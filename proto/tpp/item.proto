@@ -1,0 +1,65 @@
+syntax = "proto3";
+package danieljdd.tpp.tpp;
+
+option go_package = "github.com/danieljdd/tpp/x/tpp/types";
+
+import "gogoproto/gogo.proto";
+//import "tpp/estimator.proto";
+import "cosmos/base/v1beta1/coin.proto";
+message Item {
+  string creator = 1;
+  string id = 2;
+  string title = 3; 
+  string description = 4; 
+  int64 shippingcost = 5;
+  bool localpickup = 6; 
+  string estimationcounthash = 7; 
+  string bestestimator = 8; 
+  string lowestestimator = 9; 
+  string highestestimator = 10; 
+  int64 estimationprice = 11; 
+  repeated string estimatorlist = 12; 
+  repeated string estimatorestimationhashlist = 13; 
+  bool transferable = 14; 
+  string buyer = 15; 
+  bool tracking = 16; 
+  string status = 17; 
+  repeated string comments = 18; 
+  string tags = 19; 
+  int64 flags = 20; 
+  int64 condition = 21; 
+  string shippingregion = 22; 
+}
+
+message MsgCreateItem {
+  string creator = 1;
+  string title = 2; 
+  string description = 3; 
+  int64 shippingcost = 4 ; 
+
+  bool localpickup = 5; 
+  string estimationcounthash = 6; 
+ 
+  string tags = 7; 
+
+  int64 condition = 8; 
+  string shippingregion = 9; 
+}
+
+message MsgUpdateItem {
+  string creator = 1;
+  string id = 2;
+  string title = 3; 
+  string description = 4; 
+  int64 shippingcost = 5;
+  
+  bool localpickup = 6; 
+
+  int64 condition = 7; 
+  string shippingregion = 8; 
+}
+
+message MsgDeleteItem {
+  string creator = 1;
+  string id = 2;
+}

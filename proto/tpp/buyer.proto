@@ -1,0 +1,41 @@
+syntax = "proto3";
+package danieljdd.tpp.tpp;
+
+option go_package = "github.com/danieljdd/tpp/x/tpp/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+message Buyer {
+  string buyer = 1;
+
+  string itemid = 2; 
+  bool transferable = 3; 
+  cosmos.base.v1beta1.Coin deposit = 4 [
+    (gogoproto.nullable) = false]; 
+}
+
+message MsgCreateBuyer {
+  string buyer = 1;
+  string itemid = 2; 
+  bool transferable = 3; 
+  cosmos.base.v1beta1.Coin deposit = 4 [
+    (gogoproto.nullable) = false
+
+  ]; 
+}
+
+message MsgUpdateBuyer {
+  string buyer = 1;
+  string itemid = 2; 
+  bool transferable = 3; 
+  cosmos.base.v1beta1.Coin deposit = 4 [
+    (gogoproto.nullable) = false
+  
+  ]; 
+}
+
+message MsgDeleteBuyer {
+  string buyer = 1;
+  string itemid = 2;
+}

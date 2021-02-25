@@ -4,12 +4,84 @@ package danieljdd.tpp.tpp;
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
+import "tpp/estimator.proto";
+import "tpp/buyer.proto";
+import "tpp/item.proto";
 
 option go_package = "github.com/danieljdd/tpp/x/tpp/types";
 
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
+	rpc Estimator(QueryGetEstimatorRequest) returns (QueryGetEstimatorResponse) {
+		option (google.api.http).get = "/danieljdd/tpp/tpp/estimator/{itemid}";
+	}
+	rpc EstimatorAll(QueryAllEstimatorRequest) returns (QueryAllEstimatorResponse) {
+		option (google.api.http).get = "/danieljdd/tpp/tpp/estimator";
+	}
+
+	rpc Buyer(QueryGetBuyerRequest) returns (QueryGetBuyerResponse) {
+		option (google.api.http).get = "/danieljdd/tpp/tpp/buyer/{itemid}";
+	}
+	rpc BuyerAll(QueryAllBuyerRequest) returns (QueryAllBuyerResponse) {
+		option (google.api.http).get = "/danieljdd/tpp/tpp/buyer";
+	}
+
+	rpc Item(QueryGetItemRequest) returns (QueryGetItemResponse) {
+		option (google.api.http).get = "/danieljdd/tpp/tpp/item/{id}";
+	}
+	rpc ItemAll(QueryAllItemRequest) returns (QueryAllItemResponse) {
+		option (google.api.http).get = "/danieljdd/tpp/tpp/item";
+	}
+
 }
 
 // this line is used by starport scaffolding # 3
+message QueryGetEstimatorRequest {
+	string itemid = 1;
+}
+
+message QueryGetEstimatorResponse {
+	Estimator Estimator = 1;
+}
+
+message QueryAllEstimatorRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllEstimatorResponse {
+	repeated Estimator Estimator = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+message QueryGetBuyerRequest {
+	string itemid = 1;
+}
+
+message QueryGetBuyerResponse {
+	Buyer Buyer = 1;
+}
+
+message QueryAllBuyerRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllBuyerResponse {
+	repeated Buyer Buyer = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+message QueryGetItemRequest {
+	string id = 1;
+}
+
+message QueryGetItemResponse {
+	Item Item = 1;
+}
+
+message QueryAllItemRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllItemResponse {
+	repeated Item Item = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

@@ -1,0 +1,43 @@
+syntax = "proto3";
+package danieljdd.tpp.tpp;
+
+option go_package = "github.com/danieljdd/tpp/x/tpp/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+message Estimator {
+  string estimator = 1;
+  string itemid = 2;
+  int64 estimation = 3; 
+  string estimatorestimationhash = 4; 
+  cosmos.base.v1beta1.Coin deposit = 5 [
+    (gogoproto.nullable) = false]; 
+  bool interested = 6; 
+  string comment = 7; 
+  int64 flag = 8; 
+}
+
+message MsgCreateEstimator {
+  string estimator = 1;
+  int64 estimation = 2; 
+  string estimatorestimationhash = 3; 
+  string itemid = 4; 
+  cosmos.base.v1beta1.Coin deposit = 5 [
+    (gogoproto.nullable) = false]; 
+  bool interested = 6; 
+  string comment = 7; 
+}
+
+message MsgUpdateEstimator {
+  string estimator = 1;
+
+  string itemid = 2; 
+
+  bool interested = 3; 
+}
+
+message MsgDeleteEstimator {
+  string estimator = 1;
+  string itemid = 2;
+}
