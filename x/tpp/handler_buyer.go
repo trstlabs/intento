@@ -6,17 +6,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/danieljdd/tpp/x/tpp/keeper"
 	"github.com/danieljdd/tpp/x/tpp/types"
-	"github.com/tendermint/tendermint/crypto"
+	//"github.com/tendermint/tendermint/crypto"
 	//bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
 func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateBuyer) (*sdk.Result, error) {
 	//get item info
 
-	buyeraddress, err := sdk.AccAddressFromBech32(msg.Buyer)
-	if err != nil {
-		panic(err)
-	}
+	
 
 
 	item := k.GetItem(ctx, msg.Itemid)
@@ -44,7 +41,7 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 		DepositCoinsShipping := sdk.NewCoins(sdk.NewCoin("token", ToPayShipping))
 	*/
 
-	ModuleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+	//ModuleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 
 	if item.Shippingcost > 0 && item.Localpickup == false {
 		toPayShipping := item.Estimationprice + item.Shippingcost
@@ -53,11 +50,7 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 		if equal == false {
 			return nil, sdkerrors.Wrap(nil, "deposit insufficient, cannot make prepayment")
 		}
-		err := k.BankKeeper.SendCoinsFromAccountToModule( ctx, buyeraddress, ModuleAcct.String(), sdk.NewCoins(depositCoinsShipping))
-		//sdkError := bankkeeper.keeper.SendCoinsFromAccountToModule(ctx, buyer, ModuleAcct, depositCoinsShipping)
-		if err != nil {
-			return nil, err
-		}
+		
 		item.Buyer = msg.Buyer
 
 		k.SetItem(ctx, item)
@@ -70,12 +63,9 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 		depositCoinsLocal := sdk.NewInt64Coin("tpp", toPayLocal)
 		equallocal := depositCoinsLocal.IsEqual(msg.Deposit)
 		if equallocal == false {
-			return nil, sdkerrors.Wrap(err, "deposit insufficient, cannot make prepayment")
+			return nil, sdkerrors.Wrap(nil, "deposit insufficient, cannot make prepayment")
 		}
-		sdkError := k.BankKeeper.SendCoinsFromAccountToModule(ctx, buyeraddress, ModuleAcct.String(), sdk.NewCoins(depositCoinsLocal))
-		if sdkError != nil {
-			return nil, sdkError
-		}
+	
 		item.Buyer = msg.Buyer
 	
 		k.SetItem(ctx, item)
@@ -89,36 +79,28 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 		equallocal := depositCoinsLocal.IsEqual(msg.Deposit)
 		if equallocal == true {
 			//ModuleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-			sdkError := k.BankKeeper.SendCoinsFromAccountToModule(ctx, buyeraddress, ModuleAcct.String(), sdk.NewCoins(depositCoinsLocal))
-			if sdkError != nil {
-				return nil, sdkError
-			}
 			
+			item.Shippingcost = 0
 			item.Buyer = msg.Buyer
 		
 			k.SetItem(ctx, item)
 			k.CreateBuyer(ctx, *msg)
 
-		}
+		} else {
 		toPayShipping :=
 			item.Estimationprice + item.Shippingcost
 		depositCoinsShipping := sdk.NewInt64Coin("tpp", toPayShipping)
 		equalshipping := depositCoinsShipping.IsEqual(msg.Deposit)
 		if equalshipping == true {
-			sdkError := k.BankKeeper.SendCoinsFromAccountToModule(ctx, buyeraddress, ModuleAcct.String(), sdk.NewCoins(depositCoinsShipping))
-			if sdkError != nil {
-				return nil, sdkError
-			}
 			item.Localpickup = false
 			item.Buyer = msg.Buyer
 		
 			k.SetItem(ctx, item)
 			k.CreateBuyer(ctx, *msg)
-		}
-		if equallocal == false && equalshipping == false {
-			return nil, sdkerrors.Wrap(err, "deposit insufficient, cannot make prepayment")
-		}
-	}
+		} }
+		
+	} 
+	
 		//k.CreateBuyer(ctx, *msg)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil

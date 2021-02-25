@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"strconv"
-	"github.com/tendermint/tendermint/crypto"
+	//"github.com/tendermint/tendermint/crypto"
 
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,16 +34,7 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 	if estimatorlisthashstring == item.Estimationcounthash {
 		return nil, sdkerrors.Wrap(nil, "final estimation has already been made, estimation can not be added")
 	}
-	estimatoraddress, err := sdk.AccAddressFromBech32(msg.Estimator)
-	if err != nil {
-		sdkerrors.Wrap(err, "not an address")
-	}
-
-	moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-	sdkError := k.BankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, moduleAcct.String(), sdk.NewCoins(msg.Deposit))
-	if sdkError != nil {
-		return nil, sdkError
-	}
+	
 
 
 

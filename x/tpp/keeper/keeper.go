@@ -15,7 +15,7 @@ type (
 		cdc      codec.Marshaler
 		storeKey sdk.StoreKey
 		memKey   sdk.StoreKey
-		BankKeeper    types.BankKeeper
+		bankKeeper    types.BankKeeper
 	}
 )
 
@@ -24,7 +24,7 @@ func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, bankKeeper ty
 		cdc:      cdc,
 		storeKey: storeKey,
 		memKey:   memKey,
-		BankKeeper:    bankKeeper,
+		bankKeeper:    bankKeeper,
 	}
 }
 

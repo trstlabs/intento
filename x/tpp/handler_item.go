@@ -6,7 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/danieljdd/tpp/x/tpp/keeper"
 	"github.com/danieljdd/tpp/x/tpp/types"
-	"github.com/tendermint/tendermint/crypto"
+	//"github.com/tendermint/tendermint/crypto"
 )
 
 func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateItem) (*sdk.Result, error) {
@@ -53,25 +53,15 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 	item:= k.GetItem(ctx, msg.Id)
 	
 
-	if msg.Creator != k.GetItemOwner(ctx, msg.Id) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
-	}
+
 
 	if item.Status != "" && item.Buyer == "" {
 
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
 			key := msg.Id + "-" + element
-			estimator := k.GetEstimator(ctx, key)
-			estimatoraddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
-	if err != nil {
-		panic(err)
-	}
-			moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-			sdkErrorEstimator := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, moduleAcct.String(), estimatoraddress,sdk.NewCoins(estimator.Deposit))
-			if sdkErrorEstimator != nil {
-				return nil, sdkErrorEstimator
-			}
+
+			k.DeleteEstimator(ctx, key)
 		}
 	
 		item.Title = "Deleted"
@@ -103,16 +93,10 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 	for _, element := range item.Estimatorlist {
 		//apply this to each element
 		key := msg.Id + "-" + element
-		estimator:= k.GetEstimator(ctx, key)
-		estimatoraddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
-	if err != nil {
-		panic(err)
-	}
-		moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-		sdkErrorEstimator := k.BankKeeper.SendCoinsFromModuleToAccount(ctx, moduleAcct.String(), estimatoraddress, sdk.NewCoins(estimator.Deposit))
-		if sdkErrorEstimator != nil {
-			return nil, sdkErrorEstimator
-		}
+
+		k.DeleteEstimator(ctx, key)
+
+		
 	}
 
 	k.DeleteItem(ctx, msg.Id)
