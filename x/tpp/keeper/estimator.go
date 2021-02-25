@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	
 	"github.com/danieljdd/tpp/x/tpp/types"
 	"strconv"
 )
@@ -49,6 +51,24 @@ func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
 		Interested:              msg.Interested,
 		Comment:                 msg.Comment,
 	}
+	
+
+	estimatoraddress, err := sdk.AccAddressFromBech32(msg.Estimator)
+	if err != nil {
+		panic(err)
+	}
+
+	moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+
+	/*sdkError := k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, moduleAcct.String(), sdk.NewCoins(msg.Deposit))
+	if sdkError != nil {
+		return
+	}*/
+
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, moduleAcct.String(), sdk.NewCoins(msg.Deposit)); err != nil {
+		panic(err)
+	}
+
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 	key := types.KeyPrefix(types.EstimatorKey + estimator.Itemid + "-" + estimator.Estimator)
@@ -66,7 +86,7 @@ func (k Keeper) SetEstimator(ctx sdk.Context, estimator types.Estimator) {
 	store.Set(types.KeyPrefix(types.EstimatorKey+estimator.Itemid + "-" + estimator.Estimator), b)
 }
 
-// GetEstimator returns a estimator from its itemd
+// GetEstimator returns a estimator from its key
 func (k Keeper) GetEstimator(ctx sdk.Context, key string) types.Estimator {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 	var estimator types.Estimator
@@ -86,8 +106,20 @@ func (k Keeper) GetEstimatorOwner(ctx sdk.Context, key string) string {
 }
 
 // DeleteEstimator deletes a estimator
-func (k Keeper) DeleteEstimator(ctx sdk.Context, key string) {
+func (k Keeper) DeleteEstimator(ctx sdk.Context, key string){
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
+	var estimator types.Estimator
+	k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+key)), &estimator)
+	estimatoraddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
+	if err != nil {
+		panic(err)
+	}
+	moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+	sdkErrorEstimator := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, moduleAcct.String(), estimatoraddress, sdk.NewCoins(estimator.Deposit))
+		if sdkErrorEstimator != nil {
+			panic(err)
+		}
+	
 	store.Delete(types.KeyPrefix(types.EstimatorKey + key))
 }
 
