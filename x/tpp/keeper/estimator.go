@@ -51,7 +51,7 @@ func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
 		Interested:              msg.Interested,
 		Comment:                 msg.Comment,
 	}
-	
+
 
 	estimatoraddress, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
@@ -59,15 +59,15 @@ func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
 	}
 
 	moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+	Test := moduleAcct.String()
+	Coins := sdk.NewCoins(msg.Deposit)
 
-	/*sdkError := k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, moduleAcct.String(), sdk.NewCoins(msg.Deposit))
-	if sdkError != nil {
-		return
-	}*/
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, Test, Coins)
 
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, moduleAcct.String(), sdk.NewCoins(msg.Deposit)); err != nil {
-		panic(err)
-	}
+
+	//if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, moduleAcct.String(), ); err != nil {
+	//	panic(err)
+	//}
 
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
