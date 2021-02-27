@@ -17,6 +17,10 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 
 	item := k.GetItem(ctx, msg.Itemid)
 
+	if item.Title == ""{
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("item %s does exist", msg.Itemid ))
+	}
+
 	///for production: check if estimator is item owner
 	//
 	//
@@ -40,7 +44,7 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 
 	
 
-	k.CreateEstimator(ctx,  *msg)
+	
 
 	//append estimatorhash to list
 	item.Estimatorestimationhashlist = append(item.Estimatorestimationhashlist, msg.Estimatorestimationhash)
@@ -48,7 +52,7 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 	item.Estimatorlist = append(item.Estimatorlist, msg.Estimator)
 	
 	k.SetItem(ctx, item)
-
+	k.CreateEstimator(ctx,  *msg)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
@@ -88,6 +92,46 @@ func handleMsgDeleteEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDe
 	}
 
 	k.DeleteEstimator(ctx, msg.Itemid + "-" + msg.Estimator)
+
+	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
+}
+
+func handleMsgCreateFlag(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateFlag) (*sdk.Result, error) {
+	var estimator = types.Estimator{
+		Estimator:                 msg.Estimator,
+		
+	
+		Itemid:                  msg.Itemid,
+	
+
+
+	}
+
+	// Checks that the element exists
+	if k.HasEstimator(ctx, msg.Itemid + "-" + msg.Estimator) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("key %s does exist", msg.Itemid + "-" + msg.Estimator))
+	}
+
+
+
+
+	item := k.GetItem(ctx, msg.Itemid)
+	
+
+	if item.Transferable == true {
+		return nil, sdkerrors.Wrap(nil, "item is already estimated")
+	}
+
+	if msg.Flag == true {
+		item.Flags = item.Flags + 1
+//test
+		k.SetEstimator(ctx, estimator)
+		k.SetItem(ctx, item)
+	}
+
+	
+	
+	k.SetEstimator(ctx, estimator)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
