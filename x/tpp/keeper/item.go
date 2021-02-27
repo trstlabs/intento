@@ -47,6 +47,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 		Description:                 msg.Description,
 		Shippingcost:                msg.Shippingcost,
 		Localpickup:                 msg.Localpickup,
+		Estimationcounthash:	msg.Estimationcounthash,
 		
 	
 		Tags:                        msg.Tags,
@@ -110,4 +111,37 @@ func (k Keeper) GetAllItem(ctx sdk.Context) (msgs []types.Item) {
 	}
 
 	return
+}
+
+
+// HandlePrepayment handles payment
+func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk.Coin) {
+	//store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
+	//var estimator types.Estimator
+	//k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+key)), &estimator)
+	useraddress, err := sdk.AccAddressFromBech32(address)
+	if err != nil {
+		panic(err)
+	}
+	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, useraddress, sdk.NewCoins(coinToSend))
+	
+	
+	//store.Delete(types.KeyPrefix(types.EstimatorKey + key))
+}
+
+// HandlePrepayment handles payment
+func (k Keeper) HandlePrepaymentBack(ctx sdk.Context, address string, coinToSend sdk.Coin) {
+	//store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
+	//var estimator types.Estimator
+	//k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+key)), &estimator)
+	useraddress, err := sdk.AccAddressFromBech32(address)
+	if err != nil {
+		panic(err)
+	}
+	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, useraddress, sdk.NewCoins(coinToSend))
+	
+	
+	//store.Delete(types.KeyPrefix(types.EstimatorKey + key))
 }
