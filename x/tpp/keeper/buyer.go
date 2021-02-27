@@ -49,13 +49,13 @@ func (k Keeper) CreateBuyer(ctx sdk.Context, msg types.MsgCreateBuyer) {
 		Deposit:      msg.Deposit,
 	}
 
-	buyeraddress, err := sdk.AccAddressFromBech32(msg.Buyer)
-	if err != nil {
-		panic(err)
-	}
+	buyeraddress, _ := sdk.AccAddressFromBech32(msg.Buyer)
+	//if err != nil {
+	//	panic(err)
+	//}
 	moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 
-		err = k.bankKeeper.SendCoinsFromAccountToModule( ctx, buyeraddress, moduleAcct.String(), sdk.NewCoins(msg.Deposit))
+		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, buyeraddress, moduleAcct.String(), sdk.NewCoins(msg.Deposit))
 	//sdkError := bankkeeper.keeper.SendCoinsFromAccountToModule(ctx, buyer, ModuleAcct, depositCoinsShipping)
 		if err != nil {
 			panic(err)

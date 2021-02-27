@@ -15,17 +15,27 @@ type (
 		cdc      codec.Marshaler
 		storeKey sdk.StoreKey
 		memKey   sdk.StoreKey
-		bankKeeper    types.BankKeeper
+
+		accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
 	}
 )
 
-func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, bankKeeper types.BankKeeper) *Keeper {
-	return &Keeper{
-		cdc:      cdc,
+func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, ak types.AccountKeeper, bk types.BankKeeper) *Keeper {
+
+	// ensure reward pool module account is set
+	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
+
+
+	return &Keeper{cdc:      cdc,
 		storeKey: storeKey,
 		memKey:   memKey,
-		bankKeeper:    bankKeeper,
-	}
+		bankKeeper:    bk,
+		accountKeeper: ak,
+}
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
