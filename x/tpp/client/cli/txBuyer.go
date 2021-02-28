@@ -12,15 +12,12 @@ import (
 
 func CmdCreateBuyer() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-buyer [itemid] [transferable] [deposit]",
+		Use:   "create-buyer [itemid] [deposit]",
 		Short: "Creates a new buyer",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsItemid := string(args[0])
-			argsTransferable := false
-			if args[1] == "1" {
-				argsTransferable = true
-			}
+			
 			argsDeposit, _ := sdk.ParseCoinNormalized(args[2])
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -28,7 +25,7 @@ func CmdCreateBuyer() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgCreateBuyer(clientCtx.GetFromAddress().String(), string(argsItemid), bool(argsTransferable), sdk.Coin(argsDeposit))
+			msg := types.NewMsgCreateBuyer(clientCtx.GetFromAddress().String(), string(argsItemid), sdk.Coin(argsDeposit))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -87,6 +84,36 @@ func CmdDeleteBuyer() *cobra.Command {
 			}
 
 			msg := types.NewMsgDeleteBuyer(clientCtx.GetFromAddress().String(), id)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdItemTransfer() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "item-transfer [transterbool] [itemID]",
+		Short: "Set a new buyer",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			argsTransferbool := false
+			if args[0] == "1" {
+				argsTransferbool = true
+			}
+			argsItemID := string(args[1])
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgItemTransfer(clientCtx.GetFromAddress().String(), string(argsItemID), bool(argsTransferbool))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

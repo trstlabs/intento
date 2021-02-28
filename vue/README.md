@@ -1,6 +1,6 @@
-# tpp UI
+# trustitemstest UI
 
-This is the [vuejs](https://vuejs.org/) user inteface to tpp.
+This is the [vuejs](https://vuejs.org/) user inteface to trustitemstest.
 
 It provides UI components including login, and a template for you to do additonal development.
 

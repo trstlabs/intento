@@ -115,3 +115,39 @@ func CmdDeleteEstimator() *cobra.Command {
 
 	return cmd
 }
+
+
+
+func CmdCreateFlag() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-flag [flag] [itemid] ",
+		Short: "create a new flag for item",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			
+	
+			flag := false
+			if args[0] == "1" {
+				flag = true
+			}
+
+			itemid := args[1]
+		
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgCreateFlag(clientCtx.GetFromAddress().String(), bool(flag), string(itemid))
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}

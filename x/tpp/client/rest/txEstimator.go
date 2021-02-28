@@ -1,7 +1,9 @@
 
 package rest
-/*
+
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"strconv"
 
@@ -18,14 +20,14 @@ var _ = strconv.Itoa(42)
 
 type createEstimatorRequest struct {
 	BaseReq                 rest.BaseReq `json:"base_req"`
-	Creator                 string       `json:"creator"`
-	Estimation              string       `json:"estimation"`
-	Estimatorestimationhash string       `json:"estimatorestimationhash"`
+	Estimator                 string       `json:"creator"`
+	Estimation              int64      `json:"estimation"`
+	//Estimatorestimationhash string       `json:"estimatorestimationhash"`
 	Itemid                  string       `json:"itemid"`
 	Deposit                 string       `json:"deposit"`
-	Interested              string       `json:"interested"`
+	Interested              bool       `json:"interested"`
 	Comment                 string       `json:"comment"`
-	Flag                    string       `json:"flag"`
+	//Flag                    string       `json:"flag"`
 }
 
 func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
@@ -41,35 +43,39 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		_, err := sdk.AccAddressFromBech32(req.Creator)
+		_, err := sdk.AccAddressFromBech32(req.Estimator)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		parsedEstimation := req.Estimation
-
-		parsedEstimatorestimationhash := req.Estimatorestimationhash
+		//parsedFlag := req.Flag
 
 		parsedItemid := req.Itemid
 
-		parsedDeposit := sdk.ParseCoinNormalized(req.Deposit)
-
 		parsedInterested := req.Interested
-
 		parsedComment := req.Comment
 
-		parsedFlag := req.Flag
+		//parsedDeposit := req.Deposit
+
+		var estimatorestimation = strconv.FormatInt(parsedEstimation, 10)
+		var estimatorestimationhash = sha256.Sum256([]byte(estimatorestimation + req.Estimator))
+		var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
+
+		depositamount := "5tpp"
+		deposit, _ := sdk.ParseCoinNormalized(depositamount)
+	
 
 		msg := types.NewMsgCreateEstimator(
-			req.Creator,
+			req.Estimator,
 			parsedEstimation,
-			parsedEstimatorestimationhash,
+			estimatorestimationhashstring,
 			parsedItemid,
-			parsedDeposit,
+			deposit,
 			parsedInterested,
 			parsedComment,
-			parsedFlag,
+
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
@@ -78,14 +84,10 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 
 type updateEstimatorRequest struct {
 	BaseReq                 rest.BaseReq `json:"base_req"`
-	Creator                 string       `json:"creator"`
-	Estimation              string       `json:"estimation"`
-	Estimatorestimationhash string       `json:"estimatorestimationhash"`
+	Estimator                 string       `json:"creator"`
 	Itemid                  string       `json:"itemid"`
-	Deposit                 string       `json:"deposit"`
-	Interested              string       `json:"interested"`
-	Comment                 string       `json:"comment"`
-	Flag                    string       `json:"flag"`
+	Interested              bool       `json:"interested"`
+
 }
 
 func updateEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
@@ -103,36 +105,29 @@ func updateEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		_, err := sdk.AccAddressFromBech32(req.Creator)
+		_, err := sdk.AccAddressFromBech32(req.Estimator)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		parsedEstimation := req.Estimation
 
-		parsedEstimatorestimationhash := req.Estimatorestimationhash
 
-		parsedItemid := req.Itemid
+		parsedItemid := id
 
-		parsedDeposit := sdk.ParseCoinNormalized(req.Deposit)
+	
 
 		parsedInterested := req.Interested
 
-		parsedComment := req.Comment
-
-		parsedFlag := req.Flag
+	
 
 		msg := types.NewMsgUpdateEstimator(
-			req.Creator,
-			id,
-			parsedEstimation,
-			parsedEstimatorestimationhash,
+			req.Estimator,
+			
 			parsedItemid,
-			parsedDeposit,
+		
 			parsedInterested,
-			parsedComment,
-			parsedFlag,
+
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
@@ -141,7 +136,7 @@ func updateEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 
 type deleteEstimatorRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	Creator string       `json:"creator"`
+	Estimator string       `json:"creator"`
 }
 
 func deleteEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
@@ -159,18 +154,17 @@ func deleteEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		_, err := sdk.AccAddressFromBech32(req.Creator)
+		_, err := sdk.AccAddressFromBech32(req.Estimator)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		msg := types.NewMsgDeleteEstimator(
-			req.Creator,
+			req.Estimator,
 			id,
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
-*/

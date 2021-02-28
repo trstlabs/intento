@@ -11,14 +11,19 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateEstimator{}, "tpp/CreateEstimator", nil)
 	cdc.RegisterConcrete(&MsgUpdateEstimator{}, "tpp/UpdateEstimator", nil)
 	cdc.RegisterConcrete(&MsgDeleteEstimator{}, "tpp/DeleteEstimator", nil)
+	cdc.RegisterConcrete(&MsgCreateFlag{}, "tpp/CreateFlag", nil)
 
 	cdc.RegisterConcrete(&MsgCreateBuyer{}, "tpp/CreateBuyer", nil)
 	cdc.RegisterConcrete(&MsgUpdateBuyer{}, "tpp/UpdateBuyer", nil)
 	cdc.RegisterConcrete(&MsgDeleteBuyer{}, "tpp/DeleteBuyer", nil)
+	cdc.RegisterConcrete(&MsgItemTransfer{}, "tpp/ItemTransfer", nil)
 
 	cdc.RegisterConcrete(&MsgCreateItem{}, "tpp/CreateItem", nil)
 	cdc.RegisterConcrete(&MsgUpdateItem{}, "tpp/UpdateItem", nil)
 	cdc.RegisterConcrete(&MsgDeleteItem{}, "tpp/DeleteItem", nil)
+	cdc.RegisterConcrete(&MsgRevealEstimation{}, "tpp/RevealEstimation", nil)
+	cdc.RegisterConcrete(&MsgItemTransferable{}, "tpp/ItemTransferable", nil)
+	cdc.RegisterConcrete(&MsgItemShipping{}, "tpp/ItemShipping", nil)
 
 }
 
@@ -28,16 +33,21 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCreateEstimator{},
 		&MsgUpdateEstimator{},
 		&MsgDeleteEstimator{},
+		&MsgCreateFlag{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateBuyer{},
 		&MsgUpdateBuyer{},
 		&MsgDeleteBuyer{},
+		&MsgItemTransfer{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateItem{},
 		&MsgUpdateItem{},
 		&MsgDeleteItem{},
+		&MsgRevealEstimation{},
+		&MsgItemTransferable{},
+		&MsgItemShipping{},
 	)
 }
 

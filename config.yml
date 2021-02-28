@@ -3,12 +3,11 @@ accounts:
     coins: ["1000tpp", "1000000stake"]
   - name: user2
     coins: ["500tpp"]
-  - name: ModuleName
+  - name: user3
     coins: ["500tpp"]
   - name: faucet
     coins: ["100000000tpp"]
-  - name: tpp
-    coins: ["100tpp"]
+
 validator:
   name: user1
   staked: "1000000stake"

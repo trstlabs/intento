@@ -1,6 +1,9 @@
 package rest
-/*
+
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -17,27 +20,16 @@ var _ = strconv.Itoa(42)
 
 type createItemRequest struct {
 	BaseReq                     rest.BaseReq `json:"base_req"`
-	Creator                     string       `json:"creator"`
-	Title                       string       `json:"title"`
-	Description                 string       `json:"description"`
-	Shippingcost                string       `json:"shippingcost"`
-	Localpickup                 string       `json:"localpickup"`
-	Estimationcounthash         string       `json:"estimationcounthash"`
-	Bestestimator               string       `json:"bestestimator"`
-	Lowestestimator             string       `json:"lowestestimator"`
-	Highestestimator            string       `json:"highestestimator"`
-	Estimationprice             string       `json:"estimationprice"`
-	Estimatorlist               string       `json:"estimatorlist"`
-	Estimatorestimationhashlist string       `json:"estimatorestimationhashlist"`
-	Transferable                string       `json:"transferable"`
-	Buyer                       string       `json:"buyer"`
-	Tracking                    string       `json:"tracking"`
-	Status                      string       `json:"status"`
-	Comments                    string       `json:"comments"`
-	Tags                        string       `json:"tags"`
-	Flags                       string       `json:"flags"`
-	Condition                   string       `json:"condition"`
-	Shippingregion              string       `json:"shippingregion"`
+	Creator         string       `json:"creator"`
+	Title           string       `json:"title"`
+	Description     string       `json:"description"`
+
+	Shippingcost    int64     `json:"shippingcost"`
+	Localpickup     bool         `json:"localpickup"`
+	Estimationcount int64    `json:"estimationcount"`
+	Tags                        []string       `json:"tags"`
+	Condition                   int64       `json:"condition"`
+	Shippingregion              []string       `json:"shippingregion"`
 }
 
 func createItemHandler(clientCtx client.Context) http.HandlerFunc {
@@ -59,41 +51,25 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+
+
+
 		parsedTitle := req.Title
 
 		parsedDescription := req.Description
 
-		parsedShippingcost := sdk.ParseCoinNormalized(req.Shippingcost)
-
+		parsedShippingcost := req.Shippingcost
+	
 		parsedLocalpickup := req.Localpickup
 
-		parsedEstimationcounthash := req.Estimationcounthash
+		var estimationcount = fmt.Sprint(req.Estimationcount)
+		var estimationcountHash = sha256.Sum256([]byte(estimationcount))
+		var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
 
-		parsedBestestimator := req.Bestestimator
-
-		parsedLowestestimator := req.Lowestestimator
-
-		parsedHighestestimator := req.Highestestimator
-
-		parsedEstimationprice := req.Estimationprice
-
-		parsedEstimatorlist := req.Estimatorlist
-
-		parsedEstimatorestimationhashlist := req.Estimatorestimationhashlist
-
-		parsedTransferable := req.Transferable
-
-		parsedBuyer := req.Buyer
-
-		parsedTracking := req.Tracking
-
-		parsedStatus := req.Status
-
-		parsedComments := req.Comments
-
+	
+	
 		parsedTags := req.Tags
 
-		parsedFlags := req.Flags
 
 		parsedCondition := req.Condition
 
@@ -105,20 +81,10 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 			parsedDescription,
 			parsedShippingcost,
 			parsedLocalpickup,
-			parsedEstimationcounthash,
-			parsedBestestimator,
-			parsedLowestestimator,
-			parsedHighestestimator,
-			parsedEstimationprice,
-			parsedEstimatorlist,
-			parsedEstimatorestimationhashlist,
-			parsedTransferable,
-			parsedBuyer,
-			parsedTracking,
-			parsedStatus,
-			parsedComments,
+			estimationcountHashString,
+		
 			parsedTags,
-			parsedFlags,
+
 			parsedCondition,
 			parsedShippingregion,
 		)
@@ -130,26 +96,11 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 type updateItemRequest struct {
 	BaseReq                     rest.BaseReq `json:"base_req"`
 	Creator                     string       `json:"creator"`
-	Title                       string       `json:"title"`
-	Description                 string       `json:"description"`
-	Shippingcost                string       `json:"shippingcost"`
-	Localpickup                 string       `json:"localpickup"`
-	Estimationcounthash         string       `json:"estimationcounthash"`
-	Bestestimator               string       `json:"bestestimator"`
-	Lowestestimator             string       `json:"lowestestimator"`
-	Highestestimator            string       `json:"highestestimator"`
-	Estimationprice             string       `json:"estimationprice"`
-	Estimatorlist               string       `json:"estimatorlist"`
-	Estimatorestimationhashlist string       `json:"estimatorestimationhashlist"`
-	Transferable                string       `json:"transferable"`
-	Buyer                       string       `json:"buyer"`
-	Tracking                    string       `json:"tracking"`
-	Status                      string       `json:"status"`
-	Comments                    string       `json:"comments"`
-	Tags                        string       `json:"tags"`
-	Flags                       string       `json:"flags"`
-	Condition                   string       `json:"condition"`
-	Shippingregion              string       `json:"shippingregion"`
+
+	Shippingcost                int64       `json:"shippingcost"`
+	Localpickup                 bool       `json:"localpickup"`
+
+	Shippingregion              []string       `json:"shippingregion"`
 }
 
 func updateItemHandler(clientCtx client.Context) http.HandlerFunc {
@@ -173,68 +124,21 @@ func updateItemHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		parsedTitle := req.Title
-
-		parsedDescription := req.Description
-
-		parsedShippingcost := sdk.ParseCoinNormalized(eq.Shippingcost)
-
+	
+		parsedShippingcost := req.Shippingcost
+	
 		parsedLocalpickup := req.Localpickup
 
-		parsedEstimationcounthash := req.Estimationcounthash
-
-		parsedBestestimator := req.Bestestimator
-
-		parsedLowestestimator := req.Lowestestimator
-
-		parsedHighestestimator := req.Highestestimator
-
-		parsedEstimationprice := req.Estimationprice
-
-		parsedEstimatorlist := req.Estimatorlist
-
-		parsedEstimatorestimationhashlist := req.Estimatorestimationhashlist
-
-		parsedTransferable := req.Transferable
-
-		parsedBuyer := req.Buyer
-
-		parsedTracking := req.Tracking
-
-		parsedStatus := req.Status
-
-		parsedComments := req.Comments
-
-		parsedTags := req.Tags
-
-		parsedFlags := req.Flags
-
-		parsedCondition := req.Condition
 
 		parsedShippingregion := req.Shippingregion
 
 		msg := types.NewMsgUpdateItem(
 			req.Creator,
 			id,
-			parsedTitle,
-			parsedDescription,
+
 			parsedShippingcost,
 			parsedLocalpickup,
-			parsedEstimationcounthash,
-			parsedBestestimator,
-			parsedLowestestimator,
-			parsedHighestestimator,
-			parsedEstimationprice,
-			parsedEstimatorlist,
-			parsedEstimatorestimationhashlist,
-			parsedTransferable,
-			parsedBuyer,
-			parsedTracking,
-			parsedStatus,
-			parsedComments,
-			parsedTags,
-			parsedFlags,
-			parsedCondition,
+
 			parsedShippingregion,
 		)
 
@@ -276,4 +180,3 @@ func deleteItemHandler(clientCtx client.Context) http.HandlerFunc {
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
-*/

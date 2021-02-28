@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -43,7 +44,7 @@ func CmdCreateItem() *cobra.Command {
 			var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
 
 
-			argsTags := string(args[5])
+			argsTags := strings.Split(args[5], ",")
 
 			
 		
@@ -52,14 +53,14 @@ func CmdCreateItem() *cobra.Command {
 
 		
 		
-			argsShippingregion := string(args[7])
+			argsShippingregion := strings.Split(args[7], ",")
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), bool(argsLocalpickup), string(estimationcountHashString), string(argsTags), int64(argsCondition), string(argsShippingregion))
+			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), bool(argsLocalpickup), string(estimationcountHashString), []string(argsTags), int64(argsCondition), []string(argsShippingregion))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -74,32 +75,31 @@ func CmdCreateItem() *cobra.Command {
 
 func CmdUpdateItem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-item [id] [title] [description] [shippingcost] [condition] [shippingregion]",
+		Use:   "update-item [id]  [shippingcost] [localpickup] [shippingregion]",
 		Short: "Update a item",
 		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id := args[0]
-			argsTitle := string(args[1])
-			argsDescription := string(args[2])
+			
 	
-			argsShippingcost, _ := strconv.ParseInt(args[3],10,64)
+			argsShippingcost, _ := strconv.ParseInt(args[1],10,64)
 			argsLocalpickup := true
-			if args[4] == "0"{
+			if args[2] == "0"{
 				argsLocalpickup = false
 			}
 		
 
-			argsCondition, _ := strconv.ParseInt(args[5],10,64)
+			
 
 
-			argsShippingregion := string(args[6])
+			argsShippingregion := strings.Split(args[3], ",")
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgUpdateItem(clientCtx.GetFromAddress().String(), id, string(argsTitle), string(argsDescription), int64(argsShippingcost), bool(argsLocalpickup), int64(argsCondition), string(argsShippingregion))
+			msg := types.NewMsgUpdateItem(clientCtx.GetFromAddress().String(), id, int64(argsShippingcost), bool(argsLocalpickup), []string(argsShippingregion))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -137,3 +137,97 @@ func CmdDeleteItem() *cobra.Command {
 
 	return cmd
 }
+
+
+func CmdRevealEstimation() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "reveal-estimation [itemID]",
+		Short: "reveal a new estimation by itemID",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			itemID := args[0]
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			
+
+			msg := types.NewMsgRevealEstimation(clientCtx.GetFromAddress().String(), string(itemID))
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+
+func CmdItemTransferable() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "item-transferable [yes/no] [itemid]",
+		Short: "set item transferability",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			transferBool := true
+			if args[0] == "0" {
+				transferBool = false
+			}
+
+			itemID := args[1]
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			
+
+			msg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(),bool(transferBool), string(itemID))
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdItemShipping() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "item-shipping [yes/no] [itemid]",
+		Short: "set item transferability",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			shippingtrackingBool := false
+			if args[0] == "1" {
+				shippingtrackingBool = true
+			}
+			itemID := args[1]
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			
+
+			msg := types.NewMsgItemShipping(clientCtx.GetFromAddress().String(),bool(shippingtrackingBool), string(itemID))
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+

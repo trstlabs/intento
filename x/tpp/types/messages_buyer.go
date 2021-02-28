@@ -8,11 +8,11 @@ import (
 
 var _ sdk.Msg = &MsgCreateBuyer{}
 
-func NewMsgCreateBuyer(buyer string, itemid string, transferable bool, deposit sdk.Coin) *MsgCreateBuyer {
+func NewMsgCreateBuyer(buyer string, itemid string, deposit sdk.Coin) *MsgCreateBuyer {
 	return &MsgCreateBuyer{
 		Buyer:      buyer,
 		Itemid:       itemid,
-		Transferable: transferable,
+		//Transferable: transferable,
 		Deposit:      deposit,
 	}
 }
@@ -123,3 +123,44 @@ func (msg *MsgDeleteBuyer) ValidateBasic() error {
 	}
 	return nil
 }
+
+
+func NewMsgItemTransfer(buyer string, itemid string, transferable bool) *MsgItemTransfer {
+	return &MsgItemTransfer{
+		Buyer:      buyer,
+		Itemid:       itemid,
+		Transferable: transferable,
+
+	}
+}
+
+func (msg *MsgItemTransfer) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgItemTransfer) Type() string {
+	return "CreateBuyer"
+}
+
+func (msg *MsgItemTransfer) GetSigners() []sdk.AccAddress {
+	buyer, err := sdk.AccAddressFromBech32(msg.Buyer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{buyer}
+}
+
+func (msg *MsgItemTransfer) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgItemTransfer) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Buyer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	return nil
+}
+
+var _ sdk.Msg = &MsgCreateBuyer{}

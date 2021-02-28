@@ -15,7 +15,7 @@ const (
 func RegisterRoutes(clientCtx client.Context, r *mux.Router) {
 	// this line is used by starport scaffolding # 2
 	registerQueryRoutes(clientCtx, r)
-	//registerTxHandlers(clientCtx, r)
+	registerTxHandlers(clientCtx, r)
 
 
 }
@@ -35,17 +35,16 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 
 func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
 	// this line is used by starport scaffolding # 4
-/*	r.HandleFunc("/tpp/estimator", createEstimatorHandler(clientCtx)).Methods("POST")
+	r.HandleFunc("/tpp/estimator", createEstimatorHandler(clientCtx)).Methods("POST")
 	r.HandleFunc("/tpp/estimator/{id}", updateEstimatorHandler(clientCtx)).Methods("POST")
 	r.HandleFunc("/tpp/estimator/{id}", deleteEstimatorHandler(clientCtx)).Methods("POST")
-*/
+
 
 	r.HandleFunc("/tpp/buyer", createBuyerHandler(clientCtx)).Methods("POST")
 	r.HandleFunc("/tpp/buyer/{id}", updateBuyerHandler(clientCtx)).Methods("POST")
 	r.HandleFunc("/tpp/buyer/{id}", deleteBuyerHandler(clientCtx)).Methods("POST")
-	/*
+	
 	r.HandleFunc("/tpp/item", createItemHandler(clientCtx)).Methods("POST")
 	r.HandleFunc("/tpp/item/{id}", updateItemHandler(clientCtx)).Methods("POST")
-	r.HandleFunc("/tpp/item/{id}", deleteItemHandler(clientCtx)).Methods("POST")*/
-
+	r.HandleFunc("/tpp/item/{id}", deleteItemHandler(clientCtx)).Methods("POST")
 }

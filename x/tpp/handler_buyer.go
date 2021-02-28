@@ -143,3 +143,107 @@ func handleMsgDeleteBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDelete
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
+
+
+
+func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemTransfer) (*sdk.Result, error) {
+	//check if message creator is item creator
+	if msg.Buyer != k.GetBuyerOwner(ctx, msg.Itemid) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+	}
+	//get buyer info
+	buyer := k.GetBuyer(ctx, msg.Itemid)
+	
+
+	//get item info
+	item := k.GetItem(ctx, msg.Itemid)
+	
+	//check if item.transferable = true and therefore the creator has accepted the buyer
+
+	if item.Transferable == false {
+		return nil, sdkerrors.Wrap(nil, "creator of item does not accept a transfer")
+	}
+
+	//check if item has a buyer already
+	//check therefore that prepayment is done
+	if item.Buyer != msg.Buyer {
+		return nil, sdkerrors.Wrap(nil, "prepayment does not belong to msg sender")
+	}
+	//check therefore that prepayment is done
+	if item.Status != "" {
+		return nil, sdkerrors.Wrap(nil, "item already has had a transfer or transfer has been denied ")
+	}
+
+	if msg.Transferable == true {
+		bigintestimationprice := sdk.NewInt(item.Estimationprice)
+			//rounded down percentage for the item creator
+			percentageCreator := sdk.NewDecWithPrec(97, 2)
+			//itemPrice := sdk.NewDecFromInt(item.EstimationPrice)
+			paymentCreator := percentageCreator.MulInt(bigintestimationprice)
+			roundedAmountCreaterPayout := paymentCreator.TruncateInt()
+	
+			//rounded up percentage as a reward for the estimator
+			percentageReward := sdk.NewDecWithPrec(3, 2)
+			paymentReward := percentageReward.MulInt(bigintestimationprice)
+			roundedAmountReward := paymentReward.Ceil().TruncateInt()
+	
+			//make payment to creator and estimator
+			paymentCreatorCoins := sdk.NewCoin("tpp", roundedAmountCreaterPayout)
+			paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
+			
+	
+			k.HandlePrepayment(ctx, item.Creator, paymentCreatorCoins)
+			k.HandlePrepayment(ctx, item.Bestestimator, paymentRewardCoins)
+			
+			//refund the deposits back to all of the item estimators
+			for _, element := range item.Estimatorlist {
+				key := msg.Itemid + "-" + element
+		
+				k.DeleteEstimator(ctx, key)
+			}
+
+
+		item.Bestestimator = ""
+		item.Lowestestimator = "" 
+		item.Highestestimator = ""
+		item.Estimatorlist = nil
+		item.Status = "Item transferred"
+		k.SetItem(ctx, item)
+		k.SetBuyer(ctx, buyer)
+	}
+
+	if msg.Transferable == false {
+	
+		
+		k.HandlePrepayment(ctx, item.Buyer, buyer.Deposit)
+		
+	
+
+		for _, element := range item.Estimatorlist {
+			//apply this to each element
+			key := msg.Itemid + "-" + element
+			estimator := k.GetEstimator(ctx, key)
+			
+			if estimator.Estimator != item.Lowestestimator {
+				k.DeleteEstimator(ctx, key)
+			}
+			
+
+		}
+
+		item.Bestestimator = ""
+		item.Lowestestimator = "" 
+		item.Highestestimator = ""
+		item.Estimatorlist = nil
+		item.Status = "Item transfer declined"
+		k.SetItem(ctx, item)
+		k.SetBuyer(ctx, buyer)
+	}
+
+	
+
+	
+
+	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
+}
+

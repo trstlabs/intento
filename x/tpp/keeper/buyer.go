@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	"github.com/tendermint/tendermint/crypto"
+	//"github.com/tendermint/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/danieljdd/tpp/x/tpp/types"
 	"strconv"
@@ -45,21 +45,18 @@ func (k Keeper) CreateBuyer(ctx sdk.Context, msg types.MsgCreateBuyer) {
 		Buyer:      msg.Buyer,
 		
 		Itemid:       msg.Itemid,
-		Transferable: msg.Transferable,
+		
 		Deposit:      msg.Deposit,
 	}
 
-	buyeraddress, _ := sdk.AccAddressFromBech32(msg.Buyer)
-	//if err != nil {
-	//	panic(err)
-	//}
-	moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-
-		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, buyeraddress, moduleAcct.String(), sdk.NewCoins(msg.Deposit))
-	//sdkError := bankkeeper.keeper.SendCoinsFromAccountToModule(ctx, buyer, ModuleAcct, depositCoinsShipping)
-		if err != nil {
-			panic(err)
+	buyeraddress, err := sdk.AccAddressFromBech32(msg.Buyer)
+	if err != nil {
+		panic(err)
 	}
+	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, buyeraddress, types.ModuleName, sdk.NewCoins(msg.Deposit))
+	//sdkError := bankkeeper.keeper.SendCoinsFromAccountToModule(ctx, buyer, ModuleAcct, depositCoinsShipping)
 
 
 

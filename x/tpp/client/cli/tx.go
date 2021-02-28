@@ -25,14 +25,19 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdCreateEstimator())
 	cmd.AddCommand(CmdUpdateEstimator())
 	cmd.AddCommand(CmdDeleteEstimator())
+	cmd.AddCommand(CmdCreateFlag())
 
 	cmd.AddCommand(CmdCreateBuyer())
 	cmd.AddCommand(CmdUpdateBuyer())
 	cmd.AddCommand(CmdDeleteBuyer())
+	cmd.AddCommand(CmdItemTransfer())
 
 	cmd.AddCommand(CmdCreateItem())
 	cmd.AddCommand(CmdUpdateItem())
 	cmd.AddCommand(CmdDeleteItem())
+	cmd.AddCommand(CmdRevealEstimation())
+	cmd.AddCommand(CmdItemTransferable())
+	cmd.AddCommand(CmdItemShipping())
 
 	return cmd
 }

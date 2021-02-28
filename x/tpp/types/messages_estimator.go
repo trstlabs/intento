@@ -127,3 +127,45 @@ func (msg *MsgDeleteEstimator) ValidateBasic() error {
 	}
 	return nil
 }
+
+func NewMsgCreateFlag(estimator string,  flag bool, itemid string) *MsgCreateFlag {
+	return &MsgCreateFlag{
+		Itemid:                      itemid,
+		Flag: flag,
+		Estimator:                 estimator,
+		
+	
+
+	}
+}
+
+func (msg *MsgCreateFlag) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgCreateFlag) Type() string {
+	return "CreateFlag"
+}
+
+func (msg *MsgCreateFlag) GetSigners() []sdk.AccAddress {
+	estimator, err := sdk.AccAddressFromBech32(msg.Estimator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{estimator}
+}
+
+func (msg *MsgCreateFlag) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgCreateFlag) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Estimator)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	return nil
+}
+
+var _ sdk.Msg = &MsgCreateEstimator{}

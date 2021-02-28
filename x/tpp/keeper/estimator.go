@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/tendermint/tendermint/crypto"
+	//"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	
@@ -57,6 +57,7 @@ func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
 	if err != nil {
 		panic(err)
 	}
+	
 /*
 	moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 	Test := moduleAcct.String()*/
@@ -114,11 +115,9 @@ func (k Keeper) DeleteEstimator(ctx sdk.Context, key string){
 	if err != nil {
 		panic(err)
 	}
-	moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-	sdkErrorEstimator := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, moduleAcct.String(), estimatoraddress, sdk.NewCoins(estimator.Deposit))
-		if sdkErrorEstimator != nil {
-			panic(err)
-		}
+	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatoraddress, sdk.NewCoins(estimator.Deposit))
+	
 	
 	store.Delete(types.KeyPrefix(types.EstimatorKey + key))
 }

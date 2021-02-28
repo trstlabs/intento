@@ -43,6 +43,21 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgDeleteItem:
 			return handleMsgDeleteItem(ctx, k, msg)
 
+		case *types.MsgRevealEstimation:
+			return handleMsgRevealEstimation(ctx, k, msg)
+
+		case *types.MsgItemTransferable:
+			return handleMsgItemTransferable(ctx, k, msg)
+
+		case *types.MsgItemShipping:
+			return handleMsgItemShipping(ctx, k, msg)
+
+		case *types.MsgItemTransfer:
+			return handleMsgItemTransfer(ctx, k, msg)
+			
+		case *types.MsgCreateFlag:
+			return handleMsgCreateFlag(ctx, k, msg)
+
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)

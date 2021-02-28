@@ -1,5 +1,5 @@
 package rest
-/*
+
 import (
 	"net/http"
 	"strconv"
@@ -16,11 +16,10 @@ import (
 var _ = strconv.Itoa(42)
 
 type createBuyerRequest struct {
-	BaseReq      rest.BaseReq `json:"base_req"`
-	Creator      string       `json:"creator"`
-	Itemid       string       `json:"itemid"`
-	Transferable string       `json:"transferable"`
-	Deposit      string       `json:"deposit"`
+	BaseReq rest.BaseReq `json:"base_req"`
+	Buyer   string       `json:"creator"`
+	Itemid  string       `json:"itemid"`
+	Deposit string       `json:"deposit"`
 }
 
 func createBuyerHandler(clientCtx client.Context) http.HandlerFunc {
@@ -31,39 +30,45 @@ func createBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+
 		baseReq := req.BaseReq.Sanitize()
 		if !baseReq.ValidateBasic(w) {
 			return
 		}
 
-		_, err := sdk.AccAddressFromBech32(req.Creator)
+		_, err := sdk.AccAddressFromBech32(req.Buyer)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		parsedItemid := req.Itemid
+		parsedItemID := req.Itemid
 
-		parsedTransferable := req.Transferable
+		//parsedDeposit := req.Deposit
 
-		parsedDeposit := sdk.ParseCoinNormalized(req.Deposit)
+		parsedDeposit, err := sdk.ParseCoinNormalized(req.Deposit)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		msg := types.NewMsgCreateBuyer(
-			req.Creator,
-			parsedItemid,
-			parsedTransferable,
+			req.Buyer,
+			parsedItemID,
 			parsedDeposit,
 		)
 
+
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
+	
 }
 
 type updateBuyerRequest struct {
 	BaseReq      rest.BaseReq `json:"base_req"`
-	Creator      string       `json:"creator"`
-	Itemid       string       `json:"itemid"`
-	Transferable string       `json:"transferable"`
+	Buyer      string       `json:"creator"`
+	//Itemid       string       `json:"itemid"`
+	Transferable bool       `json:"transferable"`
 	Deposit      string       `json:"deposit"`
 }
 
@@ -82,21 +87,24 @@ func updateBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		_, err := sdk.AccAddressFromBech32(req.Creator)
+		_, err := sdk.AccAddressFromBech32(req.Buyer)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		parsedItemid := req.Itemid
+		parsedItemid := id
 
 		parsedTransferable := req.Transferable
 
-		parsedDeposit := sdk.ParseCoinNormalized(req.Deposit)
+		parsedDeposit, err := sdk.ParseCoinNormalized(req.Deposit)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
 		msg := types.NewMsgUpdateBuyer(
-			req.Creator,
-			id,
+			req.Buyer,
 			parsedItemid,
 			parsedTransferable,
 			parsedDeposit,
@@ -108,7 +116,7 @@ func updateBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 
 type deleteBuyerRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	Creator string       `json:"creator"`
+	Buyer string       `json:"creator"`
 }
 
 func deleteBuyerHandler(clientCtx client.Context) http.HandlerFunc {
@@ -126,18 +134,17 @@ func deleteBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		_, err := sdk.AccAddressFromBech32(req.Creator)
+		_, err := sdk.AccAddressFromBech32(req.Buyer)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		msg := types.NewMsgDeleteBuyer(
-			req.Creator,
+			req.Buyer,
 			id,
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
 }
-*/

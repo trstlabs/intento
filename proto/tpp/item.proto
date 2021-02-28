@@ -25,10 +25,10 @@ message Item {
   bool tracking = 16; 
   string status = 17; 
   repeated string comments = 18; 
-  string tags = 19; 
+  repeated string tags = 19; 
   int64 flags = 20; 
   int64 condition = 21; 
-  string shippingregion = 22; 
+  repeated string shippingregion = 22; 
 }
 
 message MsgCreateItem {
@@ -40,26 +40,43 @@ message MsgCreateItem {
   bool localpickup = 5; 
   string estimationcounthash = 6; 
  
-  string tags = 7; 
+  repeated string tags = 7; 
 
   int64 condition = 8; 
-  string shippingregion = 9; 
+  repeated string shippingregion = 9; 
 }
 
 message MsgUpdateItem {
   string creator = 1;
   string id = 2;
-  string title = 3; 
-  string description = 4; 
+
   int64 shippingcost = 5;
-  
   bool localpickup = 6; 
 
-  int64 condition = 7; 
-  string shippingregion = 8; 
+
+  repeated string shippingregion = 8; 
 }
 
 message MsgDeleteItem {
   string creator = 1;
   string id = 2;
+}
+
+message MsgRevealEstimation {
+    string creator = 1;
+  string itemid = 2;
+
+}
+
+message MsgItemTransferable {
+    string creator = 1;
+    bool transferable = 2;
+  string itemid = 3;
+
+}
+message MsgItemShipping {
+    string creator = 1;
+    bool tracking = 2;
+  string itemid = 3;
+
 }
