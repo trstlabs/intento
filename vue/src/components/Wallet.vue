@@ -17,7 +17,7 @@
           placeholder="Password (mnemonic)"> </v-text-field>
       </div>
       
-
+  
       <div  v-if="!address" class="password" >
         <v-btn block
           small
@@ -29,6 +29,7 @@
         >
           Sign in
         </v-btn>
+        
       </div>
       <div v-else class="account">
         <div class="card">
@@ -54,8 +55,18 @@
               >
               on your balance.
             </span>
-          </div>
+          </div> <div  v-if="!!address" >
+        <v-btn block text
+          small
+          
+          @click="signOut"
+        >
+          Sign out
+        </v-btn>
+        
+      </div>
         </div>
+       
       </div>
     </div>
    </div>
@@ -235,6 +246,11 @@ export default {
         await this.$store.dispatch("accountSignIn", { mnemonic })
 
         this.initConfig();
+      }
+    },
+     async signOut() {
+      if (this.address) {
+				this.$store.dispatch('accountSignOut')
       }
     },
     numberFormat(number) {

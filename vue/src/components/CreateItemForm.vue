@@ -442,17 +442,31 @@ export default {
         this.flight = true;
         const type = { type: "item" };
        
-        const body = { 
-            title: this.fields.title,
-            description: this.fields.description,
-            shippingcost: this.fields.shippingcost,
-            localpickup: this.fields.localpickup,
-            estimationcounthash: this.fields.estimationcount,
-            tags: this.selectedTags,
-            condition: this.fields.condition,
-            shippingregion: this.selectedCountries,
+        /*const body = [
+          ["creator", 1, this.$store.state.account.address],
+            [ "title", 2, this.fields.title ] ,                                                    
+          ["description",  3,this.fields.description ],
+          ["shippingcost",  4, this.fields.shippingcost  ],
+           ["localpickup",  5, this.fields.localpickup],
+          ["estimationcounthash" ,  6, this.fields.estimationcount.toString() ],
+         ["tags", 7, this.selectedTags ],
+           ["condition",  8, this.fields.condition.toString() ],
+           ["shippingregion",  9, this.selectedCountries ],
+      
+        ];*/
+        const body = {
+          
+            title: this.fields.title,                                                    
+          description: this.fields.description,
+          shippingcost: this.fields.shippingcost,
+           localpickup: this.fields.localpickup,
+         estimationcounthash: this.fields.estimationcount.toString(),
+         tags: this.selectedTags,
+           condition: this.fields.condition.toString() ,
+           shippingregion: this.selectedCountries ,
       
         };
+
         await this.$store.dispatch("entitySubmit", { ...type, body });
         const payload = { ...type, body }
         await this.$store.dispatch("entityFetch", payload);
@@ -462,11 +476,11 @@ export default {
 
 
         this.flight = false;
-        this.fields.title = "";
-        this.fields.description = "";
-        this.fields.shippingcost = "";
-        this.fields.localpickup = false;
-        this.fields.estimationcount = "";
+        //this.fields.title = "";
+       // this.fields.description = "";
+        //this.fields.shippingcost = "";
+       // this.fields.localpickup = false;
+        //this.fields.estimationcount = "";
         //this.itemid = await this.$store.state.newitemID;
         //console.log(this.itemid);
         //this.thisitem = await this.$store.getters.getItemByID(this.itemid);

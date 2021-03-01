@@ -120,7 +120,7 @@
     </v-col >
       
     </v-app-bar>
-    <welcome /> <v-btn
+    <welcome v-if="this.$store.state.client == null"/> <v-btn
             v-scroll="onScroll"
             v-show="fab"
             fab

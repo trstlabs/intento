@@ -106,7 +106,18 @@
     <v-card-text > 
          You may choose to sign up with your existing cosmos-address or create a new one. Be sure not to use an important account. Go to any Cosmos Wallet provider (such as <a href="https://wallet.keplr.app"> Keplr Wallet</a>) and generate an account + 24-word seed phrase.  Fill in your address to receive 5 free tokens to get started!
         </v-card-text>
-
+<!--<div class="dropdown__textarea">
+								<textarea
+									v-model="mnemonic"
+									placeholder="Mnemonic..."
+									class="dropdown__textarea__input"
+								></textarea>
+								<div
+									class="dropdown__textarea__icon"
+									@click="mnemonicGenerate()"
+								> <v-icon > mdi-plus-box </v-icon>
+									
+								</div></div>-->
     <faucet/>
 
 <v-card-actions> <v-col>
@@ -265,6 +276,7 @@
   <script>
 import Faucet from './Faucet.vue';
 import Wallet from './Wallet.vue';
+//import * as bip39 from 'bip39'
   export default {
   components: { Wallet, Faucet },
   data() {
@@ -275,10 +287,15 @@ import Wallet from './Wallet.vue';
       signup: false,
       learn: false,
       e1: 1,
+      mnemonic: ""
       
     };
   }, 
    methods: {
+    // mnemonicGenerate() {
+		//	const mnemonic = bip39.generateMnemonic()
+		//	this.mnemonic = mnemonic
+		//},
        
         loadContent(){
 
@@ -297,3 +314,38 @@ import Wallet from './Wallet.vue';
   };
 
   </script>
+<!--
+<style scoped>
+  .dropdown__textarea {
+	display: block;
+	height: 8em;
+	position: relative;
+}
+.dropdown__textarea__input {
+	border: 0;
+	border-radius: 0.5rem;
+	padding: 0.5rem;
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
+	outline: none;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	resize: none;
+	letter-spacing: 0.02em;
+	font-family: inherit;
+	font-size: 0.85rem;
+	line-height: 1.4;
+	color: rgba(0, 0, 0, 0.85);
+}
+.dropdown__textarea__icon {
+	width: 1rem;
+	height: 1rem;
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	padding: 1rem;
+	fill: rgba(0, 0, 0, 0.5);
+	cursor: pointer;
+}
+
+</style>-->

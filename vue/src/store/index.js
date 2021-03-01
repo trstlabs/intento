@@ -29,7 +29,7 @@ const API = "http://localhost:1317";
 //const API = "https://node.trustpriceprotocol.com"
 const ADDRESS_PREFIX = 'cosmos';
 
-const RPC = 'http://localhost:26657'
+const RPC = 'http://0.0.0.0:26657'
 
 export default new Vuex.Store({
   state: {
@@ -115,19 +115,8 @@ export default new Vuex.Store({
   actions: {
     async init({ dispatch, state }) {
       await dispatch("chainIdFetch");
-      //console.log(state.app.types.filter( type => type == "estimator"));
-      //console.log(state.app.types);
-
-      //works // console.log(state.app.types.filter(function(type){ return type.type == "estimator"}));
-
-      //console.log(state.app.types.forEach({ type }));
-      //rs = state.app.types.find(({type}) => type === "estimator");
-      //dispatch("entityFetch", rs );
-      /* state.app.types.forEach(({ type }) => {
-         dispatch("entityFetch", { type });
-       });
- */
-
+      await dispatch('accountSignInTry')
+    
       state.app.types.forEach(({ type }) => {
         if (type == "estimator/flag" || type == "item/reveal" || type == "item/transferable" || type == "item/transfer" || type == "item/shipping") { return; }
         dispatch("entityFetch", { type });
@@ -157,9 +146,7 @@ export default new Vuex.Store({
         makeCosmoshubPath(0),
         ADDRESS_PREFIX
       )
-      //c/onsole.log(wallet)
-      //console.log("fdgadagfgfd")
-
+  
       //console.log("fdgadagfgfd")
       localStorage.setItem('mnemonic', mnemonic)
       const { address } = wallet
@@ -169,7 +156,7 @@ export default new Vuex.Store({
       commit('set', { key: 'wallet', value: wallet })
       commit('set', { key: 'account', value: account })
       //console.log("fdgadagfgfd" + SigningStargateClient.connectWithSigner());
-      //c//onsole.log(RPC)
+      ////onsole.log(RPC)
       const client = await SigningStargateClient.connectWithSigner(RPC, wallet, {});
       commit('set', { key: 'client', value: client })
       console.log(client)
@@ -219,16 +206,17 @@ export default new Vuex.Store({
       const wallet = state.wallet
       const path = "danieljdd.tpp.tpp"
       console.log("TESTwallet" + wallet )
-      const typeUrl = `/${path}.MsgCreate${type}`
-      let MsgCreate = new Type(`MsgCreate${type}`)
-      const registry = new Registry([[typeUrl, MsgCreate]])
+      const typeUrl = `/${path}.MsgCreateItem`;
+      let MsgCreate = new Type(`MsgCreateItem`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
      
-      console.log("registery" + registry )
+      console.log("registery" + registry );
+      console.log("creator" + state.wallet.address);
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
         wallet,
         { registry }
-      )
+      );
       console.log("TEST" + client)
       const msg = {
         typeUrl,
@@ -236,16 +224,16 @@ export default new Vuex.Store({
           creator: state.account.address,
           ...body
         }
-      }
+      };
       const fee = {
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
-      }
+      };
      
       try {
         const path = "danieljdd.tpp.tpp".replace(/\./g, '/')
-        await client.signAndBroadcast(state.account.address, [msg], fee)
-        console.log(state.account.address, [msg], fee)
+        await client.signAndBroadcast(state.wallet.address, [msg], fee)
+        console.log(state.wallet.address, [msg], fee)
         await dispatch('entityFetch', {
           type: type,
           path: path
