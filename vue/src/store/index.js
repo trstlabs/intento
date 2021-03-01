@@ -29,7 +29,7 @@ const API = "http://localhost:1317";
 //const API = "https://node.trustpriceprotocol.com"
 const ADDRESS_PREFIX = 'cosmos';
 
-const RPC = 'http://0.0.0.0:26657'
+const RPC = 'http://localhost:26657'
 
 export default new Vuex.Store({
   state: {
@@ -130,10 +130,19 @@ export default new Vuex.Store({
       const node_info = (await axios.get(`${API}/node_info`)).data.node_info;
       commit("chainIdSet", { chain_id: node_info.network });
     },
-    async accountSignInTry({ dispatch }) {
+    async accountSignInTry({ state, dispatch }) {
       const mnemonic = localStorage.getItem('mnemonic')
       if (mnemonic) {
         await dispatch('accountSignIn', { mnemonic })
+        await  dispatch("setEstimatorItemList", state.account.address);
+        await  dispatch("setToEstimateList", state.account.address);
+        await  dispatch("setCreatorActionList", state.account.address);
+        await   dispatch("setSortedTagList");
+        await    dispatch("setCreatorItemList");
+        await    dispatch("setBuyerItemList", state.account.address);
+
+        await dispatch("setInterestedItemList", state.account.address);
+      //$emit('signedIn');
       }
     },
     async accountSignIn(
@@ -206,8 +215,9 @@ export default new Vuex.Store({
       const wallet = state.wallet
       const path = "danieljdd.tpp.tpp"
       console.log("TESTwallet" + wallet )
-      const typeUrl = `/${path}.MsgCreateItem`;
-      let MsgCreate = new Type(`MsgCreateItem`);
+      const type2 = type.charAt(0).toUpperCase() + type.slice(1)
+      const typeUrl = `/${path}.MsgCreate${type2}`;
+      let MsgCreate = new Type(`MsgCreate${type2}`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
      
       console.log("registery" + registry );

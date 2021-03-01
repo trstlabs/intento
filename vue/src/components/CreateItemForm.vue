@@ -462,7 +462,7 @@ export default {
            localpickup: this.fields.localpickup,
          estimationcounthash: this.fields.estimationcount.toString(),
          tags: this.selectedTags,
-           condition: this.fields.condition.toString() ,
+           condition: this.fields.condition,
            shippingregion: this.selectedCountries ,
       
         };
