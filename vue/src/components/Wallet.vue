@@ -223,7 +223,7 @@ export default {
     },
     address() {
       const client = this.$store.getters.account
-      console.log(client)
+      //console.log(client)
       return client && client.address
     
     },
@@ -235,7 +235,7 @@ export default {
     },
 
     balances() {
-      console.log(this.$store.state.bankBalances)
+      //console.log(this.$store.state.bankBalances)
 			return this.$store.getters.bankBalances;
 		}
   },

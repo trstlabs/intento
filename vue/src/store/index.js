@@ -1,14 +1,3 @@
-/*
-import Vue from "vue";
-import Vuex from "vuex";
-import cosmos from "@tendermint/vue/src/store/cosmos.js";
-
-Vue.use(Vuex);
-
-export default new Vuex.Store({
-  modules: { cosmos },
-});
-*/
 
 import Vue from "vue";
 import Vuex from "vuex";
@@ -16,11 +5,12 @@ import axios from "axios";
 import app from "./app.js";
 
 //import cosmos from "@tendermint/vue/src/store/cosmos.js";
-import { assertIsBroadcastTxSuccess, makeCosmoshubPath } from '@cosmjs/launchpad'
+import { assertIsBroadcastTxSuccess, makeCosmoshubPath, coins } from '@cosmjs/launchpad'
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 import { Type, Field } from 'protobufjs';
 import { Registry } from '@cosmjs/proto-signing';
+
 
 Vue.use(Vuex);
 
@@ -114,14 +104,14 @@ export default new Vuex.Store({
   actions: {
     async init({ dispatch, state }) {
       await dispatch("chainIdFetch");
-      await dispatch('accountSignInTry')
+     
     
       state.app.types.forEach(({ type }) => {
         if (type == "estimator/flag" || type == "item/reveal" || type == "item/transferable" || type == "item/transfer" || type == "item/shipping") { return; }
         dispatch("entityFetch", { type });
       });
 
-
+      await dispatch('accountSignInTry');
 
     },
 
@@ -167,7 +157,7 @@ export default new Vuex.Store({
       ////onsole.log(RPC)
       const client = await SigningStargateClient.connectWithSigner(RPC, wallet, {});
       commit('set', { key: 'client', value: client })
-      console.log(client)
+      //console.log(client)
       try {
         await dispatch('bankBalancesGet')
       } catch {
@@ -179,10 +169,10 @@ export default new Vuex.Store({
     async bankBalancesGet({ commit, state },) {
       //const API = rootState.cosmos.env.env.API
       const { address } = state.account
-      console.log({ address })
+      //console.log({ address })
       const url = `${API}/bank/balances/${address}`
       const value = (await axios.get(url)).data.result
-      console.log(value)
+      //console.log(value)
       commit('set', { key: 'bankBalances', value: value })
     },
 
@@ -223,7 +213,7 @@ export default new Vuex.Store({
 
       //const wallet = state.wallet
       //const path = "danieljdd.tpp.tpp"
-      console.log("TESTwallet" + wallet )
+      //console.log("TESTwallet" + wallet )
       const type2 = type.charAt(0).toUpperCase() + type.slice(1)
       const typeUrl = `/${PATH}.MsgCreate${type2}`;
       let MsgCreate = new Type(`MsgCreate${type2}`);
@@ -231,15 +221,15 @@ export default new Vuex.Store({
       fields.forEach(f => {
         MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
       })
-      console.log(registry );
+      //console.log(registry );
       const [firstAccount] = await wallet.getAccounts();
-      console.log("creator" + state.wallet.address);
+      //console.log("creator" + state.wallet.address);
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
         wallet,
         { registry }
       );
-      console.log("TEST" + client)
+      //console.log("TEST" + client)
       const msg = {
         typeUrl,
         value: {
@@ -260,7 +250,7 @@ export default new Vuex.Store({
         //const path = "danieljdd.tpp.tpp".replace(/\./g, '/')
         
         //console.log(data)
-        console.log(firstAccount.address, [msg], fee);
+        //console.log(firstAccount.address, [msg], fee);
         await dispatch('entityFetch', {
           type: type
         //  path: path
@@ -286,6 +276,7 @@ export default new Vuex.Store({
         MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
       })
       console.log(registry );
+      console.log(MsgCreate)
       const [firstAccount] = await wallet.getAccounts();
       console.log("creator" + state.wallet.address);
       const client = await SigningStargateClient.connectWithSigner(
@@ -324,6 +315,75 @@ export default new Vuex.Store({
         let len = (creatoritems.length)
         console.log((newcreatoritems[len].id))
         commit('set', { key: 'newitemID', value: (newcreatoritems[len].id) })
+      } catch (e) {
+        console.log(e)
+      }
+
+    },
+
+    async estimationSubmit({ state, dispatch }, { type, body }) {
+      const mnemonic = localStorage.getItem('mnemonic')
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+        mnemonic,
+        makeCosmoshubPath(0),
+        ADDRESS_PREFIX
+      )
+
+      const type2 = type.charAt(0).toUpperCase() + type.slice(1)
+      const typeUrl = `/${PATH}.MsgCreate${type2}`;
+      let MsgCreate = new Type(`MsgCreate${type2}`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      const fields = [
+        ["estimator", 1,'string', "optional"],
+         [ "estimation", 2,'int64', "optional"] ,                                                    
+        ["itemid",3,'string', "optional"],
+        ["deposit", 4, 'string', "optional"],
+        ["interested",5,'bool', "optional"],
+        ["comment",6,'string', "optional" ],
+        
+        
+      ];
+console.log(fields)
+fields.forEach(f => {
+  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2]))
+})
+console.log(MsgCreate)
+      //console.log(registry );
+      const [firstAccount] = await wallet.getAccounts();
+      //console.log("creator" + state.wallet.address);
+      const client = await SigningStargateClient.connectWithSigner(
+        RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          estimator: state.account.address,
+          deposit: coins(5, "token"),
+          ...body
+        }
+      };
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+       const result = await client.signAndBroadcast(firstAccount.address, [msg], fee);
+        assertIsBroadcastTxSuccess(result);
+
+        console.log(result)
+
+      try {
+        //const path = "danieljdd.tpp.tpp".replace(/\./g, '/')
+        
+        //console.log(data)
+        //console.log(firstAccount.address, [msg], fee);
+        await dispatch('entityFetch', {
+          type: type
+        //  path: path
+        }
+        )
       } catch (e) {
         console.log(e)
       }

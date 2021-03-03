@@ -1,12 +1,12 @@
 package cli
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"fmt"
+	//"crypto/sha256"
+	//"encoding/hex"
+	//"fmt"
 	"strings"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	//sdk "github.com/cosmos/cosmos-sdk/types"
+	//sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"strconv"
 	"github.com/spf13/cobra"
@@ -20,7 +20,7 @@ import (
 
 func CmdCreateItem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-item [title] [description] [shippingcost] [localpickup] [estimationcounthash] [tags] [condition] [shippingregion]",
+		Use:   "create-item [title] [description] [shippingcost] [localpickup] [estimationcount] [tags] [condition] [shippingregion]",
 		Short: "Creates a new item",
 		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -34,19 +34,16 @@ func CmdCreateItem() *cobra.Command {
 			
 			//argsEstimationcounthash := string(args[4])
 
-			estimationcheck, ok := sdk.NewIntFromString(args[4])
-			if ok != true {
-				return sdkerrors.Wrap(types.ErrArgumentMissingOrNonUInteger, "not a number or lower than zero")
-			}
+			//estimationcheck, ok := sdk.NewIntFromString(args[4])
+			//if ok != true {
+			//	return sdkerrors.Wrap(types.ErrArgumentMissingOrNonUInteger, "not a number or lower than zero")
+			//}
 
-			var estimationcount = fmt.Sprint(estimationcheck)
-			var estimationcountHash = sha256.Sum256([]byte(estimationcount))
-			var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
-
+			
 
 			argsTags := strings.Split(args[5], ",")
 
-			
+			argsEstimationcount, _ := strconv.ParseInt(args[4],10,64)
 		
 
 			argsCondition, _ := strconv.ParseInt(args[6],10,64)
@@ -60,7 +57,7 @@ func CmdCreateItem() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), bool(argsLocalpickup), string(estimationcountHashString), []string(argsTags), int64(argsCondition), []string(argsShippingregion))
+			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), bool(argsLocalpickup), int64(argsEstimationcount), []string(argsTags), int64(argsCondition), []string(argsShippingregion))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

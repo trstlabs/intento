@@ -8,7 +8,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup bool, estimationcounthash string, tags []string, condition int64, shippingregion []string) *MsgCreateItem {
+func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup bool, estimationcount int64, tags []string, condition int64, shippingregion []string) *MsgCreateItem {
 	return &MsgCreateItem{
 		
 		Creator:                     creator,
@@ -16,7 +16,7 @@ func NewMsgCreateItem(creator string, title string, description string, shipping
 		Description:                 description,
 		Shippingcost:                shippingcost,
 		Localpickup:                 localpickup,
-		Estimationcounthash:         estimationcounthash,		
+		Estimationcount:         estimationcount,		
 		Tags:                        tags,
 		Condition:                   condition,
 		Shippingregion:              shippingregion,

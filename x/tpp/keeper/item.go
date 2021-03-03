@@ -5,6 +5,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/danieljdd/tpp/x/tpp/types"
 	"strconv"
+	"fmt"
+	"crypto/sha256"
+	"encoding/hex"
 )
 
 // GetItemCount get the total number of item
@@ -40,6 +43,11 @@ func (k Keeper) SetItemCount(ctx sdk.Context, count int64) {
 func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 	// Create the item
 	count := k.GetItemCount(ctx)
+
+	var estimationcount = fmt.Sprint(msg.Estimationcount )
+			var estimationcountHash = sha256.Sum256([]byte(estimationcount + msg.Creator ))
+			var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
+
 	var item = types.Item{
 		Creator:                     msg.Creator,
 		Id:                          strconv.FormatInt(count, 10),
@@ -47,7 +55,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 		Description:                 msg.Description,
 		Shippingcost:                msg.Shippingcost,
 		Localpickup:                 msg.Localpickup,
-		Estimationcounthash:	msg.Estimationcounthash,
+		Estimationcounthash:	estimationcountHashString,
 		
 	
 		Tags:                        msg.Tags,

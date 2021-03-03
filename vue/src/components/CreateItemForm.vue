@@ -448,7 +448,7 @@ export default {
           ["description",3,'string', "optional"],
          ["shippingcost",4,'int64', "optional"],
           ["localpickup",5,'bool', "optional"],
-          ["estimationcounthash",6,'string', "optional" ],
+          ["estimationcount",6,'int64', "optional" ],
          ["tags", 7,'string', "repeated"],
            ["condition",  8, 'int64', "optional"],
            ["shippingregion",  9,'string', "repeated"],

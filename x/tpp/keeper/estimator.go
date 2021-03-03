@@ -45,7 +45,7 @@ func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
 	var estimator = types.Estimator{
 		Estimator:                 msg.Estimator,
 		Estimation:              msg.Estimation,
-		Estimatorestimationhash: msg.Estimatorestimationhash,
+		//Estimatorestimationhash: msg.Estimatorestimationhash,
 		Itemid:                  msg.Itemid,
 		Deposit:                 msg.Deposit,
 		Interested:              msg.Interested,

@@ -38,7 +38,7 @@ message MsgCreateItem {
   int64 shippingcost = 4 ; 
 
   bool localpickup = 5; 
-  string estimationcounthash = 6; 
+  int64 estimationcount = 6; 
  
   repeated string tags = 7; 
 

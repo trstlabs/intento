@@ -21,12 +21,12 @@ message Estimator {
 message MsgCreateEstimator {
   string estimator = 1;
   int64 estimation = 2; 
-  string estimatorestimationhash = 3; 
-  string itemid = 4; 
-  cosmos.base.v1beta1.Coin deposit = 5 [
+  //string estimatorestimationhash = 3; 
+  string itemid = 3; 
+  cosmos.base.v1beta1.Coin deposit = 4 [
     (gogoproto.nullable) = false]; 
-  bool interested = 6; 
-  string comment = 7; 
+  bool interested = 5; 
+  string comment = 6; 
 }
 
 message MsgUpdateEstimator {

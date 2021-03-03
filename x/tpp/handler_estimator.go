@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"strconv"
+	//"encoding/hex"
 	//"github.com/tendermint/tendermint/crypto"
 
 	"fmt"
@@ -31,9 +32,10 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s does exist", msg.Itemid + "-" + msg.Estimator))
 	}
 
+	
 	//checks whether estimationcount has been reached
 	var estimatorlistlen = strconv.Itoa(len(item.Estimatorlist))
-	var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlen))
+	var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlen + item.Creator))
 	var estimatorlisthashstring = hex.EncodeToString(estimatorlistlenhash[:])
 	if estimatorlisthashstring == item.Estimationcounthash {
 		return nil, sdkerrors.Wrap(nil, "final estimation has already been made, estimation can not be added")
@@ -42,12 +44,14 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 
 
 
-	
+	var estimatorestimationhash = sha256.Sum256([]byte(msg.Estimator + strconv.FormatInt(msg.Estimation,10)))
+	var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
+
 
 	
 
 	//append estimatorhash to list
-	item.Estimatorestimationhashlist = append(item.Estimatorestimationhashlist, msg.Estimatorestimationhash)
+	item.Estimatorestimationhashlist = append(item.Estimatorestimationhashlist, estimatorestimationhashstring)
 
 	item.Estimatorlist = append(item.Estimatorlist, msg.Estimator)
 	

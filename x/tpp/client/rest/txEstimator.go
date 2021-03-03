@@ -2,8 +2,8 @@
 package rest
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
+	//"crypto/sha256"
+	//"encoding/hex"
 	"net/http"
 	"strconv"
 
@@ -59,9 +59,9 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 
 		//parsedDeposit := req.Deposit
 
-		var estimatorestimation = strconv.FormatInt(parsedEstimation, 10)
-		var estimatorestimationhash = sha256.Sum256([]byte(estimatorestimation + req.Estimator))
-		var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
+		//var estimatorestimation = strconv.FormatInt(parsedEstimation, 10)
+		//var estimatorestimationhash = sha256.Sum256([]byte(estimatorestimation + req.Estimator))
+		//var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
 
 		depositamount := "5tpp"
 		deposit, _ := sdk.ParseCoinNormalized(depositamount)
@@ -70,7 +70,7 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 		msg := types.NewMsgCreateEstimator(
 			req.Estimator,
 			parsedEstimation,
-			estimatorestimationhashstring,
+			//estimatorestimationhashstring,
 			parsedItemid,
 			deposit,
 			parsedInterested,

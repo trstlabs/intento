@@ -8,11 +8,11 @@ import (
 
 var _ sdk.Msg = &MsgCreateEstimator{}
 
-func NewMsgCreateEstimator(estimator string, estimation int64, estimatorestimationhash string, itemid string, deposit sdk.Coin, interested bool, comment string) *MsgCreateEstimator {
+func NewMsgCreateEstimator(estimator string, estimation int64, itemid string, deposit sdk.Coin, interested bool, comment string) *MsgCreateEstimator {
 	return &MsgCreateEstimator{
 		Estimator:                 estimator,
 		Estimation:              estimation,
-		Estimatorestimationhash: estimatorestimationhash,
+		//Estimatorestimationhash: estimatorestimationhash,
 		Itemid:                  itemid,
 		Deposit:                 deposit,
 		Interested:              interested,

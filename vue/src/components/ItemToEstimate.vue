@@ -487,6 +487,7 @@
 
 <script>
 import ToEstimateTagBar from "./ToEstimateTagBar.vue";
+import { coins } from "@cosmjs/launchpad";
 export default {
 
   components: { ToEstimateTagBar },
@@ -566,8 +567,10 @@ this.loadItemPhotos();
         this.flight = true;
         this.loadingitem = true;
         const type = { type: "estimator" };
-        const body = { estimation, itemid, interested, comment };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
+        const body = { estimation: estimation, itemid: itemid, interested: interested, deposit: "5tpp",  comment: comment };
+        
+        await this.$store.dispatch("estimationSubmit", { ...type, body });
+        console.log("success!")
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("accountUpdate");
         this.submitRevealEstimation(itemid);

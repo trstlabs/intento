@@ -1,9 +1,9 @@
 package rest
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"fmt"
+	//"crypto/sha256"
+	//"encoding/hex"
+	///"fmt"
 	"net/http"
 	"strconv"
 
@@ -62,9 +62,10 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 	
 		parsedLocalpickup := req.Localpickup
 
-		var estimationcount = fmt.Sprint(req.Estimationcount)
-		var estimationcountHash = sha256.Sum256([]byte(estimationcount))
-		var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
+		parsedEstimationcount := req.Estimationcount
+		//var estimationcount = fmt.Sprint(req.Estimationcount)
+		//var estimationcountHash = sha256.Sum256([]byte(estimationcount))
+		//var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
 
 	
 	
@@ -81,7 +82,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 			parsedDescription,
 			parsedShippingcost,
 			parsedLocalpickup,
-			estimationcountHashString,
+			parsedEstimationcount,
 		
 			parsedTags,
 

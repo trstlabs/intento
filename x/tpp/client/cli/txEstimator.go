@@ -2,8 +2,8 @@ package cli
 
 import (
 	"github.com/spf13/cobra"
-	"crypto/sha256"
-	"encoding/hex"
+	//"crypto/sha256"
+	//"encoding/hex"
 	"strconv"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -27,11 +27,7 @@ func CmdCreateEstimator() *cobra.Command {
 			
 			argsEstimation, _ := strconv.ParseInt(args[0],10,64)
 
-			var estimator = clientCtx.GetFromAddress().String()
-			var estimatorestimation = args[0]
-			var estimatorestimationhash = sha256.Sum256([]byte(estimatorestimation + estimator))
-			var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
-
+		
 			
 			argsDeposit,_ := sdk.ParseCoinNormalized(args[1])
 			interested := false
@@ -42,7 +38,7 @@ func CmdCreateEstimator() *cobra.Command {
 			argsItemid := string(args[4])
 
 			
-			msg := types.NewMsgCreateEstimator(clientCtx.GetFromAddress().String(), int64(argsEstimation), string(estimatorestimationhashstring), string(argsItemid), sdk.Coin(argsDeposit), bool(interested), string(argsComment))
+			msg := types.NewMsgCreateEstimator(clientCtx.GetFromAddress().String(), int64(argsEstimation), string(argsItemid), sdk.Coin(argsDeposit), bool(interested), string(argsComment))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
