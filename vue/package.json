@@ -1,6 +1,6 @@
 {
-  "name": "frontend",
-  "version": "0.1.0",
+  "name": "marketplace",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "npm install && vue-cli-service serve",

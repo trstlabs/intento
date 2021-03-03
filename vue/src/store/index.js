@@ -16,7 +16,7 @@ import axios from "axios";
 import app from "./app.js";
 
 //import cosmos from "@tendermint/vue/src/store/cosmos.js";
-import { makeCosmoshubPath } from '@cosmjs/launchpad'
+import { assertIsBroadcastTxSuccess, makeCosmoshubPath } from '@cosmjs/launchpad'
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 import { Type, Field } from 'protobufjs';
@@ -28,6 +28,7 @@ Vue.use(Vuex);
 const API = "http://localhost:1317";
 //const API = "https://node.trustpriceprotocol.com"
 const ADDRESS_PREFIX = 'cosmos';
+const PATH = 'danieljdd.tpp.tpp'
 
 const RPC = 'http://localhost:26657'
 
@@ -72,9 +73,7 @@ export default new Vuex.Store({
     clientUpdate(state, { client }) {
       state.client = client;
     },
-    createItemID(state, itemid) {
-      state.newitemID = itemid;
-    },
+  
     setCreatorItemList(state, payload) {
       //state.CreatorItemList.push(payload);
       state.creatorItemList = payload;
@@ -193,13 +192,16 @@ export default new Vuex.Store({
       window.location.reload()
     },
 
-    async entityFetch({ state, commit }, { type }) {
-      const { chain_id } = state;
-      const url = `${API}/${chain_id}/${type}`;
-      const body = (await axios.get(url)).data.result;
+    async entityFetch({ commit }, { type }) {
+      //const { chain_id } = state;
+      const url = `${API}/${PATH.replace(/\./g, '/')}/${type}`;
+      const body = (await axios.get(url)).data
+      const uppercase = type.charAt(0).toUpperCase() + type.slice(1)
+			if (body && body[uppercase]) {
+				commit('entitySet', { type, body: body[uppercase] })
+			}
 
-
-      commit("entitySet", { type, body });
+     
     },
 
 
@@ -211,16 +213,26 @@ export default new Vuex.Store({
     },
 
 
-    async entitySubmit({ state, dispatch }, { type, body }) {
-      const wallet = state.wallet
-      const path = "danieljdd.tpp.tpp"
+    async entitySubmit({ state, dispatch }, { type, fields, body }) {
+      const mnemonic = localStorage.getItem('mnemonic')
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+        mnemonic,
+        makeCosmoshubPath(0),
+        ADDRESS_PREFIX
+      )
+
+      //const wallet = state.wallet
+      //const path = "danieljdd.tpp.tpp"
       console.log("TESTwallet" + wallet )
       const type2 = type.charAt(0).toUpperCase() + type.slice(1)
-      const typeUrl = `/${path}.MsgCreate${type2}`;
+      const typeUrl = `/${PATH}.MsgCreate${type2}`;
       let MsgCreate = new Type(`MsgCreate${type2}`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
-     
-      console.log("registery" + registry );
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+      console.log(registry );
+      const [firstAccount] = await wallet.getAccounts();
       console.log("creator" + state.wallet.address);
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
@@ -239,40 +251,84 @@ export default new Vuex.Store({
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
       };
-     
+       const result = await client.signAndBroadcast(firstAccount.address, [msg], fee);
+        assertIsBroadcastTxSuccess(result);
+
+        console.log(result)
+
       try {
-        const path = "danieljdd.tpp.tpp".replace(/\./g, '/')
-        await client.signAndBroadcast(state.wallet.address, [msg], fee)
-        console.log(state.wallet.address, [msg], fee)
+        //const path = "danieljdd.tpp.tpp".replace(/\./g, '/')
+        
+        //console.log(data)
+        console.log(firstAccount.address, [msg], fee);
         await dispatch('entityFetch', {
-          type: type,
-          path: path
-        })
+          type: type
+        //  path: path
+        }
+        )
       } catch (e) {
         console.log(e)
       }
 
     },
 
-    /*async entitySubmit({ state }, { type, body }) {
-      const { chain_id } = state;
-      const creator = state.client.senderAddress;
-      const base_req = { chain_id, from: creator };
-      const req = { base_req, creator, ...body };
 
-      const { data } = await axios.post(`${API}/${chain_id}/${type}`, req)
-        .then(function ({ data }) {
-          const { msg, fee, memo } = data.value;
-          return state.client.signAndPost(msg, fee, memo);
+    async itemSubmit({ state, commit, dispatch }, { type, fields, body }) {
+      
+      const wallet = state.wallet
 
+      console.log("TESTwallet" + wallet )
+      const type2 = type.charAt(0).toUpperCase() + type.slice(1)
+      const typeUrl = `/${PATH}.MsgCreate${type2}`;
+      let MsgCreate = new Type(`MsgCreate${type2}`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+      console.log(registry );
+      const [firstAccount] = await wallet.getAccounts();
+      console.log("creator" + state.wallet.address);
+      const client = await SigningStargateClient.connectWithSigner(
+        RPC,
+        wallet,
+        { registry }
+      );
+      console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          creator: state.account.address,
+          ...body
+        }
+      };
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+      await dispatch('entityFetch', {
+        type: type
+      })
+      await dispatch("setCreatorItemList", state.account.address)
+      let creatoritems = state.creatorItemList || []
+      console.log(creatoritems)
+
+      try {
+        const result = await client.signAndBroadcast(firstAccount.address, [msg], fee);
+        assertIsBroadcastTxSuccess(result);
+        await dispatch('entityFetch', {
+          type: type
         })
-        .catch(error => {
-          this.errorMessage = error.message;
-          console.error("There was an error!", error)
-        });
+        await dispatch("setCreatorItemList", state.account.address)
+        let newcreatoritems = state.creatorItemList
 
-    },*/
+        let len = (creatoritems.length)
+        console.log((newcreatoritems[len].id))
+        commit('set', { key: 'newitemID', value: (newcreatoritems[len].id) })
+      } catch (e) {
+        console.log(e)
+      }
 
+    },
 
 
 
@@ -322,32 +378,9 @@ export default new Vuex.Store({
 
 
 
-    async itemSubmit({ state, commit }, { type, body }) {
-      const { chain_id } = state;
-      const creator = state.account.address
-      console.log(creator)
-      const base_req = { chain_id, from: creator };
-      const req = { base_req, creator, ...body };
-      console.log(req)
-      const { data } = await axios.post(`${API}/${chain_id}/${type}`, req)
-        .then(function ({ data }) {
-          const { msg, fee, memo } = data.value;
-          const itemid = msg[0].value.ID;
-          commit("createItemID", itemid);
-          return state.client.signAndBroadcast(msg, fee, memo);
-
-        })
-        .catch(error => {
-          this.errorMessage = error.message;
-          console.error("There was an error!", error)
-        });
-    },
-
-
-
     async setCreatorItemList({ commit, state }, input) {
       const rs = state.data.item.filter(item => item.creator === input
-      );
+      ) || [];
       commit("setCreatorItemList", rs);
 
     },

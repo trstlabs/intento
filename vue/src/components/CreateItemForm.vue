@@ -442,34 +442,37 @@ export default {
         this.flight = true;
         const type = { type: "item" };
        
-        /*const body = [
-          ["creator", 1, this.$store.state.account.address],
-            [ "title", 2, this.fields.title ] ,                                                    
-          ["description",  3,this.fields.description ],
-          ["shippingcost",  4, this.fields.shippingcost  ],
-           ["localpickup",  5, this.fields.localpickup],
-          ["estimationcounthash" ,  6, this.fields.estimationcount.toString() ],
-         ["tags", 7, this.selectedTags ],
-           ["condition",  8, this.fields.condition.toString() ],
-           ["shippingregion",  9, this.selectedCountries ],
+       const fields = [
+          ["creator", 1,'string', "optional"],
+           [ "title", 2,'string', "optional"] ,                                                    
+          ["description",3,'string', "optional"],
+         ["shippingcost",4,'int64', "optional"],
+          ["localpickup",5,'bool', "optional"],
+          ["estimationcounthash",6,'string', "optional" ],
+         ["tags", 7,'string', "repeated"],
+           ["condition",  8, 'int64', "optional"],
+           ["shippingregion",  9,'string', "repeated"],
       
-        ];*/
+        ];
+ //const body = [this.$store.state.account.address,"dsaf", "asdf", 33, 1, "sdfsdf", "asdf", 4, "sfda"]
         const body = {
-          
+          creator: this.$store.state.account.address,
             title: this.fields.title,                                                    
           description: this.fields.description,
           shippingcost: this.fields.shippingcost,
            localpickup: this.fields.localpickup,
-         estimationcounthash: this.fields.estimationcount.toString(),
+        estimationcount: this.fields.estimationcount,
          tags: this.selectedTags,
            condition: this.fields.condition,
-           shippingregion: this.selectedCountries ,
+          shippingregion: this.selectedTags,
       
         };
-
-        await this.$store.dispatch("entitySubmit", { ...type, body });
-        const payload = { ...type, body }
-        await this.$store.dispatch("entityFetch", payload);
+        
+        
+      
+        await this.$store.dispatch("itemSubmit", { ...type,fields, body });
+        //const payload = { ...type, body }
+        //await this.$store.dispatch("entityFetch", payload);
         //await this.$store.dispatch("accountUpdate");
        
         
@@ -481,9 +484,10 @@ export default {
         //this.fields.shippingcost = "";
        // this.fields.localpickup = false;
         //this.fields.estimationcount = "";
-        //this.itemid = await this.$store.state.newitemID;
-        //console.log(this.itemid);
-        //this.thisitem = await this.$store.getters.getItemByID(this.itemid);
+        this.itemid = await this.$store.state.newitemID;
+        //console.log()
+        console.log(this.itemid);
+        this.thisitem = await this.$store.getters.getItemByID(this.itemid);
         this.e1 = 2;
         this.showpreview = true;
         //alert("Submitted, find the item in the account section");

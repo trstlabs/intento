@@ -47,7 +47,7 @@ func (msg *MsgCreateItem) GetSignBytes() []byte {
 func (msg *MsgCreateItem) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "HELLOOOinvalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	return nil
 }
@@ -58,11 +58,8 @@ func NewMsgUpdateItem(creator string, id string, shippingcost int64, localpickup
 	return &MsgUpdateItem{
 		Id:                          id,
 		Creator:                     creator,
-
 		Shippingcost:                shippingcost,
 		Localpickup:                 localpickup,
-		
-
 		Shippingregion:              shippingregion,
 	}
 }
