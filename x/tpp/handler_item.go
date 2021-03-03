@@ -17,6 +17,9 @@ import (
 func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateItem) (*sdk.Result, error) {
 	k.CreateItem(ctx, *msg)
 
+			
+
+
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
