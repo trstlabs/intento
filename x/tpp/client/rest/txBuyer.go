@@ -19,7 +19,7 @@ type createBuyerRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
 	Buyer   string       `json:"creator"`
 	Itemid  string       `json:"itemid"`
-	Deposit string       `json:"deposit"`
+	Deposit int64        `json:"deposit"`
 }
 
 func createBuyerHandler(clientCtx client.Context) http.HandlerFunc {
@@ -29,7 +29,6 @@ func createBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
 			return
 		}
-
 
 		baseReq := req.BaseReq.Sanitize()
 		if !baseReq.ValidateBasic(w) {
@@ -46,11 +45,7 @@ func createBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 
 		//parsedDeposit := req.Deposit
 
-		parsedDeposit, err := sdk.ParseCoinNormalized(req.Deposit)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
+		parsedDeposit := req.Deposit
 
 		msg := types.NewMsgCreateBuyer(
 			req.Buyer,
@@ -58,18 +53,17 @@ func createBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 			parsedDeposit,
 		)
 
-
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
 	}
-	
+
 }
 
 type updateBuyerRequest struct {
-	BaseReq      rest.BaseReq `json:"base_req"`
-	Buyer      string       `json:"creator"`
+	BaseReq rest.BaseReq `json:"base_req"`
+	Buyer   string       `json:"creator"`
 	//Itemid       string       `json:"itemid"`
-	Transferable bool       `json:"transferable"`
-	Deposit      string       `json:"deposit"`
+	Transferable bool  `json:"transferable"`
+	Deposit      int64 `json:"deposit"`
 }
 
 func updateBuyerHandler(clientCtx client.Context) http.HandlerFunc {
@@ -97,11 +91,7 @@ func updateBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 
 		parsedTransferable := req.Transferable
 
-		parsedDeposit, err := sdk.ParseCoinNormalized(req.Deposit)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
+		parsedDeposit := req.Deposit
 
 		msg := types.NewMsgUpdateBuyer(
 			req.Buyer,
@@ -116,7 +106,7 @@ func updateBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 
 type deleteBuyerRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	Buyer string       `json:"creator"`
+	Buyer   string       `json:"creator"`
 }
 
 func deleteBuyerHandler(clientCtx client.Context) http.HandlerFunc {

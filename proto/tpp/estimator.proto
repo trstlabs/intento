@@ -23,8 +23,7 @@ message MsgCreateEstimator {
   int64 estimation = 2; 
   //string estimatorestimationhash = 3; 
   string itemid = 3; 
-  cosmos.base.v1beta1.Coin deposit = 4 [
-    (gogoproto.nullable) = false]; 
+  int64 deposit = 4 ;
   bool interested = 5; 
   string comment = 6; 
 }

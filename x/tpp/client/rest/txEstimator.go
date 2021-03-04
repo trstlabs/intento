@@ -1,4 +1,3 @@
-
 package rest
 
 import (
@@ -19,14 +18,14 @@ import (
 var _ = strconv.Itoa(42)
 
 type createEstimatorRequest struct {
-	BaseReq                 rest.BaseReq `json:"base_req"`
-	Estimator                 string       `json:"creator"`
-	Estimation              int64      `json:"estimation"`
+	BaseReq    rest.BaseReq `json:"base_req"`
+	Estimator  string       `json:"creator"`
+	Estimation int64        `json:"estimation"`
 	//Estimatorestimationhash string       `json:"estimatorestimationhash"`
-	Itemid                  string       `json:"itemid"`
-	Deposit                 string       `json:"deposit"`
-	Interested              bool       `json:"interested"`
-	Comment                 string       `json:"comment"`
+	Itemid     string `json:"itemid"`
+	Deposit    int64  `json:"deposit"`
+	Interested bool   `json:"interested"`
+	Comment    string `json:"comment"`
 	//Flag                    string       `json:"flag"`
 }
 
@@ -63,9 +62,8 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 		//var estimatorestimationhash = sha256.Sum256([]byte(estimatorestimation + req.Estimator))
 		//var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
 
-		depositamount := "5tpp"
-		deposit, _ := sdk.ParseCoinNormalized(depositamount)
-	
+		//depositamount := "5tpp"
+		deposit := req.Deposit
 
 		msg := types.NewMsgCreateEstimator(
 			req.Estimator,
@@ -75,7 +73,6 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			deposit,
 			parsedInterested,
 			parsedComment,
-
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
@@ -83,11 +80,10 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 }
 
 type updateEstimatorRequest struct {
-	BaseReq                 rest.BaseReq `json:"base_req"`
-	Estimator                 string       `json:"creator"`
-	Itemid                  string       `json:"itemid"`
-	Interested              bool       `json:"interested"`
-
+	BaseReq    rest.BaseReq `json:"base_req"`
+	Estimator  string       `json:"creator"`
+	Itemid     string       `json:"itemid"`
+	Interested bool         `json:"interested"`
 }
 
 func updateEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
@@ -111,23 +107,16 @@ func updateEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-
-
 		parsedItemid := id
-
-	
 
 		parsedInterested := req.Interested
 
-	
-
 		msg := types.NewMsgUpdateEstimator(
 			req.Estimator,
-			
-			parsedItemid,
-		
-			parsedInterested,
 
+			parsedItemid,
+
+			parsedInterested,
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
@@ -135,7 +124,7 @@ func updateEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 }
 
 type deleteEstimatorRequest struct {
-	BaseReq rest.BaseReq `json:"base_req"`
+	BaseReq   rest.BaseReq `json:"base_req"`
 	Estimator string       `json:"creator"`
 }
 

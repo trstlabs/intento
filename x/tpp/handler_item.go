@@ -1,12 +1,13 @@
 package tpp
 
 import (
-	"fmt"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"math"
 	"sort"
 	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/danieljdd/tpp/x/tpp/keeper"
@@ -17,21 +18,18 @@ import (
 func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateItem) (*sdk.Result, error) {
 	k.CreateItem(ctx, *msg)
 
-			
-
-
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgUpdateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdateItem) (*sdk.Result, error) {
 	var item = types.Item{
-		Creator:                     msg.Creator,
-		Id:                          msg.Id,
+		Creator: msg.Creator,
+		Id:      msg.Id,
 
-		Shippingcost:                msg.Shippingcost,
-		Localpickup:                 msg.Localpickup,
+		Shippingcost: msg.Shippingcost,
+		Localpickup:  msg.Localpickup,
 
-		Shippingregion:              msg.Shippingregion,
+		Shippingregion: msg.Shippingregion,
 	}
 
 	// Checks that the element exists
@@ -57,10 +55,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
 
-	item:= k.GetItem(ctx, msg.Id)
-	
-
-
+	item := k.GetItem(ctx, msg.Id)
 
 	if item.Status != "" && item.Buyer == "" {
 
@@ -70,7 +65,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 
 			k.DeleteEstimator(ctx, key)
 		}
-	
+
 		item.Title = "Deleted"
 		item.Description = ""
 		item.Shippingcost = 0
@@ -89,46 +84,39 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 		item.Tags = nil
 		item.Condition = 0
 		item.Shippingregion = nil
-		
 
 		k.SetItem(ctx, item)
 
-	}else{
+	} else {
 
-	//if estimation is made pay back all the estimators/or buyer (like handlerItemTransfer)
-	//has to be a new function
-	for _, element := range item.Estimatorlist {
-		//apply this to each element
-		key := msg.Id + "-" + element
+		//if estimation is made pay back all the estimators/or buyer (like handlerItemTransfer)
+		//has to be a new function
+		for _, element := range item.Estimatorlist {
+			//apply this to each element
+			key := msg.Id + "-" + element
 
-		k.DeleteEstimator(ctx, key)
+			k.DeleteEstimator(ctx, key)
 
-		
-	}
+		}
 
-	k.DeleteItem(ctx, msg.Id)
+		k.DeleteItem(ctx, msg.Id)
 	}
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-
-
-
 func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgRevealEstimation) (*sdk.Result, error) {
 
 	item := k.GetItem(ctx, msg.Itemid)
-
 
 	if item.Estimatorlist == nil {
 		return nil, sdkerrors.Wrap(nil, "Item does not have estimators ")
 	}
 
-	
 	//[optional idea]can maybe replace estimatorlist hash with estimatorestimationlist hash to reduce computation
 	var estimatorlistlen = len(item.Estimatorlist)
 	var estimatorlistlenstring = strconv.Itoa(estimatorlistlen)
-	var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlenstring))
+	var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlenstring + item.Creator))
 	var estimatorlisthashstring = hex.EncodeToString(estimatorlistlenhash[:])
 
 	if estimatorlisthashstring != item.Estimationcounthash {
@@ -138,17 +126,16 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	if item.Bestestimator != "" {
 		return nil, sdkerrors.Wrap(nil, "item already has an estimation price")
 	}
-	
+
 	//remove item when it is flagged a lot w/ at least three estimators
-	if (int64(estimatorlistlen) / 2) < item.Flags && estimatorlistlen > 3 {
-	
+	if (int64(estimatorlistlen)/2) < item.Flags && estimatorlistlen > 3 {
 
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
-		
+
 			key := msg.Itemid + "-" + element
 			k.DeleteEstimator(ctx, key)
-			
+
 		}
 		item.Bestestimator = ""
 		item.Lowestestimator = ""
@@ -203,7 +190,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	for _, element := range item.Estimatorlist {
 		//apply this to each element
 		key := msg.Itemid + "-" + element
-		estimator:= k.GetEstimator(ctx, key)
+		estimator := k.GetEstimator(ctx, key)
 
 		//finding out if the creator of the estimation belongs to the best estimated price
 		var estimatorestimation = []byte(strconv.FormatInt(median, 10) + estimator.Estimator)
@@ -221,15 +208,13 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 
 	}
 
-	
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
-
 
 func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemTransferable) (*sdk.Result, error) {
 	//check if item exists
 	item := k.GetItem(ctx, msg.Itemid)
-	
+
 	//check if message creator is item creator
 	if msg.Creator != k.GetItemOwner(ctx, msg.Itemid) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
@@ -247,16 +232,12 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 			//apply this to each element
 			key := msg.Itemid + "-" + element
 			estimator := k.GetEstimator(ctx, key)
-			
-			if estimator.Estimator != item.Lowestestimator {
-				
-					k.DeleteEstimator(ctx, key)
-				
-			}
 
-				
-			
-			
+			if estimator.Estimator != item.Lowestestimator {
+
+				k.DeleteEstimator(ctx, key)
+
+			}
 
 		}
 		//item.TransferBool = msg.TransferBool
@@ -274,8 +255,6 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		k.SetItem(ctx, item)
 	}
 
-	
-
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
@@ -286,11 +265,9 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 	}
 	//get buyer info
 	buyer := k.GetBuyer(ctx, msg.Itemid)
-	
 
 	//get item info
 	item := k.GetItem(ctx, msg.Itemid)
-	
 
 	//check if item.transferable = true and therefore the creator has accepted the buyer
 	////[to do] in case this is false the prepayment will  be returned, item.buyer will be gone. this shall be in another function
@@ -325,21 +302,19 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		//make payment to creator and estimator
 		paymentCreatorCoins := sdk.NewCoin("tpp", CreaterPayoutAndShipping)
 		paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
-		
 
 		k.HandlePrepayment(ctx, item.Creator, paymentCreatorCoins)
 		k.HandlePrepayment(ctx, item.Bestestimator, paymentRewardCoins)
-		
+
 		//refund the deposits back to all of the item estimators
 		for _, element := range item.Estimatorlist {
 			key := msg.Itemid + "-" + element
-	
+
 			k.DeleteEstimator(ctx, key)
 		}
 
-		
 		item.Bestestimator = ""
-		item.Lowestestimator = "" 
+		item.Lowestestimator = ""
 		item.Highestestimator = ""
 		item.Estimatorlist = nil
 
@@ -351,20 +326,17 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 	if msg.Tracking == false {
 		repayment := bigintestimationprice.Add(bigintshipping)
 		repaymentCoins := sdk.NewCoin("tpp", repayment)
-		
+
 		k.HandlePrepayment(ctx, item.Buyer, repaymentCoins)
-		
-	
 
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
 			key := msg.Itemid + "-" + element
 			estimator := k.GetEstimator(ctx, key)
-			
+
 			if estimator.Estimator != item.Lowestestimator {
 				k.DeleteEstimator(ctx, key)
 			}
-			
 
 		}
 
@@ -373,9 +345,5 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		k.SetBuyer(ctx, buyer)
 	}
 
-	
-
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
-
-

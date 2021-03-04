@@ -567,7 +567,7 @@ this.loadItemPhotos();
         this.flight = true;
         this.loadingitem = true;
         const type = { type: "estimator" };
-        const body = { estimation: estimation, itemid: itemid, interested: interested, deposit: "5tpp",  comment: comment };
+        const body = { estimation: estimation, itemid: itemid, interested: interested, comment: comment };
         
         await this.$store.dispatch("estimationSubmit", { ...type, body });
         console.log("success!")
@@ -656,9 +656,14 @@ this.loadItemPhotos();
         this.estimation = "";
         this.comment = "";
         this.getNewItemByIndex();
-         const type = { type: "item/reveal" };
+         const fields = [
+        ["creator", 1,'string', "optional"],
+         [ "itemid", 2,'string', "optional"] ,                                                    
+  
+      ];
+        // const type = { type: "item" };
         const body = { itemid: itemid };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
+        await this.$store.dispatch("revealSubmit", { body, fields });
         
         
         

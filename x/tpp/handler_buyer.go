@@ -2,6 +2,7 @@ package tpp
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/danieljdd/tpp/x/tpp/keeper"
@@ -13,11 +14,8 @@ import (
 func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateBuyer) (*sdk.Result, error) {
 	//get item info
 
-	
-
-
 	item := k.GetItem(ctx, msg.Itemid)
-	
+
 	//check if item has a best estimator (and therefore a complete estimation)
 	if item.Bestestimator == "" {
 		return nil, sdkerrors.Wrap(nil, "item does not have estimation yet, cannot make prepayment")
@@ -25,12 +23,12 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 
 	//check if item is transferable
 	if item.Transferable != true {
-		return nil, sdkerrors.Wrap(nil,"item  not transferable, cannot make prepayment")
+		return nil, sdkerrors.Wrap(nil, "item  not transferable, cannot make prepayment")
 	}
 
 	//check if item has a buyer already
 	if item.Buyer != "" {
-		return nil, sdkerrors.Wrap(nil,"item already has a buyer, cannot make prepayment")
+		return nil, sdkerrors.Wrap(nil, "item already has a buyer, cannot make prepayment")
 	}
 
 	/*	ToPayLocal := item.EstimationPrice
@@ -45,12 +43,11 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 
 	if item.Shippingcost > 0 && item.Localpickup == false {
 		toPayShipping := item.Estimationprice + item.Shippingcost
-		depositCoinsShipping := sdk.NewInt64Coin("tpp", toPayShipping)
-		equal := depositCoinsShipping.IsEqual(msg.Deposit)
-		if equal == false {
+		if toPayShipping != msg.Deposit {
+
 			return nil, sdkerrors.Wrap(nil, "deposit insufficient, cannot make prepayment")
 		}
-		
+
 		item.Buyer = msg.Buyer
 
 		k.SetItem(ctx, item)
@@ -60,14 +57,13 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 
 	if item.Shippingcost == 0 && item.Localpickup == true {
 		toPayLocal := item.Estimationprice
-		depositCoinsLocal := sdk.NewInt64Coin("tpp", toPayLocal)
-		equallocal := depositCoinsLocal.IsEqual(msg.Deposit)
-		if equallocal == false {
+		if toPayLocal != msg.Deposit {
+
 			return nil, sdkerrors.Wrap(nil, "deposit insufficient, cannot make prepayment")
 		}
-	
+
 		item.Buyer = msg.Buyer
-	
+
 		k.SetItem(ctx, item)
 		k.CreateBuyer(ctx, *msg)
 
@@ -75,45 +71,45 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 
 	if item.Shippingcost > 0 && item.Localpickup == true {
 		toPayLocal := item.Estimationprice
-		depositCoinsLocal := sdk.NewInt64Coin("tpp", toPayLocal)
-		equallocal := depositCoinsLocal.IsEqual(msg.Deposit)
-		if equallocal == true {
+		if toPayLocal == msg.Deposit {
+
 			//ModuleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-			
+
 			item.Shippingcost = 0
 			item.Buyer = msg.Buyer
-		
+
 			k.SetItem(ctx, item)
 			k.CreateBuyer(ctx, *msg)
 
 		} else {
-		toPayShipping :=
-			item.Estimationprice + item.Shippingcost
-		depositCoinsShipping := sdk.NewInt64Coin("tpp", toPayShipping)
-		equalshipping := depositCoinsShipping.IsEqual(msg.Deposit)
-		if equalshipping == true {
-			item.Localpickup = false
-			item.Buyer = msg.Buyer
-		
-			k.SetItem(ctx, item)
-			k.CreateBuyer(ctx, *msg)
-		} }
-		
-	} 
-	
-		//k.CreateBuyer(ctx, *msg)
+			toPayShipping :=
+				item.Estimationprice + item.Shippingcost
+
+			if toPayShipping == msg.Deposit {
+				item.Localpickup = false
+				item.Buyer = msg.Buyer
+
+				k.SetItem(ctx, item)
+				k.CreateBuyer(ctx, *msg)
+			}
+		}
+
+	}
+
+	//k.CreateBuyer(ctx, *msg)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-
 func handleMsgUpdateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdateBuyer) (*sdk.Result, error) {
+	deposit := sdk.NewInt64Coin("tpp", msg.Deposit)
+
 	var buyer = types.Buyer{
-		Buyer:      msg.Buyer,
+		Buyer: msg.Buyer,
 
 		Itemid:       msg.Itemid,
 		Transferable: msg.Transferable,
-		Deposit:      msg.Deposit,
+		Deposit:      deposit,
 	}
 
 	// Checks that the element exists
@@ -125,7 +121,7 @@ func handleMsgUpdateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdate
 	if msg.Buyer != k.GetBuyerOwner(ctx, msg.Itemid) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
-	
+
 	k.SetBuyer(ctx, buyer)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
@@ -144,8 +140,6 @@ func handleMsgDeleteBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDelete
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-
-
 func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemTransfer) (*sdk.Result, error) {
 	//check if message creator is item creator
 	if msg.Buyer != k.GetBuyerOwner(ctx, msg.Itemid) {
@@ -153,11 +147,10 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 	}
 	//get buyer info
 	buyer := k.GetBuyer(ctx, msg.Itemid)
-	
 
 	//get item info
 	item := k.GetItem(ctx, msg.Itemid)
-	
+
 	//check if item.transferable = true and therefore the creator has accepted the buyer
 
 	if item.Transferable == false {
@@ -176,35 +169,33 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 
 	if msg.Transferable == true {
 		bigintestimationprice := sdk.NewInt(item.Estimationprice)
-			//rounded down percentage for the item creator
-			percentageCreator := sdk.NewDecWithPrec(97, 2)
-			//itemPrice := sdk.NewDecFromInt(item.EstimationPrice)
-			paymentCreator := percentageCreator.MulInt(bigintestimationprice)
-			roundedAmountCreaterPayout := paymentCreator.TruncateInt()
-	
-			//rounded up percentage as a reward for the estimator
-			percentageReward := sdk.NewDecWithPrec(3, 2)
-			paymentReward := percentageReward.MulInt(bigintestimationprice)
-			roundedAmountReward := paymentReward.Ceil().TruncateInt()
-	
-			//make payment to creator and estimator
-			paymentCreatorCoins := sdk.NewCoin("tpp", roundedAmountCreaterPayout)
-			paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
-			
-	
-			k.HandlePrepayment(ctx, item.Creator, paymentCreatorCoins)
-			k.HandlePrepayment(ctx, item.Bestestimator, paymentRewardCoins)
-			
-			//refund the deposits back to all of the item estimators
-			for _, element := range item.Estimatorlist {
-				key := msg.Itemid + "-" + element
-		
-				k.DeleteEstimator(ctx, key)
-			}
+		//rounded down percentage for the item creator
+		percentageCreator := sdk.NewDecWithPrec(97, 2)
+		//itemPrice := sdk.NewDecFromInt(item.EstimationPrice)
+		paymentCreator := percentageCreator.MulInt(bigintestimationprice)
+		roundedAmountCreaterPayout := paymentCreator.TruncateInt()
 
+		//rounded up percentage as a reward for the estimator
+		percentageReward := sdk.NewDecWithPrec(3, 2)
+		paymentReward := percentageReward.MulInt(bigintestimationprice)
+		roundedAmountReward := paymentReward.Ceil().TruncateInt()
+
+		//make payment to creator and estimator
+		paymentCreatorCoins := sdk.NewCoin("tpp", roundedAmountCreaterPayout)
+		paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
+
+		k.HandlePrepayment(ctx, item.Creator, paymentCreatorCoins)
+		k.HandlePrepayment(ctx, item.Bestestimator, paymentRewardCoins)
+
+		//refund the deposits back to all of the item estimators
+		for _, element := range item.Estimatorlist {
+			key := msg.Itemid + "-" + element
+
+			k.DeleteEstimator(ctx, key)
+		}
 
 		item.Bestestimator = ""
-		item.Lowestestimator = "" 
+		item.Lowestestimator = ""
 		item.Highestestimator = ""
 		item.Estimatorlist = nil
 		item.Status = "Item transferred"
@@ -213,26 +204,22 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 	}
 
 	if msg.Transferable == false {
-	
-		
+
 		k.HandlePrepayment(ctx, item.Buyer, buyer.Deposit)
-		
-	
 
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
 			key := msg.Itemid + "-" + element
 			estimator := k.GetEstimator(ctx, key)
-			
+
 			if estimator.Estimator != item.Lowestestimator {
 				k.DeleteEstimator(ctx, key)
 			}
-			
 
 		}
 
 		item.Bestestimator = ""
-		item.Lowestestimator = "" 
+		item.Lowestestimator = ""
 		item.Highestestimator = ""
 		item.Estimatorlist = nil
 		item.Status = "Item transfer declined"
@@ -240,10 +227,5 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 		k.SetBuyer(ctx, buyer)
 	}
 
-	
-
-	
-
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
-

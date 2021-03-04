@@ -5,7 +5,8 @@ import axios from "axios";
 import app from "./app.js";
 
 //import cosmos from "@tendermint/vue/src/store/cosmos.js";
-import { assertIsBroadcastTxSuccess, makeCosmoshubPath, coins } from '@cosmjs/launchpad'
+import { assert } from "@cosmjs/utils";
+import { assertIsBroadcastTxSuccess, makeCosmoshubPath, coin } from '@cosmjs/launchpad'
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 import { Type, Field } from 'protobufjs';
@@ -211,9 +212,6 @@ export default new Vuex.Store({
         ADDRESS_PREFIX
       )
 
-      //const wallet = state.wallet
-      //const path = "danieljdd.tpp.tpp"
-      //console.log("TESTwallet" + wallet )
       const type2 = type.charAt(0).toUpperCase() + type.slice(1)
       const typeUrl = `/${PATH}.MsgCreate${type2}`;
       let MsgCreate = new Type(`MsgCreate${type2}`);
@@ -275,16 +273,15 @@ export default new Vuex.Store({
       fields.forEach(f => {
         MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
       })
-      console.log(registry );
-      console.log(MsgCreate)
+
       const [firstAccount] = await wallet.getAccounts();
-      console.log("creator" + state.wallet.address);
+
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
         wallet,
         { registry }
       );
-      console.log("TEST" + client)
+
       const msg = {
         typeUrl,
         value: {
@@ -292,6 +289,7 @@ export default new Vuex.Store({
           ...body
         }
       };
+
       const fee = {
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
@@ -328,7 +326,6 @@ export default new Vuex.Store({
         makeCosmoshubPath(0),
         ADDRESS_PREFIX
       )
-
       const type2 = type.charAt(0).toUpperCase() + type.slice(1)
       const typeUrl = `/${PATH}.MsgCreate${type2}`;
       let MsgCreate = new Type(`MsgCreate${type2}`);
@@ -337,19 +334,16 @@ export default new Vuex.Store({
         ["estimator", 1,'string', "optional"],
          [ "estimation", 2,'int64', "optional"] ,                                                    
         ["itemid",3,'string', "optional"],
-        ["deposit", 4, 'string', "optional"],
+       ["deposit", 4, "int64", "optional"],
         ["interested",5,'bool', "optional"],
-        ["comment",6,'string', "optional" ],
-        
-        
+        ["comment",6,'string', "optional" ],  
       ];
 console.log(fields)
 fields.forEach(f => {
-  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2]))
+  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
 })
 console.log(MsgCreate)
       //console.log(registry );
-      const [firstAccount] = await wallet.getAccounts();
       //console.log("creator" + state.wallet.address);
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
@@ -361,24 +355,23 @@ console.log(MsgCreate)
         typeUrl,
         value: {
           estimator: state.account.address,
-          deposit: coins(5, "token"),
+          deposit: 5,
           ...body
         }
       };
+      
+      console.log(msg)
       const fee = {
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
       };
-       const result = await client.signAndBroadcast(firstAccount.address, [msg], fee);
+       const result = await client.signAndBroadcast(state.account.address, [msg], fee);
         assertIsBroadcastTxSuccess(result);
 
         console.log(result)
 
       try {
-        //const path = "danieljdd.tpp.tpp".replace(/\./g, '/')
-        
-        //console.log(data)
-        //console.log(firstAccount.address, [msg], fee);
+    
         await dispatch('entityFetch', {
           type: type
         //  path: path
@@ -390,6 +383,92 @@ console.log(MsgCreate)
 
     },
 
+
+    async revealSubmit({ state }, { body, fields }) {
+      const mnemonic = localStorage.getItem('mnemonic')
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+        mnemonic,
+        makeCosmoshubPath(0),
+        ADDRESS_PREFIX
+      )
+     
+      const typeUrl = `/${PATH}.MsgRevealEstimation`;
+      let MsgCreate = new Type(`MsgRevealEstimation`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+
+fields.forEach(f => {
+  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+})
+
+      const client = await SigningStargateClient.connectWithSigner(
+        RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          creator: state.account.address,
+          ...body
+        }
+      };
+      
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+       //const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+        //assertIsBroadcastTxSuccess(result);
+        await client.signAndBroadcast(state.account.address, [msg], fee);
+       
+      
+
+    },
+
+    async transferableSubmit({ state }, { body, fields }) {
+      const mnemonic = localStorage.getItem('mnemonic')
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+        mnemonic,
+        makeCosmoshubPath(0),
+        ADDRESS_PREFIX
+      )
+     
+      const typeUrl = `/${PATH}.MsgItemTransferable`;
+      let MsgCreate = new Type(`MsgItemTransferable`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+
+fields.forEach(f => {
+  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+})
+
+      const client = await SigningStargateClient.connectWithSigner(
+        RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          creator: state.account.address,
+          ...body
+        }
+      };
+      
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+        
+       const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+        assertIsBroadcastTxSuccess(result);
+        alert(" Placed! ");
+      
+
+    },
 
 
     //for a delete request [cors error in development]

@@ -3,9 +3,10 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	//"github.com/tendermint/tendermint/crypto"
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/danieljdd/tpp/x/tpp/types"
-	"strconv"
 )
 
 // GetBuyerCount get the total number of buyer
@@ -41,12 +42,14 @@ func (k Keeper) SetBuyerCount(ctx sdk.Context, count int64) {
 func (k Keeper) CreateBuyer(ctx sdk.Context, msg types.MsgCreateBuyer) {
 	// Create the buyer
 	count := k.GetBuyerCount(ctx)
+	deposit := sdk.NewInt64Coin("tpp", msg.Deposit)
+
 	var buyer = types.Buyer{
-		Buyer:      msg.Buyer,
-		
-		Itemid:       msg.Itemid,
-		
-		Deposit:      msg.Deposit,
+		Buyer: msg.Buyer,
+
+		Itemid: msg.Itemid,
+
+		Deposit: deposit,
 	}
 
 	buyeraddress, err := sdk.AccAddressFromBech32(msg.Buyer)
@@ -55,10 +58,8 @@ func (k Keeper) CreateBuyer(ctx sdk.Context, msg types.MsgCreateBuyer) {
 	}
 	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, buyeraddress, types.ModuleName, sdk.NewCoins(msg.Deposit))
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, buyeraddress, types.ModuleName, sdk.NewCoins(deposit))
 	//sdkError := bankkeeper.keeper.SendCoinsFromAccountToModule(ctx, buyer, ModuleAcct, depositCoinsShipping)
-
-
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BuyerKey))
 	key := types.KeyPrefix(types.BuyerKey + buyer.Itemid)
@@ -71,6 +72,7 @@ func (k Keeper) CreateBuyer(ctx sdk.Context, msg types.MsgCreateBuyer) {
 
 // SetBuyer set a specific buyer in the store
 func (k Keeper) SetBuyer(ctx sdk.Context, buyer types.Buyer) {
+
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BuyerKey))
 	b := k.cdc.MustMarshalBinaryBare(&buyer)
 	store.Set(types.KeyPrefix(types.BuyerKey+buyer.Itemid), b)

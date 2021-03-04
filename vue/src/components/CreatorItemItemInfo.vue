@@ -348,24 +348,7 @@
                       item. Meanwhile... help others by estimating other items
                       (and earn tokens)!
                     </p>
-                    <!-- <v-btn
-                      v-if="
-                        thisitem.bestestimator === '' &&
-                        getThisItem &&
-                        !flightre &&
-                        thisitem.transferable != true &&
-                        thisitem.buyer === ''
-                      "
-                      @click="submitrevealestimation(thisitem.id), getThisItem"
-                    >
-                      Reveal Item Estimation Price
-                      <div class="button__label" v-if="flightre">
-                        <div class="button__label__icon">
-                          <icon-refresh />
-                        </div>
-                        Sending transaction...
-                      </div>
-                    </v-btn>-->
+                    
                   
                 </v-stepper-content>
 
@@ -678,7 +661,7 @@ export default {
       return this.thisitem();
       
     },
-    async submititemtransferable(transferbool, itemid) {
+    async submititemtransferable(transferable, itemid) {
       if (this.valid && !this.flightit && this.hasAddress) {
        /* if (transferbool === true) {
           this.flightit = true;
@@ -688,30 +671,26 @@ export default {
         }*/
         this.flightit = true;
         this.flightitn = true; 
-        const type = { type: "item/transferable" };
-        const body = { transferbool, itemid };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
+         const fields = [
+        ["creator", 1,'string', "optional"],
+        ["transferable",2,'bool', "optional"],
+         [ "itemid", 3,'string', "optional"] ,                                                    
+     
+      ];
+        const body = { transferable, itemid };
+        await this.$store.dispatch("transferableSubmit", {  body, fields});
         //await this.$store.dispatch("entityFetch", type);
         //await this.$store.dispatch("accountUpdate");
 
          const thisitemcheck = await this.$store.getters.getItemByID(this.thisitem.id);
-        
-        console.log(thisitemcheck);
-        if (thisitemcheck.transferbool) {
-          alert("Item Placed ");
-        }
-        
       
-
-
-
-
+      
 
 
         //this.flightit = false;
         //this.flightitn = false;
         //this.deposit = "";
-        alert("Transaction sent");
+   
       }
     },
     async submitItemShipping(tracking, itemid) {

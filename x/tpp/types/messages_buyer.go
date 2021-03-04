@@ -8,12 +8,12 @@ import (
 
 var _ sdk.Msg = &MsgCreateBuyer{}
 
-func NewMsgCreateBuyer(buyer string, itemid string, deposit sdk.Coin) *MsgCreateBuyer {
+func NewMsgCreateBuyer(buyer string, itemid string, deposit int64) *MsgCreateBuyer {
 	return &MsgCreateBuyer{
-		Buyer:      buyer,
-		Itemid:       itemid,
+		Buyer:  buyer,
+		Itemid: itemid,
 		//Transferable: transferable,
-		Deposit:      deposit,
+		Deposit: deposit,
 	}
 }
 
@@ -48,10 +48,10 @@ func (msg *MsgCreateBuyer) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgUpdateBuyer{}
 
-func NewMsgUpdateBuyer(buyer string, itemid string, transferable bool, deposit sdk.Coin) *MsgUpdateBuyer {
+func NewMsgUpdateBuyer(buyer string, itemid string, transferable bool, deposit int64) *MsgUpdateBuyer {
 	return &MsgUpdateBuyer{
 
-		Buyer:      buyer,
+		Buyer:        buyer,
 		Itemid:       itemid,
 		Transferable: transferable,
 		Deposit:      deposit,
@@ -91,8 +91,8 @@ var _ sdk.Msg = &MsgCreateBuyer{}
 
 func NewMsgDeleteBuyer(buyer string, itemid string) *MsgDeleteBuyer {
 	return &MsgDeleteBuyer{
-		Itemid:      itemid,
-		Buyer: buyer,
+		Itemid: itemid,
+		Buyer:  buyer,
 	}
 }
 func (msg *MsgDeleteBuyer) Route() string {
@@ -124,13 +124,11 @@ func (msg *MsgDeleteBuyer) ValidateBasic() error {
 	return nil
 }
 
-
 func NewMsgItemTransfer(buyer string, itemid string, transferable bool) *MsgItemTransfer {
 	return &MsgItemTransfer{
-		Buyer:      buyer,
+		Buyer:        buyer,
 		Itemid:       itemid,
 		Transferable: transferable,
-
 	}
 }
 

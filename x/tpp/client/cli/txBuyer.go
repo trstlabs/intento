@@ -1,12 +1,13 @@
 package cli
 
 import (
-	"github.com/spf13/cobra"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/spf13/cobra"
 	//"cosmos/base/v1beta1/coin.proto"
 )
 
@@ -17,15 +18,15 @@ func CmdCreateBuyer() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsItemid := string(args[0])
-			
-			argsDeposit, _ := sdk.ParseCoinNormalized(args[2])
+
+			argsDeposit, _ := strconv.ParseInt(args[2], 10, 64)
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCreateBuyer(clientCtx.GetFromAddress().String(), string(argsItemid), sdk.Coin(argsDeposit))
+			msg := types.NewMsgCreateBuyer(clientCtx.GetFromAddress().String(), string(argsItemid), int64(argsDeposit))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -50,14 +51,13 @@ func CmdUpdateBuyer() *cobra.Command {
 			if args[2] == "1" {
 				argsTransferable = true
 			}
-			argsDeposit,_ := sdk.ParseCoinNormalized(args[3])
-
+			argsDeposit, _ := strconv.ParseInt(args[3], 10, 64)
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgUpdateBuyer(clientCtx.GetFromAddress().String(), string(argsItemid), bool(argsTransferable), sdk.Coin(argsDeposit))
+			msg := types.NewMsgUpdateBuyer(clientCtx.GetFromAddress().String(), string(argsItemid), bool(argsTransferable), int64(argsDeposit))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

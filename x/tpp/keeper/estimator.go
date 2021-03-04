@@ -4,9 +4,10 @@ import (
 	//"github.com/tendermint/tendermint/crypto"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	
-	"github.com/danieljdd/tpp/x/tpp/types"
+
 	"strconv"
+
+	"github.com/danieljdd/tpp/x/tpp/types"
 )
 
 // GetEstimatorCount get the total number of estimator
@@ -42,34 +43,29 @@ func (k Keeper) SetEstimatorCount(ctx sdk.Context, count int64) {
 func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
 	// Create the estimator
 	count := k.GetEstimatorCount(ctx)
+	deposit := sdk.NewInt64Coin("tpp", msg.Deposit)
 	var estimator = types.Estimator{
-		Estimator:                 msg.Estimator,
-		Estimation:              msg.Estimation,
+		Estimator:  msg.Estimator,
+		Estimation: msg.Estimation,
 		//Estimatorestimationhash: msg.Estimatorestimationhash,
-		Itemid:                  msg.Itemid,
-		Deposit:                 msg.Deposit,
-		Interested:              msg.Interested,
-		Comment:                 msg.Comment,
+		Itemid:     msg.Itemid,
+		Deposit:    deposit,
+		Interested: msg.Interested,
+		Comment:    msg.Comment,
 	}
-
 
 	estimatoraddress, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
 		panic(err)
 	}
-	
-/*
-	moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-	Test := moduleAcct.String()*/
-	Coins := sdk.NewCoins(msg.Deposit)
+
+	Coins := sdk.NewCoins(deposit)
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, types.ModuleName, Coins)
-
 
 	//if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, moduleAcct.String(), ); err != nil {
 	//	panic(err)
 	//}
-
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 	key := types.KeyPrefix(types.EstimatorKey + estimator.Itemid + "-" + estimator.Estimator)
@@ -84,7 +80,7 @@ func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
 func (k Keeper) SetEstimator(ctx sdk.Context, estimator types.Estimator) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 	b := k.cdc.MustMarshalBinaryBare(&estimator)
-	store.Set(types.KeyPrefix(types.EstimatorKey+estimator.Itemid + "-" + estimator.Estimator), b)
+	store.Set(types.KeyPrefix(types.EstimatorKey+estimator.Itemid+"-"+estimator.Estimator), b)
 }
 
 // GetEstimator returns a estimator from its key
@@ -107,7 +103,7 @@ func (k Keeper) GetEstimatorOwner(ctx sdk.Context, key string) string {
 }
 
 // DeleteEstimator deletes a estimator
-func (k Keeper) DeleteEstimator(ctx sdk.Context, key string){
+func (k Keeper) DeleteEstimator(ctx sdk.Context, key string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 	var estimator types.Estimator
 	k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+key)), &estimator)
@@ -117,8 +113,7 @@ func (k Keeper) DeleteEstimator(ctx sdk.Context, key string){
 	}
 	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatoraddress, sdk.NewCoins(estimator.Deposit))
-	
-	
+
 	store.Delete(types.KeyPrefix(types.EstimatorKey + key))
 }
 

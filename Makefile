@@ -24,3 +24,12 @@ go.sum: go.mod
 
 test:
 	@go test -mod=readonly $(PACKAGES)
+
+
+###############################################################################
+###                                Protobuf                                 ###
+###############################################################################
+proto-all: proto-gen proto-lint proto-check-breaking
+
+
+

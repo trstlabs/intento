@@ -8,16 +8,15 @@ import (
 
 var _ sdk.Msg = &MsgCreateEstimator{}
 
-func NewMsgCreateEstimator(estimator string, estimation int64, itemid string, deposit sdk.Coin, interested bool, comment string) *MsgCreateEstimator {
+func NewMsgCreateEstimator(estimator string, estimation int64, itemid string, deposit int64, interested bool, comment string) *MsgCreateEstimator {
 	return &MsgCreateEstimator{
-		Estimator:                 estimator,
-		Estimation:              estimation,
+		Estimator:  estimator,
+		Estimation: estimation,
 		//Estimatorestimationhash: estimatorestimationhash,
-		Itemid:                  itemid,
-		Deposit:                 deposit,
-		Interested:              interested,
-		Comment:                 comment,
-
+		Itemid:     itemid,
+		Deposit:    deposit,
+		Interested: interested,
+		Comment:    comment,
 	}
 }
 
@@ -52,13 +51,12 @@ func (msg *MsgCreateEstimator) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgUpdateEstimator{}
 
-func NewMsgUpdateEstimator(estimator string, itemid string,  interested bool) *MsgUpdateEstimator {
+func NewMsgUpdateEstimator(estimator string, itemid string, interested bool) *MsgUpdateEstimator {
 	return &MsgUpdateEstimator{
-		Itemid:                      itemid,
-		Estimator:                 estimator,
-		
-		Interested:              interested,
+		Itemid:    itemid,
+		Estimator: estimator,
 
+		Interested: interested,
 	}
 }
 
@@ -95,7 +93,7 @@ var _ sdk.Msg = &MsgCreateEstimator{}
 
 func NewMsgDeleteEstimator(estimator string, itemid string) *MsgDeleteEstimator {
 	return &MsgDeleteEstimator{
-		Itemid:      itemid,
+		Itemid:    itemid,
 		Estimator: estimator,
 	}
 }
@@ -128,14 +126,11 @@ func (msg *MsgDeleteEstimator) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgCreateFlag(estimator string,  flag bool, itemid string) *MsgCreateFlag {
+func NewMsgCreateFlag(estimator string, flag bool, itemid string) *MsgCreateFlag {
 	return &MsgCreateFlag{
-		Itemid:                      itemid,
-		Flag: flag,
-		Estimator:                 estimator,
-		
-	
-
+		Itemid:    itemid,
+		Flag:      flag,
+		Estimator: estimator,
 	}
 }
 
