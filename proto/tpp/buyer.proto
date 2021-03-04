@@ -26,7 +26,7 @@ message MsgUpdateBuyer {
   string buyer = 1;
   string itemid = 2; 
   bool transferable = 3; 
-  int64 deposit = 4 ; 
+  int64 deposit = 4; 
 }
 
 message MsgDeleteBuyer {
