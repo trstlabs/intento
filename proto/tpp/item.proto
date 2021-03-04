@@ -1,11 +1,13 @@
 syntax = "proto3";
 package danieljdd.tpp.tpp;
 
-option go_package = "github.com/danieljdd/tpp/x/tpp/types";
-
 import "gogoproto/gogo.proto";
 //import "tpp/estimator.proto";
 import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/danieljdd/tpp/x/tpp/types";
+
+
 message Item {
   string creator = 1;
   string id = 2;
