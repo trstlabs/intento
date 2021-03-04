@@ -1,10 +1,12 @@
 syntax = "proto3";
 package danieljdd.tpp.tpp;
 
-option go_package = "github.com/danieljdd/tpp/x/tpp/types";
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/danieljdd/tpp/x/tpp/types";
+
 
 message Estimator {
   string estimator = 1;
@@ -23,7 +25,7 @@ message MsgCreateEstimator {
   int64 estimation = 2; 
   //string estimatorestimationhash = 3; 
   string itemid = 3; 
-  int64 deposit = 4 ;
+  int64 deposit = 4;
   bool interested = 5; 
   string comment = 6; 
 }
