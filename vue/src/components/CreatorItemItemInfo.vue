@@ -9,12 +9,12 @@
         <div class="pa-2 mx-auto">
           
 
-          <v-row> <p class="pa-2 h3 font-weight-medium "> {{ thisitem.title }} </p><v-spacer /> <v-btn   fab outlined
+          <v-row> <p class="pa-2 h3 font-weight-medium "> {{ thisitem.title }} </p><v-spacer /> <!--<v-btn   fab outlined
       
       small
       @click="setItem()"><v-icon >
         mdi-marker
-      </v-icon></v-btn><v-btn text @click="removeItem()"><v-icon >
+      </v-icon></v-btn>--><v-btn text @click="removeItem()"><v-icon >
         mdi-trash-can
       </v-icon></v-btn> </v-row>
           
@@ -204,7 +204,7 @@
 <p  class="caption text-center"> No comments to show right now </p> </div>
      </v-col>
      </v-row>
-<v-divider class="ma-2"/>
+<!--<v-divider class="ma-2"/>
 
            <v-row>    
            <v-btn class="pa-2 mt-2"
@@ -292,7 +292,7 @@
     
 
                
-                </v-row>
+                </v-row>-->
                 
           <!--<v-divider class="ma-4"/>  
              
@@ -335,7 +335,7 @@
                 <v-stepper-step step="1" complete> Place Item </v-stepper-step>
 
                 <v-stepper-step
-                  :complete="thisitem.bestestimator != ''"
+                  :complete="thisitem.bestestimator != '' || thisitem.estimationprice > 0"
                   step="2"
                 >
                   Awaiting Estimation
@@ -416,7 +416,7 @@
                   Item For Sale
                 </v-stepper-step>
 
-                <v-stepper-content step="4">
+                <v-stepper-content step="4" :complete="thisitem.status != ''">
                   <app-text type="p"
                     >Awaiting buyer... Share your item!
                   </app-text>
@@ -467,8 +467,8 @@
                     
                     
                       <app-text>
-                        Now its the time to ship the item! provide the track and
-                        trace and you'll automatically get your tokens!
+                        Now it's time to ship the item. Provide a track and
+                        trace code to the buyer if available.
                       </app-text>
                       <input
                         type="checkbox"
@@ -513,8 +513,8 @@
                   </div>
                 </v-stepper-content>
 
-                <v-stepper-step :complete="step > 6" step="6">
-                  Done!
+                <v-stepper-step :complete="thisitem.status != ''" step="6">
+                  Done
                 </v-stepper-step>
 
                 <v-stepper-content step="5" height="200px"
@@ -607,7 +607,7 @@ export default {
   },
 
   methods: {
-    async submitrevealestimation(itemid) {
+    /*async submitrevealestimation(itemid) {
       if (this.valid && !this.flightre && this.hasAddress) {
         this.loadingitem = true;
         this.flightre = true;
@@ -621,7 +621,7 @@ export default {
         //this.deposit = "";
         alert("Transaction sent");
       }
-    },
+    },*/
      async removeItem() {
       
         this.loadingitem = true;
@@ -639,7 +639,7 @@ export default {
       
     },
 
-     async setItem() {
+     /*async setItem() {
       
         this.loadingitem = true;
         this.flightre = true;
@@ -654,7 +654,7 @@ export default {
     
         alert("Transaction sent");
       
-    },
+    },*/
 
     async getThisItem() {
       await submitrevealestimation();
@@ -696,12 +696,19 @@ export default {
     async submitItemShipping(tracking, itemid) {
       if (this.valid && !this.flightIS && this.hasAddress) {
         this.flightIS = true;
-        const type = { type: "item/shipping" };
+        const type = { type: "item" };
         const body = { tracking, itemid };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
+        const fields = [
+        ["creator", 1,'string', "optional"],
+         [ "tracking", 2,'bool', "optional"] ,                                                    
+        ["itemid",3,'string', "optional"],
+    
+      ];
+        await this.$store.dispatch("shippingSubmit", { ...type, body, fields });
+        
         this.flightIS = false;
         this.tracking = false;
-        alert("Transaction sent");
+
       }
     },
     createStep() {

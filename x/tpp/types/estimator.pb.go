@@ -127,7 +127,6 @@ func (m *Estimator) GetFlag() int64 {
 type MsgCreateEstimator struct {
 	Estimator  string `protobuf:"bytes,1,opt,name=estimator,proto3" json:"estimator,omitempty"`
 	Estimation int64  `protobuf:"varint,2,opt,name=estimation,proto3" json:"estimation,omitempty"`
-	//string estimatorestimationhash = 3;
 	Itemid     string `protobuf:"bytes,3,opt,name=itemid,proto3" json:"itemid,omitempty"`
 	Deposit    int64  `protobuf:"varint,4,opt,name=deposit,proto3" json:"deposit,omitempty"`
 	Interested bool   `protobuf:"varint,5,opt,name=interested,proto3" json:"interested,omitempty"`

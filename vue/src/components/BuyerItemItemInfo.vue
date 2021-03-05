@@ -184,7 +184,7 @@
       </div>
                   
                   <div>
-       <div v-if="thisitem.localpickup === true && thisitem.status != 'Transferred'">  
+       <div v-if="thisitem.localpickup === true && thisitem.status != 'Item transferred'">  
          <app-text class="ma-2" type="p"> Arrange a meeting to pick up the item.   </app-text>           
          <v-row>
            
@@ -289,32 +289,34 @@ export default {
 
   methods: {
    
-    async submitItemTransfer(transferbool, itemID) {
+    async submitItemTransfer(transferable, itemid) {
 
       if (this.valid && !this.flightIT && this.hasAddress) {
         this.flightIT = true;
-        const type = { type: "item/transfer" };
-        const body = { transferbool, itemID };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
-        //await this.$store.dispatch("entityFetch", type);
-        //await this.$store.dispatch("accountUpdate");
+        const type = { type: "buyer" };
+        const body = { transferable, itemid };
+         const fields = [
+        ["buyer", 1,'string', "optional"],
+         [ "itemid", 2,'string', "optional"] ,                                                    
+        ["transferable",3,'bool', "optional"],
+      ];
+        await this.$store.dispatch("transferSubmit", { ...type, body, fields });
+ await this.$store.dispatch("setBuyerItemList", this.$store.state.account.address);
         this.flightIT = false;
-        //this.deposit = "";
-        alert("Transaction sent");
+    
       }
     },
 
-    async submitItemTransferN(transferbool, itemID) {
+    async submitItemTransferN(transferable, itemid) {
       if (this.valid && !this.flightITN && this.hasAddress) {
         this.flightITN = true;
-        const type = { type: "item/transfer" };
-        const body = { transferbool, itemID };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
-        //await this.$store.dispatch("entityFetch", type);
-        //await this.$store.dispatch("accountUpdate");
+        const type = { type: "buyer" };
+        const body = { transferable, itemid };
+        await this.$store.dispatch("entitySubmit", { ...type, body, fields });
+        await this.$store.dispatch("entityFetch", type);
+        await this.$store.dispatch("setBuyerItemList", this.$store.state.account.address);
         this.flightITN = false;
-        //this.deposit = "";
-        alert("Transaction sent");
+     
       }
     },
 

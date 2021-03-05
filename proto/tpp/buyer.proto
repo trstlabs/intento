@@ -19,9 +19,8 @@ message Buyer {
 
 message MsgCreateBuyer {
   string buyer = 1;
-  string itemid = 2; 
-  
-  int64 deposit = 4;
+  string itemid = 2;
+  int64 deposit = 3;
 }
 
 message MsgUpdateBuyer {

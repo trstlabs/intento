@@ -49,9 +49,9 @@ func CmdCreateEstimator() *cobra.Command {
 
 func CmdUpdateEstimator() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-estimator [id] [estimation] [estimatorestimationhash] [itemid] [deposit] [interested] [comment] [flag]",
+		Use:   "update-estimator [itemid][interested] ",
 		Short: "Update a estimator",
-		Args:  cobra.ExactArgs(8),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			argsItemid := string(args[0])

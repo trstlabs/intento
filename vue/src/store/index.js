@@ -470,6 +470,133 @@ fields.forEach(f => {
 
     },
 
+    async transferSubmit({ state }, { body, fields }) {
+      const mnemonic = localStorage.getItem('mnemonic')
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+        mnemonic,
+        makeCosmoshubPath(0),
+        ADDRESS_PREFIX
+      )
+     
+      const typeUrl = `/${PATH}.MsgItemTransfer`;
+      let MsgCreate = new Type(`MsgItemTransfer`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+console.log(fields)
+fields.forEach(f => {
+  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+})
+
+      const client = await SigningStargateClient.connectWithSigner(
+        RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          buyer: state.account.address,
+          ...body
+        }
+      };
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+        const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+        assertIsBroadcastTxSuccess(result);
+        alert("Transaction sent");
+
+    },
+
+    async paySubmit({ state }, { body, fields }) {
+      const mnemonic = localStorage.getItem('mnemonic')
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+        mnemonic,
+        makeCosmoshubPath(0),
+        ADDRESS_PREFIX
+      )
+     
+      const typeUrl = `/${PATH}.MsgCreateBuyer`;
+      let MsgCreate = new Type(`MsgCreateBuyer`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+console.log(fields)
+fields.forEach(f => {
+  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+})
+
+      const client = await SigningStargateClient.connectWithSigner(
+        RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          buyer: state.account.address,
+          ...body
+        }
+      };
+      
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+       //const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+        //assertIsBroadcastTxSuccess(result);
+        const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+        assertIsBroadcastTxSuccess(result);
+        alert("Transaction sent");
+
+    },
+
+   
+
+    async shippingSubmit({ state }, { body, fields }) {
+      const mnemonic = localStorage.getItem('mnemonic')
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+        mnemonic,
+        makeCosmoshubPath(0),
+        ADDRESS_PREFIX
+      )
+     
+      const typeUrl = `/${PATH}.MsgItemShipping`;
+      let MsgCreate = new Type(`MsgItemShipping`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+console.log(fields)
+fields.forEach(f => {
+  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+})
+
+      const client = await SigningStargateClient.connectWithSigner(
+        RPC,
+        wallet,
+        { registry }
+      );
+    
+      const msg = {
+        typeUrl,
+        value: {
+          creator: state.account.address,
+          ...body
+        }
+      };
+      
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+    
+        const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+        assertIsBroadcastTxSuccess(result);
+        alert("Transaction sent");
+
+    },
+
 
     //for a delete request [cors error in development]
     async entityDelete({ state }, { type, body }) {

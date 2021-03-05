@@ -92,6 +92,10 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 				k.SetItem(ctx, item)
 				k.CreateBuyer(ctx, *msg)
 			}
+			if toPayShipping != msg.Deposit {
+
+				return nil, sdkerrors.Wrap(nil, "deposit insufficient, cannot make prepayment")
+			}
 		}
 
 	}

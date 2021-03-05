@@ -19,8 +19,10 @@ func CmdCreateBuyer() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsItemid := string(args[0])
 
-			argsDeposit, _ := strconv.ParseInt(args[2], 10, 64)
-
+			argsDeposit, err := strconv.ParseInt(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -41,17 +43,20 @@ func CmdCreateBuyer() *cobra.Command {
 
 func CmdUpdateBuyer() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-buyer [id] [itemid] [transferable] [deposit]",
+		Use:   "update-buyer[itemid] [transferable] [deposit]",
 		Short: "Update a buyer",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			argsItemid := string(args[1])
+			argsItemid := string(args[0])
 			argsTransferable := false
-			if args[2] == "1" {
+			if args[1] == "1" {
 				argsTransferable = true
 			}
-			argsDeposit, _ := strconv.ParseInt(args[3], 10, 64)
+			argsDeposit, err := strconv.ParseInt(args[2], 10, 64)
+			if err != nil {
+				return err
+			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

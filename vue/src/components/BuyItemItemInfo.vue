@@ -287,22 +287,7 @@ export default {
   },
 
   methods: {
-    /*async submit(amount, itemid) {
-      if (this.valid && !this.flight && this.hasAddress) {
-        this.flight = true;
-        this.loadingitem = true;
-        let deposit = amount + "token";
-        const type = { type: "buyer" };
-        const body = { deposit, itemid };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
-        await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("accountUpdate");
-        this.flight = false;
-        this.loadingitem = false;
-        this.deposit = "";
-        alert("Transaction sent");
-      }
-    },*/
+
 
     async submitLP(itemid) {
       if (!this.hasAddress) {alert("Sign in first");};
@@ -310,11 +295,17 @@ export default {
       if (!this.flightLP && this.hasAddress) {
         this.flightLP = true;
         this.loadingitem = true;
-        let toPay = this.thisitem.estimationprice;
-        let deposit = toPay + "tpp";
+        let deposit = this.thisitem.estimationprice;
+        //let deposit = toPay + "tpp";
         const type = { type: "buyer" };
         const body = { deposit, itemid };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
+         const fields = [
+        ["buyer", 1,'string', "optional"],                                 
+        ["itemid",2,'string', "optional"],
+       ["deposit", 3, "int64", "optional"],
+  
+      ];
+        await this.$store.dispatch("paySubmit", { ...type, body, fields });
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("accountUpdate");
         this.flightLP = false;
@@ -329,18 +320,20 @@ export default {
       if (!this.flightSP && this.hasAddress) {
         this.flightSP = true;
         this.loadingitem = true;
-        console.log("clicked");
-         console.log(this.thisitem);
-        console.log(this.thisitem.estimationprice);
-        console.log(this.thisitem.shippingcost);
-        let toPaySP =
+       
+        let deposit =
           +this.thisitem.estimationprice + +this.thisitem.shippingcost;
-        console.log(toPaySP);
-        let deposit = toPaySP + "tpp";
-        console.log(deposit);
+       
+         const fields = [
+        ["buyer", 1,'string', "optional"],
+                                         
+        ["itemid",2,'string', "optional"],
+       ["deposit", 3, "int64", "optional"],
+  
+      ];
         const type = { type: "buyer" };
         const body = { deposit, itemid };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
+        await this.$store.dispatch("paySubmit", { ...type, body, fields });
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("accountUpdate");
 
