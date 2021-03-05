@@ -1,16 +1,4 @@
 
-<!--<template>
-  <div>
-    <app-layout>
-      <div>
-        <app-text type="h1">TrustItems (v0.1)</app-text>
-        <wallet />
-
-        <item-to-estimate />
-      </div>
-    </app-layout>
-  </div>
-</template> -->
 
 <template>
   <div>
