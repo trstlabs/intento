@@ -143,16 +143,19 @@ export default {
       
         this.loadingitem = true;
         this.flightre = true;
-        const type = { type: "estimator/delete" };
+        const type = { type: "estimator" };
         const body = { itemid: this.itemid };
-      
+       const fields = [
+        ["estimator", 1,'string', "optional"],                         
+        ["itemid",2,'string', "optional"],
+      ];
        
-        await this.$store.dispatch("entitySubmit", { ...type, body });
+        await this.$store.dispatch("estimatordeleteSubmit", { ...type, body, fields });
      
         this.flightre = false;
         this.loadingitem = false;
     
-        alert("Transaction sent");
+
       
     },
   },

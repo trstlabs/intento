@@ -173,23 +173,28 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 
 	if msg.Transferable == true {
 		bigintestimationprice := sdk.NewInt(item.Estimationprice)
-		//rounded down percentage for the item creator
-		percentageCreator := sdk.NewDecWithPrec(97, 2)
-		//itemPrice := sdk.NewDecFromInt(item.EstimationPrice)
-		paymentCreator := percentageCreator.MulInt(bigintestimationprice)
-		roundedAmountCreaterPayout := paymentCreator.TruncateInt()
 
-		//rounded up percentage as a reward for the estimator
-		percentageReward := sdk.NewDecWithPrec(3, 2)
+		//rounded down percentage for minting. Percentage may be changed through governance proposals
+		percentageMint := sdk.NewDecWithPrec(10, 2)
+		percentageReward := sdk.NewDecWithPrec(5, 2)
+
+		toMintAmount := percentageMint.MulInt(bigintestimationprice).TruncateInt()
 		paymentReward := percentageReward.MulInt(bigintestimationprice)
 		roundedAmountReward := paymentReward.Ceil().TruncateInt()
 
 		//make payment to creator and estimator
-		paymentCreatorCoins := sdk.NewCoin("tpp", roundedAmountCreaterPayout)
+		paymentCreatorCoins := sdk.NewCoin("tpp", bigintestimationprice)
+
+		//minted coins (are rounded up)
+		mintCoins := sdk.NewCoin("tpp", toMintAmount)
 		paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
 
+		k.MintReward(ctx, mintCoins)
 		k.HandlePrepayment(ctx, item.Creator, paymentCreatorCoins)
+
+		//for their participation in the protocol, the best estimator and the buyer get rewarded.
 		k.HandlePrepayment(ctx, item.Bestestimator, paymentRewardCoins)
+		k.HandlePrepayment(ctx, item.Buyer, paymentRewardCoins)
 
 		//refund the deposits back to all of the item estimators
 		for _, element := range item.Estimatorlist {
@@ -216,7 +221,9 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 			key := msg.Itemid + "-" + element
 			estimator := k.GetEstimator(ctx, key)
 
-			if estimator.Estimator != item.Lowestestimator {
+			if estimator.Estimator == item.Highestestimator {
+				k.BurnCoins(ctx, estimator.Deposit)
+			} else {
 				k.DeleteEstimator(ctx, key)
 			}
 

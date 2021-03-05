@@ -90,7 +90,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 	} else {
 
 		//if estimation is made pay back all the estimators/or buyer (like handlerItemTransfer)
-		//has to be a new function
+
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
 			key := msg.Id + "-" + element
@@ -233,10 +233,10 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 			key := msg.Itemid + "-" + element
 			estimator := k.GetEstimator(ctx, key)
 
-			if estimator.Estimator != item.Lowestestimator {
-
+			if estimator.Estimator == item.Lowestestimator {
+				k.BurnCoins(ctx, estimator.Deposit)
+			} else {
 				k.DeleteEstimator(ctx, key)
-
 			}
 
 		}
@@ -288,23 +288,34 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 	bigintshipping := sdk.NewInt(item.Shippingcost)
 	if msg.Tracking == true {
 
-		//rounded down percentage for the item creator
-		percentageCreator := sdk.NewDecWithPrec(97, 2)
-		//itemPrice := sdk.NewDecFromInt(item.EstimationPrice)
-		paymentCreator := percentageCreator.MulInt(bigintestimationprice)
-		roundedAmountCreaterPayout := paymentCreator.TruncateInt()
-		CreaterPayoutAndShipping := roundedAmountCreaterPayout.Add(bigintshipping)
+		//rounded down percentage for minting. Percentage may be changed through governance proposals
+		percentageMint := sdk.NewDecWithPrec(10, 2)
+		percentageReward := sdk.NewDecWithPrec(5, 2)
+		//paymentCreator := percentageCreator.MulInt(bigintestimationprice)
+		//roundedAmountCreaterPayout := paymentCreator.TruncateInt()
+		CreaterPayoutAndShipping := bigintestimationprice.Add(bigintshipping)
 		//rounded up percentage as a reward for the estimator
-		percentageReward := sdk.NewDecWithPrec(3, 2)
+		//percentageReward := sdk.NewDecWithPrec(3, 2)
+		toMint := percentageMint.MulInt(bigintestimationprice)
+		toMintAmount := toMint.TruncateInt()
 		paymentReward := percentageReward.MulInt(bigintestimationprice)
-		roundedAmountReward := paymentReward.Ceil().TruncateInt()
+		roundedAmountReward := paymentReward.TruncateInt()
+		//roundedAmountRewardBestEstimator := paymentReward.TruncateInt()
 
 		//make payment to creator and estimator
 		paymentCreatorCoins := sdk.NewCoin("tpp", CreaterPayoutAndShipping)
-		paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
 
+		//minted coins (are rounded up)
+		mintCoins := sdk.NewCoin("tpp", toMintAmount)
+		paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
+		//paymentRewardCoinsEstimator := sdk.NewCoin("tpp", roundedAmountRewardBestEstimator)
+
+		k.MintReward(ctx, mintCoins)
 		k.HandlePrepayment(ctx, item.Creator, paymentCreatorCoins)
+
+		//for their participation in the protocol, the best estimator and the buyer get rewarded.
 		k.HandlePrepayment(ctx, item.Bestestimator, paymentRewardCoins)
+		k.HandlePrepayment(ctx, item.Buyer, paymentRewardCoins)
 
 		//refund the deposits back to all of the item estimators
 		for _, element := range item.Estimatorlist {
@@ -318,7 +329,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		item.Highestestimator = ""
 		item.Estimatorlist = nil
 
-		item.Status = "Shipped; Creator has provided a tracking number"
+		item.Status = "Shipped"
 		k.SetItem(ctx, item)
 		k.SetBuyer(ctx, buyer)
 	}
@@ -334,13 +345,15 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 			key := msg.Itemid + "-" + element
 			estimator := k.GetEstimator(ctx, key)
 
-			if estimator.Estimator != item.Lowestestimator {
+			if estimator.Estimator == item.Lowestestimator {
+				k.BurnCoins(ctx, estimator.Deposit)
+			} else {
 				k.DeleteEstimator(ctx, key)
 			}
 
 		}
 
-		item.Status = "Not sent; transfer not accepted and buyer refunded"
+		item.Status = "Shipping declined; buyer refunded"
 		k.SetItem(ctx, item)
 		k.SetBuyer(ctx, buyer)
 	}

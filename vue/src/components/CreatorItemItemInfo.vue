@@ -626,16 +626,19 @@ export default {
       
         this.loadingitem = true;
         this.flightre = true;
-        const type = { type: "item/delete" };
+        const type = { type: "item" };
         const body = { id: this.thisitem.id };
-      
+      const fields = [
+        ["creator", 1,'string', "optional"],                         
+        ["id",2,'string', "optional"],
+      ];
        
-        await this.$store.dispatch("entitySubmit", { ...type, body });
+        await this.$store.dispatch("itemdeleteSubmit", { ...type, body,fields });
      
         this.flightre = false;
         this.loadingitem = false;
     
-        alert("Transaction sent");
+    
       
     },
 

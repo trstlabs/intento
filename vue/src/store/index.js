@@ -597,38 +597,92 @@ fields.forEach(f => {
 
     },
 
+    async itemdeleteSubmit({ state }, { body, fields }) {
+      const mnemonic = localStorage.getItem('mnemonic')
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+        mnemonic,
+        makeCosmoshubPath(0),
+        ADDRESS_PREFIX
+      )
+     
+      const typeUrl = `/${PATH}.MsgDeleteItem`;
+      let MsgCreate = new Type(`MsgDeleteItem`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+console.log(fields)
+fields.forEach(f => {
+  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+})
 
-    //for a delete request [cors error in development]
-    async entityDelete({ state }, { type, body }) {
-      const { chain_id } = state;
-      const creator = state.account.address;
-      const base_req = { chain_id, from: creator };
-      const req = { base_req, creator, ...body };
-      //const headers = { 'Authorization': 'token', 'content-type': 'text/plain', 'Access-Control-Allow-Origin': '*',  'Access-Control-Allow-Methods': 'DELETE'};
-      //const { data } = await axios.request(`${API}/${chain_id}/${type}`, req, 'delete')
-      console.log("req is=" + req)
-
-
-      /* let headers = {
-         'Access-Control-Allow-Origin': '*',
-         'Access-Control-Allow-Methods': 'GET, POST ,PUT ,DELETE ,OPTIONS',
-         'Access-Control-Allow-Headers':
-           'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
-       }*/
-
-
-
-
-
-
-      const { data } = await axios.delete(`${API}/${chain_id}/${type}`, req)
-        .catch(error => {
-          this.errorMessage = error.message;
-          console.error("There was an error!", error)
-        });
-
+      const client = await SigningStargateClient.connectWithSigner(
+        RPC,
+        wallet,
+        { registry }
+      );
+    
+      const msg = {
+        typeUrl,
+        value: {
+          creator: state.account.address,
+          ...body
+        }
+      };
+      
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+    
+        const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+        assertIsBroadcastTxSuccess(result);
+        alert("Delete request sent");
 
     },
+
+    async estimatordeleteSubmit({ state }, { body, fields }) {
+      const mnemonic = localStorage.getItem('mnemonic')
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+        mnemonic,
+        makeCosmoshubPath(0),
+        ADDRESS_PREFIX
+      )
+     
+      const typeUrl = `/${PATH}.MsgDeleteEstimator`;
+      let MsgCreate = new Type(`MsgDeleteEstimator`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+console.log(fields)
+fields.forEach(f => {
+  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+})
+
+      const client = await SigningStargateClient.connectWithSigner(
+        RPC,
+        wallet,
+        { registry }
+      );
+    
+      const msg = {
+        typeUrl,
+        value: {
+          estimator: state.account.address,
+          ...body
+        }
+      };
+      
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+    
+        const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+        assertIsBroadcastTxSuccess(result);
+        alert("Delete request sent");
+
+    },
+
+
+    ////__________________//// ////__________________//// ////__________________//// ////__________________//// ////__________________////
 
     //for a put request [cors error in development]
     async entitySet({ state }, { type, body }) {
@@ -761,7 +815,7 @@ fields.forEach(f => {
 
 
     async setToEstimateList({ commit, state }) {
-      const A = state.data.item.filter(item => !item.bestestimator);
+      const A = state.data.item.filter(item => !item.bestestimator && item.status == '');
       const B = state.estimatorItemList;
       //const rsEIL = state.data.estimator.filter(estimator => estimator.estimator === state.client.anyValidAddress);
       console.log(A);

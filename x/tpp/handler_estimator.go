@@ -20,7 +20,7 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 
 	item := k.GetItem(ctx, msg.Itemid)
 
-	if item.Title == "" {
+	if item.Estimationprice > 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("item %s does exist", msg.Itemid))
 	}
 

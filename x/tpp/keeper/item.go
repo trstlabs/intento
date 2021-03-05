@@ -1,13 +1,14 @@
 package keeper
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/danieljdd/tpp/x/tpp/types"
-	"strconv"
-	"fmt"
-	"crypto/sha256"
-	"encoding/hex"
 )
 
 // GetItemCount get the total number of item
@@ -44,24 +45,23 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 	// Create the item
 	count := k.GetItemCount(ctx)
 
-	var estimationcount = fmt.Sprint(msg.Estimationcount )
-			var estimationcountHash = sha256.Sum256([]byte(estimationcount + msg.Creator ))
-			var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
+	var estimationcount = fmt.Sprint(msg.Estimationcount)
+	var estimationcountHash = sha256.Sum256([]byte(estimationcount + msg.Creator))
+	var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
 
 	var item = types.Item{
-		Creator:                     msg.Creator,
-		Id:                          strconv.FormatInt(count, 10),
-		Title:                       msg.Title,
-		Description:                 msg.Description,
-		Shippingcost:                msg.Shippingcost,
-		Localpickup:                 msg.Localpickup,
-		Estimationcounthash:	estimationcountHashString,
-		
-	
-		Tags:                        msg.Tags,
-	
-		Condition:                   msg.Condition,
-		Shippingregion:              msg.Shippingregion,
+		Creator:             msg.Creator,
+		Id:                  strconv.FormatInt(count, 10),
+		Title:               msg.Title,
+		Description:         msg.Description,
+		Shippingcost:        msg.Shippingcost,
+		Localpickup:         msg.Localpickup,
+		Estimationcounthash: estimationcountHashString,
+
+		Tags: msg.Tags,
+
+		Condition:      msg.Condition,
+		Shippingregion: msg.Shippingregion,
 	}
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
@@ -121,7 +121,6 @@ func (k Keeper) GetAllItem(ctx sdk.Context) (msgs []types.Item) {
 	return
 }
 
-
 // HandlePrepayment handles payment
 func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk.Coin) {
 	//store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
@@ -133,23 +132,18 @@ func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk
 	}
 	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, useraddress, sdk.NewCoins(coinToSend))
-	
-	
+
 	//store.Delete(types.KeyPrefix(types.EstimatorKey + key))
 }
 
-// HandlePrepayment handles payment
-func (k Keeper) HandlePrepaymentBack(ctx sdk.Context, address string, coinToSend sdk.Coin) {
-	//store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	//var estimator types.Estimator
-	//k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+key)), &estimator)
-	useraddress, err := sdk.AccAddressFromBech32(address)
-	if err != nil {
-		panic(err)
-	}
-	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, useraddress, sdk.NewCoins(coinToSend))
-	
-	
-	//store.Delete(types.KeyPrefix(types.EstimatorKey + key))
+// MintReward mints coins to a module account
+func (k Keeper) MintReward(ctx sdk.Context, coinToSend sdk.Coin) {
+	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(coinToSend))
+
+}
+
+// BurnCoins mints coins from a module account
+func (k Keeper) BurnCoins(ctx sdk.Context, coinToSend sdk.Coin) {
+	k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coinToSend))
+
 }
