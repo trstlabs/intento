@@ -1,23 +1,20 @@
-rm -rf ~/.tppd
+rm -rf ~/.tpp
 
 
-tppd init test --chain-id=tppd
+tppd init mainnode --chain-id=tpp
 
-tppd config output json
-tppd config indent true
-tppd config trust-node true
-tppd config chain-id trustitemstest
-tppd config keyring-backend test
 
-tppd keys add user1
-tppd keys add user2
-tppd keys add user3
+tppd keys add user1 --keyring-backend test
+tppd keys add user2 --keyring-backend test
+tppd keys add user3 --keyring-backend test
+tppd keys add faucet --keyring-backend test
 
-tppd add-genesis-account $(tppd keys show user1 -a) 1000token,100000000stake
-tppd add-genesis-account $(tppd keys show user2 -a) 500token
-tppd add-genesis-account $(tppd keys show user3 -a) 500token
+tppd add-genesis-account $(tppd keys show user1 -a) 1000tpp,100000000stake
+tppd add-genesis-account $(tppd keys show user2 -a) 500tpp
+tppd add-genesis-account $(tppd keys show user3 -a) 500tpp
+tppd add-genesis-account $(tppd keys show faucet -a) 100000000tpp
 
-tppd gentx --name user1 --keyring-backend test
+tppd gentx user1 100000000stake --chain-id=tpp --keyring-backend test
 
 echo "Collecting genesis txs..."
 tppd collect-gentxs
