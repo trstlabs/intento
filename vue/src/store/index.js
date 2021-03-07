@@ -16,12 +16,12 @@ import { Registry } from '@cosmjs/proto-signing';
 Vue.use(Vuex);
 
 
-const API = "http://localhost:1317";
-//const API = "https://node.trustpriceprotocol.com"
+//const API = "http://localhost:1317";
+const API = "https://node.trustpriceprotocol.com"
 const ADDRESS_PREFIX = 'cosmos';
 const PATH = 'danieljdd.tpp.tpp'
 
-const RPC = 'http://localhost:26657'
+const RPC = 'http://cli.trustpriceprotocol.com'
 
 export default new Vuex.Store({
   state: {
