@@ -15,7 +15,7 @@ all: install
 
 install: go.sum
 		@echo "--> Installing tppd"
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/tpp
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/tppd
 
 
 go.sum: go.mod
