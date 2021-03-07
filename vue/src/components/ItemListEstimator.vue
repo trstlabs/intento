@@ -31,7 +31,7 @@
       <estimator-item-item-info :itemid="estimator.itemid" />
     </div>
     <div class="card__empty" v-if="estimatorItemList.length === 0 && dummy">
-      <p>No estimations, make an estimation first</p>
+      <p class="caption">No estimations, make an estimation first</p>
     </div>
   </div>
 </template>

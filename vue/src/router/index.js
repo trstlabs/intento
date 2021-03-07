@@ -6,7 +6,7 @@ import Sell from "../views/Sell.vue";
 import Estimate from "../views/Estimate.vue";
 import Account from "../views/Account.vue";
 import BuyItemDetails from "../views/BuyItemDetails.vue";
-import CreatorItemDetails from "../views/CreatorItemDetails.vue";
+import Messages from "../views/Messages.vue";
 import MissingPage from "../views/MissingPage.vue";
 
 Vue.use(VueRouter);
@@ -64,11 +64,14 @@ const routes = [
     meta: {
       title: 'Account - Marketplace'},
   },
+
   {
-    path: "/sell/:id",
-    name: "CreatorItemDetails",
-    component: CreatorItemDetails
+    path: "/messages",
+    component: Messages,
+    meta: {
+      title: 'Messages - Marketplace'},
   },
+  
   {
     path: '*',
     name: 'catchAll',

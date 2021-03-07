@@ -30,7 +30,7 @@
       </div>
     </div>
     <div class="card__empty" v-if="buyerItemList.length === 0 && dummy">
-      <p>No items, buy an item first</p>
+      <p class="caption">No items, buy an item first</p>
     </div>
   </div>
 </template>

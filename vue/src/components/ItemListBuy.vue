@@ -1,7 +1,7 @@
 <template>
   <div class="pa-2 mx-lg-auto">
     <div>
-      <h2 class="display-1 pa-4 text-center">Browse Items</h2>
+      <h2 class="headline pa-4 text-center">Browse Items</h2>
       <div>
         <v-container>
           <v-row>
@@ -43,7 +43,7 @@
           class="rounded-lg outlined elevation-1 text-center"
           v-if="items.length < 1"
         >
-          <v-card-text>
+          <v-card-text class="caption">
             No items to show. Use search / filters to find items or sell an item :)
           </v-card-text>
         </v-card>

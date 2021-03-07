@@ -34,7 +34,7 @@
       </v-lazy>
     </div>
     <div class="card__empty" v-if="creatorItemList.length === 0 && dummy">
-      <p>No items, place an item first</p>
+      <p class="caption">No items, place an item first</p>
     </div>
   </div>
 </template>

@@ -10,16 +10,16 @@ var _ sdk.Msg = &MsgCreateItem{}
 
 func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup bool, estimationcount int64, tags []string, condition int64, shippingregion []string) *MsgCreateItem {
 	return &MsgCreateItem{
-		
-		Creator:                     creator,
-		Title:                       title,
-		Description:                 description,
-		Shippingcost:                shippingcost,
-		Localpickup:                 localpickup,
-		Estimationcount:         estimationcount,		
-		Tags:                        tags,
-		Condition:                   condition,
-		Shippingregion:              shippingregion,
+
+		Creator:         creator,
+		Title:           title,
+		Description:     description,
+		Shippingcost:    shippingcost,
+		Localpickup:     localpickup,
+		Estimationcount: estimationcount,
+		Tags:            tags,
+		Condition:       condition,
+		Shippingregion:  shippingregion,
 	}
 }
 
@@ -49,6 +49,19 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+
+	if len(msg.Tags) > 5 || len(msg.Tags) < 1 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "tags invalid")
+	}
+	if len(msg.Shippingregion) > 5 || len(msg.Shippingregion) < 1 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region invalid")
+	}
+	if len(msg.Description) > 500 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "description too long")
+	}
+	if msg.Condition > 6 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "invalid item condition")
+	}
 	return nil
 }
 
@@ -56,11 +69,11 @@ var _ sdk.Msg = &MsgUpdateItem{}
 
 func NewMsgUpdateItem(creator string, id string, shippingcost int64, localpickup bool, shippingregion []string) *MsgUpdateItem {
 	return &MsgUpdateItem{
-		Id:                          id,
-		Creator:                     creator,
-		Shippingcost:                shippingcost,
-		Localpickup:                 localpickup,
-		Shippingregion:              shippingregion,
+		Id:             id,
+		Creator:        creator,
+		Shippingcost:   shippingcost,
+		Localpickup:    localpickup,
+		Shippingregion: shippingregion,
 	}
 }
 
@@ -130,13 +143,11 @@ func (msg *MsgDeleteItem) ValidateBasic() error {
 	return nil
 }
 
-
 func NewMsgRevealEstimation(creator string, itemid string) *MsgRevealEstimation {
 	return &MsgRevealEstimation{
-		
-		Creator:                     creator,
-		Itemid:                       itemid,
-	
+
+		Creator: creator,
+		Itemid:  itemid,
 	}
 }
 
@@ -171,13 +182,12 @@ func (msg *MsgRevealEstimation) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgItemTransferable(creator string, transferable bool, itemid string,) *MsgItemTransferable {
+func NewMsgItemTransferable(creator string, transferable bool, itemid string) *MsgItemTransferable {
 	return &MsgItemTransferable{
-		
-		Creator:                     creator,
+
+		Creator:      creator,
 		Transferable: transferable,
-		Itemid:                       itemid,
-	
+		Itemid:       itemid,
 	}
 }
 
@@ -212,13 +222,12 @@ func (msg *MsgItemTransferable) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgItemShipping(creator string, tracking bool, itemid string,) *MsgItemShipping {
+func NewMsgItemShipping(creator string, tracking bool, itemid string) *MsgItemShipping {
 	return &MsgItemShipping{
-		
-		Creator:                     creator,
+
+		Creator:  creator,
 		Tracking: tracking,
-		Itemid:                       itemid,
-	
+		Itemid:   itemid,
 	}
 }
 

@@ -21,7 +21,7 @@
             
        
           >  <v-chip
-      class="ma-1 "
+      class="ma-1 caption"
       label
       color="primary lighten-1"
       medium
@@ -67,7 +67,7 @@
           }}</v-icon>
         </v-btn>
       </v-card-actions>
-
+   <v-divider class="ma-4"/>  
       <v-expand-transition >
         <div>
           <div class="pa-2 mx-auto" elevation="8" v-if="showinfo" >
@@ -103,7 +103,7 @@
 
 
          <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -115,7 +115,7 @@
     </v-chip> 
 
      <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -128,7 +128,7 @@
     </v-chip>
  
 <v-chip v-if="thisitem.localpickup"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -137,7 +137,7 @@
       </v-icon>Local Pickup</v-chip>
 
       <v-chip v-if="thisitem.shippingcost"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -150,7 +150,7 @@
       
            
             <v-chip v-if="thisitem.bestestimator"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -162,7 +162,7 @@
     </v-chip>
 
     <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       medium label outlined
     >
     <v-icon left>
@@ -175,9 +175,9 @@
       
   <div class="overline text-center"> Comments </div> 
      <div v-if="thisitem.comments">
-<v-chip  v-for="comment in commentlist" v-bind:key="comment" class="ma-2 "
+<v-chip  v-for="(listcomment, index) in commentlist" v-bind:key="index" class="ma-2"
         
-    >{{ comment }}
+    >{{ listcomment }}
      </v-chip>
 
      

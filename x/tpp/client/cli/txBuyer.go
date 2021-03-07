@@ -130,3 +130,33 @@ func CmdItemTransfer() *cobra.Command {
 
 	return cmd
 }
+
+func CmdItemThank() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "item-transfer [transterbool] [itemID]",
+		Short: "Set a new buyer",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			argsThank := false
+			if args[0] == "1" {
+				argsThank = true
+			}
+			argsItemID := string(args[1])
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgItemThank(clientCtx.GetFromAddress().String(), string(argsItemID), bool(argsThank))
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}

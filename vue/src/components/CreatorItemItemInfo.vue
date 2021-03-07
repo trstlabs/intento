@@ -59,7 +59,7 @@
 </div> -->
 <v-divider class="ma-2"/>
  <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -71,7 +71,7 @@
     </v-chip>
 
 <v-chip v-if="thisitem.localpickup"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -82,7 +82,7 @@
       Local pickup available
     </v-chip>
        <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -95,7 +95,7 @@
     </v-chip>
     
           <v-chip v-if="thisitem.shippingcost"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -107,7 +107,7 @@
     </v-chip>
 
     <v-chip v-if="thisitem.shippingcost"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -117,9 +117,16 @@
       </v-icon>
       Shipping cost: ${{thisitem.shippingcost}} TPP
     </v-chip>
+ <v-chip outlined medium label class="ma-1 caption"
+            v-for="country in thisitem.shippingregion" :key="country"
+          > <v-icon small left>
+        mdi-flag-variant-outline
+      </v-icon>{{ country }}</v-chip>
+
+    
 
     <v-chip v-if="thisitem.bestestimator"
-      class="ma-1"
+      class="ma-1 caption"
       label 
       outlined
       medium
@@ -133,7 +140,7 @@
     
 
 <v-chip v-if="thisitem.transferable"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -145,19 +152,19 @@
     </v-chip>
 
     <v-chip  v-if="thisitem.buyer"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
     >
     <v-icon left >
-        mdi-cart
+        mdi-cart-outline
       </v-icon>
       Buyer: {{thisitem.buyer}}
     </v-chip>
 
     <v-chip v-if="thisitem.status"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -170,7 +177,7 @@
              
 
               <v-chip v-if="(thisitem.buyer === '' && thisitem.transferable === true)"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -178,13 +185,19 @@
     <v-icon left>
         mdi-store
       </v-icon>
-      This item is for sale currently
+      Currently for sale
     </v-chip>
    
-    <v-chip outlined medium label class="ma-1"
+    <v-chip outlined medium label class="ma-1 caption"
             v-for="itemtag in thisitem.tags" :key="itemtag"
           > <v-icon small left>
         mdi-tag-outline
+      </v-icon>{{ itemtag }}</v-chip>
+
+       <v-chip outlined medium label class="ma-1"
+            v-for="country in thisitem.shippingregion" :key="country"
+          > <v-icon small left>
+        mdi-flag-outline
       </v-icon>{{ itemtag }}</v-chip>
         
 
@@ -343,16 +356,16 @@
 
                 <v-stepper-content step="2">
                  
-                    <p>
+                    <app-text type="subtitle">
                       Awaiting estimators to estimate the
                       item. Meanwhile... help others by estimating other items
                       (and earn tokens)!
-                    </p>
+                    </app-text>
                     
                   
                 </v-stepper-content>
 
-                <v-stepper-step :complete="thisitem.transferable" step="3">
+                <v-stepper-step  :complete="thisitem.transferable" step="3" >
                   Accept Estimation
                 </v-stepper-step>
 
@@ -360,7 +373,7 @@
                   
                     <div>
                       
-                        <app-text type="p">
+                        <app-text type="subtitle">
                           Wow! there is an estimation. You can sell {{thisitem.title}} for ${{thisitem.estimationprice}} TPP tokens. By accepting your item wil directly be able to
                           be purchased. Anyone can provide a prepayment to buy
                           the item. 
@@ -417,34 +430,33 @@
                 </v-stepper-step>
 
                 <v-stepper-content step="4" :complete="thisitem.status != ''">
-                  <app-text type="p"
-                    >Awaiting buyer... Share your item!
+                  <app-text type="subtitle"
+                    >Item placed. Awaiting buyer... Tip: share your item with family and friends.
                   </app-text>
                   <app-text
                     v-if="thisitem.shippingcost > 0 && thisitem.localpickup"
-                    type="p"
+                    type="caption"
                   >
-                    After a buyer is found and chooses shipping, you ship it,
-                    provide the track and trace and you'll automatically get
-                    your tokens! After a buyer is found and chooses local
-                    pickup, the buyer can pick it up at your convienience. Tip:
+                    If a buyer chooses shipping, you ship it,
+                    provide the track and trace code if available, and you'll automatically get
+                    your tokens. After a buyer is found and chooses local
+                    pickup, the buyer can pick it up. Tip:
                     let the buyer transfer the tokens during your meetup.
                   </app-text>
                   <app-text
                     v-if="thisitem.shippingcost === 0 && thisitem.localpickup"
-                    type="p"
+                    type="caption"
                   >
-                    After a buyer is found, negotiate a meetup time and place.
+                    After a buyer is found negotiate a meetup time and place by sending a message to the buyer.
                     Tip: let the buyer transfer the tokens during your meetup.
                   </app-text>
                   <app-text
                     v-if="
                       thisitem.shippingcost > 0 && thisitem.localpickup === false
                     "
-                    type="p"
+                    type="caption"
                   >
-                    After a buyer is found, negotiate a meetup time and place.
-                    Tip: let the buyer transfer the tokens during your meetup.
+                    After a buyer is found, find out about the address to ship to by sending a message to the buyer.
                   </app-text>
                 </v-stepper-content>
                 <v-stepper-step :complete="thisitem.status != ''" step="5">
@@ -466,7 +478,7 @@
                   >
                     
                     
-                      <app-text>
+                      <app-text type="caption"> 
                         Now it's time to ship the item. Provide a track and
                         trace code to the buyer if available.
                       </app-text>
@@ -504,7 +516,7 @@
                   >
                     <v-divider class="pa-1" ></v-divider>
                    
-                      <app-text>
+                      <app-text type="caption">
                         Now its the time to meet up with the buyer! To complete the item
                         transfer, make sure the buyer sends the tokens at the
                         pick-up.

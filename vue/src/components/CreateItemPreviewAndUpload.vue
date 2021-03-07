@@ -17,13 +17,14 @@
   <v-col >
   <v-card elevation="0">
   <v-chip-group>
-    <v-chip outlined small
+    <v-chip outlined small class="caption"
             v-for="itemtag in thisitem.tags" :key="itemtag"
           > <v-icon small left>
         mdi-tag-outline
       </v-icon>
             {{ itemtag }}
-          </v-chip><!--<v-chip 
+          </v-chip>
+          <!--<v-chip 
         class="ma-1" outlined small
       >
 <v-rating
@@ -37,6 +38,7 @@
   :value="thisitem.condition"
 ></v-rating> </v-chip>-->
         </v-chip-group> </v-card>
+
   </v-col>
   </v-row>
            <v-card elevation="0" >  <div class=" overline">Description</div> <v-card-text>
@@ -48,7 +50,7 @@
 
 <v-divider class="ma-4"></v-divider>
          <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       medium label outlined
 
     >
@@ -62,7 +64,7 @@
           
           
           <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -75,7 +77,7 @@
 
    
            <v-chip v-if="thisitem.shippingcost"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -83,10 +85,10 @@
     <v-icon left>
         mdi-package-variant
       </v-icon>
-      Shipping option available
+      Shipping
     </v-chip>
 <v-chip v-if="thisitem.localpickup"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -94,10 +96,10 @@
     <v-icon left>
          mdi-map-marker-outline
       </v-icon>
-      Local pickup option available
+      Local pickup
     </v-chip>
     <v-chip v-if="thisitem.shippingcost"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -108,8 +110,14 @@
       </v-icon>
       Shipping cost: ${{thisitem.shippingcost}} TPP
     </v-chip>
+    
+         <v-chip outlined medium label class="ma-1 caption"
+            v-for="country in thisitem.shippingregion" :key="country"
+          > <v-icon small left>
+        mdi-flag-variant-outline
+      </v-icon>{{ country }}</v-chip>
     <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium

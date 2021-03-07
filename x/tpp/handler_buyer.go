@@ -240,3 +240,38 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
+
+func handleMsgItemThank(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemThank) (*sdk.Result, error) {
+	//check if message creator is item creator
+	if msg.Buyer != k.GetBuyerOwner(ctx, msg.Itemid) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+	}
+	//get buyer info
+	buyer := k.GetBuyer(ctx, msg.Itemid)
+
+	//get item info
+	item := k.GetItem(ctx, msg.Itemid)
+
+	//check if item.transferable = false
+
+	if item.Transferable == true {
+		return nil, sdkerrors.Wrap(nil, "creator of item does not accept a transfer")
+	}
+
+	//check if item has a buyer already
+	if item.Buyer != msg.Buyer {
+		return nil, sdkerrors.Wrap(nil, "Item does not belong to msg sender")
+	}
+	//check therefore that prepayment is done
+	if item.Status != "Shipped" || item.Status != "Item transferred" {
+		return nil, sdkerrors.Wrap(nil, "item not transferred yet")
+	}
+
+	if msg.Thank == true {
+		item.Thank = true
+		k.SetItem(ctx, item)
+		k.SetBuyer(ctx, buyer)
+	}
+
+	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
+}

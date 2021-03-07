@@ -32,6 +32,7 @@ message Item {
   int64 flags = 20; 
   int64 condition = 21; 
   repeated string shippingregion = 22; 
+  bool thank = 23; 
 }
 
 message MsgCreateItem {

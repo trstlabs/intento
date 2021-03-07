@@ -137,7 +137,7 @@ func (msg *MsgItemTransfer) Route() string {
 }
 
 func (msg *MsgItemTransfer) Type() string {
-	return "CreateBuyer"
+	return "ItemTransfer"
 }
 
 func (msg *MsgItemTransfer) GetSigners() []sdk.AccAddress {
@@ -156,7 +156,46 @@ func (msg *MsgItemTransfer) GetSignBytes() []byte {
 func (msg *MsgItemTransfer) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Buyer)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid buyer address (%s)", err)
+	}
+	return nil
+}
+
+var _ sdk.Msg = &MsgCreateBuyer{}
+
+func NewMsgItemThank(buyer string, itemid string, thank bool) *MsgItemThank {
+	return &MsgItemThank{
+		Buyer:  buyer,
+		Itemid: itemid,
+		Thank:  thank,
+	}
+}
+
+func (msg *MsgItemThank) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgItemThank) Type() string {
+	return "ItemThank"
+}
+
+func (msg *MsgItemThank) GetSigners() []sdk.AccAddress {
+	buyer, err := sdk.AccAddressFromBech32(msg.Buyer)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{buyer}
+}
+
+func (msg *MsgItemThank) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgItemThank) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Buyer)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid buyer address (%s)", err)
 	}
 	return nil
 }

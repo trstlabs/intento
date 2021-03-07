@@ -100,7 +100,16 @@
 
    </v-col><v-col class="text-right"> 
 
- <v-tooltip bottom>
+      <template>
+      <v-btn icon plain :color="($vuetify.theme.dark) ? 'primary' : 'primary lighten-1'"
+          href="/messages">
+    
+          <v-icon>mdi-message-reply
+          </v-icon>
+        </v-btn>
+      </template>
+  
+<!-- <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
       <v-btn 
           icon id="mode-switcher"
@@ -113,14 +122,14 @@
         </v-btn>
       </template>
       <span>Switch Theme</span>
-    </v-tooltip>
+    </v-tooltip>-->
 
 
 
     </v-col >
       
     </v-app-bar>
-    <welcome v-if="this.$store.state.client == null"/> <v-btn
+    <welcome v-if="!this.$store.state.account.address"/> <v-btn
             v-scroll="onScroll"
             v-show="fab"
             fab
@@ -133,6 +142,7 @@
           >
             <v-icon>mdi-arrow-up</v-icon>
           </v-btn>
+          
   </v-app>
   
 </template>
@@ -147,12 +157,14 @@ export default {
     return {
       //dismiss: false,
       //dialog: true,
-      fab: false
+      fab: false,
+     
       
     };
   },
   created() {
     this.$store.dispatch("init");
+     
     //this.$store.dispatch("setBuyItemList");
     
     //this.$store.dispatch("initBuyItemList");
@@ -187,9 +199,11 @@ export default {
     messagesToEstimate() {
       return this.$store.getters.getToEstimateList.length || 0;
     },
-   
+
   },
     mounted() {
+     
+    
 
       //this.messages = this.$store.getters.getCreatorItemList.length;
         const theme = localStorage.getItem("dark\_theme");

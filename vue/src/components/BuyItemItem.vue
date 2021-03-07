@@ -1,6 +1,6 @@
 <template>
 <div class="pa-2 mx-auto">
-    <v-card elevation="2" rounded="lg" v-click-outside="clickOutside" >
+    <v-card elevation="2" rounded="lg">
       <v-progress-linear
         indeterminate
         :active="loadingitem"
@@ -56,7 +56,7 @@
 
 
          <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -66,8 +66,21 @@
       </v-icon>
       Identifier: {{ thisitem.id }}
     </v-chip> 
+ <!--<v-chip
+      class="ma-1 caption"
+      label
+      outlined
+      medium
 
-  
+    >
+  <v-rating
+      v-model="thisitem.condition"
+      dense readonly
+      color="primary lighten-1"
+      background-color="grey lighten-1"
+      small
+    ></v-rating></v-chip>-->
+
 <v-dialog transition="dialog-bottom-transition"
         max-width="300"> <template v-slot:activator="{ on, attrs }">
         <span
@@ -75,7 +88,7 @@
           v-on="on"
         >
         <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -178,7 +191,7 @@
         </template>
     </v-dialog >
 <v-chip v-if="thisitem.localpickup"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -187,7 +200,7 @@
       </v-icon>Local Pickup</v-chip>
 
       <v-chip v-if="thisitem.shippingcost"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -197,10 +210,14 @@
       </v-icon>
       Shipping Cost: ${{thisitem.shippingcost}} TPP
     </v-chip>
-      
+       <v-chip outlined medium label class="ma-1 caption"
+            v-for="country in thisitem.shippingregion" :key="country"
+          > <v-icon small left>
+        mdi-flag-variant-outline
+      </v-icon>{{ country }}</v-chip>
            
             <v-chip v-if="thisitem.bestestimator"
-      class="ma-1"
+      class="ma-1 caption"
       label
       outlined
       medium
@@ -212,7 +229,7 @@
     </v-chip>
 
     <v-chip
-      class="ma-1"
+      class="ma-1 caption"
       medium label outlined
     >
     <v-icon left>
@@ -225,9 +242,9 @@
       
   <div class="overline text-center"> Comments </div> 
      <div v-if="thisitem.comments">
-<v-chip  v-for="comment in commentlist" v-bind:key="comment" class="ma-2 "
+<v-chip  v-for="(single,i) in allcomments" v-bind:key="i" class="ma-2 "
         
-    >{{ comment }}
+    >{{ single }}
      </v-chip>
 
      
@@ -277,20 +294,22 @@
             </div>
           </div>
         </div>
-       
-         <v-card class="pa-2 mx-auto">
-            <v-card-title> All Seller items </v-card-title>
-     <div v-for="item in SellerItems" v-bind:key="item.id">
-     
+        <div class="pa-2 mx-auto caption"><v-btn text @click="sellerInfo">Seller Info </v-btn>
+         <v-card elevation="0" v-if="info">
+
+ <p> This seller has sold {{sold}} items before</p><!--<p  Of which _ have been transfered by shipping and _ by local pickup.</p>-->
+    </v-card>         <v-card-title> All Seller items </v-card-title>
+     <div  v-for="item in SellerItems" v-bind:key="item.id">
+    
         
      
-       <router-link
+       <v-card   elevation="0"
                 :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
-                > {{item.title}}
-      {{item.status}}
-              </router-link>
-  
-    </div>    </v-card>
+                ><v-row class="text-left caption ma-2"> {{item.title}} <v-spacer/> ${{item.estimationprice}}TPP
+      {{item.status}}</v-row>
+              </v-card>
+   </div>  
+    </div>  
     </v-card>
   </div>
 </template>
@@ -306,7 +325,7 @@ data() {
       flight: false,
       flightLP: false,
       flightSP: false,
-      showinfo: false,
+      info: false,
       imageurl: "",
       loadingitem: true,
       photos: [],
@@ -342,7 +361,7 @@ data() {
     valid() {
       return this.amount.trim().length > 0;
     },
-    commentlist() {
+    allcomments() {
       return this.thisitem.comments.filter(i => i != "") || [];
       
     },
@@ -416,7 +435,7 @@ data() {
     },
 
     getItemPhotos() {
-      if (this.showinfo && this.imageurl != "") {
+      if (this.imageurl != "") {
         this.loadingitem = true;
         const id = this.itemid;
         const db = firebase.database();
@@ -432,11 +451,13 @@ data() {
         this.loadingitem = false;
       }
     },
-    clickOutside(){
-      if(this.showinfo = true ){
-      this.showinfo = false};
+   
+     sellerInfo(){
+    let rs = this.SellerItems.filter(i => i.buyer != "");
+    this.sold = "no"
+    if(rs != ""){this.sold = rs};
+    this.info = true;
     },
-    
   },
 };
 </script>

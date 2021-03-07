@@ -31,7 +31,7 @@
     </div>
     <div class="card__empty" v-if="buyerItemList.length === 0 && dummy">
       
-      <p>No items, estimate items to find items you are interested in before they are on sale</p> 
+      <p class="caption">No items, estimate items to find items you are interested in before they are on sale</p> 
     </div>
   </div>
 </template>

@@ -11,6 +11,8 @@
       </button>
       <button class="button-cancel" @click="addNewRoom = false">Cancel</button>
     </form>
+<v-btn v-if="!this.currentUserId" @click="createUser" />
+	
 
     <form @submit.prevent="addRoomUser" v-if="inviteRoomId">
       <input type="text" placeholder="Add username" v-model="invitedUsername" />
@@ -32,7 +34,7 @@
       </button>
       <button class="button-cancel" @click="removeRoomId = null">Cancel</button>
     </form>
-    <chat-window
+    <chat-window v-if="this.currentUserId"
       :styles="styles"
       :current-user-id="this.currentUserId"
       :room-id="roomId"
@@ -80,7 +82,7 @@ export default {
     ChatWindow,
   },
 
-  props: ["currentUserId"],
+//props: ["address"], //["currentUserId"],
 
   data() {
     return {
@@ -106,12 +108,15 @@ export default {
       typingMessageCache: "",
       disableForm: false,
       addNewRoom: null,
+	  addNewUser: null,
       addRoomUsername: "",
+	  addUser: "",
       inviteRoomId: null,
       invitedUsername: "",
       removeRoomId: null,
       removeUserId: "",
       removeUsers: [],
+	  currentUserId: "",
       roomActions: [
         { name: "inviteUser", title: "Invite User" },
         { name: "removeUser", title: "Remove User" },
@@ -128,8 +133,9 @@ export default {
   },
 
   mounted() {
-    this.fetchRooms();
-    this.updateUserOnlineStatus();
+    
+	  this.createUser();
+    
   },
 
   destroyed() {
@@ -140,6 +146,7 @@ export default {
     loadedRooms() {
       return this.rooms.slice(0, this.roomsLoadedCount);
     },
+    //name() { return this.$store.state.account.address;}
     //screenHeight() {
     //	return this.isDevice ? window.innerHeight + 'px' : 'calc(100vh - 80px)'
     //}
@@ -274,6 +281,7 @@ export default {
 
         room.roomName =
           roomContacts.map((user) => user.username).join(", ") || "Myself";
+//const roomAvatar = roomContacts.length === 1 && roomContacts[0].avatar ? roomContacts[0].avatar : href="../public/img/brand/icon.png";
 
         formattedRooms.push({
           ...room,
@@ -741,8 +749,8 @@ export default {
     async createRoom() {
       this.disableForm = true;
 
-      const { id } = await usersRef.add({ _id: this.addRoomUsername });
-      await usersRef.doc(id).update({ _id: id });
+      const { id } = await usersRef.add({ address: this.addRoomUsername, username: "Test" });
+      await usersRef.doc(id).update({ address: id });
       await roomsRef.add({
         users: [id, this.currentUserId],
         lastUpdated: new Date(),
@@ -753,6 +761,32 @@ export default {
       this.fetchRooms();
     },
 
+	async createUser() {
+      this.disableForm = true;
+
+//let name = this.$store.state.account.address;
+  
+//console.log(name);
+//console.log(this.$store.state.account.address)
+	//const { id } = await usersRef.get(user => user.username == this.$store.state.account.address)
+		
+	//if (id === null ){
+      //id = await usersRef.add({ username: name }); return id}
+	  if (!!this.$store.state.account.address) {
+      
+	const { id } = await usersRef.add({ address: this.$store.state.account.address, username: "Test" })
+	 //await usersRef.doc(id).update({ address: id });
+   //const { id } = await usersRef.get(user => user.username == "cosmos1xq2k86902wd4rxtyj3fdpd6cmr5h37zpqsf40a")
+   //const { id } = await usersRef.where("username", "==" ,"cosmos1xq2k86902wd4rxtyj3fdpd6cmr5h37zpqsf40a");
+	console.log( {id} )
+
+     
+    this.addUser = "";
+	this.currentUserId = id;
+      this.fetchRooms();
+    this.updateUserOnlineStatus();};
+    },
+
     inviteUser(roomId) {
       this.resetForms();
       this.inviteRoomId = roomId;
@@ -761,8 +795,8 @@ export default {
     async addRoomUser() {
       this.disableForm = true;
 
-      const { id } = await usersRef.add({ _id: this.invitedUsername });
-      await usersRef.doc(id).update({ _id: id });
+      const { id } = await usersRef.add({ address: this.invitedUsername, username: "Test" });
+      await usersRef.doc(id).update({ address: id });
 
       await roomsRef
         .doc(this.inviteRoomId)

@@ -8,11 +8,11 @@
       <template v-slot:activator="{ on, attrs }">
        
     <h2  v-bind="attrs"
-          v-on="on" class="display-1 pa-4 text-center">Place a new item</h2>
+          v-on="on" class="headline pa-4 text-center">Place a new item</h2>
       </template>
 
       <v-card class="text-center">
-        <v-card-title class="headline lighten-2 ">
+        <v-card-title class="h2 lighten-2 ">
           Info
         </v-card-title>
 
@@ -41,7 +41,7 @@
     >
       <template v-slot:activator="{ on, attrs }">
        <h2  v-bind="attrs"
-          v-on="on"  class="display-1 pa-4 text-center">Place '{{fields.title}}'</h2>
+          v-on="on"  class="display-2  pa-4 text-center">Place '{{fields.title}}'</h2>
     
       </template>
 
@@ -97,7 +97,7 @@
               <v-text-field class="ma-1" prepend-icon="mdi-format-title"
                 :rules="rules.titleRules"
                 label="Title"
-                v-model="fields.title"
+                v-model="fields.title" required
                 
               />
               
@@ -210,7 +210,7 @@
                 ><template v-slot:thumb-label="item">
             {{ item.value }} tokens
           </template> </v-slider>
-</v-row>  <v-row  v-if="fields.shippingcost"> <v-col>  <v-row>    
+</v-row>  <v-row  > <v-col>  <v-row>    
            <v-btn class="pa-2"
         
         text
@@ -225,8 +225,8 @@
       v-model="fields.localpickup"
       inset
       label="Local pickup"
-      
-      
+      :persistent-hint="fields.shippingcost !=0 && fields.localpickup == true && selectedCountries.length > 1"
+      hint="Specify local pickup location in description"
     ></v-switch>  
 
     
@@ -234,13 +234,13 @@
                
                 </v-row></v-col><v-col> <v-select
                  prepend-icon="mdi-earth"
-                 hint="Leave blank for no shipping location"
+                 hint="At least one"
                  :persistent-hint="selectedCountries == 0"
                 
           v-model="selectedCountries"
           :items="countryCodes"
          :rules="rules.shippingRules"
-          label="Ships to"
+          label="Location"
           deletable-chips
           multiple
           chips
@@ -248,7 +248,7 @@
         > </v-select> 
 </v-col></v-row>
 
-                <v-row v-if="fields.shippingcost == 0 ">    
+               <!-- <v-row v-if="fields.shippingcost == 0 ">    
            <v-btn class="pa-2"
         
         text
@@ -270,7 +270,7 @@
     
 
                
-                </v-row>
+                </v-row>-->
                 
 
      <!--  <v-combobox
@@ -373,10 +373,11 @@ export default {
         ],
         
          shippingRules:  [ 
-          (v) => !!v.length == 1 || "A country is required when shipping cost is applicable",
+          (v) => !!v.length == 1 || "A country is required",
           
         
         ], 
+        
       },
       itemid: "",
       selectedTags: [],
@@ -464,8 +465,7 @@ export default {
         estimationcount: this.fields.estimationcount,
          tags: this.selectedTags,
            condition: this.fields.condition,
-          shippingregion: this.selectedTags,
-      
+          shippingregion: this.selectedCountries,
         };
         
         
