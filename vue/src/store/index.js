@@ -21,7 +21,7 @@ const API = "https://node.trustpriceprotocol.com"
 const ADDRESS_PREFIX = 'cosmos';
 const PATH = 'danieljdd.tpp.tpp'
 
-const RPC = 'http://cli.trustpriceprotocol.com'
+const RPC = 'https://cli.trustpriceprotocol.com'
 
 export default new Vuex.Store({
   state: {
