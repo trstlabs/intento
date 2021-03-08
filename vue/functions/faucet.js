@@ -1,8 +1,6 @@
 //const restEndpoint = process.env.NODE_URL
 //const restEndpoint = "https://node.trustpriceprotocol.com"
 const ADDRESS_PREFIX = 'cosmos';
-import { SigningStargateClient } from "@cosmjs/stargate";
-import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 
 const {Bech32} = require("@cosmjs/encoding")
 
@@ -12,9 +10,12 @@ const googleRecaptcha = new GoogleRecaptcha({
   secret: process.env.GOOGLE
 })
 
-
-
-
+const {
+  SigningStargateClient
+} = require("@cosmjs/stargate");
+const {
+  DirectSecp256k1HdWallet
+} = require('@cosmjs/proto-signing');
 
 
 exports.handler = async function (event, context) {
