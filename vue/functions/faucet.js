@@ -14,6 +14,9 @@ const {
   assertIsBroadcastTxSuccess, SigningStargateClient, StargateClient
 } = require("@cosmjs/stargate");
 const {
+  makeCosmoshubPath
+} = require("@cosmjs/launchpad");
+const {
   DirectSecp256k1HdWallet
 } = require('@cosmjs/proto-signing');
 
