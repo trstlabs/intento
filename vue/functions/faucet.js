@@ -135,7 +135,7 @@ const msg = {
   typeUrl,
   value: {
       amount:  [{ amount: '5', denom: 'tpp' }],
-      fromAddress: address,
+      fromAddress: firstAccount.address,
       toAddress: recipient
   }
 };
