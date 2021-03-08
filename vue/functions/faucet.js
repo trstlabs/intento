@@ -119,14 +119,29 @@ async function submitWithCosmJS(recipient) {
   const [firstAccount] = await wallet.getAccounts();
 
 const rpcEndpoint = 'https://cli.trustpriceprotocol.com';
-const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, wallet);
 
-const amount = {
-  denom: "tpp",
-  amount: "5",
+const typeUrl = "/danieljdd.tpp.tpp.MsgSend";
+let MsgCreate = new Type(`MsgSend`);
+const registry = new Registry([[typeUrl, MsgCreate]]);
+const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, wallet, {registry});
+
+
+const fee = {
+  amount: [{ amount: '0', denom: 'tpp' }],
+  gas: '200000'
 };
 
-const result = await client.sendTokens(firstAccount.address, recipient, [amount], "Welcome to the Trust Price Protocol community");
+const msg = {
+  typeUrl,
+  value: {
+      amount:  [{ amount: '5', denom: 'tpp' }],
+      from_address: address,
+      to_address: recipient
+  }
+};
+
+
+const result = await client.signAndBroadcast(firstAccount.address, [msg], fee, "Welcome to the Trust Price Protocol community");
 assertIsBroadcastTxSuccess(result);
 
   //const [{address}] = await signer.getAccounts();
