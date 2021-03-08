@@ -125,14 +125,14 @@ const rpcEndpoint = 'https://cli.trustpriceprotocol.com';
 //const registry = new Registry([[typeUrl, MsgCreate]]);
 const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, wallet);
 
-/*
+
 const fee = {
   amount: [{ amount: '0', denom: 'tpp' }],
   gas: '200000'
 };
 
 const msg = {
-  type: "cosmos-sdk/MsgSend",
+  typeUrl: "/cosmos.bank.v1beta1.MsgSend",
   value: {
       amount:  [{ amount: '5', denom: 'tpp' }],
       fromAddress: firstAccount.address,
@@ -141,14 +141,18 @@ const msg = {
 };
 const result = await client.signAndBroadcast(firstAccount.address, [msg], fee, "Welcome to the Trust Price Protocol community");
 assertIsBroadcastTxSuccess(result);
-*/
-const amount = {
+
+/*const amount = {
   denom: "tpp",
   amount: "5",
 };
 
 const result = await client.sendTokens(firstAccount.address, recipient, [amount], "Welcome to the Trust Price Protocol community");
 assertIsBroadcastTxSuccess(result);
+RESULT IS 0UCOSM INSTEAD OF 2000 MINIMUM insufficient funds: insufficient funds
+*/
+
+
 
 
 
