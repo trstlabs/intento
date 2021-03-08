@@ -1,5 +1,8 @@
 //const restEndpoint = process.env.NODE_URL
-const restEndpoint = "http://node.trustpriceprotocol.com"
+//const restEndpoint = "https://node.trustpriceprotocol.com"
+const ADDRESS_PREFIX = 'cosmos';
+import { SigningStargateClient } from "@cosmjs/stargate";
+import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 
 const {Bech32} = require("@cosmjs/encoding")
 
@@ -10,23 +13,15 @@ const googleRecaptcha = new GoogleRecaptcha({
 })
 
 
-const {
-  //coins,
-  // MsgSubmitProposal,
-  // OfflineSigner,
-  // PostTxResult,
-  SigningCosmosClient,
-  OfflineSigner,
-  Secp256k1Wallet,
-  // StdFee,
-} = require("@cosmjs/launchpad");
+
+
 
 let signer
 
 exports.handler = async function (event, context) {
 
   
-  signer = await Secp256k1Wallet.fromMnemonic(process.env.MNEMONIC)
+  //signer = await Secp256k1Wallet.fromMnemonic(process.env.MNEMONIC)
   // console.log({signer})
   // let headers = {
   //   'Access-Control-Allow-Origin': '*',
@@ -34,6 +29,12 @@ exports.handler = async function (event, context) {
   //   'Access-Control-Allow-Headers':
   //     'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
   // }
+  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+    process.env.MNEMONIC,
+    makeCosmoshubPath(0),
+    ADDRESS_PREFIX
+  )
+
   if (event.httpMethod === 'POST') {
     if (event.body) {
       let body = JSON.parse(event.body)
@@ -110,9 +111,22 @@ exports.handler = async function (event, context) {
 }
 
 async function submitWithCosmJS(recipient) {
-  const [{address}] = await signer.getAccounts();
-  console.log({address})
-  const memo = ''
+  const [firstAccount] = await wallet.getAccounts();
+
+const rpcEndpoint = 'https://cli.trustpriceprotocol.com';
+const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, wallet);
+
+const amount = {
+  denom: "tpp",
+  amount: "5",
+};
+
+const result = await client.sendTokens(firstAccount.address, recipient, [amount], "Welcome to the Trust Price Protocol community");
+assertIsBroadcastTxSuccess(result);
+
+  //const [{address}] = await signer.getAccounts();
+  //console.log({address})
+ /* const memo = ''
   const msg = {
     type:  'cosmos-sdk/MsgSend',
     value: {
@@ -128,7 +142,7 @@ async function submitWithCosmJS(recipient) {
   console.log({restEndpoint})
   const client = new SigningCosmosClient(restEndpoint, address, signer);
   console.log({client})
-  return client.signAndPost([msg], fee, memo);
+  return client.signAndPost([msg], fee, memo);*/
 
 }
 
