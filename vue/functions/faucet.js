@@ -11,7 +11,7 @@ const googleRecaptcha = new GoogleRecaptcha({
 
 
 const {
-  coins,
+  //coins,
   // MsgSubmitProposal,
   // OfflineSigner,
   // PostTxResult,

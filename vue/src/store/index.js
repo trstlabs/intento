@@ -5,8 +5,8 @@ import axios from "axios";
 import app from "./app.js";
 
 //import cosmos from "@tendermint/vue/src/store/cosmos.js";
-import { assert } from "@cosmjs/utils";
-import { assertIsBroadcastTxSuccess, makeCosmoshubPath, coin } from '@cosmjs/launchpad'
+//import { assert } from "@cosmjs/utils";
+import { assertIsBroadcastTxSuccess, makeCosmoshubPath } from '@cosmjs/launchpad'
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 import { Type, Field } from 'protobufjs';
@@ -18,10 +18,12 @@ Vue.use(Vuex);
 
 //const API = "http://localhost:1317";
 const API = "https://node.trustpriceprotocol.com"
+const API = "http://localhost:1317"
 const ADDRESS_PREFIX = 'cosmos';
 const PATH = 'danieljdd.tpp.tpp'
 
 const RPC = 'https://cli.trustpriceprotocol.com'
+//const RPC = 'http://localhost:26657'
 
 export default new Vuex.Store({
   state: {
@@ -64,7 +66,7 @@ export default new Vuex.Store({
     clientUpdate(state, { client }) {
       state.client = client;
     },
-  
+
     setCreatorItemList(state, payload) {
       //state.CreatorItemList.push(payload);
       state.creatorItemList = payload;
@@ -105,12 +107,14 @@ export default new Vuex.Store({
   actions: {
     async init({ dispatch, state }) {
       await dispatch("chainIdFetch");
-     
-    
-      state.app.types.forEach(({ type }) => {
+      const type = { type: "item" };
+      await dispatch("entityFetch", type )
+      //let { type } = state.app.types.find( type  => { type == "item"})
+      
+     /* state.app.types.forEach(({ type }) => {
         if (type == "estimator/flag" || type == "item/reveal" || type == "item/transferable" || type == "item/transfer" || type == "item/shipping") { return; }
         dispatch("entityFetch", { type });
-      });
+      });*/
 
       await dispatch('accountSignInTry');
 
@@ -124,15 +128,19 @@ export default new Vuex.Store({
       const mnemonic = localStorage.getItem('mnemonic')
       if (mnemonic) {
         await dispatch('accountSignIn', { mnemonic })
-        await  dispatch("setEstimatorItemList", state.account.address);
-        await  dispatch("setToEstimateList", state.account.address);
-        await  dispatch("setCreatorActionList", state.account.address);
-        await   dispatch("setSortedTagList");
-        await    dispatch("setCreatorItemList");
-        await    dispatch("setBuyerItemList", state.account.address);
+        let type = { type: "estimator" };
+       await dispatch("entityFetch", type )
+       let buyer = { type: "buyer" };
+      await dispatch("entityFetch", buyer )
+        await dispatch("setEstimatorItemList", state.account.address);
+        await dispatch("setToEstimateList", state.account.address);
+        await dispatch("setCreatorActionList", state.account.address);
+        await dispatch("setSortedTagList");
+        await dispatch("setCreatorItemList");
+        await dispatch("setBuyerItemList", state.account.address);
 
         await dispatch("setInterestedItemList", state.account.address);
-      //$emit('signedIn');
+        //$emit('signedIn');
       }
     },
     async accountSignIn(
@@ -145,7 +153,7 @@ export default new Vuex.Store({
         makeCosmoshubPath(0),
         ADDRESS_PREFIX
       )
-  
+
       //console.log("fdgadagfgfd")
       localStorage.setItem('mnemonic', mnemonic)
       const { address } = wallet
@@ -188,11 +196,11 @@ export default new Vuex.Store({
       const url = `${API}/${PATH.replace(/\./g, '/')}/${type}`;
       const body = (await axios.get(url)).data
       const uppercase = type.charAt(0).toUpperCase() + type.slice(1)
-			if (body && body[uppercase]) {
-				commit('entitySet', { type, body: body[uppercase] })
-			}
+      if (body && body[uppercase]) {
+        commit('entitySet', { type, body: body[uppercase] })
+      }
 
-     
+
     },
 
 
@@ -206,11 +214,7 @@ export default new Vuex.Store({
 
     async entitySubmit({ state, dispatch }, { type, fields, body }) {
       const mnemonic = localStorage.getItem('mnemonic')
-      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        makeCosmoshubPath(0),
-        ADDRESS_PREFIX
-      )
+      const wallet = state.wallet
 
       const type2 = type.charAt(0).toUpperCase() + type.slice(1)
       const typeUrl = `/${PATH}.MsgCreate${type2}`;
@@ -239,19 +243,19 @@ export default new Vuex.Store({
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
       };
-       const result = await client.signAndBroadcast(firstAccount.address, [msg], fee);
-        assertIsBroadcastTxSuccess(result);
+      const result = await client.signAndBroadcast(firstAccount.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
 
-        console.log(result)
+      console.log(result)
 
       try {
         //const path = "danieljdd.tpp.tpp".replace(/\./g, '/')
-        
+
         //console.log(data)
         //console.log(firstAccount.address, [msg], fee);
         await dispatch('entityFetch', {
           type: type
-        //  path: path
+          //  path: path
         }
         )
       } catch (e) {
@@ -262,10 +266,10 @@ export default new Vuex.Store({
 
 
     async itemSubmit({ state, commit, dispatch }, { type, fields, body }) {
-      
+
       const wallet = state.wallet
 
-      console.log("TESTwallet" + wallet )
+      console.log("TESTwallet" + wallet)
       const type2 = type.charAt(0).toUpperCase() + type.slice(1)
       const typeUrl = `/${PATH}.MsgCreate${type2}`;
       let MsgCreate = new Type(`MsgCreate${type2}`);
@@ -320,29 +324,25 @@ export default new Vuex.Store({
     },
 
     async estimationSubmit({ state, dispatch }, { type, body }) {
-      const mnemonic = localStorage.getItem('mnemonic')
-      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        makeCosmoshubPath(0),
-        ADDRESS_PREFIX
-      )
+
+      const wallet = state.wallet
       const type2 = type.charAt(0).toUpperCase() + type.slice(1)
       const typeUrl = `/${PATH}.MsgCreate${type2}`;
       let MsgCreate = new Type(`MsgCreate${type2}`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
       const fields = [
-        ["estimator", 1,'string', "optional"],
-         [ "estimation", 2,'int64', "optional"] ,                                                    
-        ["itemid",3,'string', "optional"],
-       ["deposit", 4, "int64", "optional"],
-        ["interested",5,'bool', "optional"],
-        ["comment",6,'string', "optional" ],  
+        ["estimator", 1, 'string', "optional"],
+        ["estimation", 2, 'int64', "optional"],
+        ["itemid", 3, 'string', "optional"],
+        ["deposit", 4, "int64", "optional"],
+        ["interested", 5, 'bool', "optional"],
+        ["comment", 6, 'string', "optional"],
       ];
-console.log(fields)
-fields.forEach(f => {
-  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-})
-console.log(MsgCreate)
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+      console.log(MsgCreate)
       //console.log(registry );
       //console.log("creator" + state.wallet.address);
       const client = await SigningStargateClient.connectWithSigner(
@@ -359,22 +359,22 @@ console.log(MsgCreate)
           ...body
         }
       };
-      
+
       console.log(msg)
       const fee = {
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
       };
-       const result = await client.signAndBroadcast(state.account.address, [msg], fee);
-        assertIsBroadcastTxSuccess(result);
+      const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
 
-        console.log(result)
+      console.log(result)
 
       try {
-    
+
         await dispatch('entityFetch', {
           type: type
-        //  path: path
+          //  path: path
         }
         )
       } catch (e) {
@@ -385,20 +385,14 @@ console.log(MsgCreate)
 
 
     async revealSubmit({ state }, { body, fields }) {
-      const mnemonic = localStorage.getItem('mnemonic')
-      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        makeCosmoshubPath(0),
-        ADDRESS_PREFIX
-      )
-     
+      const wallet = state.wallet
       const typeUrl = `/${PATH}.MsgRevealEstimation`;
       let MsgCreate = new Type(`MsgRevealEstimation`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
 
-fields.forEach(f => {
-  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-})
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
 
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
@@ -413,35 +407,24 @@ fields.forEach(f => {
           ...body
         }
       };
-      
-      console.log(msg)
       const fee = {
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
       };
-       //const result = await client.signAndBroadcast(state.account.address, [msg], fee);
-        //assertIsBroadcastTxSuccess(result);
-        await client.signAndBroadcast(state.account.address, [msg], fee);
-       
-      
+
+      await client.signAndBroadcast(state.account.address, [msg], fee);
 
     },
 
     async transferableSubmit({ state }, { body, fields }) {
-      const mnemonic = localStorage.getItem('mnemonic')
-      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        makeCosmoshubPath(0),
-        ADDRESS_PREFIX
-      )
-     
+      const wallet = state.wallet
       const typeUrl = `/${PATH}.MsgItemTransferable`;
       let MsgCreate = new Type(`MsgItemTransferable`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
 
-fields.forEach(f => {
-  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-})
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
 
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
@@ -456,42 +439,33 @@ fields.forEach(f => {
           ...body
         }
       };
-      
-      console.log(msg)
+
       const fee = {
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
       };
-        
-       const result = await client.signAndBroadcast(state.account.address, [msg], fee);
-        assertIsBroadcastTxSuccess(result);
-        alert(" Placed! ");
-      
 
+      const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert(" Placed! ");
     },
 
     async transferSubmit({ state }, { body, fields }) {
-      const mnemonic = localStorage.getItem('mnemonic')
-      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        makeCosmoshubPath(0),
-        ADDRESS_PREFIX
-      )
-     
+      const wallet = state.wallet
       const typeUrl = `/${PATH}.MsgItemTransfer`;
       let MsgCreate = new Type(`MsgItemTransfer`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
-console.log(fields)
-fields.forEach(f => {
-  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-})
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
 
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
         wallet,
         { registry }
       );
-      //console.log("TEST" + client)
+
       const msg = {
         typeUrl,
         value: {
@@ -504,27 +478,21 @@ fields.forEach(f => {
         gas: '200000'
       };
 
-        const result = await client.signAndBroadcast(state.account.address, [msg], fee);
-        assertIsBroadcastTxSuccess(result);
-        alert("Transaction sent");
+      const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Transaction sent");
 
     },
 
     async paySubmit({ state }, { body, fields }) {
-      const mnemonic = localStorage.getItem('mnemonic')
-      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        makeCosmoshubPath(0),
-        ADDRESS_PREFIX
-      )
-     
+      const wallet = state.wallet
       const typeUrl = `/${PATH}.MsgCreateBuyer`;
       let MsgCreate = new Type(`MsgCreateBuyer`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
-console.log(fields)
-fields.forEach(f => {
-  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-})
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
 
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
@@ -539,44 +507,37 @@ fields.forEach(f => {
           ...body
         }
       };
-      
+
       console.log(msg)
       const fee = {
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
       };
-       //const result = await client.signAndBroadcast(state.account.address, [msg], fee);
-        //assertIsBroadcastTxSuccess(result);
-        const result = await client.signAndBroadcast(state.account.address, [msg], fee);
-        assertIsBroadcastTxSuccess(result);
-        alert("Transaction sent");
+
+      const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Transaction sent");
 
     },
 
-   
+
 
     async shippingSubmit({ state }, { body, fields }) {
-      const mnemonic = localStorage.getItem('mnemonic')
-      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        makeCosmoshubPath(0),
-        ADDRESS_PREFIX
-      )
-     
+      const wallet = state.wallet
       const typeUrl = `/${PATH}.MsgItemShipping`;
       let MsgCreate = new Type(`MsgItemShipping`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
-console.log(fields)
-fields.forEach(f => {
-  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-})
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
 
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
         wallet,
         { registry }
       );
-    
+
       const msg = {
         typeUrl,
         value: {
@@ -584,41 +545,35 @@ fields.forEach(f => {
           ...body
         }
       };
-      
+
       console.log(msg)
       const fee = {
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
       };
-    
-        const result = await client.signAndBroadcast(state.account.address, [msg], fee);
-        assertIsBroadcastTxSuccess(result);
-        alert("Transaction sent");
+
+      const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Transaction sent");
 
     },
 
     async itemdeleteSubmit({ state }, { body, fields }) {
-      const mnemonic = localStorage.getItem('mnemonic')
-      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        makeCosmoshubPath(0),
-        ADDRESS_PREFIX
-      )
-     
+      const wallet = state.wallet
       const typeUrl = `/${PATH}.MsgDeleteItem`;
       let MsgCreate = new Type(`MsgDeleteItem`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
-console.log(fields)
-fields.forEach(f => {
-  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-})
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
 
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
         wallet,
         { registry }
       );
-    
+
       const msg = {
         typeUrl,
         value: {
@@ -626,41 +581,35 @@ fields.forEach(f => {
           ...body
         }
       };
-      
+
       console.log(msg)
       const fee = {
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
       };
-    
-        const result = await client.signAndBroadcast(state.account.address, [msg], fee);
-        assertIsBroadcastTxSuccess(result);
-        alert("Delete request sent");
+
+      const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Delete request sent");
 
     },
 
     async estimatordeleteSubmit({ state }, { body, fields }) {
-      const mnemonic = localStorage.getItem('mnemonic')
-      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-        mnemonic,
-        makeCosmoshubPath(0),
-        ADDRESS_PREFIX
-      )
-     
+      const wallet = state.wallet
       const typeUrl = `/${PATH}.MsgDeleteEstimator`;
       let MsgCreate = new Type(`MsgDeleteEstimator`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
-console.log(fields)
-fields.forEach(f => {
-  MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-})
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
 
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
         wallet,
         { registry }
       );
-    
+
       const msg = {
         typeUrl,
         value: {
@@ -668,33 +617,21 @@ fields.forEach(f => {
           ...body
         }
       };
-      
+
       console.log(msg)
       const fee = {
         amount: [{ amount: '0', denom: 'tpp' }],
         gas: '200000'
       };
-    
-        const result = await client.signAndBroadcast(state.account.address, [msg], fee);
-        assertIsBroadcastTxSuccess(result);
-        alert("Delete request sent");
+
+      const result = await client.signAndBroadcast(state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Delete request sent");
 
     },
 
 
     ////__________________//// ////__________________//// ////__________________//// ////__________________//// ////__________________////
-
-    //for a put request [cors error in development]
-    async entitySet({ state }, { type, body }) {
-      const { chain_id } = state;
-      const creator = state.account.address;
-      const base_req = { chain_id, from: creator };
-      const req = { base_req, creator, ...body };
-
-      const { data } = await axios.put(`${API}/${chain_id}/${type}`, req)
-
-    },
-
 
 
 
@@ -729,7 +666,7 @@ fields.forEach(f => {
     },
 
     async setLocalBuyItemList({ commit, state }) {
-      const rs = state.data.item.filter(item => !item.buyer&& item.transferable === true && item.localpickup === true
+      const rs = state.data.item.filter(item => !item.buyer && item.transferable === true && item.localpickup === true
       );
       commit("setBuyItemList", rs);
     },
@@ -755,15 +692,6 @@ fields.forEach(f => {
     async tagToEstimateList({ commit, state }, input) {
       const A = state.data.item.filter(item => !item.buyer && item.tags.find(tags => tags.includes(input)) && item.transferable === false)
         ;
-
-      //const test2 = state.data.item.filter(item => !item.buyer && item.tags.strconv().includes(input)  && item.transferable === false) 
-      //;
-
-
-      //const test2 = state.data.item.forEach(filter(item.tags => item.tags.includes(input));
-      //const test = state.data.item.tags.filter(tags => tags.includes(input));
-      //console.log(test2);
-
       const B = state.estimatorItemList;
 
       const rs = A.filter(a => !B.map(b => b.itemid).includes(a.id));
@@ -773,16 +701,6 @@ fields.forEach(f => {
       //console.log(B);
       commit("setToEstimateList", rs);
     },
-
-    /*async setTagList({commit, state}) {
-      //console.log("asd");
-      //console.log(state.data.item);
-      const rs = state.data.item.map(item => item.tags);
-      //console.log(rs);
-      var merged = [].concat.apply([], rs);
-      //console.log(merged);
-      commit("setTagList", merged);
-    },*/
 
     async setSortedTagList({ commit, state }) {
       const rs = state.data.item.map(item => item.tags);
@@ -809,10 +727,6 @@ fields.forEach(f => {
 
       commit("setTagList", sorted);
     },
-
-
-
-
 
     async setToEstimateList({ commit, state }) {
       const A = state.data.item.filter(item => !item.bestestimator && item.status == '');
@@ -864,7 +778,7 @@ fields.forEach(f => {
     },
   },
   getters: {
-    account: state => state.account, bankBalances: state => state.bankBalances, getCreatorItemList:  state => state.creatorItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getCreatorActionList: state => state.creatorActionList, getTagList: state => state.tagList, getSellerList: state => state.sellerList,
+    account: state => state.account, bankBalances: state => state.bankBalances, getCreatorItemList: state => state.creatorItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getCreatorActionList: state => state.creatorActionList, getTagList: state => state.tagList, getSellerList: state => state.sellerList,
 
   }
 
