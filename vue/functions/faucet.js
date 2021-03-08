@@ -125,7 +125,7 @@ const rpcEndpoint = 'https://cli.trustpriceprotocol.com';
 //const registry = new Registry([[typeUrl, MsgCreate]]);
 const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, wallet);
 
-
+/*
 const fee = {
   amount: [{ amount: '0', denom: 'tpp' }],
   gas: '200000'
@@ -139,10 +139,19 @@ const msg = {
       toAddress: recipient
   }
 };
-
-
 const result = await client.signAndBroadcast(firstAccount.address, [msg], fee, "Welcome to the Trust Price Protocol community");
 assertIsBroadcastTxSuccess(result);
+*/
+const amount = {
+  denom: "tpp",
+  amount: "5",
+};
+
+const result = await client.sendTokens(firstAccount.address, [amount], "Welcome to the Trust Price Protocol community");
+assertIsBroadcastTxSuccess(result);
+
+
+
 
   //const [{address}] = await signer.getAccounts();
   //console.log({address})
