@@ -11,7 +11,7 @@ const googleRecaptcha = new GoogleRecaptcha({
 })
 
 const {
-  SigningStargateClient
+  assertIsBroadcastTxSuccess, SigningStargateClient, StargateClient
 } = require("@cosmjs/stargate");
 const {
   DirectSecp256k1HdWallet
@@ -107,6 +107,7 @@ exports.handler = async function (event, context) {
 }
 
 async function submitWithCosmJS(recipient) {
+  console.log("Submitting now")
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
     process.env.MNEMONIC,
     makeCosmoshubPath(0),
