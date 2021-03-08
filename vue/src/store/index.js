@@ -18,7 +18,7 @@ Vue.use(Vuex);
 
 //const API = "http://localhost:1317";
 const API = "https://node.trustpriceprotocol.com"
-const API = "http://localhost:1317"
+//const API = "http://localhost:1317"
 const ADDRESS_PREFIX = 'cosmos';
 const PATH = 'danieljdd.tpp.tpp'
 
