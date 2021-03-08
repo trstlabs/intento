@@ -16,7 +16,6 @@ const googleRecaptcha = new GoogleRecaptcha({
 
 
 
-let signer
 
 exports.handler = async function (event, context) {
 
@@ -29,11 +28,7 @@ exports.handler = async function (event, context) {
   //   'Access-Control-Allow-Headers':
   //     'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With'
   // }
-  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
-    process.env.MNEMONIC,
-    makeCosmoshubPath(0),
-    ADDRESS_PREFIX
-  )
+  
 
   if (event.httpMethod === 'POST') {
     if (event.body) {
@@ -111,6 +106,11 @@ exports.handler = async function (event, context) {
 }
 
 async function submitWithCosmJS(recipient) {
+  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+    process.env.MNEMONIC,
+    makeCosmoshubPath(0),
+    ADDRESS_PREFIX
+  )
   const [firstAccount] = await wallet.getAccounts();
 
 const rpcEndpoint = 'https://cli.trustpriceprotocol.com';
