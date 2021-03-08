@@ -120,10 +120,10 @@ async function submitWithCosmJS(recipient) {
 
 const rpcEndpoint = 'https://cli.trustpriceprotocol.com';
 
-const typeUrl = "/danieljdd.tpp.tpp.MsgSend";
-let MsgCreate = new Type(`MsgSend`);
-const registry = new Registry([[typeUrl, MsgCreate]]);
-const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, wallet, {registry});
+//const typeUrl = "/danieljdd.tpp.tpp.MsgSend";
+//let MsgCreate = new Type(`MsgSend`);
+//const registry = new Registry([[typeUrl, MsgCreate]]);
+const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, wallet);
 
 
 const fee = {
@@ -132,11 +132,11 @@ const fee = {
 };
 
 const msg = {
-  typeUrl,
+  typeUrl: '/cosmos.bank.v1beta1.MsgSend',
   value: {
       amount:  [{ amount: '5', denom: 'tpp' }],
-      from_address: address,
-      to_address: recipient
+      fromAddress: address,
+      toAddress: recipient
   }
 };
 
