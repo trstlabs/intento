@@ -147,7 +147,7 @@ const amount = {
   amount: "5",
 };
 
-const result = await client.sendTokens(firstAccount.address, [amount], "Welcome to the Trust Price Protocol community");
+const result = await client.sendTokens(firstAccount.address, recipient, [amount], "Welcome to the Trust Price Protocol community");
 assertIsBroadcastTxSuccess(result);
 
 
