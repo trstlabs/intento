@@ -1,17 +1,40 @@
 <template>
   <div class="window-container">
-    <form @submit.prevent="createRoom" v-if="addNewRoom">
-      <v-text-field
+    <v-dialog
+      v-model="addNewRoom"
+      width="500"
+    >
+     
+
+      <v-card>
+        <v-card-title >
+          New conversation
+        </v-card-title>
+
+        <form @submit.prevent="createRoom" v-if="addNewRoom">
+      <v-text-field class="ma-2"
         type="text"
-        placeholder="Add username"
+        placeholder="Add Address"
         v-model="addRoomUsername"
       />
-      <button type="submit" :disabled="disableForm || !addRoomUsername">
+      
+     <p class="caption"> Make sure the cosmos-address is correct</p>
+    
+     
+        <v-divider></v-divider>
+
+        <v-card-actions>
+         <button class="button-cancel" @click="addNewRoom = false">Cancel</button>
+          <v-spacer></v-spacer>
+          <button type="submit" :disabled="disableForm || !addRoomUsername">
         Create Room
       </button>
-      <button class="button-cancel" @click="addNewRoom = false">Cancel</button>
-    </form>
+        </v-card-actions></form>
+      </v-card>
+    </v-dialog>
 
+
+    
 	
 
     <form @submit.prevent="addRoomUser" v-if="inviteRoomId">

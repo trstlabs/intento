@@ -128,8 +128,12 @@ export default new Vuex.Store({
     },
     async accountSignInTry({ state, dispatch }) {
       const mnemonic = localStorage.getItem('mnemonic')
+      const privkey = localStorage.getItem('privkey')
       if (mnemonic) {
-        await dispatch('accountSignIn', { mnemonic })
+        await dispatch('accountSignIn', { mnemonic })}
+        if (privkey) {
+          await dispatch('torusSignIn',  privkey )}
+        if (mnemonic || privkey) {
         let type = { type: "estimator" };
        await dispatch("entityFetch", type )
        let buyer = { type: "buyer" };
@@ -192,7 +196,7 @@ export default new Vuex.Store({
       console.log(wallet)
      
       //console.log("fdgadagfgfd")
-      //localStorage.setItem('mnemonic', mnemonic)
+      localStorage.setItem('privkey', details)
       const { address } = wallet
       const url = `${API}/auth/accounts/${address}`
       const acc = (await axios.get(url)).data

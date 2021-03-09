@@ -26,8 +26,8 @@
    v-bind="attrs"
           v-on="on"
     src="img/brand/icon.png"
-    max-height="30"
-    max-width="30"
+    max-height="32"
+    max-width="32"
     contain
   ></v-img>
         </v-btn>
@@ -101,7 +101,7 @@
    </v-col><v-col class="text-right"> 
 
       <template>
-      <v-btn rounded  :color="($vuetify.theme.dark) ? 'primary' : 'primary'"
+      <v-btn rounded elevation="1" plain small :color="($vuetify.theme.dark) ? 'primary' : 'primary'"
           to="/messages">
     
           <v-icon>mdi-message-reply
