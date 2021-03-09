@@ -11,7 +11,7 @@
       </button>
       <button class="button-cancel" @click="addNewRoom = false">Cancel</button>
     </form>
-<v-btn v-if="!this.currentUserId" @click="createUser" />
+
 	
 
     <form @submit.prevent="addRoomUser" v-if="inviteRoomId">
@@ -34,8 +34,9 @@
       </button>
       <button class="button-cancel" @click="removeRoomId = null">Cancel</button>
     </form>
+    <p v-if="!this.currentUserId" class="pa-8 text-center">  Log in to see messages. <button onClick="window.location.reload();">Refresh</button> </p>
     <chat-window v-if="this.currentUserId"
-      :styles="styles"
+      :styles="$vuetify.theme.dark == true ? stylesdark : styles "
       :current-user-id="this.currentUserId"
       :room-id="roomId"
       :rooms="loadedRooms"
@@ -59,6 +60,8 @@
       @send-message-reaction="sendMessageReaction"
       @typing-message="typingMessage"
       @toggle-rooms-list="$emit('show-demo-options', $event.opened)"
+      
+      
     >
     </chat-window>
   </div>
@@ -127,12 +130,23 @@ export default {
         { name: "removeUser", title: "Remove User" },
         { name: "deleteRoom", title: "Delete Room" },
       ],
-      styles: { container: { borderRadius: "4px" } },
+      styles: { message: {
+			
+			backgroundMe: '#BDE3F4',
+			
+		} },
+  
+    stylesdark: { message: {
+			
+			backgroundMe: '#3873F9',
+			
+		} },
+   
       // ,dbRequestCount: 0
     };
   },
 
-  mounted() {
+  created() {
     
 	  this.createUser();
     

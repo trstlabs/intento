@@ -9,7 +9,7 @@
               :menu-props="{ offsetY: true }"
               solo
               item-text="filter"
-              item-value=" abbr"
+              
               hide-details
               :items="filters"
               prepend-inner-icon="mdi-filter"
@@ -32,10 +32,10 @@ export default {
     return {
       selectedFilter: "",
     filters: [
-          { filter: 'All', abbr: 'NE' },
-          { filter: 'Local', abbr: 'GA' },
-          { filter: 'Shipping', abbr: 'GA' },
-          { filter: 'Macbook', abbr: 'transferable' },
+          { filter: 'All',  },
+          { filter: 'Pickup', },
+          { filter: 'Shipping', },
+
 
  
         ],
@@ -55,8 +55,8 @@ export default {
       this.$store.dispatch("filterBuyItemList", input);
       };
       
-      if (this.selectedFilter == "Macbook") {this.$store.dispatch("updateBuyItemList", "macbook"); };
-      if (this.selectedFilter == "Local") {
+     
+      if (this.selectedFilter == "Pickup") {
         this.$store.dispatch("setLocalBuyItemList"); };
       if (this.selectedFilter == "All") {
         this.$store.dispatch("setBuyItemList");

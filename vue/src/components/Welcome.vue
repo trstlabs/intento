@@ -7,7 +7,7 @@
 
       <v-card class="text-center">
         <v-card-title class="justify-center" >
-          Welcome! <v-spacer/> <img src="https://www.trustpriceprotocol.com/img/brand/icon.png" width="44"/>
+          Welcome! <v-spacer/> <img src="img/brand/icon.png" width="44"/>
         </v-card-title>
        
   <div v-if="!signin && !signup && !learn">

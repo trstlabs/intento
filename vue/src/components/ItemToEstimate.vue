@@ -56,8 +56,8 @@
     
      <div class="overline">Title</div>
      
-  <div class="body-1"> "
-           {{item.title }} "
+  <div class="body-1"> 
+           {{item.title }} 
          </div>  </v-card>
   </v-col>
   <v-col >
@@ -189,8 +189,8 @@
     
      <div class="overline">Description</div>
      
-  <div class="body-1"> "
-           {{item.description }} "
+  <div class="body-1"> 
+           {{item.description }} 
          </div>  </v-card>
 
    

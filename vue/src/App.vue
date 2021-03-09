@@ -101,8 +101,8 @@
    </v-col><v-col class="text-right"> 
 
       <template>
-      <v-btn icon plain :color="($vuetify.theme.dark) ? 'primary' : 'primary lighten-1'"
-          href="/messages">
+      <v-btn rounded  :color="($vuetify.theme.dark) ? 'primary' : 'primary'"
+          to="/messages">
     
           <v-icon>mdi-message-reply
           </v-icon>
