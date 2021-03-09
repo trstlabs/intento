@@ -59,7 +59,7 @@ export default {
       console.log({error})
     },
     onCaptchaVerified: async function (recaptchaToken) {
-      let accountQuery = await axios.get('https://node.trustpriceprotocol.com/auth/accounts/' + this.$store.state.account.address)
+      let accountQuery = await axios.get('https://node.trustpriceprotocol.com/auth/accounts/' + this.$store.state.wallet.address)
 
       //console.log(accountQuery.data.result.value.address)
       if (!accountQuery.data.result.value.address) {
@@ -69,7 +69,7 @@ export default {
       self.$refs.recaptcha.reset()
       try {
         let response = await axios.post('/.netlify/functions/faucet', {
-          recipient:  this.$store.state.account.address,
+          recipient:  this.$store.state.wallet.address,
           recaptchaToken: recaptchaToken
         })
         if (response.status === 200) {

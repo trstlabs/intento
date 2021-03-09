@@ -181,7 +181,6 @@ export default new Vuex.Store({
       details
     ) {
      
-//console.log(fromHex(details))
 
       var uint8array = new TextEncoder().encode(details);
       console.log(details)
@@ -198,8 +197,10 @@ export default new Vuex.Store({
       const url = `${API}/auth/accounts/${address}`
       const acc = (await axios.get(url)).data
       const account = acc.result.value
+
       commit('set', { key: 'wallet', value: wallet })
       commit('set', { key: 'account', value: account })
+      console.log(this.state.wallet.address)
       //console.log("fdgadagfgfd" + SigningStargateClient.connectWithSigner());
       ////onsole.log(RPC)
       const client = await SigningStargateClient.connectWithSigner(RPC, wallet, {});

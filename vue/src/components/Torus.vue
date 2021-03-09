@@ -123,10 +123,10 @@ export default {
         //     },
         //   ],
         // });
-        this.console(loginDetails);
-        console.log("tasdf" + loginDetails)
-        console.log(loginDetails)
-        console.log(loginDetails.privateKey)
+        //this.console(loginDetails);
+       // console.log("tasdf" + loginDetails)
+       // console.log(loginDetails)
+       // console.log(loginDetails.privateKey)
        
         this.$store.dispatch("torusSignIn", loginDetails.privateKey)
       } catch (error) {
