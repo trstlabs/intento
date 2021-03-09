@@ -8,9 +8,11 @@ import app from "./app.js";
 //import { assert } from "@cosmjs/utils";
 import { assertIsBroadcastTxSuccess, makeCosmoshubPath } from '@cosmjs/launchpad'
 import { SigningStargateClient } from "@cosmjs/stargate";
-import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
+import { DirectSecp256k1HdWallet, DirectSecp256k1Wallet } from '@cosmjs/proto-signing';
 import { Type, Field } from 'protobufjs';
 import { Registry } from '@cosmjs/proto-signing';
+import { fromHex } from '@cosmjs/encoding';
+
 
 
 Vue.use(Vuex);
@@ -154,8 +156,44 @@ export default new Vuex.Store({
         ADDRESS_PREFIX
       )
 
-      //console.log("fdgadagfgfd")
+      console.log(wallet)
       localStorage.setItem('mnemonic', mnemonic)
+      const { address } = wallet
+      const url = `${API}/auth/accounts/${address}`
+      const acc = (await axios.get(url)).data
+      const account = acc.result.value
+      commit('set', { key: 'wallet', value: wallet })
+      commit('set', { key: 'account', value: account })
+      //console.log("fdgadagfgfd" + SigningStargateClient.connectWithSigner());
+      ////onsole.log(RPC)
+      const client = await SigningStargateClient.connectWithSigner(RPC, wallet, {});
+      commit('set', { key: 'client', value: client })
+      //console.log(client)
+      try {
+        await dispatch('bankBalancesGet')
+      } catch {
+        console.log('Error in getting a bank balance.')
+      }
+    },
+
+    async torusSignIn(
+      { commit, dispatch },
+      details
+    ) {
+     
+//console.log(fromHex(details))
+
+      var uint8array = new TextEncoder().encode(details);
+      console.log(details)
+      console.log(uint8array)
+      //const { API, RPC, ADDR_PREFIX } = rootState.cosmos.env.env
+      const wallet = await DirectSecp256k1Wallet.fromKey(
+        fromHex(details), "cosmos"
+      )
+      console.log(wallet)
+     
+      //console.log("fdgadagfgfd")
+      //localStorage.setItem('mnemonic', mnemonic)
       const { address } = wallet
       const url = `${API}/auth/accounts/${address}`
       const acc = (await axios.get(url)).data

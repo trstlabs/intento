@@ -10,6 +10,7 @@
   "dependencies": {
     "@cosmjs/stargate": "^0.24.0-alpha.26",
     "@tendermint/vue": "^0.1.12",
+    "@toruslabs/torus-direct-web-sdk": "^4.5.0",
     "core-js": "^3.6.5",
     "google-recaptcha": "^1.1.0",
     "vue": "^2.6.11",

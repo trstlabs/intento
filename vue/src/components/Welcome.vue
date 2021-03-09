@@ -14,6 +14,7 @@
         <v-card-text > 
           This dApp is in development. Feel free to use the app and see how it behaves. Note: items are examples and are not redeemable for tokens. Feedback is always welcome at the <a href="https://www.trustpriceprotocol.com"> main page.</a>
         </v-card-text>
+        <torus/>
 
        
 
@@ -70,7 +71,7 @@
             Look Around
           </v-btn> 
           <v-btn
-            color="primary darken-1" 
+            color="primary lighten-1" 
             text
             @click="learn = true, loadContent()"
           >
@@ -89,6 +90,7 @@
         </v-card-actions>
   </div>
   <div v-if="signin">
+    <torus/>
     <wallet @signedIn="updateDialog()"/>
     <v-card-actions> <v-col>
           <v-btn 
@@ -104,21 +106,13 @@
 
   <div v-if="signup">
     <v-card-text > 
-         You may choose to sign up with your existing cosmos-address or create a new one. Be sure not to use an important account. Go to any Cosmos Wallet provider (such as <a href="https://wallet.keplr.app"> Keplr Wallet</a>) and generate an account + 24-word seed phrase.  Fill in your address to receive 5 free tokens to get started!
-        </v-card-text>
-<!--<div class="dropdown__textarea">
-								<textarea
-									v-model="mnemonic"
-									placeholder="Mnemonic..."
-									class="dropdown__textarea__input"
-								></textarea>
-								<div
-									class="dropdown__textarea__icon"
-									@click="mnemonicGenerate()"
-								> <v-icon > mdi-plus-box </v-icon>
-									
-								</div></div>-->
-    <faucet/>
+         Receive 5 free tokens to get started! Create a new account linked to Google using DirectAuth.
+        </v-card-text> <div v-if="!existing"> <faucet-torus />  
+       <v-row> <v-divider class="ma-2"/> <p class="caption">  Or </p> <v-divider class="ma-2"/> </v-row>
+        <v-btn text @click="existing = true"> 
+        Sign up with an existing cosmos-address. </v-btn>
+</div>
+    <faucet v-if="existing"/>
 
 <v-card-actions> <v-col>
           
@@ -126,7 +120,7 @@
           <v-btn block
             color="primary"
             text
-            @click="signup = false"
+            @click="signup = false, existing = false"
           >
             Back
           </v-btn></v-col><v-col> <v-btn
@@ -275,10 +269,12 @@
 
   <script>
 import Faucet from './Faucet.vue';
+import FaucetTorus from './FaucetTorus.vue';
+import Torus from './Torus.vue';
 import Wallet from './Wallet.vue';
 //import * as bip39 from 'bip39'
   export default {
-  components: { Wallet, Faucet },
+  components: { Wallet, Faucet, Torus, FaucetTorus },
   data() {
     return {
       //dismiss: false,
@@ -286,6 +282,7 @@ import Wallet from './Wallet.vue';
       signin: false,
       signup: false,
       learn: false,
+      existing: false,
       e1: 1,
       mnemonic: ""
       

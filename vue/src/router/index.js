@@ -7,6 +7,7 @@ import Estimate from "../views/Estimate.vue";
 import Account from "../views/Account.vue";
 import BuyItemDetails from "../views/BuyItemDetails.vue";
 import Messages from "../views/Messages.vue";
+
 import MissingPage from "../views/MissingPage.vue";
 
 Vue.use(VueRouter);
@@ -71,7 +72,6 @@ const routes = [
     meta: {
       title: 'Messages - Marketplace'},
   },
-  
   {
     path: '*',
     name: 'catchAll',
