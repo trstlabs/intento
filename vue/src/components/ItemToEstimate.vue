@@ -51,7 +51,7 @@
   
     <div class="pa-2">
     <v-row>
-  <v-col >
+  <v-col  class="py-0" >
     <v-card elevation="0" >
     
      <div class="overline">Title</div>
@@ -60,7 +60,7 @@
            {{item.title }} 
          </div>  </v-card>
   </v-col>
-  <v-col >
+  <v-col class="py-0">
   <v-card elevation="0">
   <v-chip-group>
     <v-chip outlined small
@@ -189,7 +189,7 @@
     
      <div class="overline">Description</div>
      
-  <div class="body-1"> 
+  <div class="caption"> 
            {{item.description }} 
          </div>  </v-card>
 
@@ -227,16 +227,16 @@
       
 
       <v-row>
-      <v-col cols="4" >
+      <v-col cols="4" class="mx-auto" >
 
     <v-dialog transition="dialog-bottom-transition"
         max-width="600"
       >
       <template v-slot:activator="{ on, attrs }">
-        <span
+        <span   
           v-bind="attrs"
           v-on="on"
-        ><v-subheader class="text-center" >To me, the item is worth</v-subheader>
+        ><p class="text-center caption pa-4"  >To me, it's worth</p>
         </span>
       </template> <template v-slot:default="dialog">
           <v-card>
@@ -270,7 +270,7 @@
     </v-dialog>
         
       </v-col>
-      <v-col cols="8">
+      <v-col cols="8" class="mx-auto">
         <v-text-field
           label="Amount"
           
@@ -308,7 +308,7 @@
     
 <div class="mx-auto">
   <h3 class="text-left"> " </h3>
-        <v-text-field rounded dense clearable
+        <v-text-field rounded dense clearable class="caption"
           placeholder="leave a comment (optional)"
           
           v-model="comment"
@@ -487,7 +487,7 @@
 
 <script>
 import ToEstimateTagBar from "./ToEstimateTagBar.vue";
-import { coins } from "@cosmjs/launchpad";
+
 export default {
 
   components: { ToEstimateTagBar },

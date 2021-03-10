@@ -54,29 +54,22 @@
           </v-btn></v-col>
         </v-card-actions>-->
             <v-card-actions> 
-       
-          <v-btn
-            color="primary" 
+        <v-btn
+            color="primary " 
             text
-            @click="signin = true, loadContent()"
+            @click="learn = true, loadContent()"
           >
-            Sign In
-          </v-btn> 
-          <v-spacer/>
-            <v-btn
-            color="primary lighten-1" 
+            Learn more
+          </v-btn>     <v-btn 
+            color="primary lighten-2" 
             text
             @click="dialog = false, loadContent()"
           >
             Look Around
           </v-btn> 
-          <v-btn
-            color="primary lighten-1" 
-            text
-            @click="learn = true, loadContent()"
-          >
-            Learn more
-          </v-btn>
+         <v-spacer/>
+       
+         
         
          
           <v-spacer/>

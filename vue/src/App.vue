@@ -12,7 +12,7 @@
     </div>
     
     <v-app-bar :color="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-4'"  app dense elevation="2" >
-   <v-col xs="1">
+   <v-col xs="1" class="  mx-auto" >
     
 
      <v-tooltip bottom>
@@ -40,8 +40,8 @@
     </v-col >
 <v-col cols="6" xs="10" class="pa-0" >
 
-      <v-tabs grow centered :background-color="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-4'" >
-       
+      <v-tabs show-arrows fixed-tabs   :background-color="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-4'" >
+      
        <v-tooltip bottom >
       <template v-slot:activator="{ on, attrs }" >
        
@@ -98,17 +98,17 @@
 
   
 
-   </v-col><v-col class="text-right"> 
+   </v-col><v-col class="text-right" > 
 
-      <template>
+      <template><div class="">
       <v-btn rounded elevation="1" plain small :color="($vuetify.theme.dark) ? 'primary' : 'primary'"
           to="/messages">
     
           <v-icon>mdi-message-reply
           </v-icon>
-        </v-btn>
+        </v-btn></div>
       </template>
-  
+
 <!-- <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
       <v-btn 

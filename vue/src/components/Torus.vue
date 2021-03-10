@@ -13,8 +13,8 @@
   </v-col>
    <v-col class="mx-auto"><button>
   <a  href="https://tor.us/" target="_blank" rel="noopener" > <v-img 
-   max-height="60"
-    max-width="100" 
+   max-height="80"
+    max-width="120" 
          
     src="img/google/directauth.png"
    >

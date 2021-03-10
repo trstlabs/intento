@@ -100,12 +100,13 @@ import {
   deleteDbField,
 } from "./firestore";
 import { parseTimestamp, isSameDay } from "./utils/dates";
-import ChatWindow from "vue-advanced-chat";
+//import ChatWindow from "vue-advanced-chat";
+
 import "vue-advanced-chat/dist/vue-advanced-chat.css";
 
 export default {
   components: {
-    ChatWindow,
+    ChatWindow: () => import("vue-advanced-chat"),
   },
 
 //props: ["address"], //["currentUserId"],

@@ -3,7 +3,7 @@ import vuetify from '@/plugins/vuetify' // path to vuetify export
 import App from "./App.vue";
 import router from "./router";
 import store from "./store";
-import _ from "lodash";
+//import _ from "lodash";
 //import firebase from './firebase';
 
 
@@ -11,7 +11,7 @@ import _ from "lodash";
 
 Vue.config.productionTip = false;
 
-Object.defineProperty(Vue.prototype, "$lodash", { value: _ });
+//Object.defineProperty(Vue.prototype, "$lodash", { value: _ });
 
 const ComponentContext = require.context("./", true, /\.vue$/i, "lazy");
 ComponentContext.keys().forEach((componentFilePath) => {
