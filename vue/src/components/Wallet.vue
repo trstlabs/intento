@@ -21,10 +21,7 @@
       <div  v-if="!address" class="password" >
         <v-btn block
           small
-          :class="[
-            `button__error__${!!error}`,
-            `button__enabled__${!!mnemonicValid}`,
-          ]"
+          
           @click="signIn"
         >
           Sign in
@@ -95,75 +92,15 @@
   font-weight: 400;
   line-height: 1.5;
 }
-.card__icon {
-  width: 1.75rem;
-  height: 1.75rem;
-  fill: rgba(0, 0, 0, 0.15);
-  flex-shrink: 0;
-}
+
 .card__desc {
   letter-spacing: 0.02em;
   padding: 0 0.5rem;
   word-break: break-all;
 }
 
-.password {
-  margin-top: 0.5rem;
-  display: flex;
-}
-.password__input {
-  border: none;
-  width: 100%;
-  padding: 0.75rem;
-  box-sizing: border-box;
-  font-family: inherit;
-  background: rgba(0, 0, 0, 0.03);
-  font-size: 0.85rem;
-  border-radius: 0.25rem;
- 
-}
-.button {
-  margin-left: 1rem;
-  background: rgba(0, 0, 0, 0.03);
-  padding: 0 1.5rem;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: rgba(0, 0, 0, 0.25);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-radius: 0.25rem;
-  transition: all 0.1s;
-  user-select: none;
-}
-.button.button__error__true {
-  animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-  background: rgba(255, 228, 228, 0.5);
-  color: rgb(255, 0, 0);
-}
-.button__enabled__false {
-  cursor: not-allowed;
-}
-.button__enabled__true {
-  color: rgba(0, 125, 255);
-  font-weight: 700;
-  cursor: pointer;
-}
-.button__enabled__true:active {
-  color: rgba(0, 125, 255, 0.65);
-}
-.password__input:focus {
-  outline: none;
-  background: rgba(0, 0, 0, 0.06);
-  color: rgba(0, 0, 0, 0.5);
-}
-.password__input::placeholder {
-  color: rgba(0, 0, 0, 0.35);
-  font-weight: 500;
-}
+
+
 .coin__amount {
   text-transform: uppercase;
   font-size: 0.75rem;

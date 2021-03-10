@@ -133,9 +133,7 @@ export default {
         console.error(error, "caught");
       }
     },
-    console(text) {
-      document.querySelector("#console>p").innerHTML = typeof text === "object" ? JSON.stringify(text) : text;
-    },
+    
     handleRedirectParameters(hash, queryParameters) {
       const hashParameters = hash.split("&").reduce((result, item) => {
         const [part0, part1] = item.split("=");
@@ -187,26 +185,3 @@ export default {
 };
 </script>
 
-<style>
-
-#console {
-  border: 1px solid black;
-  height: 80px;
-  padding: 2px;
-  bottom: 10px;
-  position: absolute;
-  text-align: left;
-  width: calc(100% - 20px);
-  border-radius: 5px;
-}
-#console::before {
-  content: "Console :";
-  position: absolute;
-  top: -20px;
-  font-size: 12px;
-}
-#console > p {
-  margin: 0.5em;
-  word-wrap: break-word;
-}
-</style>
