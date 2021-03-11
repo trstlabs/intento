@@ -399,7 +399,7 @@ export default new Vuex.Store({
         typeUrl,
         value: {
           estimator: state.account.address,
-          deposit: 5,
+
           ...body
         }
       };
