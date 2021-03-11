@@ -731,7 +731,8 @@ console.log("before query")
 
       const isOfflineData = {
         state: "offline",
-        lastChanged: await firebase.database.ServerValue.TIMESTAMP,
+        //lastChanged: await firebase.database.ServerValue.TIMESTAMP,
+      lastChanged: await firebase.database.ServerValue.TIMESTAMP,
       };
 
       const isOnlineData = {
