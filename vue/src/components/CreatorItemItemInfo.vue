@@ -189,16 +189,16 @@
     </v-chip>
    
     <v-chip outlined medium label class="ma-1 caption"
-            v-for="itemtag in thisitem.tags" :key="itemtag"
+            v-for="itemtags in thisitem.tags" :key="itemtags"
           > <v-icon small left>
         mdi-tag-outline
-      </v-icon>{{ itemtag }}</v-chip>
+      </v-icon>{{ itemtags }}</v-chip>
 
        <v-chip outlined medium label class="ma-1"
             v-for="country in thisitem.shippingregion" :key="country"
           > <v-icon small left>
         mdi-flag-outline
-      </v-icon>{{ itemtag }}</v-chip>
+      </v-icon>{{ country }}</v-chip>
         
 
 <v-divider class="ma-2"/>

@@ -18,11 +18,11 @@
   <v-card elevation="0">
   <v-chip-group>
     <v-chip outlined small class="caption"
-            v-for="itemtag in thisitem.tags" :key="itemtag"
+            v-for="previewtag in thisitem.tags" :key="previewtag"
           > <v-icon small left>
         mdi-tag-outline
       </v-icon>
-            {{ itemtag }}
+            {{ previewtag }}
           </v-chip>
           <!--<v-chip 
         class="ma-1" outlined small
@@ -222,19 +222,20 @@
           </div>
         </div>
 
-        <v-btn
-          :class="[`button__valid__${!!valid && !flight && hasAddress}`]"
+        </div>
+        <div class="pt-4 text-right">
+        <v-btn :disabled="!valid || !!flight || !hasAddress"
+         color="primary"
           @click="create()"
         >
-          Place item
+          Place item  <v-icon > mdi-arrow-right-bold</v-icon>
           <div class="button__label" v-if="flight">
             <div class="button__label__icon">
               <icon-refresh />
             </div>
             Creating item...
           </div>
-        </v-btn>
-        </div>
+        </v-btn> </div>
       </div>
     </div>
   
@@ -243,7 +244,7 @@
 <script>
 import AppText from "./AppText.vue";
 import CreateItemForm from "./CreateItemForm.vue";
-import { databaseRef, storageRef } from './firebase/db';
+import { fb ,databaseRef } from './firebase/db';
 
 export default {
   props: ["thisitem"],
@@ -326,7 +327,8 @@ export default {
 
     onUpload() {
       this.img1 = null;
-      storageRef
+      let storageRef = fb
+        .storage()
         .ref(`${this.imageData.name}`)
         .put(this.imageData);
       storageRef.on(
@@ -349,7 +351,7 @@ export default {
       );
     },
     previewImage2(event) {
-      console.log(firebase);
+    
       this.uploadValue2 = 0;
       this.img2 = null;
       this.imageData2 = event.target.files[0];
@@ -358,7 +360,8 @@ export default {
 
     onUpload2() {
       this.img2 = null;
-      storageRef
+      let storageRef = fb
+        .storage()
         .ref(`${this.imageData2.name}`)
         .put(this.imageData2);
       storageRef.on(
@@ -380,7 +383,7 @@ export default {
       );
     },
     previewImage3(event) {
-      console.log(firebase);
+  
       this.uploadValue3 = 0;
       this.img3 = null;
       this.imageData3 = event.target.files[0];
@@ -389,7 +392,8 @@ export default {
 
     onUpload3() {
       this.img3 = null;
-      storageRef
+      let storageRef = fb
+        .storage()
         .ref(`${this.imageData3.name}`)
         .put(this.imageData3);
       storageRef.on(

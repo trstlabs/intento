@@ -286,14 +286,12 @@
         > </v-combobox>-->
 
               </div>
+              <div class="text-center pt-6">
+              <v-btn color="primary" :disabled="!valid || !!flight || !hasAddress"
               
-              <v-btn
-                :class="[
-                  `button__enabled__${!!valid && !flight && hasAddress}`,
-                ]"
                 @click="submit()"
-              >
-                Next
+              > Next  
+                <v-icon > mdi-arrow-right-bold</v-icon>
                 <div class="v-btn__label" v-if="flight">
                   <div class="v-btn__label__icon">
                     <icon-refresh />
@@ -301,7 +299,7 @@
                   Creating item ID...
                 </div>
               </v-btn>
-              
+              </div>
             </div>
           </v-stepper-content>
         </div>
@@ -430,7 +428,7 @@ export default {
     valid() {
       if (
         this.fields.title.trim().length > 3 &&
-      this.fields.description.trim().length > 4 && this.selectedTags.length > 0
+      this.fields.description.trim().length > 4 && this.selectedTags.length > 0 && this.selectedCountries.length > 0 
       )
        {
         return true;
@@ -467,7 +465,7 @@ export default {
          tags: this.selectedTags,
            condition: this.fields.condition,
           shippingregion: this.selectedCountries,
-          depositamount: "5",
+          depositamount: this.fields.estimationcount,
         };
         
         

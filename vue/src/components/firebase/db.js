@@ -21,6 +21,7 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 export const db = firebase.firestore()
+export const fb = firebase
 export const storageRef = firebase.storage().ref()
 export const databaseRef = firebase.database()
 export const usersRef = db.collection('users')
@@ -31,3 +32,4 @@ export const filesRef = storageRef.child('files')
 
 export const dbTimestamp = firebase.firestore.FieldValue.serverTimestamp()
 export const deleteDbField = firebase.firestore.FieldValue.delete()
+

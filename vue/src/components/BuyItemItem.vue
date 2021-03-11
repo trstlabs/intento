@@ -318,7 +318,7 @@
 
 
 import BuyItemDetails from "../views/BuyItemDetails.vue";
-import {usersRef, roomsRef} from "./firebase/db.js"
+import {usersRef, roomsRef, databaseRef} from "./firebase/db.js"
 export default {
   components: { BuyItemDetails },
   props: ["itemid"],
@@ -340,8 +340,8 @@ data() {
   mounted() {
     this.loadingitem = true;
     const id = this.itemid;
-    const db = firebase.database();
-    const imageRef = db.ref("ItemPhotoGallery/" + id);
+
+    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 
@@ -442,9 +442,9 @@ data() {
       if (this.imageurl != "") {
         this.loadingitem = true;
         const id = this.itemid;
-        const db = firebase.database();
+      
 
-        const imageRef = db.ref("ItemPhotoGallery/" + id);
+        const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
         imageRef.on("value", (snapshot) => {
           const data = snapshot.val();
           if (data != null && data.photo != null) {

@@ -91,7 +91,7 @@
 </template>
 
 <script>
-import {
+import { firebase,
   databaseRef,
   roomsRef,
   messagesRef,

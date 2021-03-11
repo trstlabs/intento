@@ -18,14 +18,14 @@ import { fromHex } from '@cosmjs/encoding';
 Vue.use(Vuex);
 
 
-//const API = "http://localhost:1317";
-const API = "https://node.trustpriceprotocol.com"
+const API = "http://localhost:1317";
+//const API = "https://node.trustpriceprotocol.com"
 //const API = "http://localhost:1317"
 const ADDRESS_PREFIX = 'cosmos';
 const PATH = 'danieljdd.tpp.tpp'
 
-const RPC = 'https://cli.trustpriceprotocol.com'
-//const RPC = 'http://localhost:26657'
+//const RPC = 'https://cli.trustpriceprotocol.com'
+const RPC = 'http://localhost:26657'
 
 export default new Vuex.Store({
   state: {

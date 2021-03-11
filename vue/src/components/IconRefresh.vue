@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="button__label__icon">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="100%"
@@ -12,3 +12,14 @@
     </svg>
   </div>
 </template>
+
+<style scoped>
+.button__label__icon {
+  height: 1em;
+  width: 1em;
+  margin: 0 0.5em 0 0.5em;
+  fill: rgba(0, 0, 0, 0.25);
+  animation: rotate linear 4s infinite;
+}
+</style>
+
