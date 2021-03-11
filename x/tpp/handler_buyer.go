@@ -222,7 +222,12 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 			estimator := k.GetEstimator(ctx, key)
 
 			if estimator.Estimator == item.Highestestimator {
-				k.BurnCoins(ctx, estimator.Deposit)
+				if item.Depositamount < (item.Estimationprice / 4) {
+					k.BurnCoins(ctx, estimator.Deposit)
+				} else {
+					k.DeleteEstimator(ctx, key)
+				}
+
 			} else {
 				k.DeleteEstimator(ctx, key)
 			}

@@ -9,7 +9,9 @@ import (
 	//sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"strconv"
+
 	"github.com/spf13/cobra"
+
 	//sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,16 +24,16 @@ func CmdCreateItem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-item [title] [description] [shippingcost] [localpickup] [estimationcount] [tags] [condition] [shippingregion]",
 		Short: "Creates a new item",
-		Args:  cobra.ExactArgs(8),
+		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsTitle := string(args[0])
 			argsDescription := string(args[1])
-			argsShippingcost, _ := strconv.ParseInt(args[2],10,64)
+			argsShippingcost, _ := strconv.ParseInt(args[2], 10, 64)
 			argsLocalpickup := true
-			if args[3] == "0"{
+			if args[3] == "0" {
 				argsLocalpickup = false
 			}
-			
+
 			//argsEstimationcounthash := string(args[4])
 
 			//estimationcheck, ok := sdk.NewIntFromString(args[4])
@@ -39,25 +41,22 @@ func CmdCreateItem() *cobra.Command {
 			//	return sdkerrors.Wrap(types.ErrArgumentMissingOrNonUInteger, "not a number or lower than zero")
 			//}
 
-			
-
 			argsTags := strings.Split(args[5], ",")
 
-			argsEstimationcount, _ := strconv.ParseInt(args[4],10,64)
-		
+			argsEstimationcount, _ := strconv.ParseInt(args[4], 10, 64)
 
-			argsCondition, _ := strconv.ParseInt(args[6],10,64)
+			argsCondition, _ := strconv.ParseInt(args[6], 10, 64)
 
-		
-		
 			argsShippingregion := strings.Split(args[7], ",")
+
+			argsDepositAmount, _ := strconv.ParseInt(args[8], 10, 64)
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), bool(argsLocalpickup), int64(argsEstimationcount), []string(argsTags), int64(argsCondition), []string(argsShippingregion))
+			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), bool(argsLocalpickup), int64(argsEstimationcount), []string(argsTags), int64(argsCondition), []string(argsShippingregion), int64(argsDepositAmount))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -77,17 +76,12 @@ func CmdUpdateItem() *cobra.Command {
 		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id := args[0]
-			
-	
-			argsShippingcost, _ := strconv.ParseInt(args[1],10,64)
+
+			argsShippingcost, _ := strconv.ParseInt(args[1], 10, 64)
 			argsLocalpickup := true
-			if args[2] == "0"{
+			if args[2] == "0" {
 				argsLocalpickup = false
 			}
-		
-
-			
-
 
 			argsShippingregion := strings.Split(args[3], ",")
 
@@ -135,7 +129,6 @@ func CmdDeleteItem() *cobra.Command {
 	return cmd
 }
 
-
 func CmdRevealEstimation() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "reveal-estimation [itemID]",
@@ -149,7 +142,6 @@ func CmdRevealEstimation() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			
 
 			msg := types.NewMsgRevealEstimation(clientCtx.GetFromAddress().String(), string(itemID))
 			if err := msg.ValidateBasic(); err != nil {
@@ -163,7 +155,6 @@ func CmdRevealEstimation() *cobra.Command {
 
 	return cmd
 }
-
 
 func CmdItemTransferable() *cobra.Command {
 	cmd := &cobra.Command{
@@ -182,9 +173,8 @@ func CmdItemTransferable() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			
 
-			msg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(),bool(transferBool), string(itemID))
+			msg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(), bool(transferBool), string(itemID))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -213,9 +203,8 @@ func CmdItemShipping() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			
 
-			msg := types.NewMsgItemShipping(clientCtx.GetFromAddress().String(),bool(shippingtrackingBool), string(itemID))
+			msg := types.NewMsgItemShipping(clientCtx.GetFromAddress().String(), bool(shippingtrackingBool), string(itemID))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -227,4 +216,3 @@ func CmdItemShipping() *cobra.Command {
 
 	return cmd
 }
-

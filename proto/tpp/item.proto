@@ -33,6 +33,7 @@ message Item {
   int64 condition = 21; 
   repeated string shippingregion = 22; 
   bool thank = 23; 
+  int64 depositamount = 24;
 }
 
 message MsgCreateItem {
@@ -48,6 +49,7 @@ message MsgCreateItem {
 
   int64 condition = 8; 
   repeated string shippingregion = 9; 
+  int64 depositamount = 10;
 }
 
 message MsgUpdateItem {

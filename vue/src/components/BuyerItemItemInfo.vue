@@ -240,6 +240,7 @@
 
 <script>
 import ItemListBuyer from "./ItemListBuyer.vue";
+import {databaseRef} from "./firebase/db.js"
 export default {
   props: ["itemid"],
   components: { ItemListBuyer },
@@ -258,9 +259,9 @@ export default {
    mounted() {
     this.loadingitem = true;
     const id = this.itemid;
-    const db = firebase.database();
+    
 
-    const imageRef = db.ref("ItemPhotoGallery/" + id);
+    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 

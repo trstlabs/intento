@@ -233,8 +233,10 @@
 </template>
 
 <script>
+import { databaseRef } from './firebase/db';
 import ItemListBuy from "./ItemListBuy.vue";
 import WalletCoins from "./WalletCoins.vue";
+
 export default {
   props: ["itemid"],
   components: { ItemListBuy, WalletCoins },
@@ -256,8 +258,8 @@ export default {
   mounted() {
     this.loadingitem = true;
     const id = this.itemid;
-    const db = firebase.database();
-    const imageRef = db.ref("ItemPhotoGallery/" + id);
+
+    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 

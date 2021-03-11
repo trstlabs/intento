@@ -541,6 +541,7 @@
 </template>
 
 <script>
+import { databaseRef } from './firebase/db';
 
 import ItemListCreator from "./ItemListCreator.vue";
 export default {
@@ -579,9 +580,9 @@ export default {
   mounted() {
     this.loadingitem = true;
     const id = this.itemid;
-    const db = firebase.database();
 
-    const imageRef = db.ref("ItemPhotoGallery/" + id);
+
+    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 

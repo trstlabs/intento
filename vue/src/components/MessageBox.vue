@@ -98,15 +98,15 @@ import {
   usersRef,
   filesRef,
   deleteDbField,
-} from "./firestore";
+} from "./firebase/db.js";
 import { parseTimestamp, isSameDay } from "./utils/dates";
-//import ChatWindow from "vue-advanced-chat";
+import ChatWindow from "vue-advanced-chat";
 
 import "vue-advanced-chat/dist/vue-advanced-chat.css";
 
 export default {
   components: {
-    ChatWindow: () => import("vue-advanced-chat"),
+    ChatWindow,
   },
 
 //props: ["address"], //["currentUserId"],
@@ -822,9 +822,9 @@ console.log("CHECKED")
 console.log(user)
 
 
-if (user.o_.docs[0] != null) { console.log("User Exists")
+if (user.docs[0] != null) { console.log("User Exists")
 //console.log(user.o_.docs[0].id)
-this.currentUserId = user.o_.docs[0].id}else { console.log("User does not exist")
+this.currentUserId = user.docs[0].id}else { console.log("User does not exist")
    	const { id } = await usersRef.add({ username: this.$store.state.account.address })
      	console.log(id)
 	 await usersRef.doc(id).update({ _id: id })

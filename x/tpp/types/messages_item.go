@@ -8,7 +8,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup bool, estimationcount int64, tags []string, condition int64, shippingregion []string) *MsgCreateItem {
+func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup bool, estimationcount int64, tags []string, condition int64, shippingregion []string, depositamount int64) *MsgCreateItem {
 	return &MsgCreateItem{
 
 		Creator:         creator,
@@ -20,6 +20,7 @@ func NewMsgCreateItem(creator string, title string, description string, shipping
 		Tags:            tags,
 		Condition:       condition,
 		Shippingregion:  shippingregion,
+		Depositamount:   depositamount,
 	}
 }
 
@@ -56,7 +57,7 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 	if len(msg.Shippingregion) > 5 || len(msg.Shippingregion) < 1 {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region invalid")
 	}
-	if len(msg.Description) > 500 {
+	if len(msg.Description) > 800 {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "description too long")
 	}
 	if msg.Condition > 6 {

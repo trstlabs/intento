@@ -213,6 +213,7 @@
 </template>
 
 <script>
+import { databaseRef } from './firebase/db';
 import ItemListInterested from "./ItemListInterested.vue";
 export default {
   props: ["itemid"],
@@ -234,9 +235,8 @@ export default {
 
   mounted() {
     this.loadingitem = true;
-    const id = this.itemid;
-    const db = firebase.database();
-    const imageRef = db.ref("ItemPhotoGallery/" + id);
+
+    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 
@@ -337,9 +337,9 @@ export default {
       if (this.showinfo && this.imageurl != "") {
         this.loadingitem = true;
         const id = this.itemid;
-        const db = firebase.database();
+ 
 
-        const imageRef = db.ref("ItemPhotoGallery/" + id);
+        const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
         imageRef.on("value", (snapshot) => {
           const data = snapshot.val();
           if (data != null && data.photo != null) {

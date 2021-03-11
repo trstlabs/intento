@@ -4,12 +4,14 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 //import _ from "lodash";
-//import firebase from './firebase';
 
+import {firestorePlugin} from "vuefire";
 
 //Vue.use(Vuetify);
 
 Vue.config.productionTip = false;
+
+Vue.use(firestorePlugin);
 
 //Object.defineProperty(Vue.prototype, "$lodash", { value: _ });
 
@@ -19,22 +21,14 @@ ComponentContext.keys().forEach((componentFilePath) => {
   Vue.component(componentName, () => ComponentContext(componentFilePath));
 });
 
-var firebaseConfig = {
-  apiKey: process.env.VUE_APP_API_KEY,
-  authDomain: "trustitems-cbb92.firebaseapp.com",
-  databaseURL: "https://trustitems-cbb92.firebaseio.com",
-  projectId: "trustitems-cbb92",
-  storageBucket: "trustitems-cbb92.appspot.com",
-  messagingSenderId: "1033037336313",
-  appId: "1:1033037336313:web:475aaf4e502bc36adf9c28",
-  measurementId: "G-XQ9H3T2QNM",
-};
+
+
+
 
 
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-firebase.analytics();
+//firebase.analytics();
 
 new Vue({
   router,

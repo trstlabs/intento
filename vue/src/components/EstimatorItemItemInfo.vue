@@ -58,7 +58,7 @@
                 
                 
                 You are the lowest estimator. If the item owner does not accept
-                the estimation price, you will lose the deposit.
+                the estimation price, you  lose the deposit.
               </app-text>
               <app-text class="mt-1" 
                 v-if="thisitem.highestestimator === userAddress"
@@ -68,7 +68,7 @@
         mdi-account-arrow-right
       </v-icon>
       You are the highest estimator. If the item is not transferred,
-                you will loose the deposit.
+                you lose the deposit.
               </app-text>
             </v-col>
 
@@ -88,6 +88,7 @@
 </template>
 
 <script>
+import { databaseRef } from './firebase/db';
 import ItemListEstimator from "./ItemListEstimator.vue";
 export default {
   props: ["itemid"],
@@ -104,9 +105,8 @@ export default {
   mounted() {
     this.loadingitem = true;
     const id = this.itemid;
-    const db = firebase.database();
 
-    const imageRef = db.ref("ItemPhotoGallery/" + id);
+    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 

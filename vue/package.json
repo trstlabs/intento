@@ -12,11 +12,13 @@
     "@tendermint/vue": "^0.1.12",
     "@toruslabs/torus-direct-web-sdk": "^4.5.0",
     "core-js": "^3.6.5",
+    "firebase": "^8.3.0",
     "google-recaptcha": "^1.1.0",
     "vue": "^2.6.11",
     "vue-advanced-chat": "^0.8.0",
     "vue-recaptcha": "^1.3.0",
     "vue-router": "^3.2.0",
+    "vuefire": "^2.2.5",
     "vuetify": "^2.3.19",
     "vuex": "^3.4.0"
   },

@@ -234,7 +234,12 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 			estimator := k.GetEstimator(ctx, key)
 
 			if estimator.Estimator == item.Lowestestimator {
-				k.BurnCoins(ctx, estimator.Deposit)
+				if item.Depositamount < (item.Estimationprice / 4) {
+					k.BurnCoins(ctx, estimator.Deposit)
+				} else {
+					k.DeleteEstimator(ctx, key)
+				}
+
 			} else {
 				k.DeleteEstimator(ctx, key)
 			}
@@ -346,7 +351,12 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 			estimator := k.GetEstimator(ctx, key)
 
 			if estimator.Estimator == item.Lowestestimator {
-				k.BurnCoins(ctx, estimator.Deposit)
+				if item.Depositamount < (item.Estimationprice / 4) {
+					k.BurnCoins(ctx, estimator.Deposit)
+				} else {
+					k.DeleteEstimator(ctx, key)
+				}
+
 			} else {
 				k.DeleteEstimator(ctx, key)
 			}

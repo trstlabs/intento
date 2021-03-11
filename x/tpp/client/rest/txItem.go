@@ -19,17 +19,18 @@ import (
 var _ = strconv.Itoa(42)
 
 type createItemRequest struct {
-	BaseReq                     rest.BaseReq `json:"base_req"`
-	Creator         string       `json:"creator"`
-	Title           string       `json:"title"`
-	Description     string       `json:"description"`
+	BaseReq     rest.BaseReq `json:"base_req"`
+	Creator     string       `json:"creator"`
+	Title       string       `json:"title"`
+	Description string       `json:"description"`
 
-	Shippingcost    int64     `json:"shippingcost"`
-	Localpickup     bool         `json:"localpickup"`
+	Shippingcost    int64    `json:"shippingcost"`
+	Localpickup     bool     `json:"localpickup"`
 	Estimationcount int64    `json:"estimationcount"`
-	Tags                        []string       `json:"tags"`
-	Condition                   int64       `json:"condition"`
-	Shippingregion              []string       `json:"shippingregion"`
+	Tags            []string `json:"tags"`
+	Condition       int64    `json:"condition"`
+	Shippingregion  []string `json:"shippingregion"`
+	Depositamount   int64    `json:"Depositamount"`
 }
 
 func createItemHandler(clientCtx client.Context) http.HandlerFunc {
@@ -51,15 +52,12 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-
-
-
 		parsedTitle := req.Title
 
 		parsedDescription := req.Description
 
 		parsedShippingcost := req.Shippingcost
-	
+
 		parsedLocalpickup := req.Localpickup
 
 		parsedEstimationcount := req.Estimationcount
@@ -67,14 +65,13 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 		//var estimationcountHash = sha256.Sum256([]byte(estimationcount))
 		//var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
 
-	
-	
 		parsedTags := req.Tags
-
 
 		parsedCondition := req.Condition
 
 		parsedShippingregion := req.Shippingregion
+
+		parsedDepositAmount := req.Depositamount
 
 		msg := types.NewMsgCreateItem(
 			req.Creator,
@@ -83,11 +80,12 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 			parsedShippingcost,
 			parsedLocalpickup,
 			parsedEstimationcount,
-		
+
 			parsedTags,
 
 			parsedCondition,
 			parsedShippingregion,
+			parsedDepositAmount,
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
@@ -95,13 +93,13 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 }
 
 type updateItemRequest struct {
-	BaseReq                     rest.BaseReq `json:"base_req"`
-	Creator                     string       `json:"creator"`
+	BaseReq rest.BaseReq `json:"base_req"`
+	Creator string       `json:"creator"`
 
-	Shippingcost                int64       `json:"shippingcost"`
-	Localpickup                 bool       `json:"localpickup"`
+	Shippingcost int64 `json:"shippingcost"`
+	Localpickup  bool  `json:"localpickup"`
 
-	Shippingregion              []string       `json:"shippingregion"`
+	Shippingregion []string `json:"shippingregion"`
 }
 
 func updateItemHandler(clientCtx client.Context) http.HandlerFunc {
@@ -125,11 +123,9 @@ func updateItemHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-	
 		parsedShippingcost := req.Shippingcost
-	
-		parsedLocalpickup := req.Localpickup
 
+		parsedLocalpickup := req.Localpickup
 
 		parsedShippingregion := req.Shippingregion
 

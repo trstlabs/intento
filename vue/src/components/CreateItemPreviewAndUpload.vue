@@ -243,6 +243,7 @@
 <script>
 import AppText from "./AppText.vue";
 import CreateItemForm from "./CreateItemForm.vue";
+import { databaseRef, storageRef } from './firebase/db';
 
 export default {
   props: ["thisitem"],
@@ -299,9 +300,8 @@ export default {
         photo3: this.img3,
         //itemid: this.thisitem.id,
       };
-      console.log(firebase);
-      firebase
-        .database()
+
+      databaseRef
         .ref("ItemPhotoGallery/" + this.thisitem.id)
 
         .set(post)
@@ -317,7 +317,7 @@ export default {
 
     //i am lazy and busy so I double the functions for the other images. Code needs to be improved later ofc.
     previewImage(event) {
-      console.log(firebase);
+     
       this.uploadValue = 0;
       this.img1 = null;
       this.imageData = event.target.files[0];
@@ -326,8 +326,7 @@ export default {
 
     onUpload() {
       this.img1 = null;
-      const storageRef = firebase
-        .storage()
+      storageRef
         .ref(`${this.imageData.name}`)
         .put(this.imageData);
       storageRef.on(
@@ -359,8 +358,7 @@ export default {
 
     onUpload2() {
       this.img2 = null;
-      const storageRef = firebase
-        .storage()
+      storageRef
         .ref(`${this.imageData2.name}`)
         .put(this.imageData2);
       storageRef.on(
@@ -391,8 +389,7 @@ export default {
 
     onUpload3() {
       this.img3 = null;
-      const storageRef = firebase
-        .storage()
+      storageRef
         .ref(`${this.imageData3.name}`)
         .put(this.imageData3);
       storageRef.on(

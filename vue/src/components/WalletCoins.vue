@@ -151,12 +151,10 @@
 </style>
 
 <script>
-import IconUser from "@/components/IconUser.vue";
+
 import * as bip39 from "bip39";
 export default {
-  components: {
-    IconUser,
-  },
+
   data() {
     return {
       password: "",

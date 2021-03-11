@@ -34,6 +34,10 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s does exist", msg.Itemid+"-"+msg.Estimator))
 	}
 
+	if msg.Deposit != item.Depositamount {
+		return nil, sdkerrors.Wrap(nil, "deposit invalid")
+	}
+
 	//checks whether estimationcount has been reached
 	var estimatorlistlen = strconv.Itoa(len(item.Estimatorlist))
 	var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlen + item.Creator))

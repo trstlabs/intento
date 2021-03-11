@@ -41,7 +41,7 @@
     >
       <template v-slot:activator="{ on, attrs }">
        <h2  v-bind="attrs"
-          v-on="on"  class="display-2  pa-4 text-center">Place '{{fields.title}}'</h2>
+          v-on="on"  class="headline  pa-4 text-center">Place '{{fields.title}}'</h2>
     
       </template>
 
@@ -453,6 +453,7 @@ export default {
          ["tags", 7,'string', "repeated"],
            ["condition",  8, 'int64', "optional"],
            ["shippingregion",  9,'string', "repeated"],
+           ["depositamount", 10, "int64", "optional" ]
       
         ];
  //const body = [this.$store.state.account.address,"dsaf", "asdf", 33, 1, "sdfsdf", "asdf", 4, "sfda"]
@@ -466,6 +467,7 @@ export default {
          tags: this.selectedTags,
            condition: this.fields.condition,
           shippingregion: this.selectedCountries,
+          depositamount: "5",
         };
         
         

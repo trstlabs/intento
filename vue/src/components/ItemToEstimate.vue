@@ -487,6 +487,7 @@
 
 <script>
 import ToEstimateTagBar from "./ToEstimateTagBar.vue";
+import {databaseRef} from "./firebase/db.js"
 
 export default {
 
@@ -633,9 +634,9 @@ this.loadItemPhotos();
     loadItemPhotos() {
       this.loadingitem = true;
       const id = this.item.id;
-      const db = firebase.database();
+      //const db = firebase.database();
 
-      const imageRef = db.ref("ItemPhotoGallery/" + id);
+      const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
       imageRef.on("value", (snapshot) => {
         const data = snapshot.val();
 

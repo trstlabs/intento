@@ -294,6 +294,7 @@
             </div>
           </div>
         </div>
+        <v-btn :disabled="!this.$store. state.account.address" text to="/messages" @click="createRoom"> Message Seller</v-btn>
         <div class="pa-2 mx-auto caption"><v-btn text @click="sellerInfo">Seller Info </v-btn>
          <v-card elevation="0" v-if="info">
 
@@ -314,7 +315,10 @@
   </div>
 </template>
 <script>
+
+
 import BuyItemDetails from "../views/BuyItemDetails.vue";
+import {usersRef, roomsRef} from "./firebase/db.js"
 export default {
   components: { BuyItemDetails },
   props: ["itemid"],
@@ -457,6 +461,19 @@ data() {
     this.sold = "no"
     if(rs != ""){this.sold = rs};
     this.info = true;
+    },
+     async createRoom() {
+      
+
+      const { id } = await usersRef.add({ username: this.thisitem.creator});
+      await usersRef.doc(id).update({ _id: id });
+      await roomsRef.add({
+        users: [id, this.$store.state.account.address],
+        lastUpdated: new Date(),
+      });
+
+      
+      
     },
   },
 };
