@@ -9,7 +9,7 @@ import {firestorePlugin} from "vuefire";
 
 //Vue.use(Vuetify);
 
-Vue.config.productionTip = false;
+Vue.config.productionTip = true;
 
 Vue.use(firestorePlugin);
 
