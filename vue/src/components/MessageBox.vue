@@ -91,7 +91,7 @@
 </template>
 
 <script>
-import { firebase,
+import { fb,
   databaseRef,
   roomsRef,
   messagesRef,
@@ -680,8 +680,8 @@ console.log("before query")
 
     async sendMessageReaction({ reaction, remove, messageId, roomId }) {
       const dbAction = remove
-        ? firebase.firestore.FieldValue.arrayRemove(this.currentUserId)
-        : firebase.firestore.FieldValue.arrayUnion(this.currentUserId);
+        ? fb.firestore.FieldValue.arrayRemove(this.currentUserId)
+        : fb.firestore.FieldValue.arrayUnion(this.currentUserId);
 
       await messagesRef(roomId)
         .doc(messageId)
@@ -702,8 +702,8 @@ console.log("before query")
       this.typingMessageCache = message;
 
       const dbAction = message
-        ? firebase.firestore.FieldValue.arrayUnion(this.currentUserId)
-        : firebase.firestore.FieldValue.arrayRemove(this.currentUserId);
+        ? fb.firestore.FieldValue.arrayUnion(this.currentUserId)
+        : fb.firestore.FieldValue.arrayRemove(this.currentUserId);
 
       roomsRef.doc(roomId).update({
         typingUsers: dbAction,
@@ -732,12 +732,12 @@ console.log("before query")
       const isOfflineData = {
         state: "offline",
         //lastChanged: await firebase.database.ServerValue.TIMESTAMP,
-      lastChanged: await firebase.database.ServerValue.TIMESTAMP,
+      lastChanged: await fb.database.ServerValue.TIMESTAMP,
       };
 
       const isOnlineData = {
         state: "online",
-        lastChanged: await firebase.database.ServerValue.TIMESTAMP,
+        lastChanged: await fb.database.ServerValue.TIMESTAMP,
       };
 
       databaseRef.ref(".info/connected")
@@ -756,7 +756,7 @@ console.log("before query")
     listenUsersOnlineStatus(rooms) {
       rooms.map((room) => {
         room.users.map((user) => {
-          const listener = firebase
+          const listener = fb
             .database()
             .ref("/status/" + user._id)
             .on("value", (snapshot) => {
@@ -857,7 +857,7 @@ this.currentUserId = user.docs[0].id}else { console.log("User does not exist")
 
       await roomsRef
         .doc(this.inviteRoomId)
-        .update({ users: firebase.firestore.FieldValue.arrayUnion(id) });
+        .update({ users: fb.firestore.FieldValue.arrayUnion(id) });
 
       this.inviteRoomId = null;
       this.invitedUsername = "";
@@ -876,7 +876,7 @@ this.currentUserId = user.docs[0].id}else { console.log("User does not exist")
       this.disableForm = true;
 
       await roomsRef.doc(this.removeRoomId).update({
-        users: firebase.firestore.FieldValue.arrayRemove(this.removeUserId),
+        users: fb.firestore.FieldValue.arrayRemove(this.removeUserId),
       });
 
       this.removeRoomId = null;
