@@ -59,11 +59,13 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 
 	if item.Status != "" && item.Buyer == "" {
 
-		for _, element := range item.Estimatorlist {
-			//apply this to each element
-			key := msg.Id + "-" + element
+		if len(item.Estimatorlist) > 0 {
+			for _, element := range item.Estimatorlist {
+				//apply this to each element
+				key := msg.Id + "-" + element
 
-			k.DeleteEstimator(ctx, key)
+				k.DeleteEstimator(ctx, key)
+			}
 		}
 
 		item.Title = "Deleted"
@@ -90,15 +92,15 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 	} else {
 
 		//if estimation is made pay back all the estimators/or buyer (like handlerItemTransfer)
+		if len(item.Estimatorlist) > 0 {
+			for _, element := range item.Estimatorlist {
+				//apply this to each element
+				key := msg.Id + "-" + element
 
-		for _, element := range item.Estimatorlist {
-			//apply this to each element
-			key := msg.Id + "-" + element
+				k.DeleteEstimator(ctx, key)
 
-			k.DeleteEstimator(ctx, key)
-
+			}
 		}
-
 		k.DeleteItem(ctx, msg.Id)
 	}
 

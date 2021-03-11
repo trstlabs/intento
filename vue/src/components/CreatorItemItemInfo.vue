@@ -195,10 +195,10 @@
       </v-icon>{{ itemtags }}</v-chip>
 
        <v-chip outlined medium label class="ma-1"
-            v-for="country in thisitem.shippingregion" :key="country"
+            v-for="(countries, i) in thisitem.shippingregion" :key="i"
           > <v-icon small left>
         mdi-flag-outline
-      </v-icon>{{ country }}</v-chip>
+      </v-icon>{{ countries }}</v-chip>
         
 
 <v-divider class="ma-2"/>

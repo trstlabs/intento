@@ -290,13 +290,13 @@
               <v-btn color="primary" :disabled="!valid || !!flight || !hasAddress"
               
                 @click="submit()"
-              > <p v-if=!flight>Next<p>
-                <v-icon > mdi-arrow-right-bold</v-icon>
-                <div class="v-btn__label" v-if="flight">
-                  <div class="v-btn__label__icon">
-                    <icon-refresh />
-                  </div>
-                  Creating item ID...
+              ><div v-if="!flight">Next<v-icon > mdi-arrow-right-bold</v-icon></div>
+                <div v-if="flight">
+                 
+                    <v-progress-linear
+      indeterminate
+      color="secondary"
+    ></v-progress-linear>Creating item ID...
                 </div>
               </v-btn>
               </div>

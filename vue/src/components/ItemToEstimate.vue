@@ -5,11 +5,11 @@
   
       <div v-if="showinfo === false">
 
-  <div class="card__empty" v-if="showinfo === false">  
+  <div class="text-center"  v-if="showinfo === false">  
 
-        <v-btn :ripple="false" text @click="getItemToEstimate"><v-icon color="primary" large left>
+        <v-btn :ripple="false" text @click="getItemToEstimate"><v-icon color="primary"  left>
         mdi-refresh
-      </v-icon> all items</v-btn>
+      </v-icon> Refresh </v-btn>
       </div>
         <v-skeleton-loader
          class="mx-auto"
@@ -323,16 +323,17 @@
         <v-btn block elevation="4" color="primary"
           :disabled="!valid || !hasAddress || flight"
           @click="submit(estimation, item.id, interested, comment)"
-      ><v-icon left>
+      ><div v-if="!flight"><v-icon left>
         mdi-check
       </v-icon>  
-          Estimate item
-          <div class="button__label" v-if="flight">
-            <div class="button__label__icon">
-              <icon-refresh />
-            </div>
-            Creating estimation...
-          </div>
+          Estimate item</div>
+          <div>
+   
+          <div   v-if="flight">
+           
+            <div class="text-right"> 
+            Creating estimation...</div>
+          </div>      </div>  
         </v-btn>
         <!-- tag bar
  <v-chip-group 
@@ -370,7 +371,7 @@
       dark
       small
       color="pink"
-      :outlined="interested == false"
+      icon
       @click="interested = !interested"
     >
       <v-icon dark>
@@ -420,7 +421,7 @@
       v-bind="attrs"
           v-on="on"
       color="red"
-      :outlined="flag == false"
+      icon
       
     >
       <v-icon dark>
@@ -458,7 +459,7 @@
 </v-col><v-col class="pa-0">
     <v-btn 
       :disabled="estimation > 1 || !hasAddress || !showinfo"
-      outlined
+      icon
       @click="getNewItemByIndex" color="primary"
     >
       <v-icon dark>
@@ -568,7 +569,7 @@ this.loadItemPhotos();
         this.flight = true;
         this.loadingitem = true;
         const type = { type: "estimator" };
-        const body = { estimation: estimation, itemid: itemid, interested: interested, comment: comment };
+        const body = { deposit: this.item.depositamount, estimation: estimation, itemid: itemid, interested: interested, comment: comment };
         
         await this.$store.dispatch("estimationSubmit", { ...type, body });
         console.log("success!")
@@ -700,94 +701,3 @@ this.comment = newComment;
 
 </script>
 
-<style scoped>
-
-.short{
-  width:100px;
-}
-
-button {
-  background: none;
-  border: none;
-  color: #3062C6;
-  padding: 0;
-  font-size: inherit;
-  font-weight: 800;
-  font-family: inherit;
-  text-transform: uppercase;
-  margin-top: 0.5rem;
-  cursor: pointer;
-  transition: opacity 0.1s;
-  letter-spacing: 0.03em;
-  transition: color 0.25s;
-  display: inline-flex;
-  align-items: center;
-}
-.item {
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-.item__field {
-  display: grid;
-  line-height: 1.5;
-  grid-template-columns: 15% 1fr;
-  grid-template-rows: 1fr;
-  word-break: break-all;
-}
-.item__field__key {
-  color: rgba(0, 0, 0, 0.25);
-  word-break: keep-all;
-  overflow: hidden;
-}
-button:focus {
-  opacity: 0.85;
-  outline: none;
-}
-.button.button__valid__true:active {
-  opacity: 0.65;
-}
-.button__label {
-  display: inline-flex;
-  align-items: center;
-}
-.button__label__icon {
-  height: 1em;
-  width: 1em;
-  margin: 0 0.5em 0 0.5em;
-  fill: rgba(0, 0, 0, 0.25);
-  animation: rotate linear 4s infinite;
-}
-.button.button__valid__false {
-  color: rgba(0, 0, 0, 0.25);
-  cursor: not-allowed;
-}
-.card__empty {
-  margin-bottom: 1rem;
-  border: 1px rgba(0, 0, 0, 0.1);
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  border-radius: 8px;
-  color: rgba(0, 0, 0, 0.25);
-  text-align: center;
-  min-height: 8rem;
-}
-@keyframes rotate {
-  from {
-    transform: rotate(0);
-  }
-  to {
-    transform: rotate(-360deg);
-  }
-}
-@media screen and (max-width: 980px) {
-  .narrow {
-    padding: 0;
-  }
-}
-</style>
