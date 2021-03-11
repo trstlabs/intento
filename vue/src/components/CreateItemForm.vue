@@ -290,7 +290,7 @@
               <v-btn color="primary" :disabled="!valid || !!flight || !hasAddress"
               
                 @click="submit()"
-              > Next  
+              > <p v-if=!flight>Next<p>
                 <v-icon > mdi-arrow-right-bold</v-icon>
                 <div class="v-btn__label" v-if="flight">
                   <div class="v-btn__label__icon">

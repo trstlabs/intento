@@ -62,6 +62,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 
 		Condition:      msg.Condition,
 		Shippingregion: msg.Shippingregion,
+		Depositamount:  msg.Depositamount,
 	}
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
