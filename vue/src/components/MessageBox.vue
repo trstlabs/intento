@@ -275,6 +275,8 @@ console.log("before query")
       this.startRooms = rooms.docs[rooms.docs.length - 1];
 
       const roomUserIds = [];
+      console.log(rooms)
+
 	 
       rooms.forEach((room) => {
         room.data().users.forEach((userId) => {
