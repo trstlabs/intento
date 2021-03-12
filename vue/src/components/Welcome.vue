@@ -105,8 +105,9 @@
         <v-btn text @click="existing = true"> 
         Sign up with an existing cosmos-address. </v-btn>
 </div>
-    <faucet v-if="existing"/>
-
+<div v-if="exsiting">
+    <faucet />
+</div>
 <v-card-actions> <v-col>
           
           

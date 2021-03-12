@@ -570,8 +570,15 @@ this.loadItemPhotos();
         this.loadingitem = true;
         const type = { type: "estimator" };
         const body = { deposit: this.item.depositamount, estimation: estimation, itemid: itemid, interested: interested, comment: comment };
-        
-        await this.$store.dispatch("estimationSubmit", { ...type, body });
+        const fields = [
+        ["estimator", 1, 'string', "optional"],
+        ["estimation", 2, 'int64', "optional"],
+        ["itemid", 3, 'string', "optional"],
+        ["deposit", 4, "int64", "optional"],
+        ["interested", 5, 'bool', "optional"],
+        ["comment", 6, 'string', "optional"],
+      ];
+        await this.$store.dispatch("estimationSubmit", { ...type, body,fields });
         console.log("success!")
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("accountUpdate");

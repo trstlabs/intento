@@ -129,8 +129,8 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 		return nil, sdkerrors.Wrap(nil, "item already has an estimation price")
 	}
 
-	//remove item when it is flagged a lot w/ at least three estimators
-	if (int64(estimatorlistlen)/2) < item.Flags && estimatorlistlen > 3 {
+	//remove item when it is flagged a lot w/ at least an estimator
+	if (int64(estimatorlistlen)/2) < item.Flags && estimatorlistlen > 0 {
 
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
@@ -189,6 +189,18 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	median := sortedList[medianIndex]
 	//var EstimationPrice = sdk.NewInt(median)
 
+	///delete item because deposit has to be lower than item price
+	if median < item.Depositamount {
+		//returns each element
+		for _, element := range item.Estimatorlist {
+			//apply this to each element
+			key := msg.Itemid + "-" + element
+		k.DeleteEstimator(ctx, key)	
+		}
+		k.DeleteItem(ctx, msg.Itemid)
+		return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
+	}
+
 	for _, element := range item.Estimatorlist {
 		//apply this to each element
 		key := msg.Itemid + "-" + element
@@ -236,11 +248,9 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 			estimator := k.GetEstimator(ctx, key)
 
 			if estimator.Estimator == item.Lowestestimator {
-				if item.Depositamount < (item.Estimationprice / 4) {
+				
 					k.BurnCoins(ctx, estimator.Deposit)
-				} else {
-					k.DeleteEstimator(ctx, key)
-				}
+				
 
 			} else {
 				k.DeleteEstimator(ctx, key)
@@ -254,7 +264,7 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		item.Highestestimator = ""
 		item.Estimatorlist = nil
 
-		//item has to be deleted because otherwise this function can be run again and again causing an uneven distribution and a drain of the moduleacc
+		//item has to be deleted because otherwise this function can be run again
 		k.DeleteItem(ctx, msg.Itemid)
 
 	} else {
@@ -353,11 +363,9 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 			estimator := k.GetEstimator(ctx, key)
 
 			if estimator.Estimator == item.Lowestestimator {
-				if item.Depositamount < (item.Estimationprice / 4) {
+				
 					k.BurnCoins(ctx, estimator.Deposit)
-				} else {
-					k.DeleteEstimator(ctx, key)
-				}
+				
 
 			} else {
 				k.DeleteEstimator(ctx, key)

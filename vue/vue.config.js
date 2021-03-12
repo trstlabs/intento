@@ -1,8 +1,12 @@
+const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin')
+
 module.exports = {
   /*devServer: {
     disableHostCheck: true,
   },*/
-  devServer: {
-    proxy: 'https://localhost:1317'
-}
+  configureWebpack: {
+    plugins: [
+      new VuetifyLoaderPlugin()
+    ],
+  },
 };
