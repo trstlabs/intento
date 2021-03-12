@@ -367,28 +367,20 @@ export default new Vuex.Store({
 
     },
 
-    async estimationSubmit({ state, dispatch }, { type, body }) {
+    async estimationSubmit({ state, dispatch }, { type, body, fields }) {
 
       const wallet = state.wallet
       const type2 = type.charAt(0).toUpperCase() + type.slice(1)
       const typeUrl = `/${PATH}.MsgCreate${type2}`;
       let MsgCreate = new Type(`MsgCreate${type2}`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
-      const fields = [
-        ["estimator", 1, 'string', "optional"],
-        ["estimation", 2, 'int64', "optional"],
-        ["itemid", 3, 'string', "optional"],
-        ["deposit", 4, "int64", "optional"],
-        ["interested", 5, 'bool', "optional"],
-        ["comment", 6, 'string', "optional"],
-      ];
+      
       console.log(fields)
       fields.forEach(f => {
         MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
       })
       console.log(MsgCreate)
-      //console.log(registry );
-      //console.log("creator" + state.wallet.address);
+  
       const client = await SigningStargateClient.connectWithSigner(
         RPC,
         wallet,
