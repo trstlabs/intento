@@ -37,11 +37,11 @@
           <div class="card__row">
             
             
-            <div class="card__desc">
+            <div class="card__desc caption">
               {{ address }}
             </div>
           </div>
-          <div class="card__row justify-center">
+          <div class="card__row caption justify-center">
             <span>
               You have
               <span
@@ -86,16 +86,13 @@
 .card__row {
   display: flex;
   align-items: center;
-  margin: 0.5rem 0;
-  
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.5;
+
+
 }
 
 .card__desc {
-  letter-spacing: 0.02em;
-  padding: 0 0.5rem;
+
+
   word-break: break-all;
 }
 
@@ -103,7 +100,7 @@
 
 .coin__amount {
   text-transform: uppercase;
-  font-size: 0.75rem;
+
   letter-spacing: 0.02em;
   font-weight: 600;
 }
@@ -115,25 +112,7 @@
   content: "";
   margin-right: initial;
 }
-@keyframes shake {
-  10%,
-  90% {
-    transform: translate3d(-1px, 0, 0);
-  }
-  20%,
-  80% {
-    transform: translate3d(2px, 0, 0);
-  }
-  30%,
-  50%,
-  70% {
-    transform: translate3d(-4px, 0, 0);
-  }
-  40%,
-  60% {
-    transform: translate3d(4px, 0, 0);
-  }
-}
+
 </style>
 
 <script>
