@@ -1,14 +1,14 @@
 import Vue from "vue";
 import VueRouter from "vue-router";
-import Index from "../views/Index.vue";
-import Buy from "../views/Buy.vue";
-import Sell from "../views/Sell.vue";
-import Estimate from "../views/Estimate.vue";
-import Account from "../views/Account.vue";
-import BuyItemDetails from "../views/BuyItemDetails.vue";
-import Messages from "../views/Messages.vue";
+//import Index from "../views/Index.vue";
+//import Buy from "../views/Buy.vue";
+//import Sell from "../views/Sell.vue";
+//import Estimate from "../views/Estimate.vue";
+//import Account from "../views/Account.vue";
+//import BuyItemDetails from "../views/BuyItemDetails.vue";
+//import Messages from "../views/Messages.vue";
 
-import MissingPage from "../views/MissingPage.vue";
+//import MissingPage from "../views/MissingPage.vue";
 
 Vue.use(VueRouter);
 
@@ -18,7 +18,8 @@ const routes = [
   {
     path: "/",
     name: "Buy",
-    component: Buy,
+    component: () => 
+        import(/* webpackChunkName: "buy" */ '@/views/Buy'), 
     meta: {
       title: 'Buy - Marketplace',
       metaTags: [
@@ -39,11 +40,13 @@ const routes = [
   {
     path: "/buy/:id",
     name: "BuyItemDetails",
-    component: BuyItemDetails
+    component: () => 
+        import(/* webpackChunkName: "buyitemdetails" */ '@/views/BuyItemDetails'), 
   },
   {
     path: "/sell",
-    component: Sell,
+    component: () => 
+        import(/* webpackChunkName: "sell" */ '@/views/Sell'), 
     meta: {
       title: 'Sell - Marketplace'},
     
@@ -53,28 +56,34 @@ const routes = [
   },
   {
     path: "/earn",
-    component: Estimate,
+    component: () => 
+        import(/* webpackChunkName: "earn" */ '@/views/Estimate'), 
     meta: {
       title: 'Earn - Marketplace'},
   },
   
   {
     path: "/account",
-    component: Account,
+    component: () => 
+        import(/* webpackChunkName: "account" */ '@/views/Account'), 
     meta: {
       title: 'Account - Marketplace'},
   },
 
   {
     path: "/messages",
-    component: Messages,
+    //component: Messages,
+    component: () => 
+        import(/* webpackChunkName: "messages" */ '@/views/Messages'), 
+   
     meta: {
       title: 'Messages - Marketplace'},
   },
   {
     path: '*',
     name: 'catchAll',
-    component: Buy
+    component: () => 
+        import(/* webpackChunkName: "buy" */ '@/views/Buy'), 
   }
   /*{
     path: '*',

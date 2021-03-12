@@ -63,6 +63,9 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 	if msg.Condition > 6 {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "invalid item condition")
 	}
+	if msg.Estimationcount > 24 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "invalid estimation count")
+	}
 	return nil
 }
 

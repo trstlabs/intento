@@ -8,9 +8,8 @@ import app from "./app.js";
 //import { assert } from "@cosmjs/utils";
 import { assertIsBroadcastTxSuccess, makeCosmoshubPath } from '@cosmjs/launchpad'
 import { SigningStargateClient } from "@cosmjs/stargate";
-import { DirectSecp256k1HdWallet, DirectSecp256k1Wallet } from '@cosmjs/proto-signing';
+import { DirectSecp256k1HdWallet, DirectSecp256k1Wallet, Registry } from '@cosmjs/proto-signing/';
 import { Type, Field } from 'protobufjs';
-import { Registry } from '@cosmjs/proto-signing';
 import { fromHex } from '@cosmjs/encoding';
 
 
@@ -65,9 +64,7 @@ export default new Vuex.Store({
       updated[type] = body;
       state.data = { ...state.data, ...updated };
     },
-    clientUpdate(state, { client }) {
-      state.client = client;
-    },
+  
 
     setCreatorItemList(state, payload) {
       //state.CreatorItemList.push(payload);
