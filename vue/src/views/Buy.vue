@@ -1,15 +1,4 @@
 
-<!-- <template>
-  <div>
-    <app-layout>
-      <div>
-        <app-text type="h1">TrustItems (v0.1)</app-text>
-        <wallet />
-        <item-list-buy />
-      </div>
-    </app-layout>
-  </div>
-</template>-->
 
 <template>
   <div>
@@ -40,9 +29,7 @@
               </v-sheet>
             </v-col>
             <v-col cols="12" sm="2" class="d-sm-none d-lg-flex d-md-flex">
-              <!--<v-sheet rounded="lg" min-height="268" elevation="2">
-                
-              </v-sheet>-->
+              
             </v-col>
           </v-row>
         </v-container>

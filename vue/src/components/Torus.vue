@@ -3,7 +3,10 @@
     <div>
     </div>
     <div class="justify-center"><v-col>
-   <button> <v-img
+   <button> <v-progress-linear
+      indeterminate
+    v-if="loading"
+    ></v-progress-linear> <v-img
     max-height="100"
     max-width="200" 
         
@@ -39,6 +42,7 @@ export default {
   props: ["privkey"],
   data() {
     return {
+      loading: false,
       torusdirectsdk: undefined,
       selectedVerifier: "google",
       loginHint: "",
@@ -54,6 +58,7 @@ export default {
     };
   },
   created(){
+    
     if (this.privkey) {
           this.torusSignIn(this.privkey)}
   },
@@ -71,6 +76,7 @@ export default {
   },
   methods: {
     async login(hash, queryParameters) {
+      this.loading = true;
       try {
         if (!this.torusdirectsdk) return;
         const jwtParams = this.loginToConnectionMap[this.selectedVerifier] || {};
@@ -148,7 +154,7 @@ export default {
      async torusSignIn(
       details
     ) {
-     
+   
 
       var uint8array = new TextEncoder().encode(details);
       console.log(details)
@@ -175,6 +181,7 @@ export default {
      this.$store.commit('set', { key: 'client', value: client })
      this.$store.dispatch("setCreatorItemList", account.address);
      this.$store.dispatch("setBuyItemList");
+     this.loading = false
       //console.log(client)
       try {
         await dispatch('bankBalancesGet')
@@ -205,6 +212,7 @@ export default {
     },
   },
   async mounted() {
+    
     try {
       var url = new URL(location.href);
       const hash = url.hash.substr(1);

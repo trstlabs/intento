@@ -8,11 +8,11 @@
        <div v-if="status">Status: {{status}}</div>
       <div v-if="serverError">Oops Error!{{serverError}}</div>
 
-     <torus/>
+     <torus v-if="!this.$store.state.account.address"/>
       <button :disabled="status==='submitting'" type="submit" class="button"></button>
       
-     <v-row class="justify-center mb-4">
-      <vue-recaptcha
+     <v-row v-if="!!this.$store.state.account.address" class="justify-center mb-4">
+      <vue-recaptcha 
         ref="recaptcha"
         @verify="onCaptchaVerified"
         @expired="onCaptchaExpired"
@@ -23,7 +23,7 @@
       </vue-recaptcha></v-row>
       <v-alert type="success" v-if="sucessfulServerResponse">{{sucessfulServerResponse}}</v-alert>
     </form>
-    <v-btn class="ma-2" color="primary" block @click="submit()">Receive tokens</v-btn> </div>
+  <!--<v-btn class="ma-2" color="primary" block @click="submit()">Receive tokens</v-btn>--> </div>
   
 </div>
 </template>

@@ -13,7 +13,7 @@
             Feedback is always welcome at the
             <a href="https://www.trustpriceprotocol.com"> main page.</a>
           </v-card-text>
-          <!--- TEST <torus :privkey="signkey"/>-->
+          <torus :privkey="signkey"/>
 
           <v-card-actions>
             <v-btn color="primary " text @click="(learn = true), loadContent()">
@@ -64,7 +64,7 @@
               Sign up with an existing cosmos-address.
             </v-btn>
           </div>
-          <div v-if="exsiting">
+          <div v-if="existing">
             <faucet />
           </div>
           <v-card-actions>
@@ -252,13 +252,23 @@
 </template>
 
   <script>
+
+  
+/*
 import Faucet from "./Faucet.vue";
 import FaucetTorus from "./FaucetTorus.vue";
 import Torus from "./Torus.vue";
-import Wallet from "./Wallet.vue";
+import Wallet from "./Wallet.vue";*/
+
+//const Faucet = () => import("./Faucet.vue");
+
 //import * as bip39 from 'bip39'
 export default {
-  components: { Wallet, Faucet, Torus, FaucetTorus },
+  //components: { Wallet, Faucet, Torus, FaucetTorus },
+  components: {
+   
+  },
+
   data() {
     return {
       //dismiss: false,
@@ -298,38 +308,3 @@ export default {
   },
 };
 </script>
-<!--
-<style scoped>
-  .dropdown__textarea {
-	display: block;
-	height: 8em;
-	position: relative;
-}
-.dropdown__textarea__input {
-	border: 0;
-	border-radius: 0.5rem;
-	padding: 0.5rem;
-	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
-	outline: none;
-	width: 100%;
-	height: 100%;
-	box-sizing: border-box;
-	resize: none;
-	letter-spacing: 0.02em;
-	font-family: inherit;
-	font-size: 0.85rem;
-	line-height: 1.4;
-	color: rgba(0, 0, 0, 0.85);
-}
-.dropdown__textarea__icon {
-	width: 1rem;
-	height: 1rem;
-	position: absolute;
-	right: 0;
-	bottom: 0;
-	padding: 1rem;
-	fill: rgba(0, 0, 0, 0.5);
-	cursor: pointer;
-}
-
-</style>-->
