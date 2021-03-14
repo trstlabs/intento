@@ -172,7 +172,15 @@
               <v-icon left> mdi-account-outline </v-icon>
               Seller: {{ thisitem.creator }}
             </v-chip>
-
+<v-chip
+                class="ma-1 caption"
+                label
+                color="warning lighten-2"
+                medium
+              >
+                <v-icon left> mdi-database-plus </v-icon>
+                ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP
+              </v-chip>
             <v-divider class="ma-2" />
 
             <div class="overline text-center">Comments</div>

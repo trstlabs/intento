@@ -7,7 +7,7 @@
           :active="loadingitem"
         ></v-progress-linear>
         <div class="pa-2 mx-auto">
-          <p class="pa-2 h3 font-weight-medium "> {{ thisitem.title }} </p>
+          <p class="mx-6 overline "> {{ thisitem.title }} </p>
           
             
             <v-carousel

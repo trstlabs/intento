@@ -20,7 +20,7 @@
          
           <v-col cols="12" sm="8" class=" d-none d-sm-flex d-md-none mx-auto" >
               <v-sheet min-width="350" class="mx-auto" rounded="lg" elevation="1" >
-                <wallet />
+                <wallet v-if="this.$store.state.account.address"/>
               </v-sheet>
             </v-col >
           
@@ -28,7 +28,7 @@
           <v-row>
             <v-col cols="12" sm="2" class="d-sm-none d-lg-flex d-md-flex">
              
-                <wallet />
+                <wallet v-if="this.$store.state.account.address"/>
              
             </v-col >
 

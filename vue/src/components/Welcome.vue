@@ -13,7 +13,7 @@
             Feedback is always welcome at the
             <a href="https://www.trustpriceprotocol.com"> main page.</a>
           </v-card-text>
-          <torus :privkey="signkey"/>
+          <!--- TEST <torus :privkey="signkey"/>-->
 
           <v-card-actions>
             <v-btn color="primary " text @click="(learn = true), loadContent()">
