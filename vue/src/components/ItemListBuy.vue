@@ -20,7 +20,7 @@
       
       small
       
-      :outlined="!advanced"
+     fab
       @click="showAdvanced"
     >
       <v-icon dark>
