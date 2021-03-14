@@ -330,7 +330,13 @@
 
 <script>
 //import AppText from "./AppText.vue";
+
+import { assertIsBroadcastTxSuccess, makeCosmoshubPath } from '@cosmjs/launchpad'
 import CreateItemPreviewAndUpload from "./CreateItemPreviewAndUpload.vue";
+import { SigningStargateClient } from "@cosmjs/stargate";
+import {  Registry } from '@cosmjs/proto-signing/';
+import { Type, Field } from 'protobufjs';
+
 export default {
   components: { CreateItemPreviewAndUpload },
   data() {
@@ -341,7 +347,7 @@ export default {
         shippingcost: "0",
         localpickup: false,
         estimationcount: "3",
-        //openbox: false,
+
         condition: "0",
 
       },
@@ -470,12 +476,8 @@ export default {
         
         
       
-        await this.$store.dispatch("itemSubmit", { ...type,fields, body });
-        //const payload = { ...type, body }
-        //await this.$store.dispatch("entityFetch", payload);
-        //await this.$store.dispatch("accountUpdate");
-       
-        
+        await this.itemSubmit( {...type,fields, body} );
+     
 
 
         this.flight = false;
@@ -495,6 +497,62 @@ export default {
     },
     updateStepCount(e1) {
       this.e1 = e1;
+    },
+
+     async itemSubmit({type, fields, body}) {
+
+      const wallet = this.$store.state.wallet
+      const type2 = type.charAt(0).toUpperCase() + type.slice(1)
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreate${type2}`;
+      let MsgCreate = new Type(`MsgCreate${type2}`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+
+      const [firstAccount] = await wallet.getAccounts();
+
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+
+      const msg = {
+        typeUrl,
+        value: {
+          creator: this.$store.state.account.address,
+          ...body
+        }
+      };
+
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+      await this.$store.dispatch('entityFetch', {
+        type: type
+      })
+      await this.$store.dispatch("setCreatorItemList", this.$store.state.account.address)
+      let creatoritems = this.$store.state.creatorItemList || []
+
+
+      try {
+        const result = await client.signAndBroadcast(firstAccount.address, [msg], fee);
+        assertIsBroadcastTxSuccess(result);
+        await this.$store.dispatch('entityFetch', {
+          type: type
+        })
+        await this.$store.dispatch("setCreatorItemList", this.$store.state.account.address)
+        let newcreatoritems = this.$store.state.creatorItemList
+
+        let len = (creatoritems.length)
+        console.log((newcreatoritems[len].id))
+        this.$store.commit('set', { key: 'newitemID', value: (newcreatoritems[len].id) })
+      } catch (e) {
+        console.log(e)
+      }
+
     },
 
     conditionLabel(){

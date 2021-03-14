@@ -26,7 +26,11 @@
 </template>
 
 <script>
+import axios from "axios";
 import TorusSdk from "@toruslabs/torus-direct-web-sdk";
+import { SigningStargateClient } from "@cosmjs/stargate";
+import { DirectSecp256k1Wallet } from '@cosmjs/proto-signing/';
+import { fromHex } from '@cosmjs/encoding';
 
 const GOOGLE = "google";
 
@@ -128,9 +132,44 @@ export default {
        // console.log(loginDetails)
        // console.log(loginDetails.privateKey)
        
-        this.$store.dispatch("torusSignIn", loginDetails.privateKey)
+        this.torusSignIn(loginDetails.privateKey)
       } catch (error) {
         console.error(error, "caught");
+      }
+    },
+     async torusSignIn(
+    
+      details
+    ) {
+     
+
+      var uint8array = new TextEncoder().encode(details);
+      console.log(details)
+      console.log(uint8array)
+      
+      const wallet = await DirectSecp256k1Wallet.fromKey(
+        fromHex(details), "cosmos"
+      )
+   
+      localStorage.setItem('privkey', details)
+      const { address } = wallet
+   
+      const url = `${process.env.VUE_APP_API}/auth/accounts/${address}`
+      const acc = (await axios.get(url)).data
+      const account = acc.result.value
+
+      this.$store.commit('set', { key: 'wallet', value: wallet })
+      this.$store.commit('set', { key: 'account', value: account })
+      console.log(this.state.wallet.address)
+      //console.log("fdgadagfgfd" + SigningStargateClient.connectWithSigner());
+      ////onsole.log(RPC)
+      const client = await SigningStargateClient.connectWithSigner(process.env.VUE_APP_RPC, wallet, {});
+     this.$store.commit('set', { key: 'client', value: client })
+      //console.log(client)
+      try {
+        await dispatch('bankBalancesGet')
+      } catch {
+        console.log('Error in getting a bank balance.')
       }
     },
     

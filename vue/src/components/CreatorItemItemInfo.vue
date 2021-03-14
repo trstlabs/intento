@@ -544,6 +544,10 @@
 import { databaseRef } from './firebase/db';
 
 import ItemListCreator from "./ItemListCreator.vue";
+import { SigningStargateClient, assertIsBroadcastTxSuccess } from "@cosmjs/stargate";
+import {  Registry } from '@cosmjs/proto-signing/';
+import { Type, Field } from 'protobufjs';
+
 export default {
   props: ["itemid"],
   components: { ItemListCreator },
@@ -620,21 +624,7 @@ export default {
   },
 
   methods: {
-    /*async submitrevealestimation(itemid) {
-      if (this.valid && !this.flightre && this.hasAddress) {
-        this.loadingitem = true;
-        this.flightre = true;
-        const type = { type: "item/reveal" };
-        const body = { itemid };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
-        //await this.$store.dispatch("entityFetch", type);
-        //await this.$store.dispatch("accountUpdate");
-        this.flightre = false;
-        this.loadingitem = false;
-        //this.deposit = "";
-        alert("Transaction sent");
-      }
-    },*/
+
      async removeItem() {
       
         this.loadingitem = true;
@@ -646,7 +636,7 @@ export default {
         ["id",2,'string', "optional"],
       ];
        
-        await this.$store.dispatch("itemdeleteSubmit", { ...type, body,fields });
+       this.itemdeleteSubmit({ ...type, body,fields })
      
         this.flightre = false;
         this.loadingitem = false;
@@ -655,23 +645,42 @@ export default {
       
     },
 
-     /*async setItem() {
-      
-        this.loadingitem = true;
-        this.flightre = true;
-        const type = { type: "item/set" };
-        const body = { id: this.thisitem.id, shippingcost: this.shippingcost.toString(), localpickup: this.localpickup, shippingregion: this.shippingregion };
-      
-       
-        await this.$store.dispatch("entitySubmit", { ...type, body });
-     
-        this.flightre = false;
-        this.loadingitem = false;
-    
-        alert("Transaction sent");
-      
-    },*/
+async itemdeleteSubmit({ body, fields }) {
+      const wallet = this.$store.state.wallet
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgDeleteItem`;
+      let MsgCreate = new Type(`MsgDeleteItem`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
 
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+
+      const msg = {
+        typeUrl,
+        value: {
+          creator: this.$store.state.account.address,
+          ...body
+        }
+      };
+
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Delete request sent");
+
+    },
+   
     async getThisItem() {
       await submitrevealestimation();
       return this.thisitem();
@@ -679,12 +688,7 @@ export default {
     },
     async submititemtransferable(transferable, itemid) {
       if (this.valid && !this.flightit && this.hasAddress) {
-       /* if (transferbool === true) {
-          this.flightit = true;
-        }
-        if (transferbool === false) {
-          this.flightitn = true;
-        }*/
+     
         this.flightit = true;
         this.flightitn = true; 
          const fields = [
@@ -694,25 +698,49 @@ export default {
      
       ];
         const body = { transferable, itemid };
-        await this.$store.dispatch("transferableSubmit", {  body, fields});
-        //await this.$store.dispatch("entityFetch", type);
-        //await this.$store.dispatch("accountUpdate");
-
-         const thisitemcheck = await this.$store.getters.getItemByID(this.thisitem.id);
-      
-      
-
-
-        //this.flightit = false;
-        //this.flightitn = false;
-        //this.deposit = "";
+        await this.transferableSubmit({  body, fields});
+        
    
       }
     },
+    async transferableSubmit( { body, fields }) {
+      const wallet = this.$store.state.wallet
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgItemTransferable`;
+      let MsgCreate = new Type(`MsgItemTransferable`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          creator: this.$store.state.account.address,
+          ...body
+        }
+      };
+
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert(" Placed! ");
+    },
+
     async submitItemShipping(tracking, itemid) {
       if (this.valid && !this.flightIS && this.hasAddress) {
         this.flightIS = true;
-        const type = { type: "item" };
+
         const body = { tracking, itemid };
         const fields = [
         ["creator", 1,'string', "optional"],
@@ -720,12 +748,48 @@ export default {
         ["itemid",3,'string', "optional"],
     
       ];
-        await this.$store.dispatch("shippingSubmit", { ...type, body, fields });
+        await this.shippingSubmit({ body, fields });
         
         this.flightIS = false;
         this.tracking = false;
 
       }
+    },
+
+     async shippingSubmit({ body, fields }) {
+      const wallet = this.$store.state.wallet
+      const typeUrl = `/${VUE_APP_PATH}.MsgItemShipping`;
+      let MsgCreate = new Type(`MsgItemShipping`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+
+      const msg = {
+        typeUrl,
+        value: {
+          creator: this.$store.state.account.address,
+          ...body
+        }
+      };
+
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Transaction sent");
+
     },
     createStep() {
       if (this.thisitem.buyer != "") {

@@ -90,6 +90,11 @@
 <script>
 import { databaseRef } from './firebase/db';
 import ItemListEstimator from "./ItemListEstimator.vue";
+import { SigningStargateClient, assertIsBroadcastTxSuccess } from "@cosmjs/stargate";
+import {  Registry } from '@cosmjs/proto-signing/';
+import { Type, Field } from 'protobufjs';
+
+
 export default {
   props: ["itemid"],
   components: { ItemListEstimator },
@@ -150,13 +155,48 @@ export default {
         ["itemid",2,'string', "optional"],
       ];
        
-        await this.$store.dispatch("estimatordeleteSubmit", { ...type, body, fields });
+        await this.estimatordeleteSubmit({  body, fields });
      
         this.flightre = false;
         this.loadingitem = false;
     
 
       
+    },
+    async estimatordeleteSubmit({ body, fields }) {
+      const wallet = this.$store.state.wallet
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgDeleteEstimator`;
+      let MsgCreate = new Type(`MsgDeleteEstimator`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+
+      const msg = {
+        typeUrl,
+        value: {
+          estimator: this.$store.state.account.address,
+          ...body
+        }
+      };
+
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Delete request sent");
+
     },
   },
 };

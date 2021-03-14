@@ -118,7 +118,10 @@
 <script>
 
 import * as bip39 from "bip39";
-
+import { DirectSecp256k1HdWallet} from '@cosmjs/proto-signing/';
+import { makeCosmoshubPath } from '@cosmjs/launchpad'
+import { SigningStargateClient } from "@cosmjs/stargate";
+import axios from "axios";
 
 export default {
  
@@ -157,8 +160,34 @@ export default {
     async signIn() {
       if (this.mnemonicValid && !this.error) {
         const mnemonic = this.passwordClean;
-        await this.$store.dispatch("accountSignIn", { mnemonic })
+       
 
+      const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+        mnemonic,
+        makeCosmoshubPath(0),
+        "cosmos"
+      )
+
+    
+      localStorage.setItem('mnemonic', mnemonic)
+      const { address } = wallet
+      const API = process.env.VUE_APP_API
+      const RPC = process.env.VUE_APP_RPC
+      const url = `${API}/auth/accounts/${address}`
+      const acc = (await axios.get(url)).data
+      const account = acc.result.value
+     this.$store.commit('set', { key: 'wallet', value: wallet })
+     this.$store.commit('set', { key: 'account', value: account })
+
+      const client = await SigningStargateClient.connectWithSigner(RPC, wallet, {});
+      this.$store.commit('set', { key: 'client', value: client })
+
+      try {
+        await this.$store.dispatch('bankBalancesGet')
+      } catch {
+        console.log('Error in getting a bank balance.')
+      }
+  
         this.initConfig();
       }
     },

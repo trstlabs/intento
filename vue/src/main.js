@@ -4,7 +4,7 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 //import _ from "lodash";
-
+console.log(require('dotenv').config())
 import {firestorePlugin} from "vuefire";
 
 //Vue.use(Vuetify);

@@ -215,6 +215,10 @@
 <script>
 import { databaseRef } from './firebase/db';
 import ItemListInterested from "./ItemListInterested.vue";
+import { SigningStargateClient, assertIsBroadcastTxSuccess } from "@cosmjs/stargate";
+import {  Registry } from '@cosmjs/proto-signing/';
+import { Type, Field } from 'protobufjs';
+
 export default {
   props: ["itemid"],
   components: { ItemListInterested },
@@ -274,7 +278,13 @@ export default {
         let deposit = toPay + "token";
         const type = { type: "buyer" };
         const body = { deposit, itemid };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
+          const fields = [
+          ["buyer", 1, "string", "optional"],
+
+          ["itemid", 2, "string", "optional"],
+          ["deposit", 3, "int64", "optional"],
+        ];
+         await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("accountUpdate");
         this.flightLP = false;
@@ -299,7 +309,13 @@ export default {
         console.log(deposit);
         const type = { type: "buyer" };
         const body = { deposit, itemid };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
+          const fields = [
+          ["buyer", 1, "string", "optional"],
+
+          ["itemid", 2, "string", "optional"],
+          ["deposit", 3, "int64", "optional"],
+        ];
+         await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("accountUpdate");
 
@@ -311,19 +327,94 @@ export default {
       }
     },
 
+    async paySubmit( { body, fields }) {
+      const wallet = this.$store.state.wallet
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreateBuyer`;
+      let MsgCreate = new Type(`MsgCreateBuyer`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          buyer: this.$store.state.account.address,
+          ...body
+        }
+      };
+
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Transaction sent");
+
+    },
+
+    async likeSubmit( { body, fields }) {
+      const wallet = this.$store.state.wallet
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgUpdateEstimator`;
+      let MsgCreate = new Type(`MsgUpdateEstimator`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          estimator: this.$store.state.account.address,
+          ...body
+        }
+      };
+
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Transaction sent");
+
+    },
 
      async submitInterest(itemid) {
       if (!this.flightLP && this.hasAddress) {
     //    this.flightLP = true;
         this.loadingitem = true;
-        
-        const type = { type: "estimator/set" };
+          const fields = [
+          ["estimator", 1, "string", "optional"],
+
+          ["itemid", 2, "string", "optional"],
+          ["interested", 3, "bool", "optional"],
+        ];
+
         const body = { itemid: itemid,
         interested: false };
-        await this.$store.dispatch("entitySubmit", { ...type, body });
-       // await this.$store.dispatch("entityFetch", type);
-       // await this.$store.dispatch("accountUpdate");
-     //   this.flightLP = false;
+
+        await this.likeSubmit({ fields, body });
+   
         this.loadingitem = false;
       }
     },

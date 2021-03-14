@@ -490,6 +490,10 @@
 import ToEstimateTagBar from "./ToEstimateTagBar.vue";
 import {databaseRef} from "./firebase/db.js"
 
+import { SigningStargateClient, assertIsBroadcastTxSuccess } from "@cosmjs/stargate";
+import {  Registry } from '@cosmjs/proto-signing/';
+import { Type, Field } from 'protobufjs';
+
 export default {
 
   components: { ToEstimateTagBar },
@@ -578,8 +582,8 @@ this.loadItemPhotos();
         ["interested", 5, 'bool', "optional"],
         ["comment", 6, 'string', "optional"],
       ];
-        await this.$store.dispatch("estimationSubmit", { ...type, body,fields });
-        console.log("success!")
+        await this.estimationSubmit( { ...type, body,fields });
+        
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("accountUpdate");
         this.submitRevealEstimation(itemid);
@@ -590,16 +594,68 @@ this.loadItemPhotos();
       }
     },
 
+ async estimationSubmit({type, fields, body}) {
+
+      const wallet = this.$store.state.wallet
+      const type2 = type.charAt(0).toUpperCase() + type.slice(1)
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreate${type2}`;
+      let MsgCreate = new Type(`MsgCreate${type2}`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+     const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          estimator: this.$store.state.account.address,
+
+          ...body
+        }
+      };
+
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      console.log("success!")
+
+      try {
+
+        await this.$store.dispatch('entityFetch', {
+          type: type
+          //  path: path
+        }
+        )
+      } catch (e) {
+        console.log(e)
+      }
+
+    },
+
     async submitFlag() {
       if ( !this.flight && this.hasAddress) {
         this.flight = true;
         this.loadingitem = true;
         this.flag = true;
-        const type = { type: "estimator/flag" };
+        const type = { type: "estimator" };
         const body = { flag: true, itemid: this.item.id };
-        
-        await this.$store.dispatch("entitySubmit", { ...type, body });
-        
+          const fields = [
+        ["estimator", 1,'string', "optional"],
+         [ "itemid", 2,'string', "optional"] ,  
+         [ "flag", 3, 'bool', "optional"] ,   ];   
+
+        await this.flagSubmit( { ...type, body, fields});
+                                                  
+  
 
         this.estimation = "";
 
@@ -608,6 +664,50 @@ this.loadItemPhotos();
         this.flag = false;
         
       }
+    },
+
+async flagSubmit({type, fields, body}) {
+
+      const wallet = this.$store.state.wallet
+      const type2 = type.charAt(0).toUpperCase() + type.slice(1)
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreate${type2}`;
+      let MsgCreate = new Type(`MsgCreate${type2}`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+     const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          estimator: this.$store.state.account.address,
+
+          ...body
+        }
+      };
+
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      try {
+
+        await this.$store.dispatch('entityFetch', {
+          type: type
+
+        }
+        )
+      } catch (e) {
+        console.log(e)
+      }
+
     },
 
 
@@ -672,7 +772,7 @@ this.loadItemPhotos();
       ];
         // const type = { type: "item" };
         const body = { itemid: itemid };
-        await this.$store.dispatch("revealSubmit", { body, fields });
+        await this.revealSubmit({ body, fields });
         
         
         
@@ -680,7 +780,37 @@ this.loadItemPhotos();
         
       }
     },
+ async revealSubmit({ body, fields }) {
+      const wallet = this.$store.state.wallet
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgRevealEstimation`;
+      let MsgCreate = new Type(`MsgRevealEstimation`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
 
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          creator: this.$store.state.account.address,
+          ...body
+        }
+      };
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+      await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+
+    },
 
 
      updateComment(newComment){

@@ -235,9 +235,7 @@
               </v-row>
             </div>
 
-            <div v-if="thisitem.buyer != ''">
-              <p>Item buyer is {{ thisitem.buyer }}</p>
-            </div>
+            
           </div>
         </div>
       </div>
@@ -272,6 +270,10 @@
 <script>
 import BuyItemDetails from "../views/BuyItemDetails.vue";
 import { usersRef, roomsRef, databaseRef } from "./firebase/db.js";
+import { SigningStargateClient, assertIsBroadcastTxSuccess } from "@cosmjs/stargate";
+import {  Registry } from '@cosmjs/proto-signing/';
+import { Type, Field } from 'protobufjs';
+
 export default {
   components: { BuyItemDetails },
   props: ["itemid"],
@@ -345,7 +347,7 @@ export default {
           ["itemid", 2, "string", "optional"],
           ["deposit", 3, "int64", "optional"],
         ];
-        await this.$store.dispatch("paySubmit", { ...type, body, fields });
+         await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("accountUpdate");
         this.flightLP = false;
@@ -372,7 +374,7 @@ export default {
         ];
         const type = { type: "buyer" };
         const body = { deposit, itemid };
-        await this.$store.dispatch("paySubmit", { ...type, body, fields });
+         await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("accountUpdate");
 
@@ -386,6 +388,42 @@ export default {
       return thisitem();
     },
 
+async paySubmit( { body, fields }) {
+      const wallet = this.$store.state.wallet
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreateBuyer`;
+      let MsgCreate = new Type(`MsgCreateBuyer`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          buyer: this.$store.state.account.address,
+          ...body
+        }
+      };
+
+      console.log(msg)
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Transaction sent");
+
+    },
+    
     getItemPhotos() {
       if (this.imageurl != "") {
         this.loadingitem = true;
@@ -407,8 +445,9 @@ export default {
       let rs = this.SellerItems.filter((i) => i.buyer != "");
       this.sold = "no";
       if (rs != "") {
-        this.sold = rs;
+        this.sold = rs.length;
       }
+
       this.info = true;
     },
     async createRoom() {
