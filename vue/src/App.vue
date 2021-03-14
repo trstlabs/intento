@@ -17,6 +17,7 @@
 
      <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
+        
       <v-btn
           icon id="mode-switcher"
           @click="toggledarkmode"
@@ -40,7 +41,7 @@
     </v-col >
 <v-col cols="6" xs="10" class="pa-0" >
 
-      <v-tabs show-arrows fixed-tabs   :background-color="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-4'" >
+      <v-tabs show-arrows fixed-tabs  :background-color="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-4'" >
       
        <v-tooltip bottom >
       <template v-slot:activator="{ on, attrs }" >
@@ -194,6 +195,7 @@ export default {
     
    computed: {
     messagesAccount() {
+       
       return this.$store.getters.getCreatorActionList.length || 0;
     },
     messagesToEstimate() {

@@ -36,7 +36,7 @@ const GOOGLE = "google";
 
 
 export default {
-  name: "App",
+  props: ["privkey"],
   data() {
     return {
       torusdirectsdk: undefined,
@@ -53,6 +53,10 @@ export default {
       },
     };
   },
+  created(){
+    if (this.privkey) {
+          this.torusSignIn(this.privkey)}
+  },
   computed: {
     loginToConnectionMap() {
       return {
@@ -60,6 +64,10 @@ export default {
         
       };
     },
+  
+    
+
+
   },
   methods: {
     async login(hash, queryParameters) {
@@ -138,7 +146,6 @@ export default {
       }
     },
      async torusSignIn(
-    
       details
     ) {
      
@@ -152,6 +159,7 @@ export default {
       )
    
       localStorage.setItem('privkey', details)
+      console.log(localStorage.getItem('privkey'))
       const { address } = wallet
    
       const url = `${process.env.VUE_APP_API}/auth/accounts/${address}`
@@ -160,11 +168,13 @@ export default {
 
       this.$store.commit('set', { key: 'wallet', value: wallet })
       this.$store.commit('set', { key: 'account', value: account })
-      console.log(this.state.wallet.address)
+
       //console.log("fdgadagfgfd" + SigningStargateClient.connectWithSigner());
       ////onsole.log(RPC)
       const client = await SigningStargateClient.connectWithSigner(process.env.VUE_APP_RPC, wallet, {});
      this.$store.commit('set', { key: 'client', value: client })
+     this.$store.dispatch("setCreatorItemList", account.address);
+     this.$store.dispatch("setBuyItemList");
       //console.log(client)
       try {
         await dispatch('bankBalancesGet')
@@ -179,7 +189,7 @@ export default {
         result[part0] = part1;
         return result;
       }, {});
-      console.log(hashParameters, queryParameters);
+      //console.log(hashParameters, queryParameters);
       let instanceParameters = {};
       let error = "";
       if (!queryParameters.preopenInstanceId) {

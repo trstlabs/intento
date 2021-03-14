@@ -1,27 +1,18 @@
 <template>
   <div class="pa-2 mx-lg-auto">
 
-     <v-tooltip right >
-      <template v-slot:activator="{ on, attrs }">
-        <span
-          v-bind="attrs"
-          v-on="on"> 
+    
     <p  v-if="creatorItemList.length > 0" class="pa-2 h2 font-weight-medium text-uppercase text-center">
-      Your items ({{ creatorItemList.length }}), Actionable ({{creatorActionList.length}})
+      Total ({{ creatorItemList.length }}), Actionable ({{creatorActionList.length}})
     </p>
 
-    </span>
-    </template>  <span > You have created these items, check out the actions to be done. </span> 
-      </v-tooltip>
+ 
+    
 
-    <v-btn text
-      v-if="creatorItemList.length < 1"
-      @click="getItemsFromCreator"
-    >
-      Display items
-    </v-btn>
+    
 
     <div v-for="item in creatorItemList" v-bind:key="item.id">
+      <v-sheet min-height="250" class="fill-height" color="transparent">
       <v-lazy
         v-model="isActive"
         :options="{
@@ -31,10 +22,10 @@
         transition="fade-transition"
       >
       <creator-item-item-info :itemid="item.id" />
-      </v-lazy>
+      </v-lazy> </v-sheet>
     </div>
-    <div class="card__empty" v-if="creatorItemList.length === 0 && dummy">
-      <p class="caption">No items, place an item first</p>
+    <div v-if="creatorItemList.length === 0">
+      <p class="caption pa-12 text-center">No items, place an item first</p>
     </div>
   </div>
 </template>
@@ -50,6 +41,7 @@ export default {
       isActive: false, 
     };
   },
+ 
 
   computed: {
     creatorItemList() {
@@ -60,15 +52,7 @@ export default {
     },
   },
 
-  methods: {
-    getItemsFromCreator() {
-      if (this.$store.state.client == null) { alert("Sign in first");};
-      this.dummy = true;
-      let input = this.$store.state.account.address;
-      this.$store.dispatch("setCreatorItemList", input);
-      //this.dummy = false;
-    },
-  },
+  
 };
 </script> 
 

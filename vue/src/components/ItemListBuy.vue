@@ -34,8 +34,15 @@
         </v-container>
         <div v-for="item in items" :key="item.id">
           <div>
-            <div >
-              <buy-item-item-info :itemid="item.id" />
+            <div > <v-sheet min-height="240" class="fill-height" color="transparent"><v-lazy
+        v-model="isActive"
+        :options="{
+          threshold: .5
+        }"
+       
+        transition="fade-transition"
+      >
+              <buy-item-item-info :itemid="item.id" /></v-lazy></v-sheet>
             </div>
           </div>
         </div>
@@ -68,6 +75,7 @@ export default {
   data: function () {
     return {
       advanced: false, 
+      isActive: false,
     };
   },
   

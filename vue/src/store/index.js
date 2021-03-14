@@ -117,7 +117,7 @@ export default new Vuex.Store({
         dispatch("entityFetch", { type });
       });*/
 
-      await dispatch('accountSignInTry');
+      //await dispatch('accountSignInTry');
 
     },
 
@@ -125,7 +125,7 @@ export default new Vuex.Store({
       const node_info = (await axios.get(`${API}/node_info`)).data.node_info;
       commit("chainIdSet", { chain_id: node_info.network });
     },
-    async accountSignInTry({ state, dispatch }) {
+    /*async accountSignInTry({ state, dispatch }) {
       const mnemonic = localStorage.getItem('mnemonic')
       const privkey = localStorage.getItem('privkey')
       if (mnemonic) {
@@ -149,7 +149,7 @@ export default new Vuex.Store({
       }
     },
 
-
+*/
     async bankBalancesGet({ commit, state },) {
       //const API = rootState.cosmos.env.env.API
       const { address } = state.account
@@ -195,29 +195,29 @@ export default new Vuex.Store({
 
 
     async setCreatorItemList({ commit, state }, input) {
-      const rs = state.data.item.filter(item => item.creator === input
+     if (!!input) { const rs = state.data.item.filter(item => item.creator === input
       ) || [];
       commit("setCreatorItemList", rs);
-
+     }
     },
 
     async setEstimatorItemList({ commit, state }, input) {
-
+      if (!!input) { 
       const rse = state.data.estimator.filter(estimator => estimator.estimator === input
       ) || [];
 
 
-      commit("setEstimatorItemList", rse);
+      commit("setEstimatorItemList", rse);}
     },
 
     async setBuyerItemList({ commit, state }, input) {
-      const rs = state.data.item.filter(item => item.buyer === input
-      );
-      commit("setBuyerItemList", rs);
+      if (!!input) {  const rs = state.data.item.filter(item => item.buyer === input
+      )
+      commit("setBuyerItemList", rs);}
     },
 
     async setBuyItemList({ commit, state }) {
-
+  
       const rs = state.data.item.filter(item => !item.buyer && item.transferable === true
       ) || [];
 
@@ -225,14 +225,14 @@ export default new Vuex.Store({
     },
 
     async setLocalBuyItemList({ commit, state }) {
-      const rs = state.data.item.filter(item => !item.buyer && item.transferable === true && item.localpickup === true
+       const rs = state.data.item.filter(item => !item.buyer && item.transferable === true && item.localpickup === true
       );
       commit("setBuyItemList", rs);
     },
     async updateBuyItemList({ commit, state }, input) {
-      const rs = state.data.item.filter(item => !item.buyer && item.transferable === true && item.title.toLowerCase().includes(input)
+      if (!!input) {  const rs = state.data.item.filter(item => !item.buyer && item.transferable === true && item.title.toLowerCase().includes(input)
       );
-      commit("updateBuyItemList", rs);
+      commit("updateBuyItemList", rs);}
     },
 
     async filterBuyItemList({ commit }, input) {
@@ -241,15 +241,15 @@ export default new Vuex.Store({
     },
 
     async tagBuyItemList({ commit, state }, input) {
-
+      if (!!input) { 
       const rs = state.data.item.filter(item => !item.buyer && item.tags.find(tags => tags.includes(input)) && item.transferable === true)
         ;
 
-      commit("updateBuyItemList", rs);
+      commit("updateBuyItemList", rs);}
     },
 
     async tagToEstimateList({ commit, state }, input) {
-      const A = state.data.item.filter(item => !item.buyer && item.tags.find(tags => tags.includes(input)) && item.transferable === false)
+      if (!!input) {  const A = state.data.item.filter(item => !item.buyer && item.tags.find(tags => tags.includes(input)) && item.transferable === false)
         ;
       const B = state.estimatorItemList;
 
@@ -258,7 +258,7 @@ export default new Vuex.Store({
       //console.log(rs);
       //console.log(A);
       //console.log(B);
-      commit("setToEstimateList", rs);
+      commit("setToEstimateList", rs);}
     },
 
     async setSortedTagList({ commit, state }) {
@@ -302,14 +302,14 @@ export default new Vuex.Store({
     },
 
     async setInterestedItemList({ commit, state }, input) {
-      const rs = state.data.estimator.filter(estimator => estimator.estimator === input && estimator.interested
+      if (!!input) {  const rs = state.data.estimator.filter(estimator => estimator.estimator === input && estimator.interested
       );
 
 
-      commit("setInterestedItemList", rs);
+      commit("setInterestedItemList", rs);}
     },
     async setCreatorActionList({ commit, state }, input) {
-
+      if (!!input) { 
 
       const toAccept = state.data.item.filter(item => item.creator == input && item.estimationprice > 0 && !item.buyer && !item.transferable
       );
@@ -326,14 +326,14 @@ export default new Vuex.Store({
       toAccept.concat(toShip);
       //console.log(toAccept);
 
-      commit("setCreatorActionList", toAccept);
+      commit("setCreatorActionList", toAccept);}
     },
 
     async setSellerItemList({ commit, state }, input) {
-
+      if (!!input) { 
       const rs = state.data.item.filter(item => item.creator === input) || [];
 
-      commit("setSellerItemList", rs);
+      commit("setSellerItemList", rs);}
     },
   },
   getters: {
