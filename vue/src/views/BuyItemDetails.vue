@@ -11,7 +11,7 @@
          
           <v-col cols="12" sm="8" class="d-none d-sm-flex d-md-none mx-auto" >
               <v-sheet min-width="350" class="mx-auto" rounded="lg" elevation="1" >
-                <wallet />
+                <wallet v-if="!!this.$store.state.account.address"/>
               </v-sheet>
             </v-col >
           
@@ -19,14 +19,14 @@
           <v-row>
             <v-col cols="12" sm="2" class="d-sm-none d-lg-flex d-md-flex">
               
-                <wallet />
+                <wallet v-if="!!this.$store.state.account.address" />
  
             </v-col >
 
              <v-col cols="12" sm="8"  class="pa-0 mx-auto">
               <v-sheet min-height="70vh" rounded="lg" elevation="6">
                 <div>
-                  <!--<faucet/>-->
+               
                   <div>
     
     <div> 
@@ -36,7 +36,9 @@
     </div>
     <v-btn block class="pa-2" to="/buy"> <v-icon left>
         mdi-arrow-left
-      </v-icon>All items </v-btn>
+      </v-icon>All items </v-btn><v-btn text onClick="window.location.reload();"><v-icon left>
+        mdi-refresh
+      </v-icon></v-btn>
   </div>
                 </div>
               </v-sheet>

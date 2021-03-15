@@ -3,7 +3,9 @@
 
     
     <p  v-if="creatorItemList.length > 0" class="pa-2 h2 font-weight-medium text-uppercase text-center">
-      Total ({{ creatorItemList.length }}), Actionable ({{creatorActionList.length}})
+      Total ({{ creatorItemList.length }}), Actionable ({{creatorActionList.length}})<v-btn icon onClick="window.location.reload();"><v-icon >
+        mdi-refresh
+      </v-icon></v-btn>
     </p>
 
  
@@ -25,8 +27,11 @@
       </v-lazy> </v-sheet>
     </div>
     <div v-if="creatorItemList.length === 0">
-      <p class="caption pa-12 text-center">No items, place an item first</p>
+      <p class="caption pa-12 text-center">No items, place an item first<v-btn icon onClick="window.location.reload();"><v-icon >
+        mdi-refresh
+      </v-icon></v-btn></p>
     </div>
+    
   </div>
 </template>
 

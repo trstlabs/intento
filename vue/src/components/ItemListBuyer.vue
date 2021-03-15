@@ -4,7 +4,9 @@
 
 
     <p v-if="buyerItemList.length > 0" class="h2 font-weight-medium text-uppercase text-center">
-      Your prepayed items ({{ buyerItemList.length }})
+      Your prepayed items ({{ buyerItemList.length }})<v-btn icon onClick="window.location.reload();"><v-icon >
+        mdi-refresh
+      </v-icon></v-btn>
     </p>
    
 
@@ -17,7 +19,9 @@
       </div>
     </div>
     <div v-if="buyerItemList.length === 0 ">
-      <p class="caption pa-12 text-center">No items, buy an item first</p>
+      <p class="caption pa-12 text-center">No items, buy an item first<v-btn icon onClick="window.location.reload();"><v-icon >
+        mdi-refresh
+      </v-icon></v-btn></p>
     </div>
   </div>
 </template>

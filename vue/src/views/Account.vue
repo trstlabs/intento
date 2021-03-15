@@ -75,6 +75,7 @@
                   <item-list-buyer v-if="bought"/>
         
                   <item-list-interested v-if="interested"/>
+                  
                 </div>
                 
               </v-sheet>

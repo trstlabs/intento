@@ -7,8 +7,8 @@
       ></v-progress-linear>
 
       <v-row>
-        <v-col cols="12" md="8">
-          <h4 class="text-capitalize pa-2 text-left">{{ thisitem.title }}</h4>
+        <v-col cols="12">
+          <div class="headline  font-weight-medium text-capitalize text-center  mx-4">{{ thisitem.title }} </div>
         </v-col>
 
         <v-col cols="12">
@@ -53,20 +53,7 @@
               <v-icon left> mdi-account-badge-outline </v-icon>
               Identifier: {{ thisitem.id }}
             </v-chip>
-            <!--<v-chip
-      class="ma-1 caption"
-      label
-      outlined
-      medium
-
-    >
-  <v-rating
-      v-model="thisitem.condition"
-      dense readonly
-      color="primary lighten-1"
-      background-color="grey lighten-1"
-      small
-    ></v-rating></v-chip>-->
+      
 
             <v-dialog transition="dialog-bottom-transition" max-width="300">
               <template v-slot:activator="{ on, attrs }">

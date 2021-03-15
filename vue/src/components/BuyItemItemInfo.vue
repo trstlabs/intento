@@ -9,7 +9,7 @@
       <div class="pa-2 mx-auto">
         <v-row>
           <v-col cols="12" md="8">
-            <h4 class="text-capitalize pa-2 text-left">{{ thisitem.title }}</h4>
+            <p class="text-capitalize subtitle-2 pa-2 text-left">{{ thisitem.title }}</p>
 
             <v-card class="ma-1" elevation="0">
               <v-chip
