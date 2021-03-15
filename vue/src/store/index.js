@@ -7,22 +7,18 @@ import app from "./app.js";
 
 //import cosmos from "@tendermint/vue/src/store/cosmos.js";
 //import { assert } from "@cosmjs/utils";
-import { assertIsBroadcastTxSuccess, makeCosmoshubPath } from '@cosmjs/launchpad'
-import { SigningStargateClient } from "@cosmjs/stargate";
-import { DirectSecp256k1HdWallet, DirectSecp256k1Wallet, Registry } from '@cosmjs/proto-signing/';
-import { Type, Field } from 'protobufjs';
-import { fromHex } from '@cosmjs/encoding';
+
 
 
 
 Vue.use(Vuex);
 
 const API = process.env.VUE_APP_API
-const RPC = process.env.VUE_APP_RPC
+//const RPC = process.env.VUE_APP_RPC
 //const API = "http://localhost:1317";
 //const API = "https://node.trustpriceprotocol.com"
 //const API = "http://localhost:1317"
-const ADDRESS_PREFIX = 'cosmos';
+//const ADDRESS_PREFIX = 'cosmos';
 const PATH = process.env.VUE_APP_PATH
 
 //const RPC = 'https://cli.trustpriceprotocol.com'
