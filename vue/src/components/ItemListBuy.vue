@@ -6,43 +6,37 @@
         <v-container>
           <v-row>
             <v-col cols="12" sm="6">
-              <buy-search-bar  />
+              <buy-search-bar />
             </v-col>
             <v-col cols="10" sm="4">
               <buy-options-bar :items="items" />
             </v-col>
-           <v-col cols="2" sm="2">
-              
-            
-            <v-btn 
-     
-      text
-      
-      small
-      
-     fab
-      @click="showAdvanced"
-    >
-      <v-icon dark>
-        mdi-tune
-      </v-icon>
-    </v-btn>
-
-  </v-col>
+            <v-col cols="2" sm="2">
+              <v-btn text small fab @click="showAdvanced">
+                <v-icon dark> mdi-tune </v-icon>
+              </v-btn>
+            </v-col>
           </v-row>
-          <buy-tag-bar :advanced="advanced"/>
+          <buy-tag-bar :advanced="advanced" />
         </v-container>
-        <div v-for="item in items" :key="item.id">
-          <div>
-            <div > <v-sheet min-height="240" class="fill-height" color="transparent"><v-lazy
-        v-model="isActive"
-        :options="{
-          threshold: .5
-        }"
-       
-        transition="fade-transition"
-      >
-              <buy-item-item-info :itemid="item.id" /></v-lazy></v-sheet>
+        <div v-if="items.length > 0">
+          <div v-for="item in items" :key="item.id">
+            <div>
+              <div>
+                <v-sheet
+                  min-height="240"
+                  class="fill-height"
+                  color="transparent"
+                  ><v-lazy
+                    v-model="isActive"
+                    :options="{
+                      threshold: 0.5,
+                    }"
+                    transition="fade-transition"
+                  >
+                    <buy-item-item-info :itemid="item.id" /></v-lazy
+                ></v-sheet>
+              </div>
             </div>
           </div>
         </div>
@@ -51,7 +45,8 @@
           v-if="items.length < 1"
         >
           <v-card-text class="caption">
-            No items to show. Use search / filters to find items or sell an item :)
+            No items to show. Use search / filters to find items or sell an item
+            :)
           </v-card-text>
         </v-card>
       </div>
@@ -74,35 +69,29 @@ export default {
   },
   data: function () {
     return {
-      advanced: false, 
+      advanced: false,
       isActive: false,
     };
   },
-  
-  computed: {
 
-   
+  computed: {
     items() {
-      
       //this.$store.dispatch("setBuyItemList");
-      return this.$store.getters.getBuyItemList; console.log(this.$store.getters.getBuyItemList)
+      return this.$store.getters.getBuyItemList;
     },
   },
 
   methods: {
-
-    showAdvanced(){
+    showAdvanced() {
       this.advanced = !this.advanced;
 
       this.$store.dispatch("setSortedTagList");
-
-    }
+    },
   },
 };
 </script>
 
 <style scoped>
-
 .card__empty {
   margin-bottom: 1rem;
   border: 1px dashed rgba(0, 0, 0, 0.1);
@@ -116,5 +105,4 @@ export default {
   text-align: center;
   min-height: 8rem;
 }
-
 </style>

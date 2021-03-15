@@ -130,7 +130,9 @@
     </v-col >
       
     </v-app-bar>
-    <welcome v-if="!this.$store.state.account.address"/> <v-btn
+    <welcome v-if="!this.$store.state.account.address"/> 
+    
+    <v-btn
             v-scroll="onScroll"
             v-show="fab"
             fab
