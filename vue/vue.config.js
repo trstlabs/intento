@@ -7,25 +7,32 @@ module.exports = {
   configureWebpack: {
     plugins: [
       new VuetifyLoaderPlugin(),
-      
+
     ],
-    /*optimization: {
-      runtimeChunk: 'single',
+    optimization: {
       splitChunks: {
-        chunks: 'all',
-        maxInitialRequests: Infinity,
-        minSize: 0,
+        chunks: 'async',
+        minSize: 20000,
+
+        maxSize: 0,
+        minChunks: 1,
+        maxAsyncRequests: 30,
+        maxInitialRequests: 30,
+        enforceSizeThreshold: 50000,
         cacheGroups: {
-          vendor: {
+          defaultVendors: {
             test: /[\\/]node_modules[\\/]/,
-            name(module) {
-              const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
-              return `npm.${packageName.replace('@', '')}`;
-            },
+            priority: -10,
+            reuseExistingChunk: true,
+          },
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true,
           },
         },
       },
-    },*/
+    },
   },
-  
+
 };
