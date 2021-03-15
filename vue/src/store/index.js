@@ -160,7 +160,7 @@ export default new Vuex.Store({
     async accountSignOut() {
       localStorage.removeItem('mnemonic')
       localStorage.removeItem('privkey')
-      window.location.reload()
+      //window.location.reload()
     },
 
     async entityFetch({ commit }, { type }) {

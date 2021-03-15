@@ -36,7 +36,7 @@
     </div>
     <v-btn block class="pa-2" to="/buy"> <v-icon left>
         mdi-arrow-left
-      </v-icon>All items </v-btn><v-btn text onClick="window.location.reload();"><v-icon left>
+      </v-icon>All items </v-btn><v-btn text ><v-icon left>
         mdi-refresh
       </v-icon></v-btn>
   </div>
@@ -56,10 +56,9 @@
 </template>
 
 <script>
-import BuyItemItem from "../components/BuyItemItem.vue";
-import Wallet from "../components/Wallet.vue";
+
 export default {
-  components: { BuyItemItem, Wallet },
+
   data() {
     return { };
   },

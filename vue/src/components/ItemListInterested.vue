@@ -2,7 +2,7 @@
   <div class="pa-2 mx-lg-auto">
    
     <p v-if="buyerItemList.length > 0" class="h2 font-weight-medium text-uppercase text-center">
-      Liked Items({{ buyerItemList.length }})<v-btn icon onClick="window.location.reload();"><v-icon >
+      Liked Items({{ buyerItemList.length }})<v-btn icon ><v-icon >
         mdi-refresh
       </v-icon></v-btn>
     </p>
@@ -18,7 +18,7 @@
     </div>
     <div  v-if="buyerItemList.length === 0">
       
-      <p class="caption pa-12 text-center">No items, like and estimate liked items to find items before anyone else <v-btn icon onClick="window.location.reload();"><v-icon >
+      <p class="caption pa-12 text-center">No items, like and estimate liked items to find items before anyone else <v-btn icon ><v-icon >
         mdi-refresh
       </v-icon></v-btn></p> 
     </div>
@@ -26,10 +26,10 @@
 </template>
 
 <script>
-import AppButton from "./AppButton.vue";
+
 import InterestedItemItemInfo from "./InterestedItemItemInfo.vue";
 export default {
-  components: { AppButton, InterestedItemItemInfo },
+  components: { InterestedItemItemInfo },
   data() {
     return {
       dummy: false,
