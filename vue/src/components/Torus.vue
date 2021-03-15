@@ -185,7 +185,7 @@ export default {
      this.loading = false
       //console.log(client)
       try {
-        await dispatch('bankBalancesGet')
+        await this.$store.dispatch('bankBalancesGet')
       } catch {
         
         console.log('Error in getting a bank balance.')

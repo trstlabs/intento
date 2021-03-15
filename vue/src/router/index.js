@@ -81,7 +81,7 @@ const routes = [
   },
   {
     path: '*',
-    name: 'catchAll',
+    //name: 'catchAll',
     component: () => 
         import(/* webpackChunkName: "buy" */ '@/views/Buy'), 
   }

@@ -44,7 +44,11 @@
                 <div class="body-1">" {{ thisitem.description }} "</div>
               </v-card-text>
             </v-card>
-
+ <v-chip outlined medium label class="ma-1 caption"
+            v-for="tag in thisitem.tags" :key="tag"
+          > <v-icon small left>
+        mdi-tag-outline
+      </v-icon>{{ tag }}</v-chip>
             <v-chip class="ma-1 caption" label outlined medium>
               <v-icon left> mdi-account-badge-outline </v-icon>
               Identifier: {{ thisitem.id }}
@@ -251,7 +255,7 @@
         :disabled="!this.$store.state.account.address"
         text 
         @click="createRoom"
-      >
+      ><v-icon> mdi-message-reply</v-icon>
         Message Seller</v-btn
       >
       <div class="pa-2 mx-auto caption">

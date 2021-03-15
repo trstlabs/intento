@@ -23,7 +23,7 @@
  
             </v-col >
 
-             <v-col cols="12" sm="8" md="6" class="pa-0 mx-auto">
+             <v-col cols="12" sm="8"  class="pa-0 mx-auto">
               <v-sheet min-height="70vh" rounded="lg" elevation="6">
                 <div>
                   <!--<faucet/>-->
@@ -34,7 +34,9 @@
       <buy-item-item :itemid="this.$route.params.id" />
       
     </div>
-    <router-link to="/buy">Return to all items </router-link>
+    <v-btn block class="pa-2" to="/buy"> <v-icon left>
+        mdi-arrow-left
+      </v-icon>All items </v-btn>
   </div>
                 </div>
               </v-sheet>

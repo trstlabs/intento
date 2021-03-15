@@ -61,7 +61,7 @@
             :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
             text
           >
-            Full Details
+            Details
           </v-btn>
         </div>
         <v-spacer></v-spacer>
@@ -100,7 +100,22 @@
                   <div class="body-1">" {{ thisitem.description }} "</div>
                 </v-card-text>
               </v-card>
-
+ <v-chip outlined medium label class="ma-1 caption"
+            v-for="itemtags in thisitem.tags" :key="itemtags"
+          > <v-icon small left>
+        mdi-tag-outline
+      </v-icon>{{ itemtags }}</v-chip>
+       <v-chip
+              outlined
+              medium
+              label
+              class="ma-1 caption"
+              v-for="selected in thisitem.shippingregion"
+              :key="selected"
+            >
+              <v-icon small left> mdi-flag-variant-outline </v-icon
+              >{{ selected }}</v-chip
+            >
               <v-chip class="ma-1 caption" label outlined medium>
                 <v-icon left> mdi-account-badge-outline </v-icon>
                 Identifier: {{ thisitem.id }}
