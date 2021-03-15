@@ -6,14 +6,37 @@
           Welcome! <v-spacer /> <img src="img/brand/icon.png" width="44" />
         </v-card-title>
 
-        <div v-if="!signin && !signup && !learn">
+        <div v-if="!signin && !signup && !learn" >
           <v-card-text>
             This dApp is in development. Feel free to use the app and see how it
             behaves. Note: items are examples and are not redeemable for tokens.
             Feedback is always welcome at the
             <a href="https://www.trustpriceprotocol.com"> main page.</a>
           </v-card-text>
-          <torus :privkey="signkey"/>
+          <torus v-if="login" :privkey="signkey" />
+
+         <!-- <div v-if="!login">
+              <div >
+            <v-col >
+              <div class="justify-center" @mouseover="login = true">
+                <v-img  class="justify-center"
+                  max-height="100"
+                  max-width="200"
+                  src="img/google/btn.png"
+                >
+                </v-img>
+              </div>
+            </v-col>
+            <v-col class="mx-auto"
+              ><div class="text-center" @mouseover="login = true">
+                <v-img
+                  max-height="80"
+                  max-width="120"
+                  src="img/google/directauth.png"
+                >
+                </v-img></div
+            ></v-col></div>
+          </div>-->
 
           <v-card-actions>
             <v-btn color="primary " text @click="(learn = true), loadContent()">
@@ -252,8 +275,6 @@
 </template>
 
   <script>
-
-  
 /*
 import Faucet from "./Faucet.vue";
 import FaucetTorus from "./FaucetTorus.vue";
@@ -265,13 +286,12 @@ import Wallet from "./Wallet.vue";*/
 //import * as bip39 from 'bip39'
 export default {
   //components: { Wallet, Faucet, Torus, FaucetTorus },
-  components: {
-   
-  },
+  components: {},
 
   data() {
     return {
       //dismiss: false,
+      login: false,
       dialog: true,
       signin: false,
       signup: false,
@@ -282,7 +302,13 @@ export default {
     };
   },
   computed: {
-    signkey(){ console.log(localStorage.getItem('privkey')); return localStorage.getItem('privkey') },
+    signkey() {
+      console.log(localStorage.getItem("privkey"));
+      return localStorage.getItem("privkey");
+    },
+  },
+  mounted() {
+    this.login = true
   },
   methods: {
     // mnemonicGenerate() {
