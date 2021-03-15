@@ -26,7 +26,7 @@
       <estimator-item-item-info :itemid="estimator.itemid" /> </v-lazy>
     </div>
     <div v-if="estimatorItemList.length === 0">
-      <p class="caption pa-12 text-center">No estimations, make an estimation first<v-btn icon ><v-icon >
+      <p class="caption pa-12 text-center">No estimations, make an estimation first<v-btn icon onClick="window.location.reload();" ><v-icon >
         mdi-refresh
       </v-icon></v-btn></p>
     </div>
