@@ -8,10 +8,10 @@
        <div v-if="status">Status: {{status}}</div>
       <div v-if="serverError">Oops Error!{{serverError}}</div>
 
-     <torus v-if="!this.$store.state.account.address"/>
+     <torus v-if="!this.$store.state.wallet"/>
       <button :disabled="status==='submitting'" type="submit" class="button"></button>
       
-     <v-row v-if="!!this.$store.state.account.address" class="justify-center mb-4">
+     <v-row v-if="!!this.$store.state.wallet" class="justify-center mb-4">
       <vue-recaptcha 
         ref="recaptcha"
         @verify="onCaptchaVerified"

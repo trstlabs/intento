@@ -81,7 +81,7 @@ export default {
         if (!this.torusdirectsdk) return;
         const jwtParams = this.loginToConnectionMap[this.selectedVerifier] || {};
         const { typeOfLogin, clientId, verifier } = this.verifierMap[this.selectedVerifier];
-        console.log(hash, queryParameters, typeOfLogin, clientId, verifier, jwtParams);
+        //console.log(hash, queryParameters, typeOfLogin, clientId, verifier, jwtParams);
         const loginDetails = await this.torusdirectsdk.triggerLogin({
           typeOfLogin,
           verifier,
@@ -148,6 +148,7 @@ export default {
        
         this.torusSignIn(loginDetails.privateKey)
       } catch (error) {
+        this.loading = false
         console.error(error, "caught");
       }
     },
@@ -163,16 +164,16 @@ export default {
       const wallet = await DirectSecp256k1Wallet.fromKey(
         fromHex(details), "cosmos"
       )
-   
+      this.$store.commit('set', { key: 'wallet', value: wallet })
       localStorage.setItem('privkey', details)
-      console.log(localStorage.getItem('privkey'))
+      //console.log(localStorage.getItem('privkey'))
       const { address } = wallet
    
       const url = `${process.env.VUE_APP_API}/auth/accounts/${address}`
       const acc = (await axios.get(url)).data
       const account = acc.result.value
 
-      this.$store.commit('set', { key: 'wallet', value: wallet })
+      
       this.$store.commit('set', { key: 'account', value: account })
 
       //console.log("fdgadagfgfd" + SigningStargateClient.connectWithSigner());
@@ -186,6 +187,7 @@ export default {
       try {
         await dispatch('bankBalancesGet')
       } catch {
+        
         console.log('Error in getting a bank balance.')
       }
     },
