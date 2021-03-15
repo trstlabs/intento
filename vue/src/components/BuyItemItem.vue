@@ -196,7 +196,7 @@
                 >{{ single }}
               </v-chip>
             </div>
-            <div v-if="!thisitem.comments">
+            <div v-if="allcomments.length ==0">
               <p class="caption text-center">No comments to show right now</p>
             </div>
 
@@ -251,16 +251,19 @@
           </div>
         </div>
       </div>
-      <v-btn
+      <v-row class="pa-2 mx-auto">
+      <v-btn 
         :disabled="!this.$store.state.account.address"
         text 
         @click="createRoom"
-      ><v-icon> mdi-message-reply</v-icon>
-        Message Seller</v-btn
+      ><v-icon small> mdi-message-reply</v-icon>
+          Message Seller</v-btn
       >
-      <div class="pa-2 mx-auto caption">
+      <v-spacer/>
         <v-btn text @click="sellerInfo">Seller Info </v-btn>
-        <v-card elevation="0" v-if="info">
+         </v-row>
+     <div class="pa-2 mx-auto caption">
+       <v-card elevation="0" v-if="info">
           <p>This seller has sold {{ sold }} items before</p>
           <!--<p  Of which _ have been transfered by shipping and _ by local pickup.</p>-->
         </v-card>
@@ -460,7 +463,9 @@ async paySubmit( { body, fields }) {
         this.sold = rs.length;
       }
 
-      this.info = true;
+      this.info = !this.info
+
+     
     },
     async createRoom() {
 
