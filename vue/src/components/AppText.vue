@@ -1,4 +1,4 @@
-<template>
+npx vue-cli-service build --report <template>
   <div>
     <div :class="[`${type}`]">
       <slot />
