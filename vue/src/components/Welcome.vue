@@ -288,7 +288,7 @@ export default {
   },
   computed: {
     signkey() {
-      console.log(localStorage.getItem("privkey"));
+      //console.log(localStorage.getItem("privkey"));
       return localStorage.getItem("privkey");
     },
   },

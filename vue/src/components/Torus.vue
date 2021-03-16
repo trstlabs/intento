@@ -180,6 +180,9 @@ export default {
       ////onsole.log(RPC)
       const client = await SigningStargateClient.connectWithSigner(process.env.VUE_APP_RPC, wallet, {});
      this.$store.commit('set', { key: 'client', value: client })
+       const type = { type: "estimator" };
+      await this.$store.dispatch("entityFetch", type )
+      
      this.$store.dispatch("setCreatorItemList", account.address);
      this.$store.dispatch("setBuyItemList");
      this.loading = false

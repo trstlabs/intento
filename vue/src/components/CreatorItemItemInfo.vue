@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="pa-4 mx-auto">
-      <v-card elevation="2" rounded="lg">
+      <v-card elevation="2" class="pa-2" rounded="lg">
         <v-progress-linear
           indeterminate
           :active="loadingitem"

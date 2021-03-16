@@ -37,7 +37,7 @@
              <v-col cols="12" sm="8" class="pa-0 mx-auto">
               <v-sheet min-height="70vh" rounded="lg" elevation="6">
                 <div>
-                   <v-tabs 
+                   <v-tabs class="pt-2"
       
     fixed-tabs
       :dark="!!$vuetify.theme.dark"
@@ -142,6 +142,8 @@ export default {
     },
      getItemsFromBuyer() {
       if (!this.$store.state.account.address) { alert("Sign in first");};
+      const type = { type: "buyer" };
+      this.$store.dispatch("entityFetch",type);
       this.interested = false
       this.created = false
        this.estimated = false

@@ -106,6 +106,7 @@ export default new Vuex.Store({
       await dispatch("chainIdFetch");
       const type = { type: "item" };
       await dispatch("entityFetch", type )
+    
       //let { type } = state.app.types.find( type  => { type == "item"})
       
      /* state.app.types.forEach(({ type }) => {
@@ -198,7 +199,7 @@ export default new Vuex.Store({
     },
 
     async setEstimatorItemList({ commit, state }, input) {
-      if (!!input) { 
+      if (input) { 
       const rse = state.data.estimator.filter(estimator => estimator.estimator === input
       ) || [];
 

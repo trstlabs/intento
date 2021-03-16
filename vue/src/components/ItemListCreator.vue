@@ -27,7 +27,7 @@
       </v-lazy> </v-sheet>
     </div>
     <div v-if="creatorItemList.length === 0">
-      <p class="caption pa-12 text-center">No items, place an item first<v-btn icon  onClick="window.location.reload();"><v-icon >
+      <p class="caption pa-12 text-center">No items, place an item first<v-btn icon  onClick="window.location.reload();" ><v-icon >
         mdi-refresh
       </v-icon></v-btn></p>
     </div>

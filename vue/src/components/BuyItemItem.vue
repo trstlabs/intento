@@ -7,7 +7,7 @@
       ></v-progress-linear>
 
       <v-row>
-        <v-col cols="12">
+        <v-col cols="12">  
           <div class="subtitle-1  font-weight-medium text-capitalize text-center  mx-auto">{{ thisitem.title }} </div>
         </v-col>
 

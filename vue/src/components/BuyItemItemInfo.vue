@@ -12,24 +12,7 @@
             <p class="text-capitalize subtitle-2 pa-2 text-left">{{ thisitem.title }}</p>
 
             <v-card class="ma-1" elevation="0">
-              <v-chip
-                class="ma-1 caption"
-                label
-                color="primary lighten-1"
-                medium
-              >
-                <v-icon left> mdi-check-all </v-icon>
-                ${{ thisitem.estimationprice }} TPP
-              </v-chip>
-              <v-chip
-                class="ma-1 caption"
-                label
-                color="warning lighten-2"
-                medium
-              >
-                <v-icon left> mdi-database-plus </v-icon>
-                ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP
-              </v-chip>
+             
 
               <p class="ma-1 caption" v-if="thisitem.description.length < 200">
                 {{ thisitem.description }}
@@ -64,9 +47,31 @@
             Details
           </v-btn>
         </div>
+        
         <v-spacer></v-spacer>
 
-        <v-btn icon @click="(showinfo = !showinfo), getItemPhotos()">
+       
+            <v-chip
+                class="ma-1 caption"
+                label
+                color="warning lighten-2"
+                small
+              >
+                <v-icon left> mdi-database-plus </v-icon>
+                ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP
+              </v-chip>
+              
+         <v-chip
+                class="ma-1 caption"
+                label
+                color="primary lighten-1"
+                small
+              >
+                <v-icon left> mdi-check-all </v-icon>
+                ${{ thisitem.estimationprice }} TPP
+              </v-chip>
+                <v-spacer></v-spacer>
+           <v-btn icon @click="(showinfo = !showinfo), getItemPhotos()">
           <v-icon>{{
             showinfo ? "mdi-chevron-up" : "mdi-chevron-down"
           }}</v-icon>

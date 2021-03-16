@@ -4,35 +4,41 @@
       <v-btn :ripple="false" text @click="getItemToEstimate"
         ><v-icon color="primary" left> mdi-refresh </v-icon> Refresh
       </v-btn>
-       
     </div>
-   <v-skeleton-loader v-if="loadingitem "
+    <v-skeleton-loader
+      v-if="loadingitem"
       class="mx-auto"
       type="list-item-three-line, image, article"
     ></v-skeleton-loader>
 
-    <v-card class="pa-2 mx-auto" elevation="2" rounded="lg" v-if="showinfo == true && loadingitem == false">
+<div v-if="showinfo == true && loadingitem == false" >
+    <div elevation="8" v-if="photos.photo">
+      <v-carousel
+        delimiter-icon="mdi-minus"
+        carousel-controls-bg="primary"
+        contain
+        hide-delimiter-background
+        show-arrows-on-hover
+      >
+        <v-carousel-item v-for="(photo, i) in photos" :key="i" :src="photo">
+        </v-carousel-item>
+      </v-carousel>
+    </div>
+
+    <v-card
+      class="pa-2 mt-2"
+      elevation="2"
+      rounded="lg"
+     
+    >
       <v-progress-linear
         indeterminate
         :active="loadingitem"
       ></v-progress-linear>
 
-      <div elevation="8" v-if="photos.photo">
-        <v-carousel
-          delimiter-icon="mdi-minus"
-          carousel-controls-bg="primary"
-          contain
-          hide-delimiter-background
-          show-arrows-on-hover
-        >
-          <v-carousel-item v-for="(photo, i) in photos" :key="i" :src="photo">
-          </v-carousel-item>
-        </v-carousel>
-      </div>
-
       <div class="pa-2">
         <v-row>
-          <v-col class="py-0">
+          <v-col class="pa-2">
             <v-card elevation="0">
               <div class="overline">Title</div>
 
@@ -41,7 +47,7 @@
               </div>
             </v-card>
           </v-col>
-          <v-col class="py-0">
+          <v-col class="pa-2">
             <v-card elevation="0">
               <v-chip-group>
                 <v-chip
@@ -184,6 +190,7 @@
               label="Amount"
               type="number"
               v-model="estimation"
+              :disabled="lastitem"
               prefix="$"
               suffix="tokens"
             ></v-text-field>
@@ -196,6 +203,7 @@
           <div>
             <v-chip-group active-class="primary--text" column>
               <v-chip
+                :disabled="lastitem"
                 small
                 v-for="(option, text) in options"
                 :key="text"
@@ -207,17 +215,18 @@
           </div>
 
           <div class="mx-auto">
-            <h3 class="text-left">"</h3>
+            <h3 class="text-left">“</h3>
             <v-text-field
               rounded
               dense
+              :disabled="lastitem"
               clearable
               class="caption"
               placeholder="leave a comment (optional)"
               v-model="comment"
             />
           </div>
-          <h3 class="text-right">"</h3>
+          <h3 class="text-right">”</h3>
         </div>
       </v-card>
 
@@ -252,7 +261,7 @@
         </v-chip-group>-->
       </div>
     </v-card>
-
+</div>
     <div class="pa-4 mx-auto" v-if="showinfo">
       <v-row class="text-center">
         <v-col class="pa-0">
@@ -435,6 +444,9 @@ export default {
     //console.log(input)
     if (!!this.$store.state.account.address) {
       let input = this.$store.state.account.address;
+
+       const type = { type: "estimator" };
+      this.$store.dispatch("entityFetch",type);
       this.$store.dispatch("setSortedTagList");
       this.$store.dispatch("setEstimatorItemList", input);
       this.$store.dispatch("setToEstimateList", this.index);
@@ -484,7 +496,7 @@ export default {
         await this.estimationSubmit({ ...type, body, fields });
 
         await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("accountUpdate");
+        await this.$store.dispatch("bankBalancesGet");
         this.submitRevealEstimation(itemid);
         //this.flight = false;
         //this.loadingitem = false;
@@ -524,9 +536,14 @@ export default {
         this.$store.state.account.address,
         [msg],
         fee
-      );
+      ); 
+      if (!result.data) {
+        alert("Error")
+
+      }
       assertIsBroadcastTxSuccess(result);
       console.log("success!");
+     
 
       try {
         await this.$store.dispatch("entityFetch", {
@@ -610,7 +627,11 @@ export default {
         return (this.showinfo = false);
       }
       let input = this.$store.state.account.address;
+      
+      this.$store.dispatch("setSortedTagList");
       this.$store.dispatch("setEstimatorItemList", input);
+      this.$store.dispatch("setToEstimateList", this.index);
+
       //let index = 0;
       //this.$store.dispatch("setToEstimateList");
       this.item = this.items[this.index];

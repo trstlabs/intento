@@ -102,7 +102,7 @@
    </v-col><v-col class="text-right" > 
 
       <template><div class="">
-      <v-btn rounded elevation="1" plain small :color="($vuetify.theme.dark) ? 'primary' : 'primary'"
+      <v-btn rounded elevation="1"  small :color="($vuetify.theme.dark) ? 'primary' : 'primary'"
           to="/messages">
     
           <v-icon>mdi-message-reply

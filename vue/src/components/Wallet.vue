@@ -201,7 +201,8 @@ export default {
 		},
   //set the app according to the logged in user
     async initConfig() {
-  
+   const type = { type: "estimator" };
+      this.$store.dispatch("entityFetch",type);
        this.$store.dispatch("setEstimatorItemList", this.address);
        this.$store.dispatch("setToEstimateList", this.address);
        this.$store.dispatch("setCreatorActionList", this.address);

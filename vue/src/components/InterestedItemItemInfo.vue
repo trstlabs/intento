@@ -286,7 +286,7 @@ export default {
         ];
          await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("accountUpdate");
+        await this.$store.dispatch("bankBalancesGet");
         this.flightLP = false;
         this.loadingitem = false;
       }
@@ -317,7 +317,7 @@ export default {
         ];
          await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("accountUpdate");
+        await this.$store.dispatch("bankBalancesGet");
 
         
         this.flightSP = false;
