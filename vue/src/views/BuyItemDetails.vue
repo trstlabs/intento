@@ -36,7 +36,7 @@
     </div>
     <v-btn block class="pa-2" to="/buy"> <v-icon left>
         mdi-arrow-left
-      </v-icon>All items </v-btn><v-btn text ><v-icon left>
+      </v-icon>All items </v-btn><v-btn icon onClick="window.location.reload();" ><v-icon left>
         mdi-refresh
       </v-icon></v-btn>
   </div>

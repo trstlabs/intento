@@ -59,8 +59,13 @@
               <template v-slot:activator="{ on, attrs }">
                 <span v-bind="attrs" v-on="on">
                   <v-chip class="ma-1 caption" label outlined medium>
-                    <v-icon left small> mdi-star-outline </v-icon>
-                    {{ thisitem.condition }}/5
+                    <v-rating
+      v-model="thisitem.condition.Number"
+     readonly
+      color="primary"
+      background-color="grey lighten-1"
+      small dense
+    ></v-rating>
                   </v-chip>
                 </span>
               </template>
@@ -159,7 +164,7 @@
               Price: ${{ thisitem.estimationprice }} TPP
             </v-chip>
 
-            <v-chip class="ma-1 caption" medium label outlined>
+            <v-chip  @click="createRoom" class="ma-1 caption" medium label outlined>
               <v-icon left> mdi-account-outline </v-icon>
               Seller: {{ thisitem.creator }}
             </v-chip>
@@ -191,6 +196,9 @@
             <div v-if="hasAddress" class="ma-4 text-center">
               <wallet-coins />
             </div>
+            <div class="text-center caption pa-2"> You can buy {{thisitem.title}}  for ${{ thisitem.estimationprice }} TPP and ship the item if you live in one of the following locations: "<span
+            v-for="loc in thisitem.shippingregion" :key="loc"
+          >{{ loc }}</span>" . Additional Shipping cost is ${{thisitem.shippingcost}} TPP. You can arrange a pickup by sending a message to <a @click="createRoom" >{{thisitem.creator}}. </a>   If you buy the item you will receive a cashback reward of ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP. With TPP you can withdrawl your payment at any time, up until the item transaction and no transaction costs are applied.</div>
             <div class="text-center">
               <v-row>
                 <v-col>
@@ -239,11 +247,12 @@
         </div>
       </div>
       <v-row class="pa-2 mx-auto">
+
       <v-btn 
         :disabled="!this.$store.state.account.address"
         text 
         @click="createRoom"
-      ><v-icon small> mdi-message-reply</v-icon>
+      >
           Message Seller</v-btn
       >
       <v-spacer/>
@@ -351,7 +360,7 @@ export default {
         ];
          await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("accountUpdate");
+        await this.$store.dispatch("bankBalancesGet");
         this.flightLP = false;
         this.loadingitem = false;
       }
@@ -378,7 +387,7 @@ export default {
         const body = { deposit, itemid };
          await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("accountUpdate");
+        await this.$store.dispatch("bankBalancesGet");
 
         this.flightSP = false;
         this.loadingitem = false;

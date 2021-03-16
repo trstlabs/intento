@@ -11,7 +11,7 @@
       type="list-item-three-line, image, article"
     ></v-skeleton-loader>
 
-    <v-card class="pa-2 mx-auto" elevation="2" rounded="lg" v-if="showinfo">
+    <v-card class="pa-2 mx-auto" elevation="2" rounded="lg" v-if="showinfo == true && loadingitem == false">
       <v-progress-linear
         indeterminate
         :active="loadingitem"
