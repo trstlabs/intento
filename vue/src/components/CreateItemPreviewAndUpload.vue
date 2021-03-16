@@ -1,30 +1,30 @@
 <template>
   <div>
-    
     <div>
       <div>
         <div class="item">
-  <v-row>
-  <v-col >
-    <v-card elevation="0" >
-    
-     <div class="overline">Title</div>
-     
-  <div class="body-1"> "
-           {{thisitem.title }} "
-         </div>  </v-card>
-  </v-col>
-  <v-col >
-  <v-card elevation="0">
-  <v-chip-group>
-    <v-chip outlined small class="caption"
-            v-for="previewtag in thisitem.tags" :key="previewtag"
-          > <v-icon small left>
-        mdi-tag-outline
-      </v-icon>
-            {{ previewtag }}
-          </v-chip>
-          <!--<v-chip 
+          <v-row>
+            <v-col>
+              <v-card elevation="0">
+                <div class="overline">Title</div>
+
+                <div class="body-1">" {{ thisitem.title }} "</div>
+              </v-card>
+            </v-col>
+            <v-col>
+              <v-card elevation="0">
+                <v-chip-group>
+                  <v-chip
+                    outlined
+                    small
+                    class="caption"
+                    v-for="previewtag in thisitem.tags"
+                    :key="previewtag"
+                  >
+                    <v-icon small left> mdi-tag-outline </v-icon>
+                    {{ previewtag }}
+                  </v-chip>
+                  <!--<v-chip 
         class="ma-1" outlined small
       >
 <v-rating
@@ -37,99 +37,77 @@
   size="10"
   :value="thisitem.condition"
 ></v-rating> </v-chip>-->
-        </v-chip-group> </v-card>
+                </v-chip-group>
+              </v-card>
+            </v-col>
+          </v-row>
+          <v-card elevation="0">
+            <div class="overline">Description</div>
+            <v-card-text>
+              <div class="body-1">" {{ thisitem.description }} "</div>
+            </v-card-text>
+          </v-card>
 
-  </v-col>
-  </v-row>
-           <v-card elevation="0" >  <div class=" overline">Description</div> <v-card-text>
-    
-     
-  <div class="body-1 "> "
-           {{ thisitem.description }} "
-         </div> </v-card-text> </v-card>
+          <v-divider class="ma-4"></v-divider>
+          <div>
+          <v-chip class="ma-1 caption" medium label outlined>
+            <v-icon left> mdi-account-outline </v-icon>
+            Your Address: {{ thisitem.creator }}
+          </v-chip>
 
-<v-divider class="ma-4"></v-divider>
-         <v-chip
-      class="ma-1 caption"
-      medium label outlined
+          <v-chip class="ma-1 caption" label outlined medium>
+            <v-icon left> mdi-account-badge-outline </v-icon>
+            Identifier: {{ thisitem.id }}
+          </v-chip>
 
-    >
-    
-    <v-icon left>
-        mdi-account-outline
-      </v-icon>
-      Your Address: {{ thisitem.creator }}
-    </v-chip>
-
-          
-          
           <v-chip
-      class="ma-1 caption"
-      label
-      outlined
-      medium
-    >
-    <v-icon left>
-        mdi-account-badge-outline
-      </v-icon>
-      Identifier: {{ thisitem.id }}
-    </v-chip>
+            v-if="thisitem.shippingcost"
+            class="ma-1 caption"
+            label
+            outlined
+            medium
+          >
+            <v-icon left> mdi-package-variant </v-icon>
+            Shipping
+          </v-chip>
+          <v-chip
+            v-if="thisitem.localpickup"
+            class="ma-1 caption"
+            label
+            outlined
+            medium
+          >
+            <v-icon left> mdi-map-marker-outline </v-icon>
+            Local pickup
+          </v-chip>
+          <v-chip
+            v-if="thisitem.shippingcost"
+            class="ma-1 caption"
+            label
+            outlined
+            medium
+          >
+            <v-icon left> mdi-package-variant-closed </v-icon>
+            Shipping cost: ${{ thisitem.shippingcost }} TPP
+          </v-chip>
 
-   
-           <v-chip v-if="thisitem.shippingcost"
-      class="ma-1 caption"
-      label
-      outlined
-      medium
-    >
-    <v-icon left>
-        mdi-package-variant
-      </v-icon>
-      Shipping
-    </v-chip>
-<v-chip v-if="thisitem.localpickup"
-      class="ma-1 caption"
-      label
-      outlined
-      medium
-    >
-    <v-icon left>
-         mdi-map-marker-outline
-      </v-icon>
-      Local pickup
-    </v-chip>
-    <v-chip v-if="thisitem.shippingcost"
-      class="ma-1 caption"
-      label
-      outlined
-      medium
+          <v-chip
+            outlined
+            medium
+            label
+            class="ma-1 caption"
+            v-for="country in thisitem.shippingregion"
+            :key="country"
+          >
+            <v-icon small left> mdi-flag-variant-outline </v-icon
+            >{{ country }}</v-chip
+          >
+          <v-chip class="ma-1 caption" label outlined medium>
+            <v-icon left> mdi-star-outline </v-icon>
+            Condition: {{ thisitem.condition }}/5
+          </v-chip>
 
-    >
-    <v-icon left>
-        mdi-package-variant-closed
-      </v-icon>
-      Shipping cost: ${{thisitem.shippingcost}} TPP
-    </v-chip>
-    
-         <v-chip outlined medium label class="ma-1 caption"
-            v-for="country in thisitem.shippingregion" :key="country"
-          > <v-icon small left>
-        mdi-flag-variant-outline
-      </v-icon>{{ country }}</v-chip>
-    <v-chip
-      class="ma-1 caption"
-      label
-      outlined
-      medium
-
-    >
-    <v-icon left>
-        mdi-star-outline
-      </v-icon>
-      Condition: {{thisitem.condition}}/5
-    </v-chip>
-
-  <!--  <v-chip label color="grey"
+          <!--  <v-chip label color="grey"
         class="ma-1" disabled
       medium>
 <v-rating
@@ -142,20 +120,14 @@
   size="12"
   :value="thisitem.condition"
 ></v-rating> </v-chip>-->
-    <v-row class="text-center">
+          <v-row class="text-center"> </v-row>
+          </div>
+          <v-divider class="ma-4"></v-divider>
 
-</v-row>
-    
-   <v-divider class="ma-4"></v-divider>
-          
-          
           <div class="mt-2">
-            <v-btn  outlined @click="click1"> <v-icon
-          
-          left
-        >
-          mdi-image
-        </v-icon>Primary  </v-btn>
+            <v-btn outlined @click="click1">
+              <v-icon left> mdi-image </v-icon>Primary
+            </v-btn>
             <input
               type="file"
               ref="input1"
@@ -166,18 +138,16 @@
           </div>
           <div v-if="img1 != null">
             <v-card class="text-center mt-4">
-            <v-card-title>Primary photo</v-card-title>
-            <v-img class=" rounded contain"   :src="img1" />
+              <v-card-title>Primary photo</v-card-title>
+              <v-img class="rounded contain" :src="img1" />
 
-            <br /> </v-card>
+              <br />
+            </v-card>
           </div>
           <div class="mt-2">
-            <v-btn outlined @click="click2"> <v-icon
-          
-          left
-        >
-          mdi-image
-        </v-icon>Additonal </v-btn>
+            <v-btn outlined @click="click2">
+              <v-icon left> mdi-image </v-icon>Additonal
+            </v-btn>
             <input
               type="file"
               ref="input2"
@@ -188,19 +158,16 @@
           </div>
           <div v-if="img2 != null">
             <v-card class="text-center mt-4">
-            <v-card-title>Photo 2</v-card-title>
-            
-            <v-img class=" rounded contain" :src="img2" />
+              <v-card-title>Photo 2</v-card-title>
 
-            <br /> </v-card>
+              <v-img class="rounded contain" :src="img2" />
+
+              <br />
+            </v-card>
           </div>
           <div class="mt-2">
-            <v-btn outlined v-if="imageData2" @click="click3"> <v-icon
-          
-          left
-        >
-          mdi-image
-        </v-icon>
+            <v-btn outlined v-if="imageData2" @click="click3">
+              <v-icon left> mdi-image </v-icon>
               Additonal
             </v-btn>
             <input
@@ -214,37 +181,38 @@
 
           <div v-if="img3 != null">
             <v-card class="text-center mt-4">
-            <v-card-title>Photo 3</v-card-title>
-           
-            <v-img class=" rounded contain" :src="img3" />
+              <v-card-title>Photo 3</v-card-title>
 
-            <br /> </v-card>
+              <v-img class="rounded contain" :src="img3" />
+
+              <br />
+            </v-card>
           </div>
         </div>
-
-        </div>
-        <div class="pt-4 text-right">
-        <v-btn :disabled="!valid || !!flight || !hasAddress"
-         color="primary"
+      </div>
+      <div class="pt-4 text-right">
+        <v-btn
+          :disabled="!valid || !!flight || !hasAddress"
+          color="primary"
           @click="create()"
         >
-          Place item  <v-icon > mdi-arrow-right-bold</v-icon>
+          Place item <v-icon> mdi-arrow-right-bold</v-icon>
           <div class="button__label" v-if="flight">
             <div class="button__label__icon">
               <icon-refresh />
             </div>
             Creating item...
           </div>
-        </v-btn> </div>
+        </v-btn>
       </div>
     </div>
-  
+  </div>
 </template>
 
 <script>
 import AppText from "./AppText.vue";
 import CreateItemForm from "./CreateItemForm.vue";
-import { fb ,databaseRef } from './firebase/db';
+import { fb, databaseRef } from "./firebase/db";
 
 export default {
   props: ["thisitem"],
@@ -318,7 +286,6 @@ export default {
 
     //i am lazy and busy so I double the functions for the other images. Code needs to be improved later ofc.
     previewImage(event) {
-     
       this.uploadValue = 0;
       this.img1 = null;
       this.imageData = event.target.files[0];
@@ -351,7 +318,6 @@ export default {
       );
     },
     previewImage2(event) {
-    
       this.uploadValue2 = 0;
       this.img2 = null;
       this.imageData2 = event.target.files[0];
@@ -383,7 +349,6 @@ export default {
       );
     },
     previewImage3(event) {
-  
       this.uploadValue3 = 0;
       this.img3 = null;
       this.imageData3 = event.target.files[0];
@@ -411,14 +376,9 @@ export default {
             this.img3 = url;
             console.log(this.img3);
           });
-        },
-
-        
+        }
       );
-
     },
- 
   },
-
 };
 </script>

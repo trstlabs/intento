@@ -76,6 +76,7 @@ export default {
         if (response.status === 200) {
           self.sucessfulServerResponse = 'Your cosmos-address is succesfully registered!'
         
+        
         }
          else {
           self.sucessfulServerResponse = response.data
