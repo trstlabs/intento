@@ -30,18 +30,18 @@
       </div>
       <div v-else class="account">
         <div class="card">
-          <v-row class="justify-center">
-          <v-icon left justify-center large>
+          <v-row class="justify-center pa-4">
+          <v-icon left  large>
         mdi-account-circle
       </v-icon></v-row>
           <div class="card__row">
             
             
-            <div class="card__desc caption">
+            <div class="card__desc font-weight-medium caption">
               {{ address }}
             </div>
           </div>
-          <div class="card__row caption justify-center">
+          <div class="card__row caption font-weight-light justify-center">
             <span>
               You have
               <span
@@ -54,7 +54,7 @@
             </span>
           </div> <div  v-if="!!address" >
         <v-btn block text
-          small
+          small 
           
           @click="signOut"
         >
