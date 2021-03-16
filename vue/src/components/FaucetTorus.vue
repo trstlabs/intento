@@ -8,10 +8,10 @@
        <div v-if="status">Status: {{status}}</div>
       <div v-if="serverError">Oops Error!{{serverError}}</div>
 
-     <torus v-if="!this.$store.state.wallet"/>
+     <torus  v-if="!this.$store.state.wallet" />
       <button :disabled="status==='submitting'" type="submit" class="button"></button>
       
-     <v-row v-if="!!this.$store.state.wallet" class="justify-center mb-4">
+     <v-row v-if="this.$store.state.wallet" class="justify-center mb-4">
       <vue-recaptcha 
         ref="recaptcha"
         @verify="onCaptchaVerified"
@@ -22,7 +22,7 @@
       </vue-recaptcha></v-row>
       <v-alert type="success" v-if="sucessfulServerResponse">{{sucessfulServerResponse}}</v-alert>
     </form>
-    <p v-if="!!this.$store.state.account.address"> Registered! You may close this window now. </p>
+    <p v-if="this.$store.state.account.address"> Registered! You may close this window now. </p>
   <!--<v-btn class="ma-2" color="primary" block @click="submit()">Receive tokens</v-btn>--> </div>
   
 </div>
@@ -108,8 +108,7 @@ export default {
 
   
   components: {
-    VueRecaptch,
-    Walleta
+    VueRecaptcha
   }
 }
 </script>
