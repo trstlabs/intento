@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-4  mx-lg-auto">
+  <div class="pa-2 mx-lg-auto">
     <v-card class="pa-2 ma-auto" elevation="2" rounded="lg">
       <v-progress-linear
         indeterminate
