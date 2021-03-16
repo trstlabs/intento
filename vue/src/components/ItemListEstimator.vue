@@ -41,6 +41,7 @@ export default {
   data() {
     return {
       dummy: false,
+       isActive: false, 
     };
   },
   computed: {

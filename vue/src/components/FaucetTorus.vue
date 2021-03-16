@@ -18,11 +18,11 @@
         @expired="onCaptchaExpired"
         @error="onCaptchaError"
         @render="onCaptchaRender"
-       
         :sitekey="google">
       </vue-recaptcha></v-row>
       <v-alert type="success" v-if="sucessfulServerResponse">{{sucessfulServerResponse}}</v-alert>
     </form>
+    <p v-if="!!this.$store.state.account.address"> Registered! You may close this window now. </p>
   <!--<v-btn class="ma-2" color="primary" block @click="submit()">Receive tokens</v-btn>--> </div>
   
 </div>
@@ -31,6 +31,7 @@
 <script>
 import VueRecaptcha from 'vue-recaptcha'
 import axios from 'axios'
+
 export default {
 
   data () {
@@ -65,7 +66,7 @@ export default {
       if (!accountQuery.data.result.value.address) {
         //console.log("letsgo")
       const self = this
-      self.status = 'submitting'
+      self.status = 'Submitting...'
       self.$refs.recaptcha.reset()
       try {
         let response = await axios.post('/.netlify/functions/faucet', {
@@ -107,7 +108,8 @@ export default {
 
   
   components: {
-    VueRecaptcha
+    VueRecaptch,
+    Walleta
   }
 }
 </script>

@@ -62,6 +62,9 @@ func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
 	Coins := sdk.NewCoins(deposit)
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, types.ModuleName, Coins)
+	if err != nil {
+		panic(err)
+	}
 
 	//if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, moduleAcct.String(), ); err != nil {
 	//	panic(err)
@@ -113,7 +116,9 @@ func (k Keeper) DeleteEstimator(ctx sdk.Context, key string) {
 	}
 	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatoraddress, sdk.NewCoins(estimator.Deposit))
-
+	if err != nil {
+		panic(err)
+	}
 	store.Delete(types.KeyPrefix(types.EstimatorKey + key))
 }
 
