@@ -6,7 +6,7 @@
       </v-btn>
        
     </div>
-   <v-skeleton-loader v-if="loadingitem && !!showinfo"
+   <v-skeleton-loader v-if="loadingitem "
       class="mx-auto"
       type="list-item-three-line, image, article"
     ></v-skeleton-loader>

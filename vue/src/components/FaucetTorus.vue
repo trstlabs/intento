@@ -61,7 +61,7 @@ export default {
     onCaptchaVerified: async function (recaptchaToken) {
       let accountQuery = await axios.get('https://node.trustpriceprotocol.com/auth/accounts/' + this.$store.state.wallet.address)
 
-      //console.log(accountQuery.data.result.value.address)
+      console.log(accountQuery.data.result.value.address)
       if (!accountQuery.data.result.value.address) {
         //console.log("letsgo")
       const self = this

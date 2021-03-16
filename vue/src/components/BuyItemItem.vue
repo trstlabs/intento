@@ -1,6 +1,6 @@
 <template>
-  <div class="pa-2 mx-auto">
-    <v-card elevation="2" rounded="lg">
+  <div class="mt-4  mx-lg-auto">
+    <v-card class="pa-2 ma-auto" elevation="2" rounded="lg">
       <v-progress-linear
         indeterminate
         :active="loadingitem"
@@ -8,7 +8,7 @@
 
       <v-row>
         <v-col cols="12">
-          <div class="headline  font-weight-medium text-capitalize text-center  mx-4">{{ thisitem.title }} </div>
+          <div class="subtitle-1  font-weight-medium text-capitalize text-center  mx-auto">{{ thisitem.title }} </div>
         </v-col>
 
         <v-col cols="12">
