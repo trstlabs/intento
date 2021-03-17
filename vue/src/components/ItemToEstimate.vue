@@ -192,7 +192,7 @@
               v-model="estimation"
               :disabled="lastitem"
               prefix="$"
-              suffix="tokens"
+              suffix="TPP"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -235,17 +235,44 @@
           block
           elevation="4"
           color="primary"
-          :disabled="!valid || !hasAddress || flight"
+          :disabled="!valid || !hasAddress || flight || timeout"
           @click="submit(estimation, item.id, interested, comment)"
-          ><div v-if="!flight">
+          ><div v-if="!flight && !valid">
             <v-icon left> mdi-check </v-icon> Estimate item
           </div>
-          <div>
+          <div v-if="!flight && valid && !timeout">
+            <v-icon left> mdi-check-all </v-icon> Estimate item 
+          </div>
+          <div v-if="!timeout && !valid && flight">
+            <v-icon left> mdi-check </v-icon> Estimate item
+          </div>
+         
+             <v-progress-linear v-if="timeout && valid"
+      :rotate="360"
+      :size="50"
+      :width="5"
+      :value="value"
+      color="white"
+    >
+      
+    </v-progress-linear>
+             <div >
+          
+         
             <div v-if="flight">
               <div class="text-right">Creating estimation...</div>
             </div>
           </div>
         </v-btn>
+        <div v-if="timeout">
+              <div class="text-right caption">Wait {{ 10-(value/10) }}s</div>
+              
+            </div>
+
+             <div v-if="!flight && valid && !timeout">
+              <div class="text-right caption">Required deposit is {{item.depositamount}}TPP</div>
+              
+            </div>
         <!-- tag bar
  <v-chip-group 
     
@@ -435,12 +462,21 @@ export default {
       loadingitem: true,
       photos: [],
       selectedFilter: "",
-
+      timeout: false,
+interval: {},
+value: 0,
       dialog: false,
       conditionInfo: false,
     };
   },
+  beforeDestroy () {
+      clearInterval(this.interval)
+    },
+
   mounted() {
+
+    
+      
     //console.log(input)
     if (!!this.$store.state.account.address) {
       let input = this.$store.state.account.address;
@@ -493,11 +529,27 @@ export default {
           ["interested", 5, "bool", "optional"],
           ["comment", 6, "string", "optional"],
         ];
+        
         await this.estimationSubmit({ ...type, body, fields });
-
         await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("bankBalancesGet");
-        this.submitRevealEstimation(itemid);
+       
+             await this.$store.dispatch("bankBalancesGet");
+        this.timeout = true
+        clearInterval(this.interval)
+        this.value = 0
+        this.interval = setInterval(() => {
+      
+        this.value += 10
+      }, 1000)
+
+
+         setTimeout(() => this.timeout = false, 10000);
+     
+
+   
+        await this.submitRevealEstimation(itemid);
+         this.estimation = "";
+        this.comment = "";
         //this.flight = false;
         //this.loadingitem = false;
       }
@@ -522,7 +574,6 @@ export default {
         typeUrl,
         value: {
           estimator: this.$store.state.account.address,
-
           ...body,
         },
       };
@@ -537,22 +588,14 @@ export default {
         [msg],
         fee
       ); 
-      if (!result.data) {
-        alert("Error")
-
+      if (!result.data){
+        await this.submitRevealEstimation(this.item.id);
       }
       assertIsBroadcastTxSuccess(result);
+      
       console.log("success!");
-     
 
-      try {
-        await this.$store.dispatch("entityFetch", {
-          type: type,
-          //  path: path
-        });
-      } catch (e) {
-        console.log(e);
-      }
+      
     },
 
     async submitFlag() {
@@ -676,8 +719,7 @@ export default {
 
     async submitRevealEstimation(itemid) {
       if (this.hasAddress) {
-        this.estimation = "";
-        this.comment = "";
+       
         this.getNewItemByIndex();
         const fields = [
           ["creator", 1, "string", "optional"],
@@ -685,7 +727,7 @@ export default {
         ];
         // const type = { type: "item" };
         const body = { itemid: itemid };
-        await this.revealSubmit({ body, fields });
+        this.revealSubmit({ body, fields });
       }
     },
     async revealSubmit({ body, fields }) {
