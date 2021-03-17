@@ -5,8 +5,8 @@
   
   <form @submit.prevent="submit">
     
-       <div v-if="status">Status: {{status}}</div>
-      <div v-if="serverError">Oops Error!{{serverError}}</div>
+       <div class="caption" v-if="status">Status: {{status}}</div>
+      <div v-if="serverError">Try again{{serverError}}</div>
 
      <torus  v-if="!this.$store.state.wallet" />
       <button :disabled="status==='submitting'" type="submit" class="button"></button>
@@ -75,6 +75,7 @@ export default {
         })
         if (response.status === 200) {
           self.sucessfulServerResponse = 'Your cosmos-address is succesfully registered!'
+          window.location.reload()
         
         
         }
@@ -83,6 +84,7 @@ export default {
         }
       } catch (err) {
         console.log("ERROR" + err)
+        window.location.reload()
         //let foo = getErrorMessage(err)
         //self.serverError = foo === '"read ECONNRESET"' ? 'Opps, we had a connection issue, please try again' : foo
       }

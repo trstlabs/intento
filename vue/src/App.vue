@@ -12,18 +12,14 @@
     </div>
     
     <v-app-bar :color="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-4'"  app dense elevation="2" >
+   <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
    <v-col xs="1" class="  mx-auto" >
     
 
      <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
-        
-      <v-btn
-          icon id="mode-switcher"
-          @click="toggledarkmode"
-        >
-          
-          <v-img
+     <router-link to="/">
+     <v-img 
    v-bind="attrs"
           v-on="on"
     src="img/brand/icon.png"
@@ -31,7 +27,8 @@
     max-width="32"
     contain
   ></v-img>
-        </v-btn>
+     </router-link>
+     
       </template>
       <span>Trust Price Marketplace</span>
     </v-tooltip>
@@ -39,7 +36,7 @@
 
 
     </v-col >
-<v-col cols="6" xs="10" class="pa-0" >
+<v-col cols="6" xs="10" class="pa-0 d-none d-md-flex">
 
       <v-tabs show-arrows fixed-tabs  :background-color="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-4'" >
       
@@ -130,6 +127,63 @@
     </v-col >
       
     </v-app-bar>
+    <v-navigation-drawer
+      v-model="drawer"
+      absolute
+      
+      temporary
+    >
+      <v-list
+        nav
+        dense
+      >
+       
+   
+      <wallet v-if="this.$store.state.account.address"/>
+        <v-list-item-group
+          v-model="group"
+          active-class="blue--text text--accent-4"
+        >
+          <v-list-item to="/">
+            <v-list-item-title >Buy</v-list-item-title><v-icon >
+        mdi-shopping
+      </v-icon>
+          </v-list-item>
+
+          <v-list-item to="/sell">
+            <v-list-item-title>Sell</v-list-item-title><v-icon >
+        mdi-plus-box
+      </v-icon>
+          </v-list-item>
+
+          <v-list-item to="/earn">
+            <v-list-item-title>Earn</v-list-item-title><v-icon   >
+        mdi-checkbox-marked
+      </v-icon>
+          </v-list-item>
+
+          <v-list-item to="/account">
+            <v-list-item-title>Account</v-list-item-title> <v-icon  >
+        mdi-account-box
+      </v-icon>
+          </v-list-item>
+          
+           <v-list-item to="/messages">
+            <v-list-item-title>Messages</v-list-item-title> <v-icon>mdi-message-reply
+          </v-icon>
+          </v-list-item>
+           <v-list-item
+           id="mode-switcher"
+          @click="toggledarkmode"
+        >  <v-list-item-title>Theme</v-list-item-title><v-icon :color="($vuetify.theme.dark) ? 'primary' : 'primary lighten-1'">
+            {{ ($vuetify.theme.dark) ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
+          </v-icon>
+          </v-list-item>
+        </v-list-item-group>
+        
+      </v-list>
+    </v-navigation-drawer>
+    
     <welcome v-if="!this.$store.state.account.address"/> 
     
     <v-btn
@@ -155,12 +209,15 @@
 
 
 <script>
+import Wallet from './components/Wallet.vue';
 export default {
   data() {
     return {
+
       //dismiss: false,
       //dialog: true,
       fab: false,
+      drawer: false,
      
       
     };

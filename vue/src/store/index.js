@@ -45,6 +45,7 @@ export default new Vuex.Store({
     creatorActionList: [],
     tagList: [],
     sellerList: [],
+    locationList: [],
   },
 
   mutations: {
@@ -224,6 +225,7 @@ export default new Vuex.Store({
     async setLocalBuyItemList({ commit, state }) {
        const rs = state.data.item.filter(item => !item.buyer && item.transferable === true && item.localpickup === true
       );
+      
       commit("setBuyItemList", rs);
     },
     async updateBuyItemList({ commit, state }, input) {
@@ -239,7 +241,15 @@ export default new Vuex.Store({
 
     async tagBuyItemList({ commit, state }, input) {
       if (!!input) { 
-      const rs = state.data.item.filter(item => !item.buyer && item.tags.find(tags => tags.includes(input)) && item.transferable === true)
+      const rs = state.buyItemList.filter(item => !item.buyer && item.tags.find(tags => tags.includes(input)) && item.transferable === true)
+        ;
+
+      commit("updateBuyItemList", rs);}
+    },
+
+    async locationBuyItemList({ commit, state }, input) {
+      if (!!input) { 
+      const rs = state.buyItemList.filter(item => !item.buyer && item.shippingregion.find(loc => loc.includes(input)) && item.transferable === true)
         ;
 
       commit("updateBuyItemList", rs);}
@@ -266,22 +276,52 @@ export default new Vuex.Store({
       });
       var merged = [].concat.apply([], filtered);*/
       //console.log("TEST",merged);
-      var merged = [].concat.apply([], rs);
-      var frequency = {};
+      let merged = [].concat.apply([], rs);
+      let frequency = {};
       merged.forEach(function (value) { frequency[value.toLowerCase()] = 0; });
 
-      var uniques = merged.filter(function (value) {
+      let uniques = merged.filter(function (value) {
         return ++frequency[value] == 1;
       });
 
-      var sorted = uniques.sort(function (a, b) {
+      let sorted = uniques.sort(function (a, b) {
         return frequency[b] - frequency[a];
       });
-
-
+      /*console.log(rs)
+      console.log(merged)
+      console.log(uniques)
+      console.log(sorted)
+*/
       //console.log("TEST",sorted);
 
       commit("setTagList", sorted);
+    },
+    async setSortedLocationList({ commit, state }) {
+      
+      const rs = state.buyItemList.map(item => item.shippingregion);
+      let merged = [].concat.apply([], rs);
+      let frequency = {};
+      merged.forEach(function (value) { frequency[value.toLowerCase()] = 0; });
+
+      let uniques = merged.filter(function (value) {
+        return ++frequency[value] == 1;
+      });
+
+      let sorted = uniques.sort(function (a, b) {
+        return frequency[b] - frequency[a];
+      });
+
+      if (sorted[0]) {
+        commit("set", { key: 'locationList', value: sorted } );
+      }else{
+        console.log(merged)
+        commit("set", { key: 'locationList', value: merged } );
+      }
+      console.log(rs)
+      console.log(merged)
+      console.log(uniques)
+      console.log(sorted)
+      
     },
 
     async setToEstimateList({ commit, state }) {
@@ -334,7 +374,7 @@ export default new Vuex.Store({
     },
   },
   getters: {
-    account: state => state.account, bankBalances: state => state.bankBalances, getCreatorItemList: state => state.creatorItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getCreatorActionList: state => state.creatorActionList, getTagList: state => state.tagList, getSellerList: state => state.sellerList,
+    account: state => state.account, bankBalances: state => state.bankBalances, getCreatorItemList: state => state.creatorItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getCreatorActionList: state => state.creatorActionList, getTagList: state => state.tagList, getLocationList: state => state.locationList, getSellerList: state => state.sellerList,
 
   }
 

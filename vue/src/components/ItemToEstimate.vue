@@ -264,7 +264,7 @@
             </div>
           </div>
         </v-btn>
-        <div v-if="timeout">
+        <div v-if="timeout && valid">
               <div class="text-right caption">Wait {{ 10-(value/10) }}s</div>
               
             </div>
@@ -459,7 +459,7 @@ export default {
       index: 0,
       showinfo: false,
       lastitem: false,
-      loadingitem: true,
+      loadingitem: false,
       photos: [],
       selectedFilter: "",
       timeout: false,
