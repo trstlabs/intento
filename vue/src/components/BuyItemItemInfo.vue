@@ -48,18 +48,10 @@
           </v-btn>
         </div>
         
-        <v-spacer></v-spacer>
+      
 
        
-            <v-chip
-                class="ma-1 caption"
-                label
-                color="warning lighten-2"
-                small
-              >
-                <v-icon left> mdi-database-plus </v-icon>
-                ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP
-              </v-chip>
+           
               
          <v-chip
                 class="ma-1 caption"
@@ -69,6 +61,15 @@
               >
                 <v-icon left> mdi-check-all </v-icon>
                 ${{ thisitem.estimationprice }} TPP
+              </v-chip>
+               <v-chip
+                class="ma-1 caption"
+                label
+                color="warning lighten-1"
+                small
+              >
+                <v-icon left> mdi-database-plus </v-icon>
+                ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP
               </v-chip>
                 <v-spacer></v-spacer>
            <v-btn icon @click="(showinfo = !showinfo), getItemPhotos()">

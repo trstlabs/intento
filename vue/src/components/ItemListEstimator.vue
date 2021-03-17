@@ -4,7 +4,7 @@
 
    
     <p v-if="estimatorItemList.length > 0" class="h2 font-weight-medium text-uppercase text-center">
-      Your Estimated items ({{ estimatorItemList.length }})<v-btn icon ><v-icon >
+      Total ({{ estimatorItemList.length }})<v-btn icon ><v-icon >
         mdi-refresh
       </v-icon></v-btn>
     </p>

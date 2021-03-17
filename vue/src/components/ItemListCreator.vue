@@ -2,7 +2,7 @@
   <div class="pa-2 mx-lg-auto">
 
     
-    <p  v-if="creatorItemList.length > 0" class="pa-2 h2 font-weight-medium text-uppercase text-center">
+    <p  v-if="creatorItemList.length > 0" class="h2 font-weight-medium text-uppercase text-center">
       Total ({{ creatorItemList.length }}), Actionable ({{creatorActionList.length}})<v-btn icon onClick="window.location.reload();" ><v-icon >
         mdi-refresh
       </v-icon></v-btn>

@@ -35,7 +35,7 @@
               </v-chip>
 
               <v-card elevation="0">
-                <div class="pa-2 overline">Description</div><div class="caption">
+                <div class="pa-2 overline">Description</div><div class="pa-2 caption">
                     "{{ thisitem.description }} "
                   </div>
               </v-card>
@@ -47,7 +47,8 @@
                 > <v-icon left> mdi-account-check </v-icon>You are the best estimator.
                 <span class="caption">
                   Check your balance. If the item is transferred, you will be
-                  rewarded tokens.</span
+                  rewarded  
+                ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP.</span
                 >
               </app-text>
               <app-text
@@ -57,9 +58,8 @@
               >
                 <v-icon left> mdi-account-arrow-left </v-icon>
 
-                You are the lowest estimator.  <span class="caption">If the item owner does not accept
-                the estimation price, you lose the deposit.</span
-                >
+                You are the lowest estimator.  <span v-if="!thisitem.estimationprice" class="caption">If the item owner does not accept
+                the estimation price, you lose ${{ thisitem.depositamount}} TPP.</span>
               </app-text>
               <app-text
                 class="mt-1"
@@ -67,9 +67,8 @@
                 type="p"
               >
                 <v-icon left> mdi-account-arrow-right </v-icon>
-                You are the highest estimator.<span class="caption"> If the item is not transferred,
-                you lose the deposit.</span
-                >
+                You are the highest estimator.<span class="caption"  v-if="thisitem.status == ''"> If the item is not transferred,
+                you lose ${{ thisitem.depositamount}} TPP.</span>
               </app-text>
             </v-col>
 

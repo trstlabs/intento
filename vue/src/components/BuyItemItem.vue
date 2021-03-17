@@ -193,12 +193,16 @@
             </div>
 
             <v-divider class="ma-4" />
+            <v-row>
             <div v-if="hasAddress" class="ma-4 text-center">
               <wallet-coins />
             </div>
-            <div class="text-center caption pa-2"> You can buy {{thisitem.title}}  for ${{ thisitem.estimationprice }} TPP and ship the item if you live in one of the following locations: "<span
-            v-for="loc in thisitem.shippingregion" :key="loc"
-          >{{ loc }}</span>" . Additional Shipping cost is ${{thisitem.shippingcost}} TPP. You can arrange a pickup by sending a message to <a @click="createRoom" >{{thisitem.creator}}. </a>   If you buy the item you will receive a cashback reward of ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP. With TPP you can withdrawl your payment at any time, up until the item transaction and no transaction costs are applied.</div>
+            <v-spacer/>
+          <v-btn icon  @click="iteminfo = !iteminfo"><v-icon>mdi-information-outline</v-icon> </v-btn>
+            <div v-if="iteminfo" class="text-center caption pa-2"> You can buy {{thisitem.title}}  for ${{ thisitem.estimationprice }} TPP and ship the item if you live in one of the following locations: <span
+            v-for="loc in thisitem.shippingregion" :key="loc" class="font-weight-medium"
+          > {{ loc }} </span>. Additional Shipping cost is ${{thisitem.shippingcost}} TPP. You can arrange a pickup by sending a message to <a @click="createRoom" >{{thisitem.creator}}. </a>   If you buy the item you will receive a cashback reward of ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP. With TPP you can withdrawl your payment at any time, up until the item transaction and no transaction costs are applied.</div>
+            </v-row>
             <div class="text-center">
               <v-row>
                 <v-col>
@@ -292,6 +296,7 @@ export default {
   data() {
     return {
       amount: "",
+      iteminfo: false,
       flight: false,
       flightLP: false,
       flightSP: false,
