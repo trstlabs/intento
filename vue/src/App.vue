@@ -132,13 +132,16 @@
       
       app
       temporary
-    >
+    > 
       <v-list
         nav
         dense
       >
-       
-   
+       <div class="text-center">
+   <img class="pa-4 "
+ 
+    src="img/brand/icon.png"
+    width="77" /></div>
       <wallet v-if="this.$store.state.account.address"/>
         <v-list-item-group
          
@@ -179,13 +182,19 @@
             {{ ($vuetify.theme.dark) ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
           </v-icon>
           </v-list-item>
+           <v-list-item  inactive @click="welcome = !welcome">
+            <v-list-item-title>Get Started</v-list-item-title>
+          </v-list-item>
+          <v-list-item  target="_blank" href="https:www.trustpriceprotocol.com">
+            <v-list-item-title>About TPP</v-list-item-title>
+          </v-list-item>
         </v-list-item-group>
         
       </v-list>
     </v-navigation-drawer>
     
     <welcome v-if="!this.$store.state.account.address"/> 
-    
+    <welcome v-if="welcome"/> 
     <v-btn
             v-scroll="onScroll"
             v-show="fab"
@@ -199,12 +208,8 @@
           >
             <v-icon>mdi-arrow-up</v-icon>
           </v-btn>
-         <v-footer  padless>
-    <v-col
-      class="text-center caption"
-   
-    >
-      {{ new Date().getFullYear() }} — <strong>Trust Price Protocol</strong>
+         <v-footer class="text-center caption"  padless>
+    <v-col>{{ new Date().getFullYear() }} — <strong>© Trust Price Protocol</strong>
     </v-col>
   </v-footer>
   </v-app>
@@ -225,6 +230,7 @@ export default {
       //dialog: true,
       fab: false,
       drawer: false,
+      welcome: false
      
       
     };
