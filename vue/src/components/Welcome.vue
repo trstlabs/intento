@@ -2,19 +2,29 @@
   <div>
     <v-dialog v-model="dialog" width="600" persistent>
       <v-card class="text-center">
-        <v-card-title >
-          Welcome! <v-spacer /> <img src="img/brand/icon.png" width="44" />
-        </v-card-title>
+        <img class="pa-2" src="img/brand/icon.png" width="77" />
+       
 
         <div v-if="!signin && !signup && !learn" >
-          <v-card-text>
-            This dApp is in development. Feel free to use the app and see how it
-            behaves. Note: items are examples and are not redeemable for tokens.
+           <p class="text-center overline" >
+          Continue with an account 
+        </p>
+          <v-card-text class="">
+          Welcome to the TPP marketplace. Feel free to use the app and see how it
+            behaves. Note: items are examples only and are currently not redeemable for TPP tokens.
             Feedback is always welcome at the
-            <a href="https://www.trustpriceprotocol.com"> main page.</a>
+            <a href="https://www.trustpriceprotocol.com"> main page</a>.
           </v-card-text>
- <torus v-if="login = true" :privkey="signkey" />
-<torus-placeholder v-if="login = false" @mouseover="login = true"/>
+     
+             <v-btn class="ma-6" large
+              color="primary"
+              
+              @click="(signin = true), loadContent()"
+            >
+              Sign In
+            </v-btn>
+
+
               
 
           
@@ -38,19 +48,32 @@
               text
               @click="(signup = true), loadContent()"
             >
-              Sign In
+              Sign Up
             </v-btn>
           </v-card-actions>
         </div>
         <div v-if="signin">
-          <torus />
-          <wallet @signedIn="updateDialog()" />
+           <p class="text-center overline" >
+          Continue with an account 
+        </p>
+          <torus v-if="!wallet"/>
+           <v-row v-if="!wallet">
+              <v-divider class="ma-2" />
+              <p class="caption">Or</p>
+              <v-divider class="ma-2" />
+            </v-row>
+            <v-btn text v-if="!wallet" @click="wallet = true">
+              Sign in with a mnemonic phrase
+            </v-btn>
+          <wallet v-if="wallet" @signedIn="updateDialog()" />
           <v-card-actions>
             <v-col>
-              <v-btn color="primary" text @click="signin = false"> Back </v-btn>
+              <v-btn color="primary" text @click="signin = false, wallet = false"> Back </v-btn>
             </v-col>
+            
           </v-card-actions>
         </div>
+        
 
         <div v-if="signup">
           <v-card-text>
@@ -115,7 +138,7 @@
             <v-stepper-items>
               <v-stepper-content step="1">
                 <v-card class="mb-6">
-                  <v-card-title
+                  <v-card-title 
                     >There is a problem with current online marketplaces. </v-card-title
                   ><v-card-text>
                     <p>
@@ -123,27 +146,56 @@
                       granted to another user?
                     </p>
                     <p>
-                      Ever paid too much because you bought the item with the
+                      Ever paid too much because you had a
                       wrong idea about the item?
                     </p>
                     <p>
-                      Trust price protocol is a place where you will have the
-                      power you need to buy items more hassle free.
-                    </p>
-                    <p>
-                      * When you provide prepayment, you will from there on be
-                      seen as the only buyer
-                    </p>
-                    <p>
-                      *Prices are made up from independent estimations. So you
-                      know what you buy is the right value.
-                    </p>
-                    <p>
-                      *You are in control of your prepayment and can always get
-                      it back (until your item is shipped or transferred to you)
+                      Trust price protocol is a place where you can trade items hassle free.
                     </p>
 
-                    <p>A great way to spend crypto on things you like</p>
+                  <v-card class="ma-4">
+                     <v-list-item>
+      <v-list-item-content>
+        <v-list-item-title>When you provide prepayment, you are
+                     the only buyer</v-list-item-title><v-list-item-subtitle>
+          and you earn a cashback reward of ±5% after the transfer.
+        </v-list-item-subtitle>
+      </v-list-item-content><v-list-item-icon>
+            <v-icon>mdi-plus </v-icon>
+          </v-list-item-icon>
+    </v-list-item>
+
+    <v-list-item two-line>
+      <v-list-item-content>
+        <v-list-item-title>Prices are made from independent estimations</v-list-item-title>
+        <v-list-item-subtitle>So you
+                      know what you buy is right.</v-list-item-subtitle>
+      </v-list-item-content><v-list-item-icon>
+            <v-icon>mdi-plus </v-icon>
+          </v-list-item-icon>
+    </v-list-item>
+
+    <v-list-item three-line>
+      <v-list-item-content>
+        <v-list-item-title>You are in control of your prepayment </v-list-item-title>
+        <v-list-item-subtitle>
+          and can always get
+                      it back until it is transferred.
+        </v-list-item-subtitle>
+        
+        
+      </v-list-item-content><v-list-item-icon>
+            <v-icon>mdi-plus </v-icon>
+          </v-list-item-icon>
+    </v-list-item>
+
+                 
+
+                   </v-card>
+                
+                   
+
+                    <p class="font-weight-medium ma-4">A great way to spend crypto on things you like</p>
                   </v-card-text></v-card
                 >
                 <v-row class="ma-2">
@@ -159,12 +211,13 @@
                     >An opportunity to enter the crypto universe
                   </v-card-title>
                   <v-card-text>
+                    
                     <p>
                       As a seller, you are free to choose 2 options. Ship the
                       item and/or choose “local pickup”.
                     </p>
                     <p>
-                      If you choose shipping, you may charge shipping costs and
+                      If you choose shipping, you can charge shipping costs and
                       these are separate from the item price.
                     </p>
                     <p>
@@ -179,7 +232,7 @@
                       quality pictures and information and you are done.
                     </p>
 
-                    <p>
+                    <p class="font-weight-medium ma-4">
                       Selling items has never been this simple.
                     </p></v-card-text
                   ></v-card
@@ -209,22 +262,22 @@
                       accordingly!
                     </p>
                     <p>
-                      Currently, you will earn roughly 3% of the final selling
-                      price if you are the estimator closest to the final price.
+                      Currently, you will earn roughly 5% of the final selling
+                      price if you are the estimator closest to the final price. These TPP coins are minted.
                     </p>
                     <p>
-                      To cope with bad acting, there is a very small deposit
-                      required for each estimation, of 5 tokens (currently).
+                      To cope with bad acting, there is a deposit
+                      required for each estimation.
                       These will be returned, except when the following occurs
                       1). The seller did not accept the final price and you are
                       the lowest estimator. 2) The buyer ended up withdrawing
-                      prepayment and you are the highest estimator.
+                      prepayment and you are the highest estimator. 
                     </p>
 
-                    <p>
-                      As a bonus, you can like items and view then once they hit
-                      the marketplace. And you can trade your earned tokens for
+                    <p class="font-weight-medium ma-4">You can trade your earned TPP for
                       the items you like.
+                      As a bonus, you can <v-icon small>mdi-heart </v-icon> items and view them once they hit
+                      the marketplace. 
                     </p>
                   </v-card-text>
                 </v-card>
@@ -284,6 +337,7 @@ export default {
       existing: false,
       e1: 1,
       mnemonic: "",
+      wallet: false,
     };
   },
   computed: {
