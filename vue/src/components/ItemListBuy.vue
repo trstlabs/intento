@@ -86,7 +86,7 @@ export default {
       this.advanced = !this.advanced;
 
       this.$store.dispatch("setSortedTagList");
-      
+      this.$store.dispatch("setSortedLocationList");
 
     },
   },

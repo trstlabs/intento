@@ -1,6 +1,7 @@
 <template>
   <div v-if="advanced">
-      <v-divider class="pa-2"/>
+      <v-divider class="ma-4"/>
+    <v-card class="pa-2">
    <p class="caption mt-2">Categories: </p>
     <v-chip-group 
     
@@ -16,7 +17,7 @@
         </v-chip-group>
     <p class="caption">Region: </p>
     <v-select
-          append-icon="mdi-tag-outline"
+          append-icon="mdi-earth"
           dense
           v-model="selectedFilter"
           v-on:input="updateLocation(selectedFilter)"
@@ -24,17 +25,38 @@
           :items="locations"
           label="Region"
           clearable
-          rounded
-          solo
+          
+          outlined
      
           hint="Specify region"
         ></v-select>
+         <v-row class="ma-2"> <v-col>
        <p class="caption">Price minimum: </p>
-       <v-slider/>
-        <p class="caption">Price maximum: </p>
-       <v-slider/>
-  <v-divider class="pa-2"/>
+     
+        <v-text-field
+              label="Amount"
+              type="number"
+              v-model="minPrice"
+           
 
+              prefix="$"
+              suffix="TPP"
+            ></v-text-field> </v-col> <v-col> <v-btn icon @click="updatePriceMin"><v-icon>mdi-check</v-icon> </v-btn> <v-btn icon @click="clearList"><v-icon>mdi-cancel</v-icon> </v-btn> </v-col>
+            <v-col>
+       <p class="caption">Price maximum: </p>
+     
+        <v-text-field
+              label="Amount"
+              type="number"
+              v-model="maxPrice"
+           
+
+              prefix="$"
+              suffix="TPP"
+            ></v-text-field> </v-col> <v-col> <v-btn icon @click="updatePriceMax"><v-icon>mdi-check</v-icon> </v-btn> <v-btn icon @click="clearList"><v-icon>mdi-cancel</v-icon> </v-btn> </v-col></v-row>
+    </v-card>
+ 
+ <v-divider class="ma-4"/>
   </div>
   
 </template>
@@ -49,6 +71,8 @@ export default {
   data: function () {
     return {
       selectedFilter: "",
+      minPrice: 0,
+      maxPrice: 0,
       
 
   };
@@ -81,9 +105,25 @@ locations() {
        updateLocation(tag) {
       this.$store.dispatch("locationBuyItemList", tag);},
       
+updatePriceMin() {
+   //this.$store.dispatch("setBuyItemList");
+      this.$store.dispatch("priceMinBuyItemList", this.minPrice);
+
+      },
+
+      updatePriceMax() {
+   //this.$store.dispatch("setBuyItemList");
+      this.$store.dispatch("priceMaxBuyItemList", this.maxPrice);
+
+      },
+       clearList() {
+     
+     this.$store.dispatch("setBuyItemList");},
+
+
     },
 
-
+    
 
    
 

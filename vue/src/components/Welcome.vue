@@ -13,9 +13,9 @@
             Feedback is always welcome at the
             <a href="https://www.trustpriceprotocol.com"> main page.</a>
           </v-card-text>
-          <torus v-if="login = true" :privkey="signkey" />
+ <torus v-if="login = true" :privkey="signkey" />
 <torus-placeholder v-if="login = false" @mouseover="login = true"/>
-       
+              
 
           
 
@@ -38,7 +38,7 @@
               text
               @click="(signup = true), loadContent()"
             >
-              Sign Up
+              Sign In
             </v-btn>
           </v-card-actions>
         </div>

@@ -129,8 +129,8 @@
     </v-app-bar>
     <v-navigation-drawer
       v-model="drawer"
-      absolute
       
+      app
       temporary
     >
       <v-list
@@ -141,7 +141,7 @@
    
       <wallet v-if="this.$store.state.account.address"/>
         <v-list-item-group
-          v-model="group"
+         
           active-class="blue--text text--accent-4"
         >
           <v-list-item to="/">
@@ -172,7 +172,7 @@
             <v-list-item-title>Messages</v-list-item-title> <v-icon>mdi-message-reply
           </v-icon>
           </v-list-item>
-           <v-list-item
+           <v-list-item inactive
            id="mode-switcher"
           @click="toggledarkmode"
         >  <v-list-item-title>Theme</v-list-item-title><v-icon :color="($vuetify.theme.dark) ? 'primary' : 'primary lighten-1'">
@@ -199,7 +199,14 @@
           >
             <v-icon>mdi-arrow-up</v-icon>
           </v-btn>
-          
+         <v-footer  padless>
+    <v-col
+      class="text-center caption"
+   
+    >
+      {{ new Date().getFullYear() }} — <strong>Trust Price Protocol</strong>
+    </v-col>
+  </v-footer>
   </v-app>
   
 </template>

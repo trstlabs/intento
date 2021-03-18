@@ -11,11 +11,7 @@
           <div class="subtitle-1  font-weight-medium text-capitalize text-center  mx-auto">{{ thisitem.title }} </div>
         </v-col>
 
-        <v-col cols="12">
-          <div v-if="imageurl">
-            <v-img class="rounded contain" :src="imageurl"></v-img>
-          </div>
-        </v-col>
+     
       </v-row>
 
       <div>
@@ -24,7 +20,7 @@
             <div v-if="photos.photo">
               <v-divider></v-divider>
               <v-carousel
-                cycle
+                
                 height="400"
                 hide-delimiter-background
                 show-arrows-on-hover
@@ -267,14 +263,15 @@
           <p>This seller has sold {{ sold }} items before</p>
           <!--<p  Of which _ have been transfered by shipping and _ by local pickup.</p>-->
         </v-card>
-        <v-card-title> All Seller items </v-card-title>
+        <v-card-title class="overline justify-center"> All Seller items </v-card-title>
         <div v-for="item in SellerItems" v-bind:key="item.id">
           <v-card
             elevation="0"
             :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
-            ><v-row class="text-left caption ma-2">
-              {{ item.title }} <v-spacer /> ${{ item.estimationprice }}TPP
-              {{ item.status }}</v-row
+            > 
+            <v-row class="text-left caption ma-2"><span class="font-weight-medium">
+              {{ item.title }}</span> <v-spacer/><v-spacer/> <span v-if="item.transferable"> ${{ item.estimationprice }}TPP </span>
+              {{ item.status }} <span v-if="item.buyer && !item.transferable"> Sold </span> <span v-if="!item.estimationprice"> Awaiting estimation </span> <span v-if="!item.transferable && item.estimationprice">Not on sale yet</span> <span v-if="item.thank">Buyer thanked seller</span> </v-row
             >
           </v-card>
         </div>
@@ -312,13 +309,15 @@ export default {
     this.loadingitem = true;
     const id = this.itemid;
 
+    
+
     const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 
       if (data != null && data.photo != null) {
         //console.log(data.photo);
-        this.imageurl = data.photo;
+       this.photos = data;
         this.loadingitem = false;
       }
     });
@@ -439,23 +438,7 @@ async paySubmit( { body, fields }) {
       alert("Transaction sent");
 
     },
-    
-    getItemPhotos() {
-      if (this.imageurl != "") {
-        this.loadingitem = true;
-        const id = this.itemid;
-
-        const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
-        imageRef.on("value", (snapshot) => {
-          const data = snapshot.val();
-          if (data != null && data.photo != null) {
-            this.photos = data;
-            this.loadingitem = false;
-          }
-        });
-        this.loadingitem = false;
-      }
-    },
+  
 
     sellerInfo() {
       let rs = this.SellerItems.filter((i) => i.buyer != "");
