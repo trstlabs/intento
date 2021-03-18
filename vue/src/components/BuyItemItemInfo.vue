@@ -78,10 +78,12 @@
           }}</v-icon>
         </v-btn>
       </v-card-actions>
-      <v-divider />
+  
       <v-expand-transition>
         <div>
+             
           <div class="pa-2 mx-auto" elevation="8" v-if="showinfo">
+         
             <div>
               <div v-if="photos.photo">
                 <v-divider></v-divider>
