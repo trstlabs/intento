@@ -185,7 +185,7 @@
            <v-list-item  inactive @click="welcome = !welcome">
             <v-list-item-title>Get Started</v-list-item-title>
           </v-list-item>
-          <v-list-item  target="_blank" href="https:www.trustpriceprotocol.com">
+          <v-list-item  target="_blank" href="https://www.trustpriceprotocol.com">
             <v-list-item-title>About TPP</v-list-item-title>
           </v-list-item>
         </v-list-item-group>
