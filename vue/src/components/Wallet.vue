@@ -199,6 +199,7 @@ export default {
       auth.signOut().then(() => {
          window.localStorage.removeItem('emailForSignIn');
           window.localStorage.removeItem('emailRef');
+          window.localStorage.removeItem('privkey');
   // Sign-out successful.
 }).catch((error) => {
   // An error happened.
