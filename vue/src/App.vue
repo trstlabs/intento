@@ -193,8 +193,8 @@
       </v-list>
     </v-navigation-drawer>
     
-    <welcome v-if="!this.$store.state.account.address"/> 
-    <welcome v-if="welcome"/> 
+    <welcome v-if="!this.$store.state.account.address && welcome "/> 
+ 
     <v-btn
             v-scroll="onScroll"
             v-show="fab"
@@ -230,7 +230,7 @@ export default {
       //dialog: true,
       fab: false,
       drawer: false,
-      welcome: false
+      welcome: true
      
       
     };

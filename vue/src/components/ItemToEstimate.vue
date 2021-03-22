@@ -706,8 +706,10 @@ value: 0,
         const data = snapshot.val();
 
         if (data != null && data.photo != null) {
-          console.log(data.photo);
+        
+           console.log(data.photo);
           this.photos = data;
+          //this.photos = { photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Points_of_a_horse.jpg/330px-Points_of_a_horse.jpg" };
 
           this.loadingitem = false;
         }

@@ -52,19 +52,36 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 	}
 
 	if len(msg.Tags) > 5 || len(msg.Tags) < 1 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "tags invalid")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tags invalid")
 	}
+	for _, tags := range msg.Tags {
+		if len(tags) > 10 {
+			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "tag too long")
+		}
+	}
+
 	if len(msg.Shippingregion) > 5 || len(msg.Shippingregion) < 1 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region invalid")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Region invalid")
 	}
+
+	for _, region := range msg.Shippingregion {
+		if len(region) > 2{
+			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region too long")
+		}
+	}
+	
 	if len(msg.Description) > 800 {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "description too long")
 	}
+
+	if msg.Shippingcost == 0 && msg.Localpickup != true {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localpickup")
+	}
 	if msg.Condition > 6 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "invalid item condition")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid item condition")
 	}
 	if msg.Estimationcount > 24 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "invalid estimation count")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid estimation count")
 	}
 	return nil
 }
