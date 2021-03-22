@@ -46,4 +46,3 @@ message MsgItemThank{
   string itemid = 2;
   bool thank = 3;
 }
-
