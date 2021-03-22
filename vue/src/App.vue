@@ -125,8 +125,9 @@
 
 
     </v-col >
-      
+   
     </v-app-bar>
+       
     <v-navigation-drawer
       v-model="drawer"
       
@@ -192,11 +193,11 @@
         
       </v-list>
     </v-navigation-drawer>
-    
-    <welcome v-if="!this.$store.state.account.address && welcome "/> 
- <v-alert v-if="!this.$store.state.user && this.$store.state.account.address "
+  
+     <v-alert v-if="!this.$store.state.user && this.$store.state.account.address "
   type="warning"
 >Confirm email</v-alert>
+    <welcome v-if="!this.$store.state.account.address && welcome "/> 
     <v-btn
             v-scroll="onScroll"
             v-show="fab"
