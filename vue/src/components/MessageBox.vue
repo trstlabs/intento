@@ -209,30 +209,7 @@ export default {
         });
       });
     },
-    async addData() {
-      const user1 = this.users[0];
-      await usersRef.doc(user1._id).set(user1);
-      const user2 = this.users[1];
-      await usersRef.doc(user2._id).set(user2);
-      const user3 = this.users[2];
-      await usersRef.doc(user3._id).set(user3);
-      await roomsRef.add({
-        users: [user1._id, user2._id],
-        lastUpdated: new Date(),
-      });
-      await roomsRef.add({
-        users: [user1._id, user3._id],
-        lastUpdated: new Date(),
-      });
-      await roomsRef.add({
-        users: [user2._id, user3._id],
-        lastUpdated: new Date(),
-      });
-      await roomsRef.add({
-        users: [user1._id, user2._id, user3._id],
-        lastUpdated: new Date(),
-      });
-    },
+    
     resetRooms() {
       this.loadingRooms = true;
       this.loadingLastMessageByRoom = 0;
@@ -813,7 +790,7 @@ console.log("before query")
 		
 	//if (id === null ){
       //id = await usersRef.add({ username: name }); return id}
-	  if (!!this.$store.state.account.address) {
+	  if (!!this.$store.state.account.address && this.$store.state.user.uid ) {
       
 	//const { id } = await usersRef.add({ username: this.$store.state.account.address })
 	 //await usersRef.doc(id).update({ _id: id });
@@ -827,11 +804,12 @@ console.log(user)
 
 if (user.docs[0] != null) { console.log("User Exists")
 //console.log(user.o_.docs[0].id)
-this.currentUserId = user.docs[0].id}else { console.log("User does not exist")
-   	const { id } = await usersRef.add({ username: this.$store.state.account.address })
+//this.currentUserId = user.docs[0].id}else { console.log("User does not exist")
+this.currentUserId = this.$store.state.user.uid}else { console.log("User does not exist")
+   	const { id } = await usersRef.add({ _id: this.$store.state.user.uid, username: this.$store.state.account.address })
      	console.log(id)
-	 await usersRef.doc(id).update({ _id: id })
-   this.currentUserId = id
+	 //await usersRef.doc(id).update({ _id: id })
+   this.currentUserId = this.$store.state.user.uid
    };
 
 
@@ -887,14 +865,7 @@ this.currentUserId = user.docs[0].id}else { console.log("User does not exist")
     },
 
     async deleteRoom(roomId) {
-      const room = this.rooms.find((r) => r.roomId === roomId);
-      if (
-        room.users.find((user) => user._id === "SGmFnBZB4xxMv9V4CVlW") ||
-        room.users.find((user) => user._id === "6jMsIXUrBHBj7o2cRlau")
-      ) {
-        return alert("Nope, for demo purposes you cannot delete this room");
-      }
-
+     
       const ref = messagesRef(roomId);
 
       ref.get().then((res) => {

@@ -194,7 +194,9 @@
     </v-navigation-drawer>
     
     <welcome v-if="!this.$store.state.account.address && welcome "/> 
- 
+ <v-alert v-if="!this.$store.state.user && this.$store.state.account.address "
+  type="warning"
+>Confirm email</v-alert>
     <v-btn
             v-scroll="onScroll"
             v-show="fab"

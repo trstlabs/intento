@@ -46,6 +46,7 @@ export default new Vuex.Store({
     tagList: [],
     sellerList: [],
     locationList: [],
+    user: null,
   },
 
   mutations: {

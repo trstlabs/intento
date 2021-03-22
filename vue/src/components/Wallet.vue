@@ -122,6 +122,7 @@ import { DirectSecp256k1HdWallet} from '@cosmjs/proto-signing/';
 import { makeCosmoshubPath } from '@cosmjs/launchpad'
 import { SigningStargateClient } from "@cosmjs/stargate";
 import axios from "axios";
+import { auth } from "./firebase/db.js";
 
 export default {
  
@@ -194,7 +195,13 @@ export default {
      async signOut() {
       if (this.address) {
 				this.$store.dispatch('accountSignOut')
-      }
+      };
+      auth.signOut().then(() => {
+  // Sign-out successful.
+}).catch((error) => {
+  // An error happened.
+});
+      
     },
     numberFormat(number) {
 			return Intl.NumberFormat().format(number)
