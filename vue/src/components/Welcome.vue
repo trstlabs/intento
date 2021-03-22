@@ -56,7 +56,7 @@
            <p class="text-center overline" >
           Continue with an account 
         </p>
-          <torus v-if="!wallet"/>
+          <torus v-if="!wallet" :privkey="this.signkey"/>
            <v-row v-if="!wallet">
               <v-divider class="ma-2" />
               <p class="caption">Or</p>
