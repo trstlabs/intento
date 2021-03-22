@@ -62,8 +62,14 @@ export default {
   created(){
     
     if (this.privkey) {
+      var email = window.localStorage.getItem('emailForSignIn');
+  var emailRef = window.localStorage.getItem('emailRef');
       //if this doesnt work for returning user, put emailRef outside of it and  try signing in right away. First test if auth is able to handle handle it from its localstorage
-
+if (emailRef) {
+     auth.signInWithEmailLink(email, emailRef).then((result) => {
+       this.$store.dispatch("set", "user", result.user)
+      console.log(this.$store.state.user) })
+  }
       // Confirm the link is a sign-in with email link.
 if (auth.isSignInWithEmailLink(window.location.href)) {
   // Additional state parameters can also be passed via URL.
@@ -71,8 +77,8 @@ if (auth.isSignInWithEmailLink(window.location.href)) {
   // the sign-in operation.
   // Get the email if available. This should be available if the user completes
   // the flow on the same device where they started it.
-  var email = window.localStorage.getItem('emailForSignIn');
-  var emailRef = window.localStorage.getItem('emailRef');
+ //var email = window.localStorage.getItem('emailForSignIn');
+  //var emailRef = window.localStorage.getItem('emailRef');
 
   if (!email) {
     // User opened the link on a different device. To prevent session fixation
@@ -80,9 +86,7 @@ if (auth.isSignInWithEmailLink(window.location.href)) {
     email = window.prompt('Please provide your email for confirmation');
   }
 
-  if (emailRef) {
-     auth.signInWithEmailLink(email, emailRef)
-  }
+  
   // The client SDK will parse the code from the link for you.
   auth.signInWithEmailLink(email, window.location.href)
     .then((result) => {

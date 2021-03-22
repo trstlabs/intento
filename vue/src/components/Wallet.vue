@@ -197,6 +197,8 @@ export default {
 				this.$store.dispatch('accountSignOut')
       };
       auth.signOut().then(() => {
+         window.localStorage.removeItem('emailForSignIn');
+          window.localStorage.removeItem('emailRef');
   // Sign-out successful.
 }).catch((error) => {
   // An error happened.
