@@ -145,26 +145,28 @@ export default {
         // });
         //this.console(loginDetails);
        // console.log("tasdf" + loginDetails)
-        console.log(loginDetails.userInfo.email)
+
+        this.torusSignIn(loginDetails.privateKey)
+        
        // console.log(loginDetails.privateKey)
    
 
        
-        this.torusSignIn(loginDetails)
+       
         let actionCodeSettings = {
   
   url: 'https://marketplace.trustpriceprotocol.com',
   // This must be true.
   handleCodeInApp: true,
-  iOS: {
+  /*iOS: {
     bundleId: 'com.example.ios'
   },
   android: {
     packageName: 'com.example.android',
     installApp: true,
     minimumVersion: '12'
-  },
-  dynamicLinkDomain: 'example.page.link'
+  },*/
+  //dynamicLinkDomain: 'marketplace.trustpriceprotocol.com.page.link'
 };
 
        auth.sendSignInLinkToEmail(loginDetails.userInfo.email, actionCodeSettings)
