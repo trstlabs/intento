@@ -22,6 +22,7 @@
     src="img/google/directauth.png"
    >
   </v-img></a> </button></v-col>
+  
 
   </div></div>
    
@@ -151,7 +152,7 @@ export default {
        // console.log(loginDetails.privateKey)
    
 
-       
+
        
         let actionCodeSettings = {
   
@@ -175,6 +176,7 @@ export default {
     // Save the email locally so you don't need to ask the user for it again
     // if they open the link on the same device.
     window.localStorage.setItem('emailForSignIn', email);
+    alert("Confirm by clicking the email link on your device")
     // ...
   })
   .catch((error) => {
