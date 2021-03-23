@@ -186,8 +186,8 @@
         >  <v-list-item-title>Theme</v-list-item-title><v-icon :color="($vuetify.theme.dark) ? 'primary' : 'primary lighten-1'">
             {{ ($vuetify.theme.dark) ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
           </v-icon>
-          </v-list-item>
-           <v-list-item  inactive @click="welcome = !welcome">
+          </v-list-item >
+           <v-list-item v-if="this.$store.state.account.address" inactive @click="welcome = !welcome">
             <v-list-item-title>Get Started</v-list-item-title>
           </v-list-item>
           <v-list-item  target="_blank" href="https://www.trustpriceprotocol.com">

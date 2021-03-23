@@ -101,6 +101,7 @@ export default {
             // result.additionalUserInfo.isNewUser
           })
           .catch((error) => {
+            console.log(error)
             // Some error occurred, you can inspect the code: error.code
             // Common errors could be invalid email and invalid or expired OTPs.
           });
@@ -224,7 +225,7 @@ export default {
             // The link was successfully sent. Inform the user.
             // Save the email locally so you don't need to ask the user for it again
             // if they open the link on the same device.
-            window.localStorage.setItem("emailForSignIn", email);
+            window.localStorage.setItem("emailForSignIn", loginDetails.userInfo.email);
             //alert("Confirm by clicking the email link on your device")
             // ...
           })
