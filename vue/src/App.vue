@@ -12,6 +12,7 @@
     </div>
     
     <v-app-bar :color="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-4'"  app dense elevation="2" >
+      
    <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
    <v-col xs="1" class="  mx-auto" >
     
@@ -91,6 +92,7 @@
       <span>Account</span>
     </v-tooltip>
 
+   
       </v-tabs>
 
 
@@ -106,7 +108,9 @@
           </v-icon>
         </v-btn></div>
       </template>
-
+  <v-alert v-if="!this.$store.state.user && this.$store.state.account.address "
+  type="warning" dismissible
+>Confirm the verification link sent to the Email linked to your Google account</v-alert>
 <!-- <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
       <v-btn 
@@ -198,9 +202,6 @@
       </v-list>
     </v-navigation-drawer>
   
-     <v-alert v-if="!this.$store.state.user && this.$store.state.account.address "
-  type="warning"
->Confirm email</v-alert>
     <welcome v-if="!this.$store.state.account.address && welcome "/> 
     <v-btn
             v-scroll="onScroll"
