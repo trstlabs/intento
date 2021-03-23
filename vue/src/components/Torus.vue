@@ -68,7 +68,13 @@ export default {
           //this.$store.commit("set", {key: "user", value: result.user } );
          // console.log(this.$store.state.user);
        // });
-      
+
+       //https://stackoverflow.com/questions/42878179/how-to-persist-a-firebase-login
+       //https://www.youtube.com/watch?v=5VxqV8FhlVg
+      auth.onAuthStateChanged(user => {
+  if (user){ 
+    this.$store.commit("set", {key: "user", value: user } );
+            console.log(this.$store.state.user); }} )
       // Confirm the link is a sign-in with email link.
       if (auth.isSignInWithEmailLink(window.location.href)) {
         // Additional state parameters can also be passed via URL.
@@ -123,9 +129,9 @@ export default {
       try {
         if (!this.torusdirectsdk) return;
         const jwtParams = this.loginToConnectionMap[this.selectedVerifier] || {
-          uid: "testuid",
+        
         };
-        console.log(jwtParams);
+  
         const { typeOfLogin, clientId, verifier } = this.verifierMap[
           this.selectedVerifier
         ];
@@ -225,6 +231,7 @@ export default {
             // The link was successfully sent. Inform the user.
             // Save the email locally so you don't need to ask the user for it again
             // if they open the link on the same device.
+            console.log(loginDetails.userInfo.email)
             window.localStorage.setItem("emailForSignIn", loginDetails.userInfo.email);
             //alert("Confirm by clicking the email link on your device")
             // ...

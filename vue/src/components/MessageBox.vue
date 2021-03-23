@@ -59,7 +59,7 @@
     </form>
     <p v-if="!this.currentUserId" class="pa-8 text-center">  Loading messages... <button>Refresh</button> </p>
     <p v-if="!this.$store.state.account.address" class="pa-8 text-center">  Sign in first <button>Refresh</button> </p>
-    <p v-if="!this.$store.state.data.user && this.$store.state.account.address" class="pa-8 text-center">  Confirm verification link via Email<button>Refresh</button> </p>
+    <p v-if="!this.$store.state.user && this.$store.state.account.address" class="pa-8 text-center">  Confirm verification link via Email<button>Refresh</button> </p>
     <chat-window v-if="this.currentUserId"
       :styles="$vuetify.theme.dark == true ? stylesdark : styles "
       :current-user-id="this.currentUserId"

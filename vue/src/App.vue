@@ -180,23 +180,23 @@
             <v-list-item-title>Messages</v-list-item-title> <v-icon>mdi-message-reply
           </v-icon>
           </v-list-item>
-           <v-list-item inactive
+            <v-list-item to="/explore">
+            <v-list-item-title>Explore</v-list-item-title>
+          </v-list-item>
+        
+           <v-list-item v-if="!this.$store.state.account.address" inactive @click="welcome = !welcome">
+            <v-list-item-title>Get Started</v-list-item-title>
+          </v-list-item>
+          <v-list-item  target="_blank" href="https://www.trustpriceprotocol.com">
+            <v-list-item-title>About TPP</v-list-item-title>
+          </v-list-item>
+             <v-list-item inactive
            id="mode-switcher"
           @click="toggledarkmode"
         >  <v-list-item-title>Theme</v-list-item-title><v-icon :color="($vuetify.theme.dark) ? 'primary' : 'primary lighten-1'">
             {{ ($vuetify.theme.dark) ? 'mdi-weather-night' : 'mdi-weather-sunny' }}
           </v-icon>
           </v-list-item >
-           <v-list-item v-if="this.$store.state.account.address" inactive @click="welcome = !welcome">
-            <v-list-item-title>Get Started</v-list-item-title>
-          </v-list-item>
-          <v-list-item  target="_blank" href="https://www.trustpriceprotocol.com">
-            <v-list-item-title>About TPP</v-list-item-title>
-          </v-list-item>
-            <v-list-item to="/explore">
-            <v-list-item-title>Explore</v-list-item-title> <v-icon>mdi-database
-          </v-icon>
-          </v-list-item>
         </v-list-item-group>
         
       </v-list>
