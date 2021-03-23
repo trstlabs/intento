@@ -270,8 +270,8 @@
             :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
             > 
             <v-row class="text-left caption ma-2"><span class="font-weight-medium">
-              {{ item.title }}</span> <v-spacer/><v-spacer/> <span v-if="item.transferable"> ${{ item.estimationprice }}TPP </span>
-              {{ item.status }} <span v-if="item.buyer && !item.transferable"> Sold </span> <span v-if="!item.estimationprice"> Awaiting estimation </span> <span v-if="!item.transferable && item.estimationprice">Not on sale yet</span> <span v-if="item.thank">Buyer thanked seller</span> </v-row
+              {{ item.title }}</span> <v-spacer/><v-spacer/> <span>
+              {{ item.status }}</span> <span v-if="item.transferable && item.status != ''"> ${{ item.estimationprice }}TPP </span><span v-if="item.buyer && !item.transferable"> Sold </span> <span v-if="!item.estimationprice"> Awaiting estimation </span> <span v-if="!item.transferable && item.estimationprice">Not on sale yet</span> <span v-if="item.thank">Buyer thanked seller</span> </v-row
             >
           </v-card>
         </div>

@@ -60,15 +60,15 @@ export default {
   },
   created() {
     if (this.privkey) {
-      var email = window.localStorage.getItem("emailForSignIn");
-      var emailRef = window.localStorage.getItem("emailRef");
+      //var email = window.localStorage.getItem("emailForSignIn");
+      //var emailRef = window.localStorage.getItem("emailRef");
       //if this doesnt work for returning user, put emailRef outside of it and  try signing in right away. First test if auth is able to handle handle it from its localstorage
-      if (emailRef) {
-        auth.signInWithEmailLink(email, emailRef).then((result) => {
-          this.$store.commit("set", {key: "user", value: result.user } );
-          console.log(this.$store.state.user);
-        });
-      }
+      //if (emailRef) {
+        //auth.signInWithEmailLink(email, emailRef).then((result) => {
+          //this.$store.commit("set", {key: "user", value: result.user } );
+         // console.log(this.$store.state.user);
+       // });
+      
       // Confirm the link is a sign-in with email link.
       if (auth.isSignInWithEmailLink(window.location.href)) {
         // Additional state parameters can also be passed via URL.
@@ -90,8 +90,8 @@ export default {
           .signInWithEmailLink(email, window.location.href)
           .then((result) => {
             // Clear email from storage.
-            //window.localStorage.removeItem('emailForSignIn');
-            window.localStorage.setItem("emailRef", window.location.href);
+            window.localStorage.removeItem('emailForSignIn');
+            //window.localStorage.setItem("emailRef", window.location.href);
             this.$store.commit("set", {key: "user", value: result.user } );
             console.log(this.$store.state.user);
             // You can access the new user via result.user
@@ -107,7 +107,8 @@ export default {
       }
       this.torusSignIn(this.privkey);
     }
-  },
+},
+
   computed: {
     loginToConnectionMap() {
       return {

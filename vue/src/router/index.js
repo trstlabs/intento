@@ -80,6 +80,15 @@ const routes = [
       title: 'Messages - Marketplace'},
   },
   {
+    path: "/explore",
+
+    component: () => 
+        import(/* webpackChunkName: "explore" */ '@/views/Explore'), 
+   
+    meta: {
+      title: 'Explore - Marketplace'},
+  },
+  {
     path: '*',
     //name: 'catchAll',
     component: () => 

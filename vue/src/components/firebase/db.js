@@ -20,8 +20,10 @@ var firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
+
 export const db = firebase.firestore()
 export const auth = firebase.auth()
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
 export const fb = firebase
 export const storageRef = firebase.storage().ref()
 export const databaseRef = firebase.database()

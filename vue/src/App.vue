@@ -189,6 +189,10 @@
           <v-list-item  target="_blank" href="https://www.trustpriceprotocol.com">
             <v-list-item-title>About TPP</v-list-item-title>
           </v-list-item>
+            <v-list-item to="/explore">
+            <v-list-item-title>Explore</v-list-item-title> <v-icon>mdi-database
+          </v-icon>
+          </v-list-item>
         </v-list-item-group>
         
       </v-list>
