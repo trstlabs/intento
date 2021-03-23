@@ -46,3 +46,10 @@ message MsgItemThank{
   string itemid = 2;
   bool thank = 3;
 }
+
+message MsgCreateTransfer{
+  string buyer = 1;
+  string itemid = 2;
+  int64 sellingprice = 3; 
+  string note = 4;
+}
