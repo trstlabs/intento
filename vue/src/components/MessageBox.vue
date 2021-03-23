@@ -57,7 +57,7 @@
       </button>
       <button class="button-cancel" @click="removeRoomId = null">Cancel</button>
     </form>
-    <p v-if="!this.currentUserId" class="pa-8 text-center">  Loading messages... <button @click="window.location.reload()">Refresh</button> </p>
+    <p v-if="!this.currentUserId && this.$store.state.account.address" class="pa-8 text-center">  Loading messages... <button @click="window.location.reload()">Refresh</button> </p>
     <p v-if="!this.$store.state.account.address" class="pa-8 text-center">  Sign in first <button @click="window.location.reload()">Refresh</button> </p>
     <p v-if="!this.$store.state.user && this.$store.state.account.address" class="pa-8 text-center">  Confirm verification link via Email<button @click="window.location.reload()">Refresh</button> </p>
     <chat-window v-if="this.currentUserId"
@@ -770,12 +770,11 @@ console.log("before query")
 
  const user = await usersRef.where('username', '==' , this.addRoomUsername).get();
 
- let query =  roomsRef.where("users", "==", this.currentUserId, this.addRoomUsername)
-  console.log(query)
+ 
      // const { id } = await usersRef.add({ username: this.addRoomUsername });
        //usersRef.doc(this.$store.state.user.uid).set({ _id: this.$store.state.user.uid, username: this.$store.state.account.address })
 
-      if (user && !query) {
+      if (user) {
       //await usersRef.doc(id).update({ _id: id });
       await roomsRef.add({
         users: [user.docs[0].id, this.currentUserId],

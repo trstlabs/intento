@@ -9,6 +9,7 @@
            <p class="text-center overline" >
           Continue with an account 
         </p>
+       
           <v-card-text class="">
           Welcome to the TPP marketplace. Feel free to use the app and see how it
             behaves. Note: items are examples only and are currently not redeemable for TPP tokens.

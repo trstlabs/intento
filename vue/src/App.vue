@@ -95,8 +95,7 @@
    
       </v-tabs>
 
-
-  
+ 
 
    </v-col><v-col class="text-right" > 
 
@@ -108,9 +107,8 @@
           </v-icon>
         </v-btn></div>
       </template>
-  <v-alert v-if="!this.$store.state.user && this.$store.state.account.address "
-  type="warning" dismissible
->Confirm the verification link sent to the Email linked to your Google account</v-alert>
+
+  
 <!-- <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
       <v-btn 
@@ -142,6 +140,9 @@
         nav
         dense
       >
+      <v-alert dense  v-if="!this.$store.state.user && this.$store.state.account.address "
+  type="warning" dismissible class="caption"
+>Confirm the verification link sent to the email linked to your Google account</v-alert>
        <div class="text-center">
    <img class="pa-4 "
  
@@ -201,8 +202,8 @@
         
       </v-list>
     </v-navigation-drawer>
-  
-    <welcome v-if="!this.$store.state.account.address && welcome "/> 
+    
+    <welcome v-if="!this.$store.state.account.address && welcome"/> 
     <v-btn
             v-scroll="onScroll"
             v-show="fab"

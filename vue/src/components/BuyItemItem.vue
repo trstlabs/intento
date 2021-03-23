@@ -7,11 +7,13 @@
       ></v-progress-linear>
 
       <v-row>
-        <v-col cols="12">  
-          <div class="subtitle-1  font-weight-medium text-capitalize text-center  mx-auto">{{ thisitem.title }} </div>
+        <v-col cols="12">
+          <div
+            class="subtitle-1 font-weight-medium text-capitalize text-center mx-auto"
+          >
+            {{ thisitem.title }}
+          </div>
         </v-col>
-
-     
       </v-row>
 
       <div>
@@ -20,7 +22,6 @@
             <div v-if="photos.photo">
               <v-divider></v-divider>
               <v-carousel
-                
                 height="400"
                 hide-delimiter-background
                 show-arrows-on-hover
@@ -40,28 +41,33 @@
                 <div class="body-1">" {{ thisitem.description }} "</div>
               </v-card-text>
             </v-card>
- <v-chip outlined medium label class="ma-1 caption"
-            v-for="tag in thisitem.tags" :key="tag"
-          > <v-icon small left>
-        mdi-tag-outline
-      </v-icon>{{ tag }}</v-chip>
+            <v-chip
+              outlined
+              medium
+              label
+              class="ma-1 caption"
+              v-for="tag in thisitem.tags"
+              :key="tag"
+            >
+              <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
+            >
             <v-chip class="ma-1 caption" label outlined medium>
               <v-icon left> mdi-account-badge-outline </v-icon>
               Identifier: {{ thisitem.id }}
             </v-chip>
-      
 
             <v-dialog transition="dialog-bottom-transition" max-width="300">
               <template v-slot:activator="{ on, attrs }">
                 <span v-bind="attrs" v-on="on">
                   <v-chip class="ma-1 caption" label outlined medium>
                     <v-rating
-      v-model="thisitem.condition.Number"
-     readonly
-      color="primary"
-      background-color="grey lighten-1"
-      small dense
-    ></v-rating>
+                      v-model="thisitem.condition.Number"
+                      readonly
+                      color="primary"
+                      background-color="grey lighten-1"
+                      small
+                      dense
+                    ></v-rating>
                   </v-chip>
                 </span>
               </template>
@@ -160,19 +166,20 @@
               Price: ${{ thisitem.estimationprice }} TPP
             </v-chip>
 
-            <v-chip  @click="createRoom" class="ma-1 caption" medium label outlined>
+            <v-chip
+              @click="createRoom"
+              class="ma-1 caption"
+              medium
+              label
+              outlined
+            >
               <v-icon left> mdi-account-outline </v-icon>
               Seller: {{ thisitem.creator }}
             </v-chip>
-<v-chip
-                class="ma-1 caption"
-                label
-                color="warning lighten-2"
-                medium
-              >
-                <v-icon left> mdi-database-plus </v-icon>
-                ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP
-              </v-chip>
+            <v-chip class="ma-1 caption" label color="warning lighten-2" medium>
+              <v-icon left> mdi-database-plus </v-icon>
+              ${{ (thisitem.estimationprice * 0.05).toFixed(0) }} TPP
+            </v-chip>
             <v-divider class="ma-2" />
 
             <div class="overline text-center">Comments</div>
@@ -184,20 +191,40 @@
                 >{{ single }}
               </v-chip>
             </div>
-            <div v-if="allcomments.length ==0">
+            <div v-if="allcomments.length == 0">
               <p class="caption text-center">No comments to show right now</p>
             </div>
 
             <v-divider class="ma-4" />
             <v-row>
-            <div v-if="hasAddress" class="ma-4 text-center">
-              <wallet-coins />
-            </div>
-            <v-spacer/>
-          <v-btn icon  @click="iteminfo = !iteminfo"><v-icon>mdi-information-outline</v-icon> </v-btn>
-            <div v-if="iteminfo" class="text-center caption pa-2"> You can buy {{thisitem.title}}  for ${{ thisitem.estimationprice }} TPP and ship the item if you live in one of the following locations: <span
-            v-for="loc in thisitem.shippingregion" :key="loc" class="font-weight-medium"
-          > {{ loc }} </span>. Additional Shipping cost is ${{thisitem.shippingcost}} TPP. You can arrange a pickup by sending a message to <a @click="createRoom" >{{thisitem.creator}}. </a>   If you buy the item you will receive a cashback reward of ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP. With TPP you can withdrawl your payment at any time, up until the item transaction and no transaction costs are applied.</div>
+              <div v-if="hasAddress" class="ma-4 text-center">
+                <wallet-coins />
+              </div>
+              <v-spacer />
+              <v-btn icon @click="iteminfo = !iteminfo"
+                ><v-icon>mdi-information-outline</v-icon>
+              </v-btn>
+              <div v-if="iteminfo" class="text-center caption pa-2">
+                You can buy {{ thisitem.title }} for ${{
+                  thisitem.estimationprice
+                }}
+                TPP and ship the item if you live in one of the following
+                locations:
+                <span
+                  v-for="loc in thisitem.shippingregion"
+                  :key="loc"
+                  class="font-weight-medium"
+                >
+                  {{ loc }} </span
+                >. Additional Shipping cost is ${{ thisitem.shippingcost }} TPP.
+                You can arrange a pickup by sending a message to
+                <a @click="createRoom">{{ thisitem.creator }}. </a> If you buy
+                the item you will receive a cashback reward of ${{
+                  (thisitem.estimationprice * 0.05).toFixed(0)
+                }}
+                TPP. With TPP you can withdrawl your payment at any time, up
+                until the item transaction and no transaction costs are applied.
+              </div>
             </v-row>
             <div class="text-center">
               <v-row>
@@ -241,38 +268,45 @@
                 </v-col>
               </v-row>
             </div>
-
-            
           </div>
         </div>
       </div>
       <v-row class="pa-2 mx-auto">
-
-      <v-btn 
-        :disabled="!this.$store.state.account.address"
-        text 
-        @click="createRoom"
-      >
+        <v-btn
+          :disabled="!this.$store.state.account.address"
+          text
+          @click="createRoom"
+        >
           Message Seller</v-btn
-      >
-      <v-spacer/>
+        >
+        <v-spacer />
         <v-btn text @click="sellerInfo">Seller Info </v-btn>
-         </v-row>
-     <div class="pa-2 mx-auto caption">
-       <v-card elevation="0" v-if="info">
+      </v-row>
+      <div class="pa-2 mx-auto caption">
+        <v-card elevation="0" v-if="info">
           <p>This seller has sold {{ sold }} items before</p>
           <!--<p  Of which _ have been transfered by shipping and _ by local pickup.</p>-->
         </v-card>
-        <v-card-title class="overline justify-center"> All Seller items </v-card-title>
+        <v-card-title class="overline justify-center">
+          All Seller items
+        </v-card-title>
         <div v-for="item in SellerItems" v-bind:key="item.id">
           <v-card
             elevation="0"
             :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
-            > 
-            <v-row class="text-left caption ma-2"><span class="font-weight-medium">
-              {{ item.title }}</span> <v-spacer/><v-spacer/> <span>
-              {{ item.status }}</span> <span v-if="item.transferable && item.status != ''"> ${{ item.estimationprice }}TPP </span><span v-if="item.buyer && !item.transferable"> Sold </span> <span v-if="!item.estimationprice"> Awaiting estimation </span> <span v-if="!item.transferable && item.estimationprice">Not on sale yet</span> <span v-if="item.thank">Buyer thanked seller</span> </v-row
-            >
+          >
+            <v-row class="text-left caption ma-2"
+              ><span class="font-weight-medium"> {{ item.title }}</span>
+              <v-spacer /><v-spacer /> <span> {{ item.status }}</span>
+              <span v-if="item.transferable && item.status != ''">
+                ${{ item.estimationprice }}TPP </span
+              ><span v-if="item.buyer && !item.transferable"> Sold </span>
+              <span v-if="!item.estimationprice"> Awaiting estimation </span>
+              <span v-if="!item.transferable && item.estimationprice"
+                >Not on sale yet</span
+              >
+              <span v-if="item.thank">Buyer thanked seller</span>
+            </v-row>
           </v-card>
         </div>
       </div>
@@ -282,9 +316,12 @@
 <script>
 import BuyItemDetails from "../views/BuyItemDetails.vue";
 import { usersRef, roomsRef, databaseRef } from "./firebase/db.js";
-import { SigningStargateClient, assertIsBroadcastTxSuccess } from "@cosmjs/stargate";
-import {  Registry } from '@cosmjs/proto-signing/';
-import { Type, Field } from 'protobufjs';
+import {
+  SigningStargateClient,
+  assertIsBroadcastTxSuccess,
+} from "@cosmjs/stargate";
+import { Registry } from "@cosmjs/proto-signing/";
+import { Type, Field } from "protobufjs";
 
 export default {
   components: { BuyItemDetails },
@@ -309,15 +346,13 @@ export default {
     this.loadingitem = true;
     const id = this.itemid;
 
-    
-
     const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 
       if (data != null && data.photo != null) {
         //console.log(data.photo);
-       this.photos = data;
+        this.photos = data;
         this.loadingitem = false;
       }
     });
@@ -362,7 +397,7 @@ export default {
           ["itemid", 2, "string", "optional"],
           ["deposit", 3, "int64", "optional"],
         ];
-         await this.paySubmit({ body, fields });
+        await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("bankBalancesGet");
         this.flightLP = false;
@@ -389,7 +424,7 @@ export default {
         ];
         const type = { type: "buyer" };
         const body = { deposit, itemid };
-         await this.paySubmit({ body, fields });
+        await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("bankBalancesGet");
 
@@ -403,15 +438,15 @@ export default {
       return thisitem();
     },
 
-async paySubmit( { body, fields }) {
-      const wallet = this.$store.state.wallet
+    async paySubmit({ body, fields }) {
+      const wallet = this.$store.state.wallet;
       const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreateBuyer`;
       let MsgCreate = new Type(`MsgCreateBuyer`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
-      console.log(fields)
-      fields.forEach(f => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-      })
+      console.log(fields);
+      fields.forEach((f) => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
+      });
 
       const client = await SigningStargateClient.connectWithSigner(
         process.env.VUE_APP_RPC,
@@ -423,22 +458,24 @@ async paySubmit( { body, fields }) {
         typeUrl,
         value: {
           buyer: this.$store.state.account.address,
-          ...body
-        }
+          ...body,
+        },
       };
 
-      console.log(msg)
+      console.log(msg);
       const fee = {
-        amount: [{ amount: '0', denom: 'tpp' }],
-        gas: '200000'
+        amount: [{ amount: "0", denom: "tpp" }],
+        gas: "200000",
       };
 
-      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      const result = await client.signAndBroadcast(
+        this.$store.state.account.address,
+        [msg],
+        fee
+      );
       assertIsBroadcastTxSuccess(result);
       alert("Transaction sent");
-
     },
-  
 
     sellerInfo() {
       let rs = this.SellerItems.filter((i) => i.buyer != "");
@@ -447,33 +484,55 @@ async paySubmit( { body, fields }) {
         this.sold = rs.length;
       }
 
-      this.info = !this.info
-
-     
+      this.info = !this.info;
     },
     async createRoom() {
-
       if (this.$store.state.user.uid) {
+        const user = await usersRef
+          .where("username", "==", this.thisitem.creator)
+          .get();
+        console.log(user.docs[0].id);
 
-        const user = await usersRef.where('username', '==' , this.thisitem.creator).get();
+        //let query = await roomsRef.where("users", '', [this.$store.state.user.uid).where("users", "array-contains", user.docs[0].id).get()
+        /*await roomsRef.where("users", "==", ["5RlZazMyPgdoHgGfjTud", "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"]).get()
+ .then((querySnapshot) => {
+    querySnapshot.forEach((doc) => {
+      console.log(doc.data())
+        console.log(doc.id, ' => ', doc.data());
+    });
+});*/
+        if (user) {
+          let query = await roomsRef
+            .where("users", "==", [user.docs[0].id, this.$store.state.user.uid])
+            .get();
+          let otherquery = await roomsRef
+            .where("users", "==", [this.$store.state.user.uid, user.docs[0].id])
+            .get();
+          console.log(query.docs[0]);
+          /*
 
- let query =  roomsRef.where("users", "==", this.$store.state.user.uid, this.thisitem.creator)
-  console.log(query)
-if (user && !query) {
-      //await usersRef.doc(id).update({ _id: id });
-      await roomsRef.add({
-        users: [user.docs[0].id, this.$store.state.user.uid],
-        lastUpdated: new Date(),
-      });
+await roomsRef.where("users", "array-contains", this.$store.state.user.uid).get()
+   .then((querySnapshot) => {
+    querySnapshot.forEach((doc) => {
+      console.log(doc.data(users))
+        console.log(doc.id, ' => ', doc.data());
+    });
+});*/
 
-      this.addNewRoom = false;
-      this.addRoomUsername = "";
-      this.fetchRooms();
-     }else{
-      alert("Seller already added or seller not found")
-    }; 
-       this.$router.push('/messages') } else{ alert("Sign in first (Check your Google email)")}
-      
+          if (query.docs[0] || otherquery.docs[0]) {
+            alert("Seller already added or seller not found");
+          } else {
+            //await usersRef.doc(id).update({ _id: id });
+            await roomsRef.add({
+              users: [user.docs[0].id, this.$store.state.user.uid],
+              lastUpdated: new Date(),
+            });
+          }
+          this.$router.push("/messages");
+        }
+      } else {
+        alert("Sign in first (Check your Google email)");
+      }
     },
   },
 };
