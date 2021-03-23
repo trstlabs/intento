@@ -267,6 +267,7 @@ export default {
         photo: this.img1,
         photo2: this.img2,
         photo3: this.img3,
+        //_id: this.$store.state.user.uid,
         //itemid: this.thisitem.id,
       };
 

@@ -453,46 +453,27 @@ async paySubmit( { body, fields }) {
     },
     async createRoom() {
 
-      if (!!this.$store.state.account.address) {
-        let user = await usersRef
-          .where("username", "==", this.$store.state.account.address)
-          .get();
-        if (user.docs[0] != null) {
-          console.log("User Exists");
-          //console.log(user.o_.docs[0].id)
-          var userid = user.docs[0].id;
-        } else {
-          console.log("User does not exist");
-          let { id } = await usersRef.add({
-            username: this.$store.state.account.address,
-          });
-          console.log(id);
-          await usersRef.doc(id).update({ _id: id });
-          var userid = id;
-        }
+      if (this.$store.state.user.uid) {
 
-        let creator = await usersRef
-          .where("username", "==", this.thisitem.creator)
-          .get();
-        if (creator.docs[0] != null) {
-          console.log("User Exists");
-          //console.log(user.o_.docs[0].id)
-          var creatorid = creator.docs[0].id;
-        } else {
-          console.log("User does not exist");
-          let { id } = await usersRef.add({ username: this.thisitem.creator });
-          console.log(id);
-          await usersRef.doc(id).update({ _id: id });
-          var creatorid = id;
-        }
+        const user = await usersRef.where('username', '==' , this.thisitem.creator).get();
 
-        await roomsRef.add({
-          users: [creatorid, userid],
-          lastUpdated: new Date(),
-        });
-        console.log("asf");
-       this.$router.push('/messages')
-      }
+ let query =  roomsRef.where("users", "==", this.$store.state.user.uid, this.thisitem.creator)
+  console.log(query)
+if (user && !query) {
+      //await usersRef.doc(id).update({ _id: id });
+      await roomsRef.add({
+        users: [user.docs[0].id, this.$store.state.user.uid],
+        lastUpdated: new Date(),
+      });
+
+      this.addNewRoom = false;
+      this.addRoomUsername = "";
+      this.fetchRooms();
+     }else{
+      alert("Seller already added or seller not found")
+    }; 
+       this.$router.push('/messages') } else{ alert("Sign in first (Check your Google email)")}
+      
     },
   },
 };

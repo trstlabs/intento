@@ -31,6 +31,8 @@
             <v-col cols="12" sm="8" class="mx-auto pa-0">
               <v-sheet min-height="70vh" rounded="lg" elevation="6">
                 <div>
+                  <leaderboard/>
+
                 <all-items/>
                 </div>
               </v-sheet>

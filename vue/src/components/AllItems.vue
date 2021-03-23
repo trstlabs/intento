@@ -4,6 +4,7 @@
        <v-card>
     <v-card-title>
       All Items
+  
       <v-spacer></v-spacer>
       <v-text-field
         v-model="search"
@@ -13,6 +14,8 @@
         hide-details
       ></v-text-field>
     </v-card-title>
+          <v-card-text class=caption>
+      All of the items on the TPP blockchain </v-card-text>
     <v-data-table
       :loading="loading"
     
@@ -43,22 +46,7 @@ export default {
      itemsPerPageArray: [4, 8, 12],
         search: '',
         loading: true,
-        //filter: {},
-        //sortDesc: false,
-       // page: 1,
-        //itemsPerPage: 4,
-        /*sortBy: 'title',
-        keys: [
-          'title',
-          'description',
-          'id',
-          "estimationprice",
-          "creator",
-          "buyer",
-          "shippingregion",
-          "tags",
-         
-        ],*/
+      
         headers: [
           {
             text: 'Item',
@@ -68,7 +56,7 @@ export default {
           },
    
          
-          { text: 'Id ', value: 'id' },
+          { text: 'ID ', value: 'id' },
        
           { text: 'Price (in TPP)', value: 'estimationprice' },
           { text: 'Creator', value: 'creator' },

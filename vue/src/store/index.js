@@ -35,7 +35,6 @@ export default new Vuex.Store({
     errorMessage: "",
     newitemID: {},
     bankBalances: [],
-
     creatorItemList: [],
     estimatorItemList: [],
     buyerItemList: [],
@@ -46,7 +45,8 @@ export default new Vuex.Store({
     tagList: [],
     sellerList: [],
     locationList: [],
-    user: null,
+    user: {}
+    //user: { uid: "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"},
   },
 
   mutations: {
