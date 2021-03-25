@@ -462,7 +462,7 @@ export default {
         ];
  //const body = [this.$store.state.account.address,"dsaf", "asdf", 33, 1, "sdfsdf", "asdf", 4, "sfda"]
         const body = {
-          creator: this.$store.state.account.address,
+          //creator: this.$store.state.account.address,
             title: this.fields.title,                                                    
           description: this.fields.description,
           shippingcost: this.fields.shippingcost,
@@ -533,8 +533,8 @@ export default {
       await this.$store.dispatch('entityFetch', {
         type: type
       })
-      await this.$store.dispatch("setCreatorItemList", this.$store.state.account.address)
-      let creatoritems = this.$store.state.creatorItemList || []
+      await this.$store.dispatch("setSellerItemList", this.$store.state.account.address)
+      let selleritems = this.$store.state.sellerItemList || []
 
 
       try {
@@ -543,12 +543,12 @@ export default {
         await this.$store.dispatch('entityFetch', {
           type: type
         })
-        await this.$store.dispatch("setCreatorItemList", this.$store.state.account.address)
-        let newcreatoritems = this.$store.state.creatorItemList
+        await this.$store.dispatch("setSellerItemList", this.$store.state.account.address)
+        let newselleritems = this.$store.state.sellerItemList
 
-        let len = (creatoritems.length)
-        console.log((newcreatoritems[len].id))
-        this.$store.commit('set', { key: 'newitemID', value: (newcreatoritems[len].id) })
+        let len = (selleritems.length)
+        console.log((newselleritems[len].id))
+        this.$store.commit('set', { key: 'newitemID', value: (newselleritems[len].id) })
       } catch (e) {
         console.log(e)
       }

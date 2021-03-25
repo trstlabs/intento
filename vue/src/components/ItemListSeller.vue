@@ -2,8 +2,8 @@
   <div class="pa-2 mx-lg-auto">
 
     
-    <p  v-if="creatorItemList.length > 0" class="h2 font-weight-medium text-uppercase text-center">
-      Total ({{ creatorItemList.length }}), Actionable ({{creatorActionList.length}})<v-btn icon onClick="window.location.reload();" ><v-icon >
+    <p  v-if="sellerItemList.length > 0" class="h2 font-weight-medium text-uppercase text-center">
+      Total ({{ sellerItemList.length }}), Actionable ({{sellerActionList.length}})<v-btn icon onClick="window.location.reload();" ><v-icon >
         mdi-refresh
       </v-icon></v-btn>
     </p>
@@ -13,7 +13,7 @@
 
     
 
-    <div v-for="item in creatorItemList" v-bind:key="item.id">
+    <div v-for="item in sellerItemList" v-bind:key="item.id">
       <v-sheet min-height="250" class="fill-height" color="transparent">
       <v-lazy
         v-model="isActive"
@@ -23,10 +23,10 @@
        
         transition="fade-transition"
       >
-      <creator-item-item-info :itemid="item.id" />
+      <seller-item-item-info :itemid="item.id" />
       </v-lazy> </v-sheet>
     </div>
-    <div v-if="creatorItemList.length === 0">
+    <div v-if="sellerItemList.length === 0">
       <p class="caption pa-12 text-center">No items, place an item first<v-btn icon  onClick="window.location.reload();" ><v-icon >
         mdi-refresh
       </v-icon></v-btn></p>
@@ -37,9 +37,9 @@
 
 <script>
 
-import CreatorItemItemInfo from "./CreatorItemItemInfo.vue";
+import SellerItemItemInfo from "./SellerItemItemInfo.vue";
 export default {
-  components: { CreatorItemItemInfo },
+  components: { SellerItemItemInfo },
   data() {
     return {
       dummy: false,
@@ -49,11 +49,11 @@ export default {
  
 
   computed: {
-    creatorItemList() {
-      return this.$store.getters.getCreatorItemList || [];
+    sellerItemList() {
+      return this.$store.getters.getSellerItemList || [];
     },
-     creatorActionList() {
-      return this.$store.getters.getCreatorActionList || [];
+     sellerActionList() {
+      return this.$store.getters.getSellerActionList || [];
     },
   },
 

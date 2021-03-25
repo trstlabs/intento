@@ -33,11 +33,11 @@ func (msg *MsgCreateItem) Type() string {
 }
 
 func (msg *MsgCreateItem) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	seller, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
 	}
-	return []sdk.AccAddress{creator}
+	return []sdk.AccAddress{seller}
 }
 
 func (msg *MsgCreateItem) GetSignBytes() []byte {
@@ -48,7 +48,7 @@ func (msg *MsgCreateItem) GetSignBytes() []byte {
 func (msg *MsgCreateItem) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
 	}
 
 	if len(msg.Tags) > 5 || len(msg.Tags) < 1 {
@@ -88,10 +88,10 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgUpdateItem{}
 
-func NewMsgUpdateItem(creator string, id string, shippingcost int64, localpickup bool, shippingregion []string) *MsgUpdateItem {
+func NewMsgUpdateItem(seller string, id string, shippingcost int64, localpickup bool, shippingregion []string) *MsgUpdateItem {
 	return &MsgUpdateItem{
 		Id:             id,
-		Creator:        creator,
+		Seller:        seller,
 		Shippingcost:   shippingcost,
 		Localpickup:    localpickup,
 		Shippingregion: shippingregion,
@@ -107,11 +107,11 @@ func (msg *MsgUpdateItem) Type() string {
 }
 
 func (msg *MsgUpdateItem) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	seller, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
 		panic(err)
 	}
-	return []sdk.AccAddress{creator}
+	return []sdk.AccAddress{seller}
 }
 
 func (msg *MsgUpdateItem) GetSignBytes() []byte {
@@ -120,19 +120,19 @@ func (msg *MsgUpdateItem) GetSignBytes() []byte {
 }
 
 func (msg *MsgUpdateItem) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	_, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
 	}
 	return nil
 }
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgDeleteItem(creator string, id string) *MsgDeleteItem {
+func NewMsgDeleteItem(seller string, id string) *MsgDeleteItem {
 	return &MsgDeleteItem{
 		Id:      id,
-		Creator: creator,
+		Seller: seller,
 	}
 }
 func (msg *MsgDeleteItem) Route() string {
@@ -144,11 +144,11 @@ func (msg *MsgDeleteItem) Type() string {
 }
 
 func (msg *MsgDeleteItem) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	seller, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
 		panic(err)
 	}
-	return []sdk.AccAddress{creator}
+	return []sdk.AccAddress{seller}
 }
 
 func (msg *MsgDeleteItem) GetSignBytes() []byte {
@@ -157,9 +157,9 @@ func (msg *MsgDeleteItem) GetSignBytes() []byte {
 }
 
 func (msg *MsgDeleteItem) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	_, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
 	}
 	return nil
 }
@@ -196,17 +196,17 @@ func (msg *MsgRevealEstimation) GetSignBytes() []byte {
 func (msg *MsgRevealEstimation) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
 	}
 	return nil
 }
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgItemTransferable(creator string, transferable bool, itemid string) *MsgItemTransferable {
+func NewMsgItemTransferable(seller string, transferable bool, itemid string) *MsgItemTransferable {
 	return &MsgItemTransferable{
 
-		Creator:      creator,
+		Seller:      seller,
 		Transferable: transferable,
 		Itemid:       itemid,
 	}
@@ -221,11 +221,11 @@ func (msg *MsgItemTransferable) Type() string {
 }
 
 func (msg *MsgItemTransferable) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	seller, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
 		panic(err)
 	}
-	return []sdk.AccAddress{creator}
+	return []sdk.AccAddress{seller}
 }
 
 func (msg *MsgItemTransferable) GetSignBytes() []byte {
@@ -234,19 +234,19 @@ func (msg *MsgItemTransferable) GetSignBytes() []byte {
 }
 
 func (msg *MsgItemTransferable) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	_, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
 	}
 	return nil
 }
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgItemShipping(creator string, tracking bool, itemid string) *MsgItemShipping {
+func NewMsgItemShipping(seller string, tracking bool, itemid string) *MsgItemShipping {
 	return &MsgItemShipping{
 
-		Creator:  creator,
+		Seller:  seller,
 		Tracking: tracking,
 		Itemid:   itemid,
 	}
@@ -261,11 +261,11 @@ func (msg *MsgItemShipping) Type() string {
 }
 
 func (msg *MsgItemShipping) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	seller, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
 		panic(err)
 	}
-	return []sdk.AccAddress{creator}
+	return []sdk.AccAddress{seller}
 }
 
 func (msg *MsgItemShipping) GetSignBytes() []byte {
@@ -274,11 +274,57 @@ func (msg *MsgItemShipping) GetSignBytes() []byte {
 }
 
 func (msg *MsgItemShipping) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	_, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
 	}
 	return nil
 }
 
-var _ sdk.Msg = &MsgItemShipping{}
+var _ sdk.Msg = &MsgCreateItem{}
+
+
+func NewMsgItemResell(seller string, itemid string, shippingcost int64, discount int64, localpickup bool, shippingregion []string, note string) *MsgItemResell {
+	return &MsgItemResell {
+		Seller:  seller,
+		Itemid:   itemid,
+		Shippingcost:   shippingcost,
+		Discount: discount,
+		Localpickup:    localpickup,
+		Shippingregion: shippingregion,
+		Note: note,
+		
+	}
+}
+
+func (msg *MsgItemResell) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgItemResell) Type() string {
+	return "ItemResell"
+}
+
+func (msg *MsgItemResell) GetSigners() []sdk.AccAddress {
+	seller, err := sdk.AccAddressFromBech32(msg.Seller)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{seller}
+}
+
+func (msg *MsgItemResell) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgItemResell) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Seller)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
+	}
+
+	return nil
+}
+
+var _ sdk.Msg = &MsgCreateItem{}

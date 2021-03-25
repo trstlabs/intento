@@ -14,7 +14,7 @@
           Welcome to the TPP marketplace. Feel free to use the app and see how it
             behaves. Note: items are examples only and are currently not redeemable for TPP tokens.
             Feedback is always welcome at the
-            <a href="https://www.trustpriceprotocol.com"> main page</a>.
+            <a  target="_blank" href="https://www.trustpriceprotocol.com"> main page</a>.
           </v-card-text>
      
              <v-btn class="ma-6" large

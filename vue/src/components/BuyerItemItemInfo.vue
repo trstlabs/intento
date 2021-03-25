@@ -117,7 +117,7 @@
     <v-icon left>
         mdi-account-outline
       </v-icon>
-      Seller: {{ thisitem.creator }}
+      Seller: {{ thisitem.seller }}
     </v-chip>
 
     
@@ -184,7 +184,7 @@
       </div>
                   
                   <div>
-       <div v-if="thisitem.localpickup === true && thisitem.status != 'Item transferred'">  
+       <div v-if="thisitem.localpickup === true && thisitem.status != 'Transferred'">  
          <app-text class="ma-2" type="p"> Arrange a meeting to pick up the item.   </app-text>           
          <v-row>
            

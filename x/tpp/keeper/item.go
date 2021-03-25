@@ -51,6 +51,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 
 	var item = types.Item{
 		Creator:             msg.Creator,
+		Seller: msg.Creator,
 		Id:                  strconv.FormatInt(count, 10),
 		Title:               msg.Title,
 		Description:         msg.Description,
@@ -95,10 +96,11 @@ func (k Keeper) HasItem(ctx sdk.Context, id string) bool {
 	return store.Has(types.KeyPrefix(types.ItemKey + id))
 }
 
-// GetItemOwner returns the creator of the item
+// GetItemOwner returns the seller of the item
 func (k Keeper) GetItemOwner(ctx sdk.Context, key string) string {
-	return k.GetItem(ctx, key).Creator
+	return k.GetItem(ctx, key).Seller
 }
+
 
 // DeleteItem deletes a item
 func (k Keeper) DeleteItem(ctx sdk.Context, key string) {
@@ -133,7 +135,9 @@ func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk
 	}
 	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, useraddress, sdk.NewCoins(coinToSend))
-
+	if err != nil {
+		panic(err)
+	}
 	//store.Delete(types.KeyPrefix(types.EstimatorKey + key))
 }
 

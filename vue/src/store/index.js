@@ -35,15 +35,15 @@ export default new Vuex.Store({
     errorMessage: "",
     newitemID: {},
     bankBalances: [],
-    creatorItemList: [],
+    sellerItemList: [],
     estimatorItemList: [],
     buyerItemList: [],
     InterestedItemList: [],
     buyItemList: [],
     toEstimateList: [],
-    creatorActionList: [],
+    sellerActionList: [],
     tagList: [],
-    sellerList: [],
+    buySellerList: [],
     locationList: [],
     user: {}
     //user: { uid: "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"},
@@ -66,9 +66,9 @@ export default new Vuex.Store({
     },
   
 
-    setCreatorItemList(state, payload) {
-      //state.CreatorItemList.push(payload);
-      state.creatorItemList = payload;
+    setSellerItemList(state, payload) {
+      //state.SellerItemList.push(payload);
+      state.sellerItemList = payload;
     },
     setEstimatorItemList(state, payload) {
       state.estimatorItemList = payload;
@@ -93,14 +93,14 @@ export default new Vuex.Store({
       state.toEstimateList = payload;
     },
 
-    setCreatorActionList(state, payload) {
-      state.creatorActionList = payload;
+    setSellerActionList(state, payload) {
+      state.sellerActionList = payload;
     },
     setTagList(state, payload) {
       state.tagList = payload;
     },
-    setSellerItemList(state, payload) {
-      state.sellerList = payload;
+    setBuySellerItemList(state, payload) {
+      state.buySellerList = payload;
     },
   },
   actions: {
@@ -124,31 +124,7 @@ export default new Vuex.Store({
       const node_info = (await axios.get(`${API}/node_info`)).data.node_info;
       commit("chainIdSet", { chain_id: node_info.network });
     },
-    /*async accountSignInTry({ state, dispatch }) {
-      const mnemonic = localStorage.getItem('mnemonic')
-      const privkey = localStorage.getItem('privkey')
-      if (mnemonic) {
-        await dispatch('accountSignIn', { mnemonic })}
-        if (privkey) {
-          await dispatch('torusSignIn',  privkey )}
-        if (mnemonic || privkey) {
-        let type = { type: "estimator" };
-       await dispatch("entityFetch", type )
-       let buyer = { type: "buyer" };
-      await dispatch("entityFetch", buyer )
-        await dispatch("setEstimatorItemList", state.account.address);
-        await dispatch("setToEstimateList", state.account.address);
-        await dispatch("setCreatorActionList", state.account.address);
-        await dispatch("setSortedTagList");
-        await dispatch("setCreatorItemList");
-        await dispatch("setBuyerItemList", state.account.address);
-
-        await dispatch("setInterestedItemList", state.account.address);
-        //$emit('signedIn');
-      }
-    },
-
-*/
+   
     async bankBalancesGet({ commit, state },) {
       //const API = rootState.cosmos.env.env.API
       const { address } = state.account
@@ -193,10 +169,13 @@ export default new Vuex.Store({
 
 
 
-    async setCreatorItemList({ commit, state }, input) {
-     if (!!input) { const rs = state.data.item.filter(item => item.creator === input
-      ) || [];
-      commit("setCreatorItemList", rs);
+    async setSellerItemList({ commit, state }, input) {
+    
+     if (!!input) { const rs = state.data.item.filter(item => item.seller === input
+      ) || [];  
+      console.log("LIST")
+      console.log(rs)
+      commit("setSellerItemList", rs);
      }
     },
 
@@ -368,12 +347,12 @@ export default new Vuex.Store({
 
       commit("setInterestedItemList", rs);}
     },
-    async setCreatorActionList({ commit, state }, input) {
+    async setSellerActionList({ commit, state }, input) {
       if (!!input) { 
 
-      const toAccept = state.data.item.filter(item => item.creator == input && item.estimationprice > 0 && !item.buyer && !item.transferable
+      const toAccept = state.data.item.filter(item => item.seller == input && item.estimationprice > 0 && !item.buyer && !item.transferable
       );
-      const toShip = state.data.item.filter(item => !item.buyer && item.creator === input && !item.localpickup && !item.tracking
+      const toShip = state.data.item.filter(item => !item.buyer && item.seller === input && !item.localpickup && !item.tracking
       );
       //console.log(input);
       //console.log(state.account.address);
@@ -386,18 +365,19 @@ export default new Vuex.Store({
       toAccept.concat(toShip);
       //console.log(toAccept);
 
-      commit("setCreatorActionList", toAccept);}
+      commit("setSellerActionList", toAccept);}
     },
 
-    async setSellerItemList({ commit, state }, input) {
+    async setBuySellerItemList({ commit, state }, input) {
       if (!!input) { 
       const rs = state.data.item.filter(item => item.creator === input) || [];
 
-      commit("setSellerItemList", rs);}
+      commit("setBuySellerItemList", rs);}
     },
+  
   },
   getters: {
-    account: state => state.account, bankBalances: state => state.bankBalances, getCreatorItemList: state => state.creatorItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getCreatorActionList: state => state.creatorActionList, getTagList: state => state.tagList, getLocationList: state => state.locationList, getSellerList: state => state.sellerList,
+    account: state => state.account, bankBalances: state => state.bankBalances, getSellerItemList: state => state.sellerItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getSellerActionList: state => state.sellerActionList, getTagList: state => state.tagList, getLocationList: state => state.locationList, getBuySellerList: state => state.buySellerList,
 
   }
 

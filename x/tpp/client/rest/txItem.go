@@ -94,7 +94,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 
 type updateItemRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	Creator string       `json:"creator"`
+	Seller string       `json:"creator"`
 
 	Shippingcost int64 `json:"shippingcost"`
 	Localpickup  bool  `json:"localpickup"`
@@ -117,7 +117,7 @@ func updateItemHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		_, err := sdk.AccAddressFromBech32(req.Creator)
+		_, err := sdk.AccAddressFromBech32(req.Seller)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -130,7 +130,7 @@ func updateItemHandler(clientCtx client.Context) http.HandlerFunc {
 		parsedShippingregion := req.Shippingregion
 
 		msg := types.NewMsgUpdateItem(
-			req.Creator,
+			req.Seller,
 			id,
 
 			parsedShippingcost,
@@ -145,7 +145,7 @@ func updateItemHandler(clientCtx client.Context) http.HandlerFunc {
 
 type deleteItemRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	Creator string       `json:"creator"`
+	Seller string       `json:"creator"`
 }
 
 func deleteItemHandler(clientCtx client.Context) http.HandlerFunc {
@@ -163,14 +163,14 @@ func deleteItemHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		_, err := sdk.AccAddressFromBech32(req.Creator)
+		_, err := sdk.AccAddressFromBech32(req.Seller)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		msg := types.NewMsgDeleteItem(
-			req.Creator,
+			req.Seller,
 			id,
 		)
 

@@ -174,7 +174,7 @@
               outlined
             >
               <v-icon left> mdi-account-outline </v-icon>
-              Seller: {{ thisitem.creator }}
+              Seller: {{ thisitem.seller }}
             </v-chip>
             <v-chip class="ma-1 caption" label color="warning lighten-2" medium>
               <v-icon left> mdi-database-plus </v-icon>
@@ -218,7 +218,7 @@
                   {{ loc }} </span
                 >. Additional Shipping cost is ${{ thisitem.shippingcost }} TPP.
                 You can arrange a pickup by sending a message to
-                <a @click="createRoom">{{ thisitem.creator }}. </a> If you buy
+                <a @click="createRoom">{{ thisitem.seller }}. </a> If you buy
                 the item you will receive a cashback reward of ${{
                   (thisitem.estimationprice * 0.05).toFixed(0)
                 }}
@@ -373,8 +373,8 @@ export default {
       return this.thisitem.comments.filter((i) => i != "") || [];
     },
     SellerItems() {
-      this.$store.dispatch("setSellerItemList", this.thisitem.creator);
-      return this.$store.getters.getSellerList || [];
+      this.$store.dispatch("setBuySellerItemList", this.thisitem.seller);
+      return this.$store.getters.getBuySellerList || [];
     },
   },
 
@@ -489,7 +489,7 @@ export default {
     async createRoom() {
       if (this.$store.state.user.uid) {
         const user = await usersRef
-          .where("username", "==", this.thisitem.creator)
+          .where("username", "==", this.thisitem.seller)
           .get();
         console.log(user.docs[0].id);
 

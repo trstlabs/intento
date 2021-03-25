@@ -252,7 +252,7 @@ export default {
     //this.$store.dispatch("initBuyItemList");
   },
   /* messages() {
-      return this.$store.getters.getCreatorItemList.length || 0;
+      return this.$store.getters.getSellerItemList.length || 0;
     },*/
   
     methods: {
@@ -277,7 +277,7 @@ export default {
    computed: {
     messagesAccount() {
        
-      return this.$store.getters.getCreatorActionList.length || 0;
+      return this.$store.getters.getSellerActionList.length || 0;
     },
     messagesToEstimate() {
       return this.$store.getters.getToEstimateList.length || 0;
@@ -288,7 +288,7 @@ export default {
      
     
 
-      //this.messages = this.$store.getters.getCreatorItemList.length;
+      //this.messages = this.$store.getters.getSellerItemList.length;
         const theme = localStorage.getItem("dark\_theme");
         if (theme) {
             if (theme == "true") {

@@ -17,35 +17,35 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 	item := k.GetItem(ctx, msg.Itemid)
 
 	//check if item has a best estimator (and therefore a complete estimation)
-	if item.Bestestimator == "" {
-		return nil, sdkerrors.Wrap(nil, "item does not have estimation yet, cannot make prepayment")
+	if item.Estimationprice == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item does not have estimation yet, cannot make prepayment")
 	}
 
 	//check if item is transferable
 	if item.Transferable != true {
-		return nil, sdkerrors.Wrap(nil, "item  not transferable, cannot make prepayment")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item  not transferable, cannot make prepayment")
 	}
 
 	//check if item has a buyer already
 	if item.Buyer != "" {
-		return nil, sdkerrors.Wrap(nil, "item already has a buyer, cannot make prepayment")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has a buyer, cannot make prepayment")
 	}
 
-	/*	ToPayLocal := item.EstimationPrice
-		DepositCoinsLocal := sdk.NewCoins(sdk.NewCoin("token", ToPayLocal))
+	//item buyer cannot be the item creator
+	if msg.Buyer == item.Creator || msg.Buyer == item.Seller  {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Buyer cannot be creator/seller")
+	}
 
-		ToPayShipping :=
-			sdk.Int.Add(item.EstimationPrice, item.ShippingCost)
-		DepositCoinsShipping := sdk.NewCoins(sdk.NewCoin("token", ToPayShipping))
-	*/
-
-	//ModuleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-
+	estimationPrice := item.Estimationprice
+	if item.Discount > 0 {
+		estimationPrice = item.Estimationprice - item.Discount
+	}
+	
 	if item.Shippingcost > 0 && item.Localpickup == false {
-		toPayShipping := item.Estimationprice + item.Shippingcost
+		toPayShipping := estimationPrice + item.Shippingcost
 		if toPayShipping != msg.Deposit {
 
-			return nil, sdkerrors.Wrap(nil, "deposit insufficient, cannot make prepayment")
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit insufficient, cannot make prepayment")
 		}
 
 		item.Buyer = msg.Buyer
@@ -56,10 +56,10 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 	}
 
 	if item.Shippingcost == 0 && item.Localpickup == true {
-		toPayLocal := item.Estimationprice
-		if toPayLocal != msg.Deposit {
+		
+		if estimationPrice != msg.Deposit {
 
-			return nil, sdkerrors.Wrap(nil, "deposit insufficient, cannot make prepayment")
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit insufficient, cannot make prepayment")
 		}
 
 		item.Buyer = msg.Buyer
@@ -70,8 +70,8 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 	}
 
 	if item.Shippingcost > 0 && item.Localpickup == true {
-		toPayLocal := item.Estimationprice
-		if toPayLocal == msg.Deposit {
+	
+		if estimationPrice == msg.Deposit {
 
 			//ModuleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 
@@ -83,7 +83,7 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 
 		} else {
 			toPayShipping :=
-				item.Estimationprice + item.Shippingcost
+			estimationPrice + item.Shippingcost
 
 			if toPayShipping == msg.Deposit {
 				item.Localpickup = false
@@ -94,7 +94,7 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 			}
 			if toPayShipping != msg.Deposit {
 
-				return nil, sdkerrors.Wrap(nil, "deposit insufficient, cannot make prepayment")
+				return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit insufficient, cannot make prepayment")
 			}
 		}
 
@@ -110,7 +110,6 @@ func handleMsgUpdateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdate
 
 	var buyer = types.Buyer{
 		Buyer: msg.Buyer,
-
 		Itemid:       msg.Itemid,
 		Transferable: msg.Transferable,
 		Deposit:      deposit,
@@ -149,48 +148,53 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 	if msg.Buyer != k.GetBuyerOwner(ctx, msg.Itemid) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
-	//get buyer info
-	buyer := k.GetBuyer(ctx, msg.Itemid)
 
 	//get item info
 	item := k.GetItem(ctx, msg.Itemid)
 
-	//check if item.transferable = true and therefore the creator has accepted the buyer
+	//check if item.transferable = true and therefore the seller has accepted the buyer
 
 	if item.Transferable == false {
-		return nil, sdkerrors.Wrap(nil, "creator of item does not accept a transfer")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "seller of item does not accept a transfer")
 	}
 
 	//check if item has a buyer already
 	//check therefore that prepayment is done
 	if item.Buyer != msg.Buyer {
-		return nil, sdkerrors.Wrap(nil, "prepayment does not belong to msg sender")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "prepayment does not belong to msg sender")
 	}
 	//check therefore that prepayment is done
 	if item.Status != "" {
-		return nil, sdkerrors.Wrap(nil, "item already has had a transfer or transfer has been denied ")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has had a transfer or transfer has been denied ")
+	}
+	if item.Shippingcost > 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item has shippingcost")
 	}
 
 	if msg.Transferable == true {
+		
 		bigintestimationprice := sdk.NewInt(item.Estimationprice)
+		if item.Discount > 0 {
+			bigintestimationprice = sdk.NewInt(item.Estimationprice - item.Discount)
+		}
 
+		if (item.Creator == item.Seller) {
 		//rounded down percentage for minting. Percentage may be changed through governance proposals
 		percentageMint := sdk.NewDecWithPrec(10, 2)
 		percentageReward := sdk.NewDecWithPrec(5, 2)
 
+
 		toMintAmount := percentageMint.MulInt(bigintestimationprice).TruncateInt()
 		paymentReward := percentageReward.MulInt(bigintestimationprice)
-		roundedAmountReward := paymentReward.Ceil().TruncateInt()
+		roundedAmountReward := paymentReward.TruncateInt()
 
-		//make payment to creator and estimator
-		paymentCreatorCoins := sdk.NewCoin("tpp", bigintestimationprice)
-
+		
 		//minted coins (are rounded up)
 		mintCoins := sdk.NewCoin("tpp", toMintAmount)
 		paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
 
 		k.MintReward(ctx, mintCoins)
-		k.HandlePrepayment(ctx, item.Creator, paymentCreatorCoins)
+		
 
 		//for their participation in the protocol, the best estimator and the buyer get rewarded.
 		k.HandlePrepayment(ctx, item.Bestestimator, paymentRewardCoins)
@@ -207,13 +211,19 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 		item.Lowestestimator = ""
 		item.Highestestimator = ""
 		item.Estimatorlist = nil
-		item.Status = "Item transferred"
+	}
+		//make payment to seller
+		paymentSellerCoins := sdk.NewCoin("tpp", bigintestimationprice)
+
+		k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
+
+		item.Status = "Transferred"
 		k.SetItem(ctx, item)
-		k.SetBuyer(ctx, buyer)
+		//k.SetBuyer(ctx, buyer)
 	}
 
 	if msg.Transferable == false {
-
+		buyer := k.GetBuyer(ctx, msg.Itemid)
 		k.HandlePrepayment(ctx, item.Buyer, buyer.Deposit)
 
 		for _, element := range item.Estimatorlist {
@@ -238,14 +248,14 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 		item.Estimatorlist = nil
 		item.Status = "Item transfer declined"
 		k.SetItem(ctx, item)
-		k.SetBuyer(ctx, buyer)
+		//k.SetBuyer(ctx, buyer)
 	}
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgItemThank(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemThank) (*sdk.Result, error) {
-	//check if message creator is item creator
+	//check if message seller is item seller
 	if msg.Buyer != k.GetBuyerOwner(ctx, msg.Itemid) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
@@ -258,7 +268,7 @@ func handleMsgItemThank(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemThan
 	//check if item.transferable = false
 
 	if item.Transferable == true {
-		return nil, sdkerrors.Wrap(nil, "creator of item does not accept a transfer")
+		return nil, sdkerrors.Wrap(nil, "seller of item does not accept a transfer")
 	}
 
 	//check if item has a buyer already
@@ -266,7 +276,7 @@ func handleMsgItemThank(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemThan
 		return nil, sdkerrors.Wrap(nil, "Item does not belong to msg sender")
 	}
 	//check therefore that prepayment is done
-	if item.Status != "Shipped" || item.Status != "Item transferred" {
+	if item.Status != "Shipped" || item.Status != "Transferred" {
 		return nil, sdkerrors.Wrap(nil, "item not transferred yet")
 	}
 

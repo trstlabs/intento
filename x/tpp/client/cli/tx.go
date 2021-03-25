@@ -39,6 +39,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdRevealEstimation())
 	cmd.AddCommand(CmdItemTransferable())
 	cmd.AddCommand(CmdItemShipping())
+	cmd.AddCommand(CmdItemResell())
 
 	return cmd
 }

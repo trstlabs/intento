@@ -10,7 +10,7 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/danieljdd/tpp/x/tpp/types";
 
 message Item {
-  string creator = 1;
+  string seller = 1;
   string id = 2;
   string title = 3; 
   string description = 4; 
@@ -34,6 +34,9 @@ message Item {
   repeated string shippingregion = 22; 
   bool thank = 23; 
   int64 depositamount = 24;
+  string creator = 25;
+  string note = 26;
+  int64 discount = 27;
 }
 
 message MsgCreateItem {
@@ -53,7 +56,7 @@ message MsgCreateItem {
 }
 
 message MsgUpdateItem {
-  string creator = 1;
+  string seller = 1;
   string id = 2;
 
   int64 shippingcost = 5;
@@ -64,7 +67,7 @@ message MsgUpdateItem {
 }
 
 message MsgDeleteItem {
-  string creator = 1;
+  string seller = 1;
   string id = 2;
 }
 
@@ -75,14 +78,24 @@ message MsgRevealEstimation {
 }
 
 message MsgItemTransferable {
-    string creator = 1;
+    string seller = 1;
     bool transferable = 2;
   string itemid = 3;
 
 }
 message MsgItemShipping {
-    string creator = 1;
+    string seller = 1;
     bool tracking = 2;
   string itemid = 3;
 
+}
+
+message MsgItemResell {
+    string seller = 1;
+  string itemid = 2;
+  int64 shippingcost = 3;
+    int64 discount = 4;
+  bool localpickup = 5;
+  repeated string shippingregion = 6; 
+  string note = 7;
 }

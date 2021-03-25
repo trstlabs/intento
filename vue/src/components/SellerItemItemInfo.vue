@@ -26,10 +26,10 @@
               hide-delimiter-background
               show-arrows-on-hover
             >
+             
               <v-carousel-item
-                v-for="(photo, i) in photos"
-                :key="i"
-                :src="photo"
+               
+                :src="thisitem.description + thisitem.title"
               >
               </v-carousel-item>
             </v-carousel>
@@ -407,7 +407,7 @@
 <script>
 import { usersRef, roomsRef, databaseRef } from "./firebase/db.js";
 
-import ItemListCreator from "./ItemListCreator.vue";
+import ItemListSeller from "./ItemListSeller.vue";
 import {
   SigningStargateClient,
   assertIsBroadcastTxSuccess,
@@ -417,7 +417,7 @@ import { Type, Field } from "protobufjs";
 
 export default {
   props: ["itemid"],
-  components: { ItemListCreator },
+  components: { ItemListSeller },
   data() {
     return {
      
@@ -499,7 +499,7 @@ export default {
       const type = { type: "item" };
       const body = { id: this.thisitem.id };
       const fields = [
-        ["creator", 1, "string", "optional"],
+        ["seller", 1, "string", "optional"],
         ["id", 2, "string", "optional"],
       ];
 
@@ -528,7 +528,7 @@ export default {
       const msg = {
         typeUrl,
         value: {
-          creator: this.$store.state.account.address,
+          seller: this.$store.state.account.address,
           ...body,
         },
       };
@@ -557,7 +557,7 @@ export default {
         this.flightit = true;
         this.flightitn = true;
         const fields = [
-          ["creator", 1, "string", "optional"],
+          ["seller", 1, "string", "optional"],
           ["transferable", 2, "bool", "optional"],
           ["itemid", 3, "string", "optional"],
         ];
@@ -584,7 +584,7 @@ export default {
       const msg = {
         typeUrl,
         value: {
-          creator: this.$store.state.account.address,
+          seller: this.$store.state.account.address,
           ...body,
         },
       };
@@ -609,7 +609,7 @@ export default {
 
         const body = { tracking, itemid };
         const fields = [
-          ["creator", 1, "string", "optional"],
+          ["seller", 1, "string", "optional"],
           ["tracking", 2, "bool", "optional"],
           ["itemid", 3, "string", "optional"],
         ];
@@ -639,7 +639,7 @@ export default {
       const msg = {
         typeUrl,
         value: {
-          creator: this.$store.state.account.address,
+          seller: this.$store.state.account.address,
           ...body,
         },
       };

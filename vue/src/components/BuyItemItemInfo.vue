@@ -168,7 +168,7 @@
 
               <v-chip class="ma-1 caption" medium label outlined>
                 <v-icon left> mdi-account-outline </v-icon>
-                Seller: {{ thisitem.creator }}
+                Seller: {{ thisitem.seller }}
               </v-chip>
 <!--
               <v-divider class="ma-2" />

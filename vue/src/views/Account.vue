@@ -5,7 +5,7 @@
       <div>
         <app-text type="h1">TrustItems (v0.1)</app-text>
         <wallet />
-        <item-list-creator />
+        <item-list-seller />
         <item-list-estimator />
         <item-list-buyer />
       </div>
@@ -45,7 +45,7 @@
 
   :background-color="($vuetify.theme.dark) ? 'dark' : 'white'"
   >
-    <v-tab @click="getItemsFromCreator()">
+    <v-tab @click="getItemsFromSeller()">
      Created<v-icon >
         mdi-plus-box
       </v-icon> 
@@ -68,7 +68,7 @@
   </v-tabs>
                   <!--<faucet/>-->
                    
-                  <item-list-creator v-if="created"/>
+                  <item-list-seller v-if="created"/>
                   
                   <item-list-estimator v-if="estimated" />
                 
@@ -109,14 +109,14 @@ export default {
 
   methods: {
 
-   getItemsFromCreator() {
+   getItemsFromSeller() {
       if (!this.$store.state.account.address) { alert("Sign in first");};
        this.estimated = false
       this.bought = false
       this.interested = false
       this.created = true
       let input = this.$store.state.account.address;
-      this.$store.dispatch("setCreatorItemList", input);
+      this.$store.dispatch("setSellerItemList", input);
       //this.dummy = false;
     },
 

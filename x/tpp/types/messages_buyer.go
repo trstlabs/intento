@@ -124,6 +124,8 @@ func (msg *MsgDeleteBuyer) ValidateBasic() error {
 	return nil
 }
 
+var _ sdk.Msg = &MsgCreateBuyer{}
+
 func NewMsgItemTransfer(buyer string, itemid string, transferable bool) *MsgItemTransfer {
 	return &MsgItemTransfer{
 		Buyer:        buyer,

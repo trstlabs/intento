@@ -277,7 +277,7 @@ export default {
       const type = { type: "estimator" };
       await this.$store.dispatch("entityFetch", type);
 
-      this.$store.dispatch("setCreatorItemList", account.address);
+      this.$store.dispatch("setSellerItemList", account.address);
       this.$store.dispatch("setBuyItemList");
       this.loading = false;
       //console.log(client)

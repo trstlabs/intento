@@ -59,7 +59,7 @@ export default {
           { text: 'ID ', value: 'id' },
        
           { text: 'Price (in TPP)', value: 'estimationprice' },
-          { text: 'Creator', value: 'creator' },
+          { text: 'Seller', value: 'seller' },
         
      
         ],

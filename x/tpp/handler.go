@@ -59,6 +59,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return handleMsgCreateFlag(ctx, k, msg)
 		case *types.MsgItemThank:
 			return handleMsgItemThank(ctx, k, msg)
+		case *types.MsgItemResell:
+			return handleMsgItemResell(ctx, k, msg)
 
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)

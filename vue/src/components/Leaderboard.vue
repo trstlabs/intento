@@ -3,9 +3,9 @@
    <div >
        <v-card>
     <v-card-title>
-      Leaderboard </v-card-title>
+      Current leaderboard </v-card-title>
        <v-card-text class=caption>
-      The users that correctly estimated the most items </v-card-text>
+      The users that correctly estimated the most (currently transferrable) items. </v-card-text>
    
      <v-simple-table fixed-header
     height="300px">
@@ -58,7 +58,7 @@ export default {
           'description',
           'id',
           "estimationprice",
-          "creator",
+          "seller",
           "buyer",
           "shippingregion",
           "tags",

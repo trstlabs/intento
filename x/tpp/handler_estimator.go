@@ -40,7 +40,7 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 
 	//checks whether estimationcount has been reached
 	var estimatorlistlen = strconv.Itoa(len(item.Estimatorlist))
-	var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlen + item.Creator))
+	var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlen + item.Seller))
 	var estimatorlisthashstring = hex.EncodeToString(estimatorlistlenhash[:])
 	if estimatorlisthashstring == item.Estimationcounthash {
 		return nil, sdkerrors.Wrap(nil, "final estimation has already been made, estimation can not be added")

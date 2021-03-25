@@ -73,7 +73,7 @@ func CmdUpdateItem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-item [id]  [shippingcost] [localpickup] [shippingregion]",
 		Short: "Update a item",
-		Args:  cobra.ExactArgs(7),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id := args[0]
 
@@ -205,6 +205,44 @@ func CmdItemShipping() *cobra.Command {
 			}
 
 			msg := types.NewMsgItemShipping(clientCtx.GetFromAddress().String(), bool(shippingtrackingBool), string(itemID))
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdItemResell() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "item-resell [itemid]  [shippingcost] [discount] [localpickup] [shippingregion] [note] ",
+		Short: "Update a item",
+		Args:  cobra.ExactArgs(6),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			itemid := args[0]
+
+			argsShippingcost, _ := strconv.ParseInt(args[1], 10, 64)
+
+			argsDiscount, _ := strconv.ParseInt(args[2], 10, 64)
+			argsLocalpickup := true
+			if args[3] == "0" {
+				argsLocalpickup = false
+			}
+
+			argsShippingregion := strings.Split(args[4], ",")
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+	
+			note := args[5]
+
+			msg := types. NewMsgItemResell(clientCtx.GetFromAddress().String(), string(itemid), int64(argsShippingcost), int64(argsDiscount), bool(argsLocalpickup), []string(argsShippingregion), string(note))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

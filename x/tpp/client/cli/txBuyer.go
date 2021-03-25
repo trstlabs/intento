@@ -13,7 +13,7 @@ import (
 
 func CmdCreateBuyer() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-buyer [itemid] [deposit]",
+		Use:   "create-buyer [itemid] [deposit(amount)]",
 		Short: "Creates a new buyer",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -111,7 +111,7 @@ func CmdItemTransfer() *cobra.Command {
 			if args[0] == "1" {
 				argsTransferbool = true
 			}
-			argsItemID := string(args[1])
+			argsItemID := args[1]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -133,7 +133,7 @@ func CmdItemTransfer() *cobra.Command {
 
 func CmdItemThank() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "item-transfer [transterbool] [itemID]",
+		Use:   "item-thank [transterbool] [itemID]",
 		Short: "Set a new buyer",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
