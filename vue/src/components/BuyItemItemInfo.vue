@@ -29,6 +29,11 @@
             </div>
           </v-col>
         </v-row>
+        
+
+       
+
+      
       </div>
       <v-card-actions>
         <v-btn
@@ -50,7 +55,6 @@
         
       
 
-       
            
               
          <v-chip
@@ -60,7 +64,7 @@
                 small
               >
                 <v-icon left> mdi-check-all </v-icon>
-                ${{ thisitem.estimationprice }} TPP
+                ${{ thisitem.estimationprice }}
               </v-chip>
                <v-chip
                 class="ma-1 caption"
@@ -69,14 +73,23 @@
                 small
               >
                 <v-icon left> mdi-database-plus </v-icon>
-                ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP
+                ${{ (thisitem.estimationprice*0.05).toFixed(0)}}
               </v-chip>
+
+        <v-chip small class="ma-1 caption" v-if="thisitem.creator != thisitem.seller"
+  dense dark label color="silver"
+> <v-icon left> mdi-refresh </v-icon> Reseller</v-chip>
+
                 <v-spacer></v-spacer>
            <v-btn icon @click="(showinfo = !showinfo), getItemPhotos()">
           <v-icon>{{
             showinfo ? "mdi-chevron-up" : "mdi-chevron-down"
           }}</v-icon>
         </v-btn>
+        
+
+
+
       </v-card-actions>
   
       <v-expand-transition>
@@ -105,7 +118,7 @@
               <v-card elevation="0">
                 <div class="pa-2 overline text-center">Description</div>
                 <v-card-text>
-                  <div class="body-1">" {{ thisitem.description }} "</div>
+                  <div class="body-1">{{ thisitem.description }}</div>
                 </v-card-text>
               </v-card>
  <v-chip outlined medium label class="ma-1 caption"
@@ -163,7 +176,7 @@
                 medium
               >
                 <v-icon left> mdi-check-all </v-icon>
-                Price: ${{ thisitem.estimationprice }} TPP
+                Price: ${{ thisitem.estimationpricethisitem.discount}} TPP
               </v-chip>
 
               <v-chip class="ma-1 caption" medium label outlined>
