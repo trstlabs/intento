@@ -55,12 +55,12 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tags invalid")
 	}
 	for _, tags := range msg.Tags {
-		if len(tags) > 10 {
+		if len(tags) > 12 {
 			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "tag too long")
 		}
 	}
 
-	if len(msg.Shippingregion) > 5 || len(msg.Shippingregion) < 1 {
+	if len(msg.Shippingregion) > 6 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Region invalid")
 	}
 
@@ -322,6 +322,21 @@ func (msg *MsgItemResell) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
+	}
+	if msg.Note > 240 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "note too long")
+	}
+	if len(msg.Shippingregion) > 6  {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Region invalid")
+	}
+
+	for _, region := range msg.Shippingregion {
+		if len(region) > 2{
+			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region too long")
+		}
+	}
+	if msg.Shippingcost == 0 && msg.Localpickup != true {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localpickup")
 	}
 
 	return nil

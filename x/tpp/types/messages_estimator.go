@@ -46,7 +46,7 @@ func (msg *MsgCreateEstimator) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	if len(msg.Comment) > 50 {
+	if len(msg.Comment) > 100 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "comment too large")
 	}
 	return nil

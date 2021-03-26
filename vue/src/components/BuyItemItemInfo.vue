@@ -9,7 +9,9 @@
       <div class="pa-2 mx-auto">
         <v-row>
           <v-col cols="12" md="8">
-            <p class="text-capitalize subtitle-2 pa-2 text-left">{{ thisitem.title }}</p>
+            <p  v-if="thisitem.creator != thisitem.seller" class="text-capitalize subtitle-2 pa-2 text-left"> <v-icon small left> mdi-repeat </v-icon>{{ thisitem.title }} </p>
+
+<p  v-else class="text-capitalize subtitle-2 pa-2 text-left"> {{ thisitem.title }} </p>
 
             <v-card class="ma-1" elevation="0">
              
@@ -52,12 +54,27 @@
             Details
           </v-btn>
         </div>
-        
-      
+        <v-chip v-if="thisitem.shippingcost > 0 && thisitem.localpickup == false"
+                class="ma-1 caption"
+                label
+                color="primary lighten-2"
+                small
+              >
+                <v-icon left> mdi-package-variant-closed </v-icon>
+                ${{ thisitem.shippingcost }}
+              </v-chip>
 
-           
+        <v-chip v-if="thisitem.discount > 0"
+                class="ma-1 caption"
+                label
+                color="primary lighten-1"
+                small
+              >
+                <v-icon small left> mdi-repeat </v-icon>  
+                ${{ thisitem.estimationprice - thisitem.discount }} (${{thisitem.discount}} Discount)
+              </v-chip>
               
-         <v-chip
+        <div v-else> <v-chip 
                 class="ma-1 caption"
                 label
                 color="primary lighten-1"
@@ -74,11 +91,17 @@
               >
                 <v-icon left> mdi-database-plus </v-icon>
                 ${{ (thisitem.estimationprice*0.05).toFixed(0)}}
-              </v-chip>
+              </v-chip> </div>
+          
+      
 
-        <v-chip small class="ma-1 caption" v-if="thisitem.creator != thisitem.seller"
+           
+              
+         
+
+       <!--- <v-chip small class="ma-1 caption" v-if="thisitem.creator != thisitem.seller"
   dense dark label color="silver"
-> <v-icon left> mdi-refresh </v-icon> Reseller</v-chip>
+> <v-icon left> mdi-refresh </v-icon> Reseller</v-chip>-->
 
                 <v-spacer></v-spacer>
            <v-btn icon @click="(showinfo = !showinfo), getItemPhotos()">
@@ -158,7 +181,7 @@
               >
 
               <v-chip
-                v-if="thisitem.shippingcost"
+                v-if="thisitem.shippingcost > 0"
                 class="ma-1 caption"
                 label
                 outlined
@@ -176,13 +199,23 @@
                 medium
               >
                 <v-icon left> mdi-check-all </v-icon>
-                Price: ${{ thisitem.estimationpricethisitem.discount}} TPP
+                Price: ${{ thisitem.estimationprice}} TPP
               </v-chip>
 
               <v-chip class="ma-1 caption" medium label outlined>
-                <v-icon left> mdi-account-outline </v-icon>
+                <v-icon left> mdi-account </v-icon>
                 Seller: {{ thisitem.seller }}
               </v-chip>
+                <v-chip
+             
+              class="ma-1 caption"
+              medium
+              label
+              outlined
+            >
+              <v-icon left> mdi-account-outline </v-icon>
+             Creator: {{ thisitem.creator }}
+            </v-chip>
 <!--
               <v-divider class="ma-2" />
 

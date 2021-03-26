@@ -36,6 +36,7 @@
   <div class="body-1 "> "
            {{thisitem.description }} "
          </div> </v-card-text> </v-card>
+        
 
   <v-divider class="ma-2" />
   <v-chip
@@ -159,7 +160,7 @@
             <v-divider></v-divider>
             <div>
               <v-stepper class="elevation-0" v-model="step" vertical>
-                <v-stepper-step step="1" complete> Provide prepayment Item </v-stepper-step>                
+                <v-stepper-step step="1" complete> Prepayment </v-stepper-step>                
                 
 
                 <v-stepper-step :complete="thisitem.status != ''" step="2">
@@ -226,9 +227,121 @@
         </div>
       </div>
                 </v-stepper-content>
-                <v-stepper-step :complete="thisitem.status != ''" step="3">
-                  Item Transferred
+                <v-stepper-step  :complete="thisitem.status != ''" step="3">
+                  Complete
                 </v-stepper-step>
+                <v-stepper-content step="3" class="mx-6 pa-0"> 
+                  <div> Item status is {{thisitem.status}}</div>
+                  <div v-if="thisitem.status === 'Transferred' || thisitem.status === 'Shipped'">
+                    <p> Enjoy the item </p>
+                     <v-btn text @click="resell = !resell"> Resell item</v-btn>
+                       <div v-if="resell">
+            
+
+                      <v-textarea class="ma-1" prepend-icon="mdi-text"
+              :rules="rules.noteRules"
+            v-model="fields.note"
+            label="Note (current item condition?) (why resell?)"
+            auto-grow
+          > </v-textarea>
+
+                      <v-row>    
+           <v-btn class="pa-2 mt-2"
+        
+        text
+        icon
+        @click="fields.shippingcost = 0"
+      >
+        <v-icon > {{fields.shippingcost === 0 ? 'mdi-package-variant' : 'mdi-package-variant-closed'}} </v-icon>
+      </v-btn>
+
+                <v-slider class="pa-2 mt-2"
+                  hint="Set to 0 tpp no for added cost"
+                  
+                  thumb-label
+                  label="Added cost"
+                  suffix="tokens"
+                  :persistent-hint="fields.shippingcost != 0"
+                  
+                  placeholder="Added cost"
+                  :thumb-size="70"
+                  v-model="fields.shippingcost"
+                  
+                ><template v-slot:thumb-label="item">
+            {{ item.value }} TPP
+          </template> </v-slider>
+</v-row> 
+ <v-row>    
+           <v-btn class="pa-2 mt-2"
+        
+        text
+        icon
+        @click="fields.discount = 0"
+      >
+        <v-icon > {{fields.discount === 0 ? 'mdi-label-percent-outline' : 'mdi-label-percent'}} </v-icon>
+      </v-btn>
+
+                <v-slider class="pa-2 mt-2"
+                  hint="Explain discount in the note"
+      
+                  thumb-label
+                  label="Discount"
+                  suffix="tokens"
+                  :persistent-hint="fields.discount != 0"
+                  
+                  placeholder="Discount"
+                  :thumb-size="70"
+                  v-model="fields.discount"
+                  
+                ><template v-slot:thumb-label="item">
+            {{ item.value }} TPP
+          </template> </v-slider>
+</v-row> 
+ <v-row  > <v-col>  <v-row>    
+           <v-btn class="pa-2"
+        
+        text
+        icon
+        @click="fields.localpickup = !fields.localpickup"
+      >
+        <v-icon > {{fields.localpickup ? 'mdi-map-marker' : 'mdi-map-marker-off'}} </v-icon>
+      </v-btn>
+
+
+      <v-switch class="ml-2" 
+      v-model="fields.localpickup"
+      inset
+      label="Local pickup"
+      :persistent-hint="fields.shippingcost !=0 && fields.localpickup == true && selectedCountries.length > 1"
+      hint="Specify local pickup location in description"
+    ></v-switch>  
+
+    
+
+               
+                </v-row></v-col><v-col> <v-select
+                 prepend-icon="mdi-earth"
+                 hint="At least one"
+                 :persistent-hint="selectedCountries == 0"
+                
+          v-model="selectedCountries"
+          :items="countryCodes"
+         :rules="rules.shippingRules"
+          label="Location"
+          deletable-chips
+          multiple
+          chips
+          
+        > </v-select> 
+</v-col></v-row>
+
+                    
+                  
+                  
+                  
+                  
+                  <v-btn @click="submitItemResell"> Resell</v-btn> </div> </div>
+                   </v-stepper-content>
               </v-stepper>
             </div>
           </div> </v-expand-transition
@@ -255,9 +368,32 @@ export default {
       loadingitem: true,
       showactions: false,
       transferbool: false,
+      resell: false,
       photos: [],
       imageurl: "",
       step: 2,
+      fields: {
+        shippingcost: "0",
+        localpickup: false,
+        discount: "0",
+        note: "",
+      },
+      
+      rules: {
+       
+         shippingRules:  [ 
+          (v) => !!v.length == 1 || "A country is required",],
+         noteRules:  [ 
+          (v) =>
+            (v && v.length <= 80) || "Note must be less than 80 characters",
+
+        ], 
+        
+      },
+    
+      selectedCountries: [],
+      countryCodes:["NL", "BE", "UK", "DE", "US","CA"]
+
     };
   },
    mounted() {
@@ -298,7 +434,7 @@ export default {
 
       if (this.valid && !this.flightIT && this.hasAddress) {
         this.flightIT = true;
-        const type = { type: "buyer" };
+
         const body = { transferable, itemid };
          const fields = [
         ["buyer", 1,'string', "optional"],
@@ -315,7 +451,6 @@ export default {
     async submitItemTransferN(transferable, itemid) {
       if (this.valid && !this.flightITN && this.hasAddress) {
         this.flightITN = true;
-
         const body = { transferable, itemid };
          const fields = [
         ["buyer", 1,'string', "optional"],
@@ -339,7 +474,6 @@ export default {
       fields.forEach(f => {
         MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
       })
-
       const client = await SigningStargateClient.connectWithSigner(
         process.env.VUE_APP_RPC,
         wallet,
@@ -364,19 +498,77 @@ export default {
 
     },
 
+ async submitItemResell() {
+      if (this.hasAddress) {
+         const body = {
+           itemid: this.itemid,
+          shippingcost: this.fields.shippingcost,
+          discount: this.fields.discount,
+           localpickup: this.fields.localpickup,
+          shippingregion: this.selectedCountries,
+          note: this.fields.note,
+       
+        };
+         const fields = [
+        ["seller", 1,'string', "optional"],
+         [ "itemid", 2,'string', "optional"] ,                                                    
+        ["shippingcost",3,'int64', "optional"],
+          ["discount",4,'int64', "optional"],
+            ["localpickup",5,'bool', "optional"],
+              ["shippingregion",6,'string', "repeated"],
+                ["note",7,'string', "optional"],
+
+      ];
+        await this.resellSubmit( {body, fields });
+ await this.$store.dispatch("setBuyerItemList", this.$store.state.account.address);  
+      }
+    },
+
+      async resellSubmit( { body, fields }) {
+      const wallet = this.$store.state.wallet
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgItemResell`;
+      let MsgCreate = new Type(`MsgItemResell`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+     
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+
+      const msg = {
+        typeUrl,
+        value: {
+          seller: this.$store.state.account.address,
+          ...body
+        }
+      };
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Resell request sent");
+
+    },
     async getThisItem() {
       await submitrevealestimation();
       return this.thisitem();
 
     },
     createStep() {
-      if (this.thisitem.tracking != "") {
-        this.step = 2;
-      } else if (this.thisitem.transferable === true) {
+        if (this.thisitem.status == "" ) {
         this.step = 2;
       } else if (this.thisitem.status != "") {
         this.step = 3;
-      }
+      } 
+      
     },
   },
 };

@@ -208,7 +208,7 @@
                   v-model="fields.shippingcost"
                   
                 ><template v-slot:thumb-label="item">
-            {{ item.value }} tokens
+            {{ item.value }} TPP
           </template> </v-slider>
 </v-row>  <v-row  > <v-col>  <v-row>    
            <v-btn class="pa-2"
@@ -247,43 +247,6 @@
           
         > </v-select> 
 </v-col></v-row>
-
-               <!-- <v-row v-if="fields.shippingcost == 0 ">    
-           <v-btn class="pa-2"
-        
-        text
-        icon
-        @click="fields.localpickup = !fields.localpickup"
-      >
-        <v-icon > {{fields.localpickup ? 'mdi-map-marker' : 'mdi-map-marker-off'}} </v-icon>
-      </v-btn>
-
-
-      <v-switch class="ml-2" 
-      v-model="fields.localpickup"
-      inset
-      label="Local pickup"
-      
-      
-    ></v-switch>  
-
-    
-
-               
-                </v-row>-->
-                
-
-     <!--  <v-combobox
-                 hint="Maximum of 5 tags"
-                 
-          v-model="selectedTags"
-          :items="taglist"
-          label="Tags"
-          deletable-chips
-          multiple
-          chips
-          
-        > </v-combobox>-->
 
               </div>
               <div class="text-center pt-6">
@@ -362,6 +325,8 @@ export default {
           (v) => !!v || "Description is required",
           (v) =>
             (v && v.length > 4) || "Description must be more than 4 characters",
+             (v) =>
+            (v && v.length <= 800) || "Description must be less than 800 characters",
         ],
         estimationcountRules: [
           (v) => !!v || "Estimation count is required",

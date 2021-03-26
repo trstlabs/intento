@@ -1,9 +1,11 @@
 <template>
   <div class="pa-2 mx-lg-auto">
     <div>
-      <h2 class="headline pa-4 text-center">Browse Items</h2>
+     
+      <h2 class="headline pa-4 text-center">Browse Items </h2>  
       <div>
         <v-container>
+          
           <v-row>
             <v-col cols="12" sm="6">
               <buy-search-bar />
@@ -24,7 +26,7 @@
             <div>
               <div>
                 <v-sheet
-                  min-height="240"
+                  
                   class="fill-height"
                   color="transparent"
                   ><v-lazy

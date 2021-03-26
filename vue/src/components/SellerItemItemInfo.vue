@@ -27,9 +27,10 @@
               show-arrows-on-hover
             >
              
-              <v-carousel-item
-               
-                :src="thisitem.description + thisitem.title"
+               <v-carousel-item
+                v-for="(photo, i) in photos"
+                :key="i"
+                :src="photo"
               >
               </v-carousel-item>
             </v-carousel>
@@ -622,7 +623,7 @@ export default {
 
     async shippingSubmit({ body, fields }) {
       const wallet = this.$store.state.wallet;
-      const typeUrl = `/${VUE_APP_PATH}.MsgItemShipping`;
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgItemShipping`;
       let MsgCreate = new Type(`MsgItemShipping`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
       console.log(fields);
