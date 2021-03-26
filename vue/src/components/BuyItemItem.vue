@@ -36,11 +36,20 @@
             </div>
 
             <v-card elevation="0">
+              
               <div class="pa-2 overline text-center">Description</div>
               <v-card-text>
-                <div class="body-1">" {{ thisitem.description }} "</div>
-              </v-card-text>
+                <div class="body-1">{{ thisitem.description }}</div>
+              </v-card-text>  <v-divider class="mx-4 pa-2" /> 
             </v-card>
+            
+             
+              <v-card v-if="thisitem.note" elevation="0" > <div class="pl-4 overline text-center">Reseller's Note</div> <v-card-text>
+    
+      
+  <div class="body-1 ">
+           {{thisitem.note }}
+         </div> </v-card-text> <v-divider class="mx-4 pa-2" /></v-card>
             <v-chip
               outlined
               medium
@@ -51,6 +60,9 @@
             >
               <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
             >
+             <v-chip outlined class="ma-1 caption" v-if="thisitem.creator != thisitem.seller"
+    label 
+> <v-icon left> mdi-refresh </v-icon> Reseller</v-chip>
             <v-chip class="ma-1 caption" label outlined medium>
               <v-icon left> mdi-account-badge-outline </v-icon>
               Identifier: {{ thisitem.id }}
@@ -61,7 +73,7 @@
                 <span v-bind="attrs" v-on="on">
                   <v-chip class="ma-1 caption" label outlined medium>
                     <v-rating
-                      v-model="thisitem.condition.Number"
+                      :value="Number(thisitem.condition)"
                       readonly
                       color="primary"
                       background-color="grey lighten-1"
@@ -143,6 +155,15 @@
               <v-icon left> mdi-package-variant-closed </v-icon>
               Shipping Cost: ${{ thisitem.shippingcost }} TPP
             </v-chip>
+             <v-chip v-if="thisitem.discount > 0"
+              class="ma-1 caption"
+              medium
+              label
+              outlined
+            >
+              <v-icon left> mdi-label-percent </v-icon>
+              Discount: ${{ thisitem.discount }} TPP
+            </v-chip>
             <v-chip
               outlined
               medium
@@ -173,14 +194,25 @@
               label
               outlined
             >
-              <v-icon left> mdi-account-outline </v-icon>
+              <v-icon left> mdi-account </v-icon>
               Seller: {{ thisitem.seller }}
             </v-chip>
+             <v-chip
+             
+              class="ma-1 caption"
+              medium
+              label
+              outlined
+            >
+              <v-icon left> mdi-account-outline </v-icon>
+             Creator: {{ thisitem.creator }}
+            </v-chip>
+             
             <v-chip class="ma-1 caption" label color="warning lighten-2" medium>
               <v-icon left> mdi-database-plus </v-icon>
               ${{ (thisitem.estimationprice * 0.05).toFixed(0) }} TPP
             </v-chip>
-            <v-divider class="ma-2" />
+            <v-divider class="ma-4" />
 
             <div class="overline text-center">Comments</div>
             <div v-if="thisitem.comments">
