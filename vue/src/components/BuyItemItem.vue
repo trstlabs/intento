@@ -639,7 +639,7 @@ export default {
         const user = await usersRef
           .where("username", "==", this.thisitem.seller)
           .get();
-        console.log(user.docs[0].id);
+        //console.log(user.docs[0].id);
 
         //let query = await roomsRef.where("users", '', [this.$store.state.user.uid).where("users", "array-contains", user.docs[0].id).get()
         /*await roomsRef.where("users", "==", ["5RlZazMyPgdoHgGfjTud", "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"]).get()
@@ -677,6 +677,8 @@ await roomsRef.where("users", "array-contains", this.$store.state.user.uid).get(
             });
           }
           this.$router.push("/messages");
+        }else{
+          alert("Seller DatabaseID not found");
         }
       } else {
         alert("Sign in first (Check your Google email)");

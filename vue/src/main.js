@@ -10,6 +10,9 @@ import {firestorePlugin} from "vuefire";
 //Vue.use(Vuetify);
 
 Vue.config.productionTip = true;
+Vue.config.devtools = false
+Vue.config.debug = false;
+Vue.config.silent = true;
 
 Vue.use(firestorePlugin);
 

@@ -67,9 +67,9 @@
           small
         >
           <v-icon small left> mdi-repeat </v-icon> <v-icon small left> mdi-plus </v-icon><v-icon small left> mdi-package-variant-closed </v-icon>
-          ${{
+          <v-chip dark color="primary">${{
             Number(thisitem.estimationprice) + Number(thisitem.shippingcost)
-          }}
+          }}</v-chip>
         </v-chip>
  <v-chip
           v-if="
@@ -83,9 +83,9 @@
           small
         >
           <v-icon small left> mdi-repeat </v-icon><v-icon small left> mdi-plus </v-icon><v-icon small left> mdi-package-variant-closed </v-icon>  <v-icon small left> mdi-minus </v-icon><v-icon small left> mdi-label-percent</v-icon>
-          ${{
+          <v-chip dark color="primary">${{
             Number(thisitem.estimationprice) + Number(thisitem.shippingcost) - Number(thisitem.discount)
-          }}
+          }}</v-chip>
         </v-chip>
         <v-chip
           v-if="thisitem.discount > 0 && thisitem.localpickup"
@@ -95,19 +95,19 @@
           small
         >
           <v-icon small left> mdi-repeat </v-icon> <v-icon small left> mdi-minus </v-icon><v-icon small left> mdi-label-percent</v-icon>
-          ${{ thisitem.estimationprice - thisitem.discount }}
+       <v-chip dark color="primary">   ${{ thisitem.estimationprice - thisitem.discount }}</v-chip>
         </v-chip>
 </div>
         <div v-else>
           <span v-if="thisitem.localpickup == false"> <v-chip class="ma-1 caption" label color="primary lighten-1" small>
             <v-icon left> mdi-check-all </v-icon><v-icon small left> mdi-plus </v-icon><v-icon small left> mdi-package-variant-closed </v-icon>
-            ${{ Number(thisitem.estimationprice) + Number(thisitem.shippingcost) }}
+          <v-chip dark color="primary">  ${{ Number(thisitem.estimationprice) + Number(thisitem.shippingcost) }}</v-chip>
           </v-chip></span>
          
           <span v-else>
           <v-chip class="ma-1 caption" label color="primary lighten-1" small>
             <v-icon left> mdi-check-all </v-icon>
-            ${{ thisitem.estimationprice }}
+           <v-chip dark color="primary"> ${{ thisitem.estimationprice }}</v-chip>
           </v-chip></span>
           <v-chip class="ma-1 caption" label  dark color="green lighten-2" small>
            <v-icon small left> mdi-plus </v-icon> <v-icon small left> mdi-hand-heart </v-icon>

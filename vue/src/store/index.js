@@ -329,7 +329,7 @@ export default new Vuex.Store({
    
 
     async setToEstimateList({ commit, state }) {
-      const A = state.data.item.filter(item => item.estimationprice > 1 && item.status == '');
+      const A = state.data.item.filter(item => item.estimationprice < 1 && item.status == '');
       const B = state.estimatorItemList;
       //const rsEIL = state.data.estimator.filter(estimator => estimator.estimator === state.client.anyValidAddress);
       console.log(A);
