@@ -57,9 +57,9 @@
       </button>
       <button class="button-cancel" @click="removeRoomId = null">Cancel</button>
     </form>
-    <p v-if="!this.currentUserId && this.$store.state.account.address" class="pa-8 text-center">  Loading messages... <button @click="window.location.reload()">Refresh</button> </p>
-    <p v-if="!this.$store.state.account.address" class="pa-8 text-center">  Sign in first <button @click="window.location.reload()">Refresh</button> </p>
-    <p v-if="!this.$store.state.user && this.$store.state.account.address" class="pa-8 text-center">  Confirm verification link via Email<button @click="window.location.reload()">Refresh</button> </p>
+    <p v-if="!this.currentUserId && this.$store.state.account.address" class="pa-8 text-center">  Loading messages... <button onClick="window.location.reload();">Refresh</button> </p>
+    <p v-if="!this.$store.state.account.address" class="pa-8 text-center">  Sign in first <button onClick="window.location.reload();">Refresh</button> </p>
+    <p v-if="!this.$store.state.user && this.$store.state.account.address" class="pa-8 text-center">  Confirm verification link via Email<button onClick="window.location.reload();">Refresh</button> </p>
     <chat-window v-if="this.currentUserId"
       :styles="$vuetify.theme.dark == true ? stylesdark : styles "
       :current-user-id="this.currentUserId"

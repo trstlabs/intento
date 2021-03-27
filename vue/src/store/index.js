@@ -278,15 +278,17 @@ export default new Vuex.Store({
       //console.log("TEST",merged);
       let merged = [].concat.apply([], rs);
       let frequency = {};
-      merged.forEach(function (value) { frequency[value.toLowerCase()] = 0; });
+      merged.forEach(function (value) {  frequency[value.toLowerCase()] = 0; });
 
       let uniques = merged.filter(function (value) {
-        return ++frequency[value] == 1;
+        return ++frequency[value.toLowerCase()] == 1;
       });
 
       let sorted = uniques.sort(function (a, b) {
         return frequency[b] - frequency[a];
       });
+
+      console.log(merged)
       /*console.log(rs)
       console.log(merged)
       console.log(uniques)
@@ -304,7 +306,7 @@ export default new Vuex.Store({
       merged.forEach(function (value) { frequency[value.toLowerCase()] = 0; });
 
       let uniques = merged.filter(function (value) {
-        return ++frequency[value] == 1;
+        return ++frequency[value.toLowerCase()] == 1;
       });
 
       let sorted = uniques.sort(function (a, b) {
@@ -327,7 +329,7 @@ export default new Vuex.Store({
    
 
     async setToEstimateList({ commit, state }) {
-      const A = state.data.item.filter(item => !item.estimationprice && item.status == '');
+      const A = state.data.item.filter(item => item.estimationprice > 1 && item.status == '');
       const B = state.estimatorItemList;
       //const rsEIL = state.data.estimator.filter(estimator => estimator.estimator === state.client.anyValidAddress);
       console.log(A);

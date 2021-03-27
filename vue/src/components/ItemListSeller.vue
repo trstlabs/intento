@@ -3,7 +3,7 @@
 
     
     <p  v-if="sellerItemList.length > 0" class="h2 font-weight-medium text-uppercase text-center">
-      Total ({{ sellerItemList.length }}), Actionable ({{sellerActionList.length}})<v-btn icon onClick="window.location.reload();" ><v-icon >
+      Total ({{ sellerItemList.length }}), Actionable ({{sellerActionList.length}})<v-btn icon @click="window.location.reload()" ><v-icon >
         mdi-refresh
       </v-icon></v-btn>
     </p>

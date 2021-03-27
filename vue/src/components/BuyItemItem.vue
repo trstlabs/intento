@@ -50,23 +50,15 @@
   <div class="body-1 ">
            {{thisitem.note }}
          </div> </v-card-text> <v-divider class="mx-4 pa-2" /></v-card>
-            <v-chip
-              outlined
-              medium
-              label
-              class="ma-1 caption"
-              v-for="tag in thisitem.tags"
-              :key="tag"
-            >
-              <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
-            >
-             <v-chip outlined class="ma-1 caption" v-if="thisitem.creator != thisitem.seller"
-    label 
-> <v-icon left> mdi-refresh </v-icon> Reseller</v-chip>
-            <v-chip class="ma-1 caption" label outlined medium>
+         <v-chip class="ma-1 caption" label outlined medium>
               <v-icon left> mdi-account-badge-outline </v-icon>
               Identifier: {{ thisitem.id }}
             </v-chip>
+           
+             <v-chip outlined class="ma-1 caption" v-if="thisitem.creator != thisitem.seller"
+    label 
+> <v-icon left> mdi-refresh </v-icon> Reseller</v-chip>
+            
 
             <v-dialog transition="dialog-bottom-transition" max-width="300">
               <template v-slot:activator="{ on, attrs }">
@@ -135,29 +127,104 @@
                 </v-card>
               </template>
             </v-dialog>
+              <span v-if="thisitem.creator != thisitem.seller">
+        <v-chip
+          v-if="
+            thisitem.shippingcost > 0 &&
+            thisitem.localpickup == false &&
+            thisitem.discount == 0
+          "
+          class="ma-1 caption"
+          label
+          outlined
+          
+        >
+          <v-icon  left> mdi-repeat </v-icon> <v-icon  left> mdi-plus </v-icon><v-icon  left> mdi-package-variant-closed </v-icon>
+          ${{
+            Number(thisitem.estimationprice) + Number(thisitem.shippingcost)
+          }}
+        </v-chip>
+ <v-chip
+          v-if="
+            thisitem.shippingcost > 0 &&
+            thisitem.localpickup == false &&
+            thisitem.discount > 0
+          "
+          class="ma-1 caption"
+          label
+          outlined
+          
+        >
+          <v-icon  left> mdi-repeat </v-icon><v-icon small left> mdi-plus </v-icon><v-icon  left> mdi-package-variant-closed </v-icon>  <v-icon small left> mdi-minus </v-icon><v-icon  left> mdi-label-percent</v-icon>
+          ${{
+            Number(thisitem.estimationprice) + Number(thisitem.shippingcost) - Number(thisitem.discount)
+          }}
+        </v-chip>
+        <v-chip
+          v-if="thisitem.discount > 0 && thisitem.localpickup"
+          class="ma-1 caption"
+          label
+          outlined
+          
+        >
+          <v-icon small > mdi-repeat </v-icon><v-icon  small > mdi-minus </v-icon><v-icon  small > mdi-label-percent</v-icon>
+          ${{ thisitem.estimationprice - thisitem.discount }}
+        </v-chip>
+         <v-chip
+      
+          class="ma-1 caption"
+          label
+          outlined
+          
+        >
+          <v-icon  left> mdi-repeat </v-icon>Original price:
+          ${{
+          thisitem.estimationprice
+          }}
+        </v-chip>
+</span>
+        <span v-else>
+          <span v-if="thisitem.localpickup == false"> <v-chip class="ma-1 caption" label color="primary lighten-1" small>
+            <v-icon left> mdi-check-all </v-icon><v-icon small left> mdi-plus </v-icon><v-icon small left> mdi-package-variant-closed </v-icon>
+            ${{ Number(thisitem.estimationprice) + Number(thisitem.shippingcost) }}
+          </v-chip></span>
+         
+          <span v-else>
+          <v-chip class="ma-1 caption" label outlined > 
+            <v-icon left> mdi-check-all </v-icon>
+            ${{ thisitem.estimationprice }}
+          </v-chip></span>
+         <v-chip class="ma-1 caption" label outlined >
+              <v-icon left> mdi-hand-heart </v-icon>Cashback:
+              ${{ (thisitem.estimationprice * 0.05).toFixed(0) }} TPP
+            </v-chip>
+        </span>
             <v-chip
               v-if="thisitem.localpickup"
               class="ma-1 caption"
               label
               outlined
-              medium
+              
+              
               ><v-icon left> mdi-map-marker-outline </v-icon>Local
               Pickup</v-chip
             >
 
             <v-chip
-              v-if="thisitem.shippingcost"
+              v-if="thisitem.shippingcost > 0"
               class="ma-1 caption"
               label
               outlined
-              medium
+              
+            
             >
               <v-icon left> mdi-package-variant-closed </v-icon>
-              Shipping Cost: ${{ thisitem.shippingcost }} TPP
+              Added Cost: ${{ thisitem.shippingcost }} TPP
             </v-chip>
+             
              <v-chip v-if="thisitem.discount > 0"
               class="ma-1 caption"
-              medium
+      
               label
               outlined
             >
@@ -166,7 +233,7 @@
             </v-chip>
             <v-chip
               outlined
-              medium
+              
               label
               class="ma-1 caption"
               v-for="country in thisitem.shippingregion"
@@ -176,21 +243,12 @@
               >{{ country }}</v-chip
             >
 
-            <v-chip
-              v-if="thisitem.bestestimator"
-              class="ma-1 caption"
-              label
-              outlined
-              medium
-            >
-              <v-icon left> mdi-check-all </v-icon>
-              Price: ${{ thisitem.estimationprice }} TPP
-            </v-chip>
+           
 
             <v-chip
               @click="createRoom"
               class="ma-1 caption"
-              medium
+              
               label
               outlined
             >
@@ -200,18 +258,24 @@
              <v-chip
              
               class="ma-1 caption"
-              medium
+              
               label
               outlined
             >
               <v-icon left> mdi-account-outline </v-icon>
              Creator: {{ thisitem.creator }}
             </v-chip>
-             
-            <v-chip class="ma-1 caption" label color="warning lighten-2" medium>
-              <v-icon left> mdi-database-plus </v-icon>
-              ${{ (thisitem.estimationprice * 0.05).toFixed(0) }} TPP
-            </v-chip>
+              <v-chip
+              outlined
+              
+              label
+              class="ma-1 caption"
+              v-for="tag in thisitem.tags"
+              :key="tag"
+            >
+              <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
+            >
+          
             <v-divider class="ma-4" />
 
             <div class="overline text-center">Comments</div>
@@ -237,68 +301,142 @@
                 ><v-icon>mdi-information-outline</v-icon>
               </v-btn>
               <div v-if="iteminfo" class="text-center caption pa-2">
-                You can buy {{ thisitem.title }} for ${{
-                  thisitem.estimationprice
-                }}
-                TPP and ship the item if you live in one of the following
+                You can buy {{ thisitem.title }}
+              <span v-if=" thisitem.shippingcost > 0">and ship the item if you live in one of the following
                 locations:
-                <span
+                <span 
                   v-for="loc in thisitem.shippingregion"
                   :key="loc"
                   class="font-weight-medium"
                 >
                   {{ loc }} </span
-                >. Additional Shipping cost is ${{ thisitem.shippingcost }} TPP.
-                You can arrange a pickup by sending a message to
-                <a @click="createRoom">{{ thisitem.seller }}. </a> If you buy
+                > <span v-if="!thisitem.shippingregion[0]"> all locations </span>. Additional cost (e.g. shipping) is ${{ thisitem.shippingcost }} TPP.</span> <span v-if="thisitem.localpickup"> and you can arrange a pickup by sending a message to
+                <a @click="createRoom">{{ thisitem.seller }}. </a> </span> <span v-if="thisitem.discount > 0"> Reseller gives a discount of ${{ thisitem.discount }} TPP on the original selling price of ${{thisitem.estimationprice}}TPP.</span>
+              <span v-if="thisitem.creator == thisitem.seller" >If you buy
                 the item you will receive a cashback reward of ${{
                   (thisitem.estimationprice * 0.05).toFixed(0)
                 }}
-                TPP. With TPP you can withdrawl your payment at any time, up
+                TPP. </span> With TPP you can withdrawl your payment at any time, up
                 until the item transaction and no transaction costs are applied.
               </div>
             </v-row>
             <div class="text-center">
-              <v-row>
-                <v-col>
-                  <v-btn
+              <v-row v-if="thisitem.creator == thisitem.seller">
+                <v-col >
+                  <v-btn 
                     block
                     color="primary"
                     :disabled="!thisitem.localpickup"
-                    @click="submitLP(itemid), getThisItem"
-                  >
-                    Buy locally for ${{ thisitem.estimationprice }} TPP<v-icon
+                    @click="submit(thisitem.estimationprice), flightLP = !flightLP, getThisItem"
+                  ><div v-if="!flightLP">
+                    Buy for ${{ thisitem.estimationprice }} TPP<v-icon
                       right
                     >
-                      mdi-map-marker
-                    </v-icon>
-                    <div class="button__label" v-if="flight">
-                      <div class="button__label__icon">
-                        <icon-refresh />
-                      </div>
-                      Sending transaction...
-                    </div>
+                      mdi-check-all
+                    </v-icon></div>
+                      <div v-if="flightLP">
+                 
+                    <v-progress-linear
+      indeterminate
+      color="secondary"
+    ></v-progress-linear>Sending transaction...
+                </div>
                   </v-btn> </v-col
                 ><v-col>
                   <v-btn
                     block
                     color="primary"
                     :disabled="thisitem.shippingcost == 0"
-                    @click="submitSP(itemid), getThisItem"
-                  >
-                    Buy for ${{ thisitem.estimationprice }} TPP + shipping (${{
-                      thisitem.shippingcost
-                    }}
-                    TPP)<v-icon right> mdi-package-variant-closed </v-icon>
-                    <div class="button__label" v-if="flight">
-                      <div class="button__label__icon">
-                        <icon-refresh />
-                      </div>
-                      Sending transaction...
-                    </div>
+                    @click="submit(Number(thisitem.estimationprice) + Number(thisitem.shippingcost)), flightSP = !flightSP, getThisItem"
+                  ><div v-if="!flightSP">
+                    Buy for ${{ Number(thisitem.estimationprice) + Number(thisitem.shippingcost) }}TPP <v-icon
+                      right
+                    >
+                      mdi-check-all</v-icon><v-icon
+                      right
+                    >
+                      mdi-plus</v-icon><v-icon right> mdi-package-variant-closed </v-icon></div>
+                     <div v-if="flightSP">
+                 
+                    <v-progress-linear
+      indeterminate
+      color="secondary"
+    ></v-progress-linear>Sending transaction...
+                </div>
                   </v-btn>
+                 
                 </v-col>
+                
+                
               </v-row>
+              <v-row v-else>  <v-col >
+                  <v-btn 
+                    block
+                    color="primary"
+                    :disabled="!thisitem.localpickup || thisitem.discount == 0"
+                    @click="submit((Number(thisitem.estimationprice) -Number(thisitem.discount))), flightLP = !flightLP, getThisItem"
+                  ><div v-if="!flightLP">
+                    Buy for ${{(Number(thisitem.estimationprice) -Number(thisitem.discount) )}}TPP <v-icon
+                      right
+                    >
+                      mdi-repeat
+                    </v-icon><v-icon  right> mdi-minus </v-icon><v-icon  right> mdi-label-percent</v-icon></div>
+                      <div v-if="flightLP">
+                    <v-progress-linear
+      indeterminate
+      color="secondary"
+    ></v-progress-linear>Sending transaction...
+                </div>
+                  </v-btn>
+                   <v-btn class="mt-2"
+                    block
+                    color="primary"
+                    :disabled="!thisitem.localpickup || thisitem.discount > 0"
+                    @click="submit(thisitem.estimationprice ), flightLP = !flightLP, getThisItem"
+                  ><div v-if="!flightLP">
+                    Buy for ${{thisitem.estimationprice}}TPP  <v-icon  right> mdi-repeat </v-icon> </div>
+                      <div v-if="flightLP">
+                    <v-progress-linear
+      indeterminate
+      color="secondary"
+    ></v-progress-linear>Sending transaction...
+                </div>
+                  </v-btn>
+                   </v-col
+                ><v-col>
+                  <v-btn
+                    block
+                    color="primary"
+                    :disabled="thisitem.shippingcost == 0 || thisitem.discount > 0"
+                    @click="submit(Number(thisitem.estimationprice) + Number(thisitem.shippingcost)), flightSP = !flightSP, getThisItem"
+                  ><div v-if="!flightSP">
+                    Buy for ${{ Number(thisitem.estimationprice) + Number(thisitem.shippingcost) }}TPP
+                    <v-icon  right> mdi-repeat </v-icon> <v-icon  right> mdi-plus </v-icon><v-icon right> mdi-package-variant-closed </v-icon></div>
+                     <div v-if="flightSP">
+                 
+                    <v-progress-linear
+      indeterminate
+      color="secondary"
+    ></v-progress-linear>Sending transaction...
+                </div>
+                  </v-btn>
+                 <v-btn class="mt-2"
+                    block
+                    color="primary"
+                    :disabled="thisitem.shippingcost == 0 || thisitem.discount == 0"
+                    @click="submit(Number(thisitem.estimationprice) + Number(thisitem.shippingcost)- Number(thisitem.discount)), flightSP = !flightSP, getThisItem"
+                  ><div v-if="!flightSP">
+                    Buy for ${{ Number(thisitem.estimationprice) + Number(thisitem.shippingcost) - Number(thisitem.discount)}}TPP
+                    <v-icon  right> mdi-repeat </v-icon> <v-icon  right> mdi-plus </v-icon><v-icon right> mdi-package-variant-closed </v-icon><v-icon  right> mdi-minus </v-icon><v-icon right> mdi-label-percent </v-icon></div>
+                     <div v-if="flightSP">
+                 
+                    <v-progress-linear
+      indeterminate
+      color="secondary"
+    ></v-progress-linear>Sending transaction...
+                </div>
+                  </v-btn>
+                </v-col> </v-row>
             </div>
           </div>
         </div>
@@ -319,7 +457,7 @@
           <p>This seller has sold {{ sold }} items before</p>
           <!--<p  Of which _ have been transfered by shipping and _ by local pickup.</p>-->
         </v-card>
-        <v-card-title class="overline justify-center">
+        <v-card-title v-if="SellerItems[1]" class="overline justify-center">
           All Seller items
         </v-card-title>
         <div v-for="item in SellerItems" v-bind:key="item.id">
@@ -411,18 +549,17 @@ export default {
   },
 
   methods: {
-    async submitLP(itemid) {
+    async submit(deposit) {
       if (!this.hasAddress) {
         alert("Sign in first");
+       window.location.reload()
       }
 
-      if (!this.flightLP && this.hasAddress) {
-        this.flightLP = true;
+      if ( this.hasAddress) {
+       // this.flightLP = true;
         this.loadingitem = true;
-        let deposit = this.thisitem.estimationprice;
-        //let deposit = toPay + "tpp";
         const type = { type: "buyer" };
-        const body = { deposit, itemid };
+        const body = { deposit: deposit, itemid: this.thisitem.id};
         const fields = [
           ["buyer", 1, "string", "optional"],
 
@@ -432,39 +569,14 @@ export default {
         await this.paySubmit({ body, fields });
         await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("bankBalancesGet");
-        this.flightLP = false;
+       
         this.loadingitem = false;
       }
+      this.flightLP = false;
+      this.flightSP = false;
     },
 
-    async submitSP(itemid) {
-      if (!this.hasAddress) {
-        alert("Sign in first");
-      }
-      if (!this.flightSP && this.hasAddress) {
-        this.flightSP = true;
-        this.loadingitem = true;
-
-        let deposit =
-          +this.thisitem.estimationprice + +this.thisitem.shippingcost;
-
-        const fields = [
-          ["buyer", 1, "string", "optional"],
-
-          ["itemid", 2, "string", "optional"],
-          ["deposit", 3, "int64", "optional"],
-        ];
-        const type = { type: "buyer" };
-        const body = { deposit, itemid };
-        await this.paySubmit({ body, fields });
-        await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("bankBalancesGet");
-
-        this.flightSP = false;
-        this.loadingitem = false;
-        this.deposit = "";
-      }
-    },
+    
     async getThisItem() {
       await submit();
       return thisitem();
@@ -505,6 +617,10 @@ export default {
         [msg],
         fee
       );
+      if (!result.data){
+       alert("TX failed")
+       window.location.reload()
+      }
       assertIsBroadcastTxSuccess(result);
       alert("Transaction sent");
     },
