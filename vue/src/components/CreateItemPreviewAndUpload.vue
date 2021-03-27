@@ -263,13 +263,13 @@ export default {
     },
 
     create() {
-      const post = {
+      const post = { photos: {
         photo: this.img1,
         photo2: this.img2,
         photo3: this.img3,
         //_id: this.$store.state.user.uid,
         //itemid: this.thisitem.id,
-      };
+      }, id: { username: this.thisitem.creator, _id: this.$store.state.user.uid}}
 
       databaseRef
         .ref("ItemPhotoGallery/" + this.thisitem.id)
