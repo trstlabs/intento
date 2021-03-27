@@ -453,7 +453,7 @@ export default {
     this.loadingitem = true;
     const id = this.itemid;
 
-    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
+    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id + "/photos/");
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 

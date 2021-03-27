@@ -516,7 +516,7 @@ export default {
     this.loadingitem = true;
     const id = this.itemid;
 
-    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
+    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id + "/photos/");
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 
@@ -639,7 +639,7 @@ export default {
         const user = await usersRef
           .where("username", "==", this.thisitem.seller)
           .get();
-        //console.log(user.docs[0].id);
+        console.log(user);
 
         //let query = await roomsRef.where("users", '', [this.$store.state.user.uid).where("users", "array-contains", user.docs[0].id).get()
         /*await roomsRef.where("users", "==", ["5RlZazMyPgdoHgGfjTud", "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"]).get()
@@ -649,7 +649,7 @@ export default {
         console.log(doc.id, ' => ', doc.data());
     });
 });*/
-        if (user) {
+        if (user.docs[0]) {
           let query = await roomsRef
             .where("users", "==", [user.docs[0].id, this.$store.state.user.uid])
             .get();

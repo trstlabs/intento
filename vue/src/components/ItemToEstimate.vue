@@ -701,7 +701,7 @@ value: 0,
       const id = this.item.id;
       //const db = firebase.database();
 
-      const imageRef = databaseRef.ref("ItemPhotoGallery/" + id);
+     const imageRef = databaseRef.ref("ItemPhotoGallery/" + id + "/photos/");
       imageRef.on("value", (snapshot) => {
         const data = snapshot.val();
 

@@ -45,7 +45,7 @@ export default new Vuex.Store({
     tagList: [],
     buySellerList: [],
     locationList: [],
-    user: {}
+    user: null,
     //user: { uid: "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"},
   },
 
