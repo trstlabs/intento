@@ -36,6 +36,7 @@ export default new Vuex.Store({
     newitemID: {},
     bankBalances: [],
     sellerItemList: [],
+    creatorItemList: [],
     estimatorItemList: [],
     buyerItemList: [],
     InterestedItemList: [],
@@ -70,6 +71,11 @@ export default new Vuex.Store({
       //state.SellerItemList.push(payload);
       state.sellerItemList = payload;
     },
+    setCreatorItemList(state, payload) {
+    
+      state.creatorItemList = payload;
+    },
+
     setEstimatorItemList(state, payload) {
       state.estimatorItemList = payload;
     },
@@ -179,7 +185,17 @@ export default new Vuex.Store({
      }
     },
 
+    async setCreatorItemList({ commit, state }, input) {
+      if (!!input) { const rs = state.data.item.filter(item => item.creator === input
+       ) || [];
+       console.log(rs)
+       commit("setCreatorItemList", rs);
+      }
+     },
+
+   
     async setEstimatorItemList({ commit, state }, input) {
+      
       if (input) { 
       const rse = state.data.estimator.filter(estimator => estimator.estimator === input
       ) || [];
