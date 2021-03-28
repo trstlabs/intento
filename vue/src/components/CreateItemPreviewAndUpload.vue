@@ -257,13 +257,13 @@ export default {
         //_id: this.$store.state.user.uid,
         //itemid: this.thisitem.id,
       }, id: { username: this.thisitem.creator, _id: this.$store.state.user.uid}};
-       databaseRef
+       /*databaseRef
         .ref("ItemPhotoGallery/0").set(post) .then((response) => {
           console.log(response);
         })
         .catch((err) => {
           console.log(err);
-        });
+        });*/
 
       databaseRef
         .ref("ItemPhotoGallery/" + this.thisitem.id)
