@@ -258,7 +258,7 @@ export default {
         //itemid: this.thisitem.id,
       }, id: { username: this.thisitem.creator, _id: this.$store.state.user.uid}};
        databaseRef
-        .ref("ItemPhotoGallery/1").set(post) .then((response) => {
+        .ref("ItemPhotoGallery/0").set(post) .then((response) => {
           console.log(response);
         })
         .catch((err) => {

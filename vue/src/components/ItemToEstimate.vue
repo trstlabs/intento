@@ -624,8 +624,8 @@ value: 0,
     async flagSubmit({ type, fields, body }) {
       const wallet = this.$store.state.wallet;
       const type2 = type.charAt(0).toUpperCase() + type.slice(1);
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreate${type2}`;
-      let MsgCreate = new Type(`MsgCreate${type2}`);
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreateFlag`;
+      let MsgCreate = new Type(`MsgCreateFlag`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
       fields.forEach((f) => {
         MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
@@ -635,7 +635,7 @@ value: 0,
         wallet,
         { registry }
       );
-      //console.log("TEST" + client)
+
       const msg = {
         typeUrl,
         value: {

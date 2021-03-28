@@ -142,7 +142,9 @@
       >
       <v-alert dense  v-if="!this.$store.state.user && this.$store.state.account.address "
   type="warning" dismissible class="caption"
->Confirm the verification link sent to the email linked to your Google account</v-alert>
+>
+Confirm sign in by clicking the link sent to your Google account's email on this device.
+</v-alert>
        <div class="text-center">
    <img class="pa-4 "
  

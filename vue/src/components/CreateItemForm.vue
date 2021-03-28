@@ -264,6 +264,8 @@
               </v-btn>
               </div>
             </div>
+             <p class="caption text-center" v-if="!this.$store.state.user"> Important: 
+Confirm sign in by clicking the link sent to your Google account's email on this device.</p>
           </v-stepper-content>
         </div>
 
@@ -274,6 +276,7 @@
               v-on:changeStep="updateStepCount($event)"
             />
           </div>
+         
         </v-stepper-content>
         <v-stepper-content step="3">
           <v-alert rounded-lg type="success">
@@ -399,10 +402,10 @@ export default {
     },
     
     valid() {
-      if (
+      if ( 
         this.fields.title.trim().length > 3 &&
       this.fields.description.trim().length > 4 && this.selectedTags.length > 0 && this.selectedCountries.length > 0 
-      )
+     && !!this.$store.state.user  )
        {
         return true;
     };
@@ -410,10 +413,10 @@ export default {
 
   methods: {
     async submit() {
+    
       if (this.valid && !this.flight && this.hasAddress) {
         this.flight = true;
-        const type = { type: "item" };
-       
+        const type = { type: "item" };  
        const fields = [
           ["creator", 1,'string', "optional"],
            [ "title", 2,'string', "optional"] ,                                                    
