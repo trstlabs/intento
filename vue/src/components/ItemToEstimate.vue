@@ -712,6 +712,8 @@ value: 0,
           //this.photos = { photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Points_of_a_horse.jpg/330px-Points_of_a_horse.jpg" };
 
           this.loadingitem = false;
+        }else{
+          this.photos = []
         }
       });
       this.loadingitem = false;
