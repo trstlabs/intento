@@ -319,6 +319,8 @@ export default {
         titleRules: [
           (v) => !!v || "Title is required",
           (v) =>
+            (v && v.length > 4) || "Title must be more than 3 characters",
+          (v) =>
             (v && v.length <= 80) || "Title must be less than 80 characters",
         ],
         descriptionRules: [
@@ -498,22 +500,25 @@ export default {
       await this.$store.dispatch('entityFetch', {
         type: type
       })
-      await this.$store.dispatch("setSellerItemList", this.$store.state.account.address)
-      let selleritems = this.$store.state.sellerItemList || []
+      await this.$store.dispatch("setCreatorItemList", this.$store.state.account.address)
+      let selleritems = this.$store.state.creatorItemList || []
 
 
       try {
         const result = await client.signAndBroadcast(firstAccount.address, [msg], fee);
+        
         assertIsBroadcastTxSuccess(result);
         await this.$store.dispatch('entityFetch', {
           type: type
         })
-        await this.$store.dispatch("setSellerItemList", this.$store.state.account.address)
-        let newselleritems = this.$store.state.sellerItemList
-
-        let len = (selleritems.length)
-        console.log((newselleritems[len].id))
-        this.$store.commit('set', { key: 'newitemID', value: (newselleritems[len].id) })
+        await this.$store.dispatch("setCreatorItemList", this.$store.state.account.address)
+        let newselleritems = this.$store.state.creatorItemList.map(item =>item.id)
+      let sorted = newselleritems.sort((selleritems, newselleritems) => newselleritems - selleritems);
+console.log(sorted)
+//et len = (selleritems.length)
+       // console.log((newselleritems[len].id))
+        //this.$store.commit('set', { key: 'newitemID', value: (newselleritems[len].id) })
+        this.$store.commit('set', { key: 'newitemID', value: sorted[0] })
       } catch (e) {
         console.log(e)
       }

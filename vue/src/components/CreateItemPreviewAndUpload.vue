@@ -8,7 +8,7 @@
               <v-card elevation="0">
                 <div class="overline">Title</div>
 
-                <div class="body-1">" {{ thisitem.title }} "</div>
+                <div class="body-1 mt-1">{{ thisitem.title }}</div>
               </v-card>
             </v-col>
             <v-col>
@@ -17,7 +17,7 @@
                   <v-chip
                     outlined
                     small
-                    class="caption"
+                    class="caption mt-1"
                     v-for="previewtag in thisitem.tags"
                     :key="previewtag"
                   >
@@ -43,9 +43,9 @@
           </v-row>
           <v-card elevation="0">
             <div class="overline">Description</div>
-            <v-card-text>
-              <div class="body-1">" {{ thisitem.description }} "</div>
-            </v-card-text>
+        
+              <span class="caption mt-1">{{ thisitem.description }}</span>
+       
           </v-card>
 
           <v-divider class="ma-4"></v-divider>
@@ -107,22 +107,9 @@
             Condition: {{ thisitem.condition }}/5
           </v-chip>
 
-          <!--  <v-chip label color="grey"
-        class="ma-1" disabled
-      medium>
-<v-rating
-  background-color="#eee"
-  color="white"
-  dense
- 
-  readonly
-  length="5"
-  size="12"
-  :value="thisitem.condition"
-></v-rating> </v-chip>-->
-          <v-row class="text-center"> </v-row>
+       
           </div>
-          <v-divider class="ma-4"></v-divider>
+          <v-divider class="ma-4 "></v-divider>
 
           <div class="mt-2">
             <v-btn outlined @click="click1">
@@ -269,7 +256,14 @@ export default {
         photo3: this.img3,
         //_id: this.$store.state.user.uid,
         //itemid: this.thisitem.id,
-      }, id: { username: this.thisitem.creator, _id: this.$store.state.user.uid}}
+      }, id: { username: this.thisitem.creator, _id: this.$store.state.user.uid}};
+       databaseRef
+        .ref("ItemPhotoGallery/1").set(post) .then((response) => {
+          console.log(response);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
 
       databaseRef
         .ref("ItemPhotoGallery/" + this.thisitem.id)

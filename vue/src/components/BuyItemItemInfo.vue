@@ -16,7 +16,8 @@
               <v-icon small left> mdi-repeat </v-icon>{{ thisitem.title }}
             </p>
 
-            <p v-else class="text-capitalize subtitle-2 pa-2 text-left">  <v-icon small left>mdi-check-all </v-icon>
+            <p v-else class="text-capitalize subtitle-2 pa-2 text-left">
+              <v-icon small left>mdi-check-all </v-icon>
               {{ thisitem.title }}
             </p>
 
@@ -55,63 +56,101 @@
           </v-btn>
         </div>
         <div v-if="thisitem.creator != thisitem.seller">
-        <v-chip
-          v-if="
-            thisitem.shippingcost > 0 &&
-            thisitem.localpickup == false &&
-            thisitem.discount == 0
-          "
-          class="ma-1 caption"
-          label
-          color="primary lighten-2"
-          small
-        >
-          <v-icon small left> mdi-repeat </v-icon> <v-icon small left> mdi-plus </v-icon><v-icon small left> mdi-package-variant-closed </v-icon>
-          <v-chip dark color="primary">${{
-            Number(thisitem.estimationprice) + Number(thisitem.shippingcost)
-          }}</v-chip>
-        </v-chip>
- <v-chip
-          v-if="
-            thisitem.shippingcost > 0 &&
-            thisitem.localpickup == false &&
-            thisitem.discount > 0
-          "
-          class="ma-1 caption"
-          label
-          color="primary lighten-2"
-          small
-        >
-          <v-icon small left> mdi-repeat </v-icon><v-icon small left> mdi-plus </v-icon><v-icon small left> mdi-package-variant-closed </v-icon>  <v-icon small left> mdi-minus </v-icon><v-icon small left> mdi-label-percent</v-icon>
-          <v-chip dark color="primary">${{
-            Number(thisitem.estimationprice) + Number(thisitem.shippingcost) - Number(thisitem.discount)
-          }}</v-chip>
-        </v-chip>
-        <v-chip
-          v-if="thisitem.discount > 0 && thisitem.localpickup"
-          class="ma-1 caption"
-          label
-          color="primary lighten-2"
-          small
-        >
-          <v-icon small left> mdi-repeat </v-icon> <v-icon small left> mdi-minus </v-icon><v-icon small left> mdi-label-percent</v-icon>
-       <v-chip dark color="primary">   ${{ thisitem.estimationprice - thisitem.discount }}</v-chip>
-        </v-chip>
-</div>
+          <v-chip
+            v-if="
+              thisitem.shippingcost > 0 &&
+              thisitem.localpickup == false &&
+              thisitem.discount == 0
+            "
+            class="ma-1 pl-0 caption"
+            label
+            color="primary lighten-2"
+            small
+          >
+            <v-chip dark color="primary"
+              >${{
+                Number(thisitem.estimationprice) + Number(thisitem.shippingcost)
+              }}</v-chip
+            ><v-icon small left> mdi-repeat </v-icon>
+            <v-icon small left> mdi-plus </v-icon
+            ><v-icon small left> mdi-package-variant-closed </v-icon>
+          </v-chip>
+          <v-chip
+            v-if="
+              thisitem.shippingcost > 0 &&
+              thisitem.localpickup == false &&
+              thisitem.discount > 0
+            "
+            class="ma-1 pl-0 caption"
+            color="primary lighten-2"
+            small
+          >
+            <v-chip label dark color="primary"
+              >${{
+                Number(thisitem.estimationprice) +
+                Number(thisitem.shippingcost) -
+                Number(thisitem.discount)
+              }}</v-chip
+            >
+            <v-icon small right> mdi-repeat </v-icon
+            ><v-icon small right> mdi-plus </v-icon
+            ><v-icon small right> mdi-package-variant-closed </v-icon>
+            <v-icon small right> mdi-minus </v-icon
+            ><v-icon small right> mdi-label-percent</v-icon>
+          </v-chip>
+          <v-chip
+            v-if="thisitem.discount > 0 && thisitem.localpickup"
+            class="ma-1 pl-0 caption"
+            
+            color="primary lighten-2"
+            small
+          >
+            <v-chip  label dark color="primary">
+              ${{ thisitem.estimationprice - thisitem.discount }}</v-chip
+            >
+            <v-icon small right> mdi-repeat </v-icon>
+            <v-icon small right> mdi-minus </v-icon
+            ><v-icon small right> mdi-label-percent</v-icon>
+          </v-chip>
+        </div>
         <div v-else>
-          <span v-if="thisitem.localpickup == false"> <v-chip class="ma-1 caption" label color="primary lighten-1" small>
-            <v-icon left> mdi-check-all </v-icon><v-icon small left> mdi-plus </v-icon><v-icon small left> mdi-package-variant-closed </v-icon>
-          <v-chip dark color="primary">  ${{ Number(thisitem.estimationprice) + Number(thisitem.shippingcost) }}</v-chip>
-          </v-chip></span>
-         
+          <span v-if="thisitem.localpickup == false">
+            <v-chip class="ma-1 caption"  color="primary lighten-1" small>
+              <v-chip label dark color="primary">
+                ${{
+                  Number(thisitem.estimationprice) +
+                  Number(thisitem.shippingcost)
+                }}</v-chip
+              >
+              <v-icon right> mdi-check-all </v-icon
+              ><v-icon small right> mdi-plus </v-icon
+              ><v-icon small right> mdi-package-variant-closed </v-icon>
+            </v-chip></span
+          >
+
           <span v-else>
-          <v-chip class="ma-1 caption" label color="primary lighten-1" small>
-            <v-icon left> mdi-check-all </v-icon>
-           <v-chip dark color="primary"> ${{ thisitem.estimationprice }}</v-chip>
-          </v-chip></span>
-          <v-chip class="ma-1 caption" label  dark color="green lighten-2" small>
-           <v-icon small left> mdi-plus </v-icon> <v-icon small left> mdi-hand-heart </v-icon>
-            ${{ (thisitem.estimationprice * 0.05).toFixed(0) }}
+            <v-chip
+              class="ma-1 pl-0 caption"
+              
+              color="primary lighten-1"
+              small
+            >
+              <v-chip label dark color="primary">
+                ${{ thisitem.estimationprice }}</v-chip
+              >
+              <v-icon right> mdi-check-all </v-icon>
+            </v-chip></span
+          >
+          <v-chip
+            class="ma-1 pl-0 caption"
+            
+            dark
+            color="green lighten-2"
+            small
+          ><v-chip dark label color="green">
+            ${{ (thisitem.estimationprice * 0.05).toFixed(0)
+            }}</v-chip>
+            <v-icon small right> mdi-hand-heart </v-icon>
           </v-chip>
         </div>
 
@@ -292,8 +331,6 @@ export default {
   },
 
   methods: {
-  
-
     getItemPhotos() {
       if (this.showinfo && this.imageurl != "") {
         this.loadingitem = true;
