@@ -91,10 +91,10 @@
           </span>
             
             
-            
+            <v-divider class="ma-6" />
              </div>
            
-<v-divider class="ma-4" />
+
            
    <div class="pa-2 mx-auto font-weight-thin">
          <p
@@ -106,7 +106,7 @@
               
               class="pa-2 font-weight-light text-left"
             >Answer: </p>  <p> Provide prepayment using the buttons at the detailed page of an item. If you provided prepayment for an item that has shipping cost, the item seller will complete the item transfer (once they indicate the item has shipped). Else, If you choose to provide prepayment for a 'pickup' item, you complete the item transfer (under Account) when you are meeting up with the seller or at anytime to transfer the digital ownership of the item.
-<v-divider class="ma-4" />
+<v-divider class="ma-6" />
                   <p
               
               class="font-weight-medium pa-2 text-left"
@@ -117,7 +117,7 @@
               class="pa-2 font-weight-light text-left"
             >Answer: </p> 
             <p> Selling any item is free at any time. No costs never nada. </p>
-<v-divider class="ma-4" />
+<v-divider class="ma-6" />
             <p
               
               class="font-weight-medium pa-2 text-left"
@@ -129,7 +129,7 @@
               class="pa-2 font-weight-light text-left"
             >Answer: </p> 
             <p> Send a message to the seller at the details page of the item. If you are a seller, message the buyer at the item actions under Account. Alternatively, in messages you can add any address signed up to the marketplace.
-<v-divider class="ma-4" />
+<v-divider class="ma-6" />
   <p
               
               class="font-weight-medium pa-2 text-left"

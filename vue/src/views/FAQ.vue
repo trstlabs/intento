@@ -32,7 +32,7 @@
               <v-sheet min-height="70vh" rounded="lg" elevation="6">
                 <div>
                   <v-row class="pt-6 ml-8">
-     <v-btn icon plain to="/buy"> <v-icon >
+     <v-btn  plain to="/buy"> <v-icon >
         mdi-arrow-left
       </v-icon> To Shop</v-btn></v-row>
                   <info/>

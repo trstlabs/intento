@@ -2,7 +2,7 @@
   <div class="pa-2 mx-lg-auto">
     <div>
      
-      <h2 class="headline pa-4 text-center">Shop All ({{items.length}}) </h2> 
+      <h2 class="headline pa-4 text-center">Shop All </h2> 
       <div>
         <v-container>
           
@@ -25,7 +25,7 @@
         <div v-if="items.length > 0">
              <v-btn icon x-small to="/faq"
                 ><v-icon >mdi-information-outline</v-icon>
-              </v-btn> 
+              </v-btn> <span class="caption" v-if="items[1]"> {{items.length}} items found</span>
           <div v-for="item in items" :key="item.id">
             <div>
               <div>

@@ -54,7 +54,19 @@
               prefix="$"
               suffix="TPP"
             ></v-text-field> </v-col> <v-col> <v-btn icon @click="updatePriceMax"><v-icon>mdi-check</v-icon> </v-btn> <v-btn icon @click="clearList"><v-icon>mdi-cancel</v-icon> </v-btn> </v-col></v-row>
-    </v-card>
+   
+    <v-text-field  solo clearable
+    prepend-inner-icon="mdi-magnify"
+     class="rounded-lg" type="text"
+        placeholder="Search description..."
+        v-model.trim="input"
+        v-on:input="search()"
+        ref="input"
+      
+       > 
+
+    </v-text-field>
+     </v-card>
  
  <v-divider class="ma-4"/>
   </div>
@@ -73,6 +85,7 @@ export default {
       selectedFilter: "",
       minPrice: 0,
       maxPrice: 0,
+      input: '',
       
 
   };
@@ -120,8 +133,13 @@ updatePriceMin() {
      
      this.$store.dispatch("setBuyItemList");},
 
-
+ search() {
+      let rs = this.$store.state.data.item.filter(item => !item.buyer && item.transferable === true && item.description.toLowerCase().includes(this.input)
+      );
+      this.$store.commit("updateBuyItemList", rs);
     },
+    },
+   
 
     
 

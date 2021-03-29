@@ -179,8 +179,8 @@ export default new Vuex.Store({
     
      if (!!input) { const rs = state.data.item.filter(item => item.seller === input
       ) || [];  
-      console.log("LIST")
-      console.log(rs)
+     // console.log("LIST")
+    //  console.log(rs)
       commit("setSellerItemList", rs);
      }
     },
@@ -188,7 +188,7 @@ export default new Vuex.Store({
     async setCreatorItemList({ commit, state }, input) {
       if (!!input) { const rs = state.data.item.filter(item => item.creator === input
        ) || [];
-       console.log(rs)
+      // console.log(rs)
        commit("setCreatorItemList", rs);
       }
      },
@@ -304,7 +304,7 @@ export default new Vuex.Store({
         return frequency[b] - frequency[a];
       });
 
-      console.log(merged)
+      //console.log(merged)
       /*console.log(rs)
       console.log(merged)
       console.log(uniques)
@@ -332,13 +332,13 @@ export default new Vuex.Store({
       if (sorted[0]) {
         commit("set", { key: 'locationList', value: sorted } );
       }else{
-        console.log(merged)
+        //console.log(merged)
         commit("set", { key: 'locationList', value: merged } );
       }
-      console.log(rs)
-      console.log(merged)
-      console.log(uniques)
-      console.log(sorted)
+     // console.log(rs)
+      //console.log(merged)
+     // console.log(uniques)
+     // console.log(sorted)
       
     },
 
@@ -347,9 +347,9 @@ export default new Vuex.Store({
     async setToEstimateList({ commit, state }) {
       const A = state.data.item.filter(item => item.estimationprice < 1 && item.status == '');
       const B = state.estimatorItemList;
-      //const rsEIL = state.data.estimator.filter(estimator => estimator.estimator === state.client.anyValidAddress);
-      console.log(A);
-      console.log(B);
+     
+      //console.log(A);
+      //console.log(B);
       //console.log(A.filter(a => !B.map(b=>b.id).includes(a.id)));
       const rs = A.filter(a => !B.map(b => b.itemid).includes(a.id));
 

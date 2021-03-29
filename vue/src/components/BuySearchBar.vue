@@ -30,7 +30,7 @@
         v-model.trim="input"
         v-on:input="search()"
         ref="input"
-        @blur="closeSearchBar()"
+      
        > 
 
     </v-text-field>
@@ -48,9 +48,9 @@ export default {
       this.$store.dispatch("updateBuyItemList", this.input);
       //this.$store.commit("SET_LIST_SEARCH", this.input);
     },
-    closeSearchBar() {
+    //closeSearchBar() {
       //this.$store.commit("SET_DISPLAY_SEARCH_LIST", false);
-    },
+    //},
   },
 };
 </script>
