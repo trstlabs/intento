@@ -406,7 +406,7 @@ export default {
       const data = snapshot.val();
 
       if (data != null && data.photo != null) {
-        console.log(data.photo);
+       // console.log(data.photo);
         this.photos = data;
         this.imageurl = data.photo;
         this.loadingitem = false;
