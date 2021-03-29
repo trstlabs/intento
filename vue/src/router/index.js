@@ -89,6 +89,15 @@ const routes = [
       title: 'Explore - Marketplace'},
   },
   {
+    path: "/faq",
+
+    component: () => 
+        import(/* webpackChunkName: "faq" */ '@/views/FAQ'), 
+   
+    meta: {
+      title: 'FAQ - Marketplace'},
+  },
+  {
     path: '*',
     //name: 'catchAll',
     component: () => 

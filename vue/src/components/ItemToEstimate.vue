@@ -1,4 +1,4 @@
-<template>
+<template >
   <div class="pa-2 mx-lg-auto">
     <div class="text-center pa-12" v-if="!showinfo">
       <v-btn :ripple="false" text @click="getItemToEstimate"
@@ -25,7 +25,7 @@
       </v-carousel>
     </div>
 
-    <v-card
+    <v-card 
       class="pa-2 mt-2"
       elevation="2"
       rounded="lg"
@@ -148,7 +148,7 @@
         </v-chip>
       </div>
 
-      <v-divider></v-divider>
+       <v-divider class="mx-4 " />
 
       <div class="mx-auto">
         <v-row>
@@ -156,26 +156,32 @@
             <v-dialog transition="dialog-bottom-transition" max-width="600">
               <template v-slot:activator="{ on, attrs }">
                 <span v-bind="attrs" v-on="on"
-                  ><p class="text-center caption pa-4">To me, it's worth</p>
+                
+                ><v-icon small>mdi-information-outline</v-icon>
+           
+                  <p class="text-center caption ">To me, it's worth</p>
                 </span>
               </template>
               <template v-slot:default="dialog">
                 <v-card>
-                  <v-toolbar color="default">Rules</v-toolbar>
+                  <v-toolbar color="default">Info</v-toolbar>
                   <v-card-text>
                     <div class="text-p pt-4">
-                      - Earn ~3% of the item value when you are the best
-                      estimator.
+                      Earn ~5% of the item value when you are the best
+                      estimator. Exept when:
                     </div>
-                    <div class="text-p pa-2">
+                    <div class="caption pa-2">
                       - Your deposit is lost when you are the lowest estimator
-                      and the final estimation price is not acceoted by the
+                      and the final estimation price is not accepted by the
                       seller.
                     </div>
-                    <div class="text-p pa-2">
+                    <div class="caption pa-2">
                       - Your deposit is lost when you are the highest estimator
                       and the item is not bought by the buyer that provided
                       prepayment.
+                    </div>
+                     <div class="text-p pt-4">
+                      Good luck and have fun!
                     </div>
                   </v-card-text>
                   <v-card-actions class="justify-end">
@@ -197,7 +203,7 @@
           </v-col>
         </v-row>
       </div>
-      <v-divider></v-divider>
+      <v-divider class="mx-4" />
       <v-card elevation="0">
         <div class="pa-2">
           <div>
@@ -667,7 +673,8 @@ value: 0,
     async getItemToEstimate() {
       if (!this.hasAddress) {
         alert("Sign in first");
-        return (this.showinfo = false);
+        window.location.reload()
+        //return (this.showinfo = false);
       }
       let input = this.$store.state.account.address;
       
@@ -684,6 +691,7 @@ value: 0,
     },
 
     async getNewItemByIndex() {
+      this.loadingitem = true;
       let oldindex = this.index;
       if (oldindex >= 0 && oldindex < this.items.length - 1) {
         this.index = oldindex + 1;
@@ -714,9 +722,10 @@ value: 0,
           this.loadingitem = false;
         }else{
           this.photos = []
+          this.getNewItemByIndex()
         }
       });
-      this.loadingitem = false;
+      //this.loadingitem = false;
       this.interested = false;
       this.flight = false;
     },

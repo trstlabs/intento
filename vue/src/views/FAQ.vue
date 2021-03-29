@@ -4,7 +4,7 @@
   <div>
     <v-app>
       
-      <v-main :class="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-3' " >
+      <v-main :class="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-3'">
        <!-- <v-alert
       dense
       type="warning"
@@ -31,7 +31,13 @@
             <v-col cols="12" sm="8" class="mx-auto pa-0">
               <v-sheet min-height="70vh" rounded="lg" elevation="6">
                 <div>
-                  <item-to-estimate />
+                  <v-row class="pt-6 ml-8">
+     <v-btn icon plain to="/buy"> <v-icon >
+        mdi-arrow-left
+      </v-icon> To Shop</v-btn></v-row>
+                  <info/>
+
+
                 </div>
               </v-sheet>
             </v-col>
@@ -47,23 +53,3 @@
     </v-app>
   </div>
 </template>
-
-<script>
-
-export default {
-
-  data() {
-    return {
-
-    };
-  },
-
-  
-
-  methods: { 
-
-  
-  }
-
-}
-</script>

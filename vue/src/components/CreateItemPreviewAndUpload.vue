@@ -111,9 +111,10 @@
           </div>
           <v-divider class="ma-4 "></v-divider>
 
-          <div class="mt-2">
-            <v-btn outlined @click="click1">
-              <v-icon left> mdi-image </v-icon>Primary
+          <div class="mt-2 text-center">
+            <p class="font-weight-medium headline"> TPP ID: {{thisitem.id}}  </p><p class="caption"> Tip: Show your ID on your photos! This way everyone knows the information is correct :) </p>
+            <v-btn block large outlined @click="click1" color="primary">
+              <v-icon large left> mdi-plus </v-icon>Add Photos
             </v-btn>
             <input
               type="file"
@@ -124,16 +125,16 @@
             />
           </div>
           <div v-if="img1 != null">
-            <v-card class="text-center mt-4">
+            <v-card class="text-center mt-4 elevation-4">
               <v-card-title>Primary photo</v-card-title>
               <v-img class="rounded contain" :src="img1" />
 
               <br />
             </v-card>
           </div>
-          <div class="mt-2">
-            <v-btn outlined @click="click2">
-              <v-icon left> mdi-image </v-icon>Additonal
+          <div v-if="img1 != null" class="mt-2" >
+            <v-btn outlined @click="click2" color="primary"><v-icon large left> mdi-plus </v-icon>
+             <span v-if="img2"> Change photo 2 </span> <span v-else>   Additonal</span>
             </v-btn>
             <input
               type="file"
@@ -145,7 +146,7 @@
           </div>
           <div v-if="img2 != null">
             <v-card class="text-center mt-4">
-              <v-card-title>Photo 2</v-card-title>
+            
 
               <v-img class="rounded contain" :src="img2" />
 
@@ -153,10 +154,8 @@
             </v-card>
           </div>
           <div class="mt-2">
-            <v-btn outlined v-if="imageData2" @click="click3">
-              <v-icon left> mdi-image </v-icon>
-              Additonal
-            </v-btn>
+            <v-btn outlined v-if="imageData2" @click="click3" color="primary"><v-icon large left> mdi-plus </v-icon>
+               <span v-if="img3"> Change photo 3 </span> <span v-else>   Additonal</span></v-btn>
             <input
               type="file"
               ref="input3"

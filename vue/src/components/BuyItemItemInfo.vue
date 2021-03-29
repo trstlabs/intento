@@ -39,7 +39,7 @@
         </v-row>
       </div>
       <v-card-actions>
-        <v-btn
+        <v-btn 
           color="blue"
           text
           @click="(showinfo = !showinfo), getItemPhotos()"
@@ -47,7 +47,7 @@
           Info
         </v-btn>
         <div>
-          <v-btn
+          <v-btn 
             color="blue"
             :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
             text
@@ -56,7 +56,7 @@
           </v-btn>
         </div>
         <div v-if="thisitem.creator != thisitem.seller">
-          <v-chip
+        <!-- <v-chip
             v-if="
               thisitem.shippingcost > 0 &&
               thisitem.localpickup == false &&
@@ -67,15 +67,48 @@
             color="primary lighten-2"
             small
           >
-            <v-chip dark color="primary"
+            <v-chip dark color="primary"  
               >${{
                 Number(thisitem.estimationprice) + Number(thisitem.shippingcost)
               }}</v-chip
             ><v-icon small left> mdi-repeat </v-icon>
             <v-icon small left> mdi-plus </v-icon
             ><v-icon small left> mdi-package-variant-closed </v-icon>
+          </v-chip>-->
+          
+           <span>
+   <v-chip  v-if="
+               thisitem.shippingcost > 0 &&
+              thisitem.localpickup == false &&
+              thisitem.discount == 0
+            " small dark color="primary" class="pr-0" :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
+              >
+              <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
+              <span>
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>${{
+                 Number(thisitem.estimationprice) + Number(thisitem.shippingcost)
+              }} </span>
+              </span>
+</v-hover> 
+
+
+                  <v-chip label
+           
+            class="pl-0 caption"
+            color="primary lighten-2"
+            
+          ><v-icon small left> mdi-repeat </v-icon>
+            <v-icon small left> mdi-plus </v-icon
+            ><v-icon small left> mdi-package-variant-closed </v-icon>
           </v-chip>
-          <v-chip
+          </v-chip
+            >
+          </span>
+
+<!--
+
+          <v-hover v-slot="{ hover }" close-delay="200"  > <span>
+          <v-chip  :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
             v-if="
               thisitem.shippingcost > 0 &&
               thisitem.localpickup == false &&
@@ -86,19 +119,54 @@
             small
           >
             <v-chip label dark color="primary"
-              >${{
+              ><span v-if="hover" > Buy Now </span><span v-else>${{
                 Number(thisitem.estimationprice) +
                 Number(thisitem.shippingcost) -
                 Number(thisitem.discount)
-              }}</v-chip
+              }}</span></v-chip
             >
-            <v-icon small right> mdi-repeat </v-icon
-            ><v-icon small right> mdi-plus </v-icon
-            ><v-icon small right> mdi-package-variant-closed </v-icon>
+            <v-icon small  right> mdi-repeat </v-icon
+            ><v-icon small  right> mdi-plus </v-icon
+            ><v-icon small  right> mdi-package-variant-closed </v-icon>
+            <v-icon small right> mdi-minus </v-icon
+            ><v-icon small right> mdi-label-percent</v-icon>
+          </v-chip></span></v-hover> 
+          -->
+ <span>
+   <v-chip  v-if="
+              thisitem.shippingcost > 0 &&
+              thisitem.localpickup == false &&
+              thisitem.discount > 0
+            " small dark color="primary" class="pr-0" :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
+              >
+              <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
+              <span>
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>${{
+                Number(thisitem.estimationprice) +
+                Number(thisitem.shippingcost) -
+                Number(thisitem.discount)
+              }} </span>
+              </span>
+</v-hover> 
+
+
+                  <v-chip label
+           
+            class="pl-0 caption"
+            color="primary lighten-2"
+            
+          ><v-icon small  right> mdi-repeat </v-icon
+            ><v-icon small  right> mdi-plus </v-icon
+            ><v-icon small  right> mdi-package-variant-closed </v-icon>
             <v-icon small right> mdi-minus </v-icon
             ><v-icon small right> mdi-label-percent</v-icon>
           </v-chip>
-          <v-chip
+          </v-chip
+            >
+          </span>
+
+
+        <!--  <v-chip
             v-if="thisitem.discount > 0 && thisitem.localpickup"
             class="ma-1 pl-0 caption"
             
@@ -111,11 +179,39 @@
             <v-icon small right> mdi-repeat </v-icon>
             <v-icon small right> mdi-minus </v-icon
             ><v-icon small right> mdi-label-percent</v-icon>
+          </v-chip>-->
+          <span>
+   <v-chip  v-if="thisitem.discount > 0 && thisitem.localpickup"
+             small dark color="primary" class="pr-0" :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
+              >
+              <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
+              <span>
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>${{
+                thisitem.estimationprice - thisitem.discount
+              }} </span>
+              </span>
+</v-hover> 
+
+
+                  <v-chip label
+           
+            class="pl-0 caption"
+            color="primary lighten-2"
+            
+          ><v-icon small right> mdi-repeat </v-icon>
+            <v-icon small right> mdi-minus </v-icon
+            ><v-icon small right> mdi-label-percent</v-icon>
           </v-chip>
+          </v-chip
+            >
+          </span>
+
         </div>
         <div v-else>
+
+          
           <span v-if="thisitem.localpickup == false">
-            <v-chip class="ma-1 caption"  color="primary lighten-1" small>
+            <!--<v-chip class="ma-1 caption"  color="primary lighten-1" small>
               <v-chip label dark color="primary">
                 ${{
                   Number(thisitem.estimationprice) +
@@ -125,10 +221,39 @@
               <v-icon right> mdi-check-all </v-icon
               ><v-icon small right> mdi-plus </v-icon
               ><v-icon small right> mdi-package-variant-closed </v-icon>
-            </v-chip></span
+            </v-chip>-->
+          
+   <v-chip  
+             small dark color="primary" class="pr-0" :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
+              >
+              <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
+              <span>
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>${{
+                Number(thisitem.estimationprice) +
+                  Number(thisitem.shippingcost)
+              }} </span>
+              </span>
+</v-hover> 
+
+
+                  <v-chip label
+           
+            class="pl-0 caption"
+            color="primary lighten-1"
+            
+          > <v-icon right> mdi-check-all </v-icon
+              ><v-icon small right> mdi-plus </v-icon
+              ><v-icon small right> mdi-package-variant-closed </v-icon>
+          </v-chip>
+          </v-chip
+            >
+     
+            
+            </span
           >
 
           <span v-else>
+            <!--
             <v-chip
               class="ma-1 pl-0 caption"
               
@@ -139,7 +264,31 @@
                 ${{ thisitem.estimationprice }}</v-chip
               >
               <v-icon right> mdi-check-all </v-icon>
-            </v-chip></span
+            </v-chip>-->
+            <v-chip  
+             small dark color="primary" class="pr-0" :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
+              >
+              <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
+              <span>
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>${{
+                thisitem.estimationprice
+              }} </span>
+              </span>
+</v-hover> 
+
+
+                  <v-chip label
+           
+            class="pl-0 caption"
+            color="primary lighten-1"
+            
+          > <v-icon right> mdi-check-all </v-icon>
+          
+          </v-chip>
+          </v-chip
+            >
+            
+            </span
           >
           <v-chip
             class="ma-1 pl-0 caption"
