@@ -323,7 +323,7 @@ func (msg *MsgItemResell) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
 	}
-	if msg.Note > 240 {
+	if len(msg.Note) > 240 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "note too long")
 	}
 	if len(msg.Shippingregion) > 6  {
