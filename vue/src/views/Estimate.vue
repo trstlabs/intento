@@ -4,7 +4,7 @@
   <div>
     <v-app>
       
-      <v-main :class="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-3' " >
+      <v-main :class="($vuetify.theme.dark) ? 'grey darken-4' : 'secondary lighten-2' " >
        <!-- <v-alert
       dense
       type="warning"

@@ -222,7 +222,7 @@ Confirm sign in by clicking the link sent to your Google account's email on this
           >
             <v-icon>mdi-arrow-up</v-icon>
           </v-btn>
-         <v-footer class="text-center caption"  padless>
+         <v-footer class="text-center caption"  color="secondary lighten-2" padless>
     <v-col>{{ new Date().getFullYear() }} — <strong>© Trust Price Protocol</strong>
     </v-col>
   </v-footer>
