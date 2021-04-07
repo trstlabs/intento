@@ -225,9 +225,13 @@ export default new Vuex.Store({
       commit("setBuyItemList", rs);
     },
     async updateBuyItemList({ commit, state }, input) {
-      if (!!input) {  const rs = state.data.item.filter(item => !item.buyer && item.transferable === true && item.title.toLowerCase().includes(input)
-      );
-      commit("updateBuyItemList", rs);}
+      if (input != "") {  let rs = state.data.item.filter(item => !item.buyer && item.transferable === true && item.title.toLowerCase().includes(input)
+      )
+      commit("updateBuyItemList", rs);}else{const rs = state.data.item.filter(item => !item.buyer && item.transferable === true
+        ) || [];
+        commit("setBuyItemList", rs)
+
+      }
     },
 
     async filterBuyItemList({ commit }, input) {

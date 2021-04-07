@@ -48,7 +48,7 @@
                 <span class="caption">
                   Check your balance. If the item is transferred, you will be
                   rewarded  
-                ${{ (thisitem.estimationprice*0.05).toFixed(0)}} TPP.</span
+                ${{ (thisitem.estimationprice*0.05).toFixed(0)}}<v-icon small right>$vuetify.icons.custom</v-icon>  .</span
                 >
               </app-text>
               <app-text
@@ -59,7 +59,7 @@
                 <v-icon left> mdi-account-arrow-left </v-icon>
 
                 You are the lowest estimator.  <span v-if="!thisitem.estimationprice" class="caption">If the item owner does not accept
-                the estimation price, you lose ${{ thisitem.depositamount}} TPP.</span>
+                the estimation price, you lose ${{ thisitem.depositamount}}<v-icon small right>$vuetify.icons.custom</v-icon>  .</span>
               </app-text>
               <app-text
                 class="mt-1"
@@ -68,7 +68,7 @@
               >
                 <v-icon left> mdi-account-arrow-right </v-icon>
                 You are the highest estimator.<span class="caption"  v-if="thisitem.status == ''"> If the item is not transferred,
-                you lose ${{ thisitem.depositamount}} TPP.</span>
+                you lose ${{ thisitem.depositamount }}<v-icon small right>$vuetify.icons.custom</v-icon>  .</span>
               </app-text>
             </v-col>
 

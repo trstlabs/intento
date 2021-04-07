@@ -57,8 +57,8 @@
               <v-row v-if="thisitem.creator == thisitem.seller">
                 <v-col>
                   <v-btn
-                    block
-                    color="primary"
+                    block 
+                    color="primary lighten-1"
                     :disabled="!thisitem.localpickup"
                     @click="
                       submit(thisitem.estimationprice),
@@ -66,9 +66,9 @@
                         getThisItem
                     "
                     ><div v-if="!flightLP">
-                      Buy for ${{ thisitem.estimationprice }} TPP<v-icon right>
+                    <v-icon left >
                         mdi-check-all
-                      </v-icon>
+                      </v-icon>  Buy for {{ thisitem.estimationprice }}<v-icon small right>$vuetify.icons.custom</v-icon> 
                     </div>
                     <div v-if="flightLP">
                       <v-progress-linear
@@ -415,7 +415,7 @@
               outlined
             >
               <v-icon left> mdi-package-variant-closed </v-icon>
-              Added Cost: ${{ thisitem.shippingcost }} TPP
+              Added Cost: ${{ thisitem.shippingcost}} <v-icon small right>$vuetify.icons.custom</v-icon>  
             </v-chip>
 
             <v-chip
@@ -425,7 +425,7 @@
               outlined
             >
               <v-icon left> mdi-label-percent </v-icon>
-              Discount: ${{ thisitem.discount }} TPP
+              Discount: ${{ thisitem.discount}} <v-icon small right>$vuetify.icons.custom</v-icon>  
             </v-chip>
             <v-chip
               outlined
@@ -503,7 +503,7 @@
                   <a @click="createRoom">{{ thisitem.seller }}. </a>
                 </span>
                 <span v-if="thisitem.discount > 0">
-                  Reseller gives a discount of ${{ thisitem.discount }} TPP on
+                  Reseller gives a discount of ${{ thisitem.discount}}</v-icon>  on
                   the original selling price of ${{
                     thisitem.estimationprice
                   }}TPP.</span

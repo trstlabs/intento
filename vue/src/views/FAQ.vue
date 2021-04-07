@@ -34,7 +34,7 @@
                   <v-row class="pt-6 ml-8">
      <v-btn  plain to="/buy"> <v-icon >
         mdi-arrow-left
-      </v-icon> To Shop</v-btn></v-row>
+      </v-icon> To Shop</v-btn></v-row>   <v-img height="350px" src="img/design/market.png" ></v-img>
                   <info/>
 
 

@@ -268,7 +268,7 @@
                   v-model="fields.shippingcost"
                   
                 ><template v-slot:thumb-label="item">
-            {{ item.value }} TPP
+            {{ item.value }}<v-icon small right>$vuetify.icons.custom</v-icon>  
           </template> </v-slider>
 </v-row> 
  <v-row>    
@@ -294,7 +294,7 @@
                   v-model="fields.discount"
                   
                 ><template v-slot:thumb-label="item">
-            {{ item.value }} TPP
+            {{ item.value }}<v-icon small right>$vuetify.icons.custom</v-icon>  
           </template> </v-slider>
 </v-row> 
  <v-row  > <v-col>  <v-row>    

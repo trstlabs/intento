@@ -32,7 +32,7 @@
         <div class="card">
           <v-row class="justify-center pa-4">
           <v-icon left  large>
-        mdi-account-circle
+        mdi-account
       </v-icon></v-row>
           <div class="card__row">
             
@@ -43,12 +43,12 @@
           </div>
           <div class="card__row caption font-weight-light justify-center">
             <span>
-              You have
+              You have 
               <span
                 class="coin__amount"
                 v-for="b in balances" :key="b.denom"
                
-                >{{numberFormat( b.amount )}} {{ b.denom }}</span
+                >{{numberFormat( b.amount )}}<span v-if="b.denom === 'tpp'"><v-icon small right>$vuetify.icons.custom</v-icon> </span> <span v-else>{{ b.denom }}</span> </span
               >
               on your balance.
             </span>

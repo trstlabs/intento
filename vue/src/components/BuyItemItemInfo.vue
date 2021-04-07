@@ -68,7 +68,7 @@
             small
           >
             <v-chip dark color="primary"  
-              >${{
+              ><v-icon small right>$vuetify.icons.custom</v-icon>{{
                 Number(thisitem.estimationprice) + Number(thisitem.shippingcost)
               }}</v-chip
             ><v-icon small left> mdi-repeat </v-icon>
@@ -85,7 +85,7 @@
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>${{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small right>$vuetify.icons.custom</v-icon>{{
                  Number(thisitem.estimationprice) + Number(thisitem.shippingcost)
               }} </span>
               </span>
@@ -119,7 +119,7 @@
             small
           >
             <v-chip label dark color="primary"
-              ><span v-if="hover" > Buy Now </span><span v-else>${{
+              ><span v-if="hover" > Buy Now </span><span v-else><v-icon small right>$vuetify.icons.custom</v-icon>{{
                 Number(thisitem.estimationprice) +
                 Number(thisitem.shippingcost) -
                 Number(thisitem.discount)
@@ -141,7 +141,7 @@
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>${{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small right>$vuetify.icons.custom</v-icon>{{
                 Number(thisitem.estimationprice) +
                 Number(thisitem.shippingcost) -
                 Number(thisitem.discount)
@@ -174,7 +174,7 @@
             small
           >
             <v-chip  label dark color="primary">
-              ${{ thisitem.estimationprice - thisitem.discount }}</v-chip
+              <v-icon small right>$vuetify.icons.custom</v-icon>{{ thisitem.estimationprice - thisitem.discount }}</v-chip
             >
             <v-icon small right> mdi-repeat </v-icon>
             <v-icon small right> mdi-minus </v-icon
@@ -186,7 +186,7 @@
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>${{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small right>$vuetify.icons.custom</v-icon>{{
                 thisitem.estimationprice - thisitem.discount
               }} </span>
               </span>
@@ -213,7 +213,7 @@
           <span v-if="thisitem.localpickup == false">
             <!--<v-chip class="ma-1 caption"  color="primary lighten-1" small>
               <v-chip label dark color="primary">
-                ${{
+                <v-icon small right>$vuetify.icons.custom</v-icon>{{
                   Number(thisitem.estimationprice) +
                   Number(thisitem.shippingcost)
                 }}</v-chip
@@ -228,7 +228,7 @@
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>${{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small right>$vuetify.icons.custom</v-icon>{{
                 Number(thisitem.estimationprice) +
                   Number(thisitem.shippingcost)
               }} </span>
@@ -261,18 +261,18 @@
               small
             >
               <v-chip label dark color="primary">
-                ${{ thisitem.estimationprice }}</v-chip
+                <v-icon small right>$vuetify.icons.custom</v-icon>{{ thisitem.estimationprice }}</v-chip
               >
               <v-icon right> mdi-check-all </v-icon>
             </v-chip>-->
             <v-chip  
-             small dark color="primary" class="pr-0" :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
+             small dark color="primary lighten-1" class="pr-0" :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>${{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-3 caption" v-else>{{
                 thisitem.estimationprice
-              }} </span>
+              }}<v-icon small right>$vuetify.icons.custom</v-icon></span>
               </span>
 </v-hover> 
 
@@ -280,7 +280,7 @@
                   <v-chip label
            
             class="pl-0 caption"
-            color="primary lighten-1"
+            color="primary"
             
           > <v-icon right> mdi-check-all </v-icon>
           
@@ -297,8 +297,8 @@
             color="green lighten-2"
             small
           ><v-chip dark label color="green">
-            ${{ (thisitem.estimationprice * 0.05).toFixed(0)
-            }}</v-chip>
+            {{ (thisitem.estimationprice * 0.05).toFixed(0)
+            }}<v-icon small right>$vuetify.icons.custom</v-icon></v-chip>
             <v-icon small right> mdi-hand-heart </v-icon>
           </v-chip>
         </div>
@@ -388,7 +388,7 @@
                 medium
               >
                 <v-icon left> mdi-package-variant-closed </v-icon>
-                Shipping: ${{ thisitem.shippingcost }} TPP
+                Shipping: {{ thisitem.shippingcost}} <v-icon right small>$vuetify.icons.custom</v-icon> 
               </v-chip>
 
               <v-chip
@@ -399,7 +399,7 @@
                 medium
               >
                 <v-icon left> mdi-check-all </v-icon>
-                Price: ${{ thisitem.estimationprice }} TPP
+                Price: {{ thisitem.estimationprice}} <v-icon right small>$vuetify.icons.custom</v-icon> 
               </v-chip>
 
               <v-chip class="ma-1 caption" medium label outlined>

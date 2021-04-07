@@ -5,6 +5,7 @@
         <h2 v-bind="attrs" v-on="on" class="headline pa-4 text-center">
           Place a new item
         </h2>
+     
       </template>
 
       <v-card class="text-center">
@@ -45,7 +46,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
+<v-img  height="250" src="img/design/transfer.png" ></v-img>
     <v-stepper class="elevation-0" v-model="e1">
       <v-stepper-header>
         <v-stepper-step :complete="e1 > 1" step="1"> Data </v-stepper-step>
@@ -57,6 +58,7 @@
 
         <v-stepper-step :complete="e1 > 3" step="3"> Done! </v-stepper-step>
       </v-stepper-header>
+      
       <v-stepper-items>
         <div>
           <v-stepper-content step="1">
@@ -174,7 +176,7 @@
                     :thumb-size="70"
                     v-model="fields.shippingcost"
                     ><template v-slot:thumb-label="item">
-                      {{ item.value }} TPP
+                      {{ item.value}} <v-icon small right>$vuetify.icons.custom</v-icon>  
                     </template>
                   </v-slider>
                 </v-row>

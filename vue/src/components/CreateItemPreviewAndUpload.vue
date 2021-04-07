@@ -88,7 +88,7 @@
             medium
           >
             <v-icon left> mdi-package-variant-closed </v-icon>
-            Shipping cost: ${{ thisitem.shippingcost }} TPP
+            Shipping cost: ${{ thisitem.shippingcost }}<v-icon small right>$vuetify.icons.custom</v-icon>  
           </v-chip>
 
           <v-chip

@@ -36,8 +36,8 @@
 
              <v-col cols="12" sm="8" class="pa-0 mx-auto">
               <v-sheet min-height="70vh" rounded="lg" elevation="6">
-                <div>
-                   <v-tabs class="pt-2"
+                <div class="pt-2 mt-0"> 
+                   <v-tabs 
       
     fixed-tabs
       :dark="!!$vuetify.theme.dark"
@@ -65,7 +65,7 @@
         mdi-heart
       </v-icon> 
     </v-tab>
-  </v-tabs>
+  </v-tabs><v-img height="250" src="img/design/transfer.png" ></v-img>
                   <!--<faucet/>-->
                    
                   <item-list-seller v-if="created"/>

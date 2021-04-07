@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuetify from 'vuetify/lib'
 import 'vuetify/dist/vuetify.min.css'
+import IconCoin from '../components/IconCoin.vue' 
 
 Vue.use(Vuetify)
 
@@ -22,6 +23,13 @@ const opts = { iconfont: 'md',
             
      },
     
-   }, };
+   },  icons: {
+    values: {
+      custom: { // name of our custom icon
+        component: IconCoin, // our custom component
+      },
+    },
+   },
+  };
 
 export default new Vuetify(opts)

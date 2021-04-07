@@ -1,8 +1,9 @@
 <template>
-  <div class="pa-2 mx-lg-auto">
+  <div class="pa-0 pb-4 mx-lg-auto">
     <div>
      
-      <h2 class="headline pa-4 text-center">Shop All </h2> 
+      <h2 class="headline pa-4 mt-2 text-center">Shop All </h2> 
+    
       <div>
         <v-container>
           
@@ -23,6 +24,7 @@
         </v-container>
      
         <div v-if="items.length > 0">
+            <v-img height="350px" src="img/design/market.png" ></v-img>
              <v-btn icon x-small to="/faq"
                 ><v-icon >mdi-information-outline</v-icon>
               </v-btn> <span class="caption" v-if="items[1]"> {{items.length}} items found</span>

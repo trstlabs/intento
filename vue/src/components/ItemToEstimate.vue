@@ -197,8 +197,9 @@
               type="number"
               v-model="estimation"
               :disabled="lastitem"
-              prefix="$"
-              suffix="TPP"
+            suffix="TPP tokens"
+              prepend-icon="$vuetify.icons.custom"
+            
             ></v-text-field>
           </v-col>
         </v-row>
@@ -247,7 +248,7 @@
             <v-icon left> mdi-check </v-icon> Estimate item
           </div>
           <div v-if="!flight && valid && !timeout">
-            <v-icon left> mdi-check-all </v-icon> Estimate item 
+            <v-icon > mdi-check-bold </v-icon> Estimate item 
           </div>
           <div v-if="!timeout && !valid && flight">
             <v-icon left> mdi-check </v-icon> Estimate item
@@ -276,7 +277,7 @@
             </div>
 
              <div v-if="!flight && valid && !timeout">
-              <div class="text-right caption">Required deposit is {{item.depositamount}}TPP</div>
+              <div class="text-right caption">Deposit is {{item.depositamount}}<v-icon small right>$vuetify.icons.custom</v-icon> </div>
               
             </div>
         <!-- tag bar
@@ -395,6 +396,7 @@
       </v-row>
 
       <div class="pt-12 mx-lg-auto">
+        <v-img src="img/design/estimate.png" ></v-img>
         <v-select
           append-icon="mdi-tag-outline"
           dense
