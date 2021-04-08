@@ -46,7 +46,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-<v-img  height="250" src="img/design/transfer.png" ></v-img>
+<v-img  height="330" src="img/design/sell.png" ></v-img>
     <v-stepper class="elevation-0" v-model="e1">
       <v-stepper-header>
         <v-stepper-step :complete="e1 > 1" step="1"> Data </v-stepper-step>
@@ -173,10 +173,11 @@
                     suffix="tokens"
                     :persistent-hint="fields.shippingcost != 0"
                     placeholder="Shipping cost"
-                    :thumb-size="70"
+                    :thumb-size="60"
+                    thumb-color="primary lighten-1"
                     v-model="fields.shippingcost"
                     ><template v-slot:thumb-label="item">
-                      {{ item.value}} <v-icon small right>$vuetify.icons.custom</v-icon>  
+                      {{ item.value}} <v-icon  >$vuetify.icons.custom</v-icon>  
                     </template>
                   </v-slider>
                 </v-row>

@@ -65,7 +65,7 @@
         mdi-heart
       </v-icon> 
     </v-tab>
-  </v-tabs><v-img height="250" src="img/design/transfer.png" ></v-img>
+  </v-tabs><v-img height="200" src="img/design/transfer.png" ></v-img>
                   <!--<faucet/>-->
                    
                   <item-list-seller v-if="created"/>

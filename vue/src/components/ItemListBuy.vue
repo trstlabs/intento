@@ -4,10 +4,10 @@
      
       <h2 class="headline pa-4 mt-2 text-center">Shop All </h2> 
     
-      <div>
-        <v-container>
-          
-          <v-row>
+      <div>  <v-img height="320" src="img/design/market.png" ></v-img>  
+        <v-container class="pt-0">
+      
+          <v-row>  
             <v-col cols="12" sm="6">
               <buy-search-bar />
             </v-col>
@@ -18,16 +18,16 @@
               <v-btn text small fab @click="showAdvanced">
                 <v-icon dark> mdi-tune </v-icon>
               </v-btn>
-            </v-col>
-          </v-row>
+            </v-col>   
+          </v-row> 
           <buy-tag-bar :advanced="advanced" />
         </v-container>
      
-        <div v-if="items.length > 0">
-            <v-img height="350px" src="img/design/market.png" ></v-img>
+        <div v-if="items[0]">
+      
              <v-btn icon x-small to="/faq"
                 ><v-icon >mdi-information-outline</v-icon>
-              </v-btn> <span class="caption" v-if="items[1]"> {{items.length}} items found</span>
+              </v-btn> <span class="caption" v-if="items[1]"> {{items.length}} items available</span>
           <div v-for="item in items" :key="item.id">
             <div>
               <div>
