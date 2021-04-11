@@ -1,8 +1,8 @@
 <template>
-  <div class="pa-2 mx-lg-auto">
+  <div class="pa-2 mx-lg-auto"> 
     <v-dialog v-if="!fields.title" v-model="dialog" width="500">
       <template v-slot:activator="{ on, attrs }">
-        <h2 v-bind="attrs" v-on="on" class="headline pa-4 text-center">
+    <h2 v-bind="attrs" v-on="on" class="headline pt-2 font-weight-bold text-center ">
           Place a new item
         </h2>
      
@@ -26,7 +26,7 @@
 
     <v-dialog v-else v-model="dialog" width="500">
       <template v-slot:activator="{ on, attrs }">
-        <h2 v-bind="attrs" v-on="on" class="headline pa-4 text-center">
+        <h2 v-bind="attrs" v-on="on" class="headline  pt-2 font-weight-bold text-center">
           Place '{{ fields.title }}'
         </h2>
       </template>
@@ -45,8 +45,8 @@
           <v-btn color="primary" text @click="dialog = false"> Let's go </v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
-<v-img  height="330" src="img/design/sell.png" ></v-img>
+    </v-dialog> <v-img  height="330" src="img/design/sell.png" >
+</v-img>  
     <v-stepper class="elevation-0" v-model="e1">
       <v-stepper-header>
         <v-stepper-step :complete="e1 > 1" step="1"> Data </v-stepper-step>

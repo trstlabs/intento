@@ -235,7 +235,7 @@ Confirm sign in by clicking the link sent to your Google account's email on this
 
 
 <script>
-import Wallet from './components/Wallet.vue';
+
 export default {
   data() {
     return {

@@ -31,7 +31,7 @@
         mdi-refresh
       </v-icon></v-btn></p>
     </div>
-    
+    <v-img src="img/design/transfer.png" ></v-img>
   </div>
 </template>
 

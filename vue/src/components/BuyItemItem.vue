@@ -42,7 +42,7 @@
               </v-card-text>
        
             </v-card>
-
+  
             <v-card v-if="thisitem.note" elevation="0">
                      <v-divider class="mx-4 pa-2" />
               <div class="pl-4 overline text-center">Reseller's Note</div>
@@ -53,9 +53,10 @@
               </v-card-text></v-card>
 <v-divider class="mx-4 pa-2"/>
                 <div class="text-center pa-2">
-                   
+                   <v-img src="img/design/buy.png" >
+           </v-img> 
               <v-row v-if="thisitem.creator == thisitem.seller">
-                <v-col>
+                <v-col  >
                   <v-btn
                     block 
                     color="primary lighten-1"
@@ -81,7 +82,7 @@
                 ><v-col>
                   <v-btn
                     block
-                    color="primary"
+                    color="primary lighten-1"
                     :disabled="thisitem.shippingcost == 0"
                     @click="
                       submit(
@@ -91,14 +92,14 @@
                         (flightSP = !flightSP),
                         getThisItem
                     "
-                    ><div v-if="!flightSP">
-                      Buy for ${{
+                    ><div v-if="!flightSP"><v-icon left > mdi-check-all</v-icon
+                      ><v-icon left> mdi-plus</v-icon
+                      ><v-icon left > mdi-package-variant-closed </v-icon>
+                   
+                      Buy for {{
                         Number(thisitem.estimationprice) +
                         Number(thisitem.shippingcost)
-                      }}TPP <v-icon right> mdi-check-all</v-icon
-                      ><v-icon right> mdi-plus</v-icon
-                      ><v-icon right> mdi-package-variant-closed </v-icon>
-                    </div>
+                      }} <v-icon small >$vuetify.icons.custom</v-icon> </div>
                     <div v-if="flightSP">
                       <v-progress-linear
                         indeterminate
@@ -228,23 +229,16 @@
                     </div>
                   </v-btn>
                 </v-col>
-              </v-row>
+              </v-row> 
             </div>
               <v-divider class="ma-4 pt-2"/>
-      
+  
             <v-chip class="ma-1 caption" label outlined medium>
               <v-icon left> mdi-account-badge-outline </v-icon>
               Identifier: {{ thisitem.id }}
             </v-chip>
 
-          <!--  <v-chip
-              outlined
-              class="ma-1 caption"
-              v-if="thisitem.creator != thisitem.seller"
-              label
-            >
-              <v-icon left> mdi-refresh </v-icon> Reseller</v-chip
-            >-->
+       
 
             <v-dialog transition="dialog-bottom-transition" max-width="300">
               <template v-slot:activator="{ on, attrs }">
@@ -415,7 +409,7 @@
               outlined
             >
               <v-icon left> mdi-package-variant-closed </v-icon>
-              Added Cost: ${{ thisitem.shippingcost}} <v-icon small right>$vuetify.icons.custom</v-icon>  
+              Shipping Cost: {{ thisitem.shippingcost}} <v-icon small right>$vuetify.icons.custom</v-icon>  
             </v-chip>
 
             <v-chip
@@ -455,17 +449,16 @@
             >
               <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
             >
-
-            <v-divider class="ma-4" />
-
+      
+ <v-divider class="ma-4" /> 
             <div class="overline text-center">Comments</div>
-            <div v-if="thisitem.comments">
-              <v-chip
-                v-for="(single, i) in allcomments"
-                v-bind:key="i"
-                class="ma-2" color="primary lighten-2"
-                >{{ single }}
-              </v-chip>
+            <div v-if="thisitem.comments "><div class="font-weight-light" v-for="(single, i) in allcomments"
+                v-bind:key="i"><v-icon  small left> mdi-message-text-outline</v-icon> 
+            <v-chip
+                
+                class="ma-2 " color="primary lighten-2"
+                > {{ single }}
+              </v-chip></div>
             </div>
             <div v-if="allcomments.length == 0">
               <p class="caption text-center">No comments to show right now</p>
@@ -503,7 +496,7 @@
                   <a @click="createRoom">{{ thisitem.seller }}. </a>
                 </span>
                 <span v-if="thisitem.discount > 0">
-                  Reseller gives a discount of ${{ thisitem.discount}}</v-icon>  on
+                  Reseller gives a discount of ${{ thisitem.discount}} on
                   the original selling price of ${{
                     thisitem.estimationprice
                   }}TPP.</span
@@ -518,7 +511,7 @@
                 the item transaction and no transaction costs are applied.
               </div>
             </v-row>
-          
+    
           </div>
         </div>
       </div>
@@ -560,7 +553,7 @@
             </v-row>
           </v-card>
         </div>
-      </div>
+      </div><v-img src="img/design/transfer.png" ></v-img>
     </v-card>
   </div>
 </template>

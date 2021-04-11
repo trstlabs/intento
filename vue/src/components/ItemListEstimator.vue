@@ -29,7 +29,7 @@
       <p class="caption pa-12 text-center">No estimations, make an estimation first<v-btn icon onClick="window.location.reload();" ><v-icon >
         mdi-refresh
       </v-icon></v-btn></p>
-    </div>
+    </div><v-img class="mx-12" src="img/design/estimate.png" ></v-img>
   </div>
 </template>
 

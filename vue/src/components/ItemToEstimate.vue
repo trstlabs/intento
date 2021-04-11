@@ -12,19 +12,61 @@
     ></v-skeleton-loader>
 
 <div v-if="showinfo == true && loadingitem == false" >
-    <div elevation="8" v-if="photos.photo">
-      <v-carousel
+    <div elevation="8" v-if="photos.photo"  >
+     
+      <v-carousel style="height:100%"
         delimiter-icon="mdi-minus"
         carousel-controls-bg="primary"
-        contain
+        height="300" 
         hide-delimiter-background
-        show-arrows-on-hover
-      >
-        <v-carousel-item v-for="(photo, i) in photos" :key="i" :src="photo">
-        </v-carousel-item>
-      </v-carousel>
-    </div>
+        show-arrows-on-hover 
+      > 
+       <v-carousel-item max-height="300" 
+    contain v-for="(photo, i) in photos" :key="i" :src="photo" > 
 
+    <template v-slot:placeholder>
+        <v-row
+          class="fill-height ma-0"
+          align="center"
+          justify="center"
+        >
+          <v-progress-circular
+            indeterminate
+            color="grey lighten-5"
+          ></v-progress-circular>
+        </v-row>
+      </template>
+        </v-carousel-item>
+      </v-carousel> <div v-if="photos.photo2">
+      <v-row  v-for="(photo, index) in photos" :key="index"   > <v-img @click="show(photo)" height="56" contain :src="photo" /></v-row></div>
+    </div>
+<v-dialog
+      v-model="fullscreen"
+    
+    >
+     
+
+      <v-card>
+        <v-card-title class="headline grey lighten-2">
+          Photo {{index + 1}} <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            icon
+            @click="fullscreen = false"
+          >
+          <v-icon> mdi-image-off</v-icon>
+          </v-btn>
+        </v-card-title>
+<v-img :src="showphoto" />
+       
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+         
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-card 
       class="pa-2 mt-2"
       elevation="2"
@@ -366,16 +408,16 @@
               </v-btn>
             </template>
             <v-card>
-              <v-card-title class="headline"> Report this item? </v-card-title>
+              <v-card-title class="headline"> Report item? </v-card-title>
               <v-card-text
-                >If this item is not OK, you can report it here. TPP protocol
-                will automatically remove items that are reported
-                often.</v-card-text
+                >Thanks for keeping TPP safe. If this item is not OK, you can report it here. The protocol
+                removes items that are reported
+                often. </v-card-text
               >
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="red darken-1" text @click="dialog = false">
-                  Close
+                <v-btn color="primary darken-1" text @click="dialog = false">
+                  Discard
                 </v-btn>
                 <v-btn color="red darken-1" text @click="submitFlag()">
                   Report Item
@@ -396,7 +438,7 @@
       </v-row>
 
       <div class="pt-12 mx-lg-auto">
-        <v-img src="img/design/estimate.png" ></v-img>
+      
         <v-select
           append-icon="mdi-tag-outline"
           dense
@@ -413,12 +455,13 @@
         ></v-select>
       </div>
     </div>
-  </div>
+    <v-img class="mx-12" src="img/design/estimate.png" ></v-img></div>
 </template>
 
 <script>
 import ToEstimateTagBar from "./ToEstimateTagBar.vue";
 import { databaseRef } from "./firebase/db.js";
+
 
 import {
   SigningStargateClient,
@@ -428,6 +471,7 @@ import { Registry } from "@cosmjs/proto-signing/";
 import { Type, Field } from "protobufjs";
 
 export default {
+  
   components: { ToEstimateTagBar },
   data() {
     return {
@@ -471,9 +515,11 @@ export default {
       photos: [],
       selectedFilter: "",
       timeout: false,
+      showphoto: "",
 interval: {},
 value: 0,
       dialog: false,
+      fullscreen: false,
       conditionInfo: false,
     };
   },
@@ -705,6 +751,12 @@ value: 0,
         this.lastitem = true;
       }
       this.loadItemPhotos();
+    },
+
+    show(photo){
+      this.showphoto = photo 
+
+      this.fullscreen = true
     },
     loadItemPhotos() {
       this.loadingitem = true;

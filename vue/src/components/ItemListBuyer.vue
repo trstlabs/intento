@@ -22,7 +22,7 @@
       <p class="caption pa-12 text-center">No items, buy an item first<v-btn onClick="window.location.reload();" icon ><v-icon >
         mdi-refresh
       </v-icon></v-btn></p>
-    </div>
+    </div>    <v-img src="img/design/transfer.png" ></v-img>
   </div>
 </template>
 

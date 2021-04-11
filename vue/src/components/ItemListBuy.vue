@@ -1,10 +1,9 @@
 <template>
   <div class="pa-0 pb-4 mx-lg-auto">
     <div>
-     
-      <h2 class="headline pa-4 mt-2 text-center">Shop All </h2> 
-    
-      <div>  <v-img height="320" src="img/design/market.png" ></v-img>  
+        <p   class="headline pt-4 font-weight-bold text-center ">Shop All </p>
+
+      <div>  <v-img  height="320" src="img/design/market.png " >  </v-img>  
         <v-container class="pt-0">
       
           <v-row>  

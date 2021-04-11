@@ -30,7 +30,7 @@ export default {
   components: { ItemListBuy },
   data: function () {
     return {
-      selectedFilter: "",
+      selectedFilter: "All",
     filters: [
           { filter: 'All',  },
           { filter: 'Pickup', },
