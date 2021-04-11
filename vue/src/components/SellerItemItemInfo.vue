@@ -481,7 +481,7 @@ export default {
       return this.thisitem.id.trim().length > 0;
     },
     tocopy(){
-      return "https://marketplace.trustpriceprotocol.com/buy/" + this.thisitem.id
+      return "https://marketplace.trustpriceprotocol.com/itemid=" + this.thisitem.id
     },
 
     commentlist() {

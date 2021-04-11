@@ -21,7 +21,7 @@
       <p class="caption pa-12 text-center">No items, like and estimate liked items to find items before anyone else <v-btn icon onClick="window.location.reload();" ><v-icon >
         mdi-refresh
       </v-icon></v-btn></p> 
-    </div>
+    </div><v-img src="img/design/like.png" ></v-img>
   </div>
 </template>
 

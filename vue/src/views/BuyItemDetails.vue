@@ -30,7 +30,7 @@
                   <div>
     
     <div> <v-row class="pa-4">
-     <v-btn icon plain to="/buy"> <v-icon >
+     <v-btn icon plain to="/"> <v-icon >
         mdi-arrow-left
       </v-icon></v-btn><v-spacer/><v-btn icon onClick="window.location.reload();" ><v-icon left>
         mdi-refresh
@@ -38,7 +38,7 @@
       <buy-item-item :itemid="this.$route.params.id" />
       
     </div>
-    <v-btn block plain class="pa-2" to="/buy"> <v-icon left>
+    <v-btn block plain class="pa-2" to="/"> <v-icon left>
         mdi-arrow-left
       </v-icon>All items </v-btn>
   </div>
