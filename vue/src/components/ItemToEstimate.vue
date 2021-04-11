@@ -54,7 +54,7 @@
             icon
             @click="fullscreen = false"
           >
-          <v-icon> mdi-image-off</v-icon>
+          <v-icon> mdi-close</v-icon>
           </v-btn>
         </v-card-title>
 <v-img :src="showphoto" />

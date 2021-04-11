@@ -23,10 +23,10 @@
         </v-container>
      
         <div v-if="items[0]">
-      
+      <div class="pl-4" >
              <v-btn icon x-small to="/faq"
-                ><v-icon >mdi-information-outline</v-icon>
-              </v-btn> <span class="caption" v-if="items[1]"> {{items.length}} items available</span>
+                ><v-icon  >mdi-information-outline</v-icon>
+              </v-btn> <span class="caption" v-if="items[1]"> {{items.length}} items available</span></div>
           <div v-for="item in items" :key="item.id">
             <div>
               <div>
