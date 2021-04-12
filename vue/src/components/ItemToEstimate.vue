@@ -13,8 +13,8 @@
 
 <div v-if="showinfo == true && loadingitem == false" >
     <div elevation="8" v-if="photos.photo"  >
-     
-      <v-carousel style="height:100%"
+   
+      <v-carousel v-if="magnify == false" style="height:100%"
         delimiter-icon="mdi-minus"
         carousel-controls-bg="primary"
         height="300" 
@@ -37,9 +37,39 @@
         </v-row>
       </template>
         </v-carousel-item>
-      </v-carousel> <div v-if="photos.photo2">
-      <v-row  v-for="(photo, index) in photos" :key="index"   > <v-img @click="show(photo)" height="56" contain :src="photo" /></v-row></div>
-    </div>
+      </v-carousel>
+      <v-carousel v-if="magnify == true"
+        delimiter-icon="mdi-minus"
+        carousel-controls-bg="primary"
+     contain
+        hide-delimiter-background
+        show-arrows-on-hover 
+      > 
+       <v-carousel-item 
+    contain v-for="(photo, i) in photos" :key="i" :src="photo" > 
+
+    <template v-slot:placeholder>
+        <v-row
+          class="fill-height ma-0"
+          align="center"
+          justify="center"
+        >
+          <v-progress-circular
+            indeterminate
+            color="grey lighten-5"
+          ></v-progress-circular>
+        </v-row>
+      </template>
+        </v-carousel-item>
+      </v-carousel>
+    </div>  <v-row class="ml-4 mt-1 mb-1">
+      <span  v-for="(photo, index) in photos" :key="index"> <img class="ma-1" @click="show(photo)" height="56"  :src="photo" /></span><v-spacer/><v-btn x-small class="mr-2"
+            color="primary"
+            icon
+            @click="magnify = !magnify"
+          >
+          <v-icon> mdi-crop-free</v-icon>
+          </v-btn></v-row> 
 <v-dialog
       v-model="fullscreen"
     
@@ -47,8 +77,8 @@
      
 
       <v-card>
-        <v-card-title class="headline grey lighten-2">
-          Photo {{index + 1}} <v-spacer></v-spacer>
+        <v-card-title class="p grey lighten-2">
+         {{item.title}} <v-spacer></v-spacer>
           <v-btn
             color="primary"
             icon
@@ -520,6 +550,7 @@ interval: {},
 value: 0,
       dialog: false,
       fullscreen: false,
+      magnify: false,
       conditionInfo: false,
     };
   },

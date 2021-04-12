@@ -3,7 +3,7 @@
     <v-dialog v-if="!fields.title" v-model="dialog" width="500">
       <template v-slot:activator="{ on, attrs }">
     <h2 v-bind="attrs" v-on="on" class="headline pt-2 font-weight-bold text-center ">
-          Place a new item
+          Place Item
         </h2>
      
       </template>
@@ -45,7 +45,7 @@
           <v-btn color="primary" text @click="dialog = false"> Let's go </v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog> <v-img  height="330" src="img/design/sell.png" >
+    </v-dialog> <v-img  height="300" src="img/design/sell.png" >
 </v-img>  
     <v-stepper class="elevation-0" v-model="e1">
       <v-stepper-header>
@@ -103,12 +103,51 @@
                   <v-list-item>
                     <v-list-item-content>
                       <v-list-item-title>
-                        No results matching "<strong>{{ search }}</strong
+                        No category tags matching "<strong>{{ search }}</strong
                         >". Press <kbd>enter</kbd> to create a new one
                       </v-list-item-title>
                     </v-list-item-content>
                   </v-list-item>
-                </template></v-combobox
+                </template>
+                 <template v-slot:selection="{ attrs, item, parent, selected}">
+        <v-chip
+         v-if="selectedTags[0] == item"
+          v-bind="attrs"
+
+          :input-value="selected"
+          color="primary lighten-2"
+          small
+        >
+          <span class="pr-2">
+            Main:  <v-icon x-small>mdi-tag</v-icon> {{ item }} 
+          </span>
+          <v-icon
+            small
+            @click="parent.selectItem(item)"
+          >
+            mdi-close
+          </v-icon>
+        </v-chip> <v-chip
+         v-else
+          v-bind="attrs"
+ color="secondary darken-1"
+          :input-value="selected"
+          
+          small
+        >
+          <span class="pr-2">
+          <v-icon x-small>mdi-tag</v-icon> {{ item }} 
+          </span>
+          <v-icon
+            small
+            @click="parent.selectItem(item)"
+          >
+            mdi-close
+          </v-icon>
+        </v-chip>
+      </template>
+                   
+                   </v-combobox
               >
 
               <div>
@@ -337,6 +376,8 @@ export default {
 
       satisfactionEmojis: ["😭", "🙁", "🙂", "😊", "😄"],
       countryCodes: ["NL", "BE", "UK", "DE", "US", "CA"],
+     
+      
     };
   },
   watch: {
@@ -354,11 +395,21 @@ export default {
   },
 
   computed: {
-    taglist() {
+  taglist() {
+    if(this.selectedTags == 0) {return  [ 'Books', 'Clothing', 'Shoes','Art',
+ '   Collectible  ',
+ '   Consumer Electronic  ',
+ '   Home & Garden  ',
+ '   Motor', 'Bike', 
+ '   Pet supplies ',
+ '   Sport',
+ '   Toys & Hobbies  ',
+ '   Antique ',
+ '  Computer', 'Smartdevice', 'Smartphone', 'Sound Device', 'TV', 'NFT Art', 'NFT Collectible', ]}else{
       //this.$store.dispatch("setTagList");
-      return this.$store.getters.getTagList;
+      return this.$store.getters.getTagList;}
     },
-    //return ["sadfd","dasf"]; },
+
 
     hasAddress() {
       return !!this.$store.state.account.address || alert("Sign in first");

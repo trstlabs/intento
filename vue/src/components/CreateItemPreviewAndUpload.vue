@@ -112,7 +112,7 @@
           <v-divider class="ma-4 "></v-divider>
 
           <div class="mt-2 text-center">
-            <p class="font-weight-medium headline"> TPP ID: {{thisitem.id}}  </p><p class="caption"> Tip: Show your ID on your photos! This way everyone knows the information is correct :) </p>
+            <p  class="font-weight-medium headline"> TPP ID: {{thisitem.id}}  </p><p class="caption"> Tip: Show TPP ID: {{thisitem.id}} on your photos. This creates trust to estimators and buyers, thereby making the item more valueable.</p>
             <v-btn block large outlined @click="click1" color="primary">
               <v-icon large left> mdi-plus </v-icon>Add Photos
             </v-btn>
