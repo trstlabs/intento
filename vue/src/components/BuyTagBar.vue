@@ -103,7 +103,7 @@ export default {
       //console.log("computed tags");
       return this.$store.getters.getTagList },
      //return ["asd","sdaf"] },
-locations() {
+  locations() {
       return this.$store.getters.getLocationList;
     },
   },
