@@ -3,7 +3,7 @@
     <div class="text-center pa-12" v-if="!showinfo">
       <v-btn :ripple="false" text @click="getItemToEstimate"
         ><v-icon color="primary" left> mdi-refresh </v-icon> Refresh
-      </v-btn>
+      </v-btn><v-img class="mx-12" src="img/design/estimate.png" ></v-img>
     </div>
     <v-skeleton-loader
       v-if="loadingitem"
@@ -66,6 +66,12 @@
       <span  v-for="(photo, index) in photos" :key="index"> <img class="ma-1" @click="show(photo)" height="56"  :src="photo" /></span><v-spacer/><v-btn x-small class="mr-2"
             color="primary"
             icon
+            @click="settings = !settings"
+          >
+          <v-icon> mdi-tune</v-icon>
+          </v-btn><v-btn x-small class="mr-4"
+            color="primary"
+            icon
             @click="magnify = !magnify"
           >
           <v-icon> mdi-crop-free</v-icon>
@@ -90,13 +96,50 @@
 <v-img :src="showphoto" />
        
 
-        <v-divider></v-divider>
-
-        <v-card-actions>
-         
-        </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> 
+    <div v-if="settings"> 
+          <v-card class="pa-6 elevation-8 ma-6"><v-row  class="mb-2"><v-btn small
+        icon
+          
+            @click="getItemToEstimate()"
+          >
+          <v-icon> mdi-refresh</v-icon>
+          </v-btn> <v-spacer/><v-btn small
+        
+            icon
+            @click="settings = !settings"
+          >
+          <v-icon> mdi-close</v-icon>
+          </v-btn>
+          </v-row> <v-select
+          append-icon="mdi-tag-outline"
+          dense
+          v-model="selectedFilter"
+          v-on:input="updateList(selectedFilter)"
+          cache-items
+          :items="tags"
+          label="Categories"
+          clearable
+          solo
+          
+          :persistent-hint="!selectedFilter"
+          hint="Select item category"
+        ></v-select>
+         <v-select
+          append-icon="mdi-tag-outline"
+          dense
+          v-model="selectedRegion"
+          v-on:input="updateRegionList(selectedRegion)"
+          cache-items
+          :items="locations"
+          label="Regions"
+          clearable
+          
+          solo
+          :persistent-hint="!selectedRegion"
+          hint="Specify your region"
+        ></v-select> </v-card></div>
     <v-card 
       class="pa-2 mt-2"
       elevation="2"
@@ -122,7 +165,7 @@
           <v-col class="pa-2">
             <v-card elevation="0">
               <v-chip-group>
-                <v-chip
+                <v-chip class="ma-1"
                   outlined
                   small
                   v-for="itemtag in item.tags"
@@ -136,10 +179,16 @@
               <v-dialog transition="dialog-bottom-transition" max-width="300">
                 <template v-slot:activator="{ on, attrs }">
                   <span v-bind="attrs" v-on="on">
-                    <v-chip class="ma-1" outlined small>
-                      <v-icon left small> mdi-star-outline </v-icon>
-                      {{ item.condition }}/5
-                    </v-chip>
+                   <v-chip class="ma-1"  outlined small>
+                    <v-rating
+                      :value="Number(item.condition)"
+                      readonly
+                      color="gray lighten-1"
+                      background-color="gray"
+                      small
+                      dense
+                    ></v-rating>
+                  </v-chip>
                   </span>
                 </template>
                 <template v-slot:default="dialog">
@@ -224,38 +273,57 @@
 
       <div class="mx-auto">
         <v-row>
-          <v-col cols="4" class="mx-auto">
+          <v-col cols="6" class="mx-auto">
             <v-dialog transition="dialog-bottom-transition" max-width="600">
               <template v-slot:activator="{ on, attrs }">
                 <span v-bind="attrs" v-on="on"
                 
-                ><v-icon small>mdi-information-outline</v-icon>
+                ><v-icon class="ml-4" small>mdi-information-outline</v-icon>
            
                   <p class="text-center caption ">To me, it's worth</p>
                 </span>
               </template>
               <template v-slot:default="dialog">
                 <v-card>
-                  <v-toolbar color="default">Info</v-toolbar>
+                  <v-toolbar color="default">Info <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            icon
+            @click="dialog.value = false"
+          >
+          <v-icon> mdi-close</v-icon>
+          </v-btn></v-toolbar>
                   <v-card-text>
                     <div class="text-p pt-4">
                       Earn ~5% of the item value when you are the best
-                      estimator. Exept when:
+                      estimator! However, your deposit is lost when:
                     </div>
                     <div class="caption pa-2">
-                      - Your deposit is lost when you are the lowest estimator
+                      - You are the lowest estimator
                       and the final estimation price is not accepted by the
                       seller.
                     </div>
-                    <div class="caption pa-2">
-                      - Your deposit is lost when you are the highest estimator
+                    <div class="caption pa-2 mb-2">
+                      - You are the highest estimator
                       and the item is not bought by the buyer that provided
                       prepayment.
                     </div>
-                     <div class="text-p pt-4">
+                     
+                     <iframe style="
+      
+
+-webkit-mask-image: -webkit-radial-gradient(circle, white 100%, black 100%); /*ios 7 border-radius-bug */
+-webkit-transform: rotate(0.000001deg); /*mac os 10.6 safari 5 border-radius-bug */
+-webkit-border-radius: 10px; 
+-moz-border-radius: 10px;
+border-radius: 20px; 
+overflow: hidden; 
+" width="100%"  height="310" src="https://www.youtube.com/embed/zHXwfePrGvA?start=61&vq=hd1080&autoplay=0&loop=1&modestbranding=1&rel=0&cc_load_policy=1&color=white&mute=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                               
+                  </v-card-text>
+                   <v-img class="mx-12" src="img/design/estimate.png" ></v-img><div class="caption text-center pt-4">
                       Good luck and have fun!
                     </div>
-                  </v-card-text>
                   <v-card-actions class="justify-end">
                     <v-btn text @click="dialog.value = false">Close</v-btn>
                   </v-card-actions>
@@ -263,13 +331,13 @@
               </template>
             </v-dialog>
           </v-col>
-          <v-col cols="8" class="mx-auto">
+          <v-col cols="6" class="mx-auto">
             <v-text-field
               label="Amount"
               type="number"
               v-model="estimation"
               :disabled="lastitem"
-            suffix="TPP tokens"
+            suffix="TPP"
               prepend-icon="$vuetify.icons.custom"
             
             ></v-text-field>
@@ -352,19 +420,7 @@
               <div class="text-right caption">Deposit is {{item.depositamount}}<v-icon small right>$vuetify.icons.custom</v-icon> </div>
               
             </div>
-        <!-- tag bar
- <v-chip-group 
-    
-          
-          active-class="primary--text"
-        >
-          <v-chip @click="updateList(tag)"  outlined
-            v-for="tag in tags" :key="tag"
-          ><v-icon small left>
-        mdi-tag-outline
-      </v-icon>{{ tag }}
-          </v-chip>
-        </v-chip-group>-->
+      
       </div>
     </v-card>
 </div>
@@ -393,27 +449,7 @@
             </span>
           </v-tooltip> </v-col
         ><v-col class="pa-0">
-          <!-- <v-tooltip bottom :disabled="flag" v-if="showinfo">
-      <template v-slot:activator="{ on, attrs }">
-        <span
-          v-bind="attrs"
-          v-on="on"> 
-           <v-btn
-      class="mx-2"
-      fab
-      dark
-      small
-      color="red"
-      :outlined="flag == false"
-      @click="submitFlag(true, item.id)"
-    >
-      <v-icon dark>
-        mdi-alert-octagon
-      </v-icon>
-    </v-btn>
-          </span>
-    </template>  <span > When this item is not OK, report it. Thank You.</span> 
-      </v-tooltip> -->
+       
 
           <v-dialog
             bottom
@@ -467,7 +503,7 @@
         </v-col>
       </v-row>
 
-      <div class="pt-12 mx-lg-auto">
+     <!-- <div class="pt-12 mx-lg-auto">
       
         <v-select
           append-icon="mdi-tag-outline"
@@ -483,9 +519,23 @@
           persistent-hint
           hint="Specify your expertise"
         ></v-select>
-      </div>
+         <v-select
+          append-icon="mdi-tag-outline"
+          dense
+          v-model="selectedRegion"
+          v-on:input="updateRegionList(selectedRegion)"
+          cache-items
+          :items="locations"
+          label="Regions"
+          clearable
+          rounded
+          solo
+          persistent-hint
+          hint="Specify your region"
+        ></v-select>
+      </div>-->
     </div>
-    <v-img class="mx-12" src="img/design/estimate.png" ></v-img></div>
+  </div>
 </template>
 
 <script>
@@ -544,6 +594,7 @@ export default {
       loadingitem: false,
       photos: [],
       selectedFilter: "",
+      selectedRegion: "",
       timeout: false,
       showphoto: "",
 interval: {},
@@ -552,6 +603,7 @@ value: 0,
       fullscreen: false,
       magnify: false,
       conditionInfo: false,
+      settings: false,
     };
   },
   beforeDestroy () {
@@ -565,10 +617,10 @@ value: 0,
     //console.log(input)
     if (!!this.$store.state.account.address) {
       let input = this.$store.state.account.address;
-
-       const type = { type: "estimator" };
-      this.$store.dispatch("entityFetch",type);
-      this.$store.dispatch("setSortedTagList");
+ this.$store.dispatch("setToEstimateRegions");
+//  const type = { type: "estimator" };
+   // this.$store.dispatch("entityFetch",type);
+      this.$store.dispatch("setSortedTagList");    
       this.$store.dispatch("setEstimatorItemList", input);
       this.$store.dispatch("setToEstimateList", this.index);
 
@@ -590,6 +642,9 @@ value: 0,
     },
     tags() {
       return this.$store.getters.getTagList;
+    },
+    locations() {
+      return this.$store.getters.getRegionList;
     },
   },
 
@@ -759,7 +814,7 @@ value: 0,
       
       this.$store.dispatch("setSortedTagList");
       this.$store.dispatch("setEstimatorItemList", input);
-      this.$store.dispatch("setToEstimateList", this.index);
+      this.$store.dispatch("setToEstimateList");
 
       //let index = 0;
       //this.$store.dispatch("setToEstimateList");
@@ -871,15 +926,32 @@ value: 0,
       this.$store.dispatch("tagToEstimateList", tag);
       if (!!this.items[0]) {
         this.item = this.items[0];
-        if (!this.items[1]) {
+        if (!this.items[0]) {
           this.lastitem = true;
         } else {
           this.lastitem = false;
         }
         this.loadItemPhotos();
       } else {
-        alert("No Items to estimate for:" + tag);
-        this.$store.dispatch("setToEstimateList");
+        alert("No items to estimate for " + tag);
+        //this.$store.dispatch("setToEstimateList");
+        this.getItemToEstimate();
+      }
+    },
+
+    updateRegionList(region) {
+      this.$store.dispatch("regionToEstimateList", region);
+      if (!!this.items[0]) {
+        this.item = this.items[0];
+        if (!this.items[0]) {
+          this.lastitem = true;
+        } else {
+          this.lastitem = false;
+        }
+        this.loadItemPhotos();
+      } else {
+        alert("No Items to estimate for " + region);
+        //this.$store.dispatch("setToEstimateList");
         this.getItemToEstimate();
       }
     },

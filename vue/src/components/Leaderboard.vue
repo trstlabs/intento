@@ -94,11 +94,11 @@ export default {
   computed: {
     items(){
     let rs = this.$store.state.data.item.map(item => item.bestestimator);
-     console.log(rs)
+    
     let merged = [].concat.apply([], rs);
       let frequency = {};
       merged.forEach(function (value) { if (value != '') {frequency[value.toLowerCase()] = 0;} });
- console.log(merged)
+
       let uniques = merged.filter(function (value) {
         return ++frequency[value] == 1;
       });
@@ -107,9 +107,9 @@ export default {
         return frequency[b] - frequency[a];
       });
 
-    console.log(sorted)
-    let toreturn = { text: 'Expert', value: sorted }
-    console.log(toreturn)
+   
+//    let toreturn = { text: 'Expert', value: sorted }
+  //  console.log(toreturn)
     return sorted
 
 

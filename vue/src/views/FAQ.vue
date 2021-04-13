@@ -11,7 +11,7 @@
     >
      This App is being developed. Go to <a color="default" href="http://www.trustpriceprotocol.com">main page </a> instead?
     </v-alert> -->
-         <v-container class="pa-0" >
+         <v-container class="pb-6 pt-0 px-0" >
           
          
           <v-col cols="12" sm="8" class="d-none d-sm-flex d-md-none mx-auto" >

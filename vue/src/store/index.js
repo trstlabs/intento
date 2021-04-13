@@ -46,6 +46,7 @@ export default new Vuex.Store({
     tagList: [],
     buySellerList: [],
     locationList: [],
+    regionList: [],
     user: null,
     //user: { uid: "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"},
   },
@@ -276,15 +277,24 @@ export default new Vuex.Store({
     
 
     async tagToEstimateList({ commit, state }, input) {
-      if (!!input) {  const A = state.data.item.filter(item => !item.buyer && item.tags.find(tags => tags.includes(input)) && item.transferable === false)
+      if (!!input) {  //const A = state.data.item.filter(item => !item.buyer && item.tags.find(tags => tags.includes(input)) && item.transferable === false)
         ;
-      const B = state.estimatorItemList;
+      //const B = state.estimatorItemList;
 
-      const rs = A.filter(a => !B.map(b => b.itemid).includes(a.id));
+      //const rs = A.filter(a => !B.map(b => b.itemid).includes(a.id));
+      let rs = state.toEstimateList.filter(item => item.tags.find(tag => tag == input) )
+        ;
       //console.log(input);
       //console.log(rs);
       //console.log(A);
       //console.log(B);
+      commit("setToEstimateList", rs);}
+    },
+
+    async regionToEstimateList({ commit, state }, input) {
+      if (!!input) { let rs = state.toEstimateList.filter(item => item.shippingregion.find(region => region == input) )
+        ;
+     
       commit("setToEstimateList", rs);}
     },
 
@@ -346,6 +356,28 @@ export default new Vuex.Store({
       
     },
 
+    async setToEstimateRegions({ commit, state }) {
+console.log("test")
+      const rs = state.toEstimateList.map(item => item.shippingregion);
+      let merged = [].concat.apply([], rs);
+      let frequency = {};
+      merged.forEach(function (value) { frequency[value.toLowerCase()] = 0; });
+
+      let uniques = merged.filter(function (value) {
+        return ++frequency[value.toLowerCase()] == 1;
+      });
+
+      let sorted = uniques.sort(function (a, b) {
+        return frequency[b] - frequency[a];
+      });
+
+      if (sorted[0]) {
+        commit("set", { key: 'regionList', value: sorted } );
+      }else{
+        //console.log(merged)
+        commit("set", { key: 'regionList', value: merged } );
+      }  
+    },
    
 
     async setToEstimateList({ commit, state }) {
@@ -399,7 +431,7 @@ export default new Vuex.Store({
   
   },
   getters: {
-    account: state => state.account, bankBalances: state => state.bankBalances, getSellerItemList: state => state.sellerItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getSellerActionList: state => state.sellerActionList, getTagList: state => state.tagList, getLocationList: state => state.locationList, getBuySellerList: state => state.buySellerList,
+    account: state => state.account, bankBalances: state => state.bankBalances, getSellerItemList: state => state.sellerItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getSellerActionList: state => state.sellerActionList, getTagList: state => state.tagList, getLocationList: state => state.locationList, getRegionList: state => state.regionList, getBuySellerList: state => state.buySellerList,
 
   }
 

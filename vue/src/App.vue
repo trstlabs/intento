@@ -55,7 +55,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
-      <v-tab  to="/sell"> <v-icon v-bind="attrs"
+      <v-tab to="/sell"> <v-icon v-bind="attrs"
           v-on="on" large >
         mdi-plus-box
       </v-icon></v-tab>
@@ -64,7 +64,7 @@
     </v-tooltip>
 
     <v-tooltip bottom>
-      <template class="ma-0 pa-0" v-slot:activator="{ on, attrs }">
+      <template v-slot:activator="{ on, attrs }">
       <v-tab  to="/earn"> <v-icon v-bind="attrs"
           v-on="on" large >
         mdi-checkbox-marked

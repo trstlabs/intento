@@ -1,20 +1,38 @@
 <template>
   <div class="pa-2 mx-lg-auto"> 
-    <v-dialog v-if="!fields.title" v-model="dialog" width="500">
+    <v-dialog v-model="dialog" width="500">
       <template v-slot:activator="{ on, attrs }">
-    <h2 v-bind="attrs" v-on="on" class="headline pt-2 font-weight-bold text-center ">
-          Place Item
-        </h2>
-     
+      <span v-if="!fields.title" >
+           <h2  v-if="!fields.title" v-bind="attrs"
+          v-on="on" class="headline pt-2 font-weight-bold text-center"> Place Item
+        </h2>  </span><span  v-else>
+          <h2
+          v-bind="attrs"
+          v-on="on"
+          class="headline pt-2 font-weight-bold text-center"
+        >
+          Place '{{ fields.title }}'
+        </h2></span>
+        <v-img v-bind="attrs"
+          v-on="on" height="300" src="img/design/sell.png"> <v-icon class="ml-4" small>mdi-information-outline</v-icon></v-img>
       </template>
 
       <v-card class="text-center">
         <v-card-title class="h2 lighten-2"> Info </v-card-title>
 
         <v-card-text>
-          After placing the item, an estimation will be made.
+          After placing the item, an estimation will be made. After you accept this price, anyone can buy the item!
         </v-card-text>
+ <iframe style="
+      
 
+-webkit-mask-image: -webkit-radial-gradient(circle, white 100%, black 100%); /*ios 7 border-radius-bug */
+-webkit-transform: rotate(0.000001deg); /*mac os 10.6 safari 5 border-radius-bug */
+-webkit-border-radius: 10px; 
+-moz-border-radius: 10px;
+border-radius: 20px; 
+overflow: hidden; 
+" width="100%"  height="310" src="https://www.youtube.com/embed/zHXwfePrGvA?vq=hd1080&autoplay=0&loop=1&modestbranding=1&rel=0&cc_load_policy=1&color=white&mute=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         <v-divider></v-divider>
 
         <v-card-actions>
@@ -24,29 +42,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-else v-model="dialog" width="500">
-      <template v-slot:activator="{ on, attrs }">
-        <h2 v-bind="attrs" v-on="on" class="headline  pt-2 font-weight-bold text-center">
-          Place '{{ fields.title }}'
-        </h2>
-      </template>
-
-      <v-card class="text-center">
-        <v-card-title class="headline lighten-2"> Info </v-card-title>
-
-        <v-card-text>
-          After placing the item, an estimation will be made.
-        </v-card-text>
-
-        <v-divider></v-divider>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" text @click="dialog = false"> Let's go </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog> <v-img  height="300" src="img/design/sell.png" >
-</v-img>  
+    
     <v-stepper class="elevation-0" v-model="e1">
       <v-stepper-header>
         <v-stepper-step :complete="e1 > 1" step="1"> Data </v-stepper-step>
@@ -58,15 +54,20 @@
 
         <v-stepper-step :complete="e1 > 3" step="3"> Done! </v-stepper-step>
       </v-stepper-header>
-      
+
       <v-stepper-items>
-        <div>
-          <v-stepper-content step="1">
-            <div class="ma-5">
-               <p class="caption text-center" v-if="!this.$store.state.user && this.$store.state.account.address">
-              Important: Confirm sign in by clicking the link sent to your
-              Google account's email on this device.
-            </p>
+    
+          <v-stepper-content class="ma-5" step="1">
+      
+              <v-alert type="warning"
+                class="caption text-center"
+                v-if="
+                  !this.$store.state.user && this.$store.state.account.address
+                "
+              >
+                To post items, Confirm this sign in by clicking the link sent to your
+                Google account's email on this device. 
+              </v-alert>
               <v-text-field
                 class="ma-1"
                 prepend-icon="mdi-format-title"
@@ -109,46 +110,37 @@
                     </v-list-item-content>
                   </v-list-item>
                 </template>
-                 <template v-slot:selection="{ attrs, item, parent, selected}">
-        <v-chip
-         v-if="selectedTags[0] == item"
-          v-bind="attrs"
-
-          :input-value="selected"
-          color="primary lighten-2"
-          small
-        >
-          <span class="pr-2">
-            Main:  <v-icon x-small>mdi-tag</v-icon> {{ item }} 
-          </span>
-          <v-icon
-            small
-            @click="parent.selectItem(item)"
-          >
-            mdi-close
-          </v-icon>
-        </v-chip> <v-chip
-         v-else
-          v-bind="attrs"
- color="secondary darken-1"
-          :input-value="selected"
-          
-          small
-        >
-          <span class="pr-2">
-          <v-icon x-small>mdi-tag</v-icon> {{ item }} 
-          </span>
-          <v-icon
-            small
-            @click="parent.selectItem(item)"
-          >
-            mdi-close
-          </v-icon>
-        </v-chip>
-      </template>
-                   
-                   </v-combobox
-              >
+                <template v-slot:selection="{ attrs, item, parent, selected }">
+                  <v-chip
+                    v-if="selectedTags[0] == item"
+                    v-bind="attrs"
+                    :input-value="selected"
+                    color="primary lighten-2"
+                    small
+                  >
+                    <span class="pr-2">
+                      Main: <v-icon x-small>mdi-tag</v-icon> {{ item }}
+                    </span>
+                    <v-icon small @click="parent.selectItem(item)">
+                      mdi-close
+                    </v-icon>
+                  </v-chip>
+                  <v-chip
+                    v-else
+                    v-bind="attrs"
+                    color="secondary darken-1"
+                    :input-value="selected"
+                    small
+                  >
+                    <span class="pr-2">
+                      <v-icon x-small>mdi-tag</v-icon> {{ item }}
+                    </span>
+                    <v-icon small @click="parent.selectItem(item)">
+                      mdi-close
+                    </v-icon>
+                  </v-chip>
+                </template>
+              </v-combobox>
 
               <div>
                 <v-row class="pa-2 mt-4"
@@ -216,14 +208,15 @@
                     thumb-color="primary lighten-1"
                     v-model="fields.shippingcost"
                     ><template v-slot:thumb-label="item">
-                      {{ item.value}} <v-icon  >$vuetify.icons.custom</v-icon>  
+                      {{ item.value }} <v-icon>$vuetify.icons.custom</v-icon>
                     </template>
                   </v-slider>
                 </v-row>
                 <v-row>
                   <v-col>
                     <v-row class="ma-0">
-                      <v-btn class="mr-auto"
+                      <v-btn
+                        class="mr-auto"
                         text
                         icon
                         @click="fields.localpickup = !fields.localpickup"
@@ -236,7 +229,8 @@
                         </v-icon></v-btn
                       >
 
-                      <v-switch class="mr-auto mt-1"
+                      <v-switch
+                        class="mr-auto mt-1"
                         v-model="fields.localpickup"
                         inset
                         label="Local pickup"
@@ -248,7 +242,8 @@
                         hint="Specify local pickup location in description"
                       ></v-switch> </v-row></v-col
                   ><v-col>
-                    <v-select class="mt-1 pt-0"
+                    <v-select
+                      class="mt-1 pt-0"
                       prepend-icon="mdi-earth"
                       hint="At least one"
                       :persistent-hint="selectedCountries == 0"
@@ -274,16 +269,16 @@
                   <div v-if="flight">
                     <v-progress-linear
                       indeterminate
-                      color="white" class="ma-1"
+                      color="white"
+                      class="ma-1"
                     ></v-progress-linear
                     >Creating item ID...
                   </div>
                 </v-btn>
               </div>
-            </div>
-           
+  
           </v-stepper-content>
-        </div>
+       
 
         <v-stepper-content step="2">
           <div v-if="showpreview">
@@ -310,12 +305,7 @@
 
 
 <script>
-//import AppText from "./AppText.vue";
-
-import {
-  assertIsBroadcastTxSuccess,
-  makeCosmoshubPath,
-} from "@cosmjs/launchpad";
+import { assertIsBroadcastTxSuccess } from "@cosmjs/launchpad";
 import CreateItemPreviewAndUpload from "./CreateItemPreviewAndUpload.vue";
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { Registry } from "@cosmjs/proto-signing/";
@@ -376,8 +366,6 @@ export default {
 
       satisfactionEmojis: ["😭", "🙁", "🙂", "😊", "😄"],
       countryCodes: ["NL", "BE", "UK", "DE", "US", "CA"],
-     
-      
     };
   },
   watch: {
@@ -395,21 +383,36 @@ export default {
   },
 
   computed: {
-  taglist() {
-    if(this.selectedTags == 0) {return  [ 'Books', 'Clothing', 'Shoes','Art',
- '   Collectible  ',
- '   Consumer Electronic  ',
- '   Home & Garden  ',
- '   Motor', 'Bike', 
- '   Pet supplies ',
- '   Sport',
- '   Toys & Hobbies  ',
- '   Antique ',
- '  Computer', 'Smartdevice', 'Smartphone', 'Sound Device', 'TV', 'NFT Art', 'NFT Collectible', ]}else{
-      //this.$store.dispatch("setTagList");
-      return this.$store.getters.getTagList;}
-    },
+    taglist() {
+    
+      if (this.selectedTags == 0) {   let list =  [
+          "Books",
+          "Clothing",
+          "Shoes",
+          "   Collectible  ",
+          "   Consumer Electronic  ",
+          "   Home & Garden  ",
+          "   Motor",
+          "Bike",
+          "   Pet supplies ",
+          "   Sport",
+          "   Toys & Hobbies  ",
+          "   Antique ",
+          "  Computer",
+          "Smartdevice",
+          "Smartphone",
+          "Sound Device",
+          "TV",
+          "NFT Art",
+          "NFT Collectible",
+        ];
+        return list
+      } else {
+        //this.$store.dispatch("setTagList");
 
+        return this.$store.getters.getTagList
+      }
+    },
 
     hasAddress() {
       return !!this.$store.state.account.address || alert("Sign in first");
