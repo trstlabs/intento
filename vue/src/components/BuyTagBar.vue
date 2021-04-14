@@ -1,8 +1,21 @@
 <template>
   <div v-if="advanced">
-      <v-divider class="ma-4"/>
-    <v-card class="pa-2">
-   <p class="caption mt-2">Categories: </p>
+     <div class="mx-4"  v-if="applied[0]" > <p class="caption mb-0">Applied filters: </p> <v-chip-group 
+    
+        ><v-icon @click="clearList()" small left>
+        mdi-close
+      </v-icon><div  v-for="filter in applied" :key="filter">
+          <v-chip 
+           v-if="filter "
+          ><v-icon small left>
+        mdi-tune
+      </v-icon>{{ filter }}
+          </v-chip></div>
+        </v-chip-group></div>  <v-divider class="ma-4"/>    
+    <v-card class="pa-2 elevation-5 rounded-lg">
+
+   
+   <p class="caption mb-2">Categories: </p>
     <v-chip-group 
     
           
@@ -58,7 +71,7 @@
     <v-text-field  solo clearable
     prepend-inner-icon="mdi-magnify"
      class="rounded-lg" type="text"
-        placeholder="Search description..."
+        placeholder="Search title and description..."
         v-model.trim="input"
         v-on:input="search()"
         ref="input"
@@ -86,6 +99,7 @@ export default {
       minPrice: 0,
       maxPrice: 0,
       input: '',
+      applied: [],
       
 
   };
@@ -107,35 +121,45 @@ export default {
       return this.$store.getters.getLocationList;
     },
   },
-  
-    
+
 
   methods: {
 
     updateList(tag) {
+      
+      this.applied.push(tag);
       this.$store.dispatch("tagBuyItemList", tag);},
 
        updateLocation(tag) {
+        
+        this.applied.push(tag);
       this.$store.dispatch("locationBuyItemList", tag);},
       
 updatePriceMin() {
    //this.$store.dispatch("setBuyItemList");
+   this.applied.push(this.minPrice);
       this.$store.dispatch("priceMinBuyItemList", this.minPrice);
+      this.minPrice = ''
 
       },
 
       updatePriceMax() {
    //this.$store.dispatch("setBuyItemList");
+     this.applied.push(this.maxPrice);
       this.$store.dispatch("priceMaxBuyItemList", this.maxPrice);
-
+this.maxPrice = ''
       },
        clearList() {
-     
+     this.applied = []
      this.$store.dispatch("setBuyItemList");},
 
  search() {
-      let rs = this.$store.state.data.item.filter(item => !item.buyer && item.transferable === true && item.description.toLowerCase().includes(this.input)
+   this.applied = []
+      let array = this.$store.state.data.item.filter(item => !item.buyer && item.transferable === true)
+      
+      let rs = array.filter(item => item.description.toLowerCase().includes(this.input) || item.title.toLowerCase().includes(this.input)
       );
+      this.applied.push(this.input)
       this.$store.commit("updateBuyItemList", rs);
     },
     },

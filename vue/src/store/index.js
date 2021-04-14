@@ -242,15 +242,18 @@ export default new Vuex.Store({
 
     async tagBuyItemList({ commit, state }, input) {
       if (!!input) { 
-      const rs = state.buyItemList.filter(item => !item.buyer && item.tags.find(tags => tags.includes(input)) && item.transferable === true)
+      const rs = state.buyItemList.filter(item =>  item.tags.find(tags => tags.includes(input)) && item.transferable === true)
         ;
+        if (rs == []){
+          const rs = state.data.item.filter(item => !item.buyer && item.transferable === true && item.tags.find(tags => tags.includes(input)) && item.transferable === true)
+        }
 
       commit("updateBuyItemList", rs);}
     },
 
     async locationBuyItemList({ commit, state }, input) {
       if (!!input) { 
-      const rs = state.buyItemList.filter(item => !item.buyer && item.shippingregion.find(loc => loc.includes(input)) && item.transferable === true)
+      const rs = state.buyItemList.filter(item => item.shippingregion.find(loc => loc.includes(input)) && item.transferable === true)
         ;
 
       commit("updateBuyItemList", rs);}
@@ -259,7 +262,7 @@ export default new Vuex.Store({
     async priceMinBuyItemList({ commit, state }, input) {
       
       if (!!input) { 
-      const rs = state.buyItemList.filter(item => !item.buyer && item.transferable == true && (Number(item.estimationprice) > input))
+      const rs = state.buyItemList.filter(item =>  (Number(item.estimationprice) > input))
         ;
    
       commit("updateBuyItemList", rs);}
@@ -268,7 +271,7 @@ export default new Vuex.Store({
     async priceMaxBuyItemList({ commit, state }, input) {
       
       if (!!input) { 
-      const rs = state.buyItemList.filter(item => !item.buyer && item.transferable == true && (Number(item.estimationprice) < input))
+      const rs = state.buyItemList.filter(item =>  (Number(item.estimationprice) < input))
         ;
    
       commit("updateBuyItemList", rs);}

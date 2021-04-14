@@ -20,6 +20,11 @@ const {
   DirectSecp256k1HdWallet
 } = require('@cosmjs/proto-signing');
 
+const {
+  axios
+} = require('axios');
+
+
 
 exports.handler = async function (event, context) {
 
