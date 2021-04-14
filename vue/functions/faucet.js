@@ -110,6 +110,11 @@ exports.handler = async function (event, context) {
 }
 
 async function submitWithCosmJS(recipient) {
+  let accountQuery = await axios.get('https://node.trustpriceprotocol.com/auth/accounts/' + recipient)
+
+      console.log(accountQuery.data.result.value.address)
+      if (!accountQuery.data.result.value.address) {
+
   console.log("Submitting now")
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
     process.env.MNEMONIC,
@@ -141,7 +146,12 @@ const msg = {
 };
 const result = await client.signAndBroadcast(firstAccount.address, [msg], fee, "Welcome to the Trust Price Protocol community");
 assertIsBroadcastTxSuccess(result);
-
+      }else {
+        return {
+          statusCode: 400,
+          body: JSON.stringify("Account exists")
+        }
+      }
 /*const amount = {
   denom: "tpp",
   amount: "5",

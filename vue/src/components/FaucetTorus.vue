@@ -12,7 +12,7 @@
       <button :disabled="status==='submitting'" type="submit" class="button"></button>
       
      <v-row v-if="this.$store.state.wallet" class="justify-center mb-4">
-      <vue-recaptcha v-if="status == ''"
+      <vue-recaptcha v-if="status == '' || status == 'submitting' "
         ref="recaptcha"
         @verify="onCaptchaVerified"
         @expired="onCaptchaExpired"
@@ -87,7 +87,7 @@ export default {
         }
       } catch (err) {
         console.log("ERROR" + err)
-        alert("Error receiving TPP tokens on this address")
+        //alert("Error receiving TPP tokens on this address")
         window.location.reload()
         //let foo = getErrorMessage(err)
         //this.serverError = foo === '"read ECONNRESET"' ? 'Opps, we had a connection issue, please try again' : foo
