@@ -23,16 +23,7 @@
         <v-card-text>
           After placing the item, an estimation will be made. After you accept this price, anyone can buy the item!
         </v-card-text>
- <iframe style="
-      
-
--webkit-mask-image: -webkit-radial-gradient(circle, white 100%, black 100%); /*ios 7 border-radius-bug */
--webkit-transform: rotate(0.000001deg); /*mac os 10.6 safari 5 border-radius-bug */
--webkit-border-radius: 10px; 
--moz-border-radius: 10px;
-border-radius: 20px; 
-overflow: hidden; 
-" width="100%"  height="310" src="https://www.youtube.com/embed/zHXwfePrGvA?vq=hd1080&autoplay=0&loop=1&modestbranding=1&rel=0&cc_load_policy=1&color=white&mute=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+ <iframe width="100%"  height="281" src="https://www.youtube.com/embed/zHXwfePrGvA?vq=hd1080&autoplay=0&loop=1&modestbranding=1&rel=0&cc_load_policy=1&color=white&mute=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         <v-divider></v-divider>
 
         <v-card-actions>

@@ -3,19 +3,19 @@
     <div>
         <p   class="headline pt-4 font-weight-bold text-center ">Shop All </p>
 
-      <div>  <v-img  height="320" src="img/design/market.png " >  </v-img>  
-        <v-container class="pt-0">
+      <div>  <v-img  height="320" src="img/design/market.png "  >  </v-img>  
+        <v-container class="mt-n12">
       
           <v-row>  
-            <v-col cols="12" sm="6">
+            <v-col cols="12" sm="7">
               <buy-search-bar />
             </v-col>
             <v-col cols="10" sm="4">
               <buy-options-bar :items="items" />
             </v-col>
-            <v-col cols="2" sm="2">
-              <v-btn text small fab @click="showAdvanced">
-                <v-icon dark> mdi-tune </v-icon>
+            <v-col cols="2" sm="1" class="ml-n1">
+              <v-btn fab class="mt-1" small  @click="showAdvanced">
+                <v-icon> mdi-tune </v-icon>
               </v-btn>
             </v-col>   
           </v-row> 
@@ -100,18 +100,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.card__empty {
-  margin-bottom: 1rem;
-  border: 1px dashed rgba(0, 0, 0, 0.1);
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  border-radius: 8px;
-  color: rgba(0, 0, 0, 0.25);
-  text-align: center;
-  min-height: 8rem;
-}
-</style>
+

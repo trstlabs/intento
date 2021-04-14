@@ -37,6 +37,7 @@
              <v-col cols="12" sm="8" class="pa-0 mx-auto">
               <v-sheet min-height="70vh" rounded="lg" elevation="6">
                 <div class="pt-2 mt-0"> 
+                
                    <v-tabs 
       
     fixed-tabs

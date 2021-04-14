@@ -4,21 +4,22 @@
      
       <div class="overline text-center">{{ address ? "Your Account" : "Sign in" }}</div>
       <div :class="!address && 'card'">
-      <div v-if="!address" class="password" >
+      <div v-if="!address" >
+        <form>
         <!--<input 
           type="text"
           v-model="password"
           class="password__input"
           placeholder="Password (mnemonic)"
         />-->
-        <v-text-field type="password"
+        <v-text-field class="new-password" 
           v-model="password"
           
-          placeholder="Password (mnemonic)"> </v-text-field>
+          placeholder="Password (mnemonic)"> </v-text-field></form>
       </div>
       
   
-      <div  v-if="!address" class="password" >
+      <div  v-if="!address"  >
         <v-btn block
           small
           

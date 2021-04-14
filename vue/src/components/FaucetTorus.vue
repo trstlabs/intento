@@ -12,7 +12,7 @@
       <button :disabled="status==='submitting'" type="submit" class="button"></button>
       
      <v-row v-if="this.$store.state.wallet" class="justify-center mb-4">
-      <vue-recaptcha 
+      <vue-recaptcha v-if="status == ''"
         ref="recaptcha"
         @verify="onCaptchaVerified"
         @expired="onCaptchaExpired"
@@ -37,7 +37,7 @@ export default {
   data () {
     return {
      
-      status: null,
+      status: '',
      
       sucessfulServerResponse: '',
       serverError: '',
@@ -65,35 +65,39 @@ export default {
       console.log(accountQuery.data.result.value.address)
       if (!accountQuery.data.result.value.address) {
         //console.log("letsgo")
-      const self = this
-      self.status = 'Submitting...'
-      self.$refs.recaptcha.reset()
+ 
+      this.status = 'Submitting...'
+      this.$refs.recaptcha.reset()
       try {
+        this.status = 'Getting TPP tokens'
         let response = await axios.post('/.netlify/functions/faucet', {
           recipient:  this.$store.state.wallet.address,
           recaptchaToken: recaptchaToken
         })
         if (response.status === 200) {
-          self.sucessfulServerResponse = 'Your cosmos-address is succesfully registered!'
+           
+          this.sucessfulServerResponse = 'Your cosmos-address is succesfully registered!'
+          alert('Sign up successfull')
           window.location.reload()
         
         
         }
          else {
-          self.sucessfulServerResponse = response.data
+          this.sucessfulServerResponse = response.data
         }
       } catch (err) {
         console.log("ERROR" + err)
+        alert("Error receiving TPP tokens on this address")
         window.location.reload()
         //let foo = getErrorMessage(err)
-        //self.serverError = foo === '"read ECONNRESET"' ? 'Opps, we had a connection issue, please try again' : foo
+        //this.serverError = foo === '"read ECONNRESET"' ? 'Opps, we had a connection issue, please try again' : foo
       }
-      self.status = ''}
-      else {alert("Account already registered on TPP, please log in instead or create a new account")}
+      this.status = ''}
+      else {alert("Account already registered on TPP, please sign in instead or create a new account")}
     },
     
     onCaptchaExpired: function () {
-      self.status = ''
+      this.status = ''
       this.$refs.recaptcha.reset()
     },
     getErrorMessage (err) {
