@@ -20,9 +20,9 @@ const {
   DirectSecp256k1HdWallet
 } = require('@cosmjs/proto-signing');
 
-const {
+const
   axios
-} = require('axios');
+ = require('axios');
 
 
 
