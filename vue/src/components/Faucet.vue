@@ -1,11 +1,11 @@
 
 <template>
 <div>
-  <div class="pa-2 mx-auto"  v-if="!this.$store.state.account.address"> 
+ 
   
   <form @submit.prevent="submit">
     
-       <div v-if="status">Status: {{status}}</div>
+       <div class="caption" v-if="status">Status: {{status}}</div>
       <div v-if="serverError">Oops Error!{{serverError}}</div>
 
       <v-text-field class="mx-4" v-model="address" required placeholder="cosmos-address" name="address" type="text" />
@@ -13,7 +13,7 @@
       
      <v-row class="justify-center mb-4">
       <vue-recaptcha v-if="status == '' || status =='Registering...'"
-        ref="recaptchaRef"
+        ref="recaptcha"
         @verify="onCaptchaVerified"
         @expired="onCaptchaExpired"
         @error="onCaptchaError"
@@ -23,10 +23,8 @@
       </vue-recaptcha></v-row>
       <v-alert type="success" v-if="sucessfulServerResponse">{{sucessfulServerResponse}}</v-alert>
     </form>
-    <v-btn color="primary" block @click="submit()">Submit</v-btn> </div>
-    <div v-else>
-      <confirm-sign-in/>
-       </div>
+    <v-btn color="primary" block @click="submit()">Submit</v-btn> 
+   
     <v-divider class="mt-4" />
 </div>
 </template>
@@ -54,7 +52,7 @@ export default {
       // console.log(this.$refs.recaptcha.execute())
       this.status = 'Registering...'
       // this.$refs.recaptcha.reset()
-      this.$refs.recaptchaRef.execute();
+      this.$refs.recaptcha.execute();
     },
     onCaptchaRender: function(id) {
       //console.log({id})
@@ -70,7 +68,7 @@ export default {
         //console.log("letsgo")
  
       this.status = 'Submitting...'
-      this.$refs.recaptchaRef.reset()
+      this.$refs.recaptcha.reset()
       try {
         this.status = 'Getting TPP tokens'
         let response = await axios.post('/.netlify/functions/faucet', {
@@ -101,7 +99,7 @@ export default {
     
     onCaptchaExpired: function () {
       this.status = ''
-      this.$refs.recaptchaRef.reset()
+      this.$refs.recaptcha.reset()
     },
     getErrorMessage (err) {
   let responseBody

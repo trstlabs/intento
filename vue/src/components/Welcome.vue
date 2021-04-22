@@ -109,7 +109,8 @@
             </v-btn>
           </div>
           <div v-if="existing">
-            <faucet />
+            <faucet/>
+            
           </div>
           <v-card-actions>
             <v-col>
