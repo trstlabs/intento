@@ -12,7 +12,7 @@
       <button :disabled="status==='Registering...'" type="submit" class="button"></button>
       
      <v-row class="justify-center mb-4">
-      <vue-recaptcha v-if="status == '' || status =='Registering...'"
+      <vue-recaptcha v-show="status == '' || status =='Registering...'"
         ref="recaptcha"
         @verify="onCaptchaVerified"
         @expired="onCaptchaExpired"
@@ -23,7 +23,7 @@
       </vue-recaptcha></v-row>
       <v-alert type="success" v-if="sucessfulServerResponse">{{sucessfulServerResponse}}</v-alert>
     </form>
-    <v-btn color="primary" block @click="submit()">Submit</v-btn> 
+    <!---<v-btn color="primary" block @click="submit()">Submit</v-btn> -->
    
     <v-divider class="mt-4" />
 </div>
@@ -72,7 +72,7 @@ export default {
       try {
         this.status = 'Getting TPP tokens'
         let response = await axios.post('/.netlify/functions/faucet', {
-          recipient:  this.address,
+          recipient: this.address,
           recaptchaToken: recaptchaToken
         })
         if (response.status === 200) {
