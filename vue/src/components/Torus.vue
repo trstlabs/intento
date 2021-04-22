@@ -27,7 +27,7 @@
       ></v-col>
     </div>
      <div v-else>    <v-alert  
-  type="success"  class="caption"
+  type="info"  class="caption"
 >
 Confirm this sign-in once, by clicking the link sent to <span v-if="!!this.email"> {{email}} </span> <span v-else> your Google account's email </span >, on this device.
 </v-alert> </div>

@@ -52,8 +52,52 @@
                 </div>
               </v-card-text></v-card>
 <v-divider class="mx-4 pa-2"/>
-                <div class="text-center pa-2">
-                   <v-img src="img/design/buy.png" >
+                <div class="text-center pa-2"><v-row  class="mx-4" >  <v-btn x-small icon @click="iteminfo = !iteminfo">
+                <v-icon >mdi-information-outline</v-icon>
+              </v-btn>
+          <span  v-if="this.$store.state.account.address" >
+            <wallet-coins /></span>
+            
+              <div v-if="iteminfo" class="text-center caption font-weight-light pa-2">
+                You can buy {{ thisitem.title }}
+                <span v-if="thisitem.shippingcost > 0"
+                  >and ship the item if you live in one of the following
+                  locations:
+                  <span
+                    v-for="loc in thisitem.shippingregion"
+                    :key="loc"
+                    class="font-weight-medium"
+                  >
+                    {{ loc }}
+                  </span>
+                  <span v-if="!thisitem.shippingregion[0]"> all locations </span
+                  >. Additional cost (e.g. shipping) is ${{
+                    thisitem.shippingcost
+                  }}
+                  TPP.</span
+                >
+                <span v-if="thisitem.localpickup">
+                  and you can arrange a pickup by sending a message to
+                  <a @click="createRoom">{{ thisitem.seller }}. </a>
+                </span>
+                <span v-if="thisitem.discount > 0">
+                  Reseller gives a discount of ${{ thisitem.discount}} on
+                  the original selling price of ${{
+                    thisitem.estimationprice
+                  }}TPP.</span
+                >
+                <span v-if="thisitem.creator == thisitem.seller"
+                  >If you buy the item you will receive a cashback reward of ${{
+                    (thisitem.estimationprice * 0.05).toFixed(0)
+                  }}
+                  TPP.
+                </span>
+                With TPP you can withdrawl your payment at any time, up until
+                the item transaction and no transaction costs are applied.
+              </div>
+            </v-row>
+
+                   <v-img @click="iteminfo = !iteminfo" src="img/design/buy.png" >
            </v-img> 
               <v-row v-if="thisitem.creator == thisitem.seller">
                 <v-col  >
@@ -229,6 +273,7 @@
                     </div>
                   </v-btn>
                 </v-col>
+                
               </v-row> 
             </div>
               <v-divider class="ma-4 pt-2"/>
@@ -465,53 +510,7 @@
             </div>
 
             <v-divider class="ma-4" />
-            <v-row>
-              <div v-if="hasAddress" class="ma-4 text-center">
-                <wallet-coins />
-              </div>
-              <v-spacer />
-              <v-btn x-small icon @click="iteminfo = !iteminfo"
-                ><v-icon>mdi-information-outline</v-icon>
-              </v-btn>
-              <div v-if="iteminfo" class="text-center caption pa-2">
-                You can buy {{ thisitem.title }}
-                <span v-if="thisitem.shippingcost > 0"
-                  >and ship the item if you live in one of the following
-                  locations:
-                  <span
-                    v-for="loc in thisitem.shippingregion"
-                    :key="loc"
-                    class="font-weight-medium"
-                  >
-                    {{ loc }}
-                  </span>
-                  <span v-if="!thisitem.shippingregion[0]"> all locations </span
-                  >. Additional cost (e.g. shipping) is ${{
-                    thisitem.shippingcost
-                  }}
-                  TPP.</span
-                >
-                <span v-if="thisitem.localpickup">
-                  and you can arrange a pickup by sending a message to
-                  <a @click="createRoom">{{ thisitem.seller }}. </a>
-                </span>
-                <span v-if="thisitem.discount > 0">
-                  Reseller gives a discount of ${{ thisitem.discount}} on
-                  the original selling price of ${{
-                    thisitem.estimationprice
-                  }}TPP.</span
-                >
-                <span v-if="thisitem.creator == thisitem.seller"
-                  >If you buy the item you will receive a cashback reward of ${{
-                    (thisitem.estimationprice * 0.05).toFixed(0)
-                  }}
-                  TPP.
-                </span>
-                With TPP you can withdrawl your payment at any time, up until
-                the item transaction and no transaction costs are applied.
-              </div>
-            </v-row>
-    
+                
           </div>
         </div>
       </div>

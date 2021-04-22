@@ -1,14 +1,10 @@
 <template>
   <div>
-    <div >
+   
      
-      </div>
-      <div class="text-center"> 
-
-          </div>
-          <v-chip outlined label>
-          <div class="card__row">
-            <span>
+          
+          <div >
+            <span >
               You have
               <span
                 class="coin__amount"
@@ -19,7 +15,7 @@
               on your balance.
             </span>
           </div>
-          </v-chip>
+          
         </div>
       
   
@@ -27,27 +23,10 @@
 </template>
 
 <style scoped>
-.container {
-  margin-bottom: 1.5rem;
-}
-.card {
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 0.25rem;
- 
-  padding: 0.25rem 0.75rem;
-  overflow-x: hidden;
-}
 
 
-.card__row {
-  display: flex;
-  align-items: center;
-  margin: 0.5rem 0;
-  
-  font-size: 0.875rem;
-  font-weight: 400;
-  line-height: 1.5;
-}
+
+
 
 
 .coin__amount {

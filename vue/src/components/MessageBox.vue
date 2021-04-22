@@ -18,7 +18,7 @@
         v-model="addRoomUsername"
       />
       
-     <p class="caption"> Make sure the cosmos-address is correct</p>
+     <p class="caption text-center"> Make sure the cosmos-address is valid</p>
     
      
         <v-divider></v-divider>
@@ -60,7 +60,9 @@
     <p v-if="!this.currentUserId && this.$store.state.user != null" cass="pa-8 text-center">  Loading messages... <button onClick="window.location.reload();">Refresh</button> </p>
     <p v-if="!this.$store.state.account.address" class="pa-8 text-center">  Sign in first <button onClick="window.location.reload();">Refresh</button> </p>
     <p v-if="!this.$store.state.user && this.$store.state.account.address" class="pa-8 text-center">  Confirm verification link via Email<button onClick="window.location.reload();">Refresh</button> </p>
-    <chat-window v-if="this.currentUserId"
+   <div> 
+  <!-- To fix overlay issue: remove z index 10 from vac0room-header room-footer-->
+     <chat-window v-if="this.currentUserId"
       :styles="$vuetify.theme.dark == true ? stylesdark : styles "
       :current-user-id="this.currentUserId"
       :room-id="roomId"
@@ -88,7 +90,7 @@
       
       
     >
-    </chat-window>
+    </chat-window></div>
   </div>
 </template>
 

@@ -36,7 +36,7 @@ export default {
   data () {
     return {
      
-      status: null,
+      status: '',
       address: null,
       sucessfulServerResponse: '',
       serverError: '',

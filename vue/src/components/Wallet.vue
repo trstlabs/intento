@@ -6,18 +6,19 @@
       <div :class="!address && 'card'">
       <div v-if="!address" >
         <form>
-        <!--<input 
+        <!--- <input 
           type="text"
           v-model="password"
-          class="password__input"
+          class="password"
           placeholder="Password (mnemonic)"
-        />-->
-        <v-text-field class="new-password" 
+        />--->
+       <v-text-field type="password" class="password" 
           v-model="password"
           
-          placeholder="Password (mnemonic)"> </v-text-field></form>
+          placeholder="Password (mnemonic)"> </v-text-field>
+          </form>
       </div>
-      
+   
   
       <div  v-if="!address"  >
         <v-btn block
