@@ -72,7 +72,7 @@ export default {
       try {
         this.status = 'Getting TPP tokens'
         let response = await axios.post('/.netlify/functions/faucet', {
-          recipient:  this.$store.state.wallet.address,
+          recipient:  this.address,
           recaptchaToken: recaptchaToken
         })
         if (response.status === 200) {
@@ -88,7 +88,7 @@ export default {
         }
       } catch (err) {
         console.log("ERROR" + err)
-        //alert("Error receiving TPP tokens on this address")
+        alert("Error receiving tokens")
         window.location.reload()
         //let foo = getErrorMessage(err)
         //this.serverError = foo === '"read ECONNRESET"' ? 'Opps, we had a connection issue, please try again' : foo
