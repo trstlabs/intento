@@ -11,7 +11,7 @@
           <v-col cols="12" md="8">
             <p
               v-if="thisitem.creator != thisitem.seller"
-              class="text-capitalize subtitle-2 pa-2 text-left"
+              class="text-capitalize subtitle-2  pa-2 text-left"
             >
               <v-icon small left> mdi-repeat </v-icon>{{ thisitem.title }}
             </p>
@@ -22,10 +22,10 @@
             </p>
 
             <v-card class="ma-1" elevation="0">
-              <p class="ma-1 caption" v-if="thisitem.description.length < 200">
+              <p class="ma-1 caption font-weight-light" v-if="thisitem.description.length < 200">
                 {{ thisitem.description }}
               </p>
-              <p class="ma-1 caption" v-else>
+              <p class="ma-1 caption font-weight-light" v-else>
                 {{ thisitem.description.substring(0, 148) + ".." }}
               </p>
             </v-card>
@@ -335,14 +335,14 @@
               <v-card elevation="0">
                 <div class="pa-2 overline text-center">Description</div>
                 <v-card-text>
-                  <div class="body-1">{{ thisitem.description }}</div>
+                  <div class="caption " >{{ thisitem.description }}</div>
                 </v-card-text>
               </v-card>
               <v-chip
                 outlined
                 medium
                 label
-                class="ma-1 caption"
+                class="ma-1 caption font-weight-light"
                 v-for="itemtags in thisitem.tags"
                 :key="itemtags"
               >
@@ -406,10 +406,7 @@
                 <v-icon left> mdi-account </v-icon>
                 Seller: {{ thisitem.seller }}
               </v-chip>
-              <v-chip class="ma-1 caption" medium label outlined>
-                <v-icon left> mdi-account-outline </v-icon>
-                Creator: {{ thisitem.creator }}
-              </v-chip>
+             
             </div>
           </div>
         </div>

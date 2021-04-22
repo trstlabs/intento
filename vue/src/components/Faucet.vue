@@ -9,10 +9,10 @@
       <div v-if="serverError">Oops Error!{{serverError}}</div>
 
       <v-text-field class="mx-4" v-model="address" required placeholder="cosmos-address" name="address" type="text" />
-      <button :disabled="status==='submitting'" type="submit" class="button"></button>
+      <button :disabled="status==='Registering...'" type="submit" class="button"></button>
       
-     <v-row class="justify-center mb-4">
-      <vue-recaptcha
+     <v-row v-if="this.$store.state.wallet" class="justify-center mb-4">
+      <vue-recaptcha v-if="status == '' || status == 'Registering...' "
         ref="recaptcha"
         @verify="onCaptchaVerified"
         @expired="onCaptchaExpired"
@@ -44,11 +44,11 @@ export default {
     }
   },
   methods: {
-    submit: function () {
+   submit: function () {
 
       
       // console.log(this.$refs.recaptcha.execute())
-      this.status = 'submitting'
+      this.status = 'Registering...'
       // this.$refs.recaptcha.reset()
       this.$refs.recaptcha.execute() 
     },
@@ -64,32 +64,39 @@ export default {
       //console.log(accountQuery.data.result.value.address)
       if (!accountQuery.data.result.value.address) {
         //console.log("letsgo")
-      const self = this
-      self.status = 'submitting'
-      self.$refs.recaptcha.reset()
+ 
+      this.status = 'Submitting...'
+      this.$refs.recaptcha.reset()
       try {
+        this.status = 'Getting TPP tokens'
         let response = await axios.post('/.netlify/functions/faucet', {
-          recipient: self.address,
+          recipient:  this.$store.state.wallet.address,
           recaptchaToken: recaptchaToken
         })
         if (response.status === 200) {
-          self.sucessfulServerResponse = 'Your cosmos-address is succesfully registered!'
-          self.address = ''
+           
+          this.sucessfulServerResponse = 'Your cosmos-address is succesfully registered!'
+          alert('Sign up successfull')
+          window.location.reload()
+        
+        
         }
          else {
-          self.sucessfulServerResponse = response.data
+          this.sucessfulServerResponse = response.data
         }
       } catch (err) {
         console.log("ERROR" + err)
+        //alert("Error receiving TPP tokens on this address")
+        window.location.reload()
         //let foo = getErrorMessage(err)
-        //self.serverError = foo === '"read ECONNRESET"' ? 'Opps, we had a connection issue, please try again' : foo
+        //this.serverError = foo === '"read ECONNRESET"' ? 'Opps, we had a connection issue, please try again' : foo
       }
-      self.status = ''}
-      else {alert("Account already registered on TPP, please log in instead or create a new account")}
+      this.status = ''}
+      else {alert("Account already registered on TPP, please sign in instead or create a new account")}
     },
     
     onCaptchaExpired: function () {
-      self.status = ''
+      this.status = ''
       this.$refs.recaptcha.reset()
     },
     getErrorMessage (err) {
@@ -104,7 +111,6 @@ export default {
 },
   
   },
-
   
   components: {
     VueRecaptcha

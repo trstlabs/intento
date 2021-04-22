@@ -186,7 +186,7 @@ Confirm sign in by clicking the link sent to your Google account's email on this
             <v-list-item to="/explore">
             <v-list-item-title>Explore</v-list-item-title>
           </v-list-item>
-        <div  @click="welcome = !welcome" v-if="!this.$store.state.account.address" >
+        <div  @click="welcome = !welcome" v-if="!this.$store.state.account.address || !this.$store.state.user" >
            <v-list-item  @click="welcome = !welcome" inactive>
             <v-list-item-title>Get Started</v-list-item-title>
           </v-list-item></div>
@@ -208,7 +208,7 @@ Confirm sign in by clicking the link sent to your Google account's email on this
       </v-list>
     </v-navigation-drawer>
     
-    <welcome v-if="!this.$store.state.account.address && welcome"/> 
+    <welcome v-if="!this.$store.state.account.address || !this.$store.state.user && welcome"/> 
     <v-btn
             v-scroll="onScroll"
             v-show="fab"

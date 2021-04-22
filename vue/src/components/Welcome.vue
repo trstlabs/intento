@@ -2,7 +2,7 @@
   <div>
     <v-dialog v-model="dialog" width="600" persistent>
       <v-card class="text-center">
-        <img class="pa-2" src="img/brand/icon.png" width="77" />
+        <img class="pa-2 " src="img/brand/icon.png" width="77" />
        
 
         <div v-if="!signin && !signup && !learn" >
@@ -10,14 +10,14 @@
           Continue with an account 
         </p>
        
-          <v-card-text class="">
+          <v-card-text>
           Welcome to the TPP marketplace. Feel free to use the app and see how it
-            behaves. Note: items are examples only and are currently not redeemable for TPP tokens.
+            behaves. Note: items are examples only and are not redeemable for TPP tokens.
             Feedback is always welcome at the
             <a  target="_blank" href="https://www.trustpriceprotocol.com"> main page</a>.
           </v-card-text>
      
-             <v-btn class="ma-6" large
+             <v-btn class="ma-6 elevation-6"  large
               color="primary"
               
               @click="(signin = true), loadContent()"
@@ -45,7 +45,7 @@
 
             <v-spacer />
             <v-btn
-              color="primary "
+              color="primary"
               text
               @click="(signup = true), loadContent()"
             >
@@ -53,11 +53,21 @@
             </v-btn>
           </v-card-actions>
         </div>
-        <div v-if="signin">
+        <div  v-if="signin">
+         <div  v-if="this.$store.state.account.address">
+           <p class="text-center overline" >
+          Verify it's you
+        </p>
+        <div class="pb-4 ma-6">
+         <torus v-if="!wallet" :privkey="this.signkey"/>
+         <confirm-sign-in v-else /> </div>
+
+        </div> 
+         <div v-else>
            <p class="text-center overline" >
           Continue with an account 
         </p>
-          <torus v-if="!wallet" :privkey="this.signkey"/>
+          <torus v-if="!wallet" :privkey="this.signkey" />
            <v-row v-if="!wallet">
               <v-divider class="ma-2" />
               <p class="caption">Or</p>
@@ -66,20 +76,26 @@
             <v-btn text v-if="!wallet" @click="wallet = true">
               Sign in with a mnemonic phrase
             </v-btn>
-          <wallet v-if="wallet" @signedIn="updateDialog()" />
-          <v-card-actions>
-            <v-col>
+     <wallet v-if="wallet" @signedIn="updateDialog()" />
+          
+
+         
+          
+</div><v-card-actions>
+      
               <v-btn color="primary" text @click="signin = false, wallet = false"> Back </v-btn>
-            </v-col>
+        
             
           </v-card-actions>
         </div>
+
+        
         
 
         <div v-if="signup">
           <v-card-text>
-            Receive 5 free tokens to get started! Create a new account linked to
-            Google using DirectAuth.
+            Receive 5 free TPP tokens to get started! Create a new account linked to your Google account
+            using DirectAuth.
           </v-card-text>
           <div v-if="!existing">
             <faucet-torus />
@@ -310,7 +326,8 @@
 </template>
 
   <script>
-import TorusPlaceholder from './TorusPlaceholder.vue';
+import ConfirmSignIn from './ConfirmSignIn.vue';
+
 
 
 /*
@@ -324,7 +341,7 @@ import Wallet from "./Wallet.vue";*/
 //import * as bip39 from 'bip39'
 export default {
   //components: { Wallet, Faucet, Torus, FaucetTorus },
-  components: {TorusPlaceholder },
+  components: { ConfirmSignIn },
 
   data() {
     return {
@@ -337,7 +354,7 @@ export default {
       learn: false,
       existing: false,
       e1: 1,
-      mnemonic: "",
+
       wallet: false,
     };
   },
@@ -346,6 +363,9 @@ export default {
       //console.log(localStorage.getItem("privkey"));
       return localStorage.getItem("privkey");
     },
+    
+     
+   
   },
  
   methods: {

@@ -260,7 +260,7 @@ func handleMsgItemThank(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemThan
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
 	//get buyer info
-	buyer := k.GetBuyer(ctx, msg.Itemid)
+	//buyer := k.GetBuyer(ctx, msg.Itemid)
 
 	//get item info
 	item := k.GetItem(ctx, msg.Itemid)
@@ -279,12 +279,9 @@ func handleMsgItemThank(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemThan
 	if item.Status != "Shipped" || item.Status != "Transferred" {
 		return nil, sdkerrors.Wrap(nil, "item not transferred yet")
 	}
-
-	if msg.Thank == true {
-		item.Thank = true
-		k.SetItem(ctx, item)
-		k.SetBuyer(ctx, buyer)
-	}
-
+	item.Thank = msg.Thank
+	
+	k.SetItem(ctx, item)
+	
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

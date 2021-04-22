@@ -48,7 +48,7 @@
 
       <v-stepper-items>
     
-          <v-stepper-content class="ma-5" step="1">
+          <v-stepper-content class="pr-12 ma-5 " step="1">
       
               <v-alert type="warning"
                 class="caption text-center"
@@ -312,7 +312,6 @@ export default {
         shippingcost: "0",
         localpickup: false,
         estimationcount: "3",
-
         condition: "0",
       },
 
@@ -394,8 +393,7 @@ export default {
           "Smartphone",
           "Sound Device",
           "TV",
-          "NFT Art",
-          "NFT Collectible",
+          "NFT",
         ];
         return list
       } else {

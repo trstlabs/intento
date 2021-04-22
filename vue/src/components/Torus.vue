@@ -1,7 +1,7 @@
 <template>
   <div>
     <div></div>
-    <div class="justify-center">
+    <div v-if="!this.$store.state.account.address" class="justify-center">
       <v-col>
         <button>
           <v-progress-linear indeterminate v-if="loading"></v-progress-linear>
@@ -26,6 +26,11 @@
           ></a></button
       ></v-col>
     </div>
+     <div v-else>    <v-alert dense 
+  type="warning"  class="caption"
+>
+Confirm this sign-in once, by clicking the link sent to <span v-if="!!this.email"> {{email}} </span> <span v-else> your Google account's email </span >, on this device.
+</v-alert> </div>
   </div>
 </template>
 
@@ -88,7 +93,7 @@ export default {
         if (!email) {
           // User opened the link on a different device. To prevent session fixation
           // attacks, ask the user to provide the associated email again. For example:
-          email = window.prompt("Please provide your email for confirmation");
+          email = window.prompt("Please provide your email for sign-in confirmation");
         }
 
         // The client SDK will parse the code from the link for you.
@@ -121,6 +126,10 @@ export default {
       return {
         // [GOOGLE]: { login_hint: 'hello@tor.us', prompt: 'none' }, // This allows seamless login with google
       };
+    },
+    email() {
+      //console.log(localStorage.getItem("privkey"));
+      return localStorage.getItem("emailForSignIn");
     },
   },
   methods: {

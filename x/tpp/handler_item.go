@@ -410,7 +410,7 @@ if !k.HasItem(ctx, msg.Itemid) {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 		}
 
-	if (item.Status != "Transferred" &&  item.Status != "Shipped") {
+	if (item.Status != "Transferred" && item.Status != "Shipped") {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item not available to resell")
 	}
 
@@ -430,6 +430,7 @@ if !k.HasItem(ctx, msg.Itemid) {
 		item.Note = msg.Note
 		item.Buyer = ""
 		item.Status = ""
+		
 
 
 

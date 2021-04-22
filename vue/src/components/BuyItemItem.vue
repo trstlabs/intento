@@ -232,7 +232,7 @@
               </v-row> 
             </div>
               <v-divider class="ma-4 pt-2"/>
-  
+
             <v-chip class="ma-1 caption" label outlined medium>
               <v-icon left> mdi-account-badge-outline </v-icon>
               Identifier: {{ thisitem.id }}
@@ -320,10 +320,10 @@
               >
                 <v-icon left> mdi-repeat </v-icon>
                 <v-icon left> mdi-plus </v-icon
-                ><v-icon left> mdi-package-variant-closed </v-icon> ${{
+                ><v-icon left> mdi-package-variant-closed </v-icon> {{
                   Number(thisitem.estimationprice) +
                   Number(thisitem.shippingcost)
-                }}
+                }}<v-icon small right>$vuetify.icons.custom</v-icon>  
               </v-chip>
               <v-chip
                 v-if="
@@ -339,11 +339,11 @@
                 ><v-icon small left> mdi-plus </v-icon
                 ><v-icon left> mdi-package-variant-closed </v-icon>
                 <v-icon small left> mdi-minus </v-icon
-                ><v-icon left> mdi-label-percent</v-icon> ${{
+                ><v-icon left> mdi-label-percent</v-icon> {{
                   Number(thisitem.estimationprice) +
                   Number(thisitem.shippingcost) -
                   Number(thisitem.discount)
-                }}
+                }}<v-icon small right>$vuetify.icons.custom</v-icon>  
               </v-chip>
               <v-chip
                 v-if="thisitem.discount > 0 && thisitem.localpickup"
@@ -353,14 +353,14 @@
               >
                 <v-icon small> mdi-repeat </v-icon
                 ><v-icon small> mdi-minus </v-icon
-                ><v-icon small> mdi-label-percent</v-icon> ${{
+                ><v-icon small> mdi-label-percent</v-icon> {{
                   thisitem.estimationprice - thisitem.discount
-                }}
+                }}<v-icon small right>$vuetify.icons.custom</v-icon>  
               </v-chip>
               <v-chip class="ma-1 caption" label outlined>
-                <v-icon left> mdi-repeat </v-icon>Original price: ${{
+                <v-icon left> mdi-repeat </v-icon>Original price: {{
                   thisitem.estimationprice
-                }}
+                }}<v-icon small right>$vuetify.icons.custom</v-icon>  
               </v-chip>
             </span>
             <span v-else>
@@ -373,24 +373,24 @@
                 >
                   <v-icon left> mdi-check-all </v-icon
                   ><v-icon small left> mdi-plus </v-icon
-                  ><v-icon small left> mdi-package-variant-closed </v-icon> ${{
+                  ><v-icon small left> mdi-package-variant-closed </v-icon> {{
                     Number(thisitem.estimationprice) +
                     Number(thisitem.shippingcost)
-                  }}
+                  }}<v-icon small right>$vuetify.icons.custom</v-icon>  
                 </v-chip></span
               >
 
               <span v-else>
                 <v-chip class="ma-1 caption" label outlined>
                   <v-icon left> mdi-check-all </v-icon>
-                  ${{ thisitem.estimationprice }}
+                  {{ thisitem.estimationprice }}<v-icon small right>$vuetify.icons.custom</v-icon>  
                 </v-chip></span
               >
               <v-chip class="ma-1 caption" label outlined>
-                <v-icon left> mdi-hand-heart </v-icon>Cashback: ${{
+                <v-icon small left> mdi-hand-heart </v-icon>Cashback: {{
                   (thisitem.estimationprice * 0.05).toFixed(0)
                 }}
-                TPP
+                <v-icon small right>$vuetify.icons.custom</v-icon>  
               </v-chip>
             </span>
             <v-chip
@@ -398,7 +398,7 @@
               class="ma-1 caption"
               label
               outlined
-              ><v-icon left> mdi-map-marker-outline </v-icon>Local
+              ><v-icon left> mdi-map-marker-outline </v-icon>
               Pickup</v-chip
             >
 
@@ -419,7 +419,7 @@
               outlined
             >
               <v-icon left> mdi-label-percent </v-icon>
-              Discount: ${{ thisitem.discount}} <v-icon small right>$vuetify.icons.custom</v-icon>  
+              Discount: {{ thisitem.discount}} <v-icon small right>$vuetify.icons.custom</v-icon>  
             </v-chip>
             <v-chip
               outlined
@@ -436,7 +436,7 @@
               <v-icon left> mdi-account </v-icon>
               Seller: {{ thisitem.seller }}
             </v-chip>
-            <v-chip class="ma-1 caption" label outlined>
+            <v-chip class="ma-1 caption" label outlined v-if="thisitem.creator != thisitem.seller ">
               <v-icon left> mdi-account-outline </v-icon>
               Creator: {{ thisitem.creator }}
             </v-chip>
@@ -470,7 +470,7 @@
                 <wallet-coins />
               </div>
               <v-spacer />
-              <v-btn icon @click="iteminfo = !iteminfo"
+              <v-btn x-small icon @click="iteminfo = !iteminfo"
                 ><v-icon>mdi-information-outline</v-icon>
               </v-btn>
               <div v-if="iteminfo" class="text-center caption pa-2">

@@ -83,7 +83,7 @@
      
 
       <v-card>
-        <v-card-title class="p grey lighten-2">
+        <v-card-title class=" grey lighten-2 ">
          {{item.title}} <v-spacer></v-spacer>
           <v-btn
             color="primary"
@@ -157,7 +157,7 @@
             <v-card elevation="0">
               <div class="overline">Title</div>
 
-              <div class="body-1">
+              <div class="body-1 font-weight-light">
                 {{ item.title }}
               </div>
             </v-card>
@@ -247,9 +247,9 @@
           </v-col>
         </v-row>
         <v-card elevation="0">
-          <div class="overline">Description</div>
+          <div class="overline ">Description</div>
 
-          <div class="caption">
+          <div class="caption font-weight-light">
             {{ item.description }}
           </div>
         </v-card>
@@ -348,8 +348,8 @@ overflow: hidden;
       <v-card elevation="0">
         <div class="pa-2">
           <div>
-            <v-chip-group active-class="primary--text" column>
-              <v-chip
+            <v-chip-group active-class="primary--text " column>
+              <v-chip class="font-weight-light"
                 :disabled="lastitem"
                 small
                 v-for="(option, text) in options"
