@@ -12,7 +12,7 @@
       <button :disabled="status==='Registering...'" type="submit" class="button"></button>
       
      <v-row class="justify-center mb-4">
-      <vue-recaptcha v-show="status == '' || status =='Registering...'"
+      <vue-recaptcha v-show="status == '' || status == 'Registering...'"
         ref="recaptcha"
         @verify="onCaptchaVerified"
         @expired="onCaptchaExpired"
@@ -25,7 +25,7 @@
     </form>
     <!---<v-btn color="primary" block @click="submit()">Submit</v-btn> -->
    
-    <v-divider class="mt-4" />
+    <v-divider class=" ma-4 mt-6" />
 </div>
 </template>
 
@@ -39,7 +39,7 @@ export default {
     return {
      
       status: '',
-      address: null,
+      address: '',
       sucessfulServerResponse: '',
       serverError: '',
       google: '6LdzO1waAAAAAKDkD1sNFSx552KIrXIr1F_NY_4O'
@@ -63,7 +63,7 @@ export default {
     onCaptchaVerified: async function (recaptchaToken) {
       let accountQuery = await axios.get('https://node.trustpriceprotocol.com/auth/accounts/' + this.address)
 
-      //console.log(accountQuery.data.result.value.address)
+      console.log(accountQuery.data.result.value.address)
       if (!accountQuery.data.result.value.address) {
         //console.log("letsgo")
  
@@ -94,7 +94,7 @@ export default {
         //this.serverError = foo === '"read ECONNRESET"' ? 'Opps, we had a connection issue, please try again' : foo
       }
       this.status = ''}
-      else {alert("Account already registered on TPP, please sign in instead or create a new account")}
+      else {alert("Account seems to already exist on the TPP blockchain, try signing in, or create a new account")}
     },
     
     onCaptchaExpired: function () {

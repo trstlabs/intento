@@ -94,8 +94,8 @@
 
         <div v-if="signup">
           <v-card-text>
-            Receive 5 free TPP tokens to get started! Create a new account linked to your Google account
-            using DirectAuth.
+            Register a TPP address<span v-if="!existing"> linked to your Google account
+            using DirectAuth</span><span v-else> by entering an existing Cosmos-address</span>, and receive 5 free TPP tokens to get started!
           </v-card-text>
           <div v-if="!existing">
             <faucet-torus />
