@@ -9,10 +9,10 @@
       <div v-if="serverError">Try again{{serverError}}</div>
 
      <torus  v-if="!this.$store.state.wallet" />
-      <button :disabled="status==='submitting'" type="submit" class="button"></button>
+      <button :disabled="status==='Registering...'" type="submit" class="button"></button>
       
      <v-row v-if="this.$store.state.wallet" class="justify-center mb-4">
-      <vue-recaptcha v-if="status == '' || status == 'submitting' "
+      <vue-recaptcha v-if="status == '' || status == 'Registering...' "
         ref="recaptcha"
         @verify="onCaptchaVerified"
         @expired="onCaptchaExpired"
@@ -49,7 +49,7 @@ export default {
 
       
       // console.log(this.$refs.recaptcha.execute())
-      this.status = 'submitting'
+      this.status = 'Registering...'
       // this.$refs.recaptcha.reset()
       this.$refs.recaptcha.execute() 
     },
