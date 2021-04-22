@@ -4,7 +4,7 @@
        <v-text-field class="mx-4" v-model="email" required placeholder="Email-address" name="email" type="text" />
      <v-btn @click="sent = true, sendMail()"> Send</v-btn>  </div>
     <div v-else>
-      <v-alert dense 
+      <v-alert  
   type="success"  class="caption"
 >
 Confirm this sign-in once, by clicking the link sent to <span v-if="this.email"> {{email}} </span> <span v-else> your Google account's email </span >, on this device.

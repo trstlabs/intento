@@ -26,8 +26,8 @@
           ></a></button
       ></v-col>
     </div>
-     <div v-else>    <v-alert dense 
-  type="warning"  class="caption"
+     <div v-else>    <v-alert  
+  type="success"  class="caption"
 >
 Confirm this sign-in once, by clicking the link sent to <span v-if="!!this.email"> {{email}} </span> <span v-else> your Google account's email </span >, on this device.
 </v-alert> </div>
@@ -64,7 +64,8 @@ export default {
     };
   },
   created() {
-    if (this.privkey) {
+     const email = window.localStorage.getItem("emailForSignIn");
+    if (email) {
       //var email = window.localStorage.getItem("emailForSignIn");
       //var emailRef = window.localStorage.getItem("emailRef");
       //if this doesnt work for returning user, put emailRef outside of it and  try signing in right away. First test if auth is able to handle handle it from its localstorage
@@ -89,7 +90,7 @@ export default {
         // the flow on the same device where they started it.
 
         //var emailRef = window.localStorage.getItem('emailRef');
-        let email = window.localStorage.getItem("emailForSignIn");
+       
         if (!email) {
           // User opened the link on a different device. To prevent session fixation
           // attacks, ask the user to provide the associated email again. For example:
@@ -117,7 +118,8 @@ export default {
             // Common errors could be invalid email and invalid or expired OTPs.
           });
       }
-      this.torusSignIn(this.privkey);
+      if(!this.privkey){
+      this.torusSignIn(this.privkey);}
     }
 },
 
