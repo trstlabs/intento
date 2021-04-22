@@ -93,7 +93,7 @@ exports.handler = async function (event, context) {
           const result = await submitWithCosmJS(recipient)
           return {
             statusCode: 200,
-            body: JSON.stringify(result.data)
+            //body: JSON.stringify(result.data)
           }
         } catch (error) {
           console.log({error})
@@ -151,6 +151,7 @@ const msg = {
 };
 const result = await client.signAndBroadcast(firstAccount.address, [msg], fee, "Welcome to the Trust Price Protocol community");
 assertIsBroadcastTxSuccess(result);
+return result
       }else {
         return {
           statusCode: 400,

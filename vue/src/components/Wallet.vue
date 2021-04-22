@@ -12,15 +12,15 @@
           class="password"
           placeholder="Password (mnemonic)"
         />--->
-       <v-text-field type="password" class="password" 
+       <v-text-field v-if="!mnemonic" type="password" class="password" 
           v-model="password"
           
           placeholder="Password (mnemonic)"> </v-text-field>
           </form>
       </div>
    
-  
-      <div  v-if="!address"  >
+  <div v-if="!address ">
+      <div  v-if="!mnemonic"  >
         <v-btn block
           small
           
@@ -30,6 +30,17 @@
         </v-btn>
         
       </div>
+      <div  v-else  >
+        <v-btn block
+          small
+          
+          @click="trySignIn"
+        >
+          Sign in
+        </v-btn>
+        
+      </div>
+  </div>
       <div v-else class="account">
         <div class="card">
           <v-row class="justify-center pa-4">
@@ -157,14 +168,25 @@ export default {
     balances() {
       //console.log(this.$store.state.bankBalances)
 			return this.$store.getters.bankBalances;
-		}
+		},
+    mnemonic() {
+    return localStorage.getItem('mnemonic')
+    },
+  
+
   },
   methods: {
+    
+    trySignIn(){
+
+      this.password = this.mnemonic
+      this.signIn()
+    },
+    
     async signIn() {
       if (this.mnemonicValid && !this.error) {
         const mnemonic = this.passwordClean;
        
-
       const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
         mnemonic,
         makeCosmoshubPath(0),
