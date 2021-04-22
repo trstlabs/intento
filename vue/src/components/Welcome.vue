@@ -48,7 +48,7 @@
               color="primary"
               text
               @click="(signup = true), loadContent()"
-            >
+            > 
               Sign Up
             </v-btn>
           </v-card-actions>
@@ -56,7 +56,7 @@
         <div  v-if="signin">
          <div  v-if="this.$store.state.account.address">
            <p class="text-center overline" >
-          Verify it's you
+          Confirm Sign-in
         </p>
         <div class="pb-4 ma-6">
          <torus v-if="!wallet" :privkey="this.signkey"/>

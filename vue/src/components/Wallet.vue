@@ -194,7 +194,7 @@ export default {
       )
 
     
-      localStorage.setItem('mnemonic', mnemonic)
+     
       const { address } = wallet
       const API = process.env.VUE_APP_API
       const RPC = process.env.VUE_APP_RPC
@@ -214,6 +214,7 @@ export default {
       }
   
         this.initConfig();
+         localStorage.setItem('mnemonic', mnemonic)
       }
     },
      async signOut() {

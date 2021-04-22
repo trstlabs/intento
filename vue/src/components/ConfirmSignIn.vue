@@ -1,8 +1,17 @@
 <template>
   <div>
     <div v-if="!sent">
-       <v-text-field class="mx-4" v-model="email" required placeholder="Email-address" name="email" type="text" />
-     <v-btn @click="sent = true, sendMail()"> Send</v-btn>  </div>
+      <v-alert  
+  type="info" dense class="caption"
+>
+Confirm this sign-in once, by sending a sign-in link to your Email address.
+</v-alert>
+
+       <v-text-field class="ma-4" v-model="email" required placeholder="Email" name="email" type="text"
+       :append-outer-icon="email ? 'mdi-send' : 'mdi-send-outline'"
+       @click:append-outer="sent = true, sendMail()"
+        />
+     </div>
     <div v-else>
       <v-alert  
   type="info"  class="caption"
