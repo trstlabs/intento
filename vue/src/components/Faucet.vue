@@ -1,7 +1,7 @@
 
 <template>
 <div>
-  <div class="pa-2 mx-auto"> 
+  <div class="pa-2 mx-auto"  v-if="!this.$store.state.account.address"> 
   
   <form @submit.prevent="submit">
     
@@ -11,9 +11,9 @@
       <v-text-field class="mx-4" v-model="address" required placeholder="cosmos-address" name="address" type="text" />
       <button :disabled="status==='Registering...'" type="submit" class="button"></button>
       
-     <v-row v-if="this.$store.state.wallet" class="justify-center mb-4">
-      <vue-recaptcha v-if="status == '' || status == 'Registering...' "
-        ref="recaptcha"
+     <v-row class="justify-center mb-4">
+      <vue-recaptcha v-if="status == '' || status =='Registering...'"
+        ref="recaptchaRef"
         @verify="onCaptchaVerified"
         @expired="onCaptchaExpired"
         @error="onCaptchaError"
@@ -24,13 +24,17 @@
       <v-alert type="success" v-if="sucessfulServerResponse">{{sucessfulServerResponse}}</v-alert>
     </form>
     <v-btn color="primary" block @click="submit()">Submit</v-btn> </div>
-    <v-divider/>
+    <div v-else>
+      <confirm-sign-in/>
+       </div>
+    <v-divider class="mt-4" />
 </div>
 </template>
 
 <script>
 import VueRecaptcha from 'vue-recaptcha'
 import axios from 'axios'
+import ConfirmSignIn from './ConfirmSignIn.vue'
 export default {
 
   data () {
@@ -50,7 +54,7 @@ export default {
       // console.log(this.$refs.recaptcha.execute())
       this.status = 'Registering...'
       // this.$refs.recaptcha.reset()
-      this.$refs.recaptcha.execute() 
+      this.$refs.recaptchaRef.execute();
     },
     onCaptchaRender: function(id) {
       //console.log({id})
@@ -66,7 +70,7 @@ export default {
         //console.log("letsgo")
  
       this.status = 'Submitting...'
-      this.$refs.recaptcha.reset()
+      this.$refs.recaptchaRef.reset()
       try {
         this.status = 'Getting TPP tokens'
         let response = await axios.post('/.netlify/functions/faucet', {
@@ -97,7 +101,7 @@ export default {
     
     onCaptchaExpired: function () {
       this.status = ''
-      this.$refs.recaptcha.reset()
+      this.$refs.recaptchaRef.reset()
     },
     getErrorMessage (err) {
   let responseBody
@@ -113,7 +117,8 @@ export default {
   },
   
   components: {
-    VueRecaptcha
+    VueRecaptcha,
+    ConfirmSignIn
   }
 }
 </script>
