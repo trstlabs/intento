@@ -55,7 +55,7 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tags invalid")
 	}
 	for _, tags := range msg.Tags {
-		if len(tags) > 12 {
+		if len(tags) > 16 {
 			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "tag too long")
 		}
 	}
