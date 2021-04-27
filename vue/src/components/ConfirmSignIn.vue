@@ -84,7 +84,7 @@ sent: false,
       try {
         console.log(this.email)
  let actionCodeSettings = {
-          url: "https://marketplace.trustpriceprotocol.com",
+          url: process.env.VUE_APP_URL,
           // This must be true.
           handleCodeInApp: true,
           /*iOS: {

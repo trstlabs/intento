@@ -481,7 +481,7 @@ export default {
       return this.thisitem.id.trim().length > 0;
     },
     tocopy(){
-      return "https://marketplace.trustpriceprotocol.com/itemid=" + this.thisitem.id
+      return process.env.VUE_APP_URL, + "/itemid=" + this.thisitem.id
     },
 
     commentlist() {
