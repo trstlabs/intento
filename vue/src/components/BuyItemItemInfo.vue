@@ -33,7 +33,7 @@
 
           <v-col cols="12" md="4">
             <div v-if="imageurl">
-              <v-img class="rounded contain" :src="imageurl"></v-img>
+              <v-img class="rounded contain" :aspect-ratio="16/9" :src="imageurl"></v-img>
             </div>
           </v-col>
         </v-row>
@@ -85,7 +85,7 @@
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small right>$vuetify.icons.custom</v-icon>{{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small left>$vuetify.icons.custom</v-icon>{{
                  Number(thisitem.estimationprice) + Number(thisitem.shippingcost)
               }} </span>
               </span>
@@ -141,7 +141,7 @@
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small right>$vuetify.icons.custom</v-icon>{{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small left>$vuetify.icons.custom</v-icon>{{
                 Number(thisitem.estimationprice) +
                 Number(thisitem.shippingcost) -
                 Number(thisitem.discount)
@@ -186,7 +186,7 @@
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small right>$vuetify.icons.custom</v-icon>{{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small left>$vuetify.icons.custom</v-icon>{{
                 thisitem.estimationprice - thisitem.discount
               }} </span>
               </span>
@@ -228,7 +228,7 @@
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small right>$vuetify.icons.custom</v-icon>{{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small left>$vuetify.icons.custom</v-icon>{{
                 Number(thisitem.estimationprice) +
                   Number(thisitem.shippingcost)
               }} </span>

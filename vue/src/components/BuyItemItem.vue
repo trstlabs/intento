@@ -1,6 +1,6 @@
 <template>
   <div class="pa-2 mx-lg-auto">
-    <v-card class="pa-2 ma-auto" elevation="2" rounded="lg">
+    <v-card color="secondary lighten-3"  class="pa-2 ma-auto" elevation="2" rounded="lg">
       <v-progress-linear
         indeterminate
         :active="loadingitem"
@@ -35,7 +35,7 @@
               </v-carousel>
             </div>
 
-            <v-card elevation="0">
+            <v-card color="secondary lighten-3" elevation="0">
               <div class="pa-2 overline text-center">Description</div>
               <v-card-text>
                 <div class="body-1">{{ thisitem.description }}</div>
@@ -52,7 +52,7 @@
                 </div>
               </v-card-text></v-card>
 <v-divider class="mx-4 pa-2"/>
-                <div class="text-center pa-2"><v-row  class="mx-4" >  <v-btn x-small icon @click="iteminfo = !iteminfo">
+                <div class="text-center pa-2" v-if="thisitem.estimationprice != 0"><v-row  class="mx-4" >  <v-btn x-small icon @click="iteminfo = !iteminfo">
                 <v-icon >mdi-information-outline</v-icon>
               </v-btn>
           <span  v-if="this.$store.state.account.address" >
@@ -274,15 +274,15 @@
                   </v-btn>
                 </v-col>
                 
-              </v-row> 
+              </v-row>  <v-divider class="ma-4 pt-2"/>
             </div>
-              <v-divider class="ma-4 pt-2"/>
+             
 
             <v-chip class="ma-1 caption" label outlined medium>
               <v-icon left> mdi-account-badge-outline </v-icon>
               Identifier: {{ thisitem.id }}
             </v-chip>
-
+ 
        
 
             <v-dialog transition="dialog-bottom-transition" max-width="300">
@@ -352,7 +352,7 @@
                 </v-card>
               </template>
             </v-dialog>
-            <span v-if="thisitem.creator != thisitem.seller">
+            <span v-if="thisitem.estimationprice > 0"><span v-if="thisitem.creator != thisitem.seller">
               <v-chip
                 v-if="
                   thisitem.shippingcost > 0 &&
@@ -413,8 +413,8 @@
                 <v-chip
                   class="ma-1 caption"
                   label
-                  color="primary lighten-1"
-                  small
+                 
+                  outlined
                 >
                   <v-icon left> mdi-check-all </v-icon
                   ><v-icon small left> mdi-plus </v-icon
@@ -455,7 +455,7 @@
             >
               <v-icon left> mdi-package-variant-closed </v-icon>
               Shipping Cost: {{ thisitem.shippingcost}} <v-icon small right>$vuetify.icons.custom</v-icon>  
-            </v-chip>
+            </v-chip></span>
 
             <v-chip
               v-if="thisitem.discount > 0"
@@ -526,15 +526,15 @@
         <v-btn text @click="sellerInfo">Seller Info </v-btn>
       </v-row>
       <div class="pa-2 mx-auto caption">
-        <v-card elevation="0" v-if="info">
-          <p>This seller has sold {{ sold }} items before</p>
+        <span v-if="info">
+          <p class="text-center">This seller has sold {{ sold }} items before</p>
           <!--<p  Of which _ have been transfered by shipping and _ by local pickup.</p>-->
-        </v-card>
-        <v-card-title v-if="SellerItems[1]" class="overline justify-center">
+        </span>
+        <v-card-title v-if="SellerItems[0]" class="overline justify-center">
           All Seller items
         </v-card-title>
         <div v-for="item in SellerItems" v-bind:key="item.id">
-          <v-card
+          <v-card color="secondary lighten-3" 
             elevation="0"
             :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
           >

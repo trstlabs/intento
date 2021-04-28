@@ -5,7 +5,7 @@
         ><v-icon color="primary" left> mdi-refresh </v-icon> Refresh
       </v-btn><v-img class="mx-12" src="img/design/estimate.png" ></v-img>
     </div>
-    <v-skeleton-loader
+    <v-skeleton-loader background-color="inherit"
       v-if="loadingitem"
       class="mx-auto"
       type="list-item-three-line, image, article"
@@ -32,7 +32,7 @@
         >
           <v-progress-circular
             indeterminate
-            color="grey lighten-5"
+            color="grey lighten-3"
           ></v-progress-circular>
         </v-row>
       </template>
@@ -99,7 +99,7 @@
       </v-card>
     </v-dialog> 
     <div v-if="settings"> 
-          <v-card class="pa-6 elevation-8 ma-6"><v-row  class="mb-2"><v-btn small
+          <v-card color="secondary lighten-3" class="pa-6 elevation-8 ma-6"><v-row  class="mb-2"><v-btn small
         icon
           
             @click="getItemToEstimate()"
@@ -140,7 +140,7 @@
           :persistent-hint="!selectedRegion"
           hint="Specify your region"
         ></v-select> </v-card></div>
-    <v-card 
+    <v-card color="secondary lighten-3"
       class="pa-2 mt-2"
       elevation="2"
       rounded="lg"
@@ -154,16 +154,16 @@
       <div class="pa-2">
         <v-row>
           <v-col class="pa-2">
-            <v-card elevation="0">
+            <span elevation="0">
               <div class="overline">Title</div>
 
               <div class="body-1 font-weight-light">
                 {{ item.title }}
               </div>
-            </v-card>
+            </span>
           </v-col>
           <v-col class="pa-2">
-            <v-card elevation="0">
+            <span elevation="0">
               <v-chip-group>
                 <v-chip class="ma-1"
                   outlined
@@ -174,7 +174,22 @@
                   <v-icon small left> mdi-tag-outline </v-icon>
                   {{ itemtag }}
                 </v-chip>
-              </v-chip-group>
+               
+                
+              </v-chip-group>  <v-chip-group>  <v-chip class="ma-1"
+                  outlined
+                  small
+                 :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
+                >
+                  <v-icon small left> mdi-account-badge </v-icon>
+                  ID: {{ item.id }}
+                </v-chip>
+
+
+                 <v-chip v-if="item.flags > 0" class="ma-1 caption"  small outlined>
+              <v-icon small left> mdi-shield-alert-outline </v-icon>
+              <span v-if="item.flags == 1"> Reported {{ item.flags }} time</span><span v-else>Reported {{ item.flags }}  times</span>
+            </v-chip>
 
               <v-dialog transition="dialog-bottom-transition" max-width="300">
                 <template v-slot:activator="{ on, attrs }">
@@ -242,17 +257,17 @@
                     </v-card-actions>
                   </v-card>
                 </template>
-              </v-dialog>
-            </v-card>
+              </v-dialog></v-chip-group>
+            </span>
           </v-col>
         </v-row>
-        <v-card elevation="0">
+        <span>
           <div class="overline ">Description</div>
 
           <div class="caption font-weight-light">
             {{ item.description }}
           </div>
-        </v-card>
+        </span>
       </div>
 
       <div class="pa-2 mx-auto text-center" elevation="8" v-if="lastitem">
@@ -345,11 +360,11 @@ overflow: hidden;
         </v-row>
       </div>
       <v-divider class="mx-4" />
-      <v-card elevation="0">
+      <span>
         <div class="pa-2">
           <div>
             <v-chip-group active-class="primary--text " column>
-              <v-chip class="font-weight-light"
+              <v-chip class="font-weight-light "
                 :disabled="lastitem"
                 small
                 v-for="(option, text) in options"
@@ -375,7 +390,7 @@ overflow: hidden;
           </div>
           <h3 class="text-right">”</h3>
         </div>
-      </v-card>
+      </span>
 
       <div>
         <v-btn
@@ -457,7 +472,7 @@ overflow: hidden;
             v-if="showinfo"
             v-model="dialog"
             persistent
-            max-width="290"
+            max-width="350"
           >
             <template v-slot:activator="{ on, attrs }">
               <v-btn
@@ -474,11 +489,22 @@ overflow: hidden;
               </v-btn>
             </template>
             <v-card>
-              <v-card-title class="headline"> Report item? </v-card-title>
+              <v-card-title class="headline"> Report item? <v-icon  @click="reportinfo=!reportinfo" class="ml-4" small>mdi-information-outline</v-icon></v-card-title>
               <v-card-text
-                >Thanks for keeping TPP safe. If this item is not OK, you can report it here. The protocol
+                >  <span v-if="reportinfo">
+            
+          
+          If this item is not OK, you can report it here. The protocol
                 removes items that are reported
-                often. </v-card-text
+                often. This way they don't make it onto the marketplace. Thanks for keeping TPP safe and helping others.
+              <v-divider class="ma-4"/>
+             </span>
+                 <span class="pt-2 ma-0 subtitle-1"> Please report it if the item is:
+                <p class="caption"> Fake </p><p class="caption"> In bad condition </p><p class="caption"> From an untrustworthy seller</p><p class="caption"> Not functioning </p><p class="caption"> Using wrong data </p>
+             </span>
+           
+               
+                </v-card-text
               >
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -571,17 +597,34 @@ export default {
           attr:
             "I find the item well described, the buyer will know what to expect.",
         },
-        { name: "Looks damaged", attr: "The item appears to be damaged." },
+        { name: "Looks damaged", attr: "This item appears to be damaged." },
         {
           name: "Repairable",
-          attr: "The item seems damaged, but I think it can be repaired.",
+          attr: "This item seems damaged, but I think it can be repaired.",
         },
-        { name: "Used", attr: "The item seems used." },
+        { name: "Used", attr: "This item seems used, so I find it worth less compared similar items" },
         {
           name: "As good as new!",
-          attr: "The item appears to look as good as new!",
+          attr: "This item appears to look as good as new!",
         },
-        { name: "Dirty", attr: "The item looks dirty to me." },
+        { name: "Dirty", attr: "The item looks dirty to me, so I find it worth less compared similar items" },
+         {
+          name: "Replica",
+          attr: "The item looks like a replica to me, please don't sell if this is a replica",
+        },
+       
+         {
+          name: "Serviced",
+          attr: "This item seems serviced to me.",
+        },
+        {
+          name: "Can't tell from pics",
+          attr: "I can't tell the condition from the pictures, would see it in person.",
+        },
+         {
+          name: "More info",
+          attr: "I can't tell the condition from the data, would ask for more info.",
+        },
       ],
 
       interested: false,
@@ -604,6 +647,7 @@ value: 0,
       magnify: false,
       conditionInfo: false,
       settings: false,
+      reportinfo: false,
     };
   },
   beforeDestroy () {
@@ -833,10 +877,14 @@ value: 0,
 
       console.log(oldindex, this.index);
       this.item = this.items[this.index];
+     
+    
       if (oldindex === this.index) {
         this.lastitem = true;
       }
       this.loadItemPhotos();
+    
+      
     },
 
     show(photo){
@@ -846,6 +894,11 @@ value: 0,
     },
     loadItemPhotos() {
       this.loadingitem = true;
+       if(!this.item){ if(!this.lastitem)
+       {
+        this.getNewItemByIndex()}else {this.loadingitem = false, alert("No items found to be estimated, try again later.")}
+
+       }else{
       const id = this.item.id;
       //const db = firebase.database();
 
@@ -868,6 +921,7 @@ value: 0,
       //this.loadingitem = false;
       this.interested = false;
       this.flight = false;
+        }
     },
 
     async submitRevealEstimation(itemid) {

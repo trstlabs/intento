@@ -118,7 +118,7 @@ export default {
             // Common errors could be invalid email and invalid or expired OTPs.
           });
       }
-      if(!this.privkey){
+      if(this.privkey){
       this.torusSignIn(this.privkey);}
     }
 },

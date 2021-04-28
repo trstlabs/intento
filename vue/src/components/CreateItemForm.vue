@@ -67,8 +67,9 @@
                 v-model="fields.title"
                 required
               />
-
+<v-alert class="ma-2 caption" dense type="info" dismissible v-if="descrinfo"> Make sure to fully disclose any defects or scratches (and highlight these in the pictures)</v-alert>
               <v-textarea
+              @change="descrinfo = !descrinfo"
                 class="ma-1"
                 prepend-icon="mdi-text"
                 :rules="rules.descriptionRules"
@@ -248,7 +249,71 @@
                     >
                     </v-select> </v-col
                 ></v-row>
-              </div>
+              </div><div class="mx-auto text-center" v-if="valid">
+                <span class="caption"> Required deposit for price estimators: <v-icon small left>$vuetify.icons.custom</v-icon>{{fields.depositamount}} TPP. <v-btn @click="changedeposit = !changedeposit" icon small> <v-icon >
+        mdi-pencil
+      </v-icon></v-btn></span> 
+        <v-row v-if="changedeposit">
+          <v-col cols="6" class="mx-auto">
+            <v-dialog transition="dialog-bottom-transition" max-width="600">
+              <template v-slot:activator="{ on, attrs }">
+                <span v-bind="attrs" v-on="on"
+                
+                ><v-icon class="ml-4 align-center" small>mdi-information-outline</v-icon>
+           
+                
+                </span>
+              </template>
+              <template v-slot:default="dialog">
+                <v-card>
+                  <v-toolbar color="default">Info <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            icon
+            @click="dialog.value = false"
+          >
+          <v-icon> mdi-close</v-icon>
+          </v-btn></v-toolbar>
+                  <v-card-text>
+                    <div class="text-p pt-4">
+                     A deposit is required for all the estimators. You may change this, but don't set it too high because 1) then no one is willing to estimate it 2) when it is higher than the final price, no action is taken. Estimators risk their deposit to make an estimation for you.
+                    </div>
+                    <div class="caption pa-2">
+                      - The lowest estimator loses this
+                      when the final estimation price is not accepted by
+                      you.
+                    </div>
+                    <div class="caption pa-2 mb-2">
+                      - The highest estimator loses this
+                      when the item is not bought by the buyer that provided
+                      prepayment.
+                    </div>
+                     
+                     
+                                       </v-card-text>
+                   <v-img class="mx-12" src="img/design/transfer.png" ></v-img><div class="caption text-center pt-4">
+                      Good luck and have fun!
+                    </div>
+                  <v-card-actions class="justify-end">
+                    <v-btn text @click="dialog.value = false">Close</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </template>
+            </v-dialog>
+          </v-col>
+          <v-col cols="6" class="mx-auto">
+            <v-text-field
+              label="Amount"
+              type="number"
+              v-model="fields.depositamount"
+           
+            suffix="TPP"
+              prepend-icon="$vuetify.icons.custom"
+            
+            ></v-text-field>
+          </v-col>
+        </v-row>
+      </div>
               <div class="text-center pt-6">
                 <v-btn
                   color="primary"
@@ -313,6 +378,7 @@ export default {
         localpickup: false,
         estimationcount: "3",
         condition: "0",
+depositamount: "3",
       },
 
       rules: {
@@ -353,7 +419,8 @@ export default {
       e1: 1,
       search: null,
       dialog: false,
-
+changedeposit: false,
+ descrinfo: false,
       satisfactionEmojis: ["😭", "🙁", "🙂", "😊", "😄"],
       countryCodes: ["NL", "BE", "UK", "DE", "US", "CA"],
     };
@@ -450,7 +517,7 @@ export default {
           tags: this.selectedTags,
           condition: this.fields.condition,
           shippingregion: this.selectedCountries,
-          depositamount: this.fields.estimationcount,
+          depositamount: this.fields.depositamount,
         };
 
         await this.itemSubmit({ ...type, fields, body });
