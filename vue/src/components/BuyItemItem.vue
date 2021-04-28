@@ -20,21 +20,64 @@
         <div class="pa-2 mx-auto" elevation="8">
           <div>
             <div v-if="photos.photo">
-              <v-divider></v-divider>
-              <v-carousel
-                height="400"
-                hide-delimiter-background
-                show-arrows-on-hover
-              >
-                <v-carousel-item
-                  v-for="(photo, i) in photos"
-                  :key="i"
-                  :src="photo"
-                >
-                </v-carousel-item>
-              </v-carousel>
-            </div>
+            
+              <v-carousel v-if="magnify == false" style="height:100%"
+        delimiter-icon="mdi-minus"
+        carousel-controls-bg="primary"
+        height="300" 
+        hide-delimiter-background
+        show-arrows-on-hover 
+      > 
+       <v-carousel-item max-height="300" 
+    contain v-for="(photo, i) in photos" :key="i" :src="photo" > 
 
+  
+        </v-carousel-item>
+      </v-carousel>
+      <v-carousel v-if="magnify == true"
+        delimiter-icon="mdi-minus"
+        carousel-controls-bg="primary"
+     contain
+        hide-delimiter-background
+        show-arrows-on-hover 
+      > 
+       <v-carousel-item 
+    contain v-for="(photo, i) in photos" :key="i" :src="photo" > 
+
+   
+        </v-carousel-item>
+      </v-carousel>
+            </div>
+<v-row class="ml-4 mt-1 mb-1">
+      <span  v-for="(photo, index) in photos" :key="index"> <img class="ma-1" @click="show(photo)" height="56"  :src="photo" /></span><v-spacer/><v-btn x-small class="mr-4"
+            color="primary"
+            icon
+            @click="magnify = !magnify"
+          >
+          <v-icon> mdi-crop-free</v-icon>
+          </v-btn></v-row> 
+<v-dialog
+      v-model="fullscreen"
+    
+    >
+     
+
+      <v-card>
+        <v-card-title class=" grey lighten-2 ">
+         {{thisitem.title}} <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            icon
+            @click="fullscreen = false"
+          >
+          <v-icon> mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+<v-img :src="showphoto" />
+       
+
+      </v-card>
+    </v-dialog> 
             <v-card color="secondary lighten-3" elevation="0">
               <div class="pa-2 overline text-center">Description</div>
               <v-card-text>
@@ -582,6 +625,8 @@ export default {
       loadingitem: true,
       photos: [],
       dialog: false,
+      fullscreen: false,
+      magnify: false,
     };
   },
 
@@ -696,6 +741,12 @@ export default {
       }
       assertIsBroadcastTxSuccess(result);
       alert("Transaction sent");
+    },
+
+    show(photo){
+      this.showphoto = photo 
+
+      this.fullscreen = true
     },
 
     sellerInfo() {
