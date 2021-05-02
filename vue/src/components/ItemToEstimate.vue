@@ -612,7 +612,7 @@ export default {
           name: "Replica",
           attr: "The item looks like a replica to me, please don't sell if this is a replica",
         },
-       
+
          {
           name: "Serviced",
           attr: "This item seems serviced to me.",
@@ -625,6 +625,11 @@ export default {
           name: "More info",
           attr: "I can't tell the condition from the data, would ask for more info.",
         },
+         {
+          name: "I'd buy",
+          attr: "I like this kind of item, I'd buy it.",
+        },
+        
       ],
 
       interested: false,

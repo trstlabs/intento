@@ -6,7 +6,7 @@ module.exports = {
     disableHostCheck: true,
   },*/
   configureWebpack: {
-   mode: 'production',
+   //mode: 'production',
     plugins: [
       new VuetifyLoaderPlugin(),
 

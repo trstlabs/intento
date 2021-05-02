@@ -47,8 +47,8 @@ export default new Vuex.Store({
     buySellerList: [],
     locationList: [],
     regionList: [],
-    user: null,
-    //user: { uid: "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"},
+    //user: null,
+    user: { uid: "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"},
   },
 
   mutations: {
