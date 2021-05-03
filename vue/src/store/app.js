@@ -10,7 +10,7 @@ module.exports = {
        // { type: "item/transferable", fields: ["seller", "transferbool", "itemid",] },
         //{ type: "item/transfer", fields: ["seller", "transferbool", "itemid",] },
         //{ type: "item/shipping", fields: ["seller", "tracking", "itemid",] },
-        { type: "item", fields: ["seller", "title", "description", "shippingcost", "localpickup", "estimationcount", "estimationprice", "buyer", "status", "transferable", "bestestimator", "lowestestimator", "highestestimator", "comments", "tags", "condition", "shippingregion", "depositamount", "note", "discount", "creator"] },
+        { type: "item", fields: ["seller", "title", "description", "shippingcost", "localpickup", "estimationcount", "estimationprice", "buyer", "status", "transferable", "bestestimator", "lowestestimator", "highestestimator", "comments", "tags", "condition", "shippingregion", "depositamount", "note", "discount", "creator", "rating"] },
        // { type: "item/set", fields: ["seller", "shippingcost", "localpickup", "shippingregion",]},
        // { type: "item/delete", fields: ["seller", "id"]},
         { type: "buyer", fields: ["buyer", "deposit", "itemid"] },

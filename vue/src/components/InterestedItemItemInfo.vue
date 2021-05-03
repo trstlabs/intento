@@ -59,10 +59,10 @@
     <v-icon left>
         mdi-account-badge
       </v-icon>
-      Identifier: {{ thisitem.id }}
+      TPP ID: {{ thisitem.id }}
     </v-chip>
 
-<v-chip v-if="thisitem.localpickup"
+<v-chip v-if="thisitem.localpickup != ''"
       class="ma-1"
       label
       outlined
@@ -96,7 +96,7 @@
     <v-icon left>
         mdi-package-variant-closed
       </v-icon>
-      Shipping cost: $ {{thisitem.shippingcost}} tokens
+      Shipping cost: {{ thisitem.shippingcost }}<v-icon small right>$vuetify.icons.custom</v-icon>  
     </v-chip>
 
     <v-chip v-if="thisitem.bestestimator"
@@ -156,7 +156,7 @@
 
               <v-row> <v-col>
             <v-btn block color="primary"
-              v-if="thisitem.localpickup"
+              v-if="thisitem.localpickup != ''"
               @click="submitLP(itemid), getThisItem"
             >
               Buy Item

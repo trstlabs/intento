@@ -92,8 +92,31 @@ func handleMsgDeleteEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDe
 	if msg.Estimator != k.GetEstimatorOwner(ctx, msg.Itemid+"-"+msg.Estimator) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
+	item := k.GetItem(ctx, msg.Itemid)
+//Only delete estimator when it is not lowest /highest and not transferable
 
-	k.DeleteEstimator(ctx, msg.Itemid+"-"+msg.Estimator)
+if item.Status != "" {
+	return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item has a status")
+}
+
+if msg.Estimator == item.Highestestimator || msg.Estimator == item.Lowestestimator {
+	return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "estimator is lowest or highest")
+}
+
+	
+		
+		for i, v := range item.Estimatorlist {
+			if v == msg.Estimator {
+				item.Estimatorlist = append(item.Estimatorlist[:i], item.Estimatorlist[i+1:]...)
+				break
+			}
+		}
+		
+		k.DeleteEstimator(ctx, msg.Itemid+"-"+msg.Estimator)
+
+
+
+	
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

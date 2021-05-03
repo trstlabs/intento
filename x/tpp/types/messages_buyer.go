@@ -48,12 +48,11 @@ func (msg *MsgCreateBuyer) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgUpdateBuyer{}
 
-func NewMsgUpdateBuyer(buyer string, itemid string, transferable bool, deposit int64) *MsgUpdateBuyer {
+func NewMsgUpdateBuyer(buyer string, itemid string, deposit int64) *MsgUpdateBuyer {
 	return &MsgUpdateBuyer{
 
 		Buyer:        buyer,
 		Itemid:       itemid,
-		Transferable: transferable,
 		Deposit:      deposit,
 	}
 }
@@ -126,11 +125,11 @@ func (msg *MsgDeleteBuyer) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateBuyer{}
 
-func NewMsgItemTransfer(buyer string, itemid string, transferable bool) *MsgItemTransfer {
+func NewMsgItemTransfer(buyer string, itemid string) *MsgItemTransfer {
 	return &MsgItemTransfer{
 		Buyer:        buyer,
 		Itemid:       itemid,
-		Transferable: transferable,
+
 	}
 }
 
@@ -165,23 +164,24 @@ func (msg *MsgItemTransfer) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateBuyer{}
 
-func NewMsgItemThank(buyer string, itemid string, thank bool) *MsgItemThank {
-	return &MsgItemThank{
+func NewMsgItemRating(buyer string, itemid string, rating int64, note string) *MsgItemRating {
+	return &MsgItemRating{
 		Buyer:  buyer,
 		Itemid: itemid,
-		Thank:  thank,
+		Rating:  rating,
+		Note: note,
 	}
 }
 
-func (msg *MsgItemThank) Route() string {
+func (msg *MsgItemRating) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgItemThank) Type() string {
-	return "ItemThank"
+func (msg *MsgItemRating) Type() string {
+	return "ItemRating"
 }
 
-func (msg *MsgItemThank) GetSigners() []sdk.AccAddress {
+func (msg *MsgItemRating) GetSigners() []sdk.AccAddress {
 	buyer, err := sdk.AccAddressFromBech32(msg.Buyer)
 	if err != nil {
 		panic(err)
@@ -189,16 +189,25 @@ func (msg *MsgItemThank) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{buyer}
 }
 
-func (msg *MsgItemThank) GetSignBytes() []byte {
+func (msg *MsgItemRating) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgItemThank) ValidateBasic() error {
+func (msg *MsgItemRating) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Buyer)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid buyer address (%s)", err)
 	}
+	if msg.Rating > 5 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid item condition")
+	}
+
+	if len(msg.Note) > 240 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "note too long")
+	}
+
+
 	return nil
 }
 

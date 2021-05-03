@@ -57,7 +57,7 @@
 
           <v-chip class="ma-1 caption" label outlined medium>
             <v-icon left> mdi-account-badge-outline </v-icon>
-            Identifier: {{ thisitem.id }}
+            TPP ID: {{ thisitem.id }}
           </v-chip>
 
           <v-chip
@@ -71,7 +71,7 @@
             Shipping
           </v-chip>
           <v-chip
-            v-if="thisitem.localpickup"
+            v-if="thisitem.localpickup != ''"
             class="ma-1 caption"
             label
             outlined
@@ -81,14 +81,14 @@
             Local pickup
           </v-chip>
           <v-chip
-            v-if="thisitem.shippingcost"
+            v-if="thisitem.shippingcost != ''"
             class="ma-1 caption"
             label
             outlined
             medium
           >
             <v-icon left> mdi-package-variant-closed </v-icon>
-            Shipping cost: ${{ thisitem.shippingcost }}<v-icon small right>$vuetify.icons.custom</v-icon>  
+            Shipping cost: {{ thisitem.shippingcost }}<v-icon small right>$vuetify.icons.custom</v-icon>  
           </v-chip>
 
           <v-chip
@@ -114,7 +114,7 @@
           <div class="mt-2 text-center">
             <p  class="font-weight-medium headline"> TPP ID: {{thisitem.id}}  </p><p class="caption"> Tip: Show TPP ID: {{thisitem.id}} on your photos. This creates trust to estimators and buyers, thereby making the item more valueable.</p>
             <v-btn block large outlined @click="click1" color="primary">
-              <v-icon large left> mdi-plus </v-icon>Add Photos
+             <span v-if="img1 == null"> <v-icon large left> mdi-plus </v-icon>Add Photos</span><span v-else> <v-icon large left> mdi-refresh </v-icon> Change primary photo</span>
             </v-btn>
             <input
               type="file"
@@ -128,13 +128,16 @@
             <v-card class="text-center mt-4 elevation-4">
               <v-card-title>Primary photo</v-card-title>
               <v-img class="rounded contain" :src="img1" />
-
+  <v-progress-linear
+      v-model="uploadValue"
+    
+    ></v-progress-linear>
               <br />
             </v-card>
           </div>
           <div v-if="img1 != null" class="mt-2" >
-            <v-btn outlined @click="click2" color="primary"><v-icon large left> mdi-plus </v-icon>
-             <span v-if="img2"> Change photo 2 </span> <span v-else>   Additonal</span>
+            <v-btn outlined @click="click2" color="primary">
+             <span v-if="img2"> <v-icon large left> mdi-refresh </v-icon> Change photo 2 </span> <span v-else> <v-icon large left> mdi-plus </v-icon>  Additonal</span>
             </v-btn>
             <input
               type="file"
@@ -146,7 +149,10 @@
           </div>
           <div v-if="img2 != null">
             <v-card class="text-center mt-4">
-            
+             <v-progress-linear
+      v-model="uploadValue2"
+    
+    ></v-progress-linear>
 
               <v-img class="rounded contain" :src="img2" />
 
@@ -154,8 +160,8 @@
             </v-card>
           </div>
           <div class="mt-2">
-            <v-btn outlined v-if="imageData2" @click="click3" color="primary"><v-icon large left> mdi-plus </v-icon>
-               <span v-if="img3"> Change photo 3 </span> <span v-else>   Additonal</span></v-btn>
+            <v-btn outlined v-if="imageData2" @click="click3" color="primary">
+               <span v-if="img3"><v-icon large left> mdi-refresh </v-icon> Change photo 3 </span> <span v-else>  <v-icon large left> mdi-plus </v-icon> Additonal</span></v-btn>
             <input
               type="file"
               ref="input3"
@@ -168,7 +174,10 @@
           <div v-if="img3 != null">
             <v-card class="text-center mt-4">
               <v-card-title>Photo 3</v-card-title>
-
+    <v-progress-linear
+      v-model="uploadValue2"
+    
+    ></v-progress-linear>
               <v-img class="rounded contain" :src="img3" />
 
               <br />
@@ -205,13 +214,7 @@ export default {
   components: { AppText, CreateItemForm },
   data() {
     return {
-      fields: {
-        title: "",
-        description: "",
-        shippingcost: "0",
-        localpickup: false,
-        estimationcount: "5",
-      },
+     
       imageData: null,
       imageData2: null,
       imageData3: null,
@@ -221,6 +224,10 @@ export default {
       //thisitem: {},
       //itemid: "",
       flight: false,
+      uploadValue: 0,
+      uploadValue2: 0,
+      uploadValue3: 0,
+
     };
   },
 
@@ -249,13 +256,15 @@ export default {
     },
 
     create() {
+
+      let uploadDate = fb.database.ServerValue.TIMESTAMP
       const post = { photos: {
         photo: this.img1,
         photo2: this.img2,
         photo3: this.img3,
         //_id: this.$store.state.user.uid,
         //itemid: this.thisitem.id,
-      }, id: { username: this.thisitem.creator, _id: this.$store.state.user.uid}};
+      }, id: { username: this.thisitem.creator, _id: this.$store.state.user.uid, uploadDate: uploadDate }};
        /*databaseRef
         .ref("ItemPhotoGallery/0").set(post) .then((response) => {
           console.log(response);

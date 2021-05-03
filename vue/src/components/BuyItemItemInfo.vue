@@ -40,7 +40,7 @@
       </div>
       <v-card-actions>
         <v-btn 
-          color="blue"
+          color="primary"
           text
           @click="(showinfo = !showinfo), getItemPhotos()"
         >
@@ -48,7 +48,7 @@
         </v-btn>
         <div>
           <v-btn 
-            color="blue"
+             color="primary"
             :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
             text
           >
@@ -76,10 +76,10 @@
             ><v-icon small left> mdi-package-variant-closed </v-icon>
           </v-chip>-->
           
-           <span><router-link :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
+           <span><router-link style="text-decoration: none; color: inherit;" :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
    <v-chip style="cursor: pointer;"  v-if="
                thisitem.shippingcost > 0 &&
-              thisitem.localpickup == false &&
+              thisitem.localpickup == '' &&
               thisitem.discount == 0
             " small dark color="primary" class="pr-0" 
               >
@@ -132,10 +132,10 @@
             ><v-icon small right> mdi-label-percent</v-icon>
           </v-chip></span></v-hover> 
           -->
- <span><router-link :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
+ <span><router-link style="text-decoration: none; color: inherit;" :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
    <v-chip  v-if="
               thisitem.shippingcost > 0 &&
-              thisitem.localpickup == false &&
+              thisitem.localpickup == '' &&
               thisitem.discount > 0
             " small dark color="primary" class="pr-0" style="cursor: pointer;" 
               >
@@ -180,8 +180,8 @@
             <v-icon small right> mdi-minus </v-icon
             ><v-icon small right> mdi-label-percent</v-icon>
           </v-chip>-->
-          <span><router-link :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
-   <v-chip  v-if="thisitem.discount > 0 && thisitem.localpickup"
+          <span><router-link style="text-decoration: none; color: inherit;" :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
+   <v-chip  v-if="thisitem.discount > 0 && thisitem.localpickup != ''"
              small dark color="primary" class="pr-0" style="cursor: pointer;" 
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
@@ -210,7 +210,7 @@
         <div v-else>
 
           
-         <span v-if="thisitem.localpickup == false">
+         <span v-if="thisitem.localpickup == ''">
             <!--<v-chip class="ma-1 caption"  color="primary lighten-1" small>
               <v-chip label dark color="primary">
                 <v-icon small right>$vuetify.icons.custom</v-icon>{{
@@ -270,7 +270,7 @@
                 <v-icon small right>$vuetify.icons.custom</v-icon>{{ thisitem.estimationprice }}</v-chip
               >
               <v-icon right> mdi-check-all </v-icon>
-            </v-chip>--><router-link :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
+            </v-chip>--><router-link style="text-decoration: none; color: inherit;" :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
             <v-chip style="cursor: pointer;" 
              small dark color="primary lighten-1" class="pr-0"
               >
@@ -368,7 +368,7 @@
               >
               <v-chip class="ma-1 caption" label outlined medium>
                 <v-icon left> mdi-account-badge-outline </v-icon>
-                Identifier: {{ thisitem.id }}
+                TPP ID: {{ thisitem.id }}
               </v-chip>
 
               <v-chip class="ma-1 caption" label outlined medium>
@@ -377,7 +377,7 @@
               </v-chip>
 
               <v-chip
-                v-if="thisitem.localpickup"
+                v-if="thisitem.localpickup != ''"
                 class="ma-1 caption"
                 label
                 outlined

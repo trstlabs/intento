@@ -41,7 +41,7 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 		estimationPrice = item.Estimationprice - item.Discount
 	}
 	
-	if item.Shippingcost > 0 && item.Localpickup == false {
+	if item.Shippingcost > 0 && item.Localpickup == ""{
 		toPayShipping := estimationPrice + item.Shippingcost
 		if toPayShipping != msg.Deposit {
 
@@ -55,7 +55,7 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 		//}
 	}
 
-	if item.Shippingcost == 0 && item.Localpickup == true {
+	if item.Shippingcost == 0 && item.Localpickup != "" {
 		
 		if estimationPrice != msg.Deposit {
 
@@ -69,7 +69,7 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 
 	}
 
-	if item.Shippingcost > 0 && item.Localpickup == true {
+	if item.Shippingcost > 0 && item.Localpickup != ""  {
 	
 		if estimationPrice == msg.Deposit {
 
@@ -86,7 +86,7 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 			estimationPrice + item.Shippingcost
 
 			if toPayShipping == msg.Deposit {
-				item.Localpickup = false
+				item.Localpickup = ""
 				item.Buyer = msg.Buyer
 
 				k.SetItem(ctx, item)
@@ -111,7 +111,6 @@ func handleMsgUpdateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdate
 	var buyer = types.Buyer{
 		Buyer: msg.Buyer,
 		Itemid:       msg.Itemid,
-		Transferable: msg.Transferable,
 		Deposit:      deposit,
 	}
 
@@ -138,7 +137,61 @@ func handleMsgDeleteBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDelete
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
 
+	//get item info
+	item := k.GetItem(ctx, msg.Itemid)
+
+	if msg.Buyer != item.Buyer {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+	}
+
+	if item.Transferable == false {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item was deleted")
+	}
+
+	//Only delete the buyer if it has made prepayment and the item is not transferred yet
+	if item.Status != "" {
+		return nil, sdkerrors.Wrap(nil, "item is already transferred")
+	}
+	
+	buyer := k.GetBuyer(ctx, msg.Itemid)
+	//returning the tpp tokens
+	k.HandlePrepayment(ctx, msg.Buyer, buyer.Deposit)
 	k.DeleteBuyer(ctx, msg.Itemid)
+
+	for _, element := range item.Estimatorlist {
+		//apply this to each element
+		key := msg.Itemid + "-" + element
+		estimator := k.GetEstimator(ctx, key)
+
+		if estimator.Estimator == item.Highestestimator {
+			
+				k.BurnCoins(ctx, estimator.Deposit)
+				k.DeleteEstimatorWithoutDeposit(ctx, key)
+
+		} else {
+			k.DeleteEstimator(ctx, key)
+		}
+
+	}
+
+
+		item.Status = "Withdrawal prepayment"
+		item.Shippingcost = 0
+		item.Localpickup = ""
+		item.Estimationcounthash = ""
+		item.Bestestimator = ""
+		item.Lowestestimator = ""
+		item.Highestestimator = ""
+		item.Estimationprice = 0
+		item.Estimatorlist = nil
+		item.Estimatorestimationhashlist = nil
+		item.Transferable = false
+		item.Buyer = ""
+
+	k.SetItem(ctx, item)
+	//k.SetBuyer(ctx, buyer)
+
+	
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
@@ -171,7 +224,7 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item has shippingcost")
 	}
 
-	if msg.Transferable == true {
+
 		
 		bigintestimationprice := sdk.NewInt(item.Estimationprice)
 		if item.Discount > 0 {
@@ -220,66 +273,36 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 		item.Status = "Transferred"
 		k.SetItem(ctx, item)
 		//k.SetBuyer(ctx, buyer)
-	}
 
-	if msg.Transferable == false {
-		buyer := k.GetBuyer(ctx, msg.Itemid)
-		k.HandlePrepayment(ctx, item.Buyer, buyer.Deposit)
-
-		for _, element := range item.Estimatorlist {
-			//apply this to each element
-			key := msg.Itemid + "-" + element
-			estimator := k.GetEstimator(ctx, key)
-
-			if estimator.Estimator == item.Highestestimator {
-				
-					k.BurnCoins(ctx, estimator.Deposit)
-			
-
-			} else {
-				k.DeleteEstimator(ctx, key)
-			}
-
-		}
-
-		item.Bestestimator = ""
-		item.Lowestestimator = ""
-		item.Highestestimator = ""
-		item.Estimatorlist = nil
-		item.Status = "Item transfer declined"
-		k.SetItem(ctx, item)
-		//k.SetBuyer(ctx, buyer)
-	}
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgItemThank(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemThank) (*sdk.Result, error) {
-	//check if message seller is item seller
-	if msg.Buyer != k.GetBuyerOwner(ctx, msg.Itemid) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
-	}
+func handleMsgItemRating(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRating) (*sdk.Result, error) {
+
+	
 	//get buyer info
 	//buyer := k.GetBuyer(ctx, msg.Itemid)
 
 	//get item info
 	item := k.GetItem(ctx, msg.Itemid)
 
-	//check if item.transferable = false
-
-	if item.Transferable == true {
-		return nil, sdkerrors.Wrap(nil, "seller of item does not accept a transfer")
+	//check if msg buyer is item buyer
+	if msg.Buyer != item.Buyer {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
 
 	//check if item has a buyer already
 	if item.Buyer != msg.Buyer {
-		return nil, sdkerrors.Wrap(nil, "Item does not belong to msg sender")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item does not belong to msg sender")
 	}
-	//check therefore that prepayment is done
-	if item.Status != "Shipped" || item.Status != "Transferred" {
-		return nil, sdkerrors.Wrap(nil, "item not transferred yet")
+	//check if the item has a status, and therefore a buyer has a reason to rate the item
+	if item.Status == "" {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item does not have a status")
 	}
-	item.Thank = msg.Thank
+
+	item.Note = msg.Note
+	item.Rating = msg.Rating
 	
 	k.SetItem(ctx, item)
 	

@@ -12,8 +12,8 @@ message Buyer {
   string buyer = 1;
 
   string itemid = 2; 
-  bool transferable = 3; 
-  cosmos.base.v1beta1.Coin deposit = 4 [
+
+  cosmos.base.v1beta1.Coin deposit = 3 [
     (gogoproto.nullable) = false]; 
 }
 
@@ -26,8 +26,7 @@ message MsgCreateBuyer {
 message MsgUpdateBuyer {
   string buyer = 1;
   string itemid = 2; 
-  bool transferable = 3; 
-  int64 deposit = 4; 
+  int64 deposit = 3; 
 }
 
 message MsgDeleteBuyer {
@@ -38,11 +37,12 @@ message MsgDeleteBuyer {
 message MsgItemTransfer{
   string buyer = 1;
   string itemid = 2;
-  bool transferable = 3;
+
 }
 
-message MsgItemThank{
+message MsgItemRating{
   string buyer = 1;
   string itemid = 2;
-  bool thank = 3;
+  int64 rating = 3;
+  string note = 4;
 }

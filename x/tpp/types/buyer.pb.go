@@ -25,10 +25,9 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Buyer struct {
-	Buyer        string     `protobuf:"bytes,1,opt,name=buyer,proto3" json:"buyer,omitempty"`
-	Itemid       string     `protobuf:"bytes,2,opt,name=itemid,proto3" json:"itemid,omitempty"`
-	Transferable bool       `protobuf:"varint,3,opt,name=transferable,proto3" json:"transferable,omitempty"`
-	Deposit      types.Coin `protobuf:"bytes,4,opt,name=deposit,proto3" json:"deposit"`
+	Buyer   string     `protobuf:"bytes,1,opt,name=buyer,proto3" json:"buyer,omitempty"`
+	Itemid  string     `protobuf:"bytes,2,opt,name=itemid,proto3" json:"itemid,omitempty"`
+	Deposit types.Coin `protobuf:"bytes,3,opt,name=deposit,proto3" json:"deposit"`
 }
 
 func (m *Buyer) Reset()         { *m = Buyer{} }
@@ -76,13 +75,6 @@ func (m *Buyer) GetItemid() string {
 		return m.Itemid
 	}
 	return ""
-}
-
-func (m *Buyer) GetTransferable() bool {
-	if m != nil {
-		return m.Transferable
-	}
-	return false
 }
 
 func (m *Buyer) GetDeposit() types.Coin {
@@ -153,10 +145,9 @@ func (m *MsgCreateBuyer) GetDeposit() int64 {
 }
 
 type MsgUpdateBuyer struct {
-	Buyer        string `protobuf:"bytes,1,opt,name=buyer,proto3" json:"buyer,omitempty"`
-	Itemid       string `protobuf:"bytes,2,opt,name=itemid,proto3" json:"itemid,omitempty"`
-	Transferable bool   `protobuf:"varint,3,opt,name=transferable,proto3" json:"transferable,omitempty"`
-	Deposit      int64  `protobuf:"varint,4,opt,name=deposit,proto3" json:"deposit,omitempty"`
+	Buyer   string `protobuf:"bytes,1,opt,name=buyer,proto3" json:"buyer,omitempty"`
+	Itemid  string `protobuf:"bytes,2,opt,name=itemid,proto3" json:"itemid,omitempty"`
+	Deposit int64  `protobuf:"varint,3,opt,name=deposit,proto3" json:"deposit,omitempty"`
 }
 
 func (m *MsgUpdateBuyer) Reset()         { *m = MsgUpdateBuyer{} }
@@ -204,13 +195,6 @@ func (m *MsgUpdateBuyer) GetItemid() string {
 		return m.Itemid
 	}
 	return ""
-}
-
-func (m *MsgUpdateBuyer) GetTransferable() bool {
-	if m != nil {
-		return m.Transferable
-	}
-	return false
 }
 
 func (m *MsgUpdateBuyer) GetDeposit() int64 {
@@ -273,9 +257,8 @@ func (m *MsgDeleteBuyer) GetItemid() string {
 }
 
 type MsgItemTransfer struct {
-	Buyer        string `protobuf:"bytes,1,opt,name=buyer,proto3" json:"buyer,omitempty"`
-	Itemid       string `protobuf:"bytes,2,opt,name=itemid,proto3" json:"itemid,omitempty"`
-	Transferable bool   `protobuf:"varint,3,opt,name=transferable,proto3" json:"transferable,omitempty"`
+	Buyer  string `protobuf:"bytes,1,opt,name=buyer,proto3" json:"buyer,omitempty"`
+	Itemid string `protobuf:"bytes,2,opt,name=itemid,proto3" json:"itemid,omitempty"`
 }
 
 func (m *MsgItemTransfer) Reset()         { *m = MsgItemTransfer{} }
@@ -325,31 +308,25 @@ func (m *MsgItemTransfer) GetItemid() string {
 	return ""
 }
 
-func (m *MsgItemTransfer) GetTransferable() bool {
-	if m != nil {
-		return m.Transferable
-	}
-	return false
-}
-
-type MsgItemThank struct {
+type MsgItemRating struct {
 	Buyer  string `protobuf:"bytes,1,opt,name=buyer,proto3" json:"buyer,omitempty"`
 	Itemid string `protobuf:"bytes,2,opt,name=itemid,proto3" json:"itemid,omitempty"`
-	Thank  bool   `protobuf:"varint,3,opt,name=thank,proto3" json:"thank,omitempty"`
+	Rating int64  `protobuf:"varint,3,opt,name=rating,proto3" json:"rating,omitempty"`
+	Note   string `protobuf:"bytes,4,opt,name=note,proto3" json:"note,omitempty"`
 }
 
-func (m *MsgItemThank) Reset()         { *m = MsgItemThank{} }
-func (m *MsgItemThank) String() string { return proto.CompactTextString(m) }
-func (*MsgItemThank) ProtoMessage()    {}
-func (*MsgItemThank) Descriptor() ([]byte, []int) {
+func (m *MsgItemRating) Reset()         { *m = MsgItemRating{} }
+func (m *MsgItemRating) String() string { return proto.CompactTextString(m) }
+func (*MsgItemRating) ProtoMessage()    {}
+func (*MsgItemRating) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4868296580ce0529, []int{5}
 }
-func (m *MsgItemThank) XXX_Unmarshal(b []byte) error {
+func (m *MsgItemRating) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgItemThank) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgItemRating) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgItemThank.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgItemRating.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -359,37 +336,44 @@ func (m *MsgItemThank) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *MsgItemThank) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgItemThank.Merge(m, src)
+func (m *MsgItemRating) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgItemRating.Merge(m, src)
 }
-func (m *MsgItemThank) XXX_Size() int {
+func (m *MsgItemRating) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgItemThank) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgItemThank.DiscardUnknown(m)
+func (m *MsgItemRating) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgItemRating.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgItemThank proto.InternalMessageInfo
+var xxx_messageInfo_MsgItemRating proto.InternalMessageInfo
 
-func (m *MsgItemThank) GetBuyer() string {
+func (m *MsgItemRating) GetBuyer() string {
 	if m != nil {
 		return m.Buyer
 	}
 	return ""
 }
 
-func (m *MsgItemThank) GetItemid() string {
+func (m *MsgItemRating) GetItemid() string {
 	if m != nil {
 		return m.Itemid
 	}
 	return ""
 }
 
-func (m *MsgItemThank) GetThank() bool {
+func (m *MsgItemRating) GetRating() int64 {
 	if m != nil {
-		return m.Thank
+		return m.Rating
 	}
-	return false
+	return 0
+}
+
+func (m *MsgItemRating) GetNote() string {
+	if m != nil {
+		return m.Note
+	}
+	return ""
 }
 
 func init() {
@@ -398,36 +382,34 @@ func init() {
 	proto.RegisterType((*MsgUpdateBuyer)(nil), "danieljdd.tpp.tpp.MsgUpdateBuyer")
 	proto.RegisterType((*MsgDeleteBuyer)(nil), "danieljdd.tpp.tpp.MsgDeleteBuyer")
 	proto.RegisterType((*MsgItemTransfer)(nil), "danieljdd.tpp.tpp.MsgItemTransfer")
-	proto.RegisterType((*MsgItemThank)(nil), "danieljdd.tpp.tpp.MsgItemThank")
+	proto.RegisterType((*MsgItemRating)(nil), "danieljdd.tpp.tpp.MsgItemRating")
 }
 
 func init() { proto.RegisterFile("tpp/buyer.proto", fileDescriptor_4868296580ce0529) }
 
 var fileDescriptor_4868296580ce0529 = []byte{
-	// 353 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xbd, 0x4e, 0xeb, 0x30,
-	0x14, 0xc7, 0xe3, 0xdb, 0x8f, 0x7b, 0xaf, 0x6f, 0x75, 0x2b, 0xa2, 0x0a, 0x85, 0x0e, 0xa1, 0x8a,
-	0x18, 0x3a, 0xc5, 0x2a, 0x4c, 0x2c, 0x1d, 0x5a, 0x16, 0x86, 0x2e, 0x11, 0x48, 0x88, 0xcd, 0x49,
-	0x0e, 0xa9, 0xa1, 0x89, 0xad, 0xd8, 0x45, 0x54, 0xe2, 0x21, 0x18, 0x78, 0xa8, 0x8e, 0x1d, 0x99,
-	0x10, 0x6a, 0x5f, 0x04, 0xd9, 0x49, 0x29, 0xdd, 0xa0, 0x62, 0xb0, 0xe5, 0xf3, 0xe1, 0xff, 0xef,
-	0x7f, 0xa4, 0x83, 0x9b, 0x4a, 0x08, 0x12, 0x4e, 0x67, 0x90, 0xfb, 0x22, 0xe7, 0x8a, 0xdb, 0x7b,
-	0x31, 0xcd, 0x18, 0x4c, 0x6e, 0xe3, 0xd8, 0x57, 0x42, 0xe8, 0xd3, 0x6e, 0x25, 0x3c, 0xe1, 0xa6,
-	0x4a, 0xf4, 0xab, 0x68, 0x6c, 0xbb, 0x11, 0x97, 0x29, 0x97, 0x24, 0xa4, 0x12, 0xc8, 0x7d, 0x2f,
-	0x04, 0x45, 0x7b, 0x24, 0xe2, 0x2c, 0x2b, 0xea, 0xde, 0x33, 0xc2, 0xb5, 0x81, 0x16, 0xb6, 0x5b,
-	0xb8, 0x66, 0x08, 0x0e, 0xea, 0xa0, 0xee, 0xdf, 0xa0, 0x08, 0xec, 0x7d, 0x5c, 0x67, 0x0a, 0x52,
-	0x16, 0x3b, 0xbf, 0x4c, 0xba, 0x8c, 0x6c, 0x0f, 0x37, 0x54, 0x4e, 0x33, 0x79, 0x03, 0x39, 0x0d,
-	0x27, 0xe0, 0x54, 0x3a, 0xa8, 0xfb, 0x27, 0xd8, 0xca, 0xd9, 0xa7, 0xf8, 0x77, 0x0c, 0x82, 0x4b,
-	0xa6, 0x9c, 0x6a, 0x07, 0x75, 0xff, 0x1d, 0x1f, 0xf8, 0x85, 0x1b, 0x5f, 0xbb, 0xf1, 0x4b, 0x37,
-	0xfe, 0x90, 0xb3, 0x6c, 0x50, 0x9d, 0xbf, 0x1e, 0x5a, 0xc1, 0xba, 0xdf, 0xbb, 0xc2, 0xff, 0x47,
-	0x32, 0x19, 0xe6, 0x40, 0x15, 0xec, 0x62, 0xcf, 0xd9, 0xa0, 0xb5, 0xb3, 0xca, 0x46, 0xf9, 0xd1,
-	0x28, 0x5f, 0x8a, 0x78, 0x47, 0xe5, 0xaf, 0x0c, 0xee, 0x6c, 0x0f, 0xfe, 0x89, 0xde, 0x37, 0xf4,
-	0x33, 0x98, 0xc0, 0x4e, 0x74, 0x2f, 0xc2, 0xcd, 0x91, 0x4c, 0xce, 0x15, 0xa4, 0x17, 0x25, 0xf0,
-	0xe7, 0xed, 0x7b, 0x01, 0x6e, 0xac, 0x21, 0x63, 0x9a, 0xdd, 0x7d, 0x93, 0xd0, 0xc2, 0x35, 0xa5,
-	0xbf, 0x95, 0xd2, 0x45, 0x30, 0xe8, 0xcf, 0x97, 0x2e, 0x5a, 0x2c, 0x5d, 0xf4, 0xb6, 0x74, 0xd1,
-	0xd3, 0xca, 0xb5, 0x16, 0x2b, 0xd7, 0x7a, 0x59, 0xb9, 0xd6, 0xf5, 0x51, 0xc2, 0xd4, 0x78, 0x1a,
-	0xfa, 0x11, 0x4f, 0xc9, 0xc7, 0x56, 0x13, 0xbd, 0xf0, 0x0f, 0xe6, 0x56, 0x33, 0x01, 0x32, 0xac,
-	0x9b, 0x75, 0x3d, 0x79, 0x0f, 0x00, 0x00, 0xff, 0xff, 0xc1, 0xf6, 0x86, 0x25, 0x0a, 0x03, 0x00,
-	0x00,
+	// 328 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xcf, 0x4a, 0x33, 0x31,
+	0x10, 0xc0, 0x77, 0xbf, 0xfe, 0xf9, 0x30, 0xa2, 0xc5, 0xa5, 0x94, 0xb5, 0x87, 0x58, 0x8a, 0x87,
+	0x9e, 0x12, 0xaa, 0x27, 0x2f, 0x15, 0x5a, 0x2f, 0x1e, 0x7a, 0x29, 0x0a, 0xe2, 0x6d, 0xb7, 0x3b,
+	0xc6, 0x48, 0x37, 0x09, 0x9b, 0xa9, 0xd8, 0xb7, 0xf0, 0xb1, 0x7a, 0xec, 0xd1, 0x93, 0x48, 0xfb,
+	0x22, 0xb2, 0xd9, 0x55, 0xd0, 0x5b, 0x8b, 0x87, 0x84, 0x99, 0xcc, 0xe4, 0xf7, 0x63, 0x60, 0x48,
+	0x03, 0x8d, 0xe1, 0xf1, 0x7c, 0x01, 0x19, 0x33, 0x99, 0x46, 0x1d, 0x1c, 0x25, 0x91, 0x92, 0x30,
+	0x7b, 0x4a, 0x12, 0x86, 0xc6, 0xe4, 0xa7, 0xdd, 0x14, 0x5a, 0x68, 0x57, 0xe5, 0x79, 0x54, 0x34,
+	0xb6, 0xe9, 0x54, 0xdb, 0x54, 0x5b, 0x1e, 0x47, 0x16, 0xf8, 0x73, 0x3f, 0x06, 0x8c, 0xfa, 0x7c,
+	0xaa, 0xa5, 0x2a, 0xea, 0x5d, 0x43, 0x6a, 0xc3, 0x9c, 0x1b, 0x34, 0x49, 0xcd, 0x09, 0x42, 0xbf,
+	0xe3, 0xf7, 0xf6, 0x26, 0x45, 0x12, 0xb4, 0x48, 0x5d, 0x22, 0xa4, 0x32, 0x09, 0xff, 0xb9, 0xe7,
+	0x32, 0x0b, 0x2e, 0xc8, 0xff, 0x04, 0x8c, 0xb6, 0x12, 0xc3, 0x4a, 0xc7, 0xef, 0xed, 0x9f, 0x1d,
+	0xb3, 0x42, 0xc4, 0x72, 0x11, 0x2b, 0x45, 0x6c, 0xa4, 0xa5, 0x1a, 0x56, 0x97, 0xef, 0x27, 0xde,
+	0xe4, 0xab, 0xbf, 0x7b, 0x47, 0x0e, 0xc7, 0x56, 0x8c, 0x32, 0x88, 0x10, 0x76, 0x51, 0x87, 0x3f,
+	0xd5, 0x95, 0xdf, 0xe4, 0x5b, 0x93, 0xfc, 0x39, 0x79, 0xe0, 0xc8, 0x57, 0x30, 0x83, 0x9d, 0xc8,
+	0xdd, 0x4b, 0xd2, 0x18, 0x5b, 0x71, 0x8d, 0x90, 0xde, 0x64, 0x91, 0xb2, 0x0f, 0x5b, 0x03, 0x24,
+	0x39, 0x28, 0x01, 0x93, 0x08, 0xa5, 0x12, 0x5b, 0x4e, 0xd6, 0x22, 0xf5, 0xcc, 0xfd, 0x2b, 0x07,
+	0x2b, 0xb3, 0x20, 0x20, 0x55, 0xa5, 0x11, 0xc2, 0xaa, 0xeb, 0x76, 0xf1, 0x70, 0xb0, 0x5c, 0x53,
+	0x7f, 0xb5, 0xa6, 0xfe, 0xc7, 0x9a, 0xfa, 0xaf, 0x1b, 0xea, 0xad, 0x36, 0xd4, 0x7b, 0xdb, 0x50,
+	0xef, 0xfe, 0x54, 0x48, 0x7c, 0x9c, 0xc7, 0x6c, 0xaa, 0x53, 0xfe, 0xbd, 0x7f, 0x3c, 0x5f, 0xcd,
+	0x17, 0x77, 0xe3, 0xc2, 0x80, 0x8d, 0xeb, 0x6e, 0xb1, 0xce, 0x3f, 0x03, 0x00, 0x00, 0xff, 0xff,
+	0x77, 0x95, 0x28, 0xd3, 0xb4, 0x02, 0x00, 0x00,
 }
 
 func (m *Buyer) Marshal() (dAtA []byte, err error) {
@@ -459,17 +441,7 @@ func (m *Buyer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintBuyer(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x22
-	if m.Transferable {
-		i--
-		if m.Transferable {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x18
-	}
+	dAtA[i] = 0x1a
 	if len(m.Itemid) > 0 {
 		i -= len(m.Itemid)
 		copy(dAtA[i:], m.Itemid)
@@ -552,16 +524,6 @@ func (m *MsgUpdateBuyer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.Deposit != 0 {
 		i = encodeVarintBuyer(dAtA, i, uint64(m.Deposit))
 		i--
-		dAtA[i] = 0x20
-	}
-	if m.Transferable {
-		i--
-		if m.Transferable {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
 		dAtA[i] = 0x18
 	}
 	if len(m.Itemid) > 0 {
@@ -638,16 +600,6 @@ func (m *MsgItemTransfer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Transferable {
-		i--
-		if m.Transferable {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x18
-	}
 	if len(m.Itemid) > 0 {
 		i -= len(m.Itemid)
 		copy(dAtA[i:], m.Itemid)
@@ -665,7 +617,7 @@ func (m *MsgItemTransfer) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgItemThank) Marshal() (dAtA []byte, err error) {
+func (m *MsgItemRating) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -675,23 +627,25 @@ func (m *MsgItemThank) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgItemThank) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgItemRating) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgItemThank) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgItemRating) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.Thank {
+	if len(m.Note) > 0 {
+		i -= len(m.Note)
+		copy(dAtA[i:], m.Note)
+		i = encodeVarintBuyer(dAtA, i, uint64(len(m.Note)))
 		i--
-		if m.Thank {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
+		dAtA[i] = 0x22
+	}
+	if m.Rating != 0 {
+		i = encodeVarintBuyer(dAtA, i, uint64(m.Rating))
 		i--
 		dAtA[i] = 0x18
 	}
@@ -737,9 +691,6 @@ func (m *Buyer) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovBuyer(uint64(l))
 	}
-	if m.Transferable {
-		n += 2
-	}
 	l = m.Deposit.Size()
 	n += 1 + l + sovBuyer(uint64(l))
 	return n
@@ -779,9 +730,6 @@ func (m *MsgUpdateBuyer) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovBuyer(uint64(l))
 	}
-	if m.Transferable {
-		n += 2
-	}
 	if m.Deposit != 0 {
 		n += 1 + sovBuyer(uint64(m.Deposit))
 	}
@@ -819,13 +767,10 @@ func (m *MsgItemTransfer) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovBuyer(uint64(l))
 	}
-	if m.Transferable {
-		n += 2
-	}
 	return n
 }
 
-func (m *MsgItemThank) Size() (n int) {
+func (m *MsgItemRating) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -839,8 +784,12 @@ func (m *MsgItemThank) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovBuyer(uint64(l))
 	}
-	if m.Thank {
-		n += 2
+	if m.Rating != 0 {
+		n += 1 + sovBuyer(uint64(m.Rating))
+	}
+	l = len(m.Note)
+	if l > 0 {
+		n += 1 + l + sovBuyer(uint64(l))
 	}
 	return n
 }
@@ -945,26 +894,6 @@ func (m *Buyer) Unmarshal(dAtA []byte) error {
 			m.Itemid = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Transferable", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuyer
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Transferable = bool(v != 0)
-		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Deposit", wireType)
 			}
@@ -1246,26 +1175,6 @@ func (m *MsgUpdateBuyer) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Transferable", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuyer
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Transferable = bool(v != 0)
-		case 4:
-			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Deposit", wireType)
 			}
 			m.Deposit = 0
@@ -1511,26 +1420,6 @@ func (m *MsgItemTransfer) Unmarshal(dAtA []byte) error {
 			}
 			m.Itemid = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Transferable", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowBuyer
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Transferable = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipBuyer(dAtA[iNdEx:])
@@ -1552,7 +1441,7 @@ func (m *MsgItemTransfer) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgItemThank) Unmarshal(dAtA []byte) error {
+func (m *MsgItemRating) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1575,10 +1464,10 @@ func (m *MsgItemThank) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgItemThank: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgItemRating: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgItemThank: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgItemRating: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1647,9 +1536,9 @@ func (m *MsgItemThank) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Thank", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Rating", wireType)
 			}
-			var v int
+			m.Rating = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowBuyer
@@ -1659,12 +1548,43 @@ func (m *MsgItemThank) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= int(b&0x7F) << shift
+				m.Rating |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Thank = bool(v != 0)
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Note", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBuyer
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthBuyer
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthBuyer
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Note = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipBuyer(dAtA[iNdEx:])

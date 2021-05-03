@@ -48,12 +48,12 @@
     <v-icon left>
         mdi-account-badge
       </v-icon>
-      Identifier: {{ thisitem.id }}
+      TPP ID: {{ thisitem.id }}
     </v-chip> 
 
     
 
-<v-chip v-if="thisitem.localpickup"
+<v-chip v-if="thisitem.localpickup != ''"
       class="ma-1"
       label
       outlined
@@ -176,7 +176,7 @@
                   </app-text>
       </div>
 
-       <div v-if="thisitem.localpickup === false && !thisitem.status">
+       <div v-if="thisitem.localpickup == '' && !thisitem.status">
                     
         <app-text type="p">This item is not shipped yet</app-text>
         <app-text  type="p"
@@ -185,21 +185,21 @@
       </div>
                   
                   <div>
-       <div v-if="thisitem.localpickup === true && thisitem.status != 'Transferred'">  
+       <div v-if="thisitem.localpickup != '' && thisitem.status != 'Transferred'">  
          <app-text class="ma-2" type="p"> Arrange a meeting to pick up the item.   </app-text>           
          <v-row>
            
         <v-btn class="ma-4" color="primary"
            
 
-          @click="submitItemTransfer(true, thisitem.id), getThisItem"
+          @click="submitItemTransfer(thisitem.id), getThisItem"
         ><v-icon left>
          mdi-checkbox-marked-circle
       </v-icon>
-          Complete Transfer
-          <div class="button__label" v-if="flightIT">
+            <span v-if="!flightIT"> Complete transfer</span>
+          <div class="button__label" v-else>
             <div class="button__label__icon">
-              <icon-refresh />
+        
             </div>
             Sending tokens to seller...
           </div>
@@ -211,14 +211,14 @@
             'button',
             `button__valid__${!!valid && !flightITN && hasAddress}`,
           ]"
-          @click="submitItemTransferN(false, thisitem.id), getThisItem"
+          @click="submitDeleteBuyer(thisitem.id), getThisItem"
         ><v-icon left>
          mdi-cancel
       </v-icon>
-          Cancel transfer
-          <div class="button__label" v-if="flightITN">
+          <span v-if="!flightITN"> Cancel transfer</span>
+          <div class="button__label" v-else>
             <div class="button__label__icon">
-              <icon-refresh />
+            
             </div>
             Sending tokens back...
           </div>
@@ -302,24 +302,31 @@
         
         text
         icon
-        @click="fields.localpickup = !fields.localpickup"
+        @click="enterlocation = !enterlocation"
       >
-        <v-icon > {{fields.localpickup ? 'mdi-map-marker' : 'mdi-map-marker-off'}} </v-icon>
+        <v-icon > {{enterlocation ? 'mdi-map-marker' : 'mdi-map-marker-off'}} </v-icon>
       </v-btn>
 
 
       <v-switch class="ml-2" 
-      v-model="fields.localpickup"
+      v-model="enterlocation"
       inset
       label="Local pickup"
-      :persistent-hint="fields.shippingcost !=0 && fields.localpickup == true && selectedCountries.length > 1"
+      :persistent-hint="fields.shippingcost != 0 && enterlocation == tue && selectedCountries.length > 1"
       hint="Specify local pickup location in description"
     ></v-switch>  
 
     
 
                
-                </v-row></v-col><v-col> <v-select
+                </v-row><v-text-field
+                class="ma-1"
+                prepend-icon="mdi-map-marker"
+                :rules="rules.pickupRules"
+                label="Local Pickup Location"
+                v-model="fields.localpickup"
+                required v-if="enterlocation"
+              /></v-col><v-col> <v-select
                  prepend-icon="mdi-earth"
                  hint="At least one"
                  :persistent-hint="selectedCountries == 0"
@@ -374,13 +381,19 @@ export default {
       step: 2,
       fields: {
         shippingcost: "0",
-        localpickup: false,
+        localpickup: "",
         discount: "0",
         note: "",
       },
       
       rules: {
-       
+        pickupRules: [
+          (v) => !!v || "Pickup is required",
+        
+          (v) =>
+            (v && v.length <= 25) || "Pickup must be less than 25 characters, enter coordinates instead",
+        ],
+
          shippingRules:  [ 
           (v) => !!v.length == 1 || "A country is required",],
          noteRules:  [ 
@@ -430,16 +443,16 @@ export default {
 
   methods: {
    
-    async submitItemTransfer(transferable, itemid) {
+    async submitItemTransfer(itemid) {
 
       if (this.valid && !this.flightIT && this.hasAddress) {
         this.flightIT = true;
 
-        const body = { transferable, itemid };
+        const body = { itemid };
          const fields = [
         ["buyer", 1,'string', "optional"],
          [ "itemid", 2,'string', "optional"] ,                                                    
-        ["transferable",3,'bool', "optional"],
+     
       ];
         await this.transferSubmit( {body, fields });
  await this.$store.dispatch("setBuyerItemList", this.$store.state.account.address);
@@ -448,17 +461,17 @@ export default {
       }
     },
 
-    async submitItemTransferN(transferable, itemid) {
+    async submitDeleteBuyer(itemid) {
       if (this.valid && !this.flightITN && this.hasAddress) {
         this.flightITN = true;
-        const body = { transferable, itemid };
+        const body = { itemid };
          const fields = [
         ["buyer", 1,'string', "optional"],
          [ "itemid", 2,'string', "optional"] ,                                                    
-        ["transferable",3,'bool', "optional"],
+      
       ];
-        await this.transferSubmit( {body, fields });
-        await this.$store.dispatch("entityFetch", type);
+        await this.deleteSubmit( { body, fields });
+        await this.$store.dispatch("entityFetch", "buyer");
         await this.$store.dispatch("setBuyerItemList", this.$store.state.account.address);
         this.flightITN = false;
      
@@ -498,6 +511,41 @@ export default {
 
     },
 
+ async deleteSubmit( { body, fields }) {
+      const wallet = this.$store.state.wallet
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgDeleteBuyer`;
+      let MsgCreate = new Type(`MsgDeleteBuyer`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+      console.log(fields)
+      fields.forEach(f => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
+      })
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+
+      const msg = {
+        typeUrl,
+        value: {
+          buyer: this.$store.state.account.address,
+          ...body
+        }
+      };
+      const fee = {
+        amount: [{ amount: '0', denom: 'tpp' }],
+        gas: '200000'
+      };
+
+      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
+      assertIsBroadcastTxSuccess(result);
+      alert("Transaction sent");
+
+    },
+
+
+
  async submitItemResell() {
       if (this.hasAddress) {
          const body = {
@@ -514,7 +562,7 @@ export default {
          [ "itemid", 2,'string', "optional"] ,                                                    
         ["shippingcost",3,'int64', "optional"],
           ["discount",4,'int64', "optional"],
-            ["localpickup",5,'bool', "optional"],
+            ["localpickup",5,'string', "optional"],
               ["shippingregion",6,'string', "repeated"],
                 ["note",7,'string', "optional"],
 

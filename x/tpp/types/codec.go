@@ -16,7 +16,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateBuyer{}, "tpp/CreateBuyer", nil)
 	cdc.RegisterConcrete(&MsgUpdateBuyer{}, "tpp/UpdateBuyer", nil)
 	cdc.RegisterConcrete(&MsgDeleteBuyer{}, "tpp/DeleteBuyer", nil)
-	cdc.RegisterConcrete(&MsgItemThank{}, "tpp/ItemThank", nil)
+	cdc.RegisterConcrete(&MsgItemRating{}, "tpp/ItemRating", nil)
 	cdc.RegisterConcrete(&MsgItemTransfer{}, "tpp/ItemTransfer", nil)
 
 
@@ -49,7 +49,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgRevealEstimation{},
 		&MsgItemTransferable{},
 		&MsgItemShipping{},
-		&MsgItemThank{},
+		&MsgItemRating{},
 		&MsgItemResell{},
 	)
 }

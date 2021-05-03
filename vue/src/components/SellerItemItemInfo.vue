@@ -15,7 +15,7 @@
       small
       @click="setItem()"><v-icon >
         mdi-marker
-      </v-icon></v-btn>--><v-btn text @click="removeItem()"
+      </v-icon></v-btn>--><v-btn  v-if="thisitem.status == ''" text @click="removeItem()"
               ><v-icon> mdi-trash-can </v-icon></v-btn
             >
           </v-row>
@@ -49,11 +49,11 @@
               <v-divider class="ma-2" />
               <v-chip class="ma-1 caption" label outlined medium>
                 <v-icon left> mdi-account-badge-outline </v-icon>
-                Identifier: {{ thisitem.id }}
+                TPP ID: {{ thisitem.id }}
               </v-chip>
 
               <v-chip
-                v-if="thisitem.localpickup"
+                v-if="thisitem.localpickup != ''"
                 class="ma-1 caption"
                 label
                 outlined
@@ -86,7 +86,7 @@
                 medium
               >
                 <v-icon left> mdi-package-variant-closed </v-icon>
-                Shipping cost: ${{ thisitem.shippingcost}} <v-icon small right>$vuetify.icons.custom</v-icon>  
+                Shipping cost: {{ thisitem.shippingcost}} <v-icon small right>$vuetify.icons.custom</v-icon>  
               </v-chip>
               <v-chip
                 outlined
@@ -170,7 +170,7 @@
               <v-divider class="ma-2" />
 
               <div class="overline text-center">Comments</div>
-              <div v-if="commentlist.lenght > 0">
+              <div v-if="commentlist">
                 <div v-for="(comment, nr) in commentlist" v-bind:key="nr">
                   <v-chip color="primary" class="ma-2">{{ comment }} </v-chip>
                 </div>
@@ -217,10 +217,10 @@
                 </v-stepper-step>
 
                 <v-stepper-content step="2">
-                  <app-text type="subtitle">
+                 <p type="caption">
                     Awaiting a value determination. Meanwhile... help
                     others by estimating items (and earn tokens)!
-                  </app-text>
+                  </p>
                 </v-stepper-content>
 
                 <v-stepper-step :complete="thisitem.transferable" step="3">
@@ -229,14 +229,14 @@
 
                 <v-stepper-content step="3">
                   <div>
-                    <app-text type="subtitle">
+                    <p type="caption">
                       Wow! there is a price. You can sell
                       {{ thisitem.title }} for ${{
                         thisitem.estimationprice
                       }}
                       TPP tokens. By accepting, your item will be available to buy. Anyone can provide a prepayment to buy the
                       item.
-                    </app-text>
+                    </p>
                     <v-row>
                       <v-btn
                         class="ma-4"
@@ -292,7 +292,7 @@
                 
                 <v-icon small>mdi-share-variant </v-icon> <input v-model="tocopy" size=50 class="mx-2 caption" type="text" ref="input" >   <v-btn text @click="copyText()">  Copy</v-btn>
                   <app-text
-                    v-if="thisitem.shippingcost > 0 && thisitem.localpickup"
+                    v-if="thisitem.shippingcost > 0 && thisitem.localpickup != '' "
                     type="caption"
                   >
                     If a buyer chooses shipping, you ship it, provide the track
@@ -302,7 +302,7 @@
                     transfer the tokens during your meetup.
                   </app-text>
                   <app-text
-                    v-if="thisitem.shippingcost === 0 && thisitem.localpickup"
+                    v-if="thisitem.shippingcost === 0 && thisitem.localpickup != ''"
                     type="caption"
                   >
                     After a buyer is found negotiate a meetup time and place by
@@ -312,7 +312,7 @@
                   <app-text
                     v-if="
                       thisitem.shippingcost > 0 &&
-                      thisitem.localpickup === false
+                      thisitem.localpickup == ''
                     "
                     type="caption"
                   >
@@ -332,7 +332,7 @@
                       !!valid &&
                       !flightIS &&
                       hasAddress &&
-                      thisitem.localpickup != true &&
+                      thisitem.localpickup == '' &&
                       thisitem.buyer &&
                       thisitem.shippingcost &&
                       thisitem.status === ''
@@ -369,7 +369,7 @@
                       !!valid &&
                       !flightIS &&
                       hasAddress &&
-                      thisitem.localpickup &&
+                      thisitem.localpickup != '' &&
                       thisitem.buyer &&
                       thisitem.status === ''
                     "
@@ -422,8 +422,8 @@ export default {
   data() {
     return {
      
-      shippingcost: "0",
-      localpickup: false,
+
+
       selectedCountries: [],
       flightre: false,
       flightit: false,

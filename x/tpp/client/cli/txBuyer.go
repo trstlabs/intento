@@ -13,7 +13,7 @@ import (
 
 func CmdCreateBuyer() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-buyer [itemid] [deposit(amount)]",
+		Use:   "create-buyer [itemid] [deposit amount]",
 		Short: "Creates a new buyer",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -43,17 +43,14 @@ func CmdCreateBuyer() *cobra.Command {
 
 func CmdUpdateBuyer() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-buyer[itemid] [transferable] [deposit]",
+		Use:   "update-buyer[itemid] [deposit]",
 		Short: "Update a buyer",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			argsItemid := string(args[0])
-			argsTransferable := false
-			if args[1] == "1" {
-				argsTransferable = true
-			}
-			argsDeposit, err := strconv.ParseInt(args[2], 10, 64)
+		
+			argsDeposit, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -62,7 +59,7 @@ func CmdUpdateBuyer() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgUpdateBuyer(clientCtx.GetFromAddress().String(), string(argsItemid), bool(argsTransferable), int64(argsDeposit))
+			msg := types.NewMsgUpdateBuyer(clientCtx.GetFromAddress().String(), string(argsItemid), int64(argsDeposit))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -77,7 +74,7 @@ func CmdUpdateBuyer() *cobra.Command {
 
 func CmdDeleteBuyer() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete-buyer [id] [itemid] [transferable] [deposit]",
+		Use:   "delete-buyer [id]",
 		Short: "Delete a buyer by id",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -103,22 +100,19 @@ func CmdDeleteBuyer() *cobra.Command {
 
 func CmdItemTransfer() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "item-transfer [transterbool] [itemID]",
+		Use:   "item-transfer [itemID]",
 		Short: "Set a new buyer",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argsTransferbool := false
-			if args[0] == "1" {
-				argsTransferbool = true
-			}
-			argsItemID := args[1]
+			
+			argsItemID := args[0]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgItemTransfer(clientCtx.GetFromAddress().String(), string(argsItemID), bool(argsTransferbool))
+			msg := types.NewMsgItemTransfer(clientCtx.GetFromAddress().String(), string(argsItemID))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -131,24 +125,26 @@ func CmdItemTransfer() *cobra.Command {
 	return cmd
 }
 
-func CmdItemThank() *cobra.Command {
+func CmdItemRating() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "item-thank [transterbool] [itemID]",
+		Use:   "item-rating [Rating] [Note] [itemID]",
 		Short: "Set a new buyer",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argsThank := false
-			if args[0] == "1" {
-				argsThank = true
-			}
-			argsItemID := string(args[1])
+	
+
+			argsRating, _ := strconv.ParseInt(args[0], 10, 64)
+
+
+			argsNote := string(args[1])
+			argsItemID := string(args[2])
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgItemThank(clientCtx.GetFromAddress().String(), string(argsItemID), bool(argsThank))
+			msg := types.NewMsgItemRating(clientCtx.GetFromAddress().String(), string(argsItemID), int64(argsRating), string(argsNote))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

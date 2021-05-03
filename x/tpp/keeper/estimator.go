@@ -122,6 +122,17 @@ func (k Keeper) DeleteEstimator(ctx sdk.Context, key string) {
 	store.Delete(types.KeyPrefix(types.EstimatorKey + key))
 }
 
+
+// DeleteEstimatorWithoutDeposit deletes a estimator without returing a deposit
+func (k Keeper) DeleteEstimatorWithoutDeposit(ctx sdk.Context, key string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
+	var estimator types.Estimator
+	k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+key)), &estimator)
+	
+	store.Delete(types.KeyPrefix(types.EstimatorKey + key))
+}
+
+
 // GetAllEstimator returns all estimator
 func (k Keeper) GetAllEstimator(ctx sdk.Context) (msgs []types.Estimator) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))

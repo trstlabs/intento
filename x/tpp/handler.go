@@ -57,8 +57,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 		case *types.MsgCreateFlag:
 			return handleMsgCreateFlag(ctx, k, msg)
-		case *types.MsgItemThank:
-			return handleMsgItemThank(ctx, k, msg)
+		case *types.MsgItemRating:
+			return handleMsgItemRating(ctx, k, msg)
 		case *types.MsgItemResell:
 			return handleMsgItemResell(ctx, k, msg)
 

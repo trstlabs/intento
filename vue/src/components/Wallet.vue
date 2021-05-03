@@ -210,6 +210,7 @@ export default {
       try {
         await this.$store.dispatch('bankBalancesGet')
       } catch {
+        this.signOut()
         console.log('Error in getting a bank balance.')
       }
   
@@ -225,6 +226,7 @@ export default {
          window.localStorage.removeItem('emailForSignIn');
           window.localStorage.removeItem('emailRef');
           window.localStorage.removeItem('privkey');
+           window.localStorage.removeItem('mnemonic');
   // Sign-out successful.
 }).catch((error) => {
   // An error happened.

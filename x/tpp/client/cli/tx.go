@@ -31,7 +31,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdUpdateBuyer())
 	cmd.AddCommand(CmdDeleteBuyer())
 	cmd.AddCommand(CmdItemTransfer())
-	cmd.AddCommand(CmdItemThank())
+	cmd.AddCommand(CmdItemRating())
 
 	cmd.AddCommand(CmdCreateItem())
 	cmd.AddCommand(CmdUpdateItem())

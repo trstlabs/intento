@@ -15,7 +15,7 @@ message Item {
   string title = 3; 
   string description = 4; 
   int64 shippingcost = 5;
-  bool localpickup = 6; 
+  string localpickup = 6; 
   string estimationcounthash = 7; 
   string bestestimator = 8; 
   string lowestestimator = 9; 
@@ -32,7 +32,7 @@ message Item {
   int64 flags = 20; 
   int64 condition = 21; 
   repeated string shippingregion = 22; 
-  bool thank = 23; 
+  int64 rating = 23; 
   int64 depositamount = 24;
   string creator = 25;
   string note = 26;
@@ -45,7 +45,7 @@ message MsgCreateItem {
   string description = 3; 
   int64 shippingcost = 4 ; 
 
-  bool localpickup = 5; 
+  string localpickup = 5; 
   int64 estimationcount = 6; 
  
   repeated string tags = 7; 
@@ -60,7 +60,7 @@ message MsgUpdateItem {
   string id = 2;
 
   int64 shippingcost = 5;
-  bool localpickup = 6; 
+  string localpickup = 6; 
 
 
   repeated string shippingregion = 8; 
@@ -95,7 +95,7 @@ message MsgItemResell {
   string itemid = 2;
   int64 shippingcost = 3;
     int64 discount = 4;
-  bool localpickup = 5;
+  string localpickup = 5;
   repeated string shippingregion = 6; 
   string note = 7;
 }

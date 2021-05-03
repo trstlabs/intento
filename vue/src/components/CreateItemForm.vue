@@ -211,10 +211,10 @@
                         class="mr-auto"
                         text
                         icon
-                        @click="fields.localpickup = !fields.localpickup"
+                        @click="enterlocation = !enterlocation"
                         ><v-icon
                           >{{
-                            fields.localpickup
+                            enterlocation
                               ? "mdi-map-marker"
                               : "mdi-map-marker-off"
                           }}
@@ -223,16 +223,25 @@
 
                       <v-switch
                         class="mr-auto mt-1"
-                        v-model="fields.localpickup"
+                        v-model="enterlocation"
                         inset
                         label="Local pickup"
                         :persistent-hint="
                           fields.shippingcost != 0 &&
-                          fields.localpickup == true &&
+                          enterlocation == true &&
                           selectedCountries.length > 1
                         "
                         hint="Specify local pickup location in description"
-                      ></v-switch> </v-row></v-col
+                      ></v-switch> </v-row>
+                        <v-text-field
+                class="ma-1"
+                prepend-icon="mdi-map-marker"
+                :rules="rules.pickupRules"
+                label="Local Pickup Location"
+                v-model="fields.localpickup"
+                required v-if="enterlocation"
+              />
+              </v-col
                   ><v-col>
                     <v-select
                       class="mt-1 pt-0"
@@ -375,7 +384,7 @@ export default {
         title: "",
         description: "",
         shippingcost: "0",
-        localpickup: false,
+        localpickup: "",
         estimationcount: "3",
         condition: "0",
 depositamount: "3",
@@ -407,7 +416,12 @@ depositamount: "3",
           (v) => !!v.length == 1 || "Category tag is required",
           (v) => (v && v.length < 6) || "Category tags must be less than 6",
         ],
-
+        pickupRules: [
+          (v) => !!v || "Pickup is required",
+        
+          (v) =>
+            (v && v.length <= 25) || "Pickup must be less than 25 characters, enter coordinates instead",
+        ],
         shippingRules: [(v) => !!v.length == 1 || "A country is required"],
       },
       itemid: "",
@@ -423,6 +437,7 @@ changedeposit: false,
  descrinfo: false,
       satisfactionEmojis: ["😭", "🙁", "🙂", "😊", "😄"],
       countryCodes: ["NL", "BE", "UK", "DE", "US", "CA"],
+      enterlocation: false,
     };
   },
   watch: {
@@ -500,7 +515,7 @@ changedeposit: false,
           ["title", 2, "string", "optional"],
           ["description", 3, "string", "optional"],
           ["shippingcost", 4, "int64", "optional"],
-          ["localpickup", 5, "bool", "optional"],
+          ["localpickup", 5, "string", "optional"],
           ["estimationcount", 6, "int64", "optional"],
           ["tags", 7, "string", "repeated"],
           ["condition", 8, "int64", "optional"],

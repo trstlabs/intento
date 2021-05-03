@@ -8,7 +8,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup bool, estimationcount int64, tags []string, condition int64, shippingregion []string, depositamount int64) *MsgCreateItem {
+func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup string, estimationcount int64, tags []string, condition int64, shippingregion []string, depositamount int64) *MsgCreateItem {
 	return &MsgCreateItem{
 
 		Creator:         creator,
@@ -61,7 +61,7 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 	}
 
 	if len(msg.Shippingregion) > 6 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Region invalid")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Regions too long")
 	}
 
 	for _, region := range msg.Shippingregion {
@@ -74,10 +74,20 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "description too long")
 	}
 
-	if msg.Shippingcost == 0 && msg.Localpickup != true {
+	if msg.Shippingcost == 0 && msg.Localpickup == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localpickup")
 	}
-	if msg.Condition > 6 {
+
+	if len(msg.Description) > 800 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "description too long")
+	}
+
+	if len(msg.Localpickup) > 25 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup too long")
+	}
+
+
+	if msg.Condition > 5 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid item condition")
 	}
 	if msg.Estimationcount > 24 {
@@ -88,7 +98,7 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgUpdateItem{}
 
-func NewMsgUpdateItem(seller string, id string, shippingcost int64, localpickup bool, shippingregion []string) *MsgUpdateItem {
+func NewMsgUpdateItem(seller string, id string, shippingcost int64, localpickup string, shippingregion []string) *MsgUpdateItem {
 	return &MsgUpdateItem{
 		Id:             id,
 		Seller:        seller,
@@ -123,6 +133,13 @@ func (msg *MsgUpdateItem) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
+	}
+
+	if len(msg.Localpickup) > 25 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup too long")
+	}
+	if len(msg.Shippingregion) > 6 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Regions too long")
 	}
 	return nil
 }
@@ -284,7 +301,7 @@ func (msg *MsgItemShipping) ValidateBasic() error {
 var _ sdk.Msg = &MsgCreateItem{}
 
 
-func NewMsgItemResell(seller string, itemid string, shippingcost int64, discount int64, localpickup bool, shippingregion []string, note string) *MsgItemResell {
+func NewMsgItemResell(seller string, itemid string, shippingcost int64, discount int64, localpickup string, shippingregion []string, note string) *MsgItemResell {
 	return &MsgItemResell {
 		Seller:  seller,
 		Itemid:   itemid,
@@ -327,7 +344,7 @@ func (msg *MsgItemResell) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "note too long")
 	}
 	if len(msg.Shippingregion) > 6  {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Region invalid")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Regions too long")
 	}
 
 	for _, region := range msg.Shippingregion {
@@ -335,8 +352,12 @@ func (msg *MsgItemResell) ValidateBasic() error {
 			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region too long")
 		}
 	}
-	if msg.Shippingcost == 0 && msg.Localpickup != true {
+	if msg.Shippingcost == 0 && msg.Localpickup == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localpickup")
+	}
+
+	if len(msg.Localpickup) > 25 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup too long")
 	}
 
 	return nil

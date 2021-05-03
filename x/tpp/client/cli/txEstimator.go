@@ -49,7 +49,7 @@ func CmdCreateEstimator() *cobra.Command {
 
 func CmdUpdateEstimator() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-estimator [itemid][interested] ",
+		Use:   "update-estimator [itemid] [interested]",
 		Short: "Update a estimator",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

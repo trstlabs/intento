@@ -9,7 +9,7 @@
         <div class="pa-2 mx-auto" elevation="8">
           <v-row>
             <p class="pa-2 h3 font-weight-medium">{{ thisitem.title }}</p>
-            <v-spacer /><v-btn text @click="removeItem()"
+            <v-spacer /><v-btn v-if="thisitem.highestestimator != userAddress && thisitem.lowestestimator != userAddress" text @click="removeItem()"
               ><v-icon> mdi-trash-can </v-icon></v-btn
             >
           </v-row>
@@ -20,7 +20,7 @@
             <v-col cols="8">
               <v-chip class="ma-1" label outlined medium>
                 <v-icon left> mdi-account-badge </v-icon>
-                Identifier: {{ thisitem.id }}
+                TPP ID: {{ thisitem.id }}
               </v-chip>
 
               <v-chip
@@ -31,44 +31,52 @@
                 medium
               >
                 <v-icon left> mdi-check-all </v-icon>
-                Best Estimation: $ {{ thisitem.estimationprice }} tokens
+                Final Estimation: {{ thisitem.estimationprice }} <v-icon small right>$vuetify.icons.custom</v-icon> 
               </v-chip>
 
               <v-card elevation="0">
-                <div class="pa-2 overline">Description</div><div class="pa-2 caption">
-                    "{{ thisitem.description }} "
+                <div class="pa-2 overline">Description</div><div class="px-2 caption">
+                  {{ thisitem.description }}
                   </div>
               </v-card>
- <v-divider class="ma-2" />
+
               <app-text
                 class="mt-1"
                 v-if="thisitem.bestestimator === userAddress"
                 type="p"
-                > <v-icon left> mdi-account-check </v-icon>You are the best estimator.
+                > <v-divider class="ma-4" /> <v-icon left> mdi-account-check </v-icon>You are the best estimator.
                 <span class="caption">
-                  Check your balance. If the item is transferred, you will be
+                 If the item is transferred, you will be
                   rewarded  
-                ${{ (thisitem.estimationprice*0.05).toFixed(0)}}<v-icon small right>$vuetify.icons.custom</v-icon>  .</span
+                {{ (thisitem.estimationprice*0.05).toFixed(0)}}<v-icon small right>$vuetify.icons.custom</v-icon>  .</span
                 >
               </app-text>
               <app-text
                 class="mt-1"
-                v-if="thisitem.lowestestimator === userAddress"
+                v-else-if="thisitem.lowestestimator === userAddress"
                 type="p"
-              >
+              > <v-divider class="ma-4" />
                 <v-icon left> mdi-account-arrow-left </v-icon>
 
                 You are the lowest estimator.  <span v-if="!thisitem.estimationprice" class="caption">If the item owner does not accept
-                the estimation price, you lose ${{ thisitem.depositamount}}<v-icon small right>$vuetify.icons.custom</v-icon>  .</span>
+                the estimation price, you lose {{ thisitem.depositamount}}<v-icon small right>$vuetify.icons.custom</v-icon>  .</span>
               </app-text>
               <app-text
                 class="mt-1"
-                v-if="thisitem.highestestimator === userAddress"
+                v-else-if="thisitem.highestestimator === userAddress"
                 type="p"
-              >
+              > <v-divider class="ma-4" />
                 <v-icon left> mdi-account-arrow-right </v-icon>
-                You are the highest estimator.<span class="caption"  v-if="thisitem.status == ''"> If the item is not transferred,
-                you lose ${{ thisitem.depositamount }}<v-icon small right>$vuetify.icons.custom</v-icon>  .</span>
+                You are the highest estimator.<span class="caption"  v-if="thisitem.transferable == false"> If the seller does not accept the estimation price </span> <span class="caption"   v-else>If the seller does not ship the item,
+                you lose {{ thisitem.depositamount }}<v-icon small right>$vuetify.icons.custom</v-icon>  .</span>
+              </app-text>
+              <app-text
+                class="mt-1 text-center"
+                v-else
+                type="caption"
+              >
+               <v-divider class="ma-4" />
+                You have estimated this item and you are neither the highest, lowest or the best.  You may withdrawl your TPP tokens. This is done automatically for you when the item transfers.
               </app-text>
             </v-col>
 
@@ -196,7 +204,8 @@ export default {
         fee
       );
       assertIsBroadcastTxSuccess(result);
-      alert("Delete request sent");
+    //let routeData = this.$router.resolve({name: 'routeName', query: {data: "someData"}});
+
     },
   },
 };

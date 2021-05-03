@@ -25,7 +25,7 @@ type createItemRequest struct {
 	Description string       `json:"description"`
 
 	Shippingcost    int64    `json:"shippingcost"`
-	Localpickup     bool     `json:"localpickup"`
+	Localpickup     string     `json:"localpickup"`
 	Estimationcount int64    `json:"estimationcount"`
 	Tags            []string `json:"tags"`
 	Condition       int64    `json:"condition"`
@@ -97,7 +97,7 @@ type updateItemRequest struct {
 	Seller string       `json:"creator"`
 
 	Shippingcost int64 `json:"shippingcost"`
-	Localpickup  bool  `json:"localpickup"`
+	Localpickup  string  `json:"localpickup"`
 
 	Shippingregion []string `json:"shippingregion"`
 }

@@ -62,7 +62,7 @@ type updateBuyerRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
 	Buyer   string       `json:"creator"`
 	//Itemid       string       `json:"itemid"`
-	Transferable bool  `json:"transferable"`
+
 	Deposit      int64 `json:"deposit"`
 }
 
@@ -89,14 +89,14 @@ func updateBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 
 		parsedItemid := id
 
-		parsedTransferable := req.Transferable
+	
 
 		parsedDeposit := req.Deposit
 
 		msg := types.NewMsgUpdateBuyer(
 			req.Buyer,
 			parsedItemid,
-			parsedTransferable,
+		
 			parsedDeposit,
 		)
 

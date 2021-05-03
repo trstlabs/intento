@@ -51,11 +51,12 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 	if !k.HasItem(ctx, msg.Id) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s doesn't exist", msg.Id))
 	}
-	if msg.Seller != k.GetItemOwner(ctx, msg.Id) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
-	}
 
 	item := k.GetItem(ctx, msg.Id)
+
+	if item.Buyer != "" && item.Status != "" {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item has a buyer")
+	}
 
 	if item.Status != "" && item.Buyer == "" {
 
@@ -67,11 +68,10 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 				k.DeleteEstimator(ctx, key)
 			}
 		}
-
-		item.Title = "Deleted"
+		// title,status and rating are kept to enhance trust
 		item.Description = ""
 		item.Shippingcost = 0
-		item.Localpickup = false
+		item.Localpickup = ""
 		item.Estimationcounthash = ""
 		item.Bestestimator = ""
 		item.Lowestestimator = ""
@@ -86,12 +86,13 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 		item.Tags = nil
 		item.Condition = 0
 		item.Shippingregion = nil
+		item.Note = ""
 
 		k.SetItem(ctx, item)
 
 	} else {
 
-		//if estimation is made pay back all the estimators/or buyer (like handlerItemTransfer)
+		//if estimation is made pay back all the estimators/or buyer (like handleMsgItemTransfer)
 		if len(item.Estimatorlist) > 0 {
 			for _, element := range item.Estimatorlist {
 				//apply this to each element
@@ -112,7 +113,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	item := k.GetItem(ctx, msg.Itemid)
 
 	if item.Estimatorlist == nil {
-		return nil, sdkerrors.Wrap(nil, "Item does not have estimators ")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item does not have estimators ")
 	}
 
 	//[optional idea]can maybe replace estimatorlist hash with estimatorestimationlist hash to reduce computation
@@ -122,11 +123,11 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	var estimatorlisthashstring = hex.EncodeToString(estimatorlistlenhash[:])
 
 	if estimatorlisthashstring != item.Estimationcounthash {
-		return nil, sdkerrors.Wrap(nil, "Estimation count has not been reached, final estimation can not be made")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Estimation count has not been reached, final estimation can not be made")
 	}
 
 	if item.Bestestimator != "" {
-		return nil, sdkerrors.Wrap(nil, "item already has an estimation price")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has an estimation price")
 	}
 
 	//remove item when it is flagged a lot w/ at least an estimator
@@ -143,7 +144,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 		item.Lowestestimator = ""
 		item.Highestestimator = ""
 		item.Estimatorlist = nil
-		item.Status = "Removed (Reason: reported too often)"
+		item.Status = "Removed (Reported too often)"
 		k.DeleteItem(ctx, msg.Itemid)
 
 	}
@@ -236,7 +237,7 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 
 	//check if item has a best estimator (and therefore a complete estimation)
 	if item.Bestestimator == "" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item does not have estimation yet, cannot make item transferable")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "no estimation price yet, cannot make item transferable")
 	}
 
 	if msg.Transferable == false {
@@ -250,7 +251,7 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 			if estimator.Estimator == item.Lowestestimator {
 				
 					k.BurnCoins(ctx, estimator.Deposit)
-				
+					k.DeleteEstimatorWithoutDeposit(ctx, key)
 
 			} else {
 				k.DeleteEstimator(ctx, key)
@@ -379,7 +380,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 			if estimator.Estimator == item.Lowestestimator {
 				
 					k.BurnCoins(ctx, estimator.Deposit)
-				
+					k.DeleteEstimatorWithoutDeposit(ctx, key)
 
 			} else {
 				k.DeleteEstimator(ctx, key)
@@ -428,6 +429,7 @@ if !k.HasItem(ctx, msg.Itemid) {
 		item.Shippingregion = msg.Shippingregion
 		item.Discount = msg.Discount
 		item.Note = msg.Note
+		item.Rating = 0
 		item.Buyer = ""
 		item.Status = ""
 		
