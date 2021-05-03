@@ -29,10 +29,9 @@ func CmdCreateItem() *cobra.Command {
 			argsTitle := string(args[0])
 			argsDescription := string(args[1])
 			argsShippingcost, _ := strconv.ParseInt(args[2], 10, 64)
-			argsLocalpickup := true
-			if args[3] == "0" {
-				argsLocalpickup = false
-			}
+			argsLocalpickup := string(args[3])
+			
+
 
 			//argsEstimationcounthash := string(args[4])
 
@@ -56,7 +55,7 @@ func CmdCreateItem() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), bool(argsLocalpickup), int64(argsEstimationcount), []string(argsTags), int64(argsCondition), []string(argsShippingregion), int64(argsDepositAmount))
+			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), string(argsLocalpickup), int64(argsEstimationcount), []string(argsTags), int64(argsCondition), []string(argsShippingregion), int64(argsDepositAmount))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -78,10 +77,7 @@ func CmdUpdateItem() *cobra.Command {
 			id := args[0]
 
 			argsShippingcost, _ := strconv.ParseInt(args[1], 10, 64)
-			argsLocalpickup := true
-			if args[2] == "0" {
-				argsLocalpickup = false
-			}
+			argsLocalpickup := string(args[2])
 
 			argsShippingregion := strings.Split(args[3], ",")
 
@@ -90,7 +86,7 @@ func CmdUpdateItem() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgUpdateItem(clientCtx.GetFromAddress().String(), id, int64(argsShippingcost), bool(argsLocalpickup), []string(argsShippingregion))
+			msg := types.NewMsgUpdateItem(clientCtx.GetFromAddress().String(), id, int64(argsShippingcost), string(argsLocalpickup), []string(argsShippingregion))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -105,7 +101,7 @@ func CmdUpdateItem() *cobra.Command {
 
 func CmdDeleteItem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete-item [id] [title] [description] [shippingcost] [localpickup] [estimationcounthash] [bestestimator] [lowestestimator] [highestestimator] [estimationprice] [estimatorlist] [estimatorestimationhashlist] [transferable] [buyer] [tracking] [status] [comments] [tags] [flags] [condition] [shippingregion]",
+		Use:   "delete-item [id] ",
 		Short: "Delete a item by id",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -219,8 +215,8 @@ func CmdItemShipping() *cobra.Command {
 
 func CmdItemResell() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "item-resell [itemid]  [shippingcost] [discount] [localpickup] [shippingregion] [note] ",
-		Short: "Update a item",
+		Use:   "item-resell [itemid] [shippingcost] [discount] [localpickup] [shippingregion] [note] ",
+		Short: "Resell an item",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			itemid := args[0]
@@ -228,10 +224,9 @@ func CmdItemResell() *cobra.Command {
 			argsShippingcost, _ := strconv.ParseInt(args[1], 10, 64)
 
 			argsDiscount, _ := strconv.ParseInt(args[2], 10, 64)
-			argsLocalpickup := true
-			if args[3] == "0" {
-				argsLocalpickup = false
-			}
+
+
+			argsLocalpickup := string(args[3])
 
 			argsShippingregion := strings.Split(args[4], ",")
 
@@ -242,7 +237,7 @@ func CmdItemResell() *cobra.Command {
 	
 			note := args[5]
 
-			msg := types. NewMsgItemResell(clientCtx.GetFromAddress().String(), string(itemid), int64(argsShippingcost), int64(argsDiscount), bool(argsLocalpickup), []string(argsShippingregion), string(note))
+			msg := types. NewMsgItemResell(clientCtx.GetFromAddress().String(), string(itemid), int64(argsShippingcost), int64(argsDiscount), string(argsLocalpickup), []string(argsShippingregion), string(note))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

@@ -182,7 +182,7 @@
                  :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
                 >
                   <v-icon small left> mdi-account-badge </v-icon>
-                  ID: {{ item.id }}
+                  TPP ID: {{ item.id }}
                 </v-chip>
 
 
