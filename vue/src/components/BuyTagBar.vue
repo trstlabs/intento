@@ -22,7 +22,7 @@
           active-class="primary--text"
         >
           <v-chip @click="updateList(tag)" 
-            v-for="tag in tags" :key="tag"
+            v-for="tag in tags" :key="tag" 
           ><v-icon small left>
         mdi-tag-outline
       </v-icon>{{ tag }}

@@ -49,9 +49,7 @@ const routes = [
         import(/* webpackChunkName: "sell" */ '@/views/Sell'), 
     meta: {
       title: 'Sell - Marketplace'},
-    
-   
-    
+
   
   },
   {
@@ -97,6 +95,13 @@ const routes = [
     meta: {
       title: 'FAQ - Marketplace'},
   },
+  {
+    path: "/category=:tag",
+    name: "Search",
+    component: () => 
+        import(/* webpackChunkName: "search" */ '@/views/Search'), 
+  },
+  
   {
     path: '*',
     //name: 'catchAll',

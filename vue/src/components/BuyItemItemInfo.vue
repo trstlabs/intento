@@ -21,14 +21,14 @@
               {{ thisitem.title }}
             </p>
 
-            <v-card class="ma-1" elevation="0">
+            <span class="ma-1">
               <p class="ma-1 caption font-weight-light" v-if="thisitem.description.length < 200">
                 {{ thisitem.description }}
               </p>
               <p class="ma-1 caption font-weight-light" v-else>
                 {{ thisitem.description.substring(0, 148) + ".." }}
               </p>
-            </v-card>
+            </span>
           </v-col>
 
           <v-col cols="12" md="4">
@@ -81,7 +81,7 @@
                thisitem.shippingcost > 0 &&
               thisitem.localpickup == '' &&
               thisitem.discount == 0
-            " small dark color="primary" class="pr-0" 
+            " small dark color="primary lighten-1" class="pr-0" 
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
@@ -95,7 +95,7 @@
                   <v-chip label
            
             class="pl-0 caption"
-            color="primary lighten-2"
+            color="primary"
             
           ><v-icon small left> mdi-repeat </v-icon>
             <v-icon small left> mdi-plus </v-icon
@@ -137,7 +137,7 @@
               thisitem.shippingcost > 0 &&
               thisitem.localpickup == '' &&
               thisitem.discount > 0
-            " small dark color="primary" class="pr-0" style="cursor: pointer;" 
+            " small dark color="primary lighten-1" class="pr-0" style="cursor: pointer;" 
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
@@ -153,7 +153,7 @@
                   <v-chip label
            
             class="pl-0 caption"
-            color="primary lighten-2"
+            color="primary"
             
           ><v-icon small  right> mdi-repeat </v-icon
             ><v-icon small  right> mdi-plus </v-icon
@@ -182,7 +182,7 @@
           </v-chip>-->
           <span><router-link style="text-decoration: none; color: inherit;" :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
    <v-chip  v-if="thisitem.discount > 0 && thisitem.localpickup != ''"
-             small dark color="primary" class="pr-0" style="cursor: pointer;" 
+             small dark color="primary lighten-1" class="pr-0" style="cursor: pointer;" 
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
@@ -196,7 +196,7 @@
                   <v-chip label
            
             class="pl-0 caption"
-            color="primary lighten-2"
+            color="primary "
             
           ><v-icon small right> mdi-repeat </v-icon>
             <v-icon small right> mdi-minus </v-icon
@@ -338,12 +338,12 @@
                 </v-carousel>
               </div>
 
-              <v-card elevation="0">
+              <span>
                 <div class="pa-2 overline text-center">Description</div>
                 <v-card-text>
                   <div class="caption " >{{ thisitem.description }}</div>
                 </v-card-text>
-              </v-card>
+              </span>
               <v-chip
                 outlined
                 medium
@@ -445,13 +445,17 @@ export default {
       flightSP: false,
       showinfo: false,
       imageurl: "",
-      loadingitem: true,
+     
       photos: [],
     };
   },
 
-  mounted() {
+   beforeCreate(){
     this.loadingitem = true;
+  },
+
+  mounted() {
+
     const id = this.itemid;
 
     const imageRef = databaseRef.ref("ItemPhotoGallery/" + id + "/photos/");

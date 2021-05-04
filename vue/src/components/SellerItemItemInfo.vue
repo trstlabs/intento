@@ -60,7 +60,7 @@
                 medium
               >
                 <v-icon left> mdi-map-marker-outline </v-icon>
-                Local pickup available
+                Pickup
               </v-chip>
               <v-chip class="ma-1 caption" label outlined medium>
                 <v-icon left> mdi-star-outline </v-icon>

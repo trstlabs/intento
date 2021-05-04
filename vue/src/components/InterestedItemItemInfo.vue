@@ -71,7 +71,7 @@
     <v-icon left>
         mdi-pin
       </v-icon>
-      Local pickup available
+      Pickup
     </v-chip>
        
     

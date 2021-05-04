@@ -113,50 +113,31 @@
 
           <div class="mt-2 text-center">
             <p  class="font-weight-medium headline"> TPP ID: {{thisitem.id}}  </p><p class="caption"> Tip: Show TPP ID: {{thisitem.id}} on your photos. This creates trust to estimators and buyers, thereby making the item more valueable.</p>
-            <span v-if="!img[0]"><v-btn  block large outlined @click="addPhoto(i)" color="primary">
-            <v-icon large left> mdi-plus </v-icon>Add Photo
-            </v-btn> 
-       </span>
+            <v-btn block large outlined @click="addPhoto()" color="primary">
+             <span v-if="!img[i]"> <v-icon large left> mdi-plus </v-icon>Add Photo</span><span v-else> <v-icon large left> mdi-refresh </v-icon> Change photo</span>
+            </v-btn>
+          
           </div>
-          <input
-              type="file"
-              :ref="'input'+ i"
-             style="display: none"
-              @change="previewImage"
-              accept="image/*"
-            />
-          <div>  
-             <v-progress-circular class="ma-2"
-      v-model="uploadValue"
-    v-if="uploadValue != 0 && uploadValue != 100"
-    ></v-progress-circular>
-            <div v-for="(image, index) in imageData" :key="index">
+          <div v-if="img[0] != null"> 
+            <div v-for="(image, index) in img " :key="index"> <p> {{uploadValue[index]}}</p>
            <input
               type="file"
-              :ref="'input'+ index"
-            style="display: none"
+              :ref="'input' + index"
+              style="display: none"
               @change="previewImage"
               accept="image/*"
             />
             <v-card class="text-center mt-4 elevation-4">
               <v-card-title v-if="img[index] == img[0]">Primary photo</v-card-title>   <v-card-title v-else>Photo {{index + 1}}</v-card-title>
-              <v-img class="rounded contain" :src="img[index]"> <template v-slot:placeholder>
-        <v-row
-          class="fill-height ma-0"
-          align="center"
-          justify="center"
-        >
-          <v-progress-circular
-            indeterminate
-            color="grey lighten-5"
-          ></v-progress-circular>
-        </v-row>
-      </template> </v-img>
-  
+              <v-img class="rounded contain" :src="img[index]" />
+  <v-progress-linear
+      v-model="uploadValue[index]"
+    
+    ></v-progress-linear>
               <br />
             </v-card>  <span v-if="img[index]" class="pa-4"><v-btn  block  outlined @click="replacePhoto(index)" color="primary">
             <v-icon  left> mdi-refresh </v-icon> Change photo
-            </v-btn></span><span  v-if="img.length - 1 == index && index < 11 " class="pa-4"><v-btn  block  outlined @click="addPhoto()" color="primary">
+            </v-btn></span><span  v-if="img.length - 1 == index " class="pa-4"><v-btn  block  outlined @click="addPhoto()" color="primary">
            <v-icon  left> mdi-plus </v-icon>Add Photo
             </v-btn></span>
             </div>
@@ -194,7 +175,7 @@ export default {
       //thisitem: {},
       //itemid: "",
 
-      uploadValue: 0,
+      uploadValue: []
   
 
     };
@@ -212,7 +193,9 @@ export default {
   },
 
   methods: {
-
+    click1(i) {
+      this.$refs.input[i].click();
+    },
 
     create() {
 
@@ -246,16 +229,17 @@ export default {
   
     async previewImage(event) {
        console.log("PREVIEW " + this.i)
-      this.uploadValue = 0;
+      this.uploadValue[this.i] = 0;
       this.img[this.i] = null;
 
       this.imageData[this.i] = event.target.files[0];
-    this.onUpload();
+      await this.onUpload();
 
 
     },
 
     addPhoto(){
+    
       let refff = this.$refs['input' + this.i]
 
         console.log(this.$refs)
@@ -267,19 +251,20 @@ export default {
     newPhoto(){
       
 
-        if(this.img.length > 10){
+        if(this.img.length > 5){
         this.i = this.img[this.img.length - 1]
-       alert("Maximum amount reached")
+       
       }else{
-         console.log("LENG "+this.img.length)
-      this.i = this.img.length
+     this.i = this.i + 1
       }
      console.log("NEW INDEX " + this.i)
     },
 
     replacePhoto(index){
- 
+  
         this.i = index
+       
+   
      console.log("REPLACE INDEX " + this.i)
      this.addPhoto()
     },
@@ -295,15 +280,14 @@ export default {
       storageRef.on(
         `state_changed`,
         (snapshot) => {
-          this.uploadValue = Math.ceil(
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-            console.log(this.uploadValue)
+          this.uploadValue[this.i] =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         },
         (error) => {
           console.log(error.message);
         },
         () => {
-          //this.uploadValue[this.i] = 100;
+          this.uploadValue[this.i] = 100;
           storageRef.snapshot.ref.getDownloadURL().then((url) => {
             this.img[this.i] = url;
   
@@ -314,45 +298,8 @@ export default {
         }
       );
       
-
        
     },
-
-process() {
-  const file = this.imageData[this.i]
-
-  if (!file) return;
-
-  const reader = new FileReader();
-
-  reader.readAsDataURL(file);
-
-  reader.onload = function (event) {
-    const imgElement = createElement("img");
-    imgElement.src = event.target.result;
-    //const refff = this.$refs['input' + this.i]
-    //console.log(refff)
-    //refff.src = event.target.result;
-
-    imgElement.onload = function (e) {
-      const canvas = createElement("canvas");
-      const MAX_WIDTH = 400;
-
-      const scaleSize = MAX_WIDTH / e.target.width;
-      canvas.width = MAX_WIDTH;
-      canvas.height = e.target.height * scaleSize;
-
-      const ctx = canvas.getContext("2d");
-
-      ctx.drawImage(e.target, 0, 0, canvas.width, canvas.height);
-
-      this.imageData[this.i] = ctx.canvas.toDataURL(e.target, "image/jpeg");
-  this.onUpload();
-      // you can send srcEncoded to the server
-      //document.querySelector("#output").src = srcEncoded;
-    };
-  };
-}    
    
   }
 }

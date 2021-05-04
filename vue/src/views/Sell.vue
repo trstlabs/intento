@@ -11,7 +11,7 @@
             </v-col >
           
 
-          <v-row>
+       <v-row class="ma-0 pa-0">
             <v-col cols="12" sm="2" class="d-sm-none d-lg-flex d-md-flex">
             
                 <wallet />

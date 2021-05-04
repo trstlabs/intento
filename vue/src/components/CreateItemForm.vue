@@ -96,8 +96,8 @@
                   <v-list-item>
                     <v-list-item-content>
                       <v-list-item-title>
-                        No category tags matching "<strong>{{ search }}</strong
-                        >". Press <kbd>enter</kbd> to create a new one
+                      <span v-if="search">   No category tags matching "<strong>{{ search }}</strong
+                        >". Press <kbd>enter</kbd> to create a new one</span>
                       </v-list-item-title>
                     </v-list-item-content>
                   </v-list-item>
@@ -225,7 +225,7 @@
                         class="mr-auto mt-1"
                         v-model="enterlocation"
                         inset
-                        label="Local pickup"
+                        label="Pickup"
                         :persistent-hint="
                           fields.shippingcost != 0 &&
                           enterlocation == true &&
@@ -237,7 +237,7 @@
                 class="ma-1"
                 prepend-icon="mdi-map-marker"
                 :rules="rules.pickupRules"
-                label="Local Pickup Location"
+                label="Pickup Location"
                 v-model="fields.localpickup"
                 required v-if="enterlocation"
               />
@@ -417,10 +417,10 @@ depositamount: "3",
           (v) => (v && v.length < 6) || "Category tags must be less than 6",
         ],
         pickupRules: [
-          (v) => !!v || "Pickup is required",
+      
         
           (v) =>
-            (v && v.length <= 25) || "Pickup must be less than 25 characters, enter coordinates instead",
+            ( v.length <= 25) || "Pickup must be less than 25 characters, enter coordinates instead",
         ],
         shippingRules: [(v) => !!v.length == 1 || "A country is required"],
       },
@@ -458,27 +458,24 @@ changedeposit: false,
     taglist() {
     
       if (this.selectedTags == 0) {   let list =  [
-          "Books",
+          "Watch",
+           "Shoes",
           "Clothing",
-          "Shoes",
           "Collectable",
-           "Watch",
-          "Electronic",
-          "Home",
-          "Garden",
-          "Motor",
-          "Bike",
-          "Pet Supplies",
-          "Sport",
-          "Toys",
-          "Hobbies",
-          "Antique",
+          
+        //  "Garden item",
+          "Vehicle",
+         // "Motor",
+          //"Sport",
+           "Book",
+         // "Antique",
           "Computer",
+                "Smartphone",
           "Smart Device",
-          "Smartphone",
-          "Sound",
+          "Sound Device",
           "TV",
           "NFT",
+          "Other",
         ];
         return list
       } else {

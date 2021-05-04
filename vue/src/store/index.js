@@ -219,6 +219,7 @@ export default new Vuex.Store({
       commit("setBuyItemList", rs);
     },
 
+
     async setLocalBuyItemList({ commit, state }) {
        const rs = state.data.item.filter(item => !item.buyer && item.transferable === true && item.localpickup != ""
       );
@@ -427,7 +428,7 @@ console.log("test")
 
     async setBuySellerItemList({ commit, state }, input) {
       if (!!input) { 
-      const rs = state.data.item.filter(item => item.creator === input) || [];
+      const rs = state.data.item.filter(item => item.seller === input) || [];
 
       commit("setBuySellerItemList", rs);}
     },

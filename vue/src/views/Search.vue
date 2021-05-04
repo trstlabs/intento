@@ -1,7 +1,3 @@
-
-
-
-
 <template>
   <div>
     <v-app>
@@ -16,26 +12,26 @@
             </v-col >
           
 
-          <v-row class="ma-0 pa-0">
+          <v-row>
             <v-col cols="12" sm="2" class="d-sm-none d-lg-flex d-md-flex">
               
                 <wallet v-if="!!this.$store.state.account.address" />
  
             </v-col >
 
-            <v-col cols="12" sm="8" class="mx-auto pa-0">
-               <v-sheet  min-height="70vh" rounded="lg" elevation="6">
+             <v-col cols="12" sm="8"  class="pa-2 mx-auto">
+              <v-sheet min-height="70vh" rounded="lg" elevation="6">
                 <div>
                
                   <div>
     
-    <div>  <buy-item-item :itemid="Number(this.$route.params.id)" /><v-row class="pa-4">
+    <div> <v-row class="pa-4">
      <v-btn icon plain to="/"> <v-icon >
         mdi-arrow-left
       </v-icon></v-btn><v-spacer/><v-btn icon onClick="window.location.reload();" ><v-icon left>
         mdi-refresh
       </v-icon></v-btn></v-row>
-     
+      <search-list :tag="this.$route.params.tag" />
       
     </div>
     <v-btn block plain class="pa-2" to="/"> <v-icon left>

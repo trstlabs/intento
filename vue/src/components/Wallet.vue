@@ -44,7 +44,7 @@
       <div v-else class="account">
         <div class="card">
           <v-row class="justify-center pa-4">
-          <v-icon left  large>
+          <v-icon left plain icon to="/account" large>
         mdi-account
       </v-icon></v-row>
           <div class="card__row">

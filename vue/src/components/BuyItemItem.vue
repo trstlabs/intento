@@ -1,23 +1,24 @@
 <template>
-  <div class="pa-2 mx-lg-auto">
-    <v-card
-      color="secondary lighten-3"
-      class="pa-2 ma-auto"
-      elevation="2"
-      rounded="lg"
-    >
-      <v-progress-linear
+  <div class="pa-2 mx-lg-auto"><v-progress-linear
         indeterminate
         :active="loadingitem"
       ></v-progress-linear>
-
+    <v-card v-if="!loadingitem"
+      color="secondary lighten-3"
+      class="pa-2 ma-auto"
+      elevation="0"
+      rounded="lg"
+    >
+      
+ <v-row class="px-4">
+     <v-btn icon plain to="/"> <v-icon >
+        mdi-arrow-left
+      </v-icon></v-btn><v-spacer/><v-btn icon onClick="window.location.reload();" ><v-icon left>
+        mdi-refresh
+      </v-icon></v-btn></v-row>
       <v-row>
-        <v-col cols="12">
-          <div
-            class="subtitle-1 font-weight-medium text-capitalize text-center mx-auto"
-          >
-            {{ thisitem.title }}
-          </div>
+        <v-col class="ma-0 pa-2 mb-2 mt-n4" cols="12">
+           <p    class="display-1 font-weight-thin text-center  "> {{ thisitem.title }}</p>
         </v-col>
       </v-row>
 
@@ -95,7 +96,7 @@
               </v-card-text>
             </v-card>
 
-            <v-card v-if="thisitem.note" elevation="0">
+            <span v-if="thisitem.note">
               <v-divider class="mx-4 pa-2" />
               <div class="pl-4 overline text-center"><span v-if="thisitem.rating > 0">Rating</span><span v-else> Reseller's Note </span></div>
               <v-card-text>
@@ -178,7 +179,7 @@
                 <v-chip class="ma-2 " color="primary darken-1">
                {{ thisitem.note }}
                 </v-chip><v-icon  right> mdi-message-reply-text</v-icon></div>
-              </v-card-text></v-card
+              </v-card-text></span
             >
             <v-divider class="mx-4 pa-2" />
             <div
@@ -588,9 +589,9 @@
               </span>
               <v-chip
                 v-if="thisitem.localpickup"
-                class="ma-1 caption"
+                class="ma-1 caption" target="_blank"
                 label :href="'https://www.google.com/maps/search/?api=1&query='+thisitem.localpickup"
-                outlined
+                outlined tar
                 ><v-icon left> mdi-map-marker-outline </v-icon> Pickup</v-chip
               >
 
@@ -640,7 +641,7 @@
               <v-icon left> mdi-account-outline </v-icon>
               Creator: {{ thisitem.creator }}
             </v-chip>
-            <v-chip
+            <v-chip :to="{ name: 'Search', params: { tag: tag } }"
               outlined
               label
               class="ma-1 caption"
@@ -694,24 +695,27 @@
           All Seller items
         </v-card-title>
         <div v-for="item in SellerItems" v-bind:key="item.id">
-          <v-card class="py-2 "
+          <v-card class="py-1 my-1 "
             color="secondary lighten-3"
             elevation="0"
             :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
           >
             <v-row class="text-left caption ma-2"
               ><span class="font-weight-medium"> {{ item.title }}</span>
-              <v-spacer /><v-spacer /> <v-chip v-if="item.status != ''" x-small>  {{ item.status }} </v-chip>
-              <v-chip x-small v-if="item.transferable && item.status != ''">
+              <v-spacer /><v-spacer /> <v-chip class="mx-1" v-if="item.status != ''" small>  {{ item.status }} </v-chip>
+              <v-chip class="mx-1" small v-if="item.transferable && item.status != ''">
                 Sold for: {{ item.estimationprice
-                }}<v-icon x-small right>$vuetify.icons.custom</v-icon> </v-chip
-              ><span v-if="item.buyer && !item.transferable"> Sold </span>
-              <span v-if="!item.estimationprice"> Awaiting estimation </span>
-              <v-chip x-small v-if="!item.transferable && item.status == ''"
+                }}<v-icon small right>$vuetify.icons.custom</v-icon> </v-chip
+              ><v-chip small class="mx-1" v-if="item.buyer && !item.transferable"> Sold</v-chip> <v-chip class="mx-1" small v-else-if="!item.transferable && item.status == ''"
                 >Not on sale yet</v-chip
+                     ><v-chip class="mx-1" small v-else-if="item.transferable && item.status == '' && item.creator == thisitem.seller"
+                color="primary lighten-2">{{ item.estimationprice
+                }}<v-icon small right>mdi-check-all</v-icon></v-chip
+                     ><v-chip class="mx-1" small v-else-if="item.creator != thisitem.seller && item.status == ''"
+                color="primary lighten-2"><v-icon small >mdi-repeat</v-icon></v-chip
                      >
 
-              <v-chip x-small v-if="item.rating > 0">Rating<v-rating
+              <v-chip class="mx-1" small v-if="item.rating > 0">Rating<v-rating
                             :value="Number(item.rating)"
                             readonly
                             color="primary darken-1"
@@ -759,8 +763,11 @@ export default {
     };
   },
 
-  mounted() {
+  beforeCreate(){
     this.loadingitem = true;
+  },
+  mounted() {
+ 
     const id = this.itemid;
 
     const imageRef = databaseRef.ref("ItemPhotoGallery/" + id + "/photos/");
@@ -777,7 +784,7 @@ export default {
   },
   computed: {
     thisitem() {
-      return this.$store.getters.getItemByID(this.$route.params.id) || [];
+      return this.$store.getters.getItemByID(this.$route.params.id);
     },
 
     hasAddress() {
@@ -828,6 +835,23 @@ export default {
       await submit();
       return thisitem();
     },
+
+  
+  /*async getItem() {
+
+         const url = `${process.env.VUE_APP_API}/${process.env.VUE_APP_PATH.replace(/\./g, '/')}/${"item/"+ this.$route.params.id}`;
+      const body = (await axios.get(url)).data.Item
+
+console.log(url)
+console.log(body)
+       
+     this.thisitem = body
+    },
+*/
+
+
+ 
+ 
 
     async paySubmit({ body, fields }) {
       const wallet = this.$store.state.wallet;
