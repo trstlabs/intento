@@ -318,8 +318,8 @@
                         Number(thisitem.discount)
                       }}<v-icon small right>$vuetify.icons.custom</v-icon>
                       <v-icon right> mdi-repeat </v-icon
-                      ><v-icon right> mdi-minus </v-icon
-                      ><v-icon right> mdi-label-percent</v-icon>
+                      ><!--<v-icon right> mdi-minus </v-icon
+                      ><v-icon right> mdi-label-percent</v-icon>-->
                     </div>
                     <div v-if="flightLP">
                       <v-progress-linear
@@ -415,8 +415,8 @@
                       <v-icon right> mdi-repeat </v-icon>
                       <v-icon right> mdi-plus </v-icon
                       ><v-icon right> mdi-package-variant-closed </v-icon
-                      ><v-icon right> mdi-minus </v-icon
-                      ><v-icon right> mdi-label-percent </v-icon>
+                      ><!--<v-icon right> mdi-minus </v-icon
+                      ><v-icon right> mdi-label-percent </v-icon>-->
                     </div>
                     <div v-if="flightSP">
                       <v-progress-linear
@@ -536,15 +536,15 @@
                   <v-icon left> mdi-repeat </v-icon
                   ><v-icon small left> mdi-plus </v-icon
                   ><v-icon left> mdi-package-variant-closed </v-icon>
-                  <v-icon small left> mdi-minus </v-icon
-                  ><v-icon left> mdi-label-percent</v-icon>
+                 <!-- <v-icon small left> mdi-minus </v-icon
+                  ><v-icon left> mdi-label-percent</v-icon>-->
                   {{
                     Number(thisitem.estimationprice) +
                     Number(thisitem.shippingcost) -
                     Number(thisitem.discount)
                   }}<v-icon small right>$vuetify.icons.custom</v-icon>
                 </v-chip>
-                <v-chip
+               <!-- <v-chip
                   v-if="thisitem.discount > 0 && thisitem.localpickup"
                   class="ma-1 caption"
                   label
@@ -554,12 +554,12 @@
                   >Original price - Discount:   
                   {{ thisitem.estimationprice - thisitem.discount
                   }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                </v-chip>
-                <v-chip class="ma-1 caption" label outlined>
+                </v-chip>-->
+               <!--- <v-chip class="ma-1 caption" label outlined>
                   <v-icon left> mdi-repeat </v-icon>Original price:
                   {{ thisitem.estimationprice
                   }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                </v-chip>
+                </v-chip>-->
               </span>
               <span v-else>
                 <span v-if="thisitem.localpickup == ''">
@@ -618,7 +618,7 @@
               <v-icon small right>$vuetify.icons.custom</v-icon>
             </v-chip>
             <v-chip
-              outlined
+              outlined :to="{ name: 'SearchRegion', params: { region: country } }"
               label
               class="ma-1 caption"
               v-for="country in thisitem.shippingregion"
@@ -641,7 +641,7 @@
               <v-icon left> mdi-account-outline </v-icon>
               Creator: {{ thisitem.creator }}
             </v-chip>
-            <v-chip :to="{ name: 'Search', params: { tag: tag } }"
+            <v-chip :to="{ name: 'SearchTag', params: { tag: tag } }"
               outlined
               label
               class="ma-1 caption"

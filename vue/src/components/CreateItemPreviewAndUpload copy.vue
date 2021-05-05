@@ -91,7 +91,7 @@
             Shipping cost: {{ thisitem.shippingcost }}<v-icon small right>$vuetify.icons.custom</v-icon>  
           </v-chip>
 
-          <v-chip
+          <v-chip 
             outlined
             medium
             label

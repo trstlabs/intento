@@ -19,24 +19,24 @@
  
             </v-col >
 
-             <v-col cols="12" sm="8"  class="pa-2 mx-auto">
+             <v-col cols="12" sm="8"  class="pa-0 mx-auto">
               <v-sheet min-height="70vh" rounded="lg" elevation="6">
                 <div>
                
                   <div>
     
     <div> <v-row class="pa-4">
-     <v-btn icon plain to="/"> <v-icon >
+     <v-btn icon plain @click="$router.go(-1)"> <v-icon >
         mdi-arrow-left
       </v-icon></v-btn><v-spacer/><v-btn icon onClick="window.location.reload();" ><v-icon left>
         mdi-refresh
       </v-icon></v-btn></v-row>
-      <search-list :tag="this.$route.params.tag" />
+      <search-list-tag :tag="this.$route.params.tag" />
       
     </div>
-    <v-btn block plain class="pa-2" to="/"> <v-icon left>
+    <v-btn block plain class="pa-2" @click="$router.go(-1)"> <v-icon left>
         mdi-arrow-left
-      </v-icon>All items </v-btn>
+      </v-icon>Back </v-btn>
   </div>
                 </div>
               </v-sheet>

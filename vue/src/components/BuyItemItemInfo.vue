@@ -344,7 +344,7 @@
                   <div class="caption " >{{ thisitem.description }}</div>
                 </v-card-text>
               </span>
-              <v-chip
+              <v-chip :to="{ name: 'SearchTag', params: { tag: itemtags } }"
                 outlined
                 medium
                 label
@@ -356,7 +356,7 @@
                 >{{ itemtags }}</v-chip
               >
               <v-chip
-                outlined
+                outlined :to="{ name: 'SearchRegion', params: { region: selected } }"
                 medium
                 label
                 class="ma-1 caption"

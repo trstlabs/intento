@@ -88,7 +88,7 @@
                 <v-icon left> mdi-package-variant-closed </v-icon>
                 Shipping cost: {{ thisitem.shippingcost}} <v-icon small right>$vuetify.icons.custom</v-icon>  
               </v-chip>
-              <v-chip
+              <v-chip :to="{ name: 'SearchRegion', params: { region: country } }"
                 outlined
                 medium
                 label
@@ -156,7 +156,7 @@
               </v-chip>
 
               <v-chip
-                outlined
+                outlined :to="{ name: 'SearchTag', params: { tag: itemtags } }"
                 medium
                 label
                 class="ma-1 caption"

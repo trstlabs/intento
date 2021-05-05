@@ -97,11 +97,16 @@ const routes = [
   },
   {
     path: "/category=:tag",
-    name: "Search",
+    name: "SearchTag",
     component: () => 
-        import(/* webpackChunkName: "search" */ '@/views/Search'), 
+        import(/* webpackChunkName: "search" */ '@/views/SearchTag'), 
   },
-  
+  {
+    path: "/region=:region",
+    name: "SearchRegion",
+    component: () => 
+        import(/* webpackChunkName: "search" */ '@/views/SearchRegion'), 
+  },
   {
     path: '*',
     //name: 'catchAll',

@@ -166,7 +166,7 @@
             <span elevation="0">
               <v-chip-group>
                 <v-chip class="ma-1"
-                  outlined
+                  outlined :to="{ name: 'SearchTag', params: { tag: itemtag } }"
                   small
                   v-for="itemtag in item.tags"
                   :key="itemtag"
@@ -310,8 +310,8 @@
           </v-btn></v-toolbar>
                   <v-card-text>
                     <div class="text-p pt-4">
-                      Earn ~5% of the item value when you are the best
-                      estimator! However, your deposit is lost when:
+                      Earn a reward when you are the best
+                      estimator! This reward is currently equal to the deposit. However, your deposit is lost when:
                     </div>
                     <div class="caption pa-2">
                       - You are the lowest estimator

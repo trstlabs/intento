@@ -68,14 +68,14 @@ import BuyItemItemInfo from "./BuyItemItemInfo.vue";
 import BuySearchBar from "./BuySearchBar.vue";
 import BuyOptionsBar from "./BuyOptionsBar.vue";
 import BuyTagBar from "./BuyTagBar.vue";
-import Search from "../views/Search.vue";
+import SearchTag from "../views/SearchTag.vue";
 export default {
   components: {
     BuyItemItemInfo,
     BuySearchBar,
     BuyOptionsBar,
     BuyTagBar,
-    Search,
+    SearchTag,
   },
   props: ["tag"],
   data() {

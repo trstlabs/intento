@@ -280,13 +280,13 @@
                       accordingly!
                     </p>
                     <p>
-                      Currently, you will earn roughly 5% of the final selling
+                      Currently, you earn a reward equal to the deposit required.
                       price if you are the estimator closest to the final price. These TPP coins are minted.
                     </p>
                     <p>
-                      To cope with bad acting, there is a deposit
-                      required for each estimation.
-                      These will be returned, except when the following occurs
+                      To cope with bad acting, the deposit
+                     is at risk for each estimation.
+                      These tokens will be returned, except when the following occurs
                       1). The seller did not accept the final price and you are
                       the lowest estimator. 2) The buyer ended up withdrawing
                       prepayment and you are the highest estimator. 
