@@ -24,17 +24,17 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 
 
 
-// GetRewardPool returns the reward pool account.
+// GetTPPModuleAccount returns the module account.
 func (k Keeper) GetTPPModuleAccount(ctx sdk.Context) (ModuleName authtypes.ModuleAccountI) {
 	return k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
-// GetRewardPoolBalance returns the reward pool balance
+// GetTPPModuleBalance returns the module account balance
 func (k Keeper) GetTPPModuleBalance(ctx sdk.Context) sdk.Coin {
 	return k.bankKeeper.GetBalance(ctx, k.GetTPPModuleAccount(ctx).GetAddress(), "tpp")
 }
 
-// InitializeRewardPool sets up the reward pool from genesis
+// InitializeTPPModule sets up the module account from genesis
 func (k Keeper) InitializeTPPModule(ctx sdk.Context, funds sdk.Coin) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(funds))
 }

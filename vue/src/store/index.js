@@ -48,7 +48,7 @@ export default new Vuex.Store({
     locationList: [],
     regionList: [],
     //user: null,
-    user: { uid: "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"},
+    //user: { uid: "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"},
   },
 
   mutations: {
@@ -387,12 +387,16 @@ console.log("test")
     async setToEstimateList({ commit, state }) {
       const A = state.data.item.filter(item => item.estimationprice < 1 && item.status == '');
       const B = state.estimatorItemList;
-     
+     /* const rs = A.filter(a => !B.map(b => b.itemid).includes(a.id));*/
       //console.log(A);
       //console.log(B);
       //console.log(A.filter(a => !B.map(b=>b.id).includes(a.id)));
-      const rs = A.filter(a => !B.map(b => b.itemid).includes(a.id));
+      const D = A.filter(a => !B.map(b => b.itemid).includes(a.id));
 
+      const E = state.sellerItemList;
+
+      const rs = D.filter(d => !E.map(e => d.itemid).includes(d.id));
+      
       commit("setToEstimateList", rs);
 
 

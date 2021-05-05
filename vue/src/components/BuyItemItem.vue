@@ -226,11 +226,11 @@
                       thisitem.estimationprice
                     }} <v-icon small >$vuetify.icons.custom</v-icon>.</span
                   >
-                  <span v-if="thisitem.creator == thisitem.seller"
+                 <!-- <span v-if="thisitem.creator == thisitem.seller"
                     >If you buy the item you will receive a cashback reward of
                     {{ (thisitem.estimationprice * 0.05).toFixed(0) }}
                     <v-icon small >$vuetify.icons.custom</v-icon>.
-                  </span>
+                  </span>-->
                   With TPP you can withdrawl your payment at any time, up until
                   the item transaction and no transaction costs are applied.
                 </div>
@@ -581,11 +581,11 @@
                     }}<v-icon small right>$vuetify.icons.custom</v-icon>
                   </v-chip></span
                 >
-                <v-chip class="ma-1 caption" label outlined>
+               <!-- <v-chip class="ma-1 caption" label outlined>
                   <v-icon small left> mdi-hand-heart </v-icon>Cashback:
                   {{ (thisitem.estimationprice * 0.05).toFixed(0) }}
                   <v-icon small right>$vuetify.icons.custom</v-icon>
-                </v-chip>
+                </v-chip>--->
               </span>
               <v-chip
                 v-if="thisitem.localpickup"
@@ -755,7 +755,7 @@ export default {
       flightSP: false,
       info: false,
       imageurl: "",
-      loadingitem: true,
+      loadingitem: false,
       photos: [],
       dialog: false,
       fullscreen: false,
@@ -767,7 +767,7 @@ export default {
     this.loadingitem = true;
   },
   mounted() {
- 
+
     const id = this.itemid;
 
     const imageRef = databaseRef.ref("ItemPhotoGallery/" + id + "/photos/");

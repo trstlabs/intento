@@ -148,14 +148,32 @@ func handleMsgDeleteBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDelete
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item was deleted")
 	}
 
-	//Only delete the buyer if it has made prepayment and the item is not transferred yet
+	//if the item has a status delete the buyer upon request, if the item is not transferred, return a part of prepayment. After rating the item, the buyer gets fully refunded 
 	if item.Status != "" {
-		return nil, sdkerrors.Wrap(nil, "item is already transferred")
-	}
+		item.Buyer = ""
+		k.SetItem(ctx, item)
+		k.DeleteBuyer(ctx, msg.Buyer)
+	}else{
 	
-	buyer := k.GetBuyer(ctx, msg.Itemid)
+	//buyer := k.GetBuyer(ctx, msg.Itemid)
+
 	//returning the tpp tokens
-	k.HandlePrepayment(ctx, msg.Buyer, buyer.Deposit)
+	percentageReturn := sdk.NewDecWithPrec(95, 2)
+	
+		bigintestimationprice := sdk.NewInt(item.Estimationprice)
+		toMintAmount := percentageReturn.MulInt(bigintestimationprice).Ceil().TruncateInt()
+
+
+	burnAmount := bigintestimationprice.Sub(toMintAmount)
+	k.BurnCoins(ctx, sdk.NewCoin("tpp", burnAmount))
+
+		if item.Shippingcost > 0 {
+			toMintAmount = toMintAmount.Add(sdk.NewInt(item.Shippingcost))
+		}
+		
+		//minted coins (are rounded up)
+		mintCoins := sdk.NewCoin("tpp", toMintAmount)
+		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
 	k.DeleteBuyer(ctx, msg.Itemid)
 
 	for _, element := range item.Estimatorlist {
@@ -186,12 +204,12 @@ func handleMsgDeleteBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDelete
 		item.Estimatorlist = nil
 		item.Estimatorestimationhashlist = nil
 		item.Transferable = false
-		item.Buyer = ""
+		//item.Buyer = ""
 
 	k.SetItem(ctx, item)
-	//k.SetBuyer(ctx, buyer)
+	k.DeleteBuyer(ctx, msg.Buyer)
 
-	
+}
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
@@ -232,8 +250,10 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 		}
 
 		if (item.Creator == item.Seller) {
+
+			
 		//rounded down percentage for minting. Percentage may be changed through governance proposals
-		percentageMint := sdk.NewDecWithPrec(10, 2)
+		/*percentageMint := sdk.NewDecWithPrec(10, 2)
 		percentageReward := sdk.NewDecWithPrec(5, 2)
 
 
@@ -251,7 +271,16 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 
 		//for their participation in the protocol, the best estimator and the buyer get rewarded.
 		k.HandlePrepayment(ctx, item.Bestestimator, paymentRewardCoins)
-		k.HandlePrepayment(ctx, item.Buyer, paymentRewardCoins)
+		k.HandlePrepayment(ctx, item.Buyer, paymentRewardCoins)*/
+
+
+		//minted coins (are rounded up)
+		mintCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
+
+		k.MintReward(ctx, mintCoins)
+
+		//for their participation in the protocol, the best estimator gets rewarded.
+		k.HandlePrepayment(ctx, item.Bestestimator, mintCoins)
 
 		//refund the deposits back to all of the item estimators
 		for _, element := range item.Estimatorlist {
@@ -294,13 +323,24 @@ func handleMsgItemRating(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRat
 
 	//check if item has a buyer already
 	if item.Buyer != msg.Buyer {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item does not belong to msg sender")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item does not belong to msg sender")
 	}
 	//check if the item has a status, and therefore a buyer has a reason to rate the item
 	if item.Status == "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item does not have a status")
 	}
 
+	if item.Status == "Withdrawal prepayment" {
+		percentageReward := sdk.NewDecWithPrec(5, 2)
+		bigintestimationprice := sdk.NewInt(item.Estimationprice)
+		toMintAmount := percentageReward.MulInt(bigintestimationprice).TruncateInt()
+		
+		//minted coins (are rounded up)
+		mintCoins := sdk.NewCoin("tpp", toMintAmount)
+	k.MintReward(ctx, mintCoins)
+	k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
+
+	}
 	item.Note = msg.Note
 	item.Rating = msg.Rating
 	

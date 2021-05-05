@@ -2,7 +2,7 @@
   <div class="pa-0 pb-4 mx-lg-auto">
     <div>
         
-  <p    class="display-2 mt-n9 font-weight-thin text-center  "> Marketplace</p><p class="display-4 text-center font-weight-thin">{{this.tag.toUpperCase()}}<v-icon x-large left> mdi-tag </v-icon></p>
+  <p    class="display-2 mt-n9 font-weight-thin text-center  "> Marketplace</p><p class="display-1 text-center font-weight-thin">{{this.tag.toUpperCase()}}<v-icon x-large left> mdi-tag </v-icon></p>
 
       <div>  <v-img  height="320" src="img/design/market.png "  >  </v-img>  
         <v-container class="mt-n12">

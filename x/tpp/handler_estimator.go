@@ -25,17 +25,18 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 	}
 
 	///for production: check if estimator is item owner
-	//
-	//
+	if msg.Estimator == item.Creator {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "estimator cannot be item creator")
+	}
 
 	//checks whether the estimator already estimated the item
-	//[for testing this is may be disabled]
+
 	if k.HasEstimator(ctx, msg.Itemid+"-"+msg.Estimator) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s does exist", msg.Itemid+"-"+msg.Estimator))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "already estimated this item")
 	}
 
 	if msg.Deposit != item.Depositamount {
-		return nil, sdkerrors.Wrap(nil, "deposit invalid")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit invalid")
 	}
 
 	//checks whether estimationcount has been reached

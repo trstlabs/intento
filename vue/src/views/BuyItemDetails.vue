@@ -29,7 +29,7 @@
                
                   <div>
     
-    <div>  <buy-item-item :itemid="Number(this.$route.params.id)" /><v-row class="pa-4">
+    <div>  <buy-item-item :itemid="Number(this.$route.params.id)" /><v-row class="ma-4">
      <v-btn icon plain to="/"> <v-icon >
         mdi-arrow-left
       </v-icon></v-btn><v-spacer/><v-btn icon onClick="window.location.reload();" ><v-icon left>

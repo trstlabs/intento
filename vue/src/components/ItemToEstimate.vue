@@ -671,6 +671,7 @@ value: 0,
    // this.$store.dispatch("entityFetch",type);
       this.$store.dispatch("setSortedTagList");    
       this.$store.dispatch("setEstimatorItemList", input);
+       this.$store.dispatch("setSellerItemList", input);
       this.$store.dispatch("setToEstimateList", this.index);
 
       this.item = this.items[this.index];

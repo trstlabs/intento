@@ -46,21 +46,13 @@
               <v-icon right> mdi-check-all </v-icon>
               <v-icon small right> mdi-plus </v-icon
               ><v-icon small right> mdi-package-variant-closed </v-icon>
-            </v-chip></span
+            </v-chip>
+            
+           </span
           >.
 
 
-             As an incentive, buyers of 'estimated' items receive a ±5% TPP cashback reward. Indicated by a <v-icon> mdi-hand </v-icon>  with a <v-icon> mdi-heart </v-icon>. Like so: <v-chip
-            class="ma-1 pl-0 caption"
-            
-            dark
-            color="green lighten-2"
-            small
-          ><v-chip dark label color="green">
-            ${{ ("111111"* 0.05).toFixed(0)
-            }}</v-chip>
-            <v-icon small right> mdi-hand-heart </v-icon>
-          </v-chip>
+          
             </p>
             <p>If an item has the icon "
               <v-icon small > mdi-repeat </v-icon>", it has been reposted. It's price has been deterimined previously by experts and the item was bought by a buyer before. The seller is not the creator of the item. The value of the item can have appreciated or depreciated in the meantime, therefore it is up to the seller to give a discount "<v-icon small > mdi-label-percent</v-icon>" or add cost "<v-icon small  > mdi-package-variant-closed </v-icon>". This can also be a combination of the two, for example:

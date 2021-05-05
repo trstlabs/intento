@@ -296,7 +296,7 @@
             
             </span
           >
-          <v-chip
+        <!--  <v-chip
             class="ma-1 pl-0 caption"
             
             dark
@@ -306,7 +306,7 @@
             {{ (thisitem.estimationprice * 0.05).toFixed(0)
             }}<v-icon small right>$vuetify.icons.custom</v-icon></v-chip>
             <v-icon small right> mdi-hand-heart </v-icon>
-          </v-chip>
+          </v-chip>-->
         </div>
 
         <v-spacer></v-spacer>

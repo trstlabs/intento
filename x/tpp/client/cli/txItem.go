@@ -22,7 +22,7 @@ import (
 
 func CmdCreateItem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-item [title] [description] [shippingcost] [localpickup] [estimationcount] [tags] [condition] [shippingregion]",
+		Use:   "create-item [title] [description] [shippingcost] [localpickup] [estimationcount] [tags] [condition] [shippingregion] [depositamount]",
 		Short: "Creates a new item",
 		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {

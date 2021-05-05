@@ -176,7 +176,7 @@
       <v-list-item-content>
         <v-list-item-title>When you provide prepayment, you are
                      the only buyer</v-list-item-title><v-list-item-subtitle>
-          and you earn a cashback reward of ±5% after the transfer.
+          and your prepayment is secured.
         </v-list-item-subtitle>
       </v-list-item-content><v-list-item-icon>
             <v-icon>mdi-plus </v-icon>

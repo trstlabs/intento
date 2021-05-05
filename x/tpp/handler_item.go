@@ -190,14 +190,19 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	median := sortedList[medianIndex]
 	//var Estimationprice = sdk.NewInt(median)
 
-	///delete item because deposit has to be lower than item price
-	if median < item.Depositamount {
+	///delete item when deposit is higher than 25% of the item price
+	if  item.Depositamount > (median / 4) {
 		//returns each element
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
 			key := msg.Itemid + "-" + element
 		k.DeleteEstimator(ctx, key)	
 		}
+		/*item.Bestestimator = ""
+		item.Lowestestimator = ""
+		item.Highestestimator = ""
+		item.Estimatorlist = nil
+		item.Status = "Estimators refunded"*/
 		k.DeleteItem(ctx, msg.Itemid)
 		return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 	}
@@ -260,10 +265,10 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		}
 		//item.TransferBool = msg.TransferBool
 		//k.SetItem(ctx, item)
-		item.Bestestimator = ""
-		item.Lowestestimator = ""
-		item.Highestestimator = ""
-		item.Estimatorlist = nil
+		//item.Bestestimator = ""
+		//item.Lowestestimator = ""
+		//item.Highestestimator = ""
+		//item.Estimatorlist = nil
 
 		//item has to be deleted because otherwise this function can be run again
 		k.DeleteItem(ctx, msg.Itemid)
@@ -290,7 +295,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 	//check if item.transferable = true and therefore the seller has accepted the buyer
 	////[to do] in case this is false the prepayment will  be returned, item.buyer will be gone. this shall be in another function
 	if item.Transferable == false {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "seller of item does not accept a transfer")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item is not transferable")
 	}
 
 	//check if item has a buyer already (so that we know that prepayment is done)
@@ -307,7 +312,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 
 
 	bigintestimationprice := sdk.NewInt(item.Estimationprice)	
-	if item.Discount  > 0{
+	if item.Discount  > 0 {
 		bigintestimationprice = sdk.NewInt(item.Estimationprice - item.Discount)
 	}
 
@@ -315,7 +320,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 	if msg.Tracking == true {
 		if (item.Creator == item.Seller) {
 		//rounded down percentage for minting. Percentage may be changed through governance proposals
-		percentageMint := sdk.NewDecWithPrec(10, 2)
+		/*percentageMint := sdk.NewDecWithPrec(10, 2)
 		percentageReward := sdk.NewDecWithPrec(5, 2)
 		//paymentSeller := percentageSeller.MulInt(bigintestimationprice)
 		//roundedAmountCreaterPayout := paymentSeller.TruncateInt()
@@ -326,22 +331,22 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		toMint := percentageMint.MulInt(bigintestimationprice)
 		toMintAmount := toMint.TruncateInt()
 		paymentReward := percentageReward.MulInt(bigintestimationprice)
-		roundedAmountReward := paymentReward.TruncateInt()
+		roundedAmountReward := paymentReward.TruncateInt()*/
 		//roundedAmountRewardBestEstimator := paymentReward.TruncateInt()
 
 	
 
 		//minted coins (are rounded up)
-		mintCoins := sdk.NewCoin("tpp", toMintAmount)
-		paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
+		mintCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
+		//paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
 		//paymentRewardCoinsEstimator := sdk.NewCoin("tpp", roundedAmountRewardBestEstimator)
 
 		k.MintReward(ctx, mintCoins)
-	
+		
 
 		//for their participation in the protocol, the best estimator and the buyer get rewarded.
-		k.HandlePrepayment(ctx, item.Bestestimator, paymentRewardCoins)
-		k.HandlePrepayment(ctx, item.Buyer, paymentRewardCoins)
+		k.HandlePrepayment(ctx, item.Bestestimator, mintCoins)
+	//	k.HandlePrepayment(ctx, item.Buyer, paymentRewardCoins)
 
 		//refund the deposits back to all of the item estimators
 		for _, element := range item.Estimatorlist {
@@ -418,7 +423,6 @@ if !k.HasItem(ctx, msg.Itemid) {
 	if msg.Discount > item.Estimationprice {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Discount invalid")
 	}
-
 
 
 	

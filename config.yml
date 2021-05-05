@@ -5,6 +5,8 @@ accounts:
     coins: ["500tpp"]
   - name: user3
     coins: ["500tpp"]
+  - name: user4
+    coins: ["500tpp"]
   - name: faucet
     coins: ["100000000tpp"]
 
