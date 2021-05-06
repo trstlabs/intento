@@ -25,7 +25,7 @@
       <div>
         <div class="pa-2 mx-auto" elevation="8">
           <div>
-            <div v-if="photos.photo">
+            <div v-if="photos[0]">
               <v-carousel
                 v-if="magnify == false"
                 style="height: 100%"
@@ -734,8 +734,8 @@ export default {
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 
-      if (data != null && data.photo != null) {
-        //console.log(data.photo);
+      if (data != null ) {
+        //console.log(data[0]);
         this.photos = data;
         this.loadingitem = false;
       }

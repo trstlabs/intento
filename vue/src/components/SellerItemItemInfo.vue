@@ -457,10 +457,10 @@ export default {
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 
-      if (data != null && data.photo != null) {
-        //console.log(data.photo);
+      if (data != null ) {
+        //console.log(data[0]);
         this.photos = data;
-        this.imageurl = data.photo;
+        this.imageurl = data[0];
         this.loadingitem = false;
       }
     });

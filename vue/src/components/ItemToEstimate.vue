@@ -12,7 +12,7 @@
     ></v-skeleton-loader>
 
 <div v-if="showinfo == true && loadingitem == false" >
-    <div elevation="8" v-if="photos.photo"  >
+    <div elevation="8" v-if="photos[0]"  >
    
       <v-carousel v-if="magnify == false" style="height:100%"
         delimiter-icon="mdi-minus"
@@ -912,9 +912,9 @@ value: 0,
       imageRef.on("value", (snapshot) => {
         const data = snapshot.val();
 
-        if (data != null && data.photo != null) {
+        if (data != null ) {
         
-          // console.log(data.photo);
+          // console.log(data[0]);
           this.photos = data;
           //this.photos = { photo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Points_of_a_horse.jpg/330px-Points_of_a_horse.jpg" };
 

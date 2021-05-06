@@ -190,9 +190,9 @@ export default {
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 
-      if (data != null && data.photo != null) {
-        //console.log(data.photo);
-        this.imageurl = data.photo;
+      if (data != null ) {
+        //console.log(data[0]);
+        this.imageurl = data[0];
         this.loadingitem = false;
       }
     });
@@ -223,7 +223,7 @@ export default {
         const imageRef = databaseRef.ref("ItemPhotoGallery/" + id + "/photos/");
         imageRef.on("value", (snapshot) => {
           const data = snapshot.val();
-          if (data != null && data.photo != null) {
+          if (data != null ) {
             this.photos = data;
             this.loadingitem = false;
           }
