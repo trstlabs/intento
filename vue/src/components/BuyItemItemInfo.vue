@@ -312,52 +312,52 @@
                   <div class="caption " >{{ thisitem.description }}</div>
                 </v-card-text>
               </span>
-              <v-chip :to="{ name: 'SearchTag', params: { tag: itemtags } }"
+               <v-chip :to="{ name: 'SearchTag', params: { tag: itemtags } }"
                 outlined
                 medium
-                label
+                
                 class="ma-1 caption font-weight-light"
                 v-for="itemtags in thisitem.tags"
                 :key="itemtags"
               >
                 <v-icon small left> mdi-tag-outline </v-icon
-                >{{ itemtags }}</v-chip
+                >{{ itemtags.toUpperCase() }}</v-chip
               >
               <v-chip :to="{ name: 'SearchRegion', params: { region: selected } }"
                 outlined
                 medium
-                label
+                
                 class="ma-1 caption"
                 v-for="selected in thisitem.shippingregion"
                 :key="selected"
               >
                 <v-icon small left> mdi-flag-variant-outline </v-icon
-                >{{ selected }}</v-chip
+                >{{ selected.toUpperCase() }}</v-chip
               >
-              <v-chip class="ma-1 caption" label outlined medium>
+              <v-chip class="ma-1 caption"  outlined medium>
                 <v-icon left> mdi-account-badge-outline </v-icon>
                 TPP ID: {{ thisitem.id }}
               </v-chip>
 
-              <v-chip class="ma-1 caption" label outlined medium>
-                <v-icon left> mdi-star-outline </v-icon>
+              <v-chip class="ma-1 caption"  outlined medium>
+                <v-icon small left> mdi-star </v-icon>
                 Condition: {{ thisitem.condition }}/5
               </v-chip>
 
               <v-chip
                 v-if="thisitem.localpickup != ''"
                 class="ma-1 caption"
-                label
+                
                 outlined
                 medium
-                ><v-icon left> mdi-map-marker-outline </v-icon>Local
-                Pickup</v-chip
+                ><v-icon left> mdi-map-marker-outline </v-icon>
+                Pickup available</v-chip
               >
 
               <v-chip
                 v-if="thisitem.shippingcost > 0"
                 class="ma-1 caption"
-                label
+                
                 outlined
                 medium
               >
@@ -368,7 +368,7 @@
               <v-chip
                 v-if="thisitem.bestestimator"
                 class="ma-1 caption"
-                label
+                
                 outlined
                 medium
               >
@@ -376,11 +376,6 @@
                 Price: {{ thisitem.estimationprice}} <v-icon right small>$vuetify.icons.custom</v-icon> 
               </v-chip>
 
-              <v-chip class="ma-1 caption" medium label outlined>
-                <v-icon left> mdi-account </v-icon>
-                Seller: {{ thisitem.seller }}
-              </v-chip>
-             
             </div>
           </div>
         </div>

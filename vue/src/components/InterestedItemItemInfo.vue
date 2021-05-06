@@ -240,7 +240,7 @@ export default {
   mounted() {
     this.loadingitem = true;
 
-    const imageRef = databaseRef.ref("ItemPhotoGallery/" + id + "/photos/");
+    const imageRef = databaseRef.ref("ItemPhotoGallery/" + this.itemid + "/photos/");
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 
