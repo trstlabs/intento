@@ -55,7 +55,7 @@
           
             </p>
             <p>If an item has the icon "
-              <v-icon small > mdi-repeat </v-icon>", it has been reposted. It's price has been deterimined previously by experts and the item was bought by a buyer before. The seller is not the creator of the item. The value of the item can have appreciated or depreciated in the meantime, therefore it is up to the seller to give a discount "<v-icon small > mdi-label-percent</v-icon>" or add cost "<v-icon small  > mdi-package-variant-closed </v-icon>". This can also be a combination of the two, for example:
+              <v-icon small > mdi-repeat </v-icon>", it has been reposted. It's price has been deterimined previously by experts and the item was bought by a buyer before. The seller is not the creator of the item. The value of the item can have appreciated or depreciated in the meantime, therefore it is up to the seller to give a discount "<v-icon small > mdi-brightness-percent</v-icon>" or add cost "<v-icon small  > mdi-package-variant-closed </v-icon>". This can also be a combination of the two, for example:
             </p><span class="pa-2 font-weight-regular text-left" >
    <v-chip small dark color="primary" class="pr-0" 
               >
@@ -75,7 +75,7 @@
             ><v-icon small  right> mdi-plus </v-icon
             ><v-icon small  right> mdi-package-variant-closed </v-icon>
             <v-icon small right> mdi-minus </v-icon
-            ><v-icon small right> mdi-label-percent</v-icon>
+            ><v-icon small right> mdi-brightness-percent</v-icon>
           </v-chip>
           </v-chip
             >

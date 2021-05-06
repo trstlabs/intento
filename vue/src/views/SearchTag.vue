@@ -34,7 +34,7 @@
       <search-list-tag :tag="this.$route.params.tag" />
       
     </div>
-    <v-btn block plain class="pa-2" @click="$router.go(-1)"> <v-icon left>
+    <v-btn block plain class="mx-2" @click="$router.go(-1)"> <v-icon left>
         mdi-arrow-left
       </v-icon>Back </v-btn>
   </div>

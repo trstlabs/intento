@@ -3,16 +3,13 @@
     <v-dialog v-model="dialog" width="500">
       <template v-slot:activator="{ on, attrs }">
       <span v-if="!fields.title" >
-           <h2  v-if="!fields.title" v-bind="attrs"
-          v-on="on" class="headline pt-2 font-weight-bold text-center"> Place Item
-        </h2>  </span><span  v-else>
-          <h2
-          v-bind="attrs"
-          v-on="on"
-          class="headline pt-2 font-weight-bold text-center"
-        >
-          Place '{{ fields.title }}'
-        </h2></span>
+             <p  v-if="!fields.title" v-bind="attrs"
+          v-on="on"  class="display-1 pt-4 font-weight-thin gray--text text-center"> Place Item</p>
+        
+        </span><span  v-else>
+          <p  v-bind="attrs"
+          v-on="on"  class="display-1 pt-4 font-weight-thin gray--text text-center"> Place {{fields.title}}</p>
+     </span>
         <v-img v-bind="attrs"
           v-on="on" height="300" src="img/design/sell.png"> <v-icon class="ml-4" small>mdi-information-outline</v-icon></v-img>
       </template>

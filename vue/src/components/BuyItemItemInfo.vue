@@ -8,16 +8,16 @@
 
       <div class="pa-2 mx-auto">
         <v-row>
-          <v-col cols="12" md="8">
+          <v-col class="pa-2" cols="12" md="7">
             <p
               v-if="thisitem.creator != thisitem.seller"
               class="text-capitalize subtitle-2  pa-2 text-left"
             >
-              <v-icon small left> mdi-repeat </v-icon>{{ thisitem.title }}
+              <v-icon left> mdi-repeat </v-icon>{{ thisitem.title }}
             </p>
 
             <p v-else class="text-capitalize subtitle-2 pa-2 text-left">
-              <v-icon small left>mdi-check-all </v-icon>
+              <v-icon left>mdi-check-all </v-icon>
               {{ thisitem.title }}
             </p>
 
@@ -31,23 +31,21 @@
             </span>
           </v-col>
 
-          <v-col cols="12" md="4">
+          <v-col class="pa-2" cols="12" md="5">
             <div v-if="imageurl">
-              <v-img class="rounded contain" :aspect-ratio="16/9" :src="imageurl"></v-img>
+              <v-img class="rounded-lg contain ma-2 mb-0" :aspect-ratio="4/3" :src="imageurl"></v-img>
             </div>
           </v-col>
         </v-row>
       </div>
       <v-card-actions>
-        <v-btn 
-          color="primary"
-          text
-          @click="(showinfo = !showinfo), getItemPhotos()"
-        >
-          Info
+           <v-btn icon @click="(showinfo = !showinfo), getItemPhotos()">
+          <v-icon>{{
+            showinfo ? "mdi-chevron-up" : "mdi-chevron-down"
+          }}</v-icon>
         </v-btn>
         <div>
-          <v-btn 
+          <v-btn class="rounded-pill ml-2 mr-6" outlined small
              color="primary"
             :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
             text
@@ -77,13 +75,13 @@
           </v-chip>-->
           
            <span><router-link style="text-decoration: none; color: inherit;" :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
-   <v-chip style="cursor: pointer;"  v-if="
+   <v-chip style="cursor: pointer;" class="mr-2 pr-0"  v-if="
                thisitem.shippingcost > 0 &&
               thisitem.localpickup == '' &&
               thisitem.discount == 0
-            " small dark color="primary lighten-1" class="pr-0" 
+            " small dark color="primary lighten-1"  
               >
-              <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
+              <v-hover v-slot="{ hover }" close-delay="100" open-delay="30" >
               <span>
               <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else><v-icon small left>$vuetify.icons.custom</v-icon>{{
                  Number(thisitem.estimationprice) + Number(thisitem.shippingcost)
@@ -105,39 +103,15 @@
             ></router-link>
           </span>
 
-<!--
+         
 
-          <v-hover v-slot="{ hover }" close-delay="200"  > <span>
-          <v-chip  :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
-            v-if="
-              thisitem.shippingcost > 0 &&
-              thisitem.localpickup == false &&
-              thisitem.discount > 0
-            "
-            class="ma-1 pl-0 caption"
-            color="primary lighten-2"
-            small
-          >
-            <v-chip label dark color="primary"
-              ><span v-if="hover" > Buy Now </span><span v-else><v-icon small right>$vuetify.icons.custom</v-icon>{{
-                Number(thisitem.estimationprice) +
-                Number(thisitem.shippingcost) -
-                Number(thisitem.discount)
-              }}</span></v-chip
-            >
-            <v-icon small  right> mdi-repeat </v-icon
-            ><v-icon small  right> mdi-plus </v-icon
-            ><v-icon small  right> mdi-package-variant-closed </v-icon>
-            <v-icon small right> mdi-minus </v-icon
-            ><v-icon small right> mdi-label-percent</v-icon>
-          </v-chip></span></v-hover> 
-          -->
+
  <span><router-link style="text-decoration: none; color: inherit;" :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
    <v-chip  v-if="
               thisitem.shippingcost > 0 &&
               thisitem.localpickup == '' &&
               thisitem.discount > 0
-            " small dark color="primary lighten-1" class="pr-0" style="cursor: pointer;" 
+            " small dark color="primary lighten-1"  style="cursor: pointer;" class="mr-2 pr-0" 
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
@@ -158,8 +132,8 @@
           ><v-icon small  right> mdi-repeat </v-icon
             ><v-icon small  right> mdi-plus </v-icon
             ><v-icon small  right> mdi-package-variant-closed </v-icon>
-            <v-icon small right> mdi-minus </v-icon
-            ><v-icon small right> mdi-label-percent</v-icon>
+            <v-icon small right> mdi-plus </v-icon
+            ><v-icon small right> mdi-brightness-percent</v-icon>
           </v-chip>
           </v-chip
             > </router-link>
@@ -178,11 +152,11 @@
             >
             <v-icon small right> mdi-repeat </v-icon>
             <v-icon small right> mdi-minus </v-icon
-            ><v-icon small right> mdi-label-percent</v-icon>
+            ><v-icon small right> mdi-brightness-percent</v-icon>
           </v-chip>-->
           <span><router-link style="text-decoration: none; color: inherit;" :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
    <v-chip  v-if="thisitem.discount > 0 && thisitem.localpickup != ''"
-             small dark color="primary lighten-1" class="pr-0" style="cursor: pointer;" 
+             small dark color="primary lighten-1"  style="cursor: pointer;" class="mr-2 pr-0"
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
@@ -199,8 +173,8 @@
             color="primary "
             
           ><v-icon small right> mdi-repeat </v-icon>
-            <v-icon small right> mdi-minus </v-icon
-            ><v-icon small right> mdi-label-percent</v-icon>
+            <v-icon small right> mdi-plus </v-icon
+            ><v-icon small right> mdi-brightness-percent</v-icon>
           </v-chip>
           </v-chip
             ></router-link>
@@ -226,7 +200,7 @@
               style="text-decoration: none; color: inherit"
               :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
             >
-              <v-chip style="cursor: pointer;" small dark color="primary" class="pr-0">
+              <v-chip style="cursor: pointer;" class="mr-2 pr-0" small dark color="primary" >
                 <v-hover v-slot="{ hover }" close-delay="300" open-delay="60">
                   <span>
                     <span class="pr-2" v-if="hover"> Buy Now </span
@@ -259,20 +233,9 @@
           >
 
           <span v-else>
-            <!--
-            <v-chip
-              class="ma-1 pl-0 caption"
-              
-              color="primary lighten-1"
-              small
-            >
-              <v-chip label dark color="primary">
-                <v-icon small right>$vuetify.icons.custom</v-icon>{{ thisitem.estimationprice }}</v-chip
-              >
-              <v-icon right> mdi-check-all </v-icon>
-            </v-chip>--><router-link style="text-decoration: none; color: inherit;" :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
-            <v-chip style="cursor: pointer;" 
-             small dark color="primary lighten-1" class="pr-0"
+       <router-link style="text-decoration: none; color: inherit;" :to="{ name: 'BuyItemDetails', params: { id: itemid } }">
+            <v-chip style="cursor: pointer;" class="mr-2 pr-0" 
+             small dark color="primary lighten-1" 
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
@@ -296,18 +259,23 @@
             
             </span
           >
-        <!--  <v-chip
-            class="ma-1 pl-0 caption"
-            
-            dark
-            color="green lighten-2"
-            small
-          ><v-chip dark label color="green">
-            {{ (thisitem.estimationprice * 0.05).toFixed(0)
-            }}<v-icon small right>$vuetify.icons.custom</v-icon></v-chip>
-            <v-icon small right> mdi-hand-heart </v-icon>
-          </v-chip>-->
-        </div>
+  
+        </div> <v-chip color="primary lighten-2" small v-if="thisitem.discount > 0" class="mx-2 d-none d-md-flex  font-weight-medium" >
+                
+                  {{ Math.floor(thisitem.discount/thisitem.estimationprice * 100)}}%   <v-icon small right> mdi-brightness-percent </v-icon>
+                
+                </v-chip>
+
+                <v-chip  color="primary" small v-if="thisitem.condition " class="mx-2 d-none d-sm-flex font-weight-medium" >
+               {{thisitem.condition}} <!--<v-rating
+                            :value="Number(thisitem.condition)"
+                            readonly
+                            color="white"
+                            background-color="primary lighten-1"
+                            x-small
+                            dense
+                          ></v-rating> --><v-icon small right>mdi-star</v-icon>
+                </v-chip>
 
         <v-spacer></v-spacer>
         <v-btn icon @click="(showinfo = !showinfo), getItemPhotos()">
@@ -355,8 +323,8 @@
                 <v-icon small left> mdi-tag-outline </v-icon
                 >{{ itemtags }}</v-chip
               >
-              <v-chip
-                outlined :to="{ name: 'SearchRegion', params: { region: selected } }"
+              <v-chip :to="{ name: 'SearchRegion', params: { region: selected } }"
+                outlined
                 medium
                 label
                 class="ma-1 caption"

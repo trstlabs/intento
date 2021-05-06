@@ -4,14 +4,14 @@
         :active="loadingitem"
       ></v-progress-linear>
     <v-card v-if="!loadingitem"
-      color="secondary lighten-3"
+     
       class="pa-2 ma-auto"
       elevation="0"
       rounded="lg"
     >
       
  <v-row class="px-4">
-     <v-btn icon plain to="/"> <v-icon >
+     <v-btn icon plain @click="$router.go(-1)"> <v-icon >
         mdi-arrow-left
       </v-icon></v-btn><v-spacer/><v-btn icon onClick="window.location.reload();" ><v-icon left>
         mdi-refresh
@@ -89,12 +89,12 @@
                 <v-img :src="showphoto" />
               </v-card>
             </v-dialog>
-            <v-card color="secondary lighten-3" elevation="0">
+            <div>
               <div class="pa-2 overline text-center">Description</div>
               <v-card-text>
                 <div class="body-1">{{ thisitem.description }}</div>
               </v-card-text>
-            </v-card>
+            </div>
 
             <span v-if="thisitem.note">
               <v-divider class="mx-4 pa-2" />
@@ -318,8 +318,7 @@
                         Number(thisitem.discount)
                       }}<v-icon small right>$vuetify.icons.custom</v-icon>
                       <v-icon right> mdi-repeat </v-icon
-                      ><!--<v-icon right> mdi-minus </v-icon
-                      ><v-icon right> mdi-label-percent</v-icon>-->
+                      >
                     </div>
                     <div v-if="flightLP">
                       <v-progress-linear
@@ -415,8 +414,7 @@
                       <v-icon right> mdi-repeat </v-icon>
                       <v-icon right> mdi-plus </v-icon
                       ><v-icon right> mdi-package-variant-closed </v-icon
-                      ><!--<v-icon right> mdi-minus </v-icon
-                      ><v-icon right> mdi-label-percent </v-icon>-->
+                      >
                     </div>
                     <div v-if="flightSP">
                       <v-progress-linear
@@ -428,18 +426,15 @@
                   </v-btn>
                 </v-col>
               </v-row>
-              <v-divider class="ma-4 pt-2" />
+              <v-divider class="mx-4 mt-4 " />
             </div>
-
-            <v-chip class="ma-1 caption" label outlined medium>
-              <v-icon left> mdi-account-badge-outline </v-icon>
-              TPP ID: {{ thisitem.id }}
-            </v-chip>
+  <div class="overline mb-2 text-center">Information</div>
+         
 
             <v-dialog transition="dialog-bottom-transition" max-width="300">
               <template v-slot:activator="{ on, attrs }">
                 <span v-bind="attrs" v-on="on">
-                  <v-chip class="ma-1 caption" label outlined medium>
+                  <v-chip style="cursor: pointer;" class="ma-1 font-weight-light"  outlined medium>Condition:
                     <v-rating
                       :value="Number(thisitem.condition)"
                       readonly
@@ -503,154 +498,119 @@
                 </v-card>
               </template>
             </v-dialog>
-            <span v-if="thisitem.estimationprice > 0"
-              ><span v-if="thisitem.creator != thisitem.seller">
-                <v-chip
-                  v-if="
-                    thisitem.shippingcost > 0 &&
-                    thisitem.localpickup == '' &&
-                    thisitem.discount == 0
-                  "
-                  class="ma-1 caption"
-                  label
-                  outlined
-                >
-                  <v-icon left> mdi-repeat </v-icon>
-                  <v-icon left> mdi-plus </v-icon
-                  ><v-icon left> mdi-package-variant-closed </v-icon>
-                  {{
-                    Number(thisitem.estimationprice) +
-                    Number(thisitem.shippingcost)
-                  }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                </v-chip>
-                <v-chip
-                  v-if="
-                    thisitem.shippingcost > 0 &&
-                    thisitem.localpickup == '' &&
-                    thisitem.discount > 0
-                  "
-                  class="ma-1 caption"
-                  label
-                  outlined
-                >
-                  <v-icon left> mdi-repeat </v-icon
-                  ><v-icon small left> mdi-plus </v-icon
-                  ><v-icon left> mdi-package-variant-closed </v-icon>
-                 <!-- <v-icon small left> mdi-minus </v-icon
-                  ><v-icon left> mdi-label-percent</v-icon>-->
-                  {{
-                    Number(thisitem.estimationprice) +
-                    Number(thisitem.shippingcost) -
-                    Number(thisitem.discount)
-                  }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                </v-chip>
-               <!-- <v-chip
-                  v-if="thisitem.discount > 0 && thisitem.localpickup"
-                  class="ma-1 caption"
-                  label
-                  outlined
-                >
-                  <v-icon left > mdi-repeat </v-icon
-                  >Original price - Discount:   
-                  {{ thisitem.estimationprice - thisitem.discount
-                  }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                </v-chip>-->
-               <!--- <v-chip class="ma-1 caption" label outlined>
-                  <v-icon left> mdi-repeat </v-icon>Original price:
-                  {{ thisitem.estimationprice
-                  }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                </v-chip>-->
-              </span>
-              <span v-else>
-                <span v-if="thisitem.localpickup == ''">
-                  <v-chip class="ma-1 caption" label outlined>
-                    <v-icon left> mdi-check-all </v-icon
-                    ><v-icon small left> mdi-plus </v-icon
-                    ><v-icon small left> mdi-package-variant-closed </v-icon>
-                    {{
-                      Number(thisitem.estimationprice) +
-                      Number(thisitem.shippingcost)
-                    }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                  </v-chip></span
-                >
-
-                <span v-else>
-                  <v-chip class="ma-1 caption" label outlined>
-                    <v-icon left> mdi-check-all </v-icon>
-                    {{ thisitem.estimationprice
-                    }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                  </v-chip></span
-                >
-               <!-- <v-chip class="ma-1 caption" label outlined>
-                  <v-icon small left> mdi-hand-heart </v-icon>Cashback:
-                  {{ (thisitem.estimationprice * 0.05).toFixed(0) }}
-                  <v-icon small right>$vuetify.icons.custom</v-icon>
-                </v-chip>--->
-              </span>
+           
               <v-chip
                 v-if="thisitem.localpickup"
-                class="ma-1 caption" target="_blank"
-                label :href="'https://www.google.com/maps/search/?api=1&query='+thisitem.localpickup"
-                outlined tar
-                ><v-icon left> mdi-map-marker-outline </v-icon> Pickup</v-chip
-              >
-
-              <v-chip
-                v-if="thisitem.shippingcost > 0"
-                class="ma-1 caption"
-                label
+                class="ma-1 font-weight-light" target="_blank"
+                 :href="'https://www.google.com/maps/search/?api=1&query='+thisitem.localpickup"
                 outlined
+                ><v-icon left> mdi-map-marker-outline </v-icon> Pickup Location</v-chip
               >
-                <v-icon left> mdi-package-variant-closed </v-icon>
-                Shipping Cost: {{ thisitem.shippingcost }}
-                <v-icon small right>$vuetify.icons.custom</v-icon>
-              </v-chip></span
-            >
 
-            <v-chip
-              v-if="thisitem.discount > 0"
-              class="ma-1 caption"
-              label
+             
+            <v-chip :to="{ name: 'SearchRegion', params: { region: country } }"
               outlined
-            >
-              <v-icon left> mdi-label-percent </v-icon>
-              Discount: {{ thisitem.discount }}
-              <v-icon small right>$vuetify.icons.custom</v-icon>
-            </v-chip>
-            <v-chip
-              outlined :to="{ name: 'SearchRegion', params: { region: country } }"
-              label
-              class="ma-1 caption"
+              
+              class="ma-1 font-weight-light"
               v-for="country in thisitem.shippingregion"
               :key="country"
             >
               <v-icon small left> mdi-flag-variant-outline </v-icon
-              >{{ country }}</v-chip
+              >{{ country.toUpperCase() }}</v-chip
             >
 
-            <v-chip @click="createRoom" class="ma-1 caption" label outlined>
-              <v-icon left> mdi-account </v-icon>
-              Seller: {{ thisitem.seller }}
-            </v-chip>
-            <v-chip
-              class="ma-1 caption"
-              label
-              outlined
-              v-if="thisitem.creator != thisitem.seller"
-            >
-              <v-icon left> mdi-account-outline </v-icon>
-              Creator: {{ thisitem.creator }}
-            </v-chip>
+          
             <v-chip :to="{ name: 'SearchTag', params: { tag: tag } }"
               outlined
-              label
-              class="ma-1 caption"
+              
+             class="ma-1 font-weight-light"
               v-for="tag in thisitem.tags"
               :key="tag"
             >
-              <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
+              <v-icon small left> mdi-tag-outline </v-icon>{{ tag.toUpperCase() }}</v-chip
             >
+   <v-card class="ma-1 mt-2 rounded-lg " outlined  >
+                <v-list disabled>
+      <v-subheader>Details</v-subheader>
+      <v-list-item-group
+       
+      >
+        <v-list-item 
+         
+        > <v-list-item-icon>
+           <v-icon >mdi-account-badge-outline </v-icon>
+          </v-list-item-icon>
+         
+          <v-list-item-content>
+            <v-list-item-title class="font-weight-light"  ><v-row><v-col>TPP ID: </v-col> <v-col>{{ thisitem.id }}</v-col></v-row></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+         <v-list-item v-if="thisitem.creator != thisitem.seller"
+         
+        > <v-list-item-icon>
+            <v-icon > mdi-account-outline</v-icon>
+          </v-list-item-icon>
+         
+          <v-list-item-content>
+            <v-list-item-title class="font-weight-light" ><v-row><v-col>Original Seller: {{ thisitem.creator }}</v-col></v-row></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+         <v-list-item 
+         
+        > <v-list-item-icon>
+            <v-icon @click="createRoom" :disabled="!this.$store.state.account.address"> mdi-account</v-icon>
+          </v-list-item-icon>
+         
+          <v-list-item-content>
+            <v-list-item-title class="font-weight-light" ><v-row><v-col>Seller: {{ thisitem.seller }}</v-col></v-row></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item v-if="thisitem.shippingcost > 0"
+         
+        > <v-list-item-icon>
+           <v-icon> mdi-package-variant-closed </v-icon>
+          </v-list-item-icon>
+         
+          <v-list-item-content>
+            <v-list-item-title class="font-weight-light" ><v-row><v-col>Shipping Cost: </v-col> <v-col>{{ thisitem.shippingcost }}<v-icon small right>$vuetify.icons.custom</v-icon></v-col></v-row></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item v-if="thisitem.seller != thisitem.creator"
+         
+        > <v-list-item-icon>
+           <v-icon> mdi-repeat</v-icon>
+          </v-list-item-icon>
+         
+          <v-list-item-content>
+            <v-list-item-title class="font-weight-light" ><v-row><v-col>Original Price: </v-col> <v-col>{{ thisitem.estimationprice }}<v-icon small right>$vuetify.icons.custom</v-icon></v-col></v-row></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+         <v-list-item v-else
+         
+        > <v-list-item-icon>
+            <v-icon> mdi-check-all </v-icon>
+          </v-list-item-icon>
+         
+          <v-list-item-content>
+            <v-list-item-title class="font-weight-light" ><v-row><v-col>Estimation Price: </v-col> <v-col>{{ thisitem.estimationprice }}<v-icon small right>$vuetify.icons.custom</v-icon></v-col></v-row></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+          <v-list-item v-if="thisitem.discount > 0"
+         
+        > <v-list-item-icon>
+            <v-icon > mdi-brightness-percent</v-icon>
+          </v-list-item-icon>
+         
+          <v-list-item-content>
+            <v-list-item-title class="font-weight-light" ><v-row><v-col>Discount: </v-col> <v-col>{{ thisitem.discount }}<v-icon small right>$vuetify.icons.custom</v-icon></v-col></v-row></v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        
+      </v-list-item-group>
+    </v-list>
 
+             
+            </v-card>
             <v-divider class="ma-4" />
             <div class="overline text-center">Comments</div>
             <div v-if="thisitem.comments">
@@ -695,9 +655,9 @@
           All Seller items
         </v-card-title>
         <div v-for="item in SellerItems" v-bind:key="item.id">
-          <v-card class="py-1 my-1 "
-            color="secondary lighten-3"
-            elevation="0"
+          <div class="py-1 my-1 "
+          
+       
             :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
           >
             <v-row class="text-left caption ma-2"
@@ -725,7 +685,7 @@
                           ></v-rating> </v-chip>
 
             </v-row>
-          </v-card>
+          </div>
         </div>
       </div>
       <v-img src="img/design/transfer.png"></v-img>
@@ -767,7 +727,7 @@ export default {
     this.loadingitem = true;
   },
   mounted() {
-
+ 
     const id = this.itemid;
 
     const imageRef = databaseRef.ref("ItemPhotoGallery/" + id + "/photos/");

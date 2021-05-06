@@ -269,8 +269,8 @@
                           <v-icon>
                             {{
                               fields.discount === 0
-                                ? "mdi-label-percent-outline"
-                                : "mdi-label-percent"
+                                ? "mdi-brightness-percent-outline"
+                                : "mdi-brightness-percent"
                             }}
                           </v-icon>
                         </v-btn>
