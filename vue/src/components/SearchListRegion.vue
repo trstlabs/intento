@@ -48,13 +48,14 @@
             </div>
           </div>
         </div>
-        <v-card
+       <v-card @click="clearList()" color="secondary lighten-3"
           class="rounded-lg outlined elevation-1 text-center"
           v-if="items.length < 1"
-        >
+        ><v-icon>
+        mdi-refresh
+      </v-icon>
           <v-card-text class="caption">
-            No items to show. Use search / filters to find items or sell an item
-            :)
+            No watches to show. Use search / filters to find watches.
           </v-card-text>
         </v-card>
       </div>
@@ -108,6 +109,9 @@ export default {
       this.$store.dispatch("setSortedLocationList");
 
     },
+     clearList() {
+    this.$router.go()
+  }
   },
 };
 </script>

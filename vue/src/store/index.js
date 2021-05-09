@@ -335,28 +335,29 @@ export default new Vuex.Store({
     async setSortedLocationList({ commit, state }) {
       
       const rs = state.buyItemList.map(item => item.shippingregion);
+
       let merged = [].concat.apply([], rs);
       let frequency = {};
-      merged.forEach(function (value) { frequency[value.toLowerCase()] = 0; });
+      merged.forEach(function (value) { frequency[value] = 0; });
 
       let uniques = merged.filter(function (value) {
-        return ++frequency[value.toLowerCase()] == 1;
+        return ++frequency[value] == 1;
       });
-
-      let sorted = uniques.sort(function (a, b) {
+let uppercase = uniques.map(tag => tag.toUpperCase())
+      let sorted = uppercase.sort(function (a, b) {
         return frequency[b] - frequency[a];
       });
-
+      
       if (sorted[0]) {
         commit("set", { key: 'locationList', value: sorted } );
       }else{
         //console.log(merged)
         commit("set", { key: 'locationList', value: merged } );
       }
-     // console.log(rs)
-      //console.log(merged)
-     // console.log(uniques)
-     // console.log(sorted)
+     /* console.log(rs)
+    console.log(merged)
+      console.log(uniques)
+      console.log(sorted)*/
       
     },
 

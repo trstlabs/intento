@@ -134,4 +134,59 @@ tppd tx tpp  item-transferable 1 14 --from=user1 -y --chain-id=tpp
 tppd tx tpp create-buyer 14 9 --from=user2 -y --chain-id=tpp
 tppd tx tpp item-transfer 14 --from=user2 -y --chain-id=tpp
 
+tppd tx tpp create-item 'Orient Bambino v4' 'Orient Bambino in decent condition, a few scratches and works fine ' 5 '40.741895,-73.989308' 3 watch,orient,bambino 5 nl,be,de 2 --from=user1 -y --chain-id=tpp
+
+tppd tx tpp create-item 'Rolex Submariner (no date)' 'Rolex submariner in good condition, a few scratches and but works great. Build year 2000' 5 '40.741895,-73.989308' 3 watch,submariner,rolex 5 nl  3 --from=user1 -y --chain-id=tpp
+tppd tx tpp create-estimator 102 3 1 'Great Photos!' 16 --from=user4 -y --chain-id=tpp
+tppd tx tpp create-estimator 102 3 1 'Great Photos!' 16 --from=user2 -y --chain-id=tpp
+tppd tx tpp create-estimator 102 3 1 'Great Photos!' 16 --from=user3 -y --chain-id=tpp
+tppd tx tpp reveal-estimation 16 --from=user1 -y --chain-id=tpp
+tppd tx tpp  item-transferable 1 16 --from=user1 -y --chain-id=tpp
+
+tppd tx tpp create-item 'Rolex Submariner (no date)' 'Rolex submariner in good condition, a few scratches but works great. Build year 2000' 5 '40.741895,-73.989308' 3 watch,sumbariner,rolex 5 nl  3 --from=user1 -y --chain-id=tpp
+tppd tx tpp create-estimator 112 3 1 'Great Photos!' 17 --from=user4 -y --chain-id=tpp
+tppd tx tpp create-estimator 112 3 1 'Great Photos!' 17 --from=user2 -y --chain-id=tpp
+tppd tx tpp create-estimator 112 3 1 'Great Photos!' 17 --from=user3 -y --chain-id=tpp
+tppd tx tpp reveal-estimation 17 --from=user1 -y --chain-id=tpp
+tppd tx tpp  item-transferable 1 17 --from=user1 -y --chain-id=tpp
+
+tppd tx tpp create-item 'Rolex Submariner' 'Rolex submariner in good condition, a few scratches but works great. Build year is 2000' 5 '40.741895,-73.989308' 3 watch,sumbariner,rolex 5 nl  3 --from=user1 -y --chain-id=tpp
+tppd tx tpp create-estimator 112 3 1 'Great Photos!' 18 --from=user4 -y --chain-id=tpp
+tppd tx tpp create-estimator 112 3 1 'Great Photos!' 18 --from=user2 -y --chain-id=tpp
+tppd tx tpp create-estimator 112 3 1 'Great Photos!' 18 --from=user3 -y --chain-id=tpp
+tppd tx tpp reveal-estimation 18 --from=user1 -y --chain-id=tpp
+tppd tx tpp  item-transferable 1 18 --from=user1 -y --chain-id=tpp
+
+tppd tx tpp create-item 'Omega Seamaster Professional' 'Omega Seamaster Professional in good condition, almost no visable scratches and works great. Build year is 2001' 5 '40.741895,-73.989308' 3 watch,Omega,Seamaster 5 nl  3 --from=user1 -y --chain-id=tpp
+tppd tx tpp create-estimator 89 3 1 'Great Photos!' 19 --from=user4 -y --chain-id=tpp
+tppd tx tpp create-estimator 89 3 1 'Great Photos!' 19 --from=user2 -y --chain-id=tpp
+tppd tx tpp create-estimator 88 3 1 'Great Photos!' 19 --from=user3 -y --chain-id=tpp
+tppd tx tpp reveal-estimation 19 --from=user1 -y --chain-id=tpp
+tppd tx tpp  item-transferable 1 19 --from=user1 -y --chain-id=tpp
+
+tppd tx tpp create-item 'Omega Seamaster Professional' 'Omega Seamaster Professional in good condition, almost no visable scratches and works great. Build year is 2001' 5 '40.741895,-73.989308' 3 watch,Omega,Seamaster 5 nl  3 --from=user1 -y --chain-id=tpp
+tppd tx tpp create-estimator 89 3 1 'Great Photos!' 20 --from=user4 -y --chain-id=tpp
+tppd tx tpp create-estimator 89 3 1 'Great Photos!' 20 --from=user2 -y --chain-id=tpp
+tppd tx tpp create-estimator 88 3 1 'Great Photos!' 20 --from=user3 -y --chain-id=tpp
+tppd tx tpp reveal-estimation 20 --from=user1 -y --chain-id=tpp
+tppd tx tpp  item-transferable 1 20 --from=user1 -y --chain-id=tpp
+
+tppd tx tpp create-item 'Rolex Daytona Cosmograph' 'Omega Seamaster Professional in good condition, almost some visable spots and scratches but works great.' 5 '40.741895,-73.989308' 3 watch,Rolex,Daytona,Cosmograph 5 nl  3 --from=user1 -y --chain-id=tpp
+tppd tx tpp create-estimator 345 3 1 'Great Photos!' 21 --from=user4 -y --chain-id=tpp
+tppd tx tpp create-estimator 289 3 1 'Great Photos!' 21 --from=user2 -y --chain-id=tpp
+tppd tx tpp create-estimator 288 3 1 'Great Photos!' 21 --from=user3 -y --chain-id=tpp
+tppd tx tpp reveal-estimation 21 --from=user1 -y --chain-id=tpp
+tppd tx tpp  item-transferable 1 21 --from=user1 -y --chain-id=tpp
+
+tppd tx tpp create-item 'Rolex Daytona Cosmograph' 'Omega Seamaster Professional in good condition, almost some visable spots and scratches but works great.' 5 '40.741895,-73.989308' 3 watch,Rolex,Daytona,Cosmograph 5 nl  3 --from=user1 -y --chain-id=tpp
+tppd tx tpp create-estimator 345 3 1 'Great Photos!' 22 --from=user4 -y --chain-id=tpp
+tppd tx tpp create-estimator 289 3 1 'Great Photos!' 22 --from=user2 -y --chain-id=tpp
+tppd tx tpp create-estimator 288 3 1 'Great Photos!' 22 --from=user3 -y --chain-id=tpp
+tppd tx tpp reveal-estimation 22 --from=user1 -y --chain-id=tpp
+tppd tx tpp  item-transferable 1 22 --from=user1 -y --chain-id=tpp
+
+
+
+
+
 tppd q tpp list-item

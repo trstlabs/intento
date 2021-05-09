@@ -1,7 +1,7 @@
 <template>
   <div v-if="advanced">
-     <div class="mx-4"  v-if="applied[0]" > <p class="caption mb-0">Applied filters: </p> <v-chip-group 
-    
+      <div class="mx-4"  v-if="applied[0]" > <p class="caption mb-0 mt-2">Applied filters: </p> <v-chip-group 
+    column
         ><v-icon @click="clearList()" small left>
         mdi-close
       </v-icon><div  v-for="filter in applied" :key="filter">
@@ -12,21 +12,21 @@
       </v-icon>{{ filter }}
           </v-chip></div>
         </v-chip-group></div>  <v-divider class="ma-4"/>    
-    <v-card class="pa-2 elevation-5 rounded-lg">
+    <v-card color="secondary lighten-3" class="pa-2 elevation-5 rounded-lg">
 
    
    <p class="caption mb-2">Categories: </p>
     <v-chip-group 
-    
-          
+    multiple
+           show-arrows
           active-class="primary--text"
-        >
-          <v-chip @click="updateList(tag)" 
-            v-for="tag in tags" :key="tag" 
-          ><v-icon small left>
+        ><div  v-for="tag in tags" :key="tag">
+          <v-chip v-if="!applied.includes(tag)" color="primary lighten-1 text-capitalize"  @click="updateList(tag)" 
+           
+           ><v-icon small left>
         mdi-tag-outline
-      </v-icon>{{ tag }}
-          </v-chip>
+      </v-icon>{{ tag}}
+          </v-chip></div>
         </v-chip-group>
     <p class="caption">Region: </p>
     <v-select
@@ -52,9 +52,9 @@
               v-model="minPrice"
            
 
-              prefix="$"
-              suffix="TPP"
-            ></v-text-field> </v-col> <v-col> <v-btn icon @click="updatePriceMin"><v-icon>mdi-check</v-icon> </v-btn> <v-btn icon @click="clearList"><v-icon>mdi-cancel</v-icon> </v-btn> </v-col>
+        append-icon="$vuetify.icons.custom"
+             
+            ></v-text-field> </v-col> <v-col> <v-btn icon @click="updatePriceMin"><v-icon>mdi-check</v-icon> </v-btn> <v-btn icon @click="clearList"><v-icon>mdi-close</v-icon> </v-btn> </v-col>
             <v-col>
        <p class="caption">Price maximum: </p>
      
@@ -64,9 +64,8 @@
               v-model="maxPrice"
            
 
-              prefix="$"
-              suffix="TPP"
-            ></v-text-field> </v-col> <v-col> <v-btn icon @click="updatePriceMax"><v-icon>mdi-check</v-icon> </v-btn> <v-btn icon @click="clearList"><v-icon>mdi-cancel</v-icon> </v-btn> </v-col></v-row>
+               append-icon="$vuetify.icons.custom"
+            ></v-text-field> </v-col> <v-col> <v-btn icon @click="updatePriceMax"><v-icon>mdi-check</v-icon> </v-btn> <v-btn icon @click="clearList"><v-icon>mdi-close</v-icon> </v-btn> </v-col></v-row>
    
     <v-text-field  solo clearable
     prepend-inner-icon="mdi-magnify"
@@ -75,7 +74,7 @@
         v-model.trim="input"
         v-on:input="search()"
         ref="input"
-      
+      background-color="secondary lighten-3" 
        > 
 
     </v-text-field>

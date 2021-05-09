@@ -6,16 +6,8 @@
       <v-main :class="($vuetify.theme.dark) ? 'grey darken-4' : 'secondary lighten-2'" >
         <v-container class="pb-6 pt-0 px-0" >
           
-         
-           <v-col cols="12" sm="8" class=" d-none d-sm-flex d-md-none mx-auto" >
-              <v-sheet min-width="350" class="mx-auto" rounded="lg" elevation="1" >
-                <wallet v-if="this.$store.state.account.address"/>
-              </v-sheet>
-            </v-col >
-          
-
-          <v-row class="ma-0 pa-0">
-            <v-col cols="12" sm="2" class="d-sm-none d-lg-flex d-md-flex">
+           <v-row class="ma-0 pa-0">
+          <v-col cols="2" class="d-none d-sm-flex mx-auto ma-0 pa-0" >
              
                 <wallet v-if="this.$store.state.account.address"/>
              
@@ -29,7 +21,7 @@
                 </div>
               </v-sheet>
             </v-col>
-            <v-col cols="12" sm="2" class="d-sm-none d-lg-flex d-md-flex">
+              <v-col cols="12" sm="2" class="d-none d-sm-flex">
               
             </v-col>
           </v-row>

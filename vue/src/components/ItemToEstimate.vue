@@ -162,9 +162,9 @@
               </div>
             </span>
           </v-col>
-          <v-col class="pa-2">
-            <span elevation="0">
-              <v-chip-group>
+           <v-col class="pa-2 font-weight-light ">
+            <span>
+              <v-chip-group >
                 <v-chip class="ma-1"
                   outlined :to="{ name: 'SearchTag', params: { tag: itemtag } }"
                   small
@@ -291,12 +291,10 @@
           <v-col cols="6" class="mx-auto">
             <v-dialog transition="dialog-bottom-transition" max-width="600">
               <template v-slot:activator="{ on, attrs }">
-                <span v-bind="attrs" v-on="on"
-                
-                ><v-icon class="ml-4" small>mdi-information-outline</v-icon>
-           
-                  <p class="text-center caption ">To me, it's worth</p>
-                </span>
+                    <span v-bind="attrs" v-on="on">
+                   <v-icon class="ml-4" small>mdi-information-outline</v-icon>  <p class="text-center caption ">To me, it's worth</p><span v-if="!flight && valid && !timeout" class="caption font-weight-light">Deposit is {{item.depositamount}}<v-icon x-small right>$vuetify.icons.custom</v-icon> 
+              
+            </span></span>
               </template>
               <template v-slot:default="dialog">
                 <v-card>
@@ -311,8 +309,8 @@
                   <v-card-text>
                     <div class="text-p pt-4">
                       Earn a reward when you are the best
-                      estimator! This reward is currently equal to the deposit. However, your deposit is lost when:
-                    </div>
+                      estimator! For this item, the reward is of {{item.depositamount}} <v-icon x-small right>$vuetify.icons.custom</v-icon>  and is equal to the deposit. However, your deposit is lost when:
+                     </div>
                     <div class="caption pa-2">
                       - You are the lowest estimator
                       and the final estimation price is not accepted by the
@@ -431,10 +429,7 @@ overflow: hidden;
               
             </div>
 
-             <div v-if="!flight && valid && !timeout">
-              <div class="text-right caption">Deposit is {{item.depositamount}}<v-icon small right>$vuetify.icons.custom</v-icon> </div>
-              
-            </div>
+         
       
       </div>
     </v-card>

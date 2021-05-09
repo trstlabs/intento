@@ -307,46 +307,46 @@
               </div>
 
               <span>
-                <div class="pa-2 overline text-center">Description</div>
+                 <div class="pa-2 overline text-center">Description</div>
                 <v-card-text>
-                  <div class="caption " >{{ thisitem.description }}</div>
+                  <div class="caption" >{{ thisitem.description }}</div>
                 </v-card-text>
               </span>
-               <v-chip :to="{ name: 'SearchTag', params: { tag: itemtags } }"
+              <v-chip :to="{ name: 'SearchTag', params: { tag: itemtags } }"
                 outlined
                 medium
                 
-                class="ma-1 caption font-weight-light"
+                class="ma-1 caption font-weight-light text-capitalize"
                 v-for="itemtags in thisitem.tags"
                 :key="itemtags"
               >
                 <v-icon small left> mdi-tag-outline </v-icon
-                >{{ itemtags.toUpperCase() }}</v-chip
+                >{{ itemtags }}</v-chip
               >
               <v-chip :to="{ name: 'SearchRegion', params: { region: selected } }"
                 outlined
                 medium
                 
-                class="ma-1 caption"
+                class="ma-1 caption font-weight-light "
                 v-for="selected in thisitem.shippingregion"
                 :key="selected"
               >
                 <v-icon small left> mdi-flag-variant-outline </v-icon
                 >{{ selected.toUpperCase() }}</v-chip
               >
-              <v-chip class="ma-1 caption"  outlined medium>
+              <v-chip class="ma-1 caption font-weight-light "  outlined medium>
                 <v-icon left> mdi-account-badge-outline </v-icon>
                 TPP ID: {{ thisitem.id }}
               </v-chip>
 
-              <v-chip class="ma-1 caption"  outlined medium>
+              <v-chip class="ma-1 caption font-weight-light "  outlined medium>
                 <v-icon small left> mdi-star </v-icon>
                 Condition: {{ thisitem.condition }}/5
               </v-chip>
 
               <v-chip
                 v-if="thisitem.localpickup != ''"
-                class="ma-1 caption"
+                class="ma-1 caption font-weight-light "
                 
                 outlined
                 medium
@@ -356,7 +356,7 @@
 
               <v-chip
                 v-if="thisitem.shippingcost > 0"
-                class="ma-1 caption"
+                class="ma-1 caption font-weight-light "
                 
                 outlined
                 medium
@@ -367,7 +367,7 @@
 
               <v-chip
                 v-if="thisitem.bestestimator"
-                class="ma-1 caption"
+                class="ma-1 caption font-weight-light "
                 
                 outlined
                 medium

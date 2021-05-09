@@ -359,7 +359,7 @@ export default {
       wallet: false,
     };
   },
-  computed: {
+  /*computed: {
     signkey() {
       //console.log(localStorage.getItem("privkey"));
       return localStorage.getItem("privkey");
@@ -367,7 +367,15 @@ export default {
     
      
    
-  },
+  },*/
+    mounted() {
+
+      //console.log(localStorage.getItem("privkey"));
+      this.signkey = localStorage.getItem("privkey");
+      if (this.signkey){
+        this.signin = true;
+      }
+    },
  
   methods: {
     // mnemonicGenerate() {

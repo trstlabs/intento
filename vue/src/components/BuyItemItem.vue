@@ -508,30 +508,30 @@
               >
 
              
-            <v-chip :to="{ name: 'SearchRegion', params: { region: country } }"
+           <v-chip :to="{ name: 'SearchRegion', params: { region: country } }"
               outlined
               
-              class="ma-1 font-weight-light"
+              class="ma-1 font-weight-light text-uppercase"
               v-for="country in thisitem.shippingregion"
               :key="country"
             >
               <v-icon small left> mdi-flag-variant-outline </v-icon
-              >{{ country.toUpperCase() }}</v-chip
+              >{{ country }}</v-chip
             >
 
           
             <v-chip :to="{ name: 'SearchTag', params: { tag: tag } }"
               outlined
               
-             class="ma-1 font-weight-light"
+             class="ma-1 font-weight-light text-capitalize"
               v-for="tag in thisitem.tags"
               :key="tag"
             >
-              <v-icon small left> mdi-tag-outline </v-icon>{{ tag.toUpperCase() }}</v-chip
+              <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
             >
    <v-card class="ma-1 mt-2 rounded-lg " outlined  >
-                <v-list disabled>
-      <v-subheader>Details</v-subheader>
+                <v-list dense disabled>
+      <v-subheader>About</v-subheader>
       <v-list-item-group
        
       >
@@ -655,7 +655,7 @@
           All Seller items
         </v-card-title>
         <div v-for="item in SellerItems" v-bind:key="item.id">
-          <div class="py-1 my-1 "
+          <v-card outlined  class="py-2 my-2 rounded-lg"
           
        
             :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
@@ -685,7 +685,7 @@
                           ></v-rating> </v-chip>
 
             </v-row>
-          </div>
+           </v-card>
         </div>
       </div>
       <v-img src="img/design/transfer.png"></v-img>
