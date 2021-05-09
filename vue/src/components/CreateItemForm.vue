@@ -31,7 +31,7 @@
     </v-dialog>
 
     
-    <v-stepper class="elevation-0" v-model="e1">
+    <v-stepper class="elevation-0" v-model="e1" >
       <v-stepper-header>
         <v-stepper-step :complete="e1 > 1" step="1"> Data </v-stepper-step>
 
@@ -45,8 +45,8 @@
 
       <v-stepper-items>
     
-          <v-stepper-content class="pr-12 ma-5 " step="1">
-      
+          <v-stepper-content  class="pa-2 ma-2" step="1" >
+      <div  class=" pr-4 ma-2">
               <v-alert type="warning"
                 class="caption text-center"
                 v-if="
@@ -76,7 +76,7 @@
               >
               </v-textarea>
 
-              <v-combobox
+              <v-combobox 
                 prepend-icon="mdi-tag-outline"
                 hint="At least one and at most 5 category tags"
                 :persistent-hint="selectedTags == 0 || selectedTags == 5"
@@ -136,7 +136,7 @@
                   ><v-btn text icon @click="fields.estimationcount = 3">
                     <v-icon> mdi-check</v-icon></v-btn
                   >
-                  <v-slider
+                  <v-slider 
                     hint="Lower for faster results, higher for better accuracy"
                     thumb-label
                     :persistent-hint="fields.estimationcount != 3"
@@ -162,7 +162,7 @@
                     :hint="
                       'Condition is ' +
                       conditionLabel() +
-                      ', explain condition in description'
+                      ', please explain condition in description'
                     "
                     v-model="fields.condition"
                     :max="4"
@@ -201,7 +201,22 @@
                     </template>
                   </v-slider>
                 </v-row>
-                <v-row>
+                <v-row><v-col>
+                    <v-select
+                      class="mt-1 pt-0"
+                      prepend-icon="mdi-earth"
+                      hint="At least one"
+                      :persistent-hint="selectedCountries == 0"
+                      v-model="selectedCountries"
+                      :items="countryCodes"
+                      :rules="rules.shippingRules"
+                      label="Location"
+                      deletable-chips
+                      multiple
+                      chips
+                    >
+                    </v-select> </v-col
+                >
                   <v-col>
                     <v-row class="ma-0">
                       <v-btn
@@ -224,37 +239,22 @@
                         inset
                         label="Pickup"
                         :persistent-hint="
-                          fields.shippingcost != 0 &&
-                          enterlocation == true &&
-                          selectedCountries.length > 1
+                        
+                          enterlocation == true 
+                     
                         "
-                        hint="Specify local pickup location in description"
+                        hint="Specify location"
                       ></v-switch> </v-row>
                         <v-text-field
                 class="ma-1"
                 prepend-icon="mdi-map-marker"
                 :rules="rules.pickupRules"
-                label="Pickup Location"
+                label="Location"
                 v-model="fields.localpickup"
                 required v-if="enterlocation"
               />
               </v-col
-                  ><v-col>
-                    <v-select
-                      class="mt-1 pt-0"
-                      prepend-icon="mdi-earth"
-                      hint="At least one"
-                      :persistent-hint="selectedCountries == 0"
-                      v-model="selectedCountries"
-                      :items="countryCodes"
-                      :rules="rules.shippingRules"
-                      label="Location"
-                      deletable-chips
-                      multiple
-                      chips
-                    >
-                    </v-select> </v-col
-                ></v-row>
+                  ></v-row>
               </div><div class="mx-auto text-center" v-if="valid">
                 <span class="caption"> Required deposit for price estimators: <v-icon small left>$vuetify.icons.custom</v-icon>{{fields.depositamount}} TPP. <v-btn @click="changedeposit = !changedeposit" icon small> <v-icon >
         mdi-pencil
@@ -338,7 +338,7 @@
                   </div>
                 </v-btn>
               </div>
-  
+      </div>
           </v-stepper-content>
        
 
