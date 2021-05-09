@@ -35,7 +35,7 @@
               </v-sheet>-->
             </v-col>
                 
-       <v-col cols="12" class="d-none d-sm-flex">
+       <v-col cols="12" class="d-flex d-sm-none justify-center">
                
                 <wallet />
               
