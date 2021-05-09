@@ -52,7 +52,7 @@
             </div>
           </div>
         </div>
-           <v-card @click="clearList()" color="secondary lighten-3"
+           <v-card @click="$router.go()" color="secondary lighten-3"
           class="rounded-lg outlined elevation-1 text-center"
           v-if="items.length < 1"
         ><v-icon>
@@ -111,9 +111,7 @@ export default {
       this.$store.dispatch("setSortedTagList");
       this.$store.dispatch("setSortedLocationList");
     },
-    clearList() {
-    this.$router.go()
-  }
+    
 
   },
 };
