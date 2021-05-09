@@ -186,8 +186,8 @@ Confirm sign in by clicking the link sent to your Google account's email on this
             <v-list-item to="/explore">
             <v-list-item-title>Explore</v-list-item-title>
           </v-list-item>
-        <div  @click="$router.go()" v-if="!this.$store.state.account.addresss" >
-           <v-list-item inactive>
+       <div  @click="welcome = !welcome" v-if="!this.$store.state.account.address" >
+           <v-list-item  @click="welcome = !welcome" inactive>
             <v-list-item-title>Get Started</v-list-item-title>
           </v-list-item></div>
           <v-list-item  target="_blank" href="https://www.trustpriceprotocol.com">
@@ -208,7 +208,7 @@ Confirm sign in by clicking the link sent to your Google account's email on this
       </v-list>
     </v-navigation-drawer>
     
-    <welcome v-if="!this.$store.state.account.address || !this.$store.state.user "/> 
+<welcome v-if="!this.$store.state.account.address && welcome || !this.$store.state.user && welcome"/> 
     <v-btn
             v-scroll="onScroll"
             v-show="fab"
@@ -244,6 +244,7 @@ export default {
       //dialog: true,
       fab: false,
       drawer: false,
+      welcome: true,
 
      
       
