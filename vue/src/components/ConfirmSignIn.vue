@@ -16,7 +16,7 @@ Confirm this sign-in once, by sending a sign-in link to your Email address.
       <v-alert  
   type="info"  class="caption"
 >
-Confirm this sign-in once, by clicking the link sent to <span v-if="this.email"> {{email}} </span> <span v-else> your Google account's email </span >, on this device.
+Confirm this sign-in once, by clicking the link sent to <span v-if="this.email"> {{email}},</span> <span v-else> your Google account's email, </span >on this device.
 </v-alert> </div>
   </div>
 </template>

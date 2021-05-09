@@ -10,12 +10,6 @@
           Continue with an account 
         </p>
        
-          <v-card-text>
-          Welcome to the TPP marketplace. Feel free to use the app and see how it
-            behaves. Note: items are examples only and are not redeemable for TPP tokens.
-            Feedback is always welcome at the
-            <a  target="_blank" href="https://www.trustpriceprotocol.com"> main page</a>.
-          </v-card-text>
      
              <v-btn class="ma-6 elevation-6"  large
               color="primary"
@@ -26,16 +20,22 @@
             </v-btn>
 
 
-              
-
+         
+          <v-card-text >
+          Welcome to the TPP marketplace. Note: items are examples only and are not redeemable for TPP tokens.
+            Feedback is welcome at the
+            <a  target="_blank" href="https://www.trustpriceprotocol.com"> main page</a>.
           
+          </v-card-text>
+
+            <v-btn color="primary " small text @click="(learn = true), loadContent()">
+              Learn more
+            </v-btn>     
 
           <v-card-actions>
-            <v-btn color="primary " text @click="(learn = true), loadContent()">
-              Learn more
-            </v-btn>
+            
             <v-btn
-              color="primary lighten-2"
+              color="primary lighten-1"
               text
               @click="(dialog = false), loadContent()"
             >
