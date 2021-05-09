@@ -73,7 +73,7 @@
                 
               </v-sheet>
             </v-col>
-           </v-row><v-col cols="12" class="d-flex d-sm-none justify-center">
+           </v-row><v-col cols="12" class="d-none d-sm-flex">
                
                 <wallet />
               
