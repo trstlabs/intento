@@ -16,26 +16,20 @@
  
             </v-col >
 
-            <v-col cols="12" sm="8" class="mx-auto pa-0">
+             <v-col cols="12" sm="8" class="mx-auto pa-0 mt-n4">
                <v-sheet  min-height="70vh" rounded="lg" elevation="6">
-                <div>
-               
-                  <div>
-    
-    <div>  <buy-item-item :itemid="Number(this.$route.params.id)" /><v-row class="ma-4">
-     <v-btn icon plain to="/"> <v-icon >
+              <buy-item-item :itemid="this.$route.params.id" />
+  <v-row class="mx-0 mt-2">
+     <v-btn icon plain @click="$router.go(-1)"> <v-icon >
         mdi-arrow-left
-      </v-icon></v-btn><v-spacer/><v-btn icon onClick="window.location.reload();" ><v-icon left>
+      </v-icon></v-btn><v-spacer/><v-btn icon @click="$router.go()" ><v-icon left>
         mdi-refresh
       </v-icon></v-btn></v-row>
-     
       
-    </div>
-    <v-btn block plain class="pa-2" to="/"> <v-icon left>
+  <v-btn block plain @click="$router.push('/')"> <v-icon left>
         mdi-arrow-left
-      </v-icon>All items </v-btn>
-  </div>
-                </div>
+      </v-icon>To All Items</v-btn>
+
               </v-sheet>
             </v-col>
               <v-col cols="12" sm="2" class="d-none d-sm-flex">

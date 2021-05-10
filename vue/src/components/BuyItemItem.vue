@@ -10,16 +10,36 @@
       rounded="lg"
     >
       
- <v-row class="px-4">
+  <v-row class="ma-0 pa-2 mb-2"><v-col cols="2">
      <v-btn icon plain @click="$router.go(-1)"> <v-icon >
         mdi-arrow-left
-      </v-icon></v-btn><v-spacer/><v-btn icon onClick="window.location.reload();" ><v-icon left>
-        mdi-refresh
-      </v-icon></v-btn></v-row>
-      <v-row>
-        <v-col class="ma-0 pa-2 mb-2 mt-n4" cols="12">
+      </v-icon></v-btn></v-col>
+        <v-col  cols="8">
            <p    class="display-1 font-weight-thin text-center  "> {{ thisitem.title }}</p>
-        </v-col>
+        </v-col><v-col cols="2"> <v-speed-dial v-model="dialShare" direction="bottom" open-on-hover>
+        <template v-slot:activator>
+          <v-btn icon plain color="primary">
+            <v-icon v-if="dialShare">mdi-close</v-icon>
+            <v-icon v-else>mdi-share-variant</v-icon>
+          </v-btn>
+        </template>
+        <v-btn dark fab color="blue" small :href="`https://twitter.com/share?url=${pageUrl}&text=${encodeURI('Checkout this ' + thisitem.title)}&via=TrustPrice&hashtags=${thisitem.tags}`" target="_blank">
+          <v-icon>mdi-twitter</v-icon>
+        </v-btn>
+        <v-btn dark fab color="blue accent-5" small :href="`https://www.facebook.com/sharer/sharer.php?u=${pageUrl}`" target="_blank">
+          <v-icon>mdi-facebook</v-icon>
+        </v-btn>
+        <v-btn dark fab color="green" small :href="`https://wa.me/?text=${encodeURI('Checkout this ' + thisitem.title)}%20${pageUrl}`" target="_blank">
+          <v-icon>mdi-whatsapp</v-icon>
+        </v-btn>
+        <v-btn dark fab color="tertiary" small :href="`mailto:?subject=I found something you might like&amp;body=Checkout this ${thisitem.title} at ${pageUrl}`" target="_blank">
+          <v-icon>mdi-email</v-icon>
+        </v-btn>
+         <v-btn dark fab color="blue" small :href="`https://t.me/share/url?url=${pageUrl}&text=${encodeURI('Checkout this ' + thisitem.title)}`" target="_blank">
+          <v-icon>mdi-telegram</v-icon>
+        </v-btn>
+       
+      </v-speed-dial></v-col>
       </v-row>
 
       <div>
