@@ -1,56 +1,126 @@
 <template>
-  <div class="pa-2 mx-lg-auto"><v-progress-linear
-        indeterminate
-        :active="loadingitem"
-      ></v-progress-linear>
-    <v-card v-if="!loadingitem"
-     
-      class="pa-2 ma-auto"
-      elevation="0"
-      rounded="lg"
-    >
-      
-  <v-row class="ma-0 pa-2 mb-2"><v-col cols="2">
-     <v-btn icon plain @click="$router.go(-1)"> <v-icon >
-        mdi-arrow-left
-      </v-icon></v-btn></v-col>
-        <v-col  cols="8">
-           <p    class="display-1 font-weight-thin text-center  "> {{ thisitem.title }}</p>
-        </v-col><v-col cols="2">   <div class="d-flex d-sm-none">
-            <v-btn @click="shareItem" icon plain color="primary">
+  <div class="pa-2 mx-lg-auto">
+    <v-progress-linear indeterminate :active="loadingitem"></v-progress-linear>
+    <v-card v-if="!loadingitem" class="pa-2 ma-auto" elevation="0" rounded="lg">
+      <v-row class="ma-0 pa-2 mb-2 text-center"
+        ><v-col cols="2">
+          <v-tooltip bottom  v-if="thisitem.creator != thisitem.seller">
+      <template v-slot:activator="{ on, attrs }">
+        <span
+          v-bind="attrs"
+          v-on="on"
+        ><v-icon
+            color="primary lighten-2"
+            icon
+            plain
            
+          >
+            mdi-repeat
+          </v-icon></span>
+      </template>
+      <span>This item is reposted</span>
+    </v-tooltip>
+
+     <v-tooltip bottom  v-else>
+      <template v-slot:activator="{ on, attrs }">
+        <span
+          v-bind="attrs"
+          v-on="on"
+        ><v-icon
+            color="primary lighten-2"
+            icon
+            plain
+           
+          >
+            mdi-check-all
+          </v-icon></span>
+      </template>
+     <!-- <span v-if="thisitem.estimatorlist[0]">This item is estimated by {{thisitem.estimatorlist.length}} estimators</span>-<span v-else>Priced through estimations</span>--><span>Priced through estimations</span>
+    </v-tooltip>
+          
+
+          
+        </v-col>
+        <v-col cols="8">
+          <p class="display-1 font-weight-thin">
+            {{ thisitem.title }}
+          </p> </v-col
+        ><v-col cols="2">
+          <span class="d-flex d-sm-none">
+            <v-btn @click="shareItem" icon plain color="primary">
               <v-icon>mdi-share-variant</v-icon>
             </v-btn>
-          </div>
+          </span>
           <v-speed-dial
             v-model="dialShare"
             direction="bottom"
             open-on-hover
-            class="d-none d-sm-flex"
+            class="d-none d-sm-flex justify-center"
           >
-        <template v-slot:activator>
-          <v-btn icon plain color="primary">
-            <v-icon v-if="dialShare">mdi-close</v-icon>
-            <v-icon v-else>mdi-share-variant</v-icon>
-          </v-btn>
-        </template>
-        <v-btn dark fab color="blue" small :href="`https://twitter.com/share?url=${pageUrl}&text=${encodeURI('Checkout this ' + thisitem.title)}&via=TrustPrice&hashtags=${thisitem.tags}`" target="_blank">
-          <v-icon>mdi-twitter</v-icon>
-        </v-btn>
-        <v-btn dark fab color="blue accent-5" small :href="`https://www.facebook.com/sharer/sharer.php?u=${pageUrl}`" target="_blank">
-          <v-icon>mdi-facebook</v-icon>
-        </v-btn>
-        <v-btn dark fab color="green" small :href="`https://wa.me/?text=${encodeURI('Checkout this ' + thisitem.title)}%20${pageUrl}`" target="_blank">
-          <v-icon>mdi-whatsapp</v-icon>
-        </v-btn>
-        <v-btn dark fab color="tertiary" small :href="`mailto:?subject=I found something you might like&amp;body=Checkout this ${thisitem.title} at ${pageUrl}`" target="_blank">
-          <v-icon>mdi-email</v-icon>
-        </v-btn>
-         <v-btn dark fab color="blue" small :href="`https://t.me/share/url?url=${pageUrl}&text=${encodeURI('Checkout this ' + thisitem.title)}`" target="_blank">
-          <v-icon>mdi-telegram</v-icon>
-        </v-btn>
-       
-      </v-speed-dial></v-col>
+            <template v-slot:activator>
+              <v-btn icon plain color="primary">
+                <v-icon v-if="dialShare">mdi-close</v-icon>
+                <v-icon v-else>mdi-share-variant</v-icon>
+              </v-btn>
+            </template>
+            <v-btn
+              dark
+              fab
+              color="blue"
+              small
+              :href="`https://twitter.com/share?url=${pageUrl}&text=${encodeURI(
+                'Checkout this ' + thisitem.title
+              )}&via=TrustPrice&hashtags=${thisitem.tags}`"
+              target="_blank"
+            >
+              <v-icon>mdi-twitter</v-icon>
+            </v-btn>
+            <v-btn
+              dark
+              fab
+              color="blue accent-5"
+              small
+              :href="`https://www.facebook.com/sharer/sharer.php?u=${pageUrl}`"
+              target="_blank"
+            >
+              <v-icon>mdi-facebook</v-icon>
+            </v-btn>
+            <v-btn
+              dark
+              fab
+              color="green"
+              small
+              :href="`https://wa.me/?text=${encodeURI(
+                'Checkout this ' + thisitem.title
+              )}%20${pageUrl}`"
+              target="_blank"
+            >
+              <v-icon>mdi-whatsapp</v-icon>
+            </v-btn>
+            <v-btn
+              dark
+              fab
+              color="tertiary"
+              small
+              :href="`mailto:?subject=I found something you might like&amp;body=Checkout this ${thisitem.title} at ${pageUrl}`"
+              target="_blank"
+            >
+              <v-icon>mdi-email</v-icon>
+            </v-btn>
+            <v-btn
+              dark
+              fab
+              color="blue"
+              small
+              :href="`https://t.me/share/url?url=${pageUrl}&text=${encodeURI(
+                'Checkout this ' + thisitem.title
+              )}`"
+              target="_blank"
+            >
+              <v-icon>mdi-telegram</v-icon>
+            </v-btn>
+          </v-speed-dial>
+        </v-col>
       </v-row>
 
       <div>
@@ -129,7 +199,10 @@
 
             <span v-if="thisitem.note">
               <v-divider class="mx-4 pa-2" />
-              <div class="pl-4 overline text-center"><span v-if="thisitem.rating > 0">Rating</span><span v-else> Reseller's Note </span></div>
+              <div class="pl-4 overline text-center">
+                <span v-if="thisitem.rating > 0">Rating</span
+                ><span v-else> Reseller's Note </span>
+              </div>
               <v-card-text>
                 <div v-if="thisitem.rating > 0" class="body-1">
                   <v-dialog
@@ -138,16 +211,14 @@
                   >
                     <template v-slot:activator="{ on, attrs }">
                       <span v-bind="attrs" v-on="on">
-                       
-                          <v-rating
-                            :value="Number(thisitem.rating)"
-                            readonly
-                            color="primary darken-1"
-                            background-color="primary lighten-1"
-                            small
-                            dense
-                          ></v-rating>
-              
+                        <v-rating
+                          :value="Number(thisitem.rating)"
+                          readonly
+                          color="primary darken-1"
+                          background-color="primary lighten-1"
+                          small
+                          dense
+                        ></v-rating>
                       </span>
                     </template>
                     <template v-slot:default="dialog">
@@ -203,13 +274,15 @@
                     </template>
                   </v-dialog>
                   <v-icon small left> mdi-message-text-outline</v-icon>
-                <v-chip class="ma-2" color="primary lighten-2">
-                  {{ thisitem.note }}
-                </v-chip> 
-                </div><div v-else class="body-1  text-right">  
-                <v-chip class="ma-2 " color="primary darken-1">
-               {{ thisitem.note }}
-                </v-chip><v-icon  right> mdi-message-reply-text</v-icon></div>
+                  <v-chip class="ma-2" color="primary lighten-2">
+                    {{ thisitem.note }}
+                  </v-chip>
+                </div>
+                <div v-else class="body-1 text-right">
+                  <v-chip class="ma-2" color="primary darken-1">
+                    {{ thisitem.note }} </v-chip
+                  ><v-icon right> mdi-message-reply-text</v-icon>
+                </div>
               </v-card-text></span
             >
             <v-divider class="mx-4 pa-2" />
@@ -238,26 +311,28 @@
                       :key="loc"
                       class="font-weight-medium"
                     >
-                     <span v-if="i + 1 == thisitem.shippingregion.length">{{ loc }}</span><span v-else> {{ loc }}, </span>
+                      <span v-if="i + 1 == thisitem.shippingregion.length">{{
+                        loc
+                      }}</span
+                      ><span v-else> {{ loc }}, </span>
                     </span>
                     <span v-if="!thisitem.shippingregion[0]">
                       all locations </span
-                    >. Additional cost (e.g. shipping) is {{
-                      thisitem.shippingcost
-                    }}
-                    <v-icon small >$vuetify.icons.custom</v-icon>.</span
+                    >. Additional cost (e.g. shipping) is
+                    {{ thisitem.shippingcost }}
+                    <v-icon small>$vuetify.icons.custom</v-icon>.</span
                   >
                   <span v-if="thisitem.localpickup != ''">
                     and you can arrange a pickup by sending a message to
                     <a @click="createRoom">{{ thisitem.seller }}. </a>
                   </span>
                   <span v-if="thisitem.discount > 0">
-                    Reseller gives a discount of {{ thisitem.discount }} <v-icon small >$vuetify.icons.custom</v-icon> on the
-                    original selling price of {{
-                      thisitem.estimationprice
-                    }} <v-icon small >$vuetify.icons.custom</v-icon>.</span
+                    Reseller gives a discount of {{ thisitem.discount }}
+                    <v-icon small>$vuetify.icons.custom</v-icon> on the original
+                    selling price of {{ thisitem.estimationprice }}
+                    <v-icon small>$vuetify.icons.custom</v-icon>.</span
                   >
-                 <!-- <span v-if="thisitem.creator == thisitem.seller"
+                  <!-- <span v-if="thisitem.creator == thisitem.seller"
                     >If you buy the item you will receive a cashback reward of
                     {{ (thisitem.estimationprice * 0.05).toFixed(0) }}
                     <v-icon small >$vuetify.icons.custom</v-icon>.
@@ -330,10 +405,10 @@
               </v-row>
               <v-row v-else>
                 <v-col>
-                  <v-btn v-if="thisitem.localpickup != '' &&  thisitem.discount > 0"
+                  <v-btn
+                    v-if="thisitem.localpickup != '' && thisitem.discount > 0"
                     block
                     color="primary lighten-1"
-                    
                     @click="
                       submit(
                         Number(thisitem.estimationprice) -
@@ -348,8 +423,7 @@
                         Number(thisitem.estimationprice) -
                         Number(thisitem.discount)
                       }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                      <v-icon right> mdi-repeat </v-icon
-                      >
+                      <v-icon right> mdi-repeat </v-icon>
                     </div>
                     <div v-if="flightLP">
                       <v-progress-linear
@@ -360,13 +434,9 @@
                     </div>
                   </v-btn>
                   <v-btn
-                 
                     block
                     color="primary lighten-1"
-
-                     v-if="thisitem.localpickup != '' &&  thisitem.discount == 0"
-
-                   
+                    v-if="thisitem.localpickup != '' && thisitem.discount == 0"
                     @click="
                       submit(thisitem.estimationprice),
                         (flightLP = !flightLP),
@@ -389,9 +459,7 @@
                   <v-btn
                     block
                     color="primary lighten-1"
-
-                     v-if="thisitem.shippingcost > 0 &&  thisitem.discount == 0"
-
+                    v-if="thisitem.shippingcost > 0 && thisitem.discount == 0"
                     @click="
                       submit(
                         Number(thisitem.estimationprice) +
@@ -419,13 +487,9 @@
                     </div>
                   </v-btn>
                   <v-btn
-                 
                     block
                     color="primary lighten-1"
-                     v-if="thisitem.shippingcost > 0 &&  thisitem.discount > 0"
-
-
-                  
+                    v-if="thisitem.shippingcost > 0 && thisitem.discount > 0"
                     @click="
                       submit(
                         Number(thisitem.estimationprice) +
@@ -444,8 +508,7 @@
                       }}<v-icon small right>$vuetify.icons.custom</v-icon>
                       <v-icon right> mdi-repeat </v-icon>
                       <v-icon right> mdi-plus </v-icon
-                      ><v-icon right> mdi-package-variant-closed </v-icon
-                      >
+                      ><v-icon right> mdi-package-variant-closed </v-icon>
                     </div>
                     <div v-if="flightSP">
                       <v-progress-linear
@@ -457,15 +520,19 @@
                   </v-btn>
                 </v-col>
               </v-row>
-              <v-divider class="mx-4 mt-4 " />
+              <v-divider class="mx-4 mt-4" />
             </div>
-  <div class="overline mb-2 text-center">Information</div>
-         
+            <div class="overline mb-2 text-center">Information</div>
 
             <v-dialog transition="dialog-bottom-transition" max-width="300">
               <template v-slot:activator="{ on, attrs }">
                 <span v-bind="attrs" v-on="on">
-                  <v-chip style="cursor: pointer;" class="ma-1 font-weight-light"  outlined medium>Condition:
+                  <v-chip
+                    style="cursor: pointer"
+                    class="ma-1 font-weight-light"
+                    outlined
+                    medium
+                    >Condition:
                     <v-rating
                       :value="Number(thisitem.condition)"
                       readonly
@@ -529,19 +596,23 @@
                 </v-card>
               </template>
             </v-dialog>
-           
-              <v-chip
-                v-if="thisitem.localpickup"
-                class="ma-1 font-weight-light" target="_blank"
-                 :href="'https://www.google.com/maps/search/?api=1&query='+thisitem.localpickup"
-                outlined
-                ><v-icon left> mdi-map-marker-outline </v-icon> Pickup Location</v-chip
-              >
 
-             
-           <v-chip :to="{ name: 'SearchRegion', params: { region: country } }"
+            <v-chip
+              v-if="thisitem.localpickup"
+              class="ma-1 font-weight-light"
+              target="_blank"
+              :href="
+                'https://www.google.com/maps/search/?api=1&query=' +
+                thisitem.localpickup
+              "
               outlined
-              
+              ><v-icon left> mdi-map-marker-outline </v-icon> Pickup
+              Location</v-chip
+            >
+
+            <v-chip
+              :to="{ name: 'SearchRegion', params: { region: country } }"
+              outlined
               class="ma-1 font-weight-light text-uppercase"
               v-for="country in thisitem.shippingregion"
               :key="country"
@@ -550,97 +621,144 @@
               >{{ country }}</v-chip
             >
 
-          
-            <v-chip :to="{ name: 'SearchTag', params: { tag: tag } }"
+            <v-chip
+              :to="{ name: 'SearchTag', params: { tag: tag } }"
               outlined
-              
-             class="ma-1 font-weight-light text-capitalize"
+              class="ma-1 font-weight-light text-capitalize"
               v-for="tag in thisitem.tags"
               :key="tag"
             >
               <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
             >
-   <v-card class="ma-1 mt-2 rounded-lg " outlined  >
-                <v-list dense disabled>
-      <v-subheader>About</v-subheader>
-      <v-list-item-group
-       
-      >
-        <v-list-item 
-         
-        > <v-list-item-icon>
-           <v-icon >mdi-account-badge-outline </v-icon>
-          </v-list-item-icon>
-         
-          <v-list-item-content>
-            <v-list-item-title class="font-weight-light"  ><v-row><v-col>TPP ID: </v-col> <v-col>{{ thisitem.id }}</v-col></v-row></v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-         <v-list-item v-if="thisitem.creator != thisitem.seller"
-         
-        > <v-list-item-icon>
-            <v-icon > mdi-account-outline</v-icon>
-          </v-list-item-icon>
-         
-          <v-list-item-content>
-            <v-list-item-title class="font-weight-light" ><v-row><v-col>Original Seller: {{ thisitem.creator }}</v-col></v-row></v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-         <v-list-item 
-         
-        > <v-list-item-icon>
-            <v-icon @click="createRoom" :disabled="!this.$store.state.account.address"> mdi-account</v-icon>
-          </v-list-item-icon>
-         
-          <v-list-item-content>
-            <v-list-item-title class="font-weight-light" ><v-row><v-col>Seller: {{ thisitem.seller }}</v-col></v-row></v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item v-if="thisitem.shippingcost > 0"
-         
-        > <v-list-item-icon>
-           <v-icon> mdi-package-variant-closed </v-icon>
-          </v-list-item-icon>
-         
-          <v-list-item-content>
-            <v-list-item-title class="font-weight-light" ><v-row><v-col>Shipping Cost: </v-col> <v-col>{{ thisitem.shippingcost }}<v-icon small right>$vuetify.icons.custom</v-icon></v-col></v-row></v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item v-if="thisitem.seller != thisitem.creator"
-         
-        > <v-list-item-icon>
-           <v-icon> mdi-repeat</v-icon>
-          </v-list-item-icon>
-         
-          <v-list-item-content>
-            <v-list-item-title class="font-weight-light" ><v-row><v-col>Original Price: </v-col> <v-col>{{ thisitem.estimationprice }}<v-icon small right>$vuetify.icons.custom</v-icon></v-col></v-row></v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-         <v-list-item v-else
-         
-        > <v-list-item-icon>
-            <v-icon> mdi-check-all </v-icon>
-          </v-list-item-icon>
-         
-          <v-list-item-content>
-            <v-list-item-title class="font-weight-light" ><v-row><v-col>Estimation Price: </v-col> <v-col>{{ thisitem.estimationprice }}<v-icon small right>$vuetify.icons.custom</v-icon></v-col></v-row></v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-          <v-list-item v-if="thisitem.discount > 0"
-         
-        > <v-list-item-icon>
-            <v-icon > mdi-brightness-percent</v-icon>
-          </v-list-item-icon>
-         
-          <v-list-item-content>
-            <v-list-item-title class="font-weight-light" ><v-row><v-col>Discount: </v-col> <v-col>{{ thisitem.discount }}<v-icon small right>$vuetify.icons.custom</v-icon></v-col></v-row></v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        
-      </v-list-item-group>
-    </v-list>
+            <v-card class="ma-1 rounded-xl" outlined>
+              <v-list dense disabled>
+                <v-subheader>About</v-subheader>
+                <v-list-item-group>
+                  <v-list-item>
+                    <v-list-item-icon>
+                      <v-icon>mdi-account-badge-outline </v-icon>
+                    </v-list-item-icon>
 
-             
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>TPP ID: </v-col>
+                          <v-col>{{ thisitem.id }}</v-col></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-if="thisitem.creator != thisitem.seller">
+                    <v-list-item-icon>
+                      <v-icon> mdi-account-outline</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col
+                            >Original Seller: {{ thisitem.creator }}</v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-icon>
+                      <v-icon
+                        @click="createRoom"
+                        :disabled="!this.$store.state.account.address"
+                      >
+                        mdi-account</v-icon
+                      >
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Seller: {{ thisitem.seller }}</v-col></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-if="thisitem.shippingcost > 0">
+                    <v-list-item-icon>
+                      <v-icon> mdi-package-variant-closed </v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Shipping Cost: </v-col>
+                          <v-col
+                            >{{ thisitem.shippingcost
+                            }}<v-icon small right
+                              >$vuetify.icons.custom</v-icon
+                            ></v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-if="thisitem.seller != thisitem.creator">
+                    <v-list-item-icon>
+                      <v-icon> mdi-repeat</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content> 
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Original Price: </v-col>
+                          <v-col
+                            >{{ thisitem.estimationprice
+                            }}<v-icon small right
+                              >$vuetify.icons.custom</v-icon
+                            ></v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-else-if="thisitem.estimationprice">
+                    <v-list-item-icon>
+                      <v-icon> mdi-check-all </v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Estimation Price: </v-col>
+                          <v-col
+                            >{{ thisitem.estimationprice
+                            }}<v-icon small right
+                              >$vuetify.icons.custom</v-icon
+                            ></v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-if="thisitem.discount > 0">
+                    <v-list-item-icon>
+                      <v-icon> mdi-brightness-percent</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Discount: </v-col>
+                          <v-col
+                            >{{ thisitem.discount
+                            }}<v-icon small right
+                              >$vuetify.icons.custom</v-icon
+                            ></v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list-item-group>
+              </v-list>
             </v-card>
             <v-divider class="ma-4" />
             <div class="overline text-center">Comments</div>
@@ -665,18 +783,20 @@
         </div>
       </div>
       <v-row class="pa-2 mx-auto">
-        <v-btn
+       
+        <v-btn text @click="sellerInfo">Seller Details </v-btn>
+       
+        <v-spacer />
+          <v-btn
           :disabled="!this.$store.state.account.address"
           text
           @click="createRoom"
         >
           Message Seller</v-btn
         >
-        <v-spacer />
-        <v-btn text @click="sellerInfo">Seller Info </v-btn>
       </v-row>
-      <div class="pa-2 mx-auto caption">
-        <span v-if="info">
+      <div class="pa-2 mx-auto caption" v-if="info">
+        <span>
           <p class="text-center">
             This seller has sold {{ sold }} items before
           </p>
@@ -686,37 +806,67 @@
           All Seller items
         </v-card-title>
         <div v-for="item in SellerItems" v-bind:key="item.id">
-          <v-card outlined  class="py-2 my-2 rounded-lg"
-          
-       
+          <v-card
+            outlined
+            class="py-2 my-2 rounded-xl"
             :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
           >
             <v-row class="text-left caption ma-2"
               ><span class="font-weight-medium"> {{ item.title }}</span>
-              <v-spacer /><v-spacer /> <v-chip class="mx-1" v-if="item.status != ''" small>  {{ item.status }} </v-chip>
-              <v-chip class="mx-1" small v-if="item.transferable && item.status != ''">
+              <v-spacer /><v-spacer />
+              <v-chip class="mx-1" v-if="item.status != ''" small>
+                {{ item.status }}
+              </v-chip>
+              <v-chip
+                class="mx-1"
+                small
+                v-if="item.transferable && item.status != ''"
+              >
                 Sold for: {{ item.estimationprice
                 }}<v-icon small right>$vuetify.icons.custom</v-icon> </v-chip
-              ><v-chip small class="mx-1" v-if="item.buyer && !item.transferable"> Sold</v-chip> <v-chip class="mx-1" small v-else-if="!item.transferable && item.status == ''"
+              ><v-chip
+                small
+                class="mx-1"
+                v-if="item.buyer && !item.transferable"
+              >
+                Sold</v-chip
+              >
+              <v-chip
+                class="mx-1"
+                small
+                v-else-if="!item.transferable && item.status == ''"
                 >Not on sale yet</v-chip
-                     ><v-chip class="mx-1" small v-else-if="item.transferable && item.status == '' && item.creator == thisitem.seller"
-                color="primary lighten-2">{{ item.estimationprice
+              ><v-chip
+                class="mx-1"
+                small
+                v-else-if="
+                  item.transferable &&
+                  item.status == '' &&
+                  item.creator == thisitem.seller
+                "
+                color="primary lighten-2"
+                >{{ item.estimationprice
                 }}<v-icon small right>mdi-check-all</v-icon></v-chip
-                     ><v-chip class="mx-1" small v-else-if="item.creator != thisitem.seller && item.status == ''"
-                color="primary lighten-2"><v-icon small >mdi-repeat</v-icon></v-chip
-                     >
+              ><v-chip
+                class="mx-1"
+                small
+                v-else-if="item.creator != thisitem.seller && item.status == ''"
+                color="primary lighten-2"
+                ><v-icon small>mdi-repeat</v-icon></v-chip
+              >
 
-              <v-chip class="mx-1" small v-if="item.rating > 0">Rating<v-rating
-                            :value="Number(item.rating)"
-                            readonly
-                            color="primary darken-1"
-                            background-color="primary lighten-1"
-                            x-small
-                            dense
-                          ></v-rating> </v-chip>
-
+              <v-chip class="mx-1" small v-if="item.rating > 0"
+                >Rating<v-rating
+                  :value="Number(item.rating)"
+                  readonly
+                  color="primary darken-1"
+                  background-color="primary lighten-1"
+                  x-small
+                  dense
+                ></v-rating>
+              </v-chip>
             </v-row>
-           </v-card>
+          </v-card>
         </div>
       </div>
       <v-img src="img/design/transfer.png"></v-img>
@@ -754,18 +904,17 @@ export default {
     };
   },
 
-  beforeCreate(){
+  beforeCreate() {
     this.loadingitem = true;
   },
   mounted() {
- 
     const id = this.itemid;
 
     const imageRef = databaseRef.ref("ItemPhotoGallery/" + id + "/photos/");
     imageRef.on("value", (snapshot) => {
       const data = snapshot.val();
 
-      if (data != null ) {
+      if (data != null) {
         //console.log(data[0]);
         this.photos = data;
         this.loadingitem = false;
@@ -775,7 +924,11 @@ export default {
   },
   computed: {
     thisitem() {
-      return this.$store.getters.getItemByID(this.$route.params.id);
+      if (this.$store.state.data.item) {
+        return this.$store.getters.getItemByID(this.itemid) || {};
+      } else {
+        return {};
+      }
     },
 
     hasAddress() {
@@ -785,11 +938,15 @@ export default {
       return this.amount.trim().length > 0;
     },
     allcomments() {
-      return this.thisitem.comments.filter((i) => i != "") || [];
+      if (this.thisitem) {
+        return this.thisitem.comments.filter((i) => i != "") || [];
+      }
     },
     SellerItems() {
-      this.$store.dispatch("setBuySellerItemList", this.thisitem.seller);
       return this.$store.getters.getBuySellerList || [];
+    },
+    pageUrl() {
+      return process.env.VUE_APP_URL + "/itemid=" + this.thisitem.id;
     },
   },
 
@@ -827,23 +984,21 @@ export default {
       return thisitem();
     },
 
- shareItem(){
+    shareItem() {
+      if (navigator.share) {
+        const shareData = {
+          title: this.thisitem.title,
+          text: "Checkout this " + this.thisitem.title,
+          url: this.pageUrl,
+        };
 
-      
-  if (navigator.share) {
-      const shareData = {
-  title: this.thisitem.title,
-  text: 'Checkout this ' + this.thisitem.title,
-  url: this.pageUrl,
-}
+        navigator.share(shareData);
+      } else {
+        alert("web share not supported");
+      }
+    },
 
-navigator.share(shareData) } else {
-    alert('web share not supported');
-  }
- 
-   },
-  
-  /*async getItem() {
+    /*async getItem() {
 
          const url = `${process.env.VUE_APP_API}/${process.env.VUE_APP_PATH.replace(/\./g, '/')}/${"item/"+ this.$route.params.id}`;
       const body = (await axios.get(url)).data.Item
@@ -855,9 +1010,19 @@ console.log(body)
     },
 */
 
+    shareItem() {
+      if (navigator.share) {
+        const shareData = {
+          title: this.thisitem.title,
+          text: "Checkout this " + this.thisitem.title,
+          url: this.pageUrl,
+        };
 
- 
- 
+        navigator.share(shareData);
+      } else {
+        alert("web share not supported");
+      }
+    },
 
     async paySubmit({ body, fields }) {
       const wallet = this.$store.state.wallet;
@@ -909,6 +1074,7 @@ console.log(body)
     },
 
     sellerInfo() {
+       this.$store.dispatch("setBuySellerItemList", this.thisitem.seller);
       let rs = this.SellerItems.filter((i) => i.buyer != "");
       this.sold = "no";
       if (rs != "") {

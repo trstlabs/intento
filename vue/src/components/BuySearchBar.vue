@@ -45,7 +45,7 @@ export default {
   }),
   methods: {
     search() {
-      this.$store.dispatch("updateBuyItemList", this.input);
+      this.$store.dispatch("updateBuyItemList", this.input.toLowerCase());
       //this.$store.commit("SET_LIST_SEARCH", this.input);
  
    

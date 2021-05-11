@@ -58,7 +58,7 @@
         ><v-icon>
         mdi-refresh
       </v-icon>
-          <v-card-text class="caption">
+          <v-card-text class="caption ma-2 rounded-xl">
             No watches to show. Use search / filters to find watches.
           </v-card-text></v-card>
       </div>
