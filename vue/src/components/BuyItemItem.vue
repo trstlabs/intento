@@ -16,7 +16,18 @@
       </v-icon></v-btn></v-col>
         <v-col  cols="8">
            <p    class="display-1 font-weight-thin text-center  "> {{ thisitem.title }}</p>
-        </v-col><v-col cols="2"> <v-speed-dial v-model="dialShare" direction="bottom" open-on-hover>
+        </v-col><v-col cols="2">   <div class="d-flex d-sm-none">
+            <v-btn @click="shareItem" icon plain color="primary">
+           
+              <v-icon>mdi-share-variant</v-icon>
+            </v-btn>
+          </div>
+          <v-speed-dial
+            v-model="dialShare"
+            direction="bottom"
+            open-on-hover
+            class="d-none d-sm-flex"
+          >
         <template v-slot:activator>
           <v-btn icon plain color="primary">
             <v-icon v-if="dialShare">mdi-close</v-icon>
@@ -816,6 +827,21 @@ export default {
       return thisitem();
     },
 
+ shareItem(){
+
+      
+  if (navigator.share) {
+      const shareData = {
+  title: this.thisitem.title,
+  text: 'Checkout this ' + this.thisitem.title,
+  url: this.pageUrl,
+}
+
+navigator.share(shareData) } else {
+    alert('web share not supported');
+  }
+ 
+   },
   
   /*async getItem() {
 

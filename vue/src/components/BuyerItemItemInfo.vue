@@ -580,7 +580,7 @@ export default {
           itemid: this.itemid,
           shippingcost: this.fields.shippingcost,
           discount: this.fields.discount,
-          localpickup: this.fields.localpickup,
+          localpickup: encodeURI(this.fields.localpickup),
           shippingregion: this.selectedCountries,
           note: this.fields.note,
         };
