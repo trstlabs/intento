@@ -53,11 +53,11 @@ const routes = [
   
   },
   {
-    path: "/earn",
+    path: "/estimate",
     component: () => 
-        import(/* webpackChunkName: "earn" */ '@/views/Estimate'), 
+        import(/* webpackChunkName: "estimate" */ '@/views/Estimate'), 
     meta: {
-      title: 'Earn - Marketplace'},
+      title: 'Estimate - Marketplace'},
   },
   
   {

@@ -163,7 +163,7 @@
           </div>
         
       <div class="pt-4 text-right">
-        <v-btn
+        <v-btn rounded
           :disabled="!this.imageData[1]|| !hasAddress"
           color="primary"
           @click="create()"

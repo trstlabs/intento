@@ -82,7 +82,7 @@
     >
      
 
-      <v-card>
+      <v-card >
         <v-card-title class=" grey lighten-2 ">
          {{item.title}} <v-spacer></v-spacer>
           <v-btn
@@ -99,7 +99,7 @@
       </v-card>
     </v-dialog> 
     <div v-if="settings"> 
-          <v-card color="secondary lighten-3" class="pa-6 elevation-8 ma-6"><v-row  class="mb-2"><v-btn small
+          <v-card class="pa-6 elevation-8 ma-6 rounded-xl" ><v-row  class="mb-2"><v-btn small
         icon
           
             @click="getItemToEstimate()"
@@ -135,15 +135,14 @@
           :items="locations"
           label="Regions"
           clearable
-          
           solo
           :persistent-hint="!selectedRegion"
           hint="Specify your region"
         ></v-select> </v-card></div>
-    <v-card color="secondary lighten-3"
+    <v-card 
       class="pa-2 mt-2"
       elevation="2"
-      rounded="lg"
+      rounded="xl"
      
     >
       <v-progress-linear
@@ -391,7 +390,7 @@ overflow: hidden;
       </span>
 
       <div>
-        <v-btn
+        <v-btn rounded
           block
           elevation="4"
           color="primary"

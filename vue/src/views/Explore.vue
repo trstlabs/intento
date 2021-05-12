@@ -22,7 +22,7 @@
             </v-col >
 
             <v-col cols="12" sm="8" class="mx-auto pa-0">
-              <v-sheet color="secondary lighten-3" min-height="70vh" rounded="lg" elevation="6">
+              <v-sheet :class="($vuetify.theme.dark) ? 'grey darken-4' : 'secondary lighten-2' "  min-height="70vh" class="rounded-b-xl"  elevation="6">
                 <div>
                      <v-img height="350px" src="img/design/market.png" ></v-img>
                   <leaderboard/>

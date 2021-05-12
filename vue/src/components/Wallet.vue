@@ -44,9 +44,9 @@
       <div v-else class="account">
         <div class="card">
           <v-row class="justify-center pa-4">
-          <v-icon left plain icon to="/account" large>
-        mdi-account
-      </v-icon></v-row>
+          <v-btn plain icon to="/account" >
+       <v-icon large> mdi-account
+      </v-icon></v-btn></v-row>
           <div class="card__row">
             
             
@@ -89,7 +89,7 @@
 }
 .card {
   background: rgba(0, 0, 0, 0.03);
-  border-radius: 0.25rem;
+  border-radius: 1rem;
  
   padding: 0.25rem 0.75rem;
   overflow-x: hidden;

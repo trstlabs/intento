@@ -321,7 +321,7 @@
         </v-row>
       </div>
               <div class="text-center pt-6">
-                <v-btn
+                <v-btn rounded
                   color="primary"
                   :disabled="!valid || !!flight || !hasAddress"
                   @click="submit()"

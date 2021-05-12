@@ -65,7 +65,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
-      <v-tab  to="/earn"> <v-icon v-bind="attrs"
+      <v-tab  to="/estimate"> <v-icon v-bind="attrs"
           v-on="on" large >
         mdi-checkbox-marked
       </v-icon><v-badge 
@@ -74,7 +74,7 @@
         :value="messagesToEstimate"
         /></v-tab>
       </template>
-      <span>Earn</span>
+      <span>Estimate</span>
     </v-tooltip>
 
     <v-tooltip bottom>
@@ -167,8 +167,8 @@ Confirm sign in by clicking the link sent to your Google account's email on this
       </v-icon>
           </v-list-item>
 
-          <v-list-item to="/earn">
-            <v-list-item-title>Earn</v-list-item-title><v-icon   >
+          <v-list-item to="/estimate">
+            <v-list-item-title>Estimate</v-list-item-title><v-icon   >
         mdi-checkbox-marked
       </v-icon>
           </v-list-item>

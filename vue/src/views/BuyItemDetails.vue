@@ -17,7 +17,7 @@
             </v-col >
 
              <v-col cols="12" sm="8" class="mx-auto pa-0 mt-n4">
-               <v-sheet  min-height="70vh" rounded="lg" elevation="6">
+               <v-sheet  min-height="70vh" class="rounded-b-xl"  elevation="6">
               <buy-item-item :itemid="this.$route.params.id" />
   <v-row class="mx-0 mt-2">
      <v-btn icon plain @click="$router.go(-1)"> <v-icon >

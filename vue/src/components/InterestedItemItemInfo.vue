@@ -151,11 +151,11 @@
           <div class="pa-2 mx-auto" elevation="8" v-if="showinfo">
             <div>
              
-              <v-divider></v-divider>
+      
              
 
               <v-row> <v-col>
-            <v-btn block color="primary"
+            <v-btn rounded block color="primary"
               v-if="thisitem.localpickup != ''"
               @click="submitLP(itemid), getThisItem"
             >
@@ -168,7 +168,7 @@
               </div>
             </v-btn>
             </v-col><v-col>
-            <v-btn block color="primary"
+            <v-btn rounded block color="primary"
               v-if="thisitem.shippingcost"
               @click="submitSP(itemid), getThisItem"
             >
@@ -182,7 +182,7 @@
             </v-btn>
             </v-col><v-col>
             <v-btn block color="warning"
-              
+              rounded
               @click="submitInterest(itemid), getThisItem"
             >
               Unlike Item
