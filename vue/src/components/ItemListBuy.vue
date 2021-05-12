@@ -52,15 +52,16 @@
             </div>
           </div>
         </div>
-           <v-card @click="$router.go()" color="secondary lighten-3"
-          class="rounded-lg outlined elevation-1 text-center"
+         <v-card @click="clearList()" color="secondary lighten-3 "
+          class="rounded-xl outlined elevation-1 text-center ma-4 pa-2"
           v-if="items.length < 1"
-        ><v-icon>
+        >
+          <v-card-text class="caption ">
+            No items to show. Use search / filters to find items.
+          </v-card-text><v-icon>
         mdi-refresh
       </v-icon>
-          <v-card-text class="caption ma-2 rounded-xl">
-            No watches to show. Use search / filters to find watches.
-          </v-card-text></v-card>
+        </v-card>
       </div>
     </div>
   </div>
@@ -111,7 +112,9 @@ export default {
       this.$store.dispatch("setSortedTagList");
       this.$store.dispatch("setSortedLocationList");
     },
-    
+    clearList() {
+     this.$store.dispatch("setBuyItemList");
+  }
 
   },
 };

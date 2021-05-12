@@ -630,7 +630,7 @@
             >
               <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
             >
-            <v-card class="ma-1 rounded-xl" outlined>
+            <v-card class="ma-1 rounded-t-xl" outlined>
               <v-list dense disabled>
                 <v-subheader>About</v-subheader>
                 <v-list-item-group>
@@ -760,7 +760,7 @@
                 </v-list-item-group>
               </v-list>
             </v-card>
-            <v-divider class="ma-4" />
+     
             <div class="overline text-center">Comments</div>
             <div v-if="thisitem.comments">
               <div
@@ -782,19 +782,19 @@
           </div>
         </div>
       </div>
-      <v-row class="pa-2 mx-auto">
-       
-        <v-btn text @click="sellerInfo">Seller Details </v-btn>
+       <v-row class="pa-2 mx-auto">
+        <v-btn text @click="sellerInfo"> <v-icon v-if="!info" left> mdi-plus</v-icon
+                      ><v-icon v-else left> mdi-close</v-icon
+                      >Seller Details </v-btn>
        
         <v-spacer />
           <v-btn
           :disabled="!this.$store.state.account.address"
           text
           @click="createRoom"
-        >
+        ><v-icon left> mdi-message-text</v-icon>
           Message Seller</v-btn
-        >
-      </v-row>
+        >     </v-row>
       <div class="pa-2 mx-auto caption" v-if="info">
         <span>
           <p class="text-center">
@@ -1083,8 +1083,8 @@ console.log(body)
 
       this.info = !this.info;
     },
-    async createRoom() {
-      if (this.$store.state.user.uid) {
+     async createRoom() {
+      if (this.$store.state.user) {
         const user = await usersRef
           .where("username", "==", this.thisitem.seller)
           .get();
@@ -1127,10 +1127,10 @@ await roomsRef.where("users", "array-contains", this.$store.state.user.uid).get(
           }
           this.$router.push("/messages");
         } else {
-          alert("Seller DatabaseID not found");
+          alert("Seller not found");
         }
       } else {
-        alert("Sign in first (Check your Google email)");
+        alert("Confirm sign in first with email");
       }
     },
   },

@@ -1,39 +1,39 @@
 <template>
-  <div>
-    <v-dialog v-model="dialog" width="600" persistent>
-      <v-card class="text-center">
-        <img class="pa-2 " src="img/brand/icon.png" width="77" />
-       
 
-        <div v-if="!signin && !signup && !learn" >
-           <p class="text-center overline" >
-          Continue with an account 
-        </p>
-       
-     
-             <v-btn class="ma-6 elevation-6"  large
-              color="primary"
-              
-              @click="(signin = true), loadContent()"
-            >
-              Sign In
-            </v-btn>
+    <v-dialog v-model="dialog" width="600" persistent >
+      <v-card class="text-center rounded-lg"  >
+        <img class="pa-2" src="img/brand/icon.png" width="77" />
 
+        <div v-if="!signin && !signup && !learn">
+          <p class="text-center overline">Continue with an account</p>
 
-         
-          <v-card-text >
-          Welcome to the TPP marketplace. Note: items are examples only and are not redeemable for TPP tokens.
-            Feedback is welcome at the
-            <a  target="_blank" href="https://www.trustpriceprotocol.com"> main page</a>.
-          
+          <v-btn
+            class="ma-6 elevation-6"
+            large
+            color="primary"
+            @click="(signin = true), loadContent()"
+          >
+            Sign In
+          </v-btn>
+
+          <v-card-text>
+            Welcome to the TPP marketplace. Note: items are examples only and
+            are not redeemable for TPP tokens. Feedback is welcome at the
+            <a target="_blank" href="https://www.trustpriceprotocol.com">
+              main page</a
+            >.
           </v-card-text>
 
-            <v-btn color="primary " small text @click="(learn = true), loadContent()">
-              Learn more
-            </v-btn>     
+          <v-btn
+            color="primary "
+            small
+            text
+            @click="(learn = true), loadContent()"
+          >
+            Learn more
+          </v-btn>
 
           <v-card-actions>
-            
             <v-btn
               color="primary lighten-1"
               text
@@ -44,31 +44,23 @@
             <v-spacer />
 
             <v-spacer />
-            <v-btn
-              color="primary"
-              text
-              @click="(signup = true), loadContent()"
-            > 
+            <v-btn color="primary" text @click="(signup = true), loadContent()">
               Sign Up
             </v-btn>
           </v-card-actions>
         </div>
-        <div  v-if="signin">
-         <div  v-if="this.$store.state.account.address">
-           <p class="text-center overline" >
-          Confirm Sign-in
-        </p>
-        <div class="pb-4 ma-6">
-         <torus v-if="!wallet" :privkey="this.signkey"/>
-         <confirm-sign-in v-else /> </div>
-
-        </div> 
-         <div v-else>
-           <p class="text-center overline" >
-          Continue with an account 
-        </p>
-          <torus v-if="!wallet" :privkey="this.signkey" />
-           <v-row v-if="!wallet">
+        <div v-if="signin">
+          <div v-if="this.$store.state.account.address">
+            <p class="text-center overline">Confirm Sign-in</p>
+            <div class="pb-4 ma-6">
+              <torus v-if="!wallet" :privkey="this.signkey" />
+              <confirm-sign-in v-else />
+            </div>
+          </div>
+          <div v-else>
+            <p class="text-center overline">Continue with an account</p>
+            <torus v-if="!wallet" :privkey="this.signkey" />
+            <v-row v-if="!wallet">
               <v-divider class="ma-2" />
               <p class="caption">Or</p>
               <v-divider class="ma-2" />
@@ -76,26 +68,25 @@
             <v-btn text v-if="!wallet" @click="wallet = true">
               Sign in with a mnemonic phrase
             </v-btn>
-     <wallet v-if="wallet" @signedIn="updateDialog()" />
-          
-
-         
-          
-</div><v-card-actions>
-      
-              <v-btn color="primary" text @click="signin = false, wallet = false"> Back </v-btn>
-        
-            
+            <wallet v-if="wallet" @signedIn="updateDialog()" />
+          </div>
+          <v-card-actions>
+            <v-btn
+              color="primary"
+              text
+              @click="(signin = false), (wallet = false)"
+            >
+              Back
+            </v-btn>
           </v-card-actions>
         </div>
 
-        
-        
-
         <div v-if="signup">
           <v-card-text>
-            Register a TPP address<span v-if="!existing"> linked to your Google account
-            using DirectAuth</span><span v-else> by entering an existing Cosmos-address</span>, and receive 5 free TPP tokens to get started!
+            Register a TPP address<span v-if="!existing">
+              linked to your Google account using DirectAuth</span
+            ><span v-else> by entering an existing Cosmos-address</span>, and
+            receive 5 free TPP tokens to get started!
           </v-card-text>
           <div v-if="!existing">
             <faucet-torus />
@@ -109,8 +100,7 @@
             </v-btn>
           </div>
           <div v-if="existing">
-            <faucet/>
-            
+            <faucet />
           </div>
           <v-card-actions>
             <v-col>
@@ -156,7 +146,7 @@
             <v-stepper-items>
               <v-stepper-content step="1">
                 <v-card class="mb-6">
-                  <v-card-title 
+                  <v-card-title
                     >There is a problem with current online marketplaces. </v-card-title
                   ><v-card-text>
                     <p>
@@ -164,56 +154,60 @@
                       granted to another user?
                     </p>
                     <p>
-                      Ever paid too much because you had a
-                      wrong idea about the item?
+                      Ever paid too much because you had a wrong idea about the
+                      item?
                     </p>
                     <p>
-                      Trust price protocol is a place where you can trade items hassle free.
+                      Trust price protocol is a place where you can trade items
+                      hassle free.
                     </p>
 
-                  <v-card class="ma-4">
-                     <v-list-item>
-      <v-list-item-content>
-        <v-list-item-title>When you provide prepayment, you are
-                     the only buyer</v-list-item-title><v-list-item-subtitle>
-          and your prepayment is secured.
-        </v-list-item-subtitle>
-      </v-list-item-content><v-list-item-icon>
-            <v-icon>mdi-plus </v-icon>
-          </v-list-item-icon>
-    </v-list-item>
+                    <v-card class="ma-4">
+                      <v-list-item>
+                        <v-list-item-content>
+                          <v-list-item-title
+                            >When you provide prepayment, you are the only
+                            buyer</v-list-item-title
+                          ><v-list-item-subtitle>
+                            and your prepayment is secured.
+                          </v-list-item-subtitle> </v-list-item-content
+                        ><v-list-item-icon>
+                          <v-icon>mdi-plus </v-icon>
+                        </v-list-item-icon>
+                      </v-list-item>
 
-    <v-list-item two-line>
-      <v-list-item-content>
-        <v-list-item-title>Prices are made from independent estimations</v-list-item-title>
-        <v-list-item-subtitle>So you
-                      know what you buy is right.</v-list-item-subtitle>
-      </v-list-item-content><v-list-item-icon>
-            <v-icon>mdi-plus </v-icon>
-          </v-list-item-icon>
-    </v-list-item>
+                      <v-list-item two-line>
+                        <v-list-item-content>
+                          <v-list-item-title
+                            >Prices are made from independent
+                            estimations</v-list-item-title
+                          >
+                          <v-list-item-subtitle
+                            >So you know what you buy is
+                            right.</v-list-item-subtitle
+                          > </v-list-item-content
+                        ><v-list-item-icon>
+                          <v-icon>mdi-plus </v-icon>
+                        </v-list-item-icon>
+                      </v-list-item>
 
-    <v-list-item three-line>
-      <v-list-item-content>
-        <v-list-item-title>You are in control of your prepayment </v-list-item-title>
-        <v-list-item-subtitle>
-          and can always get
-                      it back until it is transferred.
-        </v-list-item-subtitle>
-        
-        
-      </v-list-item-content><v-list-item-icon>
-            <v-icon>mdi-plus </v-icon>
-          </v-list-item-icon>
-    </v-list-item>
+                      <v-list-item three-line>
+                        <v-list-item-content>
+                          <v-list-item-title
+                            >You are in control of your prepayment
+                          </v-list-item-title>
+                          <v-list-item-subtitle>
+                            and can always get it back until it is transferred.
+                          </v-list-item-subtitle> </v-list-item-content
+                        ><v-list-item-icon>
+                          <v-icon>mdi-plus </v-icon>
+                        </v-list-item-icon>
+                      </v-list-item>
+                    </v-card>
 
-                 
-
-                   </v-card>
-                
-                   
-
-                    <p class="font-weight-medium ma-4">A great way to spend crypto on things you like</p>
+                    <p class="font-weight-medium ma-4">
+                      A great way to spend crypto on things you like
+                    </p>
                   </v-card-text></v-card
                 >
                 <v-row class="ma-2">
@@ -229,7 +223,6 @@
                     >An opportunity to enter the crypto universe
                   </v-card-title>
                   <v-card-text>
-                    
                     <p>
                       As a seller, you are free to choose 2 options. Ship the
                       item and/or choose “local pickup”.
@@ -280,22 +273,23 @@
                       accordingly!
                     </p>
                     <p>
-                      Currently, you earn a reward equal to the deposit required.
-                      price if you are the estimator closest to the final price. These TPP coins are minted.
+                      Currently, you earn a reward equal to the deposit
+                      required. price if you are the estimator closest to the
+                      final price. These TPP coins are minted.
                     </p>
                     <p>
-                      To cope with bad acting, the deposit
-                     is at risk for each estimation.
-                      These tokens will be returned, except when the following occurs
-                      1). The seller did not accept the final price and you are
-                      the lowest estimator. 2) The buyer ended up withdrawing
-                      prepayment and you are the highest estimator. 
+                      To cope with bad acting, the deposit is at risk for each
+                      estimation. These tokens will be returned, except when the
+                      following occurs 1). The seller did not accept the final
+                      price and you are the lowest estimator. 2) The buyer ended
+                      up withdrawing prepayment and you are the highest
+                      estimator.
                     </p>
 
-                    <p class="font-weight-medium ma-4">You can trade your earned TPP for
-                      the items you like.
-                      As a bonus, you can <v-icon small>mdi-heart </v-icon> items and view them once they hit
-                      the marketplace. 
+                    <p class="font-weight-medium ma-4">
+                      You can trade your earned TPP for the items you like. As a
+                      bonus, you can <v-icon small>mdi-heart </v-icon> items and
+                      view them once they hit the marketplace.
                     </p>
                   </v-card-text>
                 </v-card>
@@ -323,13 +317,11 @@
         </div>
       </v-card>
     </v-dialog>
-  </div>
+
 </template>
 
   <script>
-import ConfirmSignIn from './ConfirmSignIn.vue';
-
-
+import ConfirmSignIn from "./ConfirmSignIn.vue";
 
 /*
 import Faucet from "./Faucet.vue";
@@ -346,7 +338,6 @@ export default {
 
   data() {
     return {
-   
       //dismiss: false,
       login: false,
       dialog: true,
@@ -368,15 +359,14 @@ export default {
      
    
   },*/
-    mounted() {
+  mounted() {
+    //console.log(localStorage.getItem("privkey"));
+    this.signkey = localStorage.getItem("privkey");
+    if (this.signkey) {
+      this.signin = true;
+    }
+  },
 
-      //console.log(localStorage.getItem("privkey"));
-      this.signkey = localStorage.getItem("privkey");
-      if (this.signkey){
-        this.signin = true;
-      }
-    },
- 
   methods: {
     // mnemonicGenerate() {
     //	const mnemonic = bip39.generateMnemonic()

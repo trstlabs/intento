@@ -48,15 +48,15 @@
             </div>
           </div>
         </div>
-       <v-card @click="clearList()" color="secondary lighten-3"
-          class="rounded-lg outlined elevation-1 text-center"
+       <v-card @click="clearList()" color="secondary lighten-3 "
+          class="rounded-xl outlined elevation-1 text-center ma-4 pa-2"
           v-if="items.length < 1"
-        ><v-icon>
+        >
+          <v-card-text class="caption ">
+            No items to show. Use search / filters to find items.
+          </v-card-text><v-icon>
         mdi-refresh
       </v-icon>
-          <v-card-text class="caption">
-            No watches to show. Use search / filters to find watches.
-          </v-card-text>
         </v-card>
       </div>
     </div>
@@ -110,7 +110,7 @@ export default {
 
     },
      clearList() {
-    this.$router.go()
+ this.$store.dispatch("setBuyItemList");
   }
   },
 };
