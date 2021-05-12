@@ -273,15 +273,15 @@
                       </v-card>
                     </template>
                   </v-dialog>
-                  <v-icon small left> mdi-message-text-outline</v-icon>
-                  <v-chip class="ma-2" color="primary lighten-2">
+                  <v-icon left class="mb-n8" > mdi-account-edit</v-icon>
+                  <v-chip class="ma-2  rounded-0 rounded-br-xl rounded-t-xl" color="primary lighten-2" >
                     {{ thisitem.note }}
                   </v-chip>
                 </div>
-                <div v-else class="body-1 text-right">
-                  <v-chip class="ma-2" color="primary darken-1">
+                <div v-else class="body-1 text-right ">
+                  <v-chip class="ma-2 rounded-0 rounded-bl-xl rounded-t-xl" color="primary darken-1">
                     {{ thisitem.note }} </v-chip
-                  ><v-icon right> mdi-message-reply-text</v-icon>
+                  ><v-icon class="mb-n8" right> mdi-account</v-icon>
                 </div>
               </v-card-text></span
             >
@@ -346,7 +346,7 @@
               </v-img>
               <v-row v-if="thisitem.creator == thisitem.seller">
                 <v-col>
-                  <v-btn
+                  <v-btn rounded
                     block
                     color="primary lighten-1"
                     :disabled="thisitem.localpickup == ''"
@@ -370,7 +370,7 @@
                   </v-btn> </v-col
                 ><v-col>
                   <v-btn
-                    block
+                    block rounded
                     color="primary lighten-1"
                     :disabled="thisitem.shippingcost == 0"
                     @click="
@@ -405,7 +405,7 @@
               </v-row>
               <v-row v-else>
                 <v-col>
-                  <v-btn
+                  <v-btn rounded
                     v-if="thisitem.localpickup != '' && thisitem.discount > 0"
                     block
                     color="primary lighten-1"
@@ -434,7 +434,7 @@
                     </div>
                   </v-btn>
                   <v-btn
-                    block
+                    block rounded
                     color="primary lighten-1"
                     v-if="thisitem.localpickup != '' && thisitem.discount == 0"
                     @click="
@@ -457,7 +457,7 @@
                   </v-btn> </v-col
                 ><v-col>
                   <v-btn
-                    block
+                    block rounded
                     color="primary lighten-1"
                     v-if="thisitem.shippingcost > 0 && thisitem.discount == 0"
                     @click="
@@ -487,7 +487,7 @@
                     </div>
                   </v-btn>
                   <v-btn
-                    block
+                    block rounded
                     color="primary lighten-1"
                     v-if="thisitem.shippingcost > 0 && thisitem.discount > 0"
                     @click="
@@ -761,15 +761,15 @@
               </v-list>
             </v-card>
      
-            <div class="overline text-center">Comments</div>
+            <div class="overline mt-4 text-center">Comments</div>
             <div v-if="thisitem.comments">
               <div
                 class="font-weight-light"
                 v-for="(single, i) in allcomments"
                 v-bind:key="i"
               >
-                <v-icon small left> mdi-message-text-outline</v-icon>
-                <v-chip class="ma-2" color="primary lighten-2">
+                <v-icon class="mb-n8" > mdi-account-check</v-icon>
+                <v-chip class="ma-2 rounded-0 rounded-br-xl rounded-t-xl text-no-wrap primary lighten-2">
                   {{ single }}
                 </v-chip>
               </div>
@@ -783,12 +783,12 @@
         </div>
       </div>
        <v-row class="pa-2 mx-auto">
-        <v-btn text @click="sellerInfo"> <v-icon v-if="!info" left> mdi-plus</v-icon
+        <v-btn text rounded @click="sellerInfo"> <v-icon v-if="!info" left> mdi-plus</v-icon
                       ><v-icon v-else left> mdi-close</v-icon
                       >Seller Details </v-btn>
        
         <v-spacer />
-          <v-btn
+          <v-btn rounded
           :disabled="!this.$store.state.account.address"
           text
           @click="createRoom"
