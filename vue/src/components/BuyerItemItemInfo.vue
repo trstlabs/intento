@@ -58,18 +58,18 @@
                 medium
               >
                 <v-icon left> mdi-package-variant-closed </v-icon>
-                Shipping Cost: $ {{ thisitem.shippingcost }} tokens
+                Shipping Cost: {{ thisitem.shippingcost }} tokens
               </v-chip>
 
               <v-chip
-                v-if="thisitem.bestestimator"
+                v-if="thisitem.estimationprice > 0"
                 class="ma-1 caption"
                 label
                 outlined
                 medium
               >
                 <v-icon left> mdi-check-all </v-icon>
-                Price: $ {{ thisitem.estimationprice }} tokens
+                Price: {{ thisitem.estimationprice }} tokens
               </v-chip>
 
               <v-chip

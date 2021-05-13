@@ -101,7 +101,7 @@
               >
 
               <v-chip
-                v-if="thisitem.bestestimator"
+                v-if="thisitem.estimationprice > 0"
                 class="ma-1 caption"
                 label
                 outlined
@@ -183,7 +183,7 @@
         </div>
 
         <v-card-actions>
-          <v-btn
+          <v-btn rounded
             color="blue"
             text
             @click="(showactions = !showactions), createStep()"
@@ -200,7 +200,7 @@
           </v-btn>
         </v-card-actions>
 
-        <v-expand-transition>
+        <v-expand-transition >
           <div class="pa-2 mx-auto" elevation="8" v-if="showactions">
             <v-divider></v-divider>
             <div>
@@ -209,42 +209,44 @@
 
                 <v-stepper-step
                   :complete="
-                    thisitem.bestestimator != '' || thisitem.estimationprice > 0
+                    thisitem.bestestimator != '' || thisitem.status != ''
                   "
                   step="2"
                 >
-                  Awaiting Estimation
+                  Awaiting Estimations
                 </v-stepper-step>
 
                 <v-stepper-content step="2">
                  <p type="caption">
-                    Awaiting a value determination. Meanwhile... help
-                    others by estimating items (and earn tokens)!
+                    Awaiting estimations. Meanwhile... help
+                    others by estimating other items (and earn tokens)!
                   </p>
                 </v-stepper-content>
 
                 <v-stepper-step :complete="thisitem.transferable" step="3">
-                  Accept Estimation
+                   Reveal estimation
                 </v-stepper-step>
+                
 
                 <v-stepper-content step="3">
-                  <div>
+               
+                  <div v-if="thisitem.bestestimator != 'Awaiting'">
                     <p type="caption">
-                      Wow! there is a price. You can sell
-                      {{ thisitem.title }} for ${{
+                      Wow! there is a final price. You can sell
+                      {{ thisitem.title }} for {{
                         thisitem.estimationprice
                       }}
-                      TPP tokens. By accepting, your item will be available to buy. Anyone can provide a prepayment to buy the
+                      <v-icon small right>$vuetify.icons.custom</v-icon> tokens. By accepting, your item will be available to buy. Anyone can provide a prepayment to buy the
                       item.
                     </p>
                     <v-row>
-                      <v-btn
+                      <v-btn rounded
                         class="ma-4"
                         color="primary"
                         v-if="
                           !flightit &&
                           hasAddress &&
-                          thisitem.bestestimator != '' &&
+                          thisitem.bestestimator != 'Awaiting' &&
                           thisitem.transferable != true
                         "
                         @click="submititemtransferable(true, thisitem.id)"
@@ -258,13 +260,13 @@
                         </div>
                       </v-btn>
 
-                      <v-btn
-                        class="ma-4"
+                      <v-btn rounded
+                        class="ma-4" 
                         color="default"
                         v-if="
                           !flightitn &&
                           hasAddress &&
-                          thisitem.bestestimator != '' &&
+                          thisitem.bestestimator != 'Awaiting' &&
                           thisitem.transferable != true
                         "
                         @click="submititemtransferable(false, thisitem.id)"
@@ -278,7 +280,27 @@
                         </div>
                       </v-btn>
                     </v-row>
-                  </div>
+                  </div>   <div v-else>
+ <p type="caption">
+                      The estimations came in. You can now reveal the final estimation price, after which you can accept or decline this price.
+                 <v-row>  <v-btn rounded
+                        class="ma-4"
+                        color="primary"
+                        v-if="
+               
+                          hasAddress &&
+                          thisitem.bestestimator == 'Awaiting' 
+                        "
+                        @click="submitRevealEstimation()"
+                        ><v-icon left> mdi-checkbox-marked-circle </v-icon>
+                      
+                        <div class="button__label" v-if="flightre">
+                      
+                          Revealing estimation...
+                        </div><span v-else>Reveal</span>
+                      </v-btn></v-row>
+                    </p>
+                    </div>
                 </v-stepper-content>
 
                 <v-stepper-step :complete="thisitem.buyer != ''" step="4">
@@ -353,7 +375,7 @@
                       I have shipped the item and provided the buyer with track
                       and trace
                     </label>
-                    <v-btn @click="submitItemShipping(tracking, thisitem.id)">
+                    <v-btn rounded @click="submitItemShipping(tracking, thisitem.id)">
                       Receive tokens
                       <div class="button__label" v-if="flightIS">
                         <div class="button__label__icon">
@@ -381,7 +403,7 @@
                     </app-text>
                   </div>
                          <div class="justify-end">
-                  <v-btn 
+                  <v-btn rounded
         :disabled="!this.$store.state.account.address"
         text 
         @click="createRoom"
@@ -468,10 +490,9 @@ export default {
   },
 
   computed: {
-    thisitem() {
-      this.loadingitem = true;
+   
+    thisitem(){
       return this.$store.getters.getItemByID(this.itemid);
-      this.loadingitem = false;
     },
 
     hasAddress() {
@@ -491,9 +512,13 @@ export default {
       return this.thisitem.comments.filter((com) => com != "") || [];
       //console.log( this.thisitem.comments.filter(i => i != ""));
     },
+
+  
   },
 
   methods: {
+
+    
     async removeItem() {
       this.loadingitem = true;
       this.flightre = true;
@@ -509,7 +534,69 @@ export default {
       this.flightre = false;
       this.loadingitem = false;
     },
+ async submitRevealEstimation() {
+      if (this.hasAddress) {
+       this.flightre = true;
+      
+        const fields = [
+          ["creator", 1, "string", "optional"],
+          ["itemid", 2, "string", "optional"],
+        ];
+        // const type = { type: "item" };
+        const body = { itemid: this.thisitem.id };
+        this.revealSubmit({ body, fields });
 
+      }
+    },
+    async revealSubmit({ body, fields }) {
+      const wallet = this.$store.state.wallet;
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgRevealEstimation`;
+      let MsgCreate = new Type(`MsgRevealEstimation`);
+      const registry = new Registry([[typeUrl, MsgCreate]]);
+
+      fields.forEach((f) => {
+        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
+      });
+
+      const client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+        { registry }
+      );
+      //console.log("TEST" + client)
+      const msg = {
+        typeUrl,
+        value: {
+          creator: this.$store.state.account.address,
+          ...body,
+        },
+      };
+      const fee = {
+        amount: [{ amount: "0", denom: "tpp" }],
+        gas: "200000",
+      };
+
+       const result = await client.signAndBroadcast(
+        this.$store.state.account.address,
+        [msg],
+        fee
+      );
+           this.flightre = false;
+      assertIsBroadcastTxSuccess(result);
+   
+      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
+         this.$router.push("/itemid="+ this.itemid)
+    //  console.log(this.newitem)
+      //this.revealed = true
+    // alert("The final price is " + this.newitem.estimationprice + " TPP")
+     // vm.$recompute('thisitem')
+      //console.log(this.thisitem)
+      //alert("Reveal request sent");
+
+     
+    },
+
+    
     async itemdeleteSubmit({ body, fields }) {
       const wallet = this.$store.state.wallet;
       const typeUrl = `/${process.env.VUE_APP_PATH}.MsgDeleteItem`;
