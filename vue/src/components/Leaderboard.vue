@@ -97,7 +97,7 @@ export default {
     
     let merged = [].concat.apply([], rs);
       let frequency = {};
-      merged.forEach(function (value) { if (value != '') {frequency[value.toLowerCase()] = 0;} });
+      merged.forEach(function (value) { if (value != '' && value != "Awaiting") {frequency[value.toLowerCase()] = 0;} });
 
       let uniques = merged.filter(function (value) {
         return ++frequency[value] == 1;

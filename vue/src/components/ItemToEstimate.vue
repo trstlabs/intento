@@ -723,7 +723,7 @@ value: 0,
         this.value = 0
         this.interval = setInterval(() => {
       
-        this.value += 10
+        this.value += 6
       }, 1000)
 
 
@@ -731,7 +731,7 @@ value: 0,
      
 
    
-        await this.submitRevealEstimation(itemid);
+        //await this.submitRevealEstimation(itemid);
          this.estimation = "";
         this.comment = "";
         //this.flight = false;
@@ -772,11 +772,11 @@ value: 0,
         [msg],
         fee
       ); 
-      if (!result.data){
+     /* if (!result.data){
         await this.submitRevealEstimation(this.item.id);
-      }
+      }*/
       assertIsBroadcastTxSuccess(result);
-      
+       this.getNewItemByIndex();
       console.log("success!");
 
       
@@ -792,7 +792,7 @@ value: 0,
         const fields = [
           ["estimator", 1, "string", "optional"],
           ["itemid", 2, "string", "optional"],
-          ["flag", 3, "bool", "optional"],
+        
         ];
 
         await this.flagSubmit({ ...type, body, fields });
@@ -924,7 +924,7 @@ value: 0,
         }
     },
 
-    async submitRevealEstimation(itemid) {
+ /*   async submitRevealEstimation(itemid) {
       if (this.hasAddress) {
        
         this.getNewItemByIndex();
@@ -971,7 +971,7 @@ value: 0,
         fee
       );
     },
-
+*/
     updateComment(newComment) {
       this.comment = newComment;
     },

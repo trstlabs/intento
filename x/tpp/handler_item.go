@@ -112,43 +112,12 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 
 	item := k.GetItem(ctx, msg.Itemid)
 
-	if item.Estimatorlist == nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item does not have estimators ")
+
+	if item.Bestestimator != "Awaiting" {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item cannot be revealed")
 	}
 
-	//[optional idea]can maybe replace estimatorlist hash with estimatorestimationlist hash to reduce computation
-	var estimatorlistlen = len(item.Estimatorlist)
-	var estimatorlistlenstring = strconv.Itoa(estimatorlistlen)
-	var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlenstring + item.Creator))
-	var estimatorlisthashstring = hex.EncodeToString(estimatorlistlenhash[:])
-
-	if estimatorlisthashstring != item.Estimationcounthash {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Estimation count has not been reached, final estimation can not be made")
-	}
-
-	if item.Bestestimator != "" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has an estimation price")
-	}
-
-	//remove item when it is flagged a lot w/ at least an estimator
-	if (int64(estimatorlistlen)/2) < item.Flags && estimatorlistlen > 0 {
-
-		for _, element := range item.Estimatorlist {
-			//apply this to each element
-
-			key := msg.Itemid + "-" + element
-			k.DeleteEstimator(ctx, key)
-
-		}
-		item.Bestestimator = ""
-		item.Lowestestimator = ""
-		item.Highestestimator = ""
-		item.Estimatorlist = nil
-		item.Status = "Removed (Reported too often)"
-		k.DeleteItem(ctx, msg.Itemid)
-
-	}
-
+	
 	var Commentlist []string
 	var EstimationList []int64
 
@@ -182,6 +151,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 
 	}
 
+
 	//create median
 	medianIndex := int64(math.Floor(float64(len(EstimationList))-1.0) / 2)
 	sortedList := make([]int64, len(EstimationList))
@@ -190,7 +160,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	median := sortedList[medianIndex]
 	//var Estimationprice = sdk.NewInt(median)
 
-	///delete item when deposit is higher than 25% of the item price
+	///delete item when deposit is higher than 25% of the item price (Can be altered through governance)
 	if  item.Depositamount > (median / 4) {
 		//returns each element
 		for _, element := range item.Estimatorlist {
@@ -224,6 +194,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 			item.Estimationprice = median
 			item.Comments = Commentlist
 			k.SetItem(ctx, item)
+			break
 		}
 
 	}
@@ -369,9 +340,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		item.Status = "Shipped"
 		k.SetItem(ctx, item)
 		k.SetBuyer(ctx, buyer)
-	}
-
-	if msg.Tracking == false {
+	} else {
 		repayment := bigintestimationprice.Add(bigintshipping)
 		repaymentCoins := sdk.NewCoin("tpp", repayment)
 

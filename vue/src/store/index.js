@@ -253,8 +253,9 @@ export default new Vuex.Store({
     },
 
     async locationBuyItemList({ commit, state }, input) {
+
       if (!!input) { 
-      const rs = state.buyItemList.filter(item => item.shippingregion.find(loc => loc.includes(input)) && item.transferable === true)
+      const rs = state.buyItemList.filter(item => item.shippingregion.find(loc => loc.toLowerCase()).includes(input.toLowerCase()))
         ;
 
       commit("updateBuyItemList", rs);}
@@ -278,7 +279,7 @@ export default new Vuex.Store({
       commit("updateBuyItemList", rs);}
     },
 
-    
+   
 
     async tagToEstimateList({ commit, state }, input) {
       if (!!input) {  //const A = state.data.item.filter(item => !item.buyer && item.tags.find(tags => tags.includes(input)) && item.transferable === false)
@@ -386,7 +387,7 @@ console.log("test")
    
 
     async setToEstimateList({ commit, state }) {
-      const A = state.data.item.filter(item => item.estimationprice < 1 && item.status == '');
+      const A = state.data.item.filter(item => item.estimationprice < 1 && item.status == '' && item.bestestimator == '');
       const B = state.estimatorItemList;
      /* const rs = A.filter(a => !B.map(b => b.itemid).includes(a.id));*/
       //console.log(A);
@@ -437,7 +438,27 @@ console.log("test")
 
       commit("setBuySellerItemList", rs);}
     },
-  
+async updateItem({ commit, state }, input) {
+      console.log(input)
+      const url = `${process.env.VUE_APP_API}/${process.env.VUE_APP_PATH.replace(/\./g, '/')}/${"item/"+ input}`;
+      console.log(url)
+      axios.get(url).then(result => {
+        let itemindex = state.data.item.findIndex(item => item.id == result.data.Item.id)
+      //state.data.item.map(item => updated.id === item.id || item);
+      state.data.item[itemindex] = result.data.Item
+
+      console.log(result.data.Item)
+      console.log(itemindex)
+      console.log(state.data.item[itemindex])
+      return result.data.Item
+
+    }, error => {
+        console.error("Got nothing from node")
+    })
+
+
+},
+
   },
   getters: {
     account: state => state.account, bankBalances: state => state.bankBalances, getSellerItemList: state => state.sellerItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getSellerActionList: state => state.sellerActionList, getTagList: state => state.tagList, getLocationList: state => state.locationList, getRegionList: state => state.regionList, getBuySellerList: state => state.buySellerList,

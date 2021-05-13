@@ -288,7 +288,7 @@
             <v-divider class="mx-4 pa-2" />
             <div
               class="text-center pa-2"
-              v-if="thisitem.estimationprice != 0 && thisitem.status == ''"
+              v-if="thisitem.transferable && thisitem.status == ''"
             >
               <v-row class="mx-4">
                 <v-btn x-small icon @click="iteminfo = !iteminfo">
@@ -760,7 +760,7 @@
                 </v-list-item-group>
               </v-list>
             </v-card>
-     
+     <v-row> <div class="text-center my-12" v-if="this.$store.state.account.address == (thisitem.seller || thisitem.buyer)"> <v-btn rounded to="/account"> To Actions</v-btn></div></v-row>
             <div class="overline mt-4 text-center">Comments</div>
             <div v-if="thisitem.comments">
               <div

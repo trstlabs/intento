@@ -129,10 +129,10 @@ func (msg *MsgDeleteEstimator) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgCreateFlag(estimator string, flag bool, itemid string) *MsgCreateFlag {
+func NewMsgCreateFlag(estimator string, itemid string) *MsgCreateFlag {
 	return &MsgCreateFlag{
 		Itemid:    itemid,
-		Flag:      flag,
+		
 		Estimator: estimator,
 	}
 }

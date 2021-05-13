@@ -366,7 +366,7 @@
               </v-chip>
 
               <v-chip
-                v-if="thisitem.bestestimator"
+                v-if="thisitem.estimationprice > 0"
                 class="ma-1 caption font-weight-light "
                 
                 outlined

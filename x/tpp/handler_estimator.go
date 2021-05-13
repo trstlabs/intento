@@ -21,14 +21,14 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 	item := k.GetItem(ctx, msg.Itemid)
 
 	if item.Estimationprice > 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("item %s does exist", msg.Itemid))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has an estimation")
 	}
 
 	///for production: check if estimator is item owner
 	if msg.Estimator == item.Creator {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "estimator cannot be item creator")
 	}
-
+	
 	//checks whether the estimator already estimated the item
 
 	if k.HasEstimator(ctx, msg.Itemid+"-"+msg.Estimator) {
@@ -39,12 +39,12 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit invalid")
 	}
 
-	//checks whether estimationcount has been reached
-	var estimatorlistlen = strconv.Itoa(len(item.Estimatorlist))
+	//checks whether estimationcount will be reached
+	var estimatorlistlen = strconv.Itoa(len(item.Estimatorlist) + 1)
 	var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlen + item.Seller))
 	var estimatorlisthashstring = hex.EncodeToString(estimatorlistlenhash[:])
 	if estimatorlisthashstring == item.Estimationcounthash {
-		return nil, sdkerrors.Wrap(nil, "final estimation has already been made, estimation can not be added")
+		item.Bestestimator = "Awaiting"
 	}
 
 	var estimatorestimationhash = sha256.Sum256([]byte(strconv.FormatInt(msg.Estimation, 10) + msg.Estimator))
@@ -123,12 +123,7 @@ if msg.Estimator == item.Highestestimator || msg.Estimator == item.Lowestestimat
 }
 
 func handleMsgCreateFlag(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateFlag) (*sdk.Result, error) {
-	var estimator = types.Estimator{
-		Estimator: msg.Estimator,
-
-		Itemid: msg.Itemid,
-	}
-
+	
 	// Checks that the element exists
 	if k.HasEstimator(ctx, msg.Itemid+"-"+msg.Estimator) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("key %s does exist", msg.Itemid+"-"+msg.Estimator))
@@ -140,14 +135,30 @@ func handleMsgCreateFlag(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateF
 		return nil, sdkerrors.Wrap(nil, "item is already estimated")
 	}
 
-	if msg.Flag == true {
-		item.Flags = item.Flags + 1
-		//test
-		k.SetEstimator(ctx, estimator)
-		k.SetItem(ctx, item)
+
+		
+
+	
+
+
+	//remove item when it is flagged enough
+	if int64(len(item.Estimatorlist)/2) < item.Flags + 1 {
+
+		for _, element := range item.Estimatorlist {
+			//apply this to each element
+			key := msg.Itemid + "-" + element
+			k.DeleteEstimator(ctx, key)
+
+		}
+		item.Bestestimator = ""
+		item.Lowestestimator = ""
+		item.Highestestimator = ""
+		item.Estimatorlist = nil
+		item.Status = "Removed (Item flagged)"
+		k.DeleteItem(ctx, msg.Itemid)
+		return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 	}
-
-	k.SetEstimator(ctx, estimator)
-
+	item.Flags = item.Flags + 1
+	k.SetItem(ctx, item)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

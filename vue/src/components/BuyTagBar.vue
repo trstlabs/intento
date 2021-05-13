@@ -1,6 +1,8 @@
 <template>
   <div v-if="advanced">
-      <div class="mx-4"  v-if="applied[0]" > <p class="caption mb-0 mt-2">Applied filters: </p> <v-chip-group 
+   <div class="caption mx-4" v-if="availableItems == 0" >None available<v-icon @click="clearList()" right>
+        mdi-refresh
+      </v-icon></div> <div class="mx-4"  v-else-if="applied[0]" > <p class="caption mb-0 mt-2">Applied filters: </p> <v-chip-group 
     column
         ><v-icon @click="clearList()" small left>
         mdi-close
@@ -12,10 +14,10 @@
       </v-icon>{{ filter }}
           </v-chip></div>
         </v-chip-group></div>  <v-divider class="ma-4"/>    
-    <v-card color="secondary lighten-3" class="pa-2 elevation-5 rounded-lg">
+    <v-card color="secondary lighten-3" class="pa-2 elevation-5 rounded-xl">
 
    
-   <p class="caption mb-2">Categories: </p>
+   <p class="caption my-2">Categories: </p>
     <v-chip-group 
     multiple
            show-arrows
@@ -31,26 +33,37 @@
     <p class="caption">Region: </p>
     <v-select
           append-icon="mdi-earth"
-          dense
+          
           v-model="selectedFilter"
           v-on:input="updateLocation(selectedFilter)"
           cache-items
           :items="locations"
           label="Region"
           clearable
-          
-          outlined
+          solo
+          class="rounded-xl"
      
           hint="Specify region"
         ></v-select>
-         <v-row class="ma-2"> <v-col>
+        
+    <v-text-field  solo clearable
+    prepend-inner-icon="mdi-magnify"
+     class="rounded-xl" type="text"
+        placeholder="Search title and description..."
+        v-model.trim="input"
+        v-on:input="search()"
+        ref="input"
+      background-color="secondary lighten-3" 
+       > 
+
+    </v-text-field> <v-row class="ma-2"> <v-col>
        <p class="caption">Price minimum: </p>
      
         <v-text-field
               label="Amount"
               type="number"
               v-model="minPrice"
-           
+            :rules="[rules.price]"
 
         append-icon="$vuetify.icons.custom"
              
@@ -62,22 +75,11 @@
               label="Amount"
               type="number"
               v-model="maxPrice"
-           
+            :rules="[rules.price]"
 
                append-icon="$vuetify.icons.custom"
             ></v-text-field> </v-col> <v-col> <v-btn icon @click="updatePriceMax"><v-icon>mdi-check</v-icon> </v-btn> <v-btn icon @click="clearList"><v-icon>mdi-close</v-icon> </v-btn> </v-col></v-row>
    
-    <v-text-field  solo clearable
-    prepend-inner-icon="mdi-magnify"
-     class="rounded-lg" type="text"
-        placeholder="Search title and description..."
-        v-model.trim="input"
-        v-on:input="search()"
-        ref="input"
-      background-color="secondary lighten-3" 
-       > 
-
-    </v-text-field>
      </v-card>
  
  <v-divider class="ma-4"/>
@@ -99,8 +101,12 @@ export default {
       maxPrice: 0,
       input: '',
       applied: [],
+       rules: {
       
-
+          price: value => value > 0 || 'Must be positive :)',
+       
+          },
+   
   };
   },
   /*mounted() {
@@ -117,7 +123,23 @@ export default {
       return this.$store.getters.getTagList },
      //return ["asd","sdaf"] },
   locations() {
+
+    
       return this.$store.getters.getLocationList;
+    },
+     availableItems() {
+       let rs = this.$store.getters.getBuyItemList.length;
+       if (rs == 0) {
+          this.selectedFilter = "",
+      this.minPrice = 0,
+     this.maxPrice = 0,
+      this.input = '',
+      this.applied = []
+     
+       }
+   
+return rs
+      
     },
   },
 
@@ -130,7 +152,7 @@ export default {
       this.$store.dispatch("tagBuyItemList", tag);},
 
        updateLocation(tag) {
-        
+        console.log(tag)
         this.applied.push(tag);
       this.$store.dispatch("locationBuyItemList", tag);},
       
@@ -156,10 +178,11 @@ this.maxPrice = ''
    this.applied = []
       let array = this.$store.state.data.item.filter(item => !item.buyer && item.transferable === true)
       
-      let rs = array.filter(item => item.description.toLowerCase().includes(this.input) || item.title.toLowerCase().includes(this.input)
+      let rs = array.filter(item => item.description.toLowerCase().includes(this.input.toLowerCase()) || item.title.toLowerCase().includes(this.input.toLowerCase())
       );
       this.applied.push(this.input)
       this.$store.commit("updateBuyItemList", rs);
+      
     },
     },
    

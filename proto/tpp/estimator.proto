@@ -43,5 +43,5 @@ message MsgDeleteEstimator {
 message MsgCreateFlag{
   string estimator = 1;
   string itemid = 2;
-  bool flag = 3;
+
 }

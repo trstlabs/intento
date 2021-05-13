@@ -99,7 +99,7 @@
       Shipping cost: {{ thisitem.shippingcost }}<v-icon small right>$vuetify.icons.custom</v-icon>  
     </v-chip>
 
-    <v-chip v-if="thisitem.bestestimator"
+    <v-chip v-if="thisitem.estimationprice > 0"
       class="ma-1"
       label
       outlined
