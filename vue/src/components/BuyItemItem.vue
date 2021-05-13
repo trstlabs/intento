@@ -4,42 +4,29 @@
     <v-card v-if="!loadingitem" class="pa-2 ma-auto" elevation="0" rounded="lg">
       <v-row class="ma-0 pa-2 mb-2 text-center"
         ><v-col cols="2">
-          <v-tooltip bottom  v-if="thisitem.creator != thisitem.seller">
-      <template v-slot:activator="{ on, attrs }">
-        <span
-          v-bind="attrs"
-          v-on="on"
-        ><v-icon
-            color="primary lighten-2"
-            icon
-            plain
-           
-          >
-            mdi-repeat
-          </v-icon></span>
-      </template>
-      <span>This item is reposted</span>
-    </v-tooltip>
+          <v-tooltip bottom v-if="thisitem.creator != thisitem.seller">
+            <template v-slot:activator="{ on, attrs }">
+              <span v-bind="attrs" v-on="on"
+                ><v-icon color="primary lighten-2" icon plain>
+                  mdi-repeat
+                </v-icon></span
+              >
+            </template>
+            <span>This item is reposted</span>
+          </v-tooltip>
 
-     <v-tooltip bottom  v-else>
-      <template v-slot:activator="{ on, attrs }">
-        <span
-          v-bind="attrs"
-          v-on="on"
-        ><v-icon
-            color="primary lighten-2"
-            icon
-            plain
-           
-          >
-            mdi-check-all
-          </v-icon></span>
-      </template>
-     <!-- <span v-if="thisitem.estimatorlist[0]">This item is estimated by {{thisitem.estimatorlist.length}} estimators</span>-<span v-else>Priced through estimations</span>--><span>Priced through estimations</span>
-    </v-tooltip>
-          
-
-          
+          <v-tooltip bottom v-else>
+            <template v-slot:activator="{ on, attrs }">
+              <span v-bind="attrs" v-on="on"
+                ><v-icon color="primary lighten-2" icon plain>
+                  mdi-check-all
+                </v-icon></span
+              >
+            </template>
+            <!-- <span v-if="thisitem.estimatorlist[0]">This item is estimated by {{thisitem.estimatorlist.length}} estimators</span>-<span v-else>Priced through estimations</span>--><span
+              >Priced through estimations</span
+            >
+          </v-tooltip>
         </v-col>
         <v-col cols="8">
           <p class="display-1 font-weight-thin">
@@ -273,13 +260,19 @@
                       </v-card>
                     </template>
                   </v-dialog>
-                  <v-icon left class="mb-n8" > mdi-account-edit</v-icon>
-                  <v-chip class="ma-2  rounded-0 rounded-br-xl rounded-t-xl" color="primary lighten-2" >
+                  <v-icon left class="mb-n8"> mdi-account-edit</v-icon>
+                  <v-chip
+                    class="ma-2 rounded-0 rounded-br-xl rounded-t-xl"
+                    color="primary lighten-2"
+                  >
                     {{ thisitem.note }}
                   </v-chip>
                 </div>
-                <div v-else class="body-1 text-right ">
-                  <v-chip class="ma-2 rounded-0 rounded-bl-xl rounded-t-xl" color="primary darken-1">
+                <div v-else class="body-1 text-right">
+                  <v-chip
+                    class="ma-2 rounded-0 rounded-bl-xl rounded-t-xl"
+                    color="primary darken-1"
+                  >
                     {{ thisitem.note }} </v-chip
                   ><v-icon class="mb-n8" right> mdi-account</v-icon>
                 </div>
@@ -346,7 +339,8 @@
               </v-img>
               <v-row v-if="thisitem.creator == thisitem.seller">
                 <v-col>
-                  <v-btn rounded
+                  <v-btn
+                    rounded
                     block
                     color="primary lighten-1"
                     :disabled="thisitem.localpickup == ''"
@@ -370,7 +364,8 @@
                   </v-btn> </v-col
                 ><v-col>
                   <v-btn
-                    block rounded
+                    block
+                    rounded
                     color="primary lighten-1"
                     :disabled="thisitem.shippingcost == 0"
                     @click="
@@ -405,7 +400,8 @@
               </v-row>
               <v-row v-else>
                 <v-col>
-                  <v-btn rounded
+                  <v-btn
+                    rounded
                     v-if="thisitem.localpickup != '' && thisitem.discount > 0"
                     block
                     color="primary lighten-1"
@@ -434,7 +430,8 @@
                     </div>
                   </v-btn>
                   <v-btn
-                    block rounded
+                    block
+                    rounded
                     color="primary lighten-1"
                     v-if="thisitem.localpickup != '' && thisitem.discount == 0"
                     @click="
@@ -457,7 +454,8 @@
                   </v-btn> </v-col
                 ><v-col>
                   <v-btn
-                    block rounded
+                    block
+                    rounded
                     color="primary lighten-1"
                     v-if="thisitem.shippingcost > 0 && thisitem.discount == 0"
                     @click="
@@ -487,7 +485,8 @@
                     </div>
                   </v-btn>
                   <v-btn
-                    block rounded
+                    block
+                    rounded
                     color="primary lighten-1"
                     v-if="thisitem.shippingcost > 0 && thisitem.discount > 0"
                     @click="
@@ -705,7 +704,7 @@
                       <v-icon> mdi-repeat</v-icon>
                     </v-list-item-icon>
 
-                    <v-list-item-content> 
+                    <v-list-item-content>
                       <v-list-item-title class="font-weight-light"
                         ><v-row
                           ><v-col>Original Price: </v-col>
@@ -719,7 +718,7 @@
                       >
                     </v-list-item-content>
                   </v-list-item>
-                  <v-list-item v-else-if="thisitem.estimationprice">
+                  <v-list-item v-else-if="thisitem.estimationprice > 0">
                     <v-list-item-icon>
                       <v-icon> mdi-check-all </v-icon>
                     </v-list-item-icon>
@@ -760,7 +759,19 @@
                 </v-list-item-group>
               </v-list>
             </v-card>
-     <v-row> <div class="text-center my-12" v-if="this.$store.state.account.address == (thisitem.seller || thisitem.buyer)"> <v-btn rounded to="/account"> To Actions</v-btn></div></v-row>
+            <v-row
+              v-if="
+                this.$store.state.account.address ==
+                (thisitem.seller || thisitem.buyer)
+              "
+              class="justify-center my-4"
+            >
+              <v-divider class="ma-4" />
+              <div>
+                <v-btn outlined rounded to="/account">Go To Actions</v-btn>
+              </div>
+              <v-divider class="ma-4"
+            /></v-row>
             <div class="overline mt-4 text-center">Comments</div>
             <div v-if="thisitem.comments">
               <div
@@ -768,8 +779,10 @@
                 v-for="(single, i) in allcomments"
                 v-bind:key="i"
               >
-                <v-icon class="mb-n8" > mdi-account-check</v-icon>
-                <v-chip class="ma-2 rounded-0 rounded-br-xl rounded-t-xl text-no-wrap primary lighten-2">
+                <v-icon class="mb-n8"> mdi-account-check</v-icon>
+                <v-chip
+                  class="ma-2 rounded-0 rounded-br-xl rounded-t-xl text-no-wrap primary lighten-2"
+                >
                   {{ single }}
                 </v-chip>
               </div>
@@ -782,19 +795,21 @@
           </div>
         </div>
       </div>
-       <v-row class="pa-2 mx-auto">
-        <v-btn text rounded @click="sellerInfo"> <v-icon v-if="!info" left> mdi-plus</v-icon
-                      ><v-icon v-else left> mdi-close</v-icon
-                      >Seller Details </v-btn>
-       
+      <v-row class="pa-2 mx-auto">
+        <v-btn text rounded @click="sellerInfo">
+          <v-icon v-if="!info" left> mdi-plus</v-icon
+          ><v-icon v-else left> mdi-close</v-icon>Seller Details
+        </v-btn>
+
         <v-spacer />
-          <v-btn rounded
+        <v-btn
+          rounded
           :disabled="!this.$store.state.account.address"
           text
           @click="createRoom"
-        ><v-icon left> mdi-message-text</v-icon>
-          Message Seller</v-btn
-        >     </v-row>
+          ><v-icon left> mdi-message-text</v-icon> Message Seller</v-btn
+        >
+      </v-row>
       <div class="pa-2 mx-auto caption" v-if="info">
         <span>
           <p class="text-center">
@@ -1065,6 +1080,8 @@ console.log(body)
       }
       assertIsBroadcastTxSuccess(result);
       alert("Transaction sent");
+         this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
+         this.$router.push("/account")
     },
 
     show(photo) {
@@ -1074,7 +1091,7 @@ console.log(body)
     },
 
     sellerInfo() {
-       this.$store.dispatch("setBuySellerItemList", this.thisitem.seller);
+      this.$store.dispatch("setBuySellerItemList", this.thisitem.seller);
       let rs = this.SellerItems.filter((i) => i.buyer != "");
       this.sold = "no";
       if (rs != "") {
@@ -1083,7 +1100,7 @@ console.log(body)
 
       this.info = !this.info;
     },
-     async createRoom() {
+    async createRoom() {
       if (this.$store.state.user) {
         const user = await usersRef
           .where("username", "==", this.thisitem.seller)

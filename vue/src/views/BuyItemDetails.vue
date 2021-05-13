@@ -5,7 +5,7 @@
 <template>
   <div>
     <v-app>
-      <v-main :class="($vuetify.theme.dark) ? 'grey darken-4' : 'secondary lighten-2'">
+       <v-main :class="($vuetify.theme.dark) ? 'grey darken-4' : 'primary lighten-5'" >
        <v-container class="pb-6 pt-0 px-0" >
           
          

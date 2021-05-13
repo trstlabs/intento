@@ -17,12 +17,12 @@
             <v-carousel-item v-for="(photo, i) in photos" :key="i" :src="photo">
             </v-carousel-item>
           </v-carousel>
-          <v-divider class="ma-2" />
+       
 
           <v-row align="start">
             <v-col>
               <v-card elevation="0">
-                <div class="pl-4 overline text-center">Description</div>
+                <div class="mt-4 overline text-center">Description</div>
                 <v-card-text>
                   <div class="body-1">
                     {{ thisitem.description }}
@@ -31,71 +31,71 @@
               </v-card>
 
               <v-divider class="ma-2" />
-              <v-chip class="ma-1 caption" label outlined medium>
-                <v-icon left> mdi-account-badge </v-icon>
+              <v-chip class="ma-1 caption" outlined>
+                <v-icon small left> mdi-account-badge </v-icon>
                 TPP ID: {{ thisitem.id }}
               </v-chip>
 
               <v-chip
                 v-if="thisitem.localpickup != ''"
                 class="ma-1 caption"
-                label
+                
                 target="_blank"
                 outlined
-                medium
+                
                 :href="
                   'https://www.google.com/maps/search/?api=1&query=' +
                   thisitem.localpickup
                 "
-                ><v-icon left> mdi-map-marker </v-icon>Pickup</v-chip
+                ><v-icon small left> mdi-map-marker </v-icon>Pickup</v-chip
               >
 
               <v-chip
                 v-if="thisitem.shippingcost > 0"
                 class="ma-1 caption"
-                label
+                
                 outlined
-                medium
+                
               >
-                <v-icon left> mdi-package-variant-closed </v-icon>
+                <v-icon small left> mdi-package-variant-closed </v-icon>
                 Shipping Cost: {{ thisitem.shippingcost }} tokens
               </v-chip>
 
               <v-chip
                 v-if="thisitem.estimationprice > 0"
                 class="ma-1 caption"
-                label
+                
                 outlined
-                medium
+                
               >
-                <v-icon left> mdi-check-all </v-icon>
+                <v-icon small left> mdi-check-all </v-icon>
                 Price: {{ thisitem.estimationprice }} tokens
               </v-chip>
 
               <v-chip
                 v-if="thisitem.status"
                 class="ma-1 caption"
-                label
+                
                 outlined
-                medium
+                
               >
-                <v-icon left> mdi-clock-time-three-outline </v-icon>
+                 <v-icon small left> mdi-tune </v-icon>
                 Status: {{ thisitem.status }}
               </v-chip>
 
               <v-chip
                 v-else-if="(thisitem.transferable = true)"
                 class="ma-1 caption"
-                label
+                
                 outlined
-                medium
+                
               >
-                <v-icon left> mdi-swap-horizontal </v-icon>
+                <v-icon small left> mdi-swap-horizontal </v-icon>
                 Item Transferable
               </v-chip>
 
-              <v-chip class="ma-1 caption" medium label outlined>
-                <v-icon left> mdi-account-outline </v-icon>
+              <v-chip class="ma-1 caption"   outlined>
+                <v-icon small left> mdi-account </v-icon>
                 Seller: {{ thisitem.seller }}
               </v-chip>
             </v-col>
@@ -111,7 +111,7 @@
         </div>
 
         <v-card-actions>
-          <v-btn
+          <v-btn rounded
             color="blue"
             text
             @click="(showactions = !showactions), createStep()"
@@ -214,7 +214,7 @@
                     "
                   >
                     <p>The transfer is complete. Enjoy your {{thisitem.tags[0]}}!</p>
-                    <v-btn block outlined text @click="resell = !resell"> <span v-if="!resell"><v-icon left> mdi-repeat </v-icon> Resell item </span><span v-else> Cancel</span></v-btn>
+                    <v-btn rounded block outlined text @click="resell = !resell"> <span v-if="!resell"><v-icon left> mdi-repeat </v-icon> Resell item </span><span v-else> Cancel</span></v-btn>
                     <div class="pa-2 my-4" v-if="resell">
                           <p class="overline"><v-icon left> mdi-repeat </v-icon> Repost</p>
                       <v-textarea
@@ -345,7 +345,7 @@
                           </v-select> </v-col
                       ></v-row>
 
-                      <v-btn  outlined block text @click="submitItemResell"> <v-icon left> mdi-repeat </v-icon>Resell</v-btn>
+                      <v-btn rounded outlined block text @click="submitItemResell"> <v-icon left> mdi-repeat </v-icon>Resell</v-btn>
                     </div>
                   </div> <div v-else>The item status is {{ thisitem.status }}.</div>
                    
@@ -369,7 +369,7 @@
                         auto-grow
                       >
                       </v-textarea>
-                      </div> <div class="pt-2"><v-btn  outlined @click="makeReview = !makeReview">  <span v-if="!makeReview"><v-icon left> mdi-star </v-icon> Rate item</span><span v-else> Cancel</span></v-btn>   <v-btn v-if="makeReview" outlined @click="submitItemRating()"> <v-icon left> mdi-star </v-icon>Post Rating</v-btn></div>
+                      </div> <div class="pt-2"><v-btn rounded outlined @click="makeReview = !makeReview">  <span v-if="!makeReview"><v-icon left> mdi-star </v-icon> Rate item</span><span v-else> Cancel</span></v-btn>   <v-btn v-if="makeReview" outlined @click="submitItemRating()"> <v-icon left> mdi-star </v-icon>Post Rating</v-btn></div>
                 </v-stepper-content>
               </v-stepper>
             </div>
@@ -536,6 +536,9 @@ export default {
       );
       assertIsBroadcastTxSuccess(result);
       alert("Transaction sent");
+     
+      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
+         this.$router.push("/itemid="+ this.itemid)
     },
 
     async deleteSubmit({ body, fields }) {
@@ -636,6 +639,9 @@ export default {
       );
       assertIsBroadcastTxSuccess(result);
       alert("Resell request sent");
+       
+      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
+         this.$router.push("/itemid="+ this.itemid)
     },
     async getThisItem() {
       await submitrevealestimation();
@@ -707,6 +713,9 @@ export default {
       );
       assertIsBroadcastTxSuccess(result);
       alert("Review sent");
+       
+      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
+         this.$router.push("/itemid="+ this.itemid)
     },
     async getThisItem() {
       await submitrevealestimation();

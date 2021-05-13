@@ -47,129 +47,280 @@
 
       
               <v-divider class="ma-2" />
-              <v-chip class="ma-1 caption" label outlined medium>
-                <v-icon left> mdi-account-badge-outline </v-icon>
-                TPP ID: {{ thisitem.id }}
-              </v-chip>
+               <div class="overline mb-2 text-center">Information</div>
 
-              <v-chip
-                v-if="thisitem.localpickup != ''"
-                class="ma-1 caption"
-                label
-                outlined
-                medium
-              >
-                <v-icon left> mdi-map-marker-outline </v-icon>
-                Pickup
-              </v-chip>
-              <v-chip class="ma-1 caption" label outlined medium>
-                <v-icon left> mdi-star-outline </v-icon>
-                Condition: {{ thisitem.condition }}/5
-              </v-chip>
+            <v-dialog transition="dialog-bottom-transition" max-width="300">
+              <template v-slot:activator="{ on, attrs }">
+                <span v-bind="attrs" v-on="on">
+                  <v-chip
+                    style="cursor: pointer"
+                    class="ma-1 font-weight-light"
+                    outlined
+                    medium
+                    >Condition:
+                    <v-rating
+                      :value="Number(thisitem.condition)"
+                      readonly
+                      color="primary darken-1"
+                      background-color="primary lighten-1"
+                      small
+                      dense
+                    ></v-rating>
+                  </v-chip>
+                </span>
+              </template>
+              <template v-slot:default="dialog">
+                <v-card>
+                  <v-toolbar color="default"
+                    >Condition (provided by you)</v-toolbar
+                  >
+                  <v-card-text class="text-left">
+                    <div class="text-p pa-2">
+                      <v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star-outline </v-icon
+                      ><v-icon left small> mdi-star-outline </v-icon
+                      ><v-icon left small> mdi-star-outline </v-icon
+                      ><v-icon left small> mdi-star-outline </v-icon>
+                      Bad
+                    </div>
+                    <div class="text-p pa-2">
+                      <v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star-outline </v-icon
+                      ><v-icon left small> mdi-star-outline </v-icon
+                      ><v-icon left small> mdi-star-outline </v-icon>Fixable
+                    </div>
+                    <div class="text-p pa-2">
+                      <v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star-outline </v-icon
+                      ><v-icon left small> mdi-star-outline </v-icon>
+                      Good
+                    </div>
+                    <div class="text-p pa-2">
+                      <v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star-outline </v-icon>
+                      As New
+                    </div>
+                    <div class="text-p pa-2">
+                      <v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star </v-icon
+                      ><v-icon left small> mdi-star </v-icon>
+                      Perfect
+                    </div>
+                  </v-card-text>
+                  <v-card-actions class="justify-end">
+                    <v-btn text @click="dialog.value = false">Close</v-btn>
+                  </v-card-actions>
+                </v-card>
+              </template>
+            </v-dialog>
 
-              <v-chip
-                v-if="thisitem.shippingcost"
-                class="ma-1 caption"
-                label
-                outlined
-                medium
-              >
-                <v-icon left> mdi-package-variant </v-icon>
-                Shipping available
-              </v-chip>
+            <v-chip
+              v-if="thisitem.localpickup"
+              class="ma-1 font-weight-light"
+              target="_blank"
+              :href="
+                'https://www.google.com/maps/search/?api=1&query=' +
+                thisitem.localpickup
+              "
+              outlined
+              ><v-icon left> mdi-map-marker-outline </v-icon> Pickup
+              Location</v-chip
+            >
 
-              <v-chip
-                v-if="thisitem.shippingcost"
-                class="ma-1 caption"
-                label
-                outlined
-                medium
-              >
-                <v-icon left> mdi-package-variant-closed </v-icon>
-                Shipping cost: {{ thisitem.shippingcost}} <v-icon small right>$vuetify.icons.custom</v-icon>  
-              </v-chip>
-              <v-chip :to="{ name: 'SearchRegion', params: { region: country } }"
-                outlined
-                medium
-                label
-                class="ma-1 caption"
-                v-for="country in thisitem.shippingregion"
-                :key="country"
-              >
-                <v-icon small left> mdi-flag-variant-outline </v-icon
-                >{{ country }}</v-chip
-              >
+            <v-chip
+              :to="{ name: 'SearchRegion', params: { region: country } }"
+              outlined
+              class="ma-1 font-weight-light text-uppercase"
+              v-for="country in thisitem.shippingregion"
+              :key="country"
+            >
+              <v-icon small left> mdi-flag-variant-outline </v-icon
+              >{{ country }}</v-chip
+            >
 
-              <v-chip
-                v-if="thisitem.estimationprice > 0"
-                class="ma-1 caption"
-                label
-                outlined
-                medium
-              >
-                <v-icon left> mdi-check-all </v-icon>
-                Price: ${{ thisitem.estimationprice }}<v-icon small right>$vuetify.icons.custom</v-icon>  
-              </v-chip>
+            <v-chip
+              :to="{ name: 'SearchTag', params: { tag: tag } }"
+              outlined
+              class="ma-1 font-weight-light text-capitalize"
+              v-for="tag in thisitem.tags"
+              :key="tag"
+            >
+              <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
+            >
+            <v-card class="ma-1 rounded-t-xl" outlined>
+              <v-list dense disabled>
+                <v-subheader>About</v-subheader>
+                <v-list-item-group>
+                  <v-list-item >
+                    <v-list-item-icon>
+                      <v-icon >mdi-account-badge-outline </v-icon>
+                    </v-list-item-icon>
 
-              <v-chip
-                v-if="thisitem.transferable"
-                class="ma-1 caption"
-                label
-                outlined
-                medium
-              >
-                <v-icon left> mdi-swap-horizontal </v-icon>
-                Transferable
-              </v-chip>
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>TPP ID: </v-col>
+                          <v-col>{{ thisitem.id }}</v-col></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-if="thisitem.creator != thisitem.seller">
+                    <v-list-item-icon>
+                      <v-icon> mdi-account-outline</v-icon>
+                    </v-list-item-icon>
 
-              <v-chip
-                v-if="thisitem.buyer"
-                class="ma-1 caption"
-                label
-                outlined
-                medium
-              >
-                <v-icon left> mdi-cart-outline </v-icon>
-                Buyer: {{ thisitem.buyer }}
-              </v-chip>
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col
+                            >Original Seller: {{ thisitem.creator }}</v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                    
+                  </v-list-item>
+                    <v-list-item  v-if="thisitem.buyer">
+                    <v-list-item-icon>
+                      <v-icon> mdi-shopping</v-icon>
+                    </v-list-item-icon>
 
-              <v-chip
-                v-if="thisitem.status"
-                class="ma-1 caption"
-                label
-                outlined
-                medium
-              >
-                <v-icon left> mdi-clock-time-three-outline </v-icon>
-                Status: {{ thisitem.status }}
-              </v-chip>
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col
+                            >Buyer: {{ thisitem.buyer }}</v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                    
+                  </v-list-item>
 
-              <v-chip
-                v-if="thisitem.buyer === '' && thisitem.transferable === true"
-                class="ma-1 caption"
-                label
-                outlined
-                medium
-              >
-                <v-icon left> mdi-store </v-icon>
-                 For sale
-              </v-chip>
+                  <v-list-item  v-if="thisitem.status">
+                    <v-list-item-icon>
+                      <v-icon> mdi-tune</v-icon>
+                    </v-list-item-icon>
 
-              <v-chip
-                outlined :to="{ name: 'SearchTag', params: { tag: itemtags } }"
-                medium
-                label
-                class="ma-1 caption"
-                v-for="itemtags in thisitem.tags"
-                :key="itemtags"
-              >
-                <v-icon small left> mdi-tag-outline </v-icon
-                >{{ itemtags }}</v-chip
-              >
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col
+                            >Status: {{ thisitem.status }}</v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                    
+                  </v-list-item>
 
-              <v-divider class="ma-2" />
+                   <v-list-item  v-if="thisitem.transferable && thisitem.buyer === '' ">
+                    <v-list-item-icon>
+                      <v-icon> mdi-swap-horizontal</v-icon>
+                    </v-list-item-icon>
 
-              <div class="overline text-center">Comments</div>
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col
+                            > <v-icon left> mdi-store </v-icon>Transferable</v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                    
+                  </v-list-item>
+                  
+               
+                  <v-list-item v-if="thisitem.shippingcost > 0">
+                    <v-list-item-icon>
+                      <v-icon> mdi-package-variant-closed </v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Shipping Cost: </v-col>
+                          <v-col
+                            >{{ thisitem.shippingcost
+                            }}<v-icon small right
+                              >$vuetify.icons.custom</v-icon
+                            ></v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-if="thisitem.seller != thisitem.creator">
+                    <v-list-item-icon>
+                      <v-icon> mdi-repeat</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Original Price: </v-col>
+                          <v-col
+                            >{{ thisitem.estimationprice
+                            }}<v-icon small right
+                              >$vuetify.icons.custom</v-icon
+                            ></v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-else-if="thisitem.estimationprice > 0">
+                    <v-list-item-icon>
+                      <v-icon> mdi-check-all </v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Estimation Price: </v-col>
+                          <v-col
+                            >{{ thisitem.estimationprice
+                            }}<v-icon small right
+                              >$vuetify.icons.custom</v-icon
+                            ></v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item v-if="thisitem.discount > 0">
+                    <v-list-item-icon>
+                      <v-icon> mdi-brightness-percent</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Discount: </v-col>
+                          <v-col
+                            >{{ thisitem.discount
+                            }}<v-icon small right
+                              >$vuetify.icons.custom</v-icon
+                            ></v-col
+                          ></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                </v-list-item-group>
+              </v-list>
+            </v-card>
+             <div class="overline text-center">Comments</div>
               <div v-if="commentlist">
                 <div v-for="(comment, nr) in commentlist" v-bind:key="nr">
                   <v-chip color="primary" class="ma-2">{{ comment }} </v-chip>
@@ -223,7 +374,7 @@
                   </p>
                 </v-stepper-content>
 
-                <v-stepper-step :complete="thisitem.transferable" step="3">
+                <v-stepper-step :complete="thisitem.transferable || thisitem.status" step="3">
                    Reveal estimation
                 </v-stepper-step>
                 
@@ -587,7 +738,7 @@ export default {
       this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
          this.$router.push("/itemid="+ this.itemid)
     //  console.log(this.newitem)
-      //this.revealed = true
+      //this.thisitem.buyer === ''  = true
     // alert("The final price is " + this.newitem.estimationprice + " TPP")
      // vm.$recompute('thisitem')
       //console.log(this.thisitem)
@@ -634,6 +785,9 @@ export default {
       );
       assertIsBroadcastTxSuccess(result);
       alert("Delete request sent");
+   
+      this.$store.dispatch("updateItem", this.thisitem.id)
+
     },
 
     async getThisItem() {
@@ -688,7 +842,8 @@ export default {
         fee
       );
       assertIsBroadcastTxSuccess(result);
-      alert(" Placed! ");
+      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
+         this.$router.push("/itemid="+ this.itemid)
     },
 
     async submitItemShipping(tracking, itemid) {
@@ -744,7 +899,9 @@ export default {
         fee
       );
       assertIsBroadcastTxSuccess(result);
-      alert("Transaction sent");
+   
+      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
+         this.$router.push("/itemid="+ this.itemid)
     },
     createStep() {
       if (this.thisitem.buyer != "") {
