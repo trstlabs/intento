@@ -1,17 +1,4 @@
 
-<!--<template>
-  <div>
-    <app-layout>
-      <div>
-        <app-text type="h1">TrustItems (v0.1)</app-text>
-        <wallet />
-        <item-list-seller />
-        <item-list-estimator />
-        <item-list-buyer />
-      </div>
-    </app-layout>
-  </div>
-</template> -->
 
 <template>
   <div>
@@ -38,22 +25,22 @@
 
   :background-color="($vuetify.theme.dark) ? 'dark' : 'white'"
   >
-    <v-tab @click="getItemsFromSeller()">
+    <v-tab to="/account=placeditems">
      Created<v-icon >
         mdi-plus-box
       </v-icon> 
     </v-tab> 
-    <v-tab @click="getItemsFromEstimator()">
+    <v-tab to="/account=estimateditems">
       Estimated<v-icon >
         mdi-checkbox-marked
       </v-icon> 
     </v-tab>
-    <v-tab @click="getItemsFromBuyer()">
+    <v-tab to="/account=boughtitems">
       Bought<v-icon >
         mdi-shopping
       </v-icon> 
     </v-tab>
-    <v-tab @click="getInterestedItems()">
+    <v-tab to="/account=likeditems">
       Liked<v-icon >
         mdi-heart
       </v-icon> 
@@ -92,59 +79,67 @@ export default {
 
   data() {
     return {
-      created: true,
+      created: false,
       estimated: false,
       bought: false,
       interested: false,
     };
   },
 
-  
+  mounted(){
+    if (this.$route.params.list == "placeditems"){
+this.getItemsFromSeller()
+
+    }else if (this.$route.params.list == "estimateditems"){
+this.getItemsFromEstimator()
+
+    }else if (this.$route.params.list == "boughtitems"){
+this.getItemsFromBuyer()
+
+    }else if (this.$route.params.list == "likeditems"){
+this.getInterestedItems()
+
+    }else{
+      this.$router.push("/account=placeditems")
+    }
+  },
 
   methods: {
 
    getItemsFromSeller() {
-      if (!this.$store.state.account.address) { alert("Sign in first");};
-       this.estimated = false
-      this.bought = false
-      this.interested = false
-      this.created = true
+      if (this.$store.state.account.address) { 
+  
       let input = this.$store.state.account.address;
       this.$store.dispatch("setSellerItemList", input);
-      //this.dummy = false;
+};    this.created = true
     },
 
      getItemsFromEstimator() {
-      if (!this.$store.state.account.address) { alert("Sign in first");};
-      this.bought = false
-      this.interested = false
-      this.created = false
-       this.estimated = true
+      if (this.$store.state.account.address) {
+     
+    
       let input = this.$store.state.account.address;
       this.$store.dispatch("setEstimatorItemList", input);
-      //this.dummy = false;
+     }   this.estimated = true
     },
      getInterestedItems() {
-      if (!this.$store.state.account.address) { alert("Sign in first");};
-      this.bought = false
-      this.created = false
-       this.estimated = false
-      this.interested = true
+      if (this.$store.state.account.address) { 
+
+     
       let input = this.$store.state.account.address;
       this.$store.dispatch("setInterestedItemList", input);
-      //this.dummy = false;
+      } this.interested = true
+
     },
      getItemsFromBuyer() {
-      if (!this.$store.state.account.address) { alert("Sign in first");};
+      if (this.$store.state.account.address) { 
       const type = { type: "buyer" };
       this.$store.dispatch("entityFetch",type);
-      this.interested = false
-      this.created = false
-       this.estimated = false
-      this.bought = true
+    
       let input = this.$store.state.account.address;
       this.$store.dispatch("setBuyerItemList", input);
-      //this.dummy = false;
+      }  this.bought = true
+
     },
 
 },

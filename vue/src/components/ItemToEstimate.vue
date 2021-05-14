@@ -389,12 +389,12 @@ overflow: hidden;
         </div>
       </span>
 
-      <div>
+      <div> 
         <v-btn rounded
           block
           elevation="4"
           color="primary"
-          :disabled="!valid || !hasAddress || flight || timeout"
+          :disabled="!valid || !hasAddress ||  flight || timeout"
           @click="submit(estimation, item.id, interested, comment)"
           ><div v-if="!flight && !valid">
             <v-icon left> mdi-check </v-icon> Estimate item
@@ -404,35 +404,31 @@ overflow: hidden;
           </div>
           <div v-if="!timeout && !valid && flight">
             <v-icon left> mdi-check </v-icon> Estimate item
-          </div>
-         
+          </div>       
              <v-progress-linear v-if="timeout && valid"
       :rotate="360"
       :size="50"
       :width="5"
-      :value="value"
+      :value="timeoutvalue"
       color="white"
     >
       
     </v-progress-linear>
-             <div >
-          
-         
-            <div v-if="flight">
-              <div class="text-right">Creating estimation...</div>
-            </div>
-          </div>
+           <div v-if="flight">
+              <div class="text-right">Awaiting submission...</div>
+            </div>       
         </v-btn>
         <div v-if="timeout && valid">
-              <div class="text-right caption">Wait {{ 10-(value/10) }}s</div>
+              <div class="text-right caption">Wait {{ 10-(timeoutvalue/6) }}s</div>
               
             </div>
 
          
       
-      </div>
+      </div> 
     </v-card>
 </div>
+<sign-tx v-if="submitted" :key="submitted" :fields="fields" :value="value" :msg="msg" @clicked="afterSubmit"></sign-tx>
     <div class="pa-4 mx-auto" v-if="showinfo">
       <v-row class="text-center">
         <v-col class="pa-0">
@@ -562,14 +558,6 @@ overflow: hidden;
 import ToEstimateTagBar from "./ToEstimateTagBar.vue";
 import { databaseRef } from "./firebase/db.js";
 
-
-import {
-  SigningStargateClient,
-  assertIsBroadcastTxSuccess,
-} from "@cosmjs/stargate";
-import { Registry } from "@cosmjs/proto-signing/";
-import { Type, Field } from "protobufjs";
-
 export default {
   
   components: { ToEstimateTagBar },
@@ -640,13 +628,19 @@ export default {
       timeout: false,
       showphoto: "",
 interval: {},
-value: 0,
+timeoutvalue: 0,
       dialog: false,
       fullscreen: false,
       magnify: false,
       conditionInfo: false,
       settings: false,
       reportinfo: false,
+
+
+      fields: [],
+      value: {},
+      msg: "",
+      submitted: false,
     };
   },
   beforeDestroy () {
@@ -661,8 +655,8 @@ value: 0,
     if (!!this.$store.state.account.address) {
       let input = this.$store.state.account.address;
  this.$store.dispatch("setToEstimateRegions");
-//  const type = { type: "estimator" };
-   // this.$store.dispatch("entityFetch",type);
+     const type = { type: "estimator" };
+    this.$store.dispatch("entityFetch",type);
       this.$store.dispatch("setSortedTagList");    
       this.$store.dispatch("setEstimatorItemList", input);
        this.$store.dispatch("setSellerItemList", input);
@@ -696,8 +690,9 @@ value: 0,
     async submit(estimation, itemid, interested, comment) {
       if (this.valid && !this.flight && this.hasAddress) {
         this.flight = true;
-        this.loadingitem = true;
-        const type = { type: "estimator" };
+       
+ 
+ 
         const body = {
           deposit: this.item.depositamount,
           estimation: estimation,
@@ -705,7 +700,8 @@ value: 0,
           interested: interested,
           comment: comment,
         };
-        const fields = [
+        this.msg = "MsgCreateEstimator"
+        this.fields = [
           ["estimator", 1, "string", "optional"],
           ["estimation", 2, "int64", "optional"],
           ["itemid", 3, "string", "optional"],
@@ -713,33 +709,55 @@ value: 0,
           ["interested", 5, "bool", "optional"],
           ["comment", 6, "string", "optional"],
         ];
-        
-        await this.estimationSubmit({ ...type, body, fields });
-        await this.$store.dispatch("entityFetch", type);
+
+        this.value = {
+          estimator: this.$store.state.account.address,
+          ...body,
+        }
+
+        this.submitted = true
+
+      }},
+
+  
+
+      async afterSubmit(value){
+ this.loadingitem = true;
+ this.submitted = false
+ this.msg = ""
+ this.fields = []
+ this.value = {}
+
+
+      console.log(value)
+      //  await this.estimationSubmit({ ...type,"body, fields });
+
+       if(value == true){
+       //this.$store.dispatch("entityFetch", "estimator");
        
              await this.$store.dispatch("bankBalancesGet");
         this.timeout = true
         clearInterval(this.interval)
-        this.value = 0
+        this.timeoutvalue = 0
         this.interval = setInterval(() => {
       
-        this.value += 6
-      }, 1000)
+        this.timeoutvalue += 6
+      }, 600)
 
 
-         setTimeout(() => this.timeout = false, 10000);
+         setTimeout(() => this.timeout = false, 6000);
      
 
-   
+       }
+        this.getNewItemByIndex();
         //await this.submitRevealEstimation(itemid);
          this.estimation = "";
         this.comment = "";
         //this.flight = false;
         //this.loadingitem = false;
-      }
-    },
+      },
 
-    async estimationSubmit({ type, fields, body }) {
+   /* async estimationSubmit({ type, fields, body }) {
       const wallet = this.$store.state.wallet;
       const type2 = type.charAt(0).toUpperCase() + type.slice(1);
       const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreate${type2}`;
@@ -772,40 +790,42 @@ value: 0,
         [msg],
         fee
       ); 
-     /* if (!result.data){
-        await this.submitRevealEstimation(this.item.id);
-      }*/
+  
       assertIsBroadcastTxSuccess(result);
        this.getNewItemByIndex();
       console.log("success!");
 
       
     },
-
+*/
     async submitFlag() {
       if (!this.flight && this.hasAddress) {
         this.flight = true;
         this.loadingitem = true;
         this.flag = true;
-        const type = { type: "estimator" };
+              this.msg = "MsgCreateFlag"
+
         const body = { flag: true, itemid: this.item.id };
-        const fields = [
+        this.fields = [
           ["estimator", 1, "string", "optional"],
           ["itemid", 2, "string", "optional"],
         
         ];
 
-        await this.flagSubmit({ ...type, body, fields });
+ this.value = {
+          estimator: this.$store.state.account.address,
 
-        this.estimation = "";
-
-        this.getNewItemByIndex();
-        this.dialog = false;
+          ...body,
+        },
+            this.dialog = false;
         this.flag = false;
+        this.submitted = true
+
+    
       }
     },
 
-    async flagSubmit({ type, fields, body }) {
+ /*   async flagSubmit({ type, fields, body }) {
       const wallet = this.$store.state.wallet;
       const type2 = type.charAt(0).toUpperCase() + type.slice(1);
       const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreateFlag`;
@@ -847,7 +867,7 @@ value: 0,
         console.log(e);
       }
     },
-
+*/
     async getItemToEstimate() {
       if (!this.hasAddress) {
         alert("Sign in first");

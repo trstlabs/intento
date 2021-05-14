@@ -208,16 +208,14 @@
           </div>
         </div>
       </v-expand-transition>
-    </v-card>
+    </v-card><sign-tx v-if="submitted" :key="submitted" :fields="fields" :value="value" :msg="msg" @clicked="afterSubmit"></sign-tx>
   </div>
 </template>
 
 <script>
 import { databaseRef } from './firebase/db';
 import ItemListInterested from "./ItemListInterested.vue";
-import { SigningStargateClient, assertIsBroadcastTxSuccess } from "@cosmjs/stargate";
-import {  Registry } from '@cosmjs/proto-signing/';
-import { Type, Field } from 'protobufjs';
+
 
 export default {
   props: ["itemid"],
@@ -234,6 +232,11 @@ export default {
       imageurl: "",
       loadingitem: true,
       photos: [],
+      
+        fields: [],
+      value: {},
+      msg: "",
+      submitted: false,
     };
   },
 
@@ -268,6 +271,26 @@ export default {
   },
 
   methods: {
+
+     async afterSubmit(value){
+ this.loadingitem = true;
+
+ this.msg = ""
+ this.fields = []
+ this.value = {}
+  if(value == true){
+             this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
+         this.$router.push("/itemid="+ this.thisitem.id)}
+        await this.$store.dispatch("bankBalancesGet");
+
+
+          this.submitted = false
+ 
+        this.loadingitem = false;  
+   
+     
+
+    },
    
 
     async submitLP(itemid) {
@@ -276,19 +299,21 @@ export default {
         this.loadingitem = true;
         let toPay = this.thisitem.estimationprice;
         let deposit = toPay + "token";
-        const type = { type: "buyer" };
+       
         const body = { deposit, itemid };
-          const fields = [
+          this.fields = [
           ["buyer", 1, "string", "optional"],
 
           ["itemid", 2, "string", "optional"],
           ["deposit", 3, "int64", "optional"],
         ];
-         await this.paySubmit({ body, fields });
-        await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("bankBalancesGet");
-        this.flightLP = false;
-        this.loadingitem = false;
+        this.msg = "MsgCreateBuyer"
+       this.value = {
+          buyer: this.$store.state.account.address,
+          ...body
+        }
+
+       this.submitted = false
       }
     },
 
@@ -298,124 +323,53 @@ export default {
       if (!this.flightSP && this.hasAddress) {
         this.flightSP = true;
         this.loadingitem = true;
-        console.log("clicked");
-         console.log(this.thisitem);
-        console.log(this.thisitem.estimationprice);
-        console.log(this.thisitem.shippingcost);
+    
+      
         let toPaySP =
           +this.thisitem.estimationprice + +this.thisitem.shippingcost;
-        console.log(toPaySP);
+       
         let deposit = toPaySP + "token";
-        console.log(deposit);
-        const type = { type: "buyer" };
+
+
         const body = { deposit, itemid };
-          const fields = [
+          this.fields = [
           ["buyer", 1, "string", "optional"],
 
           ["itemid", 2, "string", "optional"],
           ["deposit", 3, "int64", "optional"],
         ];
-         await this.paySubmit({ body, fields });
-        await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("bankBalancesGet");
-
-        
-        this.flightSP = false;
-        this.loadingitem = false;
-        this.deposit = "";
-        alert("Transaction sent");
-      }
-    },
-
-    async paySubmit( { body, fields }) {
-      const wallet = this.$store.state.wallet
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreateBuyer`;
-      let MsgCreate = new Type(`MsgCreateBuyer`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-      console.log(fields)
-      fields.forEach(f => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-      })
-
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-      //console.log("TEST" + client)
-      const msg = {
-        typeUrl,
-        value: {
+        this.msg = "MsgCreateBuyer"
+       this.value = {
           buyer: this.$store.state.account.address,
           ...body
         }
-      };
-
-      console.log(msg)
-      const fee = {
-        amount: [{ amount: '0', denom: 'tpp' }],
-        gas: '200000'
-      };
-
-      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
-      assertIsBroadcastTxSuccess(result);
-      alert("Transaction sent");
-
+          this.submitted = false
+      }
     },
 
-    async likeSubmit( { body, fields }) {
-      const wallet = this.$store.state.wallet
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgUpdateEstimator`;
-      let MsgCreate = new Type(`MsgUpdateEstimator`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-      console.log(fields)
-      fields.forEach(f => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]))
-      })
 
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-      //console.log("TEST" + client)
-      const msg = {
-        typeUrl,
-        value: {
-          estimator: this.$store.state.account.address,
-          ...body
-        }
-      };
-
-      console.log(msg)
-      const fee = {
-        amount: [{ amount: '0', denom: 'tpp' }],
-        gas: '200000'
-      };
-
-      const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee);
-      assertIsBroadcastTxSuccess(result);
-      alert("Transaction sent");
-
-    },
 
      async submitInterest(itemid) {
       if (!this.flightLP && this.hasAddress) {
     //    this.flightLP = true;
         this.loadingitem = true;
-          const fields = [
+          this.fields = [
           ["estimator", 1, "string", "optional"],
 
           ["itemid", 2, "string", "optional"],
           ["interested", 3, "bool", "optional"],
         ];
-
-        const body = { itemid: itemid,
+const body = { itemid: itemid,
         interested: false };
+this.msg = "MsgUpdateEstimator"
+this.value ={
+          estimator: this.$store.state.account.address,
+          ...body
+        }
 
-        await this.likeSubmit({ fields, body });
-   
-        this.loadingitem = false;
+  
+
+          this.submitted = false
       }
     },
 
@@ -444,41 +398,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-
-.card__empty {
-  margin-bottom: 1rem;
-  border: 1px dashed rgba(0, 0, 0, 0.1);
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  border-radius: 8px;
-
-  text-align: center;
-  min-height: 8rem;
-}
-@keyframes rotate {
-  from {
-    transform: rotate(0);
-  }
-  to {
-    transform: rotate(-360deg);
-  }
-}
-@media screen and (max-width: 980px) {
-  .narrow {
-    padding: 0;
-  }
-}
-</style>
-
-
-<!---
-shows item id from buy list
-<div id="item-list-buy">
-      {{ itemid }}
-    </div>
-    ---->

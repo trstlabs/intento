@@ -221,7 +221,7 @@
                         class="ma-1"
                         prepend-icon="mdi-text"
                         :rules="rules.noteRules"
-                        v-model="fields.note"
+                        v-model="data.note"
                         label="Note (How is the item and why do you resell?)"
                         auto-grow
                       >
@@ -232,11 +232,11 @@
                           class="pa-2 mt-2"
                           text
                           icon
-                          @click="fields.shippingcost = 0"
+                          @click="data.shippingcost = 0"
                         >
                           <v-icon>
                             {{
-                              fields.shippingcost === 0
+                              data.shippingcost === 0
                                 ? "mdi-package-variant"
                                 : "mdi-package-variant-closed"
                             }}
@@ -249,10 +249,10 @@
                           thumb-label
                           label="Shipping cost"
                           suffix="tokens"
-                          :persistent-hint="fields.shippingcost != 0"
+                          :persistent-hint="data.shippingcost != 0"
                           placeholder="Added cost"
                           :thumb-size="70"
-                          v-model="fields.shippingcost"
+                          v-model="data.shippingcost"
                           ><template v-slot:thumb-label="item">
                             {{ item.value
                             }}<v-icon small right>$vuetify.icons.custom</v-icon>
@@ -264,11 +264,11 @@
                           class="pa-2 mt-2"
                           text
                           icon
-                          @click="fields.discount = 0"
+                          @click="data.discount = 0"
                         >
                           <v-icon>
                             {{
-                              fields.discount === 0
+                              data.discount === 0
                                 ? "mdi-brightness-percent-outline"
                                 : "mdi-brightness-percent"
                             }}
@@ -281,10 +281,10 @@
                           thumb-label
                           label="Discount"
                           suffix="tokens"
-                          :persistent-hint="fields.discount != 0"
+                          :persistent-hint="data.discount != 0"
                           placeholder="Discount"
                           :thumb-size="70"
-                          v-model="fields.discount"
+                          v-model="data.discount"
                           ><template v-slot:thumb-label="item">
                             {{ item.value
                             }}<v-icon small right>$vuetify.icons.custom</v-icon>
@@ -315,7 +315,7 @@
                               inset
                               label="Pickup"
                               :persistent-hint="
-                                fields.shippingcost != 0 &&
+                                data.shippingcost != 0 &&
                                 enterlocation == tue &&
                                 selectedCountries.length > 1
                               "
@@ -326,7 +326,7 @@
                 prepend-icon="mdi-map-marker"
                 :rules="rules.pickupRules"
                 label="Pickup Location (optional)"
-                v-model="fields.localpickup"
+                v-model="data.localpickup"
                 required v-if="enterlocation"
               /></v-col
                         ><v-col>
@@ -352,7 +352,7 @@
                     <div class="pt-4" v-if="makeReview">
                       <p class="overline"><v-icon left> mdi-star </v-icon> Rate</p>
                        <v-rating
-                            v-model="fields.rating"
+                            v-model="data.rating"
                             
                             color="primary darken-1"
                             background-color="primary lighten-1"
@@ -364,7 +364,7 @@
                         class="ma-1"
                         prepend-icon="mdi-text"
                         :rules="rules.noteRules"
-                        v-model="fields.reviewnote"
+                        v-model="data.reviewnote"
                         label="Note "
                         auto-grow
                       >
@@ -375,7 +375,7 @@
             </div>
           </div>
         </v-expand-transition></v-card
-      >
+      ><sign-tx v-if="submitted" :key="submitted" :fields="fields" :value="value" :msg="msg" @clicked="afterSubmit"></sign-tx>
     </div>
   </div>
 </template>
@@ -383,12 +383,7 @@
 <script>
 import ItemListBuyer from "./ItemListBuyer.vue";
 import { databaseRef } from "./firebase/db.js";
-import {
-  SigningStargateClient,
-  assertIsBroadcastTxSuccess,
-} from "@cosmjs/stargate";
-import { Registry } from "@cosmjs/proto-signing/";
-import { Type, Field } from "protobufjs";
+
 
 export default {
   props: ["itemid"],
@@ -404,7 +399,7 @@ export default {
       photos: [],
       imageurl: "",
       step: 2,
-      fields: {
+      data: {
         shippingcost: "0",
         localpickup: "",
         discount: "0",
@@ -430,6 +425,11 @@ export default {
 
       selectedCountries: [],
       countryCodes: ["NL", "BE", "UK", "DE", "US", "CA"],
+
+        fields: [],
+      value: {},
+      msg: "",
+      submitted: false,
     };
   },
   beforeCreate() {
@@ -471,123 +471,79 @@ export default {
         this.flightIT = true;
 
         const body = { itemid };
-        const fields = [
+        this.fields = [
           ["buyer", 1, "string", "optional"],
           ["itemid", 2, "string", "optional"],
         ];
-        await this.transferSubmit({ body, fields });
-        await this.$store.dispatch(
+        this.msg = "MsgItemTransfer"
+        this.value = {
+          buyer: this.$store.state.account.address,
+          ...body,
+        },
+    
+     this.submitted = true
+      }
+    },
+
+     async afterSubmit(value){
+ this.loadingitem = true;
+
+ this.msg = ""
+ this.fields = []
+ this.value = {}
+  if(value == true){
+         await this.$store.dispatch(
           "setBuyerItemList",
           this.$store.state.account.address
         );
-        this.flightIT = false;
-      }
+        await this.$store.dispatch("bankBalancesGet");
+        await this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
+   setTimeout( () => this.$router.push("/itemid="+ this.thisitem.id), 5000)}
+
+          this.submitted = false
+              this.flightIT = false;
+              this.flightITN = false;
     },
+
 
     async submitDeleteBuyer(itemid) {
       if (this.valid && !this.flightITN && this.hasAddress) {
         this.flightITN = true;
         const body = { itemid };
-        const fields = [
+        this.fields = [
           ["buyer", 1, "string", "optional"],
           ["itemid", 2, "string", "optional"],
         ];
-        await this.deleteSubmit({ body, fields });
-        await this.$store.dispatch("entityFetch", "buyer");
-        await this.$store.dispatch(
-          "setBuyerItemList",
-          this.$store.state.account.address
-        );
-        this.flightITN = false;
-      }
-    },
-
-    async transferSubmit({ body, fields }) {
-      const wallet = this.$store.state.wallet;
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgItemTransfer`;
-      let MsgCreate = new Type(`MsgItemTransfer`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-      console.log(fields);
-      fields.forEach((f) => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
-      });
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-
-      const msg = {
-        typeUrl,
-        value: {
+    this.msg ="MsgDeleteBuyer"
+         this.value = {
           buyer: this.$store.state.account.address,
           ...body,
         },
-      };
-      const fee = {
-        amount: [{ amount: "0", denom: "tpp" }],
-        gas: "200000",
-      };
+   
+      this.submitted = true
+       
+           }
+      },
 
-      const result = await client.signAndBroadcast(
-        this.$store.state.account.address,
-        [msg],
-        fee
-      );
-      assertIsBroadcastTxSuccess(result);
-      alert("Transaction sent");
-     
-      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
-         this.$router.push("/itemid="+ this.itemid)
-    },
 
-    async deleteSubmit({ body, fields }) {
-      const wallet = this.$store.state.wallet;
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgDeleteBuyer`;
-      let MsgCreate = new Type(`MsgDeleteBuyer`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-      console.log(fields);
-      fields.forEach((f) => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
-      });
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-
-      const msg = {
-        typeUrl,
-        value: {
-          buyer: this.$store.state.account.address,
-          ...body,
-        },
-      };
-      const fee = {
-        amount: [{ amount: "0", denom: "tpp" }],
-        gas: "200000",
-      };
-
-      const result = await client.signAndBroadcast(
-        this.$store.state.account.address,
-        [msg],
-        fee
-      );
-      assertIsBroadcastTxSuccess(result);
-      alert("Transaction sent");
-    },
 
     async submitItemResell() {
       if (this.hasAddress) {
         const body = {
           itemid: this.itemid,
-          shippingcost: this.fields.shippingcost,
-          discount: this.fields.discount,
-          localpickup: encodeURI(this.fields.localpickup),
+          shippingcost: this.data.shippingcost,
+          discount: this.data.discount,
+          localpickup: encodeURI(this.data.localpickup),
           shippingregion: this.selectedCountries,
-          note: this.fields.note,
+          note: this.data.note,
         };
-        const fields = [
+        this.msg = "MsgItemResell"
+
+         this.value ={
+          seller: this.$store.state.account.address,
+          ...body,
+        },
+        this.fields = [
           ["seller", 1, "string", "optional"],
           ["itemid", 2, "string", "optional"],
           ["shippingcost", 3, "int64", "optional"],
@@ -596,53 +552,13 @@ export default {
           ["shippingregion", 6, "string", "repeated"],
           ["note", 7, "string", "optional"],
         ];
-        await this.resellSubmit({ body, fields });
-        await this.$store.dispatch(
-          "setBuyerItemList",
-          this.$store.state.account.address
-        );
+
+             this.submitted = true
+       
       }
     },
 
-    async resellSubmit({ body, fields }) {
-      const wallet = this.$store.state.wallet;
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgItemResell`;
-      let MsgCreate = new Type(`MsgItemResell`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-
-      fields.forEach((f) => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
-      });
-
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-
-      const msg = {
-        typeUrl,
-        value: {
-          seller: this.$store.state.account.address,
-          ...body,
-        },
-      };
-      const fee = {
-        amount: [{ amount: "0", denom: "tpp" }],
-        gas: "200000",
-      };
-
-      const result = await client.signAndBroadcast(
-        this.$store.state.account.address,
-        [msg],
-        fee
-      );
-      assertIsBroadcastTxSuccess(result);
-      alert("Resell request sent");
-       
-      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
-         this.$router.push("/itemid="+ this.itemid)
-    },
+  
     async getThisItem() {
       await submitrevealestimation();
       return this.thisitem();
@@ -661,62 +577,28 @@ export default {
      
         const body = {
           itemid: this.itemid,
-     rating: this.fields.rating,
-          note: this.fields.reviewnote,
+     rating: this.data.rating,
+          note: this.data.reviewnote,
         };
-        const fields = [
+
+        this.value = {
+          buyer: this.$store.state.account.address,
+          ...body,
+        },
+  
+        this.msg = "MsgItemRating"
+        this.fields = [
           ["buyer", 1, "string", "optional"],
           ["itemid", 2, "string", "optional"],
           ["rating", 3, "int64", "optional"],
           ["note", 4, "string", "optional"],
         ];
-        await this.rateSubmit({ body, fields });
-        await this.$store.dispatch(
-          "setBuyerItemList",
-          this.$store.state.account.address
-        );
+      
+
+             this.submitted = true
       }
     },
 
-    async rateSubmit({ body, fields }) {
-      const wallet = this.$store.state.wallet;
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgItemRating`;
-      let MsgCreate = new Type(`MsgItemRating`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-
-      fields.forEach((f) => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
-      });
-
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-
-      const msg = {
-        typeUrl,
-        value: {
-          buyer: this.$store.state.account.address,
-          ...body,
-        },
-      };
-      const fee = {
-        amount: [{ amount: "0", denom: "tpp" }],
-        gas: "200000",
-      };
-
-      const result = await client.signAndBroadcast(
-        this.$store.state.account.address,
-        [msg],
-        fee
-      );
-      assertIsBroadcastTxSuccess(result);
-      alert("Review sent");
-       
-      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
-         this.$router.push("/itemid="+ this.itemid)
-    },
     async getThisItem() {
       await submitrevealestimation();
       return this.thisitem();

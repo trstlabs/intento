@@ -5,7 +5,7 @@
       <div class="overline text-center">{{ address ? "Your Account" : "Sign in" }}</div>
       <div :class="!address && 'card'">
       <div v-if="!address" >
-        <form>
+        <form   @keyup.enter="signIn">
         <!--- <input 
           type="text"
           v-model="password"
@@ -14,7 +14,7 @@
         />--->
        <v-text-field v-if="!mnemonic" type="password" class="password" 
           v-model="password"
-          
+        
           placeholder="Password (mnemonic)"> </v-text-field>
           </form>
       </div>

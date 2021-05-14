@@ -2,13 +2,13 @@
   <div class="pa-2 mx-lg-auto"> 
     <v-dialog v-model="dialog" width="500">
       <template v-slot:activator="{ on, attrs }">
-      <span v-if="!fields.title" >
-             <p  v-if="!fields.title" v-bind="attrs"
+      <span v-if="!data.title" >
+             <p  v-if="!data.title" v-bind="attrs"
           v-on="on"  class="display-1 pt-4 font-weight-thin gray--text text-center"> Place Item</p>
         
         </span><span  v-else>
           <p  v-bind="attrs"
-          v-on="on"  class="display-1 pt-4 font-weight-thin gray--text text-center"> Place {{fields.title}}</p>
+          v-on="on"  class="display-1 pt-4 font-weight-thin gray--text text-center"> Place {{data.title}}</p>
      </span>
         <v-img v-bind="attrs"
           v-on="on" height="300" src="img/design/sell.png"> <v-icon class="ml-4" small>mdi-information-outline</v-icon></v-img>
@@ -61,7 +61,7 @@
                 prepend-icon="mdi-format-title"
                 :rules="rules.titleRules"
                 label="Title"
-                v-model="fields.title"
+                v-model="data.title"
                 required
               />
 <v-alert class="ma-2 caption" dense type="info" dismissible v-if="descrinfo"> Make sure to fully disclose any defects or scratches (and highlight these in the pictures)</v-alert>
@@ -70,7 +70,7 @@
                 class="ma-1"
                 prepend-icon="mdi-text"
                 :rules="rules.descriptionRules"
-                v-model="fields.description"
+                v-model="data.description"
                 label="Description"
                 auto-grow
               >
@@ -133,28 +133,28 @@
 
               <div>
                 <v-row class="pa-2 mt-4"
-                  ><v-btn text icon @click="fields.estimationcount = 3">
+                  ><v-btn text icon @click="data.estimationcount = 3">
                     <v-icon> mdi-check</v-icon></v-btn
                   >
                   <v-slider 
                     hint="Lower for faster results, higher for better accuracy"
                     thumb-label
-                    :persistent-hint="fields.estimationcount != 3"
+                    :persistent-hint="data.estimationcount != 3"
                     label="Accuracy"
                     :thumb-size="90"
                     max="12"
                     :rules="rules.estimationcountRules"
                     placeholder="Estimation count"
-                    v-model="fields.estimationcount"
+                    v-model="data.estimationcount"
                     ><template v-slot:thumb-label="item">
                       {{ item.value }} Estimations
                     </template></v-slider
                   >
                 </v-row>
                 <v-row class="pa-2">
-                  <v-btn text icon @click="fields.condition = 0">
+                  <v-btn text icon @click="data.condition = 0">
                     <v-icon>{{
-                      fields.condition === 0 ? "mdi-star-outline" : "mdi-star"
+                      data.condition === 0 ? "mdi-star-outline" : "mdi-star"
                     }}</v-icon>
                   </v-btn>
                   <v-slider
@@ -164,9 +164,9 @@
                       conditionLabel() +
                       ', please explain condition in description'
                     "
-                    v-model="fields.condition"
+                    v-model="data.condition"
                     :max="4"
-                    :persistent-hint="fields.condition != 0"
+                    :persistent-hint="data.condition != 0"
                     :thumb-size="24"
                     thumb-label
                     ><template v-slot:thumb-label="{ value }">
@@ -176,10 +176,10 @@
                 >
 
                 <v-row class="pa-2 mt-2">
-                  <v-btn text icon @click="fields.shippingcost = 0">
+                  <v-btn text icon @click="data.shippingcost = 0">
                     <v-icon>
                       {{
-                        fields.shippingcost === 0
+                        data.shippingcost === 0
                           ? "mdi-package-variant"
                           : "mdi-package-variant-closed"
                       }}
@@ -191,11 +191,11 @@
                     thumb-label
                     label="Shipping cost"
                     suffix="tokens"
-                    :persistent-hint="fields.shippingcost != 0"
+                    :persistent-hint="data.shippingcost != 0"
                     placeholder="Shipping cost"
                     :thumb-size="60"
                     thumb-color="primary lighten-1"
-                    v-model="fields.shippingcost"
+                    v-model="data.shippingcost"
                     ><template v-slot:thumb-label="item">
                       {{ item.value }} <v-icon>$vuetify.icons.custom</v-icon>
                     </template>
@@ -250,13 +250,13 @@
                 prepend-icon="mdi-map-marker"
                 :rules="rules.pickupRules"
                 label="Location"
-                v-model="fields.localpickup"
+                v-model="data.localpickup"
                 required v-if="enterlocation"
               />
               </v-col
                   ></v-row>
               </div><div class="mx-auto text-center" v-if="valid">
-                <span class="caption"> Required deposit for price estimators: <v-icon small left>$vuetify.icons.custom</v-icon>{{fields.depositamount}} TPP. <v-btn @click="changedeposit = !changedeposit" icon small> <v-icon >
+                <span class="caption"> Required deposit for price estimators: <v-icon small left>$vuetify.icons.custom</v-icon>{{data.depositamount}} TPP. <v-btn @click="changedeposit = !changedeposit" icon small> <v-icon >
         mdi-pencil
       </v-icon></v-btn></span> 
         <v-row v-if="changedeposit">
@@ -311,7 +311,7 @@
             <v-text-field
               label="Amount"
               type="number"
-              v-model="fields.depositamount"
+              v-model="data.depositamount"
            
             suffix="TPP"
               prepend-icon="$vuetify.icons.custom"
@@ -334,7 +334,7 @@
                       color="white"
                       class="ma-1"
                     ></v-progress-linear
-                    >Creating item ID...
+                    >Awaiting transaction creating item ID...
                   </div>
                 </v-btn>
               </div>
@@ -361,23 +361,21 @@
           </p>
         </v-stepper-content>
       </v-stepper-items>
-    </v-stepper>
+    </v-stepper><sign-tx v-if="submitted" :key="submitted" :fields="fields" :value="value" :msg="msg" @clicked="afterSubmit"></sign-tx>
   </div>
 </template>
 
 
 <script>
-import { assertIsBroadcastTxSuccess } from "@cosmjs/launchpad";
+
 import CreateItemPreviewAndUpload from "./CreateItemPreviewAndUpload.vue";
-import { SigningStargateClient } from "@cosmjs/stargate";
-import { Registry } from "@cosmjs/proto-signing/";
-import { Type, Field } from "protobufjs";
+
 
 export default {
   components: { CreateItemPreviewAndUpload },
   data() {
     return {
-      fields: {
+      data: {
         title: "",
         description: "",
         shippingcost: "0",
@@ -435,6 +433,11 @@ changedeposit: false,
       satisfactionEmojis: ["😭", "🙁", "🙂", "😊", "😄"],
       countryCodes: ["NL", "BE", "UK", "DE", "US", "CA"],
       enterlocation: false,
+
+        fields: [],
+      value: {},
+      msg: "",
+      submitted: false,
     };
   },
   watch: {
@@ -488,8 +491,8 @@ changedeposit: false,
 
     valid() {
       if (
-        this.fields.title.trim().length > 3 &&
-        this.fields.description.trim().length > 4 &&
+        this.data.title.trim().length > 3 &&
+        this.data.description.trim().length > 4 &&
         this.selectedTags.length > 0 &&
         this.selectedCountries.length > 0 &&
         !!this.$store.state.user
@@ -503,8 +506,8 @@ changedeposit: false,
     async submit() {
       if (this.valid && !this.flight && this.hasAddress) {
         this.flight = true;
-        const type = { type: "item" };
-        const fields = [
+
+        this.fields = [
           ["creator", 1, "string", "optional"],
           ["title", 2, "string", "optional"],
           ["description", 3, "string", "optional"],
@@ -519,92 +522,49 @@ changedeposit: false,
         //const body = [this.$store.state.account.address,"dsaf", "asdf", 33, 1, "sdfsdf", "asdf", 4, "sfda"]
         const body = {
           //creator: this.$store.state.account.address,
-          title: this.fields.title,
-          description: this.fields.description,
-          shippingcost: this.fields.shippingcost,
-          localpickup: encodeURI(this.fields.localpickup),
-          estimationcount: this.fields.estimationcount,
+          title: this.data.title,
+          description: this.data.description,
+          shippingcost: this.data.shippingcost,
+          localpickup: encodeURI(this.data.localpickup),
+          estimationcount: this.data.estimationcount,
           tags: this.selectedTags,
-          condition: this.fields.condition,
+          condition: this.data.condition,
           shippingregion: this.selectedCountries,
-          depositamount: this.fields.depositamount,
+          depositamount: this.data.depositamount,
         };
 
-        await this.itemSubmit({ ...type, fields, body });
+        this.msg = "MsgCreateItem"
 
-        this.flight = false;
-        //this.fields.title = "";
-        // this.fields.description = "";
-        //this.fields.shippingcost = "";
-        // this.fields.localpickup = false;
-        //this.fields.estimationcount = "";
-        this.itemid = await this.$store.state.newitemID;
-        //console.log()
-        console.log(this.itemid);
-        this.thisitem = await this.$store.getters.getItemByID(this.itemid);
-        this.e1 = 2;
-        this.showpreview = true;
-        //alert("Submitted, find the item in the account section");
-      }
-    },
-    updateStepCount(e1) {
-      this.e1 = e1;
-    },
-
-    async itemSubmit({ type, fields, body }) {
-      const wallet = this.$store.state.wallet;
-      const type2 = type.charAt(0).toUpperCase() + type.slice(1);
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreate${type2}`;
-      let MsgCreate = new Type(`MsgCreate${type2}`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-      fields.forEach((f) => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
-      });
-
-      const [firstAccount] = await wallet.getAccounts();
-
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-
-      const msg = {
-        typeUrl,
-        value: {
+        this.value = {
           creator: this.$store.state.account.address,
           ...body,
-        },
-      };
+        }
+        
+      this.submitted = true
 
-      const fee = {
-        amount: [{ amount: "0", denom: "tpp" }],
-        gas: "200000",
-      };
-      await this.$store.dispatch("entityFetch", {
-        type: type,
-      });
-      await this.$store.dispatch(
-        "setCreatorItemList",
-        this.$store.state.account.address
-      );
-      const selleritems = this.$store.state.creatorItemList || [];
+      
+    } },
+         async afterSubmit(value) {
+           
+ this.loadingitem = true;
 
-      try {
-        const result = await client.signAndBroadcast(
-          firstAccount.address,
-          [msg],
-          fee
+ this.msg = ""
+ this.fields = []
+ this.value = {}
+  if(value == true) {
+    const selleritems = this.$store.state.creatorItemList || []
+
+            console.log(selleritems);
+         
+        const type = { type: "item" }
+    await this.$store.dispatch("entityFetch",
+          type,
         );
-
-        assertIsBroadcastTxSuccess(result);
-        await this.$store.dispatch("entityFetch", {
-          type: type,
-        });
         await this.$store.dispatch(
           "setCreatorItemList",
           this.$store.state.account.address
         );
+            console.log("dfsfaegdsfa");
         let newselleritems = this.$store.state.creatorItemList.map(
           (item) => item.id
         );
@@ -612,33 +572,53 @@ changedeposit: false,
           (selleritems, newselleritems) => newselleritems - selleritems
         );
         console.log(sorted);
-        //et len = (selleritems.length)
-        // console.log((newselleritems[len].id))
-        //this.$store.commit('set', { key: 'newitemID', value: (newselleritems[len].id) })
+
         this.$store.commit("set", { key: "newitemID", value: sorted[0] });
         await this.$store.dispatch(
           "setSellerItemList",
           this.$store.state.account.address
         );
-      } catch (e) {
-        console.log(e);
-      }
+
+       
+
+        this.itemid = await this.$store.state.newitemID;
+
+        console.log(this.itemid);
+        this.thisitem = await this.$store.getters.getItemByID(this.itemid);
+        this.e1 = 2;
+        this.showpreview = true;
+       
+  
+
+         
+ 
+       
+  }   this.loadingitem = false;  
+  this.submitted = false
+    this.flight = false;  
+     
+
+
+    },
+    updateStepCount(e1) {
+      this.e1 = e1;
     },
 
+
     conditionLabel() {
-      if (this.fields.condition === 0) {
+      if (this.data.condition === 0) {
         return "'bad'";
       }
-      if (this.fields.condition === 1) {
+      if (this.data.condition === 1) {
         return "'fixable'";
       }
-      if (this.fields.condition === 2) {
+      if (this.data.condition === 2) {
         return "'decent'";
       }
-      if (this.fields.condition === 3) {
+      if (this.data.condition === 3) {
         return "'as new'";
       }
-      if (this.fields.condition === 4) {
+      if (this.data.condition === 4) {
         return "'perfect'";
       }
     },

@@ -59,15 +59,21 @@ const routes = [
     meta: {
       title: 'Estimate - Marketplace'},
   },
-  
-  {
-    path: "/account",
+    
+    {
+    path: "/account=:list",
+
     component: () => 
         import(/* webpackChunkName: "account" */ '@/views/Account'), 
     meta: {
       title: 'Account - Marketplace'},
-  },
 
+
+
+  }, 
+   
+  
+  
   {
     path: "/messages",
     //component: Messages,

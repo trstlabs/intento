@@ -181,7 +181,7 @@ export default new Vuex.Store({
      if (!!input) { const rs = state.data.item.filter(item => item.seller === input
       ) || [];  
      // console.log("LIST")
-    //  console.log(rs)
+    // console.log(rs)
       commit("setSellerItemList", rs);
      }
     },
@@ -363,7 +363,7 @@ let uppercase = uniques.map(tag => tag.toUpperCase())
     },
 
     async setToEstimateRegions({ commit, state }) {
-console.log("test")
+//console.log("test")
       const rs = state.toEstimateList.map(item => item.shippingregion);
       let merged = [].concat.apply([], rs);
       let frequency = {};
@@ -390,15 +390,23 @@ console.log("test")
       const A = state.data.item.filter(item => item.estimationprice < 1 && item.status == '' && item.bestestimator == '');
       const B = state.estimatorItemList;
      /* const rs = A.filter(a => !B.map(b => b.itemid).includes(a.id));*/
-      //console.log(A);
-      //console.log(B);
+
+
+
       //console.log(A.filter(a => !B.map(b=>b.id).includes(a.id)));
+
+      //where the items are not in estimator list
       const D = A.filter(a => !B.map(b => b.itemid).includes(a.id));
 
       const E = state.sellerItemList;
 
-      const rs = D.filter(d => !E.map(e => d.itemid).includes(d.id));
+      const rs = D.filter(d => !E.map(e => e.id).includes(d.id));
       
+      /*console.log(A);
+      console.log(B);
+      console.log(D);
+      console.log(E);
+      console.log(rs);*/
       commit("setToEstimateList", rs);
 
 

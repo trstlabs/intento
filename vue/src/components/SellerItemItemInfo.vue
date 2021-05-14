@@ -10,12 +10,7 @@
           <v-row>
             <p class="mx-6 overline text-center">{{ thisitem.title }}</p>
             <v-spacer />
-            <!--<v-btn   fab outlined
-      
-      small
-      @click="setItem()"><v-icon >
-        mdi-marker
-      </v-icon></v-btn>--><v-btn  v-if="thisitem.status == ''" text @click="removeItem()"
+          <v-btn  v-if="thisitem.status == ''" text @click="removeItem()"
               ><v-icon> mdi-trash-can </v-icon></v-btn
             >
           </v-row>
@@ -360,7 +355,7 @@
 
                 <v-stepper-step
                   :complete="
-                    thisitem.bestestimator != '' || thisitem.status != ''
+                    thisitem.bestestimator != '' || thisitem.status != '' ||thisitem.discount
                   "
                   step="2"
                 >
@@ -573,7 +568,7 @@
               </v-stepper>
             </div>
           </div> </v-expand-transition
-      ></v-card>
+      ></v-card><sign-tx v-if="submitted" :key="submitted" :fields="fields" :value="value" :msg="msg" @clicked="afterSubmit"></sign-tx>
     </div>
   </div>
 </template>
@@ -582,12 +577,7 @@
 import { usersRef, roomsRef, databaseRef } from "./firebase/db.js";
 
 import ItemListSeller from "./ItemListSeller.vue";
-import {
-  SigningStargateClient,
-  assertIsBroadcastTxSuccess,
-} from "@cosmjs/stargate";
-import { Registry } from "@cosmjs/proto-signing/";
-import { Type, Field } from "protobufjs";
+
 
 export default {
   props: ["itemid"],
@@ -619,6 +609,11 @@ export default {
         ],
       },
       countryCodes: ["NL", "BE", "UK", "DE", "US", "CA"],
+
+        fields: [],
+      value: {},
+      msg: "",
+      submitted: false,
     };
   },
 
@@ -653,7 +648,7 @@ export default {
       return this.thisitem.id.trim().length > 0;
     },
     tocopy(){
-      return process.env.VUE_APP_URL, + "/itemid=" + this.thisitem.id
+      return process.env.VUE_APP_URL + "/itemid=" + this.thisitem.id
     },
 
     commentlist() {
@@ -675,120 +670,70 @@ export default {
       this.flightre = true;
       const type = { type: "item" };
       const body = { id: this.thisitem.id };
-      const fields = [
+      this.fields = [
         ["seller", 1, "string", "optional"],
         ["id", 2, "string", "optional"],
       ];
 
-      this.itemdeleteSubmit({ ...type, body, fields });
+      this.msg = "MsgDeleteItem"
 
-      this.flightre = false;
-      this.loadingitem = false;
+    
+  this.value = {
+          seller: this.$store.state.account.address,
+          ...body,
+        },
+  
+  this.submitted = true
+
     },
+
+
+      async afterSubmit(value) {
+ this.loadingitem = true;
+
+ this.msg = ""
+ this.fields = []
+ this.value = {}
+  if(value == true){
+             await this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
+        
+        await this.$store.dispatch("bankBalancesGet");
+         setTimeout( () => this.$router.push("/itemid="+ this.thisitem.id), 5000) }
+
+
+
+          this.submitted = false
+               this.flightre = false;
+      this.loadingitem = false;
+         this.flightIS = false;
+        this.tracking = false;
+
+      this.flightit = false
+      this.flightitn = false
+
+    },
+
+
  async submitRevealEstimation() {
       if (this.hasAddress) {
        this.flightre = true;
       
-        const fields = [
+        this.fields = [
           ["creator", 1, "string", "optional"],
           ["itemid", 2, "string", "optional"],
         ];
+        this.msg = "MsgRevealEstimation"
         // const type = { type: "item" };
         const body = { itemid: this.thisitem.id };
-        this.revealSubmit({ body, fields });
-
-      }
-    },
-    async revealSubmit({ body, fields }) {
-      const wallet = this.$store.state.wallet;
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgRevealEstimation`;
-      let MsgCreate = new Type(`MsgRevealEstimation`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-
-      fields.forEach((f) => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
-      });
-
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-      //console.log("TEST" + client)
-      const msg = {
-        typeUrl,
-        value: {
+      
+ this.value = {
           creator: this.$store.state.account.address,
           ...body,
-        },
-      };
-      const fee = {
-        amount: [{ amount: "0", denom: "tpp" }],
-        gas: "200000",
-      };
-
-       const result = await client.signAndBroadcast(
-        this.$store.state.account.address,
-        [msg],
-        fee
-      );
-           this.flightre = false;
-      assertIsBroadcastTxSuccess(result);
-   
-      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
-         this.$router.push("/itemid="+ this.itemid)
-    //  console.log(this.newitem)
-      //this.thisitem.buyer === ''  = true
-    // alert("The final price is " + this.newitem.estimationprice + " TPP")
-     // vm.$recompute('thisitem')
-      //console.log(this.thisitem)
-      //alert("Reveal request sent");
-
-     
+        }
+      
+        this.submitted = true}
     },
-
     
-    async itemdeleteSubmit({ body, fields }) {
-      const wallet = this.$store.state.wallet;
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgDeleteItem`;
-      let MsgCreate = new Type(`MsgDeleteItem`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-      console.log(fields);
-      fields.forEach((f) => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
-      });
-
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-
-      const msg = {
-        typeUrl,
-        value: {
-          seller: this.$store.state.account.address,
-          ...body,
-        },
-      };
-
-      console.log(msg);
-      const fee = {
-        amount: [{ amount: "0", denom: "tpp" }],
-        gas: "200000",
-      };
-
-      const result = await client.signAndBroadcast(
-        this.$store.state.account.address,
-        [msg],
-        fee
-      );
-      assertIsBroadcastTxSuccess(result);
-      alert("Delete request sent");
-   
-      this.$store.dispatch("updateItem", this.thisitem.id)
-
-    },
 
     async getThisItem() {
       await submitrevealestimation();
@@ -798,111 +743,46 @@ export default {
       if (this.valid && !this.flightit && this.hasAddress) {
         this.flightit = true;
         this.flightitn = true;
-        const fields = [
+
+        this.msg = "MsgItemTransferable"
+        this.fields = [
           ["seller", 1, "string", "optional"],
           ["transferable", 2, "bool", "optional"],
           ["itemid", 3, "string", "optional"],
         ];
-        const body = { transferable, itemid };
-        await this.transferableSubmit({ body, fields });
-      }
-    },
-    async transferableSubmit({ body, fields }) {
-      const wallet = this.$store.state.wallet;
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgItemTransferable`;
-      let MsgCreate = new Type(`MsgItemTransferable`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-
-      fields.forEach((f) => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
-      });
-
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-      //console.log("TEST" + client)
-      const msg = {
-        typeUrl,
-        value: {
+ const body = { transferable, itemid };
+        this.value = {
           seller: this.$store.state.account.address,
           ...body,
-        },
-      };
-
-      const fee = {
-        amount: [{ amount: "0", denom: "tpp" }],
-        gas: "200000",
-      };
-
-      const result = await client.signAndBroadcast(
-        this.$store.state.account.address,
-        [msg],
-        fee
-      );
-      assertIsBroadcastTxSuccess(result);
-      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
-         this.$router.push("/itemid="+ this.itemid)
+        }
+    
+      }  
+      this.submitted = true
     },
-
+   
     async submitItemShipping(tracking, itemid) {
       if (this.valid && !this.flightIS && this.hasAddress) {
         this.flightIS = true;
 
         const body = { tracking, itemid };
-        const fields = [
+        this.fields = [
           ["seller", 1, "string", "optional"],
           ["tracking", 2, "bool", "optional"],
           ["itemid", 3, "string", "optional"],
         ];
-        await this.shippingSubmit({ body, fields });
+     
 
-        this.flightIS = false;
-        this.tracking = false;
+     this.msg = "MsgItemShipping"
+
+         this.value = {
+          seller: this.$store.state.account.address,
+          ...body,
+        }
+
+          this.submitted = true
       }
     },
 
-    async shippingSubmit({ body, fields }) {
-      const wallet = this.$store.state.wallet;
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgItemShipping`;
-      let MsgCreate = new Type(`MsgItemShipping`);
-      const registry = new Registry([[typeUrl, MsgCreate]]);
-      console.log(fields);
-      fields.forEach((f) => {
-        MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
-      });
-
-      const client = await SigningStargateClient.connectWithSigner(
-        process.env.VUE_APP_RPC,
-        wallet,
-        { registry }
-      );
-
-      const msg = {
-        typeUrl,
-        value: {
-          seller: this.$store.state.account.address,
-          ...body,
-        },
-      };
-
-      console.log(msg);
-      const fee = {
-        amount: [{ amount: "0", denom: "tpp" }],
-        gas: "200000",
-      };
-
-      const result = await client.signAndBroadcast(
-        this.$store.state.account.address,
-        [msg],
-        fee
-      );
-      assertIsBroadcastTxSuccess(result);
-   
-      this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
-         this.$router.push("/itemid="+ this.itemid)
-    },
     createStep() {
       if (this.thisitem.buyer != "") {
         this.step = 5;
@@ -918,6 +798,8 @@ export default {
   copyText.select();
   document.execCommand('copy');
     },
+
+
     async createRoom() {
 
       if (this.$store.state.user.uid) {

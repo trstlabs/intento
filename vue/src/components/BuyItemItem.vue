@@ -281,7 +281,7 @@
             <v-divider class="mx-4 pa-2" />
             <div
               class="text-center pa-2"
-              v-if="thisitem.transferable && thisitem.status == ''"
+              v-if="thisitem.transferable && thisitem.status == '' && !thisitem.buyer"
             >
               <v-row class="mx-4">
                 <v-btn x-small icon @click="iteminfo = !iteminfo">
@@ -359,7 +359,7 @@
                         indeterminate
                         color="secondary"
                       ></v-progress-linear
-                      >Sending transaction...
+                      >Awaiting transaction...
                     </div>
                   </v-btn> </v-col
                 ><v-col>
@@ -768,7 +768,7 @@
             >
               <v-divider class="ma-4" />
               <div>
-                <v-btn outlined rounded to="/account">Go To Actions</v-btn>
+                <v-btn outlined rounded to="/account=placeditems">Go To Actions</v-btn>
               </div>
               <v-divider class="ma-4"
             /></v-row>
@@ -813,7 +813,7 @@
       <div class="pa-2 mx-auto caption" v-if="info">
         <span>
           <p class="text-center">
-            This seller has sold {{ sold }} items before
+            This seller had {{ sold }} before
           </p>
           <!--<p  Of which _ have been transfered by shipping and _ by local pickup.</p>-->
         </span>
@@ -885,18 +885,13 @@
         </div>
       </div>
       <v-img src="img/design/transfer.png"></v-img>
-    </v-card>
+    </v-card><sign-tx v-if="submitted" :key="submitted" :fields="fields" :value="value" :msg="msg" @clicked="afterSubmit"></sign-tx>
   </div>
 </template>
 <script>
 import BuyItemDetails from "../views/BuyItemDetails.vue";
 import { usersRef, roomsRef, databaseRef } from "./firebase/db.js";
-import {
-  SigningStargateClient,
-  assertIsBroadcastTxSuccess,
-} from "@cosmjs/stargate";
-import { Registry } from "@cosmjs/proto-signing/";
-import { Type, Field } from "protobufjs";
+
 
 export default {
   components: { BuyItemDetails },
@@ -916,6 +911,11 @@ export default {
       dialog: false,
       fullscreen: false,
       magnify: false,
+
+       fields: [],
+      value: {},
+      msg: "",
+      submitted: false,
     };
   },
 
@@ -976,18 +976,21 @@ export default {
       if (this.hasAddress) {
         // this.flightLP = true;
         this.loadingitem = true;
-        const type = { type: "buyer" };
+       this.msg = "MsgCreateBuyer"
         const body = { deposit: deposit, itemid: this.thisitem.id };
-        const fields = [
+        this.fields = [
           ["buyer", 1, "string", "optional"],
 
           ["itemid", 2, "string", "optional"],
           ["deposit", 3, "int64", "optional"],
         ];
-        await this.paySubmit({ body, fields });
-        await this.$store.dispatch("entityFetch", type);
-        await this.$store.dispatch("bankBalancesGet");
 
+        this.value = {
+          buyer: this.$store.state.account.address,
+          ...body,
+        },
+         
+  this.submitted = true
         this.loadingitem = false;
       }
       this.flightLP = false;
@@ -1039,7 +1042,7 @@ console.log(body)
       }
     },
 
-    async paySubmit({ body, fields }) {
+  /*  async paySubmit({ body, fields }) {
       const wallet = this.$store.state.wallet;
       const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreateBuyer`;
       let MsgCreate = new Type(`MsgCreateBuyer`);
@@ -1080,8 +1083,21 @@ console.log(body)
       }
       assertIsBroadcastTxSuccess(result);
       alert("Transaction sent");
+*/
+          async afterSubmit(value){
+ this.loadingitem = true;
+
+ this.msg = ""
+ this.fields = []
+ this.value = {}
+  if(value == true){
+        const type = { type: "buyer" };
+        await this.$store.dispatch("entityFetch", type);
+        await this.$store.dispatch("bankBalancesGet");
          this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
-         this.$router.push("/account")
+         this.$router.push("/account=boughtitems")}
+
+          this.submitted = false
     },
 
     show(photo) {
@@ -1093,11 +1109,12 @@ console.log(body)
     sellerInfo() {
       this.$store.dispatch("setBuySellerItemList", this.thisitem.seller);
       let rs = this.SellerItems.filter((i) => i.buyer != "");
-      this.sold = "no";
-      if (rs != "") {
-        this.sold = rs.length;
+      this.sold = "no buyers";
+      if (rs[1]) {
+        this.sold = rs.length + " buyers";
+      }else if (rs[0]) {
+        this.sold = rs.length + " buyer";
       }
-
       this.info = !this.info;
     },
     async createRoom() {
