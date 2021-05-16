@@ -243,7 +243,7 @@ export default {
        this.$store.dispatch("setEstimatorItemList", this.address);
        this.$store.dispatch("setToEstimateList", this.address);
        this.$store.dispatch("setSellerActionList", this.address);
-      //  this.$store.dispatch("setSortedTagList");
+     this.$store.dispatch("setTransactions")
          this.$store.dispatch("setSellerItemList", this.address);
           this.$store.dispatch("setBuyerItemList", this.address);
 

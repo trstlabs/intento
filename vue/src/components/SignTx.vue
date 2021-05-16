@@ -64,6 +64,7 @@ export default {
   fields: Array,
   value: Object,
   msg: String,
+  typeUrl: String,
 
 },
    
@@ -91,17 +92,33 @@ methods: {
       //const type2 = type.charAt(0).toUpperCase() + type.slice(1);
 
       console.log(this.msg)
-      const typeUrl = `/${process.env.VUE_APP_PATH}.`+ this.msg;
+      
+      if(this.typeUrl){ var typeUrl = this.typeUrl
+      
+      var client = await SigningStargateClient.connectWithSigner(
+        process.env.VUE_APP_RPC,
+        wallet,
+      )
+      
+      
+      }else{
+      var typeUrl = `/${process.env.VUE_APP_PATH}.`+ this.msg;
+
+  
       let MsgCreate = new Type(`${this.msg}`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
       this.fields.forEach((f) => {
         MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));
       });
-      const client = await SigningStargateClient.connectWithSigner(
+   var client = await SigningStargateClient.connectWithSigner(
         process.env.VUE_APP_RPC,
         wallet,
-        { registry }
+      { registry }
+     
+     
       );
+
+          }
       //console.log("TEST" + client)
       const msg = {
         typeUrl,

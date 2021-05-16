@@ -48,6 +48,8 @@ export default new Vuex.Store({
     locationList: [],
     regionList: [],
     user: null,
+    sentTransactions: {},
+    receivedTransactions: {}
     //user: { uid: "B1Xk6qliE2ceNJN6HsoCk2MQO2K2"},
   },
 
@@ -466,10 +468,37 @@ async updateItem({ commit, state }, input) {
 
 
 },
+async setTransactions({ commit, state }) {
+
+
+  try {
+    let sent = (await axios.get(process.env.VUE_APP_API + '/cosmos/tx/v1beta1/txs?events='+ 'transfer.sender=' + state.account.address )).data;
+
+    //let sentTransactions = JSON.stringify(sent.result)
+
+
+    let received = (await axios.get(process.env.VUE_APP_API + '/cosmos/tx/v1beta1/txs?events=' + 'transfer.recipient=' + state.account.address)).data;
+
+   // let receivedTransactions = JSON.stringify(received.result)
+    //console.log(received)
+   // console.log(receivedTransactions)
+   // console.log(receivedTransactions)
+   // console.log(sentTransactions)
+    commit("set", { key: 'sentTransactions', value: sent });
+    commit("set", { key: 'receivedTransactions', value: received });
+  }
+
+
+  catch (e) {
+    //console.error(new SpVuexError('QueryClient:ServiceGetTxsEvent', 'API Node Unavailable. Could not perform query.'));
+    console.log("ERROR" + e)
+
+  }
+},
 
   },
   getters: {
-    account: state => state.account, bankBalances: state => state.bankBalances, getSellerItemList: state => state.sellerItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getSellerActionList: state => state.sellerActionList, getTagList: state => state.tagList, getLocationList: state => state.locationList, getRegionList: state => state.regionList, getBuySellerList: state => state.buySellerList,
+    account: state => state.account, bankBalances: state => state.bankBalances, getSellerItemList: state => state.sellerItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getSellerActionList: state => state.sellerActionList, getTagList: state => state.tagList, getLocationList: state => state.locationList, getRegionList: state => state.regionList, getBuySellerList: state => state.buySellerList, getReceivedTransactions: state => state.receivedTransactions, getSentTransactions: state => state.sentTransactions,
 
   }
 

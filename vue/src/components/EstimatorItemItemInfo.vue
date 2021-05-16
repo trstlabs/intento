@@ -8,7 +8,7 @@
         ></v-progress-linear>
         <div class="pa-2 mx-auto" elevation="8">
           <v-row>
-            <p class="pa-2 h3 font-weight-medium">{{ thisitem.title }}</p>
+           <p class="pa-2 overline"> {{ thisitem.title }} </p>
             <v-spacer /><v-btn
               v-if="
                 thisitem.highestestimator != userAddress &&
@@ -24,29 +24,30 @@
 
           <v-row align="start">
             <v-col cols="8">
-              <v-chip class="ma-1" label outlined medium>
-                <v-icon left> mdi-account-badge </v-icon>
+              <v-chip class="ma-1 caption"  outlined >
+                <v-icon left small> mdi-account-badge </v-icon>
                 TPP ID: {{ thisitem.id }}
               </v-chip>
 
               <v-chip
                 v-if="thisitem.bestestimator"
-                class="ma-1"
-                label
+                class="ma-1 caption" 
+                
                 outlined
-                medium
+                
               >
-                <v-icon left> mdi-check-all </v-icon>
+                <v-icon small left> mdi-check-all </v-icon>
                 Final Estimation: {{ thisitem.estimationprice }}
                 <v-icon small right>$vuetify.icons.custom</v-icon>
               </v-chip>
 
-              <v-card elevation="0">
+              <span>
                 <div class="pa-2 overline">Description</div>
                 <div class="px-2 caption">
                   {{ thisitem.description }}
                 </div>
-              </v-card>
+              </span>
+
 
               <app-text
                 class="mt-1"

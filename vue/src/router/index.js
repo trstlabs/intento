@@ -73,6 +73,18 @@ const routes = [
   }, 
    
   
+  {
+    path: "/account",
+    name: "account",
+
+    component: () => 
+        import(/* webpackChunkName: "account" */ '@/views/Account'), 
+    meta: {
+      title: 'Account - Marketplace'},
+
+
+
+  }, 
   
   {
     path: "/messages",

@@ -17,14 +17,20 @@
              <v-col cols="12" sm="8" class="pa-0 mx-auto">
               <v-sheet  min-height="70vh" class="rounded-b-xl"  elevation="6">
                 <div class="pt-0 mt-0"> 
+       
                    <v-tabs 
       
     fixed-tabs
       :dark="!!$vuetify.theme.dark"
       icons-and-text
 
-  :background-color="($vuetify.theme.dark) ? 'dark' : 'white'"
+  :background-color="($vuetify.theme.dark) ? 'dark' : 'light'"
   >
+   <v-tab to="/account">
+     Transactions<v-icon >
+        mdi-cube-send
+      </v-icon> 
+    </v-tab> 
     <v-tab to="/account=placeditems">
      Created<v-icon >
         mdi-plus-box
@@ -47,7 +53,16 @@
     </v-tab>
   </v-tabs>
                   <!--<faucet/>-->
-                   
+
+          <div v-if="this.$route.name == 'account'">
+  <v-img src="img/design/buy.png" contain>  <p    class="display-2 pt-4 font-weight-thin gray--text text-center mb-n1">  Transactions</p><p class="overline pt-n10 font-weight-bold gray--text text-center pb-5 "> Browse through history<v-btn text icon @click="setTX"> <v-icon >
+        mdi-refresh
+      </v-icon></v-btn></p>  </v-img>
+
+            
+  
+                  <transactions :key="update"/>
+                   </div>
                   <item-list-seller v-if="created"/>
                   
                   <item-list-estimator v-if="estimated" />
@@ -74,8 +89,14 @@
 </template>
 
 <script>
+import Transactions from '../components/Transactions.vue';
+import ItemListSeller from '../components/ItemListSeller.vue';
+import ItemListEstimator from '../components/ItemListEstimator.vue';
+import ItemListBuyer from '../components/ItemListBuyer.vue';
+import ItemListInterested from '../components/ItemListInterested.vue';
 
 export default {
+  components: { Transactions, ItemListSeller, ItemListEstimator, ItemListBuyer, ItemListInterested },
 
   data() {
     return {
@@ -83,6 +104,7 @@ export default {
       estimated: false,
       bought: false,
       interested: false,
+      update:true,
     };
   },
 
@@ -99,12 +121,16 @@ this.getItemsFromBuyer()
     }else if (this.$route.params.list == "likeditems"){
 this.getInterestedItems()
 
-    }else{
-      this.$router.push("/account=placeditems")
     }
   },
 
   methods: {
+    async setTX(){
+            this.update = false
+      await this.$store.dispatch("setTransactions")
+      this.update = true
+
+    },
 
    getItemsFromSeller() {
       if (this.$store.state.account.address) { 

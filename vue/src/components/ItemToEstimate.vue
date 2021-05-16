@@ -164,7 +164,7 @@
            <v-col class="pa-2 font-weight-light ">
             <span>
               <v-chip-group >
-                <v-chip class="ma-1"
+                   <v-chip class="ma-1 text-capitalize"
                   outlined :to="{ name: 'SearchTag', params: { tag: itemtag } }"
                   small
                   v-for="itemtag in item.tags"

@@ -4,7 +4,7 @@
      
           
           <div >
-            <span >
+            <span class="caption">
               You have
               <span
                 class="coin__amount"

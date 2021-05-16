@@ -79,7 +79,7 @@
 
     <v-tooltip bottom>
       <template v-slot:activator="{ on, attrs }">
-      <v-tab  to="/account=placeditems"> <v-icon v-bind="attrs"
+      <v-tab  to="/account"> <v-icon v-bind="attrs"
           v-on="on" large >
         mdi-account-box
       </v-icon><v-badge
@@ -173,7 +173,7 @@ Confirm sign in by clicking the link sent to your Google account's email on this
       </v-icon>
           </v-list-item>
 
-          <v-list-item to="/account=placeditems">
+          <v-list-item to="/account">
             <v-list-item-title>Account</v-list-item-title> <v-icon  >
         mdi-account-box
       </v-icon>

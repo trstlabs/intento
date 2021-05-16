@@ -1,172 +1,148 @@
 <template>
-	<div class="sp-component sp-transfer-list" >
-        <p>sgsfgdss</p>
-		<div class="sp-transfer-list__header sp-component-title">
-			<h3>Transactions</h3>
-			<span>|</span>
-			<span>A list of your recent transactions</span>
-		</div>
-		<table
-			class="sp-transfer-list__table sp-box sp-shadow"
-			v-if="bankAddress && transactions.length > 0"
-		>
-			<thead>
-				<tr>
-					<th class="sp-transfer-list__status">STATUS</th>
-					<th class="sp-transfer-list__table__address">ADDRESS / DETAILS</th>
-					<th class="sp-transfer-list__table__amount">AMOUNT</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr v-for="(tx, index) in sentTransactions" v-bind:key="index">
-					<p> TEST </p>
-					<td class="sp-transfer-list__status">
-						<div class="sp-transfer-list__status__wrapper">
-							<div
-								
-							>
-								<span
-									
-								/>
-							</div>
-							<div class="sp-transfer-list__status__action">
-								<div class="sp-transfer-list__status__action__text">
-									{{ getTxText(tx) }}
-								</div>
-								<!--<div class="sp-transfer-list__status__action__date">
-									{{ getFmtTime(tx.response.timestamp) }}
-								</div>-->
-							</div>
-						</div>
-					</td>
-					<td class="sp-transfer-list__table__address"><p> TTTEST </p>
-						{{ getTxDetails(tx) }}
-					</td>
-					<td
-						class="sp-transfer-list__table__amount"
-						v-if="
-							tx.body.messages[0]['@type'] == '/cosmos.bank.v1beta1.MsgSend'
-						"
-					>
-						<div
-							v-for="(token, index) in tx.body.messages[0].amount"
-							v-bind:key="'am' + index"
-						>
-							{{
-								tx.body.messages[0].from_address == bankAddress
-									? '-' + token.amount + ' ' + token.denom.toUpperCase()
-									: '+' + token.amount + ' ' + token.denom.toUpperCase()
-							}}
-						</div>
-					</td>
-					<td
-						class="sp-transfer-list__table__amount"
-						v-else-if="
-							tx.body.messages[0]['@type'] ==
-							'/ibc.applications.transfer.v1.MsgTransfer'
-						"
-					>
-						<div>
-							{{
-								tx.body.messages[0].sender == bankAddress
-									? '-' +
-									  tx.body.messages[0].token.amount +
-									  ' ' +
-									  tx.body.messages[0].token.denom.toUpperCase()
-									: '+' +
-									  tx.body.messages[0].token.amount +
-									  ' ' +
-									  tx.body.messages[0].token.denom.toUpperCase()
-							}}
-						</div>
-					</td>
-					<td
-						class="sp-transfer-list__table__amount"
-						v-else-if="
-							tx.body.messages[0]['@type'] ==
-							'/ibc.core.channel.v1.MsgRecvPacket'
-						"
-					>
-						<div>
-							{{
-								getDecoded(tx.body.messages[0].packet.data).receiver ==
-								bankAddress
-									? '+' +
-									  getDecoded(tx.body.messages[0].packet.data).amount +
-									  ' IBC/' +
-									  tx.body.messages[0].packet.destination_port.toUpperCase() +
-									  '/' +
-									  tx.body.messages[0].packet.destination_channel.toUpperCase() +
-									  '/' +
-									  getDecoded(
-											tx.body.messages[0].packet.data
-									  ).denom.toUpperCase()
-									: '-' +
-									  getDecoded(tx.body.messages[0].packet.data).amount +
-									  ' IBC/' +
-									  tx.body.messages[0].packet.destination_port.toUpperCase() +
-									  '/' +
-									  tx.body.messages[0].packet.destination_channel.toUpperCase() +
-									  '/' +
-									  getDecoded(
-											tx.body.messages[0].packet.data
-									  ).denom.toUpperCase()
-							}}
-						</div>
-					</td>
-					<td class="sp-transfer-list__table__amount" v-else></td>
-				</tr>
-			</tbody>
-		</table>
+	<div v-if="depsLoaded">
+		<v-row class="ma-0" ><v-row class="ma-0"> <v-col cols="3"><v-text-field
+              label="Amount"
+              type="number"
+			  solo rounded
+              v-model="amount"
+            :rules="[rules.price]"
 
-		<table class="sp-transfer-list__table sp-box sp-shadow" v-else>
-			<tbody>
-				<tr>
-					<td class="sp-transfer-list__status">
-						<div class="sp-transfer-list__status__wrapper">
-							<div
-								class="sp-transfer-list__status__icon sp-transfer-list__status__icon__empty"
-							>
-								<span class="sp-icon sp-icon-Transactions" />
-							</div>
-							<div class="sp-transfer-list__status__action">
-								<div class="sp-transfer-list__status__action__text">
-									No transactions yet
-								</div>
-								<div
-									class="sp-transfer-list__status__action__date"
-									v-if="!bankAddress"
-								>
-									Add or unlock a wallet to see recent transactions
-								</div>
-							</div>
-						</div>
-					</td>
-					<td class="sp-transfer-list__table__address"></td>
-					<td class="sp-transfer-list__table__amount"></td>
-				</tr>
-			</tbody>
-		</table>
+        append-icon="$vuetify.icons.custom"
+             
+            ></v-text-field></v-col><v-col cols="9">
+			 <v-text-field v-model="toAddress" @click:append-outer="sendMsg"
+           solo rounded append-outer-icon="mdi-send" label="Cosmos-address"
+          ></v-text-field> </v-col>  </v-row>
+
+
+ <v-expansion-panels class="caption ma-0" insert>
+      <v-expansion-panel
+        v-for="(tx,i) in transactions"
+        :key="i"
+      >
+        <v-expansion-panel-header>TX: {{ tx.response.logs[0].events[0].attributes[0].value}} </v-expansion-panel-header>
+        <v-expansion-panel-content >
+          	<v-list-item>
+	  <v-list-item-content>
+        <v-list-item-title class="caption">Height: {{tx.response.height}}, Code:  {{tx.response.code}}, Timestamp:  {{tx.response.timestamp}}, Gas Used:  {{tx.response.gas_used}},  Fee:  {{tx.auth_info.fee.amount}}</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item> 
+		   <v-list-item v-if="tx.body.messages[0].itemid">
+      <v-list-item-content>
+        <v-list-item-title><v-btn outlined block rounded target="_blank" :to="{ name: 'BuyItemDetails', params: { id: tx.body.messages[0].itemid} }">
+  TPP ID:  {{tx.body.messages[0].itemid}}
+     </v-btn></v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
+	 <v-list-item v-else-if="tx.body.messages[0].id">
+      <v-list-item-content>
+         <v-list-item-title><v-btn outlined block rounded target="_blank" :to="{ name: 'BuyItemDetails', params: { id: tx.body.messages[0].id} }">
+  TPP ID:  {{tx.body.messages[0].id}}
+     </v-btn></v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
+		 <v-list-item v-if="tx.body.messages[0].estimation">
+      <v-list-item-content>
+        <v-list-item-title class="caption">Estimation: {{tx.body.messages[0].estimation}} TPP</v-list-item-title>
+		<estimator-item-item-info :itemid="tx.body.messages[0].itemid"/>
+      </v-list-item-content>
+    </v-list-item> 
+	 <div v-if="tx.body.messages[0].seller">
+      <v-list-item-content>
+     <seller-item-item-info class="ma-0 pa-0" :itemid="tx.body.messages[0].id"/>
+      </v-list-item-content>
+    </div>
+	 <div v-if="tx.body.messages[0].buyer">
+      <buyer-item-item-info class="ma-0 pa-0" :itemid="tx.body.messages[0].itemid"/>
+    </div>
+	
+
+	<div v-for="(event, eventi) in tx.response.logs[0].events" :key="eventi">
+		<v-card class="rounded-lg my-2 " outlined>
+		<span v-for="(attribute, attributei) in event.attributes" :key="attributei">
+<v-list-item>
+      <v-list-item-content>
+        <v-list-item-title><span class="caption" >{{attribute.key.toUpperCase()}}</span> : <span v-if="attribute.value == moduleAddress"><v-icon small left>mdi-shield-lock</v-icon>TPP Module Account</span><span v-else-if="attribute.value == bankAddress"><v-icon small>mdi-account</v-icon> You</span><span v-else> {{attribute.value}}</span></v-list-item-title>
+      </v-list-item-content>
+    </v-list-item> 
+	
+	</span>
+</v-card>
+		</div>
+		
+	 
+
+	
+	 </v-expansion-panel-content>
+		
+	
+      </v-expansion-panel>
+    </v-expansion-panels>
+</v-row>
+
+
+
+				<!--<v-data-table
+    :headers="headers"
+    :items="transactions"
+    :items-per-page="5"
+    class="elevation-1"
+  ></v-data-table>
+-->
+			
+	
+
+	<sign-tx v-if="submitted" :key="submitted" :fields="fields" :value="value" :typeUrl="msg" @clicked="afterSubmit"></sign-tx>
 	</div>
 </template>
 <script>
-import axios from 'axios'
-
+//import dayjs from 'dayjs'
+//import { decode } from 'js-base64'
+import {
+  SigningStargateClient,
+  assertIsBroadcastTxSuccess,isBroadcastTxSuccess,
+} from "@cosmjs/stargate";
+import { Registry } from "@cosmjs/proto-signing/";
+import { Type, Field } from "protobufjs";
 export default {
-	name: 'SpTransferList',
+	name: 'TransferList',
+
 //	props: { address: String, refresh: Boolean },
 	data: function () {
 		return {
-			bankAddress: '',
-            GetTxsEvent: {},
-        _Subscriptions: new Set(),
-		sentTransactions: {},
-		receivedTransactions: {}
+			toAddress: "",
+			amount: 0,
+			submitted: false,
+			   rules: {
+      
+          price: value => value > 0 || 'Must be positive :)',
+       
+          },
+
+
+		
+	
+	
+
 		}
 	},
 	computed: {
+
 	
-	
+		
+		depsLoaded() {
+				console.log("dep")
+			return true
+		},
+		sentTransactions() {
+				console.log("se")
+			return this.$store.getters.getSentTransactions || [];
+		},
+		receivedTransactions() {
+					console.log("rec")
+			return this.$store.getters.getReceivedTransactions || [];
+			
+		},
 		fullBalances() {
 			return this.balances.map((x) => {
 				this.addMapping(x)
@@ -174,301 +150,127 @@ export default {
 			})
 		},
 		transactions() {
-		
-		let sent =
+			console.log(this.sentTransactions)
+			let sent =
 				this.sentTransactions.txs?.map((tx, index) => {
-					tx = this.sentTransactions[index]
-		
+					tx.response = this.sentTransactions.tx_responses[index]
 					return tx
-				}) ?? []
-							
-				console.log(sent)
-				let received =
+				}) || [];
+			let received =
 				this.receivedTransactions.txs?.map((tx, index) => {
-					tx.response = this.receivedTransactions.tx_result[index]
+					tx.response = this.receivedTransactions.tx_responses[index]
 					return tx
-				}) ?? []
+				}) || [];
+console.log([...sent, ...received].sort(
+				(a, b) => b.response.height - a.response.height
+			))
+			
 			return [...sent, ...received].sort(
 				(a, b) => b.response.height - a.response.height
 			)
-		
-				
 		}
 	},
 	beforeCreate() {
-		
+	
 	},
 
-   
-
-	async created() {
+		async created() {
 	
-			this.bankAddress = this.$store.state.account.address
-			if (this.bankAddress != '') {
-            try {
-				let sent = (await axios.get(process.env.VUE_APP_RPC + '/tx_search?query=' + '"message.sender%3D%27' + this.bankAddress + '%27"')).data;                
-            
-				this.sentTransactions = JSON.stringify(sent.result)
-				    console.log(this.sentTransactions) 
-					 console.log(sent.result) 
+this.bankAddress = this.$store.state.account.address
+this.moduleAddress = process.env.VUE_APP_MODULE
 
-              let received = (await axios.get(process.env.VUE_APP_RPC + '/tx_search?query=' + '"message.recipient%3D%27' + this.bankAddress + '%27"')).data;                
-              
-				this.receivedTransactions = JSON.stringify(received.result)
-				  console.log(this.receivedTransactions) }
+console.log(this.bankAddress)
 
-			 catch (e) {
-                //console.error(new SpVuexError('QueryClient:ServiceGetTxsEvent', 'API Node Unavailable. Could not perform query.'));
-           console.log("ERROR" + e) 
-	
-			 } }},
+		if (this.depsLoaded) {
+				console.log("TEXT")
+			}
+
+	},
 	methods: {
 
-       
-         async ServiceGetTxsEvent({ commit }, { ...key }) {
-            try {
-                let params=Object.values(key)
-                let value = (await axios.get(process.env.VUE_APP_RPC + '/tx_search?query=' + '"message.sender%3D%27' + this.bankAddress + '%27"')).data;                
-                console.log(value) 
-                /*
-                while (all && value.pagination && value.pagination.next_key!=null) {
-                    let next_values=(await (await initQueryClient(rootGetters)).queryPostAll.apply(null,[...params, {'pagination.key':value.pagination.next_key}] )).data;
-                    
-                    for (let prop of Object.keys(next_values)) {
-                        if (Array.isArray(next_values[prop])) {
-                            value[prop]=[...value[prop], ...next_values[prop]]
-                        }else{
-                            value[prop]=next_values[prop]
-                        }
-                    }
-                    console.log(value)
-                }
-                */
-                this.QUERY({query: 'GetTxsEvent', key, value });
-                if (subscribe)
-                    commit('SUBSCRIBE', { action: 'ServiceGetTxsEvent', payload: key });
-            }
-            catch (e) {
-                //console.error(new SpVuexError('QueryClient:ServiceGetTxsEvent', 'API Node Unavailable. Could not perform query.'));
-           console.log("ERROR" + e) }
-        },
-
-async QUERY( {query, key, value }) {
-            this[query][JSON.stringify(key)] = value;
-        },
-        
+		
 		getFmtTime(time) {
-			const momentTime = dayjs(time)
+		//	const momentTime = dayjs(time)
 			return momentTime.format('D MMM, YYYY')
 		},
-		getDecoded(packet) {
-			try {
-				return JSON.parse(decode(packet))
-			} catch (e) {
-				return {}
-			}
-		},
-		getTxText(tx) {
-			let text = ''
-			if (tx.code != 0) {
-				text = '(Failed) '
-			}
-			if (tx.body.messages.length > 1) {
-				text = text + 'Multiple messages'
-			} else {
-				if (
-					tx.body.messages[0]['@type'] == '/cosmos.bank.v1beta1.MsgSend' ||
-					tx.body.messages[0]['@type'] ==
-						'/ibc.applications.transfer.v1.MsgTransfer'
-				) {
-					if (tx.body.messages[0].from_address == this.bankAddress) {
-						text = text + 'Sent to'
-					}
-					if (tx.body.messages[0].to_address == this.bankAddress) {
-						text = text + 'Received from'
-					}
-					if (tx.body.messages[0].sender == this.bankAddress) {
-						text = text + 'IBC Sent to'
-					}
-					if (tx.body.messages[0].receiver == this.bankAddress) {
-						text = text + 'IBC Received from'
-					}
-				} else {
-					let packet
-					switch (tx.body.messages[0]['@type']) {
-						case '/ibc.core.channel.v1.MsgChannelOpenAck':
-							text = text + 'IBC Channel Open Ack'
-							break
-						case '/ibc.core.channel.v1.MsgChannelOpenConfirm':
-							text = text + 'IBC Channel Open Confirm'
-							break
-						case '/ibc.core.channel.v1.MsgChannelOpenTry':
-							text = text + 'IBC Channel Open Try'
-							break
-						case '/ibc.core.channel.v1.MsgRecvPacket':
-							packet = this.getDecoded(tx.body.messages[0].packet.data)
-							if (packet.sender == this.bankAddress) {
-								text = text + 'IBC Sent to'
-							} else {
-								if (packet.receiver == this.bankAddress) {
-									text = text + 'IBC Received from'
-								} else {
-									text = text + 'IBC Recv Packet'
-								}
-							}
-							break
-						case '/ibc.core.channel.v1.MsgAcknowledgement':
-							text = text + 'IBC Ack Packet'
-							break
-						case '/ibc.core.channel.v1.MsgTimeout':
-							text = text + 'IBC Timeout Packet'
-							break
-						case '/ibc.core.channel.v1.MsgChannelOpenInit':
-							text = text + 'IBC Channel Open Init'
-							break
-						case '/ibc.core.client.v1.MsgCreateClient':
-							text = text + 'IBC Client Create'
-							break
-						case '/ibc.core.client.v1.MsgUpdateClient':
-							text = text + 'IBC Client Update'
-							break
-						case '/ibc.core.connection.v1.MsgConnectionOpenAck':
-							text = text + 'IBC Connection Open Ack'
-							break
-						case '/ibc.core.connection.v1.MsgConnectionOpenInit':
-							text = text + 'IBC Connection Open Init'
-							break
-						case '/ibc.core.connection.v1.MsgConnectionOpenConfirm':
-							text = text + 'IBC Connection Open Confirm'
-							break
-						case '/ibc.core.connection.v1.MsgConnectionOpenTry':
-							text = text + 'IBC Connection Open Try'
-							break
-						default:
-							text = text + 'Message'
-							break
-					}
-				}
-			}
-			return text
-		},
-		getTxDetails(tx) {
-			let text = ''
-			if (tx.body.messages.length > 1) {
-				text = text + '-'
-			} else {
-				if (
-					tx.body.messages[0]['@type'] == '/cosmos.bank.v1beta1.MsgSend' ||
-					tx.body.messages[0]['@type'] ==
-						'/ibc.applications.transfer.v1.MsgTransfer'
-				) {
-					if (tx.body.messages[0].from_address == this.bankAddress) {
-						text = text + tx.body.messages[0].to_address
-					}
-					if (tx.body.messages[0].to_address == this.bankAddress) {
-						text = text + tx.body.messages[0].from_address
-					}
-					if (tx.body.messages[0].sender == this.bankAddress) {
-						let chain = this.$store.getters['common/relayers/chainFromChannel'](
-							tx.body.messages[0].source_channel
-						)
-						text = text + chain + ':' + tx.body.messages[0].receiver
-					}
-					if (tx.body.messages[0].receiver == this.bankAddress) {
-						let chain = this.$store.getters['common/relayers/chainToChannel'](
-							tx.body.messages[0].source_channel
-						)
-						text = text + chain + ':' + tx.body.messages[0].receiver
-					}
-				} else {
-					let packet
-					switch (tx.body.messages[0]['@type']) {
-						case '/ibc.core.channel.v1.MsgChannelOpenAck':
-							text =
-								text +
-								tx.body.messages[0].port_id +
-								' / ' +
-								tx.body.messages[0].channel_id
-							break
-						case '/ibc.core.channel.v1.MsgChannelOpenConfirm':
-							text =
-								text +
-								tx.body.messages[0].port_id +
-								' / ' +
-								tx.body.messages[0].channel_id
-							break
-						case '/ibc.core.channel.v1.MsgChannelOpenTry':
-							text =
-								text +
-								tx.body.messages[0].port_id +
-								' / ' +
-								tx.body.messages[0].previous_channel_id +
-								' / ' +
-								tx.body.messages[0].counterparty_version
-							break
-						case '/ibc.core.channel.v1.MsgRecvPacket':
-							packet = this.getDecoded(tx.body.messages[0].packet.data)
-							if (packet.sender == this.bankAddress) {
-								text = text + 'IBC:' + packet.receiver
-							} else {
-								if (packet.receiver == this.bankAddress) {
-									text = text + 'IBC:' + packet.sender
-								} else {
-									text = text + 'IBC Recv Packet'
-								}
-							}
-							break
-						case '/ibc.core.channel.v1.MsgAcknowledgement':
-							text =
-								text +
-								tx.body.messages[0].packet.source_port +
-								':' +
-								tx.body.messages[0].packet.source_channel +
-								' <-> ' +
-								tx.body.messages[0].packet.destination_port +
-								':' +
-								tx.body.messages[0].packet.destination_channel
-							break
-						case '/ibc.core.channel.v1.MsgTimeout':
-							text = text + 'IBC Timeout Packet'
-							break
-						case '/ibc.core.channel.v1.MsgChannelOpenInit':
-							text = text + tx.body.messages[0].port_id
-							break
-						case '/ibc.core.client.v1.MsgCreateClient':
-							text = text + tx.body.messages[0].signer
-							break
-						case '/ibc.core.client.v1.MsgUpdateClient':
-							text = text + tx.body.messages[0].client_id
-							break
-						case '/ibc.core.connection.v1.MsgConnectionOpenAck':
-							text =
-								text +
-								tx.body.messages[0].connection_id +
-								' / ' +
-								tx.body.messages[0].counterparty_connection_id
-							break
-						case '/ibc.core.connection.v1.MsgConnectionOpenInit':
-							text = text + tx.body.messages[0].client_id
-							break
-						case '/ibc.core.connection.v1.MsgConnectionOpenConfirm':
-							text = text + tx.body.messages[0].connection_id
-							break
-						case '/ibc.core.connection.v1.MsgConnectionOpenTry':
-							text =
-								text +
-								tx.body.messages[0].client_id +
-								' / ' +
-								tx.body.messages[0].previous_connection_id
-							break
-						default:
-							text = text + 'Message'
-							break
-					}
-				}
-			}
-			return text
-		}
+
+		  async afterSubmit(value){
+ 
+
+ this.msg = ""
+ this.fields = []
+ this.value = {}
+  if(value == true) {
+             await this.$store.dispatch("setTransactions")
+       
+        await this.$store.dispatch("bankBalancesGet")
+
+  }
+          this.submitted = false
+
+   
+     
+
+    },
+
+
+    async sendMsg() {
+      this.loadingitem = true;
+      this.flightre = true;
+
+      this.fields = [
+	
+        ["fromAddress", 1, "string", "optional"],
+        ["toAddress", 2, "string", "optional"],
+		["amount", 3, "string", "repeated"],
+
+      ];
+      this.msg = '/cosmos.bank.v1beta1.MsgSend'
+
+      this.value = {
+          fromAddress: this.$store.state.account.address,
+		toAddress: this.toAddress,
+		 amount: [{ amount: this.amount, denom: "tpp"}],
+        },
+
+
+      this.submitted = true
+    },
+
+/*
+async sendMsg() {
+ 
+  this.loadingitem = true;
+      this.flightre = true;
+
+ const wallet = this.$store.state.wallet;
+
+
+
+
+
+const client = await SigningStargateClient.connectWithSigner( process.env.VUE_APP_RPC, wallet);
+
+const fee = {
+  amount: [{ amount: '0', denom: 'tpp' }],
+  gas: '200000'
+};
+
+const msg = {
+  typeUrl: "/cosmos.bank.v1beta1.MsgSend",
+  value: {
+      amount:  [{ amount: '5', denom: 'tpp' }],
+      fromAddress: this.$store.state.account.address,
+      toAddress: this.toAddress,
+  }
+};
+const result = await client.signAndBroadcast(this.$store.state.account.address, [msg], fee, "Welcome to the Trust Price Protocol community");
+assertIsBroadcastTxSuccess(result);
+
+
+
+}*/
+		
 	},
 
 }

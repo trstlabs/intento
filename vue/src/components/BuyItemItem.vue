@@ -916,6 +916,8 @@ export default {
       value: {},
       msg: "",
       submitted: false,
+        dialShare: false,
+      showphoto: null,
     };
   },
 
