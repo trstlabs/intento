@@ -12,6 +12,7 @@
     "@tendermint/vue": "^0.1.12",
     "@toruslabs/torus-direct-web-sdk": "^4.5.0",
     "core-js": "^3.6.5",
+    "dayjs": "^1.10.4",
     "firebase": "^8.3.0",
     "google-recaptcha": "^1.1.0",
     "vue": "^2.6.11",

@@ -416,7 +416,7 @@
                           thisitem.transferable != true
                         "
                         @click="submititemtransferable(false, thisitem.id)"
-                        ><v-icon left> mdi-cancel </v-icon>
+                        ><v-icon left> mdi-close </v-icon>
                         Reject
                         <div class="button__label" v-if="flightitn">
                           <div class="button__label__icon">

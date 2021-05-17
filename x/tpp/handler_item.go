@@ -16,7 +16,12 @@ import (
 )
 
 func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateItem) (*sdk.Result, error) {
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent("ItemCreated", sdk.NewAttribute("Creator", msg.Creator)),
+	)
 	k.CreateItem(ctx, *msg)
+	
+
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
@@ -249,6 +254,10 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		k.SetItem(ctx, item)
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent("ItemTransferable", sdk.NewAttribute("Itemid", msg.Itemid)),
+	)
+
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
@@ -410,6 +419,10 @@ if !k.HasItem(ctx, msg.Itemid) {
 
 
 	k.SetItem(ctx, item)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent("ItemResellable", sdk.NewAttribute("Itemid", msg.Itemid)),
+	)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

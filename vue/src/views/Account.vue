@@ -20,11 +20,13 @@
        
                    <v-tabs 
       
-    fixed-tabs
+:fixed-tabs="$vuetify.breakpoint.smAndUp"
+:center-active="$vuetify.breakpoint.xs"
       :dark="!!$vuetify.theme.dark"
       icons-and-text
 
   :background-color="($vuetify.theme.dark) ? 'dark' : 'light'"
+
   >
    <v-tab to="/account">
      Transactions<v-icon >
@@ -55,9 +57,9 @@
                   <!--<faucet/>-->
 
           <div v-if="this.$route.name == 'account'">
-  <v-img src="img/design/buy.png" contain>  <p    class="display-2 pt-4 font-weight-thin gray--text text-center mb-n1">  Transactions</p><p class="overline pt-n10 font-weight-bold gray--text text-center pb-5 "> Browse through history<v-btn text icon @click="setTX"> <v-icon >
+  <v-img src="img/design/buy.png" contain> <p class="overline font-weight-bold pt-4 text-center align-center "> Browse through history</p> <div class="text-center align-center" > <v-btn text icon @click="setTX"> <v-icon  >
         mdi-refresh
-      </v-icon></v-btn></p>  </v-img>
+      </v-icon></v-btn></div></v-img>
 
             
   
@@ -127,7 +129,7 @@ this.getInterestedItems()
   methods: {
     async setTX(){
             this.update = false
-      await this.$store.dispatch("setTransactions")
+      await this.$store.dispatch("setTransactions", this.$store.state.account.address )
       this.update = true
 
     },

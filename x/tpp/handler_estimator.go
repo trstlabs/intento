@@ -45,6 +45,10 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 	var estimatorlisthashstring = hex.EncodeToString(estimatorlistlenhash[:])
 	if estimatorlisthashstring == item.Estimationcounthash {
 		item.Bestestimator = "Awaiting"
+	
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent("ItemReadyForReveal", sdk.NewAttribute("Itemid", msg.Itemid)),
+		)
 	}
 
 	var estimatorestimationhash = sha256.Sum256([]byte(strconv.FormatInt(msg.Estimation, 10) + msg.Estimator))
@@ -58,6 +62,7 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 	k.SetItem(ctx, item)
 
 	k.CreateEstimator(ctx, *msg)
+
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
@@ -134,11 +139,6 @@ func handleMsgCreateFlag(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateF
 	if item.Transferable == true {
 		return nil, sdkerrors.Wrap(nil, "item is already estimated")
 	}
-
-
-		
-
-	
 
 
 	//remove item when it is flagged enough

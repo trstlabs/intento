@@ -32,7 +32,7 @@
 
               <v-divider class="ma-2" />
               <v-chip class="ma-1 caption" outlined>
-                <v-icon small left> mdi-account-badge </v-icon>
+                <v-icon small left> mdi-account-badge-outline </v-icon>
                 TPP ID: {{ thisitem.id }}
               </v-chip>
 
@@ -191,7 +191,7 @@
                             }`,
                           ]"
                           @click="submitDeleteBuyer(thisitem.id), getThisItem"
-                          ><v-icon left> mdi-cancel </v-icon>
+                          ><v-icon left> mdi-close </v-icon>
                           <span v-if="!flightITN"> Cancel transfer</span>
                           <div class="button__label" v-else>
                             <div class="button__label__icon"></div>

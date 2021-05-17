@@ -180,7 +180,7 @@
                   small
                  :to="{ name: 'BuyItemDetails', params: { id: item.id } }"
                 >
-                  <v-icon small left> mdi-account-badge </v-icon>
+                  <v-icon small left> mdi-account-badge-outline </v-icon>
                   TPP ID: {{ item.id }}
                 </v-chip>
 
@@ -360,7 +360,7 @@ overflow: hidden;
       <span>
         <div class="pa-2">
           <div>
-            <v-chip-group active-class="primary--text " column>
+            <v-chip-group active-class="primary--text " :column="$vuetify.breakpoint.smAndUp">
               <v-chip class="font-weight-light "
                 :disabled="lastitem"
                 small

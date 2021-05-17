@@ -25,7 +25,7 @@
           <v-row align="start">
             <v-col cols="8">
               <v-chip class="ma-1 caption"  outlined >
-                <v-icon left small> mdi-account-badge </v-icon>
+                <v-icon left small> mdi-account-badge-outline </v-icon>
                 TPP ID: {{ thisitem.id }}
               </v-chip>
 

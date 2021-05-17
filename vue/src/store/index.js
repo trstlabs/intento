@@ -468,18 +468,18 @@ async updateItem({ commit, state }, input) {
 
 
 },
-async setTransactions({ commit, state }) {
+async setTransactions({ commit, state }, address) {
 
 
   try {
-    let sent = (await axios.get(process.env.VUE_APP_API + '/cosmos/tx/v1beta1/txs?events='+ 'transfer.sender=' + state.account.address )).data;
+    let sent = (await axios.get(process.env.VUE_APP_API + '/cosmos/tx/v1beta1/txs?events=transfer.sender%3D%27' + address + '%27')).data;
 
     //let sentTransactions = JSON.stringify(sent.result)
 
 
-    let received = (await axios.get(process.env.VUE_APP_API + '/cosmos/tx/v1beta1/txs?events=' + 'transfer.recipient=' + state.account.address)).data;
+    let received = (await axios.get(process.env.VUE_APP_API + '/cosmos/tx/v1beta1/txs?events=transfer.recipient%3D%27' + address+ '%27')).data;
 
-   // let receivedTransactions = JSON.stringify(received.result)
+   // let receivedTransactions = JSON.stringify(received.result)MsgItemTransfer
     //console.log(received)
    // console.log(receivedTransactions)
    // console.log(receivedTransactions)
