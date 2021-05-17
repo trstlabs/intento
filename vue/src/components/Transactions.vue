@@ -39,8 +39,10 @@
   <div class="overline mx-2 text-center">TPP Transactions</div>
       <v-expansion-panels class="caption ma-0">
         <v-expansion-panel v-for="(tx, i) in transactions" :key="i">
-          <v-expansion-panel-header
-            >TX: {{ tx.response.logs[0].events[0].attributes[0].value }}
+          <v-expansion-panel-header class="text-capitalize caption"
+            ><span><v-icon color="info" small >
+                      mdi-cube-send</v-icon
+                    ><span v-if="tx.response.logs[0].events[2]"> {{ tx.response.logs[0].events[1].attributes[0].value }} </span><span v-else> {{ tx.response.logs[0].events[0].attributes[0].value }}</span></span>
           </v-expansion-panel-header>
           <v-expansion-panel-content>
             <v-list-item>
@@ -50,7 +52,7 @@
                 >
                 <v-list-item-title class="caption"
                   >Response:<span v-if="(tx.response.code = '0')">
-                    Successful<v-icon color="success" small>
+                    Successful<v-icon color="success" small right>
                       mdi-checkbox-marked-circle</v-icon
                     ></span
                   >

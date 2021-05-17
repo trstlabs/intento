@@ -56,7 +56,7 @@
               color="blue"
               small
               :href="`https://twitter.com/share?url=${pageUrl}&text=${encodeURI(
-                'Checkout this ' + thisitem.title
+                'Check out this ' + thisitem.title
               )}&via=TrustPrice&hashtags=${thisitem.tags}`"
               target="_blank"
             >
@@ -78,7 +78,7 @@
               color="green"
               small
               :href="`https://wa.me/?text=${encodeURI(
-                'Checkout this ' + thisitem.title
+                'Check out this ' + thisitem.title
               )}%20${pageUrl}`"
               target="_blank"
             >
@@ -89,7 +89,7 @@
               fab
               color="tertiary"
               small
-              :href="`mailto:?subject=I found something you might like&amp;body=Checkout this ${thisitem.title} at ${pageUrl}`"
+              :href="`mailto:?subject=I found something you might like&amp;body=Check out this ${thisitem.title} at ${pageUrl}`"
               target="_blank"
             >
               <v-icon>mdi-email</v-icon>
@@ -100,7 +100,7 @@
               color="blue"
               small
               :href="`https://t.me/share/url?url=${pageUrl}&text=${encodeURI(
-                'Checkout this ' + thisitem.title
+                'Check out this ' + thisitem.title
               )}`"
               target="_blank"
             >
@@ -798,7 +798,7 @@
       <v-row class="pa-2 mx-auto">
         <v-btn text rounded @click="sellerInfo">
           <v-icon v-if="!info" left> mdi-plus</v-icon
-          ><v-icon v-else left> mdi-close</v-icon>Seller Details
+          ><v-icon v-else left> mdi-close</v-icon>Advanced
         </v-btn>
 
         <v-spacer />
@@ -812,10 +812,10 @@
       </v-row>
       <div class="pa-2 mx-auto caption" v-if="info">
         <span>
-          <p class="text-center">
-            This seller had {{ sold }} before
-          </p>
-          <!--<p  Of which _ have been transfered by shipping and _ by local pickup.</p>-->
+          <p class="text-center my-4">   </p>
+            This seller had {{ sold }} before.<div v-if="ItemDate"> Buyable since: {{ItemDate}}</div><div v-if="ItemReadyDate">Time of last estimation: {{ItemReadyDate}}</div>
+
+           <!--<p  Of which _ have been transfered by shipping and _ by local pickup.</p>-->
         </span>
         <v-card-title v-if="SellerItems[0]" class="overline justify-center">
           All Seller items
@@ -891,7 +891,7 @@
 <script>
 import BuyItemDetails from "../views/BuyItemDetails.vue";
 import { usersRef, roomsRef, databaseRef } from "./firebase/db.js";
-
+import dayjs from 'dayjs'
 
 export default {
   components: { BuyItemDetails },
@@ -965,14 +965,27 @@ export default {
     pageUrl() {
       return process.env.VUE_APP_URL + "/itemid=" + this.thisitem.id;
     },
+    ItemDate() {
+      let event = this.$store.getters.getEvent("ItemTransferable") || []
+       return (this.getFmtTime(event.tx_responses[0].timestamp));
+    },
+     ItemReadyDate() {
+      let event = this.$store.getters.getEvent("ItemReadyForReveal") || []
+       return (this.getFmtTime(event.tx_responses[0].timestamp));
+    }
   },
 
   methods: {
+
+    getFmtTime(time) {
+      	const momentTime = dayjs(time)
+      return momentTime.format("D MMM, YYYY HH:mm:ss");
+    },
     async submit(deposit) {
       if (!this.hasAddress) {
         alert("Sign in first");
-        this.$router.push("/");
-        window.location.reload();
+      //  this.$router.push("/");
+       // window.location.reload();
       }
 
       if (this.hasAddress) {
@@ -1008,7 +1021,7 @@ export default {
       if (navigator.share) {
         const shareData = {
           title: this.thisitem.title,
-          text: "Checkout this " + this.thisitem.title,
+          text: "Check out this " + this.thisitem.title,
           url: this.pageUrl,
         };
 
@@ -1034,7 +1047,7 @@ console.log(body)
       if (navigator.share) {
         const shareData = {
           title: this.thisitem.title,
-          text: "Checkout this " + this.thisitem.title,
+          text: "Check out this " + this.thisitem.title,
           url: this.pageUrl,
         };
 
@@ -1108,8 +1121,11 @@ console.log(body)
       this.fullscreen = true;
     },
 
+  
     sellerInfo() {
       this.$store.dispatch("setBuySellerItemList", this.thisitem.seller);
+    this.$store.dispatch("setEvent", {type: "ItemTransferable", attribute: "Itemid", value: this.thisitem.id});
+  this.$store.dispatch("setEvent", {type: "ItemReadyForReveal", attribute: "Itemid", value: this.thisitem.id});
       let rs = this.SellerItems.filter((i) => i.buyer != "");
       this.sold = "no buyers";
       if (rs[1]) {

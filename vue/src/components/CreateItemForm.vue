@@ -496,6 +496,8 @@ changedeposit: false,
         this.selectedTags.length > 0 &&
         this.selectedCountries.length > 0 &&
         !!this.$store.state.user
+           &&
+        (this.data.shippingcost || this.data.localpickup)
       ) {
         return true;
       }

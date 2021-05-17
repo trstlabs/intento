@@ -495,12 +495,30 @@ async setTransactions({ commit, state }, address) {
 
   }
 },
+async setEvent({ commit }, {type, attribute, value}){
 
-  },
-  getters: {
-    account: state => state.account, bankBalances: state => state.bankBalances, getSellerItemList: state => state.sellerItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getSellerActionList: state => state.sellerActionList, getTagList: state => state.tagList, getLocationList: state => state.locationList, getRegionList: state => state.regionList, getBuySellerList: state => state.buySellerList, getReceivedTransactions: state => state.receivedTransactions, getSentTransactions: state => state.sentTransactions,
-
-  }
-
-
-});
+  console.log(attribute)
+  console.log(value)
+        try {
+          let event = (await axios.get(process.env.VUE_APP_API + '/cosmos/tx/v1beta1/txs?events=' + type + '.' + attribute + '%3D%27' + value + '%27')).data;
+  console.log(event)
+          commit('entitySet', { type, body: event })
+        }
+  
+  
+        catch (e) {
+          //console.error(new SpVuexError('QueryClient:ServiceGetTxsEvent', 'API Node Unavailable. Could not perform query.'));
+          console.log("ERROR" + e)
+  
+        }
+      },
+  
+    },
+    getters: {
+      account: state => state.account, bankBalances: state => state.bankBalances, getSellerItemList: state => state.sellerItemList, getEstimatorItemList: state => state.estimatorItemList, getBuyerItemList: state => state.buyerItemList, getBuyItemList: state => state.buyItemList, getInterestedItemList: state => state.InterestedItemList, getItemByID: state => id => state.data.item.find((item) => item.id === id), getToEstimateList: state => state.toEstimateList, getSellerActionList: state => state.sellerActionList, getTagList: state => state.tagList, getLocationList: state => state.locationList, getRegionList: state => state.regionList, getBuySellerList: state => state.buySellerList, getReceivedTransactions: state => state.receivedTransactions, getSentTransactions: state => state.sentTransactions,getEvent: state => t => state.data[t],
+  
+    }
+  
+  
+  });
+  
