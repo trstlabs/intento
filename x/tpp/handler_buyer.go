@@ -99,9 +99,8 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 		}
 
 	}
-
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent("ItemPrepayment", sdk.NewAttribute("Itemid", msg.Itemid)),
+		sdk.NewEvent(types.EventTypeItemPrepayment, sdk.NewAttribute(types.AttributeKeyItemID, msg.Itemid)),
 	)
 	//k.CreateBuyer(ctx, *msg)
 

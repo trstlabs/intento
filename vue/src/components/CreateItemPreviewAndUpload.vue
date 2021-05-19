@@ -177,13 +177,13 @@
 </template>
 
 <script>
-import AppText from "./AppText.vue";
+
 import CreateItemForm from "./CreateItemForm.vue";
 import { fb, databaseRef } from "./firebase/db";
 
 export default {
   props: ["thisitem"],
-  components: { AppText, CreateItemForm },
+  components: { CreateItemForm },
   data() {
     return {
      

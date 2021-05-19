@@ -45,9 +45,16 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 	// Create the item
 	count := k.GetItemCount(ctx)
 
+
 	var estimationcount = fmt.Sprint(msg.Estimationcount)
 	var estimationcountHash = sha256.Sum256([]byte(estimationcount + msg.Creator))
 	var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
+
+	
+	submitTime := ctx.BlockHeader().Time
+
+	activePeriod := k.GetParams(ctx).MaxActivePeriod
+	endTime := submitTime.Add(activePeriod)
 
 	var item = types.Item{
 		Creator:             msg.Creator,
@@ -64,8 +71,14 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 		Condition:      msg.Condition,
 		Shippingregion: msg.Shippingregion,
 		Depositamount:  msg.Depositamount,
+		Submittime: submitTime,
+		Endtime: endTime,
+		
+		
 	}
-
+	//works 100% with endtime tx.BlockHeader().Time
+	k.InsertInactiveItemQueue(ctx, item.Id, endTime)
+	
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	key := types.KeyPrefix(types.ItemKey + item.Id)
 	value := k.cdc.MustMarshalBinaryBare(&item)
@@ -112,6 +125,24 @@ func (k Keeper) DeleteItem(ctx sdk.Context, key string) {
 func (k Keeper) GetAllItem(ctx sdk.Context) (msgs []types.Item) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefix(types.ItemKey))
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var msg types.Item
+		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &msg)
+		msgs = append(msgs, msg)
+	}
+
+	return
+}
+
+
+
+// GetAllInactiveItems returns all inactive item
+func (k Keeper) GetAllInactiveItems(ctx sdk.Context) (msgs []types.Item) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.InactiveItemQueuePrefix)
+	iterator := sdk.KVStorePrefixIterator(store, types.InactiveItemQueuePrefix)
 
 	defer iterator.Close()
 

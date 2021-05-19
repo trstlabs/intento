@@ -454,12 +454,12 @@
                 </v-stepper-step>
 
                 <v-stepper-content step="4" :complete="thisitem.status != ''">
-                  <app-text type="subtitle"
+                  <p type="subtitle"
                     >Item placed. Awaiting buyer... Tip: share your item with
-                    family and friends. </app-text>
+                    family and friends. </p>
                 
                 <v-icon small>mdi-share-variant </v-icon> <input v-model="tocopy" size=50 class="mx-2 caption" type="text" ref="input" >   <v-btn text @click="copyText()">  Copy</v-btn>
-                  <app-text
+                  <p
                     v-if="thisitem.shippingcost > 0 && thisitem.localpickup != '' "
                     type="caption"
                   >
@@ -468,16 +468,16 @@
                     your tokens. After a buyer is found and chooses local
                     pickup, the buyer can pick it up. Tip: let the buyer
                     transfer the tokens during your meetup.
-                  </app-text>
-                  <app-text
+                  </p>
+                  <p
                     v-if="thisitem.shippingcost === 0 && thisitem.localpickup != ''"
                     type="caption"
                   >
                     After a buyer is found negotiate a meetup time and place by
                     sending a message to the buyer. Tip: let the buyer transfer
                     the tokens during your meetup.
-                  </app-text>
-                  <app-text
+                  </p>
+                  <p
                     v-if="
                       thisitem.shippingcost > 0 &&
                       thisitem.localpickup == ''
@@ -486,7 +486,7 @@
                   >
                     After a buyer is found, find out about the address to ship
                     to by sending a message to the buyer.
-                  </app-text>
+                  </p>
                 </v-stepper-content>
                 <v-stepper-step :complete="thisitem.status != ''" step="5">
                   Item Transfer
@@ -507,10 +507,10 @@
                     "
                   >
                   
-                    <app-text type="caption">
+                    <p type="caption">
                       Now it's time to ship the item. Provide a track and trace
                       code to the buyer if available.
-                    </app-text>
+                    </p>
                     <input
                       type="checkbox"
                       id="checkbox"
@@ -544,9 +544,9 @@
                   >
                     
 
-                    <app-text type="caption">
+                    <p type="caption">
                       Now its time to meet up with the buyer. 
-                    </app-text>
+                    </p>
                   </div>
                          <div class="justify-end">
                   <v-btn rounded

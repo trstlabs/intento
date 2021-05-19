@@ -16,11 +16,11 @@ import (
 )
 
 func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateItem) (*sdk.Result, error) {
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent("ItemCreated", sdk.NewAttribute("Creator", msg.Creator)),
-	)
 	k.CreateItem(ctx, *msg)
 	
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, msg.Creator)),
+	)
 
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
@@ -58,7 +58,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 	}
 
 	item := k.GetItem(ctx, msg.Id)
-
+	
 	if item.Buyer != "" && item.Status != "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item has a buyer")
 	}
@@ -107,6 +107,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 
 			}
 		}
+		k.RemoveFromInactiveItemQueue(ctx, msg.Id, item.Endtime)
 		k.DeleteItem(ctx, msg.Id)
 	}
 
@@ -253,11 +254,12 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		item.Transferable = msg.Transferable
 		k.SetItem(ctx, item)
 	}
-
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent("ItemTransferable", sdk.NewAttribute("Itemid", msg.Itemid)),
+		sdk.NewEvent(types.EventTypeItemTransferable, sdk.NewAttribute(types.AttributeKeyItemID, msg.Itemid)),
 	)
 
+	
+	k.RemoveFromInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
@@ -420,9 +422,9 @@ if !k.HasItem(ctx, msg.Itemid) {
 
 	k.SetItem(ctx, item)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent("ItemResellable", sdk.NewAttribute("Itemid", msg.Itemid)),
-	)
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.EventTypeItemResellable, sdk.NewAttribute(types.AttributeKeyItemID, msg.Itemid)),
+	)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

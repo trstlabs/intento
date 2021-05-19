@@ -393,7 +393,7 @@
                         indeterminate
                         color="secondary"
                       ></v-progress-linear
-                      >Sending transaction...
+                      >Awaiting transaction...
                     </div>
                   </v-btn>
                 </v-col>
@@ -426,7 +426,7 @@
                         indeterminate
                         color="secondary"
                       ></v-progress-linear
-                      >Sending transaction...
+                      >Awaiting transaction...
                     </div>
                   </v-btn>
                   <v-btn
@@ -449,7 +449,7 @@
                         indeterminate
                         color="secondary"
                       ></v-progress-linear
-                      >Sending transaction...
+                      >Awaiting transaction...
                     </div>
                   </v-btn> </v-col
                 ><v-col>
@@ -481,7 +481,7 @@
                         indeterminate
                         color="secondary"
                       ></v-progress-linear
-                      >Sending transaction...
+                      >Awaiting transaction...
                     </div>
                   </v-btn>
                   <v-btn
@@ -514,7 +514,7 @@
                         indeterminate
                         color="secondary"
                       ></v-progress-linear
-                      >Sending transaction...
+                      >Awaiting transaction...
                     </div>
                   </v-btn>
                 </v-col>
@@ -901,7 +901,7 @@ export default {
     return {
       amount: "",
       iteminfo: false,
-      flight: false,
+ 
       flightLP: false,
       flightSP: false,
       info: false,
@@ -985,7 +985,7 @@ export default {
       if (!this.hasAddress) {
         alert("Sign in first");
       //  this.$router.push("/");
-       // window.location.reload();
+        window.location.reload();
       }
 
       if (this.hasAddress) {
@@ -1008,8 +1008,7 @@ export default {
   this.submitted = true
         this.loadingitem = false;
       }
-      this.flightLP = false;
-      this.flightSP = false;
+
     },
 
     async getThisItem() {
@@ -1113,6 +1112,8 @@ console.log(body)
          this.$router.push("/account=boughtitems")}
 
           this.submitted = false
+                this.flightLP = false;
+      this.flightSP = false;
     },
 
     show(photo) {

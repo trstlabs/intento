@@ -3,6 +3,7 @@ package types
 const (
 	QueryGetItem  = "get-item"
 	QueryListItem = "list-item"
+	QueryListInactiveItems = "list-inactive-items"
 )
 
 const (

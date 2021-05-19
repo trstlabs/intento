@@ -35,11 +35,47 @@ func CmdListItem() *cobra.Command {
 			return clientCtx.PrintProto(res)
 		},
 	}
+	
 
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
+
+
+func CmdListInactiveItems() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-inactive-items",
+		Short: "list all inactive items",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryAllItemRequest{
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.ItemAll(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 
 func CmdShowItem() *cobra.Command {
 	cmd := &cobra.Command{

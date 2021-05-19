@@ -49,10 +49,10 @@
               </span>
 
 
-              <app-text
+              <p
                 class="mt-1"
                 v-if="thisitem.bestestimator === userAddress"
-                type="p"
+                
               >
                 <v-divider class="ma-4" />
                 <v-icon left> mdi-account-check </v-icon>You are the best
@@ -62,11 +62,11 @@
                   {{ (thisitem.estimationprice * 0.05).toFixed(0)
                   }}<v-icon small right>$vuetify.icons.custom</v-icon> .</span
                 >
-              </app-text>
-              <app-text
+              </p>
+              <p
                 class="mt-1"
                 v-else-if="thisitem.lowestestimator === userAddress"
-                type="p"
+                
               >
                 <v-divider class="ma-4" />
                 <v-icon left> mdi-account-arrow-left </v-icon>
@@ -77,11 +77,11 @@
                   lose {{ thisitem.depositamount
                   }}<v-icon small right>$vuetify.icons.custom</v-icon> .</span
                 >
-              </app-text>
-              <app-text
+              </p>
+              <p
                 class="mt-1"
                 v-else-if="thisitem.highestestimator === userAddress"
-                type="p"
+                
               >
                 <v-divider class="ma-4" />
                 <v-icon left> mdi-account-arrow-right </v-icon>
@@ -96,13 +96,13 @@
                   {{ thisitem.depositamount
                   }}<v-icon small right>$vuetify.icons.custom</v-icon> .</span
                 >
-              </app-text>
-              <app-text class="mt-1 text-center" v-else type="caption">
+              </p>
+              <p class="mt-1 text-center" v-else type="caption">
                 <v-divider class="ma-4" />
                 You have estimated this item and you are neither the highest,
                 lowest or the best. You may withdrawl your TPP tokens. This is
                 done automatically for you when the item transfers.
-              </app-text>
+              </p>
             </v-col>
 
             <v-col cols="4">

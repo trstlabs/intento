@@ -23,6 +23,19 @@ func listItemHandler(clientCtx client.Context) http.HandlerFunc {
 	}
 }
 
+func listInactiveItemsHandler(clientCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/list-inactive-items", types.QuerierRoute), nil)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, res)
+	}
+}
+
 func getItemHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]

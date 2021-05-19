@@ -20,6 +20,8 @@ import (
 	"github.com/danieljdd/tpp/x/tpp/client/rest"
 	"github.com/danieljdd/tpp/x/tpp/keeper"
 	"github.com/danieljdd/tpp/x/tpp/types"
+
+	
 )
 
 var (
@@ -165,6 +167,6 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return EndBlocker(ctx, am.keeper)//return []abci.ValidatorUpdate{}
 }

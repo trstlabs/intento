@@ -12,6 +12,8 @@ func DefaultGenesis() *GenesisState {
 		EstimatorList: []*Estimator{},
 		BuyerList:     []*Buyer{},
 		ItemList:      []*Item{},
+		Params: DefaultParams(),
+
 	}
 }
 
@@ -45,7 +47,16 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("duplicated id for item")
 		}
 		itemIdMap[elem.Id] = true
+
 	}
+
+	
+/*
+	err := gs.Params.ValidateParams()
+	if err != nil {
+		return err
+	}*/
+
 
 	return nil
 }

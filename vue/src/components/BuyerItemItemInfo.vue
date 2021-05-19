@@ -141,21 +141,21 @@
 
                 <v-stepper-content step="2">
                   <div v-if="thisitem.tracking === true">
-                    <app-text type="p">This item has shipped </app-text>
-                    <app-text type="p"
+                    <p >This item has shipped </p>
+                    <p 
                       >Item has been shipped. Item seller indicated that item is
                       shipped. For more information contact the seller. The
                       protocol has received the request of the seller to arrange
                       tranfer coins.
-                    </app-text>
+                    </p>
                   </div>
 
                   <div v-if="thisitem.localpickup == '' && !thisitem.status">
-                    <app-text type="p">This item is not shipped yet</app-text>
-                    <app-text type="p"
+                    <p >This item is not shipped yet</p>
+                    <p 
                       >Contact the seller of {{ thisitem.title }}. Item seller
                       will indicate if the item is shipped.
-                    </app-text>
+                    </p>
                   </div>
 
                   <div>
@@ -165,9 +165,9 @@
                         thisitem.status != 'Transferred'
                       "
                     >
-                      <app-text class="ma-2" type="p">
+                      <p class="ma-2" >
                         Arrange a meeting to pick up the item.
-                      </app-text>
+                      </p>
                       <v-row>
                         <v-btn
                           class="ma-4"

@@ -73,7 +73,8 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		flags.FlagChainID:        ChainID,
 		flags.FlagKeyringBackend: "test",
 	})
-
+//rosetta
+	//rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 	return rootCmd, encodingConfig
 }
 

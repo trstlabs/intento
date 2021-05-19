@@ -33,6 +33,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdShowBuyer())
 
 	cmd.AddCommand(CmdListItem())
+	cmd.AddCommand(CmdListInactiveItems())
 	cmd.AddCommand(CmdShowItem())
 
 	return cmd

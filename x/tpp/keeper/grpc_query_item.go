@@ -39,6 +39,37 @@ func (k Keeper) ItemAll(c context.Context, req *types.QueryAllItemRequest) (*typ
 	return &types.QueryAllItemResponse{Item: items, Pagination: pageRes}, nil
 }
 
+
+func (k Keeper) InactiveItemsAll(c context.Context, req *types.QueryAllInactiveItemsRequest) (*types.QueryAllInactiveItemsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	var items []*types.Item
+	ctx := sdk.UnwrapSDKContext(c)
+
+	store := ctx.KVStore(k.storeKey)
+	itemStore := prefix.NewStore(store, types.InactiveItemQueuePrefix)
+
+	pageRes, err := query.Paginate(itemStore, req.Pagination, func(key []byte, value []byte) error {
+		var item types.Item
+		if err := k.cdc.UnmarshalBinaryBare(value, &item); err != nil {
+			return err
+		}
+
+		items = append(items, &item)
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllInactiveItemsResponse{Item: items, Pagination: pageRes}, nil
+}
+
+
+
 func (k Keeper) Item(c context.Context, req *types.QueryGetItemRequest) (*types.QueryGetItemResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

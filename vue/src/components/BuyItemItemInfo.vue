@@ -387,25 +387,17 @@
 <script>
 import { databaseRef } from "./firebase/db";
 import ItemListBuy from "./ItemListBuy.vue";
-import WalletCoins from "./WalletCoins.vue";
-import {
-  SigningStargateClient,
-  assertIsBroadcastTxSuccess,
-} from "@cosmjs/stargate";
-import { Registry } from "@cosmjs/proto-signing/";
-import { Type, Field } from "protobufjs";
+
+
 
 export default {
   props: ["itemid"],
-  components: { ItemListBuy, WalletCoins },
+  components: { ItemListBuy },
   data() {
     return {
       //itemid: this.item.id,
       //make sure deposit is number+token before sending tx
-      amount: "",
-      flight: false,
-      flightLP: false,
-      flightSP: false,
+
       showinfo: false,
       imageurl: "",
      
@@ -475,11 +467,3 @@ export default {
 };
 </script>
 
-
-
-<!---
-shows item id from buy list
-<div id="item-list-buy">
-      {{ itemid }}
-    </div>
-    ---->

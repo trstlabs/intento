@@ -331,7 +331,7 @@ func New(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.tppKeeper = *tppkeeper.NewKeeper(
-		appCodec, keys[tpptypes.StoreKey], keys[tpptypes.MemStoreKey], app.AccountKeeper, app.BankKeeper,
+		appCodec, keys[tpptypes.StoreKey], keys[tpptypes.MemStoreKey], app.GetSubspace(tpptypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 	)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
@@ -383,7 +383,7 @@ func New(
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName)
+	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, tpptypes.ModuleName)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -601,6 +601,7 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(tpptypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper

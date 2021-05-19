@@ -9,10 +9,11 @@ import (
 var _ sdk.Msg = &MsgCreateBuyer{}
 
 func NewMsgCreateBuyer(buyer string, itemid string, deposit int64) *MsgCreateBuyer {
+
+
 	return &MsgCreateBuyer{
 		Buyer:  buyer,
 		Itemid: itemid,
-		//Transferable: transferable,
 		Deposit: deposit,
 	}
 }

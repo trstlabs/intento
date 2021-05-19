@@ -17,6 +17,18 @@ func listItem(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmin
 	return bz, nil
 }
 
+func listInactiveItems(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	msgs := keeper.GetAllInactiveItems(ctx)
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msgs)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}
+
+
 func getItem(ctx sdk.Context, id string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	msg := keeper.GetItem(ctx, id)
 

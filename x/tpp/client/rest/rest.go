@@ -30,6 +30,7 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 
 	r.HandleFunc("/tpp/item/{id}", getItemHandler(clientCtx)).Methods("GET")
 	r.HandleFunc("/tpp/item", listItemHandler(clientCtx)).Methods("GET")
+	r.HandleFunc("/tpp/inactiveitems", listInactiveItemsHandler(clientCtx)).Methods("GET")
 
 }
 

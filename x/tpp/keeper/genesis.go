@@ -19,6 +19,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 			panic(err)
 		}
 	}
+	for _, elem := range state.ItemList {
+
+	k.SetItem(ctx, *elem)
+	k.InsertInactiveItemQueue(ctx, elem.Id, elem.Endtime)
+	}
 
 }
 

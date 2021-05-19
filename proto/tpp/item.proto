@@ -2,10 +2,11 @@ syntax = "proto3";
 package danieljdd.tpp.tpp;
 
 
-
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 import "gogoproto/gogo.proto";
 //import "tpp/estimator.proto";
-import "cosmos/base/v1beta1/coin.proto";
+//import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/danieljdd/tpp/x/tpp/types";
 
@@ -37,7 +38,12 @@ message Item {
   string creator = 25;
   string note = 26;
   int64 discount = 27;
+  google.protobuf.Timestamp submittime = 28
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+      google.protobuf.Timestamp endtime = 29
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
 }
+
 
 message MsgCreateItem {
   string creator = 1;
@@ -98,4 +104,17 @@ message MsgItemResell {
   string localpickup = 5;
   repeated string shippingregion = 6; 
   string note = 7;
+}
+
+
+// ActiveParams defines the params for activeness of items on governance proposals.
+message Params {
+   option (gogoproto.goproto_stringer) = false;
+  //  Maximum period for TPP holders to buy an item. Initial value: 2
+  //  months.
+  google.protobuf.Duration MaxActivePeriod = 1 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "max_active_period,omitempty"
+  ];
 }

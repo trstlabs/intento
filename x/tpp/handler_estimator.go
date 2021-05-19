@@ -47,7 +47,7 @@ func handleMsgCreateEstimator(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCr
 		item.Bestestimator = "Awaiting"
 	
 		ctx.EventManager().EmitEvent(
-			sdk.NewEvent("ItemReadyForReveal", sdk.NewAttribute("Itemid", msg.Itemid)),
+			sdk.NewEvent(types.EventTypeItemReady, sdk.NewAttribute(types.AttributeKeyItemID, msg.Itemid)),
 		)
 	}
 
