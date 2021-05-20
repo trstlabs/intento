@@ -9,7 +9,7 @@ import (
 	"github.com/danieljdd/tpp/x/tpp/types"
 	"github.com/gorilla/mux"
 )
-
+/*
 func listBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/list-buyer", types.QuerierRoute), nil)
@@ -28,6 +28,23 @@ func getBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 		id := mux.Vars(r)["id"]
 
 		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/get-buyer/%s", types.QuerierRoute, id), nil)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, res)
+	}
+}
+*/
+
+
+func buyerItemsHandler(clientCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		buyer := mux.Vars(r)["buyer"]
+
+		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/buyer-items/%s", types.QuerierRoute, buyer), nil)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
 			return

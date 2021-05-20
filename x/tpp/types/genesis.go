@@ -10,7 +10,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// this line is used by starport scaffolding # genesis/types/default
 		EstimatorList: []*Estimator{},
-		BuyerList:     []*Buyer{},
+		//BuyerList:     []*Buyer{},
 		ItemList:      []*Item{},
 		Params: DefaultParams(),
 
@@ -30,7 +30,7 @@ func (gs GenesisState) Validate() error {
 		}
 		estimatorIdMap[elem.Itemid + "-" + elem.Estimator] = true
 	}
-	// Check for duplicated ID in buyer
+/*	// Check for duplicated ID in buyer
 	buyerIdMap := make(map[string]bool)
 
 	for _, elem := range gs.BuyerList {
@@ -38,7 +38,7 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("duplicated id for buyer")
 		}
 		buyerIdMap[elem.Itemid] = true
-	}
+	}*/
 	// Check for duplicated ID in item
 	itemIdMap := make(map[string]bool)
 
@@ -55,8 +55,7 @@ func (gs GenesisState) Validate() error {
 	err := gs.Params.ValidateParams()
 	if err != nil {
 		return err
-	}*/
-
-
+	}
+*/
 	return nil
 }

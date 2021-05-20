@@ -50,3 +50,19 @@ func getItemHandler(clientCtx client.Context) http.HandlerFunc {
 		rest.PostProcessResponse(w, clientCtx, res)
 	}
 }
+
+
+func sellerItemsHandler(clientCtx client.Context) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		seller := mux.Vars(r)["seller"]
+
+		res, height, err := clientCtx.QueryWithData(fmt.Sprintf("custom/%s/seller-items/%s", types.QuerierRoute, seller), nil)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusNotFound, err.Error())
+			return
+		}
+
+		clientCtx = clientCtx.WithHeight(height)
+		rest.PostProcessResponse(w, clientCtx, res)
+	}
+}

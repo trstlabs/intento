@@ -83,3 +83,27 @@ func (k Keeper) Item(c context.Context, req *types.QueryGetItemRequest) (*types.
 
 	return &types.QueryGetItemResponse{Item: &item}, nil
 }
+
+
+
+
+
+func (k Keeper) SellerItems(c context.Context, req *types.QuerySellerItemsRequest) (*types.QuerySellerItemsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	//var items []*types.Item
+	ctx := sdk.UnwrapSDKContext(c)
+
+
+	items := k.GetAllSellerItems(ctx, req.Seller)
+
+	//store := ctx.KVStore(k.storeKey)
+	//itemStore := prefix.NewStore(store, types.InactiveItemQueuePrefix)
+
+
+
+	return &types.QuerySellerItemsResponse{Item: items}, nil
+
+}

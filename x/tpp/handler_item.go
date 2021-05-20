@@ -18,9 +18,7 @@ import (
 func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateItem) (*sdk.Result, error) {
 	k.CreateItem(ctx, *msg)
 	
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, msg.Creator)),
-	)
+	
 
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
@@ -109,6 +107,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 		}
 		k.RemoveFromInactiveItemQueue(ctx, msg.Id, item.Endtime)
 		k.DeleteItem(ctx, msg.Id)
+		k.RemoveFromItemSeller(ctx, msg.Id, msg.Seller)
 	}
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
@@ -180,6 +179,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 		item.Estimatorlist = nil
 		item.Status = "Estimators refunded"*/
 		k.DeleteItem(ctx, msg.Itemid)
+		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
 		return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 	}
 
@@ -249,6 +249,7 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 
 		//item has to be deleted because otherwise this function can be run again
 		k.DeleteItem(ctx, msg.Itemid)
+		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
 
 	} else {
 		item.Transferable = msg.Transferable
@@ -269,7 +270,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
 	//get buyer info
-	buyer := k.GetBuyer(ctx, msg.Itemid)
+	//buyer := k.GetBuyer(ctx, msg.Itemid)
 
 	//get item info
 	item := k.GetItem(ctx, msg.Itemid)
@@ -350,7 +351,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 
 		item.Status = "Shipped"
 		k.SetItem(ctx, item)
-		k.SetBuyer(ctx, buyer)
+		//k.SetBuyer(ctx, buyer)
 	} else {
 		repayment := bigintestimationprice.Add(bigintshipping)
 		repaymentCoins := sdk.NewCoin("tpp", repayment)
@@ -375,7 +376,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 
 		item.Status = "Shipping declined; buyer refunded"
 		k.SetItem(ctx, item)
-		k.SetBuyer(ctx, buyer)
+		//k.SetBuyer(ctx, buyer)
 	}
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil

@@ -25,12 +25,14 @@ func registerQueryRoutes(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/tpp/estimator/{id}", getEstimatorHandler(clientCtx)).Methods("GET")
 	r.HandleFunc("/tpp/estimator", listEstimatorHandler(clientCtx)).Methods("GET")
 
-	r.HandleFunc("/tpp/buyer/{id}", getBuyerHandler(clientCtx)).Methods("GET")
-	r.HandleFunc("/tpp/buyer", listBuyerHandler(clientCtx)).Methods("GET")
+//	r.HandleFunc("/tpp/buyer/{id}", getBuyerHandler(clientCtx)).Methods("GET")
+//	r.HandleFunc("/tpp/buyer", listBuyerHandler(clientCtx)).Methods("GET")
+r.HandleFunc("/tpp/buyeritems/{buyer}", buyerItemsHandler(clientCtx)).Methods("GET")
 
 	r.HandleFunc("/tpp/item/{id}", getItemHandler(clientCtx)).Methods("GET")
 	r.HandleFunc("/tpp/item", listItemHandler(clientCtx)).Methods("GET")
 	r.HandleFunc("/tpp/inactiveitems", listInactiveItemsHandler(clientCtx)).Methods("GET")
+	r.HandleFunc("/tpp/selleritems/{seller}", sellerItemsHandler(clientCtx)).Methods("GET")
 
 }
 
@@ -44,7 +46,9 @@ func registerTxHandlers(clientCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/tpp/buyer", createBuyerHandler(clientCtx)).Methods("POST")
 	r.HandleFunc("/tpp/buyer/{id}", updateBuyerHandler(clientCtx)).Methods("POST")
 	r.HandleFunc("/tpp/buyer/{id}", deleteBuyerHandler(clientCtx)).Methods("POST")
-	
+
+
+
 	r.HandleFunc("/tpp/item", createItemHandler(clientCtx)).Methods("POST")
 	r.HandleFunc("/tpp/item/{id}", updateItemHandler(clientCtx)).Methods("POST")
 	r.HandleFunc("/tpp/item/{id}", deleteItemHandler(clientCtx)).Methods("POST")

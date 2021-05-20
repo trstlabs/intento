@@ -35,11 +35,12 @@ func KeyPrefix(p string) []byte {
 const (
 	ItemKey      = "Item-value-"
 	ItemCountKey = "Item-count-"
+	
 	)	
 
 const (
 	BuyerKey      = "Buyer-value-"
-	BuyerCountKey = "Buyer-count-"
+	//BuyerCountKey = "Buyer-count-"
 )
 
 const (
@@ -48,7 +49,7 @@ const (
 )
 
 var InactiveItemQueuePrefix = []byte{0x02}
-
+var ItemSellerPrefix = []byte{0x03}
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 
@@ -61,14 +62,13 @@ func SplitInactiveItemQueueKey(key []byte) (itemid string, endTime time.Time) {
 // InactiveProposalByTimeKey gets the inactive proposal queue key by endTime
 func InactiveItemByTimeKey(endTime time.Time) []byte {
 	return append(InactiveItemQueuePrefix, sdk.FormatTimeBytes(endTime)...)
-}//////we have prefix and end time only? not sufficient??
-
+}
 
 
 //from the key we get the itemid and end time
 func splitKeyWithTime(key []byte) (itemid string, endTime time.Time) {
-//	if len(key[1:]) != 22+lenTime {
-//		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+22))
+//	if len(key[1:]) != 8+lenTime {
+//		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+8))
 //	}
 
 	endTime, err := sdk.ParseTimeBytes(key[1 : 1+lenTime])
@@ -76,7 +76,7 @@ func splitKeyWithTime(key []byte) (itemid string, endTime time.Time) {
 		panic(err)
 	}
 
-	//not sure about this, in gov returns an id from bytes
+	//eturns an id from bytes
 	itemid = string(key[1+lenTime:])
 	return
 }
@@ -85,4 +85,50 @@ func splitKeyWithTime(key []byte) (itemid string, endTime time.Time) {
 // InactiveProposalQueueKey returns the key with prefix for an itemid in the inactiveProposalQueue
 func InactiveItemQueueKey(itemid string, endTime time.Time) []byte {
 	return append(InactiveItemByTimeKey(endTime), []byte(itemid)...)
+}
+
+
+//----seller functions
+
+/*
+// SplitInactiveProposalQueueKey split the inactive key and returns the id and endTime
+func SplitItemSellerKey(key []byte) (itemid string, endTime time.Time) {
+	return splitKeyWithSeller(key)
+}
+
+
+//from the key we get the itemid and seller
+func splitKeyWithSeller(key []byte) (itemid string, seller string) {	
+
+	seller, err := sdk.ParseTimeBytes(key[1 : 1+len([]byte(seller)))
+	if err != nil {
+		panic(err)
+	}
+
+	//not sure about this, in gov returns an id from bytes
+	itemid = string(key[1+lenTime:])
+	return
+}*/
+
+
+// ItemSellerKey returns the key with prefix for an itemid in seller
+func ItemSellerKey(itemid string, seller string) []byte {
+	return append(ItemSellerBySellerKey(seller), []byte(itemid)...)
+}
+
+
+// ItemSellerBySellerKey 
+func ItemSellerBySellerKey(seller string) []byte {
+	return append(ItemSellerPrefix, []byte(seller)...)
+}
+
+// IteItemBuyerKeyBuyerKey returns the key with prefix for an itemid in seller
+func ItemBuyerKey(itemid string, buyer string) []byte {
+	return append(ItemBuyerByBuyerKey(buyer), []byte(itemid)...)
+}
+
+
+// ItemBuyerByBuyerKey 
+func ItemBuyerByBuyerKey(buyer string) []byte {
+	return append(KeyPrefix(BuyerKey), []byte(buyer)...)
 }

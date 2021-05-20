@@ -85,3 +85,99 @@ func (k Keeper) RemoveFromInactiveItemQueue(ctx sdk.Context, itemid string, endT
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.InactiveItemQueueKey(itemid, endTime))
 }
+
+//Seller functions
+/*
+// ItemSellerIterator returns an sdk.Iterator for all the items of a seller
+func (k Keeper) ItemSellerIterator(ctx sdk.Context, seller string) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	return store.Iterator(types.ItemSellerPrefix, sdk.PrefixEndBytes(types.ItemSellerBySellerKey(seller)))//we check the end of the bites array for the seller
+}*/
+
+// BindItemSeller binds a itemid with the seller address
+func (k Keeper) BindItemSeller(ctx sdk.Context, itemid string, seller string) {
+	store := ctx.KVStore(k.storeKey)
+	bz := []byte(itemid)
+
+	//here the key is seller+itemid appended (as bytes) and value is itemid in bytes
+	store.Set(types.ItemSellerKey(itemid, seller), bz)
+}
+
+// RemoveFromInactiveItemQueue removes a itemid from the seller
+func (k Keeper) RemoveFromItemSeller(ctx sdk.Context, itemid string, seller string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.ItemSellerKey(itemid, seller))
+}
+
+
+// GetAllSellerItems returns all seller items
+func (k Keeper) IterateItems(ctx sdk.Context, seller string, cb func(item types.Item) (stop bool)) {
+	//iterator := k.ItemSellerIterator(ctx, seller)
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := sdk.KVStorePrefixIterator(store, types.ItemSellerBySellerKey(seller))
+	
+	defer iterator.Close()
+	//store := ctx.KVStore(k.storeKey)
+	for ; iterator.Valid(); iterator.Next() {
+		
+
+	//var item types.Item	
+	//get the itemid from endTime (key)
+	itemID := store.Get(iterator.Key())
+	item := k.GetItem(ctx, string(itemID))
+	//items = append(items, &item)
+	if cb(item) {
+		break
+	}
+
+
+	/*var msg types.Item
+	k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &msg)
+	item := k.GetItem(ctx, msg)
+	items = append(items, &item)
+
+	//msgs = append(msgs, msg)*/
+}
+	//return //items
+}
+
+
+// GetAllSellerItems returns all seller items on chain based on the seller
+func (k Keeper) GetAllSellerItems(ctx sdk.Context, seller string) (items []*types.Item) {
+	k.IterateItems(ctx, seller, func(item types.Item) bool {
+		items = append(items, &item)
+		return false
+	})
+	return
+}
+/*
+
+// GetAllSellerItems returns all seller items
+func (k Keeper) GetAllSellerItems(ctx sdk.Context, seller string,  cb func(post types.Post)) (items []*types.Item) {
+	iterator := k.ItemSellerIterator(ctx, seller)
+
+	defer iterator.Close()
+	store := ctx.KVStore(k.storeKey)
+	for ; iterator.Valid(); iterator.Next() {
+
+	//var item types.Item	
+	//get the itemid from endTime (key)
+	itemID := store.Get(iterator.Key())
+	item := k.GetItem(ctx, string(itemID))
+	items = append(items, &item)
+	if cb(item) {
+		break
+	}
+
+
+	/*var msg types.Item
+	k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &msg)
+	item := k.GetItem(ctx, msg)
+	items = append(items, &item)
+
+	//msgs = append(msgs, msg)*
+}
+	return //items
+}
+*/

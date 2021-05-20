@@ -1125,8 +1125,8 @@ console.log(body)
   
     sellerInfo() {
       this.$store.dispatch("setBuySellerItemList", this.thisitem.seller);
-    this.$store.dispatch("setEvent", {type: "ItemTransferable", attribute: "Itemid", value: this.thisitem.id});
-  this.$store.dispatch("setEvent", {type: "ItemReadyForReveal", attribute: "Itemid", value: this.thisitem.id});
+    this.$store.dispatch("setEvent", {type: "ItemTransferable", attribute: "itemid", value: this.thisitem.id});
+  this.$store.dispatch("setEvent", {type: "ItemReadyForReveal", attribute: "itemid", value: this.thisitem.id});
       let rs = this.SellerItems.filter((i) => i.buyer != "");
       this.sold = "no buyers";
       if (rs[1]) {

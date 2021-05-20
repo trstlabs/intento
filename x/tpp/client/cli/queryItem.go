@@ -77,6 +77,34 @@ func CmdListInactiveItems() *cobra.Command {
 }
 
 
+func CmdSellerItems() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "seller-items [seller]",
+		Short: "list all seller items",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QuerySellerItemsRequest{
+				Seller: args[0],
+			}
+
+			res, err := queryClient.SellerItems(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+
 func CmdShowItem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-item [id]",

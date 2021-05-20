@@ -39,3 +39,17 @@ func getItem(ctx sdk.Context, id string, keeper Keeper, legacyQuerierCdc *codec.
 
 	return bz, nil
 }
+
+
+func sellerItems(ctx sdk.Context, seller string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	
+
+	items := keeper.GetAllSellerItems(ctx, seller)
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, items)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}

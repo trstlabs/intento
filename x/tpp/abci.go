@@ -30,6 +30,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 				k.DeleteEstimator(ctx, key)
 			}
 			k.DeleteItem(ctx, item.Id)
+			k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
 		// called when items become inactive
 		//keeper.AfterItemFailedMinDeposit(ctx, proposal.ProposalId)
 

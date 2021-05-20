@@ -156,6 +156,7 @@ func handleMsgCreateFlag(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateF
 		item.Estimatorlist = nil
 		item.Status = "Removed (Item flagged)"
 		k.DeleteItem(ctx, msg.Itemid)
+		k.RemoveFromItemSeller(ctx, msg.Itemid, item.Seller)
 		return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 	}
 	item.Flags = item.Flags + 1

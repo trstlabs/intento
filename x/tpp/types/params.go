@@ -12,15 +12,14 @@ import (
 
 // Default period for active
 const (
-	DefaultPeriod time.Duration = time.Hour * 24 * 30 // 30 days
+	DefaultPeriod time.Duration = time.Minute //Hour * 24 * 30 // 30 days
 )
-//time.Minute * 2 //
 
 // Parameter store key
 var (
 	KeyMaxActivePeriod = []byte("MaxActivePeriod")
-
 )
+
 /*
 // ParamKeyTable - Key declaration for parameters
 func ParamKeyTable() paramtypes.KeyTable {
@@ -46,14 +45,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMaxActivePeriod, &p.MaxActivePeriod, validateMaxActivePeriod),
-
 	}
 }
 
 // NewParams creates a new ActiveParams object
 func NewParams(maxActivePeriod time.Duration) Params {
-	return Params{MaxActivePeriod: maxActivePeriod,
-	}
+	return Params{MaxActivePeriod: maxActivePeriod}
 }
 
 // DefaultParams default parameters for Active
@@ -67,9 +64,8 @@ func (p Params) Validate() error {
 		return err
 	}
 
-return nil
+	return nil
 }
-
 
 func validateMaxActivePeriod(i interface{}) error {
 	v, ok := i.(time.Duration)
@@ -115,4 +111,3 @@ func (p Params) String() string {
 	}
 	return string(out)
 }
-

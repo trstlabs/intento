@@ -20,12 +20,12 @@ service Query {
 		option (google.api.http).get = "/danieljdd/tpp/tpp/estimator";
 	}
 
-	rpc Buyer(QueryGetBuyerRequest) returns (QueryGetBuyerResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/buyer/{itemid}";
-	}
-	rpc BuyerAll(QueryAllBuyerRequest) returns (QueryAllBuyerResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/buyer";
-	}
+	//rpc Buyer(QueryGetBuyerRequest) returns (QueryGetBuyerResponse) {
+	//	option (google.api.http).get = "/danieljdd/tpp/tpp/buyer/{itemid}";
+//	}
+//	rpc BuyerAll(QueryAllBuyerRequest) returns (QueryAllBuyerResponse) {
+//		option (google.api.http).get = "/danieljdd/tpp/tpp/buyer";
+//	}
 
 	rpc Item(QueryGetItemRequest) returns (QueryGetItemResponse) {
 		option (google.api.http).get = "/danieljdd/tpp/tpp/item/{id}";
@@ -35,6 +35,12 @@ service Query {
 	}
 	rpc InactiveItemsAll(QueryAllInactiveItemsRequest) returns (QueryAllInactiveItemsResponse) {
 		option (google.api.http).get = "/danieljdd/tpp/tpp/inactiveitems";
+	}
+		rpc SellerItems(QuerySellerItemsRequest) returns (QuerySellerItemsResponse) {
+		option (google.api.http).get = "/danieljdd/tpp/tpp/selleritems";
+	}
+	rpc BuyerItems(QueryBuyerItemsRequest) returns (QueryBuyerItemsResponse) {
+		option (google.api.http).get = "/danieljdd/tpp/tpp/buyeritems";
 	}
 
 }
@@ -56,22 +62,22 @@ message QueryAllEstimatorResponse {
 	repeated Estimator Estimator = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-message QueryGetBuyerRequest {
-	string itemid = 1;
-}
+//message QueryGetBuyerRequest {
+//	string itemid = 1;
+//}
 
-message QueryGetBuyerResponse {
-	Buyer Buyer = 1;
-}
+//message QueryGetBuyerResponse {
+//	Buyer Buyer = 1;
+//}
 
-message QueryAllBuyerRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
+//message QueryAllBuyerRequest {
+//	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+//}
 
-message QueryAllBuyerResponse {
-	repeated Buyer Buyer = 1;
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
+//message QueryAllBuyerResponse {
+//	repeated Buyer Buyer = 1;
+//	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+//}
 message QueryGetItemRequest {
 	string id = 1;
 }
@@ -96,4 +102,23 @@ message QueryAllInactiveItemsRequest {
 message QueryAllInactiveItemsResponse {
 	repeated Item Item = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+
+message QuerySellerItemsRequest {
+	string seller = 1;
+}
+
+message QuerySellerItemsResponse {
+	repeated Item Item = 1;
+	
+}
+
+message QueryBuyerItemsRequest {
+	string buyer = 1;
+}
+
+message QueryBuyerItemsResponse {
+	repeated Item Item = 1;
+	
 }

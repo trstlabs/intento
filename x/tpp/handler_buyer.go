@@ -108,37 +108,37 @@ func handleMsgCreateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreate
 }
 
 func handleMsgUpdateBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdateBuyer) (*sdk.Result, error) {
-	deposit := sdk.NewInt64Coin("tpp", msg.Deposit)
+	/*deposit := sdk.NewInt64Coin("tpp", msg.Deposit)
 
 	var buyer = types.Buyer{
 		Buyer: msg.Buyer,
 		Itemid:       msg.Itemid,
 		Deposit:      deposit,
-	}
+	}*/
 
 	// Checks that the element exists
-	if !k.HasBuyer(ctx, msg.Itemid) {
+	if !k.HasBuyer(ctx, msg.Itemid, msg.Buyer) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s doesn't exist", msg.Itemid))
 	}
-
+/*
 	// Checks if the the msg sender is the same as the current owner
-	if msg.Buyer != k.GetBuyerOwner(ctx, msg.Itemid) {
+	if msg.Buyer != k.GetBuyerOwner(ctx, types.BuyerKey + msg.Itemid + msg.Buyer) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
-
-	k.SetBuyer(ctx, buyer)
+*/
+	k.SetBuyer(ctx, msg.Itemid, msg.Buyer)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgDeleteBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteBuyer) (*sdk.Result, error) {
-	if !k.HasBuyer(ctx, msg.Itemid) {
+	if !k.HasBuyer(ctx, msg.Itemid, msg.Buyer) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s doesn't exist", msg.Itemid))
 	}
-	if msg.Buyer != k.GetBuyerOwner(ctx, msg.Itemid) {
+/*	if msg.Buyer != k.GetBuyerOwner(ctx, types.BuyerKey + msg.Itemid + msg.Buyer) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
-
+*/
 	//get item info
 	item := k.GetItem(ctx, msg.Itemid)
 
@@ -217,11 +217,11 @@ func handleMsgDeleteBuyer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDelete
 }
 
 func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemTransfer) (*sdk.Result, error) {
-	//check if message creator is item creator
+/*	//check if message creator is item creator
 	if msg.Buyer != k.GetBuyerOwner(ctx, msg.Itemid) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
-
+*/
 	//get item info
 	item := k.GetItem(ctx, msg.Itemid)
 

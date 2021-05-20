@@ -76,8 +76,13 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 		
 		
 	}
+	k.BindItemSeller(ctx, item.Id, msg.Creator)
 	//works 100% with endtime tx.BlockHeader().Time
 	k.InsertInactiveItemQueue(ctx, item.Id, endTime)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, item.Id) ),
+	)
 	
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	key := types.KeyPrefix(types.ItemKey + item.Id)
@@ -137,8 +142,6 @@ func (k Keeper) GetAllItem(ctx sdk.Context) (msgs []types.Item) {
 	return
 }
 
-
-
 // GetAllInactiveItems returns all inactive item
 func (k Keeper) GetAllInactiveItems(ctx sdk.Context) (msgs []types.Item) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.InactiveItemQueuePrefix)
@@ -154,6 +157,8 @@ func (k Keeper) GetAllInactiveItems(ctx sdk.Context) (msgs []types.Item) {
 
 	return
 }
+
+
 
 // HandlePrepayment handles payment
 func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk.Coin) {

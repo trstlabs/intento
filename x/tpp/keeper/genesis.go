@@ -6,7 +6,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-// InitGenesis initializes the curating module state
+// InitGenesis initializes the TPP module state
 func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	//k.SetParams(ctx, state.Params)
 
@@ -23,11 +23,57 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 
 	k.SetItem(ctx, *elem)
 	k.InsertInactiveItemQueue(ctx, elem.Id, elem.Endtime)
+	//if (elem.Buyer != "") {k.SetBuyer(ctx, elem.Id, elem.Buyer)}
+
 	}
+
+	for _, elem := range state.EstimatorList {
+
+		k.SetEstimator(ctx, *elem)
+	}
+
+	k.SetParams(ctx, types.DefaultParams())
+	// this line is used by starport scaffolding # genesis/module/init
+	// Set all the estimator
+
+	// Set estimator count
+	k.SetEstimatorCount(ctx, int64(len(state.EstimatorList)))
+
+	// Set buyer count
+	//k.SetBuyerCount(ctx, int64(len(state.BuyerList)))
+
+	// Set item count
+	k.SetItemCount(ctx, int64(len(state.ItemList)))
 
 }
 
 
+// ExportGenesis exports the TPP module state
+func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	genesis := types.DefaultGenesis()
+
+	itemList := k.GetAllItem(ctx)
+	for _, elem := range itemList {
+		elem := elem
+		genesis.ItemList = append(genesis.ItemList, &elem)
+	}
+
+	estimatorList := k.GetAllEstimator(ctx)
+	for _, elem := range estimatorList {
+		elem := elem
+		genesis.EstimatorList = append(genesis.EstimatorList, &elem)
+	}
+
+/*	// Get all buyer
+	buyerList := k.GetAllBuyer(ctx)
+	for _, elem := range buyerList {
+		elem := elem
+		genesis.BuyerList = append(genesis.BuyerList, &elem)
+	}
+	*/
+
+	return genesis
+}
 
 // GetTPPModuleAccount returns the module account.
 func (k Keeper) GetTPPModuleAccount(ctx sdk.Context) (ModuleName authtypes.ModuleAccountI) {

@@ -8,7 +8,7 @@ import (
 	"github.com/danieljdd/tpp/x/tpp/types"
 	"github.com/spf13/cobra"
 )
-
+/*
 func CmdListBuyer() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-buyer",
@@ -56,6 +56,34 @@ func CmdShowBuyer() *cobra.Command {
 			}
 
 			res, err := queryClient.Buyer(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+*/
+func CmdBuyerItems() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "buyer-items [buyer]",
+		Short: "list all buyer items",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryBuyerItemsRequest{
+				Buyer: args[0],
+			}
+
+			res, err := queryClient.BuyerItems(context.Background(), params)
 			if err != nil {
 				return err
 			}
