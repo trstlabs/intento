@@ -17,9 +17,6 @@ import (
 
 func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateItem) (*sdk.Result, error) {
 	k.CreateItem(ctx, *msg)
-	
-	
-
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
@@ -27,7 +24,7 @@ func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateI
 func handleMsgUpdateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdateItem) (*sdk.Result, error) {
 	var item = types.Item{
 		Seller: msg.Seller,
-		Id:      msg.Id,
+		Id:     msg.Id,
 
 		Shippingcost: msg.Shippingcost,
 		Localpickup:  msg.Localpickup,
@@ -56,7 +53,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 	}
 
 	item := k.GetItem(ctx, msg.Id)
-	
+
 	if item.Buyer != "" && item.Status != "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item has a buyer")
 	}
@@ -117,12 +114,10 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 
 	item := k.GetItem(ctx, msg.Itemid)
 
-
 	if item.Bestestimator != "Awaiting" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item cannot be revealed")
 	}
 
-	
 	var Commentlist []string
 	var EstimationList []int64
 
@@ -156,7 +151,6 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 
 	}
 
-
 	//create median
 	medianIndex := int64(math.Floor(float64(len(EstimationList))-1.0) / 2)
 	sortedList := make([]int64, len(EstimationList))
@@ -166,12 +160,12 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	//var Estimationprice = sdk.NewInt(median)
 
 	///delete item when deposit is higher than 25% of the item price (Can be altered through governance)
-	if  item.Depositamount > (median / 4) {
+	if item.Depositamount > (median / 4) {
 		//returns each element
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
 			key := msg.Itemid + "-" + element
-		k.DeleteEstimator(ctx, key)	
+			k.DeleteEstimator(ctx, key)
 		}
 		/*item.Bestestimator = ""
 		item.Lowestestimator = ""
@@ -231,9 +225,9 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 			estimator := k.GetEstimator(ctx, key)
 
 			if estimator.Estimator == item.Lowestestimator {
-				
-					k.BurnCoins(ctx, estimator.Deposit)
-					k.DeleteEstimatorWithoutDeposit(ctx, key)
+
+				k.BurnCoins(ctx, estimator.Deposit)
+				k.DeleteEstimatorWithoutDeposit(ctx, key)
 
 			} else {
 				k.DeleteEstimator(ctx, key)
@@ -259,7 +253,6 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		sdk.NewEvent(types.EventTypeItemTransferable, sdk.NewAttribute(types.AttributeKeyItemID, msg.Itemid)),
 	)
 
-	
 	k.RemoveFromInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
@@ -293,61 +286,57 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "unauthrorized, no shippingcost")
 	}
 
-
-	bigintestimationprice := sdk.NewInt(item.Estimationprice)	
-	if item.Discount  > 0 {
+	bigintestimationprice := sdk.NewInt(item.Estimationprice)
+	if item.Discount > 0 {
 		bigintestimationprice = sdk.NewInt(item.Estimationprice - item.Discount)
 	}
 
 	bigintshipping := sdk.NewInt(item.Shippingcost)
 	if msg.Tracking == true {
-		if (item.Creator == item.Seller) {
-		//rounded down percentage for minting. Percentage may be changed through governance proposals
-		/*percentageMint := sdk.NewDecWithPrec(10, 2)
-		percentageReward := sdk.NewDecWithPrec(5, 2)
-		//paymentSeller := percentageSeller.MulInt(bigintestimationprice)
-		//roundedAmountCreaterPayout := paymentSeller.TruncateInt()
-		
-		
-		//rounded up percentage as a reward for the estimator
-		//percentageReward := sdk.NewDecWithPrec(3, 2)
-		toMint := percentageMint.MulInt(bigintestimationprice)
-		toMintAmount := toMint.TruncateInt()
-		paymentReward := percentageReward.MulInt(bigintestimationprice)
-		roundedAmountReward := paymentReward.TruncateInt()*/
-		//roundedAmountRewardBestEstimator := paymentReward.TruncateInt()
+		if item.Creator == item.Seller {
+			//rounded down percentage for minting. Percentage may be changed through governance proposals
+			/*percentageMint := sdk.NewDecWithPrec(10, 2)
+			percentageReward := sdk.NewDecWithPrec(5, 2)
+			//paymentSeller := percentageSeller.MulInt(bigintestimationprice)
+			//roundedAmountCreaterPayout := paymentSeller.TruncateInt()
 
-	
 
-		//minted coins (are rounded up)
-		mintCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
-		//paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
-		//paymentRewardCoinsEstimator := sdk.NewCoin("tpp", roundedAmountRewardBestEstimator)
+			//rounded up percentage as a reward for the estimator
+			//percentageReward := sdk.NewDecWithPrec(3, 2)
+			toMint := percentageMint.MulInt(bigintestimationprice)
+			toMintAmount := toMint.TruncateInt()
+			paymentReward := percentageReward.MulInt(bigintestimationprice)
+			roundedAmountReward := paymentReward.TruncateInt()*/
+			//roundedAmountRewardBestEstimator := paymentReward.TruncateInt()
 
-		k.MintReward(ctx, mintCoins)
-		
+			//minted coins (are rounded up)
+			mintCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
+			//paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
+			//paymentRewardCoinsEstimator := sdk.NewCoin("tpp", roundedAmountRewardBestEstimator)
 
-		//for their participation in the protocol, the best estimator and the buyer get rewarded.
-		k.HandlePrepayment(ctx, item.Bestestimator, mintCoins)
-	//	k.HandlePrepayment(ctx, item.Buyer, paymentRewardCoins)
+			k.MintReward(ctx, mintCoins)
 
-		//refund the deposits back to all of the item estimators
-		for _, element := range item.Estimatorlist {
-			key := msg.Itemid + "-" + element
+			//for their participation in the protocol, the best estimator and the buyer get rewarded.
+			k.HandlePrepayment(ctx, item.Bestestimator, mintCoins)
+			//	k.HandlePrepayment(ctx, item.Buyer, paymentRewardCoins)
 
-			k.DeleteEstimator(ctx, key)
+			//refund the deposits back to all of the item estimators
+			for _, element := range item.Estimatorlist {
+				key := msg.Itemid + "-" + element
+
+				k.DeleteEstimator(ctx, key)
+			}
+
+			item.Bestestimator = ""
+			item.Lowestestimator = ""
+			item.Highestestimator = ""
+			item.Estimatorlist = nil
 		}
+		//make payment to seller
+		CreaterPayoutAndShipping := bigintestimationprice.Add(bigintshipping)
+		paymentSellerCoins := sdk.NewCoin("tpp", CreaterPayoutAndShipping)
 
-		item.Bestestimator = ""
-		item.Lowestestimator = ""
-		item.Highestestimator = ""
-		item.Estimatorlist = nil
-	}
-	//make payment to seller
-	CreaterPayoutAndShipping := bigintestimationprice.Add(bigintshipping)
-	paymentSellerCoins := sdk.NewCoin("tpp", CreaterPayoutAndShipping)
-
-	k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
+		k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
 
 		item.Status = "Shipped"
 		k.SetItem(ctx, item)
@@ -364,9 +353,9 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 			estimator := k.GetEstimator(ctx, key)
 
 			if estimator.Estimator == item.Lowestestimator {
-				
-					k.BurnCoins(ctx, estimator.Deposit)
-					k.DeleteEstimatorWithoutDeposit(ctx, key)
+
+				k.BurnCoins(ctx, estimator.Deposit)
+				k.DeleteEstimatorWithoutDeposit(ctx, key)
 
 			} else {
 				k.DeleteEstimator(ctx, key)
@@ -382,22 +371,21 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-
 func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemResell) (*sdk.Result, error) {
 
-// Checks that the element exists
-if !k.HasItem(ctx, msg.Itemid) {
-	return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s doesn't exist", msg.Itemid))
-}
+	// Checks that the element exists
+	if !k.HasItem(ctx, msg.Itemid) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s doesn't exist", msg.Itemid))
+	}
 
 	item := k.GetItem(ctx, msg.Itemid)
 
 	// Checks if the the msg sender is the same as the current buyer
-		if msg.Seller != item.Buyer {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
-		}
+	if msg.Seller != item.Buyer {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+	}
 
-	if (item.Status != "Transferred" && item.Status != "Shipped") {
+	if item.Status != "Transferred" && item.Status != "Shipped" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item not available to resell")
 	}
 
@@ -405,24 +393,19 @@ if !k.HasItem(ctx, msg.Itemid) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Discount invalid")
 	}
 
-
-	
-
-		item.Seller = msg.Seller
-		item.Shippingcost = msg.Shippingcost
-		item.Localpickup =  msg.Localpickup
-		item.Shippingregion = msg.Shippingregion
-		item.Discount = msg.Discount
-		item.Note = msg.Note
-		item.Rating = 0
-		item.Buyer = ""
-		item.Status = ""
-		
-
-
+	item.Seller = msg.Seller
+	item.Shippingcost = msg.Shippingcost
+	item.Localpickup = msg.Localpickup
+	item.Shippingregion = msg.Shippingregion
+	item.Discount = msg.Discount
+	item.Note = msg.Note
+	item.Rating = 0
+	item.Buyer = ""
+	item.Status = ""
+	item.Endtime = ctx.BlockTime().Add(types.DefaultParams().MaxActivePeriod)
 
 	k.SetItem(ctx, item)
-
+	k.InsertInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemResellable, sdk.NewAttribute(types.AttributeKeyItemID, msg.Itemid)),
