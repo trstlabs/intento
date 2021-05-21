@@ -647,21 +647,35 @@
                       >
                     </v-list-item-content>
                   </v-list-item>
-                  <v-list-item v-if="thisitem.creator != thisitem.seller">
+                   <v-list-item>
                     <v-list-item-icon>
-                      <v-icon> mdi-account-outline</v-icon>
+                      <v-icon> mdi-clock</v-icon>
                     </v-list-item-icon>
 
                     <v-list-item-content>
                       <v-list-item-title class="font-weight-light"
                         ><v-row
-                          ><v-col
-                            >Original Seller: {{ thisitem.creator }}</v-col
-                          ></v-row
+                          ><v-col>Created on: </v-col>
+                          <v-col>{{ getFmtTime(thisitem.submittime) }}</v-col></v-row
                         ></v-list-item-title
                       >
                     </v-list-item-content>
                   </v-list-item>
+                   <v-list-item v-if="!thisitem.buyer && thisitem.status == ''">
+                    <v-list-item-icon>
+                      <v-icon> mdi-progress-clock</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Expires on: </v-col>
+                          <v-col>{{ getFmtTime(thisitem.endtime) }}</v-col></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+               
                   <v-list-item>
                     <v-list-item-icon>
                       <v-icon
@@ -676,6 +690,21 @@
                       <v-list-item-title class="font-weight-light"
                         ><v-row
                           ><v-col>Seller: {{ thisitem.seller }}</v-col></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                     <v-list-item v-if="thisitem.creator != thisitem.seller">
+                    <v-list-item-icon>
+                      <v-icon> mdi-account-outline</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col
+                            >Original Seller: {{ thisitem.creator }}</v-col
+                          ></v-row
                         ></v-list-item-title
                       >
                     </v-list-item-content>

@@ -117,6 +117,8 @@ export default new Vuex.Store({
       await dispatch("chainIdFetch");
       const type = { type: "item" };
       await dispatch("entityFetch", type )
+
+      //await axios.get(process.env.VUE_APP_API + '/cosmos/tx/v1beta1/txs?events=transfer.sender%3D%27' + address + '%27').data;
     
       //let { type } = state.app.types.find( type  => { type == "item"})
       

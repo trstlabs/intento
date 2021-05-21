@@ -4,7 +4,7 @@
         
   <p    class="display-2 mt-n9 font-weight-thin text-center  "> Marketplace</p><p class="display-1 text-center font-weight-thin">{{this.region.toUpperCase()}}<v-icon x-large left> mdi-flag-variant </v-icon></p>
 
-      <div>  <v-img  height="320" src="img/design/market.png "  >  </v-img>  
+      <div>  <v-img class="rounded-xl" h height="320" src="img/design/market.png "  >  </v-img>  
         <v-container class="mt-n12">
       
           <v-row>  
@@ -30,7 +30,7 @@
               </v-btn> <span class="caption" v-if="items[1]"> {{items.length}}  items available in {{region.toUpperCase()}}</span></div>
           <div v-for="item in items" :key="item.id">
             <div>
-              <div>
+           <div class="pa-4">
                 <v-sheet
                   
                   class="fill-height"

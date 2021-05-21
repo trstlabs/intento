@@ -11,10 +11,10 @@
       <router-view :key="$route.path" />
     </div>
     
-    <v-app-bar :color="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-4'"  app dense elevation="2" >
+    <v-app-bar :color="($vuetify.theme.dark) ? 'grey darken-4' : 'white'"  app collapse-on-scroll dense elevation="2" >
       
    <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-   <v-col xs="1" class="  mx-auto" >
+   <v-col xs="1" class="mx-auto" >
     
 
      <v-tooltip bottom>
@@ -39,7 +39,7 @@
     </v-col >
 <v-col cols="6" xs="10" class="pa-0 d-none d-md-flex">
 
-      <v-tabs show-arrows fixed-tabs  :background-color="($vuetify.theme.dark) ? 'grey darken-4' : 'grey lighten-4'" >
+      <v-tabs show-arrows hide-slider fixed-tabs  :background-color="($vuetify.theme.dark) ? 'grey darken-4' : 'white'" >
       
        <v-tooltip bottom >
       <template v-slot:activator="{ on, attrs }" >
@@ -130,15 +130,16 @@
    
     </v-app-bar>
        
-    <v-navigation-drawer
-      v-model="drawer"
-      
-      app
-      temporary
-    > 
+    <v-navigation-drawer 
+    v-model="drawer"
+      :fixed="$vuetify.breakpoint.smAndUp"
+          :temporary="$vuetify.breakpoint.xsOnly"
+          app
+  >
+  
       <v-list
-        nav
-        dense
+        nav 
+        shaped
       >
       <v-alert dense v-if="!this.$store.state.user && this.$store.state.account.address "
   type="warning" dismissible class="caption"
@@ -151,37 +152,44 @@ Confirm sign in by clicking the link sent to your Google account's email on this
     src="img/brand/icon.png"
     width="77" /></div>
       <wallet v-if="this.$store.state.account.address"/>
+         
         <v-list-item-group
          
           active-class="blue--text text--accent-4"
         >
           <v-list-item to="/">
-            <v-list-item-title >Buy</v-list-item-title><v-icon >
+           <v-list-item-icon><v-icon >
         mdi-shopping
       </v-icon>
+          </v-list-item-icon>
+            <v-list-item-title >Buy</v-list-item-title>
           </v-list-item>
 
-          <v-list-item to="/sell">
-            <v-list-item-title>Sell</v-list-item-title><v-icon >
+          <v-list-item to="/sell"> <v-list-item-icon><v-icon >
         mdi-plus-box
       </v-icon>
+          </v-list-item-icon>
+            <v-list-item-title>Sell</v-list-item-title>
           </v-list-item>
 
-          <v-list-item to="/estimate">
-            <v-list-item-title>Estimate</v-list-item-title><v-icon   >
+          <v-list-item to="/estimate"> <v-list-item-icon><v-icon   >
         mdi-checkbox-marked
       </v-icon>
+          </v-list-item-icon>
+            <v-list-item-title>Estimate</v-list-item-title>
           </v-list-item>
 
-          <v-list-item to="/account">
-            <v-list-item-title>Account</v-list-item-title> <v-icon  >
+          <v-list-item to="/account"> <v-list-item-icon><v-icon  >
         mdi-account-box
       </v-icon>
+          </v-list-item-icon>
+            <v-list-item-title>Account</v-list-item-title>
           </v-list-item>
           
-           <v-list-item to="/messages">
-            <v-list-item-title>Messages</v-list-item-title> <v-icon>mdi-message-reply
+           <v-list-item to="/messages" > <v-list-item-icon><v-icon>mdi-message-reply
           </v-icon>
+          </v-list-item-icon>
+            <v-list-item-title>Messages</v-list-item-title>
           </v-list-item>
             <v-list-item to="/explore">
             <v-list-item-title>Explore</v-list-item-title>
@@ -191,7 +199,7 @@ Confirm sign in by clicking the link sent to your Google account's email on this
             <v-list-item-title>Get Started</v-list-item-title>
           </v-list-item></div>
           <v-list-item  target="_blank" href="https://www.trustpriceprotocol.com">
-            <v-list-item-title>About TPP</v-list-item-title>
+            <v-list-item-title>About TPP</v-list-item-title> 
           </v-list-item>
            <v-list-item  to="/FAQ">
             <v-list-item-title>FAQ</v-list-item-title>
@@ -222,7 +230,7 @@ Confirm sign in by clicking the link sent to your Google account's email on this
           >
             <v-icon>mdi-arrow-up</v-icon>
           </v-btn>
-         <v-footer class="text-center caption"  color="secondary lighten-2" padless>
+         <v-footer class="text-center caption"  color="primary lighten-5" padless>
     <v-col>{{ new Date().getFullYear() }} — <strong>© Trust Price Protocol</strong>
     </v-col>
   </v-footer>

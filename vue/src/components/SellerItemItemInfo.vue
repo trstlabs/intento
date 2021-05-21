@@ -184,6 +184,34 @@
                     </v-list-item-content>
                     
                   </v-list-item>
+                   <v-list-item>
+                    <v-list-item-icon>
+                      <v-icon> mdi-clock</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Created on: </v-col>
+                          <v-col>{{ getFmtTime(thisitem.submittime) }}</v-col></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                   <v-list-item v-if="!thisitem.buyer && thisitem.status == ''">
+                    <v-list-item-icon>
+                      <v-icon> mdi-progress-clock</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Expires on: </v-col>
+                          <v-col>{{ getFmtTime(thisitem.endtime) }}</v-col></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
                     <v-list-item  v-if="thisitem.buyer">
                     <v-list-item-icon>
                       <v-icon> mdi-shopping</v-icon>
@@ -577,7 +605,7 @@
 import { usersRef, roomsRef, databaseRef } from "./firebase/db.js";
 
 import ItemListSeller from "./ItemListSeller.vue";
-
+import dayjs from 'dayjs'
 
 export default {
   props: ["itemid"],
@@ -663,7 +691,10 @@ export default {
   },
 
   methods: {
-
+    getFmtTime(time) {
+      	const momentTime = dayjs(time)
+      return momentTime.format("D MMM, YYYY HH:mm:ss");
+    },
     
     async removeItem() {
       this.loadingitem = true;

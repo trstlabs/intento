@@ -2,7 +2,7 @@
   <div >
    
     
-    <v-select  class="mx-auto rounded-lg"
+    <v-select  class="mx-auto rounded-xl"
              
              v-model="selectedFilter"
              v-on:input="search()"

@@ -1,14 +1,14 @@
 <template>
   <div class="pa-0 pb-4 mx-lg-auto">
     <div>
-      <p    class="display-2 pt-4 font-weight-thin text-center  pb-5 "> Marketplace</p>
-   <div v-if="items[1]">   <!--<v-progress-linear
+  
+   <!-- <div v-if="items[1]">  <v-progress-linear
       :value="onSaleRatio"
  background-color="secondary"
       height="20" class="pb-5"
-    ></v-progress-linear>--><v-row class="overline mx-2 pa-2 text-left font-weight-thin">{{items.length}} Items available<v-spacer/>{{totalItems}} items on TPP </v-row></div>
+    ></v-progress-linear>--><!--<v-row class="overline mx-2 pa-2 text-left font-weight-thin">{{items.length}} Items available<v-spacer/>{{totalItems}} items on TPP </v-row></div>-->
       <div>
-        <v-img height="320" src="img/design/market.png "> </v-img>
+        <v-img max-height="320" class="rounded-xl" src="img/design/market.png ">    </v-img>
         <v-container class="mt-n12">
           <v-row>
             <v-col cols="12" sm="7">
@@ -25,7 +25,18 @@
           </v-row>
           <buy-tag-bar :advanced="advanced" />
         </v-container>
-
+ <v-chip-group 
+    multiple
+           show-arrows
+          active-class="primary--text"
+        ><div  v-for="tag in tags" :key="tag">
+          <v-chip color="primary lighten-2 text-capitalize"  :to="{ name: 'SearchTag', params: { tag: tag.toLowerCase() } }"
+           
+           ><v-icon small left>
+        mdi-tag-outline
+      </v-icon>{{ tag}}
+          </v-chip></div>
+        </v-chip-group>
         <div v-if="items[0]">
           <div class="pl-4">
             <v-btn icon x-small to="/faq"
@@ -35,9 +46,11 @@
               {{ items.length }} items available</span
             >
           </div>
-          <div v-for="item in items" :key="item.id">
-            <div>
-              <div>
+          <v-row class="pa-0 ma-0" >
+          <v-col :key="i"
+            cols="12"
+            md="6" v-for="(item,i) in items" >
+      
                 <v-sheet class="fill-height" color="transparent"
                   ><v-lazy
                     v-model="isActive"
@@ -48,9 +61,9 @@
                   >
                     <buy-item-item-info :itemid="item.id" /></v-lazy
                 ></v-sheet>
-              </div>
-            </div>
-          </div>
+         
+          </v-col>
+          </v-row>
         </div>
          <v-card @click="clearList()" color="secondary lighten-3 "
           class="rounded-xl outlined elevation-1 text-center ma-4 pa-2"
@@ -84,6 +97,26 @@ export default {
     return {
       advanced: false,
       isActive: false,
+      tags: [
+          "Watch",
+           "Shoes",
+          "Clothing",
+          "Collectable",
+          
+        //  "Garden item",
+          "Vehicle",
+         // "Motor",
+          //"Sport",
+           "Book",
+         // "Antique",
+          "Computer",
+                "Smartphone",
+          "Smart Device",
+          "Sound Device",
+          "TV",
+          "NFT",
+          "Other",
+      ]
     };
   },
 

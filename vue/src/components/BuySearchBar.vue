@@ -27,7 +27,7 @@
       solo
       clearable
       prepend-inner-icon="mdi-magnify"
-      class="rounded-lg"
+      class="rounded-xl"
       type="text"
       placeholder="Search..."
       v-model.trim="input"

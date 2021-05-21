@@ -42,7 +42,7 @@
           <v-expansion-panel-header class="text-capitalize caption"
             ><span><v-icon color="info" small >
                       mdi-cube-send</v-icon
-                    ><span v-if="tx.response.logs[0].events[2]"> {{ tx.response.logs[0].events[1].attributes[0].value }} </span><span v-else> {{ tx.response.logs[0].events[0].attributes[0].value }}</span></span>
+                    ><span v-if="tx.response.logs[0].events[2]"> {{ tx.response.logs[0].events[1].attributes[0].value.split(/(?=[A-Z])/).join(" ") }} </span><span v-else> {{ tx.response.logs[0].events[0].attributes[0].value.split(/(?=[A-Z])/).join(" ")  }}</span></span>
           </v-expansion-panel-header>
           <v-expansion-panel-content>
             <v-list-item>

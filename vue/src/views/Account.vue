@@ -4,21 +4,17 @@
   <div>
     <v-app>
   <v-main :class="($vuetify.theme.dark) ? 'grey darken-4' : 'primary lighten-5'" >
-        <v-container class="pb-6 pt-0 px-0" >
+        <v-container class="pb-6 pt-n2 px-0" >
           
          
               <v-row class="ma-0 pa-0">
-          <v-col cols="2" class="d-none d-sm-flex mx-auto ma-0 pa-0" >
-              
-                <wallet />
-            
-            </v-col >
+         
 
-             <v-col cols="12" sm="8" class="pa-0 mx-auto">
-              <v-sheet  min-height="70vh" class="rounded-b-xl"  elevation="6">
-                <div class="pt-0 mt-0"> 
+             <v-col cols="12" sm="10" class="pa-0 mx-auto">
+              <v-sheet  min-height="70vh" class="rounded-xl"  elevation="6">
+                <div class="pt-6 mt-0"> 
        
-                   <v-tabs 
+                   <v-tabs class="rounded-xl"
       
 :fixed-tabs="$vuetify.breakpoint.smAndUp"
 :center-active="$vuetify.breakpoint.xs"
@@ -76,9 +72,7 @@
                 </div>
                 
               </v-sheet>
-            </v-col> <v-col cols="12" sm="2" class="d-none d-sm-flex">
-           
-            </v-col>
+            </v-col> 
            </v-row><v-col cols="12" class="d-flex d-sm-none justify-center">
                
                 <wallet />
