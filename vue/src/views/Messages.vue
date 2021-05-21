@@ -13,7 +13,7 @@
             <v-col cols="12" class="mx-auto pa-0">
 
             
-              <v-sheet class="mt-12" rounded="lg" elevation="4"> 
+              <v-sheet class="mt-12" rounded="xl" elevation="4"> 
                 
                 <div >
                   <!--<v-alert v-if="!this.$store.state.user && this.$store.state.account.address "

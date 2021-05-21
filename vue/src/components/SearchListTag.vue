@@ -4,7 +4,7 @@
         
   <p    class="display-2 mt-n9 font-weight-thin text-center  "> Marketplace</p><p class="display-1 text-center font-weight-thin">{{this.tag.toUpperCase()}}<v-icon x-large left> mdi-tag </v-icon></p>
 
-      <div>  <v-img  height="320" src="img/design/market.png "  >  </v-img>  
+      <div>  <v-img class="rounded-xl" height="320" src="img/design/market.png "  >  </v-img>  
         <v-container class="mt-n12">
       
           <v-row>  
@@ -30,7 +30,7 @@
               </v-btn> <span class="caption" v-if="items[1]"> {{items.length}} {{tag}} items available</span></div>
           <div v-for="item in items" :key="item.id">
             <div>
-              <div>
+         <div class="pa-4">
                 <v-sheet
                   
                   class="fill-height"
@@ -96,7 +96,7 @@ export default {
 
      items() {
 
-       return this.itemsUnfiltered.filter(item => item.tags.find(tags => tags.includes(this.tag)))
+       return this.itemsUnfiltered.filter(item => item.tags.find(tags => tags.toLowerCase().includes(this.tag.toLowerCase())))
        
     },
   },
