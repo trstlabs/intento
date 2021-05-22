@@ -57,11 +57,11 @@ func CmdListInactiveItems() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAllItemRequest{
+			params := &types.QueryAllInactiveItemsRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.ItemAll(context.Background(), params)
+			res, err := queryClient.InactiveItemsAll(context.Background(), params)
 			if err != nil {
 				return err
 			}

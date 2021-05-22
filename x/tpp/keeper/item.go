@@ -45,12 +45,10 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 	// Create the item
 	count := k.GetItemCount(ctx)
 
-
 	var estimationcount = fmt.Sprint(msg.Estimationcount)
 	var estimationcountHash = sha256.Sum256([]byte(estimationcount + msg.Creator))
 	var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
 
-	
 	submitTime := ctx.BlockHeader().Time
 
 	activePeriod := k.GetParams(ctx).MaxActivePeriod
@@ -58,7 +56,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 
 	var item = types.Item{
 		Creator:             msg.Creator,
-		Seller: msg.Creator,
+		Seller:              msg.Creator,
 		Id:                  strconv.FormatInt(count, 10),
 		Title:               msg.Title,
 		Description:         msg.Description,
@@ -71,19 +69,17 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 		Condition:      msg.Condition,
 		Shippingregion: msg.Shippingregion,
 		Depositamount:  msg.Depositamount,
-		Submittime: submitTime,
-		Endtime: endTime,
-		
-		
+		Submittime:     submitTime,
+		Endtime:        endTime,
 	}
 	k.BindItemSeller(ctx, item.Id, msg.Creator)
 	//works 100% with endtime tx.BlockHeader().Time
 	k.InsertInactiveItemQueue(ctx, item.Id, endTime)
 
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, item.Id) ),
+		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, item.Id)),
 	)
-	
+
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	key := types.KeyPrefix(types.ItemKey + item.Id)
 	value := k.cdc.MustMarshalBinaryBare(&item)
@@ -119,7 +115,6 @@ func (k Keeper) GetItemOwner(ctx sdk.Context, key string) string {
 	return k.GetItem(ctx, key).Seller
 }
 
-
 // DeleteItem deletes a item
 func (k Keeper) DeleteItem(ctx sdk.Context, key string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
@@ -143,7 +138,7 @@ func (k Keeper) GetAllItem(ctx sdk.Context) (msgs []types.Item) {
 }
 
 // GetAllInactiveItems returns all inactive item
-func (k Keeper) GetAllInactiveItems(ctx sdk.Context) (msgs []types.Item) {
+func (k Keeper) GetAllInactiveItems(ctx sdk.Context) (msgs []*types.Item) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.InactiveItemQueuePrefix)
 	iterator := sdk.KVStorePrefixIterator(store, types.InactiveItemQueuePrefix)
 
@@ -152,13 +147,11 @@ func (k Keeper) GetAllInactiveItems(ctx sdk.Context) (msgs []types.Item) {
 	for ; iterator.Valid(); iterator.Next() {
 		var msg types.Item
 		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &msg)
-		msgs = append(msgs, msg)
+		msgs = append(msgs, &msg)
 	}
 
 	return
 }
-
-
 
 // HandlePrepayment handles payment
 func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk.Coin) {

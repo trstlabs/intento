@@ -49,7 +49,7 @@ message MsgCreateItem {
   string creator = 1;
   string title = 2; 
   string description = 3; 
-  int64 shippingcost = 4 ; 
+  int64 shippingcost = 4; 
 
   string localpickup = 5; 
   int64 estimationcount = 6; 
@@ -65,11 +65,11 @@ message MsgUpdateItem {
   string seller = 1;
   string id = 2;
 
-  int64 shippingcost = 5;
-  string localpickup = 6; 
+  int64 shippingcost = 3;
+  string localpickup = 4; 
 
 
-  repeated string shippingregion = 8; 
+  repeated string shippingregion = 5; 
 }
 
 message MsgDeleteItem {
