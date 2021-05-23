@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -50,9 +51,12 @@ func CmdShowEstimator() *cobra.Command {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)
-
+			Itemid, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 			params := &types.QueryGetEstimatorRequest{
-				Itemid: args[0],
+				Itemid: Itemid,
 			}
 
 			res, err := queryClient.Estimator(context.Background(), params)

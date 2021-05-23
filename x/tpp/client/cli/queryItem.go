@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -35,13 +36,11 @@ func CmdListItem() *cobra.Command {
 			return clientCtx.PrintProto(res)
 		},
 	}
-	
 
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
-
 
 func CmdListInactiveItems() *cobra.Command {
 	cmd := &cobra.Command{
@@ -69,13 +68,11 @@ func CmdListInactiveItems() *cobra.Command {
 			return clientCtx.PrintProto(res)
 		},
 	}
-	
 
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
-
 
 func CmdSellerItems() *cobra.Command {
 	cmd := &cobra.Command{
@@ -104,7 +101,6 @@ func CmdSellerItems() *cobra.Command {
 	return cmd
 }
 
-
 func CmdShowItem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-item [id]",
@@ -114,9 +110,13 @@ func CmdShowItem() *cobra.Command {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)
+			Id, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			params := &types.QueryGetItemRequest{
-				Id: args[0],
+				Id: Id,
 			}
 
 			res, err := queryClient.Item(context.Background(), params)
