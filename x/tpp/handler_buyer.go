@@ -276,13 +276,13 @@ func handleMsgItemRating(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRat
 		mintCoins := sdk.NewCoin("tpp", toMintAmount)
 		k.MintReward(ctx, mintCoins)
 		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
+		item.Estimationprice = 0
 
 	} else if msg.Rating < 3 {
 		item.Buyer = ""
 	}
 	item.Note = msg.Note
 	item.Rating = msg.Rating
-	item.Estimationprice = 0
 
 	k.SetItem(ctx, item)
 
