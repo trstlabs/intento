@@ -9,25 +9,25 @@
 
           <v-btn
             class="ma-6 elevation-6"
-            large
+            x-large rounded
             color="primary"
             @click="(signin = true), loadContent()"
           >
             Sign In
           </v-btn>
 
-          <v-card-text>
+          <p class="caption px-2">
             Welcome to the TPP marketplace. Note: items are examples only and
             are not redeemable for TPP tokens. Feedback is welcome at the
             <a target="_blank" href="https://www.trustpriceprotocol.com">
               main page</a
             >.
-          </v-card-text>
+          </p>
 
           <v-btn
             color="primary "
             small
-            text
+            plain
             @click="(learn = true), loadContent()"
           >
             Learn more

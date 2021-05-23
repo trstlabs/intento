@@ -386,7 +386,7 @@
                         Number(thisitem.estimationprice) +
                         Number(thisitem.shippingcost)
                       }}
-                      <v-icon small>$vuetify.icons.custom</v-icon>
+                      <v-icon small>$vuetify.icons.custom</v-icon> w/ shipping
                     </div>
                     <div v-if="flightSP">
                       <v-progress-linear
@@ -630,53 +630,10 @@
               <v-icon small left> mdi-tag-outline </v-icon>{{ tag }}</v-chip
             >
             <v-card class="ma-1 rounded-t-xl" outlined>
-              <v-list dense disabled>
+                <v-list subheader dense>
                 <v-subheader>About</v-subheader>
-                <v-list-item-group>
-                  <v-list-item>
-                    <v-list-item-icon>
-                      <v-icon>mdi-account-badge-outline </v-icon>
-                    </v-list-item-icon>
-
-                    <v-list-item-content>
-                      <v-list-item-title class="font-weight-light"
-                        ><v-row
-                          ><v-col>TPP ID: </v-col>
-                          <v-col>{{ thisitem.id }}</v-col></v-row
-                        ></v-list-item-title
-                      >
-                    </v-list-item-content>
-                  </v-list-item>
-                   <v-list-item>
-                    <v-list-item-icon>
-                      <v-icon> mdi-clock</v-icon>
-                    </v-list-item-icon>
-
-                    <v-list-item-content>
-                      <v-list-item-title class="font-weight-light"
-                        ><v-row
-                          ><v-col>Created on: </v-col>
-                          <v-col>{{ getFmtTime(thisitem.submittime) }}</v-col></v-row
-                        ></v-list-item-title
-                      >
-                    </v-list-item-content>
-                  </v-list-item>
-                   <v-list-item v-if="!thisitem.buyer && thisitem.status == ''">
-                    <v-list-item-icon>
-                      <v-icon> mdi-progress-clock</v-icon>
-                    </v-list-item-icon>
-
-                    <v-list-item-content>
-                      <v-list-item-title class="font-weight-light"
-                        ><v-row
-                          ><v-col>Expires on: </v-col>
-                          <v-col>{{ getFmtTime(thisitem.endtime) }}</v-col></v-row
-                        ></v-list-item-title
-                      >
-                    </v-list-item-content>
-                  </v-list-item>
-               
-                  <v-list-item>
+       
+                     <v-list-item>
                     <v-list-item-icon>
                       <v-icon
                         @click="createRoom"
@@ -709,6 +666,50 @@
                       >
                     </v-list-item-content>
                   </v-list-item>
+                  <v-list-item>
+                    <v-list-item-icon>
+                      <v-icon>mdi-account-badge-outline </v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>TPP ID: </v-col>
+                          <v-col>{{ thisitem.id }}</v-col></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                     <v-list-item>
+                    <v-list-item-icon>
+                      <v-icon> mdi-clock</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Created on: </v-col>
+                          <v-col>{{ getFmtTime(thisitem.submittime) }}</v-col></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+                   <v-list-item v-if="!thisitem.buyer && thisitem.status == ''">
+                    <v-list-item-icon>
+                      <v-icon> mdi-progress-clock</v-icon>
+                    </v-list-item-icon>
+
+                    <v-list-item-content>
+                      <v-list-item-title class="font-weight-light"
+                        ><v-row
+                          ><v-col>Expires on: </v-col>
+                          <v-col>{{ getFmtTime(thisitem.endtime) }}</v-col></v-row
+                        ></v-list-item-title
+                      >
+                    </v-list-item-content>
+                  </v-list-item>
+               
+               
                   <v-list-item v-if="thisitem.shippingcost > 0">
                     <v-list-item-icon>
                       <v-icon> mdi-package-variant-closed </v-icon>
@@ -732,6 +733,8 @@
                     <v-list-item-icon>
                       <v-icon> mdi-repeat</v-icon>
                     </v-list-item-icon>
+                 
+                
 
                     <v-list-item-content>
                       <v-list-item-title class="font-weight-light"
@@ -785,7 +788,7 @@
                       >
                     </v-list-item-content>
                   </v-list-item>
-                </v-list-item-group>
+             
               </v-list>
             </v-card>
             <v-row

@@ -6,11 +6,11 @@
           v-on="on" height="350" src="img/design/sell.png">
       <span v-if="!data.title" >
              <p  v-if="!data.title" v-bind="attrs"
-          v-on="on"  class="headline pt-4 font-weight-thin gray--text text-center"> Place An Item</p>
+          v-on="on"  class="headline pt-4 font-weight-thin text-center"> Place An Item</p>
         
         </span><span  v-else>
           <p  v-bind="attrs"
-          v-on="on"  class="headline pt-4 font-weight-thin gray--text text-center"> Place {{data.title}}</p>
+          v-on="on"  class="headline pt-4 font-weight-thin ext-center"> Place {{data.title}}</p>
      </span>
        <v-icon class="ml-4" small>mdi-information-outline</v-icon></v-img>
       </template>
@@ -67,7 +67,7 @@
               />
 <v-alert class="ma-2 caption" dense type="info" dismissible v-if="descrinfo"> Make sure to fully disclose any defects or scratches (and highlight these in the pictures)</v-alert>
               <v-textarea
-              @change="descrinfo = !descrinfo"
+              @change="descrinfo = !descrinfo" 
                 class="ma-1"
                 prepend-icon="mdi-text"
                 :rules="rules.descriptionRules"
@@ -188,7 +188,7 @@
                   </v-btn>
 
                   <v-slider
-                    hint="Set to 0 tokens no for shipping"
+                    hint="Set to 0 tokens for no shipping"
                     thumb-label
                     label="Shipping cost"
                     suffix="tokens"
@@ -546,6 +546,8 @@ changedeposit: false,
       this.submitted = true
 
       
+    }else{
+      alert("Sign in first")
     } },
          async afterSubmit(value) {
            

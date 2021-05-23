@@ -245,7 +245,7 @@
 
                         <v-slider
                           class="pa-2 mt-2"
-                          hint="Set to 0 tpp no for added cost"
+                          hint="Set to 0 tpp for no added cost"
                           thumb-label
                           label="Shipping cost"
                           suffix="tokens"

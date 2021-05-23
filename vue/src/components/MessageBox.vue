@@ -58,7 +58,7 @@
       <button class="button-cancel" @click="removeRoomId = null">Cancel</button>
     </form>
     <p v-if="!this.currentUserId && this.$store.state.user != null" class="pa-8 text-center">  Loading messages... <button onClick="window.location.reload();">Refresh</button> </p>
-    <p v-if="!this.$store.state.account.address" class="pa-8 text-center">  Sign in first <button onClick="window.location.reload();">Refresh</button> </p>
+    <p v-if="!this.$store.state.account.address" class="pa-8 text-center">  Sign in first <v-btn color="primary" onClick="window.location.reload();">Refresh</v-btn> </p>
     <p v-if="!this.$store.state.user && this.$store.state.account.address" class="pa-8 text-center">  Confirm verification link via Email<button onClick="window.location.reload();">Refresh</button> </p>
    <div> 
   <!-- To fix overlay issue: remove z index 10 from vac0room-header room-footer-->
@@ -969,7 +969,7 @@ button {
   color: #fff;
   outline: none;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 20px;
   padding: 8px 12px;
   margin-left: 10px;
   border: none;

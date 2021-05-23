@@ -138,6 +138,7 @@
   >
   
       <v-list
+      
         nav 
         shaped
       >

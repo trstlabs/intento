@@ -11,22 +11,22 @@
           <v-col class="pa-2" cols="12" md="7">
             <p :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
               v-if="thisitem.creator != thisitem.seller"
-              class="text-capitalize subtitle-2 pa-2 text-left"
+              class="text-capitalize subtitle-2 ma-2 text-left"
             >
               <v-icon left> mdi-repeat </v-icon>{{ thisitem.title }}
             </p>
 
-            <p v-else class="text-capitalize subtitle-2 pa-2 text-left">
+            <p v-else class="text-capitalize subtitle-2 ma-2 text-left">
               <v-icon color="primary" left>mdi-check-all </v-icon>
               {{ thisitem.title }}
             </p>
 
-            <span class="ma-1">
-              <p class="ma-1 caption font-weight-light" v-if="thisitem.description.length < 80">
+            <span>
+              <p class="caption pl-12 font-weight-light" v-if="thisitem.description.length < 120">
                 {{ thisitem.description }}
               </p>
-              <p class="ma-1 caption font-weight-light" v-else>
-                {{ thisitem.description.substring(0, 78) + ".." }}
+              <p class="caption pl-12 font-weight-light" v-else>
+                {{ thisitem.description.substring(0, 118) + ".." }}
               </p>
             </span>
           </v-col>
@@ -153,17 +153,7 @@
 
           
          <span v-if="thisitem.localpickup == ''">
-            <!--<v-chip class="ma-1 caption"  color="primary lighten-1" small>
-              <v-chip label dark color="primary">
-                <v-icon small right>$vuetify.icons.custom</v-icon>{{
-                  Number(thisitem.estimationprice) +
-                  Number(thisitem.shippingcost)
-                }}</v-chip
-              >
-              <v-icon right> mdi-check-all </v-icon
-              ><v-icon small right> mdi-plus </v-icon
-              ><v-icon small right> mdi-package-variant-closed </v-icon>
-            </v-chip>-->
+          
             <router-link
               style="text-decoration: none; color: inherit"
               :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
@@ -329,7 +319,7 @@
                 Shipping: {{ thisitem.shippingcost}} <v-icon right small>$vuetify.icons.custom</v-icon> 
               </v-chip>
 
-              <v-chip
+             <v-chip :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
                 v-if="thisitem.estimationprice > 0"
                 class="ma-1 caption font-weight-light "
                 
@@ -337,14 +327,15 @@
                 
               >
                 <v-icon left> mdi-check-all </v-icon>
-                Price: {{ thisitem.estimationprice}} <v-icon right small>$vuetify.icons.custom</v-icon> 
-              </v-chip>
+               Price: {{ thisitem.estimationprice}} <v-icon right small>$vuetify.icons.custom</v-icon>
+                </v-chip> 
+           
 <v-btn class="rounded-pill ml-6 mr-6"  small
              color="primary"
             :to="{ name: 'BuyItemDetails', params: { id: itemid } }"
             plain
           >
-            Details
+            More Details
           </v-btn>
             </div>
           </div>
