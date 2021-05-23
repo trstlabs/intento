@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
 /*
 func listBuyer(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	msgs := keeper.GetAllBuyer(ctx)
@@ -17,7 +18,7 @@ func listBuyer(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmi
 	return bz, nil
 }
 
-func getBuyer(ctx sdk.Context, itemid string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func getBuyer(ctx sdk.Context, itemid uint64, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	msg := keeper.GetBuyer(ctx, itemid)
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msg)
@@ -30,7 +31,6 @@ func getBuyer(ctx sdk.Context, itemid string, keeper Keeper, legacyQuerierCdc *c
 
 */
 func buyerItems(ctx sdk.Context, buyer string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	
 
 	items := keeper.GetAllBuyerItems(ctx, buyer)
 

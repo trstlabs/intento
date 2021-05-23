@@ -39,8 +39,8 @@ func (k Keeper) SetEstimatorCount(ctx sdk.Context, count int64) {
 	store.Set(byteKey, bz)
 }
 
-// CreateEstimator creates a estimator with a new id and update the count
-func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
+// CreateEstimation creates a estimator with a new id and update the count
+func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation) {
 	// Create the estimator
 	count := k.GetEstimatorCount(ctx)
 	deposit := sdk.NewInt64Coin("tpp", msg.Deposit)
@@ -71,7 +71,8 @@ func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
 	//}
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	key := types.KeyPrefix(types.EstimatorKey + estimator.Itemid + "-" + estimator.Estimator)
+
+	key := append(append([]byte(types.EstimatorKey), types.Uint64ToByte(estimator.Itemid)...), []byte(estimator.Estimator)...)
 	value := k.cdc.MustMarshalBinaryBare(&estimator)
 	store.Set(key, value)
 
@@ -83,33 +84,34 @@ func (k Keeper) CreateEstimator(ctx sdk.Context, msg types.MsgCreateEstimator) {
 func (k Keeper) SetEstimator(ctx sdk.Context, estimator types.Estimator) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 	b := k.cdc.MustMarshalBinaryBare(&estimator)
-	store.Set(types.KeyPrefix(types.EstimatorKey+estimator.Itemid+"-"+estimator.Estimator), b)
+	appended := append([]byte(types.EstimatorKey), types.Uint64ToByte(estimator.Itemid)...)
+	store.Set(append(appended, estimator.Estimator...), b)
 }
 
 // GetEstimator returns a estimator from its key
-func (k Keeper) GetEstimator(ctx sdk.Context, key string) types.Estimator {
+func (k Keeper) GetEstimator(ctx sdk.Context, key []byte) types.Estimator {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 	var estimator types.Estimator
-	k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+key)), &estimator)
+	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
 	return estimator
 }
 
 // HasEstimator checks if the estimator exists
-func (k Keeper) HasEstimator(ctx sdk.Context, id string) bool {
+func (k Keeper) HasEstimator(ctx sdk.Context, key []byte) bool {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	return store.Has(types.KeyPrefix(types.EstimatorKey + id))
+	return store.Has(append(types.KeyPrefix(types.EstimatorKey), key...))
 }
 
 // GetEstimatorOwner returns the creator of the estimator
-func (k Keeper) GetEstimatorOwner(ctx sdk.Context, key string) string {
+func (k Keeper) GetEstimatorOwner(ctx sdk.Context, key []byte) string {
 	return k.GetEstimator(ctx, key).Estimator
 }
 
-// DeleteEstimator deletes a estimator
-func (k Keeper) DeleteEstimator(ctx sdk.Context, key string) {
+// DeleteEstimation deletes a estimator
+func (k Keeper) DeleteEstimation(ctx sdk.Context, key []byte) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 	var estimator types.Estimator
-	k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+key)), &estimator)
+	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
 	estimatoraddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
 	if err != nil {
 		panic(err)
@@ -119,19 +121,17 @@ func (k Keeper) DeleteEstimator(ctx sdk.Context, key string) {
 	if err != nil {
 		panic(err)
 	}
-	store.Delete(types.KeyPrefix(types.EstimatorKey + key))
+	store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
 }
 
-
-// DeleteEstimatorWithoutDeposit deletes a estimator without returing a deposit
-func (k Keeper) DeleteEstimatorWithoutDeposit(ctx sdk.Context, key string) {
+// DeleteEstimationWithoutDeposit deletes a estimator without returing a deposit
+func (k Keeper) DeleteEstimationWithoutDeposit(ctx sdk.Context, key []byte) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 	var estimator types.Estimator
-	k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+key)), &estimator)
-	
-	store.Delete(types.KeyPrefix(types.EstimatorKey + key))
-}
+	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
 
+	store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
+}
 
 // GetAllEstimator returns all estimator
 func (k Keeper) GetAllEstimator(ctx sdk.Context) (msgs []types.Estimator) {

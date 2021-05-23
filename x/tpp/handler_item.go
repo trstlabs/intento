@@ -21,35 +21,9 @@ func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateI
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
-func handleMsgUpdateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdateItem) (*sdk.Result, error) {
-	var item = types.Item{
-		Seller: msg.Seller,
-		Id:     msg.Id,
-
-		Shippingcost: msg.Shippingcost,
-		Localpickup:  msg.Localpickup,
-
-		Shippingregion: msg.Shippingregion,
-	}
-
-	// Checks that the element exists
-	if !k.HasItem(ctx, msg.Id) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s doesn't exist", msg.Id))
-	}
-
-	// Checks if the the msg sender is the same as the current owner
-	if msg.Seller != k.GetItemOwner(ctx, msg.Id) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
-	}
-
-	k.SetItem(ctx, item)
-
-	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
-}
-
 func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteItem) (*sdk.Result, error) {
 	if !k.HasItem(ctx, msg.Id) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s doesn't exist", msg.Id))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("item id %s doesn't exist", strconv.FormatUint(msg.Id, 10)))
 	}
 
 	item := k.GetItem(ctx, msg.Id)
@@ -63,9 +37,9 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 		if len(item.Estimatorlist) > 0 {
 			for _, element := range item.Estimatorlist {
 				//apply this to each element
-				key := msg.Id + "-" + element
 
-				k.DeleteEstimator(ctx, key)
+				key := append(types.Uint64ToByte(msg.Id), []byte(element)...)
+				k.DeleteEstimation(ctx, key)
 			}
 		}
 		// title,status and rating are kept to enhance trust
@@ -96,9 +70,9 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 		if len(item.Estimatorlist) > 0 {
 			for _, element := range item.Estimatorlist {
 				//apply this to each element
-				key := msg.Id + "-" + element
+				key := append(types.Uint64ToByte(msg.Id), []byte(element)...)
 
-				k.DeleteEstimator(ctx, key)
+				k.DeleteEstimation(ctx, key)
 
 			}
 		}
@@ -122,7 +96,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	var EstimationList []int64
 
 	for _, element := range item.Estimatorlist {
-		key := msg.Itemid + "-" + element
+		key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 		estimator := k.GetEstimator(ctx, key)
 
 		//getting all of the comments into a list
@@ -164,8 +138,8 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 		//returns each element
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
-			key := msg.Itemid + "-" + element
-			k.DeleteEstimator(ctx, key)
+			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
+			k.DeleteEstimation(ctx, key)
 		}
 		/*item.Bestestimator = ""
 		item.Lowestestimator = ""
@@ -179,7 +153,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 
 	for _, element := range item.Estimatorlist {
 		//apply this to each element
-		key := msg.Itemid + "-" + element
+		key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 		estimator := k.GetEstimator(ctx, key)
 
 		//finding out if the creator of the estimation belongs to the best estimated price
@@ -221,16 +195,16 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		//returns each element
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
-			key := msg.Itemid + "-" + element
+			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 			estimator := k.GetEstimator(ctx, key)
 
 			if estimator.Estimator == item.Lowestestimator {
 
 				k.BurnCoins(ctx, estimator.Deposit)
-				k.DeleteEstimatorWithoutDeposit(ctx, key)
+				k.DeleteEstimationWithoutDeposit(ctx, key)
 
 			} else {
-				k.DeleteEstimator(ctx, key)
+				k.DeleteEstimation(ctx, key)
 			}
 
 		}
@@ -250,8 +224,7 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		k.SetItem(ctx, item)
 	}
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.EventTypeItemTransferable, sdk.NewAttribute(types.AttributeKeyItemID, msg.Itemid)),
-	)
+		sdk.NewEvent(types.EventTypeItemTransferable, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))
 
 	k.RemoveFromInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
@@ -262,14 +235,11 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 	if msg.Seller != k.GetItemOwner(ctx, msg.Itemid) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
-	//get buyer info
-	//buyer := k.GetBuyer(ctx, msg.Itemid)
 
 	//get item info
 	item := k.GetItem(ctx, msg.Itemid)
 
 	//check if item.transferable = true and therefore the seller has accepted the buyer
-	////[to do] in case this is false the prepayment will  be returned, item.buyer will be gone. this shall be in another function
 	if item.Transferable == false {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item is not transferable")
 	}
@@ -322,9 +292,9 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 
 			//refund the deposits back to all of the item estimators
 			for _, element := range item.Estimatorlist {
-				key := msg.Itemid + "-" + element
+				key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 
-				k.DeleteEstimator(ctx, key)
+				k.DeleteEstimation(ctx, key)
 			}
 
 			item.Bestestimator = ""
@@ -349,16 +319,16 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
-			key := msg.Itemid + "-" + element
+			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 			estimator := k.GetEstimator(ctx, key)
 
 			if estimator.Estimator == item.Lowestestimator {
 
 				k.BurnCoins(ctx, estimator.Deposit)
-				k.DeleteEstimatorWithoutDeposit(ctx, key)
+				k.DeleteEstimationWithoutDeposit(ctx, key)
 
 			} else {
-				k.DeleteEstimator(ctx, key)
+				k.DeleteEstimation(ctx, key)
 			}
 
 		}
@@ -375,7 +345,7 @@ func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRes
 
 	// Checks that the element exists
 	if !k.HasItem(ctx, msg.Itemid) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("key %s doesn't exist", msg.Itemid))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("item id %s doesn't exist", strconv.FormatUint(msg.Itemid, 10)))
 	}
 
 	item := k.GetItem(ctx, msg.Itemid)
@@ -392,6 +362,7 @@ func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRes
 	if msg.Discount > item.Estimationprice {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Discount invalid")
 	}
+	k.Withdrawal(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Seller)...))
 
 	item.Seller = msg.Seller
 	item.Shippingcost = msg.Shippingcost
@@ -408,7 +379,6 @@ func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRes
 	k.InsertInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.EventTypeItemResellable, sdk.NewAttribute(types.AttributeKeyItemID, msg.Itemid)),
-	)
+		sdk.NewEvent(types.EventTypeItemResellable, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

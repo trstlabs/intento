@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" width="500">
       <template v-slot:activator="{ on, attrs }">
        <v-img rounded v-bind="attrs"
-          v-on="on" height="300" src="img/design/sell.png">
+          v-on="on" height="350" src="img/design/sell.png">
       <span v-if="!data.title" >
              <p  v-if="!data.title" v-bind="attrs"
           v-on="on"  class="headline pt-4 font-weight-thin gray--text text-center"> Place An Item</p>

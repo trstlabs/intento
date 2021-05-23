@@ -1,15 +1,12 @@
 package types
 
-
 import (
-	
-	
+	"encoding/binary"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 )
-
 
 const (
 	// ModuleName defines the module name
@@ -35,11 +32,10 @@ func KeyPrefix(p string) []byte {
 const (
 	ItemKey      = "Item-value-"
 	ItemCountKey = "Item-count-"
-	
-	)	
+)
 
 const (
-	BuyerKey      = "Buyer-value-"
+	BuyerKey = "Buyer-value-"
 	//BuyerCountKey = "Buyer-count-"
 )
 
@@ -54,22 +50,20 @@ var ItemSellerPrefix = []byte{0x03}
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 
 // SplitInactiveProposalQueueKey split the inactive key and returns the id and endTime
-func SplitInactiveItemQueueKey(key []byte) (itemid string, endTime time.Time) {
+func SplitInactiveItemQueueKey(key []byte) (itemid uint64, endTime time.Time) {
 	return splitKeyWithTime(key)
 }
-
 
 // InactiveProposalByTimeKey gets the inactive proposal queue key by endTime
 func InactiveItemByTimeKey(endTime time.Time) []byte {
 	return append(InactiveItemQueuePrefix, sdk.FormatTimeBytes(endTime)...)
 }
 
-
 //from the key we get the itemid and end time
-func splitKeyWithTime(key []byte) (itemid string, endTime time.Time) {
-//	if len(key[1:]) != 8+lenTime {
-//		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+8))
-//	}
+func splitKeyWithTime(key []byte) (itemid uint64, endTime time.Time) {
+	if len(key[1:]) != 8+lenTime {
+		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+8))
+	}
 
 	endTime, err := sdk.ParseTimeBytes(key[1 : 1+lenTime])
 	if err != nil {
@@ -77,58 +71,54 @@ func splitKeyWithTime(key []byte) (itemid string, endTime time.Time) {
 	}
 
 	//eturns an id from bytes
-	itemid = string(key[1+lenTime:])
+	itemid = GetItemIDFromBytes(key[1+lenTime:])
 	return
 }
 
-
 // InactiveProposalQueueKey returns the key with prefix for an itemid in the inactiveProposalQueue
-func InactiveItemQueueKey(itemid string, endTime time.Time) []byte {
-	return append(InactiveItemByTimeKey(endTime), []byte(itemid)...)
+func InactiveItemQueueKey(itemid uint64, endTime time.Time) []byte {
+	return append(InactiveItemByTimeKey(endTime), Uint64ToByte(itemid)...)
 }
-
 
 //----seller functions
 
-/*
-// SplitInactiveProposalQueueKey split the inactive key and returns the id and endTime
-func SplitItemSellerKey(key []byte) (itemid string, endTime time.Time) {
-	return splitKeyWithSeller(key)
-}
-
-
-//from the key we get the itemid and seller
-func splitKeyWithSeller(key []byte) (itemid string, seller string) {	
-
-	seller, err := sdk.ParseTimeBytes(key[1 : 1+len([]byte(seller)))
-	if err != nil {
-		panic(err)
-	}
-
-	//not sure about this, in gov returns an id from bytes
-	itemid = string(key[1+lenTime:])
-	return
-}*/
-
-
 // ItemSellerKey returns the key with prefix for an itemid in seller
-func ItemSellerKey(itemid string, seller string) []byte {
-	return append(ItemSellerBySellerKey(seller), []byte(itemid)...)
+func ItemSellerKey(itemid uint64, seller string) []byte {
+	return append(ItemSellerBySellerKey(seller), Uint64ToByte(itemid)...)
 }
 
-
-// ItemSellerBySellerKey 
+// ItemSellerBySellerKey
 func ItemSellerBySellerKey(seller string) []byte {
 	return append(ItemSellerPrefix, []byte(seller)...)
 }
 
 // IteItemBuyerKeyBuyerKey returns the key with prefix for an itemid in seller
-func ItemBuyerKey(itemid string, buyer string) []byte {
-	return append(ItemBuyerByBuyerKey(buyer), []byte(itemid)...)
+func ItemBuyerKey(itemid uint64, buyer string) []byte {
+	return append(ItemBuyerByBuyerKey(buyer), Uint64ToByte(itemid)...)
 }
 
-
-// ItemBuyerByBuyerKey 
+// ItemBuyerByBuyerKey
 func ItemBuyerByBuyerKey(buyer string) []byte {
 	return append(KeyPrefix(BuyerKey), []byte(buyer)...)
+}
+
+/// helper functions
+
+// Uint64ToByte - marshals uint64 to a bigendian byte slice so it can be sorted
+func Uint64ToByte(i uint64) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, i)
+	return b
+}
+
+// GetItemIDBytes returns the byte representation of the itemID
+func GetItemIDBytes(itemID uint64) (ItemIDBz []byte) {
+	ItemIDBz = make([]byte, 8)
+	binary.BigEndian.PutUint64(ItemIDBz, itemID)
+	return
+}
+
+// GetItemIDFromBytes returns itemID in uint64 format from a byte array
+func GetItemIDFromBytes(bz []byte) (itemID uint64) {
+	return binary.BigEndian.Uint64(bz)
 }

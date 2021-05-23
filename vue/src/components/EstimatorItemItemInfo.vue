@@ -217,7 +217,7 @@ alert("Estimation deleted")
         ["itemid", 2, "string", "optional"],
       ];
 
-      this.msg = "MsgDeleteEstimator"
+      this.msg = "MsgDeleteEstimation"
 
       this.value = {
           estimator: this.$store.state.account.address,

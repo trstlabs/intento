@@ -1,6 +1,7 @@
 package tpp
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -26,8 +27,9 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		)
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
-			key := item.Id + "-" + element
-			k.DeleteEstimator(ctx, key)
+			key := append(types.Uint64ToByte(item.Id), []byte(element)...)
+
+			k.DeleteEstimation(ctx, key)
 		}
 		k.DeleteItem(ctx, item.Id)
 		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
@@ -37,7 +39,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeItemExpired,
-				sdk.NewAttribute(types.AttributeKeyItemID, item.Id),
+				sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10)),
 			),
 		)
 

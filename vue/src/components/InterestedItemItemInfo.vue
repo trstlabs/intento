@@ -522,7 +522,7 @@ export default {
           ["itemid", 2, "string", "optional"],
           ["deposit", 3, "int64", "optional"],
         ];
-        this.msg = "MsgCreateBuyer"
+        this.msg = "MsgPrepayment"
        this.value = {
           buyer: this.$store.state.account.address,
           ...body
@@ -552,7 +552,7 @@ export default {
           ["itemid", 2, "string", "optional"],
           ["deposit", 3, "int64", "optional"],
         ];
-        this.msg = "MsgCreateBuyer"
+        this.msg = "MsgPrepayment"
        this.value = {
           buyer: this.$store.state.account.address,
           ...body
@@ -575,7 +575,7 @@ export default {
         ];
 const body = { itemid: itemid,
         interested: false };
-this.msg = "MsgUpdateEstimator"
+this.msg = "MsgUpdateLike"
 this.value ={
           estimator: this.$store.state.account.address,
           ...body

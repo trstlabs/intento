@@ -9,7 +9,7 @@ option go_package = "github.com/danieljdd/tpp/x/tpp/types";
 
 message Estimator {
   string estimator = 1;
-  string itemid = 2;
+  uint64 itemid = 2;
   int64 estimation = 3; 
   string estimatorestimationhash = 4; 
   cosmos.base.v1beta1.Coin deposit = 5 [
@@ -19,29 +19,29 @@ message Estimator {
   int64 flag = 8; 
 }
 
-message MsgCreateEstimator {
+message MsgCreateEstimation {
   string estimator = 1;
   int64 estimation = 2; 
-  string itemid = 3; 
+  uint64 itemid = 3; 
   int64 deposit = 4;
   bool interested = 5; 
   string comment = 6; 
 }
 
 
-message MsgUpdateEstimator {
+message MsgUpdateLike {
   string estimator = 1;
-  string itemid = 2; 
+  uint64 itemid = 2; 
   bool interested = 3; 
 }
 
-message MsgDeleteEstimator {
+message MsgDeleteEstimation {
   string estimator = 1;
-  string itemid = 2;
+  uint64 itemid = 2;
 }
 
-message MsgCreateFlag{
+message MsgFlagItem{
   string estimator = 1;
-  string itemid = 2;
+  uint64 itemid = 2;
 
 }

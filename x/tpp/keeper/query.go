@@ -26,11 +26,11 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 		case types.QueryListEstimator:
 			return listEstimator(ctx, k, legacyQuerierCdc)
 
-	/*	case types.QueryGetBuyer:
-			return getBuyer(ctx, path[1], k, legacyQuerierCdc)
+			/*	case types.QueryGetBuyer:
+					return getBuyer(ctx, path[1], k, legacyQuerierCdc)
 
-		case types.QueryListBuyer:
-			return listBuyer(ctx, k, legacyQuerierCdc)*/
+				case types.QueryListBuyer:
+					return listBuyer(ctx, k, legacyQuerierCdc)*/
 
 		case types.QueryGetItem:
 			return getItem(ctx, path[1], k, legacyQuerierCdc)
@@ -43,7 +43,6 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 			return sellerItems(ctx, path[1], k, legacyQuerierCdc)
 		case types.QueryBuyerItems:
 			return buyerItems(ctx, path[1], k, legacyQuerierCdc)
-
 
 		default:
 			err = sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unknown %s query endpoint: %s", types.ModuleName, path[0])

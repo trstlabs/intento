@@ -155,8 +155,8 @@ this.getInterestedItems()
     },
      getItemsFromBuyer() {
       if (this.$store.state.account.address) { 
-      const type = { type: "buyer" };
-      this.$store.dispatch("entityFetch",type);
+      //const type = { type: "buyer" };
+      //this.$store.dispatch("entityFetch",type);
     
       let input = this.$store.state.account.address;
       this.$store.dispatch("setBuyerItemList", input);

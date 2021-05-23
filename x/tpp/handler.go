@@ -16,29 +16,23 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 
 		switch msg := msg.(type) {
 		// this line is used by starport scaffolding # 1
-		case *types.MsgCreateEstimator:
-			return handleMsgCreateEstimator(ctx, k, msg)
+		case *types.MsgCreateEstimation:
+			return handleMsgCreateEstimation(ctx, k, msg)
 
-		case *types.MsgUpdateEstimator:
-			return handleMsgUpdateEstimator(ctx, k, msg)
+		case *types.MsgUpdateLike:
+			return handleMsgUpdateLike(ctx, k, msg)
 
-		case *types.MsgDeleteEstimator:
-			return handleMsgDeleteEstimator(ctx, k, msg)
+		case *types.MsgDeleteEstimation:
+			return handleMsgDeleteEstimation(ctx, k, msg)
 
-		case *types.MsgCreateBuyer:
-			return handleMsgCreateBuyer(ctx, k, msg)
+		case *types.MsgPrepayment:
+			return handleMsgPrepayment(ctx, k, msg)
 
-		case *types.MsgUpdateBuyer:
-			return handleMsgUpdateBuyer(ctx, k, msg)
-
-		case *types.MsgDeleteBuyer:
-			return handleMsgDeleteBuyer(ctx, k, msg)
+		case *types.MsgWithdrawal:
+			return handleMsgWithdrawal(ctx, k, msg)
 
 		case *types.MsgCreateItem:
 			return handleMsgCreateItem(ctx, k, msg)
-
-		case *types.MsgUpdateItem:
-			return handleMsgUpdateItem(ctx, k, msg)
 
 		case *types.MsgDeleteItem:
 			return handleMsgDeleteItem(ctx, k, msg)
@@ -55,8 +49,8 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		case *types.MsgItemTransfer:
 			return handleMsgItemTransfer(ctx, k, msg)
 
-		case *types.MsgCreateFlag:
-			return handleMsgCreateFlag(ctx, k, msg)
+		case *types.MsgFlagItem:
+			return handleMsgFlagItem(ctx, k, msg)
 		case *types.MsgItemRating:
 			return handleMsgItemRating(ctx, k, msg)
 		case *types.MsgItemResell:

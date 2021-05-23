@@ -92,57 +92,6 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 	}
 }
 
-type updateItemRequest struct {
-	BaseReq rest.BaseReq `json:"base_req"`
-	Seller string       `json:"creator"`
-
-	Shippingcost int64 `json:"shippingcost"`
-	Localpickup  string  `json:"localpickup"`
-
-	Shippingregion []string `json:"shippingregion"`
-}
-
-func updateItemHandler(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
-
-		var req updateItemRequest
-		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
-			return
-		}
-
-		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
-			return
-		}
-
-		_, err := sdk.AccAddressFromBech32(req.Seller)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		parsedShippingcost := req.Shippingcost
-
-		parsedLocalpickup := req.Localpickup
-
-		parsedShippingregion := req.Shippingregion
-
-		msg := types.NewMsgUpdateItem(
-			req.Seller,
-			id,
-
-			parsedShippingcost,
-			parsedLocalpickup,
-
-			parsedShippingregion,
-		)
-
-		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
-	}
-}
-
 type deleteItemRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
 	Seller string       `json:"creator"`
@@ -150,13 +99,19 @@ type deleteItemRequest struct {
 
 func deleteItemHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
+		//id := mux.Vars(r)["id"]
 
 		var req deleteItemRequest
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
 			return
 		}
+
+		id, e := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+			if e != nil {
+				rest.WriteErrorResponse(w, http.StatusBadRequest, e.Error())
+			return
+			}
 
 		baseReq := req.BaseReq.Sanitize()
 		if !baseReq.ValidateBasic(w) {

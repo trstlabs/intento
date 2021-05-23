@@ -48,7 +48,7 @@ func (k Keeper) Estimator(c context.Context, req *types.QueryGetEstimatorRequest
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+req.Itemid)), &estimator)
+	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.EstimatorKey), types.Uint64ToByte(req.Itemid)...)), &estimator)
 
 	return &types.QueryGetEstimatorResponse{Estimator: &estimator}, nil
 }

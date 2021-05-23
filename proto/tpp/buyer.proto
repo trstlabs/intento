@@ -11,38 +11,38 @@ option go_package = "github.com/danieljdd/tpp/x/tpp/types";
 //message Buyer {
  // string buyer = 1;
 
- // string itemid = 2; 
+ // uint64 itemid = 2; 
 
   //cosmos.base.v1beta1.Coin deposit = 3 [
 //    (gogoproto.nullable) = false]; 
 //}
 
-message MsgCreateBuyer {
+message MsgPrepayment {
   string buyer = 1;
-  string itemid = 2;
+  uint64 itemid = 2;
   int64 deposit = 3;
 }
 
 message MsgUpdateBuyer {
   string buyer = 1;
-  string itemid = 2; 
+  uint64 itemid = 2; 
   int64 deposit = 3; 
 }
 
-message MsgDeleteBuyer {
+message MsgWithdrawal {
   string buyer = 1;
-  string itemid = 2;
+  uint64 itemid = 2;
 }
 
 message MsgItemTransfer{
   string buyer = 1;
-  string itemid = 2;
+  uint64 itemid = 2;
 
 }
 
 message MsgItemRating{
   string buyer = 1;
-  string itemid = 2;
+  uint64 itemid = 2;
   int64 rating = 3;
   string note = 4;
 }

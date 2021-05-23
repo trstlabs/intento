@@ -8,17 +8,16 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	// this line is used by starport scaffolding # 2
-	cdc.RegisterConcrete(&MsgCreateEstimator{}, "tpp/CreateEstimator", nil)
-	cdc.RegisterConcrete(&MsgUpdateEstimator{}, "tpp/UpdateEstimator", nil)
-	cdc.RegisterConcrete(&MsgDeleteEstimator{}, "tpp/DeleteEstimator", nil)
-	cdc.RegisterConcrete(&MsgCreateFlag{}, "tpp/CreateFlag", nil)
+	cdc.RegisterConcrete(&MsgCreateEstimation{}, "tpp/CreateEstimation", nil)
+	cdc.RegisterConcrete(&MsgUpdateLike{}, "tpp/UpdateLike", nil)
+	cdc.RegisterConcrete(&MsgDeleteEstimation{}, "tpp/DeleteEstimation", nil)
+	cdc.RegisterConcrete(&MsgFlagItem{}, "tpp/FlagItem", nil)
 
-	cdc.RegisterConcrete(&MsgCreateBuyer{}, "tpp/CreateBuyer", nil)
+	cdc.RegisterConcrete(&MsgPrepayment{}, "tpp/Prepayment", nil)
 	cdc.RegisterConcrete(&MsgUpdateBuyer{}, "tpp/UpdateBuyer", nil)
-	cdc.RegisterConcrete(&MsgDeleteBuyer{}, "tpp/DeleteBuyer", nil)
+	cdc.RegisterConcrete(&MsgWithdrawal{}, "tpp/Withdrawal", nil)
 	cdc.RegisterConcrete(&MsgItemRating{}, "tpp/ItemRating", nil)
 	cdc.RegisterConcrete(&MsgItemTransfer{}, "tpp/ItemTransfer", nil)
-
 
 	cdc.RegisterConcrete(&MsgCreateItem{}, "tpp/CreateItem", nil)
 	cdc.RegisterConcrete(&MsgUpdateItem{}, "tpp/UpdateItem", nil)
@@ -33,18 +32,18 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	// this line is used by starport scaffolding # 3
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgCreateEstimator{},
-		&MsgUpdateEstimator{},
-		&MsgDeleteEstimator{},
-		&MsgCreateFlag{},
+		&MsgCreateEstimation{},
+		&MsgUpdateLike{},
+		&MsgDeleteEstimation{},
+		&MsgFlagItem{},
 
-		&MsgCreateBuyer{},
-		&MsgUpdateBuyer{},
-		&MsgDeleteBuyer{},
+		&MsgPrepayment{},
+
+		&MsgWithdrawal{},
 		&MsgItemTransfer{},
 
 		&MsgCreateItem{},
-		&MsgUpdateItem{},
+
 		&MsgDeleteItem{},
 		&MsgRevealEstimation{},
 		&MsgItemTransferable{},

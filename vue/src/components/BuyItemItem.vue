@@ -1020,7 +1020,7 @@ export default {
       if (this.hasAddress) {
         // this.flightLP = true;
         this.loadingitem = true;
-       this.msg = "MsgCreateBuyer"
+       this.msg = "MsgPrepayment"
         const body = { deposit: deposit, itemid: this.thisitem.id };
         this.fields = [
           ["buyer", 1, "string", "optional"],
@@ -1087,8 +1087,8 @@ console.log(body)
 
   /*  async paySubmit({ body, fields }) {
       const wallet = this.$store.state.wallet;
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreateBuyer`;
-      let MsgCreate = new Type(`MsgCreateBuyer`);
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgPrepayment`;
+      let MsgCreate = new Type(`MsgPrepayment`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
       console.log(fields);
       fields.forEach((f) => {
@@ -1134,8 +1134,8 @@ console.log(body)
  this.fields = []
  this.value = {}
   if(value == true){
-        const type = { type: "buyer" };
-        await this.$store.dispatch("entityFetch", type);
+      //  const type = { type: "buyer" };
+        //await this.$store.dispatch("entityFetch", type);
         await this.$store.dispatch("bankBalancesGet");
          this.$store.dispatch("updateItem", this.thisitem.id)//.then(result => this.newitem = result)
          this.$router.push("/account=boughtitems")}

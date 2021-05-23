@@ -6,27 +6,26 @@ import (
 	//"cosmos/base/v1beta1/coin.proto"
 )
 
-var _ sdk.Msg = &MsgCreateBuyer{}
+var _ sdk.Msg = &MsgPrepayment{}
 
-func NewMsgCreateBuyer(buyer string, itemid string, deposit int64) *MsgCreateBuyer {
+func NewMsgPrepayment(buyer string, itemid uint64, deposit int64) *MsgPrepayment {
 
-
-	return &MsgCreateBuyer{
-		Buyer:  buyer,
-		Itemid: itemid,
+	return &MsgPrepayment{
+		Buyer:   buyer,
+		Itemid:  itemid,
 		Deposit: deposit,
 	}
 }
 
-func (msg *MsgCreateBuyer) Route() string {
+func (msg *MsgPrepayment) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgCreateBuyer) Type() string {
-	return "CreateBuyer"
+func (msg *MsgPrepayment) Type() string {
+	return "ItemPrepayment"
 }
 
-func (msg *MsgCreateBuyer) GetSigners() []sdk.AccAddress {
+func (msg *MsgPrepayment) GetSigners() []sdk.AccAddress {
 	buyer, err := sdk.AccAddressFromBech32(msg.Buyer)
 	if err != nil {
 		panic(err)
@@ -34,76 +33,36 @@ func (msg *MsgCreateBuyer) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{buyer}
 }
 
-func (msg *MsgCreateBuyer) GetSignBytes() []byte {
+func (msg *MsgPrepayment) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgCreateBuyer) ValidateBasic() error {
+func (msg *MsgPrepayment) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Buyer)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid buyer address (%s)", err)
 	}
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateBuyer{}
+var _ sdk.Msg = &MsgPrepayment{}
 
-func NewMsgUpdateBuyer(buyer string, itemid string, deposit int64) *MsgUpdateBuyer {
-	return &MsgUpdateBuyer{
-
-		Buyer:        buyer,
-		Itemid:       itemid,
-		Deposit:      deposit,
-	}
-}
-
-func (msg *MsgUpdateBuyer) Route() string {
-	return RouterKey
-}
-
-func (msg *MsgUpdateBuyer) Type() string {
-	return "UpdateBuyer"
-}
-
-func (msg *MsgUpdateBuyer) GetSigners() []sdk.AccAddress {
-	buyer, err := sdk.AccAddressFromBech32(msg.Buyer)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{buyer}
-}
-
-func (msg *MsgUpdateBuyer) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
-func (msg *MsgUpdateBuyer) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Buyer)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
-	return nil
-}
-
-var _ sdk.Msg = &MsgCreateBuyer{}
-
-func NewMsgDeleteBuyer(buyer string, itemid string) *MsgDeleteBuyer {
-	return &MsgDeleteBuyer{
+func NewMsgWithdrawal(buyer string, itemid uint64) *MsgWithdrawal {
+	return &MsgWithdrawal{
 		Itemid: itemid,
 		Buyer:  buyer,
 	}
 }
-func (msg *MsgDeleteBuyer) Route() string {
+func (msg *MsgWithdrawal) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgDeleteBuyer) Type() string {
-	return "DeleteBuyer"
+func (msg *MsgWithdrawal) Type() string {
+	return "Withdrawal"
 }
 
-func (msg *MsgDeleteBuyer) GetSigners() []sdk.AccAddress {
+func (msg *MsgWithdrawal) GetSigners() []sdk.AccAddress {
 	buyer, err := sdk.AccAddressFromBech32(msg.Buyer)
 	if err != nil {
 		panic(err)
@@ -111,26 +70,25 @@ func (msg *MsgDeleteBuyer) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{buyer}
 }
 
-func (msg *MsgDeleteBuyer) GetSignBytes() []byte {
+func (msg *MsgWithdrawal) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgDeleteBuyer) ValidateBasic() error {
+func (msg *MsgWithdrawal) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Buyer)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid buyer address (%s)", err)
 	}
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateBuyer{}
+var _ sdk.Msg = &MsgPrepayment{}
 
-func NewMsgItemTransfer(buyer string, itemid string) *MsgItemTransfer {
+func NewMsgItemTransfer(buyer string, itemid uint64) *MsgItemTransfer {
 	return &MsgItemTransfer{
-		Buyer:        buyer,
-		Itemid:       itemid,
-
+		Buyer:  buyer,
+		Itemid: itemid,
 	}
 }
 
@@ -163,14 +121,14 @@ func (msg *MsgItemTransfer) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateBuyer{}
+var _ sdk.Msg = &MsgPrepayment{}
 
-func NewMsgItemRating(buyer string, itemid string, rating int64, note string) *MsgItemRating {
+func NewMsgItemRating(buyer string, itemid uint64, rating int64, note string) *MsgItemRating {
 	return &MsgItemRating{
 		Buyer:  buyer,
 		Itemid: itemid,
-		Rating:  rating,
-		Note: note,
+		Rating: rating,
+		Note:   note,
 	}
 }
 
@@ -208,8 +166,7 @@ func (msg *MsgItemRating) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "note too long")
 	}
 
-
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateBuyer{}
+var _ sdk.Msg = &MsgPrepayment{}

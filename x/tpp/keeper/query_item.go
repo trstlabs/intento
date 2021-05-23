@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -28,9 +30,12 @@ func listInactiveItems(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.L
 	return bz, nil
 }
 
-
 func getItem(ctx sdk.Context, id string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	msg := keeper.GetItem(ctx, id)
+	idUint, err := strconv.ParseUint(id, 10, 64)
+	msg := keeper.GetItem(ctx, idUint)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msg)
 	if err != nil {
@@ -40,9 +45,7 @@ func getItem(ctx sdk.Context, id string, keeper Keeper, legacyQuerierCdc *codec.
 	return bz, nil
 }
 
-
 func sellerItems(ctx sdk.Context, seller string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	
 
 	items := keeper.GetAllSellerItems(ctx, seller)
 

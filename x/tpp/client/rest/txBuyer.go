@@ -18,7 +18,7 @@ var _ = strconv.Itoa(42)
 type createBuyerRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
 	Buyer   string       `json:"creator"`
-	Itemid  string       `json:"itemid"`
+	Itemid  uint64       `json:"itemid"`
 	Deposit int64        `json:"deposit"`
 }
 
@@ -47,7 +47,7 @@ func createBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 
 		parsedDeposit := req.Deposit
 
-		msg := types.NewMsgCreateBuyer(
+		msg := types.NewMsgPrepayment(
 			req.Buyer,
 			parsedItemID,
 			parsedDeposit,
@@ -58,52 +58,6 @@ func createBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 
 }
 
-type updateBuyerRequest struct {
-	BaseReq rest.BaseReq `json:"base_req"`
-	Buyer   string       `json:"creator"`
-	//Itemid       string       `json:"itemid"`
-
-	Deposit      int64 `json:"deposit"`
-}
-
-func updateBuyerHandler(clientCtx client.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
-
-		var req updateBuyerRequest
-		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
-			return
-		}
-
-		baseReq := req.BaseReq.Sanitize()
-		if !baseReq.ValidateBasic(w) {
-			return
-		}
-
-		_, err := sdk.AccAddressFromBech32(req.Buyer)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		parsedItemid := id
-
-	
-
-		parsedDeposit := req.Deposit
-
-		msg := types.NewMsgUpdateBuyer(
-			req.Buyer,
-			parsedItemid,
-		
-			parsedDeposit,
-		)
-
-		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
-	}
-}
-
 type deleteBuyerRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
 	Buyer   string       `json:"creator"`
@@ -111,8 +65,11 @@ type deleteBuyerRequest struct {
 
 func deleteBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
-
+		id, e := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+		if e != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, e.Error())
+			return
+		}
 		var req deleteBuyerRequest
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "failed to parse request")
@@ -130,7 +87,7 @@ func deleteBuyerHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMsgDeleteBuyer(
+		msg := types.NewMsgWithdrawal(
 			req.Buyer,
 			id,
 		)

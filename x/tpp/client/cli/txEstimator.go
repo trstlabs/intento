@@ -12,7 +12,7 @@ import (
 	"github.com/danieljdd/tpp/x/tpp/types"
 )
 
-func CmdCreateEstimator() *cobra.Command {
+func CmdCreateEstimation() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-estimator [estimation] [deposit] [interested] [comment] [itemid]",
 		Short: "Creates a new estimator",
@@ -32,9 +32,11 @@ func CmdCreateEstimator() *cobra.Command {
 				interested = true
 			}
 			argsComment := string(args[3])
-			argsItemid := string(args[4])
-
-			msg := types.NewMsgCreateEstimator(clientCtx.GetFromAddress().String(), int64(argsEstimation), string(argsItemid), int64(argsDeposit), bool(interested), string(argsComment))
+			argsItemID, err := strconv.ParseUint(args[4], 10, 64)
+			if err != nil {
+				return err
+			}
+			msg := types.NewMsgCreateEstimation(clientCtx.GetFromAddress().String(), int64(argsEstimation), uint64(argsItemID), int64(argsDeposit), bool(interested), string(argsComment))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -47,14 +49,17 @@ func CmdCreateEstimator() *cobra.Command {
 	return cmd
 }
 
-func CmdUpdateEstimator() *cobra.Command {
+func CmdUpdateLike() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-estimator [itemid] [interested]",
 		Short: "Update a estimator",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			argsItemid := string(args[0])
+			argsItemID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			interested := false
 			if args[1] == "1" {
@@ -66,7 +71,7 @@ func CmdUpdateEstimator() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgUpdateEstimator(clientCtx.GetFromAddress().String(), string(argsItemid), bool(interested))
+			msg := types.NewMsgUpdateLike(clientCtx.GetFromAddress().String(), uint64(argsItemID), bool(interested))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -79,20 +84,22 @@ func CmdUpdateEstimator() *cobra.Command {
 	return cmd
 }
 
-func CmdDeleteEstimator() *cobra.Command {
+func CmdDeleteEstimation() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete-estimator [id] [estimation] [estimatorestimationhash] [itemid] [deposit] [interested] [comment] [flag]",
 		Short: "Delete a estimator by id",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id := args[0]
-
+			id, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgDeleteEstimator(clientCtx.GetFromAddress().String(), id)
+			msg := types.NewMsgDeleteEstimation(clientCtx.GetFromAddress().String(), uint64(id))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -105,23 +112,24 @@ func CmdDeleteEstimator() *cobra.Command {
 	return cmd
 }
 
-func CmdCreateFlag() *cobra.Command {
+func CmdFlagItem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-flag [itemid]",
 		Short: "create a new flag for item",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-		
-
-			itemid := args[0]
+			itemid, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCreateFlag(clientCtx.GetFromAddress().String(), string(itemid))
+			msg := types.NewMsgFlagItem(clientCtx.GetFromAddress().String(), uint64(itemid))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

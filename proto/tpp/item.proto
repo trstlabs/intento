@@ -12,7 +12,7 @@ option go_package = "github.com/danieljdd/tpp/x/tpp/types";
 
 message Item {
   string seller = 1;
-  string id = 2;
+  uint64 id = 2;
   string title = 3; 
   string description = 4; 
   int64 shippingcost = 5;
@@ -63,7 +63,7 @@ message MsgCreateItem {
 
 message MsgUpdateItem {
   string seller = 1;
-  string id = 2;
+  uint64 id = 2;
 
   int64 shippingcost = 3;
   string localpickup = 4; 
@@ -74,31 +74,31 @@ message MsgUpdateItem {
 
 message MsgDeleteItem {
   string seller = 1;
-  string id = 2;
+  uint64 id = 2;
 }
 
 message MsgRevealEstimation {
     string creator = 1;
-  string itemid = 2;
+  uint64 itemid = 2;
 
 }
 
 message MsgItemTransferable {
     string seller = 1;
     bool transferable = 2;
-  string itemid = 3;
+  uint64 itemid = 3;
 
 }
 message MsgItemShipping {
     string seller = 1;
     bool tracking = 2;
-  string itemid = 3;
+  uint64 itemid = 3;
 
 }
 
 message MsgItemResell {
     string seller = 1;
-  string itemid = 2;
+  uint64 itemid = 2;
   int64 shippingcost = 3;
     int64 discount = 4;
   string localpickup = 5;

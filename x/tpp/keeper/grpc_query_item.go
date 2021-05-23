@@ -74,7 +74,7 @@ func (k Keeper) Item(c context.Context, req *types.QueryGetItemRequest) (*types.
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
-	k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.ItemKey+req.Id)), &item)
+	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(req.Id)...)), &item)
 
 	return &types.QueryGetItemResponse{Item: &item}, nil
 }

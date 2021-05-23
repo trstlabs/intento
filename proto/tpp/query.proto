@@ -47,7 +47,7 @@ service Query {
 
 // this line is used by starport scaffolding # 3
 message QueryGetEstimatorRequest {
-	string itemid = 1;
+	uint64 itemid = 1;
 }
 
 message QueryGetEstimatorResponse {
@@ -63,7 +63,7 @@ message QueryAllEstimatorResponse {
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 //message QueryGetBuyerRequest {
-//	string itemid = 1;
+//	uint64 itemid = 1;
 //}
 
 //message QueryGetBuyerResponse {
@@ -79,7 +79,7 @@ message QueryAllEstimatorResponse {
 //	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 //}
 message QueryGetItemRequest {
-	string id = 1;
+	uint64 id = 1;
 }
 
 message QueryGetItemResponse {

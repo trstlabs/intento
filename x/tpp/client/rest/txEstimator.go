@@ -21,8 +21,8 @@ type createEstimatorRequest struct {
 	BaseReq    rest.BaseReq `json:"base_req"`
 	Estimator  string       `json:"creator"`
 	Estimation int64        `json:"estimation"`
-	//Estimatorestimationhash string       `json:"estimatorestimationhash"`
-	Itemid     string `json:"itemid"`
+
+	Itemid     uint64 `json:"itemid"`
 	Deposit    int64  `json:"deposit"`
 	Interested bool   `json:"interested"`
 	Comment    string `json:"comment"`
@@ -50,9 +50,12 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 
 		parsedEstimation := req.Estimation
 		//parsedFlag := req.Flag
-
 		parsedItemid := req.Itemid
-
+		/*parsedItemid, e := strconv.ParseUint(req.Itemid, 10, 64)
+		if e != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, e.Error())
+			return
+		}*/
 		parsedInterested := req.Interested
 		parsedComment := req.Comment
 
@@ -65,10 +68,10 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 		//depositamount := "5tpp"
 		deposit := req.Deposit
 
-		msg := types.NewMsgCreateEstimator(
+		msg := types.NewMsgCreateEstimation(
 			req.Estimator,
 			parsedEstimation,
-			//estimatorestimationhashstring,
+
 			parsedItemid,
 			deposit,
 			parsedInterested,
@@ -82,7 +85,7 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 type updateEstimatorRequest struct {
 	BaseReq    rest.BaseReq `json:"base_req"`
 	Estimator  string       `json:"creator"`
-	Itemid     string       `json:"itemid"`
+	Itemid     uint64       `json:"itemid"`
 	Interested bool         `json:"interested"`
 }
 
@@ -107,11 +110,15 @@ func updateEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		parsedItemid := id
+		parsedItemid, e := strconv.ParseUint(id, 10, 64)
+		if e != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, e.Error())
+			return
+		}
 
 		parsedInterested := req.Interested
 
-		msg := types.NewMsgUpdateEstimator(
+		msg := types.NewMsgUpdateLike(
 			req.Estimator,
 
 			parsedItemid,
@@ -130,7 +137,11 @@ type deleteEstimatorRequest struct {
 
 func deleteEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
+		id, e := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
+		if e != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, e.Error())
+			return
+		}
 
 		var req deleteEstimatorRequest
 		if !rest.ReadRESTReq(w, r, clientCtx.LegacyAmino, &req) {
@@ -149,7 +160,7 @@ func deleteEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMsgDeleteEstimator(
+		msg := types.NewMsgDeleteEstimation(
 			req.Estimator,
 			id,
 		)

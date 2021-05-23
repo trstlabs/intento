@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="mounted">
     <div></div>
     <div v-if="!this.$store.state.account.address" class="justify-center">
       <v-col>
@@ -26,11 +26,13 @@
           ></a></button
       ></v-col>
     </div>
-     <div v-else>    <v-alert  
-  type="info"  class="caption"
->
-Confirm this sign-in once, by clicking the link sent to <span v-if="!!this.email"> {{email}} </span> <span v-else> your Google account's email </span >, on this device.
-</v-alert> </div>
+    <div v-else>
+      <v-alert type="info" class="caption">
+        Confirm this sign-in once, by clicking the link sent to
+        <span v-if="!!this.email"> {{ email }} </span>
+        <span v-else> your Google account's email </span>, on this device.
+      </v-alert>
+    </div>
   </div>
 </template>
 
@@ -49,6 +51,7 @@ export default {
   data() {
     return {
       loading: false,
+      mounted: false,
       torusdirectsdk: undefined,
       selectedVerifier: "google",
       loginHint: "",
@@ -118,10 +121,46 @@ export default {
             // Common errors could be invalid email and invalid or expired OTPs.
           });
       }
-      if(this.privkey){
+      
+    } },
+
+
+async mounted() {
+     if(this.privkey){
       this.torusSignIn(this.privkey);}
+    try {
+      var url = new URL(location.href);
+      const hash = url.hash.substr(1);
+      const queryParams = {};
+      for (let key of url.searchParams.keys()) {
+        queryParams[key] = url.searchParams.get(key);
+      }
+      const { error, instanceParameters } = this.handleRedirectParameters(
+        hash,
+        queryParams
+      );
+      const torusdirectsdk = new TorusSdk({
+        baseUrl: `${location.origin}/serviceworker`,
+        enableLogging: true,
+        network: "testnet", // details for test net
+      });
+
+      await torusdirectsdk.init({ skipSw: false });
+      this.torusdirectsdk = torusdirectsdk;
+      if (hash) {
+        if (error) throw new Error(error);
+        const { verifier: returnedVerifier } = instanceParameters;
+        this.selectedVerifier = Object.keys(this.verifierMap).find(
+          (x) => this.verifierMap[x].verifier === returnedVerifier
+        );
+        this.login(hash, queryParams);
+      }
+    } catch (error) {
+      console.error(error, "sign in error");
     }
-},
+    this.mounted = true
+  },
+
 
   computed: {
     loginToConnectionMap() {
@@ -332,38 +371,7 @@ export default {
       return { error, instanceParameters, hashParameters };
     },
   },
-  async mounted() {
-    try {
-      var url = new URL(location.href);
-      const hash = url.hash.substr(1);
-      const queryParams = {};
-      for (let key of url.searchParams.keys()) {
-        queryParams[key] = url.searchParams.get(key);
-      }
-      const { error, instanceParameters } = this.handleRedirectParameters(
-        hash,
-        queryParams
-      );
-      const torusdirectsdk = new TorusSdk({
-        baseUrl: `${location.origin}/serviceworker`,
-        enableLogging: true,
-        network: "testnet", // details for test net
-      });
-
-      await torusdirectsdk.init({ skipSw: false });
-      this.torusdirectsdk = torusdirectsdk;
-      if (hash) {
-        if (error) throw new Error(error);
-        const { verifier: returnedVerifier } = instanceParameters;
-        this.selectedVerifier = Object.keys(this.verifierMap).find(
-          (x) => this.verifierMap[x].verifier === returnedVerifier
-        );
-        this.login(hash, queryParams);
-      }
-    } catch (error) {
-      console.error(error, "mounted caught");
-    }
-  },
+  
 };
 </script>
 

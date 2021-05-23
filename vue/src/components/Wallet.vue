@@ -228,6 +228,7 @@ export default {
           window.localStorage.removeItem('emailRef');
           window.localStorage.removeItem('privkey');
            window.localStorage.removeItem('mnemonic');
+           window.location.reload()
   // Sign-out successful.
 }).catch((error) => {
   // An error happened.

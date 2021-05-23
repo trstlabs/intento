@@ -30,8 +30,6 @@ func CmdCreateItem() *cobra.Command {
 			argsDescription := string(args[1])
 			argsShippingcost, _ := strconv.ParseInt(args[2], 10, 64)
 			argsLocalpickup := string(args[3])
-			
-
 
 			//argsEstimationcounthash := string(args[4])
 
@@ -68,51 +66,23 @@ func CmdCreateItem() *cobra.Command {
 	return cmd
 }
 
-func CmdUpdateItem() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "update-item [id]  [shippingcost] [localpickup] [shippingregion]",
-		Short: "Update a item",
-		Args:  cobra.ExactArgs(4),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			id := args[0]
-
-			argsShippingcost, _ := strconv.ParseInt(args[1], 10, 64)
-			argsLocalpickup := string(args[2])
-
-			argsShippingregion := strings.Split(args[3], ",")
-
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			msg := types.NewMsgUpdateItem(clientCtx.GetFromAddress().String(), id, int64(argsShippingcost), string(argsLocalpickup), []string(argsShippingregion))
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
-	}
-
-	flags.AddTxFlagsToCmd(cmd)
-
-	return cmd
-}
-
 func CmdDeleteItem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete-item [id] ",
 		Short: "Delete a item by id",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id := args[0]
+			id, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgDeleteItem(clientCtx.GetFromAddress().String(), id)
+			msg := types.NewMsgDeleteItem(clientCtx.GetFromAddress().String(), uint64(id))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -132,14 +102,17 @@ func CmdRevealEstimation() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			itemID := args[0]
+			argsItemID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgRevealEstimation(clientCtx.GetFromAddress().String(), string(itemID))
+			msg := types.NewMsgRevealEstimation(clientCtx.GetFromAddress().String(), uint64(argsItemID))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -163,14 +136,17 @@ func CmdItemTransferable() *cobra.Command {
 				transferBool = false
 			}
 
-			itemID := args[1]
+			itemID, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(), bool(transferBool), string(itemID))
+			msg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(), bool(transferBool), uint64(itemID))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -193,14 +169,17 @@ func CmdItemShipping() *cobra.Command {
 			if args[0] == "1" {
 				shippingtrackingBool = true
 			}
-			itemID := args[1]
+			argsItemID, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgItemShipping(clientCtx.GetFromAddress().String(), bool(shippingtrackingBool), string(itemID))
+			msg := types.NewMsgItemShipping(clientCtx.GetFromAddress().String(), bool(shippingtrackingBool), uint64(argsItemID))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -219,12 +198,14 @@ func CmdItemResell() *cobra.Command {
 		Short: "Resell an item",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			itemid := args[0]
+			argsItemID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			argsShippingcost, _ := strconv.ParseInt(args[1], 10, 64)
 
 			argsDiscount, _ := strconv.ParseInt(args[2], 10, 64)
-
 
 			argsLocalpickup := string(args[3])
 
@@ -234,10 +215,10 @@ func CmdItemResell() *cobra.Command {
 			if err != nil {
 				return err
 			}
-	
+
 			note := args[5]
 
-			msg := types. NewMsgItemResell(clientCtx.GetFromAddress().String(), string(itemid), int64(argsShippingcost), int64(argsDiscount), string(argsLocalpickup), []string(argsShippingregion), string(note))
+			msg := types.NewMsgItemResell(clientCtx.GetFromAddress().String(), uint64(argsItemID), int64(argsShippingcost), int64(argsDiscount), string(argsLocalpickup), []string(argsShippingregion), string(note))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

@@ -700,7 +700,7 @@ timeoutvalue: 0,
           interested: interested,
           comment: comment,
         };
-        this.msg = "MsgCreateEstimator"
+        this.msg = "MsgCreateEstimation"
         this.fields = [
           ["estimator", 1, "string", "optional"],
           ["estimation", 2, "int64", "optional"],
@@ -803,7 +803,7 @@ timeoutvalue: 0,
         this.flight = true;
         this.loadingitem = true;
         this.flag = true;
-              this.msg = "MsgCreateFlag"
+              this.msg = "MsgFlagItem"
 
         const body = { flag: true, itemid: this.item.id };
         this.fields = [
@@ -828,8 +828,8 @@ timeoutvalue: 0,
  /*   async flagSubmit({ type, fields, body }) {
       const wallet = this.$store.state.wallet;
       const type2 = type.charAt(0).toUpperCase() + type.slice(1);
-      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgCreateFlag`;
-      let MsgCreate = new Type(`MsgCreateFlag`);
+      const typeUrl = `/${process.env.VUE_APP_PATH}.MsgFlagItem`;
+      let MsgCreate = new Type(`MsgFlagItem`);
       const registry = new Registry([[typeUrl, MsgCreate]]);
       fields.forEach((f) => {
         MsgCreate = MsgCreate.add(new Field(f[0], f[1], f[2], f[3]));

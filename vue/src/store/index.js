@@ -147,15 +147,12 @@ export default new Vuex.Store({
     },
 
 
-    async accountSignOut() {
-      localStorage.removeItem('mnemonic')
-      localStorage.removeItem('privkey')
-      window.location.reload()
-    },
+
 
     async entityFetch({ commit }, { type }) {
       //const { chain_id } = state;
       const url = `${API}/${PATH.replace(/\./g, '/')}/${type}`;
+      console.log(url)
       const body = (await axios.get(url)).data
       const uppercase = type.charAt(0).toUpperCase() + type.slice(1)
       if (body && body[uppercase]) {
@@ -201,7 +198,7 @@ export default new Vuex.Store({
    
     async setEstimatorItemList({ commit, state }, input) {
       
-      if (input) { 
+      if (state.data.estimator) { 
       const rse = state.data.estimator.filter(estimator => estimator.estimator === input
       ) || [];
 
@@ -417,7 +414,7 @@ let uppercase = uniques.map(tag => tag.toUpperCase())
     },
 
     async setInterestedItemList({ commit, state }, input) {
-      if (!!input) {  const rs = state.data.estimator.filter(estimator => estimator.estimator === input && estimator.interested
+      if (state.data.estimator) {  const rs = state.data.estimator.filter(estimator => estimator.estimator === input && estimator.interested
       );
 
 

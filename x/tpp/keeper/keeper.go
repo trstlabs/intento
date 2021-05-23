@@ -3,22 +3,23 @@ package keeper
 import (
 	"fmt"
 	"time"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/tpp/x/tpp/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/danieljdd/tpp/x/tpp/types"
 )
 
 type (
 	Keeper struct {
-		cdc      codec.Marshaler
-		storeKey sdk.StoreKey
-		memKey   sdk.StoreKey
-		paramSpace paramtypes.Subspace
+		cdc           codec.Marshaler
+		storeKey      sdk.StoreKey
+		memKey        sdk.StoreKey
+		paramSpace    paramtypes.Subspace
 		accountKeeper types.AccountKeeper
-	bankKeeper    types.BankKeeper
+		bankKeeper    types.BankKeeper
 	}
 )
 
@@ -34,15 +35,13 @@ func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, paramSpace pa
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-
-
-	return &Keeper{cdc:      cdc,
-		storeKey: storeKey,
-		memKey:   memKey,
-		paramSpace: paramSpace,
+	return &Keeper{cdc: cdc,
+		storeKey:      storeKey,
+		memKey:        memKey,
+		paramSpace:    paramSpace,
 		bankKeeper:    bk,
 		accountKeeper: ak,
-}
+	}
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
@@ -68,47 +67,40 @@ func (k Keeper) IterateInactiveItemsQueue(ctx sdk.Context, endTime time.Time, cb
 // InactiveItemQueueIterator returns an sdk.Iterator for all the items in the Inactive Queue that expire by endTime
 func (k Keeper) InactiveItemQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return store.Iterator(types.InactiveItemQueuePrefix, sdk.PrefixEndBytes(types.InactiveItemByTimeKey(endTime)))//we check the end of the bites array for the end time
+	return store.Iterator(types.InactiveItemQueuePrefix, sdk.PrefixEndBytes(types.InactiveItemByTimeKey(endTime))) //we check the end of the bites array for the end time
 }
 
 // InsertInactiveItemQueue Inserts a itemid into the inactive item queue at endTime
-func (k Keeper) InsertInactiveItemQueue(ctx sdk.Context, itemid string, endTime time.Time) {
+func (k Keeper) InsertInactiveItemQueue(ctx sdk.Context, itemid uint64, endTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	bz := []byte(itemid)
+	bz := types.Uint64ToByte(itemid)
 
 	//here the key is time+itemid appended (as bytes) and value is itemid in bytes
 	store.Set(types.InactiveItemQueueKey(itemid, endTime), bz)
 }
 
 // RemoveFromInactiveItemQueue removes a itemid from the Inactive Item Queue
-func (k Keeper) RemoveFromInactiveItemQueue(ctx sdk.Context, itemid string, endTime time.Time) {
+func (k Keeper) RemoveFromInactiveItemQueue(ctx sdk.Context, itemid uint64, endTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.InactiveItemQueueKey(itemid, endTime))
 }
 
-//Seller functions
-/*
-// ItemSellerIterator returns an sdk.Iterator for all the items of a seller
-func (k Keeper) ItemSellerIterator(ctx sdk.Context, seller string) sdk.Iterator {
-	store := ctx.KVStore(k.storeKey)
-	return store.Iterator(types.ItemSellerPrefix, sdk.PrefixEndBytes(types.ItemSellerBySellerKey(seller)))//we check the end of the bites array for the seller
-}*/
+/////Seller functions
 
 // BindItemSeller binds a itemid with the seller address
-func (k Keeper) BindItemSeller(ctx sdk.Context, itemid string, seller string) {
+func (k Keeper) BindItemSeller(ctx sdk.Context, itemid uint64, seller string) {
 	store := ctx.KVStore(k.storeKey)
-	bz := []byte(itemid)
+	bz := types.Uint64ToByte(itemid)
 
 	//here the key is seller+itemid appended (as bytes) and value is itemid in bytes
 	store.Set(types.ItemSellerKey(itemid, seller), bz)
 }
 
 // RemoveFromInactiveItemQueue removes a itemid from the seller
-func (k Keeper) RemoveFromItemSeller(ctx sdk.Context, itemid string, seller string) {
+func (k Keeper) RemoveFromItemSeller(ctx sdk.Context, itemid uint64, seller string) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.ItemSellerKey(itemid, seller))
 }
-
 
 // GetAllSellerItems returns all seller items
 func (k Keeper) IterateItems(ctx sdk.Context, seller string, cb func(item types.Item) (stop bool)) {
@@ -116,32 +108,23 @@ func (k Keeper) IterateItems(ctx sdk.Context, seller string, cb func(item types.
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.ItemSellerBySellerKey(seller))
-	
+
 	defer iterator.Close()
 	//store := ctx.KVStore(k.storeKey)
 	for ; iterator.Valid(); iterator.Next() {
-		
 
-	//var item types.Item	
-	//get the itemid from endTime (key)
-	itemID := store.Get(iterator.Key())
-	item := k.GetItem(ctx, string(itemID))
-	//items = append(items, &item)
-	if cb(item) {
-		break
+		//var item types.Item
+		//get the itemid from endTime (key)
+		itemID := store.Get(iterator.Key())
+		item := k.GetItem(ctx, types.GetItemIDFromBytes(itemID))
+		//items = append(items, &item)
+		if cb(item) {
+			break
+		}
+
 	}
-
-
-	/*var msg types.Item
-	k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &msg)
-	item := k.GetItem(ctx, msg)
-	items = append(items, &item)
-
-	//msgs = append(msgs, msg)*/
-}
 	//return //items
 }
-
 
 // GetAllSellerItems returns all seller items on chain based on the seller
 func (k Keeper) GetAllSellerItems(ctx sdk.Context, seller string) (items []*types.Item) {
@@ -151,33 +134,3 @@ func (k Keeper) GetAllSellerItems(ctx sdk.Context, seller string) (items []*type
 	})
 	return
 }
-/*
-
-// GetAllSellerItems returns all seller items
-func (k Keeper) GetAllSellerItems(ctx sdk.Context, seller string,  cb func(post types.Post)) (items []*types.Item) {
-	iterator := k.ItemSellerIterator(ctx, seller)
-
-	defer iterator.Close()
-	store := ctx.KVStore(k.storeKey)
-	for ; iterator.Valid(); iterator.Next() {
-
-	//var item types.Item	
-	//get the itemid from endTime (key)
-	itemID := store.Get(iterator.Key())
-	item := k.GetItem(ctx, string(itemID))
-	items = append(items, &item)
-	if cb(item) {
-		break
-	}
-
-
-	/*var msg types.Item
-	k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &msg)
-	item := k.GetItem(ctx, msg)
-	items = append(items, &item)
-
-	//msgs = append(msgs, msg)*
-}
-	return //items
-}
-*/

@@ -1,6 +1,9 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // DefaultIndex is the default capability global index
 const DefaultIndex uint64 = 1
@@ -11,9 +14,8 @@ func DefaultGenesis() *GenesisState {
 		// this line is used by starport scaffolding # genesis/types/default
 		EstimatorList: []*Estimator{},
 		//BuyerList:     []*Buyer{},
-		ItemList:      []*Item{},
-		Params: DefaultParams(),
-
+		ItemList: []*Item{},
+		Params:   DefaultParams(),
 	}
 }
 
@@ -25,22 +27,22 @@ func (gs GenesisState) Validate() error {
 	estimatorIdMap := make(map[string]bool)
 
 	for _, elem := range gs.EstimatorList {
-		if _, ok := estimatorIdMap[(elem.Itemid + "-" + elem.Estimator)]; ok {
+		if _, ok := estimatorIdMap[(strconv.FormatUint(elem.Itemid, 10) + "-" + elem.Estimator)]; ok {
 			return fmt.Errorf("duplicated id for estimator")
 		}
-		estimatorIdMap[elem.Itemid + "-" + elem.Estimator] = true
+		estimatorIdMap[strconv.FormatUint(elem.Itemid, 10)+"-"+elem.Estimator] = true
 	}
-/*	// Check for duplicated ID in buyer
-	buyerIdMap := make(map[string]bool)
+	/*	// Check for duplicated ID in buyer
+		buyerIdMap := make(map[string]bool)
 
-	for _, elem := range gs.BuyerList {
-		if _, ok := buyerIdMap[elem.Itemid]; ok {
-			return fmt.Errorf("duplicated id for buyer")
-		}
-		buyerIdMap[elem.Itemid] = true
-	}*/
+		for _, elem := range gs.BuyerList {
+			if _, ok := buyerIdMap[elem.Itemid]; ok {
+				return fmt.Errorf("duplicated id for buyer")
+			}
+			buyerIdMap[elem.Itemid] = true
+		}*/
 	// Check for duplicated ID in item
-	itemIdMap := make(map[string]bool)
+	itemIdMap := make(map[uint64]bool)
 
 	for _, elem := range gs.ItemList {
 		if _, ok := itemIdMap[elem.Id]; ok {
@@ -50,12 +52,11 @@ func (gs GenesisState) Validate() error {
 
 	}
 
-	
-/*
-	err := gs.Params.ValidateParams()
-	if err != nil {
-		return err
-	}
-*/
+	/*
+		err := gs.Params.ValidateParams()
+		if err != nil {
+			return err
+		}
+	*/
 	return nil
 }

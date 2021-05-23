@@ -57,7 +57,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 	var item = types.Item{
 		Creator:             msg.Creator,
 		Seller:              msg.Creator,
-		Id:                  strconv.FormatInt(count, 10),
+		Id:                  uint64(count),
 		Title:               msg.Title,
 		Description:         msg.Description,
 		Shippingcost:        msg.Shippingcost,
@@ -77,11 +77,11 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 	k.InsertInactiveItemQueue(ctx, item.Id, endTime)
 
 	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, item.Id)),
+		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
 	)
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
-	key := types.KeyPrefix(types.ItemKey + item.Id)
+	key := append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(item.Id)...)
 	value := k.cdc.MustMarshalBinaryBare(&item)
 	store.Set(key, value)
 
@@ -93,32 +93,33 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 func (k Keeper) SetItem(ctx sdk.Context, item types.Item) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	b := k.cdc.MustMarshalBinaryBare(&item)
-	store.Set(types.KeyPrefix(types.ItemKey+item.Id), b)
+	store.Set(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(item.Id)...), b)
 }
 
 // GetItem returns a item from its id
-func (k Keeper) GetItem(ctx sdk.Context, key string) types.Item {
+func (k Keeper) GetItem(ctx sdk.Context, id uint64) types.Item {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	var item types.Item
-	k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.ItemKey+key)), &item)
+	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(id)...)), &item)
 	return item
 }
 
 // HasItem checks if the item exists
-func (k Keeper) HasItem(ctx sdk.Context, id string) bool {
+func (k Keeper) HasItem(ctx sdk.Context, id uint64) bool {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
-	return store.Has(types.KeyPrefix(types.ItemKey + id))
+	return store.Has(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(id)...))
+
 }
 
 // GetItemOwner returns the seller of the item
-func (k Keeper) GetItemOwner(ctx sdk.Context, key string) string {
-	return k.GetItem(ctx, key).Seller
+func (k Keeper) GetItemOwner(ctx sdk.Context, id uint64) string {
+	return k.GetItem(ctx, id).Seller
 }
 
 // DeleteItem deletes a item
-func (k Keeper) DeleteItem(ctx sdk.Context, key string) {
+func (k Keeper) DeleteItem(ctx sdk.Context, key uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
-	store.Delete(types.KeyPrefix(types.ItemKey + key))
+	store.Delete(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(key)...))
 }
 
 // GetAllItem returns all item

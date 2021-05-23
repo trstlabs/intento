@@ -190,7 +190,7 @@
                               !!valid && !flightITN && hasAddress
                             }`,
                           ]"
-                          @click="submitDeleteBuyer(thisitem.id), getThisItem"
+                          @click="submitWithdrawal(thisitem.id), getThisItem"
                           ><v-icon left> mdi-close </v-icon>
                           <span v-if="!flightITN"> Cancel transfer</span>
                           <div class="button__label" v-else>
@@ -506,7 +506,7 @@ export default {
     },
 
 
-    async submitDeleteBuyer(itemid) {
+    async submitWithdrawal(itemid) {
       if (this.valid && !this.flightITN && this.hasAddress) {
         this.flightITN = true;
         const body = { itemid };
@@ -514,7 +514,7 @@ export default {
           ["buyer", 1, "string", "optional"],
           ["itemid", 2, "string", "optional"],
         ];
-    this.msg ="MsgDeleteBuyer"
+    this.msg ="MsgWithdrawal"
          this.value = {
           buyer: this.$store.state.account.address,
           ...body,

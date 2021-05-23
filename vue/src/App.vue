@@ -39,7 +39,7 @@
     </v-col >
 <v-col cols="6" xs="10" class="pa-0 d-none d-md-flex">
 
-      <v-tabs show-arrows hide-slider fixed-tabs  :background-color="($vuetify.theme.dark) ? 'grey darken-4' : 'white'" >
+      <v-tabs show-arrows hide-slider fixed-tabs center-active :background-color="($vuetify.theme.dark) ? 'grey darken-4' : 'white'" >
       
        <v-tooltip bottom >
       <template v-slot:activator="{ on, attrs }" >

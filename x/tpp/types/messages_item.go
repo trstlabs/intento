@@ -65,11 +65,11 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 	}
 
 	for _, region := range msg.Shippingregion {
-		if len(region) > 2{
+		if len(region) > 2 {
 			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region too long")
 		}
 	}
-	
+
 	if len(msg.Description) > 800 {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "description too long")
 	}
@@ -86,7 +86,6 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup too long")
 	}
 
-
 	if msg.Condition > 5 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid item condition")
 	}
@@ -96,59 +95,11 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateItem{}
-
-func NewMsgUpdateItem(seller string, id string, shippingcost int64, localpickup string, shippingregion []string) *MsgUpdateItem {
-	return &MsgUpdateItem{
-		Id:             id,
-		Seller:        seller,
-		Shippingcost:   shippingcost,
-		Localpickup:    localpickup,
-		Shippingregion: shippingregion,
-	}
-}
-
-func (msg *MsgUpdateItem) Route() string {
-	return RouterKey
-}
-
-func (msg *MsgUpdateItem) Type() string {
-	return "UpdateItem"
-}
-
-func (msg *MsgUpdateItem) GetSigners() []sdk.AccAddress {
-	seller, err := sdk.AccAddressFromBech32(msg.Seller)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{seller}
-}
-
-func (msg *MsgUpdateItem) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
-func (msg *MsgUpdateItem) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Seller)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid seller address (%s)", err)
-	}
-
-	if len(msg.Localpickup) > 25 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup too long")
-	}
-	if len(msg.Shippingregion) > 6 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Regions too long")
-	}
-	return nil
-}
-
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgDeleteItem(seller string, id string) *MsgDeleteItem {
+func NewMsgDeleteItem(seller string, id uint64) *MsgDeleteItem {
 	return &MsgDeleteItem{
-		Id:      id,
+		Id:     id,
 		Seller: seller,
 	}
 }
@@ -181,7 +132,7 @@ func (msg *MsgDeleteItem) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgRevealEstimation(creator string, itemid string) *MsgRevealEstimation {
+func NewMsgRevealEstimation(creator string, itemid uint64) *MsgRevealEstimation {
 	return &MsgRevealEstimation{
 
 		Creator: creator,
@@ -220,10 +171,10 @@ func (msg *MsgRevealEstimation) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgItemTransferable(seller string, transferable bool, itemid string) *MsgItemTransferable {
+func NewMsgItemTransferable(seller string, transferable bool, itemid uint64) *MsgItemTransferable {
 	return &MsgItemTransferable{
 
-		Seller:      seller,
+		Seller:       seller,
 		Transferable: transferable,
 		Itemid:       itemid,
 	}
@@ -260,10 +211,10 @@ func (msg *MsgItemTransferable) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgItemShipping(seller string, tracking bool, itemid string) *MsgItemShipping {
+func NewMsgItemShipping(seller string, tracking bool, itemid uint64) *MsgItemShipping {
 	return &MsgItemShipping{
 
-		Seller:  seller,
+		Seller:   seller,
 		Tracking: tracking,
 		Itemid:   itemid,
 	}
@@ -300,17 +251,15 @@ func (msg *MsgItemShipping) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-
-func NewMsgItemResell(seller string, itemid string, shippingcost int64, discount int64, localpickup string, shippingregion []string, note string) *MsgItemResell {
-	return &MsgItemResell {
-		Seller:  seller,
-		Itemid:   itemid,
+func NewMsgItemResell(seller string, itemid uint64, shippingcost int64, discount int64, localpickup string, shippingregion []string, note string) *MsgItemResell {
+	return &MsgItemResell{
+		Seller:         seller,
+		Itemid:         itemid,
 		Shippingcost:   shippingcost,
-		Discount: discount,
+		Discount:       discount,
 		Localpickup:    localpickup,
 		Shippingregion: shippingregion,
-		Note: note,
-		
+		Note:           note,
 	}
 }
 
@@ -343,12 +292,12 @@ func (msg *MsgItemResell) ValidateBasic() error {
 	if len(msg.Note) > 240 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "note too long")
 	}
-	if len(msg.Shippingregion) > 6  {
+	if len(msg.Shippingregion) > 6 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Regions too long")
 	}
 
 	for _, region := range msg.Shippingregion {
-		if len(region) > 2{
+		if len(region) > 2 {
 			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region too long")
 		}
 	}

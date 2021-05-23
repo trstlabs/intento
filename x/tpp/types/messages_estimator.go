@@ -6,10 +6,10 @@ import (
 	//"cosmos/base/v1beta1/coin.proto"
 )
 
-var _ sdk.Msg = &MsgCreateEstimator{}
+var _ sdk.Msg = &MsgCreateEstimation{}
 
-func NewMsgCreateEstimator(estimator string, estimation int64, itemid string, deposit int64, interested bool, comment string) *MsgCreateEstimator {
-	return &MsgCreateEstimator{
+func NewMsgCreateEstimation(estimator string, estimation int64, itemid uint64, deposit int64, interested bool, comment string) *MsgCreateEstimation {
+	return &MsgCreateEstimation{
 		Estimator:  estimator,
 		Estimation: estimation,
 		//Estimatorestimationhash: estimatorestimationhash,
@@ -20,15 +20,15 @@ func NewMsgCreateEstimator(estimator string, estimation int64, itemid string, de
 	}
 }
 
-func (msg *MsgCreateEstimator) Route() string {
+func (msg *MsgCreateEstimation) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgCreateEstimator) Type() string {
-	return "CreateEstimator"
+func (msg *MsgCreateEstimation) Type() string {
+	return "CreateEstimation"
 }
 
-func (msg *MsgCreateEstimator) GetSigners() []sdk.AccAddress {
+func (msg *MsgCreateEstimation) GetSigners() []sdk.AccAddress {
 	estimator, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
 		panic(err)
@@ -36,15 +36,15 @@ func (msg *MsgCreateEstimator) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{estimator}
 }
 
-func (msg *MsgCreateEstimator) GetSignBytes() []byte {
+func (msg *MsgCreateEstimation) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgCreateEstimator) ValidateBasic() error {
+func (msg *MsgCreateEstimation) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid estimator address (%s)", err)
 	}
 	if len(msg.Comment) > 100 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "comment too large")
@@ -52,10 +52,10 @@ func (msg *MsgCreateEstimator) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgUpdateEstimator{}
+var _ sdk.Msg = &MsgUpdateLike{}
 
-func NewMsgUpdateEstimator(estimator string, itemid string, interested bool) *MsgUpdateEstimator {
-	return &MsgUpdateEstimator{
+func NewMsgUpdateLike(estimator string, itemid uint64, interested bool) *MsgUpdateLike {
+	return &MsgUpdateLike{
 		Itemid:    itemid,
 		Estimator: estimator,
 
@@ -63,15 +63,15 @@ func NewMsgUpdateEstimator(estimator string, itemid string, interested bool) *Ms
 	}
 }
 
-func (msg *MsgUpdateEstimator) Route() string {
+func (msg *MsgUpdateLike) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgUpdateEstimator) Type() string {
-	return "UpdateEstimator"
+func (msg *MsgUpdateLike) Type() string {
+	return "UpdateLike"
 }
 
-func (msg *MsgUpdateEstimator) GetSigners() []sdk.AccAddress {
+func (msg *MsgUpdateLike) GetSigners() []sdk.AccAddress {
 	estimator, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
 		panic(err)
@@ -79,49 +79,12 @@ func (msg *MsgUpdateEstimator) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{estimator}
 }
 
-func (msg *MsgUpdateEstimator) GetSignBytes() []byte {
+func (msg *MsgUpdateLike) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgUpdateEstimator) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Estimator)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
-	return nil
-}
-
-var _ sdk.Msg = &MsgCreateEstimator{}
-
-func NewMsgDeleteEstimator(estimator string, itemid string) *MsgDeleteEstimator {
-	return &MsgDeleteEstimator{
-		Itemid:    itemid,
-		Estimator: estimator,
-	}
-}
-func (msg *MsgDeleteEstimator) Route() string {
-	return RouterKey
-}
-
-func (msg *MsgDeleteEstimator) Type() string {
-	return "DeleteEstimator"
-}
-
-func (msg *MsgDeleteEstimator) GetSigners() []sdk.AccAddress {
-	estimator, err := sdk.AccAddressFromBech32(msg.Estimator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{estimator}
-}
-
-func (msg *MsgDeleteEstimator) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
-func (msg *MsgDeleteEstimator) ValidateBasic() error {
+func (msg *MsgUpdateLike) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid estimator address (%s)", err)
@@ -129,23 +92,23 @@ func (msg *MsgDeleteEstimator) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgCreateFlag(estimator string, itemid string) *MsgCreateFlag {
-	return &MsgCreateFlag{
+var _ sdk.Msg = &MsgCreateEstimation{}
+
+func NewMsgDeleteEstimation(estimator string, itemid uint64) *MsgDeleteEstimation {
+	return &MsgDeleteEstimation{
 		Itemid:    itemid,
-		
 		Estimator: estimator,
 	}
 }
-
-func (msg *MsgCreateFlag) Route() string {
+func (msg *MsgDeleteEstimation) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgCreateFlag) Type() string {
-	return "CreateFlag"
+func (msg *MsgDeleteEstimation) Type() string {
+	return "DeleteEstimation"
 }
 
-func (msg *MsgCreateFlag) GetSigners() []sdk.AccAddress {
+func (msg *MsgDeleteEstimation) GetSigners() []sdk.AccAddress {
 	estimator, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
 		panic(err)
@@ -153,17 +116,54 @@ func (msg *MsgCreateFlag) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{estimator}
 }
 
-func (msg *MsgCreateFlag) GetSignBytes() []byte {
+func (msg *MsgDeleteEstimation) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgCreateFlag) ValidateBasic() error {
+func (msg *MsgDeleteEstimation) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid estimator address (%s)", err)
 	}
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateEstimator{}
+func NewMsgFlagItem(estimator string, itemid uint64) *MsgFlagItem {
+	return &MsgFlagItem{
+		Itemid: itemid,
+
+		Estimator: estimator,
+	}
+}
+
+func (msg *MsgFlagItem) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgFlagItem) Type() string {
+	return "FlagItem"
+}
+
+func (msg *MsgFlagItem) GetSigners() []sdk.AccAddress {
+	estimator, err := sdk.AccAddressFromBech32(msg.Estimator)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{estimator}
+}
+
+func (msg *MsgFlagItem) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgFlagItem) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Estimator)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid address (%s)", err)
+	}
+	return nil
+}
+
+var _ sdk.Msg = &MsgCreateEstimation{}
