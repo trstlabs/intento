@@ -284,11 +284,10 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 			//paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
 			//paymentRewardCoinsEstimator := sdk.NewCoin("tpp", roundedAmountRewardBestEstimator)
 
-			k.MintReward(ctx, mintCoins)
+			k.MintReward(ctx, mintCoins.Add(mintCoins))
 
-			//for their participation in the protocol, the best estimator and the buyer get rewarded.
-			k.HandlePrepayment(ctx, item.Bestestimator, mintCoins)
-			//	k.HandlePrepayment(ctx, item.Buyer, paymentRewardCoins)
+			//for their participation in the protocol, the best estimator and the stakers get rewarded.
+			k.HandleReward(ctx, item.Bestestimator, mintCoins)
 
 			//refund the deposits back to all of the item estimators
 			for _, element := range item.Estimatorlist {

@@ -219,10 +219,10 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 		//minted coins (are rounded up)
 		mintCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
 
-		k.MintReward(ctx, mintCoins)
+		k.MintReward(ctx, mintCoins.Add(mintCoins))
 
 		//for their participation in the protocol, the best estimator gets rewarded.
-		k.HandlePrepayment(ctx, item.Bestestimator, mintCoins)
+		k.HandleReward(ctx, item.Bestestimator, mintCoins)
 
 		//refund the deposits back to all of the item estimators
 		for _, element := range item.Estimatorlist {
@@ -274,7 +274,7 @@ func handleMsgItemRating(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRat
 
 		//minted coins (are rounded up)
 		mintCoins := sdk.NewCoin("tpp", toMintAmount)
-		k.MintReward(ctx, mintCoins)
+		k.MintReward(ctx, mintCoins.Add(mintCoins))
 		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
 		item.Estimationprice = 0
 

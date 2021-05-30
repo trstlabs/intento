@@ -144,7 +144,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		tpptypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		tpptypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -331,7 +331,7 @@ func New(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.tppKeeper = *tppkeeper.NewKeeper(
-		appCodec, keys[tpptypes.StoreKey], keys[tpptypes.MemStoreKey], app.GetSubspace(tpptypes.ModuleName), app.AccountKeeper, app.BankKeeper,
+		appCodec, keys[tpptypes.StoreKey], keys[tpptypes.MemStoreKey], app.GetSubspace(tpptypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
 	)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
@@ -575,8 +575,6 @@ func (app *App) RegisterTxService(clientCtx client.Context) {
 func (app *App) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.interfaceRegistry)
 }
-
-
 
 // GetMaccPerms returns a copy of the module account permissions
 func GetMaccPerms() map[string][]string {

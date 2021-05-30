@@ -14,16 +14,17 @@ import (
 
 type (
 	Keeper struct {
-		cdc           codec.Marshaler
-		storeKey      sdk.StoreKey
-		memKey        sdk.StoreKey
-		paramSpace    paramtypes.Subspace
-		accountKeeper types.AccountKeeper
-		bankKeeper    types.BankKeeper
+		cdc              codec.Marshaler
+		storeKey         sdk.StoreKey
+		memKey           sdk.StoreKey
+		paramSpace       paramtypes.Subspace
+		accountKeeper    types.AccountKeeper
+		bankKeeper       types.BankKeeper
+		feeCollectorName string
 	}
 )
 
-func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, feeCollectorName string) *Keeper {
 
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -36,11 +37,12 @@ func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, paramSpace pa
 	}
 
 	return &Keeper{cdc: cdc,
-		storeKey:      storeKey,
-		memKey:        memKey,
-		paramSpace:    paramSpace,
-		bankKeeper:    bk,
-		accountKeeper: ak,
+		storeKey:         storeKey,
+		memKey:           memKey,
+		paramSpace:       paramSpace,
+		bankKeeper:       bk,
+		accountKeeper:    ak,
+		feeCollectorName: feeCollectorName,
 	}
 }
 

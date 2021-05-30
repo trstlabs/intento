@@ -54,19 +54,19 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 		Comment:    msg.Comment,
 	}
 
-	estimatoraddress, err := sdk.AccAddressFromBech32(msg.Estimator)
+	estimatorAddress, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
 		panic(err)
 	}
 
 	Coins := sdk.NewCoins(deposit)
 
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, types.ModuleName, Coins)
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatorAddress, types.ModuleName, Coins)
 	if err != nil {
 		panic(err)
 	}
 
-	//if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatoraddress, moduleAcct.String(), ); err != nil {
+	//if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatorAddress, moduleAcct.String(), ); err != nil {
 	//	panic(err)
 	//}
 
@@ -112,15 +112,16 @@ func (k Keeper) DeleteEstimation(ctx sdk.Context, key []byte) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 	var estimator types.Estimator
 	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
-	estimatoraddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
+	estimatorAddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
 	if err != nil {
 		panic(err)
 	}
 	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatoraddress, sdk.NewCoins(estimator.Deposit))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatorAddress, sdk.NewCoins(estimator.Deposit))
 	if err != nil {
 		panic(err)
 	}
+
 	store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
 }
 

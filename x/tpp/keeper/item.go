@@ -156,15 +156,34 @@ func (k Keeper) GetAllInactiveItems(ctx sdk.Context) (msgs []*types.Item) {
 
 // HandlePrepayment handles payment
 func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk.Coin) {
-	//store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	//var estimator types.Estimator
-	//k.cdc.MustUnmarshalBinaryBare(store.Get(types.KeyPrefix(types.EstimatorKey+key)), &estimator)
-	useraddress, err := sdk.AccAddressFromBech32(address)
+
+	userAddress, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
 		panic(err)
 	}
-	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, useraddress, sdk.NewCoins(coinToSend))
+
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, userAddress, sdk.NewCoins(coinToSend))
+	if err != nil {
+		panic(err)
+	}
+
+}
+
+// HandleReward handles reward
+func (k Keeper) HandleReward(ctx sdk.Context, address string, coinToSend sdk.Coin) {
+
+	userAddress, err := sdk.AccAddressFromBech32(address)
+	if err != nil {
+		panic(err)
+	}
+
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, userAddress, sdk.NewCoins(coinToSend))
+	if err != nil {
+		panic(err)
+	}
+
+	//distribute the same reward to the staking pool
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, sdk.NewCoins(coinToSend))
 	if err != nil {
 		panic(err)
 	}

@@ -1,4 +1,4 @@
-tppd tx tpp create-item Rolex 'submariner in good condition, no scratches and works great ' 5 '40.741895,-73.989308' 3 watch,submariner,rolex 5 nl 3 --from=user1 -y --chain-id=tpp
+tppd tx tpp create-item 'Rolex Submariner 1997 Gray' 'Rolex Submariner in good condition, no scratches and works great. Bought in 1998, model year is 1997. It is the gray edition' 5 '40.741895,-73.989308' 3 watch,submariner,rolex 5 nl 3 --from=user1 -y --chain-id=tpp
 tppd tx tpp create-estimator 145 3 1 'Great Photos!' 0 --from=user4 -y --chain-id=tpp
 tppd tx tpp create-estimator 145 3 1 'Great Photos!' 0 --from=user2 -y --chain-id=tpp
 tppd tx tpp create-estimator 145 3 1 'Great Photos!' 0 --from=user3 -y --chain-id=tpp
@@ -22,7 +22,7 @@ tppd tx tpp delete-buyer 1 --from=user2 -y --chain-id=tpp
 tppd tx tpp item-rating 3 'Item was not like the photos, but seller was nice nontheless' 1 --from=user2 -y --chain-id=tpp
 
 
-tppd tx tpp create-item G-Shock 'gshock in great condition, no scratches and works great' 5 '52.3727598,4.8936041'  3 grey 5 nl,be,us 3 --from=user1 -y --chain-id=tpp
+tppd tx tpp create-item G-Shock 'g-shock in great condition, no scratches and works great' 5 '52.3727598,4.8936041'  3 grey 5 nl,be,us 3 --from=user1 -y --chain-id=tpp
 tppd tx tpp create-estimator 12 3 1 'Great Photos!' 2 --from=user4 -y --chain-id=tpp
 tppd tx tpp create-estimator 12 3 1 'Id Buy!' 2 --from=user2 -y --chain-id=tpp
 tppd tx tpp create-estimator 12 3 1 'Great Photos!' 2 --from=user3 -y --chain-id=tpp
@@ -31,7 +31,7 @@ tppd tx tpp item-transferable 1 2 --from=user1 -y --chain-id=tpp
 tppd tx tpp create-buyer 2 12 --from=user2 -y --chain-id=tpp
 
 
-tppd tx tpp create-item Rolex 'submariner in good condition, no scratches and works great ' 5 '40.741895,-73.989308' 3 watch,submariner,rolex 5 nl  3 --from=user1 -y --chain-id=tpp
+tppd tx tpp create-item Rolex 'rolex submariner in good condition, no scratches and works great. Is really valueable over time, but I want to get into crypto instead.' 5 '40.741895,-73.989308' 3 watch,submariner,rolex 5 nl  3 --from=user1 -y --chain-id=tpp
 tppd tx tpp create-estimator 77 3 1 'Great Photos!' 3 --from=user4 -y --chain-id=tpp
 tppd tx tpp create-estimator 77 3 1 'Great Photos!' 3 --from=user2 -y --chain-id=tpp
 tppd tx tpp create-estimator 77 3 1 'Great Photos!' 3 --from=user3 -y --chain-id=tpp

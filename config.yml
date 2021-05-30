@@ -2,7 +2,7 @@ accounts:
   - name: user1
     coins: ["1000tpp", "100000000stake"]
   - name: user2
-    coins: ["500tpp"]
+    coins: ["5000tpp"]
   - name: user3
     coins: ["500tpp"]
   - name: user4
