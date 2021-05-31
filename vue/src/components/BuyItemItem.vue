@@ -278,13 +278,13 @@
                 </div>
               </v-card-text></span
             >
-            <v-divider class="mx-4 pa-2" />
+            <v-divider class="mx-6 pb-1" />
             <div
-              class="text-center pa-2"
+              class="text-center px-2"
               v-if="thisitem.transferable && thisitem.status == '' && !thisitem.buyer"
             >
-              <v-row class="mx-4">
-                <v-btn x-small icon @click="iteminfo = !iteminfo">
+              <v-row class="px-4">
+                <v-btn class="mb-n6 mt-6" x-small icon @click="iteminfo = !iteminfo">
                   <v-icon>mdi-information-outline</v-icon>
                 </v-btn>
                 <span v-if="this.$store.state.account.address">
@@ -293,7 +293,7 @@
 
                 <div
                   v-if="iteminfo"
-                  class="text-center caption font-weight-light pa-2"
+                  class="text-center caption font-weight-light pa-6"
                 >
                   You can buy {{ thisitem.title }}
                   <span v-if="thisitem.shippingcost > 0"
@@ -335,13 +335,12 @@
                 </div>
               </v-row>
 
-              <v-img @click="iteminfo = !iteminfo" src="img/design/buy.png">
-              </v-img>
-              <v-row v-if="thisitem.creator == thisitem.seller">
-                <v-col>
+             <v-img class="rounded-lg mx-4" @click="iteminfo = !iteminfo" src="img/design/transfersmall.png"></v-img>
+             <v-row v-if="thisitem.creator == thisitem.seller">
+                <v-col >
                   <v-btn
-                    rounded
-                    block
+                     outlined block large
+                   rounded
                     color="primary lighten-1"
                     :disabled="thisitem.localpickup == ''"
                     @click="
@@ -364,8 +363,8 @@
                   </v-btn> </v-col
                 ><v-col>
                   <v-btn
-                    block
-                    rounded
+                    outlined block large
+                   rounded
                     color="primary lighten-1"
                     :disabled="thisitem.shippingcost == 0"
                     @click="
@@ -386,7 +385,7 @@
                         Number(thisitem.estimationprice) +
                         Number(thisitem.shippingcost)
                       }}
-                      <v-icon small>$vuetify.icons.custom</v-icon> w/ shipping
+                      <v-icon small right>$vuetify.icons.custom</v-icon>
                     </div>
                     <div v-if="flightSP">
                       <v-progress-linear
@@ -401,9 +400,10 @@
               <v-row v-else>
                 <v-col>
                   <v-btn
-                    rounded
+                    
                     v-if="thisitem.localpickup != '' && thisitem.discount > 0"
-                    block
+                   outlined block large
+                   rounded
                     color="primary lighten-1"
                     @click="
                       submit(
@@ -414,13 +414,13 @@
                         getThisItem
                     "
                     ><div v-if="!flightLP">
-                      Buy for
+                    
+                      <v-icon left> mdi-repeat </v-icon> Buy for
                       {{
                         Number(thisitem.estimationprice) -
                         Number(thisitem.discount)
-                      }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                      <v-icon right> mdi-repeat </v-icon>
-                    </div>
+                      }}
+                    </div> <v-icon small right>$vuetify.icons.custom</v-icon>
                     <div v-if="flightLP">
                       <v-progress-linear
                         indeterminate
@@ -430,8 +430,8 @@
                     </div>
                   </v-btn>
                   <v-btn
-                    block
-                    rounded
+                 outlined block large
+                   rounded
                     color="primary lighten-1"
                     v-if="thisitem.localpickup != '' && thisitem.discount == 0"
                     @click="
@@ -440,9 +440,9 @@
                         getThisItem
                     "
                     ><div v-if="!flightLP">
-                      Buy for {{ thisitem.estimationprice
-                      }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                      <v-icon right> mdi-repeat </v-icon>
+                     <v-icon left> mdi-repeat </v-icon>  Buy for {{ thisitem.estimationprice
+                      }} <v-icon small right>$vuetify.icons.custom</v-icon>
+                     
                     </div>
                     <div v-if="flightLP">
                       <v-progress-linear
@@ -454,8 +454,8 @@
                   </v-btn> </v-col
                 ><v-col>
                   <v-btn
-                    block
-                    rounded
+                   outlined block large
+                   rounded
                     color="primary lighten-1"
                     v-if="thisitem.shippingcost > 0 && thisitem.discount == 0"
                     @click="
@@ -467,26 +467,26 @@
                         getThisItem
                     "
                     ><div v-if="!flightSP">
-                      Buy for
+                   
+                      <v-icon left> mdi-repeat </v-icon>
+                      <v-icon left> mdi-plus </v-icon
+                      ><v-icon left> mdi-package-variant-closed </v-icon>  Buy for
                       {{
                         Number(thisitem.estimationprice) +
                         Number(thisitem.shippingcost)
-                      }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                      <v-icon right> mdi-repeat </v-icon>
-                      <v-icon right> mdi-plus </v-icon
-                      ><v-icon right> mdi-package-variant-closed </v-icon>
-                    </div>
+                      }}
+                    </div> <v-icon small right>$vuetify.icons.custom</v-icon>
                     <div v-if="flightSP">
                       <v-progress-linear
                         indeterminate
                         color="secondary"
                       ></v-progress-linear
-                      >Awaiting transaction...
+                      >Sending transaction...
                     </div>
                   </v-btn>
                   <v-btn
-                    block
-                    rounded
+                  outlined block large
+                   rounded
                     color="primary lighten-1"
                     v-if="thisitem.shippingcost > 0 && thisitem.discount > 0"
                     @click="
@@ -499,22 +499,22 @@
                         getThisItem
                     "
                     ><div v-if="!flightSP">
-                      Buy for
+       
+                      <v-icon left> mdi-repeat </v-icon>
+                      <v-icon left> mdi-plus </v-icon
+                      ><v-icon left> mdi-package-variant-closed </v-icon>  Buy for
                       {{
                         Number(thisitem.estimationprice) +
                         Number(thisitem.shippingcost) -
                         Number(thisitem.discount)
-                      }}<v-icon small right>$vuetify.icons.custom</v-icon>
-                      <v-icon right> mdi-repeat </v-icon>
-                      <v-icon right> mdi-plus </v-icon
-                      ><v-icon right> mdi-package-variant-closed </v-icon>
+                      }}             <v-icon small right>$vuetify.icons.custom</v-icon>
                     </div>
                     <div v-if="flightSP">
                       <v-progress-linear
                         indeterminate
                         color="secondary"
                       ></v-progress-linear
-                      >Awaiting transaction...
+                      >Sending transaction...
                     </div>
                   </v-btn>
                 </v-col>
@@ -916,7 +916,7 @@
           </v-card>
         </div>
       </div>
-      <v-img src="img/design/transfer.png"></v-img>
+       <v-img src="img/design/buy.png"></v-img>
     </v-card><sign-tx v-if="submitted" :key="submitted" :fields="fields" :value="value" :msg="msg" @clicked="afterSubmit"></sign-tx>
   </div>
 </template>

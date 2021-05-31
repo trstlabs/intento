@@ -1,10 +1,11 @@
 <template>
-  <div class="mx-auto">
-    <v-card  rounded="xl" :raised="showinfo"  v-click-outside="clickOutside ">
-      <v-progress-linear
-        indeterminate
-        :active="loadingitem"
-      ></v-progress-linear>
+  <div class="mx-auto">  <v-skeleton-loader background-color="inherit"
+      v-if="loadingitem" height="150"
+      class="mx-auto"
+      type="list-item-three-line, image, article"
+    ></v-skeleton-loader>
+    <v-card v-else rounded="xl" :raised="showinfo"  v-click-outside="clickOutside ">
+     
 <div class="pa-2 mx-auto" >
       <router-link style="text-decoration: none; color: inherit;"  :to="{ name: 'BuyItemDetails', params: { id: itemid } }" >
         <v-row >
@@ -33,7 +34,10 @@
 
           <v-col class="pa-2" cols="12" md="5">
             <div v-if="imageurl">
-              <v-img class="rounded-lg contain ma-2 mb-0" :aspect-ratio="4/3" :src="imageurl"></v-img>
+              <v-img class="rounded-lg contain ma-2 mb-0" @load="loadedphoto = true" :aspect-ratio="4/3" :src="imageurl"><v-skeleton-loader background-color="inherit"
+       v-if="!loadedphoto"
+      type="image" height="120"
+    ></v-skeleton-loader></v-img>
             </div>
           </v-col>
         </v-row>
@@ -97,11 +101,11 @@
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>{{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-3" v-else>{{
                 Number(thisitem.estimationprice) +
                 Number(thisitem.shippingcost) -
                 Number(thisitem.discount)
-              }}<v-icon small right>$vuetify.icons.custom</v-icon> </span>
+              }}<v-icon small>$vuetify.icons.custom</v-icon> </span>
               </span>
 </v-hover>
 
@@ -128,9 +132,9 @@
               >
               <v-hover v-slot="{ hover }" close-delay="300" open-delay="60" >
               <span>
-              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-2" v-else>{{
+              <span  class="pr-2" v-if="hover" > Buy Now </span><span class="pr-3" v-else>{{
                 thisitem.estimationprice - thisitem.discount
-              }}<v-icon small right>$vuetify.icons.custom</v-icon> </span>
+              }}<v-icon small right>$vuetify.icons.custom</v-icon></span>
               </span>
 </v-hover> 
 
@@ -162,7 +166,7 @@
                 <v-hover v-slot="{ hover }" close-delay="300" open-delay="60">
                   <span>
                     <span class="pr-2" v-if="hover"> Buy Now </span
-                    ><span class="pr-2" v-else
+                    ><span class="pr-3" v-else
                       >{{
                         Number(thisitem.estimationprice) +
                         Number(thisitem.shippingcost)
@@ -361,7 +365,8 @@ export default {
 
       showinfo: false,
       imageurl: "",
-     
+          loadingitem: true,
+     loadedphoto: false,
       photos: [],
     };
   },

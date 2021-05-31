@@ -287,11 +287,11 @@
 
       <div class="mx-auto">
         <v-row>
-          <v-col cols="6" class="mx-auto">
+          <v-col cols="6" md="8" class="mx-auto">
             <v-dialog transition="dialog-bottom-transition" max-width="600">
               <template v-slot:activator="{ on, attrs }">
-                    <span v-bind="attrs" v-on="on">
-                   <v-icon class="ml-4" small>mdi-information-outline</v-icon>  <p class="text-center caption ">To me, it's worth</p><span v-if="!flight && valid && !timeout" class="caption font-weight-light">Deposit is {{item.depositamount}}<v-icon x-small right>$vuetify.icons.custom</v-icon> 
+                    <span v-bind="attrs" v-on="on"  class="ml-4" >
+                   <v-icon small>mdi-information-outline</v-icon>  <p class="text-center caption ">To me, it's worth</p><span v-if="!flight && valid && !timeout" class="caption ml-4 font-weight-light">Potential reward is {{item.depositamount}}<v-icon x-small right>$vuetify.icons.custom</v-icon> 
               
             </span></span>
               </template>
@@ -343,14 +343,14 @@ overflow: hidden;
               </template>
             </v-dialog>
           </v-col>
-          <v-col cols="6" class="mx-auto">
-            <v-text-field
+          <v-col cols="6" md="4" class="mx-auto pt-4 pb-0 ">
+            <v-text-field outlined class="rounded-xl ma-2"
               label="Amount"
               type="number"
               v-model="estimation"
               :disabled="lastitem"
-            suffix="TPP"
-              prepend-icon="$vuetify.icons.custom"
+ 
+              prepend-inner-icon="$vuetify.icons.custom"
             
             ></v-text-field>
           </v-col>
