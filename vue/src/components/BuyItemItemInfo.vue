@@ -4,7 +4,7 @@
       class="mx-auto"
       type="list-item-three-line, image, article"
     ></v-skeleton-loader>
-    <v-card v-else rounded="xl" :raised="showinfo"  v-click-outside="clickOutside ">
+    <v-card v-else rounded="xl" hover v-click-outside="clickOutside ">
      
 <div class="pa-2 mx-auto" >
       <router-link style="text-decoration: none; color: inherit;"  :to="{ name: 'BuyItemDetails', params: { id: itemid } }" >
