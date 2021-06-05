@@ -125,6 +125,24 @@ func (k Keeper) DeleteEstimation(ctx sdk.Context, key []byte) {
 	store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
 }
 
+// DeleteEstimationWithReward deletes a estimator
+func (k Keeper) DeleteEstimationWithReward(ctx sdk.Context, key []byte) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
+	var estimator types.Estimator
+	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
+	estimatorAddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
+	if err != nil {
+		panic(err)
+	}
+	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatorAddress, sdk.NewCoins(estimator.Deposit.Add(estimator.Deposit)))
+	if err != nil {
+		panic(err)
+	}
+
+	store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
+}
+
 // DeleteEstimationWithoutDeposit deletes a estimator without returing a deposit
 func (k Keeper) DeleteEstimationWithoutDeposit(ctx sdk.Context, key []byte) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))

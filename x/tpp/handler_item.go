@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math"
+
 	"sort"
 	"strconv"
 
@@ -92,7 +93,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item cannot be revealed")
 	}
 
-	var Commentlist []string
+	var CommentList []string
 	var EstimationList []int64
 
 	for _, element := range item.Estimatorlist {
@@ -101,7 +102,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 
 		//getting all of the comments into a list
 		//var comment = estimator.Comment
-		Commentlist = append(Commentlist, estimator.Comment)
+		CommentList = append(CommentList, estimator.Comment)
 
 		//append estimation to estimationlist
 		//estimation := estimator.Estimation.Int64()
@@ -166,7 +167,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 		if found == true {
 			item.Bestestimator = estimator.Estimator
 			item.Estimationprice = median
-			item.Comments = Commentlist
+			item.Comments = CommentList
 			k.SetItem(ctx, item)
 			break
 		}
@@ -218,7 +219,7 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		//item has to be deleted because otherwise this function can be run again
 		k.DeleteItem(ctx, msg.Itemid)
 		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
-
+		k.RemoveFromInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 	} else {
 		item.Transferable = msg.Transferable
 		k.SetItem(ctx, item)
@@ -226,7 +227,6 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemTransferable, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))
 
-	k.RemoveFromInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
@@ -256,7 +256,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "unauthrorized, no shippingcost")
 	}
 
-	bigintestimationprice := sdk.NewInt(item.Estimationprice)
+	bigintestimationprice := sdk.NewInt(item.Estimationprice - item.Depositamount)
 	if item.Discount > 0 {
 		bigintestimationprice = sdk.NewInt(item.Estimationprice - item.Discount)
 	}
@@ -280,14 +280,16 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 			//roundedAmountRewardBestEstimator := paymentReward.TruncateInt()
 
 			//minted coins (are rounded up)
-			mintCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
+			rewardCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
 			//paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
 			//paymentRewardCoinsEstimator := sdk.NewCoin("tpp", roundedAmountRewardBestEstimator)
 
-			k.MintReward(ctx, mintCoins.Add(mintCoins))
+			k.MintReward(ctx, rewardCoins)
 
-			//for their participation in the protocol, the best estimator and the stakers get rewarded.
-			k.HandleReward(ctx, item.Bestestimator, mintCoins)
+			//for their participation in the protocol, the best estimator, a random and the stakers get rewarded.
+			k.HandleEstimatorReward(ctx, item.Bestestimator, rewardCoins)
+
+			k.HandleStakingReward(ctx, rewardCoins)
 
 			//refund the deposits back to all of the item estimators
 			for _, element := range item.Estimatorlist {
@@ -319,16 +321,16 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
 			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
-			estimator := k.GetEstimator(ctx, key)
+			//estimator := k.GetEstimator(ctx, key)
 
-			if estimator.Estimator == item.Lowestestimator {
+			/*if estimator.Estimator == item.Lowestestimator {
 
 				k.BurnCoins(ctx, estimator.Deposit)
 				k.DeleteEstimationWithoutDeposit(ctx, key)
 
-			} else {
-				k.DeleteEstimation(ctx, key)
-			}
+			} else {*/
+			k.DeleteEstimation(ctx, key)
+			//}
 
 		}
 

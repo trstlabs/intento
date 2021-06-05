@@ -170,7 +170,7 @@ func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk
 }
 
 // HandleReward handles reward
-func (k Keeper) HandleReward(ctx sdk.Context, address string, coinToSend sdk.Coin) {
+func (k Keeper) HandleEstimatorReward(ctx sdk.Context, address string, coinToSend sdk.Coin) {
 
 	userAddress, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
@@ -182,8 +182,13 @@ func (k Keeper) HandleReward(ctx sdk.Context, address string, coinToSend sdk.Coi
 		panic(err)
 	}
 
+}
+
+// HandleReward handles reward
+func (k Keeper) HandleStakingReward(ctx sdk.Context, coinToSend sdk.Coin) {
+
 	//distribute the same reward to the staking pool
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, sdk.NewCoins(coinToSend))
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, sdk.NewCoins(coinToSend))
 	if err != nil {
 		panic(err)
 	}

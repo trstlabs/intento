@@ -25,11 +25,32 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			"item", item.Id,
 			"title", item.GetTitle(),
 		)
-		for _, element := range item.Estimatorlist {
-			//apply this to each element
-			key := append(types.Uint64ToByte(item.Id), []byte(element)...)
 
-			k.DeleteEstimation(ctx, key)
+		if item.Transferable == true {
+			for _, element := range item.Estimatorlist {
+
+				key := append(types.Uint64ToByte(item.Id), []byte(element)...)
+				if item.Highestestimator == element {
+					k.DeleteEstimationWithoutDeposit(ctx, key)
+				} else if item.Bestestimator == element {
+					k.DeleteEstimationWithReward(ctx, key)
+				} else {
+					k.DeleteEstimation(ctx, key)
+				}
+			}
+		} else {
+			for _, element := range item.Estimatorlist {
+
+				key := append(types.Uint64ToByte(item.Id), []byte(element)...)
+				if item.Lowestestimator == element {
+					k.DeleteEstimationWithoutDeposit(ctx, key)
+				} else if item.Bestestimator == element {
+					k.DeleteEstimationWithReward(ctx, key)
+				} else {
+					k.DeleteEstimation(ctx, key)
+				}
+			}
+
 		}
 		k.DeleteItem(ctx, item.Id)
 		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)

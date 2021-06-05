@@ -2,6 +2,7 @@ package tpp
 
 import (
 	"fmt"
+
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -50,7 +51,7 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 		}
 
 		item.Buyer = msg.Buyer
-
+		k.RemoveFromInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 		k.SetItem(ctx, item)
 		k.Prepayment(ctx, *msg)
 		//}
@@ -64,7 +65,7 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 		}
 
 		item.Buyer = msg.Buyer
-
+		k.RemoveFromInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 		k.SetItem(ctx, item)
 		k.Prepayment(ctx, *msg)
 
@@ -78,7 +79,7 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 
 			item.Shippingcost = 0
 			item.Buyer = msg.Buyer
-
+			k.RemoveFromInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 			k.SetItem(ctx, item)
 			k.Prepayment(ctx, *msg)
 
@@ -89,7 +90,7 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 			if toPayShipping == msg.Deposit {
 				item.Localpickup = ""
 				item.Buyer = msg.Buyer
-
+				k.RemoveFromInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
 				k.SetItem(ctx, item)
 				k.Prepayment(ctx, *msg)
 			}
@@ -152,16 +153,16 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 			//apply this to each element
 			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 
-			estimator := k.GetEstimator(ctx, key)
+			//	estimator := k.GetEstimator(ctx, key)
 
-			if estimator.Estimator == item.Highestestimator {
+			//	if estimator.Estimator == item.Highestestimator {
 
-				k.BurnCoins(ctx, estimator.Deposit)
-				k.DeleteEstimationWithoutDeposit(ctx, key)
+			//	k.BurnCoins(ctx, estimator.Deposit)
+			//	k.DeleteEstimationWithoutDeposit(ctx, key)
 
-			} else {
-				k.DeleteEstimation(ctx, key)
-			}
+			//} else {
+			k.DeleteEstimation(ctx, key)
+			//	}
 
 		}
 
@@ -209,7 +210,7 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item has shippingcost")
 	}
 
-	bigintestimationprice := sdk.NewInt(item.Estimationprice)
+	bigintestimationprice := sdk.NewInt(item.Estimationprice - item.Depositamount)
 	if item.Discount > 0 {
 		bigintestimationprice = sdk.NewInt(item.Estimationprice - item.Discount)
 	}
@@ -217,12 +218,14 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 	if item.Creator == item.Seller {
 
 		//minted coins (are rounded up)
-		mintCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
+		rewardCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
 
-		k.MintReward(ctx, mintCoins.Add(mintCoins))
+		k.MintReward(ctx, rewardCoins)
 
-		//for their participation in the protocol, the best estimator gets rewarded.
-		k.HandleReward(ctx, item.Bestestimator, mintCoins)
+		//for their participation in the protocol, the best estimator, a random and the stakers get rewarded.
+		k.HandleEstimatorReward(ctx, item.Bestestimator, rewardCoins)
+
+		k.HandleStakingReward(ctx, rewardCoins)
 
 		//refund the deposits back to all of the item estimators
 		for _, element := range item.Estimatorlist {
