@@ -5,16 +5,19 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/spf13/cast"
-
+	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
+	//"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -79,7 +82,8 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	appparams "github.com/danieljdd/tpp/app/params"
+	"github.com/danieljdd/tpp/x/compute"
+	reg "github.com/danieljdd/tpp/x/registration"
 	"github.com/danieljdd/tpp/x/tpp"
 	tppkeeper "github.com/danieljdd/tpp/x/tpp/keeper"
 	tpptypes "github.com/danieljdd/tpp/x/tpp/types"
@@ -108,8 +112,15 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 }
 
 var (
-	// DefaultNodeHome default home directories for the application daemon
-	DefaultNodeHome string
+	//// DefaultNodeHome default home directories for the application daemon
+	//DefaultNodeHome string
+
+	// DefaultCLIHome default home directories for the application CLI
+	homeDir, _     = os.UserHomeDir()
+	DefaultCLIHome = filepath.Join(homeDir, ".secretd")
+
+	// DefaultNodeHome sets the folder where the applcation data and configuration will be stored
+	DefaultNodeHome = filepath.Join(homeDir, ".secretd")
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
@@ -132,6 +143,8 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		tpp.AppModuleBasic{},
+		compute.AppModuleBasic{},
+		reg.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
@@ -179,6 +192,7 @@ type App struct {
 
 	invCheckPeriod uint
 
+	bootstrap bool
 	// keys to access the substores
 	keys    map[string]*sdk.KVStoreKey
 	tkeys   map[string]*sdk.TransientStoreKey
@@ -204,25 +218,36 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	tppKeeper tppkeeper.Keeper
+	tppKeeper     tppkeeper.Keeper
+	computeKeeper compute.Keeper
+	regKeeper     reg.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// the module manager
 	mm *module.Manager
 }
 
+// WasmWrapper allows us to use namespacing in the config file
+// This is only used for parsing in the app, x/compute expects WasmConfig
+type WasmWrapper struct {
+	Wasm compute.WasmConfig `mapstructure:"wasm"`
+}
+
 // New returns a reference to an initialized Gaia.
 // NewSimApp returns a reference to an initialized SimApp.
 func New(
 	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
-	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
+	homePath string, invCheckPeriod uint, queryGasLimit uint64, bootstrap bool, appOpts servertypes.AppOptions,
+	baseAppOptions ...func(*bam.BaseApp), //encodingConfig appparams.EncodingConfig,
 	// this line is used by starport scaffolding # stargate/app/newArgument
-	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
+	//	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 
-	appCodec := encodingConfig.Marshaler
-	cdc := encodingConfig.Amino
+	encodingConfig := MakeEncodingConfig()
+	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
+
+	cdc := encodingConfig.Amino
 
 	bApp := baseapp.NewBaseApp(Name, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -234,7 +259,8 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		tpptypes.StoreKey,
+		tpptypes.StoreKey, compute.StoreKey,
+		reg.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -249,6 +275,7 @@ func New(
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
+		bootstrap:         bootstrap,
 	}
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
@@ -341,6 +368,31 @@ func New(
 		&stakingKeeper, govRouter,
 	)
 
+	// just re-use the full router - do we want to limit this more?
+	var computeRouter = bApp.Router()
+	regRouter := bApp.Router()
+
+	// better way to get this dir???
+	homeDir := viper.GetString(cli.HomeFlag)
+	computeDir := filepath.Join(homeDir, ".compute")
+
+	wasmConfig := compute.DefaultWasmConfig()
+	wasmConfig.SmartQueryGasLimit = queryGasLimit
+	wasmWrap := WasmWrapper{Wasm: wasmConfig}
+	err := viper.Unmarshal(&wasmWrap)
+	if err != nil {
+		panic("error while reading wasm config: " + err.Error())
+	}
+	wasmConfig = wasmWrap.Wasm
+
+	supportedFeatures := "staking"
+	app.regKeeper = reg.NewKeeper(appCodec, keys[reg.StoreKey], regRouter, reg.EnclaveApi{}, homeDir, app.bootstrap)
+	app.computeKeeper = compute.NewKeeper(
+		appCodec, *legacyAmino,
+		keys[compute.StoreKey],
+		app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.DistrKeeper, app.MintKeeper, stakingKeeper,
+		computeRouter, computeDir, wasmConfig, supportedFeatures, nil, nil)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -371,6 +423,8 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		tpp.NewAppModule(appCodec, app.tppKeeper, app.AccountKeeper, app.BankKeeper),
+		compute.NewAppModule(app.computeKeeper),
+		reg.NewAppModule(app.regKeeper),
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -405,6 +459,8 @@ func New(
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		tpptypes.ModuleName,
+		compute.ModuleName,
+		reg.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
@@ -600,6 +656,8 @@ func initParamsKeeper(appCodec codec.BinaryMarshaler, legacyAmino *codec.LegacyA
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(tpptypes.ModuleName)
+	paramsKeeper.Subspace(compute.ModuleName)
+	paramsKeeper.Subspace(reg.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper

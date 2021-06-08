@@ -1,5 +1,6 @@
 package cmd
 
+/*
 import (
 	"errors"
 	"io"
@@ -277,3 +278,4 @@ func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 		overwriteFlagDefaults(c, defaults)
 	}
 }
+*/
