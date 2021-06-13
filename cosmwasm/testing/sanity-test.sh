@@ -17,12 +17,12 @@ rm -rf ./.sgx_secrets
 mkdir -p ./.sgx_secrets
 
 rm -rf ~/.secret*
-#mkdir -p ~/.secretcli/config
+#mkdir -p ~/.tppd/config
 #echo 'chain-id="secret-sanity"
 #output="json"
 #indent=true
 #trust-node=true
-#keyring-backend="test"' > ~/.secretcli/config/config.toml
+#keyring-backend="test"' > ~/.tppd/config/config.toml
 
 export TRUST_PRICE_PROTOCOL_CHAIN_ID=tppdev-1
 export TRUST_PRICE_PROTOCOL_KEYRING_BACKEND=test
