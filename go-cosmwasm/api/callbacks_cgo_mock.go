@@ -1,4 +1,4 @@
-// +build secretcli
+// +build tppd
 
 package api
 

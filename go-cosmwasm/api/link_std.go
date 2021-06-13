@@ -1,4 +1,4 @@
-// +build !secretcli,linux,!muslc,!darwin
+// +build !tppd,linux,!muslc,!darwin
 
 package api
 

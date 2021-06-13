@@ -1,8 +1,9 @@
-// +build !secretcli
-
 package api
 
 /*
+// +build !tppd
+
+
 #include "bindings.h"
 
 // typedefs for _cgo functions (db)
