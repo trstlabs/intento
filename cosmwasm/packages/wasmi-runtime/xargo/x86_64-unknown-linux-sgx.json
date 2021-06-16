@@ -22,7 +22,7 @@
     ]
   },
   "relro-level": "full",
-  "stack-probes": true,
+
   "target-c-int-width": "32",
   "target-endian": "little",
   "target-family": "unix",

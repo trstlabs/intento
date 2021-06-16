@@ -123,30 +123,28 @@ build-linux: vendor bin-data-$(IAS_BUILD)
 deb: build-linux deb-no-compile
 
 deb-no-compile:
-ifneq ($(UNAME_S),Linux)
-		exit 1
-endif
-	rm -rf /tpp
 
-	mkdir -p /tpp/deb/$(DEB_BIN_DIR)
-	mv -f ./tppd /tpp/deb/$(DEB_BIN_DIR)/tppd
-	mkdir -p /tpp/deb/$(DEB_LIB_DIR)
-	cp -f ./go-cosmwasm/api/libgo_cosmwasm.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so /tpp/deb/$(DEB_LIB_DIR)/
-	chmod +x /tpp/deb/$(DEB_LIB_DIR)/lib*.so
+	rm -rf /tmp/tpp
 
-	mkdir -p /tpp/deb/DEBIAN
-	cp ./deployment/deb/control /tpp/deb/DEBIAN/control
-	printf "Version: " >> /tpp/deb/DEBIAN/control
-	printf "$(VERSION)" >> /tpp/deb/DEBIAN/control
-	echo "" >> /tpp/deb/DEBIAN/control
-	cp ./deployment/deb/postinst /tpp/deb/DEBIAN/postinst
-	chmod 755 /tpp/deb/DEBIAN/postinst
-	cp ./deployment/deb/postrm /tpp/deb/DEBIAN/postrm
-	chmod 755 /tpp/deb/DEBIAN/postrm
-	cp ./deployment/deb/triggers /tpp/deb/DEBIAN/triggers
-	chmod 755 /tpp/deb/DEBIAN/triggers
-	dpkg-deb --build /tpp/deb/ .
-	-rm -rf /tpp
+	mkdir -p /tmp/tpp/deb/$(DEB_BIN_DIR)
+	mv -f ./tppd /tmp/tpp/deb/$(DEB_BIN_DIR)/tppd
+	mkdir -p /tmp/tpp/deb/$(DEB_LIB_DIR)
+	cp -f ./go-cosmwasm/api/libgo_cosmwasm.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so /tmp/tpp/deb/$(DEB_LIB_DIR)/
+	chmod +x /tmp/tpp/deb/$(DEB_LIB_DIR)/lib*.so
+
+	mkdir -p /tmp/tpp/deb/DEBIAN
+	cp ./deployment/deb/control /tmp/tpp/deb/DEBIAN/control
+	printf "Version: " >> /tmp/tpp/deb/DEBIAN/control
+	printf "$(VERSION)" >> /tmp/tpp/deb/DEBIAN/control
+	echo "" >> /tmp/tpp/deb/DEBIAN/control
+	cp ./deployment/deb/postinst /tmp/tpp/deb/DEBIAN/postinst
+	chmod 755 /tmp/tpp/deb/DEBIAN/postinst
+	cp ./deployment/deb/postrm /tmp/tpp/deb/DEBIAN/postrm
+	chmod 755 /tmp/tpp/deb/DEBIAN/postrm
+	cp ./deployment/deb/triggers /tmp/tpp/deb/DEBIAN/triggers
+	chmod 755 /tmp/tpp/deb/DEBIAN/triggers
+	dpkg-deb --build /tmp/tpp/deb/ .
+	-rm -rf /tmp/tpp
 
 rename_for_release:
 	-rename "s/windows-4.0-amd64/v${VERSION}-win64/" *.exe
