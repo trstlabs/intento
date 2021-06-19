@@ -17,7 +17,7 @@ mod serde;
 pub mod testing;
 mod traits;
 
-// Secret Network specific modules
+// tpp specific modules
 mod attestation;
 mod enclave;
 mod seed;
@@ -45,7 +45,7 @@ pub use crate::traits::{Api, Extern, Querier, Storage};
 #[cfg(feature = "iterator")]
 pub use crate::traits::StorageIterator;
 
-// Secret Network specific exports
+// tpp specific exports
 pub use crate::attestation::{create_attestation_report_u, untrusted_get_encrypted_seed};
 pub use crate::seed::{
     untrusted_health_check, untrusted_init_bootstrap, untrusted_init_node, untrusted_key_gen,

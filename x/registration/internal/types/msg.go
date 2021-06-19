@@ -21,9 +21,9 @@ func (msg RaAuthenticate) Type() string {
 }
 
 func (msg RaAuthenticate) ValidateBasic() error {
-	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
-		return err
-	}
+	//if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+	//	return err
+	//}
 
 	if len(msg.Certificate) == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Authenticating certificate cannot be empty")

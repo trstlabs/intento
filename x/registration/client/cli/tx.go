@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/danieljdd/tpp/x/registration/internal/types"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 )
@@ -53,5 +54,8 @@ func AuthenticateNodeCmd() *cobra.Command {
 		},
 	}
 
+	flags.AddTxFlagsToCmd(cmd)
+
 	return cmd
 }
+

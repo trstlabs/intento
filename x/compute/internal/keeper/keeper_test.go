@@ -1027,7 +1027,7 @@ func TestExecuteWithStorageLoop(t *testing.T) {
 
 /*
 func TestMigrate(t *testing.T) {
-	t.SkipNow() // secret network does not support migrate
+	t.SkipNow() // tpp does not support migrate
 	tempDir, err := ioutil.TempDir("", "wasm")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
@@ -1174,7 +1174,7 @@ func TestMigrate(t *testing.T) {
 }
 
 func TestMigrateWithDispatchedMessage(t *testing.T) {
-	t.SkipNow() // secret network does not support migrate
+	t.SkipNow() // tpp does not support migrate
 	tempDir, err := ioutil.TempDir("", "wasm")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
@@ -1291,7 +1291,7 @@ func mustMarshal(t *testing.T, r interface{}) []byte {
 
 /*
 func TestUpdateContractAdmin(t *testing.T) {
-	t.SkipNow() // secret network does not support migrate
+	t.SkipNow() // tpp does not support migrate
 	tempDir, err := ioutil.TempDir("", "wasm")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)

@@ -21,7 +21,7 @@ import (
 func GetQueryCmd() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the compute module",
+		Short:                      "Querying commands for the register module",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -67,9 +67,9 @@ func GetCmdEncryptedSeed() *cobra.Command {
 // GetCmdListCode lists all wasm code uploaded
 func GetCmdMasterParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "secret-network-params",
-		Short: "Get parameters for the secret network",
-		Long:  "Get parameters for the secret network - writes the parameters to [master-cert.der] by default",
+		Use:   "tpp-params",
+		Short: "Get parameters for tpp enclave",
+		Long:  "Get parameters for tpp  - writes the parameters to [master-cert.der] by default",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
