@@ -311,7 +311,7 @@ func updateTmParamsAndInit(mbm module.BasicManager, defaultNodeHome string) *cob
 
 		appConfigFilePath := filepath.Join(defaultNodeHome, "config/app.toml")
 		appConf, _ := serverconfig.ParseConfig(viper.GetViper())
-		appConf.MinGasPrices = "0.25tpp"
+		appConf.MinGasPrices = "0.00025tpp"
 
 		serverconfig.WriteConfigFile(appConfigFilePath, appConf)
 

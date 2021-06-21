@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"io/ioutil"
+	//"io/ioutil"
 	"strconv"
-
+	"os"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmwasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
 	flag "github.com/spf13/pflag"
@@ -215,7 +215,7 @@ func GetCmdQueryCode() *cobra.Command {
 			}
 
 			fmt.Printf("Downloading wasm code to %s\n", args[1])
-			return ioutil.WriteFile(args[1], code.Data, 0644)
+			return os.WriteFile(args[1], code.Data, 0644)
 		},
 	}
 
@@ -299,12 +299,12 @@ func CmdDecryptText() *cobra.Command {
 	return cmd
 }
 
-// QueryDecryptTxCmd the default command for a tx query + IO decryption if I'm the tx sender.
+
 // Coppied from https://github.com/cosmos/cosmos-sdk/blob/v0.38.4/x/auth/client/cli/query.go#L157-L184 and added IO decryption (Could not wrap it because it prints directly to stdout)
 func GetQueryDecryptTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tx [hash]",
-		Short: "Query for a transaction by hash in a committed block, decrypt input and outputs if I'm the tx sender",
+		Short: "Query for a transaction by hash in a committed block, decrypt input and outputs for the tx sender",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -562,10 +562,7 @@ func QueryWithData(contractAddress string, queryData []byte, cliCtx client.Conte
 			}
 			return fmt.Errorf("query result: %v", stdErr.Error())
 		}
-		// Itzik: Commenting this as it might have been a placeholder for encrypting
-		//else if strings.Contains(err.Error(), "EnclaveErr") {
-		//	return err
-		//}
+
 		return err
 	}
 
@@ -586,37 +583,6 @@ func QueryWithData(contractAddress string, queryData []byte, cliCtx client.Conte
 	return nil
 }
 
-/*
-// GetCmdGetContractHistory prints the code history for a given contract
-func GetCmdGetContractHistory() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "contract-history [bech32_address]",
-		Short: "Prints out the code history for a contract given its address",
-		Long:  "Prints out the code history for a contract given its address",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
-			if err != nil {
-				return err
-			}
-
-			addr, err := sdk.AccAddressFromBech32(args[0])
-			if err != nil {
-				return err
-			}
-
-			route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryContractHistory, addr.String())
-			res, _, err := clientCtx.Query(route)
-			if err != nil {
-				return err
-			}
-			fmt.Println(string(res))
-			return nil
-		},
-	}
-}
-*/
 
 type argumentDecoder struct {
 	// dec is the default decoder

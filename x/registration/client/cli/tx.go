@@ -6,7 +6,8 @@ import (
 	"github.com/danieljdd/tpp/x/registration/internal/types"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-	"io/ioutil"
+	//"io/ioutil"
+	"os"
 )
 
 // GetTxCmd returns the transaction commands for this module
@@ -34,7 +35,7 @@ func AuthenticateNodeCmd() *cobra.Command {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			//clientCtx, err := client.ReadTxCommandFlags(clientCtx, cmd.Flags())
 
-			cert, err := ioutil.ReadFile(args[0])
+			cert, err := os.ReadFile(args[0])
 			if err != nil {
 				return err
 			}

@@ -60,7 +60,7 @@ func TestGovQueryProposals(t *testing.T) {
 	//
 
 	// upload staking derivates code
-	govCode, err := ioutil.ReadFile("./testdata/gov.wasm")
+	govCode, err := os.ReadFile("./testdata/gov.wasm")
 	require.NoError(t, err)
 	govId, err := keeper.Create(ctx, creator, govCode, "", "")
 	require.NoError(t, err)
@@ -127,7 +127,7 @@ func TestGovVote(t *testing.T) {
 	//
 
 	// upload staking derivates code
-	govCode, err := ioutil.ReadFile("./testdata/gov.wasm")
+	govCode, err := os.ReadFile("./testdata/gov.wasm")
 	require.NoError(t, err)
 	govId, err := keeper.Create(ctx, creator, govCode, "", "")
 	require.NoError(t, err)

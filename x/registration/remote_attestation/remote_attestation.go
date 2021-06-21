@@ -14,7 +14,7 @@ import (
  Verifies the remote attestation certificate, which is comprised of a the attestation report, intel signature, and enclave signature
 
  We verify that:
-	- the report is valid, that no outstanding issues exist (todo: match enclave hash or something?)
+	- the report is valid, that no outstanding issues exist 
 	- Intel's certificate signed the report
 	- The public key of the enclave/node exists, so we can use that to encrypt the seed
 
@@ -239,7 +239,7 @@ func verifyAttReport(attnReportRaw []byte, pubK []byte) ([]byte, error) {
 
 		qrData := parseReport(qb, quoteHex)
 
-		// todo: possibly verify mr signer/enclave?
+		// idea:  verify mr signer/enclave
 		//fmt.Println("Quote = [" + quoteBytes[:len(quoteBytes)-2] + "]")
 		//fmt.Println("sgx quote version = ", qrData.version)
 		//fmt.Println("sgx quote signature type = ", qrData.signType)

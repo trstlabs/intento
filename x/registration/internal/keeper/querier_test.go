@@ -28,7 +28,7 @@ func TestNewQuerier(t *testing.T) {
 
 	querier := NewLegacyQuerier(keeper) // TODO: Should test NewQuerier() as well
 
-	cert, err := ioutil.ReadFile("../../testdata/attestation_cert_sw")
+	cert, err := os.ReadFile("../../testdata/attestation_cert_sw")
 	require.NoError(t, err)
 
 	regInfo := types.RegistrationNodeInfo{

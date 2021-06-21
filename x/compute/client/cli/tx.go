@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	//"io/ioutil"
 	"strconv"
-
+	"os"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	"github.com/danieljdd/tpp/x/compute/internal/keeper"
@@ -89,7 +89,7 @@ func StoreCodeCmd() *cobra.Command {
 }
 
 func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSet) (types.MsgStoreCode, error) {
-	wasm, err := ioutil.ReadFile(args[0])
+	wasm, err := os.ReadFile(args[0])
 	if err != nil {
 		return types.MsgStoreCode{}, err
 	}
@@ -164,7 +164,7 @@ func InstantiateContractCmd() *cobra.Command {
 
 	cmd.Flags().String(flagCodeHash, "", "For offline transactions, use this to specify the target contract's code hash")
 	cmd.Flags().String(flagIoMasterKey, "", "For offline transactions, use this to specify the path to the "+
-		"io-master-cert.der file, which you can get using the command `tppd q register secret-network-params` ")
+		"io-master-cert.der file, which you can get using the command `tppd q register tpp-enclave-params` ")
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract during instantiation")
 	cmd.Flags().String(flagLabel, "", "A human-readable name for this contract in lists")
 	// cmd.Flags().String(flagAdmin, "", "Address of an admin")
@@ -332,9 +332,10 @@ func ExecuteContractCmd() *cobra.Command {
 
 	cmd.Flags().String(flagCodeHash, "", "For offline transactions, use this to specify the target contract's code hash")
 	cmd.Flags().String(flagIoMasterKey, "", "For offline transactions, use this to specify the path to the "+
-		"io-master-cert.der file, which you can get using the command `tppd q register secret-network-params` ")
+		"io-master-cert.der file, which you can get using the command `tppd q register tpp-enclave-params` ")
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract along with command")
 	cmd.Flags().String(flagLabel, "", "A human-readable name for this contract in lists")
+	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
 

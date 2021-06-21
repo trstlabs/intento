@@ -46,7 +46,7 @@ func TestCreateAndGet(t *testing.T) {
 	cache, cleanup := withCache(t)
 	defer cleanup()
 
-	wasm, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	wasm, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
 
 	id, err := Create(cache, wasm)
@@ -94,7 +94,7 @@ func TestInstantiate(t *testing.T) {
 	defer cleanup()
 
 	// create contract
-	wasm, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	wasm, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
 	id, err := Create(cache, wasm)
 	require.NoError(t, err)
@@ -418,7 +418,7 @@ func createReflectContract(t *testing.T, cache Cache) []byte {
 }
 
 func createContract(t *testing.T, cache Cache, wasmFile string) []byte {
-	wasm, err := ioutil.ReadFile(wasmFile)
+	wasm, err := os.ReadFile(wasmFile)
 	require.NoError(t, err)
 	id, err := Create(cache, wasm)
 	require.NoError(t, err)

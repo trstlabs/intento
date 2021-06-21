@@ -2,12 +2,13 @@ package utils
 
 import (
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
+	"io"
+	
 	"testing"
 )
 
 func GetTestData() ([]byte, []byte, []byte, error) {
-	wasmCode, err := ioutil.ReadFile("../../internal/keeper/testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("../../internal/keeper/testdata/contract.wasm")
 
 	if err != nil {
 		return nil, nil, nil, err

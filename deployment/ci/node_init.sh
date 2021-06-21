@@ -23,7 +23,7 @@ echo "Set persistent_peers: $PERSISTENT_PEERS"
 echo "Waiting for bootstrap to start..."
 sleep 20
 
-# MASTER_KEY="$(tppd q register secret-network-params --node http://bootstrap:26657 2> /dev/null | cut -c 3- )"
+# MASTER_KEY="$(tppd q register tpp-enclave-params --node http://bootstrap:26657 2> /dev/null | cut -c 3- )"
 
 #echo "Master key: $MASTER_KEY"
 
@@ -40,7 +40,7 @@ sleep 10
 SEED=$(tppd q register seed "$PUBLIC_KEY" --node http://bootstrap:26657 2> /dev/null | cut -c 3-)
 echo "SEED: $SEED"
 
-tppd q register secret-network-params --node http://bootstrap:26657 2> /dev/null
+tppd q register tpp-enclave-params --node http://bootstrap:26657 2> /dev/null
 
 tppd configure-secret node-master-cert.der "$SEED"
 

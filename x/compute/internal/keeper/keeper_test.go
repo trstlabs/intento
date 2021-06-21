@@ -42,8 +42,8 @@ func init() {
 	config.SetBech32PrefixForConsensusNode(eng.Bech32PrefixConsAddr, eng.Bech32PrefixConsPub)
 	config.Seal()
 
-	spid, err := ioutil.ReadFile("../../../../ias_keys/develop/spid.txt")
-	apiKey, err := ioutil.ReadFile("../../../../ias_keys/develop/api_key.txt")
+	spid, err := os.ReadFile("../../../../ias_keys/develop/spid.txt")
+	apiKey, err := os.ReadFile("../../../../ias_keys/develop/api_key.txt")
 
 	fmt.Printf("This IS spid: %v\n", spid)
 	fmt.Printf("This IS api key: %v\n", apiKey)
@@ -53,7 +53,7 @@ func init() {
 		panic(fmt.Sprintf("Error initializing the enclave: %v", err))
 	}
 
-	wasmCtx.TestMasterIOCert, err = ioutil.ReadFile(filepath.Join(".", reg.IoExchMasterCertPath))
+	wasmCtx.TestMasterIOCert, err = os.ReadFile(filepath.Join(".", reg.IoExchMasterCertPath))
 	if err != nil {
 		panic(fmt.Sprintf("Error reading 'io-master-cert.der': %v", err))
 	}
@@ -77,7 +77,7 @@ func TestCreate(t *testing.T) {
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	creator, _ := createFakeFundedAccount(ctx, accKeeper, deposit)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	contractID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -91,7 +91,7 @@ func TestCreate(t *testing.T) {
 
 /*
 func TestCreateStoresInstantiatePermission(t *testing.T) {
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 	var (
 		deposit = sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
@@ -150,7 +150,7 @@ func TestCreateWithParamPermissions(t *testing.T) {
 	creator := createFakeFundedAccount(ctx, accKeeper, deposit)
 	otherAddr := createFakeFundedAccount(ctx, accKeeper, deposit)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	specs := map[string]struct {
@@ -197,7 +197,7 @@ func TestCreateDuplicate(t *testing.T) {
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	creator, _ := createFakeFundedAccount(ctx, accKeeper, deposit)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	// create one copy
@@ -232,7 +232,7 @@ func TestCreateWithSimulation(t *testing.T) {
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	creator, _ := createFakeFundedAccount(ctx, accKeeper, deposit)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	// create this once in simulation mode
@@ -288,7 +288,7 @@ func TestCreateWithGzippedPayload(t *testing.T) {
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	creator, _ := createFakeFundedAccount(ctx, accKeeper, deposit)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm.gzip")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm.gzip")
 	require.NoError(t, err)
 
 	contractID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -297,7 +297,7 @@ func TestCreateWithGzippedPayload(t *testing.T) {
 	// and verify content
 	storedCode, err := keeper.GetByteCode(ctx, contractID)
 	require.NoError(t, err)
-	rawCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	rawCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 	require.Equal(t, rawCode, storedCode)
 }
@@ -312,7 +312,7 @@ func TestInstantiate(t *testing.T) {
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000))
 	creator, privKey := createFakeFundedAccount(ctx, accKeeper, deposit)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	contractID, err := keeper.Create(ctx, creator, wasmCode, "https://github.com/danieljdd/tpp/blob/master/cosmwasm/contracts/hackatom/src/contract.rs", "")
@@ -451,7 +451,7 @@ func TestInstantiateWithDeposit(t *testing.T) {
 
 /*
 func TestInstantiateWithPermissions(t *testing.T) {
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	var (
@@ -572,7 +572,7 @@ func TestExecute(t *testing.T) {
 	creator, creatorPrivKey := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	fred, privFred := createFakeFundedAccount(ctx, accKeeper, topUp)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	contractID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -800,7 +800,7 @@ func TestExecuteWithPanic(t *testing.T) {
 	creator, creatorPrivKey := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	fred, fredPrivKey := createFakeFundedAccount(ctx, accKeeper, topUp)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	contractID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -854,7 +854,7 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 	creator, creatorPrivKey := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	fred, fredPrivKey := createFakeFundedAccount(ctx, accKeeper, topUp)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	contractID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -963,7 +963,7 @@ func TestExecuteWithStorageLoop(t *testing.T) {
 	creator, creatorPrivKey := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	fred, fredPrivKey := createFakeFundedAccount(ctx, accKeeper, topUp)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	contractID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -1038,7 +1038,7 @@ func TestMigrate(t *testing.T) {
 	creator, _ := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	fred, _ := createFakeFundedAccount(ctx, accKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 5000)))
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	originalCodeID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -1185,9 +1185,9 @@ func TestMigrateWithDispatchedMessage(t *testing.T) {
 	creator, _ := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	fred, _ := createFakeFundedAccount(ctx, accKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 5000)))
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
-	burnerCode, err := ioutil.ReadFile("./testdata/burner.wasm")
+	burnerCode, err := os.ReadFile("./testdata/burner.wasm")
 	require.NoError(t, err)
 
 	originalContractID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -1303,7 +1303,7 @@ func TestUpdateContractAdmin(t *testing.T) {
 	creator, _ := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	fred, _ := createFakeFundedAccount(ctx, accKeeper, topUp)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	originalContractID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -1379,7 +1379,7 @@ func TestClearContractAdmin(t *testing.T) {
 	creator := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	fred := createFakeFundedAccount(ctx, accKeeper, topUp)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	originalContractID, err := keeper.Create(ctx, creator, wasmCode, "", "")

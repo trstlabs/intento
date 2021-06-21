@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-
+	//"io/ioutil"
+"os"
 	"github.com/danieljdd/tpp/x/registration/internal/keeper"
 	flag "github.com/spf13/pflag"
 
@@ -33,7 +33,7 @@ func GetQueryCmd() *cobra.Command {
 	return queryCmd
 }
 
-// GetCmdListCode lists all wasm code uploaded
+// GetCmdEncryptedSeed returns the encrypted seed from master cert
 func GetCmdEncryptedSeed() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "seed [node-id]",
@@ -64,12 +64,12 @@ func GetCmdEncryptedSeed() *cobra.Command {
 	return cmd
 }
 
-// GetCmdListCode lists all wasm code uploaded
+// GetCmdMasterParams lists certificates
 func GetCmdMasterParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tpp-params",
+		Use:   "tpp-enclave-params",
 		Short: "Get parameters for tpp enclave",
-		Long:  "Get parameters for tpp  - writes the parameters to [master-cert.der] by default",
+		Long:  "Get parameters for tpp - writes the parameters to [master-cert.der] by default",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -90,12 +90,12 @@ func GetCmdMasterParams() *cobra.Command {
 				return err
 			}
 
-			err = ioutil.WriteFile(types.IoExchMasterCertPath, certs.IoMasterCertificate.Bytes, 0644)
+			err = os.WriteFile(types.IoExchMasterCertPath, certs.IoMasterCertificate.Bytes, 0644)
 			if err != nil {
 				return err
 			}
 
-			err = ioutil.WriteFile(types.NodeExchMasterCertPath, certs.NodeExchMasterCertificate.Bytes, 0644)
+			err = os.WriteFile(types.NodeExchMasterCertPath, certs.NodeExchMasterCertificate.Bytes, 0644)
 			if err != nil {
 				return err
 			}

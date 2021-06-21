@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
+	//"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -98,7 +98,7 @@ func (ctx WASMContext) GetTxSenderKeyPair() (privkey []byte, pubkey []byte, er e
 			return nil, nil, err
 		}
 
-		err = ioutil.WriteFile(keyPairFilePath, keyPairJSONBytes, 0644)
+		err = os.WriteFile(keyPairFilePath, keyPairJSONBytes, 0644)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -106,7 +106,7 @@ func (ctx WASMContext) GetTxSenderKeyPair() (privkey []byte, pubkey []byte, er e
 		return privkey[:], pubkey[:], nil
 	}
 
-	keyPairJSONBytes, err := ioutil.ReadFile(keyPairFilePath)
+	keyPairJSONBytes, err := os.ReadFile(keyPairFilePath)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -178,7 +178,7 @@ func (ctx WASMContext) getTxEncryptionKey(txSenderPrivKey []byte, nonce []byte) 
 
 func (ctx WASMContext) OfflineEncrypt(plaintext []byte, pathToMasterIoKey string) ([]byte, error) {
 	// parse coins trying to be sent
-	cert, err := ioutil.ReadFile(pathToMasterIoKey)
+	cert, err := os.ReadFile(pathToMasterIoKey)
 	if err != nil {
 		return nil, err
 	}

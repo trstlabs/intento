@@ -15,7 +15,7 @@ func TestCanonicalAddressFailure(t *testing.T) {
 	defer cleanup()
 
 	// create contract
-	wasm, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	wasm, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
 	id, err := Create(cache, wasm)
 	require.NoError(t, err)
@@ -54,7 +54,7 @@ func TestHumanAddressFailure(t *testing.T) {
 	defer cleanup()
 
 	// create contract
-	wasm, err := ioutil.ReadFile("./testdata/hackatom.wasm")
+	wasm, err := os.ReadFile("./testdata/hackatom.wasm")
 	require.NoError(t, err)
 	id, err := Create(cache, wasm)
 	require.NoError(t, err)

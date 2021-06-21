@@ -57,7 +57,7 @@ func setupTest(t *testing.T, wasmPath string) (sdk.Context, Keeper, string, uint
 	walletA, privKeyA := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	walletB, privKeyB := createFakeFundedAccount(ctx, accKeeper, topUp)
 
-	wasmCode, err := ioutil.ReadFile(wasmPath)
+	wasmCode, err := os.ReadFile(wasmPath)
 	require.NoError(t, err)
 
 	codeID, err := keeper.Create(ctx, walletA, wasmCode, "", "")
@@ -1689,7 +1689,7 @@ func TestWasmTooHighInitialMemoryStaticFail(t *testing.T) {
 
 	walletA, _ := createFakeFundedAccount(ctx, accKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 1)))
 
-	wasmCode, err := ioutil.ReadFile("./testdata/test-contract/static-too-high-initial-memory.wasm")
+	wasmCode, err := os.ReadFile("./testdata/test-contract/static-too-high-initial-memory.wasm")
 	require.NoError(t, err)
 
 	_, err = keeper.Create(ctx, walletA, wasmCode, "", "")

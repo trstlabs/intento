@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	//"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -92,7 +92,7 @@ blockchain. Writes the certificate in DER format to ~/attestation_cert
 func InitBootstrapCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:   "init-bootstrap [node-exchange-file] [io-exchange-file]",
+		Use:   "init-bootstrap [node-cert-file] [io-cert-file]",
 		Short: "Perform bootstrap initialization",
 		Long: `Create attestation report, signed by Intel which is used in the registration process of
 the node to the chain. This process, if successful, will output a certificate which is used to authenticate with the 
@@ -136,12 +136,12 @@ blockchain. Writes the certificate in DER format to ~/attestation_cert
 			// Load consensus_seed_exchange_pubkey
 			cert := []byte(nil)
 			if len(args) >= 1 {
-				cert, err = ioutil.ReadFile(args[0])
+				cert, err = os.ReadFile(args[0])
 				if err != nil {
 					return err
 				}
 			} else {
-				cert, err = ioutil.ReadFile(filepath.Join(userHome, reg.NodeExchMasterCertPath))
+				cert, err = os.ReadFile(filepath.Join(userHome, reg.NodeExchMasterCertPath))
 				if err != nil {
 					return err
 				}
@@ -164,12 +164,12 @@ blockchain. Writes the certificate in DER format to ~/attestation_cert
 
 			// Load consensus_io_exchange_pubkey
 			if len(args) == 2 {
-				cert, err = ioutil.ReadFile(args[1])
+				cert, err = os.ReadFile(args[1])
 				if err != nil {
 					return err
 				}
 			} else {
-				cert, err = ioutil.ReadFile(filepath.Join(userHome, reg.IoExchMasterCertPath))
+				cert, err = os.ReadFile(filepath.Join(userHome, reg.IoExchMasterCertPath))
 				if err != nil {
 					return err
 				}
@@ -201,13 +201,13 @@ func ParseCert() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "parse [cert file]",
 		Short: "Verify and parse a certificate file",
-		Long: "Helper to verify generated credentials, and extract the public key of the secret node, which is used to" +
+		Long: "Helper to verify generated credentials, and extract the public key of the node, which is used to" +
 			"register the node, during node initialization",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// parse coins trying to be sent
-			cert, err := ioutil.ReadFile(args[0])
+			cert, err := os.ReadFile(args[0])
 			if err != nil {
 				return err
 			}
@@ -227,14 +227,14 @@ func ParseCert() *cobra.Command {
 
 func ConfigureSecret() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "configure-secret [master-cert] [seed]",
-		Short: "After registration is successful, configure the secret node with the credentials file and the encrypted " +
+		Use: "configure-credentials [master-cert] [seed]",
+		Short: "After registration is successful, configure the node with the credentials file and the encrypted " +
 			"seed that was written on-chain",
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// parse coins trying to be sent
-			cert, err := ioutil.ReadFile(args[0])
+			cert, err := os.ReadFile(args[0])
 			if err != nil {
 				return err
 			}
@@ -265,7 +265,7 @@ func ConfigureSecret() *cobra.Command {
 				_ = file.Close()
 			}
 
-			err = ioutil.WriteFile(path, cfgBytes, 0644)
+			err = os.WriteFile(path, cfgBytes, 0644)
 			if err != nil {
 				return err
 			}

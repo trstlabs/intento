@@ -33,7 +33,7 @@ func TestQueryContractLabel(t *testing.T) {
 	creator, privCreator := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	anyAddr, _ := createFakeFundedAccount(ctx, accKeeper, topUp)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	contractID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -130,7 +130,7 @@ func TestQueryContractState(t *testing.T) {
 	creator, _ := createFakeFundedAccount(ctx, accKeeper, deposit.Add(deposit...))
 	anyAddr, _ := createFakeFundedAccount(ctx, accKeeper, topUp)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	contractID, err := keeper.Create(ctx, creator, wasmCode, "", "")
@@ -268,7 +268,7 @@ func TestListContractByCodeOrdering(t *testing.T) {
 	creator, creatorPrivKey := createFakeFundedAccount(ctx, accKeeper, deposit)
 	anyAddr, _ := createFakeFundedAccount(ctx, accKeeper, topUp)
 
-	wasmCode, err := ioutil.ReadFile("./testdata/contract.wasm")
+	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
 	codeID, err := keeper.Create(ctx, creator, wasmCode, "", "")

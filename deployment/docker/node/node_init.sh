@@ -56,7 +56,7 @@ then
   SEED=$(tppd q register seed "$PUBLIC_KEY" --node tcp://"$RPC_URL" 2> /dev/null | cut -c 3-)
   echo "SEED: $SEED"
 
-  tppd q register secret-network-params --node tcp://"$RPC_URL" 2> /dev/null
+  tppd q register tpp-enclave-params --node tcp://"$RPC_URL" 2> /dev/null
 
   tppd configure-secret node-master-cert.der "$SEED"
 
