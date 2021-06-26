@@ -55,14 +55,14 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 	endTime := submitTime.Add(activePeriod)
 
 	var item = types.Item{
-		Creator:             msg.Creator,
-		Seller:              msg.Creator,
-		Id:                  uint64(count),
-		Title:               msg.Title,
-		Description:         msg.Description,
-		Shippingcost:        msg.Shippingcost,
-		Localpickup:         msg.Localpickup,
-		Estimationcounthash: estimationcountHashString,
+		Creator:      msg.Creator,
+		Seller:       msg.Creator,
+		Id:           uint64(count),
+		Title:        msg.Title,
+		Description:  msg.Description,
+		Shippingcost: msg.Shippingcost,
+		Localpickup:  msg.Localpickup,
+		//Estimationcounthash: estimationcountHashString,
 
 		Tags: msg.Tags,
 
@@ -72,6 +72,19 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 		Submittime:     submitTime,
 		Endtime:        endTime,
 	}
+
+	//k.computeKeeper.Instantiate()
+
+	userAddress, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+
+	contractAddr, err := k.computeKeeper.Instantiate(ctx, uint64(1), userAddress, msg.Estimationcount, string(count), sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	if err != nil {
+		return nil, err
+	}
+
 	k.BindItemSeller(ctx, item.Id, msg.Creator)
 	//works 100% with endtime tx.BlockHeader().Time
 	k.InsertInactiveItemQueue(ctx, item.Id, endTime)

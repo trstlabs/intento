@@ -275,12 +275,18 @@ impl TxBody {
             EnclaveError::FailedToDeserialize
         })?;
 
+      //  trace!("tx_body: {:?}", &tx_body);
+     //   trace!("tx_body msg: {:?}", &tx_body.messages);
+     //trace!("tx_body msg map: {:?}", &tx_body.messages.into_iter().map(|any| CosmWasmMsg::from_bytes(&any.value))
+      //  .collect::<B>());
+        
         let messages = tx_body
             .messages
             .into_iter()
             .map(|any| CosmWasmMsg::from_bytes(&any.value))
             .collect::<Result<Vec<_>, _>>()?;
 
+         //   trace!("tx_body messages : {:?}", &messages);
         Ok(TxBody {
             messages,
             memo: (),
@@ -324,8 +330,14 @@ impl CosmWasmMsg {
             MsgInstantiateContract, MsgInstantiateContract_oneof__callback_sig,
         };
 
+       // trace!("init bytes: {:?}", &bytes);
+
         let raw_msg = MsgInstantiateContract::parse_from_bytes(bytes)
             .map_err(|_| EnclaveError::FailedToDeserialize)?;
+
+      //      trace!(" uf8: {:?}", &raw_msg);
+    //  trace!("sender addr uf8: {:?}", &raw_msg.sender);
+    //  trace!("sender addr uf8: {:?}", &raw_msg.callback_code_hash);
 
         let init_funds = Self::parse_funds(raw_msg.init_funds)?;
 
@@ -342,16 +354,24 @@ impl CosmWasmMsg {
     }
 
     fn try_parse_execute(bytes: &[u8]) -> Result<Self, EnclaveError> {
-        use proto::cosmwasm::msg::{MsgExecuteContract, MsgExecuteContract_oneof__callback_sig};
-
+        use proto::cosmwasm::msg::{MsgExecuteContract, MsgExecuteContract_oneof__callback_sig, };
+     //   trace!("exec bytes: {:?}", &bytes);
         let raw_msg = MsgExecuteContract::parse_from_bytes(bytes)
             .map_err(|_| EnclaveError::FailedToDeserialize)?;
 
+           // trace!("tx_body: {:?}", String::from_utf8(raw_msg.unwrap()));
+      /*     trace!("sender addr raw: {:?}", &raw_msg.sender);
+      trace!(" contract raw: {:?}", &raw_msg.contract);
+      trace!("msg raw: {:?}", &raw_msg.msg);
+      trace!("callback_code_hash raw: {:?}", &raw_msg.callback_code_hash);
+*/
+ 
         let contract = String::from_utf8(raw_msg.contract).map_err(|err| {
             warn!(
                 "Contract address to execute was not a valid string: {}",
                 Binary(err.into_bytes()),
             );
+          //Ok(())
             EnclaveError::FailedToDeserialize
         })?;
         let contract = HumanAddr(contract);

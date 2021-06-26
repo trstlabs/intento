@@ -17,7 +17,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/danieljdd/tpp/x/tpp/types"
+
 	//"cosmos/base/v1beta1/coin.proto"
+	wasmUtils "github.com/danieljdd/tpp/x/compute/client/utils"
 )
 
 func CmdCreateItem() *cobra.Command {
@@ -26,6 +28,12 @@ func CmdCreateItem() *cobra.Command {
 		Short: "Creates a new item",
 		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
+
+			cliCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
 			argsTitle := string(args[0])
 			argsDescription := string(args[1])
 			argsShippingcost, _ := strconv.ParseInt(args[2], 10, 64)
@@ -40,7 +48,22 @@ func CmdCreateItem() *cobra.Command {
 
 			argsTags := strings.Split(args[5], ",")
 
-			argsEstimationcount, _ := strconv.ParseInt(args[4], 10, 64)
+			///	argsEstimationcount, _ := strconv.ParseInt(args[4], 10, 64)
+			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
+
+			initMsg := types.SecretMsg{}
+
+			initMsg = []byte("estimationcount:" + args[4])
+
+			initMsg.CodeHash, err = GetCodeHashByCodeId(cliCtx, args[0])
+			if err != nil {
+				return types.MsgInstantiateContract{}, err
+			}
+
+			initMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
+			if err != nil {
+				return err
+			}
 
 			argsCondition, _ := strconv.ParseInt(args[6], 10, 64)
 
