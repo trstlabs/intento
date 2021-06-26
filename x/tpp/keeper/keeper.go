@@ -2,14 +2,15 @@ package keeper
 
 import (
 	"fmt"
+	"path/filepath"
 	"time"
-
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	wasm "github.com/danieljdd/tpp/go-cosmwasm"
 	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 type (
@@ -21,10 +22,17 @@ type (
 		accountKeeper    types.AccountKeeper
 		bankKeeper       types.BankKeeper
 		feeCollectorName string
+		wasmer           wasm.Wasmer
+		computeKeeper    types.ComputeKeeper
 	}
 )
 
-func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, feeCollectorName string) *Keeper {
+func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, feeCollectorName string, homeDir string, wasmConfig types.WasmConfig, supportedFeatures string, ck types.ComputeKeeper) *Keeper {
+
+	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), supportedFeatures, wasmConfig.CacheSize)
+	if err != nil {
+		panic(err)
+	}
 
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -43,6 +51,8 @@ func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, paramSpace pa
 		bankKeeper:       bk,
 		accountKeeper:    ak,
 		feeCollectorName: feeCollectorName,
+		wasmer:           *wasmer,
+		computeKeeper:    ck,
 	}
 }
 

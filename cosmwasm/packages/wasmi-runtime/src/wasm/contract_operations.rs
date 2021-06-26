@@ -47,6 +47,7 @@ pub fn init(
     env: &[u8],         // blockchain state
     msg: &[u8],         // probably function call and args
     sig_info: &[u8],    // info about signature verification
+
 ) -> Result<InitSuccess, EnclaveError> {
     let mut parsed_env: Env = serde_json::from_slice(env).map_err(|err| {
         warn!(
@@ -78,11 +79,14 @@ pub fn init(
     })?;
 
     let secret_msg = SecretMessage::from_slice(msg)?;
-    trace!(
+  /*  trace!(
         "Init input before decryption: {:?}",
         String::from_utf8_lossy(&msg)
     );
-
+    trace!("INIT parsed_sig_info: {:?}", &parsed_sig_info);
+    trace!("INIT parsed_env: {:?}", &parsed_env);
+    trace!("INIT scrtmessage {:?}", &secret_msg);
+*/
     verify_params(&parsed_sig_info, &parsed_env, &secret_msg)?;
 
     let decrypted_msg = secret_msg.decrypt()?;
@@ -156,16 +160,18 @@ pub fn handle(
     env: &[u8],
     msg: &[u8],
     sig_info: &[u8],
+
 ) -> Result<HandleSuccess, EnclaveError> {
     let mut parsed_env: Env = serde_json::from_slice(env).map_err(|err| {
         warn!(
             "got an error while trying to deserialize env input bytes into json {:?}: {}",
-            env, err
+            String::from_utf8_lossy(&env),
+            err
         );
         EnclaveError::FailedToDeserialize
     })?;
 
-    trace!("handle parsed_env: {:?}", parsed_env);
+  //  trace!("handle parsed_env: {:?}", parsed_env);
 
     let parsed_sig_info: SigInfo = serde_json::from_slice(sig_info).map_err(|err| {
         warn!(
@@ -177,21 +183,26 @@ pub fn handle(
     })?;
 
     let secret_msg = SecretMessage::from_slice(msg)?;
-
+    
+   // trace!("HANDLER contract: {:?}", &contract);
+  /*  trace!("HANDLER parsed_sig_info: {:?}", &parsed_sig_info);
+    trace!("HANDLER parsed_env: {:?}", &parsed_env);
+    trace!("HANDLER scrtmessage {:?}", &secret_msg);*/
     // Verify env parameters against the signed tx
-    verify_params(&parsed_sig_info, &parsed_env, &secret_msg)?;
+   verify_params(&parsed_sig_info, &parsed_env, &secret_msg)?;
 
     let contract_key = extract_contract_key(&parsed_env)?;
 
-    let secret_msg = SecretMessage::from_slice(msg)?;
+    //let secret_msg = SecretMessage::from_slice(msg)?;
     let decrypted_msg = secret_msg.decrypt()?;
 
     let validated_msg = validate_msg(&decrypted_msg, contract)?;
 
-    trace!(
-        "Handle input afer decryption: {:?}",
-        String::from_utf8_lossy(&validated_msg)
-    );
+  /* trace!(
+       "Handle input after decryption: {:?}",
+     String::from_utf8_lossy(&validated_msg)
+    );*/
+   // trace!("validate_msg decrypted: {:?}", &decrypted_msg);
 
     let canonical_contract_address = CanonicalAddr::from_human(&parsed_env.contract.address).map_err(|err| {
         warn!(
@@ -208,11 +219,11 @@ pub fn handle(
 
     trace!("Successfully authenticated the contract!");
 
-    trace!(
+   /* trace!(
         "Handle: Contract Key: {:?}",
         contract_key.to_vec().as_slice()
     );
-
+*/
     let mut engine = start_engine(
         context,
         gas_limit,
@@ -247,12 +258,12 @@ pub fn handle(
             "(2) nonce just before encrypt_output: nonce = {:?} pubkey = {:?}",
             secret_msg.nonce, secret_msg.user_public_key
         );
-        let output = encrypt_output(
+        /*let output = encrypt_output(
             output,
             secret_msg.nonce,
             secret_msg.user_public_key,
             &canonical_contract_address,
-        )?;
+        )?;*/
         Ok(output)
     })
     .map_err(|err| {

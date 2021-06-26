@@ -54,10 +54,11 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 			}
 			rsp, err = queryContractListByCode(ctx, codeID, keeper)
 		case QueryGetContractState:
-			if len(path) < 3 {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown data query endpoint")
-			}
-			return queryContractState(ctx, path[1], path[2], req.Data, keeper)
+			//if len(path) < 3 {
+			//	return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "path invalid, unknown data query endpoint")
+		//	}
+			return queryContractState(ctx, path[1], req, keeper)
+			//rsp, err = queryContractState(ctx, path[1], path[2], req.Data, keeper)
 		case QueryGetCode:
 			codeID, err := strconv.ParseUint(path[1], 10, 64)
 			if err != nil {
@@ -105,7 +106,7 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 	}
 }
 
-func queryContractState(ctx sdk.Context, bech, queryMethod string, data []byte, keeper Keeper) (json.RawMessage, error) {
+func queryContractState(ctx sdk.Context, bech string,  req abci.RequestQuery, keeper Keeper) (json.RawMessage, error) {
 	contractAddr, err := sdk.AccAddressFromBech32(bech)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, bech)
@@ -135,7 +136,7 @@ func queryContractState(ctx sdk.Context, bech, queryMethod string, data []byte, 
 	// we enforce a subjective gas limit on all queries to avoid infinite loops
 	ctx = ctx.WithGasMeter(sdk.NewGasMeter(keeper.queryGasLimit))
 	// this returns raw bytes (must be base64-encoded)
-	return keeper.QuerySmart(ctx, contractAddr, data, false)
+	return keeper.QuerySmart(ctx, contractAddr, req.Data, false)
 
 	/*
 			default:

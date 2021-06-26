@@ -357,10 +357,6 @@ func New(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.tppKeeper = *tppkeeper.NewKeeper(
-		appCodec, keys[tpptypes.StoreKey], keys[tpptypes.MemStoreKey], app.GetSubspace(tpptypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
-	)
-
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
 	app.GovKeeper = govkeeper.NewKeeper(
@@ -375,8 +371,10 @@ func New(
 	// better way to get this dir???
 	homeDir := viper.GetString(cli.HomeFlag)
 	computeDir := filepath.Join(homeDir, ".compute")
+	tppDir := filepath.Join(homeDir, ".tpp")
 
 	wasmConfig := compute.DefaultWasmConfig()
+	TPPwasmConfig := tpptypes.DefaultWasmConfig()
 	wasmConfig.SmartQueryGasLimit = queryGasLimit
 	wasmWrap := WasmWrapper{Wasm: wasmConfig}
 	err := viper.Unmarshal(&wasmWrap)
@@ -386,12 +384,17 @@ func New(
 	wasmConfig = wasmWrap.Wasm
 
 	supportedFeatures := "staking"
+
 	app.regKeeper = reg.NewKeeper(appCodec, keys[reg.StoreKey], regRouter, reg.EnclaveApi{}, homeDir, app.bootstrap)
 	app.computeKeeper = compute.NewKeeper(
 		appCodec, *legacyAmino,
 		keys[compute.StoreKey],
 		app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.DistrKeeper, app.MintKeeper, stakingKeeper,
 		computeRouter, computeDir, wasmConfig, supportedFeatures, nil, nil)
+
+	app.tppKeeper = *tppkeeper.NewKeeper(
+		appCodec, keys[tpptypes.StoreKey], keys[tpptypes.MemStoreKey], app.GetSubspace(tpptypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, tppDir, TPPwasmConfig, supportedFeatures, app.computeKeeper,
+	)
 
 	/****  Module Options ****/
 

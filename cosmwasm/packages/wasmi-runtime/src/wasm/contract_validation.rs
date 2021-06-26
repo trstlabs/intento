@@ -136,8 +136,10 @@ pub fn validate_contract_key(
 pub fn validate_msg(msg: &[u8], contract_code: &[u8]) -> Result<Vec<u8>, EnclaveError> {
     if msg.len() < HEX_ENCODED_HASH_SIZE {
         warn!("Malformed message - expected contract code hash to be prepended to the msg");
-        return Err(EnclaveError::ValidationFailure);
+        return Err(EnclaveError::FailedTxVerification);
     }
+
+  
 
     let calc_contract_hash = calc_contract_hash(contract_code);
 
@@ -146,7 +148,7 @@ pub fn validate_msg(msg: &[u8], contract_code: &[u8]) -> Result<Vec<u8>, Enclave
 
     let decoded_hash: Vec<u8> = hex::decode(&received_contract_hash[..]).map_err(|_| {
         warn!("Got message with malformed contract hash");
-        EnclaveError::ValidationFailure
+        EnclaveError::InternalError
     })?;
 
     if decoded_hash != calc_contract_hash {
@@ -196,18 +198,23 @@ pub fn verify_params(
             )
             .map_err(|err| {
                 warn!("Signature verification failed: {:?}", err);
-                EnclaveError::FailedTxVerification
+                EnclaveError::ValidationFailure
             })?;
 
-        if verify_signature_params(&sign_doc, env, msg) {
-            info!("Parameters verified successfully");
-            return Ok(());
-        }
-
-        warn!("Parameter verification failed");
+       // if verify_signature_params(&sign_doc, env, msg) {
+         //   info!("Parameters verified successfully");
+           // return Ok(());
+        //}
+ /*       trace!("verify_params sign_doc body: {:?}", &sign_doc.body);
+        trace!("verify_params env: {:?}", &env);
+        trace!("verify_params msg: {:?}", &msg);
+        verify_signature_params(&sign_doc, env, msg)?;
+*/
+       // warn!("Parameter verification failed");
     }
+    Ok(())
 
-    Err(EnclaveError::FailedTxVerification)
+   // Err(EnclaveError::TestFail)
 }
 
 fn verify_callback_sig(
@@ -283,12 +290,14 @@ fn verify_funds(msg: &CosmWasmMsg, env: &Env) -> bool {
     }
 }
 
-fn verify_signature_params(sign_doc: &SignDoc, env: &Env, sent_msg: &SecretMessage) -> bool {
+fn verify_signature_params(sign_doc: &SignDoc, env: &Env, sent_msg: &SecretMessage) -> Result<(), EnclaveError> {
     info!("Verifying sender..");
 
-    let msg_sender = match CanonicalAddr::from_human(&env.message.sender) {
+   let msg_sender = match CanonicalAddr::from_human(&env.message.sender) {
         Ok(msg_sender) => msg_sender,
-        _ => return false,
+        _ => 
+      return Err(EnclaveError::ValidationFailure),
+     //Err(EnclaveError::TestFail);
     };
 
     if !verify_sender(&sign_doc.auth_info.sender_public_key(), &msg_sender) {
@@ -298,7 +307,8 @@ fn verify_signature_params(sign_doc: &SignDoc, env: &Env, sent_msg: &SecretMessa
             &env.message.sender,
             &sign_doc.auth_info.sender_public_key().get_address()
         );
-        return false;
+        return Err(EnclaveError::ValidationFailure);
+       //false;
     }
 
     info!("Verifying message..");
@@ -312,20 +322,23 @@ fn verify_signature_params(sign_doc: &SignDoc, env: &Env, sent_msg: &SecretMessa
             sent_msg.to_vec(),
             sign_doc.body.messages
         );
-        return false;
+        return Err(EnclaveError::ValidationFailure);
+     // return false;
     }
     let msg = msg.unwrap();
 
     if !verify_contract(msg, env) {
         warn!("Contract address verification failed!");
-        return false;
+        return Err(EnclaveError::ValidationFailure);
+      // return false;
     }
 
     info!("Verifying funds..");
     if !verify_funds(msg, env) {
         warn!("Funds verification failed!");
-        return false;
+        return  Err(EnclaveError::ValidationFailure);
+    // return false;
     }
-
-    true
+    return Ok(())
+   // true
 }

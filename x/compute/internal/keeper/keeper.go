@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"path/filepath"
+
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -13,7 +15,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"path/filepath"
 
 	"github.com/tendermint/tendermint/crypto"
 
@@ -299,7 +300,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		Ctx:     ctx,
 		Plugins: k.queryPlugins,
 	}
-
+	//fmt.Printf("Init message before wasm is %s \n", base64.StdEncoding.EncodeToString(initMsg))
 	// instantiate wasm contract
 	gas := gasForContract(ctx)
 	res, key, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo)
@@ -317,7 +318,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	instance := types.NewContractInfo(codeID, creator /* admin, */, label, createdAt)
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryBare(&instance))
 
-	fmt.Printf("Storing key: %s for account %s\n", key, contractAddress)
+	//	fmt.Printf("Storing key: %s for account %s\n", base64.StdEncoding.EncodeToString(key), contractAddress)
 
 	store.Set(types.GetContractEnclaveKey(contractAddress), key)
 
@@ -356,7 +357,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	store := ctx.KVStore(k.storeKey)
 
-	// add more funds
+	// add funds
 	if !coins.IsZero() {
 		if k.bankKeeper.BlockedAddr(caller) {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "blocked address can not be used")
@@ -369,6 +370,9 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
+	if contractKey == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "contract key not found")
+	}
 	fmt.Printf("Contract Execute: Got contract Key for contract %s: %s\n", contractAddress, base64.StdEncoding.EncodeToString(contractKey))
 	params := types.NewEnv(ctx, caller, coins, contractAddress, contractKey)
 	fmt.Printf("Contract Execute: key from params %s \n", params.Key)
@@ -380,6 +384,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	gas := gasForContract(ctx)
+	//	fmt.Printf("Execute message before wasm is %s \n", base64.StdEncoding.EncodeToString(msg))
 	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
 	consumeGas(ctx, gasUsed)
 

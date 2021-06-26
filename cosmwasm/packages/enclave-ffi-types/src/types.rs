@@ -86,6 +86,24 @@ pub enum EnclaveError {
     /// Calling a function in the contract failed.
     #[display(fmt = "calling a function in the contract failed for an unexpected reason")]
     FailedFunctionCall,
+     /// Calling a function in the contract failed.
+     #[display(fmt = "calling a function in the contract failed for an unexpected reason1")]
+     TestFail,
+       /// Calling a function in the contract failed.
+       #[display(fmt = "calling a function in the contract failed for an unexpected reason2")]
+       TestFail2,
+         /// Calling a function in the contract failed.
+         #[display(fmt = "calling a function in the contract failed for an unexpected reason3")]
+         TestFail3,
+           /// Calling a function in the contract failed.
+       #[display(fmt = "calling a function in the contract failed for an unexpected reason4")]
+       TestFail4,
+         /// Calling a function in the contract failed.
+         #[display(fmt = "calling a function in the contract failed for an unexpected reason5")]
+         TestFail5,
+           /// Calling a function in the contract failed.
+       #[display(fmt = "calling a function in the contract failed for an unexpected reason6")]
+       TestFail6,
     // These variants mimic the variants of `wasmi::TrapKind`
     /// The contract panicked during execution.
     #[display(fmt = "the contract panicked")]

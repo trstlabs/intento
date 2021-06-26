@@ -97,7 +97,7 @@ all: install
 
 install: go.sum
 	@echo "--> Installing tppd"
-	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/tppd
+	@go install $(BUILD_FLAGS) ./cmd/tppd
 
 go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
