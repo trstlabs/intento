@@ -1,21 +1,27 @@
 package cli
 
 import (
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+
 	"github.com/spf13/cobra"
 	//"crypto/sha256"
 	//"encoding/hex"
+	"context"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	wasmUtils "github.com/danieljdd/tpp/x/compute/client/utils"
 	"github.com/danieljdd/tpp/x/tpp/types"
 )
 
 func CmdCreateEstimation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-estimator [estimation] [deposit] [interested] [comment] [itemid]",
-		Short: "Creates a new estimator",
+		Use:   "create-estimation [estimation] [deposit] [interested] [comment] [itemid]",
+		Short: "Creates a new estimation",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -24,22 +30,56 @@ func CmdCreateEstimation() *cobra.Command {
 				return err
 			}
 
-			argsEstimation, _ := strconv.ParseInt(args[0], 10, 64)
+			//	argsMsg, _ := strconv.ParseInt(args[0], 10, 64)
+
+			wasmCtx := wasmUtils.WASMContext{CLIContext: clientCtx}
+			estimateMsg := types.SecretMsg{}
+
+			estimation := map[string]string{"amount": args[0], "comment": args[3]}
+
+			message := map[string]interface{}{"create_estimation": estimation}
+
+			estimateMsg.Msg, err = json.Marshal(message)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("json message: %X\n", estimateMsg.Msg)
+			//estimateMsg.Msg = []byte("{ amount:" + args[0] + ",comment:" + args[1] + "}")
+			queryClient := types.NewQueryClient(clientCtx)
+			params := &types.QueryCodeHashRequest{
+				Codeid: 1,
+			}
+			res, err := queryClient.CodeHash(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			var encryptedMsg []byte
+			//estimateMsg.CodeHash = res.Codehash
+
+			estimateMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
+			fmt.Printf("Got estimate .CodeHash hash: %X\n", estimateMsg.CodeHash)
+			encryptedMsg, err = wasmCtx.Encrypt(estimateMsg.Serialize())
+			if err != nil {
+				return err
+			}
 
 			argsDeposit, _ := strconv.ParseInt(args[1], 10, 64)
 			interested := false
 			if args[2] == "1" {
 				interested = true
 			}
-			argsComment := string(args[3])
+			//argsComment := string(args[3])
 			argsItemID, err := strconv.ParseUint(args[4], 10, 64)
 			if err != nil {
 				return err
 			}
-			msg := types.NewMsgCreateEstimation(clientCtx.GetFromAddress().String(), int64(argsEstimation), uint64(argsItemID), int64(argsDeposit), bool(interested), string(argsComment))
+			msg := types.NewMsgCreateEstimation(clientCtx.GetFromAddress().String(), encryptedMsg, uint64(argsItemID), int64(argsDeposit), bool(interested))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
+			fmt.Printf("sending msg: %X\n", estimateMsg.Msg)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -51,8 +91,8 @@ func CmdCreateEstimation() *cobra.Command {
 
 func CmdUpdateLike() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-estimator [itemid] [interested]",
-		Short: "Update a estimator",
+		Use:   "update-estimator [itemid] [like]",
+		Short: "Update a like",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
