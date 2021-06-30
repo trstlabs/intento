@@ -1,6 +1,8 @@
 package types
 
 import (
+	fmt "fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	//"cosmos/base/v1beta1/coin.proto"
@@ -8,15 +10,16 @@ import (
 
 var _ sdk.Msg = &MsgCreateEstimation{}
 
-func NewMsgCreateEstimation(estimator string, estimation int64, itemid uint64, deposit int64, interested bool, comment string) *MsgCreateEstimation {
+func NewMsgCreateEstimation(estimator string, estimatemsg []byte, itemid uint64, deposit int64, interested bool) *MsgCreateEstimation {
+	fmt.Printf("new item msg: %X\n", estimator)
 	return &MsgCreateEstimation{
-		Estimator:  estimator,
-		Estimation: estimation,
+		Estimator:   estimator,
+		Estimatemsg: estimatemsg,
 		//Estimatorestimationhash: estimatorestimationhash,
 		Itemid:     itemid,
 		Deposit:    deposit,
 		Interested: interested,
-		Comment:    comment,
+		//Comment:    comment,
 	}
 }
 
@@ -46,9 +49,9 @@ func (msg *MsgCreateEstimation) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid estimator address (%s)", err)
 	}
-	if len(msg.Comment) > 100 {
+	/*if len(msg.Comment) > 100 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "comment too large")
-	}
+	}*/
 	return nil
 }
 

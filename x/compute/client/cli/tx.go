@@ -144,7 +144,7 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 // InstantiateContractCmd will instantiate a contract from previously uploaded code.
 func InstantiateContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "instantiate [code_id_int64] [json_encoded_init_args] --label [text] " /* --admin [address,optional] */ + "--amount [coins,optional]",
+		Use:   "instantiate [code id] [args] --label [text] " /* --admin [address,optional] */ + "--amount [coins,optional]",
 		Short: "Instantiate a wasm contract",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -160,7 +160,12 @@ func InstantiateContractCmd() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), &msg)
+			if args[0] == "1" {
+				return nil
+			} else {
+				return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), &msg)
+			}
+
 		},
 	}
 
@@ -234,10 +239,17 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 			return types.MsgInstantiateContract{}, err
 		}
 
+		//fmt.Printf("Got code hash: %X\n", initMsg.CodeHash)
 		// todo: Add check that this is valid json and stuff
 		initMsg.Msg = []byte(args[1])
+		//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
+		//initMsg.Msg, err = json.Marshal(estimation)
+		//fmt.Printf("json message: %X\n", estimation)
+
+		//initMsg.Msg = []byte(initMsg.Msg)
 
 		encryptedMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
+
 	}
 
 	if err != nil {
@@ -259,7 +271,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 // ExecuteContractCmd will instantiate a contract from previously uploaded code.
 func ExecuteContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "execute [contract address] [json encoded send args] [codeid]",
+		Use:   "execute [contract address] [json encoded send args] [codeId]",
 		Short: "Execute a command on a wasm contract",
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -271,7 +283,7 @@ func ExecuteContractCmd() *cobra.Command {
 			var msg []byte
 			var codeHash string
 			var ioKeyPath string
-			var codeid string
+			var codeId string
 
 			genOnly, _ := cmd.Flags().GetBool(flags.FlagGenerateOnly)
 
@@ -299,7 +311,7 @@ func ExecuteContractCmd() *cobra.Command {
 
 				contractAddr = res
 				msg = []byte(args[0])
-				codeid = args[1]
+				codeId = args[1]
 			} else {
 				// get the id of the code to instantiate
 				res, err := sdk.AccAddressFromBech32(args[0])
@@ -309,7 +321,7 @@ func ExecuteContractCmd() *cobra.Command {
 
 				contractAddr = res
 				msg = []byte(args[1])
-				codeid = args[2]
+				codeId = args[2]
 				/*  codeHash, err := cmd.Flags().GetString(flagCodeHash)
 				    if err != nil {
 				        return fmt.Errorf("error with codeHash: %s", err)
@@ -338,7 +350,7 @@ func ExecuteContractCmd() *cobra.Command {
 				}
 			}
 
-			return ExecuteWithData(cmd, contractAddr, msg, amountStr, genOnly, ioKeyPath, codeHash, cliCtx, codeid)
+			return ExecuteWithData(cmd, contractAddr, msg, amountStr, genOnly, ioKeyPath, codeHash, cliCtx, codeId)
 		},
 	}
 
@@ -351,7 +363,7 @@ func ExecuteContractCmd() *cobra.Command {
 	return cmd
 }
 
-func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []byte, amount string, genOnly bool, ioMasterKeyPath string, codeHash string, cliCtx client.Context, codeid string) error {
+func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []byte, amount string, genOnly bool, ioMasterKeyPath string, codeHash string, cliCtx client.Context, codeId string) error {
 	wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 	execMsg := types.SecretMsg{}
 
@@ -381,7 +393,7 @@ func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []b
 
 		//  execMsg.CodeHash = []byte(codeHash)
 		//execMsg.CodeHash, err = GetCodeHashByContractAddr(cliCtx, contractAddress)
-		execMsg.CodeHash, err = GetCodeHashByCodeId(cliCtx, codeid)
+		execMsg.CodeHash, err = GetCodeHashByCodeId(cliCtx, codeId)
 
 		if err != nil {
 			return err

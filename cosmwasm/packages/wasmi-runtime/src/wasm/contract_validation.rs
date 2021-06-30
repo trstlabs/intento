@@ -134,12 +134,12 @@ pub fn validate_contract_key(
 }
 
 pub fn validate_msg(msg: &[u8], contract_code: &[u8]) -> Result<Vec<u8>, EnclaveError> {
-    if msg.len() < HEX_ENCODED_HASH_SIZE {
+
+      if msg.len() < HEX_ENCODED_HASH_SIZE {
         warn!("Malformed message - expected contract code hash to be prepended to the msg");
         return Err(EnclaveError::FailedTxVerification);
     }
 
-  
 
     let calc_contract_hash = calc_contract_hash(contract_code);
 

@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	"github.com/golang/protobuf/ptypes/empty"
 	"sort"
+
+	"github.com/golang/protobuf/ptypes/empty"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -124,7 +125,7 @@ func (q grpcQuerier) Code(c context.Context, req *types.QueryCodeRequest) (*type
 	if req.CodeId == 0 {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "code id")
 	}
-	rsp, err := queryCode(sdk.UnwrapSDKContext(c), req.CodeId, q.keeper)
+	rsp, err := QueryCode(sdk.UnwrapSDKContext(c), req.CodeId, q.keeper)
 	switch {
 	case err != nil:
 		return nil, err
@@ -232,7 +233,7 @@ func queryContractListByCode(ctx sdk.Context, codeID uint64, keeper Keeper) ([]t
 	return contracts, nil
 }
 
-func queryCode(ctx sdk.Context, codeID uint64, keeper Keeper) (*types.QueryCodeResponse, error) {
+func QueryCode(ctx sdk.Context, codeID uint64, keeper Keeper) (*types.QueryCodeResponse, error) {
 	if codeID == 0 {
 		return nil, nil
 	}

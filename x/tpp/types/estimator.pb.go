@@ -25,14 +25,11 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Estimator struct {
-	Estimator               string     `protobuf:"bytes,1,opt,name=estimator,proto3" json:"estimator,omitempty"`
-	Itemid                  uint64     `protobuf:"varint,2,opt,name=itemid,proto3" json:"itemid,omitempty"`
-	Estimation              int64      `protobuf:"varint,3,opt,name=estimation,proto3" json:"estimation,omitempty"`
-	Estimatorestimationhash string     `protobuf:"bytes,4,opt,name=estimatorestimationhash,proto3" json:"estimatorestimationhash,omitempty"`
-	Deposit                 types.Coin `protobuf:"bytes,5,opt,name=deposit,proto3" json:"deposit"`
-	Interested              bool       `protobuf:"varint,6,opt,name=interested,proto3" json:"interested,omitempty"`
-	Comment                 string     `protobuf:"bytes,7,opt,name=comment,proto3" json:"comment,omitempty"`
-	Flag                    int64      `protobuf:"varint,8,opt,name=flag,proto3" json:"flag,omitempty"`
+	Estimator  string     `protobuf:"bytes,1,opt,name=estimator,proto3" json:"estimator,omitempty"`
+	Itemid     uint64     `protobuf:"varint,2,opt,name=itemid,proto3" json:"itemid,omitempty"`
+	Estimation int64      `protobuf:"varint,3,opt,name=estimation,proto3" json:"estimation,omitempty"`
+	Deposit    types.Coin `protobuf:"bytes,4,opt,name=deposit,proto3" json:"deposit"`
+	Interested bool       `protobuf:"varint,5,opt,name=interested,proto3" json:"interested,omitempty"`
 }
 
 func (m *Estimator) Reset()         { *m = Estimator{} }
@@ -89,13 +86,6 @@ func (m *Estimator) GetEstimation() int64 {
 	return 0
 }
 
-func (m *Estimator) GetEstimatorestimationhash() string {
-	if m != nil {
-		return m.Estimatorestimationhash
-	}
-	return ""
-}
-
 func (m *Estimator) GetDeposit() types.Coin {
 	if m != nil {
 		return m.Deposit
@@ -110,27 +100,12 @@ func (m *Estimator) GetInterested() bool {
 	return false
 }
 
-func (m *Estimator) GetComment() string {
-	if m != nil {
-		return m.Comment
-	}
-	return ""
-}
-
-func (m *Estimator) GetFlag() int64 {
-	if m != nil {
-		return m.Flag
-	}
-	return 0
-}
-
 type MsgCreateEstimation struct {
-	Estimator  string `protobuf:"bytes,1,opt,name=estimator,proto3" json:"estimator,omitempty"`
-	Estimation int64  `protobuf:"varint,2,opt,name=estimation,proto3" json:"estimation,omitempty"`
-	Itemid     uint64 `protobuf:"varint,3,opt,name=itemid,proto3" json:"itemid,omitempty"`
-	Deposit    int64  `protobuf:"varint,4,opt,name=deposit,proto3" json:"deposit,omitempty"`
-	Interested bool   `protobuf:"varint,5,opt,name=interested,proto3" json:"interested,omitempty"`
-	Comment    string `protobuf:"bytes,6,opt,name=comment,proto3" json:"comment,omitempty"`
+	Estimator   string `protobuf:"bytes,1,opt,name=estimator,proto3" json:"estimator,omitempty"`
+	Estimatemsg []byte `protobuf:"bytes,2,opt,name=estimatemsg,proto3" json:"estimatemsg,omitempty"`
+	Itemid      uint64 `protobuf:"varint,3,opt,name=itemid,proto3" json:"itemid,omitempty"`
+	Deposit     int64  `protobuf:"varint,4,opt,name=deposit,proto3" json:"deposit,omitempty"`
+	Interested  bool   `protobuf:"varint,5,opt,name=interested,proto3" json:"interested,omitempty"`
 }
 
 func (m *MsgCreateEstimation) Reset()         { *m = MsgCreateEstimation{} }
@@ -173,11 +148,11 @@ func (m *MsgCreateEstimation) GetEstimator() string {
 	return ""
 }
 
-func (m *MsgCreateEstimation) GetEstimation() int64 {
+func (m *MsgCreateEstimation) GetEstimatemsg() []byte {
 	if m != nil {
-		return m.Estimation
+		return m.Estimatemsg
 	}
-	return 0
+	return nil
 }
 
 func (m *MsgCreateEstimation) GetItemid() uint64 {
@@ -199,13 +174,6 @@ func (m *MsgCreateEstimation) GetInterested() bool {
 		return m.Interested
 	}
 	return false
-}
-
-func (m *MsgCreateEstimation) GetComment() string {
-	if m != nil {
-		return m.Comment
-	}
-	return ""
 }
 
 type MsgUpdateLike struct {
@@ -383,34 +351,31 @@ func init() {
 func init() { proto.RegisterFile("tpp/estimator.proto", fileDescriptor_1ef292f0ad57c1d3) }
 
 var fileDescriptor_1ef292f0ad57c1d3 = []byte{
-	// 425 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x93, 0xbf, 0x8e, 0xd4, 0x30,
-	0x10, 0xc6, 0xe3, 0x4d, 0x2e, 0x7b, 0xeb, 0x13, 0x05, 0x3e, 0x04, 0xe6, 0x84, 0x4c, 0x14, 0x51,
-	0xa4, 0x4a, 0x74, 0xd0, 0x40, 0x43, 0x71, 0xcb, 0x21, 0x21, 0xd8, 0x26, 0x12, 0x0d, 0x9d, 0x93,
-	0x0c, 0x5e, 0x43, 0x12, 0x5b, 0x6b, 0x83, 0xe0, 0x2d, 0x78, 0x08, 0xde, 0x83, 0xf6, 0xca, 0x2b,
-	0xa9, 0x10, 0xda, 0x7d, 0x11, 0x14, 0xef, 0x9f, 0xec, 0x82, 0xf6, 0x24, 0xb6, 0x48, 0x64, 0xcf,
-	0x4c, 0x66, 0xbe, 0xdf, 0x17, 0x0d, 0x3e, 0xb5, 0x5a, 0x67, 0x60, 0xac, 0x6c, 0xb8, 0x55, 0xb3,
-	0x54, 0xcf, 0x94, 0x55, 0xe4, 0x76, 0xc5, 0x5b, 0x09, 0xf5, 0x87, 0xaa, 0x4a, 0xad, 0xd6, 0xdd,
-	0x73, 0x76, 0x47, 0x28, 0xa1, 0x5c, 0x36, 0xeb, 0x4e, 0xcb, 0xc2, 0x33, 0x56, 0x2a, 0xd3, 0x28,
-	0x93, 0x15, 0xdc, 0x40, 0xf6, 0xf9, 0xbc, 0x00, 0xcb, 0xcf, 0xb3, 0x52, 0xc9, 0x76, 0x99, 0x8f,
-	0xbf, 0x0f, 0xf0, 0xe8, 0x72, 0xdd, 0x9c, 0x3c, 0xc0, 0xa3, 0xcd, 0x24, 0x8a, 0x22, 0x94, 0x8c,
-	0xf2, 0x3e, 0x40, 0xee, 0xe2, 0x50, 0x5a, 0x68, 0x64, 0x45, 0x07, 0x11, 0x4a, 0x82, 0x7c, 0x75,
-	0x23, 0x0c, 0xe3, 0x55, 0x91, 0x54, 0x2d, 0xf5, 0x23, 0x94, 0xf8, 0xf9, 0x56, 0x84, 0x3c, 0xc5,
-	0xf7, 0x36, 0x4d, 0xfa, 0xf0, 0x94, 0x9b, 0x29, 0x0d, 0xdc, 0x8c, 0x7d, 0x69, 0xf2, 0x0c, 0x0f,
-	0x2b, 0xd0, 0xca, 0x48, 0x4b, 0x8f, 0x22, 0x94, 0x9c, 0x3c, 0xbe, 0x9f, 0x2e, 0x79, 0xd2, 0x8e,
-	0x27, 0x5d, 0xf1, 0xa4, 0x63, 0x25, 0xdb, 0x8b, 0xe0, 0xea, 0xd7, 0x43, 0x2f, 0x5f, 0xd7, 0x77,
-	0xa2, 0x64, 0x6b, 0xa1, 0xeb, 0x08, 0x15, 0x0d, 0x23, 0x94, 0x1c, 0xe7, 0x5b, 0x11, 0x42, 0xf1,
-	0xb0, 0x54, 0x4d, 0x03, 0xad, 0xa5, 0x43, 0x27, 0x62, 0x7d, 0x25, 0x04, 0x07, 0xef, 0x6b, 0x2e,
-	0xe8, 0xb1, 0x03, 0x71, 0xe7, 0xf8, 0x07, 0xc2, 0xa7, 0x13, 0x23, 0xc6, 0x33, 0xe0, 0x16, 0x2e,
-	0x7b, 0xb4, 0x9b, 0x0d, 0xdb, 0x35, 0x66, 0xf0, 0x8f, 0x31, 0xbd, 0xa1, 0xfe, 0x8e, 0xa1, 0xb4,
-	0xc7, 0x0e, 0xdc, 0x47, 0x7b, 0xa8, 0x8e, 0x6e, 0xa2, 0x0a, 0x77, 0xa8, 0x62, 0xc0, 0xb7, 0x26,
-	0x46, 0xbc, 0xd5, 0x15, 0xb7, 0xf0, 0x46, 0x7e, 0x84, 0xc3, 0xff, 0xf5, 0x96, 0x00, 0xff, 0x6f,
-	0x01, 0xf1, 0x6b, 0xe7, 0xd3, 0x0b, 0xa8, 0xe1, 0x3f, 0x7c, 0xda, 0x33, 0x2c, 0x1e, 0xe3, 0x93,
-	0x89, 0x11, 0x2f, 0x6b, 0x2e, 0x5e, 0x59, 0x68, 0x0e, 0x6b, 0x72, 0xf1, 0xfc, 0x6a, 0xce, 0xd0,
-	0xf5, 0x9c, 0xa1, 0xdf, 0x73, 0x86, 0xbe, 0x2d, 0x98, 0x77, 0xbd, 0x60, 0xde, 0xcf, 0x05, 0xf3,
-	0xde, 0x3d, 0x12, 0xd2, 0x4e, 0x3f, 0x15, 0x69, 0xa9, 0x9a, 0x6c, 0xb3, 0x4f, 0x59, 0xb7, 0x6e,
-	0x5f, 0xdc, 0xdb, 0x7e, 0xd5, 0x60, 0x8a, 0xd0, 0x2d, 0xca, 0x93, 0x3f, 0x01, 0x00, 0x00, 0xff,
-	0xff, 0xba, 0xa1, 0x06, 0x8f, 0x88, 0x03, 0x00, 0x00,
+	// 381 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x52, 0xc1, 0x4e, 0xdb, 0x40,
+	0x10, 0xf5, 0xd6, 0x69, 0xda, 0x6c, 0xda, 0x43, 0x9d, 0xaa, 0x72, 0xa3, 0x6a, 0x6b, 0x45, 0x3d,
+	0xf8, 0x64, 0x2b, 0xe5, 0xc4, 0x85, 0x43, 0x42, 0x90, 0x10, 0xe4, 0x62, 0x89, 0x0b, 0x37, 0x3b,
+	0x1e, 0x2d, 0x0b, 0xb1, 0x77, 0xe5, 0x1d, 0x10, 0xfc, 0x05, 0x7f, 0xc1, 0x4f, 0xf0, 0x01, 0x39,
+	0xe6, 0xc8, 0x09, 0xa1, 0xe4, 0x47, 0x90, 0x1d, 0x27, 0x71, 0x84, 0x40, 0x90, 0x83, 0xad, 0x9d,
+	0x37, 0xa3, 0x79, 0xef, 0x8d, 0x1e, 0x6d, 0xa1, 0x52, 0x3e, 0x68, 0x14, 0x49, 0x88, 0x32, 0xf3,
+	0x54, 0x26, 0x51, 0x5a, 0x3f, 0xe2, 0x30, 0x15, 0x30, 0x3e, 0x8f, 0x63, 0x0f, 0x95, 0xca, 0xbf,
+	0xf6, 0x4f, 0x2e, 0xb9, 0x2c, 0xba, 0x7e, 0xfe, 0x5a, 0x0c, 0xb6, 0xd9, 0x48, 0xea, 0x44, 0x6a,
+	0x3f, 0x0a, 0x35, 0xf8, 0x57, 0xdd, 0x08, 0x30, 0xec, 0xfa, 0x23, 0x29, 0xd2, 0x45, 0xbf, 0x73,
+	0x4f, 0x68, 0x63, 0xb0, 0x5c, 0x6e, 0xfd, 0xa1, 0x8d, 0x15, 0x93, 0x4d, 0x1c, 0xe2, 0x36, 0x82,
+	0x35, 0x60, 0xfd, 0xa2, 0x75, 0x81, 0x90, 0x88, 0xd8, 0xfe, 0xe4, 0x10, 0xb7, 0x16, 0x94, 0x95,
+	0xc5, 0x28, 0x2d, 0x87, 0x84, 0x4c, 0x6d, 0xd3, 0x21, 0xae, 0x19, 0x54, 0x10, 0x6b, 0x97, 0x7e,
+	0x89, 0x41, 0x49, 0x2d, 0xd0, 0xae, 0x39, 0xc4, 0x6d, 0xfe, 0xff, 0xed, 0x2d, 0x54, 0x79, 0xb9,
+	0x2a, 0xaf, 0x54, 0xe5, 0xf5, 0xa5, 0x48, 0x7b, 0xb5, 0xc9, 0xe3, 0x5f, 0x23, 0x58, 0xce, 0xe7,
+	0xab, 0x45, 0x8a, 0x90, 0x81, 0x46, 0x88, 0xed, 0xcf, 0x0e, 0x71, 0xbf, 0x06, 0x15, 0xa4, 0x73,
+	0x47, 0x68, 0x6b, 0xa8, 0x79, 0x3f, 0x83, 0x10, 0x61, 0xb0, 0xa6, 0x7c, 0xdb, 0x88, 0x43, 0x9b,
+	0x65, 0x01, 0x89, 0xe6, 0x85, 0x9b, 0x6f, 0x41, 0x15, 0xaa, 0x58, 0x35, 0x37, 0xac, 0xda, 0x9b,
+	0x56, 0xcc, 0xf7, 0x2b, 0x05, 0xfa, 0x7d, 0xa8, 0xf9, 0x89, 0x8a, 0x43, 0x84, 0x63, 0x71, 0x01,
+	0xdb, 0xdf, 0xba, 0x42, 0x63, 0xbe, 0xa0, 0x39, 0x2a, 0xee, 0xb1, 0x0f, 0x63, 0xf8, 0xc0, 0x3d,
+	0x5e, 0x21, 0xeb, 0xf4, 0x69, 0x73, 0xa8, 0xf9, 0xc1, 0x38, 0xe4, 0x87, 0x08, 0xc9, 0x76, 0x4b,
+	0x7a, 0x7b, 0x93, 0x19, 0x23, 0xd3, 0x19, 0x23, 0x4f, 0x33, 0x46, 0x6e, 0xe7, 0xcc, 0x98, 0xce,
+	0x99, 0xf1, 0x30, 0x67, 0xc6, 0xe9, 0x3f, 0x2e, 0xf0, 0xec, 0x32, 0xf2, 0x46, 0x32, 0xf1, 0x57,
+	0x79, 0xf6, 0xf3, 0xb8, 0x5f, 0x17, 0x7f, 0xbc, 0x51, 0xa0, 0xa3, 0x7a, 0x11, 0xd4, 0x9d, 0xe7,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0x97, 0xc2, 0x01, 0xf4, 0x08, 0x03, 0x00, 0x00,
 }
 
 func (m *Estimator) Marshal() (dAtA []byte, err error) {
@@ -433,18 +398,6 @@ func (m *Estimator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Flag != 0 {
-		i = encodeVarintEstimator(dAtA, i, uint64(m.Flag))
-		i--
-		dAtA[i] = 0x40
-	}
-	if len(m.Comment) > 0 {
-		i -= len(m.Comment)
-		copy(dAtA[i:], m.Comment)
-		i = encodeVarintEstimator(dAtA, i, uint64(len(m.Comment)))
-		i--
-		dAtA[i] = 0x3a
-	}
 	if m.Interested {
 		i--
 		if m.Interested {
@@ -453,7 +406,7 @@ func (m *Estimator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0
 		}
 		i--
-		dAtA[i] = 0x30
+		dAtA[i] = 0x28
 	}
 	{
 		size, err := m.Deposit.MarshalToSizedBuffer(dAtA[:i])
@@ -464,14 +417,7 @@ func (m *Estimator) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintEstimator(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x2a
-	if len(m.Estimatorestimationhash) > 0 {
-		i -= len(m.Estimatorestimationhash)
-		copy(dAtA[i:], m.Estimatorestimationhash)
-		i = encodeVarintEstimator(dAtA, i, uint64(len(m.Estimatorestimationhash)))
-		i--
-		dAtA[i] = 0x22
-	}
+	dAtA[i] = 0x22
 	if m.Estimation != 0 {
 		i = encodeVarintEstimator(dAtA, i, uint64(m.Estimation))
 		i--
@@ -512,13 +458,6 @@ func (m *MsgCreateEstimation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Comment) > 0 {
-		i -= len(m.Comment)
-		copy(dAtA[i:], m.Comment)
-		i = encodeVarintEstimator(dAtA, i, uint64(len(m.Comment)))
-		i--
-		dAtA[i] = 0x32
-	}
 	if m.Interested {
 		i--
 		if m.Interested {
@@ -539,10 +478,12 @@ func (m *MsgCreateEstimation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x18
 	}
-	if m.Estimation != 0 {
-		i = encodeVarintEstimator(dAtA, i, uint64(m.Estimation))
+	if len(m.Estimatemsg) > 0 {
+		i -= len(m.Estimatemsg)
+		copy(dAtA[i:], m.Estimatemsg)
+		i = encodeVarintEstimator(dAtA, i, uint64(len(m.Estimatemsg)))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x12
 	}
 	if len(m.Estimator) > 0 {
 		i -= len(m.Estimator)
@@ -696,21 +637,10 @@ func (m *Estimator) Size() (n int) {
 	if m.Estimation != 0 {
 		n += 1 + sovEstimator(uint64(m.Estimation))
 	}
-	l = len(m.Estimatorestimationhash)
-	if l > 0 {
-		n += 1 + l + sovEstimator(uint64(l))
-	}
 	l = m.Deposit.Size()
 	n += 1 + l + sovEstimator(uint64(l))
 	if m.Interested {
 		n += 2
-	}
-	l = len(m.Comment)
-	if l > 0 {
-		n += 1 + l + sovEstimator(uint64(l))
-	}
-	if m.Flag != 0 {
-		n += 1 + sovEstimator(uint64(m.Flag))
 	}
 	return n
 }
@@ -725,8 +655,9 @@ func (m *MsgCreateEstimation) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovEstimator(uint64(l))
 	}
-	if m.Estimation != 0 {
-		n += 1 + sovEstimator(uint64(m.Estimation))
+	l = len(m.Estimatemsg)
+	if l > 0 {
+		n += 1 + l + sovEstimator(uint64(l))
 	}
 	if m.Itemid != 0 {
 		n += 1 + sovEstimator(uint64(m.Itemid))
@@ -736,10 +667,6 @@ func (m *MsgCreateEstimation) Size() (n int) {
 	}
 	if m.Interested {
 		n += 2
-	}
-	l = len(m.Comment)
-	if l > 0 {
-		n += 1 + l + sovEstimator(uint64(l))
 	}
 	return n
 }
@@ -902,38 +829,6 @@ func (m *Estimator) Unmarshal(dAtA []byte) error {
 			}
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Estimatorestimationhash", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEstimator
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEstimator
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEstimator
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Estimatorestimationhash = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Deposit", wireType)
 			}
 			var msglen int
@@ -965,7 +860,7 @@ func (m *Estimator) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Interested", wireType)
 			}
@@ -985,57 +880,6 @@ func (m *Estimator) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Interested = bool(v != 0)
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Comment", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEstimator
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEstimator
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEstimator
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Comment = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Flag", wireType)
-			}
-			m.Flag = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEstimator
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Flag |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEstimator(dAtA[iNdEx:])
@@ -1119,10 +963,10 @@ func (m *MsgCreateEstimation) Unmarshal(dAtA []byte) error {
 			m.Estimator = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Estimation", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Estimatemsg", wireType)
 			}
-			m.Estimation = 0
+			var byteLen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEstimator
@@ -1132,11 +976,26 @@ func (m *MsgCreateEstimation) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Estimation |= int64(b&0x7F) << shift
+				byteLen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if byteLen < 0 {
+				return ErrInvalidLengthEstimator
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEstimator
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Estimatemsg = append(m.Estimatemsg[:0], dAtA[iNdEx:postIndex]...)
+			if m.Estimatemsg == nil {
+				m.Estimatemsg = []byte{}
+			}
+			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Itemid", wireType)
@@ -1195,38 +1054,6 @@ func (m *MsgCreateEstimation) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Interested = bool(v != 0)
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Comment", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEstimator
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEstimator
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEstimator
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Comment = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEstimator(dAtA[iNdEx:])

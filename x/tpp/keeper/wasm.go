@@ -1,5 +1,6 @@
 package keeper
 
+/*
 import (
 	"encoding/binary"
 
@@ -272,3 +273,4 @@ func gasMeter(ctx sdk.Context) MultipiedGasMeter {
 		originalMeter: ctx.GasMeter(),
 	}
 }
+*/

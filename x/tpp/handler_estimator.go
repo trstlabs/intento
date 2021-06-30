@@ -1,9 +1,6 @@
 package tpp
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"strconv"
 
 	//"encoding/hex"
 	//"github.com/tendermint/tendermint/crypto"
@@ -17,9 +14,11 @@ import (
 )
 
 func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateEstimation) (*sdk.Result, error) {
-
+	fmt.Printf("handling msg: %X\n", msg.Itemid)
 	item := k.GetItem(ctx, msg.Itemid)
-
+	if item.Bestestimator != "" {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has an estimation")
+	}
 	if item.Estimationprice > 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has an estimation")
 	}
@@ -38,28 +37,30 @@ func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgC
 	if msg.Deposit != item.Depositamount {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit invalid")
 	}
+	/*
+		//checks whether estimationcount will be reached
+		var estimatorlistlen = strconv.Itoa(len(item.Estimatorlist) + 1)
+		var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlen + item.Seller))
+		var estimatorlisthashstring = hex.EncodeToString(estimatorlistlenhash[:])
+		if estimatorlisthashstring == item.Estimationcounthash {
+			item.Bestestimator = "Awaiting"
 
-	//checks whether estimationcount will be reached
-	var estimatorlistlen = strconv.Itoa(len(item.Estimatorlist) + 1)
-	var estimatorlistlenhash = sha256.Sum256([]byte(estimatorlistlen + item.Seller))
-	var estimatorlisthashstring = hex.EncodeToString(estimatorlistlenhash[:])
-	if estimatorlisthashstring == item.Estimationcounthash {
-		item.Bestestimator = "Awaiting"
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(types.EventTypeItemReady, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))
+		}
 
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(types.EventTypeItemReady, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))
-	}
+		var estimatorestimationhash = sha256.Sum256([]byte(strconv.FormatInt(msg.Estimation, 10) + msg.Estimator))
+		var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
 
-	var estimatorestimationhash = sha256.Sum256([]byte(strconv.FormatInt(msg.Estimation, 10) + msg.Estimator))
-	var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
+		//append estimatorhash to list
+		item.Estimatorestimationhashlist = append(item.Estimatorestimationhashlist, estimatorestimationhashstring)
 
-	//append estimatorhash to list
-	item.Estimatorestimationhashlist = append(item.Estimatorestimationhashlist, estimatorestimationhashstring)
+		item.Estimatorlist = append(item.Estimatorlist, msg.Estimator)
+	*/
 
-	item.Estimatorlist = append(item.Estimatorlist, msg.Estimator)
-
+	fmt.Printf("setting item msg: %X\n", msg.Itemid)
 	k.SetItem(ctx, item)
-
+	fmt.Printf("go to keeper item msg: %X\n", msg.Itemid)
 	k.CreateEstimation(ctx, *msg)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil

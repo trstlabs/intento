@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 
@@ -58,10 +59,9 @@ type Keeper struct {
 	legacyAmino   codec.LegacyAmino
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
-
-	wasmer       wasm.Wasmer
-	queryPlugins QueryPlugins
-	messenger    MessageHandler
+	wasmer        wasm.Wasmer
+	queryPlugins  QueryPlugins
+	messenger     MessageHandler
 	// queryGasLimit is the max wasm gas that can be spent on executing a query with a contract
 	queryGasLimit uint64
 	// authZPolicy   AuthorizationPolicy
@@ -128,15 +128,7 @@ func (k Keeper) setParams(ctx sdk.Context, ps types.Params) {
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
 func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string) (codeID uint64, err error) {
-	/*
-		return k.create(ctx, creator, wasmCode, source, builder, &types.AccessConfig{Type: types.Everybody}  , k.authZPolicy )
-		}
 
-		func (k Keeper) create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string, instantiateAccess *types.AccessConfig ) (codeID uint64, err error) {
-		if !authZ.CanCreateCode(k.getUploadAccessConfig(ctx), creator) {
-			return 0, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "can not create code")
-		}
-	*/
 	wasmCode, err = uncompress(wasmCode)
 	if err != nil {
 		return 0, sdkerrors.Wrap(types.ErrCreateFailed, err.Error())
@@ -148,6 +140,8 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte,
 		// return 0, sdkerrors.Wrap(err, "cosmwasm create")
 		return 0, sdkerrors.Wrap(types.ErrCreateFailed, err.Error())
 	}
+
+	//hash = string(codeHash)
 	store := ctx.KVStore(k.storeKey)
 	codeID = k.autoIncrementID(ctx, types.KeyLastCodeID)
 	/*
@@ -220,12 +214,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, [
 
 // Instantiate creates an instance of a WASM contract
 func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, initMsg []byte, label string, deposit sdk.Coins, callbackSig []byte) (sdk.AccAddress, error) {
-	/*
-		return k.instantiate(ctx, codeID, creator admin,, initMsg, label, deposit, callbackSig)
-		}
 
-		func (k Keeper) instantiate(ctx sdk.Context, codeID uint64, creator , admin sdk.AccAddress, initMsg []byte, label string, deposit sdk.Coins, callbackSig []byte) (sdk.AccAddress, error) {
-	*/
 	ctx.GasMeter().ConsumeGas(InstanceCost, "Loading CosmWasm module: init")
 
 	signerSig := []byte{}
@@ -397,6 +386,10 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	//if err != nil {
 	//	return sdk.Result{}, err
 	//}
+	//fmt.Printf("result: Got result for item data: %s | log: %s\n", res.Data, res.Log)
+	var raw map[string]json.RawMessage
+	_ = json.Unmarshal([]byte(res.Log[0].Value), &raw)
+	//fmt.Printf("log: Got res raw for item %s: %s\n", raw, res)
 
 	// emit all events from this contract itself
 	events := types.ParseEvents(res.Log, contractAddress)
@@ -409,7 +402,9 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	return &sdk.Result{
+		//	Data: []byte(res.Log[0].Value),
 		Data: res.Data,
+		Log:  res.Log[0].Value,
 	}, nil
 }
 
@@ -686,6 +681,20 @@ func (k Keeper) GetCodeInfo(ctx sdk.Context, codeID uint64) *types.CodeInfo {
 	}
 	k.cdc.MustUnmarshalBinaryBare(codeInfoBz, &codeInfo)
 	return &codeInfo
+}
+
+func (k Keeper) GetCodeHash(ctx sdk.Context, codeID uint64) (codeHash []byte) {
+	store := ctx.KVStore(k.storeKey)
+	var codeInfo types.CodeInfo
+	codeInfoBz := store.Get(types.GetCodeKey(codeID))
+	if codeInfoBz == nil {
+		return nil
+	}
+
+	k.cdc.MustUnmarshalBinaryBare(codeInfoBz, &codeInfo)
+	fmt.Printf("GetCodeHash codeInfo: %X\n", codeInfo)
+	fmt.Printf("GetCodeHash codeInfo: %X\n", codeInfo.CodeHash)
+	return codeInfo.CodeHash
 }
 
 func (k Keeper) containsCodeInfo(ctx sdk.Context, codeID uint64) bool {

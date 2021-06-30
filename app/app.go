@@ -374,7 +374,7 @@ func New(
 	tppDir := filepath.Join(homeDir, ".tpp")
 
 	wasmConfig := compute.DefaultWasmConfig()
-	TPPwasmConfig := tpptypes.DefaultWasmConfig()
+	//TPPwasmConfig := tpptypes.DefaultWasmConfig()
 	wasmConfig.SmartQueryGasLimit = queryGasLimit
 	wasmWrap := WasmWrapper{Wasm: wasmConfig}
 	err := viper.Unmarshal(&wasmWrap)
@@ -393,9 +393,8 @@ func New(
 		computeRouter, computeDir, wasmConfig, supportedFeatures, nil, nil)
 
 	app.tppKeeper = *tppkeeper.NewKeeper(
-		appCodec, keys[tpptypes.StoreKey], keys[tpptypes.MemStoreKey], app.GetSubspace(tpptypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, tppDir, TPPwasmConfig, supportedFeatures, app.computeKeeper,
+		appCodec, keys[tpptypes.StoreKey], keys[tpptypes.MemStoreKey], app.GetSubspace(tpptypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, tppDir /* TPPwasmConfig, supportedFeatures,*/, app.computeKeeper,
 	)
-
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -425,7 +424,7 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
-		tpp.NewAppModule(appCodec, app.tppKeeper, app.AccountKeeper, app.BankKeeper),
+		tpp.NewAppModule(appCodec, app.tppKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
 		compute.NewAppModule(app.computeKeeper),
 		reg.NewAppModule(app.regKeeper),
 		// this line is used by starport scaffolding # stargate/app/appModule

@@ -1,12 +1,8 @@
 package tpp
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"math"
 
-	"sort"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,6 +14,7 @@ import (
 )
 
 func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateItem) (*sdk.Result, error) {
+
 	k.CreateItem(ctx, *msg)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
@@ -48,13 +45,13 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 		item.Description = ""
 		item.Shippingcost = 0
 		item.Localpickup = ""
-		item.Estimationcounthash = ""
+		item.Estimationcount = 0
 		item.Bestestimator = ""
 		item.Lowestestimator = ""
 		item.Highestestimator = ""
 		item.Estimationprice = 0
 		item.Estimatorlist = nil
-		item.Estimatorestimationhashlist = nil
+		item.Estimationlist = nil
 		item.Transferable = false
 		item.Buyer = ""
 		item.Tracking = false
@@ -90,90 +87,100 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 
 	item := k.GetItem(ctx, msg.Itemid)
 
+	if msg.Creator != item.Seller {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not item seller account")
+	}
 	if item.Bestestimator != "Awaiting" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item cannot be revealed")
 	}
 
-	var CommentList []string
-	var EstimationList []int64
-
-	for _, element := range item.Estimatorlist {
-		key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
-		estimator := k.GetEstimator(ctx, key)
-
-		//getting all of the comments into a list
-		//var comment = estimator.Comment
-		CommentList = append(CommentList, estimator.Comment)
-
-		//append estimation to estimationlist
-		//estimation := estimator.Estimation.Int64()
-		EstimationList = append(EstimationList, estimator.Estimation)
-
-		//create median
-		//medianIndex := int64(math.Floor(float64(len(EstimationList))-1.0) / 2)
-		sortedList := make([]int64, len(EstimationList))
-		copy(sortedList, EstimationList)
-		sort.Slice(sortedList, func(i, j int) bool { return sortedList[i] < sortedList[j] })
-
-		//median := sortedList[medianIndex]
-
-		//update the highest and lowest estimator
-		if estimator.Estimation == sortedList[0] {
-			item.Lowestestimator = estimator.Estimator
-		}
-		if estimator.Estimation == sortedList[(len(sortedList)-1)] {
-			item.Highestestimator = estimator.Estimator
-		}
-
+	err := k.RevealEstimation(ctx, item, *msg)
+	if err != nil {
+		fmt.Printf("err executing")
+		fmt.Printf("executing contract: %X\n", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item cannot be revealed") ///panic(err)
 	}
+	/*
+		var CommentList []string
+		var EstimationList []int64
 
-	//create median
-	medianIndex := int64(math.Floor(float64(len(EstimationList))-1.0) / 2)
-	sortedList := make([]int64, len(EstimationList))
-	copy(sortedList, EstimationList)
-	sort.Slice(sortedList, func(i, j int) bool { return sortedList[i] < sortedList[j] })
-	median := sortedList[medianIndex]
-	//var Estimationprice = sdk.NewInt(median)
+			for _, element := range item.Estimatorlist {
+				key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
+				estimator := k.GetEstimator(ctx, key)
 
-	///delete item when deposit is higher than 25% of the item price (Can be altered through governance)
-	if item.Depositamount > (median / 4) {
-		//returns each element
-		for _, element := range item.Estimatorlist {
-			//apply this to each element
-			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
-			k.DeleteEstimation(ctx, key)
-		}
-		/*item.Bestestimator = ""
-		item.Lowestestimator = ""
-		item.Highestestimator = ""
-		item.Estimatorlist = nil
-		item.Status = "Estimators refunded"*/
-		k.DeleteItem(ctx, msg.Itemid)
-		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
-		return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
-	}
+				//getting all of the comments into a list
+				//var comment = estimator.Comment
+				CommentList = append(CommentList, estimator.Comment)
 
-	for _, element := range item.Estimatorlist {
-		//apply this to each element
-		key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
-		estimator := k.GetEstimator(ctx, key)
+				//append estimation to estimationlist
+				//estimation := estimator.Estimation.Int64()
+				EstimationList = append(EstimationList, estimator.Estimation)
 
-		//finding out if the creator of the estimation belongs to the best estimated price
-		var estimatorestimation = []byte(strconv.FormatInt(median, 10) + estimator.Estimator)
-		var estimatorestimationhash = sha256.Sum256(estimatorestimation)
-		var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
+				//create median
+				//medianIndex := int64(math.Floor(float64(len(EstimationList))-1.0) / 2)
+				sortedList := make([]int64, len(EstimationList))
+				copy(sortedList, EstimationList)
+				sort.Slice(sortedList, func(i, j int) bool { return sortedList[i] < sortedList[j] })
 
-		//assigns revealer of the best estimation to the item
-		_, found := types.Find(item.Estimatorestimationhashlist, estimatorestimationhashstring)
-		if found == true {
-			item.Bestestimator = estimator.Estimator
-			item.Estimationprice = median
-			item.Comments = CommentList
-			k.SetItem(ctx, item)
-			break
-		}
+				//median := sortedList[medianIndex]
 
-	}
+				//update the highest and lowest estimator
+				if estimator.Estimation == sortedList[0] {
+					item.Lowestestimator = estimator.Estimator
+				}
+				if estimator.Estimation == sortedList[(len(sortedList)-1)] {
+					item.Highestestimator = estimator.Estimator
+				}
+
+			}
+
+			//create median
+			medianIndex := int64(math.Floor(float64(len(EstimationList))-1.0) / 2)
+			sortedList := make([]int64, len(EstimationList))
+			copy(sortedList, EstimationList)
+			sort.Slice(sortedList, func(i, j int) bool { return sortedList[i] < sortedList[j] })
+			median := sortedList[medianIndex]
+			//var Estimationprice = sdk.NewInt(median)
+
+			///delete item when deposit is higher than 25% of the item price (Can be altered through governance)
+			if item.Depositamount > (median / 4) {
+				//returns each element
+				for _, element := range item.Estimatorlist {
+					//apply this to each element
+					key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
+					k.DeleteEstimation(ctx, key)
+				}
+				/*item.Bestestimator = ""
+				item.Lowestestimator = ""
+				item.Highestestimator = ""
+				item.Estimatorlist = nil
+				item.Status = "Estimators refunded"
+				k.DeleteItem(ctx, msg.Itemid)
+				k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
+				return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
+			}
+
+			for _, element := range item.Estimatorlist {
+				//apply this to each element
+				key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
+				estimator := k.GetEstimator(ctx, key)
+
+				//finding out if the creator of the estimation belongs to the best estimated price
+				var estimatorestimation = []byte(strconv.FormatInt(median, 10) + estimator.Estimator)
+				var estimatorestimationhash = sha256.Sum256(estimatorestimation)
+				var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
+
+				//assigns revealer of the best estimation to the item
+				_, found := types.Find(item.Estimatorestimationhashlist, estimatorestimationhashstring)
+				if found == true {
+					item.Bestestimator = estimator.Estimator
+					item.Estimationprice = median
+					item.Comments = CommentList
+					k.SetItem(ctx, item)
+					break
+				}
+
+			}*/
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

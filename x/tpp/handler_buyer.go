@@ -169,13 +169,13 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 		item.Status = "Withdrawal prepayment"
 		item.Shippingcost = 0
 		item.Localpickup = ""
-		item.Estimationcounthash = ""
+		item.Estimationcount = 0
 		item.Bestestimator = ""
 		item.Lowestestimator = ""
 		item.Highestestimator = ""
 
 		item.Estimatorlist = nil
-		item.Estimatorestimationhashlist = nil
+		item.Estimationlist = nil
 		item.Transferable = false
 
 		k.SetItem(ctx, item)

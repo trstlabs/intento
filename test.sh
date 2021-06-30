@@ -1,0 +1,3 @@
+tppd tx tpp create-item 'Rolex Submariner 1997 Gray' 'Rolex Submariner in good condition, it has no visible scratches and still works great. Bought in 1998, model year is 1997. It is the gray edition' 5 '40.741895,-73.989308' 3 watch,submariner,rolex 5 nl 3 --from=user1 -y --chain-id=tpp --keyring-backend test --fees 150tpp
+
+tppd tx tpp create-estimation 145 3 1 'Great Photos!' 0 --from=user4 -y --chain-id=tpp --keyring-backend test --fees 150tpp

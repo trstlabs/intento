@@ -64,7 +64,7 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 			if err != nil {
 				return nil, sdkerrors.Wrapf(types.ErrInvalid, "code id: %s", err.Error())
 			}
-			rsp, err = queryCode(ctx, codeID, keeper)
+			rsp, err = QueryCode(ctx, codeID, keeper)
 		case QueryListCode:
 			rsp, err = queryCodeList(ctx, keeper)
 		/*

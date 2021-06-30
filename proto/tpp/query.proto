@@ -43,6 +43,10 @@ service Query {
 		option (google.api.http).get = "/danieljdd/tpp/tpp/buyeritems";
 	}
 
+	rpc CodeHash(QueryCodeHashRequest) returns (QueryCodeHashResponse) {
+		option (google.api.http).get = "/danieljdd/tpp/tpp/codehash";
+	}
+
 }
 
 // this line is used by starport scaffolding # 3
@@ -122,3 +126,13 @@ message QueryBuyerItemsResponse {
 	repeated Item Item = 1;
 	
 }
+
+message QueryCodeHashRequest {
+	uint64 codeid = 1;
+}
+
+message QueryCodeHashResponse {
+	bytes codehash = 1;
+	
+}
+
