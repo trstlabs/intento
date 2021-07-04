@@ -1,0 +1,1 @@
+cargo:rerun-if-changed=/root/.cargo/registry/src/github.com-1ecc6299db9ec823/cbindgen-0.13.2/tests/rust
