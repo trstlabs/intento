@@ -1,25 +1,23 @@
-# tpp
+# Trust Price Protocol
 
-**tpp** is a blockchain built using Cosmos SDK and Tendermint and created with [Starport](https://github.com/tendermint/starport).
+**Trust Price Protocol** is a blockchain built using Cosmos SDK and Tendermint and created with [Starport](https://github.com/tendermint/starport).
 
 ## Get started
 
 ```
-starport serve
+make deb
+./init.sh
 ```
 
-`serve` command installs dependencies, builds, initializes and starts your blockchain in development.
+`make deb` makes a package (linux only, with SGX enabled) with dependencies. `./init.sh` initializes and starts the node in development.
 
 ## Configure
 
-Your blockchain in development can be configured with `config.yml`. To learn more see the [reference](https://github.com/tendermint/starport#documentation).
-
-## Launch
-
-To launch your blockchain live on mutliple nodes use `starport network` commands. Learn more about [Starport Network](https://github.com/tendermint/spn).
+The node can be configured with `config.yml`. To learn more see the [reference](https://github.com/tendermint/starport#documentation).
 
 ## Learn more
 
+- [TPP](https://trustpriceprotocol.com/)
 - [Starport](https://github.com/tendermint/starport)
 - [Cosmos SDK documentation](https://docs.cosmos.network)
 - [Cosmos SDK Tutorials](https://tutorials.cosmos.network)
