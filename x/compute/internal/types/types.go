@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/base64"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	wasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
@@ -199,6 +200,7 @@ func NewWasmCoins(cosmosCoins sdk.Coins) (wasmCoins []wasmTypes.Coin) {
 }
 
 const CustomEventType = "wasm"
+const EventTypeContractExpired = "ContractExpired"
 const AttributeKeyContractAddr = "contract_address"
 
 // ParseEvents converts wasm LogAttributes into an sdk.Events (with 0 or 1 elements)

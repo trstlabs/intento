@@ -62,6 +62,13 @@ message ContractInfo {
     //    uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
 }
 
+
+// ContractInfoWithAddress adds the address (key) to the ContractInfo representation
+message ContractInfoWithAddress {
+    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    ContractInfo ContractInfo = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = ""];
+}
+
 /*
 enum ContractCodeHistoryOperationType {
     option (gogoproto.goproto_enum_prefix) = false;

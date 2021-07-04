@@ -44,7 +44,7 @@ func CmdCreateEstimation() *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("json message: %X\n", estimateMsg.Msg)
+			//fmt.Printf("json message: %X\n", estimateMsg.Msg)
 			//estimateMsg.Msg = []byte("{ amount:" + args[0] + ",comment:" + args[1] + "}")
 			queryClient := types.NewQueryClient(clientCtx)
 			params := &types.QueryCodeHashRequest{
@@ -59,7 +59,7 @@ func CmdCreateEstimation() *cobra.Command {
 			//estimateMsg.CodeHash = res.Codehash
 
 			estimateMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
-			fmt.Printf("Got estimate .CodeHash hash: %X\n", estimateMsg.CodeHash)
+			//fmt.Printf("Got estimate .CodeHash hash: %X\n", estimateMsg.CodeHash)
 			encryptedMsg, err = wasmCtx.Encrypt(estimateMsg.Serialize())
 			if err != nil {
 				return err
@@ -79,7 +79,7 @@ func CmdCreateEstimation() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			fmt.Printf("sending msg: %X\n", estimateMsg.Msg)
+			//fmt.Printf("sending msg: %X\n", estimateMsg.Msg)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -126,7 +126,7 @@ func CmdUpdateLike() *cobra.Command {
 
 func CmdDeleteEstimation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete-estimator [id] [estimation] [estimatorestimationhash] [itemid] [deposit] [interested] [comment] [flag]",
+		Use:   "delete-estimator [id] ",
 		Short: "Delete a estimator by id",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -134,16 +134,45 @@ func CmdDeleteEstimation() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			clientCtx, err := client.GetClientTxContext(cmd)
+			cliCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgDeleteEstimation(clientCtx.GetFromAddress().String(), uint64(id))
+			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
+
+			deletegMsg := types.SecretMsg{}
+			delete := types.ParseDelete{}
+
+			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
+			deletegMsg.Msg, err = json.Marshal(delete)
+			//fmt.Printf("json message: %X\n", estimation)
+			if err != nil {
+				return err
+			}
+
+			//quite a long way to get a single value, however we can't directy access the keeper
+			queryClient := types.NewQueryClient(cliCtx)
+			params := &types.QueryCodeHashRequest{
+				Codeid: 1,
+			}
+			res, err := queryClient.CodeHash(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			var encryptedMsg []byte
+			deletegMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
+			encryptedMsg, err = wasmCtx.Encrypt(deletegMsg.Serialize())
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgDeleteEstimation(cliCtx.GetFromAddress().String(), uint64(id), encryptedMsg)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), msg)
 		},
 	}
 
@@ -159,21 +188,51 @@ func CmdFlagItem() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
+			cliCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
 			itemid, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			clientCtx, err := client.GetClientTxContext(cmd)
+			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
+
+			flagMsg := types.SecretMsg{}
+			flag := types.ParseFlag{}
+
+			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
+			flagMsg.Msg, err = json.Marshal(flag)
+			//fmt.Printf("json message: %X\n", estimation)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgFlagItem(clientCtx.GetFromAddress().String(), uint64(itemid))
+			//quite a long way to get a single value, however we can't directy access the keeper
+			queryClient := types.NewQueryClient(cliCtx)
+			params := &types.QueryCodeHashRequest{
+				Codeid: 1,
+			}
+			res, err := queryClient.CodeHash(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			var encryptedMsg []byte
+			flagMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
+			encryptedMsg, err = wasmCtx.Encrypt(flagMsg.Serialize())
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgFlagItem(cliCtx.GetFromAddress().String(), uint64(itemid), encryptedMsg)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			fmt.Printf("json message: %X\n", flag)
+			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), msg)
 		},
 	}
 

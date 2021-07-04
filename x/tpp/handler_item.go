@@ -31,6 +31,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item has a buyer")
 	}
 
+	//status but no buyer
 	if item.Status != "" && item.Buyer == "" {
 
 		if len(item.Estimatorlist) > 0 {
@@ -60,6 +61,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 		item.Condition = 0
 		item.Shippingregion = nil
 		item.Note = ""
+		item.Contract = ""
 
 		k.SetItem(ctx, item)
 
@@ -75,7 +77,8 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 
 			}
 		}
-		k.RemoveFromInactiveItemQueue(ctx, msg.Id, item.Endtime)
+		k.RemoveFromListedItemQueue(ctx, msg.Id, item.Endtime)
+		_ = k.DeleteItemContract(ctx, item.Contract)
 		k.DeleteItem(ctx, msg.Id)
 		k.RemoveFromItemSeller(ctx, msg.Id, msg.Seller)
 	}
@@ -100,6 +103,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 		fmt.Printf("executing contract: %X\n", err)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item cannot be revealed") ///panic(err)
 	}
+
 	/*
 		var CommentList []string
 		var EstimationList []int64
@@ -199,7 +203,7 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "no estimation price yet, cannot make item transferable")
 	}
 
-	if msg.Transferable == false {
+	if !msg.Transferable {
 
 		//returns each element
 		for _, element := range item.Estimatorlist {
@@ -227,7 +231,7 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 		//item has to be deleted because otherwise this function can be run again
 		k.DeleteItem(ctx, msg.Itemid)
 		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
-		k.RemoveFromInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
+		k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.Endtime)
 	} else {
 		item.Transferable = msg.Transferable
 		k.SetItem(ctx, item)
@@ -248,7 +252,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 	item := k.GetItem(ctx, msg.Itemid)
 
 	//check if item.transferable = true and therefore the seller has accepted the buyer
-	if item.Transferable == false {
+	if !item.Transferable {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item is not transferable")
 	}
 
@@ -264,26 +268,26 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "unauthrorized, no shippingcost")
 	}
 
-	bigintestimationprice := sdk.NewInt(item.Estimationprice - item.Depositamount)
+	bigIntEstimationPrice := sdk.NewInt(item.Estimationprice - item.Depositamount)
 	if item.Discount > 0 {
-		bigintestimationprice = sdk.NewInt(item.Estimationprice - item.Discount)
+		bigIntEstimationPrice = sdk.NewInt(item.Estimationprice - item.Discount)
 	}
 
-	bigintshipping := sdk.NewInt(item.Shippingcost)
-	if msg.Tracking == true {
+	bigIntShipping := sdk.NewInt(item.Shippingcost)
+	if msg.Tracking {
 		if item.Creator == item.Seller {
 			//rounded down percentage for minting. Percentage may be changed through governance proposals
 			/*percentageMint := sdk.NewDecWithPrec(10, 2)
 			percentageReward := sdk.NewDecWithPrec(5, 2)
-			//paymentSeller := percentageSeller.MulInt(bigintestimationprice)
+			//paymentSeller := percentageSeller.MulInt(bigIntEstimationPrice)
 			//roundedAmountCreaterPayout := paymentSeller.TruncateInt()
 
 
 			//rounded up percentage as a reward for the estimator
 			//percentageReward := sdk.NewDecWithPrec(3, 2)
-			toMint := percentageMint.MulInt(bigintestimationprice)
+			toMint := percentageMint.MulInt(bigIntEstimationPrice)
 			toMintAmount := toMint.TruncateInt()
-			paymentReward := percentageReward.MulInt(bigintestimationprice)
+			paymentReward := percentageReward.MulInt(bigIntEstimationPrice)
 			roundedAmountReward := paymentReward.TruncateInt()*/
 			//roundedAmountRewardBestEstimator := paymentReward.TruncateInt()
 
@@ -312,7 +316,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 			item.Estimatorlist = nil
 		}
 		//make payment to seller
-		CreaterPayoutAndShipping := bigintestimationprice.Add(bigintshipping)
+		CreaterPayoutAndShipping := bigIntEstimationPrice.Add(bigIntShipping)
 		paymentSellerCoins := sdk.NewCoin("tpp", CreaterPayoutAndShipping)
 
 		k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
@@ -321,7 +325,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		k.SetItem(ctx, item)
 		//k.SetBuyer(ctx, buyer)
 	} else {
-		repayment := bigintestimationprice.Add(bigintshipping)
+		repayment := bigIntEstimationPrice.Add(bigIntShipping)
 		repaymentCoins := sdk.NewCoin("tpp", repayment)
 
 		k.HandlePrepayment(ctx, item.Buyer, repaymentCoins)
@@ -385,7 +389,7 @@ func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRes
 	item.Endtime = ctx.BlockTime().Add(types.DefaultParams().MaxActivePeriod)
 
 	k.SetItem(ctx, item)
-	k.InsertInactiveItemQueue(ctx, msg.Itemid, item.Endtime)
+	k.InsertListedItemQueue(ctx, msg.Itemid, item.Endtime)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemResellable, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))

@@ -27,12 +27,29 @@ type RevealResult struct {
 		Bestestimation int      `json:"best_estimation"`
 		Comments       []string `json:"comments"`
 		Bestestimator  string   `json:"best_estimator"`
+		EstimationList []int    `json:"estimation_list"`
 	} `json:"reveal_estimation"`
 }
 
 type ParseReveal struct {
 	RevealEstimation struct {
 	} `json:"reveal_estimation"`
+}
+
+type StatusResult struct {
+	StatusOnly struct {
+		Status string `json:"status"`
+	} `json:"status_only"`
+}
+
+type ParseFlag struct {
+	Flag struct {
+	} `json:"flag"`
+}
+
+type ParseDelete struct {
+	RetractEstimation struct {
+	} `json:"retract_estimation"`
 }
 
 // DefaultWasmConfig returns the default settings for WasmConfig

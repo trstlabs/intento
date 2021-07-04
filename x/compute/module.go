@@ -3,10 +3,11 @@ package compute
 import (
 	"context"
 	"encoding/json"
+	"math/rand"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/danieljdd/tpp/x/compute/internal/keeper"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"math/rand"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -143,8 +144,9 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock returns the end blocker for the compute module. It returns no validator
 // updates.
-func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+
+func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+	return EndBlocker(ctx, am.keeper) //return []abci.ValidatorUpdate{}
 }
 
 //____________________________________________________________________________

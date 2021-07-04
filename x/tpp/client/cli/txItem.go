@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	//sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,16 +76,16 @@ func CmdCreateItem() *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Got code hash: %X\n", res.Codehash)
+			//fmt.Printf("Got code hash: %X\n", res.Codehash)
 			var encryptedMsg []byte
 
 			initMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
-			fmt.Printf("Got initMsg.CodeHash hash: %X\n", initMsg.CodeHash)
+			//fmt.Printf("Got initMsg.CodeHash hash: %X\n", initMsg.CodeHash)
 			encryptedMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
 			if err != nil {
 				return err
 			}
-			fmt.Printf("encryptedMsg: %X\n", encryptedMsg)
+			//fmt.Printf("encryptedMsg: %X\n", encryptedMsg)
 			argsCondition, _ := strconv.ParseInt(args[6], 10, 64)
 
 			argsShippingregion := strings.Split(args[7], ",")
@@ -194,7 +193,7 @@ func CmdRevealEstimation() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			fmt.Printf("sending msg: %X\n", revealMsg.Msg)
+			//	fmt.Printf("sending msg: %X\n", revealMsg.Msg)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

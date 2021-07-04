@@ -44,6 +44,7 @@ type ComputeKeeper interface {
 	Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins, callbackSig []byte) (*sdk.Result, error)
 	QuerySmart(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool) ([]byte, error)
 	GetCodeHash(ctx sdk.Context, codeID uint64) (CodeHash []byte)
+	Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error
 	//GetByteCode()
 }
 

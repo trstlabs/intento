@@ -57,7 +57,7 @@ func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgC
 
 		item.Estimatorlist = append(item.Estimatorlist, msg.Estimator)
 	*/
-
+	item.Estimatorlist = append(item.Estimatorlist, msg.Estimator)
 	fmt.Printf("setting item msg: %X\n", msg.Itemid)
 	k.SetItem(ctx, item)
 	fmt.Printf("go to keeper item msg: %X\n", msg.Itemid)
@@ -115,6 +115,13 @@ func handleMsgDeleteEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgD
 		}
 	}
 
+	err := k.DeleteEncryptedEstimation(ctx, item, *msg)
+	if err != nil {
+		fmt.Printf("err executing")
+		fmt.Printf("executing contract: %X\n", err)
+		return nil, sdkerrors.Wrap(err, "error deleting estimation") ///panic(err)
+	}
+
 	k.DeleteEstimation(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...))
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
@@ -129,11 +136,17 @@ func handleMsgFlagItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgFlagItem)
 
 	item := k.GetItem(ctx, msg.Itemid)
 
-	if item.Transferable == true {
+	if item.Transferable {
 		return nil, sdkerrors.Wrap(nil, "item is already estimated")
 	}
 
-	//remove item when it is flagged enough
+	err := k.Flag(ctx, item, *msg)
+	if err != nil {
+		//	fmt.Printf("err executing")
+		//	fmt.Printf("executing contract: %X\n", err)
+		return nil, sdkerrors.Wrap(err, "error flagging item") ///panic(err)
+	}
+	/*//remove item when it is flagged enough
 	if int64(len(item.Estimatorlist)/2) < item.Flags+1 {
 
 		for _, element := range item.Estimatorlist {
@@ -150,8 +163,8 @@ func handleMsgFlagItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgFlagItem)
 		k.DeleteItem(ctx, msg.Itemid)
 		k.RemoveFromItemSeller(ctx, msg.Itemid, item.Seller)
 		return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
-	}
-	item.Flags = item.Flags + 1
-	k.SetItem(ctx, item)
+	}*/
+	//item.Flags = item.Flags + 1
+	//k.SetItem(ctx, item)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

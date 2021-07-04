@@ -390,7 +390,7 @@ func New(
 		appCodec, *legacyAmino,
 		keys[compute.StoreKey],
 		app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.DistrKeeper, app.MintKeeper, stakingKeeper,
-		computeRouter, computeDir, wasmConfig, supportedFeatures, nil, nil)
+		computeRouter, computeDir, wasmConfig, supportedFeatures, nil, nil, app.GetSubspace(tpptypes.ModuleName))
 
 	app.tppKeeper = *tppkeeper.NewKeeper(
 		appCodec, keys[tpptypes.StoreKey], keys[tpptypes.MemStoreKey], app.GetSubspace(tpptypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, tppDir /* TPPwasmConfig, supportedFeatures,*/, app.computeKeeper,
@@ -439,7 +439,7 @@ func New(
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, tpptypes.ModuleName)
+	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, tpptypes.ModuleName, compute.ModuleName)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.

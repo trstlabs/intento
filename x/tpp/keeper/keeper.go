@@ -56,15 +56,15 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// IterateInactiveItemsQueue iterates over the items in the inactive item queue
+// IterateListedItemsQueue iterates over the items in the inactive item queue
 // and performs a callback function
-func (k Keeper) IterateInactiveItemsQueue(ctx sdk.Context, endTime time.Time, cb func(item types.Item) (stop bool)) {
-	iterator := k.InactiveItemQueueIterator(ctx, endTime)
+func (k Keeper) IterateListedItemsQueue(ctx sdk.Context, endTime time.Time, cb func(item types.Item) (stop bool)) {
+	iterator := k.ListedItemQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		//get the itemid from endTime (key)
-		itemID, _ := types.SplitInactiveItemQueueKey(iterator.Key())
+		itemID, _ := types.SplitListedItemQueueKey(iterator.Key())
 		item := k.GetItem(ctx, itemID)
 		if cb(item) {
 			break
@@ -72,25 +72,25 @@ func (k Keeper) IterateInactiveItemsQueue(ctx sdk.Context, endTime time.Time, cb
 	}
 }
 
-// InactiveItemQueueIterator returns an sdk.Iterator for all the items in the Inactive Queue that expire by endTime
-func (k Keeper) InactiveItemQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+// ListedItemQueueIterator returns an sdk.Iterator for all the items in the Inactive Queue that expire by endTime
+func (k Keeper) ListedItemQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return store.Iterator(types.InactiveItemQueuePrefix, sdk.PrefixEndBytes(types.InactiveItemByTimeKey(endTime))) //we check the end of the bites array for the end time
+	return store.Iterator(types.ListedItemQueuePrefix, sdk.PrefixEndBytes(types.ListedItemByTimeKey(endTime))) //we check the end of the bites array for the end time
 }
 
-// InsertInactiveItemQueue Inserts a itemid into the inactive item queue at endTime
-func (k Keeper) InsertInactiveItemQueue(ctx sdk.Context, itemid uint64, endTime time.Time) {
+// InsertListedItemQueue Inserts a itemid into the inactive item queue at endTime
+func (k Keeper) InsertListedItemQueue(ctx sdk.Context, itemid uint64, endTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.Uint64ToByte(itemid)
 
 	//here the key is time+itemid appended (as bytes) and value is itemid in bytes
-	store.Set(types.InactiveItemQueueKey(itemid, endTime), bz)
+	store.Set(types.ListedItemQueueKey(itemid, endTime), bz)
 }
 
-// RemoveFromInactiveItemQueue removes a itemid from the Inactive Item Queue
-func (k Keeper) RemoveFromInactiveItemQueue(ctx sdk.Context, itemid uint64, endTime time.Time) {
+// RemoveFromListedItemQueue removes a itemid from the Inactive Item Queue
+func (k Keeper) RemoveFromListedItemQueue(ctx sdk.Context, itemid uint64, endTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.InactiveItemQueueKey(itemid, endTime))
+	store.Delete(types.ListedItemQueueKey(itemid, endTime))
 }
 
 /////Seller functions
@@ -104,7 +104,7 @@ func (k Keeper) BindItemSeller(ctx sdk.Context, itemid uint64, seller string) {
 	store.Set(types.ItemSellerKey(itemid, seller), bz)
 }
 
-// RemoveFromInactiveItemQueue removes a itemid from the seller
+// RemoveFromListedItemQueue removes a itemid from the seller
 func (k Keeper) RemoveFromItemSeller(ctx sdk.Context, itemid uint64, seller string) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.ItemSellerKey(itemid, seller))

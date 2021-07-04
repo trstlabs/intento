@@ -101,16 +101,15 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 	fmt.Println(json.Unmarshal([]byte(res.Log), &result))
 	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.Estimation.TotalCount), contractAddr)
 
-	if result.Estimation.ReadyForReveal {
-		item.Bestestimator = "Awaiting"
-	}
-
 	if result.Estimation.TotalCount > 0 {
 		item.Estimationtotal = int64(result.Estimation.TotalCount)
 		store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
 
 		key := append(append([]byte(types.EstimatorKey), types.Uint64ToByte(estimator.Itemid)...), []byte(estimator.Estimator)...)
 		value := k.cdc.MustMarshalBinaryBare(&estimator)
+		if result.Estimation.ReadyForReveal {
+			item.Bestestimator = "Awaiting"
+		}
 		store.Set(key, value)
 		k.SetItem(ctx, item)
 
@@ -119,6 +118,7 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 		//if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatorAddress, moduleAcct.String(), ); err != nil {
 		//	panic(err)
 		//}
+
 	}
 
 }
@@ -209,4 +209,77 @@ func (k Keeper) GetAllEstimator(ctx sdk.Context) (msgs []types.Estimator) {
 	}
 
 	return
+}
+
+// FlagMessage flags an item
+func (k Keeper) Flag(ctx sdk.Context, item types.Item, msg types.MsgFlagItem) error {
+
+	estimatorAddress, err := sdk.AccAddressFromBech32(msg.Estimator)
+	if err != nil {
+		return err ///panic(err)
+
+	}
+	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
+	if err != nil {
+		return err ///panic(err)
+	}
+	fmt.Printf("executing contract: %s", item.Contract)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.Flagmsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	if err != nil {
+		fmt.Printf("err executing: ")
+		//return sdkerrors.Wrapf(types.ErrInvalid, "err %s must be greater %d ",err, msg.Flagmsg)
+		return err ///panic(err)
+	}
+	fmt.Printf("res for item %s: %s\n", res.Log, contractAddr)
+
+	var result types.StatusResult
+
+	_ = json.Unmarshal([]byte(res.Log), &result)
+	if result.StatusOnly.Status == "Success" {
+		for _, element := range item.Estimatorlist {
+
+			key := append(types.Uint64ToByte(item.Id), []byte(element)...)
+
+			k.DeleteEstimation(ctx, key)
+		}
+		k.RemoveFromListedItemQueue(ctx, item.Id, item.Endtime)
+		_ = k.DeleteItemContract(ctx, item.Contract)
+		k.DeleteItem(ctx, item.Id)
+		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(types.EventTypeItemRemoved, sdk.NewAttribute(types.AttributeKeyCreator, item.Title), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
+		)
+	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.EventTypeItemFlagged, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
+	)
+
+	return nil
+}
+
+// DeleteEstimation deletes an estimation
+func (k Keeper) DeleteEncryptedEstimation(ctx sdk.Context, item types.Item, msg types.MsgDeleteEstimation) error {
+
+	estimatorAddress, err := sdk.AccAddressFromBech32(msg.Estimator)
+	if err != nil {
+		return err ///panic(err)
+
+	}
+	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
+	if err != nil {
+		return err ///panic(err)
+	}
+	fmt.Printf("executing contract: %s", item.Contract)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.Deletemsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	if err != nil {
+		fmt.Printf("err executing: ")
+		return err ///panic(err)
+	}
+	fmt.Printf("res for item %s: %s\n", res.Log, contractAddr)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
+	)
+
+	return nil
 }

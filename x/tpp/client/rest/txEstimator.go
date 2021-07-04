@@ -133,6 +133,7 @@ func updateEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 type deleteEstimatorRequest struct {
 	BaseReq   rest.BaseReq `json:"base_req"`
 	Estimator string       `json:"creator"`
+	DeleteMsg []byte       `json:"delete_msg"`
 }
 
 func deleteEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
@@ -154,6 +155,8 @@ func deleteEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+		parsedMsg := req.DeleteMsg
+
 		_, err := sdk.AccAddressFromBech32(req.Estimator)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -163,6 +166,7 @@ func deleteEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 		msg := types.NewMsgDeleteEstimation(
 			req.Estimator,
 			id,
+			parsedMsg,
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)

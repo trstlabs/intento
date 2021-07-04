@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+
+	//"log"
 	"path/filepath"
 
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -15,6 +17,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	"github.com/tendermint/tendermint/crypto"
@@ -30,6 +33,7 @@ import (
 	wasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
 
 	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // GasMultiplier is how many cosmwasm gas points = 1 sdk gas point
@@ -64,6 +68,8 @@ type Keeper struct {
 	messenger     MessageHandler
 	// queryGasLimit is the max wasm gas that can be spent on executing a query with a contract
 	queryGasLimit uint64
+	paramSpace    paramtypes.Subspace
+
 	// authZPolicy   AuthorizationPolicy
 	//paramSpace    subspace.Subspace
 }
@@ -72,18 +78,16 @@ type Keeper struct {
 // If customEncoders is non-nil, we can use this to override some of the message handler, especially custom
 func NewKeeper(cdc codec.Marshaler, legacyAmino codec.LegacyAmino, storeKey sdk.StoreKey, accountKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper, govKeeper govkeeper.Keeper, distKeeper distrkeeper.Keeper, mintKeeper mintkeeper.Keeper, stakingKeeper stakingkeeper.Keeper,
-	router sdk.Router, homeDir string, wasmConfig types.WasmConfig, supportedFeatures string, customEncoders *MessageEncoders, customPlugins *QueryPlugins) Keeper {
+	router sdk.Router, homeDir string, wasmConfig types.WasmConfig, supportedFeatures string, customEncoders *MessageEncoders, customPlugins *QueryPlugins, paramSpace paramtypes.Subspace) Keeper {
 	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), supportedFeatures, wasmConfig.CacheSize)
 	if err != nil {
 		panic(err)
 	}
 
-	/*
-		// set KeyTable if it has not already been set
-		if !paramSpace.HasKeyTable() {
-			paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-		}
-	*/
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(ParamKeyTable())
+	}
 
 	keeper := Keeper{
 		storeKey:      storeKey,
@@ -94,6 +98,7 @@ func NewKeeper(cdc codec.Marshaler, legacyAmino codec.LegacyAmino, storeKey sdk.
 		bankKeeper:    bankKeeper,
 		messenger:     NewMessageHandler(router, customEncoders),
 		queryGasLimit: wasmConfig.SmartQueryGasLimit,
+		paramSpace:    paramSpace,
 		// authZPolicy:   DefaultAuthorizationPolicy{},
 		//paramSpace:    paramSpace,
 	}
@@ -101,30 +106,9 @@ func NewKeeper(cdc codec.Marshaler, legacyAmino codec.LegacyAmino, storeKey sdk.
 	return keeper
 }
 
-/*
-func (k Keeper) getUploadAccessConfig(ctx sdk.Context) types.AccessConfig {
-	var a types.AccessConfig
-	k.paramSpace.Get(ctx, types.ParamStoreKeyUploadAccess, &a)
-	return a
+func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
-
-func (k Keeper) getInstantiateAccessConfig(ctx sdk.Context) types.AccessType {
-	var a types.AccessType
-	k.paramSpace.Get(ctx, types.ParamStoreKeyInstantiateAccess, &a)
-	return a
-}
-
-// GetParams returns the total set of wasm parameters.
-func (k Keeper) GetParams(ctx sdk.Context) types.Params {
-	var params types.Params
-	k.paramSpace.GetParamSet(ctx, &params)
-	return params
-}
-
-func (k Keeper) setParams(ctx sdk.Context, ps types.Params) {
-	k.paramSpace.SetParamSet(ctx, &ps)
-}
-*/
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
 func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string) (codeID uint64, err error) {
@@ -408,7 +392,131 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}, nil
 }
 
+// Delete deletes the contract instance
+func (k Keeper) Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error {
+
+	_, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	if err != nil {
+		return err
+	}
+
+	store := ctx.KVStore(k.storeKey)
+
+	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
+	if contractBz == nil {
+		return sdkerrors.Wrap(types.ErrNotFound, "contract")
+	}
+	var contract types.ContractInfo
+	k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)
+
+	//	var codeInfo types.CodeInfo
+	//k.cdc.MustUnmarshalBinaryBare(contractInfoBz, &codeInfo)
+	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
+	//prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	prefixStore.Delete(prefixStoreKey)
+
+	//prefixStore.Delete()
+	store.Delete(types.GetContractEnclaveKey(contractAddress))
+	store.Delete(types.GetContractLabelPrefix(contract.Label))
+	store.Delete(types.GetContractAddressKey(contractAddress))
+
+	//store.Delete(types.GetCodeKey(contract.CodeID))
+
+	return nil
+}
+
 /*
+func (k Keeper) DeleteContract(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte) (*sdk.Result, error) {
+	ctx.GasMeter().ConsumeGas(InstanceCost, "Loading CosmWasm module: Delete Contract")
+
+	//lets see if the module acc is able to pass signer info
+	signerSig := []byte{}
+	signBytes := []byte{}
+	var err error
+	signerSig, signBytes, err = k.GetSignerInfo(ctx, caller)
+	if err != nil {
+		return nil, err
+	}
+
+	verificationInfo := types.NewVerificationInfo(signBytes, signerSig, nil)
+	/*
+		_ = authtypes.StdSignature{
+			PubKey:    secp256k1.PubKeySecp256k1{},
+			Signature: []byte{},
+		}
+		_ = []byte{}
+
+		tx := authtypes.StdTx{}
+		txBytes := ctx.TxBytes()
+		err := k.cdc.UnmarshalBinaryLengthPrefixed(txBytes, &tx)
+		if err != nil {
+			return &sdk.Result{}, sdkerrors.Wrap(types.ErrInstantiateFailed, fmt.Sprintf("Unable to decode transaction from bytes: %s", err.Error()))
+		}
+
+		contractInfo := k.GetContractInfo(ctx, contractAddress)
+		if contractInfo == nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "unknown contract")
+		}	*/
+/*if !k.authZPolicy.CanModifyContract(contractInfo.Creator, caller) {
+	return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "can not Delete Contract")
+}*/
+
+/*newCodeInfo := k.GetCodeInfo(ctx, newCodeID)
+	if newCodeInfo == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "unknown code")
+	}
+
+
+	codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
+
+	var noDeposit sdk.Coins
+	params := types.NewEnv(ctx, caller, noDeposit, contractAddress, contractKey)
+
+	fmt.Printf("Contract Delete: key from params %s \n", params.Key)
+
+	// prepare querier
+	querier := QueryHandler{
+		Ctx:     ctx,
+		Plugins: k.queryPlugins,
+	}
+
+	//prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
+	//prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	gas := gasForContract(ctx)
+	//res, gasUsed, err := k.wasmer.Migrate(codeInfo.CodeHash, params, msg, &prefixStore, cosmwasmAPI, &querier, gasMeter(ctx), gas)
+	//consumeGas(ctx, gasUsed)
+
+	res, gasUsed, err := k.wasmer.Execute(codeInfo.CodeHash, params, msg, &prefixStore, cosmwasmAPI, &querier, gasMeter(ctx), gas, verificationInfo)
+	consumeGas(ctx, gasUsed)
+	if err != nil {
+		return nil, sdkerrors.Wrap(types.ErrMigrationFailed, err.Error())
+	}
+
+	// emit all events from this contract itself
+	events := types.ParseEvents(res.Log, contractAddress)
+	ctx.EventManager().EmitEvents(events)
+
+	//historyEntry := contractInfo.AddMigration(ctx, newCodeID, msg)
+	//k.appendToContractHistory(ctx, contractAddress, historyEntry)
+	//k.setContractInfo(ctx, contractAddress, contractInfo)
+
+	////k.DeleteContractInfo
+	if err := k.dispatchMessages(ctx, contractAddress, res.Messages); err != nil {
+		return nil, sdkerrors.Wrap(err, "dispatch")
+	}
+
+	return &sdk.Result{
+		Data: res.Data,
+	}, nil
+}
+
+
 // We don't use this function currently. It's here for upstream compatibility
 // Migrate allows to upgrade a contract to a new code with data migration.
 func (k Keeper) Migrate(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, newCodeID uint64, msg []byte) (*sdk.Result, error) {
@@ -617,6 +725,7 @@ func (k Keeper) GetContractHash(ctx sdk.Context, contractAddress sdk.AccAddress)
 	return hash
 }
 
+//GetContractInfo Seems to panic
 func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *types.ContractInfo {
 	store := ctx.KVStore(k.storeKey)
 	var contract types.ContractInfo
@@ -626,6 +735,41 @@ func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress)
 	}
 	k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)
 	return &contract
+}
+
+//GetContractInfoWithAddress Seems to panic
+func (k Keeper) GetContractInfoWithAddress(ctx sdk.Context, contractAddress sdk.AccAddress) types.ContractInfoWithAddress {
+	store := ctx.KVStore(k.storeKey)
+	fmt.Printf("Getting info")
+	var contract types.ContractInfoWithAddress
+
+	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
+	if contractBz == nil {
+		return types.ContractInfoWithAddress{} //sdkerrors.Wrap(types.ErrNotFound, "contract")
+	}
+
+	fmt.Printf("Unmarshalling..")
+	var Info types.ContractInfo
+	k.cdc.MustUnmarshalBinaryBare(contractBz, &Info)
+	fmt.Printf("Setting")
+	contract.ContractInfo = &Info
+
+	/*contractBz := store.Get(types.GetContractAddressKey(contractAddress))
+	if contractBz == nil {
+		return nil
+	}
+		err := k.cdc.UnmarshalBinaryBare(contractBz, contract.ContractInfo)
+	if err != nil {
+		return nil
+	}
+	*/
+	//contract.ContractInfo = k.GetContractInfo(ctx, contractAddress)
+
+	fmt.Printf("info creator is:  %s ", contract.ContractInfo.Creator.String())
+
+	contract.Address = contractAddress
+	fmt.Printf("info Address is:  %s ", contract.Address.String())
+	return contract
 }
 
 func (k Keeper) containsContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) bool {

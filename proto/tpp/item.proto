@@ -23,7 +23,7 @@ message Item {
   string highestestimator = 10; 
   int64 estimationprice = 11; 
   repeated string estimatorlist = 12; 
-  repeated string estimationlist = 13; 
+  repeated int64 estimationlist = 13; 
   bool transferable = 14; 
   string buyer = 15; 
   bool tracking = 16; 

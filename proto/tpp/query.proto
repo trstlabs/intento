@@ -33,8 +33,8 @@ service Query {
 	rpc ItemAll(QueryAllItemRequest) returns (QueryAllItemResponse) {
 		option (google.api.http).get = "/danieljdd/tpp/tpp/item";
 	}
-	rpc InactiveItemsAll(QueryAllInactiveItemsRequest) returns (QueryAllInactiveItemsResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/inactiveitems";
+	rpc ListedItemsAll(QueryAllListedItemsRequest) returns (QueryAllListedItemsResponse) {
+		option (google.api.http).get = "/danieljdd/tpp/tpp/ListedItems";
 	}
 		rpc SellerItems(QuerySellerItemsRequest) returns (QuerySellerItemsResponse) {
 		option (google.api.http).get = "/danieljdd/tpp/tpp/selleritems";
@@ -99,11 +99,11 @@ message QueryAllItemResponse {
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryAllInactiveItemsRequest {
+message QueryAllListedItemsRequest {
 	cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-message QueryAllInactiveItemsResponse {
+message QueryAllListedItemsResponse {
 	repeated string Item = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

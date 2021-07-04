@@ -19,8 +19,8 @@ func listItem(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmin
 	return bz, nil
 }
 
-func listInactiveItems(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	msgs := keeper.GetAllInactiveItems(ctx)
+func listListedItems(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	msgs := keeper.GetAllListedItems(ctx)
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msgs)
 	if err != nil {

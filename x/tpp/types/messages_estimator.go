@@ -97,10 +97,11 @@ func (msg *MsgUpdateLike) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateEstimation{}
 
-func NewMsgDeleteEstimation(estimator string, itemid uint64) *MsgDeleteEstimation {
+func NewMsgDeleteEstimation(estimator string, itemid uint64, deletemsg []byte) *MsgDeleteEstimation {
 	return &MsgDeleteEstimation{
 		Itemid:    itemid,
 		Estimator: estimator,
+		Deletemsg: deletemsg,
 	}
 }
 func (msg *MsgDeleteEstimation) Route() string {
@@ -132,11 +133,12 @@ func (msg *MsgDeleteEstimation) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgFlagItem(estimator string, itemid uint64) *MsgFlagItem {
+func NewMsgFlagItem(estimator string, itemid uint64, flagmsg []byte) *MsgFlagItem {
 	return &MsgFlagItem{
 		Itemid: itemid,
 
 		Estimator: estimator,
+		Flagmsg:   flagmsg,
 	}
 }
 

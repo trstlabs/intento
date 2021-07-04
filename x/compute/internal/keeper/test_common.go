@@ -2,6 +2,11 @@ package keeper
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	params2 "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/std"
@@ -25,6 +30,7 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -34,10 +40,6 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	"github.com/danieljdd/tpp/x/registration"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	"io/ioutil"
-	"os"
-	"testing"
-	"time"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
@@ -125,10 +127,11 @@ type TestKeepers struct {
 	GovKeeper     govkeeper.Keeper
 	BankKeeper    bankkeeper.Keeper
 	MintKeeper    mintkeeper.Keeper
+	paramSpace    paramtypes.Subspace
 }
 
 // encoders can be nil to accept the defaults, or set it to override some of the message handlers (like default)
-func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, encoders *MessageEncoders, queriers *QueryPlugins) (sdk.Context, TestKeepers) {
+func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, encoders *MessageEncoders, queriers *QueryPlugins, paramSpace paramtypes.Subspace) (sdk.Context, TestKeepers) {
 	tempDir, err := ioutil.TempDir("", "wasm")
 	require.NoError(t, err)
 	t.Cleanup(func() { os.RemoveAll(tempDir) })
@@ -262,6 +265,11 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 	// Load default wasm config
 	wasmConfig := wasmtypes.DefaultWasmConfig()
 
+	// set KeyTable if it has not already been set
+	if !paramSpace.HasKeyTable() {
+		paramSpace = paramSpace.WithKeyTable(ParamKeyTable())
+	}
+
 	keeper := NewKeeper(
 		encodingConfig().Marshaler,
 		*encodingConfig().Amino,
@@ -278,6 +286,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 		supportedFeatures,
 		encoders,
 		queriers,
+		paramSpace,
 	)
 	//keeper.setParams(ctx, wasmtypes.DefaultParams())
 	// add wasm handler so we can loop-back (contracts calling contracts)

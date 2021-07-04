@@ -36,9 +36,11 @@ message MsgUpdateLike {
 message MsgDeleteEstimation {
   string estimator = 1;
   uint64 itemid = 2;
+  bytes deletemsg = 3;
 }
 
 message MsgFlagItem{
   string estimator = 1;
   uint64 itemid = 2;
+   bytes flagmsg = 3;
 }

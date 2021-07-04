@@ -94,9 +94,11 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	)}
 	events = append(events, custom.ToABCIEvents()...)
 
-	// TODO Assaf:
-	// also need to parse here output events and pass them to Tendermint
-	// but k.Instantiate() doesn't return any output data right now, just contractAddr
+	activePeriod := k.GetParams(ctx).MaxActivePeriod
+	submitTime := ctx.BlockHeader().Time
+	endTime := submitTime.Add(activePeriod)
+
+	k.InsertContractQueue(ctx, contractAddr.String(), endTime)
 
 	return &sdk.Result{
 		Data:   contractAddr,
@@ -132,6 +134,24 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	return res, nil
 }
 
+/*
+func handleDeleteContract(ctx sdk.Context, k Keeper, msg *MsgDeleteContract) (*sdk.Result, error) {
+	res, err := k.DeleteContract(ctx, msg.Contract, msg.Sender, msg.CodeID, msg.DeleteContractMsg) // for MsgMigrateContract, there is only one signer which is msg.Sender (https://github.com/danieljdd/tpp/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L228-L230)
+	if err != nil {
+		return nil, err
+	}
+
+	events := filteredMessageEvents(ctx.EventManager())
+	ourEvent := sdk.Events{sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
+		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
+		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract.String()),
+	)}
+	res.Events = append(events, ourEvent.ToABCIEvents()...)
+	return res, nil
+}
+*/
 /*
 func handleMigration(ctx sdk.Context, k Keeper, msg *MsgMigrateContract) (*sdk.Result, error) {
 	res, err := k.Migrate(ctx, msg.Contract, msg.Sender, msg.CodeID, msg.MigrateMsg) // for MsgMigrateContract, there is only one signer which is msg.Sender (https://github.com/danieljdd/tpp/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L228-L230)
