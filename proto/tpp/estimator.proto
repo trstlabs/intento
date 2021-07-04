@@ -11,21 +11,19 @@ message Estimator {
   string estimator = 1;
   uint64 itemid = 2;
   int64 estimation = 3; 
-  string estimatorestimationhash = 4; 
-  cosmos.base.v1beta1.Coin deposit = 5 [
+
+  cosmos.base.v1beta1.Coin deposit = 4 [
     (gogoproto.nullable) = false]; 
-  bool interested = 6; 
-  string comment = 7; 
-  int64 flag = 8; 
+  bool interested = 5; 
+
 }
 
 message MsgCreateEstimation {
   string estimator = 1;
-  int64 estimation = 2; 
+  bytes estimatemsg = 2; 
   uint64 itemid = 3; 
   int64 deposit = 4;
   bool interested = 5; 
-  string comment = 6; 
 }
 
 
@@ -38,10 +36,11 @@ message MsgUpdateLike {
 message MsgDeleteEstimation {
   string estimator = 1;
   uint64 itemid = 2;
+  bytes deletemsg = 3;
 }
 
 message MsgFlagItem{
   string estimator = 1;
   uint64 itemid = 2;
-
+   bytes flagmsg = 3;
 }

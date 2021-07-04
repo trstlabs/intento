@@ -44,19 +44,19 @@ const (
 	EstimatorCountKey = "Estimator-count-"
 )
 
-var InactiveItemQueuePrefix = []byte{0x02}
+var ListedItemQueuePrefix = []byte{0x02}
 var ItemSellerPrefix = []byte{0x03}
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 
-// SplitInactiveProposalQueueKey split the inactive key and returns the id and endTime
-func SplitInactiveItemQueueKey(key []byte) (itemid uint64, endTime time.Time) {
+// SplitInactiveProposalQueueKey split the listed key and returns the id and endTime
+func SplitListedItemQueueKey(key []byte) (itemid uint64, endTime time.Time) {
 	return splitKeyWithTime(key)
 }
 
-// InactiveProposalByTimeKey gets the inactive proposal queue key by endTime
-func InactiveItemByTimeKey(endTime time.Time) []byte {
-	return append(InactiveItemQueuePrefix, sdk.FormatTimeBytes(endTime)...)
+// InactiveProposalByTimeKey gets the listed item queue key by endTime
+func ListedItemByTimeKey(endTime time.Time) []byte {
+	return append(ListedItemQueuePrefix, sdk.FormatTimeBytes(endTime)...)
 }
 
 //from the key we get the itemid and end time
@@ -75,9 +75,9 @@ func splitKeyWithTime(key []byte) (itemid uint64, endTime time.Time) {
 	return
 }
 
-// InactiveProposalQueueKey returns the key with prefix for an itemid in the inactiveProposalQueue
-func InactiveItemQueueKey(itemid uint64, endTime time.Time) []byte {
-	return append(InactiveItemByTimeKey(endTime), Uint64ToByte(itemid)...)
+// InactiveProposalQueueKey returns the key with prefix for an itemid in the Listed Item Queue
+func ListedItemQueueKey(itemid uint64, endTime time.Time) []byte {
+	return append(ListedItemByTimeKey(endTime), Uint64ToByte(itemid)...)
 }
 
 //----seller functions

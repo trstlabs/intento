@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# This `DEBIAN/postrm` script is run post-uninstallation
+
+set -e
+
+systemctl stop tpp-node                    || true
+systemctl disable tpp-node                 || true
+rm -f /etc/systemd/system/tpp-node.service || true
+systemctl daemon-reload                       || true

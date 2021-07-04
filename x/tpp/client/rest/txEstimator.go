@@ -18,14 +18,13 @@ import (
 var _ = strconv.Itoa(42)
 
 type createEstimatorRequest struct {
-	BaseReq    rest.BaseReq `json:"base_req"`
-	Estimator  string       `json:"creator"`
-	Estimation int64        `json:"estimation"`
-
-	Itemid     uint64 `json:"itemid"`
-	Deposit    int64  `json:"deposit"`
-	Interested bool   `json:"interested"`
-	Comment    string `json:"comment"`
+	BaseReq     rest.BaseReq `json:"base_req"`
+	Estimator   string       `json:"creator"`
+	Estimatemsg []byte       `json:"estimatemsg"`
+	Itemid      uint64       `json:"itemid"`
+	Deposit     int64        `json:"deposit"`
+	Interested  bool         `json:"interested"`
+	Comment     string       `json:"comment"`
 	//Flag                    string       `json:"flag"`
 }
 
@@ -48,7 +47,8 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		parsedEstimation := req.Estimation
+		parsedMsg := req.Estimatemsg
+
 		//parsedFlag := req.Flag
 		parsedItemid := req.Itemid
 		/*parsedItemid, e := strconv.ParseUint(req.Itemid, 10, 64)
@@ -57,7 +57,7 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}*/
 		parsedInterested := req.Interested
-		parsedComment := req.Comment
+		//parsedComment := req.Comment
 
 		//parsedDeposit := req.Deposit
 
@@ -70,12 +70,12 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 
 		msg := types.NewMsgCreateEstimation(
 			req.Estimator,
-			parsedEstimation,
+			parsedMsg,
 
 			parsedItemid,
 			deposit,
 			parsedInterested,
-			parsedComment,
+		//	parsedComment,
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
@@ -133,6 +133,7 @@ func updateEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 type deleteEstimatorRequest struct {
 	BaseReq   rest.BaseReq `json:"base_req"`
 	Estimator string       `json:"creator"`
+	DeleteMsg []byte       `json:"delete_msg"`
 }
 
 func deleteEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
@@ -154,6 +155,8 @@ func deleteEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+		parsedMsg := req.DeleteMsg
+
 		_, err := sdk.AccAddressFromBech32(req.Estimator)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
@@ -163,6 +166,7 @@ func deleteEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 		msg := types.NewMsgDeleteEstimation(
 			req.Estimator,
 			id,
+			parsedMsg,
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
