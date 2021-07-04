@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +40,7 @@ func (k Keeper) ItemAll(c context.Context, req *types.QueryAllItemRequest) (*typ
 	return &types.QueryAllItemResponse{Item: items, Pagination: pageRes}, nil
 }
 
-func (k Keeper) InactiveItemsAll(c context.Context, req *types.QueryAllInactiveItemsRequest) (*types.QueryAllInactiveItemsResponse, error) {
+func (k Keeper) ListedItemsAll(c context.Context, req *types.QueryAllListedItemsRequest) (*types.QueryAllListedItemsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -48,11 +49,12 @@ func (k Keeper) InactiveItemsAll(c context.Context, req *types.QueryAllInactiveI
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	itemStore := prefix.NewStore(store, types.InactiveItemQueuePrefix)
+	itemStore := prefix.NewStore(store, types.ListedItemQueuePrefix)
+
 	var items []string
 	pageRes, err := query.Paginate(itemStore, req.Pagination, func(key []byte, value []byte) error {
 
-		items = append(items, string(value))
+		items = append(items, strconv.FormatUint(types.GetItemIDFromBytes(value), 10))
 		return nil
 
 	})
@@ -60,9 +62,9 @@ func (k Keeper) InactiveItemsAll(c context.Context, req *types.QueryAllInactiveI
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	//items := k.GetAllInactiveItems(ctx)
+	//items := k.GetAllListedItems(ctx)
 
-	return &types.QueryAllInactiveItemsResponse{Item: items, Pagination: pageRes}, nil
+	return &types.QueryAllListedItemsResponse{Item: items, Pagination: pageRes}, nil
 }
 
 func (k Keeper) Item(c context.Context, req *types.QueryGetItemRequest) (*types.QueryGetItemResponse, error) {
@@ -90,7 +92,7 @@ func (k Keeper) SellerItems(c context.Context, req *types.QuerySellerItemsReques
 	items := k.GetAllSellerItems(ctx, req.Seller)
 
 	//store := ctx.KVStore(k.storeKey)
-	//itemStore := prefix.NewStore(store, types.InactiveItemQueuePrefix)
+	//itemStore := prefix.NewStore(store, types.ListedItemQueuePrefix)
 
 	return &types.QuerySellerItemsResponse{Item: items}, nil
 
