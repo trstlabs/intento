@@ -1,0 +1,9 @@
+Package: trustpriceprotocol
+Priority: optional
+Architecture: amd64
+Homepage: https://github.com/danieljdd/trustpriceprotocol
+Maintainer: https://github.com/danieljdd
+Provides: trustpriceprotocol
+Conflicts: trustpriceprotocol
+Replaces: trustpriceprotocol
+Description: The TPP node

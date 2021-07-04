@@ -4,20 +4,26 @@ import (
 	//"crypto/sha256"
 	//"encoding/hex"
 	//"fmt"
+	"context"
+	"encoding/hex"
+	"encoding/json"
 	"strings"
+
 	//sdk "github.com/cosmos/cosmos-sdk/types"
+
 	//sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"strconv"
 
 	"github.com/spf13/cobra"
 
-	//sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/danieljdd/tpp/x/tpp/types"
+
 	//"cosmos/base/v1beta1/coin.proto"
+	wasmUtils "github.com/danieljdd/tpp/x/compute/client/utils"
 )
 
 func CmdCreateItem() *cobra.Command {
@@ -26,6 +32,12 @@ func CmdCreateItem() *cobra.Command {
 		Short: "Creates a new item",
 		Args:  cobra.ExactArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
+
+			cliCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
 			argsTitle := string(args[0])
 			argsDescription := string(args[1])
 			argsShippingcost, _ := strconv.ParseInt(args[2], 10, 64)
@@ -41,7 +53,39 @@ func CmdCreateItem() *cobra.Command {
 			argsTags := strings.Split(args[5], ",")
 
 			argsEstimationcount, _ := strconv.ParseInt(args[4], 10, 64)
+			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
+			initMsg := types.SecretMsg{}
+
+			count := map[string]string{"estimationcount": args[4]}
+			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
+			initMsg.Msg, err = json.Marshal(count)
+			//fmt.Printf("json message: %X\n", estimation)
+			if err != nil {
+				return err
+			}
+			//initMsg.Msg = []byte(initMsg.Msg)
+			//fmt.Printf("message: %X\n", initMsg.Msg)
+			//quite a long way to get a single value, however we can't directy access the keeper
+			queryClient := types.NewQueryClient(cliCtx)
+			params := &types.QueryCodeHashRequest{
+				Codeid: 1,
+			}
+			res, err := queryClient.CodeHash(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			//fmt.Printf("Got code hash: %X\n", res.Codehash)
+			var encryptedMsg []byte
+
+			initMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
+			//fmt.Printf("Got initMsg.CodeHash hash: %X\n", initMsg.CodeHash)
+			encryptedMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
+			if err != nil {
+				return err
+			}
+			//fmt.Printf("encryptedMsg: %X\n", encryptedMsg)
 			argsCondition, _ := strconv.ParseInt(args[6], 10, 64)
 
 			argsShippingregion := strings.Split(args[7], ",")
@@ -53,14 +97,13 @@ func CmdCreateItem() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), string(argsLocalpickup), int64(argsEstimationcount), []string(argsTags), int64(argsCondition), []string(argsShippingregion), int64(argsDepositAmount))
+			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), string(argsLocalpickup), int64(argsEstimationcount), []string(argsTags), int64(argsCondition), []string(argsShippingregion), int64(argsDepositAmount), encryptedMsg)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -68,8 +111,8 @@ func CmdCreateItem() *cobra.Command {
 
 func CmdDeleteItem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete-item [id] ",
-		Short: "Delete a item by id",
+		Use:   "delete-item [item id] ",
+		Short: "Delete a item by item id",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseUint(args[0], 10, 64)
@@ -97,12 +140,46 @@ func CmdDeleteItem() *cobra.Command {
 
 func CmdRevealEstimation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "reveal-estimation [itemID]",
-		Short: "reveal a new estimation by itemID",
+		Use:   "reveal-estimation [item ID]",
+		Short: "reveal a new estimation by item ID",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
+			cliCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
 			argsItemID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
+
+			revealMsg := types.SecretMsg{}
+			reveal := types.ParseReveal{}
+
+			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
+			revealMsg.Msg, err = json.Marshal(reveal)
+			//fmt.Printf("json message: %X\n", estimation)
+			if err != nil {
+				return err
+			}
+
+			//quite a long way to get a single value, however we can't directy access the keeper
+			queryClient := types.NewQueryClient(cliCtx)
+			params := &types.QueryCodeHashRequest{
+				Codeid: 1,
+			}
+			res, err := queryClient.CodeHash(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			var encryptedMsg []byte
+			revealMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
+			encryptedMsg, err = wasmCtx.Encrypt(revealMsg.Serialize())
 			if err != nil {
 				return err
 			}
@@ -112,10 +189,11 @@ func CmdRevealEstimation() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgRevealEstimation(clientCtx.GetFromAddress().String(), uint64(argsItemID))
+			msg := types.NewMsgRevealEstimation(clientCtx.GetFromAddress().String(), uint64(argsItemID), encryptedMsg)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
+			//	fmt.Printf("sending msg: %X\n", revealMsg.Msg)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

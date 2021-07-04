@@ -17,13 +17,13 @@ message Item {
   string description = 4; 
   int64 shippingcost = 5;
   string localpickup = 6; 
-  string estimationcounthash = 7; 
+  int64 estimationcount = 7; 
   string bestestimator = 8; 
   string lowestestimator = 9; 
   string highestestimator = 10; 
   int64 estimationprice = 11; 
   repeated string estimatorlist = 12; 
-  repeated string estimatorestimationhashlist = 13; 
+  repeated int64 estimationlist = 13; 
   bool transferable = 14; 
   string buyer = 15; 
   bool tracking = 16; 
@@ -42,6 +42,8 @@ message Item {
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
       google.protobuf.Timestamp endtime = 29
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+       string contract = 30;
+       int64 estimationtotal = 31;
 }
 
 
@@ -59,6 +61,7 @@ message MsgCreateItem {
   int64 condition = 8; 
   repeated string shippingregion = 9; 
   int64 depositamount = 10;
+  bytes initmsg = 11;
 }
 
 message MsgUpdateItem {
@@ -80,6 +83,7 @@ message MsgDeleteItem {
 message MsgRevealEstimation {
     string creator = 1;
   uint64 itemid = 2;
+  bytes revealmsg = 3;
 
 }
 

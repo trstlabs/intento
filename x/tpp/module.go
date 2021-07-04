@@ -20,8 +20,6 @@ import (
 	"github.com/danieljdd/tpp/x/tpp/client/rest"
 	"github.com/danieljdd/tpp/x/tpp/keeper"
 	"github.com/danieljdd/tpp/x/tpp/types"
-
-	
 )
 
 var (
@@ -106,14 +104,16 @@ type AppModule struct {
 
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
+	computeKeeper types.ComputeKeeper
 }
 
-func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(cdc codec.Marshaler, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, ck types.ComputeKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
+		computeKeeper:  ck,
 	}
 }
 
@@ -148,6 +148,7 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genState types.GenesisState
+
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
 
@@ -159,9 +160,9 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONMarshaler, gs jso
 
 // ExportGenesis returns the TPP module's exported genesis state as raw JSON bytes.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONMarshaler) json.RawMessage {
-//	genState := ExportGenesis(ctx, am.keeper)
-//	return cdc.MustMarshalJSON(genState)
-return cdc.MustMarshalJSON(am.keeper.ExportGenesis(ctx))
+	//	genState := ExportGenesis(ctx, am.keeper)
+	//	return cdc.MustMarshalJSON(genState)
+	return cdc.MustMarshalJSON(am.keeper.ExportGenesis(ctx))
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
@@ -170,5 +171,5 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
 // returns no validator updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return EndBlocker(ctx, am.keeper)//return []abci.ValidatorUpdate{}
+	return EndBlocker(ctx, am.keeper) //return []abci.ValidatorUpdate{}
 }

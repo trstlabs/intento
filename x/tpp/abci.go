@@ -19,43 +19,29 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	logger := k.Logger(ctx)
 
 	// delete inactive items from store and its deposits
-	k.IterateInactiveItemsQueue(ctx, ctx.BlockHeader().Time, func(item types.Item) bool {
+	k.IterateListedItemsQueue(ctx, ctx.BlockHeader().Time, func(item types.Item) bool {
 		logger.Info(
 			"Item was expired",
 			"item", item.Id,
-			"title", item.GetTitle(),
+			//"title", item.GetTitle(),
 		)
-
-		if item.Transferable == true {
-			for _, element := range item.Estimatorlist {
-
-				key := append(types.Uint64ToByte(item.Id), []byte(element)...)
-				if item.Highestestimator == element {
-					k.DeleteEstimationWithoutDeposit(ctx, key)
-				} else if item.Bestestimator == element {
-					k.DeleteEstimationWithReward(ctx, key)
-				} else {
-					k.DeleteEstimation(ctx, key)
-				}
+		for _, estimator := range item.Estimatorlist {
+			key := append(types.Uint64ToByte(item.Id), []byte(estimator)...)
+			if item.Highestestimator == estimator && item.Transferable || item.Lowestestimator == estimator && !item.Transferable {
+				k.DeleteEstimationWithoutDeposit(ctx, key)
+			} else if item.Bestestimator == estimator {
+				k.DeleteEstimationWithReward(ctx, key)
+			} else {
+				k.DeleteEstimation(ctx, key)
 			}
-		} else {
-			for _, element := range item.Estimatorlist {
-
-				key := append(types.Uint64ToByte(item.Id), []byte(element)...)
-				if item.Lowestestimator == element {
-					k.DeleteEstimationWithoutDeposit(ctx, key)
-				} else if item.Bestestimator == element {
-					k.DeleteEstimationWithReward(ctx, key)
-				} else {
-					k.DeleteEstimation(ctx, key)
-				}
-			}
-
 		}
-		k.DeleteItem(ctx, item.Id)
+		test := k.DeleteItemContract(ctx, item.Contract)
+		if test != nil {
+			panic("test")
+		}
+		k.RemoveFromListedItemQueue(ctx, item.Id, item.Endtime)
 		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
-		// called when items become inactive
-		//keeper.AfterItemFailedMinDeposit(ctx, proposal.ProposalId)
+		k.DeleteItem(ctx, item.Id)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(

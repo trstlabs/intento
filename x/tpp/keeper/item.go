@@ -1,8 +1,7 @@
 package keeper
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -11,7 +10,7 @@ import (
 	"github.com/danieljdd/tpp/x/tpp/types"
 )
 
-// GetItemCount get the total number of item
+// GetItemCount get the total number of items
 func (k Keeper) GetItemCount(ctx sdk.Context) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemCountKey))
 	byteKey := types.KeyPrefix(types.ItemCountKey)
@@ -32,7 +31,7 @@ func (k Keeper) GetItemCount(ctx sdk.Context) int64 {
 	return count
 }
 
-// SetItemCount set the total number of item
+// SetItemCount set the total number of items
 func (k Keeper) SetItemCount(ctx sdk.Context, count int64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemCountKey))
 	byteKey := types.KeyPrefix(types.ItemCountKey)
@@ -42,27 +41,41 @@ func (k Keeper) SetItemCount(ctx sdk.Context, count int64) {
 
 // CreateItem creates a item with a new id and update the count
 func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
+
 	// Create the item
 	count := k.GetItemCount(ctx)
-
-	var estimationcount = fmt.Sprint(msg.Estimationcount)
-	var estimationcountHash = sha256.Sum256([]byte(estimationcount + msg.Creator))
-	var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
-
+	/*
+		var estimationcount = fmt.Sprint(msg.Estimationcount)
+		var estimationcountHash = sha256.Sum256([]byte(estimationcount + msg.Creator))
+		var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
+	*/
 	submitTime := ctx.BlockHeader().Time
 
 	activePeriod := k.GetParams(ctx).MaxActivePeriod
 	endTime := submitTime.Add(activePeriod)
 
+	//k.computeKeeper.Instantiate()
+
+	userAddress, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+
+	contractAddr, err := k.computeKeeper.Instantiate(ctx, uint64(1), userAddress, msg.Initmsg, fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	if err != nil {
+		panic(err)
+	}
+
 	var item = types.Item{
-		Creator:             msg.Creator,
-		Seller:              msg.Creator,
-		Id:                  uint64(count),
-		Title:               msg.Title,
-		Description:         msg.Description,
-		Shippingcost:        msg.Shippingcost,
-		Localpickup:         msg.Localpickup,
-		Estimationcounthash: estimationcountHashString,
+		Creator:         msg.Creator,
+		Seller:          msg.Creator,
+		Id:              uint64(count),
+		Title:           msg.Title,
+		Description:     msg.Description,
+		Shippingcost:    msg.Shippingcost,
+		Localpickup:     msg.Localpickup,
+		Estimationcount: msg.Estimationcount,
+		Contract:        contractAddr.String(),
 
 		Tags: msg.Tags,
 
@@ -72,9 +85,10 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 		Submittime:     submitTime,
 		Endtime:        endTime,
 	}
+
 	k.BindItemSeller(ctx, item.Id, msg.Creator)
 	//works 100% with endtime tx.BlockHeader().Time
-	k.InsertInactiveItemQueue(ctx, item.Id, endTime)
+	k.InsertListedItemQueue(ctx, item.Id, endTime)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
@@ -117,7 +131,22 @@ func (k Keeper) GetItemOwner(ctx sdk.Context, id uint64) string {
 }
 
 // DeleteItem deletes a item
+func (k Keeper) DeleteItemContract(ctx sdk.Context, contract string) error {
+	contractAddress, err := sdk.AccAddressFromBech32(contract)
+	if err != nil {
+		return err
+	}
+	err = k.computeKeeper.Delete(ctx, contractAddress)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteItem deletes a item
 func (k Keeper) DeleteItem(ctx sdk.Context, key uint64) {
+
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	store.Delete(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(key)...))
 }
@@ -138,10 +167,10 @@ func (k Keeper) GetAllItem(ctx sdk.Context) (msgs []types.Item) {
 	return
 }
 
-// GetAllInactiveItems returns all inactive item
-func (k Keeper) GetAllInactiveItems(ctx sdk.Context) (msgs []*types.Item) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.InactiveItemQueuePrefix)
-	iterator := sdk.KVStorePrefixIterator(store, types.InactiveItemQueuePrefix)
+// GetAllListedItems returns all inactive item
+func (k Keeper) GetAllListedItems(ctx sdk.Context) (msgs []*types.Item) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.ListedItemQueuePrefix)
+	iterator := sdk.KVStorePrefixIterator(store, types.ListedItemQueuePrefix)
 
 	defer iterator.Close()
 
@@ -205,4 +234,55 @@ func (k Keeper) MintReward(ctx sdk.Context, coinToSend sdk.Coin) {
 func (k Keeper) BurnCoins(ctx sdk.Context, coinToSend sdk.Coin) {
 	k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coinToSend))
 
+}
+
+// RevealEstimation reveals an item
+func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.MsgRevealEstimation) error {
+
+	creatorAddress, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return err ///panic(err)
+
+	}
+	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
+	if err != nil {
+		return err ///panic(err)
+	}
+	fmt.Printf("executing contract: %s", item.Contract)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.Revealmsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	if err != nil {
+		fmt.Printf("err executing: ")
+		return err ///panic(err)
+	}
+	fmt.Printf("res for item %s: %s\n", res.Log, contractAddr)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
+	)
+
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
+	key := append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(item.Id)...)
+	value := k.cdc.MustMarshalBinaryBare(&item)
+	store.Set(key, value)
+
+	var result types.RevealResult
+
+	fmt.Println(json.Unmarshal([]byte(res.Log), &result))
+	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.RevealEstimation.Bestestimation), contractAddr)
+	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", result.RevealEstimation.Comments[1], contractAddr)
+	//	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", res.Log, contractAddr)
+
+	b := make([]int64, len(result.RevealEstimation.EstimationList))
+	for i, v := range result.RevealEstimation.EstimationList {
+		b[i] = int64(v)
+	}
+
+	if result.RevealEstimation.Status == "Success" {
+		item.Bestestimator = result.RevealEstimation.Bestestimator
+		item.Estimationprice = int64(result.RevealEstimation.Bestestimation)
+		item.Comments = result.RevealEstimation.Comments
+		item.Estimationlist = b
+		k.SetItem(ctx, item)
+	}
+	return nil
 }

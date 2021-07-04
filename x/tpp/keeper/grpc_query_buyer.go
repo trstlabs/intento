@@ -22,7 +22,7 @@ func (k Keeper) BuyerItems(c context.Context, req *types.QueryBuyerItemsRequest)
 	items := k.GetAllBuyerItems(ctx, req.Buyer)
 
 	//store := ctx.KVStore(k.storeKey)
-	//itemStore := prefix.NewStore(store, types.InactiveItemQueuePrefix)
+	//itemStore := prefix.NewStore(store, types.ListedItemQueuePrefix)
 
 	return &types.QueryBuyerItemsResponse{Item: items}, nil
 
