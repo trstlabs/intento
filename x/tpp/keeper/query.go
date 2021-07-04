@@ -37,8 +37,8 @@ func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
 
 		case types.QueryListItem:
 			return listItem(ctx, k, legacyQuerierCdc)
-		case types.QueryListInactiveItems:
-			return listInactiveItems(ctx, k, legacyQuerierCdc)
+		case types.QueryListListedItems:
+			return listListedItems(ctx, k, legacyQuerierCdc)
 		case types.QuerySellerItems:
 			return sellerItems(ctx, path[1], k, legacyQuerierCdc)
 		case types.QueryBuyerItems:

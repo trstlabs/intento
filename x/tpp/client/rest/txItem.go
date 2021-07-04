@@ -25,12 +25,13 @@ type createItemRequest struct {
 	Description string       `json:"description"`
 
 	Shippingcost    int64    `json:"shippingcost"`
-	Localpickup     string     `json:"localpickup"`
+	Localpickup     string   `json:"localpickup"`
 	Estimationcount int64    `json:"estimationcount"`
 	Tags            []string `json:"tags"`
 	Condition       int64    `json:"condition"`
 	Shippingregion  []string `json:"shippingregion"`
 	Depositamount   int64    `json:"Depositamount"`
+	Initmsg         []byte   `json:"Initmsg"`
 }
 
 func createItemHandler(clientCtx client.Context) http.HandlerFunc {
@@ -72,6 +73,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 		parsedShippingregion := req.Shippingregion
 
 		parsedDepositAmount := req.Depositamount
+		parsedMsg := req.Initmsg
 
 		msg := types.NewMsgCreateItem(
 			req.Creator,
@@ -86,6 +88,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 			parsedCondition,
 			parsedShippingregion,
 			parsedDepositAmount,
+			parsedMsg,
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)
@@ -94,7 +97,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 
 type deleteItemRequest struct {
 	BaseReq rest.BaseReq `json:"base_req"`
-	Seller string       `json:"creator"`
+	Seller  string       `json:"creator"`
 }
 
 func deleteItemHandler(clientCtx client.Context) http.HandlerFunc {
@@ -108,10 +111,10 @@ func deleteItemHandler(clientCtx client.Context) http.HandlerFunc {
 		}
 
 		id, e := strconv.ParseUint(mux.Vars(r)["id"], 10, 64)
-			if e != nil {
-				rest.WriteErrorResponse(w, http.StatusBadRequest, e.Error())
+		if e != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, e.Error())
 			return
-			}
+		}
 
 		baseReq := req.BaseReq.Sanitize()
 		if !baseReq.ValidateBasic(w) {

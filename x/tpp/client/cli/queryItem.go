@@ -42,10 +42,10 @@ func CmdListItem() *cobra.Command {
 	return cmd
 }
 
-func CmdListInactiveItems() *cobra.Command {
+func CmdListListedItems() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-inactive-items",
-		Short: "list all inactive items",
+		Use:   "list-listed-items",
+		Short: "list all listed items",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -56,11 +56,11 @@ func CmdListInactiveItems() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAllInactiveItemsRequest{
+			params := &types.QueryAllListedItemsRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.InactiveItemsAll(context.Background(), params)
+			res, err := queryClient.ListedItemsAll(context.Background(), params)
 			if err != nil {
 				return err
 			}

@@ -8,7 +8,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup string, estimationcount int64, tags []string, condition int64, shippingregion []string, depositamount int64) *MsgCreateItem {
+func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup string, estimationcount int64, tags []string, condition int64, shippingregion []string, depositamount int64, initmsg []byte) *MsgCreateItem {
 	return &MsgCreateItem{
 
 		Creator:         creator,
@@ -21,6 +21,7 @@ func NewMsgCreateItem(creator string, title string, description string, shipping
 		Condition:       condition,
 		Shippingregion:  shippingregion,
 		Depositamount:   depositamount,
+		Initmsg:         initmsg,
 	}
 }
 
@@ -132,11 +133,12 @@ func (msg *MsgDeleteItem) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgRevealEstimation(creator string, itemid uint64) *MsgRevealEstimation {
+func NewMsgRevealEstimation(creator string, itemid uint64, revealmsg []byte) *MsgRevealEstimation {
 	return &MsgRevealEstimation{
 
-		Creator: creator,
-		Itemid:  itemid,
+		Creator:   creator,
+		Itemid:    itemid,
+		Revealmsg: revealmsg,
 	}
 }
 
