@@ -12,14 +12,15 @@ import (
 )
 
 const (
-	QueryListContractByCode = "list-contracts-by-code"
-	QueryGetContract        = "contract-info"
-	QueryGetContractState   = "contract-state"
-	QueryGetCode            = "code"
-	QueryListCode           = "list-code"
-	QueryContractAddress    = "label"
-	QueryContractKey        = "contract-key"
-	QueryContractHash       = "contract-hash"
+	QueryListContractByCode = types.QueryListContractByCode
+	QueryGetContract        = types.QueryGetContract
+	QueryGetContractState   = types.QueryGetContractState
+	QueryGetCode            = types.QueryGetCode
+	QueryListCode           = types.QueryListCode
+	QueryContractAddress    = types.QueryContractAddress
+	QueryContractKey        = types.QueryContractKey
+	QueryContractHash       = types.QueryContractHash
+	QueryMasterCertificate  = types.QueryMasterCertificate
 	//QueryContractHistory    = "contract-history"
 )
 
@@ -56,7 +57,7 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 		case QueryGetContractState:
 			//if len(path) < 3 {
 			//	return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "path invalid, unknown data query endpoint")
-		//	}
+			//	}
 			return queryContractState(ctx, path[1], req, keeper)
 			//rsp, err = queryContractState(ctx, path[1], path[2], req.Data, keeper)
 		case QueryGetCode:
@@ -106,7 +107,7 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 	}
 }
 
-func queryContractState(ctx sdk.Context, bech string,  req abci.RequestQuery, keeper Keeper) (json.RawMessage, error) {
+func queryContractState(ctx sdk.Context, bech string, req abci.RequestQuery, keeper Keeper) (json.RawMessage, error) {
 	contractAddr, err := sdk.AccAddressFromBech32(bech)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, bech)

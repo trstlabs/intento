@@ -2,7 +2,7 @@ syntax = "proto3";
 package tpp.x.compute.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "x/compute/internal/types/types.proto";
+import "compute/types.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
@@ -71,10 +71,10 @@ message QueryContractsByCodeRequest {
 }
 
 // ContractInfoWithAddress adds the address (key) to the ContractInfo representation
-message ContractInfoWithAddress {
-    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    ContractInfo ContractInfo = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = ""];
-}
+//message ContractInfoWithAddress {
+//    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+//    ContractInfo ContractInfo = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = ""];
+//}
 
 message QueryContractsByCodeResponse {
     repeated ContractInfoWithAddress contract_infos = 1 [(gogoproto.nullable) = false];

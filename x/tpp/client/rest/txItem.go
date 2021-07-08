@@ -32,6 +32,7 @@ type createItemRequest struct {
 	Shippingregion  []string `json:"shippingregion"`
 	Depositamount   int64    `json:"Depositamount"`
 	Initmsg         []byte   `json:"Initmsg"`
+	Photos          []string `json:"photos"`
 }
 
 func createItemHandler(clientCtx client.Context) http.HandlerFunc {
@@ -75,6 +76,8 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 		parsedDepositAmount := req.Depositamount
 		parsedMsg := req.Initmsg
 
+		parsedPhotos := req.Photos
+
 		msg := types.NewMsgCreateItem(
 			req.Creator,
 			parsedTitle,
@@ -89,6 +92,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 			parsedShippingregion,
 			parsedDepositAmount,
 			parsedMsg,
+			parsedPhotos,
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)

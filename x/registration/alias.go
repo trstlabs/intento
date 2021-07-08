@@ -51,10 +51,11 @@ var (
 )
 
 type (
-	MsgRaAuthenticate = types.RaAuthenticate
-	GenesisState      = types.GenesisState
-	Keeper            = keeper.Keeper
-	SeedConfig        = types.SeedConfig
-	EnclaveApi        = enclave.Api
-	MasterCertificate = types.MasterCertificate
+	MsgRaAuthenticate      = types.RaAuthenticate
+	GenesisState           = types.GenesisState
+	Keeper                 = keeper.Keeper
+	SeedConfig             = types.SeedConfig
+	EnclaveApi             = enclave.Api
+	MasterCertificate      = types.MasterCertificate
+	QueryMasterKeyResponse = types.QueryMasterKeyResponse
 )

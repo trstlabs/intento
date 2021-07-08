@@ -30,7 +30,7 @@ func CmdCreateItem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-item [title] [description] [shippingcost] [localpickup] [estimationcount] [tags] [condition] [shippingregion] [depositamount]",
 		Short: "Creates a new item",
-		Args:  cobra.ExactArgs(9),
+		Args:  cobra.MinimumNArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cliCtx, err := client.GetClientTxContext(cmd)
@@ -92,12 +92,18 @@ func CmdCreateItem() *cobra.Command {
 
 			argsDepositAmount, _ := strconv.ParseInt(args[8], 10, 64)
 
+			var argsPhotos []string
+
+			if args[9] != "" {
+				argsPhotos = strings.Split(args[9], ",")
+			}
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), string(argsLocalpickup), int64(argsEstimationcount), []string(argsTags), int64(argsCondition), []string(argsShippingregion), int64(argsDepositAmount), encryptedMsg)
+			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), string(argsLocalpickup), int64(argsEstimationcount), []string(argsTags), int64(argsCondition), []string(argsShippingregion), int64(argsDepositAmount), encryptedMsg, []string(argsPhotos))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

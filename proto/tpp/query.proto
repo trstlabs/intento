@@ -44,7 +44,7 @@ service Query {
 	}
 
 	rpc CodeHash(QueryCodeHashRequest) returns (QueryCodeHashResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/codehash";
+		option (google.api.http).get = "/danieljdd/tpp/tpp/codehash/{codeid}";
 	}
 
 }
@@ -104,7 +104,7 @@ message QueryAllListedItemsRequest {
 }
 
 message QueryAllListedItemsResponse {
-	repeated string Item = 1;
+	repeated Item Item = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

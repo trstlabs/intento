@@ -87,19 +87,19 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 		panic(err)
 	}
 	//fmt.Printf("result: Got result for item %s: %s\n", contractAddr, res)
-	fmt.Printf("result: Got result for item %s: %s\n", contractAddr, string(res.Data))
+	//fmt.Printf("result: Got result for item %s: %s\n", contractAddr, string(res.Data))
 
-	fmt.Printf("result: Got log for item %s: %s\n", contractAddr, res.Log)
+	//fmt.Printf("result: Got log for item %s: %s\n", contractAddr, res.Log)
 	var raw map[string]json.RawMessage
 	_ = json.Unmarshal([]byte(res.Log), &raw)
-	fmt.Printf("log: Got Unmarshal raw for item %s: %s\n", raw, contractAddr)
-	var values map[string]interface{}
-	fmt.Println(json.Unmarshal([]byte(res.Log), &msg))
-	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", values, contractAddr)
+	//fmt.Printf("log: Got Unmarshal raw for item %s: %s\n", raw, contractAddr)
+	//var values map[string]interface{}
+	//fmt.Println(json.Unmarshal([]byte(res.Log), &msg))
+	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", values, contractAddr)
 
 	var result types.EstimateResult
-	fmt.Println(json.Unmarshal([]byte(res.Log), &result))
-	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.Estimation.TotalCount), contractAddr)
+	//fmt.Println(json.Unmarshal([]byte(res.Log), &result))
+	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.Estimation.TotalCount), contractAddr)
 
 	if result.Estimation.TotalCount > 0 {
 		item.Estimationtotal = int64(result.Estimation.TotalCount)

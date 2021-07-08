@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,16 +44,20 @@ func (k Keeper) ListedItemsAll(c context.Context, req *types.QueryAllListedItems
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	//var items []*types.Item
+	var items []*types.Item
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 	itemStore := prefix.NewStore(store, types.ListedItemQueuePrefix)
 
-	var items []string
 	pageRes, err := query.Paginate(itemStore, req.Pagination, func(key []byte, value []byte) error {
+		var item types.Item
+		if err := k.cdc.UnmarshalBinaryBare(value, &item); err != nil {
+			return err
+		}
 
-		items = append(items, strconv.FormatUint(types.GetItemIDFromBytes(value), 10))
+		//k.cdc.MustUnmarshalBinaryBare(value, &item) //strconv.FormatUint(types.GetItemIDFromBytes(value), 10))
+		items = append(items, &item)
 		return nil
 
 	})

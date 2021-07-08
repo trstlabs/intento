@@ -9,6 +9,7 @@ import (
 	"github.com/danieljdd/tpp/x/compute/internal/types"
 )
 
+/*
 // IterateContractsQueue iterates over the items in the inactive item queue
 // and performs a callback function
 func (k Keeper) IterateContractsQueue(ctx sdk.Context, endTime time.Time, cb func(item types.ContractInfoWithAddress) (stop bool)) {
@@ -39,7 +40,7 @@ func (k Keeper) IterateContractsQueue(ctx sdk.Context, endTime time.Time, cb fun
 		}
 	}
 }
-
+*/
 // IterateContractsQueue iterates over the items in the inactive item queue
 // and performs a callback function
 func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func(addr sdk.AccAddress) (stop bool)) {

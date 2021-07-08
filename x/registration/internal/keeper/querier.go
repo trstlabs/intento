@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"github.com/golang/protobuf/ptypes/empty"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -18,7 +17,11 @@ func NewQuerier(keeper Keeper) grpcQuerier {
 	return grpcQuerier{keeper: keeper}
 }
 
-func (q grpcQuerier) MasterKey(c context.Context, _ *empty.Empty) (*types.MasterCertificate, error) {
+func (q grpcQuerier) MasterKey(c context.Context, req *types.QueryMasterKeyRequest) (*types.QueryMasterKeyResponse, error) {
+	/*if req == nil {
+		return nil, sdkerrors.Wrap(types.ErrInvalid, "empty request")
+	}*/
+
 	rsp, err := queryMasterKey(sdk.UnwrapSDKContext(c), q.keeper)
 	switch {
 	case err != nil:
@@ -26,7 +29,7 @@ func (q grpcQuerier) MasterKey(c context.Context, _ *empty.Empty) (*types.Master
 	case rsp == nil:
 		return nil, types.ErrNotFound
 	}
-	return rsp, nil
+	return &types.QueryMasterKeyResponse{MasterKey: rsp}, nil
 }
 
 func (q grpcQuerier) EncryptedSeed(c context.Context, req *types.QueryEncryptedSeedRequest) (*types.QueryEncryptedSeedResponse, error) {

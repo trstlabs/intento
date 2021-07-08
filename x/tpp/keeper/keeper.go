@@ -79,9 +79,9 @@ func (k Keeper) ListedItemQueueIterator(ctx sdk.Context, endTime time.Time) sdk.
 }
 
 // InsertListedItemQueue Inserts a itemid into the inactive item queue at endTime
-func (k Keeper) InsertListedItemQueue(ctx sdk.Context, itemid uint64, endTime time.Time) {
+func (k Keeper) InsertListedItemQueue(ctx sdk.Context, itemid uint64, item types.Item, endTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.Uint64ToByte(itemid)
+	bz := k.cdc.MustMarshalBinaryBare(&item) //types.Uint64ToByte(itemid)
 
 	//here the key is time+itemid appended (as bytes) and value is itemid in bytes
 	store.Set(types.ListedItemQueueKey(itemid, endTime), bz)

@@ -250,3 +250,8 @@ func NewVerificationInfo(signBytes []byte, signature []byte, callbackSig []byte)
 		CallbackSignature: callbackSig,
 	}
 }
+
+type ParseLast struct {
+	LastMsg struct {
+	} `json:"last_msg"`
+}

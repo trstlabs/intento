@@ -44,6 +44,7 @@ message Item {
       [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
        string contract = 30;
        int64 estimationtotal = 31;
+        repeated string photos = 32;
 }
 
 
@@ -62,6 +63,7 @@ message MsgCreateItem {
   repeated string shippingregion = 9; 
   int64 depositamount = 10;
   bytes initmsg = 11;
+repeated string photos = 12;
 }
 
 message MsgUpdateItem {

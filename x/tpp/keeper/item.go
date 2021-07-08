@@ -88,7 +88,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 
 	k.BindItemSeller(ctx, item.Id, msg.Creator)
 	//works 100% with endtime tx.BlockHeader().Time
-	k.InsertListedItemQueue(ctx, item.Id, endTime)
+	k.InsertListedItemQueue(ctx, item.Id, item, endTime)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),

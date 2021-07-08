@@ -3,15 +3,17 @@ package keeper
 import (
 	"encoding/hex"
 	"encoding/json"
+	"reflect"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/danieljdd/tpp/x/registration/internal/types"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"reflect"
 )
 
 const (
-	QueryEncryptedSeed     = "seed"
-	QueryMasterCertificate = "master-cert"
+	QueryEncryptedSeed     = types.QueryEncryptedSeed
+	QueryMasterCertificate = types.QueryMasterCertificate
 )
 
 // controls error output on querier - set true when testing/debugging

@@ -42,7 +42,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 				k.DeleteEstimation(ctx, key)
 			}
 		}
-		// title,status and rating are kept to enhance trust
+		// title,status and rating are kept for record keeping
 		item.Description = ""
 		item.Shippingcost = 0
 		item.Localpickup = ""
@@ -62,6 +62,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 		item.Shippingregion = nil
 		item.Note = ""
 		item.Contract = ""
+		item.Photos = nil
 
 		k.SetItem(ctx, item)
 
@@ -389,7 +390,8 @@ func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRes
 	item.Endtime = ctx.BlockTime().Add(types.DefaultParams().MaxActivePeriod)
 
 	k.SetItem(ctx, item)
-	k.InsertListedItemQueue(ctx, msg.Itemid, item.Endtime)
+	k.InsertListedItemQueue(ctx, msg.Itemid, item, item.Endtime)
+	k.BindItemSeller(ctx, msg.Itemid, msg.Seller)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemResellable, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))

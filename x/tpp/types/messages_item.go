@@ -8,7 +8,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup string, estimationcount int64, tags []string, condition int64, shippingregion []string, depositamount int64, initmsg []byte) *MsgCreateItem {
+func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup string, estimationcount int64, tags []string, condition int64, shippingregion []string, depositamount int64, initmsg []byte, photos []string) *MsgCreateItem {
 	return &MsgCreateItem{
 
 		Creator:         creator,
@@ -22,6 +22,7 @@ func NewMsgCreateItem(creator string, title string, description string, shipping
 		Shippingregion:  shippingregion,
 		Depositamount:   depositamount,
 		Initmsg:         initmsg,
+		Photos:          photos,
 	}
 }
 
@@ -92,6 +93,15 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 	}
 	if msg.Estimationcount > 24 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid estimation count")
+	}
+
+	if len(msg.Photos) > 9 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tags invalid")
+	}
+	for _, photo := range msg.Photos {
+		if len(photo) > 99 {
+			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "url too long")
+		}
 	}
 	return nil
 }

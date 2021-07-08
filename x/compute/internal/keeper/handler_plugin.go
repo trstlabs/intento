@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -73,6 +75,7 @@ func (e MessageEncoders) Merge(o *MessageEncoders) MessageEncoders {
 }
 
 func (e MessageEncoders) Encode(contractAddr sdk.AccAddress, msg wasmTypes.CosmosMsg) ([]sdk.Msg, error) {
+	fmt.Print("Encoding msg")
 	switch {
 	case msg.Bank != nil:
 		return e.Bank(contractAddr, msg.Bank)
@@ -84,9 +87,12 @@ func (e MessageEncoders) Encode(contractAddr sdk.AccAddress, msg wasmTypes.Cosmo
 		return e.Wasm(contractAddr, msg.Wasm)
 	case msg.Gov != nil:
 		return e.Gov(contractAddr, msg.Gov)
-	}
 
-	return nil, sdkerrors.Wrap(types.ErrInvalidMsg, "Unknown variant of Wasm")
+	default:
+		return nil, sdkerrors.Wrap(types.ErrInvalidMsg, "Unknown variant of Wasm")
+
+	}
+	//return nil, sdkerrors.Wrap(types.ErrInvalidMsg, "Unknown variant of Wasm")
 }
 
 func EncodeGovMsg(sender sdk.AccAddress, msg *wasmTypes.GovMsg) ([]sdk.Msg, error) {
@@ -200,7 +206,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			CallbackCodeHash: msg.Execute.CallbackCodeHash,
 			Msg:              msg.Execute.Msg,
 			SentFunds:        coins,
-			CallbackSig:      msg.Execute.CallbackSignature,
+			//CallbackSig:      msg.Execute.CallbackSignature,
 		}
 		return []sdk.Msg{&sdkMsg}, nil
 	case msg.Instantiate != nil:
@@ -217,7 +223,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			CallbackCodeHash: msg.Instantiate.CallbackCodeHash,
 			InitMsg:          msg.Instantiate.Msg,
 			InitFunds:        coins,
-			CallbackSig:      msg.Instantiate.CallbackSignature,
+			//CallbackSig:      msg.Instantiate.CallbackSignature,
 		}
 		return []sdk.Msg{&sdkMsg}, nil
 	default:
@@ -226,11 +232,17 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 }
 
 func (h MessageHandler) Dispatch(ctx sdk.Context, contractAddr sdk.AccAddress, msg wasmTypes.CosmosMsg) error {
+	fmt.Printf("Dispatching msg %+v\n", msg)
+	//	fmt.Printf("handling msg: %X\n", msg.)
+
 	sdkMsgs, err := h.encoders.Encode(contractAddr, msg)
 	if err != nil {
 		return err
 	}
+
 	for _, sdkMsg := range sdkMsgs {
+		fmt.Printf("Dispatching sdkMsgs %+v\n", sdkMsg)
+		fmt.Print("handling")
 		if err := h.handleSdkMessage(ctx, contractAddr, sdkMsg); err != nil {
 			return err
 		}
@@ -249,7 +261,8 @@ func (h MessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Addre
 			return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
 		}
 	}
-
+	fmt.Printf("signers %+q", msg.GetSigners())
+	fmt.Print("handl route:  %n ", msg.Route())
 	// find the handler and execute it
 	handler := h.router.Route(ctx, msg.Route())
 	if handler == nil {
@@ -257,17 +270,18 @@ func (h MessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Addre
 	}
 	res, err := handler(ctx, msg)
 	if err != nil {
+		fmt.Print("handler err", err)
 		return err
 	}
-
-	events := make(sdk.Events, len(res.Events))
+	fmt.Print("handl res %n", res)
+	/*events := make(sdk.Events, len(res.Events))
 	for i := range res.Events {
 		events[i] = sdk.Event(res.Events[i])
 	}
 
 	// redispatch all events, (type sdk.EventTypeMessage will be filtered out in the handler)
 	ctx.EventManager().EmitEvents(events)
-
+	*/
 	return nil
 }
 
