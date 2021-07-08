@@ -21,7 +21,10 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
-	regtypes "github.com/danieljdd/tpp/x/registration"
+	// "github.com/danieljdd/tpp/x/compute/internal/types"
+	reg "github.com/danieljdd/tpp/x/registration"
+
+	//"github.com/danieljdd/tpp/x/registration/internal/types"
 	ra "github.com/danieljdd/tpp/x/registration/remote_attestation"
 
 	"github.com/miscreant/miscreant.go"
@@ -65,7 +68,7 @@ func GzipIt(input []byte) ([]byte, error) {
 type WASMContext struct {
 	CLIContext       client.Context
 	TestKeyPairPath  string
-	TestMasterIOCert regtypes.MasterCertificate
+	TestMasterIOCert reg.MasterCertificate
 }
 
 type keyPair struct {
@@ -120,9 +123,13 @@ func (ctx WASMContext) GetTxSenderKeyPair() (privkey []byte, pubkey []byte, er e
 	}
 
 	privkey, err = hex.DecodeString(keyPair.Private)
+	if err != nil {
+		return nil, nil, err
+	}
 	pubkey, err = hex.DecodeString(keyPair.Public)
-
-	// TODO verify pubkey
+	if err != nil {
+		return nil, nil, err
+	}
 
 	return privkey, pubkey, nil
 }
@@ -135,22 +142,29 @@ var hkdfSalt = []byte{
 }
 
 func (ctx WASMContext) getConsensusIoPubKey() ([]byte, error) {
-	var masterIoKey regtypes.MasterCertificate
-	if ctx.TestMasterIOCert.Bytes != nil { // TODO check length?
+	var masterIoKey reg.MasterCertificate
+
+	var response reg.QueryMasterKeyResponse
+	if ctx.TestMasterIOCert.Bytes != nil {
 		masterIoKey.Bytes = ctx.TestMasterIOCert.Bytes
 	} else {
+		//route := fmt.Sprintf("custom/%s/%s", types.RegisterQuerierRoute, types.QueryMasterCertificate)
+
 		res, _, err := ctx.CLIContext.Query("/tpp.x.registration.v1beta1.Query/MasterKey")
 		if err != nil {
-			return nil, err
+			//	res, _, err = ctx.CLIContext.Query("/tpp.x.registration.v1beta1.Query/MasterKey")
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		err = encoding.GetCodec(proto.Name).Unmarshal(res, &masterIoKey)
+		err = encoding.GetCodec(proto.Name).Unmarshal(res, &response)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	ioPubkey, err := ra.VerifyRaCert(masterIoKey.Bytes)
+	ioPubkey, err := ra.VerifyRaCert(response.MasterKey.Bytes)
 	if err != nil {
 		return nil, err
 	}
@@ -159,6 +173,19 @@ func (ctx WASMContext) getConsensusIoPubKey() ([]byte, error) {
 }
 
 func (ctx WASMContext) getTxEncryptionKey(txSenderPrivKey []byte, nonce []byte) ([]byte, error) {
+
+	/*queryClient := registertypes.NewQueryClient(ctx.CLIContext)
+
+	params := &registertypes.QueryMasterKeyRequest{}
+
+	res, err := queryClient.MasterKey(context.Background(), params)
+	if err != nil {
+		return nil, fmt.Errorf("got an error querying client: %w", err)
+	}
+
+	consensusIoPubKeyBytes := res.MasterKey
+	fmt.Println("Failed to get IO key. %s", res)
+	*/
 	consensusIoPubKeyBytes, err := ctx.getConsensusIoPubKey()
 	if err != nil {
 		fmt.Println("Failed to get IO key. Make sure the CLI and the node you are targeting are operating in the same SGX mode")
@@ -166,7 +193,9 @@ func (ctx WASMContext) getTxEncryptionKey(txSenderPrivKey []byte, nonce []byte) 
 	}
 
 	txEncryptionIkm, err := curve25519.X25519(txSenderPrivKey, consensusIoPubKeyBytes)
-
+	if err != nil {
+		return nil, err
+	}
 	kdfFunc := hkdf.New(sha256.New, append(txEncryptionIkm[:], nonce...), hkdfSalt, []byte{})
 
 	txEncryptionKey := make([]byte, 32)
@@ -190,6 +219,9 @@ func (ctx WASMContext) OfflineEncrypt(plaintext []byte, pathToMasterIoKey string
 	}
 
 	txSenderPrivKey, txSenderPubKey, err := ctx.GetTxSenderKeyPair()
+	if err != nil {
+		return nil, err
+	}
 
 	nonce := make([]byte, 32)
 	_, err = rand.Read(nonce)
@@ -210,6 +242,9 @@ func (ctx WASMContext) OfflineEncrypt(plaintext []byte, pathToMasterIoKey string
 // Encrypt encrypts
 func (ctx WASMContext) Encrypt(plaintext []byte) ([]byte, error) {
 	txSenderPrivKey, txSenderPubKey, err := ctx.GetTxSenderKeyPair()
+	if err != nil {
+		return nil, err
+	}
 
 	nonce := make([]byte, 32)
 	_, err = rand.Read(nonce)
@@ -234,6 +269,9 @@ func (ctx WASMContext) Decrypt(ciphertext []byte, nonce []byte) ([]byte, error) 
 	}
 
 	txSenderPrivKey, _, err := ctx.GetTxSenderKeyPair()
+	if err != nil {
+		return nil, err
+	}
 
 	txEncryptionKey, err := ctx.getTxEncryptionKey(txSenderPrivKey, nonce)
 	if err != nil {
@@ -254,12 +292,12 @@ func (ctx WASMContext) DecryptError(errString string, msgType string, nonce []by
 
 	errorCipherBz, err := base64.StdEncoding.DecodeString(errorCipherB64)
 	if err != nil {
-		return nil, fmt.Errorf("Got an error decoding base64 of the error: %w", err)
+		return nil, fmt.Errorf("got an error decoding base64 of the error: %w", err)
 	}
 
 	errorPlainBz, err := ctx.Decrypt(errorCipherBz, nonce)
 	if err != nil {
-		return nil, fmt.Errorf("Got an error decrypting the error: %w", err)
+		return nil, fmt.Errorf("got an error decrypting the error: %w", err)
 	}
 
 	return errorPlainBz, nil

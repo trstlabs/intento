@@ -11,7 +11,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
-	"github.com/danieljdd/tpp/x/compute/internal/keeper"
+	//"github.com/danieljdd/tpp/x/compute/internal/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -228,7 +228,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		encryptedMsg, _ = wasmCtx.OfflineEncrypt(initMsg.Serialize(), ioKeyPath)
 	} else {
 		// if we aren't creating an offline transaction we can validate the chosen label
-		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryContractAddress, label)
+		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, label)
 		res, _, _ := cliCtx.Query(route)
 		if res != nil {
 			return types.MsgInstantiateContract{}, fmt.Errorf("label already exists. You must choose a unique label for your contract instance")
@@ -251,6 +251,18 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		encryptedMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
 
 	}
+	lastMsg := types.SecretMsg{}
+	last := types.ParseLast{}
+	lastMsg.Msg, err = json.Marshal(last)
+	if err != nil {
+		return types.MsgInstantiateContract{}, err
+	}
+	var lastMsgEncrypted []byte
+	lastMsg.CodeHash = initMsg.CodeHash
+	lastMsgEncrypted, err = wasmCtx.Encrypt(lastMsg.Serialize())
+	if err != nil {
+		return types.MsgInstantiateContract{}, err
+	}
 
 	if err != nil {
 		return types.MsgInstantiateContract{}, err
@@ -264,6 +276,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		Label:            label,
 		InitFunds:        amount,
 		InitMsg:          encryptedMsg,
+		LastMsg:          lastMsgEncrypted,
 	}
 	return msg, nil
 }
@@ -303,7 +316,7 @@ func ExecuteContractCmd() *cobra.Command {
 					return fmt.Errorf("label or bech32 contract address is required")
 				}
 
-				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryContractAddress, label)
+				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, label)
 				res, _, err := cliCtx.Query(route)
 				if err != nil {
 					return err
@@ -380,10 +393,10 @@ func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []b
 		encryptedMsg, err = wasmCtx.OfflineEncrypt(execMsg.Serialize(), ioMasterKeyPath)
 	} else {
 		/*
-		   routeHash := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryContractHash, contractAddress.String())
+		   routeHash := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractHash, contractAddress.String())
 		   hash, _, err := cliCtx.Query(routeHash)
 		   if err != nil {
-		   return fmt.Errorf("error querying contract hash: %s", err)
+		   return fmt.Errorf("error querying code hash: %s", err)
 		   }
 
 
@@ -415,13 +428,13 @@ func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []b
 		Msg:              encryptedMsg,
 	}
 
-	//	fmt.Printf("Execute message before keeper is %s \n", string(encryptedMsg))
+	//	fmt.Printf("Execute message before types is %s \n", string(encryptedMsg))
 
 	return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), &msgExec)
 }
 
 func GetCodeHashByCodeId(cliCtx client.Context, codeID string) ([]byte, error) {
-	route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryGetCode, codeID)
+	route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryGetCode, codeID)
 	res, _, err := cliCtx.Query(route)
 	if err != nil {
 		return nil, err
@@ -434,11 +447,11 @@ func GetCodeHashByCodeId(cliCtx client.Context, codeID string) ([]byte, error) {
 		return nil, err
 	}
 
-	return []byte(hex.EncodeToString(codeResp.DataHash)), nil
+	return []byte(hex.EncodeToString(codeResp.CodeHash)), nil
 }
 
 func GetCodeHashByContractAddr(cliCtx client.Context, contractAddr sdk.AccAddress) ([]byte, error) {
-	route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryContractHash, contractAddr.String())
+	route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractHash, contractAddr.String())
 	res, _, err := cliCtx.Query(route)
 	if err != nil {
 		return nil, err

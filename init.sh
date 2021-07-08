@@ -28,4 +28,11 @@ tppd collect-gentxs
 echo "Validating genesis file..."
 tppd validate-genesis
 
+sed -i '104s/enable = false/enable = true/g' ~/.tpp/config/app.toml
+sed -i 's/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.tpp/config/app.toml
+
+
+
+
 tppd start --bootstrap
+

@@ -1,7 +1,7 @@
 package compute
 
 import (
-	"fmt"
+	//"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -17,45 +17,31 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	logger := k.Logger(ctx)
-	fmt.Printf("ABCI ENDBLOCK COMPUTE")
+	//fmt.Printf("ABCI ENDBLOCK COMPUTE")
 	// delete inactive items from store and its deposits
-	/*k.IterateContractsQueue(ctx, ctx.BlockHeader().Time, func(contract types.ContractInfoWithAddress) bool {
-		fmt.Printf(" ENDBLOCK QUEue")
-		logger.Info(
-			"contract was expired",
-			"contract", contract.ContractInfo.CodeID,
-			//"title", item.GetTitle(),
-		)
-		fmt.Printf("Deleting")
-		err := k.Delete(ctx, contract.Address)
-		if err != nil {
-			fmt.Printf("contract.ContractInfo.CodeID")
-			fmt.Printf("contract.ContractInfo.CodeID  is:  %s ", strconv.FormatUint(contract.ContractInfo.CodeID, 10))
-			return false
-		}
-
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeContractExpired,
-				sdk.NewAttribute(types.AttributeKeyCodeID, strconv.FormatUint(contract.ContractInfo.CodeID, 10)),
-			),
-		)
-		return false
-	})*/
 	k.IterateContractQueue(ctx, ctx.BlockHeader().Time, func(addr sdk.AccAddress) bool {
-		fmt.Printf(" ENDBLOCK QUEue")
+		//	fmt.Printf(" ENDBLOCK QUEue")
 		logger.Info(
 			"contract was expired",
 			"contract", addr.String(),
-			//"title", item.GetTitle(),
 		)
-		fmt.Printf("Deleting")
-		err := k.Delete(ctx, addr)
+		//fmt.Printf("Deleting")
+		err := k.CallLastMsg(ctx, addr)
+
 		if err != nil {
-			//fmt.Printf("contract.ContractInfo.CodeID")
-			fmt.Printf(".AttributeKeyContractAddr  is:  %s ", addr.String())
-			return false
+			logger.Info(
+				"Calling last msg unsuccesful", err,
+			)
+			err = k.ContractPayout(ctx, addr)
+			logger.Info(
+				"Contract creator payout", err,
+			)
 		}
+		k.RemoveFromContractQueue(ctx, addr.String(), ctx.BlockHeader().Time)
+		err = k.Delete(ctx, addr)
+		logger.Info(
+			"Deleted", err,
+		)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -64,6 +50,14 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			),
 		)
 		return false
+
+		/*if err != nil {
+			//fmt.Printf("contract.ContractInfo.CodeID")
+			//fmt.Printf(".AttributeKeyContractAddr  is:  %s ", addr.String())
+			return false
+		}
+		*/
+
 	})
 
 	return []abci.ValidatorUpdate{}

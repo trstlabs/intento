@@ -26,7 +26,6 @@ import (
 
 	wasmUtils "github.com/danieljdd/tpp/x/compute/client/utils"
 
-	"github.com/danieljdd/tpp/x/compute/internal/keeper"
 	"github.com/danieljdd/tpp/x/compute/internal/types"
 )
 
@@ -66,7 +65,7 @@ func GetCmdListCode() *cobra.Command {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, keeper.QueryListCode)
+			route := fmt.Sprintf("custom/%s/%s", types.QuerierRoute, types.QueryListCode)
 			res, _, err := clientCtx.Query(route)
 			if err != nil {
 				return err
@@ -93,7 +92,7 @@ func GetCmdQueryLabel() *cobra.Command {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryContractAddress, args[0])
+			route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, args[0])
 			res, _, err := clientCtx.Query(route)
 			if err != nil {
 				if err == sdkErrors.ErrUnknownAddress {
@@ -123,7 +122,7 @@ func GetCmdQueryLabel() *cobra.Command {
 // GetCmdListCode lists all wasm code uploaded
 func GetCmdCodeHashByContract() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "contract-hash [address]",
+		Use:   "code-hash [address]",
 		Short: "Return the code hash of a contract",
 		Long:  "Return the code hash of a contract",
 		Args:  cobra.ExactArgs(1),
@@ -133,10 +132,10 @@ func GetCmdCodeHashByContract() *cobra.Command {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryContractHash, args[0])
+			route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractHash, args[0])
 			res, _, err := clientCtx.Query(route)
 			if err != nil {
-				return fmt.Errorf("error querying contract hash: %s", err)
+				return fmt.Errorf("error querying code hash: %s", err)
 			}
 
 			codeHash := hex.EncodeToString(res)
@@ -167,7 +166,7 @@ func GetCmdListContractByCode() *cobra.Command {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s/%d", types.QuerierRoute, keeper.QueryListContractByCode, codeID)
+			route := fmt.Sprintf("custom/%s/%s/%d", types.QuerierRoute, types.QueryListContractByCode, codeID)
 			res, _, err := clientCtx.Query(route)
 			if err != nil {
 				return err
@@ -199,7 +198,7 @@ func GetCmdQueryCode() *cobra.Command {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s/%d", types.QuerierRoute, keeper.QueryGetCode, codeID)
+			route := fmt.Sprintf("custom/%s/%s/%d", types.QuerierRoute, types.QueryGetCode, codeID)
 			res, _, err := clientCtx.Query(route)
 			if err != nil {
 				return err
@@ -244,7 +243,7 @@ func GetCmdGetContractInfo() *cobra.Command {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContract, addr.String())
+			route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryGetContract, addr.String())
 			res, _, err := clientCtx.Query(route)
 			if err != nil {
 				return err
@@ -492,7 +491,7 @@ func GetCmdQuery() *cobra.Command {
 					return fmt.Errorf("label or bech32 contract address is required")
 				}
 
-				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryContractAddress, label)
+				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, label)
 				res, _, err := clientCtx.Query(route)
 				if err != nil {
 					return err
@@ -530,7 +529,7 @@ func QueryWithData(contractAddress string, queryData []byte, cliCtx client.Conte
 		return err
 	}
 
-	route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractState, addr.String())
+	route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryGetContractState, addr.String())
 
 	wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
@@ -544,10 +543,10 @@ func QueryWithData(contractAddress string, queryData []byte, cliCtx client.Conte
 			return fmt.Errorf("code id not found: %s", codeHash)
 		}*/
 
-	routeHash := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryContractHash, addr.String())
+	routeHash := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractHash, addr.String())
 	hash, _, err := cliCtx.Query(routeHash)
 	if err != nil {
-		return fmt.Errorf("error querying contract hash: %s", err)
+		return fmt.Errorf("error querying code hash: %s", err)
 	}
 
 	//codeHash := hex.EncodeToString(res)
@@ -564,7 +563,7 @@ func QueryWithData(contractAddress string, queryData []byte, cliCtx client.Conte
 
 	res, _, err := cliCtx.QueryWithData(route, queryData)
 
-	//res, err := keeper.QueryContractState(sdk.Context,contractAddress, queryData, keeper)
+	//res, err := types.QueryContractState(sdk.Context,contractAddress, queryData, types)
 
 	if err != nil {
 		if types.ErrContainsQueryError(err) {

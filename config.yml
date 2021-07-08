@@ -1,12 +1,12 @@
 accounts:
   - name: user1
-    coins: ["1000tpp", "100000000stake"]
+    coins: ["10000tpp", "1000000stake"]
   - name: user2
-    coins: ["5000tpp"]
+    coins: ["50000tpp"]
   - name: user3
-    coins: ["500tpp"]
+    coins: ["5000tpp"]
   - name: user4
-    coins: ["500tpp"]
+    coins: ["5000tpp"]
   - name: faucet
     coins: ["100000000tpp"]
 

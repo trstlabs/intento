@@ -5,9 +5,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 	"net/http"
 	"strconv"
+
+	"github.com/cosmos/cosmos-sdk/client"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
@@ -276,7 +277,7 @@ func queryCodeHashHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		cliCtx = cliCtx.WithHeight(height)
-		rest.PostProcessResponse(w, cliCtx, hex.EncodeToString(codeResp.DataHash))
+		rest.PostProcessResponse(w, cliCtx, hex.EncodeToString(codeResp.CodeHash))
 	}
 }
 

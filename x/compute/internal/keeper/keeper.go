@@ -278,6 +278,9 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	gas := gasForContract(ctx)
 	res, key, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo)
 	consumeGas(ctx, gasUsed)
+	//fmt.Print("Init message after wasm is  \n", res.Messages[0])
+	//fmt.Print("Init message after wasm is  \n", res.Messages[1])
+	//fmt.Printf("Init message after wasm is  \n", res.Log)
 	if err != nil {
 		return contractAddress, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
 	}
@@ -288,7 +291,18 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 
 	// persist instance
 	createdAt := types.NewAbsoluteTxPosition(ctx)
-	instance := types.NewContractInfo(codeID, creator /* admin, */, label, createdAt)
+	var instance = types.ContractInfo{
+		CodeID:  codeID,
+		Creator: creator,
+		Label:   label,
+		Created: createdAt,
+	}
+	//	instance.CodeID = codeID
+	//	instance.Creator = creator
+	//	instance.Label = label
+	//	instance.Created = createdAt
+	//instance.LastMsg = nil
+	//instance = types.NewContractInfo(codeID, creator /* admin, */, label, createdAt, nil)
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryBare(&instance))
 
 	//	fmt.Printf("Storing key: %s for account %s\n", base64.StdEncoding.EncodeToString(key), contractAddress)
@@ -392,6 +406,60 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}, nil
 }
 
+/*
+// Delete deletes the contract instance
+func (k Keeper) ContractPayout(ctx sdk.Context, contractAddress sdk.AccAddress) error {
+	store := ctx.KVStore(k.storeKey)
+	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
+	if contractBz == nil {
+		return sdkerrors.Wrap(types.ErrNotFound, "contract")
+	}
+	var contract types.ContractInfo
+	k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)
+
+	//payout contract coins to the creator
+	balance := k.bankKeeper.GetAllBalances(ctx, contractAddress)
+	if !balance.Empty() {
+		k.bankKeeper.SendCoins(ctx, contractAddress, contract.Creator, balance)
+	}
+	return nil
+}
+
+// CallLastMsg executes a final message before end-blocker deletion
+func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (err error) {
+
+
+	//msgLast =
+	//var err
+	lastMsg := types.SecretMsg{}
+	last := types.ParseLast{}
+
+	//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
+	lastMsg.Msg, err = json.Marshal(last)
+	if err != nil {
+		return err
+	}
+
+	//queryClient := types.NewQueryClient(ctx.Context())
+
+	//get codeid first
+	hash := k.GetCodeHash(ctx, codeid)
+
+	var encryptedMsg []byte
+	lastMsg.CodeHash = []byte(hex.EncodeToString(hash))
+	encryptedMsg, err = wasmCtx.Encrypt(deletegMsg.Serialize())
+	if err != nil {
+		return err
+	}
+
+	res, err := k.Execute(ctx, contractAddress, contractAddress, encryptedMsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+*/
 // Delete deletes the contract instance
 func (k Keeper) Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error {
 
@@ -718,23 +786,23 @@ func (k Keeper) GetContractAddress(ctx sdk.Context, label string) sdk.AccAddress
 
 func (k Keeper) GetContractHash(ctx sdk.Context, contractAddress sdk.AccAddress) []byte {
 
-	codeId := k.GetContractInfo(ctx, contractAddress).CodeID
+	info, _ := k.GetContractInfo(ctx, contractAddress)
 
-	hash := k.GetCodeInfo(ctx, codeId).CodeHash
+	hash := k.GetCodeInfo(ctx, info.CodeID).CodeHash
 
 	return hash
 }
 
 //GetContractInfo Seems to panic
-func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) *types.ContractInfo {
+func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) (types.ContractInfo, error) {
 	store := ctx.KVStore(k.storeKey)
 	var contract types.ContractInfo
 	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
 	if contractBz == nil {
-		return nil
+		return types.ContractInfo{}, sdkerrors.Wrap(types.ErrNotFound, "contract info")
 	}
 	k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)
-	return &contract
+	return contract, nil
 }
 
 //GetContractInfoWithAddress Seems to panic
@@ -893,7 +961,7 @@ func consumeGas(ctx sdk.Context, gas uint64) {
 	ctx.GasMeter().ConsumeGas(consumed, "wasm contract")
 	// throw OutOfGas error if we ran out (got exactly to zero due to better limit enforcing)
 	if ctx.GasMeter().IsOutOfGas() {
-		panic(sdk.ErrorOutOfGas{"Wasmer function execution"})
+		panic(sdk.ErrorOutOfGas{})
 	}
 }
 

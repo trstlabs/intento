@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	//"io/ioutil"
-"os"
+	"os"
+
 	"github.com/danieljdd/tpp/x/registration/internal/keeper"
 	flag "github.com/spf13/pflag"
 

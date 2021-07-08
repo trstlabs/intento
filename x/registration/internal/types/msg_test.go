@@ -2,7 +2,7 @@ package types
 
 import (
 	"fmt"
-	"io/ioutil"
+
 	"os"
 	"testing"
 

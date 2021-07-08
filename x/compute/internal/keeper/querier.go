@@ -195,15 +195,15 @@ func (q grpcQuerier) ContractHash(c context.Context, req *types.QueryContractHas
 }
 
 func queryContractInfo(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) (*types.ContractInfoWithAddress, error) {
-	info := keeper.GetContractInfo(ctx, addr)
-	if info == nil {
+	info, err := keeper.GetContractInfo(ctx, addr)
+	if err != nil {
 		return nil, nil
 	}
 	// redact the Created field (just used for sorting, not part of public API)
 	info.Created = nil
 	return &types.ContractInfoWithAddress{
 		Address:      addr,
-		ContractInfo: info,
+		ContractInfo: &info,
 	}, nil
 }
 
@@ -245,7 +245,7 @@ func QueryCode(ctx sdk.Context, codeID uint64, keeper Keeper) (*types.QueryCodeR
 	info := types.CodeInfoResponse{
 		CodeID:   codeID,
 		Creator:  res.Creator,
-		DataHash: res.CodeHash,
+		CodeHash: res.CodeHash,
 		Source:   res.Source,
 		Builder:  res.Builder,
 	}
@@ -264,7 +264,7 @@ func queryCodeList(ctx sdk.Context, keeper Keeper) ([]types.CodeInfoResponse, er
 		info = append(info, types.CodeInfoResponse{
 			CodeID:   i,
 			Creator:  res.Creator,
-			DataHash: res.CodeHash,
+			CodeHash: res.CodeHash,
 			Source:   res.Source,
 			Builder:  res.Builder,
 		})
@@ -316,8 +316,8 @@ func queryContractKey(ctx sdk.Context, address sdk.AccAddress, keeper Keeper) ([
 }
 
 func queryContractHash(ctx sdk.Context, address sdk.AccAddress, keeper Keeper) ([]byte, error) {
-	res := keeper.GetContractInfo(ctx, address)
-	if res == nil {
+	res, err := keeper.GetContractInfo(ctx, address)
+	if err != nil {
 		return nil, nil
 	}
 
