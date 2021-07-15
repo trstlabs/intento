@@ -6,6 +6,7 @@ import (
 	//"github.com/tendermint/tendermint/crypto"
 
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -14,8 +15,11 @@ import (
 )
 
 func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateEstimation) (*sdk.Result, error) {
-	fmt.Printf("handling msg: %X\n", msg.Itemid)
+	//fmt.Printf("handling msg: %X\n", msg.Itemid)
 	item := k.GetItem(ctx, msg.Itemid)
+	if item.Id != msg.Itemid {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item not found")
+	}
 	if item.Bestestimator != "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has an estimation")
 	}
@@ -58,10 +62,15 @@ func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgC
 		item.Estimatorlist = append(item.Estimatorlist, msg.Estimator)
 	*/
 	item.Estimatorlist = append(item.Estimatorlist, msg.Estimator)
-	fmt.Printf("setting item msg: %X\n", msg.Itemid)
+	//fmt.Printf("setting item msg: %X\n", msg.Itemid)
 	k.SetItem(ctx, item)
-	fmt.Printf("go to keeper item msg: %X\n", msg.Itemid)
-	k.CreateEstimation(ctx, *msg)
+	//fmt.Printf("go to keeper item msg: %X\n", msg.Itemid)
+	err := k.CreateEstimation(ctx, *msg)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.EventTypeItemReady, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
@@ -117,9 +126,9 @@ func handleMsgDeleteEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgD
 
 	err := k.DeleteEncryptedEstimation(ctx, item, *msg)
 	if err != nil {
-		fmt.Printf("err executing")
-		fmt.Printf("executing contract: %X\n", err)
-		return nil, sdkerrors.Wrap(err, "error deleting estimation") ///panic(err)
+		//	fmt.Printf("err executing")
+		//	fmt.Printf("executing contract: %X\n", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error()) ///panic(err)
 	}
 
 	k.DeleteEstimation(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...))
@@ -144,7 +153,7 @@ func handleMsgFlagItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgFlagItem)
 	if err != nil {
 		//	fmt.Printf("err executing")
 		//	fmt.Printf("executing contract: %X\n", err)
-		return nil, sdkerrors.Wrap(err, "error flagging item") ///panic(err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error()) ///panic(err)
 	}
 	/*//remove item when it is flagged enough
 	if int64(len(item.Estimatorlist)/2) < item.Flags+1 {

@@ -18,6 +18,7 @@ service Query {
   rpc EncryptedSeed (QueryEncryptedSeedRequest) returns (QueryEncryptedSeedResponse) {
     option (google.api.http).get = "/registration/v1beta1/encrypted-seed/{pub_key}";
   }
+
 }
 
 
@@ -26,6 +27,7 @@ message QueryMasterKeyRequest {}
 
 message QueryMasterKeyResponse {
   MasterCertificate master_key = 1; // [(gogoproto.nullable) = false];
+
 }
 
 message QueryEncryptedSeedRequest {

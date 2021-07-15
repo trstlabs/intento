@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/danieljdd/tpp/x/registration/internal/types"
+	ra "github.com/danieljdd/tpp/x/registration/remote_attestation"
 )
 
 type grpcQuerier struct {
@@ -21,6 +22,8 @@ func (q grpcQuerier) MasterKey(c context.Context, req *types.QueryMasterKeyReque
 	/*if req == nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "empty request")
 	}*/
+	//var response types.QueryMasterKeyResponse
+	//	var response *types.MasterCertificate
 
 	rsp, err := queryMasterKey(sdk.UnwrapSDKContext(c), q.keeper)
 	switch {
@@ -29,8 +32,115 @@ func (q grpcQuerier) MasterKey(c context.Context, req *types.QueryMasterKeyReque
 	case rsp == nil:
 		return nil, types.ErrNotFound
 	}
+
+	/*	err = encoding.GetCodec(proto.Name).Unmarshal(rsp.Bytes, &response.Bytes)
+		if err != nil {
+			return nil, err
+		}
+	*/
+	/*err = encoding.GetCodec(proto.Name).Unmarshal(rsp.Bytes, &response)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("response %+v\n", &response)*/
+	//	fmt.Printf("master key %+v\n", rsp)
+
+	ioPubkey, err := ra.VerifyRaCert(rsp.Bytes)
+	if err != nil {
+		return nil, err
+	}
+	//	fmt.Printf("response %+v\n", ioPubkey)
+	rsp.Bytes = ioPubkey
 	return &types.QueryMasterKeyResponse{MasterKey: rsp}, nil
 }
+
+/*
+func (q grpcQuerier) MasterKeyBytes(c context.Context, req *types.QueryMasterKeyBytesRequest) (*types.QueryMasterKeyBytesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	var response types.QueryMasterKeyResponse
+
+	rsp, err := queryMasterKey(sdk.UnwrapSDKContext(c), q.keeper)
+	switch {
+	case err != nil:
+		return nil, err
+	case rsp == nil:
+		return nil, types.ErrNotFound
+	}
+
+	result := &types.QueryMasterKeyResponse{MasterKey: rsp}
+
+	err = encoding.GetCodec(proto.Name).Unmarshal(rsp, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	//keeper.GetMasterCertificate(ctx, types.MasterIoKeyId)
+	ioPubKey := q.keeper.GetMasterIoPubKeyArray(ctx)
+
+	fmt.Printf("query result: %X\n", result)
+	fmt.Printf("query ioPubKey bytes: %X\n", &ioPubKey)
+	//store := ctx.KVStore(k.storeKey)
+
+	//codeHash := store.Get([]byte(req.Codeid))
+	if ioPubKey == nil {
+		return nil, status.Error(codes.InvalidArgument, "no io PubKey")
+	}
+
+	err := encoding.GetCodec(proto.Name).Unmarshal(ioPubKey, &response.Bytes)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "marshalling failed")
+	}
+
+	ioPubkey, err := ra.VerifyRaCert(response.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("query ioPubKey response: %X\n", &response)
+	fmt.Printf("query ioPubKey response bytes: %X\n", response)
+	//itemStore := prefix.NewStore(store, types.KeyPrefix(types.ItemKey))
+
+	return &types.QueryMasterKeyBytesResponse{Masterkey: ioPubkey}, nil
+}
+*/ /*
+
+func (q grpcQuerier) MasterKeyBytes(c context.Context, req *types.QueryMasterKeyBytesRequest) (*types.QueryMasterKeyBytesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	var response *types.MasterCertificate
+	ctx := sdk.UnwrapSDKContext(c)
+	//keeper.GetMasterCertificate(ctx, types.MasterIoKeyId)
+	ioPubKey := q.keeper.GetMasterIoPubKeyArray(ctx)
+
+	fmt.Printf("query ioPubKey: %X\n", ioPubKey)
+	fmt.Printf("query ioPubKey bytes: %X\n", &ioPubKey)
+	//store := ctx.KVStore(k.storeKey)
+
+	//codeHash := store.Get([]byte(req.Codeid))
+	if ioPubKey == nil {
+		return nil, status.Error(codes.InvalidArgument, "no io PubKey")
+	}
+
+	err := encoding.GetCodec(proto.Name).Unmarshal(ioPubKey, &response.Bytes)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "marshalling failed")
+	}
+
+	ioPubkey, err := ra.VerifyRaCert(response.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("query ioPubKey response: %X\n", &response)
+	fmt.Printf("query ioPubKey response bytes: %X\n", response)
+	//itemStore := prefix.NewStore(store, types.KeyPrefix(types.ItemKey))
+
+	return &types.QueryMasterKeyBytesResponse{Masterkey: ioPubkey}, nil
+}*/
 
 func (q grpcQuerier) EncryptedSeed(c context.Context, req *types.QueryEncryptedSeedRequest) (*types.QueryEncryptedSeedResponse, error) {
 	if req.PubKey == nil {
@@ -52,7 +162,6 @@ func queryMasterKey(ctx sdk.Context, keeper Keeper) (*types.MasterCertificate, e
 	if ioKey == nil { //|| nodeKey == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "Chain has not been initialized yet")
 	}
-
 	//resp := types.GenesisState{
 	//	Registration:              nil,
 	//	NodeExchMasterCertificate: nodeKey,

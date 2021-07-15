@@ -47,6 +47,7 @@ service Query {
 		option (google.api.http).get = "/danieljdd/tpp/tpp/codehash/{codeid}";
 	}
 
+
 }
 
 // this line is used by starport scaffolding # 3
@@ -133,6 +134,9 @@ message QueryCodeHashRequest {
 
 message QueryCodeHashResponse {
 	bytes codehash = 1;
+	string codehash_string = 2;
 	
 }
+
+
 
