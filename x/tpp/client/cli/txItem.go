@@ -80,11 +80,20 @@ func CmdCreateItem() *cobra.Command {
 			var encryptedMsg []byte
 
 			initMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
-			//fmt.Printf("Got initMsg.CodeHash hash: %X\n", initMsg.CodeHash)
+			/*	fmt.Printf("Got RES %X\n", res.Codehash)
+				fmt.Printf("Got RES: %s", res.Codehash)
+				fmt.Printf("Got RES String string: %s", string(res.Codehash))
+				fmt.Printf("Got res CodeHash hash: %X\n", hex.EncodeToString(res.Codehash))
+				fmt.Printf("Got res CodeHash hash string: %s", hex.EncodeToString(res.Codehash))
+				fmt.Printf("Got initMsg.CodeHash hash: %X\n", initMsg.CodeHash)
+				fmt.Printf("Got initMsg.CodeHash hash string: %s", initMsg.CodeHash)*/
 			encryptedMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
 			if err != nil {
 				return err
 			}
+
+			///	fmt.Printf("encryptedMsg %+v\n ", encryptedMsg)
+
 			//fmt.Printf("encryptedMsg: %X\n", encryptedMsg)
 			argsCondition, _ := strconv.ParseInt(args[6], 10, 64)
 

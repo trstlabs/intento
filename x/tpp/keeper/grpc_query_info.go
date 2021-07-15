@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"fmt"
+	"encoding/hex"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/danieljdd/tpp/x/tpp/types"
@@ -17,15 +17,18 @@ func (k Keeper) CodeHash(c context.Context, req *types.QueryCodeHashRequest) (*t
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	codeHash := k.computeKeeper.GetCodeHash(ctx, req.Codeid)
-	fmt.Printf("query codeHash: %X\n", codeHash)
+	CodeHash := k.computeKeeper.GetCodeHash(ctx, req.Codeid)
+	//	fmt.Printf("query codeHash: %X\n", CodeHash)
+	//	fmt.Printf("query codeHash string: %s", CodeHash)
+	//	fmt.Printf("query codeHash string string: %s", string(CodeHash))
 	//store := ctx.KVStore(k.storeKey)
 
 	//codeHash := store.Get([]byte(req.Codeid))
-	if codeHash == nil {
+	if CodeHash == nil {
 		return nil, status.Error(codes.InvalidArgument, "no code hash")
 	}
+
 	//itemStore := prefix.NewStore(store, types.KeyPrefix(types.ItemKey))
 
-	return &types.QueryCodeHashResponse{Codehash: codeHash}, nil
+	return &types.QueryCodeHashResponse{Codehash: CodeHash, CodehashString: hex.EncodeToString(CodeHash)}, nil
 }

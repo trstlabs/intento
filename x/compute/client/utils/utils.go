@@ -163,13 +163,19 @@ func (ctx WASMContext) getConsensusIoPubKey() ([]byte, error) {
 			return nil, err
 		}
 	}
-
-	ioPubkey, err := ra.VerifyRaCert(response.MasterKey.Bytes)
+	/*ioPubkey, err := ra.VerifyRaCert(response.MasterKey.Bytes)
 	if err != nil {
 		return nil, err
-	}
+	}*/
 
-	return ioPubkey, nil
+	/*ioPubkey, err = ra.VerifyRaCert(res.Bytes)
+	if err != nil {
+		return nil, err
+	}*/
+
+	fmt.Printf("ioPubkey %+v\n", response.MasterKey.Bytes)
+
+	return response.MasterKey.Bytes, nil
 }
 
 func (ctx WASMContext) getTxEncryptionKey(txSenderPrivKey []byte, nonce []byte) ([]byte, error) {
@@ -258,6 +264,10 @@ func (ctx WASMContext) Encrypt(plaintext []byte) ([]byte, error) {
 		log.Println(err)
 		return nil, err
 	}
+	/*fmt.Printf("txEncryptionKey %+v\n, ", txEncryptionKey)
+	fmt.Printf("txSenderPubKey %+v\n, ", txSenderPubKey)
+	fmt.Printf("plaintext %+v\n, ", plaintext)
+	fmt.Printf("nonce %+v\n, ", nonce)*/
 
 	return encryptData(txEncryptionKey, txSenderPubKey, plaintext, nonce)
 }

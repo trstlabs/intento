@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/hex"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/danieljdd/tpp/x/registration/internal/types"
@@ -35,6 +36,20 @@ func (k Keeper) GetMasterCertificate(ctx sdk.Context, certType string) *types.Ma
 	}
 	k.cdc.MustUnmarshalBinaryBare(certBz, &cert)
 	return &cert
+}
+
+func (k Keeper) GetMasterIoPubKeyArray(ctx sdk.Context) []byte {
+	store := ctx.KVStore(k.storeKey)
+	var cert types.MasterCertificate
+	certBz := store.Get(types.MasterCertPrefix(types.MasterIoKeyId))
+	if certBz == nil {
+		return nil
+	}
+	k.cdc.MustUnmarshalBinaryBare(certBz, &cert)
+	fmt.Printf("cert : %X\n", cert)
+	fmt.Printf("cert Bytes: %X\n", cert.Bytes)
+
+	return cert.Bytes
 }
 
 func (k Keeper) setMasterCertificate(ctx sdk.Context, cert types.MasterCertificate, certType string) {

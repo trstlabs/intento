@@ -40,7 +40,7 @@ func (k Keeper) SetItemCount(ctx sdk.Context, count int64) {
 }
 
 // CreateItem creates a item with a new id and update the count
-func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
+func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 
 	// Create the item
 	count := k.GetItemCount(ctx)
@@ -58,12 +58,12 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 
 	userAddress, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	contractAddr, err := k.computeKeeper.Instantiate(ctx, uint64(1), userAddress, msg.Initmsg, fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	var item = types.Item{
@@ -101,6 +101,8 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) {
 
 	// Update item count
 	k.SetItemCount(ctx, count+1)
+
+	return nil
 }
 
 // SetItem set a specific item in the store
@@ -266,8 +268,8 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 	store.Set(key, value)
 
 	var result types.RevealResult
-
-	fmt.Println(json.Unmarshal([]byte(res.Log), &result))
+	json.Unmarshal([]byte(res.Log), &result)
+	//fmt.Println(json.Unmarshal([]byte(res.Log), &result))
 	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.RevealEstimation.Bestestimation), contractAddr)
 	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", result.RevealEstimation.Comments[1], contractAddr)
 	//	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", res.Log, contractAddr)

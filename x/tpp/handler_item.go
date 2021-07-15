@@ -15,8 +15,10 @@ import (
 
 func handleMsgCreateItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateItem) (*sdk.Result, error) {
 
-	k.CreateItem(ctx, *msg)
-
+	err := k.CreateItem(ctx, *msg)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+	}
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
@@ -94,15 +96,16 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	if msg.Creator != item.Seller {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not item seller account")
 	}
-	if item.Bestestimator != "Awaiting" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item cannot be revealed")
+
+	if item.Estimationcount != item.Estimationtotal {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not enough estimators")
 	}
 
 	err := k.RevealEstimation(ctx, item, *msg)
 	if err != nil {
-		fmt.Printf("err executing")
-		fmt.Printf("executing contract: %X\n", err)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item cannot be revealed") ///panic(err)
+		//	fmt.Printf("err executing")
+		//	fmt.Printf("executing contract: %X\n", err)
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error()) ///panic(err)
 	}
 
 	/*

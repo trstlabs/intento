@@ -8,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"strconv"
 
@@ -44,11 +45,11 @@ func (k Keeper) SetEstimatorCount(ctx sdk.Context, count int64) {
 }
 
 // CreateEstimation creates a estimator with a new id and update the count
-func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation) {
+func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation) error {
 
 	item := k.GetItem(ctx, msg.Itemid)
 
-	fmt.Printf("Keeper : %X\n", item.Contract)
+	//	fmt.Printf("Keeper : %X\n", item.Contract)
 	// Create the estimator
 	count := k.GetEstimatorCount(ctx)
 	deposit := sdk.NewInt64Coin("tpp", msg.Deposit)
@@ -66,25 +67,24 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 
 	estimatorAddress, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
-		panic(err)
-
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "address invalid")
 	}
 
 	coins := sdk.NewCoins(deposit)
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatorAddress, types.ModuleName, coins)
 	if err != nil {
-		panic(err)
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "sending coins failed")
 	}
 
 	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
 	if err != nil {
-		panic(err)
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract address invalid")
 	}
-	fmt.Printf("executing contract: %X\n", contractAddr)
+	//	fmt.Printf("executing contract: %X\n", contractAddr)
 	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.Estimatemsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
 	if err != nil {
-		panic(err)
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "error when executing estimation")
 	}
 	//fmt.Printf("result: Got result for item %s: %s\n", contractAddr, res)
 	//fmt.Printf("result: Got result for item %s: %s\n", contractAddr, string(res.Data))
@@ -98,18 +98,14 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", values, contractAddr)
 
 	var result types.EstimateResult
-	//fmt.Println(json.Unmarshal([]byte(res.Log), &result))
+	json.Unmarshal([]byte(res.Log), &result)
 	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.Estimation.TotalCount), contractAddr)
 
-	if result.Estimation.TotalCount > 0 {
+	if result.Estimation.Status != "" {
 		item.Estimationtotal = int64(result.Estimation.TotalCount)
 		store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-
 		key := append(append([]byte(types.EstimatorKey), types.Uint64ToByte(estimator.Itemid)...), []byte(estimator.Estimator)...)
 		value := k.cdc.MustMarshalBinaryBare(&estimator)
-		if result.Estimation.ReadyForReveal {
-			item.Bestestimator = "Awaiting"
-		}
 		store.Set(key, value)
 		k.SetItem(ctx, item)
 
@@ -119,8 +115,10 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 		//	panic(err)
 		//}
 
+	} else {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "error after executing estimation")
 	}
-
+	return nil
 }
 
 // SetEstimator set a specific estimator in the store
@@ -156,16 +154,17 @@ func (k Keeper) DeleteEstimation(ctx sdk.Context, key []byte) {
 	var estimator types.Estimator
 	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
 	estimatorAddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
-	if err != nil {
-		panic(err)
-	}
-	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatorAddress, sdk.NewCoins(estimator.Deposit))
-	if err != nil {
-		panic(err)
+	if err == nil {
+		//panic(err)
+		//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatorAddress, sdk.NewCoins(estimator.Deposit))
+		if err != nil {
+			panic(err)
+		}
+
+		store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
 	}
 
-	store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
 }
 
 // DeleteEstimationWithReward deletes a estimator
@@ -174,16 +173,16 @@ func (k Keeper) DeleteEstimationWithReward(ctx sdk.Context, key []byte) {
 	var estimator types.Estimator
 	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
 	estimatorAddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
-	if err != nil {
-		panic(err)
-	}
-	//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatorAddress, sdk.NewCoins(estimator.Deposit.Add(estimator.Deposit)))
-	if err != nil {
-		panic(err)
+	if err == nil {
+		//panic(err)
+		//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatorAddress, sdk.NewCoins(estimator.Deposit.Add(estimator.Deposit)))
+		if err != nil {
+			panic(err)
+		}
+		store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
 	}
 
-	store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
 }
 
 // DeleteEstimationWithoutDeposit deletes a estimator without returing a deposit
