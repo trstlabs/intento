@@ -57,35 +57,31 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tags invalid")
 	}
 	for _, tags := range msg.Tags {
-		if len(tags) > 16 {
-			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "tag too long")
+		if len(tags) > 24 {
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "a tag was too long")
 		}
 	}
 
-	if len(msg.Shippingregion) > 6 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Regions too long")
+	if len(msg.Shippingregion) > 9 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Region list too long")
 	}
 
 	for _, region := range msg.Shippingregion {
 		if len(region) > 2 {
-			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region too long")
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "A Region cannot be longer than 2")
 		}
-	}
-
-	if len(msg.Description) > 800 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "description too long")
 	}
 
 	if msg.Shippingcost == 0 && msg.Localpickup == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localpickup")
 	}
 
-	if len(msg.Description) > 800 {
+	if len(msg.Description) > 1000 {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "description too long")
 	}
 
-	if len(msg.Localpickup) > 25 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup too long")
+	if len(msg.Localpickup) > 48 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup location too long")
 	}
 
 	if msg.Condition > 5 {
@@ -96,11 +92,11 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 	}
 
 	if len(msg.Photos) > 9 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "tags invalid")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "too many photos")
 	}
 	for _, photo := range msg.Photos {
-		if len(photo) > 99 {
-			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "url too long")
+		if len(photo) > 200 {
+			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "photo url too long")
 		}
 	}
 	return nil

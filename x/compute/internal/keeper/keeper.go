@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	//"log"
 	"path/filepath"
@@ -111,7 +112,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
-func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string) (codeID uint64, err error) {
+func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string, endTime time.Duration) (codeID uint64, err error) {
 
 	wasmCode, err = uncompress(wasmCode)
 	if err != nil {
@@ -134,7 +135,7 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte,
 			instantiateAccess = &defaultAccessConfig
 		}
 	*/
-	codeInfo := types.NewCodeInfo(codeHash, creator, source, builder /* , *instantiateAccess */)
+	codeInfo := types.NewCodeInfo(codeHash, creator, source, builder, endTime /* , *instantiateAccess */)
 	// 0x01 | codeID (uint64) -> ContractInfo
 	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshalBinaryBare(&codeInfo))
 

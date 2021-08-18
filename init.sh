@@ -30,7 +30,7 @@ tppd validate-genesis
 
 sed -i '104s/enable = false/enable = true/g' ~/.tpp/config/app.toml
 sed -i 's/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.tpp/config/app.toml
-
+sed -i 's/minimum-gas-prices = 0.00025tpp"/minimum-gas-prices = 0.0000025tpp"/g' ~/.tpp/config/app.toml
 
 
 

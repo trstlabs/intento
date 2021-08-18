@@ -6,6 +6,7 @@ import "compute/types.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/danieljdd/tpp/x/compute/internal/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -135,6 +136,11 @@ message CodeInfoResponse {
     bytes code_hash = 3 [(gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"];
     string source = 4;
     string builder = 5;
+     google.protobuf.Duration contract_duration = 6 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "contract_duration,omitempty"
+  ];
 }
 
 message QueryCodeResponse {

@@ -217,6 +217,7 @@ func GetCmdQueryCode() *cobra.Command {
 			}
 
 			fmt.Printf("Downloading wasm code to %s\n", args[1])
+			fmt.Printf("This code has a contract duration of %s\n hours", code.ContractDuration)
 			return os.WriteFile(args[1], code.Data, 0644)
 		},
 	}
