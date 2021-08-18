@@ -2,6 +2,8 @@ syntax = "proto3";
 package tpp.x.compute.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/danieljdd/tpp/x/compute/internal/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -45,6 +47,12 @@ message CodeInfo {
     string source = 3;
     string builder = 4;
 //    AccessConfig instantiate_config = 5 [(gogoproto.nullable) = false];
+ //   google.protobuf.Timestamp end_time = 5;
+   google.protobuf.Duration end_time = 5 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "end_time,omitempty"
+  ];
 }
 
 // ContractInfo stores a WASM contract instance
@@ -61,6 +69,7 @@ message ContractInfo {
     //    AbsoluteTxPosition last_updated = 7;
     //    uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
     bytes last_msg = 6;
+
 }
 
 

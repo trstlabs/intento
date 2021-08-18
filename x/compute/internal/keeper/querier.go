@@ -243,11 +243,12 @@ func QueryCode(ctx sdk.Context, codeID uint64, keeper Keeper) (*types.QueryCodeR
 		return nil, nil
 	}
 	info := types.CodeInfoResponse{
-		CodeID:   codeID,
-		Creator:  res.Creator,
-		CodeHash: res.CodeHash,
-		Source:   res.Source,
-		Builder:  res.Builder,
+		CodeID:           codeID,
+		Creator:          res.Creator,
+		CodeHash:         res.CodeHash,
+		Source:           res.Source,
+		Builder:          res.Builder,
+		ContractDuration: res.EndTime,
 	}
 
 	code, err := keeper.GetByteCode(ctx, codeID)
@@ -262,11 +263,12 @@ func queryCodeList(ctx sdk.Context, keeper Keeper) ([]types.CodeInfoResponse, er
 	var info []types.CodeInfoResponse
 	keeper.IterateCodeInfos(ctx, func(i uint64, res types.CodeInfo) bool {
 		info = append(info, types.CodeInfoResponse{
-			CodeID:   i,
-			Creator:  res.Creator,
-			CodeHash: res.CodeHash,
-			Source:   res.Source,
-			Builder:  res.Builder,
+			CodeID:           i,
+			Creator:          res.Creator,
+			CodeHash:         res.CodeHash,
+			Source:           res.Source,
+			Builder:          res.Builder,
+			ContractDuration: res.EndTime,
 		})
 		return false
 	})

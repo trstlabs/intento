@@ -60,9 +60,9 @@ func GetTxCmd() *cobra.Command {
 // StoreCodeCmd will upload code to be reused.
 func StoreCodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "store [wasm file] --source [source] --builder [builder]",
+		Use:   "store [wasm file] [Contract duration in hours] --source [source] --builder [builder]",
 		Short: "Upload a wasm binary",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -107,6 +107,11 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 		return types.MsgStoreCode{}, fmt.Errorf("invalid input file. Use wasm binary or gzip")
 	}
 
+	contractPeriod, err := strconv.ParseInt(args[1], 10, 64)
+	if err != nil {
+		return types.MsgStoreCode{}, err
+	}
+
 	/*
 	   var perm *types.AccessConfig
 	   if onlyAddrStr := viper.GetString(flagInstantiateByAddress); onlyAddrStr != "" {
@@ -132,10 +137,11 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgStoreCode{
-		Sender:       cliCtx.GetFromAddress(),
-		WASMByteCode: wasm,
-		Source:       source,
-		Builder:      builder,
+		Sender:         cliCtx.GetFromAddress(),
+		WASMByteCode:   wasm,
+		Source:         source,
+		Builder:        builder,
+		ContractPeriod: contractPeriod,
 		// InstantiatePermission: perm,
 	}
 	return msg, nil

@@ -2,6 +2,7 @@ package compute
 
 import (
 	"fmt"
+	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -56,8 +57,20 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 	if err != nil {
 		return nil, err
 	}
+	activePeriod := k.GetParams(ctx).MaxActivePeriod
+	//submitTime := ctx.BlockHeader().Time
 
-	codeID, err := k.Create(ctx, msg.Sender, msg.WASMByteCode, msg.Source, msg.Builder)
+	endTime := time.Hour * time.Duration(msg.ContractPeriod)
+	maxEndTime := activePeriod
+
+	if msg.ContractPeriod == 0 {
+		endTime = maxEndTime
+	}
+	if endTime > maxEndTime {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Time period invalid for this contract code")
+	}
+
+	codeID, err := k.Create(ctx, msg.Sender, msg.WASMByteCode, msg.Source, msg.Builder, endTime)
 	if err != nil {
 		return nil, err
 	}
@@ -94,10 +107,21 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	)}
 	events = append(events, custom.ToABCIEvents()...)
 
-	activePeriod := k.GetParams(ctx).MaxActivePeriod
+	/*activePeriod := k.GetParams(ctx).MaxActivePeriod
 	submitTime := ctx.BlockHeader().Time
 	endTime := submitTime.Add(activePeriod)
+	var info *types.CodeInfo
+	info = k.GetCodeInfo(ctx, msg.CodeID)
+	if info.EndTime <= endTime {
+		endTime = info.EndTime
+	} else {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Time period invalid for this contract code")
 
+	}*/
+	var info *types.CodeInfo
+	info = k.GetCodeInfo(ctx, msg.CodeID)
+	submitTime := ctx.BlockHeader().Time
+	endTime := submitTime.Add(info.EndTime)
 	k.InsertContractQueue(ctx, contractAddr.String(), endTime)
 
 	return &sdk.Result{

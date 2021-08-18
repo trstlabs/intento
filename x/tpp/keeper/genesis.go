@@ -113,7 +113,7 @@ func (k Keeper) InitializeContract(ctx sdk.Context) error {
 	var codeID uint64
 	var hash string
 
-	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "")
+	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "", 0)
 	if err != nil {
 		panic(err)
 	}

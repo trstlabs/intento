@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/base64"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -43,12 +44,13 @@ func (c CodeInfo) ValidateBasic() error {
 }
 
 // NewCodeInfo fills a new Contract struct
-func NewCodeInfo(codeHash []byte, creator sdk.AccAddress, source string, builder string /* , instantiatePermission AccessConfig */) CodeInfo {
+func NewCodeInfo(codeHash []byte, creator sdk.AccAddress, source string, builder string, endTime time.Duration /* , instantiatePermission AccessConfig */) CodeInfo {
 	return CodeInfo{
 		CodeHash: codeHash,
 		Creator:  creator,
 		Source:   source,
 		Builder:  builder,
+		EndTime:  endTime,
 		// InstantiateConfig: instantiatePermission,
 	}
 }
