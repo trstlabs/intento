@@ -60,7 +60,7 @@ message ContractInfo {
     uint64 code_id = 1 [(gogoproto.customname) = "CodeID"];
     bytes creator = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 //    bytes admin = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    string label = 4;
+    string contract_id = 4;
     // never show this in query results, just use for sorting
     // (Note: when using json tag "-" amino refused to serialize it...)
     AbsoluteTxPosition created = 5;

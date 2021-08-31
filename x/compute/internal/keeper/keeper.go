@@ -794,7 +794,7 @@ func (k Keeper) GetContractHash(ctx sdk.Context, contractAddress sdk.AccAddress)
 	return hash
 }
 
-//GetContractInfo Seems to panic
+//GetContractInfo (if you see panic error, try commenting out this)
 func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress) (types.ContractInfo, error) {
 	store := ctx.KVStore(k.storeKey)
 	var contract types.ContractInfo
@@ -806,7 +806,19 @@ func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress)
 	return contract, nil
 }
 
-//GetContractInfoWithAddress Seems to panic
+//GetContractResult  (if you see panic error, try commenting out this)
+func (k Keeper) GetContractResult(ctx sdk.Context, contractAddress sdk.AccAddress) ([]byte, error) {
+	store := ctx.KVStore(k.storeKey)
+	//	var contract types.ContractInfo
+	contractBz := store.Get(types.GetContractResultKey(contractAddress))
+	/*if contractBz == nil {
+		return byte, sdkerrors.Wrap(types.ErrNotFound, "contract info")
+	}
+	k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)*/
+	return contractBz, nil
+}
+
+//GetContractInfoWithAddress  (if you see panic error, try commenting out this)
 func (k Keeper) GetContractInfoWithAddress(ctx sdk.Context, contractAddress sdk.AccAddress) types.ContractInfoWithAddress {
 	store := ctx.KVStore(k.storeKey)
 	fmt.Printf("Getting info")
@@ -851,6 +863,13 @@ func (k Keeper) setContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress,
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryBare(contract))
 }
 
+// SetContractResult sets the result of the contract
+func (k Keeper) SetContractResult(ctx sdk.Context, contractAddress sdk.AccAddress, res *sdk.Result) error {
+	store := ctx.KVStore(k.storeKey)
+
+	store.Set(types.GetContractResultKey(contractAddress), k.cdc.MustMarshalBinaryBare(res))
+	return nil
+}
 func (k Keeper) IterateContractInfo(ctx sdk.Context, cb func(sdk.AccAddress, types.ContractInfo) bool) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.ContractKeyPrefix)
 	iter := prefixStore.Iterator(nil, nil)

@@ -4,6 +4,7 @@ const (
 	QueryListContractByCode = "list-contracts-by-code"
 	QueryGetContract        = "contract-info"
 	QueryGetContractState   = "contract-state"
+	QueryGetContractResult  = "contract-result"
 	QueryGetCode            = "code"
 	QueryListCode           = "list-code"
 	QueryContractAddress    = "label"

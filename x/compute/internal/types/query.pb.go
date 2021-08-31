@@ -269,7 +269,7 @@ func (m *QuerySmartContractStateRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QuerySmartContractStateRequest proto.InternalMessageInfo
 
-type QueryContractAddressByLabelRequest struct {
+type QueryContractAddressByContractIdRequest struct {
 	Label string `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
 }
 
@@ -304,7 +304,7 @@ func (m *QueryContractAddressByLabelRequest) XXX_DiscardUnknown() {
 	xxx_messageInfo_QueryContractAddressByLabelRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryContractAddressByLabelRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryContractAddressByContractIdRequest proto.InternalMessageInfo
 
 type QueryContractKeyRequest struct {
 	// address is the address of the contract

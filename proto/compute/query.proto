@@ -17,6 +17,9 @@ service Query {
     rpc ContractInfo (QueryContractInfoRequest) returns (QueryContractInfoResponse) {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}";
     }
+     rpc ContractInfo (QueryContractResultRequest) returns (QueryContractResultResponse) {
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}";
+    }
     /*
     rpc ContractHistory (QueryContractHistoryRequest) returns (QueryContractHistoryResponse) {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}/history";
@@ -54,6 +57,19 @@ message QueryContractInfoResponse {
     // address is the address of the contract
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     ContractInfo ContractInfo = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = ""];
+}
+
+
+// QueryContractResultRequest is the request type for the Query/ContractInfo RPC method
+message QueryContractResultRequest {
+    // address is the address of the contract to query
+    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+// QueryContractResultResponse is the response type for the Query/ContractInfo RPC method
+message QueryContractResultResponse {
+    // address is the address of the contract
+    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes result = 2;
 }
 
 message QueryContractHistoryRequest {
@@ -108,8 +124,8 @@ message QuerySmartContractStateRequest {
     bytes query_data = 2;
 }
 
-message QueryContractAddressByLabelRequest {
-    string label = 1;
+message QueryContractAddressByContractIdRequest {
+    string contract_id = 1;
 }
 
 message QueryContractKeyRequest {

@@ -36,11 +36,13 @@ var (
 	ContractKeyPrefix   = []byte{0x02}
 	ContractStorePrefix = []byte{0x03}
 	SequenceKeyPrefix   = []byte{0x04}
+
 	// ContractHistoryStorePrefix = []byte{0x05}
 	ContractEnclaveIdPrefix = []byte{0x06}
 	ContractLabelPrefix     = []byte{0x07}
 
-	ContractQueuePrefix = []byte{0x08}
+	ContractQueuePrefix  = []byte{0x08}
+	ContractResultPrefix = []byte{0x09}
 
 	KeyLastCodeID     = append(SequenceKeyPrefix, []byte("lastCodeId")...)
 	KeyLastInstanceID = append(SequenceKeyPrefix, []byte("lastContractId")...)
@@ -59,6 +61,11 @@ func decodeCodeKey(src []byte) uint64 {
 // GetContractAddressKey returns the key for the WASM contract instance
 func GetContractAddressKey(addr sdk.AccAddress) []byte {
 	return append(ContractKeyPrefix, addr...)
+}
+
+// GetContractResultKey returns the key for the WASM contract instance
+func GetContractResultKey(addr sdk.AccAddress) []byte {
+	return append(ContractResultPrefix, addr...)
 }
 
 // GetContractAddressKey returns the key for the WASM contract instance

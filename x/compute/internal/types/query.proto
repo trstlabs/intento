@@ -107,8 +107,8 @@ message QuerySmartContractStateRequest {
     bytes query_data = 2;
 }
 
-message QueryContractAddressByLabelRequest {
-    string label = 1;
+message QueryContractAddressByContractIdRequest {
+    string contract_id = 1;
 }
 
 message QueryContractKeyRequest {
