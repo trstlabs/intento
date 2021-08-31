@@ -26,6 +26,7 @@ const (
 	MaxGas                        = keeper.MaxGas
 	QueryListContractByCode       = keeper.QueryListContractByCode
 	QueryGetContract              = keeper.QueryGetContract
+	QueryGetContractResult        = keeper.QueryGetContractResult
 	QueryGetContractState         = keeper.QueryGetContractState
 	QueryGetCode                  = keeper.QueryGetCode
 	QueryListCode                 = keeper.QueryListCode
@@ -47,6 +48,7 @@ var (
 	ValidateGenesis           = types.ValidateGenesis
 	GetCodeKey                = types.GetCodeKey
 	GetContractAddressKey     = types.GetContractAddressKey
+	GetContractResultKey      = types.GetContractResultKey
 	GetContractStorePrefixKey = types.GetContractStorePrefixKey
 	NewCodeInfo               = types.NewCodeInfo
 	NewAbsoluteTxPosition     = types.NewAbsoluteTxPosition

@@ -42,6 +42,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdListContractByCode(),
 		GetCmdQueryCode(),
 		GetCmdGetContractInfo(),
+		GetCmdGetContractResult(),
 		GetCmdQuery(),
 		GetQueryDecryptTxCmd(),
 		GetCmdQueryLabel(),
@@ -258,6 +259,38 @@ func GetCmdGetContractInfo() *cobra.Command {
 	return cmd
 }
 
+// GetCmdGetContractResult gets result details about a given contract
+func GetCmdGetContractResult() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "result [bech32_address]",
+		Short: "Prints out metadata of a contract given its address",
+		Long:  "Prints out metadata of a contract given its address",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			addr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryGetContractResult, addr.String())
+			res, _, err := clientCtx.Query(route)
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(res))
+			return nil
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
 func CmdDecryptText() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "decrypt [encrypted_data]",
@@ -282,7 +315,7 @@ func CmdDecryptText() *cobra.Command {
 			originalTxSenderPubkey := dataCipherBz[32:64]
 
 			wasmCtx := wasmUtils.WASMContext{CLIContext: clientCtx}
-			_, myPubkey, err := wasmCtx.GetTxSenderKeyPair()
+			_, myPubkey, _ := wasmCtx.GetTxSenderKeyPair()
 
 			if !bytes.Equal(originalTxSenderPubkey, myPubkey) {
 				return fmt.Errorf("cannot decrypt, not original tx sender")
@@ -489,7 +522,7 @@ func GetCmdQuery() *cobra.Command {
 
 				label, err := cmd.Flags().GetString(flagLabel)
 				if err != nil {
-					return fmt.Errorf("label or bech32 contract address is required")
+					return fmt.Errorf("trustless Contract ID or bech32 contract address is required")
 				}
 
 				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, label)
@@ -575,7 +608,7 @@ func QueryWithData(contractAddress string, queryData []byte, cliCtx client.Conte
 			var stdErr cosmwasmTypes.StdError
 			err = json.Unmarshal(errorPlainBz, &stdErr)
 			if err != nil {
-				return fmt.Errorf("Error while trying to parse the error as json: '%s': %w", string(errorPlainBz), err)
+				return fmt.Errorf("error while trying to parse the error as json: '%s': %w", string(errorPlainBz), err)
 			}
 			return fmt.Errorf("query result: %v", stdErr.Error())
 		}

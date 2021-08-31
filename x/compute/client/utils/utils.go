@@ -173,7 +173,7 @@ func (ctx WASMContext) getConsensusIoPubKey() ([]byte, error) {
 		return nil, err
 	}*/
 
-	fmt.Printf("ioPubkey %+v\n", response.MasterKey.Bytes)
+	//fmt.Printf("ioPubkey %+v\n", response.MasterKey.Bytes)
 
 	return response.MasterKey.Bytes, nil
 }

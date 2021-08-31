@@ -86,11 +86,11 @@ func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (er
 
 	*/
 	if info.LastMsg != nil {
-		_, err = k.Execute(ctx, contractAddress, contractAddress, info.LastMsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+		res, err := k.Execute(ctx, contractAddress, contractAddress, info.LastMsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
 		if err != nil {
 			return err
 		}
-
+		k.SetContractResult(ctx, contractAddress, res)
 	}
 	return nil
 }

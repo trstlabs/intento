@@ -14,6 +14,7 @@ import (
 const (
 	QueryListContractByCode = types.QueryListContractByCode
 	QueryGetContract        = types.QueryGetContract
+	QueryGetContractResult  = types.QueryGetContractResult
 	QueryGetContractState   = types.QueryGetContractState
 	QueryGetCode            = types.QueryGetCode
 	QueryListCode           = types.QueryListCode
@@ -48,6 +49,12 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 			}
 			rsp, err = queryContractInfo(ctx, addr, keeper)
+		case QueryGetContractResult:
+			addr, err := sdk.AccAddressFromBech32(path[1])
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
+			}
+			rsp, err = queryContractResult(ctx, addr, keeper)
 		case QueryListContractByCode:
 			codeID, err := strconv.ParseUint(path[1], 10, 64)
 			if err != nil {

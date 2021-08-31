@@ -37,6 +37,23 @@ func (q grpcQuerier) ContractInfo(c context.Context, req *types.QueryContractInf
 	}, nil
 }
 
+func (q grpcQuerier) ContractResult(c context.Context, req *types.QueryContractResultRequest) (*types.QueryContractResultResponse, error) {
+	if err := sdk.VerifyAddressFormat(req.Address); err != nil {
+		return nil, err
+	}
+	rsp, err := queryContractResult(sdk.UnwrapSDKContext(c), req.Address, q.keeper)
+	switch {
+	case err != nil:
+		return nil, err
+	case rsp == nil:
+		return nil, types.ErrNotFound
+	}
+	return &types.QueryContractResultResponse{
+		Address: rsp.Address,
+		Result:  rsp.Result,
+	}, nil
+}
+
 /*
 func (q grpcQuerier) ContractHistory(c context.Context, req *types.QueryContractHistoryRequest) (*types.QueryContractHistoryResponse, error) {
 	if err := sdk.VerifyAddressFormat(req.Address); err != nil {
@@ -205,6 +222,16 @@ func queryContractInfo(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) (*ty
 		Address:      addr,
 		ContractInfo: &info,
 	}, nil
+}
+
+func queryContractResult(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) ([]byte, error) {
+	res, err := keeper.GetContractResult(ctx, addr)
+	if err != nil {
+		return nil, nil
+	}
+	// redact the Created field (just used for sorting, not part of public API)
+	//info.Created = nil
+	return res, nil
 }
 
 func queryContractListByCode(ctx sdk.Context, codeID uint64, keeper Keeper) ([]types.ContractInfoWithAddress, error) {
