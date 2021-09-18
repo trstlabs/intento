@@ -49,8 +49,8 @@ func (q grpcQuerier) ContractResult(c context.Context, req *types.QueryContractR
 		return nil, types.ErrNotFound
 	}
 	return &types.QueryContractResultResponse{
-		Address: rsp.Address,
-		Result:  rsp.Result,
+		Address: req.Address,
+		Result:  rsp,
 	}, nil
 }
 
@@ -166,16 +166,16 @@ func (q grpcQuerier) Codes(c context.Context, _ *empty.Empty) (*types.QueryCodes
 	return &types.QueryCodesResponse{CodeInfos: rsp}, nil
 }
 
-func (q grpcQuerier) AddressByLabel(c context.Context, req *types.QueryContractAddressByLabelRequest) (*types.QueryContractAddressByLabelResponse, error) {
+func (q grpcQuerier) AddressByLabel(c context.Context, req *types.QueryContractAddressByContractIdRequest) (*types.QueryContractAddressByContractIdResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c).WithGasMeter(sdk.NewGasMeter(q.keeper.queryGasLimit))
-	rsp, err := queryContractAddress(ctx, req.Label, q.keeper)
+	rsp, err := queryContractAddress(ctx, req.ContractId, q.keeper)
 	switch {
 	case err != nil:
 		return nil, err
 	case rsp == nil:
 		return nil, types.ErrNotFound
 	}
-	return &types.QueryContractAddressByLabelResponse{Address: rsp}, nil
+	return &types.QueryContractAddressByContractIdResponse{Address: rsp}, nil
 
 }
 

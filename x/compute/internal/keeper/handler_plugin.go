@@ -219,7 +219,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			Sender: sender,
 			CodeID: msg.Instantiate.CodeID,
 			// TODO: add this to CosmWasm
-			Label:            msg.Instantiate.Label,
+			ContractId:       msg.Instantiate.Label,
 			CallbackCodeHash: msg.Instantiate.CallbackCodeHash,
 			InitMsg:          msg.Instantiate.Msg,
 			InitFunds:        coins,

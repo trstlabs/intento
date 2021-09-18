@@ -92,7 +92,7 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 
 func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (*sdk.Result, error) {
 
-	contractAddr, err := k.Instantiate(ctx, msg.CodeID, msg.Sender, msg.InitMsg, msg.Label, msg.InitFunds, nil)
+	contractAddr, err := k.Instantiate(ctx, msg.CodeID, msg.Sender, msg.InitMsg, msg.ContractId, msg.InitFunds, nil)
 	if err != nil {
 		return nil, err
 	}

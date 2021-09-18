@@ -64,7 +64,7 @@ func (msg MsgInstantiateContract) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "code_id is required")
 	}
 
-	if err := validateLabel(msg.Label); err != nil {
+	if err := validateLabel(msg.ContractId); err != nil {
 		return err
 	}
 

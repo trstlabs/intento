@@ -293,10 +293,10 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	// persist instance
 	createdAt := types.NewAbsoluteTxPosition(ctx)
 	var instance = types.ContractInfo{
-		CodeID:  codeID,
-		Creator: creator,
-		Label:   label,
-		Created: createdAt,
+		CodeID:     codeID,
+		Creator:    creator,
+		ContractId: label,
+		Created:    createdAt,
 	}
 	//	instance.CodeID = codeID
 	//	instance.Creator = creator
@@ -486,7 +486,7 @@ func (k Keeper) Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error {
 
 	//prefixStore.Delete()
 	store.Delete(types.GetContractEnclaveKey(contractAddress))
-	store.Delete(types.GetContractLabelPrefix(contract.Label))
+	store.Delete(types.GetContractLabelPrefix(contract.ContractId))
 	store.Delete(types.GetContractAddressKey(contractAddress))
 
 	//store.Delete(types.GetCodeKey(contract.CodeID))

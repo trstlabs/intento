@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/danieljdd/tpp/x/compute/internal/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/danieljdd/tpp/x/compute/internal/types"
 	fuzz "github.com/google/gofuzz"
 	tmBytes "github.com/tendermint/tendermint/libs/bytes"
 )
@@ -23,7 +23,7 @@ func FuzzContractInfo(m *types.ContractInfo, c fuzz.Continue) {
 	m.CodeID = c.RandUint64()
 	FuzzAddr(&m.Creator, c)
 	// FuzzAddr(&m.Admin, c)
-	m.Label = c.RandString()
+	m.ContractId = c.RandString()
 	c.Fuzz(&m.Created)
 }
 

@@ -17,8 +17,8 @@ service Query {
     rpc ContractInfo (QueryContractInfoRequest) returns (QueryContractInfoResponse) {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}";
     }
-     rpc ContractInfo (QueryContractResultRequest) returns (QueryContractResultResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}";
+     rpc ContractResult (QueryContractResultRequest) returns (QueryContractResultResponse) {
+        option (google.api.http).get = "/compute/v1beta1/contract/result/{address}";
     }
     /*
     rpc ContractHistory (QueryContractHistoryRequest) returns (QueryContractHistoryResponse) {
@@ -168,7 +168,7 @@ message QueryCodesResponse {
     repeated CodeInfoResponse code_infos = 1 [(gogoproto.nullable) = false];
 }
 
-message QueryContractAddressByLabelResponse {
+message QueryContractAddressByContractIdResponse {
     // address is the address of the contract
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
