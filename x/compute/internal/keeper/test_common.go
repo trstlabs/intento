@@ -325,7 +325,7 @@ func TestHandler(k Keeper) sdk.Handler {
 }
 
 func handleInstantiate(ctx sdk.Context, k Keeper, msg *wasmtypes.MsgInstantiateContract) (*sdk.Result, error) {
-	contractAddr, err := k.Instantiate(ctx, msg.CodeID, msg.Sender /* msg.Admin, */, msg.InitMsg, msg.Label, msg.InitFunds, nil)
+	contractAddr, err := k.Instantiate(ctx, msg.CodeID, msg.Sender /* msg.Admin, */, msg.InitMsg, msg.ContractId, msg.InitFunds, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -353,10 +353,10 @@ func PrepareInitSignedTx(t *testing.T, keeper Keeper, ctx sdk.Context, creator s
 	tx := NewTestTx(ctx, []sdk.Msg{&wasmtypes.MsgInstantiateContract{
 		Sender: creator,
 		// Admin:     nil,
-		CodeID:    codeID,
-		Label:     "demo contract 1",
-		InitMsg:   encMsg,
-		InitFunds: funds,
+		CodeID:     codeID,
+		ContractId: "1",
+		InitMsg:    encMsg,
+		InitFunds:  funds,
 	}}, []crypto.PrivKey{privKey}, []uint64{creatorAcc.GetAccountNumber()}, []uint64{creatorAcc.GetSequence() - 1}, 0, authlegacy.StdFee{
 		Amount: nil,
 		Gas:    0,

@@ -91,10 +91,10 @@ func OnlyGenesisFields(info *ContractInfo) {
 func ContractInfoFixture(mutators ...func(*ContractInfo)) ContractInfo {
 	anyAddress := make([]byte, 20)
 	fixture := ContractInfo{
-		CodeID:  1,
-		Creator: anyAddress,
-		Label:   "any",
-		Created: &AbsoluteTxPosition{BlockHeight: 1, TxIndex: 1},
+		CodeID:     1,
+		Creator:    anyAddress,
+		ContractId: "any",
+		Created:    &AbsoluteTxPosition{BlockHeight: 1, TxIndex: 1},
 	}
 
 	for _, m := range mutators {

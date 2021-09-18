@@ -81,8 +81,8 @@ func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label 
 		CodeID:  codeID,
 		Creator: creator,
 		// Admin:   admin,
-		Label:   label,
-		Created: createdAt,
+		ContractId: label,
+		Created:    createdAt,
 	}
 }
 func (c *ContractInfo) ValidateBasic() error {
@@ -99,7 +99,7 @@ func (c *ContractInfo) ValidateBasic() error {
 			}
 		}
 	*/
-	if err := validateLabel(c.Label); err != nil {
+	if err := validateLabel(c.ContractId); err != nil {
 		return sdkerrors.Wrap(err, "label")
 	}
 	return nil

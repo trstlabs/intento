@@ -279,7 +279,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		Sender:           cliCtx.GetFromAddress(),
 		CallbackCodeHash: "",
 		CodeID:           codeID,
-		Label:            label,
+		ContractId:       label,
 		InitFunds:        amount,
 		InitMsg:          encryptedMsg,
 		LastMsg:          lastMsgEncrypted,
