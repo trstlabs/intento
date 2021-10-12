@@ -17,14 +17,14 @@ import (
 //	if certBz == nil {
 //		return nil
 //	}
-//	k.cdc.MustUnmarshalBinaryBare(certBz, &pkIO)
+//	k.cdc.MustUnmarshal(certBz, &pkIO)
 //	return &pkIO
 //}
 //
 //func (k Keeper) setMasterPublicKey(ctx sdk.Context, publicKey types.PublicKey) {
 //	store := ctx.KVStore(k.storeKey)
 //
-//	store.Set(types.MasterCertPrefix(types.MasterPublicKeyId), k.cdc.MustMarshalBinaryBare(publicKey))
+//	store.Set(types.MasterCertPrefix(types.MasterPublicKeyId), k.cdc.MustMarshal(publicKey))
 //}
 
 func (k Keeper) GetMasterCertificate(ctx sdk.Context, certType string) *types.MasterCertificate {
@@ -34,7 +34,7 @@ func (k Keeper) GetMasterCertificate(ctx sdk.Context, certType string) *types.Ma
 	if certBz == nil {
 		return nil
 	}
-	k.cdc.MustUnmarshalBinaryBare(certBz, &cert)
+	k.cdc.MustUnmarshal(certBz, &cert)
 	return &cert
 }
 
@@ -45,7 +45,7 @@ func (k Keeper) GetMasterIoPubKeyArray(ctx sdk.Context) []byte {
 	if certBz == nil {
 		return nil
 	}
-	k.cdc.MustUnmarshalBinaryBare(certBz, &cert)
+	k.cdc.MustUnmarshal(certBz, &cert)
 	fmt.Printf("cert : %X\n", cert)
 	fmt.Printf("cert Bytes: %X\n", cert.Bytes)
 
@@ -55,7 +55,7 @@ func (k Keeper) GetMasterIoPubKeyArray(ctx sdk.Context) []byte {
 func (k Keeper) setMasterCertificate(ctx sdk.Context, cert types.MasterCertificate, certType string) {
 	store := ctx.KVStore(k.storeKey)
 
-	store.Set(types.MasterCertPrefix(certType), k.cdc.MustMarshalBinaryBare(&cert))
+	store.Set(types.MasterCertPrefix(certType), k.cdc.MustMarshal(&cert))
 }
 
 func (k Keeper) isMasterCertificateDefined(ctx sdk.Context, certType string) bool {
@@ -75,7 +75,7 @@ func (k Keeper) getRegistrationInfo(ctx sdk.Context, publicKey types.NodeID) *ty
 	if certBz == nil {
 		return nil
 	}
-	k.cdc.MustUnmarshalBinaryBare(certBz, &nodeInfo)
+	k.cdc.MustUnmarshal(certBz, &nodeInfo)
 
 	return &nodeInfo
 }
@@ -85,7 +85,7 @@ func (k Keeper) ListRegistrationInfo(ctx sdk.Context, cb func([]byte, types.Regi
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
 		var regInfo types.RegistrationNodeInfo
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &regInfo)
+		k.cdc.MustUnmarshal(iter.Value(), &regInfo)
 		// cb returns true to stop early
 		if cb(iter.Key(), regInfo) {
 			break
@@ -103,7 +103,7 @@ func (k Keeper) SetRegistrationInfo(ctx sdk.Context, certificate types.Registrat
 
 	fmt.Println("pubkey", hex.EncodeToString(publicKey))
 	fmt.Println("EncryptedSeed", hex.EncodeToString(certificate.EncryptedSeed))
-	store.Set(types.RegistrationKeyPrefix(publicKey), k.cdc.MustMarshalBinaryBare(&certificate))
+	store.Set(types.RegistrationKeyPrefix(publicKey), k.cdc.MustMarshal(&certificate))
 }
 
 func (k Keeper) isNodeAuthenticated(ctx sdk.Context, publicKey types.NodeID) (bool, error) {

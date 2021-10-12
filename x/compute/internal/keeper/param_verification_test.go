@@ -5,14 +5,16 @@ import (
 	"os"
 	"testing"
 
-	"github.com/danieljdd/tpp/x/compute/internal/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/danieljdd/tpp/x/compute/internal/types"
+
 	//"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+
 	//"github.com/tendermint/tendermint/crypto/multisig"
 	"github.com/tendermint/tendermint/crypto/sr25519"
 )
@@ -151,7 +153,7 @@ func TestMultipleSigners(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -254,7 +256,7 @@ func TestMultiSig(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -306,7 +308,7 @@ func TestMultiSigThreshold(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -358,7 +360,7 @@ func TestMultiSigThresholdNotMet(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -398,7 +400,7 @@ func TestMultiSigExecute(t *testing.T) {
 
 	execMsg := fmt.Sprintf(`{"transfer":{"amount":"10","recipient":"%s"}}`, walletB.String())
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(execMsg),
 	}
@@ -478,7 +480,7 @@ func TestMultiSigCallbacks(t *testing.T) {
 
 	execMsg := fmt.Sprintf(`{"a":{"contract_addr":"%s","code_hash":"%s","x":2,"y":3}}`, contractAddress.String(), codeHash)
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(execMsg),
 	}
@@ -533,7 +535,7 @@ func TestMultiSigInMultiSig(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -627,7 +629,7 @@ func TestMultiSigInMultiSigDifferentOrder(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -726,7 +728,7 @@ func TestInvalidKeyType(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -782,7 +784,7 @@ func TestInvalidKeyTypeInMultisig(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -847,7 +849,7 @@ func TestWrongFundsNoFunds(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -871,7 +873,7 @@ func TestWrongFundsSomeFunds(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -895,7 +897,7 @@ func TestWrongMessage(t *testing.T) {
 
 	initMsg := `{"nop":{}}`
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(initMsg),
 	}
@@ -906,7 +908,7 @@ func TestWrongMessage(t *testing.T) {
 
 	notTheRealMsg := `{"no_logs":{}}`
 
-	notReallyTheMsg := types.SecretMsg{
+	notReallyTheMsg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(notTheRealMsg),
 	}
@@ -938,7 +940,7 @@ func TestWrongContractAddress(t *testing.T) {
 
 	execMsg := fmt.Sprintf(`{"transfer":{"amount":"10","recipient":"%s"}}`, walletB.String())
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHash),
 		Msg:      []byte(execMsg),
 	}

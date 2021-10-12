@@ -1,28 +1,22 @@
 use log::*;
-use parity_wasm::elements;
-use parity_wasm::elements::Module;
-use wasmi::ModuleInstance;
 
 use enclave_ffi_types::{Ctx, EnclaveError};
 
+use crate::coalesce;
+use crate::cosmwasm::encoding::Binary;
 use crate::cosmwasm::types::{CanonicalAddr, Env};
 use crate::crypto::Ed25519PublicKey;
 use crate::results::{HandleSuccess, InitSuccess, QuerySuccess};
-use crate::wasm::types::{IoNonce, SecretMessage, SigInfo};
 
 use super::contract_validation::{
-    calc_contract_hash, extract_contract_key, generate_encryption_key, validate_contract_key,
-    validate_msg, verify_params, ContractKey, CONTRACT_KEY_LENGTH,
+    extract_contract_key, generate_encryption_key, validate_contract_key, validate_msg,
+    verify_params, ContractKey, CONTRACT_KEY_LENGTH,
 };
-use super::gas::{gas_rules, WasmCosts};
+use super::gas::WasmCosts;
 use super::io::encrypt_output;
-use super::{
-    memory::validate_memory,
-    runtime::{create_builder, ContractInstance, ContractOperation, Engine, WasmiImportResolver},
-};
-
-use crate::coalesce;
-use crate::cosmwasm::encoding::Binary;
+use super::module_cache::create_module_instance;
+use super::runtime::{ContractInstance, ContractOperation, Engine};
+use super::types::{ContractCode, IoNonce, SecretMessage, SigInfo};
 
 /*
 Each contract is compiled with these functions already implemented in wasm:
@@ -47,8 +41,9 @@ pub fn init(
     env: &[u8],         // blockchain state
     msg: &[u8],         // probably function call and args
     sig_info: &[u8],    // info about signature verification
-
 ) -> Result<InitSuccess, EnclaveError> {
+    let contract_code = ContractCode::new(contract);
+
     let mut parsed_env: Env = serde_json::from_slice(env).map_err(|err| {
         warn!(
             "got an error while trying to deserialize env input bytes into json {:?}: {}",
@@ -57,6 +52,7 @@ pub fn init(
         );
         EnclaveError::FailedToDeserialize
     })?;
+    parsed_env.contract_code_hash = hex::encode(contract_code.hash());
 
     let canonical_contract_address = CanonicalAddr::from_human(&parsed_env.contract.address).map_err(|err| {
         warn!(
@@ -65,9 +61,12 @@ pub fn init(
         );
         EnclaveError::FailedToDeserialize
     })?;
-    let contract_key =
-        generate_encryption_key(&parsed_env, contract, &(canonical_contract_address.0).0)?;
-    trace!("Init: Contract Key: {:?}", contract_key.to_vec().as_slice());
+    let contract_key = generate_encryption_key(
+        &parsed_env,
+        contract_code.hash(),
+        &(canonical_contract_address.0).0,
+    )?;
+    trace!("Init: Contract Key: {:?}", hex::encode(contract_key));
 
     let parsed_sig_info: SigInfo = serde_json::from_slice(sig_info).map_err(|err| {
         warn!(
@@ -78,20 +77,14 @@ pub fn init(
         EnclaveError::FailedToDeserialize
     })?;
 
+    trace!("Init input before decryption: {:?}", base64::encode(&msg));
     let secret_msg = SecretMessage::from_slice(msg)?;
-  /*  trace!(
-        "Init input before decryption: {:?}",
-        String::from_utf8_lossy(&msg)
-    );
-    trace!("INIT parsed_sig_info: {:?}", &parsed_sig_info);
-    trace!("INIT parsed_env: {:?}", &parsed_env);
-    trace!("INIT scrtmessage {:?}", &secret_msg);
-*/
+
     verify_params(&parsed_sig_info, &parsed_env, &secret_msg)?;
 
     let decrypted_msg = secret_msg.decrypt()?;
 
-    let validated_msg = validate_msg(&decrypted_msg, contract)?;
+    let validated_msg = validate_msg(&decrypted_msg, contract_code.hash())?;
 
     trace!(
         "Init input after decryption: {:?}",
@@ -101,14 +94,12 @@ pub fn init(
     let mut engine = start_engine(
         context,
         gas_limit,
-        contract,
+        contract_code,
         &contract_key,
         ContractOperation::Init,
         secret_msg.nonce,
         secret_msg.user_public_key,
     )?;
-
-    parsed_env.contract_code_hash = hex::encode(calc_contract_hash(contract));
 
     let new_env = serde_json::to_vec(&parsed_env).map_err(|err| {
         warn!(
@@ -160,18 +151,19 @@ pub fn handle(
     env: &[u8],
     msg: &[u8],
     sig_info: &[u8],
-
 ) -> Result<HandleSuccess, EnclaveError> {
+    let contract_code = ContractCode::new(contract);
+
     let mut parsed_env: Env = serde_json::from_slice(env).map_err(|err| {
         warn!(
             "got an error while trying to deserialize env input bytes into json {:?}: {}",
-            String::from_utf8_lossy(&env),
-            err
+            env, err
         );
         EnclaveError::FailedToDeserialize
     })?;
+    parsed_env.contract_code_hash = hex::encode(contract_code.hash());
 
-  //  trace!("handle parsed_env: {:?}", parsed_env);
+    trace!("handle parsed_env: {:?}", parsed_env);
 
     let parsed_sig_info: SigInfo = serde_json::from_slice(sig_info).map_err(|err| {
         warn!(
@@ -182,27 +174,23 @@ pub fn handle(
         EnclaveError::FailedToDeserialize
     })?;
 
+    trace!("Handle input before decryption: {:?}", base64::encode(&msg));
     let secret_msg = SecretMessage::from_slice(msg)?;
-    
-   // trace!("HANDLER contract: {:?}", &contract);
-  /*  trace!("HANDLER parsed_sig_info: {:?}", &parsed_sig_info);
-    trace!("HANDLER parsed_env: {:?}", &parsed_env);
-    trace!("HANDLER scrtmessage {:?}", &secret_msg);*/
+
     // Verify env parameters against the signed tx
-   verify_params(&parsed_sig_info, &parsed_env, &secret_msg)?;
+    verify_params(&parsed_sig_info, &parsed_env, &secret_msg)?;
 
     let contract_key = extract_contract_key(&parsed_env)?;
 
-    //let secret_msg = SecretMessage::from_slice(msg)?;
+    let secret_msg = SecretMessage::from_slice(msg)?;
     let decrypted_msg = secret_msg.decrypt()?;
 
-    let validated_msg = validate_msg(&decrypted_msg, contract)?;
+    let validated_msg = validate_msg(&decrypted_msg, contract_code.hash())?;
 
-  /* trace!(
-       "Handle input after decryption: {:?}",
-     String::from_utf8_lossy(&validated_msg)
-    );*/
-   // trace!("validate_msg decrypted: {:?}", &decrypted_msg);
+    trace!(
+        "Handle input afer decryption: {:?}",
+        String::from_utf8_lossy(&validated_msg)
+    );
 
     let canonical_contract_address = CanonicalAddr::from_human(&parsed_env.contract.address).map_err(|err| {
         warn!(
@@ -219,22 +207,17 @@ pub fn handle(
 
     trace!("Successfully authenticated the contract!");
 
-   /* trace!(
-        "Handle: Contract Key: {:?}",
-        contract_key.to_vec().as_slice()
-    );
-*/
+    trace!("Handle: Contract Key: {:?}", hex::encode(contract_key));
+
     let mut engine = start_engine(
         context,
         gas_limit,
-        contract,
+        contract_code,
         &contract_key,
         ContractOperation::Handle,
         secret_msg.nonce,
         secret_msg.user_public_key,
     )?;
-
-    parsed_env.contract_code_hash = hex::encode(calc_contract_hash(contract));
 
     let new_env = serde_json::to_vec(&parsed_env).map_err(|err| {
         warn!(
@@ -258,7 +241,7 @@ pub fn handle(
             "(2) nonce just before encrypt_output: nonce = {:?} pubkey = {:?}",
             secret_msg.nonce, secret_msg.user_public_key
         );
-        /*let output = encrypt_output(
+      /*  let output = encrypt_output(
             output,
             secret_msg.nonce,
             secret_msg.user_public_key,
@@ -282,6 +265,8 @@ pub fn query(
     contract: &[u8],
     msg: &[u8],
 ) -> Result<QuerySuccess, EnclaveError> {
+    let contract_code = ContractCode::new(contract);
+
     if msg.len() < CONTRACT_KEY_LENGTH {
         warn!("Input query is shorter than the minimum expected. Msg is malformed");
         return Err(EnclaveError::FailedFunctionCall);
@@ -292,23 +277,21 @@ pub fn query(
     let mut contract_key = [0; CONTRACT_KEY_LENGTH];
     contract_key.copy_from_slice(key);
 
-    trace!(
-        "Query: Contract Key: {:?}",
-        contract_key.to_vec().as_slice()
-    );
+    trace!("Query: Contract Key: {:?}", hex::encode(contract_key));
 
+    trace!("Query input before decryption: {:?}", base64::encode(&msg));
     let secret_msg = SecretMessage::from_slice(msg)?;
     let decrypted_msg = secret_msg.decrypt()?;
     trace!(
         "Query input afer decryption: {:?}",
         String::from_utf8_lossy(&decrypted_msg)
     );
-    let validated_msg = validate_msg(&decrypted_msg, contract)?;
+    let validated_msg = validate_msg(&decrypted_msg, contract_code.hash())?;
 
     let mut engine = start_engine(
         context,
         gas_limit,
-        contract,
+        contract_code,
         &contract_key,
         ContractOperation::Query,
         secret_msg.nonce,
@@ -344,60 +327,16 @@ pub fn query(
 fn start_engine(
     context: Ctx,
     gas_limit: u64,
-    contract: &[u8],
+    contract_code: ContractCode,
     contract_key: &ContractKey,
     operation: ContractOperation,
     nonce: IoNonce,
     user_public_key: Ed25519PublicKey,
 ) -> Result<Engine, EnclaveError> {
-    info!("Deserializing Wasm contract");
-
-    // Create a parity-wasm module first, so we can inject gas metering to it
-    // (you need a parity-wasm module to use the pwasm-utils crate)
-    let mut p_modlue: Module =
-        elements::deserialize_buffer(contract).map_err(|_| EnclaveError::InvalidWasm)?;
-
-    info!("Deserialized Wasm contract");
-
-    info!("Validating WASM memory demands");
-
-    validate_memory(&mut p_modlue)?;
-
-    info!("Validated WASM memory demands");
+    let module = create_module_instance(contract_code)?;
 
     // Set the gas costs for wasm op-codes (there is an inline stack_height limit in WasmCosts)
     let wasm_costs = WasmCosts::default();
-
-    // Inject gas metering to pwasm module
-    let contract_module = pwasm_utils::inject_gas_counter(p_modlue, &gas_rules(&wasm_costs))
-        .map_err(|_| EnclaveError::FailedGasMeteringInjection)?;
-
-    info!("Trying to create Wasmi module from parity...");
-
-    // Create a wasmi module from the parity module
-    let module = wasmi::Module::from_parity_wasm_module(contract_module)
-        .map_err(|_err| EnclaveError::InvalidWasm)?;
-
-    info!("Created Wasmi module from parity. Now checking for floating points...");
-
-    module
-        .deny_floating_point()
-        .map_err(|_err| EnclaveError::WasmModuleWithFP)?;
-
-    // Create new imports resolver.
-    // These are the signatures of rust functions available to invoke from wasm code.
-    let resolver = WasmiImportResolver {};
-    let imports_builder = create_builder(&resolver);
-
-    // Instantiate a module with our imports and assert that there is no `start` function.
-    let module_instance = ModuleInstance::new(&module, &imports_builder).map_err(|err| {
-        warn!("Error in instantiation: {:?}", err);
-        EnclaveError::InvalidWasm
-    })?;
-    if module_instance.has_start() {
-        return Err(EnclaveError::WasmModuleWithStart);
-    }
-    let module = module_instance.not_started_instance().clone();
 
     let contract_instance = ContractInstance::new(
         context,

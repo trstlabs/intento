@@ -134,30 +134,6 @@ typedef enum EnclaveError_Tag {
      */
     EnclaveError_FailedFunctionCall,
     /**
-     * Calling a function in the contract failed.
-     */
-    EnclaveError_TestFail,
-    /**
-     * Calling a function in the contract failed.
-     */
-    EnclaveError_TestFail2,
-    /**
-     * Calling a function in the contract failed.
-     */
-    EnclaveError_TestFail3,
-    /**
-     * Calling a function in the contract failed.
-     */
-    EnclaveError_TestFail4,
-    /**
-     * Calling a function in the contract failed.
-     */
-    EnclaveError_TestFail5,
-    /**
-     * Calling a function in the contract failed.
-     */
-    EnclaveError_TestFail6,
-    /**
      * The contract panicked during execution.
      */
     EnclaveError_ContractPanicUnreachable,
@@ -324,5 +300,17 @@ typedef struct QueryResult {
         QueryResult_Failure_Body failure;
     };
 } QueryResult;
+
+/**
+ * This type describes parameters of the runtime that the node can configure for itself.
+ */
+typedef struct RuntimeConfiguration {
+    /**
+     * The amount of wasmi modules cached in an LRU cache inside the enclave.
+     * This speeds up the execution of recently used modules, but has a significant
+     * memory overhead.
+     */
+    uint8_t module_cache_size;
+} RuntimeConfiguration;
 
 #endif /* enclave_ffi_types_h */

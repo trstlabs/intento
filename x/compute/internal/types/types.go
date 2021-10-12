@@ -4,12 +4,16 @@ import (
 	"encoding/base64"
 	"time"
 
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdktxsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	wasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
+	"github.com/spf13/cast"
 )
 
 const defaultLRUCacheSize = uint64(0)
+const defaultEnclaveLRUCacheSize = uint8(5) // can safely go up to 15
 const defaultQueryGasLimit = uint64(3000000)
 
 // base64 of a 64 byte key
@@ -224,31 +228,38 @@ func ParseEvents(logs []wasmTypes.LogAttribute, contractAddr sdk.AccAddress) sdk
 
 // WasmConfig is the extra config required for wasm
 type WasmConfig struct {
-	SmartQueryGasLimit uint64 `mapstructure:"query_gas_limit"`
-	CacheSize          uint64 `mapstructure:"lru_size"`
+	SmartQueryGasLimit uint64
+	CacheSize          uint64
+	EnclaveCacheSize   uint8
 }
 
 // DefaultWasmConfig returns the default settings for WasmConfig
-func DefaultWasmConfig() WasmConfig {
-	return WasmConfig{
+func DefaultWasmConfig() *WasmConfig {
+	return &WasmConfig{
 		SmartQueryGasLimit: defaultQueryGasLimit,
 		CacheSize:          defaultLRUCacheSize,
+		EnclaveCacheSize:   defaultEnclaveLRUCacheSize,
 	}
 }
 
-type SecretMsg struct {
+type TrustlessMsg struct {
 	CodeHash []byte
 	Msg      []byte
 }
 
-func (m SecretMsg) Serialize() []byte {
+func (m TrustlessMsg) Serialize() []byte {
 	return append(m.CodeHash, m.Msg...)
 }
 
-func NewVerificationInfo(signBytes []byte, signature []byte, callbackSig []byte) wasmTypes.VerificationInfo {
+func NewVerificationInfo(
+	signBytes []byte, signMode sdktxsigning.SignMode, modeInfo []byte, publicKey []byte, signature []byte, callbackSig []byte,
+) wasmTypes.VerificationInfo {
 	return wasmTypes.VerificationInfo{
 		Bytes:             signBytes,
+		SignMode:          signMode.String(),
+		ModeInfo:          modeInfo,
 		Signature:         signature,
+		PublicKey:         publicKey,
 		CallbackSignature: callbackSig,
 	}
 }
@@ -257,3 +268,27 @@ type ParseLast struct {
 	LastMsg struct {
 	} `json:"last_msg"`
 }
+
+// GetConfig load config values from the app options
+func GetConfig(appOpts servertypes.AppOptions) *WasmConfig {
+	return &WasmConfig{
+		SmartQueryGasLimit: cast.ToUint64(appOpts.Get("wasm.contract-query-gas-limit")),
+		CacheSize:          cast.ToUint64(appOpts.Get("wasm.contract-memory-cache-size")),
+		EnclaveCacheSize:   cast.ToUint8(appOpts.Get("wasm.contract-memory-enclave-cache-size")),
+	}
+}
+
+// DefaultConfigTemplate default config template for wasm module
+const DefaultConfigTemplate = `
+[wasm]
+# The maximum gas amount can be spent for contract query.
+# The contract query will invoke contract execution vm,
+# so we need to restrict the max usage to prevent DoS attack
+contract-query-gas-limit = "{{ .WASMConfig.SmartQueryGasLimit }}"
+
+# The WASM VM memory cache size in MiB not bytes
+contract-memory-cache-size = "{{ .WASMConfig.CacheSize }}"
+
+# The WASM VM memory cache size in number of cached modules. Can safely go up to 15, but not recommended for validators
+contract-memory-enclave-cache-size = "{{ .WASMConfig.EnclaveCacheSize }}"
+`

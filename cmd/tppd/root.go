@@ -14,6 +14,7 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	tpp "github.com/danieljdd/tpp/types"
+	"github.com/danieljdd/tpp/x/compute"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -23,7 +24,7 @@ import (
 	app "github.com/danieljdd/tpp/app"
 
 	//"github.com/danieljdd/tpp/app"
-	"github.com/danieljdd/tpp/app/params"
+
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	tmcfg "github.com/tendermint/tendermint/config"
@@ -41,7 +42,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
@@ -71,11 +71,11 @@ func bindFlags(cmd *cobra.Command, v *viper.Viper) {
 
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
-func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
+func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 
 	initClientCtx := client.Context{}.
-		WithJSONMarshaler(encodingConfig.Marshaler).
+		WithCodec(encodingConfig.Marshaler).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
 		WithTxConfig(encodingConfig.TxConfig).
 		WithLegacyAmino(encodingConfig.Amino).
@@ -89,7 +89,9 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		Short: "The Trust Price Protocol App Daemon (server)",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 
-			if err := server.InterceptConfigsPreRunHandler(cmd); err != nil {
+			tppAppTemplate, tppAppConfig := initAppConfig()
+
+			if err := server.InterceptConfigsPreRunHandler(cmd, tppAppTemplate, tppAppConfig); err != nil {
 				return err
 			}
 
@@ -126,12 +128,13 @@ func Execute(rootCmd *cobra.Command) error {
 	return executor.ExecuteContext(ctx)
 }
 
-func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
-	authclient.Codec = encodingConfig.Marshaler
+func initRootCmd(rootCmd *cobra.Command, encodingConfig app.EncodingConfig) {
+	//authclient.Codec = e
 
 	rootCmd.AddCommand(
 		//genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
-		updateTmParamsAndInit(app.ModuleBasics, app.DefaultNodeHome),
+		//updateTmParamsAndInit(app.ModuleBasics, app.DefaultNodeHome),
+		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
@@ -261,6 +264,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		queryGasLimit,
 		bootstrap,
 		appOpts,
+		compute.GetConfig(appOpts),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -286,13 +290,13 @@ func exportAppStateAndTMValidators(
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var wasmApp *app.App
 	if height != -1 {
-		wasmApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts)
+		wasmApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts, compute.DefaultWasmConfig())
 
 		if err := wasmApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		wasmApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts)
+		wasmApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts, compute.DefaultWasmConfig())
 	}
 
 	return wasmApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)

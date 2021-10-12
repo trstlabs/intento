@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/base64"
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -15,7 +16,9 @@ import (
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer"
+	"github.com/cosmos/ibc-go/modules/apps/transfer"
+
+	//"github.com/cosmos/ibc-go/applications/transfer"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	//ibc "github.com/cosmos/cosmos-sdk/x/ibc/core"
@@ -25,7 +28,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-//	"io/ioutil"
+
+	//	"io/ioutil"
 	"os"
 	"testing"
 
@@ -76,7 +80,7 @@ var ModuleBasics = module.NewBasicManager(
 	transfer.AppModuleBasic{},
 )
 
-func MakeTestCodec() codec.Marshaler {
+func MakeTestCodec() codec.BinaryCodec {
 	return MakeEncodingConfig().Marshaler
 }
 func MakeEncodingConfig() params.EncodingConfig {

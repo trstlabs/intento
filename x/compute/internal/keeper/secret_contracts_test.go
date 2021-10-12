@@ -13,8 +13,8 @@ import (
 	"github.com/danieljdd/tpp/x/compute/internal/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	cosmwasm "github.com/danieljdd/tpp/go-cosmwasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cosmwasm "github.com/danieljdd/tpp/go-cosmwasm/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 )
@@ -35,7 +35,7 @@ func testEncrypt(t *testing.T, keeper Keeper, ctx sdk.Context, contractAddress s
 		return nil, cosmwasm.StdError{}
 	}
 
-	intMsg := types.SecretMsg{
+	intMsg := types.TrustlessMsg{
 		CodeHash: []byte(hex.EncodeToString(hash)),
 		Msg:      msg,
 	}
@@ -193,7 +193,7 @@ func queryHelper(t *testing.T, keeper Keeper, ctx sdk.Context, contractAddr sdk.
 func queryHelperImpl(t *testing.T, keeper Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, input string, isErrorEncrypted bool, gas uint64, wasmCallCount int64) (string, cosmwasm.StdError) {
 	hashStr := hex.EncodeToString(keeper.GetContractHash(ctx, contractAddr))
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(hashStr),
 		Msg:      []byte(input),
 	}
@@ -242,7 +242,7 @@ func execHelper(t *testing.T, keeper Keeper, ctx sdk.Context, contractAddress sd
 func execHelperImpl(t *testing.T, keeper Keeper, ctx sdk.Context, contractAddress sdk.AccAddress, txSender sdk.AccAddress, senderPrivKey crypto.PrivKey, execMsg string, isErrorEncrypted bool, gas uint64, coin int64, wasmCallCount int64) ([]byte, []ContractEvent, cosmwasm.StdError) {
 	hashStr := hex.EncodeToString(keeper.GetContractHash(ctx, contractAddress))
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(hashStr),
 		Msg:      []byte(execMsg),
 	}
@@ -294,7 +294,7 @@ func initHelper(t *testing.T, keeper Keeper, ctx sdk.Context, codeID uint64, cre
 func initHelperImpl(t *testing.T, keeper Keeper, ctx sdk.Context, codeID uint64, creator sdk.AccAddress, creatorPrivKey crypto.PrivKey, initMsg string, isErrorEncrypted bool, gas uint64, wasmCallCount int64, coin int64) (sdk.AccAddress, []ContractEvent, cosmwasm.StdError) {
 	hashStr := hex.EncodeToString(keeper.GetCodeInfo(ctx, codeID).CodeHash)
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(hashStr),
 		Msg:      []byte(initMsg),
 	}

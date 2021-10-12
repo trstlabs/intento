@@ -55,7 +55,7 @@ func CmdCreateItem() *cobra.Command {
 			argsEstimationcount, _ := strconv.ParseInt(args[4], 10, 64)
 			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
-			initMsg := types.SecretMsg{}
+			initMsg := types.TrustlessMsg{}
 
 			count := map[string]string{"estimationcount": args[4]}
 			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
@@ -172,7 +172,7 @@ func CmdRevealEstimation() *cobra.Command {
 
 			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
-			revealMsg := types.SecretMsg{}
+			revealMsg := types.TrustlessMsg{}
 			reveal := types.ParseReveal{}
 
 			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")

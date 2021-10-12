@@ -233,12 +233,12 @@ func TestGasOnExternalQuery(t *testing.T) {
 			recurse.Contract = contractAddr
 			msg := buildQuery(t, recurse, hex.EncodeToString(keeper.GetContractHash(ctx, contractAddr)))
 
-			secretMsg := types.SecretMsg{
+			TrustlessMsg := types.TrustlessMsg{
 				CodeHash: []byte(hex.EncodeToString(keeper.GetContractHash(ctx, contractAddr))),
 				Msg:      msg,
 			}
 
-			msg, err := wasmCtx.Encrypt(secretMsg.Serialize())
+			msg, err := wasmCtx.Encrypt(TrustlessMsg.Serialize())
 			require.NoError(t, err)
 
 			// do the query
@@ -314,7 +314,7 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 			expectedGas:               GasWork2k + 9*(GasWork2k+GasReturnHashed),
 			expectOutOfGas:            false,
 			expectOOM:                 false,
-			expectRecursionLimit:       true,
+			expectRecursionLimit:      true,
 		},
 		// this is where we expect an error...
 		// it has enough gas to run 4 times and die on the 5th (4th time dispatching to sub-contract)
@@ -329,7 +329,7 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 			expectQueriesFromContract: 4,
 			expectOutOfGas:            false,
 			expectOOM:                 false,
-			expectRecursionLimit:       true,
+			expectRecursionLimit:      true,
 		},
 	}
 

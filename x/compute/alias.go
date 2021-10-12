@@ -22,8 +22,8 @@ const (
 	MaxBuildTagSize               = types.MaxBuildTagSize
 	CustomEventType               = types.CustomEventType
 	AttributeKeyContractAddr      = types.AttributeKeyContractAddr
-	GasMultiplier                 = keeper.GasMultiplier
-	MaxGas                        = keeper.MaxGas
+	GasMultiplier                 = types.GasMultiplier
+	MaxGas                        = types.MaxGas
 	QueryListContractByCode       = keeper.QueryListContractByCode
 	QueryGetContract              = keeper.QueryGetContract
 	QueryGetContractResult        = keeper.QueryGetContractResult
@@ -33,6 +33,8 @@ const (
 	QueryContractKey              = keeper.QueryContractKey
 	QueryContractAddress          = keeper.QueryContractAddress
 	QueryMethodContractStateSmart = keeper.QueryMethodContractStateSmart
+	DefaultConfigTemplate         = types.DefaultConfigTemplate
+
 	/*
 		QueryMethodContractStateAll   = keeper.QueryMethodContractStateAll
 		QueryMethodContractStateRaw   = keeper.QueryMethodContractStateRaw
@@ -80,6 +82,7 @@ var (
 	TestHandler               = keeper.TestHandler
 	PrepareInitSignedTx       = keeper.PrepareInitSignedTx
 	PrepareExecSignedTx       = keeper.PrepareExecSignedTx
+	GetConfig                 = types.GetConfig
 
 	// variable aliases
 	ModuleCdc            = types.ModuleCdc

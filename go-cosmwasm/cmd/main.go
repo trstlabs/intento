@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	//"io/ioutil"
+	//	"io/ioutil"
 	"os"
 
 	wasm "github.com/danieljdd/tpp/go-cosmwasm"
@@ -19,7 +19,8 @@ func main() {
 	fmt.Println("Loaded!")
 
 	os.MkdirAll("tmp", 0755)
-	wasmer, err := wasm.NewWasmer("tmp", "staking", 0)
+	wasmer, err := wasm.NewWasmer("tmp", "staking", 0, 15)
+
 	if err != nil {
 		panic(err)
 	}

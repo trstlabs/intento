@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
 	//"io/ioutil"
 	"os"
 	"path/filepath"
@@ -101,8 +102,8 @@ blockchain. Writes the certificate in DER format to ~/attestation_cert
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-			depCdc := clientCtx.JSONMarshaler
-			cdc := depCdc.(codec.Marshaler)
+			depCdc := clientCtx.Codec
+			cdc := depCdc.(codec.Codec)
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
@@ -179,7 +180,7 @@ blockchain. Writes the certificate in DER format to ~/attestation_cert
 			// Create genesis state from certificates
 			regGenStateBz, err := cdc.MarshalJSON(&regGenState)
 			if err != nil {
-				return fmt.Errorf("failed to marshal auth genesis state: %w", err)
+				return fmt.Errorf("failed to marshal reg genesis state: %w", err)
 			}
 
 			appState[reg.ModuleName] = regGenStateBz

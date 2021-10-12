@@ -2,20 +2,21 @@ package keeper
 
 import (
 	"encoding/json"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"strings"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	wasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
+	"github.com/danieljdd/tpp/x/compute/internal/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -28,7 +29,7 @@ var _ wasmTypes.Querier = QueryHandler{}
 
 func (q QueryHandler) Query(request wasmTypes.QueryRequest, gasLimit uint64) ([]byte, error) {
 	// set a limit for a subctx
-	sdkGas := gasLimit / GasMultiplier
+	sdkGas := gasLimit / types.GasMultiplier
 	subctx := q.Ctx.WithGasMeter(sdk.NewGasMeter(sdkGas))
 
 	// make sure we charge the higher level context even on panic
@@ -207,7 +208,7 @@ func DistQuerier(keeper distrkeeper.Keeper) func(ctx sdk.Context, request *wasmT
 			for i, valRewards := range res.Rewards {
 				res.Rewards[i].Validator = valRewards.Validator
 				for j, valReward := range valRewards.Reward {
-					// this is here so we can remove fractions of uscrt from the result
+					// this is here so we can remove fractions of tpp from the result
 					res.Rewards[i].Reward[j].Amount = strings.Split(valReward.Amount, ".")[0]
 					res.Rewards[i].Reward[j].Denom = valReward.Denom
 				}

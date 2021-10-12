@@ -1,21 +1,22 @@
 package keeper
 
 import (
-	"fmt"
-
-	cosmwasm "github.com/danieljdd/tpp/go-cosmwasm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cosmwasm "github.com/danieljdd/tpp/go-cosmwasm"
+	"github.com/danieljdd/tpp/x/compute/internal/types"
 )
 
 var (
-	CostHumanize  = 5 * GasMultiplier
-	CostCanonical = 4 * GasMultiplier
+	CostHumanize  = 5 * types.GasMultiplier
+	CostCanonical = 4 * types.GasMultiplier
 )
 
 func humanAddress(canon []byte) (string, uint64, error) {
+	/* AddrLen not declared by package Types
+
 	if len(canon) != sdk.AddrLen {
 		return "", CostHumanize, fmt.Errorf("Expected %d byte address", sdk.AddrLen)
-	}
+	}*/
 	return sdk.AccAddress(canon).String(), CostHumanize, nil
 }
 

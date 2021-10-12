@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	wasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	wasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
 
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
@@ -36,8 +37,8 @@ type GovProposalResponse struct {
 
 // ProposalEqual checks if two proposals are equal (note: slow, for tests only)
 func ProposalEqual(proposalA types.Proposal, proposalB types.Proposal) bool {
-	return bytes.Equal(types.ModuleCdc.MustMarshalBinaryBare(proposalA),
-		types.ModuleCdc.MustMarshalBinaryBare(proposalB))
+	return bytes.Equal(types.ModuleCdc.MustMarshal(proposalA),
+		types.ModuleCdc.MustMarshal(proposalB))
 }
 
 // TestGovQueryProposals tests reading how many proposals are active - first testing 0 proposals, then adding

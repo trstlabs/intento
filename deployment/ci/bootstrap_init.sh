@@ -12,11 +12,11 @@ tppd init banana --chain-id enigma-testnet
 
 cp ~/node_key.json ~/.tppd/config/node_key.json
 
-perl -i -pe 's/"stake"/"uscrt"/g' ~/.tppd/config/genesis.json
+perl -i -pe 's/"stake"/"tpp"/g' ~/.tppd/config/genesis.json
 tppd keys add a
 
-tppd add-genesis-account "$(tppd keys show -a a)" 1000000000000uscrt
-tppd gentx --name a --keyring-backend test --amount 1000000uscrt
+tppd add-genesis-account "$(tppd keys show -a a)" 1000000000000tpp
+tppd gentx --name a --keyring-backend test --amount 1000000tpp
 tppd collect-gentxs
 tppd validate-genesis
 

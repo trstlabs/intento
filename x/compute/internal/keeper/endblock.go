@@ -18,7 +18,7 @@ func (k Keeper) ContractPayout(ctx sdk.Context, contractAddress sdk.AccAddress) 
 		return sdkerrors.Wrap(types.ErrNotFound, "contract")
 	}
 	var contract types.ContractInfo
-	k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)
+	k.cdc.MustUnmarshal(contractBz, &contract)
 
 	//payout contract coins to the creator
 	balance := k.bankKeeper.GetAllBalances(ctx, contractAddress)

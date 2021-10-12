@@ -24,7 +24,7 @@ func (k Keeper) ItemAll(c context.Context, req *types.QueryAllItemRequest) (*typ
 
 	pageRes, err := query.Paginate(itemStore, req.Pagination, func(key []byte, value []byte) error {
 		var item types.Item
-		if err := k.cdc.UnmarshalBinaryBare(value, &item); err != nil {
+		if err := k.cdc.Unmarshal(value, &item); err != nil {
 			return err
 		}
 
@@ -52,11 +52,11 @@ func (k Keeper) ListedItemsAll(c context.Context, req *types.QueryAllListedItems
 
 	pageRes, err := query.Paginate(itemStore, req.Pagination, func(key []byte, value []byte) error {
 		var item types.Item
-		if err := k.cdc.UnmarshalBinaryBare(value, &item); err != nil {
+		if err := k.cdc.Unmarshal(value, &item); err != nil {
 			return err
 		}
 
-		//k.cdc.MustUnmarshalBinaryBare(value, &item) //strconv.FormatUint(types.GetItemIDFromBytes(value), 10))
+		//k.cdc.MustUnmarshal(value, &item) //strconv.FormatUint(types.GetItemIDFromBytes(value), 10))
 		items = append(items, &item)
 		return nil
 
@@ -79,7 +79,7 @@ func (k Keeper) Item(c context.Context, req *types.QueryGetItemRequest) (*types.
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
-	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(req.Id)...)), &item)
+	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(req.Id)...)), &item)
 
 	return &types.QueryGetItemResponse{Item: &item}, nil
 }
