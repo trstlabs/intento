@@ -14,7 +14,7 @@ import (
 
 type (
 	Keeper struct {
-		cdc              codec.Marshaler
+		cdc              codec.BinaryCodec
 		storeKey         sdk.StoreKey
 		memKey           sdk.StoreKey
 		paramSpace       paramtypes.Subspace
@@ -26,7 +26,7 @@ type (
 	}
 )
 
-func NewKeeper(cdc codec.Marshaler, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, feeCollectorName string, homeDir string /*wasmConfig types.WasmConfig, supportedFeatures string, */, ck types.ComputeKeeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, feeCollectorName string, homeDir string /*wasmConfig types.WasmConfig, supportedFeatures string, */, ck types.ComputeKeeper) *Keeper {
 
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -81,7 +81,7 @@ func (k Keeper) ListedItemQueueIterator(ctx sdk.Context, endTime time.Time) sdk.
 // InsertListedItemQueue Inserts a itemid into the inactive item queue at endTime
 func (k Keeper) InsertListedItemQueue(ctx sdk.Context, itemid uint64, item types.Item, endTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshalBinaryBare(&item) //types.Uint64ToByte(itemid)
+	bz := k.cdc.MustMarshal(&item) //types.Uint64ToByte(itemid)
 
 	//here the key is time+itemid appended (as bytes) and value is itemid in bytes
 	store.Set(types.ListedItemQueueKey(itemid, endTime), bz)

@@ -12,9 +12,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/danieljdd/tpp/x/compute/internal/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/danieljdd/tpp/x/compute/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -49,7 +49,7 @@ func TestQueryContractLabel(t *testing.T) {
 
 	hash := keeper.GetCodeInfo(ctx, contractID).CodeHash
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(hex.EncodeToString(hash)),
 		Msg:      initMsgBz,
 	}
@@ -147,7 +147,7 @@ func TestQueryContractState(t *testing.T) {
 	key := keeper.GetCodeInfo(ctx, contractID).CodeHash
 	keyStr := hex.EncodeToString(key)
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(keyStr),
 		Msg:      initMsgBz,
 	}
@@ -285,7 +285,7 @@ func TestListContractByCodeOrdering(t *testing.T) {
 	key := keeper.GetCodeInfo(ctx, codeID).CodeHash
 	keyStr := hex.EncodeToString(key)
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(keyStr),
 		Msg:      initMsgBz,
 	}

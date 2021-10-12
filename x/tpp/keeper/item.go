@@ -96,7 +96,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	key := append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(item.Id)...)
-	value := k.cdc.MustMarshalBinaryBare(&item)
+	value := k.cdc.MustMarshal(&item)
 	store.Set(key, value)
 
 	// Update item count
@@ -108,7 +108,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 // SetItem set a specific item in the store
 func (k Keeper) SetItem(ctx sdk.Context, item types.Item) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
-	b := k.cdc.MustMarshalBinaryBare(&item)
+	b := k.cdc.MustMarshal(&item)
 	store.Set(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(item.Id)...), b)
 }
 
@@ -116,7 +116,7 @@ func (k Keeper) SetItem(ctx sdk.Context, item types.Item) {
 func (k Keeper) GetItem(ctx sdk.Context, id uint64) types.Item {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	var item types.Item
-	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(id)...)), &item)
+	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(id)...)), &item)
 	return item
 }
 
@@ -162,7 +162,7 @@ func (k Keeper) GetAllItem(ctx sdk.Context) (msgs []types.Item) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var msg types.Item
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &msg)
+		k.cdc.MustUnmarshal(iterator.Value(), &msg)
 		msgs = append(msgs, msg)
 	}
 
@@ -178,7 +178,7 @@ func (k Keeper) GetAllListedItems(ctx sdk.Context) (msgs []*types.Item) {
 
 	for ; iterator.Valid(); iterator.Next() {
 		var msg types.Item
-		k.cdc.MustUnmarshalBinaryBare(iterator.Value(), &msg)
+		k.cdc.MustUnmarshal(iterator.Value(), &msg)
 		msgs = append(msgs, &msg)
 	}
 
@@ -264,7 +264,7 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	key := append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(item.Id)...)
-	value := k.cdc.MustMarshalBinaryBare(&item)
+	value := k.cdc.MustMarshal(&item)
 	store.Set(key, value)
 
 	var result types.RevealResult

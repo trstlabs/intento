@@ -13,8 +13,6 @@ use serde_json::Value;
 use std::array::TryFromSliceError;
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::time::SystemTime;
-use std::untrusted::time::SystemTimeEx;
 use uuid::Uuid;
 
 use super::cert::{get_ias_auth_config, get_netscape_comment};
@@ -600,11 +598,11 @@ impl AttestationReport {
         // Convert to endorsed report
         let report: EndorsedAttestationReport = serde_json::from_slice(&payload)?;
 
-        // Verify report's signature
+        // Verify report's signature - aka intel's signing cert
         let signing_cert = webpki::EndEntityCert::from(&report.signing_cert)
             .map_err(|_| Error::ReportParseError)?;
 
-        let (cert, root_store) = get_ias_auth_config();
+        let (ias_cert, root_store) = get_ias_auth_config();
 
         let trust_anchors: Vec<webpki::TrustAnchor> = root_store
             .roots
@@ -613,29 +611,26 @@ impl AttestationReport {
             .collect();
 
         let mut chain: Vec<&[u8]> = Vec::new();
-        chain.push(&cert);
+        chain.push(&ias_cert);
 
-        let now_func = match webpki::Time::try_from(SystemTime::now()) {
-            Ok(val) => val,
-            Err(_e) => {
-                error!("Failed to get local time");
-                return Err(Error::ReportParseError);
-            }
-        };
+        // set as 04.11.23(dd.mm.yy) - should be valid for the foreseeable future, and not rely on SystemTime
+        let time_stamp = webpki::Time::from_seconds_since_unix_epoch(1_699_088_856);
 
-        // todo: figure out what to do when the certificate expires
+        // note: there's no way to not validate the time, and we don't want to write this code
+        // ourselves. We also can't just ignore the error message, since that means that the rest of
+        // the validation didn't happen (time is validated early on)
         match signing_cert.verify_is_valid_tls_server_cert(
             SUPPORTED_SIG_ALGS,
             &webpki::TLSServerTrustAnchors(&trust_anchors),
             &chain,
-            now_func,
+            time_stamp,
         ) {
             Ok(_) => info!("Certificate verified successfully"),
             Err(e) => {
-                warn!("Certificate verification error {:?}", e);
+                error!("Certificate verification error {:?}", e);
                 return Err(Error::ReportValidationError);
             }
-        }
+        };
 
         // Verify the signature against the signing cert
         match signing_cert.verify_signature(
@@ -745,7 +740,7 @@ pub mod tests {
         cert
     }
 
-    fn tls_ra_cert_der_out_of_date() -> Vec<u8> {
+    fn _test_aes_encrypttls_ra_cert_der_out_of_date() -> Vec<u8> {
         let mut cert = vec![];
         let mut f = File::open(
             "../wasmi-runtime/src/registration/fixtures/attestation_cert_sw_config_needed.der",
@@ -756,7 +751,7 @@ pub mod tests {
         cert
     }
 
-    fn ias_root_ca_cert_der() -> Vec<u8> {
+    fn _ias_root_ca_cert_der() -> Vec<u8> {
         let mut cert = vec![];
         let mut f =
             File::open("../wasmi-runtime/src/registration/fixtures/ias_root_ca_cert.der").unwrap();
@@ -872,10 +867,7 @@ pub mod tests {
         assert!(report.is_ok());
 
         let report = report.unwrap();
-        assert_eq!(
-            report.sgx_quote_status,
-            SgxQuoteStatus::ConfigurationAndSwHardeningNeeded
-        );
+        assert_eq!(report.sgx_quote_status, SgxQuoteStatus::GroupOutOfDate);
     }
 
     pub fn test_attestation_report_from_cert_api_version_not_compatible() {

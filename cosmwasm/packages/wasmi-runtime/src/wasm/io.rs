@@ -74,11 +74,11 @@ pub fn encrypt_output(
 ) -> Result<Vec<u8>, EnclaveError> {
     let key = calc_encryption_key(&nonce, &user_public_key);
 
-   /* trace!(
+    trace!(
         "Output before encryption: {:?}",
         String::from_utf8_lossy(&output)
     );
-*/
+
     let mut output: WasmOutput = serde_json::from_slice(&output).map_err(|err| {
         warn!("got an error while trying to deserialize output bytes into json");
         trace!("output: {:?} error: {:?}", output, err);
@@ -105,7 +105,7 @@ pub fn encrypt_output(
                 }
             }
 
-            for log in &mut ok.log {
+            for log in ok.log.iter_mut().filter(|log| log.encrypted) {
                 log.key = encrypt_preserialized_string(&key, &log.key)?;
                 log.value = encrypt_preserialized_string(&key, &log.value)?;
             }

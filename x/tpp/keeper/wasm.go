@@ -19,14 +19,14 @@ func (k Keeper) contractInstance(ctx sdk.Context, contractAddress sdk.AccAddress
 		return types.CodeInfo{}, prefix.Store{}, sdkerrors.Wrap(types.ErrNotFound, "contract")
 	}
 	var contract types.ContractInfo
-	k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)
+	k.cdc.MustUnmarshal(contractBz, &contract)
 
 	contractInfoBz := store.Get(types.GetCodeKey(contract.CodeID))
 	if contractInfoBz == nil {
 		return types.CodeInfo{}, prefix.Store{}, sdkerrors.Wrap(types.ErrNotFound, "contract info")
 	}
 	var codeInfo types.CodeInfo
-	k.cdc.MustUnmarshalBinaryBare(contractInfoBz, &codeInfo)
+	k.cdc.MustUnmarshal(contractInfoBz, &codeInfo)
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 	return codeInfo, prefixStore, nil
@@ -64,7 +64,7 @@ func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress)
 	if contractBz == nil {
 		return nil
 	}
-	k.cdc.MustUnmarshalBinaryBare(contractBz, &contract)
+	k.cdc.MustUnmarshal(contractBz, &contract)
 	return &contract
 }
 
@@ -75,7 +75,7 @@ func (k Keeper) containsContractInfo(ctx sdk.Context, contractAddress sdk.AccAdd
 
 func (k Keeper) setContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress, contract *types.ContractInfo) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshalBinaryBare(contract))
+	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(contract))
 }
 
 func (k Keeper) IterateContractInfo(ctx sdk.Context, cb func(sdk.AccAddress, types.ContractInfo) bool) {
@@ -83,7 +83,7 @@ func (k Keeper) IterateContractInfo(ctx sdk.Context, cb func(sdk.AccAddress, typ
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
 		var contract types.ContractInfo
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &contract)
+		k.cdc.MustUnmarshal(iter.Value(), &contract)
 		// cb returns true to stop early
 		if cb(iter.Key(), contract) {
 			break
@@ -119,7 +119,7 @@ func (k Keeper) GetCodeInfo(ctx sdk.Context, codeID uint64) *types.CodeInfo {
 	if codeInfoBz == nil {
 		return nil
 	}
-	k.cdc.MustUnmarshalBinaryBare(codeInfoBz, &codeInfo)
+	k.cdc.MustUnmarshal(codeInfoBz, &codeInfo)
 	return &codeInfo
 }
 
@@ -133,7 +133,7 @@ func (k Keeper) IterateCodeInfos(ctx sdk.Context, cb func(uint64, types.CodeInfo
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
 		var c types.CodeInfo
-		k.cdc.MustUnmarshalBinaryBare(iter.Value(), &c)
+		k.cdc.MustUnmarshal(iter.Value(), &c)
 		// cb returns true to stop early
 		if cb(binary.BigEndian.Uint64(iter.Key()), c) {
 			return
@@ -148,7 +148,7 @@ func (k Keeper) GetByteCode(ctx sdk.Context, codeID uint64) ([]byte, error) {
 	if codeInfoBz == nil {
 		return nil, nil
 	}
-	k.cdc.MustUnmarshalBinaryBare(codeInfoBz, &codeInfo)
+	k.cdc.MustUnmarshal(codeInfoBz, &codeInfo)
 	return k.wasmer.GetCode(codeInfo.CodeHash)
 }
 

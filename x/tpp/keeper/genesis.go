@@ -70,6 +70,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		genesis.EstimatorList = append(genesis.EstimatorList, &elem)
 	}
 
+	genesis.Params = k.GetParams(ctx)
+
 	/*	// Get all buyer
 		buyerList := k.GetAllBuyer(ctx)
 		for _, elem := range buyerList {

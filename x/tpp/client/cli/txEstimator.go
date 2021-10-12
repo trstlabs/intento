@@ -33,7 +33,7 @@ func CmdCreateEstimation() *cobra.Command {
 			//	argsMsg, _ := strconv.ParseInt(args[0], 10, 64)
 
 			wasmCtx := wasmUtils.WASMContext{CLIContext: clientCtx}
-			estimateMsg := types.SecretMsg{}
+			estimateMsg := types.TrustlessMsg{}
 
 			estimation := map[string]string{"amount": args[0], "comment": args[3]}
 
@@ -141,7 +141,7 @@ func CmdDeleteEstimation() *cobra.Command {
 
 			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
-			deletegMsg := types.SecretMsg{}
+			deletegMsg := types.TrustlessMsg{}
 			delete := types.ParseDelete{}
 
 			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
@@ -200,7 +200,7 @@ func CmdFlagItem() *cobra.Command {
 
 			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
-			flagMsg := types.SecretMsg{}
+			flagMsg := types.TrustlessMsg{}
 			flag := types.ParseFlag{}
 
 			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")

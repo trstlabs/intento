@@ -36,7 +36,7 @@ message MsgInstantiateContract {
   bytes init_msg = 5;
    bytes last_msg = 6;
   repeated cosmos.base.v1beta1.Coin init_funds = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  //optional bytes callback_sig = 8;
+   bytes callback_sig = 8 [(gogoproto.customname) = "CallbackSig"];
 }
 
 message MsgExecuteContract {
@@ -47,7 +47,7 @@ message MsgExecuteContract {
   bytes msg = 3;
   string callback_code_hash = 4;
   repeated cosmos.base.v1beta1.Coin sent_funds = 5 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
- // optional bytes callback_sig = 6;
+  bytes callback_sig = 6 [(gogoproto.customname) = "CallbackSig"];
 }
 
 /*

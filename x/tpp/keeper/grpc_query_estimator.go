@@ -24,7 +24,7 @@ func (k Keeper) EstimatorAll(c context.Context, req *types.QueryAllEstimatorRequ
 
 	pageRes, err := query.Paginate(estimatorStore, req.Pagination, func(key []byte, value []byte) error {
 		var estimator types.Estimator
-		if err := k.cdc.UnmarshalBinaryBare(value, &estimator); err != nil {
+		if err := k.cdc.Unmarshal(value, &estimator); err != nil {
 			return err
 		}
 
@@ -48,7 +48,7 @@ func (k Keeper) Estimator(c context.Context, req *types.QueryGetEstimatorRequest
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	k.cdc.MustUnmarshalBinaryBare(store.Get(append(types.KeyPrefix(types.EstimatorKey), types.Uint64ToByte(req.Itemid)...)), &estimator)
+	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.EstimatorKey), types.Uint64ToByte(req.Itemid)...)), &estimator)
 
 	return &types.QueryGetEstimatorResponse{Estimator: &estimator}, nil
 }

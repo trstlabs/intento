@@ -14,14 +14,14 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 
+	stypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/danieljdd/tpp/go-cosmwasm/api"
 	eng "github.com/danieljdd/tpp/types"
 	wasmUtils "github.com/danieljdd/tpp/x/compute/client/utils"
 	"github.com/danieljdd/tpp/x/compute/internal/types"
 	reg "github.com/danieljdd/tpp/x/registration"
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -330,7 +330,7 @@ func TestInstantiate(t *testing.T) {
 
 	key := keeper.GetCodeInfo(ctx, contractID).CodeHash
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(hex.EncodeToString(key)),
 		Msg:      initMsgBz,
 	}
@@ -588,7 +588,7 @@ func TestExecute(t *testing.T) {
 	key := keeper.GetCodeInfo(ctx, contractID).CodeHash
 	//keyStr := hex.EncodeToString(key)
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(hex.EncodeToString(key)),
 		Msg:      initMsgBz,
 	}
@@ -642,7 +642,7 @@ func TestExecute(t *testing.T) {
 	key = keeper.GetCodeInfo(ctx, contractID).CodeHash
 	//keyStr := hex.EncodeToString(key)
 
-	msg = types.SecretMsg{
+	msg = types.TrustlessMsg{
 		CodeHash: []byte(hex.EncodeToString(key)),
 		Msg:      initMsgBz,
 	}
@@ -870,7 +870,7 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 
 	hash := keeper.GetCodeInfo(ctx, contractID).CodeHash
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(hex.EncodeToString(hash)),
 		Msg:      initMsgBz,
 	}
@@ -909,7 +909,7 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 	codeHash := keeper.GetContractHash(ctx, addr)
 	codeHashStr := hex.EncodeToString(codeHash)
 
-	msg2 := types.SecretMsg{
+	msg2 := types.TrustlessMsg{
 		CodeHash: []byte(codeHashStr),
 		Msg:      []byte(`{"cpu_loop":{}}`),
 	}
@@ -994,7 +994,7 @@ func TestExecuteWithStorageLoop(t *testing.T) {
 	codeHash := keeper.GetContractHash(ctx, addr)
 	codeHashStr := hex.EncodeToString(codeHash)
 
-	msg := types.SecretMsg{
+	msg := types.TrustlessMsg{
 		CodeHash: []byte(codeHashStr),
 		Msg:      []byte(`{"storage_loop":{}}`),
 	}

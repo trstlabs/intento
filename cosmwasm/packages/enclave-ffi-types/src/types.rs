@@ -34,6 +34,15 @@ impl Default for EnclaveBuffer {
     }
 }
 
+/// This type describes parameters of the runtime that the node can configure for itself.
+#[repr(C)]
+pub struct RuntimeConfiguration {
+    /// The amount of wasmi modules cached in an LRU cache inside the enclave.
+    /// This speeds up the execution of recently used modules, but has a significant
+    /// memory overhead.
+    pub module_cache_size: u8,
+}
+
 /// This struct holds a pointer to memory in userspace, that contains the storage
 #[repr(C)]
 pub struct Ctx {
@@ -86,24 +95,6 @@ pub enum EnclaveError {
     /// Calling a function in the contract failed.
     #[display(fmt = "calling a function in the contract failed for an unexpected reason")]
     FailedFunctionCall,
-     /// Calling a function in the contract failed.
-     #[display(fmt = "calling a function in the contract failed for an unexpected reason1")]
-     TestFail,
-       /// Calling a function in the contract failed.
-       #[display(fmt = "calling a function in the contract failed for an unexpected reason2")]
-       TestFail2,
-         /// Calling a function in the contract failed.
-         #[display(fmt = "calling a function in the contract failed for an unexpected reason3")]
-         TestFail3,
-           /// Calling a function in the contract failed.
-       #[display(fmt = "calling a function in the contract failed for an unexpected reason4")]
-       TestFail4,
-         /// Calling a function in the contract failed.
-         #[display(fmt = "calling a function in the contract failed for an unexpected reason5")]
-         TestFail5,
-           /// Calling a function in the contract failed.
-       #[display(fmt = "calling a function in the contract failed for an unexpected reason6")]
-       TestFail6,
     // These variants mimic the variants of `wasmi::TrapKind`
     /// The contract panicked during execution.
     #[display(fmt = "the contract panicked")]
