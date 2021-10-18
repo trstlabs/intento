@@ -1,11 +1,11 @@
 syntax = "proto3";
-package tpp.x.registration.v1beta1;
+package trst.x.registration.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "registration/types.proto";
 import "registration/msg.proto";
 
-option go_package = "github.com/danieljdd/tpp/x/registration/internal/types";
+option go_package = "github.com/danieljdd/trst/x/registration/internal/types";
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = true;
 

@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs:
   amd64:
-    name: tpp Docker
+    name: trst Docker
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -25,7 +25,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push blockchain
-        run: docker buildx build --tag ${{ secrets.DOCKERHUB_USERNAME }}/tpp --file Dockerfile --platform linux/amd64,linux/arm64 --cache-from ${{ secrets.DOCKERHUB_USERNAME }}/tpp:cache --cache-to ${{ secrets.DOCKERHUB_USERNAME }}/tpp:cache --push --progress tty .
+        run: docker buildx build --tag ${{ secrets.DOCKERHUB_USERNAME }}/trst --file Dockerfile --platform linux/amd64,linux/arm64 --cache-from ${{ secrets.DOCKERHUB_USERNAME }}/trst:cache --cache-to ${{ secrets.DOCKERHUB_USERNAME }}/trst:cache --push --progress tty .
 
       - name: Build and push UI
-        run: docker buildx build --tag ${{ secrets.DOCKERHUB_USERNAME }}/tpp-ui --file vue/Dockerfile --platform linux/amd64,linux/arm64 --cache-from ${{ secrets.DOCKERHUB_USERNAME }}/tpp-ui:cache --cache-to ${{ secrets.DOCKERHUB_USERNAME }}/tpp-ui:cache --push --progress tty ./vue
+        run: docker buildx build --tag ${{ secrets.DOCKERHUB_USERNAME }}/trst-ui --file vue/Dockerfile --platform linux/amd64,linux/arm64 --cache-from ${{ secrets.DOCKERHUB_USERNAME }}/trst-ui:cache --cache-to ${{ secrets.DOCKERHUB_USERNAME }}/trst-ui:cache --push --progress tty ./vue

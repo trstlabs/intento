@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/types"
 )
 
 /*
@@ -16,7 +16,7 @@ func (k Keeper) GetActiveParams(ctx sdk.Context) types.ActiveParams {
 }
 */
 /**/
-// ParamKeyTable for tpp module
+// ParamKeyTable for trst module
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&types.Params{})
 }

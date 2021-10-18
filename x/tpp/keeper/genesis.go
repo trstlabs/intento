@@ -7,18 +7,18 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/types"
 )
 
-// InitGenesis initializes the TPP module state
+// InitGenesis initializes the trst module state
 func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	//k.SetParams(ctx, state.Params)
 
 	// NOTE: since the reward pool is a module account, the auth module should
 	// take care of importing the amount into the account except for the
 	// genesis block
-	if k.GetTPPModuleBalance(ctx).IsZero() {
-		err := k.InitializeTPPModule(ctx, sdk.NewCoin("tpp", sdk.ZeroInt()))
+	if k.GettrstModuleBalance(ctx).IsZero() {
+		err := k.InitializetrstModule(ctx, sdk.NewCoin("utrst", sdk.ZeroInt()))
 		if err != nil {
 			panic(err)
 		}
@@ -54,7 +54,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 
 }
 
-// ExportGenesis exports the TPP module state
+// ExportGenesis exports the trst module state
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
@@ -83,22 +83,22 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return genesis
 }
 
-// GetTPPModuleAccount returns the module account.
-func (k Keeper) GetTPPModuleAccount(ctx sdk.Context) (ModuleName authtypes.ModuleAccountI) {
+// GettrstModuleAccount returns the module account.
+func (k Keeper) GettrstModuleAccount(ctx sdk.Context) (ModuleName authtypes.ModuleAccountI) {
 	return k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
-// GetTPPModuleBalance returns the module account balance
-func (k Keeper) GetTPPModuleBalance(ctx sdk.Context) sdk.Coin {
-	return k.bankKeeper.GetBalance(ctx, k.GetTPPModuleAccount(ctx).GetAddress(), "tpp")
+// GettrstModuleBalance returns the module account balance
+func (k Keeper) GettrstModuleBalance(ctx sdk.Context) sdk.Coin {
+	return k.bankKeeper.GetBalance(ctx, k.GettrstModuleAccount(ctx).GetAddress(), "utrst")
 }
 
-// InitializeTPPModule sets up the module account from genesis
-func (k Keeper) InitializeTPPModule(ctx sdk.Context, funds sdk.Coin) error {
+// InitializetrstModule sets up the module account from genesis
+func (k Keeper) InitializetrstModule(ctx sdk.Context, funds sdk.Coin) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(funds))
 }
 
-// InitializeTPPModule sets up the module account from genesis
+// InitializetrstModule sets up the module account from genesis
 func (k Keeper) InitializeContract(ctx sdk.Context) error {
 	addr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	// ensure reward pool module account is set
@@ -108,7 +108,7 @@ func (k Keeper) InitializeContract(ctx sdk.Context) error {
 
 	userHomeDir, _ := os.UserHomeDir()
 
-	wasm, err := os.ReadFile(filepath.Join(userHomeDir, "tpp", "contract.wasm.gz"))
+	wasm, err := os.ReadFile(filepath.Join(userHomeDir, "utrst", "contract.wasm.gz"))
 	if err != nil {
 		panic(err)
 	}

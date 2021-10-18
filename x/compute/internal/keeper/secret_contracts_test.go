@@ -10,11 +10,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/tendermint/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	cosmwasm "github.com/danieljdd/tpp/go-cosmwasm/types"
+	cosmwasm "github.com/danieljdd/trst/go-cosmwasm/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 )

@@ -1,4 +1,4 @@
-// +build !tppd
+// +build !trstd
 
 package api
 

@@ -1,9 +1,9 @@
-Package: trustpriceprotocol
+Package: trustlesshub
 Priority: optional
 Architecture: amd64
-Homepage: https://github.com/danieljdd/trustpriceprotocol
+Homepage: https://github.com/danieljdd/trustlesshub
 Maintainer: https://github.com/danieljdd
-Provides: trustpriceprotocol
-Conflicts: trustpriceprotocol
-Replaces: trustpriceprotocol
-Description: The TPP node
+Provides: trustlesshub
+Conflicts: trustlesshub
+Replaces: trustlesshub
+Description: The trst node

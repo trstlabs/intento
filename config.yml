@@ -1,14 +1,14 @@
 accounts:
   - name: user1
-    coins: ["10000tpp", "1000000stake"]
+    coins: ["10000trst", "1000000stake"]
   - name: user2
-    coins: ["500000tpp"]
+    coins: ["500000trst"]
   - name: user3
-    coins: ["50000tpp"]
+    coins: ["50000trst"]
   - name: user4
-    coins: ["50000tpp"]
+    coins: ["50000trst"]
   - name: faucet
-    coins: ["1000000000tpp"]
+    coins: ["1000000000trst"]
     mnemonic: "yellow reveal rubber dumb picture cargo valid cover define inner demand solve panel behave analyst build edit stereo hope initial feed rare bleak army"
 
 validator:

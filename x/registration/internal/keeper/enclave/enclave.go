@@ -1,7 +1,7 @@
 package enclave
 
 import (
-	"github.com/danieljdd/tpp/go-cosmwasm/api"
+	"github.com/danieljdd/trst/go-cosmwasm/api"
 )
 
 type Api struct{}

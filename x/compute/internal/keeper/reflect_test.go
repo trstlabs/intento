@@ -8,17 +8,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danieljdd/tpp/x/compute/internal/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	wasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
 )
 
 // MaskInitMsg is {}

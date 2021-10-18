@@ -30,10 +30,10 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	sdktxsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	wasm "github.com/danieljdd/tpp/go-cosmwasm"
-	wasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
+	wasm "github.com/danieljdd/trst/go-cosmwasm"
+	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
 
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/tendermint/tendermint/libs/log"
 )
 
@@ -154,7 +154,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, [
 	}
 
 	// for MsgInstantiateContract, there is only one signer which is msg.Sender
-	// (https://github.com/danieljdd/tpp/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L192-L194)
+	// (https://github.com/danieljdd/trst/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L192-L194)
 	signerAcc, err := ante.GetSignerAcc(ctx, k.accountKeeper, signer)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, fmt.Sprintf("Unable to retrieve account by address: %s", err.Error()))
@@ -517,7 +517,7 @@ func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (er
 		return err
 	}
 
-	res, err := k.Execute(ctx, contractAddress, contractAddress, encryptedMsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	res, err := k.Execute(ctx, contractAddress, contractAddress, encryptedMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		panic(err)
 	}

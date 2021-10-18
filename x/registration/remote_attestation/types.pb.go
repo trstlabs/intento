@@ -268,12 +268,12 @@ func (m *PlatformInfoBlob) XXX_DiscardUnknown() {
 var xxx_messageInfo_PlatformInfoBlob proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*QuoteReport)(nil), "tpp.x.registration.remote_attestation.v1beta1.QuoteReport")
-	proto.RegisterType((*QuoteReportBody)(nil), "tpp.x.registration.remote_attestation.v1beta1.QuoteReportBody")
-	proto.RegisterType((*QuoteReportData)(nil), "tpp.x.registration.remote_attestation.v1beta1.QuoteReportData")
-	proto.RegisterType((*EndorsedAttestationReport)(nil), "tpp.x.registration.remote_attestation.v1beta1.EndorsedAttestationReport")
-	proto.RegisterType((*SGXEC256Signature)(nil), "tpp.x.registration.remote_attestation.v1beta1.SGXEC256Signature")
-	proto.RegisterType((*PlatformInfoBlob)(nil), "tpp.x.registration.remote_attestation.v1beta1.PlatformInfoBlob")
+	proto.RegisterType((*QuoteReport)(nil), "trst.x.registration.remote_attestation.v1beta1.QuoteReport")
+	proto.RegisterType((*QuoteReportBody)(nil), "trst.x.registration.remote_attestation.v1beta1.QuoteReportBody")
+	proto.RegisterType((*QuoteReportData)(nil), "trst.x.registration.remote_attestation.v1beta1.QuoteReportData")
+	proto.RegisterType((*EndorsedAttestationReport)(nil), "trst.x.registration.remote_attestation.v1beta1.EndorsedAttestationReport")
+	proto.RegisterType((*SGXEC256Signature)(nil), "trst.x.registration.remote_attestation.v1beta1.SGXEC256Signature")
+	proto.RegisterType((*PlatformInfoBlob)(nil), "trst.x.registration.remote_attestation.v1beta1.PlatformInfoBlob")
 }
 
 func init() {

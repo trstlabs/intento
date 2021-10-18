@@ -10,9 +10,9 @@ Enclave_u.c
 Enclave_u.h
 Enclave_u.o
 
-/tppd*
+/trstd*
 
-tppd*
+trstd*
 incubator-teaclave-sgx-sdk
 libenclave.a
 libEnclave_u.a

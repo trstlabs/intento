@@ -1,4 +1,4 @@
-// +build tppd
+// +build trstd
 
 package api
 
@@ -42,7 +42,7 @@ package api
 //
 //	dbm "github.com/tendermint/tm-db"
 //
-//	"github.com/danieljdd/tpp/go-cosmwasm/types"
+//	"github.com/danieljdd/trst/go-cosmwasm/types"
 //)
 //
 //type i32 = uint32

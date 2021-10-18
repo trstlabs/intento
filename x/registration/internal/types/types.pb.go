@@ -6,7 +6,7 @@ package types
 import (
 	bytes "bytes"
 	fmt "fmt"
-	github_com_danieljdd_tpp_x_registration_remote_attestation "github.com/danieljdd/tpp/x/registration/remote_attestation"
+	github_com_danieljdd_trst_x_registration_remote_attestation "github.com/danieljdd/trst/x/registration/remote_attestation"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -64,8 +64,8 @@ func (m *SeedConfig) XXX_DiscardUnknown() {
 var xxx_messageInfo_SeedConfig proto.InternalMessageInfo
 
 type RegistrationNodeInfo struct {
-	Certificate   github_com_danieljdd_tpp_x_registration_remote_attestation.Certificate `protobuf:"bytes,1,opt,name=certificate,proto3,casttype=github.com/danieljdd/tpp/x/registration/remote_attestation.Certificate" json:"certificate,omitempty"`
-	EncryptedSeed []byte                                                                 `protobuf:"bytes,2,opt,name=encrypted_seed,json=encryptedSeed,proto3" json:"encrypted_seed,omitempty"`
+	Certificate   github_com_danieljdd_trst_x_registration_remote_attestation.Certificate `protobuf:"bytes,1,opt,name=certificate,proto3,casttype=github.com/danieljdd/trst/x/registration/remote_attestation.Certificate" json:"certificate,omitempty"`
+	EncryptedSeed []byte                                                                  `protobuf:"bytes,2,opt,name=encrypted_seed,json=encryptedSeed,proto3" json:"encrypted_seed,omitempty"`
 }
 
 func (m *RegistrationNodeInfo) Reset()         { *m = RegistrationNodeInfo{} }
@@ -102,8 +102,8 @@ func (m *RegistrationNodeInfo) XXX_DiscardUnknown() {
 var xxx_messageInfo_RegistrationNodeInfo proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*SeedConfig)(nil), "tpp.x.registration.v1beta1.SeedConfig")
-	proto.RegisterType((*RegistrationNodeInfo)(nil), "tpp.x.registration.v1beta1.RegistrationNodeInfo")
+	proto.RegisterType((*SeedConfig)(nil), "trst.x.registration.v1beta1.SeedConfig")
+	proto.RegisterType((*RegistrationNodeInfo)(nil), "trst.x.registration.v1beta1.RegistrationNodeInfo")
 }
 
 func init() { proto.RegisterFile("registration/types.proto", fileDescriptor_647ba3364f4e61ab) }

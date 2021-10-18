@@ -1,14 +1,14 @@
 syntax = "proto3";
-package danieljdd.tpp.tpp;
+package danieljdd.trst.trst;
 
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "gogoproto/gogo.proto";
-//import "tpp/estimator.proto";
+//import "trst/estimator.proto";
 //import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/danieljdd/tpp/x/tpp/types";
+option go_package = "github.com/danieljdd/trst/x/trst/types";
 
 message Item {
   string seller = 1;
@@ -117,7 +117,7 @@ message MsgItemResell {
 // ActiveParams defines the params for activeness of items on governance proposals.
 message Params {
    option (gogoproto.goproto_stringer) = false;
-  //  Maximum period for TPP holders to buy an item. Initial value: 2
+  //  Maximum period for trst holders to buy an item. Initial value: 2
   //  months.
   google.protobuf.Duration MaxActivePeriod = 1 [
     (gogoproto.nullable)    = false,

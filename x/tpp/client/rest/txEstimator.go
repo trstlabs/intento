@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/types"
 	"github.com/gorilla/mux"
 )
 
@@ -65,7 +65,7 @@ func createEstimatorHandler(clientCtx client.Context) http.HandlerFunc {
 		//var estimatorestimationhash = sha256.Sum256([]byte(estimatorestimation + req.Estimator))
 		//var estimatorestimationhashstring = hex.EncodeToString(estimatorestimationhash[:])
 
-		//depositamount := "5tpp"
+		//depositamount := "5trst"
 		deposit := req.Deposit
 
 		msg := types.NewMsgCreateEstimation(

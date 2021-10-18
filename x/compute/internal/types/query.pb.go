@@ -814,26 +814,26 @@ func (m *DecryptedAnswer) XXX_DiscardUnknown() {
 var xxx_messageInfo_DecryptedAnswer proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*QueryContractInfoRequest)(nil), "tpp.x.compute.v1beta1.QueryContractInfoRequest")
-	proto.RegisterType((*QueryContractInfoResponse)(nil), "tpp.x.compute.v1beta1.QueryContractInfoResponse")
-	proto.RegisterType((*QueryContractResultRequest)(nil), "tpp.x.compute.v1beta1.QueryContractResultRequest")
-	proto.RegisterType((*QueryContractResultResponse)(nil), "tpp.x.compute.v1beta1.QueryContractResultResponse")
-	proto.RegisterType((*QueryContractHistoryRequest)(nil), "tpp.x.compute.v1beta1.QueryContractHistoryRequest")
-	proto.RegisterType((*QueryContractsByCodeRequest)(nil), "tpp.x.compute.v1beta1.QueryContractsByCodeRequest")
-	proto.RegisterType((*QueryContractsByCodeResponse)(nil), "tpp.x.compute.v1beta1.QueryContractsByCodeResponse")
-	proto.RegisterType((*QuerySmartContractStateRequest)(nil), "tpp.x.compute.v1beta1.QuerySmartContractStateRequest")
-	proto.RegisterType((*QueryContractAddressByContractIdRequest)(nil), "tpp.x.compute.v1beta1.QueryContractAddressByContractIdRequest")
-	proto.RegisterType((*QueryContractKeyRequest)(nil), "tpp.x.compute.v1beta1.QueryContractKeyRequest")
-	proto.RegisterType((*QueryContractHashRequest)(nil), "tpp.x.compute.v1beta1.QueryContractHashRequest")
-	proto.RegisterType((*QuerySmartContractStateResponse)(nil), "tpp.x.compute.v1beta1.QuerySmartContractStateResponse")
-	proto.RegisterType((*QueryCodeRequest)(nil), "tpp.x.compute.v1beta1.QueryCodeRequest")
-	proto.RegisterType((*CodeInfoResponse)(nil), "tpp.x.compute.v1beta1.CodeInfoResponse")
-	proto.RegisterType((*QueryCodeResponse)(nil), "tpp.x.compute.v1beta1.QueryCodeResponse")
-	proto.RegisterType((*QueryCodesResponse)(nil), "tpp.x.compute.v1beta1.QueryCodesResponse")
-	proto.RegisterType((*QueryContractAddressByContractIdResponse)(nil), "tpp.x.compute.v1beta1.QueryContractAddressByContractIdResponse")
-	proto.RegisterType((*QueryContractKeyResponse)(nil), "tpp.x.compute.v1beta1.QueryContractKeyResponse")
-	proto.RegisterType((*QueryContractHashResponse)(nil), "tpp.x.compute.v1beta1.QueryContractHashResponse")
-	proto.RegisterType((*DecryptedAnswer)(nil), "tpp.x.compute.v1beta1.DecryptedAnswer")
+	proto.RegisterType((*QueryContractInfoRequest)(nil), "trst.x.compute.v1beta1.QueryContractInfoRequest")
+	proto.RegisterType((*QueryContractInfoResponse)(nil), "trst.x.compute.v1beta1.QueryContractInfoResponse")
+	proto.RegisterType((*QueryContractResultRequest)(nil), "trst.x.compute.v1beta1.QueryContractResultRequest")
+	proto.RegisterType((*QueryContractResultResponse)(nil), "trst.x.compute.v1beta1.QueryContractResultResponse")
+	proto.RegisterType((*QueryContractHistoryRequest)(nil), "trst.x.compute.v1beta1.QueryContractHistoryRequest")
+	proto.RegisterType((*QueryContractsByCodeRequest)(nil), "trst.x.compute.v1beta1.QueryContractsByCodeRequest")
+	proto.RegisterType((*QueryContractsByCodeResponse)(nil), "trst.x.compute.v1beta1.QueryContractsByCodeResponse")
+	proto.RegisterType((*QuerySmartContractStateRequest)(nil), "trst.x.compute.v1beta1.QuerySmartContractStateRequest")
+	proto.RegisterType((*QueryContractAddressByContractIdRequest)(nil), "trst.x.compute.v1beta1.QueryContractAddressByContractIdRequest")
+	proto.RegisterType((*QueryContractKeyRequest)(nil), "trst.x.compute.v1beta1.QueryContractKeyRequest")
+	proto.RegisterType((*QueryContractHashRequest)(nil), "trst.x.compute.v1beta1.QueryContractHashRequest")
+	proto.RegisterType((*QuerySmartContractStateResponse)(nil), "trst.x.compute.v1beta1.QuerySmartContractStateResponse")
+	proto.RegisterType((*QueryCodeRequest)(nil), "trst.x.compute.v1beta1.QueryCodeRequest")
+	proto.RegisterType((*CodeInfoResponse)(nil), "trst.x.compute.v1beta1.CodeInfoResponse")
+	proto.RegisterType((*QueryCodeResponse)(nil), "trst.x.compute.v1beta1.QueryCodeResponse")
+	proto.RegisterType((*QueryCodesResponse)(nil), "trst.x.compute.v1beta1.QueryCodesResponse")
+	proto.RegisterType((*QueryContractAddressByContractIdResponse)(nil), "trst.x.compute.v1beta1.QueryContractAddressByContractIdResponse")
+	proto.RegisterType((*QueryContractKeyResponse)(nil), "trst.x.compute.v1beta1.QueryContractKeyResponse")
+	proto.RegisterType((*QueryContractHashResponse)(nil), "trst.x.compute.v1beta1.QueryContractHashResponse")
+	proto.RegisterType((*DecryptedAnswer)(nil), "trst.x.compute.v1beta1.DecryptedAnswer")
 }
 
 func init() { proto.RegisterFile("compute/query.proto", fileDescriptor_94dcea2ad30dffea) }
@@ -1456,7 +1456,7 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 
 func (c *queryClient) ContractInfo(ctx context.Context, in *QueryContractInfoRequest, opts ...grpc.CallOption) (*QueryContractInfoResponse, error) {
 	out := new(QueryContractInfoResponse)
-	err := c.cc.Invoke(ctx, "/tpp.x.compute.v1beta1.Query/ContractInfo", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trst.x.compute.v1beta1.Query/ContractInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1465,7 +1465,7 @@ func (c *queryClient) ContractInfo(ctx context.Context, in *QueryContractInfoReq
 
 func (c *queryClient) ContractResult(ctx context.Context, in *QueryContractResultRequest, opts ...grpc.CallOption) (*QueryContractResultResponse, error) {
 	out := new(QueryContractResultResponse)
-	err := c.cc.Invoke(ctx, "/tpp.x.compute.v1beta1.Query/ContractResult", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trst.x.compute.v1beta1.Query/ContractResult", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1474,7 +1474,7 @@ func (c *queryClient) ContractResult(ctx context.Context, in *QueryContractResul
 
 func (c *queryClient) ContractsByCode(ctx context.Context, in *QueryContractsByCodeRequest, opts ...grpc.CallOption) (*QueryContractsByCodeResponse, error) {
 	out := new(QueryContractsByCodeResponse)
-	err := c.cc.Invoke(ctx, "/tpp.x.compute.v1beta1.Query/ContractsByCode", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trst.x.compute.v1beta1.Query/ContractsByCode", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1483,7 +1483,7 @@ func (c *queryClient) ContractsByCode(ctx context.Context, in *QueryContractsByC
 
 func (c *queryClient) SmartContractState(ctx context.Context, in *QuerySmartContractStateRequest, opts ...grpc.CallOption) (*QuerySmartContractStateResponse, error) {
 	out := new(QuerySmartContractStateResponse)
-	err := c.cc.Invoke(ctx, "/tpp.x.compute.v1beta1.Query/SmartContractState", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trst.x.compute.v1beta1.Query/SmartContractState", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1492,7 +1492,7 @@ func (c *queryClient) SmartContractState(ctx context.Context, in *QuerySmartCont
 
 func (c *queryClient) Code(ctx context.Context, in *QueryCodeRequest, opts ...grpc.CallOption) (*QueryCodeResponse, error) {
 	out := new(QueryCodeResponse)
-	err := c.cc.Invoke(ctx, "/tpp.x.compute.v1beta1.Query/Code", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trst.x.compute.v1beta1.Query/Code", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1501,7 +1501,7 @@ func (c *queryClient) Code(ctx context.Context, in *QueryCodeRequest, opts ...gr
 
 func (c *queryClient) Codes(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*QueryCodesResponse, error) {
 	out := new(QueryCodesResponse)
-	err := c.cc.Invoke(ctx, "/tpp.x.compute.v1beta1.Query/Codes", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trst.x.compute.v1beta1.Query/Codes", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1566,7 +1566,7 @@ func _Query_ContractInfo_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tpp.x.compute.v1beta1.Query/ContractInfo",
+		FullMethod: "/trst.x.compute.v1beta1.Query/ContractInfo",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).ContractInfo(ctx, req.(*QueryContractInfoRequest))
@@ -1584,7 +1584,7 @@ func _Query_ContractResult_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tpp.x.compute.v1beta1.Query/ContractResult",
+		FullMethod: "/trst.x.compute.v1beta1.Query/ContractResult",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).ContractResult(ctx, req.(*QueryContractResultRequest))
@@ -1602,7 +1602,7 @@ func _Query_ContractsByCode_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tpp.x.compute.v1beta1.Query/ContractsByCode",
+		FullMethod: "/trst.x.compute.v1beta1.Query/ContractsByCode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).ContractsByCode(ctx, req.(*QueryContractsByCodeRequest))
@@ -1620,7 +1620,7 @@ func _Query_SmartContractState_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tpp.x.compute.v1beta1.Query/SmartContractState",
+		FullMethod: "/trst.x.compute.v1beta1.Query/SmartContractState",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).SmartContractState(ctx, req.(*QuerySmartContractStateRequest))
@@ -1638,7 +1638,7 @@ func _Query_Code_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tpp.x.compute.v1beta1.Query/Code",
+		FullMethod: "/trst.x.compute.v1beta1.Query/Code",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Code(ctx, req.(*QueryCodeRequest))
@@ -1656,7 +1656,7 @@ func _Query_Codes_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tpp.x.compute.v1beta1.Query/Codes",
+		FullMethod: "/trst.x.compute.v1beta1.Query/Codes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Codes(ctx, req.(*emptypb.Empty))
@@ -1665,7 +1665,7 @@ func _Query_Codes_Handler(srv interface{}, ctx context.Context, dec func(interfa
 }
 
 var _Query_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "tpp.x.compute.v1beta1.Query",
+	ServiceName: "trst.x.compute.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

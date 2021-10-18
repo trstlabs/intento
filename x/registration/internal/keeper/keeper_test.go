@@ -1,15 +1,16 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	eng "github.com/danieljdd/tpp/types"
-	"github.com/danieljdd/tpp/x/registration/internal/types"
-	ra "github.com/danieljdd/tpp/x/registration/remote_attestation"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	eng "github.com/danieljdd/trst/types"
+	"github.com/danieljdd/trst/x/registration/internal/types"
+	ra "github.com/danieljdd/trst/x/registration/remote_attestation"
+	"github.com/stretchr/testify/require"
 )
 
 func init() {

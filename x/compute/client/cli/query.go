@@ -16,7 +16,7 @@ import (
 	"strconv"
 
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	cosmwasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
+	cosmwasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
 	flag "github.com/spf13/pflag"
 
 	"github.com/spf13/cobra"
@@ -25,9 +25,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	wasmUtils "github.com/danieljdd/tpp/x/compute/client/utils"
+	wasmUtils "github.com/danieljdd/trst/x/compute/client/utils"
 
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 )
 
 func GetQueryCmd() *cobra.Command {

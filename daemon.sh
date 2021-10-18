@@ -1,1 +1,1 @@
-tppd start
+trstd start

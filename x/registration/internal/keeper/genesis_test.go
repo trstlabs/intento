@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/danieljdd/tpp/x/registration/internal/types"
+	"github.com/danieljdd/trst/x/registration/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"

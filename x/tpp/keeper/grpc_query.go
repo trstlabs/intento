@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/types"
 )
 
 var _ types.QueryServer = Keeper{}

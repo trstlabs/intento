@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/types"
 )
 
 // GetItemCount get the total number of items
@@ -61,7 +61,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 		return err
 	}
 
-	contractAddr, err := k.computeKeeper.Instantiate(ctx, uint64(1), userAddress, msg.Initmsg, fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	contractAddr, err := k.computeKeeper.Instantiate(ctx, uint64(1), userAddress, msg.Initmsg, fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		return err
 	}
@@ -286,7 +286,7 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 		return err ///panic(err)
 	}
 	fmt.Printf("executing contract: %s", item.Contract)
-	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.Revealmsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.Revealmsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: ")
 		return err ///panic(err)

@@ -15,8 +15,8 @@ import (
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	wasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -208,7 +208,7 @@ func DistQuerier(keeper distrkeeper.Keeper) func(ctx sdk.Context, request *wasmT
 			for i, valRewards := range res.Rewards {
 				res.Rewards[i].Validator = valRewards.Validator
 				for j, valReward := range valRewards.Reward {
-					// this is here so we can remove fractions of tpp from the result
+					// this is here so we can remove fractions of trst from the result
 					res.Rewards[i].Reward[j].Amount = strings.Split(valReward.Amount, ".")[0]
 					res.Rewards[i].Reward[j].Denom = valReward.Denom
 				}

@@ -1,12 +1,12 @@
-package tpp
+package trst
 
 import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/tpp/x/tpp/keeper"
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/keeper"
+	"github.com/danieljdd/trst/x/trst/types"
 )
 
 // NewHandler ...

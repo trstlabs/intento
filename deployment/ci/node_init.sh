@@ -4,50 +4,50 @@ set -euv
 
 # init the node
 # rm -rf ~/.secret*
-#tppd config chain-id enigma-testnet
-#tppd config output json
-#tppd config indent true
-#tppd config trust-node true
-#tppd config keyring-backend test
-rm -rf ~/.tppd
+#trstd config chain-id enigma-testnet
+#trstd config output json
+#trstd config indent true
+#trstd config trust-node true
+#trstd config keyring-backend test
+rm -rf ~/.trstd
 
-mkdir -p /root/.tppd/.node
+mkdir -p /root/.trstd/.node
 
-tppd init "$(hostname)" --chain-id enigma-testnet || true
+trstd init "$(hostname)" --chain-id enigma-testnet || true
 
 PERSISTENT_PEERS=''
 
-sed -i 's/persistent_peers = ""/persistent_peers = "'$PERSISTENT_PEERS'"/g' ~/.tppd/config/config.toml
+sed -i 's/persistent_peers = ""/persistent_peers = "'$PERSISTENT_PEERS'"/g' ~/.trstd/config/config.toml
 echo "Set persistent_peers: $PERSISTENT_PEERS"
 
 echo "Waiting for bootstrap to start..."
 sleep 20
 
-# MASTER_KEY="$(tppd q register tpp-enclave-params --node http://bootstrap:26657 2> /dev/null | cut -c 3- )"
+# MASTER_KEY="$(trstd q register trst-enclave-params --node http://bootstrap:26657 2> /dev/null | cut -c 3- )"
 
 #echo "Master key: $MASTER_KEY"
 
-tppd init-enclave
+trstd init-enclave
 
-PUBLIC_KEY=$(tppd parse attestation_cert.der 2> /dev/null | cut -c 3- )
+PUBLIC_KEY=$(trstd parse attestation_cert.der 2> /dev/null | cut -c 3- )
 
-echo "Public key: $(tppd parse attestation_cert.der 2> /dev/null | cut -c 3- )"
+echo "Public key: $(trstd parse attestation_cert.der 2> /dev/null | cut -c 3- )"
 
-tppd tx register auth attestation_cert.der --node http://bootstrap:26657 -y --from a
+trstd tx register auth attestation_cert.der --node http://bootstrap:26657 -y --from a
 
 sleep 10
 
-SEED=$(tppd q register seed "$PUBLIC_KEY" --node http://bootstrap:26657 2> /dev/null | cut -c 3-)
+SEED=$(trstd q register seed "$PUBLIC_KEY" --node http://bootstrap:26657 2> /dev/null | cut -c 3-)
 echo "SEED: $SEED"
 
-tppd q register tpp-enclave-params --node http://bootstrap:26657 2> /dev/null
+trstd q register trst-enclave-params --node http://bootstrap:26657 2> /dev/null
 
-tppd configure-secret node-master-cert.der "$SEED"
+trstd configure-secret node-master-cert.der "$SEED"
 
-cp /tmp/.tppd/config/genesis.json /root/.tppd/config/genesis.json
+cp /tmp/.trstd/config/genesis.json /root/.trstd/config/genesis.json
 
-tppd validate-genesis
+trstd validate-genesis
 
-RUST_BACKTRACE=1 tppd start &
+RUST_BACKTRACE=1 trstd start &
 
 ./wasmi-sgx-test.sh

@@ -262,10 +262,10 @@ func (m *Sequence) GetValue() uint64 {
 }
 
 func init() {
-	proto.RegisterType((*GenesisState)(nil), "tpp.x.compute.v1beta1.GenesisState")
-	proto.RegisterType((*Code)(nil), "tpp.x.compute.v1beta1.Code")
-	proto.RegisterType((*Contract)(nil), "tpp.x.compute.v1beta1.Contract")
-	proto.RegisterType((*Sequence)(nil), "tpp.x.compute.v1beta1.Sequence")
+	proto.RegisterType((*GenesisState)(nil), "trst.x.compute.v1beta1.GenesisState")
+	proto.RegisterType((*Code)(nil), "trst.x.compute.v1beta1.Code")
+	proto.RegisterType((*Contract)(nil), "trst.x.compute.v1beta1.Contract")
+	proto.RegisterType((*Sequence)(nil), "trst.x.compute.v1beta1.Sequence")
 }
 
 func init() { proto.RegisterFile("compute/genesis.proto", fileDescriptor_84e79754c247dc2f) }

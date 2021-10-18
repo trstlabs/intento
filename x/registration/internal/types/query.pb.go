@@ -178,10 +178,10 @@ func (m *QueryEncryptedSeedResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryEncryptedSeedResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*QueryMasterKeyRequest)(nil), "tpp.x.registration.v1beta1.QueryMasterKeyRequest")
-	proto.RegisterType((*QueryMasterKeyResponse)(nil), "tpp.x.registration.v1beta1.QueryMasterKeyResponse")
-	proto.RegisterType((*QueryEncryptedSeedRequest)(nil), "tpp.x.registration.v1beta1.QueryEncryptedSeedRequest")
-	proto.RegisterType((*QueryEncryptedSeedResponse)(nil), "tpp.x.registration.v1beta1.QueryEncryptedSeedResponse")
+	proto.RegisterType((*QueryMasterKeyRequest)(nil), "trst.x.registration.v1beta1.QueryMasterKeyRequest")
+	proto.RegisterType((*QueryMasterKeyResponse)(nil), "trst.x.registration.v1beta1.QueryMasterKeyResponse")
+	proto.RegisterType((*QueryEncryptedSeedRequest)(nil), "trst.x.registration.v1beta1.QueryEncryptedSeedRequest")
+	proto.RegisterType((*QueryEncryptedSeedResponse)(nil), "trst.x.registration.v1beta1.QueryEncryptedSeedResponse")
 }
 
 func init() { proto.RegisterFile("registration/query.proto", fileDescriptor_f77edfeb78906709) }
@@ -337,7 +337,7 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 
 func (c *queryClient) MasterKey(ctx context.Context, in *QueryMasterKeyRequest, opts ...grpc.CallOption) (*QueryMasterKeyResponse, error) {
 	out := new(QueryMasterKeyResponse)
-	err := c.cc.Invoke(ctx, "/tpp.x.registration.v1beta1.Query/MasterKey", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trst.x.registration.v1beta1.Query/MasterKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -346,7 +346,7 @@ func (c *queryClient) MasterKey(ctx context.Context, in *QueryMasterKeyRequest, 
 
 func (c *queryClient) EncryptedSeed(ctx context.Context, in *QueryEncryptedSeedRequest, opts ...grpc.CallOption) (*QueryEncryptedSeedResponse, error) {
 	out := new(QueryEncryptedSeedResponse)
-	err := c.cc.Invoke(ctx, "/tpp.x.registration.v1beta1.Query/EncryptedSeed", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/trst.x.registration.v1beta1.Query/EncryptedSeed", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -384,7 +384,7 @@ func _Query_MasterKey_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tpp.x.registration.v1beta1.Query/MasterKey",
+		FullMethod: "/trst.x.registration.v1beta1.Query/MasterKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).MasterKey(ctx, req.(*QueryMasterKeyRequest))
@@ -402,7 +402,7 @@ func _Query_EncryptedSeed_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tpp.x.registration.v1beta1.Query/EncryptedSeed",
+		FullMethod: "/trst.x.registration.v1beta1.Query/EncryptedSeed",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).EncryptedSeed(ctx, req.(*QueryEncryptedSeedRequest))
@@ -411,7 +411,7 @@ func _Query_EncryptedSeed_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 var _Query_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "tpp.x.registration.v1beta1.Query",
+	ServiceName: "trst.x.registration.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

@@ -21,11 +21,11 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/proto"
 
-	// "github.com/danieljdd/tpp/x/compute/internal/types"
-	reg "github.com/danieljdd/tpp/x/registration"
+	// "github.com/danieljdd/trst/x/compute/internal/types"
+	reg "github.com/danieljdd/trst/x/registration"
 
-	//"github.com/danieljdd/tpp/x/registration/internal/types"
-	ra "github.com/danieljdd/tpp/x/registration/remote_attestation"
+	//"github.com/danieljdd/trst/x/registration/internal/types"
+	ra "github.com/danieljdd/trst/x/registration/remote_attestation"
 
 	"github.com/miscreant/miscreant.go"
 	"golang.org/x/crypto/curve25519"
@@ -150,9 +150,9 @@ func (ctx WASMContext) getConsensusIoPubKey() ([]byte, error) {
 	} else {
 		//route := fmt.Sprintf("custom/%s/%s", types.RegisterQuerierRoute, types.QueryMasterCertificate)
 
-		res, _, err := ctx.CLIContext.Query("/tpp.x.registration.v1beta1.Query/MasterKey")
+		res, _, err := ctx.CLIContext.Query("/trst.x.registration.v1beta1.Query/MasterKey")
 		if err != nil {
-			//	res, _, err = ctx.CLIContext.Query("/tpp.x.registration.v1beta1.Query/MasterKey")
+			//	res, _, err = ctx.CLIContext.Query("/trst.x.registration.v1beta1.Query/MasterKey")
 			if err != nil {
 				return nil, err
 			}

@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/danieljdd/tpp/types/util"
+	"github.com/danieljdd/trst/types/util"
 )
 
 // Aliases for internal types

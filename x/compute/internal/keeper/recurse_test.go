@@ -7,8 +7,8 @@ import (
 	"os"
 	"testing"
 
-	wasmTypes "github.com/danieljdd/tpp/go-cosmwasm/types"
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
