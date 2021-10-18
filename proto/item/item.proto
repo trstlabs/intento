@@ -1,0 +1,137 @@
+syntax = "proto3";
+package danieljdd.trst.trst;
+
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "gogoproto/gogo.proto";
+//import "trst/estimator.proto";
+//import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/danieljdd/trst/x/item/types";
+
+message Item {
+  string seller = 1;
+  uint64 id = 2;
+  string title = 3; 
+  string description = 4; 
+  int64 shippingcost = 5;
+  string localpickup = 6; 
+  int64 estimationcount = 7; 
+  string bestestimator = 8; 
+  string lowestestimator = 9; 
+  string highestestimator = 10; 
+  int64 estimationprice = 11; 
+  repeated string estimatorlist = 12; 
+  repeated int64 estimationlist = 13; 
+  bool transferable = 14; 
+  string buyer = 15; 
+  bool tracking = 16; 
+  string status = 17; 
+  repeated string comments = 18; 
+  repeated string tags = 19; 
+  int64 flags = 20; 
+  int64 condition = 21; 
+  repeated string shippingregion = 22; 
+  int64 rating = 23; 
+  int64 depositamount = 24;
+  string creator = 25;
+  string note = 26;
+  int64 discount = 27;
+  google.protobuf.Timestamp submittime = 28
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+      google.protobuf.Timestamp endtime = 29
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+       string contract = 30;
+       int64 estimationtotal = 31;
+        repeated string photos = 32;
+        bool is_token = 33;
+}
+
+
+
+message MsgCreateItem {
+  string creator = 1;
+  string title = 2; 
+  string description = 3; 
+  int64 shippingcost = 4; 
+
+  string localpickup = 5; 
+  int64 estimationcount = 6; 
+ 
+  repeated string tags = 7; 
+
+  int64 condition = 8; 
+  repeated string shippingregion = 9; 
+  int64 depositamount = 10;
+  bytes initmsg = 11;
+repeated string photos = 12;
+}
+
+message MsgUpdateItem {
+  string seller = 1;
+  uint64 id = 2;
+
+  int64 shippingcost = 3;
+  string localpickup = 4; 
+
+
+  repeated string shippingregion = 5; 
+}
+
+message MsgDeleteItem {
+  string seller = 1;
+  uint64 id = 2;
+}
+
+message MsgRevealEstimation {
+    string creator = 1;
+  uint64 itemid = 2;
+  bytes revealmsg = 3;
+
+}
+
+message MsgItemTransferable {
+    string seller = 1;
+    bool transferable = 2;
+  uint64 itemid = 3;
+}
+message MsgItemShipping {
+    string seller = 1;
+    bool tracking = 2;
+  uint64 itemid = 3;
+
+}
+
+message MsgItemResell {
+    string seller = 1;
+  uint64 itemid = 2;
+  int64 shippingcost = 3;
+    int64 discount = 4;
+  string localpickup = 5;
+  repeated string shippingregion = 6; 
+  string note = 7;
+}
+
+
+// ActiveParams defines the params for activeness of items on governance proposals.
+message Params {
+   option (gogoproto.goproto_stringer) = false;
+  //  Maximum period for trst holders to buy an item. Initial value: 2
+  //  months.
+  google.protobuf.Duration MaxActivePeriod = 1 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "max_active_period,omitempty"
+  ];
+}
+
+message MsgTokenizeItem {
+    string sender = 1;
+  uint64 id = 3;
+}
+
+message MsgUnTokenizeItem {
+    string sender = 1;
+  uint64 id = 3;
+}

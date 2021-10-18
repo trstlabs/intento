@@ -1,0 +1,142 @@
+syntax = "proto3";
+package danieljdd.trst.trst;
+
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+// this line is used by starport scaffolding # 1
+import "item/estimator.proto";
+import "item/buyer.proto";
+import "item/item.proto";
+
+option go_package = "github.com/danieljdd/trst/x/item/types";
+
+// Query defines the gRPC querier service.
+service Query {
+    // this line is used by starport scaffolding # 2
+	rpc Estimator(QueryGetEstimatorRequest) returns (QueryGetEstimatorResponse) {
+		option (google.api.http).get = "/danieljdd/trst/trst/estimator/{itemid}";
+	}
+	rpc EstimatorAll(QueryAllEstimatorRequest) returns (QueryAllEstimatorResponse) {
+		option (google.api.http).get = "/danieljdd/trst/trst/estimator";
+	}
+
+	//rpc Buyer(QueryGetBuyerRequest) returns (QueryGetBuyerResponse) {
+	//	option (google.api.http).get = "/danieljdd/trst/trst/buyer/{itemid}";
+//	}
+//	rpc BuyerAll(QueryAllBuyerRequest) returns (QueryAllBuyerResponse) {
+//		option (google.api.http).get = "/danieljdd/trst/trst/buyer";
+//	}
+
+	rpc Item(QueryGetItemRequest) returns (QueryGetItemResponse) {
+		option (google.api.http).get = "/danieljdd/trst/trst/item/{id}";
+	}
+	rpc ItemAll(QueryAllItemRequest) returns (QueryAllItemResponse) {
+		option (google.api.http).get = "/danieljdd/trst/trst/item";
+	}
+	rpc ListedItemsAll(QueryAllListedItemsRequest) returns (QueryAllListedItemsResponse) {
+		option (google.api.http).get = "/danieljdd/trst/trst/ListedItems";
+	}
+		rpc SellerItems(QuerySellerItemsRequest) returns (QuerySellerItemsResponse) {
+		option (google.api.http).get = "/danieljdd/trst/trst/selleritems";
+	}
+	rpc BuyerItems(QueryBuyerItemsRequest) returns (QueryBuyerItemsResponse) {
+		option (google.api.http).get = "/danieljdd/trst/trst/buyeritems";
+	}
+
+	rpc CodeHash(QueryCodeHashRequest) returns (QueryCodeHashResponse) {
+		option (google.api.http).get = "/danieljdd/trst/trst/codehash/{codeid}";
+	}
+
+
+}
+
+// this line is used by starport scaffolding # 3
+message QueryGetEstimatorRequest {
+	uint64 itemid = 1;
+}
+
+message QueryGetEstimatorResponse {
+	Estimator Estimator = 1;
+}
+
+message QueryAllEstimatorRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllEstimatorResponse {
+	repeated Estimator Estimator = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+//message QueryGetBuyerRequest {
+//	uint64 itemid = 1;
+//}
+
+//message QueryGetBuyerResponse {
+//	Buyer Buyer = 1;
+//}
+
+//message QueryAllBuyerRequest {
+//	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+//}
+
+//message QueryAllBuyerResponse {
+//	repeated Buyer Buyer = 1;
+//	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+//}
+message QueryGetItemRequest {
+	uint64 id = 1;
+}
+
+message QueryGetItemResponse {
+	Item Item = 1;
+}
+
+message QueryAllItemRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllItemResponse {
+	repeated Item Item = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllListedItemsRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllListedItemsResponse {
+	repeated Item Item = 1;
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+
+message QuerySellerItemsRequest {
+	string seller = 1;
+}
+
+message QuerySellerItemsResponse {
+	repeated Item Item = 1;
+	
+}
+
+message QueryBuyerItemsRequest {
+	string buyer = 1;
+}
+
+message QueryBuyerItemsResponse {
+	repeated Item Item = 1;
+	
+}
+
+message QueryCodeHashRequest {
+	uint64 codeid = 1;
+}
+
+message QueryCodeHashResponse {
+	bytes codehash = 1;
+	string codehash_string = 2;
+	
+}
+
+
+
