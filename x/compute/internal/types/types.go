@@ -80,13 +80,14 @@ type ContractCodeHistoryEntry struct {
 */
 
 // NewContractInfo creates a new instance of a given WASM contract info
-func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition) ContractInfo {
+func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, endTime time.Time) ContractInfo {
 	return ContractInfo{
 		CodeID:  codeID,
 		Creator: creator,
 		// Admin:   admin,
 		ContractId: label,
 		Created:    createdAt,
+		EndTime:    endTime,
 	}
 }
 func (c *ContractInfo) ValidateBasic() error {

@@ -55,6 +55,7 @@ message CodeInfo {
   ];
 }
 
+
 // ContractInfo stores a WASM contract instance
 message ContractInfo {
     uint64 code_id = 1 [(gogoproto.customname) = "CodeID"];
@@ -64,13 +65,15 @@ message ContractInfo {
     // never show this in query results, just use for sorting
     // (Note: when using json tag "-" amino refused to serialize it...)
     AbsoluteTxPosition created = 5;
+      google.protobuf.Timestamp end_time = 6  [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
     //    bytes init_msg = 5 [(gogoproto.casttype) = "encoding/json.RawMessage"];
     //
     //    AbsoluteTxPosition last_updated = 7;
     //    uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
-    bytes last_msg = 6;
+    bytes last_msg = 7;
 
 }
+
 
 
 // ContractInfoWithAddress adds the address (key) to the ContractInfo representation

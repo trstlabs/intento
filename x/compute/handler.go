@@ -118,12 +118,11 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Time period invalid for this contract code")
 
 	}*/
-	var info *types.CodeInfo
-	info = k.GetCodeInfo(ctx, msg.CodeID)
+	//var info *types.CodeInfo
+	info := k.GetCodeInfo(ctx, msg.CodeID)
 	submitTime := ctx.BlockHeader().Time
 	endTime := submitTime.Add(info.EndTime)
 	k.InsertContractQueue(ctx, contractAddr.String(), endTime)
-
 	return &sdk.Result{
 		Data:   contractAddr,
 		Events: events,

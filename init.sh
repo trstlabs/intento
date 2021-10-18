@@ -18,7 +18,7 @@ tppd add-genesis-account $(tppd keys show faucet -a --keyring-backend test) 1000
 
 tppd gentx user1 100000000stake --chain-id=tpp --keyring-backend=test  --website="trustpriceprotocol.com" --security-contact="trustpriceprotocol@gmail.com"
 
-tppd init-enclave
+tppd init-enclave --reset
 PUBLIC_KEY=$(tppd parse attestation_cert.der 2> /dev/null | cut -c 3-)
 echo $PUBLIC_KEY
 tppd init-bootstrap ./node-master-cert.der ./io-master-cert.der

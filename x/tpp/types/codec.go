@@ -26,6 +26,8 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgItemTransferable{}, "tpp/ItemTransferable", nil)
 	cdc.RegisterConcrete(&MsgItemShipping{}, "tpp/ItemShipping", nil)
 	cdc.RegisterConcrete(&MsgItemResell{}, "tpp/ItemResell", nil)
+	cdc.RegisterConcrete(&MsgTokenizeItem{}, "tpp/TokenizeItem", nil)
+	cdc.RegisterConcrete(&MsgUnTokenizeItem{}, "tpp/UnTokenizeItem", nil)
 
 }
 
@@ -50,6 +52,8 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgItemShipping{},
 		&MsgItemRating{},
 		&MsgItemResell{},
+		&MsgUnTokenizeItem{},
+		&MsgTokenizeItem{},
 	)
 }
 

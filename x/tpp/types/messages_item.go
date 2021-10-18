@@ -320,4 +320,72 @@ func (msg *MsgItemResell) ValidateBasic() error {
 	return nil
 }
 
-var _ sdk.Msg = &MsgCreateItem{}
+func NewMsgTokenizeItem(sender string, id uint64) *MsgTokenizeItem {
+	return &MsgTokenizeItem{
+		Id:     id,
+		Sender: sender,
+	}
+}
+func (msg *MsgTokenizeItem) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgTokenizeItem) Type() string {
+	return "DeleteItem"
+}
+
+func (msg *MsgTokenizeItem) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+func (msg *MsgTokenizeItem) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgTokenizeItem) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
+	}
+	return nil
+}
+
+func NewMsgUnTokenizeItem(sender string, id uint64) *MsgUnTokenizeItem {
+	return &MsgUnTokenizeItem{
+		Id:     id,
+		Sender: sender,
+	}
+}
+func (msg *MsgUnTokenizeItem) Route() string {
+	return RouterKey
+}
+
+func (msg *MsgUnTokenizeItem) Type() string {
+	return "DeleteItem"
+}
+
+func (msg *MsgUnTokenizeItem) GetSigners() []sdk.AccAddress {
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{sender}
+}
+
+func (msg *MsgUnTokenizeItem) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg *MsgUnTokenizeItem) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
+	}
+	return nil
+}
