@@ -8,26 +8,26 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	// this line is used by starport scaffolding # 2
-	cdc.RegisterConcrete(&MsgCreateEstimation{}, "tpp/CreateEstimation", nil)
-	cdc.RegisterConcrete(&MsgUpdateLike{}, "tpp/UpdateLike", nil)
-	cdc.RegisterConcrete(&MsgDeleteEstimation{}, "tpp/DeleteEstimation", nil)
-	cdc.RegisterConcrete(&MsgFlagItem{}, "tpp/FlagItem", nil)
+	cdc.RegisterConcrete(&MsgCreateEstimation{}, "trst/CreateEstimation", nil)
+	cdc.RegisterConcrete(&MsgUpdateLike{}, "trst/UpdateLike", nil)
+	cdc.RegisterConcrete(&MsgDeleteEstimation{}, "trst/DeleteEstimation", nil)
+	cdc.RegisterConcrete(&MsgFlagItem{}, "trst/FlagItem", nil)
 
-	cdc.RegisterConcrete(&MsgPrepayment{}, "tpp/Prepayment", nil)
-	cdc.RegisterConcrete(&MsgUpdateBuyer{}, "tpp/UpdateBuyer", nil)
-	cdc.RegisterConcrete(&MsgWithdrawal{}, "tpp/Withdrawal", nil)
-	cdc.RegisterConcrete(&MsgItemRating{}, "tpp/ItemRating", nil)
-	cdc.RegisterConcrete(&MsgItemTransfer{}, "tpp/ItemTransfer", nil)
+	cdc.RegisterConcrete(&MsgPrepayment{}, "trst/Prepayment", nil)
+	cdc.RegisterConcrete(&MsgUpdateBuyer{}, "trst/UpdateBuyer", nil)
+	cdc.RegisterConcrete(&MsgWithdrawal{}, "trst/Withdrawal", nil)
+	cdc.RegisterConcrete(&MsgItemRating{}, "trst/ItemRating", nil)
+	cdc.RegisterConcrete(&MsgItemTransfer{}, "trst/ItemTransfer", nil)
 
-	cdc.RegisterConcrete(&MsgCreateItem{}, "tpp/CreateItem", nil)
-	cdc.RegisterConcrete(&MsgUpdateItem{}, "tpp/UpdateItem", nil)
-	cdc.RegisterConcrete(&MsgDeleteItem{}, "tpp/DeleteItem", nil)
-	cdc.RegisterConcrete(&MsgRevealEstimation{}, "tpp/RevealEstimation", nil)
-	cdc.RegisterConcrete(&MsgItemTransferable{}, "tpp/ItemTransferable", nil)
-	cdc.RegisterConcrete(&MsgItemShipping{}, "tpp/ItemShipping", nil)
-	cdc.RegisterConcrete(&MsgItemResell{}, "tpp/ItemResell", nil)
-	cdc.RegisterConcrete(&MsgTokenizeItem{}, "tpp/TokenizeItem", nil)
-	cdc.RegisterConcrete(&MsgUnTokenizeItem{}, "tpp/UnTokenizeItem", nil)
+	cdc.RegisterConcrete(&MsgCreateItem{}, "trst/CreateItem", nil)
+	cdc.RegisterConcrete(&MsgUpdateItem{}, "trst/UpdateItem", nil)
+	cdc.RegisterConcrete(&MsgDeleteItem{}, "trst/DeleteItem", nil)
+	cdc.RegisterConcrete(&MsgRevealEstimation{}, "trst/RevealEstimation", nil)
+	cdc.RegisterConcrete(&MsgItemTransferable{}, "trst/ItemTransferable", nil)
+	cdc.RegisterConcrete(&MsgItemShipping{}, "trst/ItemShipping", nil)
+	cdc.RegisterConcrete(&MsgItemResell{}, "trst/ItemResell", nil)
+	cdc.RegisterConcrete(&MsgTokenizeItem{}, "trst/TokenizeItem", nil)
+	cdc.RegisterConcrete(&MsgUnTokenizeItem{}, "trst/UnTokenizeItem", nil)
 
 }
 

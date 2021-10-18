@@ -14,7 +14,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

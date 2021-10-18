@@ -1,4 +1,4 @@
-package tpp
+package trst
 
 import (
 
@@ -10,8 +10,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/tpp/x/tpp/keeper"
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/keeper"
+	"github.com/danieljdd/trst/x/trst/types"
 )
 
 func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateEstimation) (*sdk.Result, error) {

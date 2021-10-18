@@ -1,6 +1,6 @@
-# Trust Price Protocol
+# Trustless Hub
 
-**Trust Price Protocol** is a blockchain built using Cosmos SDK and Tendermint and created with [Starport](https://github.com/tendermint/starport).
+**Trustless Hub** is a blockchain built using Cosmos SDK and Tendermint and created with [Starport](https://github.com/tendermint/starport).
 
 ## Get started
 
@@ -17,7 +17,7 @@ The node can be configured with `config.yml`. To learn more see the [reference](
 
 ## Learn more
 
-- [TPP](https://trustpriceprotocol.com/)
+- [trst](https://trustlesshub.com/)
 - [Starport](https://github.com/tendermint/starport)
 - [Cosmos SDK documentation](https://docs.cosmos.network)
 - [Cosmos SDK Tutorials](https://tutorials.cosmos.network)

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 )
 
 // ContractPayout pays the creator of the contract
@@ -63,7 +63,7 @@ func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (er
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "contract key not found")
 		}
 		//fmt.Printf("Contract Execute: Got contract Key for contract %s: %s\n", contractAddress, base64.StdEncoding.EncodeToString(contractKey))
-		params := types.NewEnv(ctx, contractAddress, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), contractAddress, contractKey)
+		params := types.NewEnv(ctx, contractAddress, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), contractAddress, contractKey)
 		//fmt.Printf("Contract Execute: key from params %s \n", params.Key)
 
 		// prepare querier
@@ -86,7 +86,7 @@ func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (er
 
 	*/
 	if info.LastMsg != nil {
-		res, err := k.Execute(ctx, contractAddress, contractAddress, info.LastMsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+		res, err := k.Execute(ctx, contractAddress, contractAddress, info.LastMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 		if err != nil {
 			return err
 		}
@@ -101,9 +101,9 @@ func (k Keeper) getConsensusIoPubKey(ctx sdk.Context) ([]byte, error) {
 
 	//route := fmt.Sprintf("custom/%s/%s", types.RegisterQuerierRoute, types.QueryMasterCertificate)
 
-	res, _, err := ctx.Context().Query("/tpp.x.registration.v1beta1.Query/MasterKey")
+	res, _, err := ctx.Context().Query("/trst.x.registration.v1beta1.Query/MasterKey")
 	if err != nil {
-		//	res, _, err = ctx.CLIContext.Query("/tpp.x.registration.v1beta1.Query/MasterKey")
+		//	res, _, err = ctx.CLIContext.Query("/trst.x.registration.v1beta1.Query/MasterKey")
 		if err != nil {
 			return nil, err
 		}

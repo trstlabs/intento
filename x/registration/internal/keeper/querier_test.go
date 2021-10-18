@@ -5,12 +5,13 @@ package keeper
 import (
 	"encoding/hex"
 	"encoding/json"
-	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/tpp/x/registration/internal/types"
-	ra "github.com/danieljdd/tpp/x/registration/remote_attestation"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/danieljdd/trst/x/registration/internal/types"
+	ra "github.com/danieljdd/trst/x/registration/remote_attestation"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

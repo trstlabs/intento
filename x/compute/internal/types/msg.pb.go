@@ -160,9 +160,9 @@ func (m *MsgExecuteContract) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgExecuteContract proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgStoreCode)(nil), "tpp.x.compute.v1beta1.MsgStoreCode")
-	proto.RegisterType((*MsgInstantiateContract)(nil), "tpp.x.compute.v1beta1.MsgInstantiateContract")
-	proto.RegisterType((*MsgExecuteContract)(nil), "tpp.x.compute.v1beta1.MsgExecuteContract")
+	proto.RegisterType((*MsgStoreCode)(nil), "trst.x.compute.v1beta1.MsgStoreCode")
+	proto.RegisterType((*MsgInstantiateContract)(nil), "trst.x.compute.v1beta1.MsgInstantiateContract")
+	proto.RegisterType((*MsgExecuteContract)(nil), "trst.x.compute.v1beta1.MsgExecuteContract")
 }
 
 func init() { proto.RegisterFile("compute/msg.proto", fileDescriptor_5c8bfcb6dfda1556) }

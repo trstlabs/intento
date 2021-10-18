@@ -1,10 +1,10 @@
 syntax = "proto3";
-package tpp.x.compute.v1beta1;
+package trst.x.compute.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "compute/types.proto";
 
-option go_package = "github.com/danieljdd/tpp/x/compute/internal/types";
+option go_package = "github.com/danieljdd/trst/x/compute/internal/types";
 
 // GenesisState - genesis state of x/wasm
 message GenesisState {

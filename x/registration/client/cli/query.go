@@ -10,14 +10,14 @@ import (
 	//"io/ioutil"
 	"os"
 
-	"github.com/danieljdd/tpp/x/registration/internal/keeper"
+	"github.com/danieljdd/trst/x/registration/internal/keeper"
 	flag "github.com/spf13/pflag"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/danieljdd/tpp/x/registration/internal/types"
+	"github.com/danieljdd/trst/x/registration/internal/types"
 )
 
 func GetQueryCmd() *cobra.Command {
@@ -69,9 +69,9 @@ func GetCmdEncryptedSeed() *cobra.Command {
 // GetCmdMasterParams lists certificates
 func GetCmdMasterParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tpp-enclave-params",
-		Short: "Get parameters for tpp enclave",
-		Long:  "Get parameters for tpp - writes the parameters to [master-cert.der] by default",
+		Use:   "trst-enclave-params",
+		Short: "Get parameters for trst enclave",
+		Long:  "Get parameters for trst - writes the parameters to [master-cert.der] by default",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

@@ -6,8 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/tpp/x/compute/internal/keeper"
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/danieljdd/trst/x/compute/internal/keeper"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -28,7 +28,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 
 		//err := k.CallLastMsg(ctx, item.Address)
 		if item.LastMsg != nil {
-			res, err := k.Execute(ctx, item.Address, item.Address, item.LastMsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+			res, err := k.Execute(ctx, item.Address, item.Address, item.LastMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 			if err != nil {
 				_ = k.ContractPayout(ctx, item.Address)
 				logger.Info(

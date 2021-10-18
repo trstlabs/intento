@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/tpp/x/registration/internal/types"
+	"github.com/danieljdd/trst/x/registration/internal/types"
 )
 
 // InitGenesis sets supply information for genesis.

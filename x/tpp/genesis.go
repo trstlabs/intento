@@ -1,12 +1,13 @@
-package tpp
+package trst
+
 /*
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/tpp/x/tpp/keeper"
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/keeper"
+	"github.com/danieljdd/trst/x/trst/types"
 )
 
-// InitGenesis initializes the TPP module's state from a provided genesis
+// InitGenesis initializes the trst module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, types.DefaultParams())
@@ -37,7 +38,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 }
 
-// ExportGenesis returns the TPP module's exported genesis.
+// ExportGenesis returns the trst module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 

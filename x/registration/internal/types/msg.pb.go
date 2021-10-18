@@ -7,7 +7,7 @@ import (
 	bytes "bytes"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	github_com_danieljdd_tpp_x_registration_remote_attestation "github.com/danieljdd/tpp/x/registration/remote_attestation"
+	github_com_danieljdd_trst_x_registration_remote_attestation "github.com/danieljdd/trst/x/registration/remote_attestation"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
@@ -27,8 +27,8 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type RaAuthenticate struct {
-	Sender      github_com_cosmos_cosmos_sdk_types.AccAddress                          `protobuf:"bytes,1,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
-	Certificate github_com_danieljdd_tpp_x_registration_remote_attestation.Certificate `protobuf:"bytes,2,opt,name=certificate,proto3,casttype=github.com/danieljdd/tpp/x/registration/remote_attestation.Certificate" json:"ra_cert"`
+	Sender      github_com_cosmos_cosmos_sdk_types.AccAddress                           `protobuf:"bytes,1,opt,name=sender,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"sender,omitempty"`
+	Certificate github_com_danieljdd_trst_x_registration_remote_attestation.Certificate `protobuf:"bytes,2,opt,name=certificate,proto3,casttype=github.com/danieljdd/trst/x/registration/remote_attestation.Certificate" json:"ra_cert"`
 }
 
 func (m *RaAuthenticate) Reset()         { *m = RaAuthenticate{} }
@@ -102,8 +102,8 @@ func (m *MasterCertificate) XXX_DiscardUnknown() {
 var xxx_messageInfo_MasterCertificate proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*RaAuthenticate)(nil), "tpp.x.registration.v1beta1.RaAuthenticate")
-	proto.RegisterType((*MasterCertificate)(nil), "tpp.x.registration.v1beta1.MasterCertificate")
+	proto.RegisterType((*RaAuthenticate)(nil), "trst.x.registration.v1beta1.RaAuthenticate")
+	proto.RegisterType((*MasterCertificate)(nil), "trst.x.registration.v1beta1.MasterCertificate")
 }
 
 func init() { proto.RegisterFile("registration/msg.proto", fileDescriptor_ed96c7e197d2ea4d) }

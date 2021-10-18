@@ -1,15 +1,15 @@
 syntax = "proto3";
-package danieljdd.tpp.tpp;
+package danieljdd.trst.trst;
 
 // this line is used by starport scaffolding # genesis/proto/import
-import "tpp/estimator.proto";
-import "tpp/buyer.proto";
-import "tpp/item.proto";
+import "trst/estimator.proto";
+import "trst/buyer.proto";
+import "trst/item.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/danieljdd/tpp/x/tpp/types";
+option go_package = "github.com/danieljdd/trst/x/trst/types";
 
-// GenesisState defines the TPP module's genesis state.
+// GenesisState defines the trst module's genesis state.
 message GenesisState {
     // this line is used by starport scaffolding # genesis/proto/state
 		repeated Estimator estimatorList = 3; // this line is used by starport scaffolding # genesis/proto/stateField

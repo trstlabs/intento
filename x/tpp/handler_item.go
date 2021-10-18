@@ -1,4 +1,4 @@
-package tpp
+package trst
 
 import (
 	"fmt"
@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/danieljdd/tpp/x/tpp/keeper"
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/keeper"
+	"github.com/danieljdd/trst/x/trst/types"
 	//"github.com/tendermint/tendermint/crypto"
 )
 
@@ -274,9 +274,9 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 			//roundedAmountRewardBestEstimator := paymentReward.TruncateInt()
 
 			//minted coins (are rounded up)
-			rewardCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
-			//paymentRewardCoins := sdk.NewCoin("tpp", roundedAmountReward)
-			//paymentRewardCoinsEstimator := sdk.NewCoin("tpp", roundedAmountRewardBestEstimator)
+			rewardCoins := sdk.NewCoin("utrst", sdk.NewInt(item.Depositamount))
+			//paymentRewardCoins := sdk.NewCoin("utrst", roundedAmountReward)
+			//paymentRewardCoinsEstimator := sdk.NewCoin("utrst", roundedAmountRewardBestEstimator)
 
 			k.MintReward(ctx, rewardCoins)
 
@@ -299,7 +299,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		}
 		//make payment to seller
 		CreaterPayoutAndShipping := bigIntEstimationPrice.Add(bigIntShipping)
-		paymentSellerCoins := sdk.NewCoin("tpp", CreaterPayoutAndShipping)
+		paymentSellerCoins := sdk.NewCoin("utrst", CreaterPayoutAndShipping)
 
 		k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
 
@@ -308,7 +308,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		//k.SetBuyer(ctx, buyer)
 	} else {
 		repayment := bigIntEstimationPrice.Add(bigIntShipping)
-		repaymentCoins := sdk.NewCoin("tpp", repayment)
+		repaymentCoins := sdk.NewCoin("utrst", repayment)
 
 		k.HandlePrepayment(ctx, item.Buyer, repaymentCoins)
 

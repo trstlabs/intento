@@ -8,16 +8,16 @@ then
     export SUDO_USER=root
 fi
 
-cat <<EOF > /etc/systemd/system/tpp-node.service
+cat <<EOF > /etc/systemd/system/trst-node.service
 [Unit]
-Description=TPP node service
+Description=trst node service
 After=network.target
 
 [Service]
 Type=simple
 Environment=SCRT_ENCLAVE_DIR=/usr/lib
 WorkingDirectory=$(eval echo ~"$SUDO_USER")
-ExecStart=/usr/local/bin/tppd start
+ExecStart=/usr/local/bin/trstd start
 User=$SUDO_USER
 Restart=on-failure
 StartLimitInterval=0

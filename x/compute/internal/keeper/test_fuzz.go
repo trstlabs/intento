@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 	fuzz "github.com/google/gofuzz"
 	tmBytes "github.com/tendermint/tendermint/libs/bytes"
 )

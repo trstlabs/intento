@@ -1,9 +1,9 @@
 syntax = "proto3";
-package tpp.x.registration.remote_attestation.v1beta1;
+package trst.x.registration.remote_attestation.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/danieljdd/tpp/x/registration/remote_attestation";
+option go_package = "github.com/danieljdd/trst/x/registration/remote_attestation";
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = true;
 

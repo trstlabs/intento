@@ -5,11 +5,13 @@ import (
 	"compress/gzip"
 	"errors"
 	"io"
+	"os"
+
 	//"io/ioutil"
 	"strings"
 	"testing"
 
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/stretchr/testify/require"
 )
 

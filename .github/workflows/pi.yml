@@ -10,7 +10,7 @@ on: [push, pull_request]
 
 jobs:
   pi:
-    name: tpp Pi
+    name: trst Pi
     runs-on: ubuntu-latest
     steps:
       - name: checkout
@@ -32,16 +32,16 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Image in Docker
-        run: docker buildx build --tag tpp --file .pi/Dockerfile --platform linux/arm64 --cache-from ${{ secrets.DOCKERHUB_USERNAME }}/tpp:picache --cache-to ${{ secrets.DOCKERHUB_USERNAME }}/tpp:picache --load --progress tty .
+        run: docker buildx build --tag trst --file .pi/Dockerfile --platform linux/arm64 --cache-from ${{ secrets.DOCKERHUB_USERNAME }}/trst:picache --cache-to ${{ secrets.DOCKERHUB_USERNAME }}/trst:picache --load --progress tty .
 
       - name: Build Image
         run: bash .pi/build.sh
 
       - name: Compress
-        run: xz -T $(nproc) images/tpp.img
+        run: xz -T $(nproc) images/trst.img
 
       - name: Upload image
         uses: actions/upload-artifact@v2
         with:
           name: Starport Pi
-          path: images/tpp.img.xz
+          path: images/trst.img.xz

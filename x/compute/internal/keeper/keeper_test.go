@@ -17,11 +17,11 @@ import (
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/danieljdd/tpp/go-cosmwasm/api"
-	eng "github.com/danieljdd/tpp/types"
-	wasmUtils "github.com/danieljdd/tpp/x/compute/client/utils"
-	"github.com/danieljdd/tpp/x/compute/internal/types"
-	reg "github.com/danieljdd/tpp/x/registration"
+	"github.com/danieljdd/trst/go-cosmwasm/api"
+	eng "github.com/danieljdd/trst/types"
+	wasmUtils "github.com/danieljdd/trst/x/compute/client/utils"
+	"github.com/danieljdd/trst/x/compute/internal/types"
+	reg "github.com/danieljdd/trst/x/registration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -315,7 +315,7 @@ func TestInstantiate(t *testing.T) {
 	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
-	contractID, err := keeper.Create(ctx, creator, wasmCode, "https://github.com/danieljdd/tpp/blob/master/cosmwasm/contracts/hackatom/src/contract.rs", "")
+	contractID, err := keeper.Create(ctx, creator, wasmCode, "https://github.com/danieljdd/trst/blob/master/cosmwasm/contracts/hackatom/src/contract.rs", "")
 	require.NoError(t, err)
 
 	_, _, bob := keyPubAddr()
@@ -1027,7 +1027,7 @@ func TestExecuteWithStorageLoop(t *testing.T) {
 
 /*
 func TestMigrate(t *testing.T) {
-	t.SkipNow() // tpp does not support migrate
+	t.SkipNow() // trst does not support migrate
 	tempDir, err := ioutil.TempDir("", "wasm")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
@@ -1174,7 +1174,7 @@ func TestMigrate(t *testing.T) {
 }
 
 func TestMigrateWithDispatchedMessage(t *testing.T) {
-	t.SkipNow() // tpp does not support migrate
+	t.SkipNow() // trst does not support migrate
 	tempDir, err := ioutil.TempDir("", "wasm")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
@@ -1291,7 +1291,7 @@ func mustMarshal(t *testing.T, r interface{}) []byte {
 
 /*
 func TestUpdateContractAdmin(t *testing.T) {
-	t.SkipNow() // tpp does not support migrate
+	t.SkipNow() // trst does not support migrate
 	tempDir, err := ioutil.TempDir("", "wasm")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)

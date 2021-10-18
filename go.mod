@@ -1,9 +1,9 @@
-module github.com/danieljdd/tpp
+module github.com/danieljdd/trst
 
 go 1.15
 
 require (
-	github.com/cosmos/cosmos-sdk v0.43.0
+	github.com/cosmos/cosmos-sdk v0.44.2
 	github.com/cosmos/ibc-go v1.0.0-rc3
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2

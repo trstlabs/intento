@@ -83,16 +83,16 @@ import (
 	porttypes "github.com/cosmos/ibc-go/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/modules/core/keeper"
-	"github.com/danieljdd/tpp/x/compute"
-	reg "github.com/danieljdd/tpp/x/registration"
-	"github.com/danieljdd/tpp/x/tpp"
-	tppkeeper "github.com/danieljdd/tpp/x/tpp/keeper"
-	tpptypes "github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/compute"
+	reg "github.com/danieljdd/trst/x/registration"
+	"github.com/danieljdd/trst/x/trst"
+	trstkeeper "github.com/danieljdd/trst/x/trst/keeper"
+	trsttypes "github.com/danieljdd/trst/x/trst/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
-const Name = "tpp"
+const Name = "TRST"
 
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals
 
@@ -117,10 +117,10 @@ var (
 
 	// DefaultCLIHome default home directories for the application CLI
 	homeDir, _     = os.UserHomeDir()
-	DefaultCLIHome = filepath.Join(homeDir, ".tppd")
+	DefaultCLIHome = filepath.Join(homeDir, ".trstd")
 
 	// DefaultNodeHome sets the folder where the applcation data and configuration will be stored
-	DefaultNodeHome = filepath.Join(homeDir, ".tppd")
+	DefaultNodeHome = filepath.Join(homeDir, ".trstd")
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
@@ -142,7 +142,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
-		tpp.AppModuleBasic{},
+		trst.AppModuleBasic{},
 		compute.AppModuleBasic{},
 		reg.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
@@ -157,7 +157,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		tpptypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
+		trsttypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -219,7 +219,7 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	tppKeeper     tppkeeper.Keeper
+	trstKeeper    trstkeeper.Keeper
 	computeKeeper compute.Keeper
 	regKeeper     reg.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
@@ -260,7 +260,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		tpptypes.StoreKey, compute.StoreKey,
+		trsttypes.StoreKey, compute.StoreKey,
 		reg.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
@@ -373,10 +373,10 @@ func New(
 
 	homeDir := viper.GetString(cli.HomeFlag)
 	computeDir := filepath.Join(homeDir, ".compute")
-	tppDir := filepath.Join(homeDir, ".tpp")
+	trstdir := filepath.Join(homeDir, ".trst")
 	/*
 		wasmConfig := compute.DefaultWasmConfig()
-		//TPPwasmConfig := tpptypes.DefaultWasmConfig()
+		//trstwasmConfig := trsttypes.DefaultWasmConfig()
 		wasmConfig.SmartQueryGasLimit = queryGasLimit
 		wasmWrap := WasmWrapper{Wasm: wasmConfig}
 		err := viper.Unmarshal(&wasmWrap)
@@ -392,10 +392,10 @@ func New(
 		appCodec, *legacyAmino,
 		keys[compute.StoreKey],
 		app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.DistrKeeper, app.MintKeeper, stakingKeeper,
-		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(tpptypes.ModuleName))
+		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(trsttypes.ModuleName))
 
-	app.tppKeeper = *tppkeeper.NewKeeper(
-		appCodec, keys[tpptypes.StoreKey], keys[tpptypes.MemStoreKey], app.GetSubspace(tpptypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, tppDir /* TPPwasmConfig, supportedFeatures,*/, app.computeKeeper,
+	app.trstKeeper = *trstkeeper.NewKeeper(
+		appCodec, keys[trsttypes.StoreKey], keys[trsttypes.MemStoreKey], app.GetSubspace(trsttypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, trstdir /* trstwasmConfig, supportedFeatures,*/, app.computeKeeper,
 	)
 	/****  Module Options ****/
 
@@ -426,7 +426,7 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
-		tpp.NewAppModule(appCodec, app.tppKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
+		trst.NewAppModule(appCodec, app.trstKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
 		compute.NewAppModule(app.computeKeeper),
 		reg.NewAppModule(app.regKeeper),
 		// this line is used by starport scaffolding # stargate/app/appModule
@@ -441,7 +441,7 @@ func New(
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, tpptypes.ModuleName, compute.ModuleName)
+	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, trsttypes.ModuleName, compute.ModuleName)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -462,7 +462,7 @@ func New(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		tpptypes.ModuleName,
+		trsttypes.ModuleName,
 		compute.ModuleName,
 		reg.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
@@ -670,7 +670,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
-	paramsKeeper.Subspace(tpptypes.ModuleName)
+	paramsKeeper.Subspace(trsttypes.ModuleName)
 	paramsKeeper.Subspace(compute.ModuleName)
 	paramsKeeper.Subspace(reg.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace

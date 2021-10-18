@@ -2,7 +2,7 @@ package keeper
 
 import (
 	// this line is used by starport scaffolding # 1
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

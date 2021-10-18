@@ -12,7 +12,7 @@ import (
 
 	"strconv"
 
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/types"
 )
 
 // GetEstimatorCount get the total number of estimator
@@ -52,7 +52,7 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 	fmt.Printf("Keeper  item: %X\n", item.Contract)
 	// Create the estimator
 	count := k.GetEstimatorCount(ctx)
-	deposit := sdk.NewInt64Coin("tpp", msg.Deposit)
+	deposit := sdk.NewInt64Coin("utrst", msg.Deposit)
 	var estimator = types.Estimator{
 		Estimator: msg.Estimator,
 		//	Estimation: msg.Estimation,
@@ -83,7 +83,7 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 	}
 	fmt.Printf("executing contract: %X\n", item.Contract)
 	fmt.Printf("executing contract addr: %s", item.Contract)
-	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.Estimatemsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.Estimatemsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Execution failed")
 	}
@@ -224,7 +224,7 @@ func (k Keeper) Flag(ctx sdk.Context, item types.Item, msg types.MsgFlagItem) er
 		return err ///panic(err)
 	}
 	fmt.Printf("executing contract: %s", item.Contract)
-	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.Flagmsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.Flagmsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: ")
 		//return sdkerrors.Wrapf(types.ErrInvalid, "err %s must be greater %d ",err, msg.Flagmsg)
@@ -270,7 +270,7 @@ func (k Keeper) DeleteEncryptedEstimation(ctx sdk.Context, item types.Item, msg 
 		return err ///panic(err)
 	}
 	fmt.Printf("executing contract: %s", item.Contract)
-	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.Deletemsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.Deletemsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: ")
 		return err ///panic(err)

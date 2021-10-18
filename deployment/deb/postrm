@@ -3,7 +3,7 @@
 
 set -e
 
-systemctl stop tpp-node                    || true
-systemctl disable tpp-node                 || true
-rm -f /etc/systemd/system/tpp-node.service || true
+systemctl stop trst-node                    || true
+systemctl disable trst-node                 || true
+rm -f /etc/systemd/system/trst-node.service || true
 systemctl daemon-reload                       || true

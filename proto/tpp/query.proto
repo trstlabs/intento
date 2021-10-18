@@ -1,50 +1,50 @@
 syntax = "proto3";
-package danieljdd.tpp.tpp;
+package danieljdd.trst.trst;
 
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
-import "tpp/estimator.proto";
-import "tpp/buyer.proto";
-import "tpp/item.proto";
+import "trst/estimator.proto";
+import "trst/buyer.proto";
+import "trst/item.proto";
 
-option go_package = "github.com/danieljdd/tpp/x/tpp/types";
+option go_package = "github.com/danieljdd/trst/x/trst/types";
 
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
 	rpc Estimator(QueryGetEstimatorRequest) returns (QueryGetEstimatorResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/estimator/{itemid}";
+		option (google.api.http).get = "/danieljdd/trst/trst/estimator/{itemid}";
 	}
 	rpc EstimatorAll(QueryAllEstimatorRequest) returns (QueryAllEstimatorResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/estimator";
+		option (google.api.http).get = "/danieljdd/trst/trst/estimator";
 	}
 
 	//rpc Buyer(QueryGetBuyerRequest) returns (QueryGetBuyerResponse) {
-	//	option (google.api.http).get = "/danieljdd/tpp/tpp/buyer/{itemid}";
+	//	option (google.api.http).get = "/danieljdd/trst/trst/buyer/{itemid}";
 //	}
 //	rpc BuyerAll(QueryAllBuyerRequest) returns (QueryAllBuyerResponse) {
-//		option (google.api.http).get = "/danieljdd/tpp/tpp/buyer";
+//		option (google.api.http).get = "/danieljdd/trst/trst/buyer";
 //	}
 
 	rpc Item(QueryGetItemRequest) returns (QueryGetItemResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/item/{id}";
+		option (google.api.http).get = "/danieljdd/trst/trst/item/{id}";
 	}
 	rpc ItemAll(QueryAllItemRequest) returns (QueryAllItemResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/item";
+		option (google.api.http).get = "/danieljdd/trst/trst/item";
 	}
 	rpc ListedItemsAll(QueryAllListedItemsRequest) returns (QueryAllListedItemsResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/ListedItems";
+		option (google.api.http).get = "/danieljdd/trst/trst/ListedItems";
 	}
 		rpc SellerItems(QuerySellerItemsRequest) returns (QuerySellerItemsResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/selleritems";
+		option (google.api.http).get = "/danieljdd/trst/trst/selleritems";
 	}
 	rpc BuyerItems(QueryBuyerItemsRequest) returns (QueryBuyerItemsResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/buyeritems";
+		option (google.api.http).get = "/danieljdd/trst/trst/buyeritems";
 	}
 
 	rpc CodeHash(QueryCodeHashRequest) returns (QueryCodeHashResponse) {
-		option (google.api.http).get = "/danieljdd/tpp/tpp/codehash/{codeid}";
+		option (google.api.http).get = "/danieljdd/trst/trst/codehash/{codeid}";
 	}
 
 

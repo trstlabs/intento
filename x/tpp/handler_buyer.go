@@ -1,4 +1,4 @@
-package tpp
+package trst
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/tpp/x/tpp/keeper"
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/keeper"
+	"github.com/danieljdd/trst/x/trst/types"
 	//"github.com/tendermint/tendermint/crypto"
 	//bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
@@ -131,21 +131,21 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 		k.Withdrawal(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
 	} else {
 
-		//returning the tpp tokens
+		//returning the trst tokens
 		percentageReturn := sdk.NewDecWithPrec(95, 2)
 
 		bigIntEstimationPrice := sdk.NewInt(item.Estimationprice)
 		toMintAmount := percentageReturn.MulInt(bigIntEstimationPrice).TruncateInt()
 
 		burnAmount := bigIntEstimationPrice.Sub(toMintAmount)
-		k.BurnCoins(ctx, sdk.NewCoin("tpp", burnAmount))
+		k.BurnCoins(ctx, sdk.NewCoin("utrst", burnAmount))
 
 		if item.Shippingcost > 0 {
 			toMintAmount = toMintAmount.Add(sdk.NewInt(item.Shippingcost))
 		}
 
 		//minted coins (are rounded up)
-		mintCoins := sdk.NewCoin("tpp", toMintAmount)
+		mintCoins := sdk.NewCoin("utrst", toMintAmount)
 		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
 		k.Withdrawal(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
 
@@ -218,7 +218,7 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 	if item.Creator == item.Seller {
 
 		//minted coins (are rounded up)
-		rewardCoins := sdk.NewCoin("tpp", sdk.NewInt(item.Depositamount))
+		rewardCoins := sdk.NewCoin("utrst", sdk.NewInt(item.Depositamount))
 
 		k.MintReward(ctx, rewardCoins)
 
@@ -240,7 +240,7 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 		item.Estimatorlist = nil
 	}
 	//make payment to seller
-	paymentSellerCoins := sdk.NewCoin("tpp", bigIntEstimationPrice)
+	paymentSellerCoins := sdk.NewCoin("utrst", bigIntEstimationPrice)
 
 	k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
 
@@ -276,7 +276,7 @@ func handleMsgItemRating(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRat
 		toMintAmount := percentageReward.MulInt(bigIntEstimationPrice).Ceil().TruncateInt()
 
 		//minted coins (are rounded up)
-		mintCoins := sdk.NewCoin("tpp", toMintAmount)
+		mintCoins := sdk.NewCoin("utrst", toMintAmount)
 		k.MintReward(ctx, mintCoins.Add(mintCoins))
 		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
 		item.Estimationprice = 0

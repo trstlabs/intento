@@ -2,7 +2,7 @@ version: '3'
 
 services:
   aesm:
-    image: tpp/aesm
+    image: trst/aesm
     devices:
       - /dev/sgx
     volumes:
@@ -21,7 +21,7 @@ services:
       - /dev/sgx
     volumes:
       - /tmp/aesmd:/var/run/aesmd
-      - /tmp/tppd:/root/.tppd
+      - /tmp/trstd:/root/.trstd
 
     stdin_open: true
     tty: true
@@ -35,7 +35,7 @@ services:
       - /dev/sgx
     volumes:
       - /tmp/aesmd:/var/run/aesmd
-      - /tmp/tppd:/root/.tppd
+      - /tmp/trstd:/root/.trstd
 
     stdin_open: true
     tty: true
@@ -54,7 +54,7 @@ services:
       - /dev/sgx
     volumes:
       - /tmp/aesmd:/var/run/aesmd
-      - /tmp/tppd:/tmp/.tppd
+      - /tmp/trstd:/tmp/.trstd
 
     stdin_open: true
     tty: true
@@ -70,7 +70,7 @@ services:
       - /dev/sgx
     volumes:
       - /tmp/aesmd:/var/run/aesmd
-      - /tmp/tppd:/tmp/.tppd
+      - /tmp/trstd:/tmp/.trstd
 
     stdin_open: true
     tty: true

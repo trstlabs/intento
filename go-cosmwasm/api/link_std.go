@@ -1,4 +1,4 @@
-// +build !tppd,linux,!muslc,!darwin
+// +build !trstd,linux,!muslc,!darwin
 
 package api
 

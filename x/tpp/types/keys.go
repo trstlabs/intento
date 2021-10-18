@@ -10,7 +10,7 @@ import (
 
 const (
 	// ModuleName defines the module name
-	ModuleName = "tpp"
+	ModuleName = "utrst"
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName

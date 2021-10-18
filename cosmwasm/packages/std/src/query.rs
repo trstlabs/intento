@@ -70,7 +70,7 @@ pub enum WasmQuery {
     /// return value is whatever the contract returns (caller should know)
     Smart {
         contract_addr: HumanAddr,
-        /// callback_code_hash is the hex encoded hash of the code. This is used by tpp to harden against replaying the contract
+        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         callback_code_hash: String,
         /// msg is the json-encoded QueryMsg struct
@@ -82,7 +82,7 @@ pub enum WasmQuery {
         contract_addr: HumanAddr,
         /// Key is the raw key used in the contracts Storage
         key: Binary,
-        /// callback_code_hash is the hex encoded hash of the code. This is used by tpp to harden against replaying the contract
+        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         callback_code_hash: String,
     },

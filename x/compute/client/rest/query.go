@@ -12,8 +12,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/danieljdd/tpp/x/compute/internal/keeper"
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/danieljdd/trst/x/compute/internal/keeper"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 
 	"github.com/gorilla/mux"
 )

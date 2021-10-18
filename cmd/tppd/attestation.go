@@ -14,12 +14,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	app2 "github.com/danieljdd/tpp/app"
+	app2 "github.com/danieljdd/trst/app"
 
 	"github.com/cosmos/cosmos-sdk/x/genutil"
-	"github.com/danieljdd/tpp/go-cosmwasm/api"
-	reg "github.com/danieljdd/tpp/x/registration"
-	ra "github.com/danieljdd/tpp/x/registration/remote_attestation"
+	"github.com/danieljdd/trst/go-cosmwasm/api"
+	reg "github.com/danieljdd/trst/x/registration"
+	ra "github.com/danieljdd/trst/x/registration/remote_attestation"
 
 	"github.com/spf13/cobra"
 )
@@ -308,7 +308,7 @@ func ResetEnclave() *cobra.Command {
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			// remove .tppd/.node/seed.json
+			// remove .trstd/.node/seed.json
 			path := filepath.Join(app2.DefaultNodeHome, reg.SecretNodeCfgFolder, reg.SecretNodeSeedConfig)
 			if _, err := os.Stat(path); !os.IsNotExist(err) {
 				fmt.Printf("Removing %s\n", path)

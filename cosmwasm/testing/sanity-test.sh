@@ -23,11 +23,11 @@ secretd config chain-id secretdev-1
 secretd config output json
 
 secretd init banana --chain-id secretdev-1
-perl -i -pe 's/"stake"/"tpp"/g' ~/.secretd/config/genesis.json
+perl -i -pe 's/"stake"/"utrst"/g' ~/.secretd/config/genesis.json
 echo "cost member exercise evoke isolate gift cattle move bundle assume spell face balance lesson resemble orange bench surge now unhappy potato dress number acid" |
     secretd keys add a --recover --keyring-backend test
-secretd add-genesis-account "$(secretd keys show -a --keyring-backend test a)" 1000000000000tpp
-secretd gentx a 1000000tpp --chain-id secretdev-1 --keyring-backend test
+secretd add-genesis-account "$(secretd keys show -a --keyring-backend test a)" 1000000000000trst
+secretd gentx a 1000000trst --chain-id secretdev-1 --keyring-backend test
 secretd collect-gentxs
 secretd validate-genesis
 
@@ -52,7 +52,7 @@ trap cleanup EXIT ERR
 
 # store wasm code on-chain so we could later instansiate it
 export STORE_TX_HASH=$(
-    secretd tx compute store erc20.wasm --from a --gas 10000000 --gas-prices 0.25tpp --output json -y |
+    secretd tx compute store erc20.wasm --from a --gas 10000000 --gas-prices 0.25trst --output json -y |
         jq -r .txhash
 )
 
@@ -67,7 +67,7 @@ secretd q tx "$STORE_TX_HASH" --output json |
 # secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t is just a random address
 # balances are set to 108 & 53 at init
 export INIT_TX_HASH=$(
-    secretd tx compute instantiate 1 "{\"decimals\":10,\"initial_balances\":[{\"address\":\"$(secretd keys show a -a)\",\"amount\":\"108\"},{\"address\":\"secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t\",\"amount\":\"53\"}],\"name\":\"ReuvenPersonalRustCoin\",\"symbol\":\"RPRC\"}" --label RPRCCoin2 --from a --output json -y --gas-prices 0.25tpp |
+    secretd tx compute instantiate 1 "{\"decimals\":10,\"initial_balances\":[{\"address\":\"$(secretd keys show a -a)\",\"amount\":\"108\"},{\"address\":\"secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t\",\"amount\":\"53\"}],\"name\":\"ReuvenPersonalRustCoin\",\"symbol\":\"RPRC\"}" --label RPRCCoin2 --from a --output json -y --gas-prices 0.25trst |
         jq -r .txhash
 )
 
@@ -88,7 +88,7 @@ secretd q compute query "$CONTRACT_ADDRESS" "{\"balance\":{\"address\":\"secret1
     jq -e '.balance == "53"'
 
 # transfer 10 balance (ocall_handle + read_db + write_db + humanize_address + canonicalize_address)
-secretd tx compute execute "$CONTRACT_ADDRESS" '{"transfer":{"amount":"10","recipient":"secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t"}}' --gas-prices 0.25tpp --from a -b block -y --output json |
+secretd tx compute execute "$CONTRACT_ADDRESS" '{"transfer":{"amount":"10","recipient":"secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t"}}' --gas-prices 0.25trst --from a -b block -y --output json |
     jq -r .txhash |
     xargs secretd q compute tx
 

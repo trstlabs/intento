@@ -3,9 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 	// authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	// "github.com/danieljdd/tpp/x/compute/internal/types"
+	// "github.com/danieljdd/trst/x/compute/internal/types"
 )
 
 // InitGenesis sets supply information for genesis.

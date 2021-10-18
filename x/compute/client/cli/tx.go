@@ -11,13 +11,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
-	//"github.com/danieljdd/tpp/x/compute/internal/types"
+	//"github.com/danieljdd/trst/x/compute/internal/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wasmUtils "github.com/danieljdd/tpp/x/compute/client/utils"
-	"github.com/danieljdd/tpp/x/compute/internal/types"
+	wasmUtils "github.com/danieljdd/trst/x/compute/client/utils"
+	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
@@ -177,7 +177,7 @@ func InstantiateContractCmd() *cobra.Command {
 
 	cmd.Flags().String(flagCodeHash, "", "For offline transactions, use this to specify the target contract's code hash")
 	cmd.Flags().String(flagIoMasterKey, "", "For offline transactions, use this to specify the path to the "+
-		"io-master-cert.der file, which you can get using the command `tppd q register tpp-enclave-params` ")
+		"io-master-cert.der file, which you can get using the command `trstd q register trst-enclave-params` ")
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract during instantiation")
 	cmd.Flags().String(flagLabel, "", "A human-readable name for this contract in lists")
 	// cmd.Flags().String(flagAdmin, "", "Address of an admin")
@@ -375,7 +375,7 @@ func ExecuteContractCmd() *cobra.Command {
 
 	cmd.Flags().String(flagCodeHash, "", "For offline transactions, use this to specify the target contract's code hash")
 	cmd.Flags().String(flagIoMasterKey, "", "For offline transactions, use this to specify the path to the "+
-		"io-master-cert.der file, which you can get using the command `tppd q register tpp-enclave-params` ")
+		"io-master-cert.der file, which you can get using the command `trstd q register trst-enclave-params` ")
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract along with command")
 	cmd.Flags().String(flagLabel, "", "A human-readable name for this contract in lists")
 	flags.AddTxFlagsToCmd(cmd)

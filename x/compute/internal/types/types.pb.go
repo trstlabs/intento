@@ -59,7 +59,7 @@ func (AccessType) EnumDescriptor() ([]byte, []int) {
 }
 
 type AccessTypeParam struct {
-	Value AccessType `protobuf:"varint,1,opt,name=value,proto3,enum=tpp.x.compute.v1beta1.AccessType" json:"value,omitempty" yaml:"value"`
+	Value AccessType `protobuf:"varint,1,opt,name=value,proto3,enum=trst.x.compute.v1beta1.AccessType" json:"value,omitempty" yaml:"value"`
 }
 
 func (m *AccessTypeParam) Reset()         { *m = AccessTypeParam{} }
@@ -311,13 +311,13 @@ func (m *Model) XXX_DiscardUnknown() {
 var xxx_messageInfo_Model proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterEnum("tpp.x.compute.v1beta1.AccessType", AccessType_name, AccessType_value)
-	proto.RegisterType((*AccessTypeParam)(nil), "tpp.x.compute.v1beta1.AccessTypeParam")
-	proto.RegisterType((*CodeInfo)(nil), "tpp.x.compute.v1beta1.CodeInfo")
-	proto.RegisterType((*ContractInfo)(nil), "tpp.x.compute.v1beta1.ContractInfo")
-	proto.RegisterType((*ContractInfoWithAddress)(nil), "tpp.x.compute.v1beta1.ContractInfoWithAddress")
-	proto.RegisterType((*AbsoluteTxPosition)(nil), "tpp.x.compute.v1beta1.AbsoluteTxPosition")
-	proto.RegisterType((*Model)(nil), "tpp.x.compute.v1beta1.Model")
+	proto.RegisterEnum("trst.x.compute.v1beta1.AccessType", AccessType_name, AccessType_value)
+	proto.RegisterType((*AccessTypeParam)(nil), "trst.x.compute.v1beta1.AccessTypeParam")
+	proto.RegisterType((*CodeInfo)(nil), "trst.x.compute.v1beta1.CodeInfo")
+	proto.RegisterType((*ContractInfo)(nil), "trst.x.compute.v1beta1.ContractInfo")
+	proto.RegisterType((*ContractInfoWithAddress)(nil), "trst.x.compute.v1beta1.ContractInfoWithAddress")
+	proto.RegisterType((*AbsoluteTxPosition)(nil), "trst.x.compute.v1beta1.AbsoluteTxPosition")
+	proto.RegisterType((*Model)(nil), "trst.x.compute.v1beta1.Model")
 }
 
 func init() { proto.RegisterFile("compute/types.proto", fileDescriptor_2f2f6c3ae1579987) }

@@ -6,14 +6,14 @@ import (
 	//	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/tpp/x/tpp/types"
+	"github.com/danieljdd/trst/x/trst/types"
 )
 
 // Prepayment creates a buyer with a new id and update the count
 func (k Keeper) Prepayment(ctx sdk.Context, msg types.MsgPrepayment) {
 	// Create the buyer
 
-	deposit := sdk.NewInt64Coin("tpp", msg.Deposit)
+	deposit := sdk.NewInt64Coin("utrst", msg.Deposit)
 
 	buyeraddress, err := sdk.AccAddressFromBech32(msg.Buyer)
 	if err != nil {

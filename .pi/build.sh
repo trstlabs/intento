@@ -24,10 +24,10 @@ rm -rf .tmp || true
 mkdir .tmp
 
 # UNCOMMENT and add username WHEN NOT USING GITHUB ACTIONS
-# docker buildx build --tag tpp --file .pi/Dockerfile --platform linux/arm64 --cache-from tpp:cache --cache-to tpp:cache --load --progress tty .
+# docker buildx build --tag trst --file .pi/Dockerfile --platform linux/arm64 --cache-from trst:cache --cache-to trst:cache --load --progress tty .
 
 # save the image to result-rootfs.tar
-docker save --output ./.tmp/result-rootfs.tar tpp
+docker save --output ./.tmp/result-rootfs.tar trst
 
 # Extract the image using docker-extract
 docker run --rm --tty --volume $(pwd)/./.tmp:/root/./.tmp --workdir /root/./.tmp/.. faddat/toolbox /tools/docker-extract --root ./.tmp/result-rootfs  ./.tmp/result-rootfs.tar
@@ -36,7 +36,7 @@ docker run --rm --tty --volume $(pwd)/./.tmp:/root/./.tmp --workdir /root/./.tmp
 rm ./.tmp/result-rootfs.tar
 
 # Set hostname while the image is just in the filesystem.
-sudo bash -c "echo tpp > ./.tmp/result-rootfs/etc/hostname"
+sudo bash -c "echo trst > ./.tmp/result-rootfs/etc/hostname"
 
 
 # ===================================================================================
@@ -58,10 +58,10 @@ rm -rf images || true
 mkdir -p images
 
 # Make the image file
-fallocate -l 4G "images/tpp.img"
+fallocate -l 4G "images/trst.img"
 
 # loop-mount the image file so it becomes a disk
-sudo losetup --find --show images/tpp.img
+sudo losetup --find --show images/trst.img
 
 # partition the loop-mounted disk
 sudo parted --script /dev/loop0 mklabel msdos

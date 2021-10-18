@@ -73,9 +73,9 @@ whitespace += $(whitespace)
 comma := ,
 build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=tpp \
--X github.com/cosmos/cosmos-sdk/version.AppName=tppd \
-	-X github.com/danieljdd/tpp/cmd/tppd/version.ClientName=tppd \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=trst \
+-X github.com/cosmos/cosmos-sdk/version.AppName=trstd \
+	-X github.com/danieljdd/trst/cmd/trstd/version.ClientName=trstd \
 -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 
@@ -96,8 +96,8 @@ BUILD_FLAGS := -ldflags '$(ldflags)'
 all: install
 
 install: go.sum
-	@echo "--> Installing tppd"
-	@go install $(BUILD_FLAGS) ./cmd/tppd
+	@echo "--> Installing trstd"
+	@go install $(BUILD_FLAGS) ./cmd/trstd
 
 go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
@@ -111,74 +111,74 @@ vendor:
 
 build_local_no_rust: bin-data-$(IAS_BUILD)
 	cp go-cosmwasm/target/release/libgo_cosmwasm.so go-cosmwasm/api
-	go build -mod=readonly -tags "$(GO_TAGS)" -ldflags '$(LD_FLAGS)' ./cmd/tppd
+	go build -mod=readonly -tags "$(GO_TAGS)" -ldflags '$(LD_FLAGS)' ./cmd/trstd
 
 build-linux: vendor bin-data-$(IAS_BUILD)
 	BUILD_PROFILE=$(BUILD_PROFILE) $(MAKE) -C go-cosmwasm build-rust
 	cp go-cosmwasm/target/$(BUILD_PROFILE)/libgo_cosmwasm.so go-cosmwasm/api
 #   this pulls out ELF symbols, 80% size reduction!
-	go build -mod=readonly -tags "$(GO_TAGS)" -ldflags '$(LD_FLAGS)' ./cmd/tppd
+	go build -mod=readonly -tags "$(GO_TAGS)" -ldflags '$(LD_FLAGS)' ./cmd/trstd
 
 
 deb: build-linux deb-no-compile
 
 deb-no-compile:
 
-	rm -rf /tmp/tpp
+	rm -rf /tmp/trst
 
-	mkdir -p /tmp/tpp/deb/$(DEB_BIN_DIR)
-	mv -f ./tppd /tmp/tpp/deb/$(DEB_BIN_DIR)/tppd
-	mkdir -p /tmp/tpp/deb/$(DEB_LIB_DIR)
-	cp -f ./go-cosmwasm/api/libgo_cosmwasm.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so /tmp/tpp/deb/$(DEB_LIB_DIR)/
-	chmod +x /tmp/tpp/deb/$(DEB_LIB_DIR)/lib*.so
+	mkdir -p /tmp/trst/deb/$(DEB_BIN_DIR)
+	mv -f ./trstd /tmp/trst/deb/$(DEB_BIN_DIR)/trstd
+	mkdir -p /tmp/trst/deb/$(DEB_LIB_DIR)
+	cp -f ./go-cosmwasm/api/libgo_cosmwasm.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so /tmp/trst/deb/$(DEB_LIB_DIR)/
+	chmod +x /tmp/trst/deb/$(DEB_LIB_DIR)/lib*.so
 
-	mkdir -p /tmp/tpp/deb/DEBIAN
-	cp ./deployment/deb/control /tmp/tpp/deb/DEBIAN/control
-	printf "Version: " >> /tmp/tpp/deb/DEBIAN/control
-	printf "$(VERSION)" >> /tmp/tpp/deb/DEBIAN/control
-	echo "" >> /tmp/tpp/deb/DEBIAN/control
-	cp ./deployment/deb/postinst /tmp/tpp/deb/DEBIAN/postinst
-	chmod 755 /tmp/tpp/deb/DEBIAN/postinst
-	cp ./deployment/deb/postrm /tmp/tpp/deb/DEBIAN/postrm
-	chmod 755 /tmp/tpp/deb/DEBIAN/postrm
-	cp ./deployment/deb/triggers /tmp/tpp/deb/DEBIAN/triggers
-	chmod 755 /tmp/tpp/deb/DEBIAN/triggers
-	dpkg-deb --build /tmp/tpp/deb/ .
-	-rm -rf /tmp/tpp
+	mkdir -p /tmp/trst/deb/DEBIAN
+	cp ./deployment/deb/control /tmp/trst/deb/DEBIAN/control
+	printf "Version: " >> /tmp/trst/deb/DEBIAN/control
+	printf "$(VERSION)" >> /tmp/trst/deb/DEBIAN/control
+	echo "" >> /tmp/trst/deb/DEBIAN/control
+	cp ./deployment/deb/postinst /tmp/trst/deb/DEBIAN/postinst
+	chmod 755 /tmp/trst/deb/DEBIAN/postinst
+	cp ./deployment/deb/postrm /tmp/trst/deb/DEBIAN/postrm
+	chmod 755 /tmp/trst/deb/DEBIAN/postrm
+	cp ./deployment/deb/triggers /tmp/trst/deb/DEBIAN/triggers
+	chmod 755 /tmp/trst/deb/DEBIAN/triggers
+	dpkg-deb --build /tmp/trst/deb/ .
+	-rm -rf /tmp/trst
 
 rename_for_release:
 	-rename "s/windows-4.0-amd64/v${VERSION}-win64/" *.exe
 	-rename "s/darwin-10.6-amd64/v${VERSION}-osx64/" *darwin*
 
 sign_for_release: rename_for_release
-	sha256sum tpp-blockchain*.deb > SHA256SUMS
-	-sha256sum tppd-* >> SHA256SUMS
+	sha256sum trst-blockchain*.deb > SHA256SUMS
+	-sha256sum trstd-* >> SHA256SUMS
 	gpg -u 91831DE812C6415123AFAA7B420BF1CB005FBCE6 --digest-algo sha256 --clearsign --yes SHA256SUMS
 	rm -f SHA256SUMS
 
 release: sign_for_release
 	rm -rf ./release/
 	mkdir -p ./release/
-	cp tpp-blockchain_*.deb ./release/
-	cp tppd-* ./release/
+	cp trst-blockchain_*.deb ./release/
+	cp trstd-* ./release/
 	cp SHA256SUMS.asc ./release/
 
 clean:
-	-rm -rf /tpp
+	-rm -rf /trst
 
-	-rm -f ./tppd*
+	-rm -f ./trstd*
 #   -find -name librust_cosmwasm_enclave.signed.so -delete
 #   -find -name libgo_cosmwasm.so -delete
 #   -find -name '*.so' -delete
 #   -find -name 'target' -type d -exec rm -rf \;
-	-rm -f ./tpp-blockchain*.deb
+	-rm -f ./trst-blockchain*.deb
 	-rm -f ./SHA256SUMS*
 	-rm -rf ./third_party/vendor/
 	-rm -rf ./.sgx_secrets/*
 	-rm -rf ./x/compute/internal/keeper/.sgx_secrets/*
 	-rm -rf ./*.der
 	-rm -rf ./x/compute/internal/keeper/*.der
-	-rm -rf ./cmd/tppd/ias_bin*
+	-rm -rf ./cmd/trstd/ias_bin*
 	$(MAKE) -C go-cosmwasm clean-all
 	$(MAKE) -C cosmwasm/packages/wasmi-runtime clean
 
@@ -276,10 +276,10 @@ build-all-test-contracts: build-test-contract
 bin-data: bin-data-sw bin-data-develop bin-data-production
 
 bin-data-sw:
-	cd ./cmd/tppd && go-bindata -o ias_bin_sw.go -prefix "../../ias_keys/sw_dummy/" -tags "!hw" ../../ias_keys/sw_dummy/...
+	cd ./cmd/trstd && go-bindata -o ias_bin_sw.go -prefix "../../ias_keys/sw_dummy/" -tags "!hw" ../../ias_keys/sw_dummy/...
 
 bin-data-develop:
-	cd ./cmd/tppd && go-bindata -o ias_bin_dev.go -prefix "../../ias_keys/develop/" -tags "develop,hw" ../../ias_keys/develop/...
+	cd ./cmd/trstd && go-bindata -o ias_bin_dev.go -prefix "../../ias_keys/develop/" -tags "develop,hw" ../../ias_keys/develop/...
 
 bin-data-production:
-	cd ./cmd/tppd && go-bindata -o ias_bin_prod.go -prefix "../../ias_keys/production/" -tags "production,hw" ../../ias_keys/production
+	cd ./cmd/trstd && go-bindata -o ias_bin_prod.go -prefix "../../ias_keys/production/" -tags "production,hw" ../../ias_keys/production

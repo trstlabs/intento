@@ -13,17 +13,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	tpp "github.com/danieljdd/tpp/types"
-	"github.com/danieljdd/tpp/x/compute"
+	trst "github.com/danieljdd/trst/types"
+	"github.com/danieljdd/trst/x/compute"
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
 	//"github.com/tendermint/tendermint/libs/cli"
 	"github.com/cosmos/cosmos-sdk/snapshots"
-	app "github.com/danieljdd/tpp/app"
+	app "github.com/danieljdd/trst/app"
 
-	//"github.com/danieljdd/tpp/app"
+	//"github.com/danieljdd/trst/app"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -86,12 +86,12 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 
 	rootCmd := &cobra.Command{
 		Use:   app.Name + "d",
-		Short: "The Trust Price Protocol App Daemon (server)",
+		Short: "The Trustless Hub App Daemon (server)",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 
-			tppAppTemplate, tppAppConfig := initAppConfig()
+			trstAppTemplate, trstAppConfig := initAppConfig()
 
-			if err := server.InterceptConfigsPreRunHandler(cmd, tppAppTemplate, tppAppConfig); err != nil {
+			if err := server.InterceptConfigsPreRunHandler(cmd, trstAppTemplate, trstAppConfig); err != nil {
 				return err
 			}
 
@@ -106,7 +106,7 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	initRootCmd(rootCmd, encodingConfig)
 
 	//rosetta
-	//rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
+	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 	return rootCmd, encodingConfig
 }
 
@@ -315,7 +315,7 @@ func updateTmParamsAndInit(mbm module.BasicManager, defaultNodeHome string) *cob
 
 		appConfigFilePath := filepath.Join(defaultNodeHome, "config/app.toml")
 		appConf, _ := serverconfig.ParseConfig(viper.GetViper())
-		appConf.MinGasPrices = "0.00025tpp"
+		appConf.MinGasPrices = "0.00025trst"
 
 		serverconfig.WriteConfigFile(appConfigFilePath, appConf)
 
@@ -334,9 +334,9 @@ func initConfig(ctx *client.Context, cmd *cobra.Command) error {
 	cmd.PersistentFlags().Bool(flagLegacyHdPath, false, "Flag to specify the command uses old HD path - use this for ledger compatibility")
 
 	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(tpp.Bech32PrefixAccAddr, tpp.Bech32PrefixAccPub)
-	config.SetBech32PrefixForValidator(tpp.Bech32PrefixValAddr, tpp.Bech32PrefixValPub)
-	config.SetBech32PrefixForConsensusNode(tpp.Bech32PrefixConsAddr, tpp.Bech32PrefixConsPub)
+	config.SetBech32PrefixForAccount(trst.Bech32PrefixAccAddr, trst.Bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(trst.Bech32PrefixValAddr, trst.Bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(trst.Bech32PrefixConsAddr, trst.Bech32PrefixConsPub)
 
 	oldHDPath, err := cmd.PersistentFlags().GetBool(flagLegacyHdPath)
 	if err != nil {
