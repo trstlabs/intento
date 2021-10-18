@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/danieljdd/trst/x/trst/types"
+	"github.com/danieljdd/trst/x/item/types"
 )
 
 /*

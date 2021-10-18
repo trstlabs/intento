@@ -84,15 +84,15 @@ import (
 	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/modules/core/keeper"
 	"github.com/danieljdd/trst/x/compute"
+	trst "github.com/danieljdd/trst/x/item"
+	trstkeeper "github.com/danieljdd/trst/x/item/keeper"
+	trsttypes "github.com/danieljdd/trst/x/item/types"
 	reg "github.com/danieljdd/trst/x/registration"
-	"github.com/danieljdd/trst/x/trst"
-	trstkeeper "github.com/danieljdd/trst/x/trst/keeper"
-	trsttypes "github.com/danieljdd/trst/x/trst/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
-const Name = "TRST"
+const Name = "trst"
 
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals
 
