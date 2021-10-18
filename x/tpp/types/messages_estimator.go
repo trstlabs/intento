@@ -1,8 +1,6 @@
 package types
 
 import (
-	fmt "fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	//"cosmos/base/v1beta1/coin.proto"
@@ -11,7 +9,7 @@ import (
 var _ sdk.Msg = &MsgCreateEstimation{}
 
 func NewMsgCreateEstimation(estimator string, estimatemsg []byte, itemid uint64, deposit int64, interested bool) *MsgCreateEstimation {
-	fmt.Printf("new item msg: %X\n", estimator)
+	//fmt.Printf("new item msg: %X\n", estimator)
 	return &MsgCreateEstimation{
 		Estimator:   estimator,
 		Estimatemsg: estimatemsg,

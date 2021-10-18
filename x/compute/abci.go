@@ -19,34 +19,35 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	logger := k.Logger(ctx)
 	//fmt.Printf("ABCI ENDBLOCK COMPUTE")
 	// delete inactive items from store and its deposits
-	k.IterateContractQueue(ctx, ctx.BlockHeader().Time, func(addr sdk.AccAddress) bool {
-		//	fmt.Printf(" ENDBLOCK QUEue")
+	k.IterateContractQueue(ctx, ctx.BlockHeader().Time, func(item types.ContractInfoWithAddress) bool {
+
 		logger.Info(
 			"contract was expired",
-			"contract", addr.String(),
+			"contract", item.Address.String(),
 		)
-		//fmt.Printf("Deleting")
-		err := k.CallLastMsg(ctx, addr)
 
-		if err != nil {
-			logger.Info(
-				"Calling last msg unsuccesful", err,
-			)
-			err = k.ContractPayout(ctx, addr)
-			logger.Info(
-				"Contract creator payout", err,
-			)
+		//err := k.CallLastMsg(ctx, item.Address)
+		if item.LastMsg != nil {
+			res, err := k.Execute(ctx, item.Address, item.Address, item.LastMsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
+			if err != nil {
+				_ = k.ContractPayout(ctx, item.Address)
+				logger.Info(
+					"Error lastMsg, creator payout", item.Address,
+				)
+			}
+			k.SetContractResult(ctx, item.Address, res)
 		}
-		k.RemoveFromContractQueue(ctx, addr.String(), ctx.BlockHeader().Time)
-		err = k.Delete(ctx, addr)
+
+		k.RemoveFromContractQueue(ctx, item.Address.String(), item.ContractInfo.EndTime)
+		_ = k.Delete(ctx, item.Address)
 		logger.Info(
-			"Deleted", err,
+			"Deleted contract", item.Address,
 		)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeContractExpired,
-				sdk.NewAttribute(types.AttributeKeyContractAddr, addr.String()),
+				sdk.NewAttribute(types.AttributeKeyContractAddr, item.Address.String()),
 			),
 		)
 		return false

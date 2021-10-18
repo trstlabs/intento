@@ -49,18 +49,27 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 			}
 			rsp, err = queryContractInfo(ctx, addr, keeper)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
 		case QueryGetContractResult:
 			addr, err := sdk.AccAddressFromBech32(path[1])
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 			}
 			rsp, err = queryContractResult(ctx, addr, keeper)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
 		case QueryListContractByCode:
 			codeID, err := strconv.ParseUint(path[1], 10, 64)
 			if err != nil {
 				return nil, sdkerrors.Wrapf(types.ErrInvalid, "code id: %s", err.Error())
 			}
 			rsp, err = queryContractListByCode(ctx, codeID, keeper)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
 		case QueryGetContractState:
 			//if len(path) < 3 {
 			//	return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "path invalid, unknown data query endpoint")
@@ -73,6 +82,9 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 				return nil, sdkerrors.Wrapf(types.ErrInvalid, "code id: %s", err.Error())
 			}
 			rsp, err = QueryCode(ctx, codeID, keeper)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
 		case QueryListCode:
 			rsp, err = queryCodeList(ctx, keeper)
 		/*
@@ -91,12 +103,18 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 			}
 			rsp, err = queryContractKey(ctx, addr, keeper)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
 		case QueryContractHash:
 			addr, err := sdk.AccAddressFromBech32(path[1])
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 			}
 			rsp, err = queryContractHash(ctx, addr, keeper)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			}
 		default:
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown data query endpoint")
 		}

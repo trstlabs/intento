@@ -49,7 +49,7 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 
 	item := k.GetItem(ctx, msg.Itemid)
 
-	//	fmt.Printf("Keeper : %X\n", item.Contract)
+	fmt.Printf("Keeper  item: %X\n", item.Contract)
 	// Create the estimator
 	count := k.GetEstimatorCount(ctx)
 	deposit := sdk.NewInt64Coin("tpp", msg.Deposit)
@@ -81,10 +81,11 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 	if err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract address invalid")
 	}
-	//	fmt.Printf("executing contract: %X\n", contractAddr)
+	fmt.Printf("executing contract: %X\n", item.Contract)
+	fmt.Printf("executing contract addr: %s", item.Contract)
 	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.Estimatemsg, sdk.NewCoins(sdk.NewCoin("tpp", sdk.ZeroInt())), nil)
 	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "error when executing estimation")
+		return sdkerrors.Wrap(err, "Execution failed")
 	}
 	//fmt.Printf("result: Got result for item %s: %s\n", contractAddr, res)
 	//fmt.Printf("result: Got result for item %s: %s\n", contractAddr, string(res.Data))

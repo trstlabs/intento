@@ -232,10 +232,45 @@ func (k Keeper) MintReward(ctx sdk.Context, coinToSend sdk.Coin) {
 
 }
 
-// BurnCoins mints coins from a module account
-func (k Keeper) BurnCoins(ctx sdk.Context, coinToSend sdk.Coin) {
-	k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coinToSend))
+// TokenizeItem mints coins to a module account
+func (k Keeper) TokenizeItem(ctx sdk.Context, itemId uint64, userAddress sdk.AccAddress) error {
+	coin := sdk.NewCoins(sdk.NewCoin(("TRSTITEM" + strconv.FormatUint(itemId, 10)), sdk.OneInt()))
+	err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coin)
+	if err != nil {
+		return err ///panic(err)
 
+	}
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, userAddress, coin)
+	if err != nil {
+		return err ///panic(err)
+	}
+	return nil
+}
+
+// TokenizeItem burns coins from a module account
+func (k Keeper) UnTokenizeItem(ctx sdk.Context, itemId uint64, userAddress sdk.AccAddress) error {
+	coin := sdk.NewCoins(sdk.NewCoin(("TRSTITEM" + strconv.FormatUint(itemId, 10)), sdk.OneInt()))
+	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, userAddress, types.ModuleName, coin)
+	if err != nil {
+		return err ///panic(err)
+	}
+
+	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, coin)
+	if err != nil {
+		return err ///panic(err)
+
+	}
+	return nil
+}
+
+// BurnCoins burns coins from a module account
+func (k Keeper) BurnCoins(ctx sdk.Context, coinToBurn sdk.Coin) error {
+	err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coinToBurn))
+	if err != nil {
+		return err ///panic(err)
+
+	}
+	return nil
 }
 
 // RevealEstimation reveals an item

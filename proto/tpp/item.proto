@@ -45,7 +45,9 @@ message Item {
        string contract = 30;
        int64 estimationtotal = 31;
         repeated string photos = 32;
+        bool is_token = 33;
 }
+
 
 
 message MsgCreateItem {
@@ -93,7 +95,6 @@ message MsgItemTransferable {
     string seller = 1;
     bool transferable = 2;
   uint64 itemid = 3;
-
 }
 message MsgItemShipping {
     string seller = 1;
@@ -123,4 +124,14 @@ message Params {
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "max_active_period,omitempty"
   ];
+}
+
+message MsgTokenizeItem {
+    string sender = 1;
+  uint64 id = 3;
+}
+
+message MsgUnTokenizeItem {
+    string sender = 1;
+  uint64 id = 3;
 }

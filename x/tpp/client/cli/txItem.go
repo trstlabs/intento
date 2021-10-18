@@ -127,7 +127,7 @@ func CmdCreateItem() *cobra.Command {
 func CmdDeleteItem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete-item [item id] ",
-		Short: "Delete a item by item id",
+		Short: "Delete an item by item id",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseUint(args[0], 10, 64)
@@ -312,6 +312,64 @@ func CmdItemResell() *cobra.Command {
 			note := args[5]
 
 			msg := types.NewMsgItemResell(clientCtx.GetFromAddress().String(), uint64(argsItemID), int64(argsShippingcost), int64(argsDiscount), string(argsLocalpickup), []string(argsShippingregion), string(note))
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdTokenizeItem() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "tokenize-item [item id] ",
+		Short: "Tokenize an item by item id",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgTokenizeItem(clientCtx.GetFromAddress().String(), uint64(id))
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdUnTokenizeItem() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "un-tokenize-item [item id] ",
+		Short: "Un-Tokenize an item by item id",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgUnTokenizeItem(clientCtx.GetFromAddress().String(), uint64(id))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

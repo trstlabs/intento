@@ -203,39 +203,17 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 	}
 
 	//check if item has a best estimator (and therefore a complete estimation)
+	if item.IsToken {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item is a token")
+	}
+
+	//check if item has a best estimator (and therefore a complete estimation)
 	if item.Bestestimator == "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "no estimation price yet, cannot make item transferable")
 	}
 
 	if !msg.Transferable {
 
-		//returns each element
-		for _, element := range item.Estimatorlist {
-			//apply this to each element
-			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
-			estimator := k.GetEstimator(ctx, key)
-
-			if estimator.Estimator == item.Lowestestimator {
-
-				k.BurnCoins(ctx, estimator.Deposit)
-				k.DeleteEstimationWithoutDeposit(ctx, key)
-
-			} else {
-				k.DeleteEstimation(ctx, key)
-			}
-
-		}
-		//item.TransferBool = msg.TransferBool
-		//k.SetItem(ctx, item)
-		//item.Bestestimator = ""
-		//item.Lowestestimator = ""
-		//item.Highestestimator = ""
-		//item.Estimatorlist = nil
-
-		//item has to be deleted because otherwise this function can be run again
-		k.DeleteItem(ctx, msg.Itemid)
-		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
-		k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.Endtime)
 	} else {
 		item.Transferable = msg.Transferable
 		k.SetItem(ctx, item)
@@ -398,5 +376,63 @@ func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRes
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemResellable, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))
+	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
+}
+
+func handleMsgTokenizeItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgTokenizeItem) (*sdk.Result, error) {
+
+	// Checks that the element exists
+	if !k.HasItem(ctx, msg.Id) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("item id %s doesn't exist", strconv.FormatUint(msg.Id, 10)))
+	}
+
+	item := k.GetItem(ctx, msg.Id)
+
+	// Checks if the the msg sender is the same as the current buyer or creator
+	if msg.Sender != item.Buyer && msg.Sender != item.Creator {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+	}
+	//if item was sold previously or if item is not made transferable
+	if item.Status == "Transferred" || item.Status == "Shipped" {
+		//Create new coin
+		//Make visible in item that it it tokenized now... (bool)
+		err := k.TokenizeItem(ctx, msg.Id, sdk.AccAddress(msg.Sender))
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+		}
+		item.IsToken = true
+
+	} else if !item.Transferable && item.Bestestimator == "" {
+		err := k.TokenizeItem(ctx, msg.Id, sdk.AccAddress(msg.Sender))
+
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+		}
+		item.IsToken = true
+
+	} else {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item not available to tokenize")
+	}
+	k.SetItem(ctx, item)
+	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
+}
+
+func handleMsgUnTokenizeItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUnTokenizeItem) (*sdk.Result, error) {
+
+	// Checks that the element exists
+	if !k.HasItem(ctx, msg.Id) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("item id %s doesn't exist", strconv.FormatUint(msg.Id, 10)))
+	}
+
+	item := k.GetItem(ctx, msg.Id)
+
+	err := k.UnTokenizeItem(ctx, msg.Id, sdk.AccAddress(msg.Sender))
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item not available to untokenize")
+
+	}
+	item.Buyer = msg.Sender
+	item.IsToken = false
+	k.SetItem(ctx, item)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

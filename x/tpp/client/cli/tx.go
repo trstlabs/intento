@@ -40,6 +40,8 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdItemTransferable())
 	cmd.AddCommand(CmdItemShipping())
 	cmd.AddCommand(CmdItemResell())
+	cmd.AddCommand(CmdTokenizeItem())
+	cmd.AddCommand(CmdUnTokenizeItem())
 
 	return cmd
 }

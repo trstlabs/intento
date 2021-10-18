@@ -35,9 +35,9 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 				k.DeleteEstimation(ctx, key)
 			}
 		}
-		test := k.DeleteItemContract(ctx, item.Contract)
-		if test != nil {
-			panic("test")
+		errDelete := k.DeleteItemContract(ctx, item.Contract)
+		if errDelete != nil {
+			panic("error deleting item contract")
 		}
 		k.RemoveFromListedItemQueue(ctx, item.Id, item.Endtime)
 		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)

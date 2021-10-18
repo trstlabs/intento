@@ -357,7 +357,13 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 
 	// persist instance
 	createdAt := types.NewAbsoluteTxPosition(ctx)
-	instance := types.NewContractInfo(codeID, creator /* admin, */, label, createdAt)
+
+	endTime := ctx.BlockHeader().Time.Add(codeInfo.EndTime)
+	if codeInfo.EndTime == 0 {
+		endTime = ctx.BlockHeader().Time.Add(k.GetParams(ctx).MaxActivePeriod)
+	}
+
+	instance := types.NewContractInfo(codeID, creator /* admin, */, label, createdAt, endTime)
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&instance))
 
 	// fmt.Printf("Storing key: %v for account %s\n", key, contractAddress)
