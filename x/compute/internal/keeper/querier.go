@@ -45,12 +45,13 @@ func (q grpcQuerier) ContractResult(c context.Context, req *types.QueryContractR
 	switch {
 	case err != nil:
 		return nil, err
-	case rsp == nil:
+	case rsp.Log == "":
 		return nil, types.ErrNotFound
 	}
 	return &types.QueryContractResultResponse{
 		Address: req.Address,
-		Result:  rsp,
+		Data:    rsp.Data,
+		Log:     rsp.Log,
 	}, nil
 }
 
@@ -224,14 +225,20 @@ func queryContractInfo(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) (*ty
 	}, nil
 }
 
-func queryContractResult(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) ([]byte, error) {
-	res, err := keeper.GetContractResult(ctx, addr)
+func queryContractResult(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) (*sdk.Result, error) {
+	//var res sdk.Result
+	result, err := keeper.GetContractResult(ctx, addr)
 	if err != nil {
-		return nil, nil
+		return &sdk.Result{}, err
 	}
+	//var res sdk.Result
+	//keeper.cdc.MustUnmarshal(result, &res)
 	// redact the Created field (just used for sorting, not part of public API)
 	//info.Created = nil
-	return res, nil
+	return &sdk.Result{
+		Data: result.Data,
+		Log:  result.Log,
+	}, nil
 }
 
 func queryContractListByCode(ctx sdk.Context, codeID uint64, keeper Keeper) ([]types.ContractInfoWithAddress, error) {

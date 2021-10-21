@@ -150,7 +150,7 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 // InstantiateContractCmd will instantiate a contract from previously uploaded code.
 func InstantiateContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "instantiate [code id] [args] --label [text] " /* --admin [address,optional] */ + "--amount [coins,optional]",
+		Use:   "instantiate [code id] [JSON args] --label [unique text label] " /* --admin [address,optional] */ + "--amount [coins,optional]",
 		Short: "Instantiate a wasm contract",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

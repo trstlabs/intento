@@ -142,6 +142,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	if err != nil {
 		return nil, err
 	}
+	k.SetContractResult(ctx, msg.Contract, res)
 
 	events := filteredMessageEvents(ctx.EventManager())
 	custom := sdk.Events{sdk.NewEvent(

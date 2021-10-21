@@ -667,15 +667,16 @@ func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress)
 }
 
 //GetContractResult  (if you see panic error, try commenting out this)
-func (k Keeper) GetContractResult(ctx sdk.Context, contractAddress sdk.AccAddress) ([]byte, error) {
+func (k Keeper) GetContractResult(ctx sdk.Context, contractAddress sdk.AccAddress) (sdk.Result, error) {
 	store := ctx.KVStore(k.storeKey)
-	//	var contract types.ContractInfo
-	contractBz := store.Get(types.GetContractResultKey(contractAddress))
-	/*if contractBz == nil {
-		return byte, sdkerrors.Wrap(types.ErrNotFound, "contract info")
+	var result sdk.Result
+	res := store.Get(types.GetContractResultKey(contractAddress))
+	if res == nil {
+		return sdk.Result{}, sdkerrors.Wrap(types.ErrNotFound, "result info")
 	}
-	k.cdc.MustUnmarshal(contractBz, &contract)*/
-	return contractBz, nil
+	k.cdc.MustUnmarshal(res, &result)
+
+	return result, nil
 }
 
 //GetContractInfoWithAddress  (if you see panic error, try commenting out this)
@@ -724,10 +725,10 @@ func (k Keeper) setContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress,
 }
 
 // SetContractResult sets the result of the contract
-func (k Keeper) SetContractResult(ctx sdk.Context, contractAddress sdk.AccAddress, res *sdk.Result) error {
+func (k Keeper) SetContractResult(ctx sdk.Context, contractAddress sdk.AccAddress, result *sdk.Result) error {
 	store := ctx.KVStore(k.storeKey)
 
-	store.Set(types.GetContractResultKey(contractAddress), k.cdc.MustMarshal(res))
+	store.Set(types.GetContractResultKey(contractAddress), k.cdc.MustMarshal(result))
 	return nil
 }
 func (k Keeper) IterateContractInfo(ctx sdk.Context, cb func(sdk.AccAddress, types.ContractInfo) bool) {

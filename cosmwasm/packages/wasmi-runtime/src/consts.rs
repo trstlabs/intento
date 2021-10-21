@@ -8,7 +8,7 @@ use lazy_static::lazy_static;
 
 pub const CERTEXPIRYDAYS: i64 = 3652i64;
 
-pub const BECH32_PREFIX_ACC_ADDR: &str = "cosmos";
+pub const BECH32_PREFIX_ACC_ADDR: &str = "trust";
 
 #[allow(dead_code)]
 #[derive(PartialEq, Eq)]
