@@ -1,0 +1,1 @@
+trstd start --bootstrap

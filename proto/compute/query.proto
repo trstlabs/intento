@@ -60,16 +60,17 @@ message QueryContractInfoResponse {
 }
 
 
-// QueryContractResultRequest is the request type for the Query/ContractInfo RPC method
+// QueryContractResultRequest is the request type for the Query/ContractrResult RPC method
 message QueryContractResultRequest {
     // address is the address of the contract to query
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
-// QueryContractResultResponse is the response type for the Query/ContractInfo RPC method
+// QueryContractResultResponse is the response type for the Query/ContractrResult RPC method
 message QueryContractResultResponse {
     // address is the address of the contract
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    bytes result = 2;
+    bytes data = 2;
+    string log = 3;
 }
 
 message QueryContractHistoryRequest {

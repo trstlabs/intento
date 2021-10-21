@@ -264,8 +264,8 @@ func GetCmdGetContractInfo() *cobra.Command {
 func GetCmdGetContractResult() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "result [bech32_address]",
-		Short: "Prints out metadata of a contract given its address",
-		Long:  "Prints out metadata of a contract given its address",
+		Short: "Prints out the last available result of a contract given its address",
+		Long:  "Prints out  the last available result of a contract given its address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -283,6 +283,7 @@ func GetCmdGetContractResult() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			fmt.Println(string(res))
 			return nil
 		},

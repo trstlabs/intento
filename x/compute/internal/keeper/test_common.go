@@ -411,6 +411,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *wasmtypes.MsgExecuteContract)
 	if err != nil {
 		return nil, err
 	}
+	k.SetContractResult(ctx, msg.Contract, res)
 
 	res.Events = ctx.EventManager().Events().ToABCIEvents()
 	return res, nil

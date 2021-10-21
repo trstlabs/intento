@@ -75,7 +75,6 @@ message ContractInfo {
 }
 
 
-
 // ContractInfoWithAddress adds the address (key) to the ContractInfo representation
 message ContractInfoWithAddress {
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];

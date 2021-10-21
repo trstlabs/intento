@@ -27,8 +27,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		)
 
 		//err := k.CallLastMsg(ctx, item.Address)
-		if item.LastMsg != nil {
-			res, err := k.Execute(ctx, item.Address, item.Address, item.LastMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
+		if item.ContractInfo.LastMsg != nil {
+			res, err := k.Execute(ctx, item.Address, item.Address, item.ContractInfo.LastMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 			if err != nil {
 				_ = k.ContractPayout(ctx, item.Address)
 				logger.Info(
