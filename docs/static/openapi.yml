@@ -12287,7 +12287,7 @@ paths:
         - Query
   '/danieljdd/trst/trst/estimator/{itemid}':
     get:
-      summary: 'this line is used by starport scaffolding # 2'
+      summary: 'this line is used by Trustless Hub scaffolding # 2'
       operationId: DanieljddtrsttrstEstimator
       responses:
         '200':
