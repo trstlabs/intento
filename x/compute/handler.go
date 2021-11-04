@@ -122,6 +122,8 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	info := k.GetCodeInfo(ctx, msg.CodeID)
 	submitTime := ctx.BlockHeader().Time
 	endTime := submitTime.Add(info.EndTime)
+
+	types.ComputeHooks.AfterComputeInstantiate(types.MultiComputeHooks{}, ctx, msg.Sender)
 	k.InsertContractQueue(ctx, contractAddr.String(), endTime)
 	return &sdk.Result{
 		Data:   contractAddr,
@@ -152,6 +154,8 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract.String()),
 	)}
 	events = append(events, custom.ToABCIEvents()...)
+
+	types.ComputeHooks.AfterComputeExecuted(types.MultiComputeHooks{}, ctx, msg.Sender)
 
 	res.Events = events
 

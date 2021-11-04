@@ -1,0 +1,2 @@
+bootstrap: trueDEBUG  [wasmi_runtime_enclave::exports] inside ecall_configure_runtime: 5
+DEBUG  [wasmi_runtime_enclave::wasm::module_cache] configuring module cache: 5
