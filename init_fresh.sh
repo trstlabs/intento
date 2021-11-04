@@ -1,7 +1,7 @@
 rm -rf ~/.trst
 
 
-trstd init F!RST --chain-id=trst_chain_1
+trstd init FRST --chain-id=trst_chain_1
 
 yes exchange cabin middle shed identify soon loop vivid mutual simple sing vessel tail embody vote glide bid olive possible invite merry kitten keen nuclear | trstd keys add user1 --keyring-backend test --recover
 

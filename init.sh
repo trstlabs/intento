@@ -1,6 +1,7 @@
 rm -rf ~/.trst
 
-trstd init F!RST --chain-id=trst_chain_1
+trstd init FRST --chain-id=trst_chain_1
+trstd prepare-genesis mainnet trst_chain_1
 yes exchange cabin middle shed identify soon loop vivid mutual simple sing vessel tail embody vote glide bid olive possible invite merry kitten keen nuclear | trstd keys add user1 --keyring-backend test --recover
 
 yes comic broom zone grass reject apology erupt chef wish add actor damage deputy hip aware connect addict excite poem arrive since bird couple artwork | trstd keys add user3 --keyring-backend test --recover
@@ -12,12 +13,12 @@ yes kiwi obtain scrub aunt female shoulder dune shove budget salt mechanic plug 
 yes orchard thing tooth dismiss seat couple define atom antenna language fuel wrist napkin tired undo toddler virus cherry shock mimic toss rifle predict crisp |trstd keys add faucet --keyring-backend test --recover
 
 
-trstd add-genesis-account $(trstd keys show user1 -a --keyring-backend test) 25000000000utrst,100000000000stake  --vesting-amount 200000utrst  --vesting-end-time 1638485671
-trstd add-genesis-account $(trstd keys show user2 -a --keyring-backend test) 25000000000utrst
-trstd add-genesis-account $(trstd keys show user3 -a --keyring-backend test) 25000000000utrst
-trstd add-genesis-account $(trstd keys show user4 -a --keyring-backend test) 25000000000utrst
+trstd add-genesis-account $(trstd keys show user1 -a --keyring-backend test) 25000000000utrst --vesting-amount 20000000000utrst  --vesting-end-time 1638485671
+trstd add-genesis-account $(trstd keys show user2 -a --keyring-backend test) 25000000000utrst --vesting-amount 20000000000utrst  --vesting-end-time 1638485671
+trstd add-genesis-account $(trstd keys show user3 -a --keyring-backend test) 25000000000utrst --vesting-amount 20000000000utrst  --vesting-end-time 1638485671
+trstd add-genesis-account $(trstd keys show user4 -a --keyring-backend test) 25000000000utrst --vesting-amount 20000000000utrst  --vesting-end-time 1638485671
 
-trstd gentx user1 100000000000stake --chain-id=trst_chain_1 --keyring-backend=test  --website="trustlesshub.com" --security-contact="trustlesshub@gmail.com"
+trstd gentx user1 2000000000utrst --chain-id=trst_chain_1 --keyring-backend=test  --website="trustlesshub.com" --security-contact="trustlesshub@gmail.com"
 
 
 trstd import-genesis-accounts-from-snapshot ./snapshot.json ./reserves.json 
@@ -35,5 +36,5 @@ trstd validate-genesis
 
 sed -i '104s/enable = false/enable = true/g' ~/.trst/config/app.toml
 
-trstd start --bootstrap
+trstd start --bootstrap > init.log
 
