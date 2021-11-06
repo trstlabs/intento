@@ -5,14 +5,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/client"
 	"net/http"
 
-	"github.com/cosmos/cosmos-sdk/types/rest"
-	ra "github.com/danieljdd/trst/x/registration/remote_attestation"
+	"github.com/cosmos/cosmos-sdk/client"
 
-	"github.com/danieljdd/trst/x/registration/internal/keeper"
-	"github.com/danieljdd/trst/x/registration/internal/types"
+	"github.com/cosmos/cosmos-sdk/types/rest"
+	ra "github.com/trstlabs/trst/x/registration/remote_attestation"
+
+	"github.com/trstlabs/trst/x/registration/internal/keeper"
+	"github.com/trstlabs/trst/x/registration/internal/types"
 
 	"github.com/gorilla/mux"
 )

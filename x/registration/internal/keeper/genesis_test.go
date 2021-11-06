@@ -1,12 +1,13 @@
 package keeper
 
 import (
-	"github.com/danieljdd/trst/x/registration/internal/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/trstlabs/trst/x/registration/internal/types"
 )
 
 func TestInitGenesisNoMaster(t *testing.T) {

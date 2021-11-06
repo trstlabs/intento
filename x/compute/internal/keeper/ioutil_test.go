@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/stretchr/testify/require"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 func TestUncompress(t *testing.T) {

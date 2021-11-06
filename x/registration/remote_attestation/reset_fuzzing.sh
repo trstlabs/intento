@@ -7,6 +7,6 @@ rm suppressions/*
 
 
 echo "Building new package.."
-/home/bob/go/bin/go-fuzz-build github.com/danieljdd/trst/x/registration/remote_attestation
+/home/bob/go/bin/go-fuzz-build github.com/trstlabs/trst/x/registration/remote_attestation
 
 /home/bob/go/bin/go-fuzz -bin=remote_attestation-fuzz.zip -workdir=.

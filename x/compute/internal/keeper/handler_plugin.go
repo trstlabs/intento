@@ -11,8 +11,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
-	"github.com/danieljdd/trst/x/compute/internal/types"
+	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 type MessageHandler struct {

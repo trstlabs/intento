@@ -8,8 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktxsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
 	"github.com/spf13/cast"
+	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 )
 
 const defaultLRUCacheSize = uint64(0)

@@ -2,8 +2,9 @@ package compute
 
 import (
 	"encoding/json"
-	compute "github.com/danieljdd/trst/x/compute/internal/keeper"
 	"testing"
+
+	compute "github.com/trstlabs/trst/x/compute/internal/keeper"
 
 	"github.com/stretchr/testify/require"
 
@@ -71,7 +72,7 @@ func TestInitGenesis(t *testing.T) {
 	msg = MsgStoreCode{
 		Sender:       creator,
 		WASMByteCode: testContract,
-		Source:       "https://github.com/danieljdd/trst/blob/cosnwasm/x/compute/testdata/escrow.wasm",
+		Source:       "https://github.com/trstlabs/trst/blob/cosnwasm/x/compute/testdata/escrow.wasm",
 		Builder:      "confio/cosmwasm-opt:0.7.0",
 	}
 	err = msg.ValidateBasic()

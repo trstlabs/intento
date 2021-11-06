@@ -7,10 +7,10 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	eng "github.com/danieljdd/trst/types"
-	"github.com/danieljdd/trst/x/registration/internal/types"
-	ra "github.com/danieljdd/trst/x/registration/remote_attestation"
 	"github.com/stretchr/testify/require"
+	eng "github.com/trstlabs/trst/types"
+	"github.com/trstlabs/trst/x/registration/internal/types"
+	ra "github.com/trstlabs/trst/x/registration/remote_attestation"
 )
 
 func init() {

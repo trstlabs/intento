@@ -4,8 +4,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/danieljdd/trst/x/claim/types"
 	"github.com/gogo/protobuf/proto"
+	"github.com/trstlabs/trst/x/claim/types"
 )
 
 // GetModuleAccountBalance gets the airdrop coin balance of module account

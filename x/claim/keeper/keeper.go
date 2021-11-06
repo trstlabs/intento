@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/trst/x/claim/types"
+	"github.com/trstlabs/trst/x/claim/types"
 )
 
 // Keeper struct

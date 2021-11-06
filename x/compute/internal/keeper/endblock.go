@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/danieljdd/trst/x/compute/internal/types"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 // ContractPayout pays the creator of the contract

@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/trst/x/registration/internal/types"
-	ra "github.com/danieljdd/trst/x/registration/remote_attestation"
+	"github.com/trstlabs/trst/x/registration/internal/types"
+	ra "github.com/trstlabs/trst/x/registration/remote_attestation"
 )
 
 type grpcQuerier struct {

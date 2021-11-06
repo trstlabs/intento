@@ -2,8 +2,8 @@ package client
 
 /*
 import (
-	"github.com/danieljdd/trst/x/compute/client/cli"
-	"github.com/danieljdd/trst/x/compute/client/rest"
+	"github.com/trstlabs/trst/x/compute/client/cli"
+	"github.com/trstlabs/trst/x/compute/client/rest"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 )
 

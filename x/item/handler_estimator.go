@@ -10,8 +10,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/trst/x/item/keeper"
-	"github.com/danieljdd/trst/x/item/types"
+	"github.com/trstlabs/trst/x/item/keeper"
+	"github.com/trstlabs/trst/x/item/types"
 )
 
 func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateEstimation) (*sdk.Result, error) {

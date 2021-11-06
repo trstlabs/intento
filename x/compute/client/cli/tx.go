@@ -11,15 +11,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/tx"
 
-	//"github.com/danieljdd/trst/x/compute/internal/types"
+	//"github.com/trstlabs/trst/x/compute/internal/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	wasmUtils "github.com/danieljdd/trst/x/compute/client/utils"
-	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	wasmUtils "github.com/trstlabs/trst/x/compute/client/utils"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 const (

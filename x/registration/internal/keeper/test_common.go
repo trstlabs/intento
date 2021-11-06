@@ -38,11 +38,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/trst/x/registration/internal/keeper/mock"
-	regtypes "github.com/danieljdd/trst/x/registration/internal/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
+	"github.com/trstlabs/trst/x/registration/internal/keeper/mock"
+	regtypes "github.com/trstlabs/trst/x/registration/internal/types"
 )
 
 func CreateTestSeedConfig(t *testing.T) []byte {

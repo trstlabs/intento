@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/danieljdd/trst/x/compute/internal/types"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 // magic bytes to identify gzip.

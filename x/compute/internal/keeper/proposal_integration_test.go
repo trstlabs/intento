@@ -8,7 +8,7 @@ package keeper
 // 	"os"
 // 	"testing"
 
-// 	"github.com/danieljdd/trst/x/compute/internal/types"
+// 	"github.com/trstlabs/trst/x/compute/internal/types"
 // 	sdk "github.com/cosmos/cosmos-sdk/types"
 // 	"github.com/cosmos/cosmos-sdk/x/gov"
 // 	"github.com/cosmos/cosmos-sdk/x/params"

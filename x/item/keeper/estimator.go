@@ -12,7 +12,7 @@ import (
 
 	"strconv"
 
-	"github.com/danieljdd/trst/x/item/types"
+	"github.com/trstlabs/trst/x/item/types"
 )
 
 // GetEstimatorCount get the total number of estimator

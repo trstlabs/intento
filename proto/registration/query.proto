@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "registration/msg.proto";
 
-option go_package = "github.com/danieljdd/trst/x/registration/internal/types";
+option go_package = "github.com/trstlabs/trst/x/registration/internal/types";
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = true;
 

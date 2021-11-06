@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/trst/x/compute/internal/types"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
+	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 )
 
 // MaskInitMsg is {}

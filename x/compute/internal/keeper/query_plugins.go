@@ -15,9 +15,9 @@ import (
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
-	"github.com/danieljdd/trst/x/compute/internal/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 type QueryHandler struct {

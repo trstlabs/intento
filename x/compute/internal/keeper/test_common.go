@@ -80,8 +80,8 @@ import (
 	//crypto "github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	wasmtypes "github.com/danieljdd/trst/x/compute/internal/types"
-	"github.com/danieljdd/trst/x/registration"
+	wasmtypes "github.com/trstlabs/trst/x/compute/internal/types"
+	"github.com/trstlabs/trst/x/registration"
 )
 
 const flagLRUCacheSize = "lru_size"

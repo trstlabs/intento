@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/danieljdd/trst/x/registration/internal/keeper"
-	"github.com/danieljdd/trst/x/registration/internal/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/trstlabs/trst/x/registration/internal/keeper"
+	"github.com/trstlabs/trst/x/registration/internal/types"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -20,8 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/danieljdd/trst/x/registration/client/cli"
-	"github.com/danieljdd/trst/x/registration/client/rest"
+	"github.com/trstlabs/trst/x/registration/client/cli"
+	"github.com/trstlabs/trst/x/registration/client/rest"
 )
 
 var (

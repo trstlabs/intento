@@ -770,21 +770,21 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Estimator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"danieljdd", "trst", "estimator", "itemid"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Estimator_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"trstlabs", "trst", "estimator", "itemid"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_EstimatorAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2}, []string{"danieljdd", "trst", "estimator"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_EstimatorAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2}, []string{"trstlabs", "trst", "estimator"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Item_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"danieljdd", "trst", "item", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Item_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"trstlabs", "trst", "item", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ItemAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2}, []string{"danieljdd", "trst", "item"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ItemAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2}, []string{"trstlabs", "trst", "item"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ListedItemsAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2}, []string{"danieljdd", "trst", "ListedItems"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ListedItemsAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2}, []string{"trstlabs", "trst", "ListedItems"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_SellerItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2}, []string{"danieljdd", "trst", "selleritems"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_SellerItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2}, []string{"trstlabs", "trst", "selleritems"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_BuyerItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2}, []string{"danieljdd", "trst", "buyeritems"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_BuyerItems_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2}, []string{"trstlabs", "trst", "buyeritems"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_CodeHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"danieljdd", "trst", "codehash", "codeid"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_CodeHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"trstlabs", "trst", "codehash", "codeid"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

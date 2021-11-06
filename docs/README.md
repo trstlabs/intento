@@ -2,7 +2,7 @@
 
 # Trustless Hub
 
-[The Trustless Hub](https://github.com/danieljdd/trst) is a zone on the Cosmos hub where you can build and deploy Trustless Contracts to a decentralized worldwide community. Trustless Hub is built on top of the [Cosmos SDK](https://docs.cosmos.network), the world’s most popular blockchain framework. Trustless Hub enables new services using trustless data aggregation and tokenization of independently priced items. Trustless Contracts enable trustless applications through private contracts with time-dependent functions. Assets can be exchanged for TRST tokens with independent prices on Trustless Transfers. Anything can be transferred in a fast, secure and trustless way.
+[The Trustless Hub](https://github.com/trstlabs/trst) is a zone on the Cosmos hub where you can build and deploy Trustless Contracts to a decentralized worldwide community. Trustless Hub is built on top of the [Cosmos SDK](https://docs.cosmos.network), the world’s most popular blockchain framework. Trustless Hub enables new services using trustless data aggregation and tokenization of independently priced items. Trustless Contracts enable trustless applications through private contracts with time-dependent functions. Assets can be exchanged for TRST tokens with independent prices on Trustless Transfers. Anything can be transferred in a fast, secure and trustless way.
 
 ## What is TRST?
 

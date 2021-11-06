@@ -4,5 +4,5 @@ FROM faddat/sos-lite
 # I will prototype the rest of this on gaia.
 RUN echo trst > /etc/hostname && \
 		pacman -Syyu --noconfirm docker-compose zerotier-one
-#		echo "docker run danieljdd/trst" >> /usr/local/bin/firstboot.sh
+#		echo "docker run trstlabs/trst" >> /usr/local/bin/firstboot.sh
 # TODO: docker-compose

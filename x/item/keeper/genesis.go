@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/danieljdd/trst/x/item/types"
+	"github.com/trstlabs/trst/x/item/types"
 )
 
 // InitGenesis initializes the trst module state

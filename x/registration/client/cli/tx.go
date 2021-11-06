@@ -4,8 +4,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/danieljdd/trst/x/registration/internal/types"
 	"github.com/spf13/cobra"
+	"github.com/trstlabs/trst/x/registration/internal/types"
+
 	//"io/ioutil"
 	"os"
 )

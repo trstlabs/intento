@@ -2,7 +2,7 @@ package keeper
 
 /*
 import (
-	"github.com/danieljdd/trst/x/compute/internal/types"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

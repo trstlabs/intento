@@ -18,7 +18,7 @@ description: Steps to install a Trustless Hub Daemon on your local computer.
 
 # Install Trustless Hub
 
-You can install the Trustless Hub (https://github.com/danieljdd/trst) blockchain on a server or you can install Trustless Hub on your local computer.  
+You can install the Trustless Hub (https://github.com/trstlabs/trst) blockchain on a server or you can install Trustless Hub on your local computer.  
 
 
 ## Prerequisites
@@ -106,7 +106,7 @@ You're all set to start running SGX programs!
 First, download the Trustless Hub daemon, run the following command in the home directory:
 
 ```sh
-curl https://github.com/danieljdd/trst! | bash
+curl https://github.com/trstlabs/trst! | bash
 cd trst
 
 ```

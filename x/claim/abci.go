@@ -2,7 +2,7 @@ package claim
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/trst/x/claim/keeper"
+	"github.com/trstlabs/trst/x/claim/keeper"
 )
 
 // EndBlocker called every block, process inflation, update validator set.

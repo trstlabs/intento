@@ -2,8 +2,8 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	cosmwasm "github.com/danieljdd/trst/go-cosmwasm"
-	"github.com/danieljdd/trst/x/compute/internal/types"
+	cosmwasm "github.com/trstlabs/trst/go-cosmwasm"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 var (

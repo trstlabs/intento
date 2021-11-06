@@ -6,8 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/trst/x/registration/internal/types"
-	ra "github.com/danieljdd/trst/x/registration/remote_attestation"
+	"github.com/trstlabs/trst/x/registration/internal/types"
+	ra "github.com/trstlabs/trst/x/registration/remote_attestation"
 )
 
 //func (k Keeper) MasterCertPrefix(ctx sdk.Context) *types.PublicKey {

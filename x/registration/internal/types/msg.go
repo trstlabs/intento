@@ -3,7 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ra "github.com/danieljdd/trst/x/registration/remote_attestation"
+	ra "github.com/trstlabs/trst/x/registration/remote_attestation"
 )
 
 const (

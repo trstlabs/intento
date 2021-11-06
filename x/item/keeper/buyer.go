@@ -6,7 +6,7 @@ import (
 	//	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/trst/x/item/types"
+	"github.com/trstlabs/trst/x/item/types"
 )
 
 // Prepayment creates a buyer with a new id and update the count

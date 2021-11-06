@@ -10,13 +10,13 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	cosmwasm "github.com/danieljdd/trst/go-cosmwasm/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
+	cosmwasm "github.com/trstlabs/trst/go-cosmwasm/types"
 )
 
 type ContractEvent []cosmwasm.LogAttribute

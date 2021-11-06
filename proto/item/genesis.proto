@@ -1,5 +1,5 @@
 syntax = "proto3";
-package danieljdd.trst.trst;
+package trstlabs.trst.trst;
 
 // this line is used by starport scaffolding # genesis/proto/import
 import "item/estimator.proto";
@@ -7,7 +7,7 @@ import "item/buyer.proto";
 import "item/item.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/danieljdd/trst/x/item/types";
+option go_package = "github.com/trstlabs/trst/x/item/types";
 
 // GenesisState defines the trst module's genesis state.
 message GenesisState {

@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	sdkErrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/trst/x/registration/internal/types"
-	ra "github.com/danieljdd/trst/x/registration/remote_attestation"
+	"github.com/trstlabs/trst/x/registration/internal/types"
+	ra "github.com/trstlabs/trst/x/registration/remote_attestation"
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"

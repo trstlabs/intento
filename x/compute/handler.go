@@ -8,7 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/trst/x/compute/internal/types"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 // NewHandler returns a handler for "bank" type messages.
@@ -160,7 +160,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 
 /*
 func handleDeleteContract(ctx sdk.Context, k Keeper, msg *MsgDeleteContract) (*sdk.Result, error) {
-	res, err := k.DeleteContract(ctx, msg.Contract, msg.Sender, msg.CodeID, msg.DeleteContractMsg) // for MsgMigrateContract, there is only one signer which is msg.Sender (https://github.com/danieljdd/trst/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L228-L230)
+	res, err := k.DeleteContract(ctx, msg.Contract, msg.Sender, msg.CodeID, msg.DeleteContractMsg) // for MsgMigrateContract, there is only one signer which is msg.Sender (https://github.com/trstlabs/trst/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L228-L230)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func handleDeleteContract(ctx sdk.Context, k Keeper, msg *MsgDeleteContract) (*s
 */
 /*
 func handleMigration(ctx sdk.Context, k Keeper, msg *MsgMigrateContract) (*sdk.Result, error) {
-	res, err := k.Migrate(ctx, msg.Contract, msg.Sender, msg.CodeID, msg.MigrateMsg) // for MsgMigrateContract, there is only one signer which is msg.Sender (https://github.com/danieljdd/trst/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L228-L230)
+	res, err := k.Migrate(ctx, msg.Contract, msg.Sender, msg.CodeID, msg.MigrateMsg) // for MsgMigrateContract, there is only one signer which is msg.Sender (https://github.com/trstlabs/trst/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L228-L230)
 	if err != nil {
 		return nil, err
 	}

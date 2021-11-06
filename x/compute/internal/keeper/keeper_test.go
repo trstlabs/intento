@@ -17,15 +17,15 @@ import (
 	stypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/danieljdd/trst/go-cosmwasm/api"
-	eng "github.com/danieljdd/trst/types"
-	wasmUtils "github.com/danieljdd/trst/x/compute/client/utils"
-	"github.com/danieljdd/trst/x/compute/internal/types"
-	reg "github.com/danieljdd/trst/x/registration"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/trstlabs/trst/go-cosmwasm/api"
+	eng "github.com/trstlabs/trst/types"
+	wasmUtils "github.com/trstlabs/trst/x/compute/client/utils"
+	"github.com/trstlabs/trst/x/compute/internal/types"
+	reg "github.com/trstlabs/trst/x/registration"
 )
 
 const SupportedFeatures = "staking"
@@ -315,7 +315,7 @@ func TestInstantiate(t *testing.T) {
 	wasmCode, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
-	contractID, err := keeper.Create(ctx, creator, wasmCode, "https://github.com/danieljdd/trst/blob/master/cosmwasm/contracts/hackatom/src/contract.rs", "")
+	contractID, err := keeper.Create(ctx, creator, wasmCode, "https://github.com/trstlabs/trst/blob/master/cosmwasm/contracts/hackatom/src/contract.rs", "")
 	require.NoError(t, err)
 
 	_, _, bob := keyPubAddr()

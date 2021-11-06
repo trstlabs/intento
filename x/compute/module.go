@@ -6,8 +6,8 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/danieljdd/trst/x/compute/internal/keeper"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/trstlabs/trst/x/compute/internal/keeper"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
@@ -20,9 +20,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/danieljdd/trst/x/compute/client/cli"
-	"github.com/danieljdd/trst/x/compute/client/rest"
-	"github.com/danieljdd/trst/x/compute/internal/types"
+	"github.com/trstlabs/trst/x/compute/client/cli"
+	"github.com/trstlabs/trst/x/compute/client/rest"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 var (

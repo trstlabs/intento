@@ -11769,7 +11769,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /danieljdd/trst/trst/ListedItems:
+  /trstlabs/trst/trst/ListedItems:
     get:
       operationId: DanieljddtrsttrstListedItemsAll
       responses:
@@ -11975,7 +11975,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /danieljdd/trst/trst/buyeritems:
+  /trstlabs/trst/trst/buyeritems:
     get:
       operationId: DanieljddtrsttrstBuyerItems
       responses:
@@ -12105,7 +12105,7 @@ paths:
           type: string
       tags:
         - Query
-  '/danieljdd/trst/trst/codehash/{codeid}':
+  '/trstlabs/trst/trst/codehash/{codeid}':
     get:
       operationId: DanieljddtrsttrstCodeHash
       responses:
@@ -12145,7 +12145,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /danieljdd/trst/trst/estimator:
+  /trstlabs/trst/trst/estimator:
     get:
       operationId: DanieljddtrsttrstEstimatorAll
       responses:
@@ -12285,7 +12285,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/danieljdd/trst/trst/estimator/{itemid}':
+  '/trstlabs/trst/trst/estimator/{itemid}':
     get:
       summary: 'this line is used by Trustless Hub scaffolding # 2'
       operationId: DanieljddtrsttrstEstimator
@@ -12349,7 +12349,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /danieljdd/trst/trst/item:
+  /trstlabs/trst/trst/item:
     get:
       operationId: DanieljddtrsttrstItemAll
       responses:
@@ -12555,7 +12555,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/danieljdd/trst/trst/item/{id}':
+  '/trstlabs/trst/trst/item/{id}':
     get:
       operationId: DanieljddtrsttrstItem
       responses:
@@ -12684,7 +12684,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /danieljdd/trst/trst/selleritems:
+  /trstlabs/trst/trst/selleritems:
     get:
       operationId: DanieljddtrsttrstSellerItems
       responses:
@@ -22171,7 +22171,7 @@ definitions:
     description: >-
       MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount
       response type.
-  danieljdd.trst.trst.Estimator:
+  trstlabs.trst.trst.Estimator:
     type: object
     properties:
       estimator:
@@ -22196,7 +22196,7 @@ definitions:
           signatures required by gogoproto.
       interested:
         type: boolean
-  danieljdd.trst.trst.Item:
+  trstlabs.trst.trst.Item:
     type: object
     properties:
       seller:
@@ -22290,7 +22290,7 @@ definitions:
           type: string
       isToken:
         type: boolean
-  danieljdd.trst.trst.QueryAllEstimatorResponse:
+  trstlabs.trst.trst.QueryAllEstimatorResponse:
     type: object
     properties:
       Estimator:
@@ -22348,7 +22348,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  danieljdd.trst.trst.QueryAllItemResponse:
+  trstlabs.trst.trst.QueryAllItemResponse:
     type: object
     properties:
       Item:
@@ -22472,7 +22472,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  danieljdd.trst.trst.QueryAllListedItemsResponse:
+  trstlabs.trst.trst.QueryAllListedItemsResponse:
     type: object
     properties:
       Item:
@@ -22596,7 +22596,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  danieljdd.trst.trst.QueryBuyerItemsResponse:
+  trstlabs.trst.trst.QueryBuyerItemsResponse:
     type: object
     properties:
       Item:
@@ -22695,7 +22695,7 @@ definitions:
                 type: string
             isToken:
               type: boolean
-  danieljdd.trst.trst.QueryCodeHashResponse:
+  trstlabs.trst.trst.QueryCodeHashResponse:
     type: object
     properties:
       codehash:
@@ -22703,7 +22703,7 @@ definitions:
         format: byte
       codehashString:
         type: string
-  danieljdd.trst.trst.QueryGetEstimatorResponse:
+  trstlabs.trst.trst.QueryGetEstimatorResponse:
     type: object
     properties:
       Estimator:
@@ -22734,7 +22734,7 @@ definitions:
               signatures required by gogoproto.
           interested:
             type: boolean
-  danieljdd.trst.trst.QueryGetItemResponse:
+  trstlabs.trst.trst.QueryGetItemResponse:
     type: object
     properties:
       Item:
@@ -22831,7 +22831,7 @@ definitions:
               type: string
           isToken:
             type: boolean
-  danieljdd.trst.trst.QuerySellerItemsResponse:
+  trstlabs.trst.trst.QuerySellerItemsResponse:
     type: object
     properties:
       Item:

@@ -2,9 +2,9 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/trst/x/compute/internal/types"
 	fuzz "github.com/google/gofuzz"
 	tmBytes "github.com/tendermint/tendermint/libs/bytes"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 var ModelFuzzers = []interface{}{FuzzAddr, FuzzAbsoluteTxPosition, FuzzContractInfo, FuzzStateModel /*FuzzAccessType, FuzzAccessConfig  FuzzContractCodeHistory */}

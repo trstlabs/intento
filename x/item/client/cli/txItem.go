@@ -20,10 +20,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/danieljdd/trst/x/item/types"
+	"github.com/trstlabs/trst/x/item/types"
 
 	//"cosmos/base/v1beta1/coin.proto"
-	wasmUtils "github.com/danieljdd/trst/x/compute/client/utils"
+	wasmUtils "github.com/trstlabs/trst/x/compute/client/utils"
 )
 
 func CmdCreateItem() *cobra.Command {

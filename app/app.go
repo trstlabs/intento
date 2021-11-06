@@ -83,12 +83,12 @@ import (
 	porttypes "github.com/cosmos/ibc-go/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/modules/core/keeper"
-	"github.com/danieljdd/trst/x/compute"
-	trst "github.com/danieljdd/trst/x/item"
-	trstkeeper "github.com/danieljdd/trst/x/item/keeper"
-	trsttypes "github.com/danieljdd/trst/x/item/types"
-	reg "github.com/danieljdd/trst/x/registration"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/trstlabs/trst/x/compute"
+	trst "github.com/trstlabs/trst/x/item"
+	trstkeeper "github.com/trstlabs/trst/x/item/keeper"
+	trsttypes "github.com/trstlabs/trst/x/item/types"
+	reg "github.com/trstlabs/trst/x/registration"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 

@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"syscall"
 
-	"github.com/danieljdd/trst/go-cosmwasm/types"
+	"github.com/trstlabs/trst/go-cosmwasm/types"
 )
 
 // nice aliases to the rust names

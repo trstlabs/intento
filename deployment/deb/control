@@ -1,8 +1,8 @@
 Package: trustlesshub
 Priority: optional
 Architecture: amd64
-Homepage: https://github.com/danieljdd/trustlesshub
-Maintainer: https://github.com/danieljdd
+Homepage: https://github.com/trstlabs/trustlesshub
+Maintainer: https://github.com/trstlabs
 Provides: trustlesshub
 Conflicts: trustlesshub
 Replaces: trustlesshub

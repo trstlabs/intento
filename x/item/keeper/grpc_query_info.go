@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/trst/x/item/types"
+	"github.com/trstlabs/trst/x/item/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

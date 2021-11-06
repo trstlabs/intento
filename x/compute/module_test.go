@@ -11,12 +11,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
+	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 	//	"github.com/tendermint/tendermint/libs/kv"
 )
 

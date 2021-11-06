@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/trst/x/claim/types"
+	"github.com/trstlabs/trst/x/claim/types"
 )
 
 // GetParams get params

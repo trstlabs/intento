@@ -3,8 +3,8 @@ package trst
 /*
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/trst/x/item/keeper"
-	"github.com/danieljdd/trst/x/item/types"
+	"github.com/trstlabs/trst/x/item/keeper"
+	"github.com/trstlabs/trst/x/item/types"
 )
 
 // InitGenesis initializes the trst module's state from a provided genesis

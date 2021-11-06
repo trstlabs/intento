@@ -1,11 +1,11 @@
 syntax = "proto3";
-package danieljdd.trst.trst;
+package trstlabs.trst.trst;
 
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-option go_package = "github.com/danieljdd/trst/x/item/types";
+option go_package = "github.com/trstlabs/trst/x/item/types";
 
 message Estimator {
   string estimator = 1;

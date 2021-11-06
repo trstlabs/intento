@@ -1,17 +1,18 @@
 package rest
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	"net/http"
 	"strconv"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/gorilla/mux"
 
-	wasmUtils "github.com/danieljdd/trst/x/compute/client/utils"
-	"github.com/danieljdd/trst/x/compute/internal/types"
+	wasmUtils "github.com/trstlabs/trst/x/compute/client/utils"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 func registerTxRoutes(cliCtx client.Context, r *mux.Router) {

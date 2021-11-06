@@ -5,8 +5,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/danieljdd/trst/x/claim/types"
-	itemtypes "github.com/danieljdd/trst/x/item/types"
+	"github.com/trstlabs/trst/x/claim/types"
+	itemtypes "github.com/trstlabs/trst/x/item/types"
 )
 
 func (k Keeper) AfterComputeExecuted(ctx sdk.Context, sender sdk.AccAddress) {

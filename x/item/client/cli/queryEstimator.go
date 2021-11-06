@@ -6,8 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/danieljdd/trst/x/item/types"
 	"github.com/spf13/cobra"
+	"github.com/trstlabs/trst/x/item/types"
 )
 
 func CmdListEstimator() *cobra.Command {

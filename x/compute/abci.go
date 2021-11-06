@@ -6,9 +6,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/danieljdd/trst/x/compute/internal/keeper"
-	"github.com/danieljdd/trst/x/compute/internal/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/trstlabs/trst/x/compute/internal/keeper"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 // EndBlocker called every block, process inflation, update validator set.

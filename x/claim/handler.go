@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/trst/x/claim/keeper"
-	"github.com/danieljdd/trst/x/claim/types"
+	"github.com/trstlabs/trst/x/claim/keeper"
+	"github.com/trstlabs/trst/x/claim/types"
 )
 
 // NewHandler returns claim module messages

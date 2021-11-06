@@ -10,14 +10,14 @@ import (
 	//"io/ioutil"
 	"os"
 
-	"github.com/danieljdd/trst/x/registration/internal/keeper"
 	flag "github.com/spf13/pflag"
+	"github.com/trstlabs/trst/x/registration/internal/keeper"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/danieljdd/trst/x/registration/internal/types"
+	"github.com/trstlabs/trst/x/registration/internal/types"
 )
 
 func GetQueryCmd() *cobra.Command {

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
+	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"

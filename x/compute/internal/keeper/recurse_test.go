@@ -7,10 +7,10 @@ import (
 	"os"
 	"testing"
 
-	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
-	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	abci "github.com/tendermint/tendermint/abci/types"

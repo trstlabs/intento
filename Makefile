@@ -75,7 +75,7 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=trst \
 -X github.com/cosmos/cosmos-sdk/version.AppName=trstd \
-	-X github.com/danieljdd/trst/cmd/trstd/version.ClientName=trstd \
+	-X github.com/trstlabs/trst/cmd/trstd/version.ClientName=trstd \
 -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 

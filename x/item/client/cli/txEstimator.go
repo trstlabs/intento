@@ -14,8 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	wasmUtils "github.com/danieljdd/trst/x/compute/client/utils"
-	"github.com/danieljdd/trst/x/item/types"
+	wasmUtils "github.com/trstlabs/trst/x/compute/client/utils"
+	"github.com/trstlabs/trst/x/item/types"
 )
 
 func CmdCreateEstimation() *cobra.Command {

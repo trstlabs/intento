@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	wasmTypes "github.com/danieljdd/trst/x/compute/internal/types"
+	wasmTypes "github.com/trstlabs/trst/x/compute/internal/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth"

@@ -16,10 +16,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/danieljdd/trst/x/item/client/cli"
-	"github.com/danieljdd/trst/x/item/client/rest"
-	"github.com/danieljdd/trst/x/item/keeper"
-	"github.com/danieljdd/trst/x/item/types"
+	"github.com/trstlabs/trst/x/item/client/cli"
+	"github.com/trstlabs/trst/x/item/client/rest"
+	"github.com/trstlabs/trst/x/item/keeper"
+	"github.com/trstlabs/trst/x/item/types"
 )
 
 var (

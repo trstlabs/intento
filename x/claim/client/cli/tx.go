@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/danieljdd/trst/x/claim/types"
 	"github.com/spf13/cobra"
+	"github.com/trstlabs/trst/x/claim/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

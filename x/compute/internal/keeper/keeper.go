@@ -30,11 +30,11 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	sdktxsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	wasm "github.com/danieljdd/trst/go-cosmwasm"
-	wasmTypes "github.com/danieljdd/trst/go-cosmwasm/types"
+	wasm "github.com/trstlabs/trst/go-cosmwasm"
+	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 
-	"github.com/danieljdd/trst/x/compute/internal/types"
 	"github.com/tendermint/tendermint/libs/log"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 // Keeper will have a reference to Wasmer with it's own data directory.
@@ -154,7 +154,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, [
 	}
 
 	// for MsgInstantiateContract, there is only one signer which is msg.Sender
-	// (https://github.com/danieljdd/trst/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L192-L194)
+	// (https://github.com/trstlabs/trst/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L192-L194)
 	signerAcc, err := ante.GetSignerAcc(ctx, k.accountKeeper, signer)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, fmt.Sprintf("Unable to retrieve account by address: %s", err.Error()))

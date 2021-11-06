@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/danieljdd/trst/x/compute/internal/types"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 const (

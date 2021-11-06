@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/rest"
-	"github.com/danieljdd/trst/x/item/types"
 	"github.com/gorilla/mux"
+	"github.com/trstlabs/trst/x/item/types"
 )
 
 // Used to not have an error if strconv is unused
