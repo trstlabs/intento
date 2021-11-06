@@ -36,3 +36,8 @@ ias_bin_dev.go
 ias_bin_prod.go
 ias_bin_sw.go
 node_modules
+
+genesis_secret_3.json
+genesis.cosmoshub_4.json
+
+init.log
