@@ -301,11 +301,8 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		CreaterPayoutAndShipping := bigIntEstimationPrice.Add(bigIntShipping)
 		paymentSellerCoins := sdk.NewCoin("utrst", CreaterPayoutAndShipping)
 
-		k.HandleFunds(ctx, item.Seller, paymentSellerCoins)
-		seller, _ := sdk.AccAddressFromBech32(item.Seller)
-		buyer, _ := sdk.AccAddressFromBech32(item.Buyer)
-		types.ItemHooks.AfterItemBought(types.MultiItemHooks{}, ctx, seller)
-		types.ItemHooks.AfterItemBought(types.MultiItemHooks{}, ctx, buyer)
+		k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
+
 		item.Status = "Shipped"
 		k.SetItem(ctx, item)
 		//k.SetBuyer(ctx, buyer)
@@ -313,7 +310,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		repayment := bigIntEstimationPrice.Add(bigIntShipping)
 		repaymentCoins := sdk.NewCoin("utrst", repayment)
 
-		k.HandleFunds(ctx, item.Buyer, repaymentCoins)
+		k.HandlePrepayment(ctx, item.Buyer, repaymentCoins)
 
 		for _, element := range item.Estimatorlist {
 			//apply this to each element
@@ -417,10 +414,6 @@ func handleMsgTokenizeItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgToken
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item not available to tokenize")
 	}
 	k.SetItem(ctx, item)
-
-	sender, _ := sdk.AccAddressFromBech32(msg.Sender)
-	types.ItemHooks.AfterItemTokenized(types.MultiItemHooks{}, ctx, sender)
-
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 

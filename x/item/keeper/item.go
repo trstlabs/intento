@@ -185,8 +185,8 @@ func (k Keeper) GetAllListedItems(ctx sdk.Context) (msgs []*types.Item) {
 	return
 }
 
-// HandleFunds handles payment
-func (k Keeper) HandleFunds(ctx sdk.Context, address string, coinToSend sdk.Coin) {
+// HandlePrepayment handles payment
+func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk.Coin) {
 
 	userAddress, err := sdk.AccAddressFromBech32(address)
 	if err != nil {

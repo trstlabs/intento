@@ -146,7 +146,7 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 
 		//minted coins (are rounded up)
 		mintCoins := sdk.NewCoin("utrst", toMintAmount)
-		k.HandleFunds(ctx, msg.Buyer, mintCoins)
+		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
 		k.Withdrawal(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
 
 		for _, element := range item.Estimatorlist {
@@ -242,11 +242,8 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 	//make payment to seller
 	paymentSellerCoins := sdk.NewCoin("utrst", bigIntEstimationPrice)
 
-	k.HandleFunds(ctx, item.Seller, paymentSellerCoins)
-	seller, _ := sdk.AccAddressFromBech32(item.Seller)
-	buyer, _ := sdk.AccAddressFromBech32(item.Buyer)
-	types.ItemHooks.AfterItemBought(types.MultiItemHooks{}, ctx, seller)
-	types.ItemHooks.AfterItemBought(types.MultiItemHooks{}, ctx, buyer)
+	k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
+
 	item.Status = "Transferred"
 	k.SetItem(ctx, item)
 	//k.SetBuyer(ctx, buyer)
@@ -281,7 +278,7 @@ func handleMsgItemRating(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRat
 		//minted coins (are rounded up)
 		mintCoins := sdk.NewCoin("utrst", toMintAmount)
 		k.MintReward(ctx, mintCoins.Add(mintCoins))
-		k.HandleFunds(ctx, msg.Buyer, mintCoins)
+		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
 		item.Estimationprice = 0
 
 	} else if msg.Rating < 3 {

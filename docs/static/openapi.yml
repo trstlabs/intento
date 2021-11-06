@@ -3758,8 +3758,11 @@ paths:
                         - PROPOSAL_STATUS_REJECTED
                         - PROPOSAL_STATUS_FAILED
 <<<<<<< HEAD
+<<<<<<< HEAD
                       default: PROPOSAL_STATUS_UNSPECIF
 =======
+=======
+>>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
                       default: PROPOSAL_STATUS_UNSPECIFIED
                       description: >-
                         ProposalStatus enumerates the valid statuses of a
@@ -23424,4 +23427,7 @@ definitions:
           bytes:
             type: string
             format: byte
+<<<<<<< HEAD
 >>>>>>> 6b9558a2843ef071b5a093ea8a0f29924c3a5a54
+=======
+>>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
