@@ -83,20 +83,12 @@ import (
 	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/modules/core/keeper"
 	"github.com/danieljdd/trst/x/compute"
-<<<<<<< HEAD
 	item "github.com/danieljdd/trst/x/item"
 	itemkeeper "github.com/danieljdd/trst/x/item/keeper"
 	itemtypes "github.com/danieljdd/trst/x/item/types"
 	reg "github.com/danieljdd/trst/x/registration"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
-=======
-	trst "github.com/danieljdd/trst/x/item"
-	trstkeeper "github.com/danieljdd/trst/x/item/keeper"
-	trsttypes "github.com/danieljdd/trst/x/item/types"
-	reg "github.com/danieljdd/trst/x/registration"
-	tmjson "github.com/tendermint/tendermint/libs/json"
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 	"github.com/danieljdd/trst/x/claim"
 	claimkeeper "github.com/danieljdd/trst/x/claim/keeper"
