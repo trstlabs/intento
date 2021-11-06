@@ -37,16 +37,9 @@ ias_bin_prod.go
 ias_bin_sw.go
 node_modules
 
-<<<<<<< HEAD
 vue
 
 genesis_secret_3.json
 genesis.cosmoshub_4.json
 
 init.log
-=======
-genesis_secret_3.json
-genesis.cosmoshub_4.json
-
-init.log
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
