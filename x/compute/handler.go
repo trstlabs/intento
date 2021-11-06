@@ -122,11 +122,8 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	info := k.GetCodeInfo(ctx, msg.CodeID)
 	submitTime := ctx.BlockHeader().Time
 	endTime := submitTime.Add(info.EndTime)
-<<<<<<< HEAD
 
 	types.ComputeHooks.AfterComputeInstantiate(types.MultiComputeHooks{}, ctx, msg.Sender)
-=======
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 	k.InsertContractQueue(ctx, contractAddr.String(), endTime)
 	return &sdk.Result{
 		Data:   contractAddr,

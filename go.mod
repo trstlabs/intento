@@ -11,10 +11,9 @@ require (
 	github.com/google/gofuzz v1.1.1-0.20200604201612-c04b05f3adfa
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.6.0 // indirect
 	github.com/miscreant/miscreant.go v0.0.0-20200214223636-26d376326b75
 	github.com/pkg/errors v0.9.1
-x	github.com/rs/zerolog v1.23.0
+	github.com/rs/zerolog v1.23.0
 	github.com/spf13/cast v1.3.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5

@@ -145,11 +145,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
-<<<<<<< HEAD
 		item.AppModuleBasic{},
-=======
-		trst.AppModuleBasic{},
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 		compute.AppModuleBasic{},
 		reg.AppModuleBasic{},
 		claim.AppModuleBasic{},
@@ -165,12 +161,8 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-<<<<<<< HEAD
 		itemtypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
 		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner},
-=======
-		trsttypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -232,11 +224,7 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-<<<<<<< HEAD
 	itemKeeper    itemkeeper.Keeper
-=======
-	trstKeeper    trstkeeper.Keeper
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 	computeKeeper compute.Keeper
 	regKeeper     reg.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
@@ -277,13 +265,8 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-<<<<<<< HEAD
 		itemtypes.StoreKey, compute.StoreKey,
 		reg.StoreKey, claimtypes.StoreKey,
-=======
-		trsttypes.StoreKey, compute.StoreKey,
-		reg.StoreKey,
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -334,13 +317,6 @@ func New(
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
 	)
-<<<<<<< HEAD
-=======
-	app.CrisisKeeper = crisiskeeper.NewKeeper(
-		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
-	)
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 
 	app.ClaimKeeper = claimkeeper.NewKeeper(
 		appCodec,
@@ -422,21 +398,6 @@ func New(
 	homeDir := viper.GetString(cli.HomeFlag)
 	computeDir := filepath.Join(homeDir, ".compute")
 	trstdir := filepath.Join(homeDir, ".trst")
-<<<<<<< HEAD
-
-=======
-	/*
-		wasmConfig := compute.DefaultWasmConfig()
-		//trstwasmConfig := trsttypes.DefaultWasmConfig()
-		wasmConfig.SmartQueryGasLimit = queryGasLimit
-		wasmWrap := WasmWrapper{Wasm: wasmConfig}
-		err := viper.Unmarshal(&wasmWrap)
-		if err != nil {
-			panic("error while reading wasm config: " + err.Error())
-		}
-		wasmConfig = wasmWrap.Wasm
-	*/
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 	supportedFeatures := "staking"
 
 	app.regKeeper = reg.NewKeeper(appCodec, keys[reg.StoreKey], regRouter, reg.EnclaveApi{}, homeDir, app.bootstrap)
@@ -444,17 +405,10 @@ func New(
 		appCodec, *legacyAmino,
 		keys[compute.StoreKey],
 		app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.DistrKeeper, app.MintKeeper, stakingKeeper,
-<<<<<<< HEAD
 		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(itemtypes.ModuleName))
 
 	app.itemKeeper = *itemkeeper.NewKeeper(
 		appCodec, keys[itemtypes.StoreKey], keys[itemtypes.MemStoreKey], app.GetSubspace(itemtypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, trstdir /* trstwasmConfig, supportedFeatures,*/, app.computeKeeper,
-=======
-		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(trsttypes.ModuleName))
-
-	app.trstKeeper = *trstkeeper.NewKeeper(
-		appCodec, keys[trsttypes.StoreKey], keys[trsttypes.MemStoreKey], app.GetSubspace(trsttypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, trstdir /* trstwasmConfig, supportedFeatures,*/, app.computeKeeper,
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 	)
 	/****  Module Options ****/
 
@@ -485,11 +439,7 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
-<<<<<<< HEAD
 		item.NewAppModule(appCodec, app.itemKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
-=======
-		trst.NewAppModule(appCodec, app.trstKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 		compute.NewAppModule(app.computeKeeper),
 		reg.NewAppModule(app.regKeeper),
 		claim.NewAppModule(appCodec, *app.ClaimKeeper),
@@ -505,11 +455,7 @@ func New(
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 
-<<<<<<< HEAD
 	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, itemtypes.ModuleName, compute.ModuleName, claimtypes.ModuleName)
-=======
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, trsttypes.ModuleName, compute.ModuleName)
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -530,11 +476,7 @@ func New(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
-<<<<<<< HEAD
 		itemtypes.ModuleName,
-=======
-		trsttypes.ModuleName,
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 		compute.ModuleName,
 		reg.ModuleName,
 		claimtypes.ModuleName,
@@ -743,11 +685,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
-<<<<<<< HEAD
 	paramsKeeper.Subspace(itemtypes.ModuleName)
-=======
-	paramsKeeper.Subspace(trsttypes.ModuleName)
->>>>>>> 55c237ffb099e4a88ffb2fbfec20a025600c59c9
 	paramsKeeper.Subspace(compute.ModuleName)
 	paramsKeeper.Subspace(reg.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
