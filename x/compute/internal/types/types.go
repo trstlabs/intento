@@ -48,13 +48,16 @@ func (c CodeInfo) ValidateBasic() error {
 }
 
 // NewCodeInfo fills a new Contract struct
-func NewCodeInfo(codeHash []byte, creator sdk.AccAddress, source string, builder string, endTime time.Duration /* , instantiatePermission AccessConfig */) CodeInfo {
+func NewCodeInfo(codeHash []byte, creator sdk.AccAddress, source string, builder string, endTime time.Duration /* , instantiatePermission AccessConfig */, title string, description string) CodeInfo {
 	return CodeInfo{
-		CodeHash: codeHash,
-		Creator:  creator,
-		Source:   source,
-		Builder:  builder,
-		EndTime:  endTime,
+		CodeHash:    codeHash,
+		Creator:     creator,
+		Source:      source,
+		Builder:     builder,
+		EndTime:     endTime,
+		Title:       title,
+		Description: description,
+		Instances:   0,
 		// InstantiateConfig: instantiatePermission,
 	}
 }

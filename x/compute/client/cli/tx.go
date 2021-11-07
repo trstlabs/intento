@@ -60,9 +60,9 @@ func GetTxCmd() *cobra.Command {
 // StoreCodeCmd will upload code to be reused.
 func StoreCodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "store [wasm file] [Contract duration in hours] --source [source] --builder [builder]",
+		Use:   "store [wasm file] [Contract duration in hours] [title] [description] --source [source] ",
 		Short: "Upload a wasm binary",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -96,6 +96,9 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 		return types.MsgStoreCode{}, err
 	}
 
+	argsTitle := string(args[1])
+	argsDescription := string(args[2])
+
 	// gzip the wasm file
 	if wasmUtils.IsWasm(wasm) {
 		wasm, err = wasmUtils.GzipIt(wasm)
@@ -107,7 +110,7 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 		return types.MsgStoreCode{}, fmt.Errorf("invalid input file. Use wasm binary or gzip")
 	}
 
-	contractPeriod, err := strconv.ParseInt(args[1], 10, 64)
+	contractPeriod, err := strconv.ParseInt(args[3], 10, 64)
 	if err != nil {
 		return types.MsgStoreCode{}, err
 	}
@@ -142,6 +145,8 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 		Source:         source,
 		Builder:        builder,
 		ContractPeriod: contractPeriod,
+		Title:          argsTitle,
+		Description:    argsDescription,
 		// InstantiatePermission: perm,
 	}
 	return msg, nil

@@ -283,6 +283,9 @@ func QueryCode(ctx sdk.Context, codeID uint64, keeper Keeper) (*types.QueryCodeR
 		Source:           res.Source,
 		Builder:          res.Builder,
 		ContractDuration: res.EndTime,
+		Title:            res.Title,
+		Description:      res.Description,
+		Instances:        res.Instances,
 	}
 
 	code, err := keeper.GetByteCode(ctx, codeID)
@@ -303,6 +306,9 @@ func queryCodeList(ctx sdk.Context, keeper Keeper) ([]types.CodeInfoResponse, er
 			Source:           res.Source,
 			Builder:          res.Builder,
 			ContractDuration: res.EndTime,
+			Title:            res.Title,
+			Description:      res.Description,
+			Instances:        res.Instances,
 		})
 		return false
 	})

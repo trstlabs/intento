@@ -76,8 +76,12 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localpickup")
 	}
 
+	if len(msg.Title) > 100 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Title length too long")
+	}
+
 	if len(msg.Description) > 1000 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "description too long")
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Description length too long")
 	}
 
 	if len(msg.Localpickup) > 48 {

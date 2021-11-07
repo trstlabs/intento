@@ -29,6 +29,14 @@ func (msg MsgStoreCode) ValidateBasic() error {
 	if err := validateBuilder(msg.Builder); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "builder %s", err.Error())
 	}
+
+	if len(msg.Title) > 100 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Title length too long")
+	}
+
+	if len(msg.Description) > 1000 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Description length too long")
+	}
 	/*
 		if msg.InstantiatePermission != nil {
 			if err := msg.InstantiatePermission.ValidateBasic(); err != nil {

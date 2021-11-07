@@ -115,7 +115,7 @@ func (k Keeper) InitializeContract(ctx sdk.Context) error {
 	var codeID uint64
 	var hash string
 
-	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "", 0)
+	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "", 0, "Estimation aggregation", "This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. This code is used internally.")
 	if err != nil {
 		panic(err)
 	}

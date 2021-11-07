@@ -158,6 +158,9 @@ message CodeInfoResponse {
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "contract_duration,omitempty"
   ];
+    string title = 7;
+    string description = 8;
+    uint64 instances = 9;
 }
 
 message QueryCodeResponse {

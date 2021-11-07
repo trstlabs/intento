@@ -92,7 +92,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
-func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string, endTime time.Duration) (codeID uint64, err error) {
+func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string, endTime time.Duration, title string, description string) (codeID uint64, err error) {
 
 	wasmCode, err = uncompress(wasmCode)
 	if err != nil {
@@ -115,7 +115,7 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte,
 			instantiateAccess = &defaultAccessConfig
 		}
 	*/
-	codeInfo := types.NewCodeInfo(codeHash, creator, source, builder, endTime /* , *instantiateAccess */)
+	codeInfo := types.NewCodeInfo(codeHash, creator, source, builder, endTime /* , *instantiateAccess */, title, description)
 	// 0x01 | codeID (uint64) -> ContractInfo
 	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(&codeInfo))
 
@@ -364,6 +364,8 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	}
 
 	instance := types.NewContractInfo(codeID, creator /* admin, */, label, createdAt, endTime)
+	codeInfo.Instances = codeInfo.Instances + 1
+	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(&codeInfo))
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&instance))
 
 	// fmt.Printf("Storing key: %v for account %s\n", key, contractAddress)

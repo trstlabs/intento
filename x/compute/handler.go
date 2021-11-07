@@ -70,7 +70,7 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Time period invalid for this contract code")
 	}
 
-	codeID, err := k.Create(ctx, msg.Sender, msg.WASMByteCode, msg.Source, msg.Builder, endTime)
+	codeID, err := k.Create(ctx, msg.Sender, msg.WASMByteCode, msg.Source, msg.Builder, endTime, msg.Title, msg.Description)
 	if err != nil {
 		return nil, err
 	}

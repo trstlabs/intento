@@ -57,7 +57,7 @@ func GetQueryCmd() *cobra.Command {
 // GetCmdListCode lists all wasm code uploaded
 func GetCmdListCode() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-code",
+		Use:   "list-codes",
 		Short: "List all wasm bytecode on the chain",
 		Long:  "List all wasm bytecode on the chain",
 		Args:  cobra.ExactArgs(0),
