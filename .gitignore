@@ -24,7 +24,7 @@ SHA256SUMS*
 /third_party/vendor
 .vscode
 *.sealed
-*.der
+*.dersum
 __debug_bin
 id_tx_io.json
 .idea
@@ -37,6 +37,7 @@ ias_bin_prod.go
 ias_bin_sw.go
 node_modules
 
+go.sum
 vue
 
 

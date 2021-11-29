@@ -140,7 +140,7 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgStoreCode{
-		Sender:         cliCtx.GetFromAddress(),
+		Sender:         cliCtx.GetFromAddress().String(),
 		WASMByteCode:   wasm,
 		Source:         source,
 		Builder:        builder,
@@ -281,7 +281,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgInstantiateContract{
-		Sender:           cliCtx.GetFromAddress(),
+		Sender:           cliCtx.GetFromAddress().String(),
 		CallbackCodeHash: "",
 		CodeID:           codeID,
 		ContractId:       label,
@@ -432,7 +432,7 @@ func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []b
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msgExec := types.MsgExecuteContract{
-		Sender:           cliCtx.GetFromAddress(),
+		Sender:           cliCtx.GetFromAddress().String(),
 		Contract:         contractAddress,
 		CallbackCodeHash: "",
 		SentFunds:        coins,

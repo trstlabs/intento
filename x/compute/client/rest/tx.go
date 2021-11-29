@@ -25,15 +25,20 @@ func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
 const maxSize = 400 * 1024
 
 type storeCodeReq struct {
-	BaseReq   rest.BaseReq `json:"base_req" yaml:"base_req"`
-	WasmBytes []byte       `json:"wasm_bytes"`
+	BaseReq          rest.BaseReq `json:"base_req" yaml:"base_req"`
+	WasmBytes        []byte       `json:"wasm_bytes"`
+	ContractDuration string       `json:"contract_duration"`
+	Title            string       `json:"title"`
+	Description      string       `json:"description"`
 }
 
 type instantiateContractReq struct {
 	BaseReq rest.BaseReq `json:"base_req" yaml:"base_req"`
 	Deposit sdk.Coins    `json:"deposit" yaml:"deposit"`
 	// Admin   sdk.AccAddress `json:"admin,omitempty" yaml:"admin"`
-	InitMsg []byte `json:"init_msg" yaml:"init_msg"`
+	InitMsg    []byte `json:"init_msg" yaml:"init_msg"`
+	LastMsg    []byte `json:"last_msg" yaml:"last_msg"`
+	ContractId string `json:"contract_id" yaml:"contract_id"`
 }
 
 type executeContractReq struct {
@@ -61,6 +66,12 @@ func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
+		contractPeriod, err := strconv.ParseInt(req.ContractDuration, 10, 64)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
 		// gzip the wasm file
 		if wasmUtils.IsWasm(wasm) {
 			wasm, err = wasmUtils.GzipIt(wasm)
@@ -80,8 +91,11 @@ func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 		// build and sign the transaction, then broadcast to Tendermint
 		msg := types.MsgStoreCode{
-			Sender:       fromAddr,
-			WASMByteCode: wasm,
+			Sender:         fromAddr.String(),
+			WASMByteCode:   wasm,
+			ContractPeriod: contractPeriod,
+			Title:          req.Title,
+			Description:    req.Description,
 		}
 
 		err = msg.ValidateBasic()
@@ -115,11 +129,13 @@ func instantiateContractHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		msg := types.MsgInstantiateContract{
-			Sender:           cliCtx.GetFromAddress(),
+			Sender:           cliCtx.GetFromAddress().String(),
 			CodeID:           codeID,
 			CallbackCodeHash: "",
 			InitFunds:        req.Deposit,
 			InitMsg:          req.InitMsg,
+			LastMsg:          req.LastMsg,
+			ContractId:       req.ContractId,
 			// Admin:            req.Admin,
 		}
 
@@ -153,7 +169,7 @@ func executeContractHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		msg := types.MsgExecuteContract{
-			Sender:           cliCtx.GetFromAddress(),
+			Sender:           cliCtx.GetFromAddress().String(),
 			Contract:         contractAddress,
 			CallbackCodeHash: "",
 			Msg:              req.ExecMsg,

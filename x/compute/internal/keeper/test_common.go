@@ -395,7 +395,11 @@ func TestHandler(k Keeper) sdk.Handler {
 }
 
 func handleInstantiate(ctx sdk.Context, k Keeper, msg *wasmtypes.MsgInstantiateContract) (*sdk.Result, error) {
-	contractAddr, err := k.Instantiate(ctx, msg.CodeID, msg.Sender /* msg.Admin, */, msg.InitMsg, msg.ContractId, msg.InitFunds, msg.CallbackSig)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender /* msg.Admin, */, msg.InitMsg, msg.ContractId, msg.InitFunds, msg.CallbackSig)
 	if err != nil {
 		return nil, err
 	}
@@ -407,7 +411,11 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *wasmtypes.MsgInstantiateC
 }
 
 func handleExecute(ctx sdk.Context, k Keeper, msg *wasmtypes.MsgExecuteContract) (*sdk.Result, error) {
-	res, err := k.Execute(ctx, msg.Contract, msg.Sender, msg.Msg, msg.SentFunds, msg.CallbackSig)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+	res, err := k.Execute(ctx, msg.Contract, sender, msg.Msg, msg.SentFunds, msg.CallbackSig)
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +430,7 @@ func PrepareInitSignedTx(t *testing.T, keeper Keeper, ctx sdk.Context, creator s
 	require.NoError(t, err)
 
 	initMsg := wasmtypes.MsgInstantiateContract{
-		Sender: creator,
+		Sender: creator.String(),
 		// Admin:     nil,
 		CodeID:     codeID,
 		ContractId: "demo contract 1",
@@ -442,7 +450,7 @@ func PrepareExecSignedTx(t *testing.T, keeper Keeper, ctx sdk.Context, sender sd
 	require.NoError(t, err)
 
 	executeMsg := wasmtypes.MsgExecuteContract{
-		Sender:    sender,
+		Sender:    sender.String(),
 		Contract:  contract,
 		Msg:       encMsg,
 		SentFunds: funds,
