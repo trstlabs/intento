@@ -2,6 +2,8 @@ vue/node_modules
 vue/dist
 secret.yml
 
+.DS_Store
+
 *.a
 *.deb
 Enclave_t.c
@@ -10,9 +12,7 @@ Enclave_u.c
 Enclave_u.h
 Enclave_u.o
 
-/trstd*
 
-trstd*
 incubator-teaclave-sgx-sdk
 libenclave.a
 libEnclave_u.a

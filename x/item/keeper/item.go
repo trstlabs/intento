@@ -61,7 +61,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 		return err
 	}
 
-	contractAddr, err := k.computeKeeper.Instantiate(ctx, uint64(1), userAddress, msg.Initmsg, fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
+	contractAddr, err := k.computeKeeper.Instantiate(ctx, uint64(1), userAddress, msg.Initmsg, "Item "+fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		return err
 	}
@@ -248,6 +248,7 @@ func (k Keeper) TokenizeItem(ctx sdk.Context, itemId uint64, addr string) error 
 	if err != nil {
 		return err ///panic(err)
 	}
+	k.hooks.AfterItemTokenized(ctx, userAddress)
 	return nil
 }
 

@@ -23,10 +23,11 @@ type (
 		feeCollectorName string
 		//	wasmer           wasm.Wasmer
 		computeKeeper types.ComputeKeeper
+		hooks         types.ItemHooks
 	}
 )
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, feeCollectorName string, homeDir string /*wasmConfig types.WasmConfig, supportedFeatures string, */, ck types.ComputeKeeper) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, feeCollectorName string, homeDir string /*wasmConfig types.WasmConfig, supportedFeatures string, */, ck types.ComputeKeeper, hooks types.ItemHooks) *Keeper {
 
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -49,6 +50,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, paramSpace 
 		feeCollectorName: feeCollectorName,
 		//	wasmer:           *wasmer,
 		computeKeeper: ck,
+		hooks:         hooks,
 	}
 }
 

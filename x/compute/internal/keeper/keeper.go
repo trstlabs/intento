@@ -30,10 +30,11 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	sdktxsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/tendermint/tendermint/libs/log"
 	wasm "github.com/trstlabs/trst/go-cosmwasm"
 	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 
-	"github.com/tendermint/tendermint/libs/log"
+	hooks "github.com/trstlabs/trst/x/compute/hooks"
 	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
@@ -50,7 +51,7 @@ type Keeper struct {
 	// queryGasLimit is the max wasm gas that can be spent on executing a query with a contract
 	queryGasLimit uint64
 	paramSpace    paramtypes.Subspace
-
+	hooks         hooks.ComputeHooks
 	// authZPolicy   AuthorizationPolicy
 	//paramSpace    subspace.Subspace
 }
@@ -59,7 +60,7 @@ type Keeper struct {
 // If customEncoders is non-nil, we can use this to override some of the message handler, especially custom
 func NewKeeper(cdc codec.BinaryCodec, legacyAmino codec.LegacyAmino, storeKey sdk.StoreKey, accountKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper, govKeeper govkeeper.Keeper, distKeeper distrkeeper.Keeper, mintKeeper mintkeeper.Keeper, stakingKeeper stakingkeeper.Keeper,
-	router sdk.Router, homeDir string, wasmConfig *types.WasmConfig, supportedFeatures string, customEncoders *MessageEncoders, customPlugins *QueryPlugins, paramSpace paramtypes.Subspace) Keeper {
+	router sdk.Router, homeDir string, wasmConfig *types.WasmConfig, supportedFeatures string, customEncoders *MessageEncoders, customPlugins *QueryPlugins, paramSpace paramtypes.Subspace, gh hooks.ComputeHooks) Keeper {
 	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), supportedFeatures, wasmConfig.CacheSize, wasmConfig.EnclaveCacheSize)
 	if err != nil {
 		panic(err)
@@ -80,6 +81,7 @@ func NewKeeper(cdc codec.BinaryCodec, legacyAmino codec.LegacyAmino, storeKey sd
 		messenger:     NewMessageHandler(router, customEncoders),
 		queryGasLimit: wasmConfig.SmartQueryGasLimit,
 		paramSpace:    paramSpace,
+		hooks:         gh,
 		// authZPolicy:   DefaultAuthorizationPolicy{},
 		//paramSpace:    paramSpace,
 	}
@@ -333,6 +335,8 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 
 	store.Set(types.GetContractLabelPrefix(label), contractAddress)
 
+	k.hooks.AfterComputeInstantiated(ctx, creator)
+
 	err = k.dispatchMessages(ctx, contractAddress, res.Messages)
 	if err != nil {
 		return nil, err
@@ -423,7 +427,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	if err != nil {
 		return nil, err
 	}
-
+	k.hooks.AfterComputeExecuted(ctx, caller)
 	return &sdk.Result{
 		//	Data: []byte(res.Log[0].Value),
 		Data: res.Data,

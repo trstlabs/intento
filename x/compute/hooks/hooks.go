@@ -1,12 +1,12 @@
-package types
+package hooks
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
 type ComputeHooks interface {
 
 	// AfterExitPool is called after ExitPool, ExitSwapShareAmountIn, and ExitSwapExternAmountOut
-	AfterComputeInstantiate(ctx sdk.Context, sender sdk.AccAddress)
-	// AfterSwap is called after SwapExactAmountIn and SwapExactAmountOut
+	AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress)
+	// AfterComputeExecuted is called after SwapExactAmountIn and SwapExactAmountOut
 	AfterComputeExecuted(ctx sdk.Context, sender sdk.AccAddress)
 }
 
@@ -20,9 +20,9 @@ func NewMultiComputeHooks(hooks ...ComputeHooks) MultiComputeHooks {
 	return hooks
 }
 
-func (h MultiComputeHooks) AfterComputeInstantiate(ctx sdk.Context, sender sdk.AccAddress) {
+func (h MultiComputeHooks) AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress) {
 	for i := range h {
-		h[i].AfterComputeInstantiate(ctx, sender)
+		h[i].AfterComputeInstantiated(ctx, sender)
 	}
 }
 

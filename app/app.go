@@ -8,19 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/spf13/cast"
-	"github.com/spf13/viper"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	dbm "github.com/tendermint/tm-db"
-
-	//"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -55,10 +46,6 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	claim "github.com/trstlabs/trst/x/claim"
-	claimkeeper "github.com/trstlabs/trst/x/claim/keeper"
-	claimtypes "github.com/trstlabs/trst/x/claim/types"
-
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -86,11 +73,22 @@ import (
 	porttypes "github.com/cosmos/ibc-go/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/modules/core/keeper"
+	"github.com/spf13/cast"
+	"github.com/spf13/viper"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/cli"
 	tmjson "github.com/tendermint/tendermint/libs/json"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	dbm "github.com/tendermint/tm-db"
+	claim "github.com/trstlabs/trst/x/claim"
+	claimkeeper "github.com/trstlabs/trst/x/claim/keeper"
+	claimtypes "github.com/trstlabs/trst/x/claim/types"
 	"github.com/trstlabs/trst/x/compute"
-	trst "github.com/trstlabs/trst/x/item"
-	trstkeeper "github.com/trstlabs/trst/x/item/keeper"
-	trsttypes "github.com/trstlabs/trst/x/item/types"
+	computehooks "github.com/trstlabs/trst/x/compute/hooks"
+	item "github.com/trstlabs/trst/x/item"
+	itemkeeper "github.com/trstlabs/trst/x/item/keeper"
+	itemtypes "github.com/trstlabs/trst/x/item/types"
 	reg "github.com/trstlabs/trst/x/registration"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
@@ -145,7 +143,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
-		trst.AppModuleBasic{},
+		item.AppModuleBasic{},
 		compute.AppModuleBasic{},
 		reg.AppModuleBasic{},
 		claim.AppModuleBasic{},
@@ -161,7 +159,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		trsttypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
+		itemtypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
 		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 	}
 
@@ -224,7 +222,7 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	trstKeeper    trstkeeper.Keeper
+	itemKeeper    itemkeeper.Keeper
 	computeKeeper compute.Keeper
 	regKeeper     reg.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
@@ -265,7 +263,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		trsttypes.StoreKey, compute.StoreKey,
+		itemtypes.StoreKey, compute.StoreKey,
 		reg.StoreKey,
 		claimtypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
@@ -391,7 +389,7 @@ func New(
 	trstdir := filepath.Join(homeDir, ".trst")
 	/*
 		wasmConfig := compute.DefaultWasmConfig()
-		//trstwasmConfig := trsttypes.DefaultWasmConfig()
+		//trstwasmConfig := itemtypes.DefaultWasmConfig()
 		wasmConfig.SmartQueryGasLimit = queryGasLimit
 		wasmWrap := WasmWrapper{Wasm: wasmConfig}
 		err := viper.Unmarshal(&wasmWrap)
@@ -407,11 +405,11 @@ func New(
 		appCodec, *legacyAmino,
 		keys[compute.StoreKey],
 		app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.DistrKeeper, app.MintKeeper, stakingKeeper,
-		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(trsttypes.ModuleName))
+		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(itemtypes.ModuleName), computehooks.NewMultiComputeHooks(app.ClaimKeeper.Hooks()))
 
-	app.trstKeeper = *trstkeeper.NewKeeper(
-		appCodec, keys[trsttypes.StoreKey], keys[trsttypes.MemStoreKey], app.GetSubspace(trsttypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, trstdir /* trstwasmConfig, supportedFeatures,*/, app.computeKeeper,
-	)
+	app.itemKeeper = *itemkeeper.NewKeeper(
+		appCodec, keys[itemtypes.StoreKey], keys[itemtypes.MemStoreKey], app.GetSubspace(itemtypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, trstdir /* trstwasmConfig, supportedFeatures,*/, app.computeKeeper,
+		itemtypes.NewMultiItemHooks(app.ClaimKeeper.Hooks()))
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -441,7 +439,7 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
-		trst.NewAppModule(appCodec, app.trstKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
+		item.NewAppModule(appCodec, app.itemKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
 		compute.NewAppModule(app.computeKeeper),
 		reg.NewAppModule(app.regKeeper),
 		claimModule,
@@ -457,7 +455,7 @@ func New(
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, trsttypes.ModuleName, compute.ModuleName, claimtypes.ModuleName)
+	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, itemtypes.ModuleName, compute.ModuleName, claimtypes.ModuleName)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -478,7 +476,7 @@ func New(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		trsttypes.ModuleName,
+		itemtypes.ModuleName,
 		compute.ModuleName,
 		reg.ModuleName,
 		claimtypes.ModuleName,
@@ -687,7 +685,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
-	paramsKeeper.Subspace(trsttypes.ModuleName)
+	paramsKeeper.Subspace(itemtypes.ModuleName)
 	paramsKeeper.Subspace(compute.ModuleName)
 	paramsKeeper.Subspace(reg.ModuleName)
 	paramsKeeper.Subspace(claimtypes.ModuleName)

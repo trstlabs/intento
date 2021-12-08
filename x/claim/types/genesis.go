@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	fmt "fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,12 +17,12 @@ const DefaultIndex uint64 = 1
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		ModuleAccountBalance: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+		ModuleAccountBalance: sdk.NewCoin(DefaultClaimDenom, sdk.ZeroInt()),
 		Params: Params{
 			AirdropStartTime:   time.Time{},
 			DurationUntilDecay: DefaultDurationUntilDecay, // 2 month
 			DurationOfDecay:    DefaultDurationOfDecay,    // 4 months
-			ClaimDenom:         DefaultClaimDenom,         // ustarx
+			ClaimDenom:         DefaultClaimDenom,         // utrst
 		},
 		ClaimRecords: []ClaimRecord{},
 	}
@@ -50,6 +51,9 @@ func (gs GenesisState) Validate() error {
 
 	if !totalClaimable.IsEqual(sdk.NewCoins(gs.ModuleAccountBalance)) {
 		return ErrIncorrectModuleAccountBalance
+	}
+	if gs.Params.ClaimDenom != gs.ModuleAccountBalance.Denom {
+		return fmt.Errorf("denom for module and claim does not match")
 	}
 	return nil
 }

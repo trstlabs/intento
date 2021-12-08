@@ -16,7 +16,7 @@ func (k Keeper) AfterComputeExecuted(ctx sdk.Context, sender sdk.AccAddress) {
 	}
 }
 
-func (k Keeper) AfterComputeInstantiate(ctx sdk.Context, sender sdk.AccAddress) {
+func (k Keeper) AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress) {
 	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionComputeInstantiate)
 	if err != nil {
 		panic(err.Error())
@@ -103,7 +103,7 @@ func (h Hooks) AfterItemBought(ctx sdk.Context, senderAddr sdk.AccAddress) {
 
 // Compute hooks
 func (h Hooks) AfterComputeExecuted(ctx sdk.Context, senderAddr sdk.AccAddress) {}
-func (h Hooks) AfterComputeInstantiate(ctx sdk.Context, senderAddr sdk.AccAddress) {
+func (h Hooks) AfterComputeInstantiated(ctx sdk.Context, senderAddr sdk.AccAddress) {
 }
 
 //func (h Hooks) AfterItemEstimated(ctx sdk.Context, proposalID uint64) {}
