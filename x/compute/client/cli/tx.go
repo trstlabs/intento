@@ -60,7 +60,7 @@ func GetTxCmd() *cobra.Command {
 // StoreCodeCmd will upload code to be reused.
 func StoreCodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "store [wasm file] [Contract duration in hours] [title] [description] --source [source] ",
+		Use:   "store [wasm file] [title] [description] [contract duration in hours] --source [source] ",
 		Short: "Upload a wasm binary",
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -155,8 +155,8 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 // InstantiateContractCmd will instantiate a contract from previously uploaded code.
 func InstantiateContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "instantiate [code id] [JSON args] --label [unique text label] " /* --admin [address,optional] */ + "--amount [coins,optional]",
-		Short: "Instantiate a wasm contract",
+		Use:   "instantiate [code id] [JSON args] --contract_id [unique label] " /* --admin [address,optional] */ + "--amount [coins] (optional)",
+		Short: "Instantiate a Trustless Contract",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx, err := client.GetClientTxContext(cmd)
@@ -209,7 +209,10 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 
 	label, err := initFlags.GetString(flagLabel)
 	if label == "" {
-		return types.MsgInstantiateContract{}, fmt.Errorf("Label is required on all contracts")
+		return types.MsgInstantiateContract{}, fmt.Errorf("label is required on all contracts")
+	}
+	if err != nil {
+		return types.MsgInstantiateContract{}, err
 	}
 
 	wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
@@ -296,7 +299,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 func ExecuteContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "execute [contract address] [json encoded send args] [codeId]",
-		Short: "Execute a command on a wasm contract",
+		Short: "Execute a command on a wasm-based Trustless Contract",
 		Args:  cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx, err := client.GetClientTxContext(cmd)
@@ -312,7 +315,7 @@ func ExecuteContractCmd() *cobra.Command {
 			genOnly, _ := cmd.Flags().GetBool(flags.FlagGenerateOnly)
 
 			amountStr, _ := cmd.Flags().GetString(flagAmount)
-
+			fmt.Print("Generating")
 			if len(args) == 2 {
 
 				if genOnly {
@@ -337,22 +340,16 @@ func ExecuteContractCmd() *cobra.Command {
 				msg = []byte(args[0])
 				codeId = args[1]
 			} else {
-				// get the id of the code to instantiate
+				// get address to execute
 				res, err := sdk.AccAddressFromBech32(args[0])
 				if err != nil {
 					return err
 				}
-
+				fmt.Print("Executing")
 				contractAddr = res
 				msg = []byte(args[1])
 				codeId = args[2]
-				/*  codeHash, err := cmd.Flags().GetString(flagCodeHash)
-				    if err != nil {
-				        return fmt.Errorf("error with codeHash: %s", err)
-				    }
-				    if codeHash == "" {
-				        return fmt.Errorf("missing flag --%s. you must set the target contract's code hash", flagCodeHash)
-				    }*/
+
 			}
 
 			if genOnly {
@@ -373,7 +370,7 @@ func ExecuteContractCmd() *cobra.Command {
 					return fmt.Errorf("missing flag --%s. To create an offline transaction, you must set the target contract's code hash", flagCodeHash)
 				}
 			}
-
+			fmt.Print("Executing with data")
 			return ExecuteWithData(cmd, contractAddr, msg, amountStr, genOnly, ioKeyPath, codeHash, cliCtx, codeId)
 		},
 	}
@@ -397,26 +394,13 @@ func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []b
 	if err != nil {
 		return err
 	}
-
+	fmt.Print("Executing msg...")
 	var encryptedMsg []byte
 	if genOnly {
 		execMsg.CodeHash = []byte(codeHash)
 		encryptedMsg, err = wasmCtx.OfflineEncrypt(execMsg.Serialize(), ioMasterKeyPath)
 	} else {
-		/*
-		   routeHash := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractHash, contractAddress.String())
-		   hash, _, err := cliCtx.Query(routeHash)
-		   if err != nil {
-		   return fmt.Errorf("error querying code hash: %s", err)
-		   }
 
-
-
-		   execMsg.CodeHash = []byte(hex.EncodeToString(hash))
-		*/
-
-		//  execMsg.CodeHash = []byte(codeHash)
-		//execMsg.CodeHash, err = GetCodeHashByContractAddr(cliCtx, contractAddress)
 		execMsg.CodeHash, err = GetCodeHashByCodeId(cliCtx, codeId)
 
 		if err != nil {
@@ -439,7 +423,7 @@ func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []b
 		Msg:              encryptedMsg,
 	}
 
-	//	fmt.Printf("Execute message before types is %s \n", string(encryptedMsg))
+	fmt.Printf("Execute message before is %s \n", string(encryptedMsg))
 
 	return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), &msgExec)
 }
@@ -461,6 +445,7 @@ func GetCodeHashByCodeId(cliCtx client.Context, codeID string) ([]byte, error) {
 	return []byte(hex.EncodeToString(codeResp.CodeHash)), nil
 }
 
+/*
 func GetCodeHashByContractAddr(cliCtx client.Context, contractAddr sdk.AccAddress) ([]byte, error) {
 	route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractHash, contractAddr.String())
 	res, _, err := cliCtx.Query(route)
@@ -470,3 +455,4 @@ func GetCodeHashByContractAddr(cliCtx client.Context, contractAddr sdk.AccAddres
 
 	return []byte(hex.EncodeToString(res)), nil
 }
+*/

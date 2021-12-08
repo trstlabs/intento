@@ -136,10 +136,12 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 }
 
 func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Result, error) {
+	fmt.Print("handling..")
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Print("executing..")
 	res, err := k.Execute(
 		ctx,
 		msg.Contract,
@@ -151,6 +153,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	if err != nil {
 		return nil, err
 	}
+	fmt.Print("setting..")
 	k.SetContractResult(ctx, msg.Contract, res)
 
 	events := filteredMessageEvents(ctx.EventManager())
@@ -161,7 +164,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract.String()),
 	)}
 	events = append(events, custom.ToABCIEvents()...)
-
+	fmt.Print("events Execute handled")
 	res.Events = events
 
 	return res, nil

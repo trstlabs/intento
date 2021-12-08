@@ -145,40 +145,6 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 	return nil
 }
 
-/*
-func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, []byte, error) {
-	tx := sdktx.Tx{}
-	err := k.cdc.Unmarshal(ctx.TxBytes(), &tx)
-	if err != nil {
-		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, fmt.Sprintf("Unable to decode transaction from bytes: %s", err.Error()))
-	}
-
-	// for MsgInstantiateContract, there is only one signer which is msg.Sender
-	// (https://github.com/trstlabs/trst/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L192-L194)
-	signerAcc, err := ante.GetSignerAcc(ctx, k.accountKeeper, signer)
-	if err != nil {
-		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, fmt.Sprintf("Unable to retrieve account by address: %s", err.Error()))
-	}
-
-	txConfig := authtx.NewTxConfig(k.cdc.(*codec.ProtoCodec), []sdktxsigning.SignMode{sdktxsigning.SignMode_SIGN_MODE_DIRECT})
-	modeHandler := txConfig.SignModeHandler()
-	signingData := authsigning.SignerData{
-		ChainID:       ctx.ChainID(),
-		AccountNumber: signerAcc.GetAccountNumber(),
-		Sequence:      signerAcc.GetSequence() - 1,
-	}
-
-	protobufTx := authtx.WrapTx(&tx).GetTx()
-	signBytes, err := modeHandler.GetSignBytes(sdktxsigning.SignMode_SIGN_MODE_DIRECT, signingData, protobufTx)
-	if err != nil {
-		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, fmt.Sprintf("Unable to recreate sign bytes for the tx: %s", err.Error()))
-	}
-
-	// The first signature is the signature of the message sender,
-	// according to the docstring of `tx.AuthInfo.SignerInfos`
-	return tx.Signatures[0], signBytes, nil
-}*/
-
 func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, sdktxsigning.SignMode, []byte, []byte, []byte, error) {
 	tx := sdktx.Tx{}
 	err := k.cdc.Unmarshal(ctx.TxBytes(), &tx)
@@ -254,12 +220,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 
 // Instantiate creates an instance of a WASM contract
 func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, initMsg []byte, label string, deposit sdk.Coins, callbackSig []byte) (sdk.AccAddress, error) {
-	/*
-		return k.instantiate(ctx, codeID, creator admin,, initMsg, label, deposit, callbackSig)
-		}
 
-		func (k Keeper) instantiate(ctx sdk.Context, codeID uint64, creator , admin sdk.AccAddress, initMsg []byte, label string, deposit sdk.Coins, callbackSig []byte) (sdk.AccAddress, error) {
-	*/
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading CosmWasm module: init")
 
 	signBytes := []byte{}
@@ -348,9 +309,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	if err != nil {
 		return contractAddress, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
 	}
-	//fmt.Print("Init message after wasm is  \n", res.Messages[0])
-	//fmt.Print("Init message after wasm is  \n", res.Messages[1])
-	//fmt.Printf("Init message after wasm is  \n", res.Log)
+
 	// emit all events from this contract itself
 	events := types.ParseEvents(res.Log, contractAddress)
 	ctx.EventManager().EmitEvents(events)
@@ -379,7 +338,6 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		return nil, err
 	}
 
-	// k.appendToContractHistory(ctx, contractAddress, instance.InitialHistory(initMsg))
 	return contractAddress, nil
 }
 

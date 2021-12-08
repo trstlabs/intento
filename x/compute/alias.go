@@ -77,11 +77,6 @@ var (
 	NoCustomQuerier           = keeper.NoCustomQuerier
 	StakingQuerier            = keeper.StakingQuerier
 	WasmQuerier               = keeper.WasmQuerier
-	MakeTestCodec             = keeper.MakeTestCodec
-	CreateTestInput           = keeper.CreateTestInput
-	TestHandler               = keeper.TestHandler
-	PrepareInitSignedTx       = keeper.PrepareInitSignedTx
-	PrepareExecSignedTx       = keeper.PrepareExecSignedTx
 	GetConfig                 = types.GetConfig
 
 	// variable aliases
@@ -101,8 +96,6 @@ var (
 	CodeKeyPrefix        = types.CodeKeyPrefix
 	ContractKeyPrefix    = types.ContractKeyPrefix
 	ContractStorePrefix  = types.ContractStorePrefix
-	// EnableAllProposals   = types.EnableAllProposals
-	// DisableAllProposals  = types.DisableAllProposals
 )
 
 type (
@@ -131,7 +124,4 @@ type (
 	QueryHandler            = keeper.QueryHandler
 	CustomQuerier           = keeper.CustomQuerier
 	QueryPlugins            = keeper.QueryPlugins
-	// MsgMigrateContract      = types.MsgMigrateContract
-	// MsgUpdateAdmin          = types.MsgUpdateAdmin
-	// MsgClearAdmin           = types.MsgClearAdmin
 )

@@ -13,7 +13,7 @@ yes kiwi obtain scrub aunt female shoulder dune shove budget salt mechanic plug 
 yes orchard thing tooth dismiss seat couple define atom antenna language fuel wrist napkin tired undo toddler virus cherry shock mimic toss rifle predict crisp |trstd keys add faucet --keyring-backend test --recover
 
 
-trstd add-genesis-account $(trstd keys show user1 -a --keyring-backend test) 25000000000utrst --vesting-amount 20000000000utrst  --vesting-end-time 1638485671
+trstd add-genesis-account $(trstd keys show user1 -a --keyring-backend test) 25000000000utrst
 trstd add-genesis-account $(trstd keys show user2 -a --keyring-backend test) 25000000000utrst --vesting-amount 20000000000utrst  --vesting-end-time 1638485671
 trstd add-genesis-account $(trstd keys show user3 -a --keyring-backend test) 25000000000utrst --vesting-amount 20000000000utrst  --vesting-end-time 1638485671
 trstd add-genesis-account $(trstd keys show user4 -a --keyring-backend test) 25000000000utrst --vesting-amount 20000000000utrst  --vesting-end-time 1638485671
@@ -34,7 +34,7 @@ trstd collect-gentxs
 echo "Validating genesis file..."
 trstd validate-genesis
 
-sed -i '104s/enable = false/enable = true/g' ~/.trst/config/app.toml
+
 
 trstd start --bootstrap > init.log
 

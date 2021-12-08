@@ -4,19 +4,19 @@ order: 1
 
 # Concepts
 
-Osmosis' initial supply was given as a quadratic fairdrop to ATOM users.
+Trustless Hub' initial supply was given as a quadratic fairdrop to ATOM users.
 Details of the fairdrop are in the 'fairdrop' section of the following blog post: 
-https://medium.com/osmosis/osmo-token-distribution-ae27ea2bb4db
+https://medium.com/Trustless Hub/osmo-token-distribution-ae27ea2bb4db
 
 To briefly summarize, a quadratic fairdrop is an airdrop that rewards you an amount proportional to the square root of the amount of tokens you had at the snapshot date.
-The particular quadratic fairdrop Osmosis used had a bonus going towards stakers, as detailed in the blog post.
+The particular quadratic fairdrop Trustless Hub used had a bonus going towards stakers, as detailed in the blog post.
 
-In Osmosis, users are required to claim their airdrop by participating in core network activities. An Airdrop recipient is given 20% of the airdrop amount up front, and then they have to perform the following activities to get the rest:
+In Trustless Hub, users are required to claim their airdrop by participating in core network activities. An Airdrop recipient is given 20% of the airdrop amount up front, and then they have to perform the following activities to get the rest:
 
 * 20% is claimed by staking
-* 20% is claimed by voting in governance
-* 20% is claimed by swapping into a pool
-* 20% is claimed by providing liquidity to a pool
+* 20% is claimed by initiating a Trustless Contract
+* 20% is claimed by tokenizing an item
+* 20% is claimed by executing code on a Trustless Contract
 
 At initial, module stores all airdrop users with amounts from genesis inside KVStore.
 

@@ -1,1 +1,1 @@
-trstd start --bootstrap
+trstd start --log_level trace --bootstrap > init.log
