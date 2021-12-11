@@ -26,7 +26,7 @@ const (
 	flagAmount                 = "amount"
 	flagSource                 = "source"
 	flagBuilder                = "builder"
-	flagLabel                  = "label"
+	flagLabel                  = "contract_id"
 	flagRunAs                  = "run-as"
 	flagInstantiateByEverybody = "instantiate-everybody"
 	flagInstantiateByAddress   = "instantiate-only-address"
@@ -140,7 +140,7 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgStoreCode{
-		Sender:         cliCtx.GetFromAddress().String(),
+		Sender:         cliCtx.GetFromAddress(),
 		WASMByteCode:   wasm,
 		Source:         source,
 		Builder:        builder,
@@ -262,7 +262,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 
 		//initMsg.Msg = []byte(initMsg.Msg)
 
-		encryptedMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
+		encryptedMsg, _ = wasmCtx.Encrypt(initMsg.Serialize())
 
 	}
 	lastMsg := types.TrustlessMsg{}
@@ -284,7 +284,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgInstantiateContract{
-		Sender:           cliCtx.GetFromAddress().String(),
+		Sender:           cliCtx.GetFromAddress(),
 		CallbackCodeHash: "",
 		CodeID:           codeID,
 		ContractId:       label,
@@ -416,7 +416,7 @@ func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []b
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msgExec := types.MsgExecuteContract{
-		Sender:           cliCtx.GetFromAddress().String(),
+		Sender:           cliCtx.GetFromAddress(),
 		Contract:         contractAddress,
 		CallbackCodeHash: "",
 		SentFunds:        coins,

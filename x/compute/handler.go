@@ -69,11 +69,11 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 	if endTime > maxEndTime {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Time period invalid for this contract code")
 	}
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	/*sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
-	}
-	codeID, err := k.Create(ctx, sender, msg.WASMByteCode, msg.Source, msg.Builder, endTime, msg.Title, msg.Description)
+	}*/
+	codeID, err := k.Create(ctx, msg.Sender, msg.WASMByteCode, msg.Source, msg.Builder, endTime, msg.Title, msg.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-			sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
 			sdk.NewAttribute(types.AttributeKeyCodeID, fmt.Sprintf("%d", codeID)),
 		),
 	})
@@ -94,11 +94,11 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 }
 
 func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (*sdk.Result, error) {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.ContractId, msg.InitFunds, nil)
+	/*	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+		if err != nil {
+			return nil, err
+		}*/
+	contractAddr, err := k.Instantiate(ctx, msg.CodeID, msg.Sender, msg.InitMsg, msg.ContractId, msg.InitFunds, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	custom := sdk.Events{sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
+		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
 		sdk.NewAttribute(types.AttributeKeyCodeID, fmt.Sprintf("%d", msg.CodeID)),
 		sdk.NewAttribute(types.AttributeKeyContract, contractAddr.String()),
 	)}
@@ -137,15 +137,15 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 
 func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Result, error) {
 	fmt.Print("handling..")
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	/*sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
-	}
+	}*/
 	fmt.Print("executing..")
 	res, err := k.Execute(
 		ctx,
 		msg.Contract,
-		sender,
+		msg.Sender,
 		msg.Msg,
 		msg.SentFunds,
 		nil,
@@ -160,7 +160,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	custom := sdk.Events{sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
+		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
 		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract.String()),
 	)}
 	events = append(events, custom.ToABCIEvents()...)

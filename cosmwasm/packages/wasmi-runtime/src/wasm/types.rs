@@ -321,7 +321,7 @@ impl TxBody {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case", tag = "type", content = "value")]
 pub enum StdCosmWasmMsg {
-    #[serde(alias = "wasm/MsgExecuteContract")]
+    #[serde(alias = "compute/MsgExecuteContract")]
     Execute {
         sender: HumanAddr,
         contract: HumanAddr,
@@ -330,13 +330,14 @@ pub enum StdCosmWasmMsg {
         sent_funds: Vec<Coin>,
         callback_sig: Option<Vec<u8>>,
     },
-    #[serde(alias = "wasm/MsgInstantiateContract")]
+    #[serde(alias = "compute/MsgInstantiateContract")]
     Instantiate {
         sender: HumanAddr,
         code_id: String,
         init_msg: String,
+        last_msg: String,
         init_funds: Vec<Coin>,
-        label: String,
+        contract_id: String,
         callback_sig: Option<Vec<u8>>,
     },
 }
@@ -374,8 +375,9 @@ impl StdCosmWasmMsg {
             Self::Instantiate {
                 sender,
                 init_msg,
+                last_msg,
                 init_funds,
-                label,
+                contract_id,
                 callback_sig,
                 code_id: _,
             } => {
@@ -390,12 +392,21 @@ impl StdCosmWasmMsg {
                     );
                     EnclaveError::FailedToDeserialize
                 })?;
+                let last_msg = Binary::from_base64(&last_msg).map_err(|err| {
+                    warn!(
+                        "failed to parse base64 last_msg when parsing last CosmWasmMsg: {:?}",
+                        err
+                    );
+                    EnclaveError::FailedToDeserialize
+                })?;
                 let init_msg = init_msg.0;
+                let last_msg = last_msg.0;
                 Ok(CosmWasmMsg::Instantiate {
                     sender,
                     init_msg,
+                    last_msg, 
                     init_funds,
-                    label,
+                    contract_id,
                     callback_sig,
                 })
             }
@@ -415,8 +426,9 @@ pub enum CosmWasmMsg {
     Instantiate {
         sender: CanonicalAddr,
         init_msg: Vec<u8>,
+        last_msg: Vec<u8>,
         init_funds: Vec<Coin>,
-        label: String,
+        contract_id: String,
         callback_sig: Option<Vec<u8>>,
     },
     Other,
@@ -454,8 +466,9 @@ impl CosmWasmMsg {
         Ok(CosmWasmMsg::Instantiate {
             sender: CanonicalAddr(Binary(raw_msg.sender)),
             init_msg: raw_msg.init_msg,
+            last_msg: raw_msg.last_msg,
             init_funds,
-            label: raw_msg.label,
+            contract_id: raw_msg.contract_id,
             callback_sig,
         })
     }

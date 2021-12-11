@@ -14,11 +14,9 @@ func (msg MsgStoreCode) Type() string {
 }
 
 func (msg MsgStoreCode) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
+	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+		return err
 	}
-
 	if err := validateWasmCode(msg.WASMByteCode); err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "code bytes %s", err.Error())
 	}
@@ -53,11 +51,7 @@ func (msg MsgStoreCode) GetSignBytes() []byte {
 }
 
 func (msg MsgStoreCode) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
+	return []sdk.AccAddress{msg.Sender}
 }
 
 func (msg MsgInstantiateContract) Route() string {
@@ -69,11 +63,9 @@ func (msg MsgInstantiateContract) Type() string {
 }
 
 func (msg MsgInstantiateContract) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
+	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+		return err
 	}
-
 	if msg.CodeID == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "code_id is required")
 	}
@@ -104,11 +96,7 @@ func (msg MsgInstantiateContract) GetSignBytes() []byte {
 }
 
 func (msg MsgInstantiateContract) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
+	return []sdk.AccAddress{msg.Sender}
 }
 
 func (msg MsgExecuteContract) Route() string {
@@ -120,11 +108,9 @@ func (msg MsgExecuteContract) Type() string {
 }
 
 func (msg MsgExecuteContract) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
+	if err := sdk.VerifyAddressFormat(msg.Sender); err != nil {
+		return err
 	}
-
 	if err := sdk.VerifyAddressFormat(msg.Contract); err != nil {
 		return err
 	}
@@ -145,11 +131,7 @@ func (msg MsgExecuteContract) GetSignBytes() []byte {
 }
 
 func (msg MsgExecuteContract) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
+	return []sdk.AccAddress{msg.Sender}
 }
 
 /*
@@ -190,11 +172,7 @@ func (msg MsgMigrateContract) GetSignBytes() []byte {
 }
 
 func (msg MsgMigrateContract) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender} }
+	return []sdk.AccAddress{msg.Sender} }
 
 type MsgUpdateAdmin struct {
 	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`
@@ -231,11 +209,7 @@ func (msg MsgUpdateAdmin) GetSignBytes() []byte {
 }
 
 func (msg MsgUpdateAdmin) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender} }
+	return []sdk.AccAddress{msg.Sender} }
 
 type MsgClearAdmin struct {
 	Sender   sdk.AccAddress `json:"sender" yaml:"sender"`
@@ -265,9 +239,5 @@ func (msg MsgClearAdmin) GetSignBytes() []byte {
 }
 
 func (msg MsgClearAdmin) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender} }
+	return []sdk.AccAddress{msg.Sender} }
 */

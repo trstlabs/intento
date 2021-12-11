@@ -12,7 +12,7 @@ import "cosmos/base/v1beta1/coin.proto";
 message MsgStoreCode {
   option (gogoproto.goproto_getters) = false;
 
-  string sender = 1;
+   bytes sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   // WASMByteCode can be raw or gzip compressed
   bytes wasm_byte_code = 2 [(gogoproto.customname) = "WASMByteCode"];
   // Source is a valid absolute HTTPS URI to the contract's source code, optional
@@ -30,7 +30,7 @@ message MsgStoreCode {
 message MsgInstantiateContract {
   option (gogoproto.goproto_getters) = false;
 
-  string sender = 1 ;
+   bytes sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   // Admin is an optional address that can execute migrations
 //  bytes admin = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   string callback_code_hash = 2;
@@ -45,7 +45,7 @@ message MsgInstantiateContract {
 message MsgExecuteContract {
   option (gogoproto.goproto_getters) = false;
 
-  string sender = 1;
+   bytes sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   bytes contract = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   bytes msg = 3;
   string callback_code_hash = 4;

@@ -91,7 +91,7 @@ func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 		// build and sign the transaction, then broadcast to Tendermint
 		msg := types.MsgStoreCode{
-			Sender:         fromAddr.String(),
+			Sender:         fromAddr,
 			WASMByteCode:   wasm,
 			ContractPeriod: contractPeriod,
 			Title:          req.Title,
@@ -129,7 +129,7 @@ func instantiateContractHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		msg := types.MsgInstantiateContract{
-			Sender:           cliCtx.GetFromAddress().String(),
+			Sender:           cliCtx.GetFromAddress(),
 			CodeID:           codeID,
 			CallbackCodeHash: "",
 			InitFunds:        req.Deposit,
@@ -169,7 +169,7 @@ func executeContractHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		msg := types.MsgExecuteContract{
-			Sender:           cliCtx.GetFromAddress().String(),
+			Sender:           cliCtx.GetFromAddress(),
 			Contract:         contractAddress,
 			CallbackCodeHash: "",
 			Msg:              req.ExecMsg,

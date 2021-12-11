@@ -197,7 +197,7 @@ pub fn verify_params(
         })?;
       
 
-   /* if verify_message_params(&messages, env, &sender_public_key, msg) {
+   if verify_message_params(&messages, env, &sender_public_key, msg) {
         info!("Parameters verified successfully");
         return Ok(());
     }
@@ -205,9 +205,9 @@ pub fn verify_params(
     warn!("Parameter verification failed");
 
     Err(EnclaveError::FailedTxVerification)
-*/
-    info!("Parameters verified successfully");
-    return Ok(());
+
+  //  info!("Parameters verified successfully");
+    //return Ok(());
 }
 
 fn get_signer_and_messages(
