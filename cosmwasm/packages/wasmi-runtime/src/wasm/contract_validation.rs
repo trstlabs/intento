@@ -21,7 +21,13 @@ pub fn generate_encryption_key(
     contract_hash: [u8; HASH_SIZE],
     contract_address: &[u8],
 ) -> Result<[u8; CONTRACT_KEY_LENGTH], EnclaveError> {
-    let consensus_state_ikm = KEY_MANAGER.get_consensus_state_ikm().unwrap();
+    let consensus_state_ikm = KEY_MANAGER.get_consensus_state_ikm().map_err(|err| {
+        warn!(
+        "got an error while trying to extract consensus_state_key, contract addess {:?}: {}", contract_address, err);
+        EnclaveError::FailedToDeserialize
+    })
+    .unwrap();
+
 
     let (_, sender_address_u5) = bech32::decode(env.message.sender.as_str()).map_err(|err| {
         warn!(
@@ -331,6 +337,9 @@ fn get_verified_msg<'sd>(
             init_msg: msg,
             sender,
             ..
+        } | CosmWasmMsg::CreateItem {
+            initmsg: msg, creator: 
+            sender, ..
         } => msg_sender == sender && &sent_msg.to_vec() == msg,
         CosmWasmMsg::Other => false,
     })
@@ -353,6 +362,7 @@ fn verify_contract(msg: &CosmWasmMsg, env: &Env) -> bool {
             is_verified
         }
         CosmWasmMsg::Instantiate { .. } => true,
+        CosmWasmMsg::CreateItem { .. } => true,
         CosmWasmMsg::Other => false,
     }
 }
@@ -364,8 +374,8 @@ fn verify_funds(msg: &CosmWasmMsg, env: &Env) -> bool {
         | CosmWasmMsg::Instantiate {
             init_funds: sent_funds,
             ..
-        } => &env.message.sent_funds == sent_funds,
-        CosmWasmMsg::Other => false,
+         } => &env.message.sent_funds == sent_funds,
+        CosmWasmMsg::Other => false, CosmWasmMsg::CreateItem { .. } => true, 
     }
 }
 

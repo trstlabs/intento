@@ -46,6 +46,13 @@ mod protobuf {
                 "src/proto/cosmwasm",
                 &["../../../proto/compute/msg.proto"],
             ),
+            (
+                "src/proto/item",
+                &["../../../proto/item/item.proto",
+                 "../../../proto/item/estimator.proto"],
+               
+            ),
+           
         ];
 
         for (out_dir, inputs) in directories {
@@ -54,6 +61,7 @@ mod protobuf {
 
             protoc_rust::Codegen::new()
                 .include("../../../proto/compute") // cosmwasm
+                .include("../../../proto/item") // item
                 .include("proto") // cosmos and gogoproto
                 .include(&library_dir) // google types
                 .out_dir(*out_dir)

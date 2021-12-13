@@ -5,3 +5,4 @@ pub mod crypto;
 pub mod tx;
 
 pub mod cosmwasm;
+pub mod item;
