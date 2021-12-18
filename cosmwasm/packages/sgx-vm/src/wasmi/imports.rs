@@ -25,6 +25,8 @@ extern "C" {
         env_len: usize,
         msg: *const u8,
         msg_len: usize,
+        auto_msg: *const u8,
+        auto_msg_len: usize,
         sig_info: *const u8,
         sig_info_len: usize,
     ) -> sgx_status_t;

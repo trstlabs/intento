@@ -110,11 +110,12 @@ where
         self.used_gas
     }
 
-    pub fn init(&mut self, env: &[u8], msg: &[u8], sig_info: &[u8]) -> VmResult<InitSuccess> {
+    pub fn init(&mut self, env: &[u8], msg: &[u8], auto_msg: &[u8], sig_info: &[u8]) -> VmResult<InitSuccess> {
         trace!(
-            "init() called with env: {:?} msg: {:?} enclave_id: {:?} gas_left: {}",
+            "init() called with env: {:?} msg: {:?}  auto_msg: {:?} ,enclave_id: {:?} gas_left: {}",
             String::from_utf8_lossy(env),
             String::from_utf8_lossy(msg),
+            String::from_utf8_lossy(auto_msg),
             self.enclave.geteid(),
             self.gas_left()
         );
@@ -135,6 +136,8 @@ where
                 env.len(),
                 msg.as_ptr(),
                 msg.len(),
+                auto_msg.as_ptr(),
+                auto_msg.len(),
                 sig_info.as_ptr(),
                 sig_info.len(),
             )

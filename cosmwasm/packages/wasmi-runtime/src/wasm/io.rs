@@ -3,7 +3,7 @@
 /// that is unique to the user and the enclave
 ///
 use super::types::{IoNonce, SecretMessage};
-
+use std::convert::TryInto;
 use crate::cosmwasm::encoding::Binary;
 use crate::cosmwasm::types::{CanonicalAddr, Coin, CosmosMsg, WasmMsg, WasmOutput};
 use crate::crypto::{AESKey, Ed25519PublicKey, Kdf, SIVEncryptable, KEY_MANAGER};
@@ -174,16 +174,22 @@ pub fn create_callback_signature(
     msg_to_sign: &SecretMessage,
     funds_to_send: &[Coin],
 ) -> Vec<u8> {
+    //trace!("creating callback sig... {:?} message is {:?} funds are {:?}",contract_addr,msg_to_sign,funds_to_send );
     // Hash(Enclave_secret | sender(current contract) | msg_to_pass | sent_funds)
     let mut callback_sig_bytes = KEY_MANAGER
         .get_consensus_callback_secret()
         .unwrap()
         .get()
         .to_vec();
-
     callback_sig_bytes.extend(contract_addr.as_slice());
     callback_sig_bytes.extend(msg_to_sign.msg.as_slice());
     callback_sig_bytes.extend(serde_json::to_vec(funds_to_send).unwrap());
-
+    //trace!("digesting callback sig... {:?}", callback_sig_bytes.as_slice());
     sha2::Sha256::digest(callback_sig_bytes.as_slice()).to_vec()
+}
+
+
+
+pub fn copy_into_array(slice: &[u8]) -> [u8; 32] {
+    slice.try_into().expect("slice with incorrect length")
 }

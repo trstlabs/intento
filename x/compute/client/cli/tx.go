@@ -26,13 +26,14 @@ const (
 	flagAmount                 = "amount"
 	flagSource                 = "source"
 	flagBuilder                = "builder"
-	flagLabel                  = "contract_id"
+	flagContractId             = "contract_id"
 	flagRunAs                  = "run-as"
 	flagInstantiateByEverybody = "instantiate-everybody"
 	flagInstantiateByAddress   = "instantiate-only-address"
 	flagProposalType           = "type"
 	flagIoMasterKey            = "enclave-key"
 	flagCodeHash               = "code-hash"
+
 	// flagAdmin                  = "admin"
 )
 
@@ -140,7 +141,7 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgStoreCode{
-		Sender:         cliCtx.GetFromAddress(),
+		Sender:         cliCtx.GetFromAddress().String(),
 		WASMByteCode:   wasm,
 		Source:         source,
 		Builder:        builder,
@@ -155,7 +156,7 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 // InstantiateContractCmd will instantiate a contract from previously uploaded code.
 func InstantiateContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "instantiate [code id] [JSON args] --contract_id [unique label] " /* --admin [address,optional] */ + "--amount [coins] (optional)",
+		Use:   "instantiate [code id] [JSON args] --contract_id [unique contractId] " /* --admin [address,optional] */ + "--amount [coins] (optional)",
 		Short: "Instantiate a Trustless Contract",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -179,12 +180,14 @@ func InstantiateContractCmd() *cobra.Command {
 
 		},
 	}
-
+	var sendAutoMsg bool
 	cmd.Flags().String(flagCodeHash, "", "For offline transactions, use this to specify the target contract's code hash")
 	cmd.Flags().String(flagIoMasterKey, "", "For offline transactions, use this to specify the path to the "+
 		"io-master-cert.der file, which you can get using the command `trstd q register trst-enclave-params` ")
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract during instantiation")
-	cmd.Flags().String(flagLabel, "", "A human-readable name for this contract in lists")
+	cmd.Flags().String(flagContractId, "", "A human-readable name for this contract in lists")
+	cmd.Flags().BoolVar(&sendAutoMsg, "auto_msg", false, "(A auto message to send, before the contract ends (optional)")
+
 	// cmd.Flags().String(flagAdmin, "", "Address of an admin")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
@@ -207,10 +210,12 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		return types.MsgInstantiateContract{}, err
 	}
 
-	label, err := initFlags.GetString(flagLabel)
-	if label == "" {
-		return types.MsgInstantiateContract{}, fmt.Errorf("label is required on all contracts")
+	contractId, err := initFlags.GetString(flagContractId)
+	if contractId == "" {
+		return types.MsgInstantiateContract{}, fmt.Errorf("contract id is required on all contracts")
 	}
+	sendAutoMsg, _ := initFlags.GetBool("auto_msg")
+
 	if err != nil {
 		return types.MsgInstantiateContract{}, err
 	}
@@ -241,11 +246,11 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 
 		encryptedMsg, _ = wasmCtx.OfflineEncrypt(initMsg.Serialize(), ioKeyPath)
 	} else {
-		// if we aren't creating an offline transaction we can validate the chosen label
-		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, label)
+		// if we aren't creating an offline transaction we can validate the chosen contractId
+		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, contractId)
 		res, _, _ := cliCtx.Query(route)
 		if res != nil {
-			return types.MsgInstantiateContract{}, fmt.Errorf("label already exists. You must choose a unique label for your contract instance")
+			return types.MsgInstantiateContract{}, fmt.Errorf("contractId already exists. You must choose a unique contractId for your contract instance")
 		}
 
 		initMsg.CodeHash, err = GetCodeHashByCodeId(cliCtx, args[0])
@@ -265,32 +270,33 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		encryptedMsg, _ = wasmCtx.Encrypt(initMsg.Serialize())
 
 	}
-	lastMsg := types.TrustlessMsg{}
-	last := types.ParseLast{}
-	lastMsg.Msg, err = json.Marshal(last)
-	if err != nil {
-		return types.MsgInstantiateContract{}, err
-	}
-	var lastMsgEncrypted []byte
-	lastMsg.CodeHash = initMsg.CodeHash
-	lastMsgEncrypted, err = wasmCtx.Encrypt(lastMsg.Serialize())
-	if err != nil {
-		return types.MsgInstantiateContract{}, err
-	}
+	var autoMsgEncrypted []byte
+	autoMsgEncrypted = nil
+	if sendAutoMsg {
+		autoMsg := types.TrustlessMsg{}
+		auto := types.ParseAuto{}
+		autoMsg.Msg, err = json.Marshal(auto)
+		if err != nil {
+			return types.MsgInstantiateContract{}, err
+		}
 
-	if err != nil {
-		return types.MsgInstantiateContract{}, err
+		autoMsg.CodeHash = initMsg.CodeHash
+		autoMsgEncrypted, err = wasmCtx.Encrypt(autoMsg.Serialize())
+		if err != nil {
+			return types.MsgInstantiateContract{}, err
+		}
+
 	}
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgInstantiateContract{
-		Sender:           cliCtx.GetFromAddress(),
+		Sender:           cliCtx.GetFromAddress().String(),
 		CallbackCodeHash: "",
 		CodeID:           codeID,
-		ContractId:       label,
+		ContractId:       contractId,
 		InitFunds:        amount,
 		InitMsg:          encryptedMsg,
-		LastMsg:          lastMsgEncrypted,
+		AutoMsg:          autoMsgEncrypted,
 	}
 	return msg, nil
 }
@@ -315,22 +321,22 @@ func ExecuteContractCmd() *cobra.Command {
 			genOnly, _ := cmd.Flags().GetBool(flags.FlagGenerateOnly)
 
 			amountStr, _ := cmd.Flags().GetString(flagAmount)
-			fmt.Print("Generating")
+
 			if len(args) == 2 {
 
 				if genOnly {
 					return fmt.Errorf("offline transactions must contain contract address")
 				}
 
-				label, err := cmd.Flags().GetString(flagLabel)
+				contractId, err := cmd.Flags().GetString(flagContractId)
 				if err != nil {
-					return fmt.Errorf("error with label: %s", err)
+					return fmt.Errorf("error with contractId: %s", err)
 				}
-				if label == "" {
-					return fmt.Errorf("label or bech32 contract address is required")
+				if contractId == "" {
+					return fmt.Errorf("contractId or bech32 contract address is required")
 				}
 
-				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, label)
+				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, contractId)
 				res, _, err := cliCtx.Query(route)
 				if err != nil {
 					return err
@@ -345,7 +351,7 @@ func ExecuteContractCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				fmt.Print("Executing")
+
 				contractAddr = res
 				msg = []byte(args[1])
 				codeId = args[2]
@@ -370,7 +376,7 @@ func ExecuteContractCmd() *cobra.Command {
 					return fmt.Errorf("missing flag --%s. To create an offline transaction, you must set the target contract's code hash", flagCodeHash)
 				}
 			}
-			fmt.Print("Executing with data")
+
 			return ExecuteWithData(cmd, contractAddr, msg, amountStr, genOnly, ioKeyPath, codeHash, cliCtx, codeId)
 		},
 	}
@@ -379,7 +385,7 @@ func ExecuteContractCmd() *cobra.Command {
 	cmd.Flags().String(flagIoMasterKey, "", "For offline transactions, use this to specify the path to the "+
 		"io-master-cert.der file, which you can get using the command `trstd q register trst-enclave-params` ")
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract along with command")
-	cmd.Flags().String(flagLabel, "", "A human-readable name for this contract in lists")
+	cmd.Flags().String(flagContractId, "", "A human-readable name for this contract in lists")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -416,8 +422,8 @@ func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []b
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msgExec := types.MsgExecuteContract{
-		Sender:           cliCtx.GetFromAddress(),
-		Contract:         contractAddress,
+		Sender:           cliCtx.GetFromAddress().String(),
+		Contract:         contractAddress.String(),
 		CallbackCodeHash: "",
 		SentFunds:        coins,
 		Msg:              encryptedMsg,

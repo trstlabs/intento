@@ -75,7 +75,7 @@ func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func
 
 // IterateContractsQueue iterates over the items in the inactive item queue
 // and performs a callback function
-func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func(item types.ContractInfoWithAddress) (stop bool)) {
+func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func(contract types.ContractInfoWithAddress) (stop bool)) {
 	iterator := k.ContractQueueIterator(ctx, endTime)
 
 	defer iterator.Close()
@@ -90,11 +90,11 @@ func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func
 		}
 		fmt.Printf("addr is:  %s ", addr)
 
-		item := k.GetContractInfoWithAddress(ctx, contractAddr)
+		contract := k.GetContractInfoWithAddress(ctx, contractAddr)
 
-		fmt.Printf("info creator is:  %s ", item.ContractInfo.Creator)
+		fmt.Printf("info creator is:  %s \n", contract.ContractInfo.Creator)
 
-		if cb(item) {
+		if cb(contract) {
 			break
 		}
 	}

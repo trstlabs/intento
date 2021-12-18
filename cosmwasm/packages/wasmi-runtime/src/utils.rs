@@ -4,7 +4,7 @@ use sgx_trts::trts::{
     rsgx_lfence, rsgx_raw_is_outside_enclave, rsgx_sfence, rsgx_slice_is_outside_enclave,
 };
 use sgx_types::*;
-
+//use std::convert::AsMut;
 use crate::crypto::KeyPair;
 use crate::registration::create_attestation_certificate;
 use crate::storage::write_to_untrusted;

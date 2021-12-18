@@ -330,8 +330,8 @@ where
         Ok(function)
     }
 
-    pub fn call_init(&mut self, env: &[u8], msg: &[u8], sig_info: &[u8]) -> VmResult<Vec<u8>> {
-        let init_result = self.inner.init(env, msg, sig_info)?;
+    pub fn call_init(&mut self, env: &[u8], msg: &[u8], auto_msg: &[u8], sig_info: &[u8]) -> VmResult<Vec<u8>> {
+        let init_result = self.inner.init(env, msg, auto_msg, sig_info)?;
         Ok(init_result.into_output())
     }
 
@@ -601,7 +601,7 @@ mod test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        call_init::<_, _, _, Empty>(&mut instance, &env, msg)
+        call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
             .unwrap()
             .unwrap();
 
@@ -627,7 +627,7 @@ mod test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        call_init::<_, _, _, Empty>(&mut instance, &env, msg)
+        call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
             .unwrap()
             .unwrap();
 
@@ -840,7 +840,7 @@ mod singlepass_test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        call_init::<_, _, _, Empty>(&mut instance, &env, msg)
+        call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
             .unwrap()
             .unwrap();
 
@@ -856,7 +856,7 @@ mod singlepass_test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        call_init::<_, _, _, Empty>(&mut instance, &env, msg)
+        call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
             .unwrap()
             .unwrap();
 
@@ -864,7 +864,7 @@ mod singlepass_test {
         let gas_before_handle = instance.get_gas_left();
         let env = mock_env("verifies", &coins(15, "earth"));
         let msg = br#"{"release":{}}"#;
-        call_handle::<_, _, _, Empty>(&mut instance, &env, msg)
+        call_handle::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
             .unwrap()
             .unwrap();
 
@@ -880,7 +880,7 @@ mod singlepass_test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        let res = call_init::<_, _, _, Empty>(&mut instance, &env, msg);
+        let res = call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg);
         assert!(res.is_err());
     }
 
@@ -891,7 +891,7 @@ mod singlepass_test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        let _res = call_init::<_, _, _, Empty>(&mut instance, &env, msg)
+        let _res = call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
             .unwrap()
             .unwrap();
 

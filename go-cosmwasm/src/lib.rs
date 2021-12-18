@@ -227,6 +227,7 @@ static CACHE_ARG: &str = "cache";
 static WASM_ARG: &str = "wasm";
 static CODE_ID_ARG: &str = "code_id";
 static MSG_ARG: &str = "msg";
+static AUTO_MSG_ARG: &str = "auto_msg";
 static PARAMS_ARG: &str = "params";
 static GAS_USED_ARG: &str = "gas_used";
 static SIG_INFO_ARG: &str = "sig_info";
@@ -331,6 +332,7 @@ pub extern "C" fn instantiate(
     contract_id: Buffer,
     params: Buffer,
     msg: Buffer,
+    auto_msg: Buffer,
     db: DB,
     api: GoApi,
     querier: GoQuerier,
@@ -346,6 +348,7 @@ pub extern "C" fn instantiate(
                 contract_id,
                 params,
                 msg,
+                auto_msg,
                 db,
                 api,
                 querier,
@@ -367,6 +370,7 @@ fn do_init(
     code_id: Buffer,
     params: Buffer,
     msg: Buffer,
+    auto_msg: Buffer,
     db: DB,
     api: GoApi,
     querier: GoQuerier,
@@ -380,12 +384,13 @@ fn do_init(
         .try_into()?;
     let params = unsafe { params.read() }.ok_or_else(|| Error::empty_arg(PARAMS_ARG))?;
     let msg = unsafe { msg.read() }.ok_or_else(|| Error::empty_arg(MSG_ARG))?;
+    let auto_msg = unsafe { auto_msg.read() }.ok_or_else(|| Error::empty_arg(AUTO_MSG_ARG))?;
     let sig_info = unsafe { sig_info.read() }.ok_or_else(|| Error::empty_arg(SIG_INFO_ARG))?;
 
     let deps = to_extern(db, api, querier);
     let mut instance = cache.get_instance(&code_id, deps, gas_limit)?;
     // We only check this result after reporting gas usage and returning the instance into the cache.
-    let res = call_init_raw(&mut instance, params, msg, sig_info);
+    let res = call_init_raw(&mut instance, params, msg, auto_msg, sig_info);
     *gas_used = instance.create_gas_report().used_internally;
     instance.recycle();
     Ok(res?)

@@ -12,7 +12,7 @@ import "cosmos/base/v1beta1/coin.proto";
 message MsgStoreCode {
   option (gogoproto.goproto_getters) = false;
 
-   bytes sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+   string sender = 1;
   // WASMByteCode can be raw or gzip compressed
   bytes wasm_byte_code = 2 [(gogoproto.customname) = "WASMByteCode"];
   // Source is a valid absolute HTTPS URI to the contract's source code, optional
@@ -30,14 +30,14 @@ message MsgStoreCode {
 message MsgInstantiateContract {
   option (gogoproto.goproto_getters) = false;
 
-   bytes sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+   string sender = 1;
   // Admin is an optional address that can execute migrations
 //  bytes admin = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   string callback_code_hash = 2;
   uint64 code_id = 3 [(gogoproto.customname) = "CodeID"];
   string contract_id = 4;
   bytes init_msg = 5;
-   bytes last_msg = 6;
+   bytes auto_msg = 6;
   repeated cosmos.base.v1beta1.Coin init_funds = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
    bytes callback_sig = 8 [(gogoproto.customname) = "CallbackSig"];
 }
@@ -45,8 +45,8 @@ message MsgInstantiateContract {
 message MsgExecuteContract {
   option (gogoproto.goproto_getters) = false;
 
-   bytes sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  bytes contract = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+   string sender = 1;
+  string contract = 2;
   bytes msg = 3;
   string callback_code_hash = 4;
   repeated cosmos.base.v1beta1.Coin sent_funds = 5 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];

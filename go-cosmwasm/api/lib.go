@@ -126,6 +126,7 @@ func Instantiate(
 	code_id []byte,
 	params []byte,
 	msg []byte,
+	auto_msg []byte,
 	gasMeter *GasMeter,
 	store KVStore,
 	api *GoAPI,
@@ -139,6 +140,8 @@ func Instantiate(
 	defer freeAfterSend(p)
 	m := sendSlice(msg)
 	defer freeAfterSend(m)
+	am := sendSlice(auto_msg)
+	defer freeAfterSend(am)
 
 	// set up a new stack frame to handle iterators
 	counter := startContract()
@@ -155,7 +158,7 @@ func Instantiate(
 
 	errmsg := C.Buffer{}
 
-	res, err := C.instantiate(cache.ptr, id, p, m, db, a, q, u64(gasLimit), &gasUsed, &errmsg, s)
+	res, err := C.instantiate(cache.ptr, id, p, m, am, db, a, q, u64(gasLimit), &gasUsed, &errmsg, s)
 	if err != nil && err.(syscall.Errno) != C.ErrnoValue_Success {
 		// Depending on the nature of the error, `gasUsed` will either have a meaningful value, or just 0.
 		return nil, uint64(gasUsed), errorWithMessage(err, errmsg)

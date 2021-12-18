@@ -297,6 +297,8 @@ pub enum InitResult {
         output: UserSpaceBuffer,
         /// The contract_key for this contract.
         contract_key: [u8; 64],
+         /// The callback_sig for this contract.
+        callback_sig: [u8; 32],
     },
     Failure {
         /// The error that happened in the enclave

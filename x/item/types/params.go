@@ -12,7 +12,7 @@ import (
 
 // Default period for active
 const (
-	DefaultPeriod time.Duration = time.Hour * 24 * 30 // 30 days
+	DefaultPeriod time.Duration = time.Minute * 1 //time.Hour * 24 * 30 // 30 days
 )
 
 // Parameter store key

@@ -37,7 +37,7 @@ type instantiateContractReq struct {
 	Deposit sdk.Coins    `json:"deposit" yaml:"deposit"`
 	// Admin   sdk.AccAddress `json:"admin,omitempty" yaml:"admin"`
 	InitMsg    []byte `json:"init_msg" yaml:"init_msg"`
-	LastMsg    []byte `json:"last_msg" yaml:"last_msg"`
+	AutoMsg    []byte `json:"last_msg" yaml:"last_msg"`
 	ContractId string `json:"contract_id" yaml:"contract_id"`
 }
 
@@ -84,14 +84,9 @@ func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		fromAddr, err := sdk.AccAddressFromBech32(req.BaseReq.From)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
 		// build and sign the transaction, then broadcast to Tendermint
 		msg := types.MsgStoreCode{
-			Sender:         fromAddr,
+			Sender:         req.BaseReq.From,
 			WASMByteCode:   wasm,
 			ContractPeriod: contractPeriod,
 			Title:          req.Title,
@@ -129,12 +124,12 @@ func instantiateContractHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		msg := types.MsgInstantiateContract{
-			Sender:           cliCtx.GetFromAddress(),
+			Sender:           cliCtx.GetFromAddress().String(),
 			CodeID:           codeID,
 			CallbackCodeHash: "",
 			InitFunds:        req.Deposit,
 			InitMsg:          req.InitMsg,
-			LastMsg:          req.LastMsg,
+			AutoMsg:          req.AutoMsg,
 			ContractId:       req.ContractId,
 			// Admin:            req.Admin,
 		}
@@ -169,8 +164,8 @@ func executeContractHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		msg := types.MsgExecuteContract{
-			Sender:           cliCtx.GetFromAddress(),
-			Contract:         contractAddress,
+			Sender:           cliCtx.GetFromAddress().String(),
+			Contract:         contractAddress.String(),
 			CallbackCodeHash: "",
 			Msg:              req.ExecMsg,
 			SentFunds:        req.Amount,

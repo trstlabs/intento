@@ -37,7 +37,7 @@ func setupQueueContractWithData(t *testing.T, cache Cache, values ...int) queueD
 	msg := []byte(`{}`)
 
 	igasMeter1 := GasMeter(gasMeter1)
-	res, _, err := Instantiate(cache, id, params, msg, &igasMeter1, store, api, &querier, 100000000, nil)
+	res, _, err := Instantiate(cache, id, params, msg, msg, &igasMeter1, store, api, &querier, 100000000, nil)
 	require.NoError(t, err)
 	requireOkResponse(t, res, 0)
 

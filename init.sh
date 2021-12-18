@@ -35,5 +35,5 @@ trstd validate-genesis
 
 
 
-trstd start --bootstrap > init.log --log_level trace
+trstd start --bootstrap > init.log --log_level info
 

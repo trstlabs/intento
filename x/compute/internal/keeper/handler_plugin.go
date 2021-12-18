@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -252,8 +253,8 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 		}
 
 		sdkMsg := types.MsgExecuteContract{
-			Sender:           sender,
-			Contract:         contractAddr,
+			Sender:           sender.String(),
+			Contract:         contractAddr.String(),
 			CallbackCodeHash: msg.Execute.CallbackCodeHash,
 			Msg:              msg.Execute.Msg,
 			SentFunds:        coins,
@@ -267,7 +268,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 		}
 
 		sdkMsg := types.MsgInstantiateContract{
-			Sender: sender,
+			Sender: sender.String(),
 			CodeID: msg.Instantiate.CodeID,
 			// TODO: add this to CosmWasm
 			ContractId:       msg.Instantiate.Label,
@@ -282,49 +283,56 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 	}
 }
 
-func (k Keeper) Dispatch(ctx sdk.Context, contractAddr sdk.AccAddress, msg wasmTypes.CosmosMsg) (events sdk.Events, data []byte, err error) {
-
+func (k Keeper) Dispatch(ctx sdk.Context, contractAddr sdk.AccAddress, msg wasmTypes.CosmosMsg) (results sdk.Result, data []byte, err error) {
+	fmt.Printf("Dispatching.. \n")
+	var result sdk.Result
 	sdkMsgs, err := k.messenger.encoders.Encode(contractAddr, msg)
 	if err != nil {
-		return nil, nil, err
+		return sdk.Result{}, nil, err
 	}
+
 	for _, sdkMsg := range sdkMsgs {
-		_, _, err := k.handleSdkMessage(ctx, contractAddr, sdkMsg)
+		res, _, err := k.handleSdkMessage(ctx, contractAddr, sdkMsg)
 		if err != nil {
-			return nil, nil, err
+			return sdk.Result{}, nil, err
 		}
-		//return sdkEvents, msgData, err
+		result.Data = append(result.Data, res.Data...)
+		result.Events = append(result.Events, res.Events...)
+		result.Log = result.Log + res.Log
 	}
-	return nil, nil, nil
+	return result, nil, nil
 }
 
-func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg sdk.Msg) (sdk.Events, []byte, error) {
+func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg sdk.Msg) (sdk.Result, []byte, error) {
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, nil, err
+		return sdk.Result{}, nil, err
 	}
 
 	// make sure this account can send it
 	for _, acct := range msg.GetSigners() {
 		if !acct.Equals(contractAddr) {
-			return nil, nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
+			return sdk.Result{}, nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
 		}
 	}
 
 	var res *sdk.Result
 	var err error
+
 	if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
+
 		msgRoute := legacyMsg.Route()
+		fmt.Printf("Route is.. %s \n", msgRoute)
 		handler := k.messenger.router.Route(ctx, msgRoute)
 		if handler == nil {
-			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msgRoute)
+			return sdk.Result{}, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msgRoute)
 		}
 
 		res, err = handler(ctx, msg)
 		if err != nil {
-			return nil, nil, err
+			return sdk.Result{}, nil, err
 		}
 	} else {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized legacy message route: %s", sdk.MsgTypeURL(msg))
+		return sdk.Result{}, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized legacy message route: %s", sdk.MsgTypeURL(msg))
 
 		// todo: grpc routing
 		//handler := k.serviceRouter.Handler(msg)
@@ -359,7 +367,7 @@ func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg 
 	// append message action attribute
 	//events = append(events, sdkEvents...)
 
-	return nil, nil, nil
+	return *res, nil, nil
 }
 
 func convertWasmCoinsToSdkCoins(coins []wasmTypes.Coin) (sdk.Coins, error) {

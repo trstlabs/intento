@@ -67,13 +67,13 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 		endTime = maxEndTime
 	}
 	if endTime > maxEndTime {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Time period invalid for this contract code")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Time period must be smaller than maximum period")
 	}
-	/*sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
-	}*/
-	codeID, err := k.Create(ctx, msg.Sender, msg.WASMByteCode, msg.Source, msg.Builder, endTime, msg.Title, msg.Description)
+	}
+	codeID, err := k.Create(ctx, sender, msg.WASMByteCode, msg.Source, msg.Builder, endTime, msg.Title, msg.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
 			sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-			sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
+			sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyCodeID, fmt.Sprintf("%d", codeID)),
 		),
 	})
@@ -94,11 +94,11 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 }
 
 func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (*sdk.Result, error) {
-	/*	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-		if err != nil {
-			return nil, err
-		}*/
-	contractAddr, err := k.Instantiate(ctx, msg.CodeID, msg.Sender, msg.InitMsg, msg.ContractId, msg.InitFunds, nil)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return nil, err
+	}
+	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	custom := sdk.Events{sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
+		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
 		sdk.NewAttribute(types.AttributeKeyCodeID, fmt.Sprintf("%d", msg.CodeID)),
 		sdk.NewAttribute(types.AttributeKeyContract, contractAddr.String()),
 	)}
@@ -137,15 +137,20 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 
 func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Result, error) {
 	fmt.Print("handling..")
-	/*sender, err := sdk.AccAddressFromBech32(msg.Sender)
+
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
-	}*/
+	}
+	contract, err := sdk.AccAddressFromBech32(msg.Contract)
+	if err != nil {
+		return nil, err
+	}
 	fmt.Print("executing..")
 	res, err := k.Execute(
 		ctx,
-		msg.Contract,
-		msg.Sender,
+		contract,
+		sender,
 		msg.Msg,
 		msg.SentFunds,
 		nil,
@@ -154,14 +159,14 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 		return nil, err
 	}
 	fmt.Print("setting..")
-	k.SetContractResult(ctx, msg.Contract, res)
+	k.SetContractResult(ctx, contract, res)
 
 	events := filteredMessageEvents(ctx.EventManager())
 	custom := sdk.Events{sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
-		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract.String()),
+		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
+		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract),
 	)}
 	events = append(events, custom.ToABCIEvents()...)
 	fmt.Print("events Execute handled")
@@ -181,7 +186,7 @@ func handleDeleteContract(ctx sdk.Context, k Keeper, msg *MsgDeleteContract) (*s
 	ourEvent := sdk.Events{sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
+		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
 		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract.String()),
 	)}
 	res.Events = append(events, ourEvent.ToABCIEvents()...)
@@ -199,7 +204,7 @@ func handleMigration(ctx sdk.Context, k Keeper, msg *MsgMigrateContract) (*sdk.R
 	ourEvent := sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
+		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
 		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract.String()),
 	)
 	res.Events = append(events, ourEvent)
@@ -214,7 +219,7 @@ func handleUpdateContractAdmin(ctx sdk.Context, k Keeper, msg *MsgUpdateAdmin) (
 	ourEvent := sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
+		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
 		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract.String()),
 	)
 	return &sdk.Result{
@@ -230,7 +235,7 @@ func handleClearContractAdmin(ctx sdk.Context, k Keeper, msg *MsgClearAdmin) (*s
 	ourEvent := sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
-		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
+		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
 		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract.String()),
 	)
 	return &sdk.Result{

@@ -1,7 +1,7 @@
 #![cfg_attr(not(feature = "SGX_MODE_HW"), allow(unused))]
 
 use std::env;
-use std::path;
+//use std::path;
 
 pub use enclave_ffi_types::ENCRYPTED_SEED_SIZE;
 use lazy_static::lazy_static;

@@ -11,6 +11,8 @@ pub struct InitSuccess {
     pub output: Vec<u8>,
     /// The contract_key of this contract.
     pub contract_key: [u8; 64],
+    /// The callback_sig of this contract.
+    pub callback_sig: [u8; 32],
 }
 
 pub fn result_init_success_to_initresult(result: Result<InitSuccess, EnclaveError>) -> InitResult {
@@ -18,6 +20,7 @@ pub fn result_init_success_to_initresult(result: Result<InitSuccess, EnclaveErro
         Ok(InitSuccess {
             output,
             contract_key,
+            callback_sig
         }) => {
             let user_buffer = unsafe {
                 let mut user_buffer = std::mem::MaybeUninit::<UserSpaceBuffer>::uninit();
@@ -36,6 +39,7 @@ pub fn result_init_success_to_initresult(result: Result<InitSuccess, EnclaveErro
             InitResult::Success {
                 output: user_buffer,
                 contract_key,
+                callback_sig,
             }
         }
         Err(err) => InitResult::Failure { err },

@@ -224,6 +224,10 @@ typedef struct InitResult_Success_Body {
      * The contract_key for this contract.
      */
     uint8_t contract_key[64];
+    /**
+     * The callback_sig for this contract.
+     */
+    uint8_t callback_sig[32];
 } InitResult_Success_Body;
 
 typedef struct InitResult_Failure_Body {

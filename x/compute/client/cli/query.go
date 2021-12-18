@@ -525,7 +525,7 @@ func GetCmdQuery() *cobra.Command {
 
 			if len(args) == 1 {
 
-				label, err := cmd.Flags().GetString(flagLabel)
+				label, err := cmd.Flags().GetString(flagContractId)
 				if err != nil {
 					return fmt.Errorf("trustless Contract ID or bech32 contract address is required")
 				}
@@ -557,7 +557,7 @@ func GetCmdQuery() *cobra.Command {
 		},
 	}
 	decoder.RegisterFlags(cmd.PersistentFlags(), "query argument")
-	cmd.Flags().String(flagLabel, "", "A human-readable name for this contract in lists")
+	cmd.Flags().String(flagContractId, "", "A human-readable name for this contract in lists")
 	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

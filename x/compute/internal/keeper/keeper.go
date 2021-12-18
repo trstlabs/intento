@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/json"
+
+	//"encoding/json"
 	"fmt"
 	"time"
 
@@ -151,6 +152,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 	tx := sdktx.Tx{}
 	err := k.cdc.Unmarshal(ctx.TxBytes(), &tx)
 	if err != nil {
+		fmt.Printf("err")
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to decode transaction from bytes: %s", err.Error()))
 	}
 
@@ -158,9 +160,10 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 	// (https://github.com/enigmampc/SecretNetwork/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L192-L194)
 	signerAcc, err := ante.GetSignerAcc(ctx, k.accountKeeper, signer)
 	if err != nil {
+		fmt.Printf("er6r")
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to retrieve account by address: %s", err.Error()))
 	}
-
+	fmt.Printf("dsf")
 	txConfig := authtx.NewTxConfig(k.cdc.(*codec.ProtoCodec), authtx.DefaultSignModes)
 	modeHandler := txConfig.SignModeHandler()
 	signingData := authsigning.SignerData{
@@ -168,14 +171,14 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 		AccountNumber: signerAcc.GetAccountNumber(),
 		Sequence:      signerAcc.GetSequence() - 1,
 	}
-
+	fmt.Printf("errasfg")
 	protobufTx := authtx.WrapTx(&tx).GetTx()
-
+	fmt.Printf("errasdfsasfg")
 	pubKeys, err := protobufTx.GetPubKeys()
 	if err != nil {
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to get public keys for instantiate: %s", err.Error()))
 	}
-
+	fmt.Printf("executing sig errsdf ")
 	pkIndex := -1
 	var _signers [][]byte // This is just used for the error message below
 	for index, pubKey := range pubKeys {
@@ -185,10 +188,11 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 			pkIndex = index
 		}
 	}
+	fmt.Printf("executing sig sadfserrsdf ")
 	if pkIndex == -1 {
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Message sender: %v is not found in the tx signer set: %v, callback signature not provided", signer, _signers))
 	}
-
+	fmt.Printf("execusdafasting sig errsdf ")
 	signatures, _ := protobufTx.GetSignaturesV2()
 	var signMode sdktxsigning.SignMode
 	switch signData := signatures[pkIndex].Data.(type) {
@@ -197,31 +201,34 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 	case *sdktxsigning.MultiSignatureData:
 		signMode = sdktxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
 	}
+	fmt.Printf("exesdfsacuting sig errsdf ")
 	signBytes, err := modeHandler.GetSignBytes(signMode, signingData, protobufTx)
 	if err != nil {
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to recreate sign bytes for the tx: %s", err.Error()))
 	}
-
+	fmt.Printf("executing ssadfig errsdf ")
 	modeInfoBytes, err := sdktxsigning.SignatureDataToProto(signatures[pkIndex].Data).Marshal()
 	if err != nil {
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, "couldn't marshal mode info")
 	}
-
+	fmt.Printf("executsadfing sig errsdff ")
 	var pkBytes []byte
 	pubKey := pubKeys[pkIndex]
 	anyPubKey, err := codedctypes.NewAnyWithValue(pubKey)
 	if err != nil {
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, "couldn't turn public key into Any")
 	}
+	fmt.Printf("executing sig esadfrrsdf ")
 	pkBytes, err = k.cdc.Marshal(anyPubKey)
 	if err != nil {
 		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, "couldn't marshal public key")
 	}
+	fmt.Printf("executing sig errssdaffdf ")
 	return signBytes, signMode, modeInfoBytes, pkBytes, tx.Signatures[pkIndex], nil
 }
 
 // Instantiate creates an instance of a WASM contract
-func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, initMsg []byte, label string, deposit sdk.Coins, callbackSig []byte) (sdk.AccAddress, error) {
+func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, initMsg []byte, autoMsg []byte, label string, deposit sdk.Coins, callbackSig []byte) (sdk.AccAddress, error) {
 
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading CosmWasm module: init")
 
@@ -241,8 +248,8 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	}
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
-	fmt.Print("Init verificationInfo SignMode is  \n", verificationInfo.SignMode)
-	fmt.Print("Init verificationInfo Signature is  \n", verificationInfo.Signature)
+	//fmt.Print("Init verificationInfo SignMode is  \n", verificationInfo.SignMode)
+	//fmt.Print("Init verificationInfo Signature is  \n", verificationInfo.Signature)
 	//fmt.Print("Init message after wasm is  \n", res.Messages[1])
 	//fmt.Printf("Init message after wasm is  \n", res.Log)
 	// create contract address
@@ -303,15 +310,17 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		Ctx:     ctx,
 		Plugins: k.queryPlugins,
 	}
-
+	if autoMsg == nil {
+		autoMsg = make([]byte, 32)
+	}
 	// instantiate wasm contract
 	gas := gasForContract(ctx)
-	res, key, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo)
+	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, autoMsg, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo)
 	consumeGas(ctx, gasUsed)
 	if err != nil {
 		return contractAddress, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
 	}
-
+	fmt.Printf("sig// %s \n", string(callbackSig))
 	// emit all events from this contract itself
 	events := types.ParseEvents(res.Log, contractAddress)
 	ctx.EventManager().EmitEvents(events)
@@ -323,12 +332,16 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	if codeInfo.EndTime == 0 {
 		endTime = ctx.BlockHeader().Time.Add(k.GetParams(ctx).MaxActivePeriod)
 	}
-
-	instance := types.NewContractInfo(codeID, creator /* admin, */, label, createdAt, endTime)
-	codeInfo.Instances = codeInfo.Instances + 1
+	if autoMsg != nil {
+		instance := types.NewContractInfo(codeID, creator /* admin, */, label, createdAt, endTime, autoMsg, callbackSig)
+		store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&instance))
+	} else {
+		instance := types.NewContractInfo(codeID, creator /* admin, */, label, createdAt, endTime, nil, nil)
+		store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&instance))
+	}
 	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(&codeInfo))
-	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&instance))
 
+	codeInfo.Instances = codeInfo.Instances + 1
 	// fmt.Printf("Storing key: %v for account %s\n", key, contractAddress)
 
 	store.Set(types.GetContractEnclaveKey(contractAddress), key)
@@ -347,30 +360,32 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 
 // Execute executes the contract instance
 func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins, callbackSig []byte) (*sdk.Result, error) {
-	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading Compute module: execute")
-
+	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading compute module: execute")
+	fmt.Printf("executing caller %s ", caller)
 	signBytes := []byte{}
 	signMode := sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED
 	modeInfoBytes := []byte{}
 	pkBytes := []byte{}
 	signerSig := []byte{}
 	var err error
-
+	fmt.Printf("executing callback sig %s \n", string(callbackSig))
 	// If no callback signature - we should send the actual msg sender sign bytes and signature
 	if callbackSig == nil {
 		signBytes, signMode, modeInfoBytes, pkBytes, signerSig, err = k.GetSignerInfo(ctx, caller)
 		if err != nil {
+			fmt.Printf("executing sig err %s", err)
 			return nil, err
 		}
+		fmt.Printf("executing sig %s \n", signMode)
 	}
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
-
+	fmt.Println("executing sig verified")
 	codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("executing sig instance")
 	store := ctx.KVStore(k.storeKey)
 
 	// add funds
@@ -384,7 +399,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 			return nil, sdkerr
 		}
 	}
-
+	fmt.Println("executing sig funds")
 	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
 	if contractKey == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "contract key not found")
@@ -414,8 +429,8 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	//	return sdk.Result{}, err
 	//}
 	//fmt.Printf("result: Got result for item data: %s | log: %s\n", res.Data, res.Log)
-	var raw map[string]json.RawMessage
-	_ = json.Unmarshal([]byte(res.Log[0].Value), &raw)
+	/*var raw map[string]json.RawMessage
+	_ = json.Unmarshal([]byte(res.Log[0].Value), &raw)*/
 	//fmt.Printf("log: Got res raw for item %s: %s\n", raw, res)
 
 	// emit all events from this contract itself
@@ -460,11 +475,11 @@ func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (er
 
 	//msgLast =
 	//var err
-	lastMsg := types.TrustlessMsg{}
+	autoMsg := types.TrustlessMsg{}
 	last := types.ParseLast{}
 
 	//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
-	lastMsg.Msg, err = json.Marshal(last)
+	autoMsg.Msg, err = json.Marshal(last)
 	if err != nil {
 		return err
 	}
@@ -475,7 +490,7 @@ func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (er
 	hash := k.GetCodeHash(ctx, codeid)
 
 	var encryptedMsg []byte
-	lastMsg.CodeHash = []byte(hex.EncodeToString(hash))
+	autoMsg.CodeHash = []byte(hex.EncodeToString(hash))
 	encryptedMsg, err = wasmCtx.Encrypt(deletegMsg.Serialize())
 	if err != nil {
 		return err
@@ -489,6 +504,7 @@ func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (er
 	return nil
 }
 */
+
 // Delete deletes the contract instance
 func (k Keeper) Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error {
 
@@ -655,10 +671,10 @@ func (k Keeper) GetContractInfoWithAddress(ctx sdk.Context, contractAddress sdk.
 	}
 
 	fmt.Printf("Unmarshalling..")
-	var Info types.ContractInfo
-	k.cdc.MustUnmarshal(contractBz, &Info)
+	var info types.ContractInfo
+	k.cdc.MustUnmarshal(contractBz, &info)
 	fmt.Printf("Setting")
-	contract.ContractInfo = &Info
+	contract.ContractInfo = &info
 
 	/*contractBz := store.Get(types.GetContractAddressKey(contractAddress))
 	if contractBz == nil {
@@ -671,7 +687,7 @@ func (k Keeper) GetContractInfoWithAddress(ctx sdk.Context, contractAddress sdk.
 	*/
 	//contract.ContractInfo = k.GetContractInfo(ctx, contractAddress)
 
-	fmt.Printf("info creator is:  %s ", contract.ContractInfo.Creator.String())
+	//fmt.Printf("info creator is:  %s ", contract.ContractInfo.Creator.String())
 
 	contract.Address = contractAddress
 	fmt.Printf("info Address is:  %s ", contract.Address.String())

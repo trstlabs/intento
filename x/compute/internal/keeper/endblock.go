@@ -28,8 +28,8 @@ func (k Keeper) ContractPayout(ctx sdk.Context, contractAddress sdk.AccAddress) 
 	return nil
 }
 
-// CallLastMsg executes a final message before end-blocker deletion
-func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (err error) {
+// CallAutoMsg executes a final message before end-blocker deletion
+func (k Keeper) CallAutoMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (err error) {
 
 	//get codeid first
 	info, err := k.GetContractInfo(ctx, contractAddress)
@@ -74,7 +74,7 @@ func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (er
 
 		gas := gasForContract(ctx)
 		//	fmt.Printf("Execute message before wasm is %s \n", base64.StdEncoding.EncodeToString(msg))
-		res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, codeInfo.LastMsg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+		res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, codeInfo.AutoMsg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
 		consumeGas(ctx, gasUsed)
 
 		if execErr != nil {
@@ -85,8 +85,8 @@ func (k Keeper) CallLastMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (er
 
 
 	*/
-	if info.LastMsg != nil {
-		res, err := k.Execute(ctx, contractAddress, contractAddress, info.LastMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
+	if info.AutoMsg != nil {
+		res, err := k.Execute(ctx, contractAddress, contractAddress, info.AutoMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 		if err != nil {
 			return err
 		}

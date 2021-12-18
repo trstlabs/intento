@@ -22,13 +22,13 @@ type HandleResponse struct {
 	Log []LogAttribute `json:"log"`
 }
 
-// InitResult is the raw response from the handle call
+// InitResult is the raw response from the init call
 type InitResult struct {
 	Ok  *InitResponse `json:"Ok,omitempty"`
 	Err *StdError     `json:"Err,omitempty"`
 }
 
-// InitResponse defines the return value on a successful handle
+// InitResponse defines the return value on a successful init
 type InitResponse struct {
 	// Messages comes directly from the contract and is it's request for action
 	Messages []CosmosMsg `json:"messages"`
@@ -84,9 +84,9 @@ type VoteMsg struct {
 }
 
 var (
-	Yes = "Yes"
-	Abstain = "Abstain"
-	No = "No"
+	Yes        = "Yes"
+	Abstain    = "Abstain"
+	No         = "No"
 	NoWithVeto = "NoWithVeto"
 )
 
@@ -163,6 +163,9 @@ type InstantiateMsg struct {
 	// Msg is assumed to be a json-encoded message, which will be passed directly
 	// as `userMsg` when calling `Handle` on the above-defined contract
 	Msg []byte `json:"msg"`
+	// AutoMsg is assumed to be a json-encoded message, which will be passed directly
+	// as `autoMsg` when calling `Handle` on the above-defined contract
+	AutoMsg []byte `json:"auto_msg"`
 	/// Label is a mandatory human-readbale label for the contract
 	Label string `json:"label"`
 	// Send is an optional amount of coins this contract sends to the called contract

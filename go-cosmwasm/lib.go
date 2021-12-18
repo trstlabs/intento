@@ -93,39 +93,43 @@ func (w *Wasmer) Instantiate(
 	code CodeID,
 	env types.Env,
 	initMsg []byte,
+	autoMsg []byte,
 	store KVStore,
 	goapi GoAPI,
 	querier Querier,
 	gasMeter GasMeter,
 	gasLimit uint64,
 	sigInfo types.VerificationInfo,
-) (*types.InitResponse, []byte, uint64, error) {
+) (*types.InitResponse, []byte, []byte, uint64, error) {
 	paramBin, err := json.Marshal(env)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, nil, 0, err
 	}
 
 	sigInfoBin, err := json.Marshal(sigInfo)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, nil, 0, err
 	}
+	fmt.Printf("Auto msg")
+	fmt.Println(string(autoMsg))
 
-	data, gasUsed, err := api.Instantiate(w.cache, code, paramBin, initMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
+	data, gasUsed, err := api.Instantiate(w.cache, code, paramBin, initMsg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
 	if err != nil {
-		return nil, nil, gasUsed, err
+		return nil, nil, nil, gasUsed, err
 	}
 
 	key := data[0:64]
+	callback_sig := data[64:96]
 	var resp types.InitResult
-	err = json.Unmarshal(data[64:], &resp)
+	err = json.Unmarshal(data[96:], &resp)
 	if err != nil {
-		return nil, nil, gasUsed, err
+		return nil, nil, nil, gasUsed, err
 	}
 
 	if resp.Err != nil {
-		return nil, nil, gasUsed, fmt.Errorf("%v", resp.Err)
+		return nil, nil, nil, gasUsed, fmt.Errorf("%v", resp.Err)
 	}
-	return resp.Ok, key, gasUsed, nil
+	return resp.Ok, key, callback_sig, gasUsed, nil
 }
 
 // Execute calls a given contract. Since the only difference between contracts with the same CodeID is the

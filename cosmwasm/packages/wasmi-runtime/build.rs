@@ -53,6 +53,7 @@ mod protobuf {
                
             ),
            
+           
         ];
 
         for (out_dir, inputs) in directories {

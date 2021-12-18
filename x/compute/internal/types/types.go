@@ -83,14 +83,16 @@ type ContractCodeHistoryEntry struct {
 */
 
 // NewContractInfo creates a new instance of a given WASM contract info
-func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, endTime time.Time) ContractInfo {
+func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, endTime time.Time, autoMsg []byte, callbackSig []byte) ContractInfo {
 	return ContractInfo{
 		CodeID:  codeID,
 		Creator: creator,
 		// Admin:   admin,
-		ContractId: label,
-		Created:    createdAt,
-		EndTime:    endTime,
+		ContractId:  label,
+		Created:     createdAt,
+		EndTime:     endTime,
+		AutoMsg:     autoMsg,
+		CallbackSig: callbackSig,
 	}
 }
 func (c *ContractInfo) ValidateBasic() error {
@@ -268,9 +270,9 @@ func NewVerificationInfo(
 	}
 }
 
-type ParseLast struct {
-	LastMsg struct {
-	} `json:"last_msg"`
+type ParseAuto struct {
+	AutoMsg struct {
+	} `json:"auto_msg"`
 }
 
 // GetConfig load config values from the app options
