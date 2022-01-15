@@ -42,9 +42,10 @@ vue
 
 /init.log
 
-snapshot.json
-reserves.json
 genesis_secret_3.json
 genesis.cosmoshub_4.json
 
 init.log
+
+snapshot.json
+reserves.json

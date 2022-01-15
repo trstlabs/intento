@@ -217,7 +217,7 @@ type App struct {
 	transferKeeper   ibctransferkeeper.Keeper
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
-	ClaimKeeper      claimkeeper.Keeper
+	ClaimKeeper      *claimkeeper.Keeper
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -248,7 +248,8 @@ func New(
 ) *App {
 
 	encodingConfig := MakeEncodingConfig()
-	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
+	//	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
+	appCodec := encodingConfig.Marshaler
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 
 	cdc := encodingConfig.Amino
@@ -321,14 +322,8 @@ func New(
 	)
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp)
 
-	// register the staking hooks
-	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	app.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks()),
-	)
-
 	// ... other modules keepers
-	app.ClaimKeeper = *claimkeeper.NewKeeper(
+	app.ClaimKeeper = claimkeeper.NewKeeper(
 		appCodec,
 		keys[claimtypes.StoreKey],
 		keys[claimtypes.MemStoreKey],
@@ -337,7 +332,14 @@ func New(
 		&stakingKeeper,
 		app.DistrKeeper,
 	)
-	claimModule := claim.NewAppModule(appCodec, app.ClaimKeeper)
+
+	// register the staking hooks
+	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
+	app.StakingKeeper = *stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ClaimKeeper.Hooks()),
+	)
+
+	claimModule := claim.NewAppModule(appCodec, *app.ClaimKeeper)
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
@@ -402,13 +404,13 @@ func New(
 
 	app.regKeeper = reg.NewKeeper(appCodec, keys[reg.StoreKey], regRouter, reg.EnclaveApi{}, homeDir, app.bootstrap)
 	app.computeKeeper = compute.NewKeeper(
-		appCodec, *legacyAmino,
+		appCodec, /**legacyAmino,*/
 		keys[compute.StoreKey],
 		app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.DistrKeeper, app.MintKeeper, stakingKeeper,
-		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(itemtypes.ModuleName), computehooks.NewMultiComputeHooks(app.ClaimKeeper.Hooks()))
+		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(compute.ModuleName), computehooks.NewMultiComputeHooks(app.ClaimKeeper.Hooks()))
 
 	app.itemKeeper = *itemkeeper.NewKeeper(
-		appCodec, keys[itemtypes.StoreKey], keys[itemtypes.MemStoreKey], app.GetSubspace(itemtypes.ModuleName), app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName, trstdir /* trstwasmConfig, supportedFeatures,*/, app.computeKeeper,
+		appCodec, keys[itemtypes.StoreKey], keys[itemtypes.MemStoreKey], app.GetSubspace(itemtypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.DistrKeeper, trstdir /* trstwasmConfig, supportedFeatures,*/, app.computeKeeper,
 		itemtypes.NewMultiItemHooks(app.ClaimKeeper.Hooks()))
 	/****  Module Options ****/
 
@@ -440,7 +442,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		item.NewAppModule(appCodec, app.itemKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
-		compute.NewAppModule(app.computeKeeper),
+		compute.NewAppModule(appCodec, app.computeKeeper),
 		reg.NewAppModule(app.regKeeper),
 		claimModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
@@ -493,6 +495,7 @@ func New(
 	app.MountMemoryStores(memKeys)
 
 	// initialize BaseApp
+
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 
@@ -553,6 +556,7 @@ func (app *App) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.Respo
 func (app *App) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := tmjson.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
+
 		panic(err)
 	}
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)

@@ -8,11 +8,11 @@ import (
 
 var _ sdk.Msg = &MsgCreateEstimation{}
 
-func NewMsgCreateEstimation(estimator string, estimatemsg []byte, itemid uint64, deposit int64, interested bool) *MsgCreateEstimation {
+func NewMsgCreateEstimation(estimator string, estimateMsg []byte, itemid uint64, deposit int64, interested bool) *MsgCreateEstimation {
 	//fmt.Printf("new item msg: %X\n", estimator)
 	return &MsgCreateEstimation{
 		Estimator:   estimator,
-		Estimatemsg: estimatemsg,
+		EstimateMsg: estimateMsg,
 		//Estimatorestimationhash: estimatorestimationhash,
 		Itemid:     itemid,
 		Deposit:    deposit,
@@ -99,7 +99,7 @@ func NewMsgDeleteEstimation(estimator string, itemid uint64, deletemsg []byte) *
 	return &MsgDeleteEstimation{
 		Itemid:    itemid,
 		Estimator: estimator,
-		Deletemsg: deletemsg,
+		DeleteMsg: deletemsg,
 	}
 }
 func (msg *MsgDeleteEstimation) Route() string {
@@ -131,12 +131,12 @@ func (msg *MsgDeleteEstimation) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgFlagItem(estimator string, itemid uint64, flagmsg []byte) *MsgFlagItem {
+func NewMsgFlagItem(estimator string, itemid uint64, flagMsg []byte) *MsgFlagItem {
 	return &MsgFlagItem{
 		Itemid: itemid,
 
 		Estimator: estimator,
-		Flagmsg:   flagmsg,
+		FlagMsg:   flagMsg,
 	}
 }
 

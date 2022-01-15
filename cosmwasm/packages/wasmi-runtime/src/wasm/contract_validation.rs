@@ -4,10 +4,10 @@ use enclave_ffi_types::EnclaveError;
 
 use crate::cosmwasm::types::{CanonicalAddr, Coin, Env, HumanAddr};
 use crate::crypto::traits::PubKey;
-use crate::crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER};
+use crate::crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER, };
 use crate::wasm::io;
 use crate::wasm::types::{SecretMessage, StdSignDoc};
-
+use crate::crypto::secp256k1::secp256k1_verify;
 use super::types::{CosmWasmMsg, CosmosPubKey, SigInfo, SignDoc};
 
 pub type ContractKey = [u8; CONTRACT_KEY_LENGTH];
@@ -27,7 +27,6 @@ pub fn generate_encryption_key(
         EnclaveError::FailedToDeserialize
     })
     .unwrap();
-
 
     let (_, sender_address_u5) = bech32::decode(env.message.sender.as_str()).map_err(|err| {
         warn!(
@@ -162,6 +161,7 @@ pub fn validate_msg(msg: &[u8], contract_hash: [u8; HASH_SIZE]) -> Result<Vec<u8
 
 /// Verify all the parameters sent to the enclave match up, and were signed by the right account.
 pub fn verify_params(
+    msg_bytes: &[u8],
     sig_info: &SigInfo,
     env: &Env,
     msg: &SecretMessage,
@@ -182,6 +182,12 @@ pub fn verify_params(
         "Sign bytes are: {:?}",
         String::from_utf8_lossy(sig_info.sign_bytes.as_slice())
     );
+//test
+    trace!(
+        "Sign signature is: {:?}",
+        String::from_utf8_lossy(sig_info.signature.as_slice())
+    );
+
 
     let (sender_public_key, messages) = get_signer_and_messages(sig_info, env)?;
 
@@ -189,10 +195,31 @@ pub fn verify_params(
         "sender canonical address is: {:?}",
         sender_public_key.get_address().0.0
     );
-    trace!("sender signature is: {:?}", sig_info.signature);
-    trace!("sign bytes are: {:?}", sig_info.sign_bytes);
 
-    /*sender_public_key
+   /*  trace!(
+        "sender key  is: {:?}",
+        sender_public_key.amino_bytes().clone()
+    );
+   
+    trace!(
+        "sender key  is: {:?}",
+        sender_public_key.amino_bytes().clone()
+    );
+    trace!(
+        "msg_bytes  is: {:?}",
+        msg_bytes
+    );
+    trace!(
+        "msg_bytes length is: {:?}",
+        msg_bytes.len()
+    );
+
+   secp256k1_verify(msg_bytes, sig_info.signature.as_slice(), &sender_public_key.amino_bytes()).map_err(|err| {
+        warn!("Signature verification failed: {:?}", err);
+        EnclaveError::FailedTxVerification
+    })?;*/
+    //keplr direct signer seems to be incompatible with this verification, it keeps failing with 'IncorrectSignature'
+  sender_public_key
         .verify_bytes(
             sig_info.sign_bytes.as_slice(),
             sig_info.signature.as_slice(),
@@ -201,9 +228,8 @@ pub fn verify_params(
             warn!("Signature verification failed: {:?}", err);
             EnclaveError::FailedTxVerification
         })?;
-      */
 
-   if verify_message_params(&messages, env, &sender_public_key, msg) {
+    if verify_message_params(&messages, env, &sender_public_key, msg) {
         info!("Parameters verified successfully");
         return Ok(());
     }
@@ -212,7 +238,7 @@ pub fn verify_params(
 
     Err(EnclaveError::FailedTxVerification)
 
-  //  info!("Parameters verified successfully");
+    //  info!("Parameters verified successfully");
     //return Ok(());
 }
 
@@ -279,6 +305,10 @@ fn get_signer_and_messages(
     }
 }
 
+
+
+
+
 /// Verify that the callback sig is appropriate.
 ///
 ///This is used when contracts send callbacks to each other.
@@ -316,7 +346,8 @@ fn verify_callback_sig_impl(
 
     if callback_signature != callback_sig {
         trace!(
-            "Contract signature does not match with the one sent: {:?}",
+            "Contract signature {:?} does not match with the one sent: {:?}",
+            callback_sig,
             callback_signature
         );
         return false;
@@ -337,19 +368,31 @@ fn get_verified_msg<'sd>(
             init_msg: msg,
             sender,
             ..
-        } | CosmWasmMsg::CreateItem {
-            initmsg: msg, creator: 
-            sender, ..
-        } | CosmWasmMsg::CreateEstimation{
-            estimatemsg: msg, estimator: 
-            sender, ..
-        } | CosmWasmMsg::FlagItem {
-            flagmsg: msg, estimator: 
-            sender, ..
-        } 
-        | CosmWasmMsg::RevealEstimation{
-            revealmsg: msg, creator: 
-            sender, ..
+        }
+        | CosmWasmMsg::CreateItem {
+            init_msg: msg,
+            creator: sender,
+            ..
+        }
+        | CosmWasmMsg::CreateEstimation {
+            estimate_msg: msg,
+            estimator: sender,
+            ..
+        }
+        | CosmWasmMsg::FlagItem {
+            flag_msg: msg,
+            estimator: sender,
+            ..
+        }
+        | CosmWasmMsg::ItemTransferable {
+            transferable_msg: msg,
+            seller: sender,
+            ..
+        }
+        | CosmWasmMsg::RevealEstimation {
+            reveal_msg: msg,
+            creator: sender,
+            ..
         } => msg_sender == sender && &sent_msg.to_vec() == msg,
         CosmWasmMsg::Other => false,
     })
@@ -374,6 +417,7 @@ fn verify_contract(msg: &CosmWasmMsg, env: &Env) -> bool {
         CosmWasmMsg::Instantiate { .. } => true,
         CosmWasmMsg::CreateItem { .. } => true,
         CosmWasmMsg::FlagItem { .. } => true,
+        CosmWasmMsg::ItemTransferable { .. } => true,
         CosmWasmMsg::RevealEstimation { .. } => true,
         CosmWasmMsg::CreateEstimation { .. } => true,
         CosmWasmMsg::Other => false,
@@ -387,8 +431,13 @@ fn verify_funds(msg: &CosmWasmMsg, env: &Env) -> bool {
         | CosmWasmMsg::Instantiate {
             init_funds: sent_funds,
             ..
-         } => &env.message.sent_funds == sent_funds,
-        CosmWasmMsg::Other => false, CosmWasmMsg::CreateItem { .. } => true, CosmWasmMsg::CreateEstimation { .. } => true, CosmWasmMsg::FlagItem { .. } => true, CosmWasmMsg::RevealEstimation { .. } => true, 
+        } => &env.message.sent_funds == sent_funds,
+        CosmWasmMsg::Other => false,
+        CosmWasmMsg::CreateItem { .. } => true,
+        CosmWasmMsg::CreateEstimation { .. } => true,
+        CosmWasmMsg::FlagItem { .. } => true,
+        CosmWasmMsg::ItemTransferable { .. } => true,
+        CosmWasmMsg::RevealEstimation { .. } => true,
     }
 }
 
@@ -420,7 +469,7 @@ fn verify_message_params(
     // If msg is not found (is None) then it means message verification failed,
     // since it didn't find a matching signed message
     let msg = get_verified_msg(messages, &msg_sender, sent_msg);
-   if msg.is_none() {
+    if msg.is_none() {
         warn!("Message verification failed!");
         trace!(
             "Message sent to contract {:?} by {:?} does not match any signed messages {:?}",
@@ -434,7 +483,6 @@ fn verify_message_params(
 
     if msg.sender() != Some(&signer_addr) {
         warn!(
-            
             "message signer did not match cosmwasm message sender: {:?} {:?}",
             signer_addr, msg
         );

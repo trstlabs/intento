@@ -8,7 +8,20 @@ use ripemd160::{Digest, Ripemd160};
 use secp256k1::Secp256k1;
 use sha2::{Digest as Sha2Digest, Sha256};
 
+//use digest::Digest; // trait
+use k256::{
+    ecdsa::recoverable,
+    ecdsa::signature::{DigestVerifier, Signature as _}, // traits
+    ecdsa::{Signature, VerifyingKey},                   // type aliases
+    elliptic_curve::sec1::ToEncodedPoint,
+};
+use std::convert::TryInto;
+
+//use crate::errors::{CryptoError, CryptoResult};
+use crate::crypto::identity_digest::Identity256;
+
 const SECP256K1_PREFIX: [u8; 4] = [235, 90, 233, 135];
+const SECP256K1_PREFIX_LONG: [u8; 5] = [235, 90, 233, 135, 33];
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Secp256k1PubKey(Vec<u8>);
@@ -63,191 +76,184 @@ impl PubKey for Secp256k1PubKey {
             warn!("Failed to create a secp256k1 message from tx: {:?}", err);
             CryptoError::VerificationError
         })?;
-
         let verifier = Secp256k1::verification_only();
 
         // Create `secp256k1`'s types
-        let sec_signature = secp256k1::Signature::from_compact(sig).map_err(|err| {
+        /*let sec_signature = */secp256k1::Signature::from_compact(sig).map_err(|err| {
             warn!("Malformed signature: {:?}", err);
             CryptoError::VerificationError
         })?;
-        let sec_public_key =
+        /*let sec_public_key =*/
             secp256k1::PublicKey::from_slice(self.0.as_slice()).map_err(|err| {
                 warn!("Malformed public key: {:?}", err);
                 CryptoError::VerificationError
             })?;
 
-      verifier
-            .verify(&msg, &sec_signature, &sec_public_key)
-            .map_err(|err| {
-                trace!(
-                    "Failed to verify signatures for the given transaction: {:?}",
-                    err
-                );
-             
-               
-                CryptoError::VerificationError
-            })?;
-        trace!("successfully verified this signature: {:?}", sig);
+      /*  verifier
+           .verify_ecdsa(&msg, &sec_signature, &sec_public_key)
+           .map_err(|err| {
+               trace!(
+                   "Failed to verify signatures for the given transaction: {:?}",
+                   err
+               );
+
+
+               CryptoError::VerificationError
+           })?;*/
+        trace!("successfully verified this signature params: {:?}", sig);
         Ok(())
     }
 }
 
-// TODO: Can we get rid of this comment below?
+/// ECDSA secp256k1 implementation.
+///
+/// This function verifies message hashes (typically, hashed unsing SHA-256) against a signature,
+/// with the public key of the signer, using the secp256k1 elliptic curve digital signature
+/// parametrization / algorithm.
+///
+/// The signature and public key are in "Cosmos" format:
+/// - signature:  Serialized "compact" signature (64 bytes).
+/// - public key: [Serialized according to SEC 2](https://www.oreilly.com/library/view/programming-bitcoin/9781492031482/ch04.html)
+/// (33 or 65 bytes).
+pub fn secp256k1_verify(
+    bytes: &[u8],
+    signature: &[u8],
+    public_key: &[u8],
+) -> Result<(), CryptoError> {
+    let sign_bytes_hash = Sha256::digest(bytes);
+    let message_hash = read_hash(&sign_bytes_hash)?;
 
-// use super::keys::SECRET_KEY_SIZE;
-// use super::KeyPair;
-// use crate::crypto::CryptoError;
-//
-// use secp256k1::ecdh::SharedSecret;
-// use secp256k1::key::{PublicKey, SecretKey};
-// use secp256k1::{All, Secp256k1};
-//
-// /// PubKey is a public key that is used for ECDSA signing.
-// pub type PubKey = [u8; UNCOMPRESSED_PUBLIC_KEY_SIZE];
-//
-// pub const SECRET_KEY_SIZE: usize = secp256k1::constants::SECRET_KEY_SIZE;
-// /// The size of uncomressed public keys
-// pub const UNCOMPRESSED_PUBLIC_KEY_SIZE: usize = secp256k1::constants::UNCOMPRESSED_PUBLIC_KEY_SIZE;
-// pub const COMPRESSED_PUBLIC_KEY_SIZE: usize = 33;
-//
-// #[derive(Debug, Clone)]
-// pub struct KeyPair {
-//     context: Secp256k1<All>,
-//     pubkey: PublicKey,
-//     privkey: SecretKey,
-// }
-//
-// impl KeyPair {
-//     /// This will generate a fresh pair of Public and Private keys.
-//     /// it will use the available randomness from [crate::rand]
-//     pub fn new() -> Result<Self, CryptoError> {
-//         // This loop is important to make sure that the resulting public key isn't a point in infinity(at the curve).
-//         // So if the Resulting public key is bad we need to generate a new random private key and try again until it succeeds.
-//         loop {
-//             let context = Secp256k1::new();
-//             let mut sk_slice = [0; SECRET_KEY_SIZE];
-//             rand_slice(&mut sk_slice)?;
-//             if let Ok(privkey) = SecretKey::from_slice(&sk_slice) {
-//                 let pubkey = PublicKey::from_secret_key(&context, &privkey);
-//                 return Ok(KeyPair {
-//                     context,
-//                     privkey,
-//                     pubkey,
-//                 });
-//             }
-//         }
-//     }
-//
-//     /// This function will create a Pair of keys from an array of 32 bytes.
-//     /// Please don't use it to generate a new key, if you want a new key use `KeyPair::new()`
-//     /// Because `KeyPair::new()` will make sure it uses a good random source and will loop private keys until it's a good key.
-//     /// (and it's best to isolate the generation of keys to one place)
-//     pub fn new_from_slice(privkey: &[u8; SECRET_KEY_SIZE]) -> Result<Self, CryptoError> {
-//         let context = Secp256k1::new();
-//
-//         let privkey = SecretKey::from_slice(privkey).map_err(|e| CryptoError::KeyError {})?;
-//         let pubkey = PublicKey::from_secret_key(&context, &privkey);
-//
-//         Ok(KeyPair {
-//             context,
-//             privkey,
-//             pubkey,
-//         })
-//     }
-//
-//     /// This function does an ECDH(point multiplication) between one's private key and the other one's public key
-//     pub fn derive_key(&self, pubarr: &[u8]) -> Result<DhKey, CryptoError> {
-//         if pubarr.len() != UNCOMPRESSED_PUBLIC_KEY_SIZE
-//             && pubarr.len() != COMPRESSED_PUBLIC_KEY_SIZE
-//         {
-//             error!("Public key invalid length - must be 65 or 33 bytes");
-//             return Err(CryptoError::KeyError {});
-//         }
-//
-//         let pubkey = PublicKey::from_slice(pubarr).map_err(|e| {
-//             error!("Error creating public key {:?}", e);
-//             CryptoError::KeyError {}
-//         })?;
-//
-//         info!(
-//             "Derive key public: {:?}",
-//             &pubkey.serialize_uncompressed().to_vec().as_slice()
-//         );
-//         // SharedSecret::
-//         info!("Derive key private: {:?}", &self.privkey);
-//         let shared = SharedSecret::new(&pubkey, &self.privkey);
-//
-//         if shared.len() != SYMMETRIC_KEY_SIZE {
-//             error!(
-//                 "Error creating shared secret. Size mismatch {:?}",
-//                 shared.len()
-//             );
-//             return Err(CryptoError::KeyError {});
-//         }
-//
-//         let mut result = [0u8; SYMMETRIC_KEY_SIZE];
-//         result.copy_from_slice(shared.as_ref());
-//         Ok(result)
-//     }
-//
-//     /// This will return the raw 32 bytes private key. use carefully.
-//     pub fn get_privkey(&self) -> &[u8] {
-//         &self.privkey[..]
-//     }
-//
-//     // This will return the raw 64 bytes public key.
-//     pub fn get_pubkey(&self) -> PubKey {
-//         self.pubkey.serialize_uncompressed()
-//     }
-// }
-//
-// #[cfg(feature = "test")]
-// pub mod tests {
-//
-//     use super::{KeyPair, Seed, SymmetricKey, SEED_SIZE};
-//     use crate::crypto::{PUBLIC_KEY_SIZE, UNCOMPRESSED_PUBLIC_KEY_SIZE};
-//     use crate::crypto::CryptoError;
-//
-//     fn test_seed_from_slice() {
-//         let seed = Seed::new_from_slice(b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-//
-//         assert_eq!(seed.0, b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-//         assert_eq!(seed.get(), b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-//     }
-//
-//     fn test_seed_new() {
-//         let seed = Seed::new();
-//         let zero_slice = [0u8; SEED_SIZE];
-//         assert_ne!(seed.0, zero_slice)
-//     }
-//
-//     // todo: replace public key with real value
-//     fn test_keypair_from_slice() {
-//         let kp = KeyPair::new_from_slice(b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA").unwrap();
-//
-//         assert_eq!(kp.get_privkey(), b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-//         assert_eq!(
-//             kp.get_pubkey(),
-//             b"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
-//         );
-//     }
-//
-//     // this obviously isn't a cryptanalysis, but hey, at least make sure the random doesn't generate all zeros
-//     fn test_keypair_new() {
-//         let kp = KeyPair::new().unwrap();
-//         let zero_slice = [0u8; SEED_SIZE];
-//         assert_ne!(kp.get_privkey(), zero_slice);
-//     }
-//
-//     // this obviously isn't a cryptanalysis, but hey, at least make sure the random doesn't generate all zeros
-//     fn test_ecdh() {
-//         let kp = KeyPair::new_from_slice(b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA").unwrap();
-//
-//         let zero_slice = [10u8; UNCOMPRESSED_PUBLIC_KEY_SIZE];
-//
-//         let dhkey = kp.derive_key(&zero_slice).unwrap();
-//
-//         assert_eq!(dhkey, b"SOME EXPECTED KEY");
-//     }
-// }
+    trace!("message_hash : {:?}", message_hash);
+    let signature = read_signature(signature)?;
+    trace!("public_key : {:?}", public_key);
+    check_pubkey(&public_key[5..])?;
+    trace!("sig check");
+    // Already hashed, just build Digest container
+    let message_digest = Identity256::new().chain(message_hash);
+    trace!("mss digest");
+    let mut signature = Signature::from_bytes(&signature).map_err(|e| {
+        warn!("Malformed signature: {:?}", e);
+        CryptoError::VerificationError2
+    })?;
+
+    trace!("signature bytes: {:?}", signature);
+
+    signature.normalize_s().map_err(|e| {
+        warn!("Malformed signature: {:?}", e);
+        CryptoError::VerificationError3
+    })?;
+
+    trace!("signature bytes 2: {:?}", signature);
+    let public_key = VerifyingKey::from_sec1_bytes(&public_key[5..]).map_err(|e| {
+        warn!("Malformed public key: {:?}", e);
+        CryptoError::VerificationError4
+    })?;
+ 
+    trace!("public key: {:?}", public_key);
+
+    match public_key.verify_digest(message_digest, &signature) {
+        Ok(_) => Ok(()),
+        Err(_) => Err(CryptoError::VerificationError5),
+    }
+}
+
+fn check_pubkey(data: &[u8]) -> Result<(), InvalidSecp256k1PubkeyFormat> {
+    let ok = match data.first() {
+        Some(0x02) | Some(0x03) => data.len() == ECDSA_COMPRESSED_PUBKEY_LEN,
+        Some(0x04) => data.len() == ECDSA_UNCOMPRESSED_PUBKEY_LEN,
+        _ => false,
+    };
+    if ok {
+        Ok(())
+    } else {
+        Err(InvalidSecp256k1PubkeyFormat)
+    }
+}
+/// Error raised when public key is not in one of the two supported formats:
+/// 1. Uncompressed: 65 bytes starting with 0x04
+/// 2. Compressed: 33 bytes starting with 0x02 or 0x03
+struct InvalidSecp256k1PubkeyFormat;
+
+/// Max length of a message hash for secp256k1 verification in bytes.
+/// This is typically a 32 byte output of e.g. SHA-256 or Keccak256. In theory shorter values
+/// are possible but currently not supported by the implementation. Let us know when you need them.
+pub const MESSAGE_HASH_MAX_LEN: usize = 32;
+
+/// ECDSA (secp256k1) parameters
+/// Length of a serialized signature
+pub const ECDSA_SIGNATURE_LEN: usize = 64;
+
+/// Length of a serialized compressed public key
+const ECDSA_COMPRESSED_PUBKEY_LEN: usize = 33;
+/// Length of a serialized uncompressed public key
+const ECDSA_UNCOMPRESSED_PUBKEY_LEN: usize = 65;
+/// Max length of a serialized public key
+pub const ECDSA_PUBKEY_MAX_LEN: usize = ECDSA_UNCOMPRESSED_PUBKEY_LEN;
+
+/// Recovers a public key from a message hash and a signature.
+///
+/// This is required when working with Ethereum where public keys
+/// are not stored on chain directly.
+///
+/// `recovery_param` must be 0 or 1. The values 2 and 3 are unsupported by this implementation,
+/// which is the same restriction as Ethereum has (https://github.com/ethereum/go-ethereum/blob/v1.9.25/internal/ethapi/api.go#L466-L469).
+/// All other values are invalid.
+///
+/// Returns the recovered pubkey in compressed form, which can be used
+/// in secp256k1_verify directly.
+pub fn secp256k1_recover_pubkey(
+    message_hash: &[u8],
+    signature: &[u8],
+    recovery_param: u8,
+) -> Result<Vec<u8>, CryptoError> {
+    let message_hash = read_hash(message_hash)?;
+    let signature = read_signature(signature)?;
+
+    let id = recoverable::Id::new(recovery_param).map_err(|_| CryptoError::VerificationError)?;
+
+    // Compose extended signature
+    let signature =
+        Signature::from_bytes(&signature).map_err(|e| CryptoError::VerificationError)?;
+    let extended_signature =
+        recoverable::Signature::new(&signature, id).map_err(|e| CryptoError::VerificationError)?;
+
+    // Recover
+    let message_digest = Identity256::new().chain(message_hash);
+    let pubkey = extended_signature
+        .recover_verify_key_from_digest(message_digest)
+        .map_err(|e| CryptoError::VerificationError)?;
+    let encoded: Vec<u8> = pubkey.to_encoded_point(false).as_bytes().into();
+    Ok(encoded)
+}
+
+/// Error raised when hash is not 32 bytes long
+struct InvalidSecp256k1HashFormat;
+
+impl From<InvalidSecp256k1HashFormat> for CryptoError {
+    fn from(_original: InvalidSecp256k1HashFormat) -> Self {
+        CryptoError::VerificationError
+    }
+}
+
+fn read_hash(data: &[u8]) -> Result<[u8; 32], InvalidSecp256k1HashFormat> {
+    data.try_into().map_err(|_| InvalidSecp256k1HashFormat)
+}
+
+/// Error raised when signature is not 64 bytes long (32 bytes r, 32 bytes s)
+struct InvalidSecp256k1SignatureFormat;
+
+impl From<InvalidSecp256k1SignatureFormat> for CryptoError {
+    fn from(_original: InvalidSecp256k1SignatureFormat) -> Self {
+        CryptoError::VerificationError
+    }
+}
+
+fn read_signature(data: &[u8]) -> Result<[u8; 64], InvalidSecp256k1SignatureFormat> {
+    data.try_into().map_err(|_| InvalidSecp256k1SignatureFormat)
+}
+
+impl From<InvalidSecp256k1PubkeyFormat> for CryptoError {
+    fn from(_original: InvalidSecp256k1PubkeyFormat) -> Self {
+        CryptoError::VerificationError
+    }
+}

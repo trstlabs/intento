@@ -57,7 +57,7 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 	if err != nil {
 		return nil, err
 	}
-	activePeriod := k.GetParams(ctx).MaxActivePeriod
+	activePeriod := k.GetParams(ctx).MaxActiveContractPeriod
 	//submitTime := ctx.BlockHeader().Time
 
 	endTime := time.Hour * time.Duration(msg.ContractPeriod)
@@ -98,10 +98,12 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	if err != nil {
 		return nil, err
 	}
-	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, nil)
+	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, nil, 0)
 	if err != nil {
+		fmt.Printf("err")
 		return nil, err
 	}
+	//	fmt.Printf("Initted")
 
 	events := filteredMessageEvents(ctx.EventManager())
 	custom := sdk.Events{sdk.NewEvent(
@@ -125,10 +127,6 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 
 	}*/
 	//var info *types.CodeInfo
-	info := k.GetCodeInfo(ctx, msg.CodeID)
-	submitTime := ctx.BlockHeader().Time
-	endTime := submitTime.Add(info.EndTime)
-	k.InsertContractQueue(ctx, contractAddr.String(), endTime)
 	return &sdk.Result{
 		Data:   contractAddr,
 		Events: events,
@@ -136,7 +134,7 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 }
 
 func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Result, error) {
-	fmt.Print("handling..")
+	//fmt.Print("handling..")
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -146,7 +144,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	if err != nil {
 		return nil, err
 	}
-	fmt.Print("executing..")
+	//fmt.Print("executing..")
 	res, err := k.Execute(
 		ctx,
 		contract,
@@ -158,7 +156,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	if err != nil {
 		return nil, err
 	}
-	fmt.Print("setting..")
+
 	k.SetContractResult(ctx, contract, res)
 
 	events := filteredMessageEvents(ctx.EventManager())

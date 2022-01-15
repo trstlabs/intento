@@ -3,6 +3,7 @@ package compute
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -34,7 +35,14 @@ var (
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // AppModuleBasic defines the basic application module used by the compute module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.BinaryCodec
+}
+
+/*
+func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
+	RegisterCodec(cdc)
+}*/
 
 func (b AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
 	RegisterCodec(amino)
@@ -52,12 +60,20 @@ func (AppModuleBasic) Name() string {
 // DefaultGenesis returns default genesis state as raw bytes for the compute
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(&GenesisState{
-		// Params: DefaultParams(),
-	})
+	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
 // ValidateGenesis performs genesis state validation for the compute module.
+func (AppModuleBasic) ValidateGenesis(
+	cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var genState types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+	return genState.Validate()
+}
+
+/*
 func (AppModuleBasic) ValidateGenesis(marshaler codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
 	var data GenesisState
 	err := marshaler.UnmarshalJSON(message, &data)
@@ -65,7 +81,7 @@ func (AppModuleBasic) ValidateGenesis(marshaler codec.JSONCodec, config client.T
 		return err
 	}
 	return ValidateGenesis(data)
-}
+}*/
 
 // RegisterRESTRoutes registers the REST routes for the compute module.
 func (AppModuleBasic) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
@@ -96,11 +112,15 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(keeper Keeper) AppModule {
+func NewAppModule(cdc codec.BinaryCodec, keeper Keeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
 	}
+}
+
+func NewAppModuleBasic(cdc codec.BinaryCodec) AppModuleBasic {
+	return AppModuleBasic{cdc: cdc}
 }
 
 func (am AppModule) RegisterServices(configurator module.Configurator) {
@@ -128,6 +148,7 @@ func (AppModule) QuerierRoute() string {
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
 	var genesisState GenesisState
+
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	if err := InitGenesis(ctx, am.keeper, genesisState); err != nil {
 		panic(err)

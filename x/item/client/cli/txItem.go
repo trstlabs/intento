@@ -28,7 +28,7 @@ import (
 
 func CmdCreateItem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-item [title] [description] [shippingcost] [localpickup] [estimationcount] [tags] [condition] [shippingregion] [depositamount]",
+		Use:   "create-item [title] [description] [shipping_cost] [localpickup] [estimationcount] [tags] [condition] [shipping_region] [depositamount]",
 		Short: "Creates a new item",
 		Args:  cobra.MinimumNArgs(9),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -40,10 +40,10 @@ func CmdCreateItem() *cobra.Command {
 
 			argsTitle := string(args[0])
 			argsDescription := string(args[1])
-			argsShippingcost, _ := strconv.ParseInt(args[2], 10, 64)
-			argsLocalpickup := string(args[3])
+			argsShippingCost, _ := strconv.ParseInt(args[2], 10, 64)
+			argsLocalPickup := string(args[3])
 
-			//argsEstimationcounthash := string(args[4])
+			//argsEstimationCounthash := string(args[4])
 
 			//estimationcheck, ok := sdk.NewIntFromString(args[4])
 			//if ok != true {
@@ -52,21 +52,19 @@ func CmdCreateItem() *cobra.Command {
 
 			argsTags := strings.Split(args[5], ",")
 
-			argsEstimationcount, _ := strconv.ParseInt(args[4], 10, 64)
+			argsEstimationCount, _ := strconv.ParseInt(args[4], 10, 64)
 			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
-			initMsg := types.TrustlessMsg{}
+			argsDepositAmount, _ := strconv.ParseInt(args[8], 10, 64)
 
-			count := map[string]string{"estimationcount": args[4]}
+			count := map[string]string{"estimation_count": args[4], "deposit_required": args[8]}
 			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
+			initMsg := types.TrustlessMsg{}
 			initMsg.Msg, err = json.Marshal(count)
 			//fmt.Printf("json message: %X\n", estimation)
 			if err != nil {
 				return err
 			}
-			//initMsg.Msg = []byte(initMsg.Msg)
-			//fmt.Printf("message: %X\n", initMsg.Msg)
-			//quite a long way to get a single value, however we can't directy access the keeper
 			queryClient := types.NewQueryClient(cliCtx)
 			params := &types.QueryCodeHashRequest{
 				Codeid: 1,
@@ -76,18 +74,23 @@ func CmdCreateItem() *cobra.Command {
 				return err
 			}
 
-			//fmt.Printf("Got code hash: %X\n", res.Codehash)
 			var encryptedMsg []byte
 
 			initMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
-			/*	fmt.Printf("Got RES %X\n", res.Codehash)
-				fmt.Printf("Got RES: %s", res.Codehash)
-				fmt.Printf("Got RES String string: %s", string(res.Codehash))
-				fmt.Printf("Got res CodeHash hash: %X\n", hex.EncodeToString(res.Codehash))
-				fmt.Printf("Got res CodeHash hash string: %s", hex.EncodeToString(res.Codehash))
-				fmt.Printf("Got initMsg.CodeHash hash: %X\n", initMsg.CodeHash)
-				fmt.Printf("Got initMsg.CodeHash hash string: %s", initMsg.CodeHash)*/
 			encryptedMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
+			if err != nil {
+				return err
+			}
+
+			autoMsg := types.TrustlessMsg{}
+			auto := types.ParseAuto{}
+			autoMsg.Msg, err = json.Marshal(auto)
+			if err != nil {
+				return err
+			}
+
+			autoMsg.CodeHash = initMsg.CodeHash
+			autoMsgEncrypted, err := wasmCtx.Encrypt(autoMsg.Serialize())
 			if err != nil {
 				return err
 			}
@@ -97,9 +100,7 @@ func CmdCreateItem() *cobra.Command {
 			//fmt.Printf("encryptedMsg: %X\n", encryptedMsg)
 			argsCondition, _ := strconv.ParseInt(args[6], 10, 64)
 
-			argsShippingregion := strings.Split(args[7], ",")
-
-			argsDepositAmount, _ := strconv.ParseInt(args[8], 10, 64)
+			argsShippingRegion := strings.Split(args[7], ",")
 
 			var argsPhotos []string
 
@@ -112,7 +113,7 @@ func CmdCreateItem() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingcost), string(argsLocalpickup), int64(argsEstimationcount), []string(argsTags), int64(argsCondition), []string(argsShippingregion), int64(argsDepositAmount), encryptedMsg, []string(argsPhotos))
+			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingCost), string(argsLocalPickup), int64(argsEstimationCount), []string(argsTags), int64(argsCondition), []string(argsShippingRegion), int64(argsDepositAmount), encryptedMsg, autoMsgEncrypted, []string(argsPhotos))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -224,10 +225,12 @@ func CmdItemTransferable() *cobra.Command {
 		Short: "set item transferability",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			transferBool := true
-			if args[0] == "0" {
-				transferBool = false
+
+			cliCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
 			}
+			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
 			itemID, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
@@ -239,7 +242,33 @@ func CmdItemTransferable() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(), bool(transferBool), uint64(itemID))
+			//msgTransfer := map[string]string{"transferable": ""}
+			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
+			initMsg := types.TrustlessMsg{}
+			init := types.ParseTransferable{}
+			initMsg.Msg, err = json.Marshal(init)
+			//fmt.Printf("json message: %X\n", estimation)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(cliCtx)
+			params := &types.QueryCodeHashRequest{
+				Codeid: 1,
+			}
+			res, err := queryClient.CodeHash(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			var encryptedMsg []byte
+
+			initMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
+			encryptedMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(), encryptedMsg, uint64(itemID))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -287,7 +316,7 @@ func CmdItemShipping() *cobra.Command {
 
 func CmdItemResell() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "item-resell [itemid] [shippingcost] [discount] [localpickup] [shippingregion] [note] ",
+		Use:   "item-resell [itemid] [shipping_cost] [discount] [localpickup] [shipping_region] [note] ",
 		Short: "Resell an item",
 		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -296,13 +325,13 @@ func CmdItemResell() *cobra.Command {
 				return err
 			}
 
-			argsShippingcost, _ := strconv.ParseInt(args[1], 10, 64)
+			argsShippingCost, _ := strconv.ParseInt(args[1], 10, 64)
 
 			argsDiscount, _ := strconv.ParseInt(args[2], 10, 64)
 
-			argsLocalpickup := string(args[3])
+			argsLocalPickup := string(args[3])
 
-			argsShippingregion := strings.Split(args[4], ",")
+			argsShippingRegion := strings.Split(args[4], ",")
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -311,7 +340,7 @@ func CmdItemResell() *cobra.Command {
 
 			note := args[5]
 
-			msg := types.NewMsgItemResell(clientCtx.GetFromAddress().String(), uint64(argsItemID), int64(argsShippingcost), int64(argsDiscount), string(argsLocalpickup), []string(argsShippingregion), string(note))
+			msg := types.NewMsgItemResell(clientCtx.GetFromAddress().String(), uint64(argsItemID), int64(argsShippingCost), int64(argsDiscount), string(argsLocalPickup), []string(argsShippingRegion), string(note))
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

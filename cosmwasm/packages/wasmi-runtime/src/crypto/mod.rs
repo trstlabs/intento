@@ -15,6 +15,7 @@ mod ed25519;
 pub mod multisig;
 pub mod secp256k1;
 
+mod identity_digest;
 pub use errors::CryptoError;
 pub use key_manager::Keychain;
 pub use key_manager::KEY_MANAGER;

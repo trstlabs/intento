@@ -17,8 +17,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	// NOTE: since the reward pool is a module account, the auth module should
 	// take care of importing the amount into the account except for the
 	// genesis block
-	if k.GettrstModuleBalance(ctx).IsZero() {
-		err := k.InitializetrstModule(ctx, sdk.NewCoin("utrst", sdk.ZeroInt()))
+	if k.GetItemModuleBalance(ctx).IsZero() {
+		err := k.InitializeItemModule(ctx, sdk.NewCoin("utrst", sdk.ZeroInt()))
 		if err != nil {
 			panic(err)
 		}
@@ -29,14 +29,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	for _, elem := range state.ItemList {
 
 		k.SetItem(ctx, *elem)
-		k.InsertListedItemQueue(ctx, elem.Id, *elem, elem.Endtime)
+		k.InsertListedItemQueue(ctx, elem.Id, *elem, elem.EndTime)
 		//if (elem.Buyer != "") {k.SetBuyer(ctx, elem.Id, elem.Buyer)}
 
 	}
 
 	for _, elem := range state.EstimatorList {
 
-		k.SetEstimator(ctx, *elem)
+		k.SetEstimationInfo(ctx, *elem)
 	}
 
 	k.SetParams(ctx, types.DefaultParams())
@@ -44,7 +44,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	// Set all the estimator
 
 	// Set estimator count
-	k.SetEstimatorCount(ctx, int64(len(state.EstimatorList)))
+	//k.SetEstimationInfoCount(ctx, int64(len(state.EstimatorList)))
 
 	// Set buyer count
 	//k.SetBuyerCount(ctx, int64(len(state.BuyerList)))
@@ -83,22 +83,22 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return genesis
 }
 
-// GettrstModuleAccount returns the module account.
-func (k Keeper) GettrstModuleAccount(ctx sdk.Context) (ModuleName authtypes.ModuleAccountI) {
+// GetItemModuleAccount returns the module account.
+func (k Keeper) GetItemModuleAccount(ctx sdk.Context) (ModuleName authtypes.ModuleAccountI) {
 	return k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }
 
-// GettrstModuleBalance returns the module account balance
-func (k Keeper) GettrstModuleBalance(ctx sdk.Context) sdk.Coin {
-	return k.bankKeeper.GetBalance(ctx, k.GettrstModuleAccount(ctx).GetAddress(), "utrst")
+// GetItemModuleBalance returns the module account balance
+func (k Keeper) GetItemModuleBalance(ctx sdk.Context) sdk.Coin {
+	return k.bankKeeper.GetBalance(ctx, k.GetItemModuleAccount(ctx).GetAddress(), "utrst")
 }
 
-// InitializetrstModule sets up the module account from genesis
-func (k Keeper) InitializetrstModule(ctx sdk.Context, funds sdk.Coin) error {
+// InitializeItemModule sets up the module account from genesis
+func (k Keeper) InitializeItemModule(ctx sdk.Context, funds sdk.Coin) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(funds))
 }
 
-// InitializetrstModule sets up the module account from genesis
+// InitializeContract sets up the module account from genesis
 func (k Keeper) InitializeContract(ctx sdk.Context) error {
 	addr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	// ensure reward pool module account is set
@@ -115,7 +115,7 @@ func (k Keeper) InitializeContract(ctx sdk.Context) error {
 	var codeID uint64
 	var hash string
 
-	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "", 0, "Estimation aggregation", "This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. This code is used internally.")
+	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "", 0, "Estimation aggregation", "This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically sent back at the end of the contract period. This code is used internally.")
 	if err != nil {
 		panic(err)
 	}

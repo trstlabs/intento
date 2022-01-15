@@ -39,6 +39,8 @@ sgx_tstd = { rev = "a37ffb9449ba6d5b6e4a9d586bbab864ae732269", git = "https://gi
 ] }
 
 [dependencies]
+digest = "0.9"
+k256 = { version = "0.8.0", features = ["ecdsa"] }
 sgx_tse = { rev = "a37ffb9449ba6d5b6e4a9d586bbab864ae732269", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_rand = { rev = "a37ffb9449ba6d5b6e4a9d586bbab864ae732269", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_trts = { rev = "a37ffb9449ba6d5b6e4a9d586bbab864ae732269", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
@@ -58,7 +60,7 @@ bech32 = "0.7.2"
 derive_more = "0.99"
 sha2 = "0.8.1"
 ring = { git = "https://github.com/mesalock-linux/ring-sgx", tag = "v0.16.5" }
-secp256k1 = "0.19.0"
+secp256k1 = "0.21.2"
 # for attestation
 chrono = { git = "https://github.com/mesalock-linux/chrono-sgx" }
 num-bigint = { git = "https://github.com/mesalock-linux/num-bigint-sgx" }
@@ -87,6 +89,7 @@ git = "https://github.com/mesalock-linux/prost-sgx"
 rev = "cd3103a6d45cf7a43b6c1c5e4223428097d1c547"
 default-features = false
 features = ["prost-derive"]
+
 
 [dependencies.wasmi]
 git = "https://github.com/paritytech/wasmi"

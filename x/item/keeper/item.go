@@ -44,11 +44,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 
 	// Create the item
 	count := k.GetItemCount(ctx)
-	/*
-		var estimationcount = fmt.Sprint(msg.Estimationcount)
-		var estimationcountHash = sha256.Sum256([]byte(estimationcount + msg.Creator))
-		var estimationcountHashString = hex.EncodeToString(estimationcountHash[:])
-	*/
+
 	submitTime := ctx.BlockHeader().Time
 
 	activePeriod := k.GetParams(ctx).MaxActivePeriod
@@ -61,7 +57,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 		return err
 	}
 
-	contractAddr, err := k.computeKeeper.Instantiate(ctx, uint64(1), userAddress, msg.Initmsg, nil, "Item "+fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
+	contractAddr, err := k.computeKeeper.Instantiate(ctx, uint64(1), userAddress, msg.InitMsg, msg.AutoMsg, "Item "+fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil, activePeriod)
 	if err != nil {
 		return err
 	}
@@ -72,18 +68,18 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 		Id:              uint64(count),
 		Title:           msg.Title,
 		Description:     msg.Description,
-		Shippingcost:    msg.Shippingcost,
-		Localpickup:     msg.Localpickup,
-		Estimationcount: msg.Estimationcount,
+		ShippingCost:    msg.ShippingCost,
+		LocalPickup:     msg.LocalPickup,
+		EstimationCount: msg.EstimationCount,
 		Contract:        contractAddr.String(),
 
 		Tags: msg.Tags,
 
 		Condition:      msg.Condition,
-		Shippingregion: msg.Shippingregion,
-		Depositamount:  msg.Depositamount,
-		Submittime:     submitTime,
-		Endtime:        endTime,
+		ShippingRegion: msg.ShippingRegion,
+		DepositAmount:  msg.DepositAmount,
+		SubmitTime:     submitTime,
+		EndTime:        endTime,
 	}
 
 	k.BindItemSeller(ctx, item.Id, msg.Creator)
@@ -217,9 +213,9 @@ func (k Keeper) HandleEstimatorReward(ctx sdk.Context, address string, coinToSen
 
 // HandleReward handles reward
 func (k Keeper) HandleStakingReward(ctx sdk.Context, coinToSend sdk.Coin) {
-
+	moduleAcc := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	//distribute the same reward to the staking pool
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, sdk.NewCoins(coinToSend))
+	err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(coinToSend), moduleAcc)
 	if err != nil {
 		panic(err)
 	}
@@ -295,7 +291,7 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 		return err ///panic(err)
 	}
 	fmt.Printf("executing contract: %s", item.Contract)
-	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.Revealmsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.RevealMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: ")
 		return err ///panic(err)
@@ -314,8 +310,8 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 	var result types.RevealResult
 	json.Unmarshal([]byte(res.Log), &result)
 	//fmt.Println(json.Unmarshal([]byte(res.Log), &result))
-	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.RevealEstimation.Bestestimation), contractAddr)
-	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", result.RevealEstimation.Comments[1], contractAddr)
+	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.RevealEstimation.BestEstimation), contractAddr)
+	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", result.RevealEstimation.Comments[1], contractAddr)
 	//	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", res.Log, contractAddr)
 
 	b := make([]int64, len(result.RevealEstimation.EstimationList))
@@ -324,10 +320,56 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 	}
 
 	if result.RevealEstimation.Status == "Success" {
-		item.Bestestimator = result.RevealEstimation.Bestestimator
-		item.Estimationprice = int64(result.RevealEstimation.Bestestimation)
+		item.BestEstimator = result.RevealEstimation.BestEstimator
+		item.EstimationPrice = int64(result.RevealEstimation.BestEstimation)
 		item.Comments = result.RevealEstimation.Comments
-		item.Estimationlist = b
+		item.EstimationList = b
+		k.SetItem(ctx, item)
+	}
+	return nil
+}
+
+// RevealEstimation reveals an item
+func (k Keeper) Transferable(ctx sdk.Context, item types.Item, msg types.MsgItemTransferable) error {
+
+	creatorAddress, err := sdk.AccAddressFromBech32(msg.Seller)
+	if err != nil {
+		return err ///panic(err)
+
+	}
+	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
+	if err != nil {
+		return err ///panic(err)
+	}
+	fmt.Printf("executing contract: %s", item.Contract)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.TransferableMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
+	if err != nil {
+		fmt.Printf("err executing: %s", err)
+		return err ///panic(err)
+	}
+	fmt.Printf("res for item %s: %s\n", res.Log, contractAddr)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
+	)
+
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
+	key := append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(item.Id)...)
+	value := k.cdc.MustMarshal(&item)
+	store.Set(key, value)
+
+	var result types.TransferableResult
+	json.Unmarshal([]byte(res.Log), &result)
+	fmt.Println(json.Unmarshal([]byte(res.Log), &result))
+	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.), contractAddr)
+	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", result.RevealEstimation.Comments[1], contractAddr)
+	//	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", res.Log, contractAddr)
+
+	if result.Transferable.Status == "Success" {
+		/*item.BestEstimator = result.RevealEstimation.BestEstimator
+		item.EstimationPrice = int64(result.RevealEstimation.Bestestimation)
+		item.Comments = result.RevealEstimation.Comments*/
+		item.Transferable = true
 		k.SetItem(ctx, item)
 	}
 	return nil

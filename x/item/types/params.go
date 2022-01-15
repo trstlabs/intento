@@ -12,7 +12,7 @@ import (
 
 // Default period for active
 const (
-	DefaultPeriod time.Duration = time.Minute * 1 //time.Hour * 24 * 30 // 30 days
+	DefaultPeriod time.Duration = time.Minute * 2 //time.Minute //time.Hour * 24 * 30 // 30 days
 )
 
 // Parameter store key
@@ -40,7 +40,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 */
-/**/
+
 // ParamSetPairs - Implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
@@ -55,6 +55,7 @@ func NewParams(maxActivePeriod time.Duration) Params {
 
 // DefaultParams default parameters for Active
 func DefaultParams() Params {
+
 	return NewParams(DefaultPeriod)
 }
 

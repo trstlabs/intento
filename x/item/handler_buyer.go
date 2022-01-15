@@ -19,7 +19,7 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 	item := k.GetItem(ctx, msg.Itemid)
 
 	//check if item has a best estimator (and therefore a complete estimation)
-	if item.Estimationprice == 0 {
+	if item.EstimationPrice == 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item does not have estimation yet, cannot make prepayment")
 	}
 
@@ -38,26 +38,29 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Buyer cannot be creator/seller")
 	}
 
-	estimationPrice := item.Estimationprice
+	estimationPrice := item.EstimationPrice
 	if item.Discount > 0 {
-		estimationPrice = item.Estimationprice - item.Discount
+		estimationPrice = item.EstimationPrice - item.Discount
 	}
 
-	if item.Shippingcost > 0 && item.Localpickup == "" {
-		toPayShipping := estimationPrice + item.Shippingcost
+	if item.ShippingCost > 0 && item.LocalPickup == "" {
+		toPayShipping := estimationPrice + item.ShippingCost
 		if toPayShipping != msg.Deposit {
 
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit insufficient, cannot make prepayment")
 		}
 
 		item.Buyer = msg.Buyer
-		k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.Endtime)
+		k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.EndTime)
 		k.SetItem(ctx, item)
-		k.Prepayment(ctx, *msg)
+		err := k.Prepayment(ctx, *msg)
+		if err != nil {
+			return nil, err
+		}
 		//}
 	}
 
-	if item.Shippingcost == 0 && item.Localpickup != "" {
+	if item.ShippingCost == 0 && item.LocalPickup != "" {
 
 		if estimationPrice != msg.Deposit {
 
@@ -65,34 +68,42 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 		}
 
 		item.Buyer = msg.Buyer
-		k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.Endtime)
+		k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.EndTime)
 		k.SetItem(ctx, item)
-		k.Prepayment(ctx, *msg)
+		err := k.Prepayment(ctx, *msg)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 
-	if item.Shippingcost > 0 && item.Localpickup != "" {
+	if item.ShippingCost > 0 && item.LocalPickup != "" {
 
 		if estimationPrice == msg.Deposit {
 
 			//ModuleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 
-			item.Shippingcost = 0
+			item.ShippingCost = 0
 			item.Buyer = msg.Buyer
-			k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.Endtime)
+			k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.EndTime)
 			k.SetItem(ctx, item)
-			k.Prepayment(ctx, *msg)
-
+			err := k.Prepayment(ctx, *msg)
+			if err != nil {
+				return nil, err
+			}
 		} else {
 			toPayShipping :=
-				estimationPrice + item.Shippingcost
+				estimationPrice + item.ShippingCost
 
 			if toPayShipping == msg.Deposit {
-				item.Localpickup = ""
+				item.LocalPickup = ""
 				item.Buyer = msg.Buyer
-				k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.Endtime)
+				k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.EndTime)
 				k.SetItem(ctx, item)
-				k.Prepayment(ctx, *msg)
+				err := k.Prepayment(ctx, *msg)
+				if err != nil {
+					return nil, err
+				}
 			}
 			if toPayShipping != msg.Deposit {
 
@@ -134,14 +145,14 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 		//returning the trst tokens
 		percentageReturn := sdk.NewDecWithPrec(95, 2)
 
-		bigIntEstimationPrice := sdk.NewInt(item.Estimationprice)
+		bigIntEstimationPrice := sdk.NewInt(item.EstimationPrice)
 		toMintAmount := percentageReturn.MulInt(bigIntEstimationPrice).TruncateInt()
 
 		burnAmount := bigIntEstimationPrice.Sub(toMintAmount)
 		k.BurnCoins(ctx, sdk.NewCoin("utrst", burnAmount))
 
-		if item.Shippingcost > 0 {
-			toMintAmount = toMintAmount.Add(sdk.NewInt(item.Shippingcost))
+		if item.ShippingCost > 0 {
+			toMintAmount = toMintAmount.Add(sdk.NewInt(item.ShippingCost))
 		}
 
 		//minted coins (are rounded up)
@@ -149,16 +160,16 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
 		k.Withdrawal(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
 
-		for _, element := range item.Estimatorlist {
+		for _, element := range item.EstimatorList {
 			//apply this to each element
 			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 
-			//	estimator := k.GetEstimator(ctx, key)
+			//	estimator := k.GetEstimationInfo(ctx, key)
 
 			//	if estimator.Estimator == item.Highestestimator {
 
 			//	k.BurnCoins(ctx, estimator.Deposit)
-			//	k.DeleteEstimationWithoutDeposit(ctx, key)
+			//	k.DeleteEstimation(ctx, key)
 
 			//} else {
 			k.DeleteEstimation(ctx, key)
@@ -167,15 +178,12 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 		}
 
 		item.Status = "Withdrawal prepayment"
-		item.Shippingcost = 0
-		item.Localpickup = ""
-		item.Estimationcount = 0
-		item.Bestestimator = ""
-		item.Lowestestimator = ""
-		item.Highestestimator = ""
-
-		item.Estimatorlist = nil
-		item.Estimationlist = nil
+		item.ShippingCost = 0
+		item.LocalPickup = ""
+		item.EstimationCount = 0
+		item.BestEstimator = ""
+		item.EstimatorList = nil
+		item.EstimationList = nil
 		item.Transferable = false
 
 		k.SetItem(ctx, item)
@@ -206,38 +214,36 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 	if item.Status != "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has had a transfer or transfer has been denied ")
 	}
-	if item.Shippingcost > 0 {
+	if item.ShippingCost > 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item has shippingcost")
 	}
 
-	bigIntEstimationPrice := sdk.NewInt(item.Estimationprice - item.Depositamount)
+	bigIntEstimationPrice := sdk.NewInt(item.EstimationPrice - item.DepositAmount)
 	if item.Discount > 0 {
-		bigIntEstimationPrice = sdk.NewInt(item.Estimationprice - item.Discount)
+		bigIntEstimationPrice = sdk.NewInt(item.EstimationPrice - item.Discount)
 	}
 
 	if item.Creator == item.Seller {
 
 		//minted coins (are rounded up)
-		rewardCoins := sdk.NewCoin("utrst", sdk.NewInt(item.Depositamount))
+		rewardCoins := sdk.NewCoin("utrst", sdk.NewInt(item.DepositAmount))
 
 		k.MintReward(ctx, rewardCoins)
 
 		//for their participation in the protocol, the best estimator, a random and the stakers get rewarded.
-		k.HandleEstimatorReward(ctx, item.Bestestimator, rewardCoins)
+		//k.HandleEstimatorReward(ctx, item.BestEstimator, rewardCoins)
 
 		k.HandleStakingReward(ctx, rewardCoins)
 
 		//refund the deposits back to all of the item estimators
-		for _, element := range item.Estimatorlist {
+		for _, element := range item.EstimatorList {
 			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 
 			k.DeleteEstimation(ctx, key)
 		}
 
-		item.Bestestimator = ""
-		item.Lowestestimator = ""
-		item.Highestestimator = ""
-		item.Estimatorlist = nil
+		item.BestEstimator = ""
+		item.EstimatorList = nil
 	}
 	//make payment to seller
 	paymentSellerCoins := sdk.NewCoin("utrst", bigIntEstimationPrice)
@@ -272,14 +278,14 @@ func handleMsgItemRating(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRat
 
 	if item.Status == "Withdrawal prepayment" {
 		percentageReward := sdk.NewDecWithPrec(5, 2)
-		bigIntEstimationPrice := sdk.NewInt(item.Estimationprice)
+		bigIntEstimationPrice := sdk.NewInt(item.EstimationPrice)
 		toMintAmount := percentageReward.MulInt(bigIntEstimationPrice).Ceil().TruncateInt()
 
 		//minted coins (are rounded up)
 		mintCoins := sdk.NewCoin("utrst", toMintAmount)
 		k.MintReward(ctx, mintCoins.Add(mintCoins))
 		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
-		item.Estimationprice = 0
+		item.EstimationPrice = 0
 
 	} else if msg.Rating < 3 {
 		item.Buyer = ""

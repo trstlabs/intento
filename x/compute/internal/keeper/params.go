@@ -3,19 +3,9 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/trstlabs/trst/x/item/types"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
-/*
-// GetDepositParams returns the current DepositParams from the global param store
-func (k Keeper) GetActiveParams(ctx sdk.Context) types.ActiveParams {
-	var activeParams types.ActiveParams
-
-	k.paramSpace.Get(ctx, types.ParamStoreKeyActiveParams, &activeParams)
-	return activeParams
-}
-*/
-/**/
 // ParamKeyTable for contract module
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&types.Params{})

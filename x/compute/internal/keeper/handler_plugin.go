@@ -321,7 +321,7 @@ func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg 
 	if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 
 		msgRoute := legacyMsg.Route()
-		fmt.Printf("Route is.. %s \n", msgRoute)
+		//	fmt.Printf("Route is.. %s \n", msgRoute)
 		handler := k.messenger.router.Route(ctx, msgRoute)
 		if handler == nil {
 			return sdk.Result{}, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msgRoute)

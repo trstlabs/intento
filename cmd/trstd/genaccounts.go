@@ -284,7 +284,10 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 
 			// figure out normalizationFactor to normalize snapshot balances to desired airdrop supply
 			normalizationFactor := genesisParams.AirdropSupply.ToDec().QuoInt(snapshot.TotalTrstAirdropAmount)
+
+			fmt.Printf("total snapshot accounts: %s\n", len(snapshot.Accounts))
 			fmt.Printf("normalization factor: %s\n", normalizationFactor)
+			fmt.Printf("snapshot total  supply: %s\n", snapshot.TotalTrstAirdropAmount)
 
 			bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 			liquidBalances := bankGenState.Balances
@@ -299,7 +302,7 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				// read address from snapshot
 				//we cannot have duplicate accounts
 
-				bech32Addr, err := ConvertBech32(acc.AtomAddress)
+				bech32Addr, err := ConvertBech32(acc.TokenAddress)
 				if err != nil {
 					return err
 				}
@@ -351,15 +354,12 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				//	fmt.Printf(" new genesis account contains double account: %w", address)
 				//	}
 			}
-
-			//fmt.Println(supply.AmountOf("utrst"))
-
-			var total sdk.Coins
+			var totalAirdrop sdk.Coins
 			for _, balance := range liquidBalances {
-				total = total.Add(balance.Coins...)
+				totalAirdrop = totalAirdrop.Add(balance.Coins...)
 			}
-
-			fmt.Println(total)
+			fmt.Printf("Total all airdrop balances %s", totalAirdrop)
+			//fmt.Println(supply.AmountOf("utrst"))
 
 			// distribute remaining trst to accounts not in fairdrop
 			for addr, coin := range nonAirdropAccs {
@@ -382,6 +382,11 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				}
 				accs = append(accs, baseAccount)
 			}
+			var total sdk.Coins
+			for _, balance := range liquidBalances {
+				total = total.Add(balance.Coins...)
+			}
+			fmt.Printf("Total all balances %s", total)
 
 			// auth module genesis
 			accs = authtypes.SanitizeGenesisAccounts(accs)
@@ -510,12 +515,14 @@ func removeDuplicates(m map[string]SnapshotAccount) map[string]SnapshotAccount {
 	return m
 }
 
-func removeDuplicatesFromSnapshot(first map[string]SnapshotAccount, second map[string]SnapshotAccount) map[string]SnapshotAccount {
+func removeDuplicatesFromSnapshot(first map[string]SnapshotAccount, second map[string]SnapshotAccount, third map[string]SnapshotAccount) map[string]SnapshotAccount {
 	list := make([]string, 0, len(first))
 
 	var duplicatesSecret uint64
+	var duplicatesTerra uint64
 	fmt.Printf("length cosmos accs %d\n", len(first))
 	fmt.Printf("length secret accs %d\n", len(second))
+	fmt.Printf("length terra accs %d\n", len(third))
 	//append accounts to list so we have list of all acc
 	for acc, _ := range first {
 
@@ -531,18 +538,40 @@ func removeDuplicatesFromSnapshot(first map[string]SnapshotAccount, second map[s
 
 			list = append(list, newAcc)
 			first[newAcc] = value
+
 		} else {
 			//	fmt.Println("delete secret acc  %s\n", acc)
-
+			var acct = first[newAcc]
+			acct.TrstBalance = acct.TrstBalance.Add(value.TrstBalance)
 			delete(second, acc)
 			duplicatesSecret = duplicatesSecret + 1
 		}
 	}
+	fmt.Println("removed duplicates secret")
+	//append accounts to list so we have list of all terra acc
+	for acc, value := range third {
+		newAcc, _ := cosmosConvertBech32(acc)
+		//if it does not contain the acc we append to it
+		if contains(list, newAcc) == false {
+
+			list = append(list, newAcc)
+			first[newAcc] = value
+		} else {
+			/*//	fmt.Println("delete secret acc  %s\n", acc)
+			var acct = first[newAcc]
+			acct.TrstBalance = acct.TrstBalance.Add(value.TrstBalance)
+			first[newAcc] = value*/
+			delete(third, acc)
+			duplicatesTerra = duplicatesTerra + 1
+		}
+	}
 
 	fmt.Printf("final length secret accs: %d\n", len(second))
+	fmt.Printf("final length terra accs: %d\n", len(third))
 	fmt.Printf("length list accs: %d\n", len(list))
 
 	fmt.Printf("duplicates secret accs: %s \n", string(duplicatesSecret))
+	fmt.Printf("duplicates terra accs: %s \n", string(duplicatesTerra))
 	//all := append(first, second)
 
 	fmt.Println("removed duplicates")

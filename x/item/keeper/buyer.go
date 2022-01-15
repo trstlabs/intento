@@ -4,28 +4,31 @@ import (
 
 	//"github.com/tendermint/tendermint/crypto"
 	//	"strconv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/trstlabs/trst/x/item/types"
 )
 
 // Prepayment creates a buyer with a new id and update the count
-func (k Keeper) Prepayment(ctx sdk.Context, msg types.MsgPrepayment) {
+func (k Keeper) Prepayment(ctx sdk.Context, msg types.MsgPrepayment) (err error) {
 	// Create the buyer
 
 	deposit := sdk.NewInt64Coin("utrst", msg.Deposit)
 
 	buyeraddress, err := sdk.AccAddressFromBech32(msg.Buyer)
 	if err != nil {
-		panic(err)
+		sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address not found")
 	}
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, buyeraddress, types.ModuleName, sdk.NewCoins(deposit))
 	if err != nil {
-		panic(err)
+		//panic(err)
+		sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "insufficent balance")
 	}
 
 	k.SetBuyer(ctx, msg.Itemid, msg.Buyer)
+
+	return nil
 
 }
 

@@ -4,7 +4,7 @@ use enclave_ffi_types::{Ctx, EnclaveError};
 
 use crate::coalesce;
 use crate::cosmwasm::encoding::Binary;
-use crate::cosmwasm::types::{CanonicalAddr, Env, Coin};
+use crate::cosmwasm::types::{CanonicalAddr, Env};
 
 use crate::cosmwasm::math::Uint128;
 use crate::crypto::Ed25519PublicKey;
@@ -79,16 +79,20 @@ pub fn init(
         );
         EnclaveError::FailedToDeserialize
     })?;
+  //  trace!("Init: Sender sig_info: {:?}", String::from_utf8_lossy(&sig_info));
+
+
 
     trace!("Init input before decryption: {:?}", base64::encode(&msg));
     let secret_msg = SecretMessage::from_slice(msg)?;
 
-    verify_params(&parsed_sig_info, &parsed_env, &secret_msg)?;
+
+    verify_params(&msg, &parsed_sig_info, &parsed_env, &secret_msg)?;
 
     let decrypted_msg = secret_msg.decrypt()?;
 
     let validated_msg = validate_msg(&decrypted_msg, contract_code.hash())?;
-    //let validated_auto_msg = validate_msg(&decrypted_msg, contract_code.hash())?;
+
     trace!(
         "Init input after decryption: {:?}",
         String::from_utf8_lossy(&validated_msg)
@@ -115,41 +119,22 @@ pub fn init(
   
     let env_ptr = engine.write_to_memory(&new_env)?;
     let msg_ptr = engine.write_to_memory(&validated_msg)?;
-   // trace!("callback sig...");
-    //let mut callback_sig: [u8; 256] = [0; 256];
+
     let auto_msg = SecretMessage::from_slice(auto_msg)?;
-    let sent_funds = [Coin{ denom: "utrst".to_string(), amount: Uint128(0) }];//&parsed_env.message.sent_funds[..];
+
+    let sent_funds = [];
     trace!("sent_funds {:?}...", sent_funds);
     let sig = create_callback_signature(&canonical_contract_address, &auto_msg, &sent_funds);
-    //trace!("callback sisadfg...{:?}", sig);
-    //trace!("callback length...{:?}", sig.len());
-    //callback_sig.copy_from_slice(&sig);
+
     let array = copy_into_array(&sig[..]);
    // trace!("array length...{:?}", array.len());
-    let mut callback_sig: [u8; 32] = array;
+    let callback_sig: [u8; 32] = array;
 
-    //may not be 
-  //  if callback_sig.len() != 32 {
-    //    callback_sig = [0; 32];
-   // }
-
-  //let mut callback_sig = callback.try_into().expect("slice with incorrect length");
-   //   let callback_sig = <&[u8; 256]>::try_from(callback);
-
-   //trace!("callback callback_sig...{:?}", callback_sig.len());
-    //trace!("callback sig...");
-   
-    //trace!("callback sig is {:?} and length is: {:?}", callback_sig, callback_sig.len());
-    //let auto_msg_ptr = engine.write_to_memory(&auto_msg)?;
-    // This wrapper is used to coalesce all errors in this block to one object
-    // so we can `.map_err()` in one place for all of them
     let output = coalesce!(EnclaveError, {
         let vec_ptr = engine.init(env_ptr, msg_ptr)?;
         let output = engine.extract_vector(vec_ptr)?;
         // TODO: copy cosmwasm's structures to enclave
-        // TODO: ref: https://github.com/CosmWasm/cosmwasm/blob/b971c037a773bf6a5f5d08a88485113d9b9e8e7b/packages/std/src/init_handle.rs#L129
-        // TODO: ref: https://github.com/CosmWasm/cosmwasm/blob/b971c037a773bf6a5f5d08a88485113d9b9e8e7b/packages/std/src/query.rs#L13
-        let output = encrypt_output(
+         let output = encrypt_output(
             output,
             secret_msg.nonce,
             secret_msg.user_public_key,
@@ -208,7 +193,7 @@ pub fn handle(
     let secret_msg = SecretMessage::from_slice(msg)?;
 
     // Verify env parameters against the signed tx
-    verify_params(&parsed_sig_info, &parsed_env, &secret_msg)?;
+    verify_params(&msg, &parsed_sig_info, &parsed_env, &secret_msg)?;
 
     let contract_key = extract_contract_key(&parsed_env)?;
 

@@ -110,18 +110,21 @@ func (w *Wasmer) Instantiate(
 	if err != nil {
 		return nil, nil, nil, 0, err
 	}
-	fmt.Printf("Auto msg")
-	fmt.Println(string(autoMsg))
+	//fmt.Printf("Auto msg")
 
 	data, gasUsed, err := api.Instantiate(w.cache, code, paramBin, initMsg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
 	if err != nil {
 		return nil, nil, nil, gasUsed, err
 	}
-
+	fmt.Println("success")
 	key := data[0:64]
 	callback_sig := data[64:96]
+
+	fmt.Println(string(callback_sig))
+
 	var resp types.InitResult
 	err = json.Unmarshal(data[96:], &resp)
+
 	if err != nil {
 		return nil, nil, nil, gasUsed, err
 	}

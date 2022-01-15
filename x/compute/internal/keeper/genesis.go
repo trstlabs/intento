@@ -11,9 +11,10 @@ import (
 // InitGenesis sets supply information for genesis.
 //
 // CONTRACT: all types of accounts must have been already initialized/created
-func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) error {
+func InitGenesis(ctx sdk.Context, keeper Keeper, gs types.GenesisState) error {
+
 	var maxCodeID uint64
-	for i, code := range data.Codes {
+	for i, code := range gs.Codes {
 		err := keeper.importCode(ctx, code.CodeID, code.CodeInfo, code.CodeBytes)
 		if err != nil {
 			return sdkerrors.Wrapf(err, "code %d with id: %d", i, code.CodeID)
@@ -24,7 +25,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) error 
 	}
 
 	var maxContractID int
-	for i, contract := range data.Contracts {
+	for i, contract := range gs.Contracts {
 		err := keeper.importContract(ctx, contract.ContractAddress, &contract.ContractInfo, contract.ContractState)
 		if err != nil {
 			return sdkerrors.Wrapf(err, "contract number %d", i)
@@ -32,7 +33,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) error 
 		maxContractID = i + 1 // not ideal but max(contractID) is not persisted otherwise
 	}
 
-	for i, seq := range data.Sequences {
+	for i, seq := range gs.Sequences {
 		err := keeper.importAutoIncrementID(ctx, seq.IDKey, seq.Value)
 		if err != nil {
 			return sdkerrors.Wrapf(err, "sequence number %d", i)
@@ -46,6 +47,8 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) error 
 	if keeper.peekAutoIncrementID(ctx, types.KeyLastInstanceID) <= uint64(maxContractID) {
 		return sdkerrors.Wrapf(types.ErrInvalid, "seq %s must be greater %d ", string(types.KeyLastInstanceID), maxContractID)
 	}
+	//fmt.Print("setting paams...")
+	keeper.SetParams(ctx, types.DefaultParams())
 	//keeper.setParams(ctx, data.Params)
 
 	return nil
@@ -53,9 +56,11 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, data types.GenesisState) error 
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
 func ExportGenesis(ctx sdk.Context, keeper Keeper) *types.GenesisState {
-	var genState types.GenesisState
+	//var genState types.GenesisState
+	genState := *types.DefaultGenesis()
 
 	//genState.Params = keeper.GetParams(ctx)
+	genState.Params = keeper.GetParams(ctx)
 
 	keeper.IterateCodeInfos(ctx, func(codeID uint64, info types.CodeInfo) bool {
 		bytecode, err := keeper.GetByteCode(ctx, codeID)

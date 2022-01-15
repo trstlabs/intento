@@ -35,7 +35,7 @@ func CmdCreateEstimation() *cobra.Command {
 			wasmCtx := wasmUtils.WASMContext{CLIContext: clientCtx}
 			estimateMsg := types.TrustlessMsg{}
 
-			estimation := map[string]string{"amount": args[0], "comment": args[3]}
+			estimation := map[string]string{"amount": args[0], "comment": args[3], "estimator": clientCtx.GetFromAddress().String()}
 
 			message := map[string]interface{}{"create_estimation": estimation}
 
@@ -126,8 +126,8 @@ func CmdUpdateLike() *cobra.Command {
 
 func CmdDeleteEstimation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete-estimator [id] ",
-		Short: "Delete a estimator by id",
+		Use:   "delete-estimation [id] ",
+		Short: "Delete a estimation by id",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseUint(args[0], 10, 64)
@@ -143,8 +143,6 @@ func CmdDeleteEstimation() *cobra.Command {
 
 			deletegMsg := types.TrustlessMsg{}
 			delete := types.ParseDelete{}
-
-			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
 			deletegMsg.Msg, err = json.Marshal(delete)
 			//fmt.Printf("json message: %X\n", estimation)
 			if err != nil {

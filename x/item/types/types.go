@@ -11,11 +11,16 @@ type TrustlessMsg struct {
 	Msg      []byte
 }
 
+type ParseAuto struct {
+	AutoMsg struct {
+	} `json:"auto_msg"`
+}
+
 type EstimateResult struct {
 	Estimation struct {
-		Status         string `json:"status"`
-		TotalCount     int    `json:"total_count"`
-		ReadyForReveal bool   `json:"ready_for_reveal"`
+		Status     string `json:"status"`
+		TotalCount int    `json:"total_count"`
+		//ReadyForReveal bool   `json:"ready_for_reveal"`
 		//AmountEstimation string `json:"amount_estimation"`
 	} `json:"estimation"`
 }
@@ -24,9 +29,9 @@ type RevealResult struct {
 	RevealEstimation struct {
 		Status         string   `json:"status"`
 		Message        string   `json:"message"`
-		Bestestimation int      `json:"best_estimation"`
+		BestEstimation int      `json:"best_estimation"`
 		Comments       []string `json:"comments"`
-		Bestestimator  string   `json:"best_estimator"`
+		BestEstimator  string   `json:"best_estimator"`
 		EstimationList []int    `json:"estimation_list"`
 	} `json:"reveal_estimation"`
 }
@@ -34,6 +39,17 @@ type RevealResult struct {
 type ParseReveal struct {
 	RevealEstimation struct {
 	} `json:"reveal_estimation"`
+}
+
+type ParseTransferable struct {
+	Transferable struct {
+	} `json:"transferable"`
+}
+
+type TransferableResult struct {
+	Transferable struct {
+		Status string `json:"status"`
+	} `json:"transferable"`
 }
 
 type StatusResult struct {

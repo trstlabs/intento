@@ -30,8 +30,9 @@ type createItemRequest struct {
 	Tags            []string `json:"tags"`
 	Condition       int64    `json:"condition"`
 	Shippingregion  []string `json:"shippingregion"`
-	Depositamount   int64    `json:"Depositamount"`
-	Initmsg         []byte   `json:"Initmsg"`
+	Depositamount   int64    `json:"depositamount"`
+	InitMsg         []byte   `json:"init_msg"`
+	AutoMsg         []byte   `json:"auto_msg"`
 	Photos          []string `json:"photos"`
 }
 
@@ -74,7 +75,8 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 		parsedShippingregion := req.Shippingregion
 
 		parsedDepositAmount := req.Depositamount
-		parsedMsg := req.Initmsg
+		parsedMsg := req.InitMsg
+		parsedAutoMsg := req.AutoMsg
 
 		parsedPhotos := req.Photos
 
@@ -92,6 +94,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 			parsedShippingregion,
 			parsedDepositAmount,
 			parsedMsg,
+			parsedAutoMsg,
 			parsedPhotos,
 		)
 

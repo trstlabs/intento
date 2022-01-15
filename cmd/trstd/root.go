@@ -48,7 +48,7 @@ import (
 )
 
 // thanks @terra-project for this fix
-const flagLegacyHdPath = "legacy-hd-path"
+///const flagLegacyHdPath = "legacy-hd-path"
 const flagIsBootstrap = "bootstrap"
 const cfgFileName = "config-cli.toml"
 
@@ -334,23 +334,24 @@ func updateTmParamsAndInit(mbm module.BasicManager, defaultNodeHome string) *cob
 }
 
 func initConfig(ctx *client.Context, cmd *cobra.Command) error {
-	cmd.PersistentFlags().Bool(flagLegacyHdPath, false, "Flag to specify the command uses old HD path - use this for ledger compatibility")
+	//cmd.PersistentFlags().Bool(flagLegacyHdPath, false, "Flag to specify the command uses old HD path - use this for ledger compatibility")
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(trst.Bech32PrefixAccAddr, trst.Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(trst.Bech32PrefixValAddr, trst.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(trst.Bech32PrefixConsAddr, trst.Bech32PrefixConsPub)
 
-	oldHDPath, err := cmd.PersistentFlags().GetBool(flagLegacyHdPath)
+	/*oldHDPath, err := cmd.PersistentFlags().GetBool(flagLegacyHdPath)
 	if err != nil {
 		return err
 	}
 	if !oldHDPath {
 		config.SetCoinType(529)
 		config.SetFullFundraiserPath("44'/529'/0'/0/0")
-	}
-
-	config.Seal()
+	}*/
+	//fmt.Printf(sdk.GetConfig().GetFullBIP44Path())
+	//config.SetCoinType(933)
+	//config.SetFullFundraiserPath("44'/933'/0'/0/0")
 
 	cfgFilePath := filepath.Join(app.DefaultCLIHome, "config", cfgFileName)
 	if _, err := os.Stat(cfgFilePath); err == nil {
@@ -363,7 +364,7 @@ func initConfig(ctx *client.Context, cmd *cobra.Command) error {
 
 	cfgFlags := []string{flags.FlagChainID, flags.FlagKeyringBackend}
 	for _, flag := range cfgFlags {
-		err = setFlagFromConfig(cmd, flag)
+		err := setFlagFromConfig(cmd, flag)
 		if err != nil {
 			return err
 		}

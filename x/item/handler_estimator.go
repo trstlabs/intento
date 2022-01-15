@@ -20,10 +20,10 @@ func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgC
 	if item.Id != msg.Itemid {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item not found")
 	}
-	if item.Bestestimator != "" {
+	if item.BestEstimator != "" {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has an estimation")
 	}
-	if item.Estimationprice > 0 {
+	if item.EstimationPrice > 0 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has an estimation")
 	}
 
@@ -32,17 +32,11 @@ func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgC
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "estimator cannot be item creator")
 	}
 
-	//checks whether the estimator already estimated the item
-
-	if k.HasEstimator(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "already estimated this item")
-	}
-
-	if msg.Deposit != item.Depositamount {
+	if msg.Deposit != item.DepositAmount {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit invalid")
 	}
 
-	item.Estimatorlist = append(item.Estimatorlist, msg.Estimator)
+	item.EstimatorList = append(item.EstimatorList, msg.Estimator)
 	//fmt.Printf("setting item msg: %X\n", msg.Itemid)
 	k.SetItem(ctx, item)
 	//fmt.Printf("go to keeper item msg: %X\n", msg.Itemid)
@@ -66,25 +60,23 @@ func handleMsgUpdateLike(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdateL
 	}
 
 	// Checks that the element exists
-	if !k.HasEstimator(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
+	if !k.HasEstimationInfo(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("like of %s doesn't exist", msg.Estimator))
 	}
 
 	// Checks if the the msg sender is the same as the current owner
-	if msg.Estimator != k.GetEstimatorOwner(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
+	if msg.Estimator != k.GetEstimator(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
 
-	k.SetEstimator(ctx, estimator)
+	k.SetEstimationInfo(ctx, estimator)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgDeleteEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteEstimation) (*sdk.Result, error) {
-	if !k.HasEstimator(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("estimation of %s doesn't exist", msg.Estimator))
-	}
-	if msg.Estimator != k.GetEstimatorOwner(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
+
+	if msg.Estimator != k.GetEstimator(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
 	item := k.GetItem(ctx, msg.Itemid)
@@ -94,13 +86,9 @@ func handleMsgDeleteEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgD
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item has a status")
 	}
 
-	if msg.Estimator == item.Highestestimator || msg.Estimator == item.Lowestestimator {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "estimator is lowest or highest")
-	}
-
-	for i, v := range item.Estimatorlist {
+	for i, v := range item.EstimatorList {
 		if v == msg.Estimator {
-			item.Estimatorlist = append(item.Estimatorlist[:i], item.Estimatorlist[i+1:]...)
+			item.EstimatorList = append(item.EstimatorList[:i], item.EstimatorList[i+1:]...)
 			break
 		}
 	}
@@ -119,11 +107,6 @@ func handleMsgDeleteEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgD
 
 func handleMsgFlagItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgFlagItem) (*sdk.Result, error) {
 
-	// Checks that the element exists
-	if k.HasEstimator(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, fmt.Sprintf("estimation of %s does exist", msg.Estimator))
-	}
-
 	item := k.GetItem(ctx, msg.Itemid)
 
 	if item.Transferable {
@@ -137,18 +120,18 @@ func handleMsgFlagItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgFlagItem)
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error()) ///panic(err)
 	}
 	/*//remove item when it is flagged enough
-	if int64(len(item.Estimatorlist)/2) < item.Flags+1 {
+	if int64(len(item.EstimatorList)/2) < item.Flags+1 {
 
-		for _, element := range item.Estimatorlist {
+		for _, element := range item.EstimatorList {
 			//apply this to each element
 			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 			k.DeleteEstimation(ctx, key)
 
 		}
-		item.Bestestimator = ""
+		item.BestEstimator = ""
 		item.Lowestestimator = ""
 		item.Highestestimator = ""
-		item.Estimatorlist = nil
+		item.EstimatorList = nil
 		item.Status = "Removed (Item flagged)"
 		k.DeleteItem(ctx, msg.Itemid)
 		k.RemoveFromItemSeller(ctx, msg.Itemid, item.Seller)

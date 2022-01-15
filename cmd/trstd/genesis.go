@@ -234,7 +234,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
 	genParams.AirdropSupply = sdk.NewIntWithDecimal(2, 14) // 2*10^14 utrst, 2*10^8 (200M TRST)
-	genParams.GenesisTime = time.Now()                     ///time.Date(2021, 7, 29, 17, 0, 0, 0, time.UTC) // Jul 29, 2021 - 17:00 UTC
+	genParams.GenesisTime = time.Now()                     ///time.Date(2022, 2, 1, 17, 0, 0, 0, time.UTC) // Jul 29, 2021 - 17:00 UTC
 
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{

@@ -14,20 +14,20 @@ import (
 
 type (
 	Keeper struct {
-		cdc              codec.BinaryCodec
-		storeKey         sdk.StoreKey
-		memKey           sdk.StoreKey
-		paramSpace       paramtypes.Subspace
-		accountKeeper    types.AccountKeeper
-		bankKeeper       types.BankKeeper
-		feeCollectorName string
+		cdc           codec.BinaryCodec
+		storeKey      sdk.StoreKey
+		memKey        sdk.StoreKey
+		paramSpace    paramtypes.Subspace
+		accountKeeper types.AccountKeeper
+		bankKeeper    types.BankKeeper
+		distrKeeper   types.DistrKeeper
 		//	wasmer           wasm.Wasmer
 		computeKeeper types.ComputeKeeper
 		hooks         types.ItemHooks
 	}
 )
 
-func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, feeCollectorName string, homeDir string /*wasmConfig types.WasmConfig, supportedFeatures string, */, ck types.ComputeKeeper, hooks types.ItemHooks) *Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, paramSpace paramtypes.Subspace, ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper, homeDir string /*wasmConfig types.WasmConfig, supportedFeatures string, */, ck types.ComputeKeeper, hooks types.ItemHooks) *Keeper {
 
 	// set KeyTable if it has not already been set
 	if !paramSpace.HasKeyTable() {
@@ -42,12 +42,12 @@ func NewKeeper(cdc codec.BinaryCodec, storeKey, memKey sdk.StoreKey, paramSpace 
 	}
 
 	return &Keeper{cdc: cdc,
-		storeKey:         storeKey,
-		memKey:           memKey,
-		paramSpace:       paramSpace,
-		bankKeeper:       bk,
-		accountKeeper:    ak,
-		feeCollectorName: feeCollectorName,
+		storeKey:      storeKey,
+		memKey:        memKey,
+		paramSpace:    paramSpace,
+		bankKeeper:    bk,
+		accountKeeper: ak,
+		distrKeeper:   dk,
 		//	wasmer:           *wasmer,
 		computeKeeper: ck,
 		hooks:         hooks,

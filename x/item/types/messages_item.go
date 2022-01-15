@@ -8,20 +8,21 @@ import (
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgCreateItem(creator string, title string, description string, shippingcost int64, localpickup string, estimationcount int64, tags []string, condition int64, shippingregion []string, depositamount int64, initmsg []byte, photos []string) *MsgCreateItem {
+func NewMsgCreateItem(creator string, title string, description string, shippingCost int64, localpickup string, estimationcount int64, tags []string, condition int64, shippingRegion []string, depositamount int64, initMsg []byte, autoMsg []byte, photos []string) *MsgCreateItem {
 	return &MsgCreateItem{
 
 		Creator:         creator,
 		Title:           title,
 		Description:     description,
-		Shippingcost:    shippingcost,
-		Localpickup:     localpickup,
-		Estimationcount: estimationcount,
+		ShippingCost:    shippingCost,
+		LocalPickup:     localpickup,
+		EstimationCount: estimationcount,
 		Tags:            tags,
 		Condition:       condition,
-		Shippingregion:  shippingregion,
-		Depositamount:   depositamount,
-		Initmsg:         initmsg,
+		ShippingRegion:  shippingRegion,
+		DepositAmount:   depositamount,
+		InitMsg:         initMsg,
+		AutoMsg:         autoMsg,
 		Photos:          photos,
 	}
 }
@@ -62,17 +63,17 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 		}
 	}
 
-	if len(msg.Shippingregion) > 9 {
+	if len(msg.ShippingRegion) > 9 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Region list too long")
 	}
 
-	for _, region := range msg.Shippingregion {
+	for _, region := range msg.ShippingRegion {
 		if len(region) > 2 {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "A Region cannot be longer than 2")
 		}
 	}
 
-	if msg.Shippingcost == 0 && msg.Localpickup == "" {
+	if msg.ShippingCost == 0 && msg.LocalPickup == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localpickup")
 	}
 
@@ -84,14 +85,14 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Description length too long")
 	}
 
-	if len(msg.Localpickup) > 48 {
+	if len(msg.LocalPickup) > 48 {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup location too long")
 	}
 
 	if msg.Condition > 5 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid item condition")
 	}
-	if msg.Estimationcount > 24 {
+	if msg.EstimationCount > 24 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid estimation count")
 	}
 
@@ -143,12 +144,12 @@ func (msg *MsgDeleteItem) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgRevealEstimation(creator string, itemid uint64, revealmsg []byte) *MsgRevealEstimation {
+func NewMsgRevealEstimation(creator string, itemid uint64, revealMsg []byte) *MsgRevealEstimation {
 	return &MsgRevealEstimation{
 
 		Creator:   creator,
 		Itemid:    itemid,
-		Revealmsg: revealmsg,
+		RevealMsg: revealMsg,
 	}
 }
 
@@ -183,12 +184,12 @@ func (msg *MsgRevealEstimation) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgItemTransferable(seller string, transferable bool, itemid uint64) *MsgItemTransferable {
+func NewMsgItemTransferable(seller string, transferable []byte, itemid uint64) *MsgItemTransferable {
 	return &MsgItemTransferable{
 
-		Seller:       seller,
-		Transferable: transferable,
-		Itemid:       itemid,
+		Seller:          seller,
+		TransferableMsg: transferable,
+		Itemid:          itemid,
 	}
 }
 
@@ -263,14 +264,14 @@ func (msg *MsgItemShipping) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgItemResell(seller string, itemid uint64, shippingcost int64, discount int64, localpickup string, shippingregion []string, note string) *MsgItemResell {
+func NewMsgItemResell(seller string, itemid uint64, shippingCost int64, discount int64, localpickup string, shipping_region []string, note string) *MsgItemResell {
 	return &MsgItemResell{
 		Seller:         seller,
 		Itemid:         itemid,
-		Shippingcost:   shippingcost,
+		ShippingCost:   shippingCost,
 		Discount:       discount,
-		Localpickup:    localpickup,
-		Shippingregion: shippingregion,
+		LocalPickup:    localpickup,
+		ShippingRegion: shipping_region,
 		Note:           note,
 	}
 }
@@ -304,20 +305,20 @@ func (msg *MsgItemResell) ValidateBasic() error {
 	if len(msg.Note) > 240 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "note too long")
 	}
-	if len(msg.Shippingregion) > 6 {
+	if len(msg.ShippingRegion) > 6 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Regions too long")
 	}
 
-	for _, region := range msg.Shippingregion {
+	for _, region := range msg.ShippingRegion {
 		if len(region) > 2 {
 			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region too long")
 		}
 	}
-	if msg.Shippingcost == 0 && msg.Localpickup == "" {
+	if msg.ShippingCost == 0 && msg.LocalPickup == "" {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localpickup")
 	}
 
-	if len(msg.Localpickup) > 25 {
+	if len(msg.LocalPickup) > 25 {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup too long")
 	}
 

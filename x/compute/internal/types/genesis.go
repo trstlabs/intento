@@ -5,6 +5,16 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// DefaultGenesis returns the default Capability genesis state
+func DefaultGenesis() *GenesisState {
+	//fmt.Print("DefaultGenesis")
+	return &GenesisState{
+
+		// this line is used by starport scaffolding # genesis/types/default
+		Params: DefaultParams(),
+	}
+}
+
 func (s Sequence) ValidateBasic() error {
 	if len(s.IDKey) == 0 {
 		return sdkerrors.Wrap(ErrEmpty, "id key")
@@ -13,15 +23,16 @@ func (s Sequence) ValidateBasic() error {
 }
 
 func (s GenesisState) ValidateBasic() error {
-	/*
-		if err := s.Params.ValidateBasic(); err != nil {
-			return sdkerrors.Wrap(err, "params")
-		}
-	*/
+	//fmt.Print("VALIDATING BASIC")
+	if err := s.Params.Validate(); err != nil {
+		return sdkerrors.Wrap(err, "params")
+	}
+
 	for i := range s.Codes {
 		if err := s.Codes[i].ValidateBasic(); err != nil {
 			return sdkerrors.Wrapf(err, "code: %d", i)
 		}
+
 	}
 	for i := range s.Contracts {
 		if err := s.Contracts[i].ValidateBasic(); err != nil {
@@ -70,6 +81,19 @@ func (c Contract) ValidateBasic() error {
 
 // ValidateGenesis performs basic validation of supply genesis data returning an
 // error for any failed validation criteria.
-func ValidateGenesis(data GenesisState) error {
-	return data.ValidateBasic()
+func ValidateGenesis(gs GenesisState) error {
+	return gs.ValidateBasic()
+}
+
+// Validate performs basic genesis state validation returning an error upon any
+// failure.
+func (gs GenesisState) Validate() error {
+	//fmt.Println("Validating")
+	gs.ValidateBasic()
+	err := gs.Params.Validate()
+	if err != nil {
+		return err
+	}
+	//fmt.Println("Validated")
+	return nil
 }

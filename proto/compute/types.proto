@@ -126,3 +126,18 @@ message Model {
     // base64-encode raw value
     bytes Value = 2;
 }
+
+
+// Params defines the params for activeness of contracts on governance proposals.
+message Params {
+   option (gogoproto.goproto_stringer) = false;
+  //  Maximum period for trst holders to buy an item. Initial value: 2
+  //  months.
+  google.protobuf.Duration MaxActiveContractPeriod = 1 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "max_active_contract_period,omitempty"
+  ];
+  int64 Commission  = 2;
+
+}

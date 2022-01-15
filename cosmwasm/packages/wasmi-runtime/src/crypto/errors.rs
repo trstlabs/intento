@@ -26,4 +26,14 @@ pub enum CryptoError {
     RandomError,
     /// An error related to signature verification
     VerificationError,
+    /// An error related to signature verification
+    VerificationError2,
+    /// An error related to signature verification
+    VerificationError3,
+    /// An error related to signature verification
+    VerificationError4,
+    /// An error related to signature verification
+    VerificationError5,
 }
+
+

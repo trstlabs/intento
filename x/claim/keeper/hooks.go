@@ -23,15 +23,16 @@ func (k Keeper) AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress)
 	}
 }
 
+/*
 func (k Keeper) AfterItemBought(ctx sdk.Context, sender sdk.AccAddress) {
 	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionItemBought)
 	if err != nil {
 		panic(err.Error())
 	}
 }
-
-func (k Keeper) AfterItemTokenized(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, voterAddr, types.ActionItemTokenized)
+*/
+func (k Keeper) AfterItemTokenized(ctx sdk.Context, creator sdk.AccAddress) {
+	_, err := k.ClaimCoinsForAction(ctx, creator, types.ActionItemTokenized)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -46,7 +47,7 @@ func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress,
 
 // ________________________________________________________________________________________
 
-// Hooks wrapper struct for slashing keeper
+// Hooks wrapper struct for claims keeper
 type Hooks struct {
 	k Keeper
 }
@@ -93,17 +94,23 @@ func (h Hooks) BeforeDelegationSharesModified(ctx sdk.Context, delAddr sdk.AccAd
 func (h Hooks) BeforeDelegationRemoved(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 }
 func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	h.k.AfterDelegationModified(ctx, delAddr, valAddr)
 }
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {}
 
 // item hooks
-func (h Hooks) AfterItemTokenized(ctx sdk.Context, senderAddr sdk.AccAddress) {}
+func (h Hooks) AfterItemTokenized(ctx sdk.Context, senderAddr sdk.AccAddress) {
+	h.k.AfterItemTokenized(ctx, senderAddr)
+}
 func (h Hooks) AfterItemBought(ctx sdk.Context, senderAddr sdk.AccAddress) {
 }
 
 // Compute hooks
-func (h Hooks) AfterComputeExecuted(ctx sdk.Context, senderAddr sdk.AccAddress) {}
+func (h Hooks) AfterComputeExecuted(ctx sdk.Context, senderAddr sdk.AccAddress) {
+	h.k.AfterComputeExecuted(ctx, senderAddr)
+}
 func (h Hooks) AfterComputeInstantiated(ctx sdk.Context, senderAddr sdk.AccAddress) {
+	h.k.AfterComputeInstantiated(ctx, senderAddr)
 }
 
 //func (h Hooks) AfterItemEstimated(ctx sdk.Context, proposalID uint64) {}

@@ -20,7 +20,7 @@ message Estimator {
 
 message MsgCreateEstimation {
   string estimator = 1;
-  bytes estimatemsg = 2; 
+  bytes estimate_msg = 2; 
   uint64 itemid = 3; 
   int64 deposit = 4;
   bool interested = 5; 
@@ -36,11 +36,11 @@ message MsgUpdateLike {
 message MsgDeleteEstimation {
   string estimator = 1;
   uint64 itemid = 2;
-  bytes deletemsg = 3;
+  bytes delete_msg = 3;
 }
 
 message MsgFlagItem{
   string estimator = 1;
   uint64 itemid = 2;
-   bytes flagmsg = 3;
+   bytes flag_msg = 3;
 }

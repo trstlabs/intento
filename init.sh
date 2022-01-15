@@ -1,3 +1,4 @@
+
 rm -rf ~/.trst
 
 trstd init FRST --chain-id=trst_chain_1
@@ -12,7 +13,6 @@ yes impulse north bulb pistol oven fiction struggle gun season quote blush regio
 yes kiwi obtain scrub aunt female shoulder dune shove budget salt mechanic plug beef right pact economy swear flash update wild change puppy hurdle power | trstd keys add user4 --keyring-backend test --recover
 
 yes orchard thing tooth dismiss seat couple define atom antenna language fuel wrist napkin tired undo toddler virus cherry shock mimic toss rifle predict crisp |trstd keys add faucet --keyring-backend test --recover
-
 
 trstd add-genesis-account $(trstd keys show user1 -a --keyring-backend test) 25000000000utrst
 trstd add-genesis-account $(trstd keys show user2 -a --keyring-backend test) 25000000000utrst --vesting-amount 20000000000utrst  --vesting-end-time 1638485671

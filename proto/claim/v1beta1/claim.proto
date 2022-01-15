@@ -12,9 +12,8 @@ enum Action {
 
   ActionComputeInstantiate= 0;
   ActionComputeExecute = 1;
-  ActionItemBought = 2;
-  ActionItemTokenized = 3;
-  ActionDelegateStake = 4;
+  ActionItemTokenized = 2;
+  ActionDelegateStake = 3;
 }
 
 // A Claim Records is the metadata of claim data per address

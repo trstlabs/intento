@@ -348,7 +348,7 @@ impl ::protobuf::reflect::ProtobufValue for Estimator {
 pub struct MsgCreateEstimation {
     // message fields
     pub estimator: ::std::string::String,
-    pub estimatemsg: ::std::vec::Vec<u8>,
+    pub estimate_msg: ::std::vec::Vec<u8>,
     pub itemid: u64,
     pub deposit: i64,
     pub interested: bool,
@@ -394,30 +394,30 @@ impl MsgCreateEstimation {
         ::std::mem::replace(&mut self.estimator, ::std::string::String::new())
     }
 
-    // bytes estimatemsg = 2;
+    // bytes estimate_msg = 2;
 
 
-    pub fn get_estimatemsg(&self) -> &[u8] {
-        &self.estimatemsg
+    pub fn get_estimate_msg(&self) -> &[u8] {
+        &self.estimate_msg
     }
-    pub fn clear_estimatemsg(&mut self) {
-        self.estimatemsg.clear();
+    pub fn clear_estimate_msg(&mut self) {
+        self.estimate_msg.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_estimatemsg(&mut self, v: ::std::vec::Vec<u8>) {
-        self.estimatemsg = v;
+    pub fn set_estimate_msg(&mut self, v: ::std::vec::Vec<u8>) {
+        self.estimate_msg = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_estimatemsg(&mut self) -> &mut ::std::vec::Vec<u8> {
-        &mut self.estimatemsg
+    pub fn mut_estimate_msg(&mut self) -> &mut ::std::vec::Vec<u8> {
+        &mut self.estimate_msg
     }
 
     // Take field
-    pub fn take_estimatemsg(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.estimatemsg, ::std::vec::Vec::new())
+    pub fn take_estimate_msg(&mut self) -> ::std::vec::Vec<u8> {
+        ::std::mem::replace(&mut self.estimate_msg, ::std::vec::Vec::new())
     }
 
     // uint64 itemid = 3;
@@ -479,7 +479,7 @@ impl ::protobuf::Message for MsgCreateEstimation {
                     ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.estimator)?;
                 },
                 2 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.estimatemsg)?;
+                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.estimate_msg)?;
                 },
                 3 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
@@ -517,8 +517,8 @@ impl ::protobuf::Message for MsgCreateEstimation {
         if !self.estimator.is_empty() {
             my_size += ::protobuf::rt::string_size(1, &self.estimator);
         }
-        if !self.estimatemsg.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(2, &self.estimatemsg);
+        if !self.estimate_msg.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(2, &self.estimate_msg);
         }
         if self.itemid != 0 {
             my_size += ::protobuf::rt::value_size(3, self.itemid, ::protobuf::wire_format::WireTypeVarint);
@@ -538,8 +538,8 @@ impl ::protobuf::Message for MsgCreateEstimation {
         if !self.estimator.is_empty() {
             os.write_string(1, &self.estimator)?;
         }
-        if !self.estimatemsg.is_empty() {
-            os.write_bytes(2, &self.estimatemsg)?;
+        if !self.estimate_msg.is_empty() {
+            os.write_bytes(2, &self.estimate_msg)?;
         }
         if self.itemid != 0 {
             os.write_uint64(3, self.itemid)?;
@@ -594,9 +594,9 @@ impl ::protobuf::Message for MsgCreateEstimation {
                 |m: &mut MsgCreateEstimation| { &mut m.estimator },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
-                "estimatemsg",
-                |m: &MsgCreateEstimation| { &m.estimatemsg },
-                |m: &mut MsgCreateEstimation| { &mut m.estimatemsg },
+                "estimate_msg",
+                |m: &MsgCreateEstimation| { &m.estimate_msg },
+                |m: &mut MsgCreateEstimation| { &mut m.estimate_msg },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
                 "itemid",
@@ -630,7 +630,7 @@ impl ::protobuf::Message for MsgCreateEstimation {
 impl ::protobuf::Clear for MsgCreateEstimation {
     fn clear(&mut self) {
         self.estimator.clear();
-        self.estimatemsg.clear();
+        self.estimate_msg.clear();
         self.itemid = 0;
         self.deposit = 0;
         self.interested = false;
@@ -884,7 +884,7 @@ pub struct MsgDeleteEstimation {
     // message fields
     pub estimator: ::std::string::String,
     pub itemid: u64,
-    pub deletemsg: ::std::vec::Vec<u8>,
+    pub delete_msg: ::std::vec::Vec<u8>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -942,30 +942,30 @@ impl MsgDeleteEstimation {
         self.itemid = v;
     }
 
-    // bytes deletemsg = 3;
+    // bytes delete_msg = 3;
 
 
-    pub fn get_deletemsg(&self) -> &[u8] {
-        &self.deletemsg
+    pub fn get_delete_msg(&self) -> &[u8] {
+        &self.delete_msg
     }
-    pub fn clear_deletemsg(&mut self) {
-        self.deletemsg.clear();
+    pub fn clear_delete_msg(&mut self) {
+        self.delete_msg.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_deletemsg(&mut self, v: ::std::vec::Vec<u8>) {
-        self.deletemsg = v;
+    pub fn set_delete_msg(&mut self, v: ::std::vec::Vec<u8>) {
+        self.delete_msg = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_deletemsg(&mut self) -> &mut ::std::vec::Vec<u8> {
-        &mut self.deletemsg
+    pub fn mut_delete_msg(&mut self) -> &mut ::std::vec::Vec<u8> {
+        &mut self.delete_msg
     }
 
     // Take field
-    pub fn take_deletemsg(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.deletemsg, ::std::vec::Vec::new())
+    pub fn take_delete_msg(&mut self) -> ::std::vec::Vec<u8> {
+        ::std::mem::replace(&mut self.delete_msg, ::std::vec::Vec::new())
     }
 }
 
@@ -989,7 +989,7 @@ impl ::protobuf::Message for MsgDeleteEstimation {
                     self.itemid = tmp;
                 },
                 3 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.deletemsg)?;
+                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.delete_msg)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -1009,8 +1009,8 @@ impl ::protobuf::Message for MsgDeleteEstimation {
         if self.itemid != 0 {
             my_size += ::protobuf::rt::value_size(2, self.itemid, ::protobuf::wire_format::WireTypeVarint);
         }
-        if !self.deletemsg.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(3, &self.deletemsg);
+        if !self.delete_msg.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(3, &self.delete_msg);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
@@ -1024,8 +1024,8 @@ impl ::protobuf::Message for MsgDeleteEstimation {
         if self.itemid != 0 {
             os.write_uint64(2, self.itemid)?;
         }
-        if !self.deletemsg.is_empty() {
-            os.write_bytes(3, &self.deletemsg)?;
+        if !self.delete_msg.is_empty() {
+            os.write_bytes(3, &self.delete_msg)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1076,9 +1076,9 @@ impl ::protobuf::Message for MsgDeleteEstimation {
                 |m: &mut MsgDeleteEstimation| { &mut m.itemid },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
-                "deletemsg",
-                |m: &MsgDeleteEstimation| { &m.deletemsg },
-                |m: &mut MsgDeleteEstimation| { &mut m.deletemsg },
+                "delete_msg",
+                |m: &MsgDeleteEstimation| { &m.delete_msg },
+                |m: &mut MsgDeleteEstimation| { &mut m.delete_msg },
             ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<MsgDeleteEstimation>(
                 "MsgDeleteEstimation",
@@ -1098,7 +1098,7 @@ impl ::protobuf::Clear for MsgDeleteEstimation {
     fn clear(&mut self) {
         self.estimator.clear();
         self.itemid = 0;
-        self.deletemsg.clear();
+        self.delete_msg.clear();
         self.unknown_fields.clear();
     }
 }
@@ -1120,7 +1120,7 @@ pub struct MsgFlagItem {
     // message fields
     pub estimator: ::std::string::String,
     pub itemid: u64,
-    pub flagmsg: ::std::vec::Vec<u8>,
+    pub flag_msg: ::std::vec::Vec<u8>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -1178,30 +1178,30 @@ impl MsgFlagItem {
         self.itemid = v;
     }
 
-    // bytes flagmsg = 3;
+    // bytes flag_msg = 3;
 
 
-    pub fn get_flagmsg(&self) -> &[u8] {
-        &self.flagmsg
+    pub fn get_flag_msg(&self) -> &[u8] {
+        &self.flag_msg
     }
-    pub fn clear_flagmsg(&mut self) {
-        self.flagmsg.clear();
+    pub fn clear_flag_msg(&mut self) {
+        self.flag_msg.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_flagmsg(&mut self, v: ::std::vec::Vec<u8>) {
-        self.flagmsg = v;
+    pub fn set_flag_msg(&mut self, v: ::std::vec::Vec<u8>) {
+        self.flag_msg = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_flagmsg(&mut self) -> &mut ::std::vec::Vec<u8> {
-        &mut self.flagmsg
+    pub fn mut_flag_msg(&mut self) -> &mut ::std::vec::Vec<u8> {
+        &mut self.flag_msg
     }
 
     // Take field
-    pub fn take_flagmsg(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.flagmsg, ::std::vec::Vec::new())
+    pub fn take_flag_msg(&mut self) -> ::std::vec::Vec<u8> {
+        ::std::mem::replace(&mut self.flag_msg, ::std::vec::Vec::new())
     }
 }
 
@@ -1225,7 +1225,7 @@ impl ::protobuf::Message for MsgFlagItem {
                     self.itemid = tmp;
                 },
                 3 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.flagmsg)?;
+                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.flag_msg)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -1245,8 +1245,8 @@ impl ::protobuf::Message for MsgFlagItem {
         if self.itemid != 0 {
             my_size += ::protobuf::rt::value_size(2, self.itemid, ::protobuf::wire_format::WireTypeVarint);
         }
-        if !self.flagmsg.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(3, &self.flagmsg);
+        if !self.flag_msg.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(3, &self.flag_msg);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
@@ -1260,8 +1260,8 @@ impl ::protobuf::Message for MsgFlagItem {
         if self.itemid != 0 {
             os.write_uint64(2, self.itemid)?;
         }
-        if !self.flagmsg.is_empty() {
-            os.write_bytes(3, &self.flagmsg)?;
+        if !self.flag_msg.is_empty() {
+            os.write_bytes(3, &self.flag_msg)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1312,9 +1312,9 @@ impl ::protobuf::Message for MsgFlagItem {
                 |m: &mut MsgFlagItem| { &mut m.itemid },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
-                "flagmsg",
-                |m: &MsgFlagItem| { &m.flagmsg },
-                |m: &mut MsgFlagItem| { &mut m.flagmsg },
+                "flag_msg",
+                |m: &MsgFlagItem| { &m.flag_msg },
+                |m: &mut MsgFlagItem| { &mut m.flag_msg },
             ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<MsgFlagItem>(
                 "MsgFlagItem",
@@ -1334,7 +1334,7 @@ impl ::protobuf::Clear for MsgFlagItem {
     fn clear(&mut self) {
         self.estimator.clear();
         self.itemid = 0;
-        self.flagmsg.clear();
+        self.flag_msg.clear();
         self.unknown_fields.clear();
     }
 }
@@ -1358,19 +1358,19 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\x04R\x06itemid\x12\x1e\n\nestimation\x18\x03\x20\x01(\x03R\nes\
     timation\x129\n\x07deposit\x18\x04\x20\x01(\x0b2\x19.cosmos.base.v1beta1\
     .CoinR\x07depositB\x04\xc8\xde\x1f\0\x12\x1e\n\ninterested\x18\x05\x20\
-    \x01(\x08R\ninterested\"\xa7\x01\n\x13MsgCreateEstimation\x12\x1c\n\test\
-    imator\x18\x01\x20\x01(\tR\testimator\x12\x20\n\x0bestimatemsg\x18\x02\
-    \x20\x01(\x0cR\x0bestimatemsg\x12\x16\n\x06itemid\x18\x03\x20\x01(\x04R\
-    \x06itemid\x12\x18\n\x07deposit\x18\x04\x20\x01(\x03R\x07deposit\x12\x1e\
-    \n\ninterested\x18\x05\x20\x01(\x08R\ninterested\"e\n\rMsgUpdateLike\x12\
-    \x1c\n\testimator\x18\x01\x20\x01(\tR\testimator\x12\x16\n\x06itemid\x18\
-    \x02\x20\x01(\x04R\x06itemid\x12\x1e\n\ninterested\x18\x03\x20\x01(\x08R\
-    \ninterested\"i\n\x13MsgDeleteEstimation\x12\x1c\n\testimator\x18\x01\
-    \x20\x01(\tR\testimator\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04R\x06ite\
-    mid\x12\x1c\n\tdeletemsg\x18\x03\x20\x01(\x0cR\tdeletemsg\"]\n\x0bMsgFla\
-    gItem\x12\x1c\n\testimator\x18\x01\x20\x01(\tR\testimator\x12\x16\n\x06i\
-    temid\x18\x02\x20\x01(\x04R\x06itemid\x12\x18\n\x07flagmsg\x18\x03\x20\
-    \x01(\x0cR\x07flagmsgB'Z%github.com/trstlabs/trst/x/item/typesb\x06proto\
+    \x01(\x08R\ninterested\"\xa8\x01\n\x13MsgCreateEstimation\x12\x1c\n\test\
+    imator\x18\x01\x20\x01(\tR\testimator\x12!\n\x0cestimate_msg\x18\x02\x20\
+    \x01(\x0cR\x0bestimateMsg\x12\x16\n\x06itemid\x18\x03\x20\x01(\x04R\x06i\
+    temid\x12\x18\n\x07deposit\x18\x04\x20\x01(\x03R\x07deposit\x12\x1e\n\ni\
+    nterested\x18\x05\x20\x01(\x08R\ninterested\"e\n\rMsgUpdateLike\x12\x1c\
+    \n\testimator\x18\x01\x20\x01(\tR\testimator\x12\x16\n\x06itemid\x18\x02\
+    \x20\x01(\x04R\x06itemid\x12\x1e\n\ninterested\x18\x03\x20\x01(\x08R\nin\
+    terested\"j\n\x13MsgDeleteEstimation\x12\x1c\n\testimator\x18\x01\x20\
+    \x01(\tR\testimator\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04R\x06itemid\
+    \x12\x1d\n\ndelete_msg\x18\x03\x20\x01(\x0cR\tdeleteMsg\"^\n\x0bMsgFlagI\
+    tem\x12\x1c\n\testimator\x18\x01\x20\x01(\tR\testimator\x12\x16\n\x06ite\
+    mid\x18\x02\x20\x01(\x04R\x06itemid\x12\x19\n\x08flag_msg\x18\x03\x20\
+    \x01(\x0cR\x07flagMsgB'Z%github.com/trstlabs/trst/x/item/typesb\x06proto\
     3\
 ";
 
