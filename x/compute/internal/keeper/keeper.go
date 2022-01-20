@@ -657,6 +657,7 @@ func (k Keeper) IterateContractInfo(ctx sdk.Context, cb func(sdk.AccAddress, typ
 		if cb(iter.Key(), contract) {
 			break
 		}
+
 	}
 }
 

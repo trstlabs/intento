@@ -112,7 +112,7 @@ func (k Keeper) RemoveFromItemSeller(ctx sdk.Context, itemid uint64, seller stri
 	store.Delete(types.ItemSellerKey(itemid, seller))
 }
 
-// GetAllSellerItems returns all seller items
+// IterateItems iterates all seller items
 func (k Keeper) IterateItems(ctx sdk.Context, seller string, cb func(item types.Item) (stop bool)) {
 	//iterator := k.ItemSellerIterator(ctx, seller)
 	store := ctx.KVStore(k.storeKey)
