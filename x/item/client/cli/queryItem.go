@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/spf13/cobra"
 	"github.com/trstlabs/trst/x/item/types"
 )
@@ -25,7 +24,7 @@ func CmdListItem() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAllItemRequest{
+			params := &types.QueryAllItemsRequest{
 				Pagination: pageReq,
 			}
 
@@ -83,20 +82,17 @@ func CmdSellerItems() *cobra.Command {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)
-			if len(args[0]) > 0 {
-				params := &types.QuerySellerItemsRequest{
-					Seller: args[0],
-				}
 
-				res, err := queryClient.SellerItems(context.Background(), params)
-				if err != nil {
-					return err
-				}
-
-				return clientCtx.PrintProto(res)
-			} else {
-				return sdkerrors.Wrap(types.ErrArgumentMissingOrNonUInteger, "address missing")
+			params := &types.QuerySellerItemsRequest{
+				Seller: args[0],
 			}
+
+			res, err := queryClient.SellerItems(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
 		},
 	}
 

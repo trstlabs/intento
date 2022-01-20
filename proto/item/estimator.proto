@@ -1,22 +1,25 @@
 syntax = "proto3";
 package trstlabs.trst.trst;
 
-
 import "gogoproto/gogo.proto";
-import "cosmos/base/v1beta1/coin.proto";
+import "item/item.proto";
 
 option go_package = "github.com/trstlabs/trst/x/item/types";
 
-message Estimator {
-  string estimator = 1;
-  uint64 itemid = 2;
-  int64 estimation = 3; 
-
-  cosmos.base.v1beta1.Coin deposit = 4 [
-    (gogoproto.nullable) = false]; 
-  bool interested = 5; 
-
+message Profile {
+  string owner = 1;
+  // string username = 2;
+  repeated EstimationInfo estimations = 2;
+  //repeated Item createdItems = 4;
+ // repeated Item boughtItems = 5;
 }
+
+message EstimationInfo {
+  uint64 itemid = 1;
+  bool interested = 2; 
+  string item_creator = 3;
+}
+
 
 message MsgCreateEstimation {
   string estimator = 1;
@@ -25,7 +28,6 @@ message MsgCreateEstimation {
   int64 deposit = 4;
   bool interested = 5; 
 }
-
 
 message MsgUpdateLike {
   string estimator = 1;

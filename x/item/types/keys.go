@@ -40,8 +40,8 @@ const (
 )
 
 const (
-	EstimatorKey      = "Estimator-value-"
-	EstimatorCountKey = "Estimator-count-"
+	ProfileKey      = "Profile-value-"
+	ProfileCountKey = "Profile-count-"
 )
 
 var ListedItemQueuePrefix = []byte{0x02}
@@ -54,7 +54,7 @@ func SplitListedItemQueueKey(key []byte) (itemid uint64, endTime time.Time) {
 	return splitKeyWithTime(key)
 }
 
-// InactiveProposalByTimeKey gets the listed item queue key by endTime
+// ListedItemByTimeKey gets the listed item queue key by endTime
 func ListedItemByTimeKey(endTime time.Time) []byte {
 	return append(ListedItemQueuePrefix, sdk.FormatTimeBytes(endTime)...)
 }

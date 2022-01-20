@@ -152,7 +152,7 @@ $ %s query claim claimable-for-action stars1ey69r37gfxvxg62sh4r0ktpuc46pzjrmkkj4
 			action, ok := types.Action_value[args[1]]
 			if !ok {
 				return fmt.Errorf("invalid Action type: %s.  Valid actions are %s, %s, %s, %s", args[1],
-					types.ActionComputeExecute, types.ActionComputeInstantiate, types.ActionItemTokenized, types.ActionDelegateStake)
+					types.ActionComputeExecute, types.ActionComputeInstantiate, types.ActionItemBought, types.ActionDelegateStake)
 			}
 
 			// Query store

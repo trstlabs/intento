@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	// "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
@@ -12,17 +13,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(MsgStoreCode{}, "compute/MsgStoreCode", nil)
 	cdc.RegisterConcrete(MsgInstantiateContract{}, "compute/MsgInstantiateContract", nil)
 	cdc.RegisterConcrete(MsgExecuteContract{}, "compute/MsgExecuteContract", nil)
-	/*
-		cdc.RegisterConcrete(MsgMigrateContract{}, "wasm/MsgMigrateContract", nil)
-		cdc.RegisterConcrete(MsgUpdateAdmin{}, "wasm/MsgUpdateAdmin", nil)
-		cdc.RegisterConcrete(MsgClearAdmin{}, "wasm/MsgClearAdmin", nil)
 
-		cdc.RegisterConcrete(StoreCodeProposal{}, "wasm/StoreCodeProposal", nil)
-		cdc.RegisterConcrete(InstantiateContractProposal{}, "wasm/InstantiateContractProposal", nil)
-		cdc.RegisterConcrete(MigrateContractProposal{}, "wasm/MigrateContractProposal", nil)
-		cdc.RegisterConcrete(UpdateAdminProposal{}, "wasm/UpdateAdminProposal", nil)
-		cdc.RegisterConcrete(ClearAdminProposal{}, "wasm/ClearAdminProposal", nil)
-	*/
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -42,10 +33,8 @@ var (
 	ModuleCdc = codec.NewAminoCodec(amino)
 )
 
-/*
 func init() {
 	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
 	amino.Seal()
 }
-*/

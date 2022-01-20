@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) ItemAll(c context.Context, req *types.QueryAllItemRequest) (*types.QueryAllItemResponse, error) {
+func (k Keeper) ItemAll(c context.Context, req *types.QueryAllItemsRequest) (*types.QueryAllItemsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -36,7 +36,7 @@ func (k Keeper) ItemAll(c context.Context, req *types.QueryAllItemRequest) (*typ
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllItemResponse{Item: items, Pagination: pageRes}, nil
+	return &types.QueryAllItemsResponse{Item: items, Pagination: pageRes}, nil
 }
 
 func (k Keeper) ListedItemsAll(c context.Context, req *types.QueryAllListedItemsRequest) (*types.QueryAllListedItemsResponse, error) {

@@ -14,6 +14,6 @@ const (
 )
 
 const (
-	QueryGetEstimator  = "get-estimator"
-	QueryListEstimator = "list-estimator"
+	QueryGetProfile   = "get-profile"
+	QueryListProfiles = "list-profiles"
 )

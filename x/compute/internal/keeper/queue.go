@@ -9,70 +9,6 @@ import (
 	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
-/*
-// IterateContractsQueue iterates over the items in the inactive item queue
-// and performs a callback function
-func (k Keeper) IterateContractsQueue(ctx sdk.Context, endTime time.Time, cb func(item types.ContractInfoWithAddress) (stop bool)) {
-	iterator := k.ContractQueueIterator(ctx, endTime)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-
-		//fmt.Printf("iterator key is:  %s ", string(iterator.Key()))
-		//get the contract from endTime (key)
-		addr, _ := types.SplitContractQueueKey(iterator.Key())
-		contractAddr, err := sdk.AccAddressFromBech32(addr)
-		if err != nil {
-			return
-		}
-		fmt.Printf("addr is:  %s ", addr)
-
-		info := k.GetContractInfoWithAddress(ctx, contractAddr)
-
-		fmt.Printf("info creator is:  %s ", info.ContractInfo.Creator)
-		//	test := k.Delete(ctx, contractAddr)
-		//if test == nil {
-		//	panic("Success")
-		//	}
-		//k.RemoveFromContractQueue(ctx, contractAddr.String(), endTime)
-		if cb(info) {
-			break
-		}
-	}
-}
-
-// IterateContractsQueue iterates over the items in the inactive item queue
-// and performs a callback function
-func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func(addr sdk.AccAddress) (stop bool)) {
-	iterator := k.ContractQueueIterator(ctx, endTime)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-
-		//fmt.Printf("iterator key is:  %s ", string(iterator.Key()))
-		//get the contract from endTime (key)
-		addr, _ := types.SplitContractQueueKey(iterator.Key())
-		contractAddr, err := sdk.AccAddressFromBech32(addr)
-		if err != nil {
-			return
-		}
-		fmt.Printf("addr is:  %s ", addr)
-
-		//info := k.GetContractInfoWithAddress(ctx, contractAddr)
-
-		//fmt.Printf("info creator is:  %s ", info.ContractInfo.Creator)
-		//	test := k.Delete(ctx, contractAddr)
-		//if test == nil {
-		//	panic("Success")
-		//	}
-		//k.RemoveFromContractQueue(ctx, contractAddr.String(), endTime)
-		if cb(contractAddr) {
-			break
-		}
-	}
-}
-*/
-
 // IterateContractsQueue iterates over the items in the inactive item queue
 // and performs a callback function
 func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func(contract types.ContractInfoWithAddress) (stop bool)) {
@@ -98,6 +34,29 @@ func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func
 			break
 		}
 	}
+}
+
+// IterateContractsQueue iterates over the items in the inactive item queue
+// and performs a callback function
+func (k Keeper) IterateContractQueueAddressOnly(ctx sdk.Context, endTime time.Time, cb func(addr string) (stop bool)) {
+	iterator := k.ContractQueueIterator(ctx, endTime)
+
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		addr, _ := types.SplitContractQueueKey(iterator.Key())
+		if cb(addr) {
+			break
+		}
+	}
+}
+
+// GetAllContractAddresses returns all seller items on chain based on the seller
+func (k Keeper) GetAllContractAddresses(ctx sdk.Context) (addressList []*string) {
+	k.IterateContractQueueAddressOnly(ctx, ctx.BlockHeader().Time, func(address string) bool {
+		addressList = append(addressList, &address)
+		return false
+	})
+	return
 }
 
 // ContractQueueIterator returns an sdk.Iterator for all the items in the Inactive Queue that expire by endTime

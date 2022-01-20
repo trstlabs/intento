@@ -36,14 +36,14 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 	//status but no buyer
 	if item.Status != "" && item.Buyer == "" {
 
-		if len(item.EstimatorList) > 0 {
+		/*if len(item.EstimatorList) > 0 {
 			for _, element := range item.EstimatorList {
 				//apply this to each element
 
 				key := append(types.Uint64ToByte(msg.Id), []byte(element)...)
 				k.DeleteEstimation(ctx, key)
 			}
-		}
+		}*/
 		// title,status and rating are kept for record keeping
 		item.Description = ""
 		item.ShippingCost = 0
@@ -69,16 +69,6 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 
 	} else {
 
-		//if estimation is made pay back all the estimators/or buyer (like handleMsgItemTransfer)
-		if len(item.EstimatorList) > 0 {
-			for _, element := range item.EstimatorList {
-				//apply this to each element
-				key := append(types.Uint64ToByte(msg.Id), []byte(element)...)
-
-				k.DeleteEstimation(ctx, key)
-
-			}
-		}
 		k.RemoveFromListedItemQueue(ctx, msg.Id, item.EndTime)
 		_ = k.DeleteItemContract(ctx, item.Contract)
 		k.DeleteItem(ctx, msg.Id)
@@ -198,14 +188,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 			//for their participation in the protocol, the best estimator, a random and the stakers get rewarded.
 			//k.HandleEstimatorReward(ctx, item.BestEstimator, rewardCoins)
 
-			k.HandleStakingReward(ctx, rewardCoins)
-
-			//refund the deposits back to all of the item estimators
-			for _, element := range item.EstimatorList {
-				key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
-
-				k.DeleteEstimation(ctx, key)
-			}
+			k.HandleCommunityReward(ctx, rewardCoins)
 
 			item.BestEstimator = ""
 			item.EstimatorList = nil
@@ -224,14 +207,6 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		repaymentCoins := sdk.NewCoin("utrst", repayment)
 
 		k.HandlePrepayment(ctx, item.Buyer, repaymentCoins)
-
-		for _, element := range item.EstimatorList {
-			//apply this to each element
-			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
-
-			k.DeleteEstimation(ctx, key)
-
-		}
 
 		item.Status = "Shipping declined; buyer refunded"
 		k.SetItem(ctx, item)

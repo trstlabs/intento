@@ -193,7 +193,7 @@ func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk
 	if err != nil {
 		panic(err)
 	}
-
+	k.hooks.AfterItemBought(ctx, userAddress)
 }
 
 // HandleReward handles reward
@@ -212,14 +212,14 @@ func (k Keeper) HandleEstimatorReward(ctx sdk.Context, address string, coinToSen
 }
 
 // HandleReward handles reward
-func (k Keeper) HandleStakingReward(ctx sdk.Context, coinToSend sdk.Coin) {
+func (k Keeper) HandleCommunityReward(ctx sdk.Context, coinToSend sdk.Coin) {
 	moduleAcc := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	//distribute the same reward to the staking pool
 	err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(coinToSend), moduleAcc)
 	if err != nil {
 		panic(err)
 	}
-	//store.Delete(types.KeyPrefix(types.EstimatorKey + key))
+	//store.Delete(types.KeyPrefix(types.ProfileKey + key))
 }
 
 // MintReward mints coins to a module account
@@ -244,7 +244,7 @@ func (k Keeper) TokenizeItem(ctx sdk.Context, itemId uint64, addr string) error 
 	if err != nil {
 		return err ///panic(err)
 	}
-	k.hooks.AfterItemTokenized(ctx, userAddress)
+	//k.hooks.AfterItemTokenized(ctx, userAddress)
 	return nil
 }
 

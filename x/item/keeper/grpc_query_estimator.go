@@ -11,24 +11,24 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) EstimatorAll(c context.Context, req *types.QueryAllEstimatorRequest) (*types.QueryAllEstimatorResponse, error) {
+func (k Keeper) AllProfiles(c context.Context, req *types.QueryAllProfilesRequest) (*types.QueryAllProfilesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var estimators []*types.Estimator
+	var profiles []*types.Profile
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	estimatorStore := prefix.NewStore(store, types.KeyPrefix(types.EstimatorKey))
+	profileStore := prefix.NewStore(store, types.KeyPrefix(types.ProfileKey))
 
-	pageRes, err := query.Paginate(estimatorStore, req.Pagination, func(key []byte, value []byte) error {
-		var estimator types.Estimator
-		if err := k.cdc.Unmarshal(value, &estimator); err != nil {
+	pageRes, err := query.Paginate(profileStore, req.Pagination, func(key []byte, value []byte) error {
+		var profile types.Profile
+		if err := k.cdc.Unmarshal(value, &profile); err != nil {
 			return err
 		}
 
-		estimators = append(estimators, &estimator)
+		profiles = append(profiles, &profile)
 		return nil
 	})
 
@@ -36,19 +36,19 @@ func (k Keeper) EstimatorAll(c context.Context, req *types.QueryAllEstimatorRequ
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllEstimatorResponse{Estimator: estimators, Pagination: pageRes}, nil
+	return &types.QueryAllProfilesResponse{Profile: profiles, Pagination: pageRes}, nil
 }
 
-func (k Keeper) Estimator(c context.Context, req *types.QueryGetEstimatorRequest) (*types.QueryGetEstimatorResponse, error) {
+func (k Keeper) Profile(c context.Context, req *types.QueryGetProfileRequest) (*types.QueryGetProfileResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var estimator types.Estimator
+	var profile types.Profile
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.EstimatorKey), types.Uint64ToByte(req.Itemid)...)), &estimator)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
+	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ProfileKey), []byte(req.Owner)...)), &profile)
 
-	return &types.QueryGetEstimatorResponse{Estimator: &estimator}, nil
+	return &types.QueryGetProfileResponse{Profile: &profile}, nil
 }

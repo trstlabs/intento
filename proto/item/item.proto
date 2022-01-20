@@ -117,6 +117,7 @@ message Params {
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "max_active_period,omitempty"
   ];
+  uint64 MaxEstimatorCreatorRatio = 2;
 }
 
 message MsgTokenizeItem {

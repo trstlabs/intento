@@ -23,20 +23,20 @@ func (k Keeper) AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress)
 	}
 }
 
-/*
 func (k Keeper) AfterItemBought(ctx sdk.Context, sender sdk.AccAddress) {
 	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionItemBought)
 	if err != nil {
 		panic(err.Error())
 	}
 }
-*/
+
+/*
 func (k Keeper) AfterItemTokenized(ctx sdk.Context, creator sdk.AccAddress) {
 	_, err := k.ClaimCoinsForAction(ctx, creator, types.ActionItemTokenized)
 	if err != nil {
 		panic(err.Error())
 	}
-}
+}*/
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	_, err := k.ClaimCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
@@ -99,10 +99,12 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {}
 
 // item hooks
+
 func (h Hooks) AfterItemTokenized(ctx sdk.Context, senderAddr sdk.AccAddress) {
-	h.k.AfterItemTokenized(ctx, senderAddr)
+	//h.k.AfterItemTokenized(ctx, senderAddr)
 }
 func (h Hooks) AfterItemBought(ctx sdk.Context, senderAddr sdk.AccAddress) {
+	h.k.AfterItemBought(ctx, senderAddr)
 }
 
 // Compute hooks

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	//"github.com/coreos/etcd/store"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -15,11 +16,10 @@ import (
 	"github.com/trstlabs/trst/x/item/types"
 )
 
-/*
-// GetEstimationInfoCount get the total number of estimator
-func (k Keeper) GetEstimationInfoCount(ctx sdk.Context) int64 {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorCountKey))
-	byteKey := types.KeyPrefix(types.EstimatorCountKey)
+// GetProfileCount get the total number of profiles
+func (k Keeper) GetProfileCount(ctx sdk.Context) int64 {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileCountKey))
+	byteKey := types.KeyPrefix(types.ProfileCountKey)
 	bz := store.Get(byteKey)
 
 	// Count doesn't exist: no element
@@ -37,14 +37,14 @@ func (k Keeper) GetEstimationInfoCount(ctx sdk.Context) int64 {
 	return count
 }
 
-// SetEstimationInfoCount sets the total number of estimators for an item
-func (k Keeper) SetEstimationInfoCount(ctx sdk.Context, count int64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorCountKey))
-	byteKey := types.KeyPrefix(types.EstimatorCountKey)
+// SetProfileCount sets the total number of profiles
+func (k Keeper) SetProfileCount(ctx sdk.Context, count int64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileCountKey))
+	byteKey := types.KeyPrefix(types.ProfileCountKey)
 	bz := []byte(strconv.FormatInt(count, 10))
 	store.Set(byteKey, bz)
 }
-*/
+
 // CreateEstimation creates a estimator with a new id and update the count
 func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation) error {
 
@@ -52,16 +52,50 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 
 	//fmt.Printf("Keeper  item: %X\n", item.Contract)
 	// Create the estimator
-	// := k.GetEstimationInfoCount(ctx)
+	// := k.GetProfileCount(ctx)
 	deposit := sdk.NewInt64Coin("utrst", msg.Deposit)
-	var estimator = types.Estimator{
-		Estimator: msg.Estimator,
+	/*	var profile = types.Profile{
+			Creator: msg.Estimator,
 
-		Itemid: msg.Itemid,
-		//Deposit:    deposit,
-		Interested: msg.Interested,
-		//Msg:        msg.Msg,
-		//	Comment: msg.Comment,
+			Itemid: msg.Itemid,
+			//Deposit:    deposit,
+			Interested: msg.Interested,
+			//Msg:        msg.Msg,
+			//	Comment: msg.Comment,
+		}
+	*/
+	//var profile types.Profile
+	var estimationInfo = types.EstimationInfo{
+		Itemid:      msg.Itemid,
+		Interested:  msg.Interested,
+		ItemCreator: item.Creator,
+	}
+	var key = append([]byte(types.ProfileKey), []byte(msg.Estimator)...)
+	var profile types.Profile
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
+	if !store.Has(key) {
+
+		profile.Estimations = append(profile.Estimations, &estimationInfo)
+		var count = k.GetProfileCount(ctx)
+		profile.Owner = msg.Estimator
+		k.SetProfileCount(ctx, count+1)
+
+	} else {
+		profile = k.GetProfile(ctx, key)
+	}
+
+	amountEstimations := len(profile.Estimations)
+	var amountSameCreator int
+	for _, item := range profile.Estimations {
+		if item.ItemCreator == estimationInfo.ItemCreator {
+			amountSameCreator = amountSameCreator + 1
+		}
+	}
+	if amountSameCreator/amountEstimations*100 < int(types.DefaultEstimatorCreatorRatio) {
+		profile.Estimations = append(profile.Estimations, &estimationInfo)
+
+	} else {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot estimate again for this creator")
 	}
 
 	estimatorAddress, err := sdk.AccAddressFromBech32(msg.Estimator)
@@ -92,18 +126,14 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 
 	var result types.EstimateResult
 	json.Unmarshal([]byte(res.Log), &result)
-	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.Estimation.TotalCount), contractAddr)
 
 	if result.Estimation.Status != "" {
 		item.EstimationTotal = int64(result.Estimation.TotalCount)
-		store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-		key := append(append([]byte(types.EstimatorKey), types.Uint64ToByte(estimator.Itemid)...), []byte(estimator.Estimator)...)
-		value := k.cdc.MustMarshal(&estimator)
-		store.Set(key, value)
+
 		k.SetItem(ctx, item)
-		if estimator.Interested {
-			k.SetEstimationInfo(ctx, estimator)
-		}
+
+		b := k.cdc.MustMarshal(&profile)
+		store.Set(key, b)
 
 	} else {
 		fmt.Printf("result: Got result for item %s: %s\n", contractAddr, result.Estimation.Status)
@@ -112,89 +142,79 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 	return nil
 }
 
-// SetEstimationInfo set a specific estimator in the store
-func (k Keeper) SetEstimationInfo(ctx sdk.Context, estimator types.Estimator) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	b := k.cdc.MustMarshal(&estimator)
-	appended := append([]byte(types.EstimatorKey), types.Uint64ToByte(estimator.Itemid)...)
-	store.Set(append(appended, estimator.Estimator...), b)
+// SetProfile set a specific profile in the store
+func (k Keeper) SetProfile(ctx sdk.Context, profile types.Profile, owner string) {
+	var count = k.GetProfileCount(ctx)
+
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
+	b := k.cdc.MustMarshal(&profile)
+	appended := append([]byte(types.ProfileKey), []byte(owner)...)
+
+	k.SetProfileCount(ctx, count+1)
+	store.Set(appended, b)
 }
 
-// GetEstimationInfo returns estimation info from its key
-func (k Keeper) GetEstimationInfo(ctx sdk.Context, key []byte) types.Estimator {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	var estimator types.Estimator
-	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
-	return estimator
-}
+// UpdateEstimationInfo gets a info from a specific profile in the store
+func (k Keeper) UpdateEstimationInfo(ctx sdk.Context, estimationInfo types.EstimationInfo, estimator string) (err error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
+	var profile types.Profile
+	var key = append([]byte(types.ProfileKey), []byte(estimator)...)
+	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ProfileKey), key...)), &profile)
 
-// HasEstimationInfo checks if the estimator exists
-func (k Keeper) HasEstimationInfo(ctx sdk.Context, key []byte) bool {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	return store.Has(append(types.KeyPrefix(types.EstimatorKey), key...))
-}
+	for index, estimation := range profile.Estimations {
+		if estimation.Itemid == estimationInfo.Itemid {
+			profile.Estimations[index] = &estimationInfo
 
-// GetEstimator returns the creator of the estimation
-func (k Keeper) GetEstimator(ctx sdk.Context, key []byte) string {
-	return k.GetEstimationInfo(ctx, key).Estimator
-}
-
-/*
-// DeleteEstimation deletes a estimator
-func (k Keeper) DeleteEstimationWithDeposit(ctx sdk.Context, key []byte) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	var estimator types.Estimator
-	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
-	estimatorAddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
-	if err == nil {
-		//panic(err)
-		//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatorAddress, sdk.NewCoins(estimator.Deposit))
-		if err != nil {
-			panic(err)
+		} else {
+			return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "estimation info not found")
 		}
-
-		store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
 	}
 
+	b := k.cdc.MustMarshal(&profile)
+	store.Set(key, b)
+	return nil
 }
 
-// DeleteEstimationWithReward deletes a estimator
-func (k Keeper) DeleteEstimationWithReward(ctx sdk.Context, key []byte) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	var estimator types.Estimator
-	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
-	estimatorAddress, err := sdk.AccAddressFromBech32(estimator.Estimator)
-	if err == nil {
-		//panic(err)
-		//moduleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, estimatorAddress, sdk.NewCoins(estimator.Deposit.Add(estimator.Deposit)))
-		if err != nil {
-			panic(err)
-		}
-		store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
-	}
-
-}
-*/
-// DeleteEstimation deletes a estimator without returing a deposit
-func (k Keeper) DeleteEstimation(ctx sdk.Context, key []byte) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	var estimator types.Estimator
-	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.EstimatorKey), key...)), &estimator)
-
-	store.Delete(append(types.KeyPrefix(types.EstimatorKey), key...))
+// GetProfile returns profile info from its key
+func (k Keeper) GetProfile(ctx sdk.Context, key []byte) types.Profile {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
+	var profile types.Profile
+	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ProfileKey), key...)), &profile)
+	return profile
 }
 
-// GetAllEstimator returns all estimator
-func (k Keeper) GetAllEstimator(ctx sdk.Context) (msgs []types.Estimator) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EstimatorKey))
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefix(types.EstimatorKey))
+// GetProfileOwner returns owner from its key
+func (k Keeper) GetProfileOwner(ctx sdk.Context, key []byte) string {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
+	var profile types.Profile
+	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ProfileKey), key...)), &profile)
+	return profile.Owner
+}
+
+// HasProfile checks if the estimator exists
+func (k Keeper) HasProfile(ctx sdk.Context, key []byte) bool {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
+	return store.Has(append(types.KeyPrefix(types.ProfileKey), key...))
+}
+
+// DeleteProfile deletes a profile
+func (k Keeper) DeleteProfile(ctx sdk.Context, key []byte) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
+	var profile types.Profile
+	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ProfileKey), key...)), &profile)
+
+	store.Delete(append(types.KeyPrefix(types.ProfileKey), key...))
+}
+
+// GetAllProfiles returns all estimator profiles
+func (k Keeper) GetAllProfiles(ctx sdk.Context) (msgs []types.Profile) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefix(types.ProfileKey))
 
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		var msg types.Estimator
+		var msg types.Profile
 		k.cdc.MustUnmarshal(iterator.Value(), &msg)
 		msgs = append(msgs, msg)
 	}
@@ -214,25 +234,25 @@ func (k Keeper) Flag(ctx sdk.Context, item types.Item, msg types.MsgFlagItem) er
 	if err != nil {
 		return err ///panic(err)
 	}
-	fmt.Printf("executing contract: %s", item.Contract)
+	//fmt.Printf("executing contract: %s", item.Contract)
 	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.FlagMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: ")
 		//return sdkerrors.Wrapf(types.ErrInvalid, "err %s must be greater %d ",err, msg.Flagmsg)
 		return err ///panic(err)
 	}
-	fmt.Printf("res for item %s: %s\n", res.Log, contractAddr)
+	//fmt.Printf("res for item %s: %s\n", res.Log, contractAddr)
 
 	var result types.StatusResult
 
 	_ = json.Unmarshal([]byte(res.Log), &result)
 	if result.StatusOnly.Status == "Success" {
-		for _, element := range item.EstimatorList {
+		/*for _, element := range item.EstimatorList {
 
 			key := append(types.Uint64ToByte(item.Id), []byte(element)...)
 
 			k.DeleteEstimation(ctx, key)
-		}
+		}*/
 		k.RemoveFromListedItemQueue(ctx, item.Id, item.EndTime)
 		_ = k.DeleteItemContract(ctx, item.Contract)
 		k.DeleteItem(ctx, item.Id)

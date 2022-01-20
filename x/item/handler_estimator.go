@@ -5,7 +5,6 @@ import (
 	//"encoding/hex"
 	//"github.com/tendermint/tendermint/crypto"
 
-	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,34 +50,22 @@ func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgC
 }
 
 func handleMsgUpdateLike(ctx sdk.Context, k keeper.Keeper, msg *types.MsgUpdateLike) (*sdk.Result, error) {
-	var estimator = types.Estimator{
-		Estimator: msg.Estimator,
 
-		Itemid: msg.Itemid,
-
+	var estimationInfo = types.EstimationInfo{
+		Itemid:     msg.Itemid,
 		Interested: msg.Interested,
 	}
 
-	// Checks that the element exists
-	if !k.HasEstimationInfo(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, fmt.Sprintf("like of %s doesn't exist", msg.Estimator))
+	err := k.UpdateEstimationInfo(ctx, estimationInfo, msg.Estimator)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "estimation info not found")
 	}
-
-	// Checks if the the msg sender is the same as the current owner
-	if msg.Estimator != k.GetEstimator(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
-	}
-
-	k.SetEstimationInfo(ctx, estimator)
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
 
 func handleMsgDeleteEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteEstimation) (*sdk.Result, error) {
 
-	if msg.Estimator != k.GetEstimator(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...)) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
-	}
 	item := k.GetItem(ctx, msg.Itemid)
 	//Only delete estimator when it is not lowest /highest and not transferable
 
@@ -90,6 +77,8 @@ func handleMsgDeleteEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgD
 		if v == msg.Estimator {
 			item.EstimatorList = append(item.EstimatorList[:i], item.EstimatorList[i+1:]...)
 			break
+		} else {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "estimator not found in item info")
 		}
 	}
 
@@ -100,7 +89,7 @@ func handleMsgDeleteEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgD
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error()) ///panic(err)
 	}
 
-	k.DeleteEstimation(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...))
+	//k.DeleteEstimation(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Estimator)...))
 
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }
@@ -109,8 +98,8 @@ func handleMsgFlagItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgFlagItem)
 
 	item := k.GetItem(ctx, msg.Itemid)
 
-	if item.Transferable {
-		return nil, sdkerrors.Wrap(nil, "item is already estimated")
+	if item.EstimationPrice > 0 {
+		return nil, sdkerrors.Wrap(nil, "estimation period has ended")
 	}
 
 	err := k.Flag(ctx, item, *msg)

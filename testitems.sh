@@ -1,10 +1,9 @@
 trstd tx item create-item 'Rolex Submariner 1997 Gray' 'Rolex Submariner in good condition, it has no visible scratches and still works great. Bought in 1998, model year is 1997. It is the gray edition' 5 '40.741895,-73.989308' 3 watch,submariner,rolex 5 nl 3 "" --from=user1 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
 trstd tx item create-estimation 14 3 1 'Great Photos!' 0 --from=user4 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
-trstd tx item create-estimation 145 3 1 'Great Photos!' 0 --from=user2 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
-trstd tx item create-estimation 16 3 1 'Great Photos!' 0 --from=user3 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item create-estimation 145 3 1 'Great Photos!' 0 --from=user3 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item create-estimation 16 3 1 'Great Photos!' 0 --from=user2 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
 trstd tx item reveal-estimation 0 --from=user1 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
 trstd tx item tokenize-item 0 --from=user1 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
-
 
 trstd tx item create-item G-Shock 'gshock in good condition, it has no visible scratches and still works great' 5 '40.7127281,-74.0060152' 3 grey 5 nl,be,us 2 "" --from=user1 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
 trstd tx item create-estimation 14 2 1 'Great Photos!' 1 --from=user4 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
@@ -16,7 +15,6 @@ trstd tx item create-buyer 1 11 --from=user2 --chain-id=trst_chain_1 --keyring-b
 
 trstd tx item delete-buyer 1 --from=user2 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
 trstd tx item item-rating 3 'Item was not like the photos, but seller was nice nontheless' 1 --from=user2 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
-
 
 trstd tx item create-item G-Shock 'g-shock in great condition, it has no visible scratches and still works great' 5 '52.3727598,4.8936041'  3 grey 5 nl,be,us 3 "" --from=user1 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst
 trstd tx item create-estimation 12 3 1 'Great Photos!' 2 --from=user4 -y --chain-id=trst_chain_1 --keyring-backend test --fees 150utrst

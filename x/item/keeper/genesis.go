@@ -34,9 +34,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 
 	}
 
-	for _, elem := range state.EstimatorList {
+	for _, elem := range state.ProfileList {
 
-		k.SetEstimationInfo(ctx, *elem)
+		k.SetProfile(ctx, *elem, elem.Owner)
 	}
 
 	k.SetParams(ctx, types.DefaultParams())
@@ -44,7 +44,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	// Set all the estimator
 
 	// Set estimator count
-	//k.SetEstimationInfoCount(ctx, int64(len(state.EstimatorList)))
+	//k.SetEstimationInfoCount(ctx, int64(len(state.ProfileList)))
 
 	// Set buyer count
 	//k.SetBuyerCount(ctx, int64(len(state.BuyerList)))
@@ -64,10 +64,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		genesis.ItemList = append(genesis.ItemList, &elem)
 	}
 
-	estimatorList := k.GetAllEstimator(ctx)
-	for _, elem := range estimatorList {
+	profileList := k.GetAllProfiles(ctx)
+	for _, elem := range profileList {
 		elem := elem
-		genesis.EstimatorList = append(genesis.EstimatorList, &elem)
+		genesis.ProfileList = append(genesis.ProfileList, &elem)
 	}
 
 	genesis.Params = k.GetParams(ctx)

@@ -160,23 +160,23 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
 		k.Withdrawal(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
 
-		for _, element := range item.EstimatorList {
-			//apply this to each element
-			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
+		/*	for _, element := range item.EstimatorList {
+				//apply this to each element
+				key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 
-			//	estimator := k.GetEstimationInfo(ctx, key)
+				//	estimator := k.GetProfileInfo(ctx, key)
 
-			//	if estimator.Estimator == item.Highestestimator {
+				//	if estimator.Estimator == item.Highestestimator {
 
-			//	k.BurnCoins(ctx, estimator.Deposit)
-			//	k.DeleteEstimation(ctx, key)
+				//	k.BurnCoins(ctx, estimator.Deposit)
+				//	k.DeleteEstimation(ctx, key)
 
-			//} else {
-			k.DeleteEstimation(ctx, key)
-			//	}
+				//} else {
+				k.DeleteEstimation(ctx, key)
+				//	}
 
-		}
-
+			}
+		*/
 		item.Status = "Withdrawal prepayment"
 		item.ShippingCost = 0
 		item.LocalPickup = ""
@@ -230,18 +230,18 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 
 		k.MintReward(ctx, rewardCoins)
 
-		//for their participation in the protocol, the best estimator, a random and the stakers get rewarded.
-		//k.HandleEstimatorReward(ctx, item.BestEstimator, rewardCoins)
+		//for their participation the best estimator gets rewarded.
+		k.HandleEstimatorReward(ctx, item.BestEstimator, rewardCoins)
 
-		k.HandleStakingReward(ctx, rewardCoins)
+		k.HandleCommunityReward(ctx, rewardCoins)
 
-		//refund the deposits back to all of the item estimators
+		/*//refund the deposits back to all of the item estimators
 		for _, element := range item.EstimatorList {
 			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
 
 			k.DeleteEstimation(ctx, key)
 		}
-
+		*/
 		item.BestEstimator = ""
 		item.EstimatorList = nil
 	}

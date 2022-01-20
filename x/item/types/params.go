@@ -12,56 +12,44 @@ import (
 
 // Default period for active
 const (
-	DefaultPeriod time.Duration = time.Minute * 2 //time.Minute //time.Hour * 24 * 30 // 30 days
+	DefaultPeriod                time.Duration = time.Hour * 24 * 30 // 30 days
+	DefaultEstimatorCreatorRatio uint64        = 100
+
+//MaxSameCreator 5
+//MaxCreatorRatio 20%
 )
 
 // Parameter store key
 var (
-	KeyMaxActivePeriod = []byte("MaxActivePeriod")
+	KeyMaxActivePeriod          = []byte("MaxActivePeriod")
+	KeyMaxEstimatorCreatorRatio = []byte("MaxEstimatorCreatorRatio")
 )
-
-/*
-// ParamKeyTable - Key declaration for parameters
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable(
-		paramtypes.NewParamSetPair(ParamStoreKeyActiveParams, ActiveParams{}, validateActiveParams),
-
-	)
-}
-
-
-
-// ParamKeyTable - Key declaration for parameters
-func ParamKeyTable() paramtypes.KeyTable {
-	return paramtypes.NewKeyTable(
-		paramtypes.NewParamSetPair(KeyMaxActivePeriod, Params{}, Validate),
-
-	)
-}
-
-*/
 
 // ParamSetPairs - Implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMaxActivePeriod, &p.MaxActivePeriod, validateMaxActivePeriod),
+		paramtypes.NewParamSetPair(KeyMaxEstimatorCreatorRatio, &p.MaxEstimatorCreatorRatio, validateMaxEstimatorCreatorRatio),
 	}
 }
 
 // NewParams creates a new ActiveParams object
-func NewParams(maxActivePeriod time.Duration) Params {
-	return Params{MaxActivePeriod: maxActivePeriod}
+func NewParams(maxActivePeriod time.Duration, maxEstimatorCreatorRatio uint64) Params {
+	return Params{MaxActivePeriod: maxActivePeriod, MaxEstimatorCreatorRatio: maxEstimatorCreatorRatio}
 }
 
 // DefaultParams default parameters for Active
 func DefaultParams() Params {
 
-	return NewParams(DefaultPeriod)
+	return NewParams(DefaultPeriod, DefaultEstimatorCreatorRatio)
 }
 
 // Validate validates all params
 func (p Params) Validate() error {
 	if err := validateMaxActivePeriod(p.MaxActivePeriod); err != nil {
+		return err
+	}
+	if err := validateMaxEstimatorCreatorRatio(p.MaxEstimatorCreatorRatio); err != nil {
 		return err
 	}
 
@@ -81,29 +69,19 @@ func validateMaxActivePeriod(i interface{}) error {
 	return nil
 }
 
-/*
-func Validate(i interface{}) error {
-	v, ok := i.(Params)
+func validateMaxEstimatorCreatorRatio(i interface{}) error {
+	v, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.MaxActivePeriod <= 0 {
-		return fmt.Errorf("maximum active period must be positive: %d", v.MaxActivePeriod)
+	if v < 1 || v > 100 {
+		return fmt.Errorf("ratio must be within 0-100: %d", v)
 	}
 
 	return nil
 }
 
-// Params returns all of the  params
-type Params struct {
-
-	ActiveParams ActiveParams `json:"active_params" yaml:"active_params"`
-}
-
-func (p Params) String() string {
-	return  p.Params.String()
-}*/
 // String implements the stringer interface for Params
 func (p Params) String() string {
 	out, err := yaml.Marshal(p)

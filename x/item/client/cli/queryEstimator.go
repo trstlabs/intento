@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -10,10 +9,10 @@ import (
 	"github.com/trstlabs/trst/x/item/types"
 )
 
-func CmdListEstimator() *cobra.Command {
+func CmdListProfiles() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-estimator",
-		Short: "list all estimator",
+		Use:   "list-profiles",
+		Short: "list all profiles",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -24,11 +23,11 @@ func CmdListEstimator() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAllEstimatorRequest{
+			params := &types.QueryAllProfilesRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.EstimatorAll(context.Background(), params)
+			res, err := queryClient.AllProfiles(context.Background(), params)
 			if err != nil {
 				return err
 			}
@@ -42,24 +41,23 @@ func CmdListEstimator() *cobra.Command {
 	return cmd
 }
 
-func CmdShowEstimator() *cobra.Command {
+func CmdGetProfile() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-estimator [id]",
-		Short: "shows a estimator",
+		Use:   "get-profile [id]",
+		Short: "gets an estimator profile",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)
-			Itemid, err := strconv.ParseUint(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
-			params := &types.QueryGetEstimatorRequest{
-				Itemid: Itemid,
+
+			Owner := args[0]
+
+			params := &types.QueryGetProfileRequest{
+				Owner: Owner,
 			}
 
-			res, err := queryClient.Estimator(context.Background(), params)
+			res, err := queryClient.Profile(context.Background(), params)
 			if err != nil {
 				return err
 			}

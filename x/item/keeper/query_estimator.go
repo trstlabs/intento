@@ -7,8 +7,8 @@ import (
 	"github.com/trstlabs/trst/x/item/types"
 )
 
-func listEstimator(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	msgs := keeper.GetAllEstimator(ctx)
+func listProfiles(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+	msgs := keeper.GetAllProfiles(ctx)
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msgs)
 	if err != nil {
@@ -18,9 +18,9 @@ func listEstimator(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.Legac
 	return bz, nil
 }
 
-func getEstimator(ctx sdk.Context, key string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+func getProfile(ctx sdk.Context, key string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 
-	msg := keeper.GetEstimator(ctx, []byte(types.EstimatorKey+key))
+	msg := keeper.GetProfile(ctx, []byte(types.ProfileKey+key))
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msg)
 	if err != nil {

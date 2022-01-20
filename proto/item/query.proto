@@ -13,11 +13,11 @@ option go_package = "github.com/trstlabs/trst/x/item/types";
 // Query defines the gRPC querier service.
 service Query {
     // this line is used by starport scaffolding # 2
-	rpc Estimator(QueryGetEstimatorRequest) returns (QueryGetEstimatorResponse) {
-		option (google.api.http).get = "/trstlabs/trst/trst/estimators/{itemid}";
+	rpc Profile(QueryGetProfileRequest) returns (QueryGetProfileResponse) {
+		option (google.api.http).get = "/trstlabs/trst/trst/profiles/{owner}";
 	}
-	rpc EstimatorAll(QueryAllEstimatorRequest) returns (QueryAllEstimatorResponse) {
-		option (google.api.http).get = "/trstlabs/trst/trst/estimators";
+	rpc AllProfiles(QueryAllProfilesRequest) returns (QueryAllProfilesResponse) {
+		option (google.api.http).get = "/trstlabs/trst/trst/profiles";
 	}
 
 	//rpc Buyer(QueryGetBuyerRequest) returns (QueryGetBuyerResponse) {
@@ -30,7 +30,7 @@ service Query {
 	rpc Item(QueryGetItemRequest) returns (QueryGetItemResponse) {
 		option (google.api.http).get = "/trstlabs/trst/trst/item/{id}";
 	}
-	rpc ItemAll(QueryAllItemRequest) returns (QueryAllItemResponse) {
+	rpc ItemAll(QueryAllItemsRequest) returns (QueryAllItemsResponse) {
 		option (google.api.http).get = "/trstlabs/trst/trst/item";
 	}
 	rpc ListedItemsAll(QueryAllListedItemsRequest) returns (QueryAllListedItemsResponse) {
@@ -51,20 +51,20 @@ service Query {
 }
 
 // this line is used by starport scaffolding # 3
-message QueryGetEstimatorRequest {
-	uint64 itemid = 1;
+message QueryGetProfileRequest {
+	string owner = 1;
 }
 
-message QueryGetEstimatorResponse {
-	Estimator Estimator = 1;
+message QueryGetProfileResponse {
+	Profile Profile = 1;
 }
 
-message QueryAllEstimatorRequest {
+message QueryAllProfilesRequest {
 	cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-message QueryAllEstimatorResponse {
-	repeated Estimator Estimator = 1;
+message QueryAllProfilesResponse {
+	repeated Profile Profile = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 //message QueryGetBuyerRequest {
@@ -91,11 +91,11 @@ message QueryGetItemResponse {
 	Item Item = 1;
 }
 
-message QueryAllItemRequest {
+message QueryAllItemsRequest {
 	cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-message QueryAllItemResponse {
+message QueryAllItemsResponse {
 	repeated Item Item = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

@@ -12,7 +12,7 @@ enum Action {
 
   ActionComputeInstantiate= 0;
   ActionComputeExecute = 1;
-  ActionItemTokenized = 2;
+  ActionItemBought = 2;
   ActionDelegateStake = 3;
 }
 
