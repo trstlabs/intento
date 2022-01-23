@@ -47,11 +47,11 @@ message CodeInfo {
     string source = 3;
     string builder = 4;
 //    AccessConfig instantiate_config = 5 [(gogoproto.nullable) = false];
- //   google.protobuf.Timestamp end_time = 5;
-   google.protobuf.Duration end_time = 5 [
+
+   google.protobuf.Duration duration = 5 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
-    (gogoproto.jsontag)     = "end_time,omitempty"
+    (gogoproto.jsontag)     = "duration,omitempty"
   ];
   string title = 6;
     string description = 7;
@@ -139,5 +139,11 @@ message Params {
     (gogoproto.jsontag)     = "max_active_contract_period,omitempty"
   ];
   int64 Commission  = 2;
-
+  google.protobuf.Duration MinContractDurationForIncentive = 3 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "min_contract_duration_for_reward,omitempty"
+  ];
+int64 MaxContractIncentive = 4;
+  int64 MinContractBalanceForIncentive = 5;
 }

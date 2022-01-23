@@ -10,10 +10,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/trstlabs/trst/x/compute/internal/keeper"
 
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
-
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -108,14 +107,16 @@ func (b AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) 
 // AppModule implements an application module for the compute module.
 type AppModule struct {
 	AppModuleBasic
-	keeper Keeper
+	keeper        Keeper
+	accountKeeper types.AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.BinaryCodec, keeper Keeper) AppModule {
+func NewAppModule(cdc codec.BinaryCodec, keeper Keeper, ak types.AccountKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
+		accountKeeper:  ak,
 	}
 }
 
@@ -150,7 +151,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	var genesisState GenesisState
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	if err := InitGenesis(ctx, am.keeper, genesisState); err != nil {
+	if err := am.keeper.InitGenesis(ctx, genesisState); err != nil {
 		panic(err)
 	}
 	return []abci.ValidatorUpdate{}

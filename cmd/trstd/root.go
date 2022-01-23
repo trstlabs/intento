@@ -259,7 +259,7 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	bootstrap := cast.ToBool(appOpts.Get("bootstrap"))
 	queryGasLimit := viper.GetUint64("query-gas-limit")
 
-	fmt.Printf("bootstrap: %s", cast.ToString(bootstrap))
+	//fmt.Printf("bootstrap: %s", cast.ToString(bootstrap))
 
 	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
@@ -318,7 +318,7 @@ func updateTmParamsAndInit(mbm module.BasicManager, defaultNodeHome string) *cob
 
 		appConfigFilePath := filepath.Join(defaultNodeHome, "config/app.toml")
 		appConf, _ := serverconfig.ParseConfig(viper.GetViper())
-		appConf.MinGasPrices = "0.00025trst"
+		appConf.MinGasPrices = "0.00025utrst"
 
 		serverconfig.WriteConfigFile(appConfigFilePath, appConf)
 

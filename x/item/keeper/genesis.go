@@ -14,7 +14,9 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	//k.SetParams(ctx, state.Params)
 
-	// NOTE: since the reward pool is a module account, the auth module should
+	k.SetParams(ctx, types.DefaultParams())
+	k.InitializeContract(ctx)
+	// NOTE: since the item module is a module account, the auth module should
 	// take care of importing the amount into the account except for the
 	// genesis block
 	if k.GetItemModuleBalance(ctx).IsZero() {
@@ -23,8 +25,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 			panic(err)
 		}
 	}
-
-	k.InitializeContract(ctx)
 
 	for _, elem := range state.ItemList {
 
@@ -39,7 +39,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 		k.SetProfile(ctx, *elem, elem.Owner)
 	}
 
-	k.SetParams(ctx, types.DefaultParams())
 	// this line is used by starport scaffolding # genesis/module/init
 	// Set all the estimator
 
@@ -101,6 +100,7 @@ func (k Keeper) InitializeItemModule(ctx sdk.Context, funds sdk.Coin) error {
 // InitializeContract sets up the module account from genesis
 func (k Keeper) InitializeContract(ctx sdk.Context) error {
 	addr := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	params := k.GetParams(ctx)
 	// ensure reward pool module account is set
 	if addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -115,7 +115,7 @@ func (k Keeper) InitializeContract(ctx sdk.Context) error {
 	var codeID uint64
 	var hash string
 
-	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "", 0, "Estimation aggregation", "This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically sent back at the end of the contract period. This code is used internally.")
+	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "", params.MaxActivePeriod, "Estimation aggregation", "This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically sent back at the end of the contract period. This code is used internally.")
 	if err != nil {
 		panic(err)
 	}

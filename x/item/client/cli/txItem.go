@@ -221,9 +221,9 @@ func CmdRevealEstimation() *cobra.Command {
 
 func CmdItemTransferable() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "item-transferable [yes/no] [itemid]",
+		Use:   "item-transferable [itemid]",
 		Short: "set item transferability",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cliCtx, err := client.GetClientTxContext(cmd)
@@ -232,7 +232,7 @@ func CmdItemTransferable() *cobra.Command {
 			}
 			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
-			itemID, err := strconv.ParseUint(args[1], 10, 64)
+			itemID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}

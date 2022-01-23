@@ -12,12 +12,12 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 	"github.com/trstlabs/trst/x/compute/internal/types"
+	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
 )
 
 type QueryHandler struct {
@@ -85,7 +85,7 @@ func DefaultQueryPlugins(gov govkeeper.Keeper, dist distrkeeper.Keeper, mint min
 		Staking: StakingQuerier(staking, dist),
 		Wasm:    WasmQuerier(wasm),
 		Dist:    DistQuerier(dist),
-		Mint:    MintQuerier(mint),
+		Mint:    MintQuerier(staking), // MintQuerier(mint),
 		Gov:     GovQuerier(gov),
 	}
 }
@@ -147,7 +147,7 @@ func GovQuerier(keeper govkeeper.Keeper) func(ctx sdk.Context, request *wasmType
 	}
 }
 
-func MintQuerier(keeper mintkeeper.Keeper) func(ctx sdk.Context, request *wasmTypes.MintQuery) ([]byte, error) {
+func MintQuerier(keeper stakingkeeper.Keeper) func(ctx sdk.Context, request *wasmTypes.MintQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmTypes.MintQuery) ([]byte, error) {
 		if request.BondedRatio != nil {
 			total := keeper.BondedRatio(ctx)
@@ -158,7 +158,8 @@ func MintQuerier(keeper mintkeeper.Keeper) func(ctx sdk.Context, request *wasmTy
 
 			return json.Marshal(resp)
 		}
-		if request.Inflation != nil {
+		//We do not have inflation info in our custom keeper
+		/*	if request.Inflation != nil {
 			minter := keeper.GetMinter(ctx)
 			inflation := minter.Inflation
 
@@ -167,7 +168,7 @@ func MintQuerier(keeper mintkeeper.Keeper) func(ctx sdk.Context, request *wasmTy
 			}
 
 			return json.Marshal(resp)
-		}
+		}*/
 		return nil, wasmTypes.UnsupportedRequest{Kind: "unknown MintQuery variant"}
 	}
 

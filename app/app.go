@@ -46,9 +46,6 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -81,14 +78,21 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+	alloc "github.com/trstlabs/trst/x/alloc"
+	allockeeper "github.com/trstlabs/trst/x/alloc/keeper"
+	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	claim "github.com/trstlabs/trst/x/claim"
 	claimkeeper "github.com/trstlabs/trst/x/claim/keeper"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
 	"github.com/trstlabs/trst/x/compute"
 	computehooks "github.com/trstlabs/trst/x/compute/hooks"
+
 	item "github.com/trstlabs/trst/x/item"
 	itemkeeper "github.com/trstlabs/trst/x/item/keeper"
 	itemtypes "github.com/trstlabs/trst/x/item/types"
+	"github.com/trstlabs/trst/x/mint"
+	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
+	minttypes "github.com/trstlabs/trst/x/mint/types"
 	reg "github.com/trstlabs/trst/x/registration"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
@@ -147,20 +151,24 @@ var (
 		compute.AppModuleBasic{},
 		reg.AppModuleBasic{},
 		claim.AppModuleBasic{},
+		alloc.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		itemtypes.ModuleName:           {authtypes.Minter, authtypes.Burner},
-		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		authtypes.FeeCollectorName:                nil,
+		distrtypes.ModuleName:                     nil,
+		minttypes.ModuleName:                      {authtypes.Minter},
+		stakingtypes.BondedPoolName:               {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:            {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                       {authtypes.Burner},
+		ibctransfertypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
+		itemtypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
+		compute.ModuleName:                        {authtypes.Minter},
+		claimtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		alloctypes.ModuleName:                     {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		alloctypes.DeveloperVestingModuleAcctName: nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -218,6 +226,7 @@ type App struct {
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
 	ClaimKeeper      *claimkeeper.Keeper
+	AllocKeeper      allockeeper.Keeper
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -267,6 +276,7 @@ func New(
 		itemtypes.StoreKey, compute.StoreKey,
 		reg.StoreKey,
 		claimtypes.StoreKey,
+		alloctypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -307,7 +317,7 @@ func New(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(
-		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName), &stakingKeeper,
+		appCodec, keys[minttypes.StoreKey], app.GetSubspace(minttypes.ModuleName),
 		app.AccountKeeper, app.BankKeeper, authtypes.FeeCollectorName,
 	)
 	app.DistrKeeper = distrkeeper.NewKeeper(
@@ -409,6 +419,20 @@ func New(
 		app.AccountKeeper, app.BankKeeper, app.GovKeeper, app.DistrKeeper, app.MintKeeper, stakingKeeper,
 		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(compute.ModuleName), computehooks.NewMultiComputeHooks(app.ClaimKeeper.Hooks()))
 
+	app.AllocKeeper = *allockeeper.NewKeeper(
+		appCodec,
+		keys[alloctypes.StoreKey],
+		keys[alloctypes.MemStoreKey],
+
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		//app.computeKeeper,
+		app.GetSubspace(alloctypes.ModuleName),
+	)
+	allocModule := alloc.NewAppModule(appCodec, app.AllocKeeper)
+
 	app.itemKeeper = *itemkeeper.NewKeeper(
 		appCodec, keys[itemtypes.StoreKey], keys[itemtypes.MemStoreKey], app.GetSubspace(itemtypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.DistrKeeper, trstdir /* trstwasmConfig, supportedFeatures,*/, app.computeKeeper,
 		itemtypes.NewMultiItemHooks(app.ClaimKeeper.Hooks()))
@@ -442,9 +466,10 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		item.NewAppModule(appCodec, app.itemKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
-		compute.NewAppModule(appCodec, app.computeKeeper),
+		compute.NewAppModule(appCodec, app.computeKeeper, app.AccountKeeper),
 		reg.NewAppModule(app.regKeeper),
 		claimModule,
+		allocModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -453,11 +478,11 @@ func New(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
+		upgradetypes.ModuleName, minttypes.ModuleName, alloctypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, itemtypes.ModuleName, compute.ModuleName, claimtypes.ModuleName)
+	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, alloctypes.ModuleName, compute.ModuleName, itemtypes.ModuleName, claimtypes.ModuleName)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -468,11 +493,13 @@ func New(
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
+
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
 		govtypes.ModuleName,
 		minttypes.ModuleName,
+
 		crisistypes.ModuleName,
 		ibchost.ModuleName,
 		genutiltypes.ModuleName,
@@ -482,6 +509,7 @@ func New(
 		compute.ModuleName,
 		reg.ModuleName,
 		claimtypes.ModuleName,
+		alloctypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
@@ -693,6 +721,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(compute.ModuleName)
 	paramsKeeper.Subspace(reg.ModuleName)
 	paramsKeeper.Subspace(claimtypes.ModuleName)
+	paramsKeeper.Subspace(alloctypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper

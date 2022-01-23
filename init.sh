@@ -21,7 +21,9 @@ trstd add-genesis-account $(trstd keys show user4 -a --keyring-backend test) 250
 
 trstd gentx user1 2000000000utrst --chain-id=trst_chain_1 --keyring-backend=test  --website="trustlesshub.com" --security-contact="trustlesshub@gmail.com"
 
+
 trstd import-genesis-accounts-from-snapshot ./snapshot.json ./reserves.json 
+
 
 trstd init-enclave 
 PUBLIC_KEY=$(trstd parse attestation_cert.der 2> /dev/null | cut -c 3-)

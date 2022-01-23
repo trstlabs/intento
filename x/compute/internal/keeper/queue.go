@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,17 +23,48 @@ func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func
 		if err != nil {
 			return
 		}
-		fmt.Printf("addr is:  %s ", addr)
+		//fmt.Printf("addr is:  %s ", addr)
 
 		contract := k.GetContractInfoWithAddress(ctx, contractAddr)
 
-		fmt.Printf("info creator is:  %s \n", contract.ContractInfo.Creator)
+		//fmt.Printf("info creator is:  %s \n", contract.ContractInfo.Creator)
 
 		if cb(contract) {
 			break
 		}
 	}
 }
+
+/*
+// IterateContractsQueue iterates over the items in the inactive item queue
+// and performs a callback function
+func (k Keeper) IterateContractsInQueueForReward(ctx sdk.Context, endTime time.Time, cb func(contract types.ContractInfoWithAddress) (stop bool)) {
+	iterator := k.ContractQueueIterator(ctx, endTime)
+	params := k.GetParams(ctx)
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+
+		addr, _ := types.SplitContractQueueKey(iterator.Key())
+		contractAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			return
+		}
+
+		contract := k.GetContractInfoWithAddress(ctx, contractAddr)
+		info := k.GetCodeInfo(ctx, contract.ContractInfo.CodeID)
+		if info.Duration >= params.MinContractDurationForIncentive {
+
+			if cb(contract) {
+				fmt.Printf("found addr:  %s ", addr)
+				break
+			}
+		} else {
+			return
+		}
+
+	}
+}
+
 
 // IterateContractsQueue iterates over the items in the inactive item queue
 // and performs a callback function
@@ -48,17 +78,48 @@ func (k Keeper) IterateContractQueueAddressOnly(ctx sdk.Context, endTime time.Ti
 			break
 		}
 	}
-}
+}*/
 
-// GetAllContractAddresses returns all seller items on chain based on the seller
-func (k Keeper) GetAllContractAddresses(ctx sdk.Context) (addressList []*string) {
-	k.IterateContractQueueAddressOnly(ctx, ctx.BlockHeader().Time, func(address string) bool {
-		addressList = append(addressList, &address)
+// GetContractAddressesForBlock returns all expiring contracts for a block
+func (k Keeper) GetContractAddressesForBlock(ctx sdk.Context) (incentiveList []string, contracts []types.ContractInfoWithAddress) {
+	params := k.GetParams(ctx)
+	k.IterateContractQueue(ctx, ctx.BlockHeader().Time, func(contract types.ContractInfoWithAddress) bool {
+
+		if contract.ContractInfo.AutoMsg != nil {
+			info := k.GetCodeInfo(ctx, contract.ContractInfo.CodeID)
+			if info.Duration >= params.MinContractDurationForIncentive {
+				if k.bankKeeper.GetBalance(ctx, contract.Address, "utrst").Amount.SubRaw(params.MinContractBalanceForIncentive).IsPositive() {
+					incentiveList = append(incentiveList, contract.Address.String())
+				}
+			}
+		}
+
+		contracts = append(contracts, contract)
 		return false
 	})
 	return
 }
 
+/*
+// GetContractAddressesForBlock returns all expiring contracts for a block
+func (k Keeper) GetContractAddresses(ctx sdk.Context) (incentiveList []string) {
+	params := k.GetParams(ctx)
+	k.IterateContractQueue(ctx, ctx.BlockHeader().Time, func(contract types.ContractInfoWithAddress) bool {
+
+		if contract.ContractInfo.AutoMsg != nil {
+			info := k.GetCodeInfo(ctx, contract.ContractInfo.CodeID)
+			if info.Duration >= params.MinContractDurationForIncentive {
+				//if k.bankKeeper.GetBalance(contract.Address, "utrst") > params.MinContractBalanceForIncentive {
+				incentiveList = append(incentiveList, contract.Address.String())
+				//}
+			}
+		}
+
+		return false
+	})
+	return
+}
+*/
 // ContractQueueIterator returns an sdk.Iterator for all the items in the Inactive Queue that expire by endTime
 func (k Keeper) ContractQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)

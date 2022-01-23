@@ -18,49 +18,50 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 
 	logger := k.Logger(ctx)
 
-	//addressList := k.GetAllContractAddresses
+	//	addressList := k.GetAllContractAddresses
+	incentiveList, contracts := k.GetContractAddressesForBlock(ctx)
+	//var rewardCoins sdk.Coins
+	if len(incentiveList) > 0 {
+		k.SetIncentiveCoins(ctx, incentiveList)
 
-	// delete inactive contracts from store and its deposits
-	k.IterateContractQueue(ctx, ctx.BlockHeader().Time, func(contract types.ContractInfoWithAddress) bool {
+	}
+
+	for _, contract := range contracts {
+		for _, addr := range incentiveList {
+			if addr == contract.Address.String() {
+
+				res, err := k.Execute(ctx, contract.Address, contract.Address, contract.ContractInfo.AutoMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), contract.ContractInfo.CallbackSig)
+				if err != nil {
+					logger.Info(
+						"contract",
+						"err", err.Error(),
+					)
+
+					k.SetContractResult(ctx, contract.Address, &sdk.Result{Log: err.Error()})
+				} else {
+					k.SetContractResult(ctx, contract.Address, res)
+				}
+				break
+			}
+		}
 
 		logger.Info(
-			"contract was expired",
+			"expired",
 			"contract", contract.Address.String(),
 		)
-
-		if contract.ContractInfo.AutoMsg != nil {
-
-			res, err := k.Execute(ctx, contract.Address, contract.Address, contract.ContractInfo.AutoMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), contract.ContractInfo.CallbackSig)
-			if err != nil {
-				logger.Info(
-					"contract",
-					"err", err.Error(),
-				)
-
-				k.SetContractResult(ctx, contract.Address, &sdk.Result{Log: err.Error()})
-				logger.Info(
-					"contract",
-					"err", err.Error(),
-				)
-			} else {
-				k.SetContractResult(ctx, contract.Address, res)
-
-			}
-			err = k.ContractPayoutCreator(ctx, contract.Address)
-			if err != nil {
-				logger.Info(
-					"contract payout creator",
-					"err", err.Error(),
-				)
-			}
-			k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.EndTime)
-			_ = k.Delete(ctx, contract.Address)
+		err := k.ContractPayoutCreator(ctx, contract.Address)
+		if err != nil {
 			logger.Info(
-				"deleted",
-				"contract", contract.Address.String(),
+				"contract payout creator",
+				"err", err.Error(),
 			)
-
 		}
+		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.EndTime)
+		//	_ = k.Delete(ctx, contract.Address)
+		logger.Info(
+			"deleted",
+			"contract", contract.Address.String(),
+		)
 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
@@ -69,9 +70,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			),
 		)
 
-		return false
-
-	})
+	}
 
 	return []abci.ValidatorUpdate{}
 }

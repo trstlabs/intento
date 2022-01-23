@@ -5,6 +5,7 @@ import (
 	//"encoding/hex"
 	//"github.com/tendermint/tendermint/crypto"
 
+	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -36,7 +37,7 @@ func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgC
 	}
 
 	item.EstimatorList = append(item.EstimatorList, msg.Estimator)
-	//fmt.Printf("setting item msg: %X\n", msg.Itemid)
+	fmt.Printf("setting item msg: %X\n", msg.Itemid)
 	k.SetItem(ctx, item)
 	//fmt.Printf("go to keeper item msg: %X\n", msg.Itemid)
 	err := k.CreateEstimation(ctx, *msg)

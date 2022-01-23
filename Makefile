@@ -182,6 +182,25 @@ clean:
 	$(MAKE) -C go-cosmwasm clean-all
 	$(MAKE) -C cosmwasm/packages/wasmi-runtime clean
 
+
+clean-files:
+	-rm -rf /trst
+
+	-rm -f ./trstd*
+#   -find -name librust_cosmwasm_enclave.signed.so -delete
+#   -find -name libgo_cosmwasm.so -delete
+#   -find -name '*.so' -delete
+#   -find -name 'target' -type d -exec rm -rf \;
+	-rm -f ./trst-blockchain*.deb
+	-rm -f ./SHA256SUMS*
+	-rm -rf ./.sgx_secrets/*
+	-rm -rf ./x/compute/internal/keeper/.sgx_secrets/*
+	-rm -rf ./*.der
+	-rm -rf ./x/compute/internal/keeper/*.der
+	-rm -rf ./cmd/trstd/ias_bin*
+
+
+
 # while developing:
 build-enclave: vendor
 	$(MAKE) -C cosmwasm/packages/wasmi-runtime

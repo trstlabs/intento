@@ -50,72 +50,51 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 
 	item := k.GetItem(ctx, msg.Itemid)
 
-	//fmt.Printf("Keeper  item: %X\n", item.Contract)
-	// Create the estimator
-	// := k.GetProfileCount(ctx)
-	deposit := sdk.NewInt64Coin("utrst", msg.Deposit)
-	/*	var profile = types.Profile{
-			Creator: msg.Estimator,
-
-			Itemid: msg.Itemid,
-			//Deposit:    deposit,
-			Interested: msg.Interested,
-			//Msg:        msg.Msg,
-			//	Comment: msg.Comment,
-		}
-	*/
 	//var profile types.Profile
 	var estimationInfo = types.EstimationInfo{
 		Itemid:      msg.Itemid,
 		Interested:  msg.Interested,
 		ItemCreator: item.Creator,
 	}
+	//	fmt.Printf("executiddng consstract: %X\n", item.Contract)
 	var key = append([]byte(types.ProfileKey), []byte(msg.Estimator)...)
 	var profile types.Profile
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
 	if !store.Has(key) {
-
-		profile.Estimations = append(profile.Estimations, &estimationInfo)
 		var count = k.GetProfileCount(ctx)
 		profile.Owner = msg.Estimator
 		k.SetProfileCount(ctx, count+1)
 
 	} else {
-		profile = k.GetProfile(ctx, key)
+		profile = k.GetProfile(ctx, msg.Estimator)
 	}
-
+	//	fmt.Printf("executaing contract: %X\n", item.Contract)
 	amountEstimations := len(profile.Estimations)
 	var amountSameCreator int
-	for _, item := range profile.Estimations {
-		if item.ItemCreator == estimationInfo.ItemCreator {
+	for _, estimation := range profile.Estimations {
+		if estimation.ItemCreator == estimationInfo.ItemCreator {
 			amountSameCreator = amountSameCreator + 1
 		}
 	}
-	if amountSameCreator/amountEstimations*100 < int(types.DefaultEstimatorCreatorRatio) {
-		profile.Estimations = append(profile.Estimations, &estimationInfo)
-
-	} else {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot estimate again for this creator")
+	if amountSameCreator != 0 {
+		params := k.GetParams(ctx)
+		if (amountSameCreator / amountEstimations) > int(params.MaxEstimatorCreatorRatio) {
+			return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot estimate again for this creator")
+		}
 	}
+	profile.Estimations = append(profile.Estimations, &estimationInfo)
 
+	//fmt.Printf("execusadfting contract: %X\n", item.Contract)
 	estimatorAddress, err := sdk.AccAddressFromBech32(msg.Estimator)
 	if err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "address invalid")
-	}
-
-	coins := sdk.NewCoins(deposit)
-
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, estimatorAddress, types.ModuleName, coins)
-	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "sending coins failed")
 	}
 
 	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
 	if err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract address invalid")
 	}
-	//fmt.Printf("executing contract: %X\n", item.Contract)
-	//fmt.Printf("executing contract addr: %s", item.Contract)
+
 	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.EstimateMsg, sdk.NewCoins(sdk.NewInt64Coin("utrst", msg.Deposit)), nil)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Execution failed")
@@ -128,16 +107,17 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 	json.Unmarshal([]byte(res.Log), &result)
 
 	if result.Estimation.Status != "" {
+
 		item.EstimationTotal = int64(result.Estimation.TotalCount)
 
 		k.SetItem(ctx, item)
 
-		b := k.cdc.MustMarshal(&profile)
-		store.Set(key, b)
+		//b := k.cdc.MustMarshal(&profile)
+		k.SetProfile(ctx, profile, msg.Estimator)
 
 	} else {
-		fmt.Printf("result: Got result for item %s: %s\n", contractAddr, result.Estimation.Status)
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "error after executing estimation")
+		//fmt.Printf("result: got result for estimation %s: %s\n", contractAddr, result.Estimation.Status)
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "error during execution of estimation")
 	}
 	return nil
 }
@@ -148,17 +128,25 @@ func (k Keeper) SetProfile(ctx sdk.Context, profile types.Profile, owner string)
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
 	b := k.cdc.MustMarshal(&profile)
-	appended := append([]byte(types.ProfileKey), []byte(owner)...)
+	appended := append(types.KeyPrefix(types.ProfileKey), []byte(owner)...)
 
 	k.SetProfileCount(ctx, count+1)
 	store.Set(appended, b)
+}
+
+// GetProfile returns profile info from its owner
+func (k Keeper) GetProfile(ctx sdk.Context, owner string) types.Profile {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
+	var profile types.Profile
+	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ProfileKey), types.KeyPrefix(owner)...)), &profile)
+	return profile
 }
 
 // UpdateEstimationInfo gets a info from a specific profile in the store
 func (k Keeper) UpdateEstimationInfo(ctx sdk.Context, estimationInfo types.EstimationInfo, estimator string) (err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
 	var profile types.Profile
-	var key = append([]byte(types.ProfileKey), []byte(estimator)...)
+	var key = append(types.KeyPrefix(types.ProfileKey), []byte(estimator)...)
 	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ProfileKey), key...)), &profile)
 
 	for index, estimation := range profile.Estimations {
@@ -173,22 +161,6 @@ func (k Keeper) UpdateEstimationInfo(ctx sdk.Context, estimationInfo types.Estim
 	b := k.cdc.MustMarshal(&profile)
 	store.Set(key, b)
 	return nil
-}
-
-// GetProfile returns profile info from its key
-func (k Keeper) GetProfile(ctx sdk.Context, key []byte) types.Profile {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
-	var profile types.Profile
-	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ProfileKey), key...)), &profile)
-	return profile
-}
-
-// GetProfileOwner returns owner from its key
-func (k Keeper) GetProfileOwner(ctx sdk.Context, key []byte) string {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProfileKey))
-	var profile types.Profile
-	k.cdc.MustUnmarshal(store.Get(append(types.KeyPrefix(types.ProfileKey), key...)), &profile)
-	return profile.Owner
 }
 
 // HasProfile checks if the estimator exists
@@ -260,6 +232,8 @@ func (k Keeper) Flag(ctx sdk.Context, item types.Item, msg types.MsgFlagItem) er
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(types.EventTypeItemRemoved, sdk.NewAttribute(types.AttributeKeyCreator, item.Title), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
 		)
+	} else {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "flagging item not possible")
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemFlagged, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),

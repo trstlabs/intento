@@ -18,10 +18,10 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/tendermint/tendermint/crypto"
+	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -53,18 +53,24 @@ type Keeper struct {
 	queryGasLimit uint64
 	paramSpace    paramtypes.Subspace
 	hooks         hooks.ComputeHooks
+
 	// authZPolicy   AuthorizationPolicy
 
 }
 
 // NewKeeper creates a new contract Keeper instance
 // If customEncoders is non-nil, we can use this to override some of the message handler, especially custom
-func NewKeeper(cdc codec.BinaryCodec /*legacyAmino codec.LegacyAmino,*/, storeKey sdk.StoreKey, accountKeeper authkeeper.AccountKeeper,
-	bankKeeper bankkeeper.Keeper, govKeeper govkeeper.Keeper, distKeeper distrkeeper.Keeper, mintKeeper mintkeeper.Keeper, stakingKeeper stakingkeeper.Keeper,
+func NewKeeper(cdc codec.BinaryCodec /*legacyAmino codec.LegacyAmino,*/, storeKey sdk.StoreKey, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, govKeeper govkeeper.Keeper, distKeeper distrkeeper.Keeper, mintKeeper mintkeeper.Keeper, stakingKeeper stakingkeeper.Keeper,
 	router sdk.Router, homeDir string, wasmConfig *types.WasmConfig, supportedFeatures string, customEncoders *MessageEncoders, customPlugins *QueryPlugins, paramSpace paramtypes.Subspace, gh hooks.ComputeHooks) Keeper {
 	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), supportedFeatures, wasmConfig.CacheSize, wasmConfig.EnclaveCacheSize)
 	if err != nil {
 		panic(err)
+	}
+
+	addr := accountKeeper.GetModuleAddress(types.ModuleName)
+	// ensure module account is set
+	if addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
 	// set KeyTable if it has not already been set
@@ -84,6 +90,7 @@ func NewKeeper(cdc codec.BinaryCodec /*legacyAmino codec.LegacyAmino,*/, storeKe
 		queryGasLimit: wasmConfig.SmartQueryGasLimit,
 		paramSpace:    paramSpace,
 		hooks:         gh,
+
 		// authZPolicy:   DefaultAuthorizationPolicy{},
 
 	}
@@ -96,7 +103,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
-func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string, endTime time.Duration, title string, description string) (codeID uint64, err error) {
+func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string, duration time.Duration, title string, description string) (codeID uint64, err error) {
 
 	wasmCode, err = uncompress(wasmCode)
 	if err != nil {
@@ -119,7 +126,7 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte,
 			instantiateAccess = &defaultAccessConfig
 		}
 	*/
-	codeInfo := types.NewCodeInfo(codeHash, creator, source, builder, endTime /* , *instantiateAccess */, title, description)
+	codeInfo := types.NewCodeInfo(codeHash, creator, source, builder, duration /* , *instantiateAccess */, title, description)
 	// 0x01 | codeID (uint64) -> ContractInfo
 	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(&codeInfo))
 
@@ -320,11 +327,9 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	// persist instance
 	createdAt := types.NewAbsoluteTxPosition(ctx)
 	//fmt.Printf("created")
-	endTime := ctx.BlockHeader().Time.Add(codeInfo.EndTime)
+	endTime := ctx.BlockHeader().Time.Add(codeInfo.Duration)
 	if customDuration != 0 {
 		endTime = ctx.BlockHeader().Time.Add(customDuration)
-	} else if codeInfo.EndTime == 0 {
-		endTime = ctx.BlockHeader().Time.Add(k.GetParams(ctx).MaxActiveContractPeriod)
 	}
 	if autoMsg != nil {
 		instance := types.NewContractInfo(codeID, creator /* admin, */, label, createdAt, endTime, autoMsg, callbackSig)
@@ -742,6 +747,7 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, m
 		var err error
 
 		if _, _, err = k.Dispatch(ctx, contractAddr, msg); err != nil {
+			fmt.Printf("err dispatch.. \n")
 			return err
 		}
 	}

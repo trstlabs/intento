@@ -4,18 +4,30 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/trstlabs/trst/x/compute/internal/types"
+
 	// authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	// "github.com/trstlabs/trst/x/compute/internal/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // InitGenesis sets supply information for genesis.
 //
 // CONTRACT: all types of accounts must have been already initialized/created
-func InitGenesis(ctx sdk.Context, keeper Keeper, gs types.GenesisState) error {
+// InitGenesis initializes the trst module state
+func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
+	// NOTE: since the compute module is a module account, the auth module should
+	// take care of importing the amount into the account except for the
+	// genesis block
 
+	if k.GetComputeModuleBalance(ctx).IsZero() {
+		err := k.InitializeComputeModule(ctx, sdk.NewCoin("utrst", sdk.ZeroInt()))
+		if err != nil {
+			panic(err)
+		}
+	}
 	var maxCodeID uint64
 	for i, code := range gs.Codes {
-		err := keeper.importCode(ctx, code.CodeID, code.CodeInfo, code.CodeBytes)
+		err := k.importCode(ctx, code.CodeID, code.CodeInfo, code.CodeBytes)
 		if err != nil {
 			return sdkerrors.Wrapf(err, "code %d with id: %d", i, code.CodeID)
 		}
@@ -26,7 +38,7 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, gs types.GenesisState) error {
 
 	var maxContractID int
 	for i, contract := range gs.Contracts {
-		err := keeper.importContract(ctx, contract.ContractAddress, &contract.ContractInfo, contract.ContractState)
+		err := k.importContract(ctx, contract.ContractAddress, &contract.ContractInfo, contract.ContractState)
 		if err != nil {
 			return sdkerrors.Wrapf(err, "contract number %d", i)
 		}
@@ -34,21 +46,21 @@ func InitGenesis(ctx sdk.Context, keeper Keeper, gs types.GenesisState) error {
 	}
 
 	for i, seq := range gs.Sequences {
-		err := keeper.importAutoIncrementID(ctx, seq.IDKey, seq.Value)
+		err := k.importAutoIncrementID(ctx, seq.IDKey, seq.Value)
 		if err != nil {
 			return sdkerrors.Wrapf(err, "sequence number %d", i)
 		}
 	}
 
 	// sanity check seq values
-	if keeper.peekAutoIncrementID(ctx, types.KeyLastCodeID) <= maxCodeID {
+	if k.peekAutoIncrementID(ctx, types.KeyLastCodeID) <= maxCodeID {
 		return sdkerrors.Wrapf(types.ErrInvalid, "seq %s must be greater %d ", string(types.KeyLastCodeID), maxCodeID)
 	}
-	if keeper.peekAutoIncrementID(ctx, types.KeyLastInstanceID) <= uint64(maxContractID) {
+	if k.peekAutoIncrementID(ctx, types.KeyLastInstanceID) <= uint64(maxContractID) {
 		return sdkerrors.Wrapf(types.ErrInvalid, "seq %s must be greater %d ", string(types.KeyLastInstanceID), maxContractID)
 	}
 	//fmt.Print("setting paams...")
-	keeper.SetParams(ctx, types.DefaultParams())
+	k.SetParams(ctx, types.DefaultParams())
 	//keeper.setParams(ctx, data.Params)
 
 	return nil
@@ -105,4 +117,19 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) *types.GenesisState {
 	}
 
 	return &genState
+}
+
+// GetComputeModuleAccount returns the module account.
+func (k Keeper) GetComputeModuleAccount(ctx sdk.Context) (ModuleName authtypes.ModuleAccountI) {
+	return k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
+}
+
+// GetComputeModuleBalance returns the module account balance
+func (k Keeper) GetComputeModuleBalance(ctx sdk.Context) sdk.Coin {
+	return k.bankKeeper.GetBalance(ctx, k.GetComputeModuleAccount(ctx).GetAddress(), "utrst")
+}
+
+// InitializeComputeModule sets up the module account from genesis
+func (k Keeper) InitializeComputeModule(ctx sdk.Context, funds sdk.Coin) error {
+	return k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(funds))
 }

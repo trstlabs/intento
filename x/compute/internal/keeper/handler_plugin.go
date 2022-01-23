@@ -307,7 +307,7 @@ func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg 
 	if err := msg.ValidateBasic(); err != nil {
 		return sdk.Result{}, nil, err
 	}
-
+	fmt.Printf("handling.. \n")
 	// make sure this account can send it
 	for _, acct := range msg.GetSigners() {
 		if !acct.Equals(contractAddr) {
@@ -326,7 +326,7 @@ func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg 
 		if handler == nil {
 			return sdk.Result{}, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msgRoute)
 		}
-
+		fmt.Printf("handler.. \n")
 		res, err = handler(ctx, msg)
 		if err != nil {
 			return sdk.Result{}, nil, err

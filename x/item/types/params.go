@@ -12,8 +12,8 @@ import (
 
 // Default period for active
 const (
-	DefaultPeriod                time.Duration = time.Hour * 24 * 30 // 30 days
-	DefaultEstimatorCreatorRatio uint64        = 100
+	DefaultPeriod                time.Duration = time.Minute //time.Hour * 24 * 30 // 30 days
+	DefaultEstimatorCreatorRatio uint64        = 1           //range from 0 -1
 
 //MaxSameCreator 5
 //MaxCreatorRatio 20%
@@ -75,7 +75,7 @@ func validateMaxEstimatorCreatorRatio(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v < 1 || v > 100 {
+	if v > 1 {
 		return fmt.Errorf("ratio must be within 0-100: %d", v)
 	}
 

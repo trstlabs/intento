@@ -22,13 +22,14 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	minttypes "github.com/trstlabs/trst/x/mint/types"
 
 	//wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
 	appParams "github.com/trstlabs/trst/app/params"
+	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
 )
 
@@ -49,9 +50,9 @@ type GenesisParams struct {
 	CrisisConstantFee sdk.Coin
 
 	SlashingParams slashingtypes.Params
-
-	ClaimParams claimtypes.Params
-	MintParams  minttypes.Params
+	AllocParams    alloctypes.Params
+	ClaimParams    claimtypes.Params
+	MintParams     minttypes.Params
 }
 
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
@@ -255,12 +256,28 @@ func MainnetGenesisParams() GenesisParams {
 			Display: appParams.HumanCoinUnit,
 		},
 	}
+	// alloc
+	genParams.AllocParams = alloctypes.DefaultParams()
+	genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
+		Staking:                     sdk.MustNewDecFromStr("0.25"), // 25%
+		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.50"), // 45%
+		DeveloperRewards:            sdk.MustNewDecFromStr("0.10"), // 25%
+		CommunityPool:               sdk.MustNewDecFromStr("0.15"), // 5%
+	}
+	genParams.AllocParams.WeightedDeveloperRewardsReceivers = []alloctypes.WeightedAddress{
+		{
+			Address: "trust1sns5l9cvkgf4fy770nmg98e7uzet5xhhmv8njv",
+			Weight:  sdk.NewDecWithPrec(100, 2),
+		},
+	}
+
 	// mint
 	genParams.MintParams = minttypes.DefaultParams()
-	genParams.MintParams.InflationMax = sdk.NewDecWithPrec(40, 2) // Max 40%
-	genParams.MintParams.InflationRateChange = sdk.NewDec(1)      // 100%
 	genParams.MintParams.MintDenom = appParams.BaseCoinUnit
-
+	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(1, 0, 0)
+	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(60_000_000_000_000)
+	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3)
+	genParams.MintParams.BlocksPerYear = uint64(5737588)
 	genParams.StakingParams = stakingtypes.DefaultParams()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
 	genParams.StakingParams.MaxValidators = 100

@@ -13,7 +13,7 @@ import (
 
 func CmdPrepayment() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-buyer [itemid] [deposit amount]",
+		Use:   "buy-item [itemid] [deposit amount]",
 		Short: "Creates a new buyer",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -46,8 +46,8 @@ func CmdPrepayment() *cobra.Command {
 
 func CmdWithdrawal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete-buyer [id]",
-		Short: "Delete a buyer by id",
+		Use:   "delete-prepayment [id]",
+		Short: "Delete a buyer prepayment by id",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			id, err := strconv.ParseUint(args[0], 10, 64)

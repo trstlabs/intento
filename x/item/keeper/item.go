@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/trstlabs/trst/x/item/types"
 )
 
@@ -290,13 +291,13 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 	if err != nil {
 		return err ///panic(err)
 	}
-	fmt.Printf("executing contract: %s", item.Contract)
+	//fmt.Printf("executing contract: %s", item.Contract)
 	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.RevealMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: ")
 		return err ///panic(err)
 	}
-	fmt.Printf("res for item %s: %s\n", res.Log, contractAddr)
+	//	fmt.Printf("res for item %s: %s\n", res.Log, contractAddr)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
@@ -309,10 +310,6 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 
 	var result types.RevealResult
 	json.Unmarshal([]byte(res.Log), &result)
-	//fmt.Println(json.Unmarshal([]byte(res.Log), &result))
-	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.RevealEstimation.BestEstimation), contractAddr)
-	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", result.RevealEstimation.Comments[1], contractAddr)
-	//	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", res.Log, contractAddr)
 
 	b := make([]int64, len(result.RevealEstimation.EstimationList))
 	for i, v := range result.RevealEstimation.EstimationList {
@@ -325,6 +322,8 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 		item.Comments = result.RevealEstimation.Comments
 		item.EstimationList = b
 		k.SetItem(ctx, item)
+	} else {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "reveal not possible")
 	}
 	return nil
 }
@@ -371,6 +370,8 @@ func (k Keeper) Transferable(ctx sdk.Context, item types.Item, msg types.MsgItem
 		item.Comments = result.RevealEstimation.Comments*/
 		item.Transferable = true
 		k.SetItem(ctx, item)
+	} else {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "setting item not possible")
 	}
 	return nil
 }

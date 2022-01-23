@@ -198,7 +198,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		paymentSellerCoins := sdk.NewCoin("utrst", CreaterPayoutAndShipping)
 
 		k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
-
+		k.RemoveFromListedItemQueue(ctx, item.Id, item.EndTime)
 		item.Status = "Shipped"
 		k.SetItem(ctx, item)
 		//k.SetBuyer(ctx, buyer)
@@ -272,27 +272,21 @@ func handleMsgTokenizeItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgToken
 	if msg.Sender != item.Buyer && msg.Sender != item.Creator {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
 	}
-	//if item was sold previously or if item is not made transferable
-	if item.Status == "Transferred" || item.Status == "Shipped" {
-		//Create new coin
-		//Make visible in item that it it tokenized now... (bool)
-		err := k.TokenizeItem(ctx, msg.Id, (msg.Sender))
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+	//if item was not transferred previously
+	if item.Status != "Transferred" && item.Status != "Shipped" {
+		//and if item is made transferable or it has no best estimator
+		if item.Transferable || item.BestEstimator == "" {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item must have an estimation and not be transferable ")
 		}
-		item.IsToken = true
-
-	} else if !item.Transferable && item.BestEstimator != "" {
-		err := k.TokenizeItem(ctx, msg.Id, msg.Sender)
-
-		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
-		}
-		item.IsToken = true
-
-	} else {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Item not available to tokenize")
 	}
+	//Create new coin
+	//Set item to tokenized
+	err := k.TokenizeItem(ctx, msg.Id, (msg.Sender))
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
+	}
+	item.IsToken = true
+	k.RemoveFromListedItemQueue(ctx, item.Id, item.EndTime)
 	k.SetItem(ctx, item)
 	return &sdk.Result{Events: ctx.EventManager().ABCIEvents()}, nil
 }

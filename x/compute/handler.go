@@ -60,20 +60,20 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 	activePeriod := k.GetParams(ctx).MaxActiveContractPeriod
 	//submitTime := ctx.BlockHeader().Time
 
-	endTime := time.Hour * time.Duration(msg.ContractPeriod)
-	maxEndTime := activePeriod
+	duration := time.Hour * time.Duration(msg.ContractPeriod)
+	maxDuration := activePeriod
 
 	if msg.ContractPeriod == 0 {
-		endTime = maxEndTime
+		duration = maxDuration
 	}
-	if endTime > maxEndTime {
+	if duration > maxDuration {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Time period must be smaller than maximum period")
 	}
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
 	}
-	codeID, err := k.Create(ctx, sender, msg.WASMByteCode, msg.Source, msg.Builder, endTime, msg.Title, msg.Description)
+	codeID, err := k.Create(ctx, sender, msg.WASMByteCode, msg.Source, msg.Builder, duration, msg.Title, msg.Description)
 	if err != nil {
 		return nil, err
 	}
