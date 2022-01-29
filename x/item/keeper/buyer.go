@@ -11,19 +11,18 @@ import (
 
 // Prepayment creates a buyer with a new id and update the count
 func (k Keeper) Prepayment(ctx sdk.Context, msg types.MsgPrepayment) (err error) {
-	// Create the buyer
 
 	deposit := sdk.NewInt64Coin("utrst", msg.Deposit)
 
 	buyeraddress, err := sdk.AccAddressFromBech32(msg.Buyer)
 	if err != nil {
-		sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address not found")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address not found")
 	}
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, buyeraddress, types.ModuleName, sdk.NewCoins(deposit))
 	if err != nil {
 		//panic(err)
-		sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "insufficent balance")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "insufficent balance")
 	}
 
 	k.SetBuyer(ctx, msg.Itemid, msg.Buyer)
@@ -48,14 +47,14 @@ func (k Keeper) HasBuyer(ctx sdk.Context, key []byte) bool {
 	return store.Has(append(types.KeyPrefix(types.BuyerKey), key...))
 }
 
-// Withdrawal deletes a buyer
-func (k Keeper) Withdrawal(ctx sdk.Context, key []byte) {
+// DeleteBuyerKey deletes a buyer
+func (k Keeper) DeleteBuyerKey(ctx sdk.Context, key []byte) {
 	//store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BuyerKey))
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(append(types.KeyPrefix(types.BuyerKey), key...))
 }
 
-// IterateBuyerItems returns all buyer items
+// IterateBuyerItems returns all items from an buyer
 func (k Keeper) IterateBuyerItems(ctx sdk.Context, buyer string, cb func(item types.Item) (stop bool)) {
 
 	store := ctx.KVStore(k.storeKey)

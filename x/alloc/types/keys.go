@@ -3,8 +3,6 @@ package types
 const (
 	// ModuleName defines the module name
 	ModuleName = "alloc"
-	// module acct name for developer vesting
-	DeveloperVestingModuleAcctName = "developer_vesting_unvested"
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName

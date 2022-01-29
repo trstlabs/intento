@@ -11,7 +11,8 @@ import (
 const (
 	// ModuleName defines the module name
 	ModuleName = "item"
-
+	// module acct name for item incentives
+	ItemIncentivesModuleAcctName = "item_incentives"
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 

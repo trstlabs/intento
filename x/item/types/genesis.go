@@ -1,7 +1,11 @@
 package types
 
 import (
+	"encoding/json"
+
 	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // DefaultIndex is the default capability global index
@@ -54,4 +58,15 @@ func (gs GenesisState) Validate() error {
 		}
 	*/
 	return nil
+}
+
+// GetGenesisStateFromAppState return GenesisState
+func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.RawMessage) *GenesisState {
+	var genesisState GenesisState
+
+	if appState[ModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+	}
+
+	return &genesisState
 }

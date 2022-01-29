@@ -60,10 +60,13 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 	activePeriod := k.GetParams(ctx).MaxActiveContractPeriod
 	//submitTime := ctx.BlockHeader().Time
 
-	duration := time.Hour * time.Duration(msg.ContractPeriod)
+	duration, err := time.ParseDuration(msg.ContractPeriod)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
 	maxDuration := activePeriod
 
-	if msg.ContractPeriod == 0 {
+	if duration == 0 {
 		duration = maxDuration
 	}
 	if duration > maxDuration {
@@ -143,6 +146,10 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	contract, err := sdk.AccAddressFromBech32(msg.Contract)
 	if err != nil {
 		return nil, err
+	}
+	info, _ := k.GetContractInfo(ctx, contract)
+	if info.CodeID == 1 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot execute on internal contract code")
 	}
 	//fmt.Print("executing..")
 	res, err := k.Execute(

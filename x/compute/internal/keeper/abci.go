@@ -25,14 +25,15 @@ func (k Keeper) ContractPayoutCreator(ctx sdk.Context, contractAddress sdk.AccAd
 
 		//returning the trst tokens
 		commission := k.GetParams(ctx).Commission
-		percentageCreator := sdk.NewDecWithPrec(100-commission, 2)
+		//percentageCreator := sdk.NewDecWithPrec(100-commission, 2)
 		percentageCommission := sdk.NewDecWithPrec(commission, 2)
 
 		toCommission := percentageCommission.MulInt(balance.AmountOf("utrst")).Ceil().TruncateInt()
-		toCreator := percentageCreator.MulInt(balance.AmountOf("utrst")).TruncateInt()
-		balance = balance.Sub(sdk.NewCoins(sdk.NewCoin("utrst", toCreator)))
+		toCommissionCoins := sdk.NewCoins(sdk.NewCoin("utrst", toCommission))
+		//toCreator := percentageCreator.MulInt(balance.AmountOf("utrst")).TruncateInt()
+		balance = balance.Sub(toCommissionCoins)
 
-		err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewCoin("utrst", toCommission)), contractAddress)
+		err := k.distrKeeper.FundCommunityPool(ctx, toCommissionCoins, contractAddress)
 		if err != nil {
 			return err
 		}

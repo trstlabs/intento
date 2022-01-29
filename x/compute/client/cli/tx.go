@@ -111,10 +111,7 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 		return types.MsgStoreCode{}, fmt.Errorf("invalid input file. Use wasm binary or gzip")
 	}
 
-	contractPeriod, err := strconv.ParseInt(args[3], 10, 64)
-	if err != nil {
-		return types.MsgStoreCode{}, err
-	}
+	contractPeriod := string(args[3]) //strconv.ParseInt(args[3], 10, 64)
 
 	/*
 	   var perm *types.AccessConfig

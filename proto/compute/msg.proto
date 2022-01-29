@@ -21,7 +21,7 @@ message MsgStoreCode {
   string builder = 4;
   // InstantiatePermission to apply on contract creation, optional
 //  AccessConfig InstantiatePermission = 5;
-    int64 contract_period = 5;
+    string contract_period = 5;
     string title = 6;
      string description = 7;
     uint64 instances = 8;

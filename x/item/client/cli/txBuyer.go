@@ -105,15 +105,15 @@ func CmdItemTransfer() *cobra.Command {
 
 func CmdItemRating() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "item-rating [Rating] [Note] [itemID]",
+		Use:   "item-rating [itemID] [Rating] [Note] ",
 		Short: "Set a new buyer",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			argsRating, _ := strconv.ParseInt(args[0], 10, 64)
+			argsRating, _ := strconv.ParseInt(args[1], 10, 64)
 
-			argsNote := string(args[1])
-			argsItemID, err := strconv.ParseUint(args[2], 10, 64)
+			argsNote := string(args[2])
+			argsItemID, err := strconv.ParseUint(args[0], 10, 64)
 			if err != nil {
 				return err
 			}

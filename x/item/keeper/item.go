@@ -66,7 +66,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 	var item = types.Item{
 		Creator:         msg.Creator,
 		Seller:          msg.Creator,
-		Id:              uint64(count),
+		Id:              uint64(count) + 1,
 		Title:           msg.Title,
 		Description:     msg.Description,
 		ShippingCost:    msg.ShippingCost,
@@ -124,8 +124,8 @@ func (k Keeper) HasItem(ctx sdk.Context, id uint64) bool {
 
 }
 
-// GetItemOwner returns the seller of the item
-func (k Keeper) GetItemOwner(ctx sdk.Context, id uint64) string {
+// GetItemBuyer returns the seller of the item
+func (k Keeper) GetItemBuyer(ctx sdk.Context, id uint64) string {
 	return k.GetItem(ctx, id).Seller
 }
 
@@ -182,8 +182,8 @@ func (k Keeper) GetAllListedItems(ctx sdk.Context) (msgs []*types.Item) {
 	return
 }
 
-// HandlePrepayment handles payment
-func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk.Coin) {
+// SendPaymentToAccount handles payment
+func (k Keeper) SendPaymentToAccount(ctx sdk.Context, address string, coinToSend sdk.Coin) {
 
 	userAddress, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
@@ -197,36 +197,25 @@ func (k Keeper) HandlePrepayment(ctx sdk.Context, address string, coinToSend sdk
 	k.hooks.AfterItemBought(ctx, userAddress)
 }
 
-// HandleReward handles reward
-func (k Keeper) HandleEstimatorReward(ctx sdk.Context, address string, coinToSend sdk.Coin) {
-
-	userAddress, err := sdk.AccAddressFromBech32(address)
-	if err != nil {
-		panic(err)
-	}
-
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, userAddress, sdk.NewCoins(coinToSend))
-	if err != nil {
-		panic(err)
-	}
-
-}
-
-// HandleReward handles reward
-func (k Keeper) HandleCommunityReward(ctx sdk.Context, coinToSend sdk.Coin) {
-	moduleAcc := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	//distribute the same reward to the staking pool
-	err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(coinToSend), moduleAcc)
-	if err != nil {
-		panic(err)
-	}
-	//store.Delete(types.KeyPrefix(types.ProfileKey + key))
-}
-
 // MintReward mints coins to a module account
 func (k Keeper) MintReward(ctx sdk.Context, coinToSend sdk.Coin) {
 	k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(coinToSend))
 
+}
+
+// HandleReward handles reward
+func (k Keeper) HandleBuyerReward(ctx sdk.Context, coinToSend sdk.Coin, buyer sdk.AccAddress) {
+	itemIncentivesAddr := k.accountKeeper.GetModuleAddress(types.ItemIncentivesModuleAcctName)
+	balance := k.bankKeeper.GetBalance(ctx, itemIncentivesAddr, "utrst")
+	//distribute to the buyer
+	params := k.GetParams(ctx)
+	if coinToSend.Amount.SubRaw(params.MaxBuyerReward).IsNegative() {
+		coinToSend.Amount = sdk.NewInt(params.MaxBuyerReward)
+	}
+	if coinToSend.Sub(balance).IsNegative() {
+		coinToSend = balance
+	}
+	k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ItemIncentivesModuleAcctName, buyer, sdk.NewCoins(coinToSend))
 }
 
 // TokenizeItem mints coins to a module account

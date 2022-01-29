@@ -14,7 +14,7 @@ import (
 func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	//k.SetParams(ctx, state.Params)
 
-	k.SetParams(ctx, types.DefaultParams())
+	k.SetParams(ctx, state.Params)
 	k.InitializeContract(ctx)
 	// NOTE: since the item module is a module account, the auth module should
 	// take care of importing the amount into the account except for the
@@ -24,6 +24,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 		if err != nil {
 			panic(err)
 		}
+		k.InitializeItemIncentiveModule(ctx, sdk.NewCoin("utrst", sdk.ZeroInt()))
+
 	}
 
 	for _, elem := range state.ItemList {
@@ -97,6 +99,20 @@ func (k Keeper) InitializeItemModule(ctx sdk.Context, funds sdk.Coin) error {
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(funds))
 }
 
+// InitializeItemIncentiveModule creates the module account for item incentives.
+func (k Keeper) InitializeItemIncentiveModule(ctx sdk.Context, amount sdk.Coin) {
+
+	moduleAcc := authtypes.NewEmptyModuleAccount(
+		types.ItemIncentivesModuleAcctName, authtypes.Minter)
+
+	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+
+	err := k.bankKeeper.MintCoins(ctx, types.ItemIncentivesModuleAcctName, sdk.NewCoins(amount))
+	if err != nil {
+		panic(err)
+	}
+}
+
 // InitializeContract sets up the module account from genesis
 func (k Keeper) InitializeContract(ctx sdk.Context) error {
 	addr := k.accountKeeper.GetModuleAddress(types.ModuleName)
@@ -115,7 +131,7 @@ func (k Keeper) InitializeContract(ctx sdk.Context) error {
 	var codeID uint64
 	var hash string
 
-	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "", params.MaxActivePeriod, "Estimation aggregation", "This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically sent back at the end of the contract period. This code is used internally.")
+	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "", params.MaxActivePeriod, "Estimation aggregation", "This code is used internally. This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically redistributed at the end of the contract period.")
 	if err != nil {
 		panic(err)
 	}

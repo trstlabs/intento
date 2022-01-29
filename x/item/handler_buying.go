@@ -20,22 +20,22 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 
 	//check if item has a best estimator (and therefore a complete estimation)
 	if item.EstimationPrice == 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item does not have estimation yet, cannot make prepayment")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item does not have a price yet, cannot make prepayment")
 	}
 
 	//check if item is transferable
 	if !item.Transferable {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item  not transferable, cannot make prepayment")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item not transferable, cannot make prepayment")
 	}
 
 	//check if item has a buyer already
 	if item.Buyer != "" {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has a buyer, cannot make prepayment")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item has a buyer, cannot make prepayment")
 	}
 
 	//item buyer cannot be the item creator
 	if msg.Buyer == item.Creator || msg.Buyer == item.Seller {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Buyer cannot be creator/seller")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "buyer cannot be creator/seller")
 	}
 
 	estimationPrice := item.EstimationPrice
@@ -50,14 +50,6 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit insufficient, cannot make prepayment")
 		}
 
-		item.Buyer = msg.Buyer
-		k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.EndTime)
-		k.SetItem(ctx, item)
-		err := k.Prepayment(ctx, *msg)
-		if err != nil {
-			return nil, err
-		}
-		//}
 	}
 
 	if item.ShippingCost == 0 && item.LocalPickup != "" {
@@ -67,50 +59,34 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit insufficient, cannot make prepayment")
 		}
 
-		item.Buyer = msg.Buyer
-		k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.EndTime)
-		k.SetItem(ctx, item)
-		err := k.Prepayment(ctx, *msg)
-		if err != nil {
-			return nil, err
-		}
-
 	}
 
 	if item.ShippingCost > 0 && item.LocalPickup != "" {
 
 		if estimationPrice == msg.Deposit {
 
-			//ModuleAcct := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
-
 			item.ShippingCost = 0
-			item.Buyer = msg.Buyer
-			k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.EndTime)
-			k.SetItem(ctx, item)
-			err := k.Prepayment(ctx, *msg)
-			if err != nil {
-				return nil, err
-			}
+
 		} else {
 			toPayShipping :=
 				estimationPrice + item.ShippingCost
 
 			if toPayShipping == msg.Deposit {
 				item.LocalPickup = ""
-				item.Buyer = msg.Buyer
-				k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.EndTime)
-				k.SetItem(ctx, item)
-				err := k.Prepayment(ctx, *msg)
-				if err != nil {
-					return nil, err
-				}
-			}
-			if toPayShipping != msg.Deposit {
+
+			} else {
 
 				return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit insufficient, cannot make prepayment")
 			}
 		}
 
+	}
+	item.Buyer = msg.Buyer
+	k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.EndTime)
+	k.SetItem(ctx, item)
+	err := k.Prepayment(ctx, *msg)
+	if err != nil {
+		return nil, err
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemPrepayment, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))
@@ -128,21 +104,21 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 	item := k.GetItem(ctx, msg.Itemid)
 
 	if msg.Buyer != item.Buyer {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect item buyer")
 	}
 
 	if !item.Transferable {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item was deleted")
 	}
 
-	//if the item has a status delete the buyer upon request, if the item is not transferred, return a part of prepayment. After rating the item, the buyer gets fully refunded
+	//if the item has a status, withdrawl upon request. if the item is not transferred, return a part of prepayment. After rating the item, the buyer gets fully refunded
 	if item.Status != "" {
 		item.Buyer = ""
 		k.SetItem(ctx, item)
-		k.Withdrawal(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
+		k.DeleteBuyerKey(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
 	} else {
 
-		//returning the trst tokens
+		//returning the trst tokens minus a percentage that will be returned after placing a review
 		percentageReturn := sdk.NewDecWithPrec(95, 2)
 
 		bigIntEstimationPrice := sdk.NewInt(item.EstimationPrice)
@@ -156,27 +132,10 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 		}
 
 		//minted coins (are rounded up)
-		mintCoins := sdk.NewCoin("utrst", toMintAmount)
-		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
-		k.Withdrawal(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
+		mintCoin := sdk.NewCoin("utrst", toMintAmount)
+		k.SendPaymentToAccount(ctx, msg.Buyer, mintCoin)
+		k.DeleteBuyerKey(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
 
-		/*	for _, element := range item.EstimatorList {
-				//apply this to each element
-				key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
-
-				//	estimator := k.GetProfileInfo(ctx, key)
-
-				//	if estimator.Estimator == item.Highestestimator {
-
-				//	k.BurnCoins(ctx, estimator.Deposit)
-				//	k.DeleteEstimation(ctx, key)
-
-				//} else {
-				k.DeleteEstimation(ctx, key)
-				//	}
-
-			}
-		*/
 		item.Status = "Withdrawal prepayment"
 		item.ShippingCost = 0
 		item.LocalPickup = ""
@@ -187,7 +146,7 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 		item.Transferable = false
 
 		k.SetItem(ctx, item)
-		k.Withdrawal(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
+		k.DeleteBuyerKey(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
 
 	}
 
@@ -208,7 +167,7 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 	//check if item has a buyer already
 	//check therefore that prepayment is done
 	if item.Buyer != msg.Buyer {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "prepayment does not belong to msg sender")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item has a different buyer")
 	}
 	//check therefore that prepayment is done
 	if item.Status != "" {
@@ -226,29 +185,17 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 	if item.Creator == item.Seller {
 
 		//minted coins (are rounded up)
-		rewardCoins := sdk.NewCoin("utrst", sdk.NewInt(item.DepositAmount))
+		maxRewardCoin := sdk.NewCoin("utrst", sdk.NewInt(item.DepositAmount))
 
-		k.MintReward(ctx, rewardCoins)
+		k.HandleBuyerReward(ctx, maxRewardCoin, sdk.AccAddress(msg.Buyer))
 
-		//for their participation the best estimator gets rewarded.
-		k.HandleEstimatorReward(ctx, item.BestEstimator, rewardCoins)
-
-		k.HandleCommunityReward(ctx, rewardCoins)
-
-		/*//refund the deposits back to all of the item estimators
-		for _, element := range item.EstimatorList {
-			key := append(types.Uint64ToByte(msg.Itemid), []byte(element)...)
-
-			k.DeleteEstimation(ctx, key)
-		}
-		*/
 		item.BestEstimator = ""
 		item.EstimatorList = nil
 	}
 	//make payment to seller
 	paymentSellerCoins := sdk.NewCoin("utrst", bigIntEstimationPrice)
 
-	k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
+	k.SendPaymentToAccount(ctx, item.Seller, paymentSellerCoins)
 
 	item.Status = "Transferred"
 	k.SetItem(ctx, item)
@@ -264,7 +211,7 @@ func handleMsgItemRating(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRat
 
 	//check if msg buyer is item buyer
 	if msg.Buyer != item.Buyer {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect buyer")
 	}
 
 	//check if item has a buyer already
@@ -281,13 +228,14 @@ func handleMsgItemRating(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRat
 		bigIntEstimationPrice := sdk.NewInt(item.EstimationPrice)
 		toMintAmount := percentageReward.MulInt(bigIntEstimationPrice).Ceil().TruncateInt()
 
-		//minted coins (are rounded up)
-		mintCoins := sdk.NewCoin("utrst", toMintAmount)
-		k.MintReward(ctx, mintCoins.Add(mintCoins))
-		k.HandlePrepayment(ctx, msg.Buyer, mintCoins)
+		//mint the remaining payment (5%), that was burned when withdrawing payment
+		mintCoin := sdk.NewCoin("utrst", toMintAmount)
+		k.MintReward(ctx, mintCoin.Add(mintCoin))
+		k.SendPaymentToAccount(ctx, msg.Buyer, mintCoin)
 		item.EstimationPrice = 0
 
 	} else if msg.Rating < 3 {
+		//if the rating is low, we hide the buyer
 		item.Buyer = ""
 	}
 	item.Note = msg.Note

@@ -22,9 +22,9 @@ import (
 const (
 	MaxCap = 50000000000
 
-	TotalTrstAirdropAmountCosmos = 15000000000000 //We want to support cosmonauts and we love Cosmos <3
-	TotalTrstAirdropAmountTerra  = 15000000000000 //Terra is a huge ecosystem and growing, we would love to see developers use Trustless Contracts
-	TotalTrstAirdropAmountSecret = 5000000000000  //Without Secret's development this project would not be where it is, this total amount is lower as there are significantly fewer accounts in the genesis
+	TotalTrstAirdropAmountCosmos = 100000000000000 //We want to support cosmonauts and we love Cosmos <3
+	TotalTrstAirdropAmountTerra  = 50000000000000  //Terra is a huge ecosystem and growing, we would love to see developers use Trustless Contracts
+	TotalTrstAirdropAmountSecret = 30000000000000  //Without Secret's development this project would not be where it is, this total amount is lower as there are significantly fewer accounts in the snapshot, so percentage-wise these accounts should be well off nontheless
 )
 
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided cosmos-sdk v0.36 genesis export.

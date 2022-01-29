@@ -73,10 +73,14 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
-
+	itemIncentiveCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.ItemIncentives))
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "item_incentives", itemIncentiveCoins)
+	if err != nil {
+		return err
+	}
 	k.Logger(ctx).Debug("funded trustless contracts", "amount", contrIncentiveCoins.String(), "from", blockInflationAddr)
 
-	//staking incentives stay in the fee collector account and are to be moved to on next begin blocker by staking module
+	//staking incentives stay in the fee collector account and are to be moved to on next begin blocker
 	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.Staking))
 
 	devRewardCoin := k.GetProportions(ctx, blockInflation, proportions.DeveloperRewards)
@@ -103,7 +107,7 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 	}
 
 	// subtract from original provision to ensure no coins left over after the allocations
-	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins).Sub(contrIncentiveCoins).Sub(devRewardCoins)
+	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins).Sub(itemIncentiveCoins).Sub(contrIncentiveCoins).Sub(devRewardCoins)
 
 	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, blockInflationAddr)
 	if err != nil {
@@ -117,17 +121,4 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 // and returns coins according to the `AllocationRatio`
 func (k Keeper) GetProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
 	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt())
-}
-
-// CreateDeveloperVestingModuleAccount creates the module account for developer vesting.
-func (k Keeper) CreateDeveloperVestingModuleAccount(ctx sdk.Context, amount sdk.Coin) {
-	moduleAcc := authtypes.NewEmptyModuleAccount(
-		types.DeveloperVestingModuleAcctName, authtypes.Minter)
-
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
-
-	err := k.bankKeeper.MintCoins(ctx, types.DeveloperVestingModuleAcctName, sdk.NewCoins(amount))
-	if err != nil {
-		panic(err)
-	}
 }

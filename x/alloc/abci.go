@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/trstlabs/trst/x/alloc/keeper"
 	"github.com/trstlabs/trst/x/alloc/types"
 )
@@ -18,12 +17,4 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		panic(fmt.Sprintf("Error distribute inflation: %s", err.Error()))
 	}
 
-}
-
-// EndBlocker called every block, process inflation, update validator set.
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
-
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
-
-	return []abci.ValidatorUpdate{}
 }

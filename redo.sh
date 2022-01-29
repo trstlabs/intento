@@ -6,6 +6,6 @@ kill -9 $(lsof -t -i:54246  -sTCP:LISTEN)
 kill -9 $(lsof -t -i:26656 -sTCP:LISTEN)
 sudo apt remove trustlesshub -y
 make clean-files
-sudo apt install ./trustlesshub_0.7.0-61-gee8e458_amd64.deb -y
+sudo apt install ./trustlesshub_0.7.0-62-g97f8346_amd64.deb -y
 
 ./init.sh

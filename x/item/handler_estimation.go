@@ -5,7 +5,6 @@ import (
 	//"encoding/hex"
 	//"github.com/tendermint/tendermint/crypto"
 
-	"fmt"
 	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,6 +16,9 @@ import (
 func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgCreateEstimation) (*sdk.Result, error) {
 	//fmt.Printf("handling msg: %X\n", msg.Itemid)
 	item := k.GetItem(ctx, msg.Itemid)
+	if item.Id == 0 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item not found")
+	}
 	if item.Id != msg.Itemid {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item not found")
 	}
@@ -27,7 +29,7 @@ func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgC
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item already has an estimation")
 	}
 
-	///for production: check if estimator is item owner
+	///for production: check if estimator is item buyer
 	if msg.Estimator == item.Creator {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "estimator cannot be item creator")
 	}
@@ -37,7 +39,7 @@ func handleMsgCreateEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgC
 	}
 
 	item.EstimatorList = append(item.EstimatorList, msg.Estimator)
-	fmt.Printf("setting item msg: %X\n", msg.Itemid)
+	//fmt.Printf("setting item msg: %X\n", msg.Itemid)
 	k.SetItem(ctx, item)
 	//fmt.Printf("go to keeper item msg: %X\n", msg.Itemid)
 	err := k.CreateEstimation(ctx, *msg)

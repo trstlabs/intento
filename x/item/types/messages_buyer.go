@@ -43,6 +43,7 @@ func (msg *MsgPrepayment) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid buyer address (%s)", err)
 	}
+
 	return nil
 }
 

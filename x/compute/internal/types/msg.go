@@ -130,6 +130,7 @@ func (msg MsgExecuteContract) ValidateBasic() error {
 	if !msg.SentFunds.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "sentFunds")
 	}
+
 	/*
 		if !json.Valid(msg.Msg) {
 			return sdkerrors.Wrap(ErrInvalid, "msg json")

@@ -66,11 +66,7 @@ func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		contractPeriod, err := strconv.ParseInt(req.ContractDuration, 10, 64)
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
-			return
-		}
+		contractPeriod := req.ContractDuration
 
 		// gzip the wasm file
 		if wasmUtils.IsWasm(wasm) {

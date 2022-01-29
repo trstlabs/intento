@@ -57,7 +57,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			)
 		}
 		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.EndTime)
-		//	_ = k.Delete(ctx, contract.Address)
+		_ = k.Delete(ctx, contract.Address)
 		logger.Info(
 			"deleted",
 			"contract", contract.Address.String(),

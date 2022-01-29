@@ -83,7 +83,7 @@ func handleMsgRevealEstimation(ctx sdk.Context, k keeper.Keeper, msg *types.MsgR
 	item := k.GetItem(ctx, msg.Itemid)
 
 	if msg.Creator != item.Seller {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not item seller account")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "not item seller")
 	}
 
 	if item.EstimationCount != item.EstimationTotal {
@@ -105,8 +105,8 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 	item := k.GetItem(ctx, msg.Itemid)
 
 	//check if message creator is item seller
-	if msg.Seller != k.GetItemOwner(ctx, msg.Itemid) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+	if msg.Seller != k.GetItemBuyer(ctx, msg.Itemid) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect buyer")
 	}
 
 	//check if item has a best estimator (and therefore a complete estimation)
@@ -131,8 +131,8 @@ func handleMsgItemTransferable(ctx sdk.Context, k keeper.Keeper, msg *types.MsgI
 
 func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemShipping) (*sdk.Result, error) {
 	//check if message seller is item seller
-	if msg.Seller != k.GetItemOwner(ctx, msg.Itemid) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+	if msg.Seller != k.GetItemBuyer(ctx, msg.Itemid) {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect buyer")
 	}
 
 	//get item info
@@ -163,50 +163,27 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 	bigIntShipping := sdk.NewInt(item.ShippingCost)
 	if msg.Tracking {
 		if item.Creator == item.Seller {
-			//rounded down percentage for minting. Percentage may be changed through governance proposals
-			/*percentageMint := sdk.NewDecWithPrec(10, 2)
-			percentageReward := sdk.NewDecWithPrec(5, 2)
-			//paymentSeller := percentageSeller.MulInt(bigIntEstimationPrice)
-			//roundedAmountCreaterPayout := paymentSeller.TruncateInt()
 
-
-			//rounded up percentage as a reward for the estimator
-			//percentageReward := sdk.NewDecWithPrec(3, 2)
-			toMint := percentageMint.MulInt(bigIntEstimationPrice)
-			toMintAmount := toMint.TruncateInt()
-			paymentReward := percentageReward.MulInt(bigIntEstimationPrice)
-			roundedAmountReward := paymentReward.TruncateInt()*/
-			//roundedAmountRewardBestEstimator := paymentReward.TruncateInt()
-
-			//minted coins (are rounded up)
-			rewardCoins := sdk.NewCoin("utrst", sdk.NewInt(item.DepositAmount))
-			//paymentRewardCoins := sdk.NewCoin("utrst", roundedAmountReward)
-			//paymentRewardCoinsEstimator := sdk.NewCoin("utrst", roundedAmountRewardBestEstimator)
-
-			k.MintReward(ctx, rewardCoins)
-
-			//for their participation in the protocol, the best estimator, a random and the stakers get rewarded.
-			//k.HandleEstimatorReward(ctx, item.BestEstimator, rewardCoins)
-
-			k.HandleCommunityReward(ctx, rewardCoins)
+			maxRewardCoin := sdk.NewCoin("utrst", sdk.NewInt(item.DepositAmount))
+			k.HandleBuyerReward(ctx, maxRewardCoin, sdk.AccAddress(item.Buyer))
 
 			item.BestEstimator = ""
 			item.EstimatorList = nil
 		}
 		//make payment to seller
 		CreaterPayoutAndShipping := bigIntEstimationPrice.Add(bigIntShipping)
-		paymentSellerCoins := sdk.NewCoin("utrst", CreaterPayoutAndShipping)
+		paymentSellerCoin := sdk.NewCoin("utrst", CreaterPayoutAndShipping)
 
-		k.HandlePrepayment(ctx, item.Seller, paymentSellerCoins)
+		k.SendPaymentToAccount(ctx, item.Seller, paymentSellerCoin)
 		k.RemoveFromListedItemQueue(ctx, item.Id, item.EndTime)
 		item.Status = "Shipped"
 		k.SetItem(ctx, item)
 		//k.SetBuyer(ctx, buyer)
 	} else {
 		repayment := bigIntEstimationPrice.Add(bigIntShipping)
-		repaymentCoins := sdk.NewCoin("utrst", repayment)
+		repaymentCoin := sdk.NewCoin("utrst", repayment)
 
-		k.HandlePrepayment(ctx, item.Buyer, repaymentCoins)
+		k.SendPaymentToAccount(ctx, item.Buyer, repaymentCoin)
 
 		item.Status = "Shipping declined; buyer refunded"
 		k.SetItem(ctx, item)
@@ -227,7 +204,7 @@ func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRes
 
 	// Checks if the the msg sender is the same as the current buyer
 	if msg.Seller != item.Buyer {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect buyer")
 	}
 
 	if item.Status != "Transferred" && item.Status != "Shipped" {
@@ -237,7 +214,7 @@ func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRes
 	if msg.Discount > item.EstimationPrice {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Discount invalid")
 	}
-	k.Withdrawal(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Seller)...))
+	k.DeleteBuyerKey(ctx, append(types.Uint64ToByte(msg.Itemid), []byte(msg.Seller)...))
 
 	item.Seller = msg.Seller
 	item.ShippingCost = msg.ShippingCost
@@ -270,7 +247,7 @@ func handleMsgTokenizeItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgToken
 
 	// Checks if the the msg sender is the same as the current buyer or creator
 	if msg.Sender != item.Buyer && msg.Sender != item.Creator {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect owner")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "incorrect buyer")
 	}
 	//if item was not transferred previously
 	if item.Status != "Transferred" && item.Status != "Shipped" {

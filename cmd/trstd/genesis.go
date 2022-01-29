@@ -31,6 +31,8 @@ import (
 	appParams "github.com/trstlabs/trst/app/params"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
+
+	itemtypes "github.com/trstlabs/trst/x/item/types"
 )
 
 type GenesisParams struct {
@@ -53,6 +55,7 @@ type GenesisParams struct {
 	AllocParams    alloctypes.Params
 	ClaimParams    claimtypes.Params
 	MintParams     minttypes.Params
+	ItemParams     itemtypes.Params
 }
 
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
@@ -227,6 +230,24 @@ func PrepareGenesis(
 	}
 	appState[claimtypes.ModuleName] = claimGenStateBz
 
+	// alloc module genesis
+	allocGenState := alloctypes.GetGenesisStateFromAppState(cdc, appState)
+	allocGenState.Params = genesisParams.AllocParams
+	allocGenStateBz, err := cdc.MarshalJSON(allocGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal alloc genesis state: %w", err)
+	}
+	appState[alloctypes.ModuleName] = allocGenStateBz
+
+	// item module genesis
+	itemGenState := itemtypes.GetGenesisStateFromAppState(cdc, appState)
+	itemGenState.Params = genesisParams.ItemParams
+	itemGenStateBz, err := cdc.MarshalJSON(itemGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal slashing genesis state: %w", err)
+	}
+	appState[itemtypes.ModuleName] = itemGenStateBz
+
 	// return appState and genDoc
 	return appState, genDoc, nil
 }
@@ -234,8 +255,8 @@ func PrepareGenesis(
 func MainnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
-	genParams.AirdropSupply = sdk.NewIntWithDecimal(2, 14) // 2*10^14 utrst, 2*10^8 (200M TRST)
-	genParams.GenesisTime = time.Now()                     ///time.Date(2022, 2, 1, 17, 0, 0, 0, time.UTC) // Jul 29, 2021 - 17:00 UTC
+	genParams.AirdropSupply = sdk.NewInt(180_000_000_000_000) // (180M TRST)
+	genParams.GenesisTime = time.Now()                        ///time.Date(2022, 2, 1, 17, 0, 0, 0, time.UTC) // Jul 29, 2021 - 17:00 UTC
 
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{
@@ -259,9 +280,10 @@ func MainnetGenesisParams() GenesisParams {
 	// alloc
 	genParams.AllocParams = alloctypes.DefaultParams()
 	genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
-		Staking:                     sdk.MustNewDecFromStr("0.25"), // 25%
-		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.50"), // 45%
-		DeveloperRewards:            sdk.MustNewDecFromStr("0.10"), // 25%
+		Staking:                     sdk.MustNewDecFromStr("0.35"), // 25%
+		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.40"), // 45%
+		ItemIncentives:              sdk.MustNewDecFromStr("0.05"), // 45%
+		DeveloperRewards:            sdk.MustNewDecFromStr("0.05"), // 25%
 		CommunityPool:               sdk.MustNewDecFromStr("0.15"), // 5%
 	}
 	genParams.AllocParams.WeightedDeveloperRewardsReceivers = []alloctypes.WeightedAddress{
@@ -275,49 +297,52 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams = minttypes.DefaultParams()
 	genParams.MintParams.MintDenom = appParams.BaseCoinUnit
 	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(1, 0, 0)
-	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(60_000_000_000_000)
+	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(250_000_000_000_000)
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3)
 	genParams.MintParams.BlocksPerYear = uint64(5737588)
 	genParams.StakingParams = stakingtypes.DefaultParams()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
-	genParams.StakingParams.MaxValidators = 100
+	genParams.StakingParams.MaxValidators = 50
 	genParams.StakingParams.BondDenom = genParams.NativeCoinMetadatas[0].Base
 
 	// genParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
-
+	//distr
 	genParams.DistributionParams = distributiontypes.DefaultParams()
 	genParams.DistributionParams.BaseProposerReward = sdk.MustNewDecFromStr("0.01")
 	genParams.DistributionParams.BonusProposerReward = sdk.MustNewDecFromStr("0.04")
 	genParams.DistributionParams.CommunityTax = sdk.MustNewDecFromStr("0.05")
 	genParams.DistributionParams.WithdrawAddrEnabled = true
-
+	//gov
 	genParams.GovParams = govtypes.DefaultParams()
 	genParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 14 // 2 weeks
 	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
-		sdk.NewInt(2_500_000_000),
+		sdk.NewInt(1_000_000_000),
 	))
 	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.2") // 20%
 	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 24 * 3    // 3 days
-
+	//crisis
 	genParams.CrisisConstantFee = sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
-		sdk.NewInt(500_000_000_000),
+		sdk.NewInt(100_000_000_000),
 	)
-
+	//slash/
 	genParams.SlashingParams = slashingtypes.DefaultParams()
-	genParams.SlashingParams.SignedBlocksWindow = int64(30000)                       // ~41 hr at 5 second blocks
+	genParams.SlashingParams.SignedBlocksWindow = int64(25000)                       // ~41 hr at 6 second blocks
 	genParams.SlashingParams.MinSignedPerWindow = sdk.MustNewDecFromStr("0.05")      // 5% minimum liveness
 	genParams.SlashingParams.DowntimeJailDuration = time.Minute                      // 1 minute jail period
 	genParams.SlashingParams.SlashFractionDoubleSign = sdk.MustNewDecFromStr("0.05") // 5% double sign slashing
-	genParams.SlashingParams.SlashFractionDowntime = sdk.ZeroDec()                   // 0% liveness slashing
+	genParams.SlashingParams.SlashFractionDowntime = sdk.MustNewDecFromStr("0.0001") // 0.01% liveness slashing               // 0% liveness slashing
+	//item
+	genParams.ItemParams.MaxActivePeriod = time.Hour * 24 * 30
+	genParams.ItemParams.MaxEstimatorCreatorRatio = 50
+	genParams.ItemParams.MaxBuyerReward = 5000000000
 
-	genParams.ClaimParams = claimtypes.Params{
-		AirdropStartTime:   genParams.GenesisTime, //.Add(time.Hour * 24 * 365), // 1 year (will be changed by gov)
-		DurationUntilDecay: time.Hour * 24 * 183,  // 183 days = ~6 months
-		DurationOfDecay:    time.Hour * 24 * 120,  // 120 days = ~4 months
-		ClaimDenom:         genParams.NativeCoinMetadatas[0].Base,
-	}
+	//claim
+	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime.Add(time.Hour * 24 * 365) // 1 year (will be changed by gov)
+	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 60                           // 60 days = ~2 months
+	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 120                             // 120 days = ~4 months
+	genParams.ClaimParams.ClaimDenom = genParams.NativeCoinMetadatas[0].Base
 
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
 	genParams.ConsensusParams.Block.MaxBytes = 5 * 1024 * 1024
@@ -335,7 +360,7 @@ func TestnetGenesisParams() GenesisParams {
 	genParams := MainnetGenesisParams()
 
 	// genParams.GenesisTime = time.Now()
-	genParams.GenesisTime = time.Date(2021, 7, 19, 17, 0, 0, 0, time.UTC) // Jul 19, 2021 - 17:00 UTC
+	genParams.GenesisTime = time.Now()
 
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 3 // 3 days
 
@@ -349,6 +374,11 @@ func TestnetGenesisParams() GenesisParams {
 
 	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 5 // 5 days
 	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 5    // 5 days
+
+	//item
+	genParams.ItemParams.MaxActivePeriod = time.Hour * 24 * 5 // 5 days
+	genParams.ItemParams.MaxEstimatorCreatorRatio = 100
+	genParams.ItemParams.MaxBuyerReward = 500000000000
 
 	return genParams
 }

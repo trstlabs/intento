@@ -78,7 +78,7 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 	}
 	if amountSameCreator != 0 {
 		params := k.GetParams(ctx)
-		if (amountSameCreator / amountEstimations) > int(params.MaxEstimatorCreatorRatio) {
+		if (amountSameCreator/amountEstimations)*100 > int(params.MaxEstimatorCreatorRatio) {
 			return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot estimate again for this creator")
 		}
 	}

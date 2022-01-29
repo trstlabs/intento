@@ -157,18 +157,18 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:                nil,
-		distrtypes.ModuleName:                     nil,
-		minttypes.ModuleName:                      {authtypes.Minter},
-		stakingtypes.BondedPoolName:               {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:            {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                       {authtypes.Burner},
-		ibctransfertypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
-		itemtypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
-		compute.ModuleName:                        {authtypes.Minter},
-		claimtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		alloctypes.ModuleName:                     {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		alloctypes.DeveloperVestingModuleAcctName: nil,
+		authtypes.FeeCollectorName:             nil,
+		distrtypes.ModuleName:                  nil,
+		minttypes.ModuleName:                   {authtypes.Minter},
+		stakingtypes.BondedPoolName:            {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:         {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                    {authtypes.Burner},
+		ibctransfertypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
+		itemtypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+		itemtypes.ItemIncentivesModuleAcctName: nil,
+		compute.ModuleName:                     {authtypes.Minter},
+		claimtypes.ModuleName:                  {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		alloctypes.ModuleName:                  {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -482,7 +482,7 @@ func New(
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, alloctypes.ModuleName, compute.ModuleName, itemtypes.ModuleName, claimtypes.ModuleName)
+	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, compute.ModuleName, itemtypes.ModuleName, claimtypes.ModuleName)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.

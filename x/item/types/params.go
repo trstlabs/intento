@@ -12,8 +12,9 @@ import (
 
 // Default period for active
 const (
-	DefaultPeriod                time.Duration = time.Minute //time.Hour * 24 * 30 // 30 days
-	DefaultEstimatorCreatorRatio uint64        = 1           //range from 0 -1
+	DefaultMaxActivePeriod       time.Duration = time.Hour * 24 * 30 // 30 days
+	DefaultEstimatorCreatorRatio int64         = 50                  //range from 0 - 100
+	DefaultMaxBuyerReward        int64         = 500000000           //amount of utrst
 
 //MaxSameCreator 5
 //MaxCreatorRatio 20%
@@ -23,6 +24,7 @@ const (
 var (
 	KeyMaxActivePeriod          = []byte("MaxActivePeriod")
 	KeyMaxEstimatorCreatorRatio = []byte("MaxEstimatorCreatorRatio")
+	KeyMaxBuyerReward           = []byte("MaxBuyerReward")
 )
 
 // ParamSetPairs - Implements params.ParamSet
@@ -30,18 +32,19 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMaxActivePeriod, &p.MaxActivePeriod, validateMaxActivePeriod),
 		paramtypes.NewParamSetPair(KeyMaxEstimatorCreatorRatio, &p.MaxEstimatorCreatorRatio, validateMaxEstimatorCreatorRatio),
+		paramtypes.NewParamSetPair(KeyMaxBuyerReward, &p.MaxBuyerReward, validateMaxBuyerReward),
 	}
 }
 
 // NewParams creates a new ActiveParams object
-func NewParams(maxActivePeriod time.Duration, maxEstimatorCreatorRatio uint64) Params {
-	return Params{MaxActivePeriod: maxActivePeriod, MaxEstimatorCreatorRatio: maxEstimatorCreatorRatio}
+func NewParams(maxActivePeriod time.Duration, maxEstimatorCreatorRatio int64, maxBuyerReward int64) Params {
+	return Params{MaxActivePeriod: maxActivePeriod, MaxEstimatorCreatorRatio: maxEstimatorCreatorRatio, MaxBuyerReward: maxBuyerReward}
 }
 
 // DefaultParams default parameters for Active
 func DefaultParams() Params {
 
-	return NewParams(DefaultPeriod, DefaultEstimatorCreatorRatio)
+	return NewParams(DefaultMaxActivePeriod, DefaultEstimatorCreatorRatio, DefaultMaxBuyerReward)
 }
 
 // Validate validates all params
@@ -50,6 +53,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateMaxEstimatorCreatorRatio(p.MaxEstimatorCreatorRatio); err != nil {
+		return err
+	}
+	if err := validateMaxBuyerReward(p.MaxBuyerReward); err != nil {
 		return err
 	}
 
@@ -70,13 +76,25 @@ func validateMaxActivePeriod(i interface{}) error {
 }
 
 func validateMaxEstimatorCreatorRatio(i interface{}) error {
-	v, ok := i.(uint64)
+	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v > 1 {
+	if 0 > v || v > 100 {
 		return fmt.Errorf("ratio must be within 0-100: %d", v)
+	}
+
+	return nil
+}
+func validateMaxBuyerReward(i interface{}) error {
+	v, ok := i.(int64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v < 0 {
+		return fmt.Errorf("must be positive: %d", v)
 	}
 
 	return nil
