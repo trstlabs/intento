@@ -90,7 +90,7 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "address invalid")
 	}
 
-	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
+	contractAddr, err := sdk.AccAddressFromBech32(item.Estimation.Contract)
 	if err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract address invalid")
 	}
@@ -108,7 +108,7 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 
 	if result.Estimation.Status != "" {
 
-		item.EstimationTotal = int64(result.Estimation.TotalCount)
+		item.Estimation.EstimationTotal = int64(result.Estimation.TotalCount)
 
 		k.SetItem(ctx, item)
 
@@ -202,7 +202,7 @@ func (k Keeper) Flag(ctx sdk.Context, item types.Item, msg types.MsgFlagItem) er
 		return err ///panic(err)
 
 	}
-	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
+	contractAddr, err := sdk.AccAddressFromBech32(item.Estimation.Contract)
 	if err != nil {
 		return err ///panic(err)
 	}
@@ -219,16 +219,16 @@ func (k Keeper) Flag(ctx sdk.Context, item types.Item, msg types.MsgFlagItem) er
 
 	_ = json.Unmarshal([]byte(res.Log), &result)
 	if result.StatusOnly.Status == "Success" {
-		/*for _, element := range item.EstimatorList {
+		/*for _, element := range item.Estimation.EstimatorList {
 
 			key := append(types.Uint64ToByte(item.Id), []byte(element)...)
 
 			k.DeleteEstimation(ctx, key)
 		}*/
-		k.RemoveFromListedItemQueue(ctx, item.Id, item.EndTime)
-		_ = k.DeleteItemContract(ctx, item.Contract)
+		k.RemoveFromListedItemQueue(ctx, item.Id, item.ListingDuration.EndTime)
+		_ = k.DeleteItemContract(ctx, item.Estimation.Contract)
 		k.DeleteItem(ctx, item.Id)
-		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
+		k.RemoveFromSellerItems(ctx, item.Id, item.Transfer.Seller)
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(types.EventTypeItemRemoved, sdk.NewAttribute(types.AttributeKeyCreator, item.Title), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
 		)
@@ -250,11 +250,11 @@ func (k Keeper) DeleteEncryptedEstimation(ctx sdk.Context, item types.Item, msg 
 		return err ///panic(err)
 
 	}
-	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
+	contractAddr, err := sdk.AccAddressFromBech32(item.Estimation.Contract)
 	if err != nil {
 		return err ///panic(err)
 	}
-	fmt.Printf("executing contract: %s", item.Contract)
+	fmt.Printf("executing contract: %s", item.Estimation.Contract)
 	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.DeleteMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: ")

@@ -48,5 +48,8 @@ genesis.cosmoshub_4.json
 init.log
 init.sh
 init_fresh.sh
+
 snapshot.json
 reserves.json
+
+redo.sh

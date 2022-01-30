@@ -24,56 +24,236 @@
 // const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_2_25_2;
 
 #[derive(PartialEq,Clone,Default)]
-pub struct Estimator {
+pub struct Profile {
     // message fields
-    pub estimator: ::std::string::String,
-    pub itemid: u64,
-    pub estimation: i64,
-    pub deposit: ::protobuf::SingularPtrField<super::coin::Coin>,
-    pub interested: bool,
+    pub owner: ::std::string::String,
+    pub estimations: ::protobuf::RepeatedField<EstimationInfo>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
 }
 
-impl<'a> ::std::default::Default for &'a Estimator {
-    fn default() -> &'a Estimator {
-        <Estimator as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a Profile {
+    fn default() -> &'a Profile {
+        <Profile as ::protobuf::Message>::default_instance()
     }
 }
 
-impl Estimator {
-    pub fn new() -> Estimator {
+impl Profile {
+    pub fn new() -> Profile {
         ::std::default::Default::default()
     }
 
-    // string estimator = 1;
+    // string owner = 1;
 
 
-    pub fn get_estimator(&self) -> &str {
-        &self.estimator
+    pub fn get_owner(&self) -> &str {
+        &self.owner
     }
-    pub fn clear_estimator(&mut self) {
-        self.estimator.clear();
+    pub fn clear_owner(&mut self) {
+        self.owner.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_estimator(&mut self, v: ::std::string::String) {
-        self.estimator = v;
+    pub fn set_owner(&mut self, v: ::std::string::String) {
+        self.owner = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_estimator(&mut self) -> &mut ::std::string::String {
-        &mut self.estimator
+    pub fn mut_owner(&mut self) -> &mut ::std::string::String {
+        &mut self.owner
     }
 
     // Take field
-    pub fn take_estimator(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.estimator, ::std::string::String::new())
+    pub fn take_owner(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.owner, ::std::string::String::new())
     }
 
-    // uint64 itemid = 2;
+    // repeated .trstlabs.trst.trst.EstimationInfo estimations = 2;
+
+
+    pub fn get_estimations(&self) -> &[EstimationInfo] {
+        &self.estimations
+    }
+    pub fn clear_estimations(&mut self) {
+        self.estimations.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_estimations(&mut self, v: ::protobuf::RepeatedField<EstimationInfo>) {
+        self.estimations = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_estimations(&mut self) -> &mut ::protobuf::RepeatedField<EstimationInfo> {
+        &mut self.estimations
+    }
+
+    // Take field
+    pub fn take_estimations(&mut self) -> ::protobuf::RepeatedField<EstimationInfo> {
+        ::std::mem::replace(&mut self.estimations, ::protobuf::RepeatedField::new())
+    }
+}
+
+impl ::protobuf::Message for Profile {
+    fn is_initialized(&self) -> bool {
+        for v in &self.estimations {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.owner)?;
+                },
+                2 => {
+                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.estimations)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if !self.owner.is_empty() {
+            my_size += ::protobuf::rt::string_size(1, &self.owner);
+        }
+        for value in &self.estimations {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
+        if !self.owner.is_empty() {
+            os.write_string(1, &self.owner)?;
+        }
+        for v in &self.estimations {
+            os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        };
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &dyn (::std::any::Any) {
+        self as &dyn (::std::any::Any)
+    }
+    fn as_any_mut(&mut self) -> &mut dyn (::std::any::Any) {
+        self as &mut dyn (::std::any::Any)
+    }
+    fn into_any(self: ::std::boxed::Box<Self>) -> ::std::boxed::Box<dyn (::std::any::Any)> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> Profile {
+        Profile::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
+        descriptor.get(|| {
+            let mut fields = ::std::vec::Vec::new();
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                "owner",
+                |m: &Profile| { &m.owner },
+                |m: &mut Profile| { &mut m.owner },
+            ));
+            fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<EstimationInfo>>(
+                "estimations",
+                |m: &Profile| { &m.estimations },
+                |m: &mut Profile| { &mut m.estimations },
+            ));
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<Profile>(
+                "Profile",
+                fields,
+                file_descriptor_proto()
+            )
+        })
+    }
+
+    fn default_instance() -> &'static Profile {
+        static instance: ::protobuf::rt::LazyV2<Profile> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(Profile::new)
+    }
+}
+
+impl ::protobuf::Clear for Profile {
+    fn clear(&mut self) {
+        self.owner.clear();
+        self.estimations.clear();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for Profile {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Profile {
+    fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
+        ::protobuf::reflect::ReflectValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct EstimationInfo {
+    // message fields
+    pub itemid: u64,
+    pub interested: bool,
+    pub item_creator: ::std::string::String,
+    // special fields
+    pub unknown_fields: ::protobuf::UnknownFields,
+    pub cached_size: ::protobuf::CachedSize,
+}
+
+impl<'a> ::std::default::Default for &'a EstimationInfo {
+    fn default() -> &'a EstimationInfo {
+        <EstimationInfo as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl EstimationInfo {
+    pub fn new() -> EstimationInfo {
+        ::std::default::Default::default()
+    }
+
+    // uint64 itemid = 1;
 
 
     pub fn get_itemid(&self) -> u64 {
@@ -88,55 +268,7 @@ impl Estimator {
         self.itemid = v;
     }
 
-    // int64 estimation = 3;
-
-
-    pub fn get_estimation(&self) -> i64 {
-        self.estimation
-    }
-    pub fn clear_estimation(&mut self) {
-        self.estimation = 0;
-    }
-
-    // Param is passed by value, moved
-    pub fn set_estimation(&mut self, v: i64) {
-        self.estimation = v;
-    }
-
-    // .cosmos.base.v1beta1.Coin deposit = 4;
-
-
-    pub fn get_deposit(&self) -> &super::coin::Coin {
-        self.deposit.as_ref().unwrap_or_else(|| <super::coin::Coin as ::protobuf::Message>::default_instance())
-    }
-    pub fn clear_deposit(&mut self) {
-        self.deposit.clear();
-    }
-
-    pub fn has_deposit(&self) -> bool {
-        self.deposit.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_deposit(&mut self, v: super::coin::Coin) {
-        self.deposit = ::protobuf::SingularPtrField::some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_deposit(&mut self) -> &mut super::coin::Coin {
-        if self.deposit.is_none() {
-            self.deposit.set_default();
-        }
-        self.deposit.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_deposit(&mut self) -> super::coin::Coin {
-        self.deposit.take().unwrap_or_else(|| super::coin::Coin::new())
-    }
-
-    // bool interested = 5;
+    // bool interested = 2;
 
 
     pub fn get_interested(&self) -> bool {
@@ -150,15 +282,36 @@ impl Estimator {
     pub fn set_interested(&mut self, v: bool) {
         self.interested = v;
     }
+
+    // string item_creator = 3;
+
+
+    pub fn get_item_creator(&self) -> &str {
+        &self.item_creator
+    }
+    pub fn clear_item_creator(&mut self) {
+        self.item_creator.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_item_creator(&mut self, v: ::std::string::String) {
+        self.item_creator = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_item_creator(&mut self) -> &mut ::std::string::String {
+        &mut self.item_creator
+    }
+
+    // Take field
+    pub fn take_item_creator(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.item_creator, ::std::string::String::new())
+    }
 }
 
-impl ::protobuf::Message for Estimator {
+impl ::protobuf::Message for EstimationInfo {
     fn is_initialized(&self) -> bool {
-        for v in &self.deposit {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
         true
     }
 
@@ -167,31 +320,21 @@ impl ::protobuf::Message for Estimator {
             let (field_number, wire_type) = is.read_tag_unpack()?;
             match field_number {
                 1 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.estimator)?;
-                },
-                2 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     let tmp = is.read_uint64()?;
                     self.itemid = tmp;
                 },
-                3 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_int64()?;
-                    self.estimation = tmp;
-                },
-                4 => {
-                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.deposit)?;
-                },
-                5 => {
+                2 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     let tmp = is.read_bool()?;
                     self.interested = tmp;
+                },
+                3 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.item_creator)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -205,21 +348,14 @@ impl ::protobuf::Message for Estimator {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u32 {
         let mut my_size = 0;
-        if !self.estimator.is_empty() {
-            my_size += ::protobuf::rt::string_size(1, &self.estimator);
-        }
         if self.itemid != 0 {
-            my_size += ::protobuf::rt::value_size(2, self.itemid, ::protobuf::wire_format::WireTypeVarint);
-        }
-        if self.estimation != 0 {
-            my_size += ::protobuf::rt::value_size(3, self.estimation, ::protobuf::wire_format::WireTypeVarint);
-        }
-        if let Some(ref v) = self.deposit.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+            my_size += ::protobuf::rt::value_size(1, self.itemid, ::protobuf::wire_format::WireTypeVarint);
         }
         if self.interested != false {
             my_size += 2;
+        }
+        if !self.item_creator.is_empty() {
+            my_size += ::protobuf::rt::string_size(3, &self.item_creator);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
@@ -227,22 +363,14 @@ impl ::protobuf::Message for Estimator {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
-        if !self.estimator.is_empty() {
-            os.write_string(1, &self.estimator)?;
-        }
         if self.itemid != 0 {
-            os.write_uint64(2, self.itemid)?;
-        }
-        if self.estimation != 0 {
-            os.write_int64(3, self.estimation)?;
-        }
-        if let Some(ref v) = self.deposit.as_ref() {
-            os.write_tag(4, ::protobuf::wire_format::WireTypeLengthDelimited)?;
-            os.write_raw_varint32(v.get_cached_size())?;
-            v.write_to_with_cached_sizes(os)?;
+            os.write_uint64(1, self.itemid)?;
         }
         if self.interested != false {
-            os.write_bool(5, self.interested)?;
+            os.write_bool(2, self.interested)?;
+        }
+        if !self.item_creator.is_empty() {
+            os.write_string(3, &self.item_creator)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -274,71 +402,59 @@ impl ::protobuf::Message for Estimator {
         Self::descriptor_static()
     }
 
-    fn new() -> Estimator {
-        Estimator::new()
+    fn new() -> EstimationInfo {
+        EstimationInfo::new()
     }
 
     fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
         descriptor.get(|| {
             let mut fields = ::std::vec::Vec::new();
-            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                "estimator",
-                |m: &Estimator| { &m.estimator },
-                |m: &mut Estimator| { &mut m.estimator },
-            ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
                 "itemid",
-                |m: &Estimator| { &m.itemid },
-                |m: &mut Estimator| { &mut m.itemid },
-            ));
-            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt64>(
-                "estimation",
-                |m: &Estimator| { &m.estimation },
-                |m: &mut Estimator| { &mut m.estimation },
-            ));
-            fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<super::coin::Coin>>(
-                "deposit",
-                |m: &Estimator| { &m.deposit },
-                |m: &mut Estimator| { &mut m.deposit },
+                |m: &EstimationInfo| { &m.itemid },
+                |m: &mut EstimationInfo| { &mut m.itemid },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
                 "interested",
-                |m: &Estimator| { &m.interested },
-                |m: &mut Estimator| { &mut m.interested },
+                |m: &EstimationInfo| { &m.interested },
+                |m: &mut EstimationInfo| { &mut m.interested },
             ));
-            ::protobuf::reflect::MessageDescriptor::new_pb_name::<Estimator>(
-                "Estimator",
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                "item_creator",
+                |m: &EstimationInfo| { &m.item_creator },
+                |m: &mut EstimationInfo| { &mut m.item_creator },
+            ));
+            ::protobuf::reflect::MessageDescriptor::new_pb_name::<EstimationInfo>(
+                "EstimationInfo",
                 fields,
                 file_descriptor_proto()
             )
         })
     }
 
-    fn default_instance() -> &'static Estimator {
-        static instance: ::protobuf::rt::LazyV2<Estimator> = ::protobuf::rt::LazyV2::INIT;
-        instance.get(Estimator::new)
+    fn default_instance() -> &'static EstimationInfo {
+        static instance: ::protobuf::rt::LazyV2<EstimationInfo> = ::protobuf::rt::LazyV2::INIT;
+        instance.get(EstimationInfo::new)
     }
 }
 
-impl ::protobuf::Clear for Estimator {
+impl ::protobuf::Clear for EstimationInfo {
     fn clear(&mut self) {
-        self.estimator.clear();
         self.itemid = 0;
-        self.estimation = 0;
-        self.deposit.clear();
         self.interested = false;
+        self.item_creator.clear();
         self.unknown_fields.clear();
     }
 }
 
-impl ::std::fmt::Debug for Estimator {
+impl ::std::fmt::Debug for EstimationInfo {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for Estimator {
+impl ::protobuf::reflect::ProtobufValue for EstimationInfo {
     fn as_ref(&self) -> ::protobuf::reflect::ReflectValueRef {
         ::protobuf::reflect::ReflectValueRef::Message(self)
     }
@@ -1353,25 +1469,24 @@ impl ::protobuf::reflect::ProtobufValue for MsgFlagItem {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x0festimator.proto\x12\x12trstlabs.trst.trst\x1a\x14gogoproto/gogo.pr\
-    oto\x1a\x1ecosmos/base/v1beta1/coin.proto\"\xbc\x01\n\tEstimator\x12\x1c\
-    \n\testimator\x18\x01\x20\x01(\tR\testimator\x12\x16\n\x06itemid\x18\x02\
-    \x20\x01(\x04R\x06itemid\x12\x1e\n\nestimation\x18\x03\x20\x01(\x03R\nes\
-    timation\x129\n\x07deposit\x18\x04\x20\x01(\x0b2\x19.cosmos.base.v1beta1\
-    .CoinR\x07depositB\x04\xc8\xde\x1f\0\x12\x1e\n\ninterested\x18\x05\x20\
-    \x01(\x08R\ninterested\"\xa8\x01\n\x13MsgCreateEstimation\x12\x1c\n\test\
-    imator\x18\x01\x20\x01(\tR\testimator\x12!\n\x0cestimate_msg\x18\x02\x20\
-    \x01(\x0cR\x0bestimateMsg\x12\x16\n\x06itemid\x18\x03\x20\x01(\x04R\x06i\
-    temid\x12\x18\n\x07deposit\x18\x04\x20\x01(\x03R\x07deposit\x12\x1e\n\ni\
-    nterested\x18\x05\x20\x01(\x08R\ninterested\"e\n\rMsgUpdateLike\x12\x1c\
-    \n\testimator\x18\x01\x20\x01(\tR\testimator\x12\x16\n\x06itemid\x18\x02\
-    \x20\x01(\x04R\x06itemid\x12\x1e\n\ninterested\x18\x03\x20\x01(\x08R\nin\
-    terested\"j\n\x13MsgDeleteEstimation\x12\x1c\n\testimator\x18\x01\x20\
+    oto\"e\n\x07Profile\x12\x14\n\x05owner\x18\x01\x20\x01(\tR\x05owner\x12D\
+    \n\x0bestimations\x18\x02\x20\x03(\x0b2\".trstlabs.trst.trst.EstimationI\
+    nfoR\x0bestimations\"k\n\x0eEstimationInfo\x12\x16\n\x06itemid\x18\x01\
+    \x20\x01(\x04R\x06itemid\x12\x1e\n\ninterested\x18\x02\x20\x01(\x08R\nin\
+    terested\x12!\n\x0citem_creator\x18\x03\x20\x01(\tR\x0bitemCreator\"\xa8\
+    \x01\n\x13MsgCreateEstimation\x12\x1c\n\testimator\x18\x01\x20\x01(\tR\t\
+    estimator\x12!\n\x0cestimate_msg\x18\x02\x20\x01(\x0cR\x0bestimateMsg\
+    \x12\x16\n\x06itemid\x18\x03\x20\x01(\x04R\x06itemid\x12\x18\n\x07deposi\
+    t\x18\x04\x20\x01(\x03R\x07deposit\x12\x1e\n\ninterested\x18\x05\x20\x01\
+    (\x08R\ninterested\"e\n\rMsgUpdateLike\x12\x1c\n\testimator\x18\x01\x20\
     \x01(\tR\testimator\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04R\x06itemid\
-    \x12\x1d\n\ndelete_msg\x18\x03\x20\x01(\x0cR\tdeleteMsg\"^\n\x0bMsgFlagI\
-    tem\x12\x1c\n\testimator\x18\x01\x20\x01(\tR\testimator\x12\x16\n\x06ite\
-    mid\x18\x02\x20\x01(\x04R\x06itemid\x12\x19\n\x08flag_msg\x18\x03\x20\
-    \x01(\x0cR\x07flagMsgB'Z%github.com/trstlabs/trst/x/item/typesb\x06proto\
-    3\
+    \x12\x1e\n\ninterested\x18\x03\x20\x01(\x08R\ninterested\"j\n\x13MsgDele\
+    teEstimation\x12\x1c\n\testimator\x18\x01\x20\x01(\tR\testimator\x12\x16\
+    \n\x06itemid\x18\x02\x20\x01(\x04R\x06itemid\x12\x1d\n\ndelete_msg\x18\
+    \x03\x20\x01(\x0cR\tdeleteMsg\"^\n\x0bMsgFlagItem\x12\x1c\n\testimator\
+    \x18\x01\x20\x01(\tR\testimator\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04\
+    R\x06itemid\x12\x19\n\x08flag_msg\x18\x03\x20\x01(\x0cR\x07flagMsgB'Z%gi\
+    thub.com/trstlabs/trst/x/item/typesb\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;

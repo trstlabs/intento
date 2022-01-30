@@ -9,7 +9,7 @@ import (
 )
 
 func listItem(ctx sdk.Context, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
-	msgs := keeper.GetAllItem(ctx)
+	msgs := keeper.GetAllItems(ctx)
 
 	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, msgs)
 	if err != nil {

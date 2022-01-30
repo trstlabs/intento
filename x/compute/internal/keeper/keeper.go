@@ -340,7 +340,6 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	}
 	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(&codeInfo))
 	//	fmt.Printf("setted")
-	//k.SetContractResult(ctx, contractAddress, &sdk.Result{Log: res.Log[0].Key})
 	codeInfo.Instances = codeInfo.Instances + 1
 	// fmt.Printf("Storing key: %v for account %s\n", key, contractAddress)
 	//	fmt.Printf("set")
@@ -424,16 +423,6 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	if execErr != nil {
 		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, execErr.Error())
 	}
-
-	//var res wasmTypes.CosmosResponse
-	//err = json.Unmarshal(res, &res)
-	//if err != nil {
-	//	return sdk.Result{}, err
-	//}
-	//fmt.Printf("result: Got result for item data: %s | log: %s\n", res.Data, res.Log)
-	/*var raw map[string]json.RawMessage
-	_ = json.Unmarshal([]byte(res.Log[0].Value), &raw)*/
-	//fmt.Printf("log: Got res raw for item %s: %s\n", raw, res)
 
 	// emit all events from this contract itself
 	events := types.ParseEvents(res.Log, contractAddress)

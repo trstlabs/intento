@@ -15,7 +15,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	//k.SetParams(ctx, state.Params)
 
 	k.SetParams(ctx, state.Params)
-	k.InitializeContract(ctx)
+	k.InitializeContracts(ctx)
 	// NOTE: since the item module is a module account, the auth module should
 	// take care of importing the amount into the account except for the
 	// genesis block
@@ -31,7 +31,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	for _, elem := range state.ItemList {
 
 		k.SetItem(ctx, *elem)
-		k.InsertListedItemQueue(ctx, elem.Id, *elem, elem.EndTime)
+		k.InsertListedItemQueue(ctx, elem.Id, *elem, elem.ListingDuration.EndTime)
 		//if (elem.Buyer != "") {k.SetBuyer(ctx, elem.Id, elem.Buyer)}
 
 	}
@@ -59,7 +59,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
-	itemList := k.GetAllItem(ctx)
+	itemList := k.GetAllItems(ctx)
 	for _, elem := range itemList {
 		elem := elem
 		genesis.ItemList = append(genesis.ItemList, &elem)
@@ -113,8 +113,8 @@ func (k Keeper) InitializeItemIncentiveModule(ctx sdk.Context, amount sdk.Coin) 
 	}
 }
 
-// InitializeContract sets up the module account from genesis
-func (k Keeper) InitializeContract(ctx sdk.Context) error {
+// InitializeContracts sets up the module contracts from genesis
+func (k Keeper) InitializeContracts(ctx sdk.Context) error {
 	addr := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	params := k.GetParams(ctx)
 	// ensure reward pool module account is set
@@ -124,20 +124,28 @@ func (k Keeper) InitializeContract(ctx sdk.Context) error {
 
 	userHomeDir, _ := os.UserHomeDir()
 
-	wasm, err := os.ReadFile(filepath.Join(userHomeDir, "trst", "contract.wasm.gz"))
+	transferCode, err := os.ReadFile(filepath.Join(userHomeDir, "trst", "wasm_code", "transfer_contract.wasm.gz"))
 	if err != nil {
 		panic(err)
 	}
-	var codeID uint64
-	var hash string
+	estimateOnlyCode, err := os.ReadFile(filepath.Join(userHomeDir, "trst", "wasm_code", "estimate_only_contract.wasm.gz"))
+	if err != nil {
+		panic(err)
+	}
+	//var codeID uint64
+	//var hash string
 
-	codeID, err = k.computeKeeper.Create(ctx, addr, wasm, "", "", params.MaxActivePeriod, "Estimation aggregation", "This code is used internally. This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically redistributed at the end of the contract period.")
+	_, err = k.computeKeeper.Create(ctx, addr, transferCode, "", "", params.MaxActivePeriod, "Estimation aggregation", " for Trustless Transfer items. This code is used internally. This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically redistributed at the end of the contract period.")
+	if err != nil {
+		panic(err)
+	}
+	_, err = k.computeKeeper.Create(ctx, addr, estimateOnlyCode, "", "", params.MaxActivePeriod, "Estimation aggregation", " This code is used internally. This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically redistributed at the end of the contract period.")
 	if err != nil {
 		panic(err)
 	}
 
-	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte(fmt.Sprint(codeID)), []byte(hash))
+	//store := ctx.KVStore(k.storeKey)
+	//store.Set([]byte(fmt.Sprint(codeID)), []byte(hash))
 
 	return nil
 }

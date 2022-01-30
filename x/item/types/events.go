@@ -10,6 +10,8 @@ const (
 	EventTypeItemResellable   = "ItemResellable"
 	EventTypeItemPrepayment   = "ItemPrepayment"
 	EventTypeItemExpired      = "ItemExpired"
+	EventTypeItemTokenized    = "ItemTokenized"
+	EventTypeItemUnTokenized  = "ItemUntokenized"
 	AttributeKeyCreator       = "creator"
 	AttributeKeyItemID        = "itemid"
 )

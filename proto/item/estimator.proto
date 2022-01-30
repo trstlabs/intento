@@ -2,7 +2,6 @@ syntax = "proto3";
 package trstlabs.trst.trst;
 
 import "gogoproto/gogo.proto";
-import "item/item.proto";
 
 option go_package = "github.com/trstlabs/trst/x/item/types";
 
@@ -10,8 +9,6 @@ message Profile {
   string owner = 1;
   // string username = 2;
   repeated EstimationInfo estimations = 2;
-  //repeated Item createdItems = 4;
- // repeated Item boughtItems = 5;
 }
 
 message EstimationInfo {

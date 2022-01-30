@@ -35,7 +35,7 @@ func CmdCreateEstimation() *cobra.Command {
 			wasmCtx := wasmUtils.WASMContext{CLIContext: clientCtx}
 			estimateMsg := types.TrustlessMsg{}
 
-			estimation := map[string]string{"amount": args[0], "comment": args[3], "estimator": clientCtx.GetFromAddress().String()}
+			estimation := map[string]string{"estimation_amount": args[0], "comment": args[3]}
 
 			message := map[string]interface{}{"create_estimation": estimation}
 

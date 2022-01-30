@@ -51,36 +51,48 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 	activePeriod := k.GetParams(ctx).MaxActivePeriod
 	endTime := submitTime.Add(activePeriod)
 
-	//k.computeKeeper.Instantiate()
-
 	userAddress, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return err
 	}
+	estimationOnly := false
+	seller := msg.Creator
+	code := uint64(1)
+	if msg.LocalPickup == "" && msg.ShippingRegion == nil {
+		estimationOnly = true
+		code = uint64(2)
+		seller = ""
+	}
 
-	contractAddr, err := k.computeKeeper.Instantiate(ctx, uint64(1), userAddress, msg.InitMsg, msg.AutoMsg, "Item "+fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil, activePeriod)
+	contractAddr, err := k.computeKeeper.Instantiate(ctx, code, userAddress, msg.InitMsg, msg.AutoMsg, "Item "+fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil, activePeriod)
 	if err != nil {
 		return err
 	}
-
 	var item = types.Item{
-		Creator:         msg.Creator,
-		Seller:          msg.Creator,
-		Id:              uint64(count) + 1,
-		Title:           msg.Title,
-		Description:     msg.Description,
-		ShippingCost:    msg.ShippingCost,
-		LocalPickup:     msg.LocalPickup,
-		EstimationCount: msg.EstimationCount,
-		Contract:        contractAddr.String(),
+		Creator: msg.Creator,
 
-		Tags: msg.Tags,
-
-		Condition:      msg.Condition,
-		ShippingRegion: msg.ShippingRegion,
-		DepositAmount:  msg.DepositAmount,
-		SubmitTime:     submitTime,
-		EndTime:        endTime,
+		Id:          uint64(count) + 1,
+		Title:       msg.Title,
+		Description: msg.Description,
+		Transfer: &types.Transfer{ShippingCost: msg.ShippingCost,
+			LocalPickup:    msg.LocalPickup,
+			ShippingRegion: msg.ShippingRegion,
+			Seller:         seller,
+		},
+		Estimation: &types.Estimation{Contract: contractAddr.String(),
+			EstimationCount: msg.EstimationCount,
+			DepositAmount:   msg.DepositAmount,
+		},
+		Properties: &types.Properties{Condition: msg.Condition,
+			Tags:           msg.Tags,
+			TokenUri:       msg.TokenUri,
+			EstimationOnly: estimationOnly,
+			Photos:         msg.Photos,
+		},
+		ListingDuration: &types.ListingDuration{
+			SubmitTime: submitTime,
+			EndTime:    endTime,
+		},
 	}
 
 	k.BindItemSeller(ctx, item.Id, msg.Creator)
@@ -124,12 +136,20 @@ func (k Keeper) HasItem(ctx sdk.Context, id uint64) bool {
 
 }
 
-// GetItemBuyer returns the seller of the item
-func (k Keeper) GetItemBuyer(ctx sdk.Context, id uint64) string {
-	return k.GetItem(ctx, id).Seller
+// GetItemOwner returns the owner of the item
+// this is a buyer when the item was transferred, the seller when the item is on resale, and otherwise it is the original item creator
+func (k Keeper) GetItemOwner(ctx sdk.Context, id uint64) string {
+	item := k.GetItem(ctx, id)
+	if item.Status == "Shipped" || item.Status == "Transferred" {
+		return item.Transfer.Buyer
+	} else if item.Transfer.Seller != "" {
+		return item.Transfer.Seller
+	} else {
+		return item.Creator
+	}
 }
 
-// DeleteItem deletes a item
+// DeleteItemContract deletes an item contract
 func (k Keeper) DeleteItemContract(ctx sdk.Context, contract string) error {
 	contractAddress, err := sdk.AccAddressFromBech32(contract)
 	if err != nil {
@@ -143,15 +163,15 @@ func (k Keeper) DeleteItemContract(ctx sdk.Context, contract string) error {
 	return nil
 }
 
-// DeleteItem deletes a item
+// DeleteItem deletes an item
 func (k Keeper) DeleteItem(ctx sdk.Context, key uint64) {
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	store.Delete(append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(key)...))
 }
 
-// GetAllItem returns all item
-func (k Keeper) GetAllItem(ctx sdk.Context) (msgs []types.Item) {
+// GetAllItems returns all items
+func (k Keeper) GetAllItems(ctx sdk.Context) (msgs []types.Item) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefix(types.ItemKey))
 
@@ -276,7 +296,7 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 		return err ///panic(err)
 
 	}
-	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
+	contractAddr, err := sdk.AccAddressFromBech32(item.Estimation.Contract)
 	if err != nil {
 		return err ///panic(err)
 	}
@@ -286,7 +306,6 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 		fmt.Printf("err executing: ")
 		return err ///panic(err)
 	}
-	//	fmt.Printf("res for item %s: %s\n", res.Log, contractAddr)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
@@ -306,10 +325,10 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 	}
 
 	if result.RevealEstimation.Status == "Success" {
-		item.BestEstimator = result.RevealEstimation.BestEstimator
-		item.EstimationPrice = int64(result.RevealEstimation.BestEstimation)
-		item.Comments = result.RevealEstimation.Comments
-		item.EstimationList = b
+		item.Estimation.BestEstimator = result.RevealEstimation.BestEstimator
+		item.Estimation.EstimationPrice = int64(result.RevealEstimation.BestEstimation)
+		item.Estimation.Comments = result.RevealEstimation.Comments
+		item.Estimation.EstimationList = b
 		k.SetItem(ctx, item)
 	} else {
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "reveal not possible")
@@ -317,19 +336,19 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 	return nil
 }
 
-// RevealEstimation reveals an item
-func (k Keeper) Transferable(ctx sdk.Context, item types.Item, msg types.MsgItemTransferable) error {
+// SetTransferable makes the item available to buy
+func (k Keeper) SetTransferable(ctx sdk.Context, item types.Item, msg types.MsgItemTransferable) error {
 
 	creatorAddress, err := sdk.AccAddressFromBech32(msg.Seller)
 	if err != nil {
 		return err ///panic(err)
 
 	}
-	contractAddr, err := sdk.AccAddressFromBech32(item.Contract)
+	contractAddr, err := sdk.AccAddressFromBech32(item.Estimation.Contract)
 	if err != nil {
 		return err ///panic(err)
 	}
-	fmt.Printf("executing contract: %s", item.Contract)
+	fmt.Printf("executing contract: %s", item.Estimation.Contract)
 	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.TransferableMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: %s", err)
@@ -349,15 +368,10 @@ func (k Keeper) Transferable(ctx sdk.Context, item types.Item, msg types.MsgItem
 	var result types.TransferableResult
 	json.Unmarshal([]byte(res.Log), &result)
 	fmt.Println(json.Unmarshal([]byte(res.Log), &result))
-	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", strconv.Itoa(result.), contractAddr)
-	//fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", result.RevealEstimation.Comments[1], contractAddr)
-	//	fmt.Printf("log: Got Unmarshal msg for item %s: %s\n", res.Log, contractAddr)
 
 	if result.Transferable.Status == "Success" {
-		/*item.BestEstimator = result.RevealEstimation.BestEstimator
-		item.EstimationPrice = int64(result.RevealEstimation.Bestestimation)
-		item.Comments = result.RevealEstimation.Comments*/
-		item.Transferable = true
+
+		item.Properties.Transferable = true
 		k.SetItem(ctx, item)
 	} else {
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "setting item not possible")

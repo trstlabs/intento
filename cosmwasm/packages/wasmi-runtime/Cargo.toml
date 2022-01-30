@@ -39,8 +39,8 @@ sgx_tstd = { rev = "a37ffb9449ba6d5b6e4a9d586bbab864ae732269", git = "https://gi
 ] }
 
 [dependencies]
-digest = "0.9"
-k256 = { version = "0.8.0", features = ["ecdsa"] }
+# digest = "0.9"
+# k256 = { version = "0.8.0", features = ["ecdsa"] }
 sgx_tse = { rev = "a37ffb9449ba6d5b6e4a9d586bbab864ae732269", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_rand = { rev = "a37ffb9449ba6d5b6e4a9d586bbab864ae732269", git = "https://github.com/apache/teaclave-sgx-sdk.git" }
 sgx_trts = { rev = "a37ffb9449ba6d5b6e4a9d586bbab864ae732269", git = "https://github.com/apache/teaclave-sgx-sdk.git" }

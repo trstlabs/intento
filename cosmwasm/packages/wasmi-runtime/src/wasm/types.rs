@@ -355,7 +355,8 @@ pub enum StdCosmWasmMsg {
     deposit_amount: i64,
     init_msg: String,
     auto_msg: String,
-    photos: Vec<String>,// ::protobuf::RepeatedField<::std::string::String>,//std::string::String,//Vec<String>,
+    photos: Vec<String>,
+    token_uri: String,// ::protobuf::RepeatedField<::std::string::String>,//std::string::String,//Vec<String>,
 },
 #[serde(alias = "trstlabs.trst.trst.MsgCreateEstimation")]
 CreateEstimation {
@@ -476,6 +477,7 @@ impl StdCosmWasmMsg {
                 init_msg,
                 auto_msg,
                 photos,
+                token_uri
             } => {
                let creator = CanonicalAddr::from_human(&creator).map_err(|err| {
                     warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
@@ -514,6 +516,7 @@ impl StdCosmWasmMsg {
                 init_msg,
                 auto_msg,
                 photos,
+                token_uri
                 })
             }
             Self::FlagItem {
@@ -581,6 +584,7 @@ impl StdCosmWasmMsg {
                 init_msg,
                 auto_msg,
                 photos,
+                token_uri,
             } => {
                let creator = CanonicalAddr::from_human(&creator).map_err(|err| {
                     warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
@@ -620,6 +624,7 @@ impl StdCosmWasmMsg {
                 init_msg,
                 auto_msg,
                 photos,
+                token_uri
                 })
             }
             Self::RevealEstimation {
@@ -763,7 +768,8 @@ pub enum CosmWasmMsg {
         deposit_amount: i64,
         init_msg: Vec<u8>,
         auto_msg: Vec<u8>,
-        photos:  Vec<String>,//V ::protobuf::RepeatedField<::std::string::String>,//std::string::String,
+        photos:  Vec<String>,
+        token_uri:  String,//V ::protobuf::RepeatedField<::std::string::String>,//std::string::String,
     },
     CreateEstimation {
         estimator: CanonicalAddr,
@@ -871,6 +877,7 @@ impl CosmWasmMsg {
             init_msg: raw_msg.init_msg,
             auto_msg: raw_msg.auto_msg,
             photos: photos,
+            token_uri: raw_msg.token_uri,
         })
     }
 

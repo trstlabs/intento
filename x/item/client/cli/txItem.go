@@ -26,11 +26,22 @@ import (
 	wasmUtils "github.com/trstlabs/trst/x/compute/client/utils"
 )
 
+const (
+	flagPhotos          = "photos"
+	flagTokenURI        = "token_uri"
+	flagShippingCost    = "shipping_cost"
+	flagLocalPickup     = "local_pickup"
+	flagShippingRegion  = "shipping_region"
+	flagDepositAmount   = "deposit_amount"
+	flagEstimationCount = "estimation_count"
+	flagCondition       = "condition"
+)
+
 func CmdCreateItem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-item [title] [description] [shipping_cost] [localpickup] [estimationcount] [tags] [condition] [shipping_region] [depositamount]",
-		Short: "Creates a new item",
-		Args:  cobra.MinimumNArgs(9),
+		Use:   "create-item [title] [description] [tags] --deposit_amount number --estimation_count number",
+		Short: "Creates a new Trustless Item",
+		Args:  cobra.MinimumNArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			cliCtx, err := client.GetClientTxContext(cmd)
@@ -40,28 +51,37 @@ func CmdCreateItem() *cobra.Command {
 
 			argsTitle := string(args[0])
 			argsDescription := string(args[1])
-			argsShippingCost, _ := strconv.ParseInt(args[2], 10, 64)
-			argsLocalPickup := string(args[3])
+			argsTags := strings.Split(args[2], ",")
 
-			//argsEstimationCounthash := string(args[4])
+			flags := cmd.Flags()
+			argsLocalPickup, _ := flags.GetString(flagLocalPickup)
+			argsShippingCost, _ := flags.GetInt64(flagShippingCost)
+			argsCondition, _ := flags.GetInt64(flagCondition)
+			argsEstimationCount, err := flags.GetInt64(flagEstimationCount)
+			if err != nil {
+				return err
+			}
+			argsDepositAmount, err := flags.GetInt64(flagDepositAmount)
+			if err != nil {
+				return err
+			}
 
-			//estimationcheck, ok := sdk.NewIntFromString(args[4])
-			//if ok != true {
-			//	return sdkerrors.Wrap(types.ErrArgumentMissingOrNonUInteger, "not a number or lower than zero")
-			//}
+			argsShippingRegion, _ := flags.GetStringSlice(flagShippingRegion)
 
-			argsTags := strings.Split(args[5], ",")
+			argsPhotos, err := flags.GetStringSlice(flagPhotos)
 
-			argsEstimationCount, _ := strconv.ParseInt(args[4], 10, 64)
+			if err != nil {
+				return err
+			}
+			argsTokenURI, _ := flags.GetString(flagTokenURI)
+
 			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
-			argsDepositAmount, _ := strconv.ParseInt(args[8], 10, 64)
+			count := map[string]string{"estimation_count": strconv.FormatInt(argsEstimationCount, 10), "deposit_required": strconv.FormatInt(argsDepositAmount, 10)}
 
-			count := map[string]string{"estimation_count": args[4], "deposit_required": args[8]}
-			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
 			initMsg := types.TrustlessMsg{}
 			initMsg.Msg, err = json.Marshal(count)
-			//fmt.Printf("json message: %X\n", estimation)
+
 			if err != nil {
 				return err
 			}
@@ -95,31 +115,31 @@ func CmdCreateItem() *cobra.Command {
 				return err
 			}
 
-			///	fmt.Printf("encryptedMsg %+v\n ", encryptedMsg)
-
-			//fmt.Printf("encryptedMsg: %X\n", encryptedMsg)
-			argsCondition, _ := strconv.ParseInt(args[6], 10, 64)
-
-			argsShippingRegion := strings.Split(args[7], ",")
-
-			var argsPhotos []string
-
-			if args[9] != "" {
-				argsPhotos = strings.Split(args[9], ",")
-			}
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), int64(argsShippingCost), string(argsLocalPickup), int64(argsEstimationCount), []string(argsTags), int64(argsCondition), []string(argsShippingRegion), int64(argsDepositAmount), encryptedMsg, autoMsgEncrypted, []string(argsPhotos))
+			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), argsShippingCost, string(argsLocalPickup), int64(argsEstimationCount), []string(argsTags), int64(argsCondition), []string(argsShippingRegion), int64(argsDepositAmount), encryptedMsg, autoMsgEncrypted, []string(argsPhotos), argsTokenURI)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+	//Estimation related
+	cmd.Flags().Int64(flagDepositAmount, 0, "deposit amount for the estimators to estimate the item (higher = more accurate, lower = faster)'  [number] ")
+	cmd.Flags().Int64(flagEstimationCount, 0, "estimation count of estimators to estimate the item (higher = more accurate, lower = faster)'  [number] ")
+
+	//Property related
+	cmd.Flags().String(flagTokenURI, "", "token_uri of the item [string] (optional)")
+	cmd.Flags().StringSlice(flagPhotos, []string{}, "photos of the item, max 9 [string array] (optional)")
+	cmd.Flags().Int64(flagCondition, 0, "condition of the item (in case the item is NFT only this is 0) (optional)")
+	//Transfer related
+	cmd.Flags().StringSlice(flagShippingRegion, []string{}, "shipping regions  of the item e.g. 'UK,NL,DE' [string array] (optional)")
+	cmd.Flags().Int64(flagShippingCost, 0, "shipping_cost of the item [string] (optional)")
+	cmd.Flags().String(flagLocalPickup, "", "local_pickup location of the item [string] (optional)")
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

@@ -1,4 +1,4 @@
-//! Dummy 256-bits Digest impl.
+/*//! Dummy 256-bits Digest impl.
 //! This digest stores/accepts a value of the proper length.
 //! To be used for / with already hashed values, just to comply with the Digest contract.
 //!
@@ -32,4 +32,4 @@ impl Reset for Identity256 {
     fn reset(&mut self) {
         *self = Self::default();
     }
-}
+}*/

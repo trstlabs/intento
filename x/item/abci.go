@@ -26,8 +26,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			//"title", item.GetTitle(),
 		)
 
-		k.RemoveFromListedItemQueue(ctx, item.Id, item.EndTime)
-		k.RemoveFromItemSeller(ctx, item.Id, item.Seller)
+		k.RemoveFromListedItemQueue(ctx, item.Id, item.ListingDuration.EndTime)
+		k.RemoveFromSellerItems(ctx, item.Id, item.Transfer.Seller)
 		k.DeleteItem(ctx, item.Id)
 
 		ctx.EventManager().EmitEvent(

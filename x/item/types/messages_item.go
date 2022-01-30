@@ -8,22 +8,23 @@ import (
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgCreateItem(creator string, title string, description string, shippingCost int64, localpickup string, estimationcount int64, tags []string, condition int64, shippingRegion []string, depositamount int64, initMsg []byte, autoMsg []byte, photos []string) *MsgCreateItem {
+func NewMsgCreateItem(creator string, title string, description string, shippingCost int64, localPickup string, estimationCount int64, tags []string, condition int64, shippingRegion []string, depositAmount int64, initMsg []byte, autoMsg []byte, photos []string, tokenURI string) *MsgCreateItem {
 	return &MsgCreateItem{
 
 		Creator:         creator,
 		Title:           title,
 		Description:     description,
 		ShippingCost:    shippingCost,
-		LocalPickup:     localpickup,
-		EstimationCount: estimationcount,
+		LocalPickup:     localPickup,
+		EstimationCount: estimationCount,
 		Tags:            tags,
 		Condition:       condition,
 		ShippingRegion:  shippingRegion,
-		DepositAmount:   depositamount,
+		DepositAmount:   depositAmount,
 		InitMsg:         initMsg,
 		AutoMsg:         autoMsg,
 		Photos:          photos,
+		TokenUri:        tokenURI,
 	}
 }
 
@@ -72,11 +73,6 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "A Region cannot be longer than 2")
 		}
 	}
-
-	if msg.ShippingCost == 0 && msg.LocalPickup == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localpickup")
-	}
-
 	if len(msg.Title) > 100 {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Title length too long")
 	}
@@ -100,9 +96,12 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "too many photos")
 	}
 	for _, photo := range msg.Photos {
-		if len(photo) > 200 {
+		if len(photo) > 300 {
 			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "photo url too long")
 		}
+	}
+	if msg.TokenUri == "" && msg.Photos == nil {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "provide either photos or a token URI")
 	}
 	return nil
 }
@@ -264,14 +263,14 @@ func (msg *MsgItemShipping) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgItemResell(seller string, itemid uint64, shippingCost int64, discount int64, localpickup string, shipping_region []string, note string) *MsgItemResell {
+func NewMsgItemResell(seller string, itemid uint64, shippingCost int64, discount int64, localPickup string, shippingRegion []string, note string) *MsgItemResell {
 	return &MsgItemResell{
 		Seller:         seller,
 		Itemid:         itemid,
 		ShippingCost:   shippingCost,
 		Discount:       discount,
-		LocalPickup:    localpickup,
-		ShippingRegion: shipping_region,
+		LocalPickup:    localPickup,
+		ShippingRegion: shippingRegion,
 		Note:           note,
 	}
 }
@@ -315,7 +314,7 @@ func (msg *MsgItemResell) ValidateBasic() error {
 		}
 	}
 	if msg.ShippingCost == 0 && msg.LocalPickup == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localpickup")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localPickup")
 	}
 
 	if len(msg.LocalPickup) > 25 {

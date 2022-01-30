@@ -34,6 +34,7 @@ type createItemRequest struct {
 	InitMsg         []byte   `json:"init_msg"`
 	AutoMsg         []byte   `json:"auto_msg"`
 	Photos          []string `json:"photos"`
+	TokenUri        string   `json:"token_uri"`
 }
 
 func createItemHandler(clientCtx client.Context) http.HandlerFunc {
@@ -79,6 +80,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 		parsedAutoMsg := req.AutoMsg
 
 		parsedPhotos := req.Photos
+		parsedTokenUri := req.TokenUri
 
 		msg := types.NewMsgCreateItem(
 			req.Creator,
@@ -96,6 +98,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 			parsedMsg,
 			parsedAutoMsg,
 			parsedPhotos,
+			parsedTokenUri,
 		)
 
 		tx.WriteGeneratedTxResponse(clientCtx, w, req.BaseReq, msg)

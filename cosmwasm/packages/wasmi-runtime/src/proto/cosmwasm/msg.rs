@@ -30,7 +30,7 @@ pub struct MsgStoreCode {
     pub wasm_byte_code: ::std::vec::Vec<u8>,
     pub source: ::std::string::String,
     pub builder: ::std::string::String,
-    pub contract_period: i64,
+    pub contract_period: ::std::string::String,
     pub title: ::std::string::String,
     pub description: ::std::string::String,
     pub instances: u64,
@@ -154,19 +154,30 @@ impl MsgStoreCode {
         ::std::mem::replace(&mut self.builder, ::std::string::String::new())
     }
 
-    // int64 contract_period = 5;
+    // string contract_period = 5;
 
 
-    pub fn get_contract_period(&self) -> i64 {
-        self.contract_period
+    pub fn get_contract_period(&self) -> &str {
+        &self.contract_period
     }
     pub fn clear_contract_period(&mut self) {
-        self.contract_period = 0;
+        self.contract_period.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_contract_period(&mut self, v: i64) {
+    pub fn set_contract_period(&mut self, v: ::std::string::String) {
         self.contract_period = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_contract_period(&mut self) -> &mut ::std::string::String {
+        &mut self.contract_period
+    }
+
+    // Take field
+    pub fn take_contract_period(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.contract_period, ::std::string::String::new())
     }
 
     // string title = 6;
@@ -259,11 +270,7 @@ impl ::protobuf::Message for MsgStoreCode {
                     ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.builder)?;
                 },
                 5 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_int64()?;
-                    self.contract_period = tmp;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.contract_period)?;
                 },
                 6 => {
                     ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.title)?;
@@ -302,8 +309,8 @@ impl ::protobuf::Message for MsgStoreCode {
         if !self.builder.is_empty() {
             my_size += ::protobuf::rt::string_size(4, &self.builder);
         }
-        if self.contract_period != 0 {
-            my_size += ::protobuf::rt::value_size(5, self.contract_period, ::protobuf::wire_format::WireTypeVarint);
+        if !self.contract_period.is_empty() {
+            my_size += ::protobuf::rt::string_size(5, &self.contract_period);
         }
         if !self.title.is_empty() {
             my_size += ::protobuf::rt::string_size(6, &self.title);
@@ -332,8 +339,8 @@ impl ::protobuf::Message for MsgStoreCode {
         if !self.builder.is_empty() {
             os.write_string(4, &self.builder)?;
         }
-        if self.contract_period != 0 {
-            os.write_int64(5, self.contract_period)?;
+        if !self.contract_period.is_empty() {
+            os.write_string(5, &self.contract_period)?;
         }
         if !self.title.is_empty() {
             os.write_string(6, &self.title)?;
@@ -402,7 +409,7 @@ impl ::protobuf::Message for MsgStoreCode {
                 |m: &MsgStoreCode| { &m.builder },
                 |m: &mut MsgStoreCode| { &mut m.builder },
             ));
-            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt64>(
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
                 "contract_period",
                 |m: &MsgStoreCode| { &m.contract_period },
                 |m: &mut MsgStoreCode| { &mut m.contract_period },
@@ -442,7 +449,7 @@ impl ::protobuf::Clear for MsgStoreCode {
         self.wasm_byte_code.clear();
         self.source.clear();
         self.builder.clear();
-        self.contract_period = 0;
+        self.contract_period.clear();
         self.title.clear();
         self.description.clear();
         self.instances = 0;
@@ -1298,9 +1305,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x02\x20\x01(\x0cR\x0cwasmByteCodeB\x10\xe2\xde\x1f\x0cWASMByteCode\
     \x12\x16\n\x06source\x18\x03\x20\x01(\tR\x06source\x12\x18\n\x07builder\
     \x18\x04\x20\x01(\tR\x07builder\x12'\n\x0fcontract_period\x18\x05\x20\
-    \x01(\x03R\x0econtractPeriod\x12\x14\n\x05title\x18\x06\x20\x01(\tR\x05t\
-    itle\x12\x20\n\x0bdescription\x18\x07\x20\x01(\tR\x0bdescription\x12\x1c\
-    \n\tinstances\x18\x08\x20\x01(\x04R\tinstances:\x04\x88\xa0\x1f\0\"\x80\
+    \x01(\tR\x0econtractPeriod\x12\x14\n\x05title\x18\x06\x20\x01(\tR\x05tit\
+    le\x12\x20\n\x0bdescription\x18\x07\x20\x01(\tR\x0bdescription\x12\x1c\n\
+    \tinstances\x18\x08\x20\x01(\x04R\tinstances:\x04\x88\xa0\x1f\0\"\x80\
     \x03\n\x16MsgInstantiateContract\x12\x16\n\x06sender\x18\x01\x20\x01(\tR\
     \x06sender\x12,\n\x12callback_code_hash\x18\x02\x20\x01(\tR\x10callbackC\
     odeHash\x12#\n\x07code_id\x18\x03\x20\x01(\x04R\x06codeIdB\n\xe2\xde\x1f\

@@ -11,41 +11,58 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/trstlabs/trst/x/item/types";
 
 message Item {
-  string seller = 1;
-  uint64 id = 2;
-  string title = 3; 
-  string description = 4; 
-  int64 shipping_cost = 5;
-  string local_pickup = 6; 
-  int64 estimation_count = 7; 
-  string best_estimator = 8; 
-  int64 estimation_price = 9; 
-  repeated string estimator_list = 10; 
-  repeated int64 estimation_list = 11; 
-  bool transferable = 12; 
-  string buyer = 13; 
-  bool tracking = 14; 
-  string status = 15; 
-  repeated string comments = 16; 
-  repeated string tags = 17; 
-  int64 flags = 18; 
-  int64 condition = 19; 
-  repeated string shipping_region = 20; 
-  int64 rating = 21; 
-  int64 deposit_amount = 22;
-  string creator = 23;
-  string note = 24;
-  int64 discount = 25;
-  google.protobuf.Timestamp submit_time = 26
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-  google.protobuf.Timestamp end_time = 27
-      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-  string contract = 28;
-  int64 estimation_total = 29;
-  repeated string photos = 30;
-  bool is_token = 31;
+  string creator = 1;
+  uint64 id = 3;
+  string title = 4; 
+  string description = 5; 
+  string status = 6; 
+  Estimation estimation = 7;
+  ListingDuration listing_duration = 8;
+  Transfer transfer = 9;
+  Properties properties = 10;
 }
 
+message Estimation {
+  int64 estimation_price = 1; 
+  string best_estimator = 2; 
+  int64 estimation_count = 3; 
+  int64 estimation_total = 4;
+  repeated string estimator_list = 5; 
+  repeated int64 estimation_list = 6; 
+  repeated string comments = 7; 
+  int64 deposit_amount = 8;
+  string contract = 9;
+  int64 flags = 10; 
+}
+
+message ListingDuration {
+  google.protobuf.Timestamp submit_time = 1
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  google.protobuf.Timestamp end_time = 2
+      [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+}
+
+message Transfer {
+  int64 shipping_cost = 1;
+  string local_pickup = 2; 
+  bool tracking = 3; 
+  repeated string shipping_region = 4; 
+  int64 rating = 5; 
+  string note = 6;
+  int64 discount = 7;
+  string buyer = 8; 
+  string seller = 9;
+}
+
+message Properties {
+  int64 condition = 1; 
+  repeated string photos = 2;
+  bool is_token = 3;
+  bool estimation_only  = 4;
+  repeated string tags = 5;
+  string token_uri = 6; 
+  bool transferable = 7; 
+}
 
 
 message MsgCreateItem {
@@ -62,6 +79,7 @@ message MsgCreateItem {
   bytes init_msg = 11;
   bytes auto_msg = 12;
   repeated string photos = 13;
+  string token_uri = 14; 
 }
 
 message MsgUpdateItem {
@@ -117,7 +135,8 @@ message Params {
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "max_active_period,omitempty"
   ];
-  uint64 MaxEstimatorCreatorRatio = 2;
+  int64 MaxEstimatorCreatorRatio = 2;
+  int64 MaxBuyerReward = 3;
 }
 
 message MsgTokenizeItem {

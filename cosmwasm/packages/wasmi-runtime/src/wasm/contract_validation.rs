@@ -7,7 +7,7 @@ use crate::crypto::traits::PubKey;
 use crate::crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER, };
 use crate::wasm::io;
 use crate::wasm::types::{SecretMessage, StdSignDoc};
-use crate::crypto::secp256k1::secp256k1_verify;
+//use crate::crypto::secp256k1::secp256k1_verify;
 use super::types::{CosmWasmMsg, CosmosPubKey, SigInfo, SignDoc};
 
 pub type ContractKey = [u8; CONTRACT_KEY_LENGTH];
@@ -196,28 +196,6 @@ pub fn verify_params(
         sender_public_key.get_address().0.0
     );
 
-   /*  trace!(
-        "sender key  is: {:?}",
-        sender_public_key.amino_bytes().clone()
-    );
-   
-    trace!(
-        "sender key  is: {:?}",
-        sender_public_key.amino_bytes().clone()
-    );
-    trace!(
-        "msg_bytes  is: {:?}",
-        msg_bytes
-    );
-    trace!(
-        "msg_bytes length is: {:?}",
-        msg_bytes.len()
-    );
-
-   secp256k1_verify(msg_bytes, sig_info.signature.as_slice(), &sender_public_key.amino_bytes()).map_err(|err| {
-        warn!("Signature verification failed: {:?}", err);
-        EnclaveError::FailedTxVerification
-    })?;*/
     //keplr direct signer seems to be incompatible with this verification, it keeps failing with 'IncorrectSignature'
   sender_public_key
         .verify_bytes(

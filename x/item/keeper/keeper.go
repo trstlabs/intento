@@ -97,7 +97,7 @@ func (k Keeper) RemoveFromListedItemQueue(ctx sdk.Context, itemid uint64, endTim
 
 /////Seller functions
 
-// BindItemSeller binds a itemid with the seller address
+// BindItemSeller binds a itemid with the seller account address
 func (k Keeper) BindItemSeller(ctx sdk.Context, itemid uint64, seller string) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.Uint64ToByte(itemid)
@@ -106,8 +106,8 @@ func (k Keeper) BindItemSeller(ctx sdk.Context, itemid uint64, seller string) {
 	store.Set(types.ItemSellerKey(itemid, seller), bz)
 }
 
-// RemoveFromListedItemQueue removes a itemid from the seller
-func (k Keeper) RemoveFromItemSeller(ctx sdk.Context, itemid uint64, seller string) {
+// RemoveFromSellerItems removes the binding of an itemid to the seller
+func (k Keeper) RemoveFromSellerItems(ctx sdk.Context, itemid uint64, seller string) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.ItemSellerKey(itemid, seller))
 }

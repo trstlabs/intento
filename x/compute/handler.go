@@ -103,10 +103,9 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	}
 	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, nil, 0)
 	if err != nil {
-		fmt.Printf("err")
+
 		return nil, err
 	}
-	//	fmt.Printf("Initted")
 
 	events := filteredMessageEvents(ctx.EventManager())
 	custom := sdk.Events{sdk.NewEvent(
@@ -118,18 +117,6 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	)}
 	events = append(events, custom.ToABCIEvents()...)
 
-	/*activePeriod := k.GetParams(ctx).MaxActivePeriod
-	submitTime := ctx.BlockHeader().Time
-	endTime := submitTime.Add(activePeriod)
-	var info *types.CodeInfo
-	info = k.GetCodeInfo(ctx, msg.CodeID)
-	if info.EndTime <= endTime {
-		endTime = info.EndTime
-	} else {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Time period invalid for this contract code")
-
-	}*/
-	//var info *types.CodeInfo
 	return &sdk.Result{
 		Data:   contractAddr,
 		Events: events,
@@ -137,7 +124,6 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 }
 
 func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Result, error) {
-	//fmt.Print("handling..")
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -148,10 +134,10 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 		return nil, err
 	}
 	info, _ := k.GetContractInfo(ctx, contract)
-	if info.CodeID == 1 {
+	if info.CodeID < 3 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot execute on internal contract code")
 	}
-	//fmt.Print("executing..")
+
 	res, err := k.Execute(
 		ctx,
 		contract,
@@ -174,7 +160,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract),
 	)}
 	events = append(events, custom.ToABCIEvents()...)
-	fmt.Print("events Execute handled")
+	//fmt.Print("events Execute handled")
 	res.Events = events
 
 	return res, nil
