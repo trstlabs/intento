@@ -58,10 +58,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// IterateListedItemsQueue iterates over the items in the inactive item queue
+// IterateListedItemsByEndTime iterates over the items in the inactive item queue by end time
 // and performs a callback function
-func (k Keeper) IterateListedItemsQueue(ctx sdk.Context, endTime time.Time, cb func(item types.Item) (stop bool)) {
-	iterator := k.ListedItemQueueIterator(ctx, endTime)
+func (k Keeper) IterateListedItemsByEndTime(ctx sdk.Context, endTime time.Time, cb func(item types.Item) (stop bool)) {
+	iterator := k.ListedItemQueueByEndTimeIterator(ctx, endTime)
 
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -74,19 +74,20 @@ func (k Keeper) IterateListedItemsQueue(ctx sdk.Context, endTime time.Time, cb f
 	}
 }
 
-// ListedItemQueueIterator returns an sdk.Iterator for all the items in the Inactive Queue that expire by endTime
-func (k Keeper) ListedItemQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+// ListedItemQueueByEndTimeIterator returns an sdk.Iterator for all the items in the Inactive Queue that expire by endTime
+func (k Keeper) ListedItemQueueByEndTimeIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return store.Iterator(types.ListedItemQueuePrefix, sdk.PrefixEndBytes(types.ListedItemByTimeKey(endTime))) //we check the end of the bites array for the end time
 }
 
 // InsertListedItemQueue Inserts a itemid into the inactive item queue at endTime
-func (k Keeper) InsertListedItemQueue(ctx sdk.Context, itemid uint64, item types.Item, endTime time.Time) {
+func (k Keeper) InsertListedItemQueue(ctx sdk.Context, item types.Item) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&item) //types.Uint64ToByte(itemid)
+	//bz := k.cdc.MustMarshal(&item)
+	bz := types.Uint64ToByte(item.Id)
 
 	//here the key is time+itemid appended (as bytes) and value is itemid in bytes
-	store.Set(types.ListedItemQueueKey(itemid, endTime), bz)
+	store.Set(types.ListedItemQueueKey(item.Id, item.ListingDuration.EndTime), bz)
 }
 
 // RemoveFromListedItemQueue removes a itemid from the Inactive Item Queue
@@ -97,8 +98,8 @@ func (k Keeper) RemoveFromListedItemQueue(ctx sdk.Context, itemid uint64, endTim
 
 /////Seller functions
 
-// BindItemSeller binds a itemid with the seller account address
-func (k Keeper) BindItemSeller(ctx sdk.Context, itemid uint64, seller string) {
+// BindItemToSellerItems binds a itemid with the seller account address
+func (k Keeper) BindItemToSellerItems(ctx sdk.Context, itemid uint64, seller string) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.Uint64ToByte(itemid)
 
@@ -112,8 +113,8 @@ func (k Keeper) RemoveFromSellerItems(ctx sdk.Context, itemid uint64, seller str
 	store.Delete(types.ItemSellerKey(itemid, seller))
 }
 
-// IterateItems iterates all seller items
-func (k Keeper) IterateItems(ctx sdk.Context, seller string, cb func(item types.Item) (stop bool)) {
+// IterateSellerItems iterates all seller items
+func (k Keeper) IterateSellerItems(ctx sdk.Context, seller string, cb func(item types.Item) (stop bool)) {
 	//iterator := k.ItemSellerIterator(ctx, seller)
 	store := ctx.KVStore(k.storeKey)
 
@@ -136,9 +137,40 @@ func (k Keeper) IterateItems(ctx sdk.Context, seller string, cb func(item types.
 	//return //items
 }
 
-// GetAllSellerItems returns all seller items on chain based on the seller
+// IterateListedItems iterates all listed items
+func (k Keeper) IterateListedItems(ctx sdk.Context, cb func(item types.Item) (stop bool)) {
+	//iterator := k.ItemSellerIterator(ctx, seller)
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := sdk.KVStorePrefixIterator(store, types.ListedItemQueuePrefix)
+
+	defer iterator.Close()
+	//store := ctx.KVStore(k.storeKey)
+	for ; iterator.Valid(); iterator.Next() {
+		k.Logger(ctx).Info("iterator", string(iterator.Key()))
+		itemID := store.Get(iterator.Key())
+		item := k.GetItem(ctx, types.GetItemIDFromBytes(itemID))
+
+		if cb(item) {
+			break
+		}
+
+	}
+
+}
+
+// GetAllSellerItems returns all seller items on-chain based on the seller
 func (k Keeper) GetAllSellerItems(ctx sdk.Context, seller string) (items []*types.Item) {
-	k.IterateItems(ctx, seller, func(item types.Item) bool {
+	k.IterateSellerItems(ctx, seller, func(item types.Item) bool {
+		items = append(items, &item)
+		return false
+	})
+	return
+}
+
+// GetAllListedItems returns all listed items on-chain based on the seller
+func (k Keeper) GetAllListedItems(ctx sdk.Context) (items []*types.Item) {
+	k.IterateListedItems(ctx, func(item types.Item) bool {
 		items = append(items, &item)
 		return false
 	})

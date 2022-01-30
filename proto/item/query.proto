@@ -5,7 +5,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 // this line is used by starport scaffolding # 1
 import "item/estimator.proto";
-import "item/buyer.proto";
+//import "item/buyer.proto";
 import "item/item.proto";
 
 option go_package = "github.com/trstlabs/trst/x/item/types";
@@ -19,19 +19,14 @@ service Query {
 	rpc AllProfiles(QueryAllProfilesRequest) returns (QueryAllProfilesResponse) {
 		option (google.api.http).get = "/trstlabs/trst/trst/profiles";
 	}
-
-	//rpc Buyer(QueryGetBuyerRequest) returns (QueryGetBuyerResponse) {
-	//	option (google.api.http).get = "/trstlabs/trst/trst/buyer/{itemid}";
-//	}
-//	rpc BuyerAll(QueryAllBuyerRequest) returns (QueryAllBuyerResponse) {
-//		option (google.api.http).get = "/trstlabs/trst/trst/buyers";
-//	}
-
 	rpc Item(QueryGetItemRequest) returns (QueryGetItemResponse) {
 		option (google.api.http).get = "/trstlabs/trst/trst/item/{id}";
 	}
 	rpc ItemAll(QueryAllItemsRequest) returns (QueryAllItemsResponse) {
 		option (google.api.http).get = "/trstlabs/trst/trst/item";
+	}
+	rpc ItemOwner(QueryGetItemOwnerRequest) returns (QueryGetItemOwnerResponse) {
+		option (google.api.http).get = "/trstlabs/trst/trst/item/{id}/owner";
 	}
 	rpc ListedItemsAll(QueryAllListedItemsRequest) returns (QueryAllListedItemsResponse) {
 		option (google.api.http).get = "/trstlabs/trst/trst/listeditems";
@@ -40,7 +35,7 @@ service Query {
 		option (google.api.http).get = "/trstlabs/trst/trst/selleritems/{seller}";
 	}
 	rpc BuyerItems(QueryBuyerItemsRequest) returns (QueryBuyerItemsResponse) {
-		option (google.api.http).get = "/trstlabs/trst/trst/buyeritems";
+		option (google.api.http).get = "/trstlabs/trst/trst/buyeritems/{buyer}";
 	}
 
 	rpc CodeHash(QueryCodeHashRequest) returns (QueryCodeHashResponse) {
@@ -67,28 +62,18 @@ message QueryAllProfilesResponse {
 	repeated Profile Profile = 1;
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-//message QueryGetBuyerRequest {
-//	uint64 itemid = 1;
-//}
 
-//message QueryGetBuyerResponse {
-//	Buyer Buyer = 1;
-//}
-
-//message QueryAllBuyerRequest {
-//	cosmos.base.query.v1beta1.PageRequest pagination = 1;
-//}
-
-//message QueryAllBuyerResponse {
-//	repeated Buyer Buyer = 1;
-//	cosmos.base.query.v1beta1.PageResponse pagination = 2;
-//}
 message QueryGetItemRequest {
 	uint64 id = 1;
 }
-
 message QueryGetItemResponse {
 	Item Item = 1;
+}
+message QueryGetItemOwnerRequest {
+	uint64 id = 1;
+}
+message QueryGetItemOwnerResponse {
+	string Owner = 1;
 }
 
 message QueryAllItemsRequest {

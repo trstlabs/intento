@@ -220,8 +220,8 @@ func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRes
 	item.ListingDuration.EndTime = ctx.BlockTime().Add(types.DefaultParams().MaxActivePeriod)
 
 	k.SetItem(ctx, item)
-	k.InsertListedItemQueue(ctx, msg.Itemid, item, item.ListingDuration.EndTime)
-	k.BindItemSeller(ctx, msg.Itemid, msg.Seller)
+	k.InsertListedItemQueue(ctx, item)
+	k.BindItemToSellerItems(ctx, msg.Itemid, msg.Seller)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemResellable, sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(msg.Itemid, 10))))

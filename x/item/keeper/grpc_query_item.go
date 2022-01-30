@@ -51,13 +51,11 @@ func (k Keeper) ListedItemsAll(c context.Context, req *types.QueryAllListedItems
 	itemStore := prefix.NewStore(store, types.ListedItemQueuePrefix)
 
 	pageRes, err := query.Paginate(itemStore, req.Pagination, func(key []byte, value []byte) error {
-		var item types.Item
-		if err := k.cdc.Unmarshal(value, &item); err != nil {
-			return err
-		}
 
-		//k.cdc.MustUnmarshal(value, &item) //strconv.FormatUint(types.GetItemIDFromBytes(value), 10))
+		item := k.GetItem(ctx, types.GetItemIDFromBytes(value))
+
 		items = append(items, &item)
+
 		return nil
 
 	})
@@ -84,6 +82,17 @@ func (k Keeper) Item(c context.Context, req *types.QueryGetItemRequest) (*types.
 	return &types.QueryGetItemResponse{Item: &item}, nil
 }
 
+func (k Keeper) ItemOwner(c context.Context, req *types.QueryGetItemOwnerRequest) (*types.QueryGetItemOwnerResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	owner := k.GetItemOwner(ctx, req.Id)
+	return &types.QueryGetItemOwnerResponse{Owner: owner}, nil
+}
+
 func (k Keeper) SellerItems(c context.Context, req *types.QuerySellerItemsRequest) (*types.QuerySellerItemsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -93,9 +102,6 @@ func (k Keeper) SellerItems(c context.Context, req *types.QuerySellerItemsReques
 	ctx := sdk.UnwrapSDKContext(c)
 
 	items := k.GetAllSellerItems(ctx, req.Seller)
-
-	//store := ctx.KVStore(k.storeKey)
-	//itemStore := prefix.NewStore(store, types.ListedItemQueuePrefix)
 
 	return &types.QuerySellerItemsResponse{Item: items}, nil
 

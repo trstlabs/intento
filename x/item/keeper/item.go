@@ -95,19 +95,15 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 		},
 	}
 
-	k.BindItemSeller(ctx, item.Id, msg.Creator)
+	k.BindItemToSellerItems(ctx, item.Id, msg.Creator)
 	//works 100% with endtime tx.BlockHeader().Time
-	k.InsertListedItemQueue(ctx, item.Id, item, endTime)
+	k.InsertListedItemQueue(ctx, item)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(types.EventTypeItemCreated, sdk.NewAttribute(types.AttributeKeyCreator, item.Creator), sdk.NewAttribute(types.AttributeKeyItemID, strconv.FormatUint(item.Id, 10))),
 	)
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
-	key := append(types.KeyPrefix(types.ItemKey), types.Uint64ToByte(item.Id)...)
-	value := k.cdc.MustMarshal(&item)
-	store.Set(key, value)
-
+	k.SetItem(ctx, item)
 	// Update item count
 	k.SetItemCount(ctx, count+1)
 
@@ -171,7 +167,7 @@ func (k Keeper) DeleteItem(ctx sdk.Context, key uint64) {
 }
 
 // GetAllItems returns all items
-func (k Keeper) GetAllItems(ctx sdk.Context) (msgs []types.Item) {
+func (k Keeper) GetAllItems(ctx sdk.Context) (items []types.Item) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ItemKey))
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefix(types.ItemKey))
 
@@ -180,23 +176,7 @@ func (k Keeper) GetAllItems(ctx sdk.Context) (msgs []types.Item) {
 	for ; iterator.Valid(); iterator.Next() {
 		var msg types.Item
 		k.cdc.MustUnmarshal(iterator.Value(), &msg)
-		msgs = append(msgs, msg)
-	}
-
-	return
-}
-
-// GetAllListedItems returns all inactive item
-func (k Keeper) GetAllListedItems(ctx sdk.Context) (msgs []*types.Item) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.ListedItemQueuePrefix)
-	iterator := sdk.KVStorePrefixIterator(store, types.ListedItemQueuePrefix)
-
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var msg types.Item
-		k.cdc.MustUnmarshal(iterator.Value(), &msg)
-		msgs = append(msgs, &msg)
+		items = append(items, msg)
 	}
 
 	return

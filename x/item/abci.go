@@ -19,7 +19,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	logger := k.Logger(ctx)
 
 	// delete inactive items from store and its deposits
-	k.IterateListedItemsQueue(ctx, ctx.BlockHeader().Time, func(item types.Item) bool {
+	k.IterateListedItemsByEndTime(ctx, ctx.BlockHeader().Time, func(item types.Item) bool {
 		logger.Info(
 			"Item was expired",
 			"item", item.Id,

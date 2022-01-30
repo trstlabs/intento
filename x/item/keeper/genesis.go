@@ -31,7 +31,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	for _, elem := range state.ItemList {
 
 		k.SetItem(ctx, *elem)
-		k.InsertListedItemQueue(ctx, elem.Id, *elem, elem.ListingDuration.EndTime)
+		k.InsertListedItemQueue(ctx, *elem)
 		//if (elem.Buyer != "") {k.SetBuyer(ctx, elem.Id, elem.Buyer)}
 
 	}

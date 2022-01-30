@@ -3,7 +3,7 @@ package trstlabs.trst.trst;
 
 // this line is used by starport scaffolding # genesis/proto/import
 import "item/estimator.proto";
-import "item/buyer.proto";
+//import "item/buyer.proto";
 import "item/item.proto";
 import "gogoproto/gogo.proto";
 

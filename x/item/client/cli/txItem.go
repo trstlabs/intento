@@ -1,17 +1,10 @@
 package cli
 
 import (
-	//"crypto/sha256"
-	//"encoding/hex"
-	//"fmt"
 	"context"
 	"encoding/hex"
 	"encoding/json"
 	"strings"
-
-	//sdk "github.com/cosmos/cosmos-sdk/types"
-
-	//sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"strconv"
 
@@ -22,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/trstlabs/trst/x/item/types"
 
-	//"cosmos/base/v1beta1/coin.proto"
 	wasmUtils "github.com/trstlabs/trst/x/compute/client/utils"
 )
 
@@ -85,9 +77,13 @@ func CmdCreateItem() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			var codeId uint64 = 1
+			if argsLocalPickup == "" && argsShippingRegion == nil {
+				codeId = 2
+			}
 			queryClient := types.NewQueryClient(cliCtx)
 			params := &types.QueryCodeHashRequest{
-				Codeid: 1,
+				Codeid: codeId,
 			}
 			res, err := queryClient.CodeHash(context.Background(), params)
 			if err != nil {
