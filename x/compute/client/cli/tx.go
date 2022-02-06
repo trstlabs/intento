@@ -397,7 +397,7 @@ func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []b
 	if err != nil {
 		return err
 	}
-	fmt.Print("Executing msg...")
+	//	fmt.Print("Executing msg...")
 	var encryptedMsg []byte
 	if genOnly {
 		execMsg.CodeHash = []byte(codeHash)
@@ -426,7 +426,7 @@ func ExecuteWithData(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []b
 		Msg:              encryptedMsg,
 	}
 
-	fmt.Printf("Execute message before is %s \n", string(encryptedMsg))
+	//	fmt.Printf("Execute message before is %s \n", string(encryptedMsg))
 
 	return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), &msgExec)
 }

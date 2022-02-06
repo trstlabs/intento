@@ -8,14 +8,14 @@ import (
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgCreateItem(creator string, title string, description string, shippingCost int64, localPickup string, estimationCount int64, tags []string, condition int64, shippingRegion []string, depositAmount int64, initMsg []byte, autoMsg []byte, photos []string, tokenURI string) *MsgCreateItem {
+func NewMsgCreateItem(creator string, title string, description string, shippingCost int64, location string, estimationCount int64, tags []string, condition int64, shippingRegion []string, depositAmount int64, initMsg []byte, autoMsg []byte, photos []string, tokenURI string) *MsgCreateItem {
 	return &MsgCreateItem{
 
 		Creator:         creator,
 		Title:           title,
 		Description:     description,
 		ShippingCost:    shippingCost,
-		LocalPickup:     localPickup,
+		Location:        location,
 		EstimationCount: estimationCount,
 		Tags:            tags,
 		Condition:       condition,
@@ -65,24 +65,24 @@ func (msg *MsgCreateItem) ValidateBasic() error {
 	}
 
 	if len(msg.ShippingRegion) > 9 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Region list too long")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "region list too long")
 	}
 
 	for _, region := range msg.ShippingRegion {
 		if len(region) > 2 {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "A Region cannot be longer than 2")
+			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "a Region cannot be longer than 2")
 		}
 	}
 	if len(msg.Title) > 100 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Title length too long")
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "title length too long")
 	}
 
 	if len(msg.Description) > 1000 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Description length too long")
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "description length too long")
 	}
 
-	if len(msg.LocalPickup) > 48 {
-		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup location too long")
+	if len(msg.Location) > 48 {
+		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "location too long")
 	}
 
 	if msg.Condition > 5 {
@@ -263,13 +263,13 @@ func (msg *MsgItemShipping) ValidateBasic() error {
 
 var _ sdk.Msg = &MsgCreateItem{}
 
-func NewMsgItemResell(seller string, itemid uint64, shippingCost int64, discount int64, localPickup string, shippingRegion []string, note string) *MsgItemResell {
+func NewMsgItemResell(seller string, itemid uint64, shippingCost int64, discount int64, location string, shippingRegion []string, note string) *MsgItemResell {
 	return &MsgItemResell{
 		Seller:         seller,
 		Itemid:         itemid,
 		ShippingCost:   shippingCost,
 		Discount:       discount,
-		LocalPickup:    localPickup,
+		Location:       location,
 		ShippingRegion: shippingRegion,
 		Note:           note,
 	}
@@ -313,11 +313,11 @@ func (msg *MsgItemResell) ValidateBasic() error {
 			return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Region too long")
 		}
 	}
-	if msg.ShippingCost == 0 && msg.LocalPickup == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or localPickup")
+	if msg.ShippingCost == 0 && msg.Location == "" {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Provide either shipping or location")
 	}
 
-	if len(msg.LocalPickup) > 25 {
+	if len(msg.Location) > 25 {
 		return sdkerrors.Wrap(sdkerrors.ErrMemoTooLarge, "Local pickup too long")
 	}
 

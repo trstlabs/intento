@@ -134,7 +134,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 		return nil, err
 	}
 	info, _ := k.GetContractInfo(ctx, contract)
-	if info.CodeID < 3 {
+	if info.CodeID < 2 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot execute on internal contract code")
 	}
 

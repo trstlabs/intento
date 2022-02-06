@@ -337,6 +337,8 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ItemParams.MaxActivePeriod = time.Hour * 24 * 30
 	genParams.ItemParams.MaxEstimatorCreatorRatio = 50
 	genParams.ItemParams.MaxBuyerReward = 5000000000
+	genParams.ItemParams.EstimationRatioForNewItem = 0
+	genParams.ItemParams.CreateItemFee = 0
 
 	//claim
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime.Add(time.Hour * 24 * 365) // 1 year (will be changed by gov)

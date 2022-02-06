@@ -44,7 +44,7 @@ message ListingDuration {
 
 message Transfer {
   int64 shipping_cost = 1;
-  string local_pickup = 2; 
+  string location = 2; 
   bool tracking = 3; 
   repeated string shipping_region = 4; 
   int64 rating = 5; 
@@ -70,7 +70,7 @@ message MsgCreateItem {
   string title = 2; 
   string description = 3; 
   int64 shipping_cost = 4; 
-  string local_pickup = 5; 
+  string location = 5; 
   int64 estimation_count = 6; 
   repeated string tags = 7; 
   int64 condition = 8; 
@@ -86,7 +86,7 @@ message MsgUpdateItem {
   string seller = 1;
   uint64 id = 2;
   int64 shipping_cost = 3;
-  string local_pickup = 4; 
+  string location = 4; 
   repeated string shipping_region = 5; 
 }
 
@@ -119,7 +119,7 @@ message MsgItemResell {
   uint64 itemid = 2;
   int64 shipping_cost = 3;
   int64 discount = 4;
-  string local_pickup = 5;
+  string location = 5;
   repeated string shipping_region = 6; 
   string note = 7;
 }
@@ -136,7 +136,10 @@ message Params {
     (gogoproto.jsontag)     = "max_active_period,omitempty"
   ];
   int64 MaxEstimatorCreatorRatio = 2;
-  int64 MaxBuyerReward = 3;
+  int64 EstimationRatioForNewItem = 3;
+  int64 CreateItemFee = 4;
+  int64 MaxBuyerReward = 5;
+
 }
 
 message MsgTokenizeItem {

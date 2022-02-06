@@ -95,7 +95,7 @@ func (k Keeper) CreateEstimation(ctx sdk.Context, msg types.MsgCreateEstimation)
 		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract address invalid")
 	}
 
-	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.EstimateMsg, sdk.NewCoins(sdk.NewInt64Coin("utrst", msg.Deposit)), nil)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.EstimateMsg, sdk.NewCoins(sdk.NewInt64Coin(types.Denom, msg.Deposit)), nil)
 	if err != nil {
 		return sdkerrors.Wrap(err, "Execution failed")
 	}
@@ -207,7 +207,7 @@ func (k Keeper) Flag(ctx sdk.Context, item types.Item, msg types.MsgFlagItem) er
 		return err ///panic(err)
 	}
 	//fmt.Printf("executing contract: %s", item.Contract)
-	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.FlagMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.FlagMsg, sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: ")
 		//return sdkerrors.Wrapf(types.ErrInvalid, "err %s must be greater %d ",err, msg.Flagmsg)
@@ -255,7 +255,7 @@ func (k Keeper) DeleteEncryptedEstimation(ctx sdk.Context, item types.Item, msg 
 		return err ///panic(err)
 	}
 	fmt.Printf("executing contract: %s", item.Estimation.Contract)
-	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.DeleteMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, estimatorAddress, msg.DeleteMsg, sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: ")
 		return err ///panic(err)

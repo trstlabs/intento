@@ -18,24 +18,13 @@ service Query {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}";
     }
      rpc ContractResult (QueryContractResultRequest) returns (QueryContractResultResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/result/{address}";
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/result";
     }
-    /*
-    rpc ContractHistory (QueryContractHistoryRequest) returns (QueryContractHistoryResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/history";
-    }
-    */
+
     rpc ContractsByCode (QueryContractsByCodeRequest) returns (QueryContractsByCodeResponse) {
         option (google.api.http).get = "/compute/v1beta1/code/{code_id}/contracts";
     }
-    /*
-    rpc AllContractState (QueryAllContractStateRequest) returns (QueryAllContractStateResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/state";
-    }
-    rpc RawContractState (QueryRawContractStateRequest) returns (QueryRawContractStateResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/raw/{query_data}";
-    }
-    */
+  
     rpc SmartContractState (QuerySmartContractStateRequest) returns (QuerySmartContractStateResponse) {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}/smart/{query_data}";
     }
@@ -50,12 +39,11 @@ service Query {
 // QueryContractInfoRequest is the request type for the Query/ContractInfo RPC method
 message QueryContractInfoRequest {
     // address is the address of the contract to query
-    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    string address = 1;
 }
 // QueryContractInfoResponse is the response type for the Query/ContractInfo RPC method
 message QueryContractInfoResponse {
-    // address is the address of the contract
-    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+
     ContractInfo ContractInfo = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = ""];
 }
 
@@ -63,65 +51,26 @@ message QueryContractInfoResponse {
 // QueryContractResultRequest is the request type for the Query/ContractrResult RPC method
 message QueryContractResultRequest {
     // address is the address of the contract to query
-    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    string address = 1;
 }
 // QueryContractResultResponse is the response type for the Query/ContractrResult RPC method
 message QueryContractResultResponse {
-    // address is the address of the contract
-    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    bytes data = 2;
-    string log = 3;
+    bytes data = 1;
+    string log = 2;
 }
-
-message QueryContractHistoryRequest {
-    // address is the address of the contract to query
-    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-}
-
-/*
-message QueryContractHistoryResponse {
-    repeated ContractCodeHistoryEntry entries = 1 [(gogoproto.nullable) = false];
-}
-*/
 
 message QueryContractsByCodeRequest {
     uint64 code_id = 1; // grpc-gateway_out does not support Go style CodID
 }
 
-// ContractInfoWithAddress adds the address (key) to the ContractInfo representation
-//message ContractInfoWithAddress {
-//    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-//    ContractInfo ContractInfo = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = ""];
-//}
-
 message QueryContractsByCodeResponse {
     repeated ContractInfoWithAddress contract_infos = 1 [(gogoproto.nullable) = false];
 }
 
-/*
-message QueryAllContractStateRequest {
-    // address is the address of the contract
-    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-}
-
-message QueryAllContractStateResponse {
-    repeated Model models = 1 [(gogoproto.nullable) = false];
-}
-
-message QueryRawContractStateRequest {
-    // address is the address of the contract
-    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    bytes query_data = 2;
-}
-
-message QueryRawContractStateResponse {
-    bytes data = 1;
-}
-*/
 
 message QuerySmartContractStateRequest {
     // address is the address of the contract
-    bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    string address = 1;
     bytes query_data = 2;
 }
 
