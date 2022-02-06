@@ -34,7 +34,7 @@ func ExportAirdropSnapshotCmd() *cobra.Command {
 		Short: "Export a quadratic fairdrop snapshot from provided genesis exports",
 		Long: `Export a quadratic fairdrop snapshot from provided  genesis exports
 Example:
-trstd export-airdrop-snapshot  ~/genesisfiles/genesis.cosmoshub-4.json ~/genesisfiles/genesis_secret_3.json  ~/genesisfiles/columbus-5-genesis.json ./snapshot.json
+trstd export-airdrop-snapshot ~/genesisfiles/genesis.cosmoshub-4.json ~/genesisfiles/genesis_secret_3.json  ~/genesisfiles/columbus-5-genesis.json ./snapshot.json
 	- Check input genesis:
 		file is at ~/.tsrtd/config/genesis.json
 	- Snapshot

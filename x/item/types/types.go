@@ -1,5 +1,7 @@
 package types
 
+const Denom = "utrst"
+
 // WasmConfig is the extra config required for wasm
 type WasmConfig struct {
 	SmartQueryGasLimit uint64 `mapstructure:"query_gas_limit"`

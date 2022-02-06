@@ -41,7 +41,7 @@ func handleMsgDeleteItem(ctx sdk.Context, k keeper.Keeper, msg *types.MsgDeleteI
 
 		item.Estimation = &types.Estimation{}
 		item.Transfer.ShippingCost = 0
-		item.Transfer.LocalPickup = ""
+		item.Transfer.Location = ""
 		item.Transfer.Buyer = ""
 		item.Transfer.Tracking = false
 		item.Transfer.ShippingRegion = nil
@@ -156,7 +156,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 	if msg.Tracking {
 		if item.Creator == item.Transfer.Seller {
 
-			maxRewardCoin := sdk.NewCoin("utrst", sdk.NewInt(item.Transfer.ShippingCost))
+			maxRewardCoin := sdk.NewCoin(types.Denom, sdk.NewInt(item.Transfer.ShippingCost))
 			k.HandleBuyerReward(ctx, maxRewardCoin, sdk.AccAddress(item.Transfer.Buyer))
 
 			item.Estimation.BestEstimator = ""
@@ -164,7 +164,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		}
 		//make payment to seller
 		CreaterPayoutAndShipping := bigIntEstimationPrice.Add(bigIntShipping)
-		paymentSellerCoin := sdk.NewCoin("utrst", CreaterPayoutAndShipping)
+		paymentSellerCoin := sdk.NewCoin(types.Denom, CreaterPayoutAndShipping)
 
 		k.SendPaymentToAccount(ctx, item.Transfer.Seller, paymentSellerCoin)
 		k.RemoveFromListedItemQueue(ctx, item.Id, item.ListingDuration.EndTime)
@@ -173,7 +173,7 @@ func handleMsgItemShipping(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemS
 		//k.SetBuyer(ctx, buyer)
 	} else {
 		repayment := bigIntEstimationPrice.Add(bigIntShipping)
-		repaymentCoin := sdk.NewCoin("utrst", repayment)
+		repaymentCoin := sdk.NewCoin(types.Denom, repayment)
 
 		k.SendPaymentToAccount(ctx, item.Transfer.Buyer, repaymentCoin)
 
@@ -210,7 +210,7 @@ func handleMsgItemResell(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRes
 
 	item.Transfer.Seller = msg.Seller
 	item.Transfer.ShippingCost = msg.ShippingCost
-	item.Transfer.LocalPickup = msg.LocalPickup
+	item.Transfer.Location = msg.Location
 	item.Transfer.ShippingRegion = msg.ShippingRegion
 	item.Transfer.Discount = msg.Discount
 	item.Transfer.Note = msg.Note

@@ -18,11 +18,16 @@ import (
 	"github.com/trstlabs/trst/x/item/types"
 )
 
+const (
+	flagEstimationOnly = "estimation-only"
+	flagInterested     = "interested"
+)
+
 func CmdCreateEstimation() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-estimation [estimation] [deposit] [interested] [comment] [itemid]",
+		Use:   "create-estimation [estimation] [deposit amount] [comment] [itemid]",
 		Short: "Creates a new estimation",
-		Args:  cobra.ExactArgs(5),
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -35,7 +40,7 @@ func CmdCreateEstimation() *cobra.Command {
 			wasmCtx := wasmUtils.WASMContext{CLIContext: clientCtx}
 			estimateMsg := types.TrustlessMsg{}
 
-			estimation := map[string]string{"estimation_amount": args[0], "comment": args[3]}
+			estimation := map[string]string{"estimation_amount": args[0], "comment": args[2]}
 
 			message := map[string]interface{}{"create_estimation": estimation}
 
@@ -47,8 +52,13 @@ func CmdCreateEstimation() *cobra.Command {
 			//fmt.Printf("json message: %X\n", estimateMsg.Msg)
 			//estimateMsg.Msg = []byte("{ amount:" + args[0] + ",comment:" + args[1] + "}")
 			queryClient := types.NewQueryClient(clientCtx)
+			estimationOnly, _ := cmd.Flags().GetBool(flagEstimationOnly)
+			var codeId uint64 = 1
+			if estimationOnly {
+				codeId = 2
+			}
 			params := &types.QueryCodeHashRequest{
-				Codeid: 1,
+				Codeid: codeId,
 			}
 			res, err := queryClient.CodeHash(context.Background(), params)
 			if err != nil {
@@ -66,12 +76,11 @@ func CmdCreateEstimation() *cobra.Command {
 			}
 
 			argsDeposit, _ := strconv.ParseInt(args[1], 10, 64)
-			interested := false
-			if args[2] == "1" {
-				interested = true
-			}
+
+			interested, _ := cmd.Flags().GetBool(flagInterested)
+
 			//argsComment := string(args[3])
-			argsItemID, err := strconv.ParseUint(args[4], 10, 64)
+			argsItemID, err := strconv.ParseUint(args[3], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -83,7 +92,8 @@ func CmdCreateEstimation() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
+	cmd.Flags().Bool(flagEstimationOnly, false, "for an item that is estimation-only (has no shipping or location set")
+	cmd.Flags().Bool(flagInterested, false, "for an item that is estimation-only (has no shipping or location set")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -151,8 +161,13 @@ func CmdDeleteEstimation() *cobra.Command {
 
 			//quite a long way to get a single value, however we can't directy access the keeper
 			queryClient := types.NewQueryClient(cliCtx)
+			estimationOnly, _ := cmd.Flags().GetBool(flagEstimationOnly)
+			var codeId uint64 = 1
+			if estimationOnly {
+				codeId = 2
+			}
 			params := &types.QueryCodeHashRequest{
-				Codeid: 1,
+				Codeid: codeId,
 			}
 			res, err := queryClient.CodeHash(context.Background(), params)
 			if err != nil {
@@ -173,6 +188,7 @@ func CmdDeleteEstimation() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), msg)
 		},
 	}
+	cmd.Flags().Bool(flagEstimationOnly, false, "for an item that is estimation-only (has no shipping or location set")
 
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -210,8 +226,13 @@ func CmdFlagItem() *cobra.Command {
 
 			//quite a long way to get a single value, however we can't directy access the keeper
 			queryClient := types.NewQueryClient(cliCtx)
+			estimationOnly, _ := cmd.Flags().GetBool(flagEstimationOnly)
+			var codeId uint64 = 1
+			if estimationOnly {
+				codeId = 2
+			}
 			params := &types.QueryCodeHashRequest{
-				Codeid: 1,
+				Codeid: codeId,
 			}
 			res, err := queryClient.CodeHash(context.Background(), params)
 			if err != nil {
@@ -233,6 +254,7 @@ func CmdFlagItem() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), msg)
 		},
 	}
+	cmd.Flags().Bool(flagEstimationOnly, false, "for an item that is estimation-only (has no shipping or location set")
 
 	flags.AddTxFlagsToCmd(cmd)
 

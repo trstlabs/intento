@@ -1305,7 +1305,7 @@ impl ::protobuf::reflect::ProtobufValue for ListingDuration {
 pub struct Transfer {
     // message fields
     pub shipping_cost: i64,
-    pub local_pickup: ::std::string::String,
+    pub location: ::std::string::String,
     pub tracking: bool,
     pub shipping_region: ::protobuf::RepeatedField<::std::string::String>,
     pub rating: i64,
@@ -1344,30 +1344,30 @@ impl Transfer {
         self.shipping_cost = v;
     }
 
-    // string local_pickup = 2;
+    // string location = 2;
 
 
-    pub fn get_local_pickup(&self) -> &str {
-        &self.local_pickup
+    pub fn get_location(&self) -> &str {
+        &self.location
     }
-    pub fn clear_local_pickup(&mut self) {
-        self.local_pickup.clear();
+    pub fn clear_location(&mut self) {
+        self.location.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_local_pickup(&mut self, v: ::std::string::String) {
-        self.local_pickup = v;
+    pub fn set_location(&mut self, v: ::std::string::String) {
+        self.location = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_local_pickup(&mut self) -> &mut ::std::string::String {
-        &mut self.local_pickup
+    pub fn mut_location(&mut self) -> &mut ::std::string::String {
+        &mut self.location
     }
 
     // Take field
-    pub fn take_local_pickup(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.local_pickup, ::std::string::String::new())
+    pub fn take_location(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.location, ::std::string::String::new())
     }
 
     // bool tracking = 3;
@@ -1536,7 +1536,7 @@ impl ::protobuf::Message for Transfer {
                     self.shipping_cost = tmp;
                 },
                 2 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.local_pickup)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.location)?;
                 },
                 3 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
@@ -1586,8 +1586,8 @@ impl ::protobuf::Message for Transfer {
         if self.shipping_cost != 0 {
             my_size += ::protobuf::rt::value_size(1, self.shipping_cost, ::protobuf::wire_format::WireTypeVarint);
         }
-        if !self.local_pickup.is_empty() {
-            my_size += ::protobuf::rt::string_size(2, &self.local_pickup);
+        if !self.location.is_empty() {
+            my_size += ::protobuf::rt::string_size(2, &self.location);
         }
         if self.tracking != false {
             my_size += 2;
@@ -1619,8 +1619,8 @@ impl ::protobuf::Message for Transfer {
         if self.shipping_cost != 0 {
             os.write_int64(1, self.shipping_cost)?;
         }
-        if !self.local_pickup.is_empty() {
-            os.write_string(2, &self.local_pickup)?;
+        if !self.location.is_empty() {
+            os.write_string(2, &self.location)?;
         }
         if self.tracking != false {
             os.write_bool(3, self.tracking)?;
@@ -1687,9 +1687,9 @@ impl ::protobuf::Message for Transfer {
                 |m: &mut Transfer| { &mut m.shipping_cost },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                "local_pickup",
-                |m: &Transfer| { &m.local_pickup },
-                |m: &mut Transfer| { &mut m.local_pickup },
+                "location",
+                |m: &Transfer| { &m.location },
+                |m: &mut Transfer| { &mut m.location },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
                 "tracking",
@@ -1743,7 +1743,7 @@ impl ::protobuf::Message for Transfer {
 impl ::protobuf::Clear for Transfer {
     fn clear(&mut self) {
         self.shipping_cost = 0;
-        self.local_pickup.clear();
+        self.location.clear();
         self.tracking = false;
         self.shipping_region.clear();
         self.rating = 0;
@@ -2155,7 +2155,7 @@ pub struct MsgCreateItem {
     pub title: ::std::string::String,
     pub description: ::std::string::String,
     pub shipping_cost: i64,
-    pub local_pickup: ::std::string::String,
+    pub location: ::std::string::String,
     pub estimation_count: i64,
     pub tags: ::protobuf::RepeatedField<::std::string::String>,
     pub condition: i64,
@@ -2274,30 +2274,30 @@ impl MsgCreateItem {
         self.shipping_cost = v;
     }
 
-    // string local_pickup = 5;
+    // string location = 5;
 
 
-    pub fn get_local_pickup(&self) -> &str {
-        &self.local_pickup
+    pub fn get_location(&self) -> &str {
+        &self.location
     }
-    pub fn clear_local_pickup(&mut self) {
-        self.local_pickup.clear();
+    pub fn clear_location(&mut self) {
+        self.location.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_local_pickup(&mut self, v: ::std::string::String) {
-        self.local_pickup = v;
+    pub fn set_location(&mut self, v: ::std::string::String) {
+        self.location = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_local_pickup(&mut self) -> &mut ::std::string::String {
-        &mut self.local_pickup
+    pub fn mut_location(&mut self) -> &mut ::std::string::String {
+        &mut self.location
     }
 
     // Take field
-    pub fn take_local_pickup(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.local_pickup, ::std::string::String::new())
+    pub fn take_location(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.location, ::std::string::String::new())
     }
 
     // int64 estimation_count = 6;
@@ -2525,7 +2525,7 @@ impl ::protobuf::Message for MsgCreateItem {
                     self.shipping_cost = tmp;
                 },
                 5 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.local_pickup)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.location)?;
                 },
                 6 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
@@ -2590,8 +2590,8 @@ impl ::protobuf::Message for MsgCreateItem {
         if self.shipping_cost != 0 {
             my_size += ::protobuf::rt::value_size(4, self.shipping_cost, ::protobuf::wire_format::WireTypeVarint);
         }
-        if !self.local_pickup.is_empty() {
-            my_size += ::protobuf::rt::string_size(5, &self.local_pickup);
+        if !self.location.is_empty() {
+            my_size += ::protobuf::rt::string_size(5, &self.location);
         }
         if self.estimation_count != 0 {
             my_size += ::protobuf::rt::value_size(6, self.estimation_count, ::protobuf::wire_format::WireTypeVarint);
@@ -2638,8 +2638,8 @@ impl ::protobuf::Message for MsgCreateItem {
         if self.shipping_cost != 0 {
             os.write_int64(4, self.shipping_cost)?;
         }
-        if !self.local_pickup.is_empty() {
-            os.write_string(5, &self.local_pickup)?;
+        if !self.location.is_empty() {
+            os.write_string(5, &self.location)?;
         }
         if self.estimation_count != 0 {
             os.write_int64(6, self.estimation_count)?;
@@ -2727,9 +2727,9 @@ impl ::protobuf::Message for MsgCreateItem {
                 |m: &mut MsgCreateItem| { &mut m.shipping_cost },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                "local_pickup",
-                |m: &MsgCreateItem| { &m.local_pickup },
-                |m: &mut MsgCreateItem| { &mut m.local_pickup },
+                "location",
+                |m: &MsgCreateItem| { &m.location },
+                |m: &mut MsgCreateItem| { &mut m.location },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt64>(
                 "estimation_count",
@@ -2796,7 +2796,7 @@ impl ::protobuf::Clear for MsgCreateItem {
         self.title.clear();
         self.description.clear();
         self.shipping_cost = 0;
-        self.local_pickup.clear();
+        self.location.clear();
         self.estimation_count = 0;
         self.tags.clear();
         self.condition = 0;
@@ -2828,7 +2828,7 @@ pub struct MsgUpdateItem {
     pub seller: ::std::string::String,
     pub id: u64,
     pub shipping_cost: i64,
-    pub local_pickup: ::std::string::String,
+    pub location: ::std::string::String,
     pub shipping_region: ::protobuf::RepeatedField<::std::string::String>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
@@ -2902,30 +2902,30 @@ impl MsgUpdateItem {
         self.shipping_cost = v;
     }
 
-    // string local_pickup = 4;
+    // string location = 4;
 
 
-    pub fn get_local_pickup(&self) -> &str {
-        &self.local_pickup
+    pub fn get_location(&self) -> &str {
+        &self.location
     }
-    pub fn clear_local_pickup(&mut self) {
-        self.local_pickup.clear();
+    pub fn clear_location(&mut self) {
+        self.location.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_local_pickup(&mut self, v: ::std::string::String) {
-        self.local_pickup = v;
+    pub fn set_location(&mut self, v: ::std::string::String) {
+        self.location = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_local_pickup(&mut self) -> &mut ::std::string::String {
-        &mut self.local_pickup
+    pub fn mut_location(&mut self) -> &mut ::std::string::String {
+        &mut self.location
     }
 
     // Take field
-    pub fn take_local_pickup(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.local_pickup, ::std::string::String::new())
+    pub fn take_location(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.location, ::std::string::String::new())
     }
 
     // repeated string shipping_region = 5;
@@ -2981,7 +2981,7 @@ impl ::protobuf::Message for MsgUpdateItem {
                     self.shipping_cost = tmp;
                 },
                 4 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.local_pickup)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.location)?;
                 },
                 5 => {
                     ::protobuf::rt::read_repeated_string_into(wire_type, is, &mut self.shipping_region)?;
@@ -3007,8 +3007,8 @@ impl ::protobuf::Message for MsgUpdateItem {
         if self.shipping_cost != 0 {
             my_size += ::protobuf::rt::value_size(3, self.shipping_cost, ::protobuf::wire_format::WireTypeVarint);
         }
-        if !self.local_pickup.is_empty() {
-            my_size += ::protobuf::rt::string_size(4, &self.local_pickup);
+        if !self.location.is_empty() {
+            my_size += ::protobuf::rt::string_size(4, &self.location);
         }
         for value in &self.shipping_region {
             my_size += ::protobuf::rt::string_size(5, &value);
@@ -3028,8 +3028,8 @@ impl ::protobuf::Message for MsgUpdateItem {
         if self.shipping_cost != 0 {
             os.write_int64(3, self.shipping_cost)?;
         }
-        if !self.local_pickup.is_empty() {
-            os.write_string(4, &self.local_pickup)?;
+        if !self.location.is_empty() {
+            os.write_string(4, &self.location)?;
         }
         for v in &self.shipping_region {
             os.write_string(5, &v)?;
@@ -3088,9 +3088,9 @@ impl ::protobuf::Message for MsgUpdateItem {
                 |m: &mut MsgUpdateItem| { &mut m.shipping_cost },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                "local_pickup",
-                |m: &MsgUpdateItem| { &m.local_pickup },
-                |m: &mut MsgUpdateItem| { &mut m.local_pickup },
+                "location",
+                |m: &MsgUpdateItem| { &m.location },
+                |m: &mut MsgUpdateItem| { &mut m.location },
             ));
             fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
                 "shipping_region",
@@ -3116,7 +3116,7 @@ impl ::protobuf::Clear for MsgUpdateItem {
         self.seller.clear();
         self.id = 0;
         self.shipping_cost = 0;
-        self.local_pickup.clear();
+        self.location.clear();
         self.shipping_region.clear();
         self.unknown_fields.clear();
     }
@@ -4036,7 +4036,7 @@ pub struct MsgItemResell {
     pub itemid: u64,
     pub shipping_cost: i64,
     pub discount: i64,
-    pub local_pickup: ::std::string::String,
+    pub location: ::std::string::String,
     pub shipping_region: ::protobuf::RepeatedField<::std::string::String>,
     pub note: ::std::string::String,
     // special fields
@@ -4126,30 +4126,30 @@ impl MsgItemResell {
         self.discount = v;
     }
 
-    // string local_pickup = 5;
+    // string location = 5;
 
 
-    pub fn get_local_pickup(&self) -> &str {
-        &self.local_pickup
+    pub fn get_location(&self) -> &str {
+        &self.location
     }
-    pub fn clear_local_pickup(&mut self) {
-        self.local_pickup.clear();
+    pub fn clear_location(&mut self) {
+        self.location.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_local_pickup(&mut self, v: ::std::string::String) {
-        self.local_pickup = v;
+    pub fn set_location(&mut self, v: ::std::string::String) {
+        self.location = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_local_pickup(&mut self) -> &mut ::std::string::String {
-        &mut self.local_pickup
+    pub fn mut_location(&mut self) -> &mut ::std::string::String {
+        &mut self.location
     }
 
     // Take field
-    pub fn take_local_pickup(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.local_pickup, ::std::string::String::new())
+    pub fn take_location(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.location, ::std::string::String::new())
     }
 
     // repeated string shipping_region = 6;
@@ -4238,7 +4238,7 @@ impl ::protobuf::Message for MsgItemResell {
                     self.discount = tmp;
                 },
                 5 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.local_pickup)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.location)?;
                 },
                 6 => {
                     ::protobuf::rt::read_repeated_string_into(wire_type, is, &mut self.shipping_region)?;
@@ -4270,8 +4270,8 @@ impl ::protobuf::Message for MsgItemResell {
         if self.discount != 0 {
             my_size += ::protobuf::rt::value_size(4, self.discount, ::protobuf::wire_format::WireTypeVarint);
         }
-        if !self.local_pickup.is_empty() {
-            my_size += ::protobuf::rt::string_size(5, &self.local_pickup);
+        if !self.location.is_empty() {
+            my_size += ::protobuf::rt::string_size(5, &self.location);
         }
         for value in &self.shipping_region {
             my_size += ::protobuf::rt::string_size(6, &value);
@@ -4297,8 +4297,8 @@ impl ::protobuf::Message for MsgItemResell {
         if self.discount != 0 {
             os.write_int64(4, self.discount)?;
         }
-        if !self.local_pickup.is_empty() {
-            os.write_string(5, &self.local_pickup)?;
+        if !self.location.is_empty() {
+            os.write_string(5, &self.location)?;
         }
         for v in &self.shipping_region {
             os.write_string(6, &v)?;
@@ -4365,9 +4365,9 @@ impl ::protobuf::Message for MsgItemResell {
                 |m: &mut MsgItemResell| { &mut m.discount },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                "local_pickup",
-                |m: &MsgItemResell| { &m.local_pickup },
-                |m: &mut MsgItemResell| { &mut m.local_pickup },
+                "location",
+                |m: &MsgItemResell| { &m.location },
+                |m: &mut MsgItemResell| { &mut m.location },
             ));
             fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
                 "shipping_region",
@@ -4399,7 +4399,7 @@ impl ::protobuf::Clear for MsgItemResell {
         self.itemid = 0;
         self.shipping_cost = 0;
         self.discount = 0;
-        self.local_pickup.clear();
+        self.location.clear();
         self.shipping_region.clear();
         self.note.clear();
         self.unknown_fields.clear();
@@ -5076,7 +5076,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12?\n\x08end_time\x18\x02\x20\x01(\x0b2\x1a.google.protobuf.TimestampR\
     \x07endTimeB\x08\x90\xdf\x1f\x01\xc8\xde\x1f\0\"\x8d\x02\n\x08Transfer\
     \x12#\n\rshipping_cost\x18\x01\x20\x01(\x03R\x0cshippingCost\x12!\n\x0cl\
-    ocal_pickup\x18\x02\x20\x01(\tR\x0blocalPickup\x12\x1a\n\x08tracking\x18\
+    ocal_pickup\x18\x02\x20\x01(\tR\x0blocation\x12\x1a\n\x08tracking\x18\
     \x03\x20\x01(\x08R\x08tracking\x12'\n\x0fshipping_region\x18\x04\x20\x03\
     (\tR\x0eshippingRegion\x12\x16\n\x06rating\x18\x05\x20\x01(\x03R\x06rati\
     ng\x12\x12\n\x04note\x18\x06\x20\x01(\tR\x04note\x12\x1a\n\x08discount\
@@ -5091,7 +5091,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\n\x07creator\x18\x01\x20\x01(\tR\x07creator\x12\x14\n\x05title\x18\
     \x02\x20\x01(\tR\x05title\x12\x20\n\x0bdescription\x18\x03\x20\x01(\tR\
     \x0bdescription\x12#\n\rshipping_cost\x18\x04\x20\x01(\x03R\x0cshippingC\
-    ost\x12!\n\x0clocal_pickup\x18\x05\x20\x01(\tR\x0blocalPickup\x12)\n\x10\
+    ost\x12!\n\x0clocation\x18\x05\x20\x01(\tR\x0blocation\x12)\n\x10\
     estimation_count\x18\x06\x20\x01(\x03R\x0festimationCount\x12\x12\n\x04t\
     ags\x18\x07\x20\x03(\tR\x04tags\x12\x1c\n\tcondition\x18\x08\x20\x01(\
     \x03R\tcondition\x12'\n\x0fshipping_region\x18\t\x20\x03(\tR\x0eshipping\
@@ -5101,8 +5101,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x06photos\x12\x1b\n\ttoken_uri\x18\x0e\x20\x01(\tR\x08tokenUri\"\xa8\
     \x01\n\rMsgUpdateItem\x12\x16\n\x06seller\x18\x01\x20\x01(\tR\x06seller\
     \x12\x0e\n\x02id\x18\x02\x20\x01(\x04R\x02id\x12#\n\rshipping_cost\x18\
-    \x03\x20\x01(\x03R\x0cshippingCost\x12!\n\x0clocal_pickup\x18\x04\x20\
-    \x01(\tR\x0blocalPickup\x12'\n\x0fshipping_region\x18\x05\x20\x03(\tR\
+    \x03\x20\x01(\x03R\x0cshippingCost\x12!\n\x0clocation\x18\x04\x20\
+    \x01(\tR\x0blocation\x12'\n\x0fshipping_region\x18\x05\x20\x03(\tR\
     \x0eshippingRegion\"7\n\rMsgDeleteItem\x12\x16\n\x06seller\x18\x01\x20\
     \x01(\tR\x06seller\x12\x0e\n\x02id\x18\x02\x20\x01(\x04R\x02id\"f\n\x13M\
     sgRevealEstimation\x12\x18\n\x07creator\x18\x01\x20\x01(\tR\x07creator\
@@ -5116,8 +5116,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x01\n\rMsgItemResell\x12\x16\n\x06seller\x18\x01\x20\x01(\tR\x06seller\
     \x12\x16\n\x06itemid\x18\x02\x20\x01(\x04R\x06itemid\x12#\n\rshipping_co\
     st\x18\x03\x20\x01(\x03R\x0cshippingCost\x12\x1a\n\x08discount\x18\x04\
-    \x20\x01(\x03R\x08discount\x12!\n\x0clocal_pickup\x18\x05\x20\x01(\tR\
-    \x0blocalPickup\x12'\n\x0fshipping_region\x18\x06\x20\x03(\tR\x0eshippin\
+    \x20\x01(\x03R\x08discount\x12!\n\x0clocation\x18\x05\x20\x01(\tR\
+    \x0blocation\x12'\n\x0fshipping_region\x18\x06\x20\x03(\tR\x0eshippin\
     gRegion\x12\x12\n\x04note\x18\x07\x20\x01(\tR\x04note\"\xe0\x01\n\x06Par\
     ams\x12l\n\x0fMaxActivePeriod\x18\x01\x20\x01(\x0b2\x19.google.protobuf.\
     DurationR\x0fMaxActivePeriodB'\xc8\xde\x1f\0\x98\xdf\x1f\x01\xea\xde\x1f\

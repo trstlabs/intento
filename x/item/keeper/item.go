@@ -42,9 +42,24 @@ func (k Keeper) SetItemCount(ctx sdk.Context, count int64) {
 
 // CreateItem creates a item with a new id and update the count
 func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
+	params := k.GetParams(ctx)
+	var totalEstimationsAsked = msg.EstimationCount
 
-	// Create the item
-	count := k.GetItemCount(ctx)
+	k.IterateSellerItems(ctx, msg.Creator, func(item types.Item) bool {
+		totalEstimationsAsked = totalEstimationsAsked + item.Estimation.EstimationCount
+		return false
+	})
+
+	err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(sdk.NewInt64Coin(types.Denom, params.CreateItemFee)), sdk.AccAddress(msg.Creator))
+	if err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "balance too low to collect fee")
+	}
+	if totalEstimationsAsked > 0 { // Create the item
+		profile := k.GetProfile(ctx, msg.Creator)
+		if (len(profile.Estimations)/int(totalEstimationsAsked))*100 < int((params.EstimationRatioForNewItem)) {
+			return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "asking for too many esitimations")
+		}
+	}
 
 	submitTime := ctx.BlockHeader().Time
 
@@ -58,16 +73,17 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 	estimationOnly := false
 	seller := msg.Creator
 	code := uint64(1)
-	if msg.LocalPickup == "" && msg.ShippingRegion == nil {
+	if msg.Location == "" && msg.ShippingRegion == nil {
 		estimationOnly = true
 		code = uint64(2)
 		seller = ""
 	}
-
-	contractAddr, err := k.computeKeeper.Instantiate(ctx, code, userAddress, msg.InitMsg, msg.AutoMsg, "Item "+fmt.Sprint(count), sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil, activePeriod)
+	count := k.GetItemCount(ctx)
+	contractAddr, err := k.computeKeeper.Instantiate(ctx, code, userAddress, msg.InitMsg, msg.AutoMsg, fmt.Sprint(count)+", "+msg.Title, sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.ZeroInt())), nil, activePeriod)
 	if err != nil {
 		return err
 	}
+
 	var item = types.Item{
 		Creator: msg.Creator,
 
@@ -75,7 +91,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 		Title:       msg.Title,
 		Description: msg.Description,
 		Transfer: &types.Transfer{ShippingCost: msg.ShippingCost,
-			LocalPickup:    msg.LocalPickup,
+			Location:       msg.Location,
 			ShippingRegion: msg.ShippingRegion,
 			Seller:         seller,
 		},
@@ -206,7 +222,7 @@ func (k Keeper) MintReward(ctx sdk.Context, coinToSend sdk.Coin) {
 // HandleReward handles reward
 func (k Keeper) HandleBuyerReward(ctx sdk.Context, coinToSend sdk.Coin, buyer sdk.AccAddress) {
 	itemIncentivesAddr := k.accountKeeper.GetModuleAddress(types.ItemIncentivesModuleAcctName)
-	balance := k.bankKeeper.GetBalance(ctx, itemIncentivesAddr, "utrst")
+	balance := k.bankKeeper.GetBalance(ctx, itemIncentivesAddr, types.Denom)
 	//distribute to the buyer
 	params := k.GetParams(ctx)
 	if coinToSend.Amount.SubRaw(params.MaxBuyerReward).IsNegative() {
@@ -281,7 +297,7 @@ func (k Keeper) RevealEstimation(ctx sdk.Context, item types.Item, msg types.Msg
 		return err ///panic(err)
 	}
 	//fmt.Printf("executing contract: %s", item.Contract)
-	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.RevealMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.RevealMsg, sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: ")
 		return err ///panic(err)
@@ -329,7 +345,7 @@ func (k Keeper) SetTransferable(ctx sdk.Context, item types.Item, msg types.MsgI
 		return err ///panic(err)
 	}
 	fmt.Printf("executing contract: %s", item.Estimation.Contract)
-	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.TransferableMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
+	res, err := k.computeKeeper.Execute(ctx, contractAddr, creatorAddress, msg.TransferableMsg, sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.ZeroInt())), nil)
 	if err != nil {
 		fmt.Printf("err executing: %s", err)
 		return err ///panic(err)

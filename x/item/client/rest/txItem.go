@@ -24,13 +24,13 @@ type createItemRequest struct {
 	Title       string       `json:"title"`
 	Description string       `json:"description"`
 
-	Shippingcost    int64    `json:"shippingcost"`
-	Localpickup     string   `json:"localpickup"`
-	Estimationcount int64    `json:"estimationcount"`
+	Shippingcost    int64    `json:"shipping_cost"`
+	Location        string   `json:"location"`
+	Estimationcount int64    `json:"estimation_count"`
 	Tags            []string `json:"tags"`
 	Condition       int64    `json:"condition"`
-	Shippingregion  []string `json:"shippingregion"`
-	Depositamount   int64    `json:"depositamount"`
+	Shippingregion  []string `json:"shipping_region"`
+	Depositamount   int64    `json:"deposit_amount"`
 	InitMsg         []byte   `json:"init_msg"`
 	AutoMsg         []byte   `json:"auto_msg"`
 	Photos          []string `json:"photos"`
@@ -62,7 +62,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 
 		parsedShippingcost := req.Shippingcost
 
-		parsedLocalpickup := req.Localpickup
+		parsedLocation := req.Location
 
 		parsedEstimationcount := req.Estimationcount
 		//var estimationcount = fmt.Sprint(req.Estimationcount)
@@ -87,7 +87,7 @@ func createItemHandler(clientCtx client.Context) http.HandlerFunc {
 			parsedTitle,
 			parsedDescription,
 			parsedShippingcost,
-			parsedLocalpickup,
+			parsedLocation,
 			parsedEstimationcount,
 
 			parsedTags,

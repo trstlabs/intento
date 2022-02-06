@@ -20,11 +20,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, state types.GenesisState) {
 	// take care of importing the amount into the account except for the
 	// genesis block
 	if k.GetItemModuleBalance(ctx).IsZero() {
-		err := k.InitializeItemModule(ctx, sdk.NewCoin("utrst", sdk.ZeroInt()))
+		err := k.InitializeItemModule(ctx, sdk.NewCoin(types.Denom, sdk.ZeroInt()))
 		if err != nil {
 			panic(err)
 		}
-		k.InitializeItemIncentiveModule(ctx, sdk.NewCoin("utrst", sdk.ZeroInt()))
+		k.InitializeItemIncentiveModule(ctx, sdk.NewCoin(types.Denom, sdk.ZeroInt()))
 
 	}
 
@@ -91,7 +91,7 @@ func (k Keeper) GetItemModuleAccount(ctx sdk.Context) (ModuleName authtypes.Modu
 
 // GetItemModuleBalance returns the module account balance
 func (k Keeper) GetItemModuleBalance(ctx sdk.Context) sdk.Coin {
-	return k.bankKeeper.GetBalance(ctx, k.GetItemModuleAccount(ctx).GetAddress(), "utrst")
+	return k.bankKeeper.GetBalance(ctx, k.GetItemModuleAccount(ctx).GetAddress(), types.Denom)
 }
 
 // InitializeItemModule sets up the module account from genesis

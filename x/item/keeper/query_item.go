@@ -56,3 +56,15 @@ func sellerItems(ctx sdk.Context, seller string, keeper Keeper, legacyQuerierCdc
 
 	return bz, nil
 }
+
+func buyerItems(ctx sdk.Context, buyer string, keeper Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
+
+	items := keeper.GetAllBuyerItems(ctx, buyer)
+
+	bz, err := codec.MarshalJSONIndent(legacyQuerierCdc, items)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
+	}
+
+	return bz, nil
+}

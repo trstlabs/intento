@@ -33,7 +33,7 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item has a buyer, cannot make prepayment")
 	}
 
-	//item buyer cannot be the item creator
+	//item buyer cannot be the item creatorc
 	if msg.Buyer == item.Creator || msg.Buyer == item.Transfer.Seller {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "buyer cannot be creator/seller")
 	}
@@ -43,7 +43,7 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 		estimationPrice = item.Estimation.EstimationPrice - item.Transfer.Discount
 	}
 
-	if item.Transfer.ShippingCost > 0 && item.Transfer.LocalPickup == "" {
+	if item.Transfer.ShippingCost > 0 && item.Transfer.Location == "" {
 		toPayShipping := estimationPrice + item.Transfer.ShippingCost
 		if toPayShipping != msg.Deposit {
 
@@ -52,7 +52,7 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 
 	}
 
-	if item.Transfer.ShippingCost == 0 && item.Transfer.LocalPickup != "" {
+	if item.Transfer.ShippingCost == 0 && item.Transfer.Location != "" {
 
 		if estimationPrice != msg.Deposit {
 
@@ -61,7 +61,7 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 
 	}
 
-	if item.Transfer.ShippingCost > 0 && item.Transfer.LocalPickup != "" {
+	if item.Transfer.ShippingCost > 0 && item.Transfer.Location != "" {
 
 		if estimationPrice == msg.Deposit {
 
@@ -72,7 +72,7 @@ func handleMsgPrepayment(ctx sdk.Context, k keeper.Keeper, msg *types.MsgPrepaym
 				estimationPrice + item.Transfer.ShippingCost
 
 			if toPayShipping == msg.Deposit {
-				item.Transfer.LocalPickup = ""
+				item.Transfer.Location = ""
 
 			} else {
 
@@ -125,20 +125,20 @@ func handleMsgWithdrawal(ctx sdk.Context, k keeper.Keeper, msg *types.MsgWithdra
 		toMintAmount := percentageReturn.MulInt(bigIntEstimationPrice).TruncateInt()
 
 		burnAmount := bigIntEstimationPrice.Sub(toMintAmount)
-		k.BurnCoins(ctx, sdk.NewCoin("utrst", burnAmount))
+		k.BurnCoins(ctx, sdk.NewCoin(types.Denom, burnAmount))
 
 		if item.Transfer.ShippingCost > 0 {
 			toMintAmount = toMintAmount.Add(sdk.NewInt(item.Transfer.ShippingCost))
 		}
 
 		//minted coins (are rounded up)
-		mintCoin := sdk.NewCoin("utrst", toMintAmount)
+		mintCoin := sdk.NewCoin(types.Denom, toMintAmount)
 		k.SendPaymentToAccount(ctx, msg.Buyer, mintCoin)
 		k.DeleteBuyerKey(ctx, append([]byte(msg.Buyer), types.Uint64ToByte(msg.Itemid)...))
 
 		item.Status = "Withdrawal prepayment"
 		item.Transfer.ShippingCost = 0
-		item.Transfer.LocalPickup = ""
+		item.Transfer.Location = ""
 		item.Estimation = &types.Estimation{}
 		item.Properties.Transferable = false
 
@@ -182,7 +182,7 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 	if item.Creator == item.Transfer.Seller {
 
 		//minted coins (are rounded up)
-		maxRewardCoin := sdk.NewCoin("utrst", sdk.NewInt(item.Estimation.DepositAmount))
+		maxRewardCoin := sdk.NewCoin(types.Denom, sdk.NewInt(item.Estimation.DepositAmount))
 
 		k.HandleBuyerReward(ctx, maxRewardCoin, sdk.AccAddress(msg.Buyer))
 
@@ -190,7 +190,7 @@ func handleMsgItemTransfer(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemT
 		item.Estimation.EstimatorList = nil
 	}
 	//make payment to seller
-	paymentSellerCoins := sdk.NewCoin("utrst", bigIntEstimationPrice)
+	paymentSellerCoins := sdk.NewCoin(types.Denom, bigIntEstimationPrice)
 
 	k.SendPaymentToAccount(ctx, item.Transfer.Seller, paymentSellerCoins)
 
@@ -226,7 +226,7 @@ func handleMsgItemRating(ctx sdk.Context, k keeper.Keeper, msg *types.MsgItemRat
 		toMintAmount := percentageReward.MulInt(bigIntEstimationPrice).Ceil().TruncateInt()
 
 		//mint the remaining payment (5%), that was burned when withdrawing payment
-		mintCoin := sdk.NewCoin("utrst", toMintAmount)
+		mintCoin := sdk.NewCoin(types.Denom, toMintAmount)
 		k.MintReward(ctx, mintCoin.Add(mintCoin))
 		k.SendPaymentToAccount(ctx, msg.Buyer, mintCoin)
 		item.Estimation.EstimationPrice = 0
