@@ -7,14 +7,14 @@ module.exports = {
       "script",
       {
         async: true,
-        src: "https://www.googletagmanager.com/gtag/js?id=G-XL9GNV1KHW",
+        src: "https://www.googletagmanager.com/gtag/js?id=G-2GH9Q08C2Z",
       },
     ],
     [
       "script",
       {},
       [
-        "window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', 'G-XL9GNV1KHW');",
+        "window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', 'G-2GH9Q08C2Z');",
       ],
     ],
   ],
@@ -144,11 +144,11 @@ module.exports = {
             {
               title: "Contributing to the docs",
               url:
-                "https://github.com/cosmos/cosmos-sdk/blob/master/docs/DOCS_README.md",
+                "https://github.com/trstlabs/trst/blob/master/docs/DOCS_README.md",
             },
             {
               title: "Source code on GitHub",
-              url: "https://github.com/cosmos/cosmos-sdk/",
+              url: "https://github.com/trstlabs/trst/",
             },
           ],
         },
