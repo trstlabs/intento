@@ -102,7 +102,7 @@ module.exports = {
       ],
 
       smallprint:
-        "This website is maintained by Tendermint Inc. The contents and opinions of this website are those of Tendermint Inc.",
+        "This website is maintained by TRST Labs. The contents and opinions of this website are those of TRST Labs.",
       links: [
         {
           title: "Documentation",
