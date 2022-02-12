@@ -133,7 +133,7 @@ trstd version
 
 Success! You are now ready to start a local node or join the mainnet! :)
 
-# Uninstall Trustless Hub
+## Uninstall Trustless Hub
 
 To uninstall Trustless Hub, run the following command in the trst directoty:
 
@@ -142,7 +142,7 @@ sudo apt remove trustlesshub -y
 make clean
 ```
 
-# Uninstall SGX
+## Uninstall SGX
 
 To uninstall all SGX related tools, run:
 ```sh

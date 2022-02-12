@@ -34,11 +34,11 @@ And additionally:
 
 1,2,3,4 are similar to develop as in other smart contract platforms. Encryption and privacy are enabled by the blockchain, and the developer can carelessly use the benefits of these.
 For 5, automatically executing code, an automated message should be enabled, and this can point to an existing function or to a completely seperate one than that can be executed on by the users of the contract.
-You can name this AutoMsg, or anything else. Please refer to the message to be handled as AutoMsg, so people investigating the code are aware of the which part of the code to be run automatically.
+You can name this AutoMessage, or anything else. Please refer to the message to be handled as AutoMessage, so people investigating the code are aware of the which part of the code to be run automatically.
 
 
 ![Example auto_msg on internal estimation contract](./auto_msg_example.png)
-Above, an example on the AutoMsg pointing to a function on the internal estimation Trustless Contract
+Above, an example on the AutoMessage pointing to a function on the internal estimation Trustless Contract
 
 ## Differences in contract transactions with standard CosmWasm
 
@@ -48,7 +48,7 @@ Executing code is done by encrypting the message with the code hash and sender p
 The inputs are private and are only decrypted once the message is in the Trusted Execution Environment (TEE), where the inputs are then securely handled. The TEE, that runs through Intel SGX, and is designed in such a way that no other process or application is able to view or currupt the contents.
 
 ### Instantiating 
-Next to the standard InitMsg, an AutoMsg can to be sent to automatically execute code. 
+Next to the standard InitMsg, an AutoMessage can to be sent to automatically execute code. 
 The instantiation message and the automated message are encrypted and only decrypted once the message is in in the Trusted Execution Environment 
 
 ### Querying 
@@ -59,8 +59,8 @@ the result of the query is always encrypted and only viewable by the person that
 
 In addition, like with other CosmWasm contract instances, contracts can also query other contracts.
 
-### Results
-Results can be queried by anyone. The last available result is can be queried through {RCP API URL}/compute/v1beta1/contract/{contract_address}/result . 
+### Contract Result
+Cntract Results can be queried by anyone. It is basically a publicly viewable state of the private smart contract. The 'handleResponse' of an execution message gets saved on-chain. This is also the case for the AutoMessage. The Contract Result (last available result) is can be queried through {RCP API URL}/compute/v1beta1/contract/{contract_address}/result . 
 
 As a developer you should keep this in mind in what you send back as information for each transaction.
 
