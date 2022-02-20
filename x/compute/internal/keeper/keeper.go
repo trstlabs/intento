@@ -434,15 +434,13 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 		return nil, err
 	}
 	k.hooks.AfterComputeExecuted(ctx, caller)
-	if res.Data != nil {
-		return &sdk.Result{
+	if res.Log[0].Value == "verifiable" && res.Log[0].Key == "output" {
+		res := &sdk.Result{
 			Data: res.Data,
-			Log:  res.Log[0].Value,
-		}, nil
-	} else if res.Log[0].Value != "" {
-		return &sdk.Result{
-			Log: res.Log[0].Value,
-		}, nil
+			Log:  res.Log[1].Value,
+		}
+		k.SetContractResult(ctx, contractAddress, res)
+		return res, nil
 	} else {
 		return &sdk.Result{}, nil
 	}

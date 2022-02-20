@@ -256,13 +256,15 @@ pub fn handle(
             "(2) nonce just before encrypt_output: nonce = {:?} pubkey = {:?}",
             secret_msg.nonce, secret_msg.user_public_key
         );
-        /*  let output = encrypt_output(
+         let output = encrypt_output(
             output,
             secret_msg.nonce,
             secret_msg.user_public_key,
             &canonical_contract_address,
-        )?;*/
+        )?;
         Ok(output)
+
+        
     })
     .map_err(|err| {
         *used_gas = engine.gas_used();

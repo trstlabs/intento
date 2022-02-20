@@ -321,7 +321,7 @@ impl TxBody {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case", tag = "type", content = "value")]
 pub enum StdCosmWasmMsg {
-    #[serde(alias = "compute/MsgExecuteContract")]
+    #[serde(alias = "wasm/MsgExecuteContract")]
     Execute {
         sender: HumanAddr,
         contract: HumanAddr,
@@ -330,7 +330,7 @@ pub enum StdCosmWasmMsg {
         sent_funds: Vec<Coin>,
         callback_sig: Option<Vec<u8>>,
     },
-    #[serde(alias = "compute/MsgInstantiateContract")]
+    #[serde(alias = "wasm/MsgInstantiateContract")]
     Instantiate {
         sender: HumanAddr,
         code_id: String,

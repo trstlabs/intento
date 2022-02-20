@@ -73,6 +73,7 @@ pub fn encrypt_output(
     contract_addr: &CanonicalAddr,
 ) -> Result<Vec<u8>, EnclaveError> {
     let key = calc_encryption_key(&nonce, &user_public_key);
+    let open_output = output.clone();
 
     trace!(
         "Output before encryption: {:?}",
@@ -84,6 +85,7 @@ pub fn encrypt_output(
         trace!("output: {:?} error: {:?}", output, err);
         EnclaveError::FailedToDeserialize
     })?;
+
 
     match &mut output {
         WasmOutput::ErrObject { err } => {
@@ -99,13 +101,16 @@ pub fn encrypt_output(
 
         // Encrypt all Wasm messages (keeps Bank, Staking, etc.. as is)
         WasmOutput::OkObject { ok } => {
+           
             for msg in &mut ok.messages {
                 if let CosmosMsg::Wasm(wasm_msg) = msg {
                     encrypt_wasm_msg(wasm_msg, nonce, user_public_key, contract_addr)?;
                 }
             }
-
             for log in ok.log.iter_mut().filter(|log| log.encrypted) {
+                if log.value.starts_with( "verifiable") && log.key.starts_with( "output"){
+                    return Ok(open_output)
+                } 
                 log.key = encrypt_preserialized_string(&key, &log.key)?;
                 log.value = encrypt_preserialized_string(&key, &log.value)?;
             }

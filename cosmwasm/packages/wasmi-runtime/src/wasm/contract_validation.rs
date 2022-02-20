@@ -190,7 +190,7 @@ pub fn verify_params(
 
 
     let (sender_public_key, messages) = get_signer_and_messages(sig_info, env)?;
-
+   
     trace!(
         "sender canonical address is: {:?}",
         sender_public_key.get_address().0.0

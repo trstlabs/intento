@@ -33,6 +33,7 @@ const (
 	flagProposalType           = "type"
 	flagIoMasterKey            = "enclave-key"
 	flagCodeHash               = "code-hash"
+	flagDuration               = "duration"
 
 	// flagAdmin                  = "admin"
 )
@@ -61,9 +62,9 @@ func GetTxCmd() *cobra.Command {
 // StoreCodeCmd will upload code to be reused.
 func StoreCodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "store [wasm file] [title] [description] [contract duration in hours] --source [source] ",
+		Use:   "store [wasm file] [title] [description]  --source [source] ",
 		Short: "Upload a wasm binary",
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -84,8 +85,9 @@ func StoreCodeCmd() *cobra.Command {
 
 	cmd.Flags().String(flagSource, "", "A valid URI reference to the contract's source code, optional")
 	cmd.Flags().String(flagBuilder, "", "A valid docker tag for the build system, optional")
-	cmd.Flags().String(flagInstantiateByEverybody, "", "Everybody can instantiate a contract from the code, optional")
-	cmd.Flags().String(flagInstantiateByAddress, "", "Only this address can instantiate a contract instance from the code, optional")
+	//cmd.Flags().String(flagInstantiateByEverybody, "", "Everybody can instantiate a contract from the code, optional")
+	//cmd.Flags().String(flagInstantiateByAddress, "", "Only this address can instantiate a contract instance from the code, optional")
+	cmd.Flags().String(flagDuration, "", "A duration for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -111,8 +113,10 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 		return types.MsgStoreCode{}, fmt.Errorf("invalid input file. Use wasm binary or gzip")
 	}
 
-	contractPeriod := string(args[3]) //strconv.ParseInt(args[3], 10, 64)
-
+	contractDuration, err := flags.GetString(flagDuration) //strconv.ParseInt(args[3], 10, 64)
+	if err != nil {
+		return types.MsgStoreCode{}, fmt.Errorf("contract duration: %s", err)
+	}
 	/*
 	   var perm *types.AccessConfig
 	   if onlyAddrStr := viper.GetString(flagInstantiateByAddress); onlyAddrStr != "" {
@@ -142,7 +146,7 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 		WASMByteCode:   wasm,
 		Source:         source,
 		Builder:        builder,
-		ContractPeriod: contractPeriod,
+		ContractPeriod: contractDuration,
 		Title:          argsTitle,
 		Description:    argsDescription,
 		// InstantiatePermission: perm,
@@ -169,11 +173,8 @@ func InstantiateContractCmd() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			if args[0] == "1" {
-				return nil
-			} else {
-				return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), &msg)
-			}
+
+			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), &msg)
 
 		},
 	}
