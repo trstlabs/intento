@@ -1,6 +1,6 @@
 ![Welcome to the Trustless Hub](./images/transfer.png)
 
-# Trustless Hub
+# The Trustless Hub
 
 [The Trustless Hub](https://github.com/trstlabs/trst) is a private smart contract hub within the Cosmos ecosystem. Here you can build and deploy Trustless Contracts to a large decentralized worldwide community. The Trustless Hub is built on top of the [Cosmos SDK](https://docs.cosmos.network), the world’s most popular blockchain framework. Trustless Hub enables new services using private inputs, automated messages and verifiable outcomes.
 Additionally, any unique asset can be exchanged for TRST with independent prices. Anything can be transferred in a fast, secure and trustless way.
