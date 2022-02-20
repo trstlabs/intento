@@ -15,6 +15,7 @@
 ///     deps: &mut Extern<S, A, Q>,
 ///     env: Env,
 ///     msg: InitMsg,
+///  auto_msg: AutoMsg,
 /// ) -> InitResult {
 /// #   Ok(Default::default())
 /// }
@@ -69,11 +70,12 @@ macro_rules! create_entry_points {
             };
 
             #[no_mangle]
-            extern "C" fn init(env_ptr: u32, msg_ptr: u32) -> u32 {
+            extern "C" fn init(env_ptr: u32, msg_ptr: u32, auto_msg_ptr: u32) -> u32 {
                 do_init(
                     &$contract::init::<ExternalStorage, ExternalApi, ExternalQuerier>,
                     env_ptr,
                     msg_ptr,
+                    auto_msg_ptr,
                 )
             }
 

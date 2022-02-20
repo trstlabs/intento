@@ -50,15 +50,17 @@ pub fn do_init<T, U>(
         &mut Extern<ExternalStorage, ExternalApi, ExternalQuerier>,
         Env,
         T,
+        T,
     ) -> InitResult<U>,
     env_ptr: u32,
     msg_ptr: u32,
+    auto_msg_ptr: u32,
 ) -> u32
 where
     T: DeserializeOwned + JsonSchema,
     U: Serialize + Clone + fmt::Debug + PartialEq + JsonSchema,
 {
-    let res: InitResult<U> = _do_init(init_fn, env_ptr as *mut Region, msg_ptr as *mut Region);
+    let res: InitResult<U> = _do_init(init_fn, env_ptr as *mut Region, msg_ptr as *mut Region, auto_msg_ptr as *mut Region);
     let v = to_vec(&res).unwrap();
     release_buffer(v) as u32
 }
@@ -121,9 +123,11 @@ fn _do_init<T, U>(
         &mut Extern<ExternalStorage, ExternalApi, ExternalQuerier>,
         Env,
         T,
+        T,
     ) -> InitResult<U>,
     env_ptr: *mut Region,
     msg_ptr: *mut Region,
+    auto_msg_ptr: *mut Region,
 ) -> InitResult<U>
 where
     T: DeserializeOwned + JsonSchema,
@@ -131,8 +135,10 @@ where
 {
     let env: Vec<u8> = unsafe { consume_region(env_ptr) };
     let msg: Vec<u8> = unsafe { consume_region(msg_ptr) };
+    let auto_msg: Vec<u8> = unsafe { consume_region(auto_msg_ptr) };
     let env: Env = from_slice(&env)?;
     let msg: T = from_slice(&msg)?;
+    let auto_msg: T = from_slice(&auto_msg)?;
     let mut deps = make_dependencies();
     init_fn(&mut deps, env, msg)
 }
