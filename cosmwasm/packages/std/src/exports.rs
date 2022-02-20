@@ -140,7 +140,7 @@ where
     let msg: T = from_slice(&msg)?;
     let auto_msg: T = from_slice(&auto_msg)?;
     let mut deps = make_dependencies();
-    init_fn(&mut deps, env, msg)
+    init_fn(&mut deps, env, msg, auto_msg)
 }
 
 fn _do_handle<T, U>(
