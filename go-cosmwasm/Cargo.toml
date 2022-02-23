@@ -31,7 +31,7 @@ backtraces = ["snafu/backtraces"]
 production = ["cosmwasm-sgx-vm/production"]
 
 [dependencies]
-cosmwasm-std = { path = "../cosmwasm/packages/std", features = ["iterator"] }
+secret-cosmwasm-std = { path = "../cosmwasm/packages/std", features = ["iterator"] }
 cosmwasm-sgx-vm = { path = "../cosmwasm/packages/sgx-vm", features = [
     "iterator"
 ] }

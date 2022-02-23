@@ -107,7 +107,7 @@ pub enum WasmMsg {
         /// msg is the json-encoded InitMsg struct (as raw Binary)
         msg: Binary,
         /// auto_msg is the json-encoded AutoMsg struct (as raw Binary)
-        auto_msg: Binary,
+        auto_msg: Option<Binary>,
         send: Vec<Coin>,
         /// mandatory human-readbale label for the contract
         label: String,

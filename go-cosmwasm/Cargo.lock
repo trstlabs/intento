@@ -180,7 +180,6 @@ name = "cosmwasm-sgx-vm"
 version = "0.10.0"
 dependencies = [
  "base64 0.12.3",
- "cosmwasm-std",
  "enclave-ffi-types",
  "hex",
  "lazy_static",
@@ -188,22 +187,12 @@ dependencies = [
  "memmap",
  "parity-wasm",
  "schemars",
+ "secret-cosmwasm-std",
  "serde",
  "serde_json",
  "sgx_types",
  "sgx_urts",
  "sha2",
- "snafu",
-]
-
-[[package]]
-name = "cosmwasm-std"
-version = "0.10.0"
-dependencies = [
- "base64 0.11.0",
- "schemars",
- "serde",
- "serde-json-wasm",
  "snafu",
 ]
 
@@ -317,10 +306,10 @@ version = "0.10.0"
 dependencies = [
  "cbindgen 0.14.3",
  "cosmwasm-sgx-vm",
- "cosmwasm-std",
  "ctor",
  "errno",
  "log",
+ "secret-cosmwasm-std",
  "serde",
  "serde_json",
  "sgx_edl",
@@ -579,6 +568,17 @@ dependencies = [
  "quote",
  "serde_derive_internals",
  "syn",
+]
+
+[[package]]
+name = "secret-cosmwasm-std"
+version = "0.10.0"
+dependencies = [
+ "base64 0.11.0",
+ "schemars",
+ "serde",
+ "serde-json-wasm",
+ "snafu",
 ]
 
 [[package]]
