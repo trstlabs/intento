@@ -43,7 +43,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdListContractByCode(),
 		GetCmdQueryCode(),
 		GetCmdGetContractInfo(),
-		GetCmdGetContractResult(),
+		GetCmdGetContractState(),
 		GetCmdQuery(),
 		GetQueryDecryptTxCmd(),
 		GetCmdQueryLabel(),
@@ -260,12 +260,12 @@ func GetCmdGetContractInfo() *cobra.Command {
 	return cmd
 }
 
-// GetCmdGetContractResult gets result details about a given contract
-func GetCmdGetContractResult() *cobra.Command {
+// GetCmdGetContractState gets public state details about a given contract
+func GetCmdGetContractState() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "result [bech32_address]",
-		Short: "Prints out the last available result of a contract given its address",
-		Long:  "Prints out  the last available result of a contract given its address",
+		Use:   "state [bech32_address]",
+		Short: "Prints out the last available state of a contract given its address",
+		Long:  "Prints out the last available state of a contract given its address",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -278,7 +278,7 @@ func GetCmdGetContractResult() *cobra.Command {
 				return err
 			}
 
-			route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryGetContractResult, addr.String())
+			route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryGetContractPublicState, addr.String())
 			res, _, err := clientCtx.Query(route)
 			if err != nil {
 				return err

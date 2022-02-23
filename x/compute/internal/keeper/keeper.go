@@ -407,7 +407,6 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 	//fmt.Printf("Contract Execute: Got contract Key for contract %s: %s\n", contractAddress, base64.StdEncoding.EncodeToString(contractKey))
 	params := types.NewEnv(ctx, caller, coins, contractAddress, contractKey)
-	//fmt.Printf("Contract Execute: key from params %s \n", params.Key)
 
 	// prepare querier
 	querier := QueryHandler{
@@ -435,12 +434,8 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 	k.hooks.AfterComputeExecuted(ctx, caller)
 	if res.Log[0].Value == "verifiable" && res.Log[0].Key == "output" {
-		res := &sdk.Result{
-			Data: res.Data,
-			Log:  res.Log[1].Value,
-		}
-		k.SetContractResult(ctx, contractAddress, res)
-		return res, nil
+		k.SetContractPublicState(ctx, contractAddress, res.Log)
+		return &sdk.Result{Log: res.Log[1].Value}, nil
 	} else {
 		return &sdk.Result{}, nil
 	}
@@ -511,7 +506,6 @@ func (k Keeper) QuerySmart(ctx sdk.Context, contractAddr sdk.AccAddress, req []b
 	return queryResult, nil
 }
 
-// We don't use this function since we have an encrypted state. It's here for upstream compatibility
 // QueryRaw returns the contract's state for give key. For a `nil` key a empty slice result is returned.
 func (k Keeper) QueryRaw(ctx sdk.Context, contractAddress sdk.AccAddress, key []byte) []types.Model {
 	result := make([]types.Model, 0)
@@ -588,19 +582,6 @@ func (k Keeper) GetContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress)
 	return contract, nil
 }
 
-//GetContractResult  (if you see panic error, try commenting out this)
-func (k Keeper) GetContractResult(ctx sdk.Context, contractAddress sdk.AccAddress) (sdk.Result, error) {
-	store := ctx.KVStore(k.storeKey)
-	var result sdk.Result
-	res := store.Get(types.GetContractResultKey(contractAddress))
-	if res == nil {
-		return sdk.Result{}, sdkerrors.Wrap(types.ErrNotFound, "result info")
-	}
-	k.cdc.MustUnmarshal(res, &result)
-
-	return result, nil
-}
-
 //GetContractInfoWithAddress  (if you see panic error, try commenting out this func)
 func (k Keeper) GetContractInfoWithAddress(ctx sdk.Context, contractAddress sdk.AccAddress) types.ContractInfoWithAddress {
 	store := ctx.KVStore(k.storeKey)
@@ -632,13 +613,28 @@ func (k Keeper) setContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress,
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(contract))
 }
 
-// SetContractResult sets the result of the contract
-func (k Keeper) SetContractResult(ctx sdk.Context, contractAddress sdk.AccAddress, result *sdk.Result) error {
-	store := ctx.KVStore(k.storeKey)
-
-	store.Set(types.GetContractResultKey(contractAddress), k.cdc.MustMarshal(result))
+// SetContractPublicState sets the result of the contract from wasm attributes, it overrides existing keys
+func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress, result []wasmTypes.LogAttribute) error {
+	prefixStoreKey := types.GetPublicContractStateKey(contractAddress)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	for _, attr := range result {
+		prefixStore.Set([]byte(attr.Key), []byte(attr.Value))
+	}
 	return nil
 }
+
+//GetContractPublicState  (if you see panic error, try commenting out this)
+func (k Keeper) GetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress) []*types.KeyPair {
+	prefixStoreKey := types.GetPublicContractStateKey(contractAddress)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	iter := prefixStore.Iterator(nil, nil)
+	var pKeyPair []*types.KeyPair
+	for ; iter.Valid(); iter.Next() {
+		pKeyPair = append(pKeyPair, &types.KeyPair{Key: string(iter.Key()), Value: string(iter.Value())})
+	}
+	return pKeyPair
+}
+
 func (k Keeper) IterateContractInfo(ctx sdk.Context, cb func(sdk.AccAddress, types.ContractInfo) bool) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.ContractKeyPrefix)
 	iter := prefixStore.Iterator(nil, nil)

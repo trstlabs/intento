@@ -30,16 +30,13 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		for _, addr := range incentiveList {
 			if addr == contract.Address.String() {
 
-				res, err := k.Execute(ctx, contract.Address, contract.Address, contract.ContractInfo.AutoMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), contract.ContractInfo.CallbackSig)
+				_, err := k.Execute(ctx, contract.Address, contract.Address, contract.ContractInfo.AutoMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), contract.ContractInfo.CallbackSig)
 				if err != nil {
 					logger.Info(
 						"contract",
 						"err", err.Error(),
 					)
 
-					k.SetContractResult(ctx, contract.Address, &sdk.Result{Log: err.Error()})
-				} else {
-					k.SetContractResult(ctx, contract.Address, res)
 				}
 				break
 			}

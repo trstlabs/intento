@@ -37,21 +37,20 @@ func (q grpcQuerier) ContractInfo(c context.Context, req *types.QueryContractInf
 	}, nil
 }
 
-func (q grpcQuerier) ContractResult(c context.Context, req *types.QueryContractResultRequest) (*types.QueryContractResultResponse, error) {
+func (q grpcQuerier) ContractPublicState(c context.Context, req *types.QueryContractPublicStateRequest) (*types.QueryContractPublicStateResponse, error) {
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return nil, err
 	}
-	rsp, err := queryContractResult(sdk.UnwrapSDKContext(c), addr, q.keeper)
+	rsp, err := queryContractPublicState(sdk.UnwrapSDKContext(c), addr, q.keeper)
 	switch {
 	case err != nil:
 		return nil, err
 	case rsp == nil:
 		return nil, types.ErrNotFound
 	}
-	return &types.QueryContractResultResponse{
-		Data: rsp.Data,
-		Log:  rsp.Log,
+	return &types.QueryContractPublicStateResponse{
+		KeyPairs: rsp,
 	}, nil
 }
 
@@ -174,20 +173,11 @@ func queryContractInfo(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) (*ty
 	}, nil
 }
 
-func queryContractResult(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) (*sdk.Result, error) {
+func queryContractPublicState(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) ([]*types.KeyPair, error) {
 	//var res sdk.Result
-	result, err := keeper.GetContractResult(ctx, addr)
-	if err != nil {
-		return &sdk.Result{}, err
-	}
-	//var res sdk.Result
-	//keeper.cdc.MustUnmarshal(result, &res)
-	// redact the Created field (just used for sorting, not part of public API)
-	//info.Created = nil
-	return &sdk.Result{
-		Data: result.Data,
-		Log:  result.Log,
-	}, nil
+	pS := keeper.GetContractPublicState(ctx, addr)
+
+	return pS, nil
 }
 
 func queryContractListByCode(ctx sdk.Context, codeID uint64, keeper Keeper) ([]types.ContractInfoWithAddress, error) {

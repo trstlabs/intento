@@ -12,16 +12,16 @@ import (
 )
 
 const (
-	QueryListContractByCode = types.QueryListContractByCode
-	QueryGetContract        = types.QueryGetContract
-	QueryGetContractResult  = types.QueryGetContractResult
-	QueryGetContractState   = types.QueryGetContractState
-	QueryGetCode            = types.QueryGetCode
-	QueryListCode           = types.QueryListCode
-	QueryContractAddress    = types.QueryContractAddress
-	QueryContractKey        = types.QueryContractKey
-	QueryContractHash       = types.QueryContractHash
-	QueryMasterCertificate  = types.QueryMasterCertificate
+	QueryListContractByCode     = types.QueryListContractByCode
+	QueryGetContract            = types.QueryGetContract
+	QueryGetContractPublicState = types.QueryGetContractPublicState
+	QueryGetContractState       = types.QueryGetContractState
+	QueryGetCode                = types.QueryGetCode
+	QueryListCode               = types.QueryListCode
+	QueryContractAddress        = types.QueryContractAddress
+	QueryContractKey            = types.QueryContractKey
+	QueryContractHash           = types.QueryContractHash
+	QueryMasterCertificate      = types.QueryMasterCertificate
 	//QueryContractHistory    = "contract-history"
 )
 
@@ -52,12 +52,12 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 			}
-		case QueryGetContractResult:
+		case QueryGetContractPublicState:
 			addr, err := sdk.AccAddressFromBech32(path[1])
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 			}
-			rsp, err = queryContractResult(ctx, addr, keeper)
+			rsp, err = queryContractPublicState(ctx, addr, keeper)
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 			}

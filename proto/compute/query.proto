@@ -17,8 +17,8 @@ service Query {
     rpc ContractInfo (QueryContractInfoRequest) returns (QueryContractInfoResponse) {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}";
     }
-     rpc ContractResult (QueryContractResultRequest) returns (QueryContractResultResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/result";
+     rpc ContractPublicState (QueryContractPublicStateRequest) returns (QueryContractPublicStateResponse) {
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/state";
     }
 
     rpc ContractsByCode (QueryContractsByCodeRequest) returns (QueryContractsByCodeResponse) {
@@ -48,15 +48,14 @@ message QueryContractInfoResponse {
 }
 
 
-// QueryContractResultRequest is the request type for the Query/ContractrResult RPC method
-message QueryContractResultRequest {
+// QueryContractPublicStateRequest is the request type for the Query/ContractPublicState RPC method
+message QueryContractPublicStateRequest {
     // address is the address of the contract to query
     string address = 1;
 }
-// QueryContractResultResponse is the response type for the Query/ContractrResult RPC method
-message QueryContractResultResponse {
-    bytes data = 1;
-    string log = 2;
+// QueryContractPublicStateResponse is the response type for the Query/ContractPublicState RPC method
+message QueryContractPublicStateResponse {
+    repeated KeyPair key_pairs = 1;
 }
 
 message QueryContractsByCodeRequest {
