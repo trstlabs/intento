@@ -111,6 +111,7 @@ func Instantiate(
 	code_id []byte,
 	params []byte,
 	msg []byte,
+	auto_msg []byte,
 	gasMeter *GasMeter,
 	store KVStore,
 	api *GoAPI,
@@ -204,6 +205,7 @@ func Migrate(
 func Query(
 	cache Cache,
 	code_id []byte,
+	params []byte,
 	msg []byte,
 	gasMeter *GasMeter,
 	store KVStore,

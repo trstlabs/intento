@@ -14,12 +14,12 @@ circle-ci = { repository = "CosmWasm/cosmwasm", branch = "master" }
 maintenance = { status = "actively-developed" }
 
 [features]
-# This enables iterator functionality, as exposed in secret-cosmwasm-std/iterator
-iterator = ["secret-cosmwasm-std/iterator"]
+# This enables iterator functionality, as exposed in trustless-cosmwasm-std/iterator
+iterator = ["trustless-cosmwasm-std/iterator"]
 
 [dependencies]
 # Uses the path when built locally; uses the given version from crates.io when published
-secret-cosmwasm-std = { path = "../std", version = "0.10.0" }
+trustless-cosmwasm-std = { path = "../std", version = "0.10.0" }
 serde = { version = "1.0.103", default-features = false, features = ["derive", "alloc"] }
 
 [dev-dependencies]

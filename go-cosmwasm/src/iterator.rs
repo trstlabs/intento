@@ -1,5 +1,5 @@
 use cosmwasm_sgx_vm::{FfiError, FfiResult, GasInfo, StorageIterator};
-use cosmwasm_std::KV;
+use trustless_cosmwasm_std::KV;
 
 use crate::error::GoResult;
 use crate::gas_meter::gas_meter_t;

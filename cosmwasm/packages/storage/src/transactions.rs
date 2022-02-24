@@ -9,8 +9,8 @@ use std::iter::Peekable;
 use std::ops::{Bound, RangeBounds};
 
 #[cfg(feature = "iterator")]
-use cosmwasm_std::{Order, KV};
-use cosmwasm_std::{ReadonlyStorage, StdResult, Storage};
+use trustless_cosmwasm_std::{Order, KV};
+use trustless_cosmwasm_std::{ReadonlyStorage, StdResult, Storage};
 
 #[cfg(feature = "iterator")]
 /// The BTreeMap specific key-value pair reference type, as returned by BTreeMap<Vec<u8>, T>::range.
@@ -272,7 +272,7 @@ fn range_bounds(start: Option<&[u8]>, end: Option<&[u8]>) -> impl RangeBounds<Ve
 #[cfg(test)]
 mod test {
     use super::*;
-    use cosmwasm_std::{MemoryStorage, StdError};
+    use trustless_cosmwasm_std::{MemoryStorage, StdError};
 
     #[cfg(feature = "iterator")]
     // iterator_test_suite takes a storage, adds data and runs iterator tests

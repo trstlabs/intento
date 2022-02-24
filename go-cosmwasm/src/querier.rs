@@ -1,5 +1,5 @@
 use cosmwasm_sgx_vm::{FfiResult, GasInfo, Querier};
-use cosmwasm_std::{Binary, StdResult, SystemError, SystemResult};
+use trustless_cosmwasm_std::{Binary, StdResult, SystemError, SystemResult};
 
 use crate::error::GoResult;
 use crate::memory::Buffer;

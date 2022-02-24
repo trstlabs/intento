@@ -1,7 +1,7 @@
 use serde::{de::DeserializeOwned, ser::Serialize};
 use std::marker::PhantomData;
 
-use cosmwasm_std::{to_vec, ReadonlyStorage, StdResult, Storage};
+use trustless_cosmwasm_std::{to_vec, ReadonlyStorage, StdResult, Storage};
 
 use crate::length_prefixed::to_length_prefixed;
 use crate::type_helpers::{may_deserialize, must_deserialize};
@@ -130,10 +130,10 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
-    use cosmwasm_std::testing::MockStorage;
+    use trustless_cosmwasm_std::testing::MockStorage;
     use serde::{Deserialize, Serialize};
 
-    use cosmwasm_std::StdError;
+    use trustless_cosmwasm_std::StdError;
 
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct Config {

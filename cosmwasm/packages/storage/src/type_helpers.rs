@@ -2,8 +2,8 @@ use serde::de::DeserializeOwned;
 use std::any::type_name;
 
 #[cfg(feature = "iterator")]
-use cosmwasm_std::KV;
-use cosmwasm_std::{from_slice, StdError, StdResult};
+use trustless_cosmwasm_std::KV;
+use trustless_cosmwasm_std::{from_slice, StdError, StdResult};
 
 /// may_deserialize parses json bytes from storage (Option), returning Ok(None) if no data present
 ///
@@ -36,7 +36,7 @@ pub(crate) fn deserialize_kv<T: DeserializeOwned>(kv: KV) -> StdResult<KV<T>> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use cosmwasm_std::{to_vec, StdError};
+    use trustless_cosmwasm_std::{to_vec, StdError};
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug)]

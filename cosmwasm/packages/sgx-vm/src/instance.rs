@@ -25,7 +25,7 @@ use crate::context::{
 /*
 use crate::conversion::to_u32;
 */
-use crate::errors::{EnclaveError, VmResult};
+use crate::errors::VmResult;
 /*
 use crate::features::required_features_from_wasmer_instance;
 use crate::imports::{
@@ -37,7 +37,6 @@ use crate::memory::{get_memory_info, read_region, write_region};
 */
 use crate::traits::{Api, Extern, Querier, Storage};
 
-use crate::enclave::get_enclave;
 use crate::wasmi::Module;
 
 /*
@@ -87,13 +86,8 @@ where
         let module = compile(code)?;
         Instance::from_module(&module, deps, gas_limit)
         */
-        let enclave = get_enclave().map_err(EnclaveError::sdk_err)?;
-        let module = Module::<S, Q>::new(
-            code.to_vec(),
-            gas_limit,
-            enclave,
-            setup_context::<S, Q>(gas_limit),
-        );
+        let module =
+            Module::<S, Q>::new(code.to_vec(), gas_limit, setup_context::<S, Q>(gas_limit));
         Ok(Instance::from_wasmer(module, deps, gas_limit))
     }
 
@@ -344,8 +338,8 @@ where
         Ok(Vec::new())
     }
 
-    pub fn call_query(&mut self, msg: &[u8]) -> VmResult<Vec<u8>> {
-        let init_result = self.inner.query(msg)?;
+    pub fn call_query(&mut self, env: &[u8], msg: &[u8]) -> VmResult<Vec<u8>> {
+        let init_result = self.inner.query(env, msg)?;
         Ok(init_result.into_output())
     }
 }
@@ -412,10 +406,8 @@ mod test {
     #[test]
     fn func_works() {
         let instance = mock_instance(&CONTRACT, &[]);
-
         // can get func
         let allocate: Func<u32, u32> = instance.func("allocate").expect("error getting func");
-
         // can call a few times
         let _ptr1 = allocate.call(0).expect("error calling allocate func");
         let _ptr2 = allocate.call(1).expect("error calling allocate func");
@@ -601,7 +593,7 @@ mod test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
+        call_init::<_, _, _, Empty>(&mut instance, &env, msg)
             .unwrap()
             .unwrap();
 
@@ -627,7 +619,7 @@ mod test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
+        call_init::<_, _, _, Empty>(&mut instance, &env, msg)
             .unwrap()
             .unwrap();
 
@@ -840,7 +832,7 @@ mod singlepass_test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
+        call_init::<_, _, _, Empty>(&mut instance, &env, msg)
             .unwrap()
             .unwrap();
 
@@ -856,7 +848,7 @@ mod singlepass_test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
+        call_init::<_, _, _, Empty>(&mut instance, &env, msg)
             .unwrap()
             .unwrap();
 
@@ -864,7 +856,7 @@ mod singlepass_test {
         let gas_before_handle = instance.get_gas_left();
         let env = mock_env("verifies", &coins(15, "earth"));
         let msg = br#"{"release":{}}"#;
-        call_handle::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
+        call_handle::<_, _, _, Empty>(&mut instance, &env, msg)
             .unwrap()
             .unwrap();
 
@@ -880,7 +872,7 @@ mod singlepass_test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        let res = call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg);
+        let res = call_init::<_, _, _, Empty>(&mut instance, &env, msg);
         assert!(res.is_err());
     }
 
@@ -891,7 +883,7 @@ mod singlepass_test {
         // init contract
         let env = mock_env("creator", &coins(1000, "earth"));
         let msg = r#"{"verifier": "verifies", "beneficiary": "benefits"}"#.as_bytes();
-        let _res = call_init::<_, _, _, _, Empty>(&mut instance, &env, msg, &msg)
+        let _res = call_init::<_, _, _, Empty>(&mut instance, &env, msg)
             .unwrap()
             .unwrap();
 

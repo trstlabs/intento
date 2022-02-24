@@ -1,6 +1,6 @@
 #[cfg(feature = "iterator")]
-use cosmwasm_std::{Order, KV};
-use cosmwasm_std::{ReadonlyStorage, Storage};
+use trustless_cosmwasm_std::{Order, KV};
+use trustless_cosmwasm_std::{ReadonlyStorage, Storage};
 
 pub(crate) fn get_with_prefix<S: ReadonlyStorage>(
     storage: &S,
@@ -86,7 +86,7 @@ fn namespace_upper_bound(input: &[u8]) -> Vec<u8> {
 mod test {
     use super::*;
     use crate::length_prefixed::to_length_prefixed;
-    use cosmwasm_std::testing::MockStorage;
+    use trustless_cosmwasm_std::testing::MockStorage;
 
     #[test]
     fn prefix_get_set() {

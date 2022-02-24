@@ -8,6 +8,7 @@ import "C"
 
 import (
 	"fmt"
+	"runtime"
 	"syscall"
 
 	"github.com/trstlabs/trst/go-cosmwasm/types"
@@ -142,7 +143,6 @@ func Instantiate(
 	defer freeAfterSend(m)
 	am := sendSlice(auto_msg)
 	defer freeAfterSend(am)
-
 	// set up a new stack frame to handle iterators
 	counter := startContract()
 	defer endContract(counter)
@@ -155,8 +155,12 @@ func Instantiate(
 	a := buildAPI(api)
 	q := buildQuerier(querier)
 	var gasUsed u64
-
 	errmsg := C.Buffer{}
+
+	// This is done in order to ensure that goroutines don't
+	// swap threads between recursive calls to the enclave.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 
 	res, err := C.instantiate(cache.ptr, id, p, m, am, db, a, q, u64(gasLimit), &gasUsed, &errmsg, s)
 	if err != nil && err.(syscall.Errno) != C.ErrnoValue_Success {
@@ -165,7 +169,6 @@ func Instantiate(
 	}
 	return receiveVector(res), uint64(gasUsed), nil
 }
-
 func Handle(
 	cache Cache,
 	code_id []byte,
@@ -197,6 +200,11 @@ func Handle(
 	q := buildQuerier(querier)
 	var gasUsed u64
 	errmsg := C.Buffer{}
+
+	// This is done in order to ensure that goroutines don't
+	// swap threads between recursive calls to the enclave.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 
 	res, err := C.handle(cache.ptr, id, p, m, db, a, q, u64(gasLimit), &gasUsed, &errmsg, s)
 	if err != nil && err.(syscall.Errno) != C.ErrnoValue_Success {
@@ -235,6 +243,11 @@ func Migrate(
 	var gasUsed u64
 	errmsg := C.Buffer{}
 
+	// This is done in order to ensure that goroutines don't
+	// swap threads between recursive calls to the enclave.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
 	res, err := C.migrate(cache.ptr, id, p, m, db, a, q, u64(gasLimit), &gasUsed, &errmsg)
 	if err != nil && err.(syscall.Errno) != C.ErrnoValue_Success {
 		// Depending on the nature of the error, `gasUsed` will either have a meaningful value, or just 0.
@@ -246,6 +259,7 @@ func Migrate(
 func Query(
 	cache Cache,
 	code_id []byte,
+	params []byte,
 	msg []byte,
 	gasMeter *GasMeter,
 	store KVStore,
@@ -255,6 +269,8 @@ func Query(
 ) ([]byte, uint64, error) {
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
+	p := sendSlice(params)
+	defer freeAfterSend(p)
 	m := sendSlice(msg)
 	defer freeAfterSend(m)
 
@@ -269,7 +285,12 @@ func Query(
 	var gasUsed u64
 	errmsg := C.Buffer{}
 
-	res, err := C.query(cache.ptr, id, m, db, a, q, u64(gasLimit), &gasUsed, &errmsg)
+	// This is done in order to ensure that goroutines don't
+	// swap threads between recursive calls to the enclave.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	res, err := C.query(cache.ptr, id, p, m, db, a, q, u64(gasLimit), &gasUsed, &errmsg)
 	if err != nil && err.(syscall.Errno) != C.ErrnoValue_Success {
 		// Depending on the nature of the error, `gasUsed` will either have a meaningful value, or just 0.
 		return nil, uint64(gasUsed), errorWithMessage(err, errmsg)
