@@ -8,13 +8,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"time"
 )
 
 /*
  Verifies the remote attestation certificate, which is comprised of a the attestation report, intel signature, and enclave signature
 
  We verify that:
-	- the report is valid, that no outstanding issues exist 
+	- the report is valid, that no outstanding issues exist (todo: match enclave hash or something?)
 	- Intel's certificate signed the report
 	- The public key of the enclave/node exists, so we can use that to encrypt the seed
 
@@ -116,11 +117,6 @@ func verifyCert(payload []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	//cert, err := base64.StdEncoding.DecodeString(string(signedReport.SigningCert))
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	certServer, err := x509.ParseCertificate(signedReport.SigningCert)
 	if err != nil {
 		return nil, err
@@ -135,6 +131,10 @@ func verifyCert(payload []byte) ([]byte, error) {
 
 	opts := x509.VerifyOptions{
 		Roots: roots,
+		// note: there's no way to not validate the time, and we don't want to write this code
+		// ourselves. We also can't just ignore the error message, since that means that the rest of
+		// the validation didn't happen (time is validated early on)
+		CurrentTime: time.Date(2023, 11, 04, 00, 00, 00, 00, time.UTC),
 	}
 
 	if _, err := certServer.Verify(opts); err != nil {
@@ -239,7 +239,7 @@ func verifyAttReport(attnReportRaw []byte, pubK []byte) ([]byte, error) {
 
 		qrData := parseReport(qb, quoteHex)
 
-		// idea:  verify mr signer/enclave
+		// todo: possibly verify mr signer/enclave?
 		//fmt.Println("Quote = [" + quoteBytes[:len(quoteBytes)-2] + "]")
 		//fmt.Println("sgx quote version = ", qrData.version)
 		//fmt.Println("sgx quote signature type = ", qrData.signType)

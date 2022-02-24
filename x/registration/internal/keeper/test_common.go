@@ -12,26 +12,26 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	"github.com/cosmos/ibc-go/modules/apps/transfer"
 
-	//"github.com/cosmos/ibc-go/applications/transfer"
+	//"github.com/cosmos/cosmos-sdk/x/ibc/applications/transfer"
+	"github.com/cosmos/cosmos-sdk/x/distribution"
+	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
+	"github.com/cosmos/ibc-go/modules/apps/transfer"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	//ibc "github.com/cosmos/cosmos-sdk/x/ibc/core"
+
+	"os"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-
-	//	"io/ioutil"
-	"os"
-	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -80,7 +80,7 @@ var ModuleBasics = module.NewBasicManager(
 	transfer.AppModuleBasic{},
 )
 
-func MakeTestCodec() codec.BinaryCodec {
+func MakeTestCodec() codec.Codec {
 	return MakeEncodingConfig().Marshaler
 }
 func MakeEncodingConfig() params.EncodingConfig {

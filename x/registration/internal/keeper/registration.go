@@ -1,9 +1,6 @@
 package keeper
 
 import (
-	"encoding/hex"
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/trstlabs/trst/x/registration/internal/types"
@@ -17,14 +14,14 @@ import (
 //	if certBz == nil {
 //		return nil
 //	}
-//	k.cdc.MustUnmarshal(certBz, &pkIO)
+//	k.cdc.MustUnmarshalBinaryBare(certBz, &pkIO)
 //	return &pkIO
 //}
 //
 //func (k Keeper) setMasterPublicKey(ctx sdk.Context, publicKey types.PublicKey) {
 //	store := ctx.KVStore(k.storeKey)
 //
-//	store.Set(types.MasterCertPrefix(types.MasterPublicKeyId), k.cdc.MustMarshal(publicKey))
+//	store.Set(types.MasterCertPrefix(types.MasterPublicKeyId), k.cdc.MustMarshalBinaryBare(publicKey))
 //}
 
 func (k Keeper) GetMasterCertificate(ctx sdk.Context, certType string) *types.MasterCertificate {
@@ -36,20 +33,6 @@ func (k Keeper) GetMasterCertificate(ctx sdk.Context, certType string) *types.Ma
 	}
 	k.cdc.MustUnmarshal(certBz, &cert)
 	return &cert
-}
-
-func (k Keeper) GetMasterIoPubKeyArray(ctx sdk.Context) []byte {
-	store := ctx.KVStore(k.storeKey)
-	var cert types.MasterCertificate
-	certBz := store.Get(types.MasterCertPrefix(types.MasterIoKeyId))
-	if certBz == nil {
-		return nil
-	}
-	k.cdc.MustUnmarshal(certBz, &cert)
-	fmt.Printf("cert : %X\n", cert)
-	fmt.Printf("cert Bytes: %X\n", cert.Bytes)
-
-	return cert.Bytes
 }
 
 func (k Keeper) setMasterCertificate(ctx sdk.Context, cert types.MasterCertificate, certType string) {
@@ -69,7 +52,7 @@ func (k Keeper) isMasterCertificateDefined(ctx sdk.Context, certType string) boo
 func (k Keeper) getRegistrationInfo(ctx sdk.Context, publicKey types.NodeID) *types.RegistrationNodeInfo {
 	store := ctx.KVStore(k.storeKey)
 	var nodeInfo types.RegistrationNodeInfo
-	fmt.Println("pubkey", hex.EncodeToString(publicKey))
+	//fmt.Println("pubkey", hex.EncodeToString(publicKey))
 	certBz := store.Get(types.RegistrationKeyPrefix(publicKey))
 
 	if certBz == nil {
@@ -101,8 +84,8 @@ func (k Keeper) SetRegistrationInfo(ctx sdk.Context, certificate types.Registrat
 		return
 	}
 
-	fmt.Println("pubkey", hex.EncodeToString(publicKey))
-	fmt.Println("EncryptedSeed", hex.EncodeToString(certificate.EncryptedSeed))
+	//fmt.Println("pubkey", hex.EncodeToString(publicKey))
+	//fmt.Println("EncryptedSeed", hex.EncodeToString(certificate.EncryptedSeed))
 	store.Set(types.RegistrationKeyPrefix(publicKey), k.cdc.MustMarshal(&certificate))
 }
 

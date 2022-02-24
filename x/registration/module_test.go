@@ -32,7 +32,7 @@ package registration
 //}
 //
 //func mustLoad(path string) []byte {
-//	bz, err := os.ReadFile(path)
+//	bz, err := ioutil.ReadFile(path)
 //	if err != nil {
 //		panic(err)
 //	}

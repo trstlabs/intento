@@ -1,11 +1,12 @@
 syntax = "proto3";
-package trst.x.registration.remote_attestation.v1beta1;
+package trst.x.registration.remote_atterstation.v1beta1;
 
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/trstlabs/trst/x/registration/remote_attestation";
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = true;
+
 
 message QuoteReport {
   string id = 1 [(gogoproto.customname) = "ID"];

@@ -74,6 +74,7 @@ func GetCmdMasterParams() *cobra.Command {
 		Long:  "Get parameters for trst - writes the parameters to [master-cert.der] by default",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
+
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
