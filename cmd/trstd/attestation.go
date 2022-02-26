@@ -147,14 +147,11 @@ blockchain. Writes the certificate in DER format to ~/attestation_cert
 					return err
 				}
 			}
-
+			fmt.Print("cert", cert)
 			pubkey, err := ra.VerifyRaCert(cert)
 			if err != nil {
 				return err
 			}
-
-			fmt.Println(fmt.Sprintf("%s", hex.EncodeToString(pubkey)))
-			fmt.Println(fmt.Sprintf("%s", hex.EncodeToString(masterKey)))
 
 			// sanity check - make sure the certificate we're using matches the generated key
 			if hex.EncodeToString(pubkey) != hex.EncodeToString(masterKey) {
@@ -180,7 +177,7 @@ blockchain. Writes the certificate in DER format to ~/attestation_cert
 			// Create genesis state from certificates
 			regGenStateBz, err := cdc.MarshalJSON(&regGenState)
 			if err != nil {
-				return fmt.Errorf("failed to marshal reg genesis state: %w", err)
+				return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 			}
 
 			appState[reg.ModuleName] = regGenStateBz

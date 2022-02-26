@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use tempfile::TempDir;
 
-use trustless_cosmwasm_std::{coins, HumanAddr};
+use cosmwasm_std::{coins, HumanAddr};
 use cosmwasm_sgx_vm::testing::{mock_dependencies, mock_env, mock_instance_with_gas_limit};
 use cosmwasm_sgx_vm::{call_handle_raw, call_init_raw, features_from_csv, to_vec, CosmCache};
 

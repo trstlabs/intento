@@ -92,7 +92,6 @@ where
         VmError::generic_err("The enclave is too busy and can not respond to this query")
     }
 
-
     pub fn init(&mut self, env: &[u8], msg: &[u8], auto_msg: &[u8], sig_info: &[u8]) -> VmResult<InitSuccess> {
 
         trace!(
@@ -102,9 +101,9 @@ where
             String::from_utf8_lossy(auto_msg),
             self.gas_left()
         );
+
         let mut init_result = MaybeUninit::<InitResult>::uninit();
         let mut used_gas = 0_u64;
-
 
         // Bind the token to a local variable to ensure its
         // destructor runs in the end of the function
@@ -128,7 +127,7 @@ where
                 msg.len(),
                 auto_msg.as_ptr(),
                 auto_msg.len(),
-                sig_info.as_ptr(),
+                  sig_info.as_ptr(),
                 sig_info.len(),
             )
         };

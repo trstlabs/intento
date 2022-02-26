@@ -14,6 +14,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -30,79 +31,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type QueryMasterKeyRequest struct {
-}
-
-func (m *QueryMasterKeyRequest) Reset()         { *m = QueryMasterKeyRequest{} }
-func (m *QueryMasterKeyRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryMasterKeyRequest) ProtoMessage()    {}
-func (*QueryMasterKeyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f77edfeb78906709, []int{0}
-}
-func (m *QueryMasterKeyRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryMasterKeyRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryMasterKeyRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryMasterKeyRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMasterKeyRequest.Merge(m, src)
-}
-func (m *QueryMasterKeyRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryMasterKeyRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMasterKeyRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryMasterKeyRequest proto.InternalMessageInfo
-
-type QueryMasterKeyResponse struct {
-	MasterKey *MasterCertificate `protobuf:"bytes,1,opt,name=master_key,json=masterKey,proto3" json:"master_key,omitempty"`
-}
-
-func (m *QueryMasterKeyResponse) Reset()         { *m = QueryMasterKeyResponse{} }
-func (m *QueryMasterKeyResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryMasterKeyResponse) ProtoMessage()    {}
-func (*QueryMasterKeyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f77edfeb78906709, []int{1}
-}
-func (m *QueryMasterKeyResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryMasterKeyResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryMasterKeyResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryMasterKeyResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryMasterKeyResponse.Merge(m, src)
-}
-func (m *QueryMasterKeyResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryMasterKeyResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryMasterKeyResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryMasterKeyResponse proto.InternalMessageInfo
-
 type QueryEncryptedSeedRequest struct {
 	PubKey []byte `protobuf:"bytes,1,opt,name=pub_key,json=pubKey,proto3" json:"pub_key,omitempty"`
 }
@@ -111,7 +39,7 @@ func (m *QueryEncryptedSeedRequest) Reset()         { *m = QueryEncryptedSeedReq
 func (m *QueryEncryptedSeedRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryEncryptedSeedRequest) ProtoMessage()    {}
 func (*QueryEncryptedSeedRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f77edfeb78906709, []int{2}
+	return fileDescriptor_f77edfeb78906709, []int{0}
 }
 func (m *QueryEncryptedSeedRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -148,7 +76,7 @@ func (m *QueryEncryptedSeedResponse) Reset()         { *m = QueryEncryptedSeedRe
 func (m *QueryEncryptedSeedResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryEncryptedSeedResponse) ProtoMessage()    {}
 func (*QueryEncryptedSeedResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f77edfeb78906709, []int{3}
+	return fileDescriptor_f77edfeb78906709, []int{1}
 }
 func (m *QueryEncryptedSeedResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -178,8 +106,6 @@ func (m *QueryEncryptedSeedResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryEncryptedSeedResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*QueryMasterKeyRequest)(nil), "trst.x.registration.v1beta1.QueryMasterKeyRequest")
-	proto.RegisterType((*QueryMasterKeyResponse)(nil), "trst.x.registration.v1beta1.QueryMasterKeyResponse")
 	proto.RegisterType((*QueryEncryptedSeedRequest)(nil), "trst.x.registration.v1beta1.QueryEncryptedSeedRequest")
 	proto.RegisterType((*QueryEncryptedSeedResponse)(nil), "trst.x.registration.v1beta1.QueryEncryptedSeedResponse")
 }
@@ -187,81 +113,35 @@ func init() {
 func init() { proto.RegisterFile("registration/query.proto", fileDescriptor_f77edfeb78906709) }
 
 var fileDescriptor_f77edfeb78906709 = []byte{
-	// 418 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x31, 0x8f, 0xd3, 0x30,
-	0x14, 0xc7, 0xe3, 0x93, 0x38, 0x74, 0x86, 0x63, 0xb0, 0xe0, 0xee, 0x08, 0xc8, 0x3a, 0x45, 0x42,
-	0xba, 0xe5, 0x6c, 0xae, 0x87, 0xca, 0xce, 0x89, 0x09, 0xdd, 0x40, 0x59, 0x10, 0x4b, 0xe5, 0xb4,
-	0x0f, 0x13, 0xb5, 0x89, 0x53, 0xdb, 0x41, 0x8d, 0x10, 0x0b, 0x9f, 0x00, 0x89, 0x9d, 0x99, 0x8f,
-	0xc0, 0x47, 0xe8, 0x58, 0x89, 0x85, 0x11, 0x12, 0x3e, 0x08, 0x8a, 0x93, 0x56, 0x0d, 0x8a, 0x8a,
-	0xba, 0x59, 0x7e, 0xef, 0xff, 0xfe, 0xbf, 0xf7, 0xb7, 0xf1, 0x89, 0x06, 0x19, 0x19, 0xab, 0x85,
-	0x8d, 0x54, 0xc2, 0x67, 0x19, 0xe8, 0x9c, 0xa5, 0x5a, 0x59, 0x45, 0x1e, 0x58, 0x6d, 0x2c, 0x9b,
-	0xb3, 0xcd, 0x06, 0xf6, 0xfe, 0x22, 0x04, 0x2b, 0x2e, 0xfc, 0xbb, 0x52, 0x49, 0xe5, 0xfa, 0x78,
-	0x75, 0xaa, 0x25, 0xfe, 0x43, 0xa9, 0x94, 0x9c, 0x02, 0x17, 0x69, 0xc4, 0x45, 0x92, 0x28, 0xeb,
-	0x44, 0xa6, 0xa9, 0x1e, 0xb5, 0xac, 0x62, 0x23, 0xeb, 0xfb, 0xe0, 0x18, 0xdf, 0x7b, 0x59, 0xf9,
-	0x5e, 0x0b, 0x63, 0x41, 0xbf, 0x80, 0x7c, 0x00, 0xb3, 0x0c, 0x8c, 0x0d, 0x24, 0x3e, 0xfa, 0xb7,
-	0x60, 0x52, 0x95, 0x18, 0x20, 0xd7, 0x18, 0xc7, 0xee, 0x72, 0x38, 0x81, 0xfc, 0x04, 0x9d, 0xa2,
-	0xb3, 0x5b, 0x3d, 0xc6, 0xb6, 0x00, 0xb3, 0x7a, 0xc6, 0x15, 0x68, 0x1b, 0xbd, 0x8d, 0x46, 0xc2,
-	0xc2, 0xe0, 0x20, 0x5e, 0x8d, 0x0d, 0x9e, 0xe0, 0xfb, 0xce, 0xe8, 0x79, 0x32, 0xd2, 0x79, 0x6a,
-	0x61, 0xfc, 0x0a, 0x60, 0xdc, 0x50, 0x90, 0x63, 0x7c, 0x33, 0xcd, 0xc2, 0xb5, 0xd1, 0xed, 0xc1,
-	0x7e, 0x9a, 0x85, 0x95, 0xea, 0x0a, 0xfb, 0x5d, 0xaa, 0x06, 0xf1, 0x11, 0xbe, 0x03, 0xab, 0xc2,
-	0xd0, 0x00, 0x8c, 0x1b, 0xf5, 0x21, 0x6c, 0xb6, 0xf7, 0xca, 0x3d, 0x7c, 0xc3, 0x4d, 0x21, 0x5f,
-	0x11, 0x3e, 0x58, 0x6f, 0x4a, 0x7a, 0x5b, 0xb7, 0xe9, 0xcc, 0xcb, 0xbf, 0xdc, 0x49, 0x53, 0x73,
-	0x06, 0x67, 0x9f, 0x7e, 0xfc, 0xf9, 0xb2, 0x17, 0x90, 0x53, 0xde, 0x7a, 0x9e, 0x46, 0xc5, 0xeb,
-	0x90, 0xce, 0x27, 0x90, 0x93, 0xef, 0x08, 0x1f, 0xb6, 0x76, 0x25, 0xfd, 0xff, 0x1b, 0x76, 0x45,
-	0xea, 0x3f, 0xdd, 0x59, 0xd7, 0xc0, 0xf6, 0x1d, 0xec, 0x63, 0xc2, 0xba, 0x61, 0xd7, 0xd1, 0x9e,
-	0x57, 0x81, 0xf3, 0x0f, 0xcd, 0xbb, 0x7d, 0x7c, 0xf6, 0x7a, 0xf1, 0x9b, 0x7a, 0xdf, 0x0a, 0x8a,
-	0x16, 0x05, 0x45, 0xcb, 0x82, 0xa2, 0x5f, 0x05, 0x45, 0x9f, 0x4b, 0xea, 0x2d, 0x4b, 0xea, 0xfd,
-	0x2c, 0xa9, 0xf7, 0xa6, 0x2f, 0x23, 0xfb, 0x2e, 0x0b, 0xd9, 0x48, 0xc5, 0xbc, 0x82, 0x9b, 0x8a,
-	0xd0, 0xb8, 0x03, 0x9f, 0xb7, 0xbd, 0xa2, 0xc4, 0x82, 0x4e, 0xc4, 0x94, 0xdb, 0x3c, 0x05, 0x13,
-	0xee, 0xbb, 0x3f, 0x7c, 0xf9, 0x37, 0x00, 0x00, 0xff, 0xff, 0xcf, 0xfe, 0xef, 0xce, 0x48, 0x03,
-	0x00, 0x00,
+	// 406 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x51, 0xc1, 0xaa, 0xd3, 0x40,
+	0x14, 0x4d, 0x94, 0x56, 0x18, 0xac, 0xc2, 0x20, 0xb5, 0xa6, 0x65, 0x28, 0x45, 0xa5, 0x9b, 0xce,
+	0x58, 0x95, 0xba, 0x57, 0xba, 0xea, 0xca, 0xea, 0x42, 0xdc, 0x94, 0xa4, 0xbd, 0x8e, 0xa1, 0x6d,
+	0x66, 0x9a, 0x99, 0x48, 0x42, 0x71, 0xe3, 0x17, 0x08, 0xfe, 0x44, 0x3f, 0xc1, 0x4f, 0xe8, 0xb2,
+	0xe0, 0xc6, 0xa5, 0xa6, 0x7e, 0x88, 0x64, 0x92, 0x4a, 0x02, 0xb5, 0xf0, 0x78, 0xbb, 0x99, 0x7b,
+	0xef, 0xb9, 0xe7, 0x9c, 0x7b, 0x50, 0x2b, 0x04, 0xee, 0x2b, 0x1d, 0xba, 0xda, 0x17, 0x01, 0xdb,
+	0x44, 0x10, 0x26, 0x54, 0x86, 0x42, 0x0b, 0xdc, 0xd6, 0xa1, 0xd2, 0x34, 0xa6, 0xe5, 0x01, 0xfa,
+	0x69, 0xe8, 0x81, 0x76, 0x87, 0xce, 0x3d, 0x2e, 0xb8, 0x30, 0x73, 0x2c, 0x7b, 0xe5, 0x10, 0xa7,
+	0xcd, 0x85, 0xe0, 0x2b, 0x60, 0xe6, 0xe7, 0x45, 0x1f, 0x18, 0xac, 0xa5, 0x2e, 0xf6, 0x39, 0x9d,
+	0xa2, 0xe9, 0x4a, 0x9f, 0xb9, 0x41, 0x20, 0xb4, 0xd9, 0xa8, 0x8a, 0x6e, 0xb3, 0xa2, 0x63, 0xad,
+	0x78, 0x5e, 0xef, 0x3d, 0x47, 0x0f, 0x5e, 0x67, 0xa2, 0xc6, 0xc1, 0x3c, 0x4c, 0xa4, 0x86, 0xc5,
+	0x1b, 0x80, 0xc5, 0x14, 0x36, 0x11, 0x28, 0x8d, 0xef, 0xa3, 0x5b, 0x32, 0xf2, 0x66, 0x4b, 0x48,
+	0x5a, 0x76, 0xd7, 0xee, 0xdf, 0x9e, 0xd6, 0x65, 0xe4, 0x4d, 0x20, 0xe9, 0xbd, 0x42, 0xce, 0x39,
+	0x94, 0x92, 0x22, 0x50, 0x80, 0x1f, 0xa1, 0x3b, 0x70, 0x6a, 0xcc, 0x14, 0xc0, 0xa2, 0x40, 0x37,
+	0xa0, 0x3c, 0xfe, 0x74, 0x77, 0x13, 0xd5, 0xcc, 0x16, 0xcc, 0x51, 0xed, 0x6d, 0x3c, 0x81, 0x04,
+	0x37, 0x69, 0x6e, 0x82, 0x9e, 0x1c, 0xd2, 0x71, 0xe6, 0xd0, 0xe9, 0xd2, 0x0b, 0xc7, 0xa2, 0x99,
+	0xa2, 0x87, 0x5f, 0x7e, 0xfc, 0xf9, 0x76, 0x83, 0xe0, 0x0e, 0xab, 0x18, 0x2d, 0x46, 0x98, 0x8e,
+	0x07, 0x4b, 0x48, 0xf0, 0x16, 0xdd, 0x9d, 0x96, 0xda, 0xd7, 0xa3, 0xa4, 0x86, 0xb2, 0x8f, 0x1f,
+	0x9f, 0xa7, 0x2c, 0x17, 0x0d, 0xf9, 0x77, 0x1b, 0x35, 0x2a, 0x07, 0xc3, 0xa3, 0x8b, 0x1c, 0xff,
+	0xcd, 0xc5, 0x79, 0x71, 0x65, 0x5c, 0x9e, 0x4c, 0x6f, 0x64, 0x24, 0x3f, 0xc1, 0xf4, 0xbc, 0xe4,
+	0x7f, 0xf9, 0x0c, 0xb2, 0xd4, 0xd8, 0xb6, 0x08, 0xff, 0xf3, 0xcb, 0x77, 0xfb, 0xdf, 0xc4, 0xda,
+	0xa5, 0xc4, 0xde, 0xa7, 0xc4, 0x3e, 0xa4, 0xc4, 0xfe, 0x95, 0x12, 0xfb, 0xeb, 0x91, 0x58, 0x87,
+	0x23, 0xb1, 0x7e, 0x1e, 0x89, 0xf5, 0x7e, 0xc4, 0x7d, 0xfd, 0x31, 0xf2, 0xe8, 0x5c, 0xac, 0x59,
+	0x26, 0x6e, 0xe5, 0x7a, 0xca, 0x3c, 0x58, 0x5c, 0xe5, 0xf2, 0x03, 0x0d, 0x61, 0xe0, 0xae, 0x98,
+	0x4e, 0x24, 0x28, 0xaf, 0x6e, 0xce, 0xfe, 0xec, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x2a, 0xe4,
+	0x06, 0x39, 0x28, 0x03, 0x00, 0x00,
 }
 
-func (this *QueryMasterKeyRequest) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*QueryMasterKeyRequest)
-	if !ok {
-		that2, ok := that.(QueryMasterKeyRequest)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	return true
-}
-func (this *QueryMasterKeyResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*QueryMasterKeyResponse)
-	if !ok {
-		that2, ok := that.(QueryMasterKeyResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.MasterKey.Equal(that1.MasterKey) {
-		return false
-	}
-	return true
-}
 func (this *QueryEncryptedSeedRequest) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -323,7 +203,11 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	MasterKey(ctx context.Context, in *QueryMasterKeyRequest, opts ...grpc.CallOption) (*QueryMasterKeyResponse, error)
+	// Returns the key used for transactions
+	TxKey(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Key, error)
+	// Returns the key used for registration
+	RegistrationKey(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Key, error)
+	// Returns the encrypted seed for a registered node by public key
 	EncryptedSeed(ctx context.Context, in *QueryEncryptedSeedRequest, opts ...grpc.CallOption) (*QueryEncryptedSeedResponse, error)
 }
 
@@ -335,9 +219,18 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) MasterKey(ctx context.Context, in *QueryMasterKeyRequest, opts ...grpc.CallOption) (*QueryMasterKeyResponse, error) {
-	out := new(QueryMasterKeyResponse)
-	err := c.cc.Invoke(ctx, "/trst.x.registration.v1beta1.Query/MasterKey", in, out, opts...)
+func (c *queryClient) TxKey(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Key, error) {
+	out := new(Key)
+	err := c.cc.Invoke(ctx, "/trst.x.registration.v1beta1.Query/TxKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RegistrationKey(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Key, error) {
+	out := new(Key)
+	err := c.cc.Invoke(ctx, "/trst.x.registration.v1beta1.Query/RegistrationKey", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -355,7 +248,11 @@ func (c *queryClient) EncryptedSeed(ctx context.Context, in *QueryEncryptedSeedR
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	MasterKey(context.Context, *QueryMasterKeyRequest) (*QueryMasterKeyResponse, error)
+	// Returns the key used for transactions
+	TxKey(context.Context, *emptypb.Empty) (*Key, error)
+	// Returns the key used for registration
+	RegistrationKey(context.Context, *emptypb.Empty) (*Key, error)
+	// Returns the encrypted seed for a registered node by public key
 	EncryptedSeed(context.Context, *QueryEncryptedSeedRequest) (*QueryEncryptedSeedResponse, error)
 }
 
@@ -363,8 +260,11 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) MasterKey(ctx context.Context, req *QueryMasterKeyRequest) (*QueryMasterKeyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MasterKey not implemented")
+func (*UnimplementedQueryServer) TxKey(ctx context.Context, req *emptypb.Empty) (*Key, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TxKey not implemented")
+}
+func (*UnimplementedQueryServer) RegistrationKey(ctx context.Context, req *emptypb.Empty) (*Key, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegistrationKey not implemented")
 }
 func (*UnimplementedQueryServer) EncryptedSeed(ctx context.Context, req *QueryEncryptedSeedRequest) (*QueryEncryptedSeedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EncryptedSeed not implemented")
@@ -374,20 +274,38 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_MasterKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryMasterKeyRequest)
+func _Query_TxKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).MasterKey(ctx, in)
+		return srv.(QueryServer).TxKey(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/trst.x.registration.v1beta1.Query/MasterKey",
+		FullMethod: "/trst.x.registration.v1beta1.Query/TxKey",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).MasterKey(ctx, req.(*QueryMasterKeyRequest))
+		return srv.(QueryServer).TxKey(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RegistrationKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RegistrationKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/trst.x.registration.v1beta1.Query/RegistrationKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RegistrationKey(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -415,8 +333,12 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "MasterKey",
-			Handler:    _Query_MasterKey_Handler,
+			MethodName: "TxKey",
+			Handler:    _Query_TxKey_Handler,
+		},
+		{
+			MethodName: "RegistrationKey",
+			Handler:    _Query_RegistrationKey_Handler,
 		},
 		{
 			MethodName: "EncryptedSeed",
@@ -425,64 +347,6 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "registration/query.proto",
-}
-
-func (m *QueryMasterKeyRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryMasterKeyRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryMasterKeyRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryMasterKeyResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryMasterKeyResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryMasterKeyResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.MasterKey != nil {
-		{
-			size, err := m.MasterKey.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintQuery(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *QueryEncryptedSeedRequest) Marshal() (dAtA []byte, err error) {
@@ -556,28 +420,6 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryMasterKeyRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *QueryMasterKeyResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.MasterKey != nil {
-		l = m.MasterKey.Size()
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
 func (m *QueryEncryptedSeedRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -609,142 +451,6 @@ func sovQuery(x uint64) (n int) {
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *QueryMasterKeyRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMasterKeyRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMasterKeyRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryMasterKeyResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryMasterKeyResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryMasterKeyResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MasterKey", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.MasterKey == nil {
-				m.MasterKey = &MasterCertificate{}
-			}
-			if err := m.MasterKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *QueryEncryptedSeedRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

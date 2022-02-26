@@ -98,7 +98,7 @@ impl Storage for DB {
         &'a self,
         start: Option<&[u8]>,
         end: Option<&[u8]>,
-        order: trustless_cosmwasm_std::Order,
+        order: cosmwasm_std::Order,
     ) -> FfiResult<Box<dyn StorageIterator + 'a>> {
         // returns nul pointer in Buffer in none, otherwise proper buffer
         let start_buf = start

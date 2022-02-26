@@ -301,15 +301,18 @@ func Query(
 // KeyGen Send KeyGen request to enclave
 func KeyGen() ([]byte, error) {
 	errmsg := C.Buffer{}
+	fmt.Print("keygen", KeyGen)
 	res, err := C.key_gen(&errmsg)
 	if err != nil {
 		return nil, errorWithMessage(err, errmsg)
 	}
+
 	return receiveVector(res), nil
 }
 
 // CreateAttestationReport Send CreateAttestationReport request to enclave
 func CreateAttestationReport(spid []byte, apiKey []byte) (bool, error) {
+
 	errmsg := C.Buffer{}
 	spidSlice := sendSlice(spid)
 	defer freeAfterSend(spidSlice)

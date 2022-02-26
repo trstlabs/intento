@@ -314,7 +314,7 @@ func TestMigrate(t *testing.T) {
 
 	// verifier is fred
 	query := []byte(`{"verifier":{}}`)
-	data, _, err := Query(cache, id, query, &igasMeter, store, api, &querier, 100000000)
+	data, _, err := Query(cache, id, query, query, &igasMeter, store, api, &querier, 100000000)
 	require.NoError(t, err)
 	var qres types.QueryResponse
 	err = json.Unmarshal(data, &qres)
@@ -330,7 +330,7 @@ func TestMigrate(t *testing.T) {
 	require.NoError(t, err)
 
 	// should update verifier to alice
-	data, _, err = Query(cache, id, query, &igasMeter, store, api, &querier, 100000000)
+	data, _, err = Query(cache, id, query, query, &igasMeter, store, api, &querier, 100000000)
 	require.NoError(t, err)
 	var qres2 types.QueryResponse
 	err = json.Unmarshal(data, &qres2)
@@ -464,7 +464,7 @@ func TestQuery(t *testing.T) {
 	igasMeter2 := GasMeter(gasMeter2)
 	store.SetGasMeter(gasMeter2)
 	query := []byte(`{"Raw":{"val":"config"}}`)
-	data, _, err := Query(cache, id, query, &igasMeter2, store, api, &querier, 100000000)
+	data, _, err := Query(cache, id, query, query, &igasMeter2, store, api, &querier, 100000000)
 	require.NoError(t, err)
 	var badResp types.QueryResponse
 	err = json.Unmarshal(data, &badResp)
@@ -481,7 +481,7 @@ func TestQuery(t *testing.T) {
 	igasMeter3 := GasMeter(gasMeter3)
 	store.SetGasMeter(gasMeter3)
 	query = []byte(`{"verifier":{}}`)
-	data, _, err = Query(cache, id, query, &igasMeter3, store, api, &querier, 100000000)
+	data, _, err = Query(cache, id, query, query, &igasMeter3, store, api, &querier, 100000000)
 	require.NoError(t, err)
 	var qres types.QueryResponse
 	err = json.Unmarshal(data, &qres)
@@ -564,7 +564,7 @@ func TestHackatomQuerier(t *testing.T) {
 	// make a valid query to the other address
 	query := []byte(`{"other_balance":{"address":"foobar"}}`)
 	// TODO The query happens before the contract is initialized. How is this legal?
-	data, _, err := Query(cache, id, query, &igasMeter, store, api, &querier, 100000000)
+	data, _, err := Query(cache, id, query, query, &igasMeter, store, api, &querier, 100000000)
 	require.NoError(t, err)
 	var qres types.QueryResponse
 	err = json.Unmarshal(data, &qres)
@@ -595,7 +595,7 @@ func TestCustomReflectQuerier(t *testing.T) {
 
 	// make a valid query to the other address
 	query := []byte(`{"reflect_custom":{"text":"small Frys :)"}}`)
-	data, _, err := Query(cache, id, query, &igasMeter, store, api, &querier, 100000000)
+	data, _, err := Query(cache, id, query, query, &igasMeter, store, api, &querier, 100000000)
 	require.NoError(t, err)
 	var qres types.QueryResponse
 	err = json.Unmarshal(data, &qres)

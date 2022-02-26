@@ -74,7 +74,7 @@ func TestQueueIterator(t *testing.T) {
 	igasMeter := GasMeter(gasMeter)
 	store := setup.Store(gasMeter)
 	query := []byte(`{"sum":{}}`)
-	data, _, err := Query(cache, id, query, &igasMeter, store, api, &querier, 100000000)
+	data, _, err := Query(cache, id, query, query, &igasMeter, store, api, &querier, 100000000)
 	require.NoError(t, err)
 	var qres types.QueryResponse
 	err = json.Unmarshal(data, &qres)
@@ -84,7 +84,7 @@ func TestQueueIterator(t *testing.T) {
 
 	// query reduce (multiple iterators at once)
 	query = []byte(`{"reducer":{}}`)
-	data, _, err = Query(cache, id, query, &igasMeter, store, api, &querier, 100000000)
+	data, _, err = Query(cache, id, query, query, &igasMeter, store, api, &querier, 100000000)
 	require.NoError(t, err)
 	var reduced types.QueryResponse
 	err = json.Unmarshal(data, &reduced)
@@ -111,7 +111,7 @@ func TestQueueIteratorRaces(t *testing.T) {
 
 		// query reduce (multiple iterators at once)
 		query := []byte(`{"reducer":{}}`)
-		data, _, err := Query(cache, id, query, &igasMeter, store, api, &querier, 100000000)
+		data, _, err := Query(cache, id, query, query, &igasMeter, store, api, &querier, 100000000)
 		require.NoError(t, err)
 		var reduced types.QueryResponse
 		err = json.Unmarshal(data, &reduced)

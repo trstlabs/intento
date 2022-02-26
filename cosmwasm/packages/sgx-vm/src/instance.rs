@@ -250,7 +250,9 @@ where
         let limit = self.inner.gas_limit();
         let remaining = self.inner.gas_left();
         let used_internally = self.inner.gas_used();
-        let used_externally = limit.saturating_sub(remaining).saturating_sub(used_internally);
+        let used_externally = limit
+            .saturating_sub(remaining)
+            .saturating_sub(used_internally);
         GasReport {
             limit,
             remaining,
@@ -323,7 +325,6 @@ where
         let function = self.inner.exports.get(name)?;
         Ok(function)
     }
-
     pub fn call_init(&mut self, env: &[u8], msg: &[u8], auto_msg: &[u8], sig_info: &[u8]) -> VmResult<Vec<u8>> {
         let init_result = self.inner.init(env, msg, auto_msg, sig_info)?;
         Ok(init_result.into_output())
@@ -406,8 +407,10 @@ mod test {
     #[test]
     fn func_works() {
         let instance = mock_instance(&CONTRACT, &[]);
+
         // can get func
         let allocate: Func<u32, u32> = instance.func("allocate").expect("error getting func");
+
         // can call a few times
         let _ptr1 = allocate.call(0).expect("error calling allocate func");
         let _ptr2 = allocate.call(1).expect("error calling allocate func");

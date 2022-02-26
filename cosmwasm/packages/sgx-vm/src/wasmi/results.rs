@@ -8,7 +8,7 @@ pub struct InitSuccess {
     output: Vec<u8>,
     /// The contract_key for this contract.
     contract_key: [u8; 64],
-    /// The contract_key for this contract.
+  /// The sig for this contract.
     callback_sig: [u8; 32],
 }
 
@@ -47,6 +47,7 @@ impl HandleSuccess {
         self.output
     }
 }
+
 pub fn handle_result_to_vm_result(other: HandleResult) -> VmResult<HandleSuccess> {
     match other {
         HandleResult::Success { output } => Ok(HandleSuccess {

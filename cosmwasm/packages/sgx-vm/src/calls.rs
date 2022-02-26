@@ -37,6 +37,7 @@ where
     let result: InitResult<U> = from_slice(&data)?;
     Ok(result)
 }
+
 pub fn call_handle<S, A, Q, U>(
     instance: &mut Instance<S, A, Q>,
     env: &Env,
@@ -53,6 +54,7 @@ where
     let result: HandleResult<U> = from_slice(&data)?;
     Ok(result)
 }
+
 pub fn call_migrate<S, A, Q, U>(
     instance: &mut Instance<S, A, Q>,
     env: &Env,
@@ -69,18 +71,21 @@ where
     let result: MigrateResult<U> = from_slice(&data)?;
     Ok(result)
 }
+
 pub fn call_query<S: Storage + 'static, A: Api + 'static, Q: Querier + 'static>(
     instance: &mut Instance<S, A, Q>,
     msg: &[u8],
 ) -> VmResult<QueryResult> {
     let data = call_query_raw(instance, msg)?;
     let result: QueryResult = from_slice(&data)?;
+
     // Ensure query response is valid JSON
     if let Ok(binary_response) = &result {
         serde_json::from_slice::<serde_json::Value>(binary_response.as_slice()).map_err(|e| {
             VmError::generic_err(format!("Query response must be valid JSON. {}", e))
         })?;
     }
+
     Ok(result)
 }
 */

@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc/encoding/proto"
 
 	// "github.com/trstlabs/trst/x/compute/internal/types"
-	reg "github.com/trstlabs/trst/x/registration"
+	regtypes "github.com/trstlabs/trst/x/registration"
 
 	//"github.com/trstlabs/trst/x/registration/internal/types"
 	ra "github.com/trstlabs/trst/x/registration/remote_attestation"
@@ -68,7 +68,7 @@ func GzipIt(input []byte) ([]byte, error) {
 type WASMContext struct {
 	CLIContext       client.Context
 	TestKeyPairPath  string
-	TestMasterIOCert reg.MasterCertificate
+	TestMasterIOCert regtypes.MasterCertificate
 }
 
 type keyPair struct {
@@ -142,40 +142,27 @@ var hkdfSalt = []byte{
 }
 
 func (ctx WASMContext) getConsensusIoPubKey() ([]byte, error) {
-	var masterIoKey reg.MasterCertificate
-
-	var response reg.QueryMasterKeyResponse
-	if ctx.TestMasterIOCert.Bytes != nil {
-		masterIoKey.Bytes = ctx.TestMasterIOCert.Bytes
+	var masterIoKey regtypes.Key
+	if ctx.TestMasterIOCert.Bytes != nil { // TODO check length?
+		masterIoKey.Key = ctx.TestMasterIOCert.Bytes
 	} else {
-		//route := fmt.Sprintf("custom/%s/%s", types.RegisterQuerierRoute, types.QueryMasterCertificate)
-
-		res, _, err := ctx.CLIContext.Query("/trst.x.registration.v1beta1.Query/MasterKey")
+		res, _, err := ctx.CLIContext.Query("/trst.x.registration.v1beta1.Query/TxKey")
 		if err != nil {
-			//	res, _, err = ctx.CLIContext.Query("/trst.x.registration.v1beta1.Query/MasterKey")
-			if err != nil {
-				return nil, err
-			}
+			return nil, err
 		}
 
-		err = encoding.GetCodec(proto.Name).Unmarshal(res, &response)
+		err = encoding.GetCodec(proto.Name).Unmarshal(res, &masterIoKey)
 		if err != nil {
 			return nil, err
 		}
 	}
-	/*ioPubkey, err := ra.VerifyRaCert(response.MasterKey.Bytes)
+
+	ioPubkey, err := ra.VerifyRaCert(masterIoKey.Key)
 	if err != nil {
 		return nil, err
-	}*/
+	}
 
-	/*ioPubkey, err = ra.VerifyRaCert(res.Bytes)
-	if err != nil {
-		return nil, err
-	}*/
-
-	//fmt.Printf("ioPubkey %+v\n", response.MasterKey.Bytes)
-
-	return response.MasterKey.Bytes, nil
+	return ioPubkey, nil
 }
 
 func (ctx WASMContext) getTxEncryptionKey(txSenderPrivKey []byte, nonce []byte) ([]byte, error) {

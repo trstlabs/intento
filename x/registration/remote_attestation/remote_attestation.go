@@ -7,8 +7,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 /*
@@ -56,7 +57,9 @@ func VerifyRaCert(rawCert []byte) ([]byte, error) {
 }
 
 func extractAsn1Value(cert []byte, oid []byte) ([]byte, error) {
+
 	offset := uint(bytes.Index(cert, oid))
+
 	offset += 12 // 11 + TAG (0x04)
 
 	// we will be accessing offset + 2, so make sure it's not out-of-bounds

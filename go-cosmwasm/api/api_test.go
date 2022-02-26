@@ -78,7 +78,7 @@ func TestHumanAddressFailure(t *testing.T) {
 	gasMeter3 := NewMockGasMeter(100000000)
 	query := []byte(`{"verifier":{}}`)
 	igasMeter3 := GasMeter(gasMeter3)
-	res, _, err := Query(cache, id, query, &igasMeter3, store, badApi, &querier, 100000000)
+	res, _, err := Query(cache, id, query, query, &igasMeter3, store, badApi, &querier, 100000000)
 	require.NoError(t, err)
 	var resp types.QueryResponse
 	err = json.Unmarshal(res, &resp)
