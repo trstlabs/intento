@@ -941,6 +941,97 @@ type ValidatorTerra struct {
 	UnbondingTime     time.Time `json:"unbonding_time"`
 }
 
+func removeDuplicates(m map[string]SnapshotAccount) map[string]SnapshotAccount {
+	list := make([]string, 0, len(m))
+
+	//append accounts to list so we have list of all acc
+	for acc, _ := range m {
+
+		list = append(list, acc)
+	}
+
+	for _, item := range list {
+
+		if contains(list, item) == false {
+			_, ok := m[item]
+			if ok {
+				delete(m, item)
+			}
+
+			//list = append(list, item)
+		}
+	}
+
+	return m
+}
+
+func removeDuplicatesFromSnapshot(first map[string]SnapshotAccount, second map[string]SnapshotAccount, third map[string]SnapshotAccount) map[string]SnapshotAccount {
+	list := make([]string, 0, len(first))
+
+	var duplicatesSecret uint64
+	var duplicatesTerra uint64
+	fmt.Printf("length cosmos accs %d\n", len(first))
+	fmt.Printf("length secret accs %d\n", len(second))
+	fmt.Printf("length terra accs %d\n", len(third))
+	//append accounts to list so we have list of all acc
+	for acc, _ := range first {
+
+		list = append(list, acc)
+
+	}
+	fmt.Println("appended cosmos accs")
+	//append accounts to list so we have list of all secret acc
+	for acc, value := range second {
+		newAcc, _ := cosmosConvertBech32(acc)
+		//if it does not contain the acc we append to it
+		if contains(list, newAcc) == false {
+
+			list = append(list, newAcc)
+			first[newAcc] = value
+
+		} else {
+			//	fmt.Println("delete secret acc  %s\n", acc)
+			var acct = first[newAcc]
+			acct.TrstBalance = acct.TrstBalance.Add(value.TrstBalance)
+			delete(second, acc)
+			first[newAcc] = acct
+			fmt.Println("merged scrt acc", acc)
+			duplicatesSecret = duplicatesSecret + 1
+		}
+	}
+	fmt.Println("removed duplicates secret")
+	//append accounts to list so we have list of all terra acc
+	for acc, value := range third {
+		newAcc, _ := cosmosConvertBech32(acc)
+		//if it does not contain the acc we append to it
+		if contains(list, newAcc) == false {
+
+			list = append(list, newAcc)
+			first[newAcc] = value
+		} else {
+			//	fmt.Println("delete secret acc  %s\n", acc)
+			var acct = first[newAcc]
+			acct.TrstBalance = acct.TrstBalance.Add(value.TrstBalance)
+			first[newAcc] = acct
+
+			fmt.Println("merged terra acc", acc)
+			delete(third, acc)
+			duplicatesTerra = duplicatesTerra + 1
+		}
+	}
+
+	fmt.Printf("final length secret accs: c\n", len(second))
+	fmt.Printf("final length terra accs: %d\n", len(third))
+	fmt.Printf("length list accs: %d\n", len(list))
+
+	fmt.Printf("duplicates secret accs: %d\n", duplicatesSecret)
+	fmt.Printf("duplicates terra accs: %d\n", duplicatesTerra)
+	//all := append(first, second)
+
+	fmt.Println("removed duplicates")
+	return first
+}
+
 /*
 type GenesisFile struct {
 	AppHash  string `json:"app_hash"`

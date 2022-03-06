@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -209,8 +211,17 @@ func (k Keeper) GetUserTotalClaimable(ctx sdk.Context, addr sdk.AccAddress) (sdk
 	return totalClaimable, nil
 }
 
+//ends the vesting for a claim
+func (k Keeper) EndClaimVesting(ctx sdk.Context, addr sdk.AccAddress, claimableAmount sdk.Coins) error {
+	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, claimableAmount)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // ClaimCoins remove claimable amount entry and transfer it to user's account
-func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action types.Action) (sdk.Coins, error) {
+func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action types.Action, duration string) (sdk.Coins, error) {
 	claimableAmount, err := k.GetClaimableAmountForAction(ctx, addr, action)
 	if err != nil {
 		return claimableAmount, err
@@ -220,12 +231,14 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 		return claimableAmount, nil
 	}
 
-	claimRecord, err := k.GetClaimRecord(ctx, addr)
+	vestDuration, err := time.ParseDuration(duration)
 	if err != nil {
-		return nil, err
+		return claimableAmount, err
 	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, claimableAmount)
+	k.InsertVestingQueue(ctx, claimableAmount, addr.String(), ctx.BlockHeader().Time.Add(vestDuration))
+
+	claimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
 		return nil, err
 	}

@@ -9,7 +9,6 @@ option go_package = "github.com/trstlabs/trst/x/claim/types";
 
 enum Action {
   option (gogoproto.goproto_enum_prefix) = false;
-
   ActionComputeInstantiate= 0;
   ActionComputeExecute = 1;
   ActionItemBought = 2;

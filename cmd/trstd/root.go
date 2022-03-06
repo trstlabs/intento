@@ -261,13 +261,14 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 
 	//fmt.Printf("bootstrap: %s", cast.ToString(bootstrap))
 
-	return app.New(logger, db, traceStore, true, skipUpgradeHeights,
+	return app.NewTrstApp(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		queryGasLimit,
 		bootstrap,
 		appOpts,
 		compute.GetConfig(appOpts),
+		app.GetEnabledProposals(),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -293,13 +294,13 @@ func exportAppStateAndTMValidators(
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var wasmApp *app.App
 	if height != -1 {
-		wasmApp = app.New(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts, compute.DefaultWasmConfig())
+		wasmApp = app.NewTrstApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts, compute.DefaultWasmConfig(), app.GetEnabledProposals())
 
 		if err := wasmApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		wasmApp = app.New(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts, compute.DefaultWasmConfig())
+		wasmApp = app.NewTrstApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts, compute.DefaultWasmConfig(), app.GetEnabledProposals())
 	}
 
 	return wasmApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)

@@ -1,5 +1,11 @@
 package types
 
+import (
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "claim"
@@ -24,3 +30,53 @@ const (
 
 	MemStoreKey = "mem_claim"
 )
+
+// nolint
+var (
+	VestingStorePrefix = []byte{0x01}
+	VestingQueuePrefix = []byte{0x02}
+)
+
+// GetVestingStorePrefixKey returns the store prefix for the WASM contract instance
+func GetVestingStorePrefixKey(addr sdk.AccAddress) []byte {
+	return append(VestingStorePrefix, addr...)
+}
+
+////queue types
+
+var lenTime = len(sdk.FormatTimeBytes(time.Now()))
+
+// SplitVestingQueueKey split the listed key and returns the id and endTime
+func SplitVestingQueueKey(key []byte) (vestingAddr string, endTime time.Time) {
+	return splitKeyWithTime(key)
+}
+
+// VestingByTimeKey gets the listed item queue key by endTime
+func VestingByTimeKey(endTime time.Time) []byte {
+	return append(VestingQueuePrefix, sdk.FormatTimeBytes(endTime)...)
+}
+
+//from the key we get the contract and end time
+func splitKeyWithTime(key []byte) (vestingAddr string, endTime time.Time) {
+
+	/*if len(key[1:]) != 8+lenTime {
+		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+8))
+	}*/
+
+	endTime, _ = sdk.ParseTimeBytes(key[1 : 1+lenTime])
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//fmt.Printf("endTime is %s ", endTime)
+
+	//returns an id from bytes
+	vestingAddr = string(key[1+lenTime:])
+
+	//	fmt.Printf("vestingAddr key is %s ", vestingAddr)
+	return
+}
+
+// VestingQueueKey returns the key with prefix for an contract in the Listed Item Queue
+func VestingQueueKey(vestingAddr string, endTime time.Time) []byte {
+	return append(VestingByTimeKey(endTime), []byte(vestingAddr)...)
+}

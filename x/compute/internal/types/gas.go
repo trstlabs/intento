@@ -8,7 +8,7 @@ package types
 // Please not that all gas prices returned to the wasmer engine should have this multiplied
 const GasMultiplier uint64 = 1000
 
-// MaxGas for a contract is 10 billion wasmer gas (enforced in rust to prevent overflow)
+// MaxGas for a contract is 10 billion (10_000_000_000) wasmer gas (enforced in rust to prevent overflow)
 // The limit for v0.9.3 is defined here: https://github.com/CosmWasm/cosmwasm/blob/v0.9.3/packages/vm/src/backends/singlepass.rs#L15-L23
 // (this will be increased in future releases)
 const MaxGas = 10_000_000_000
@@ -18,4 +18,4 @@ const MaxGas = 10_000_000_000
 const InstanceCost uint64 = 10_000
 
 // CompileCost is how much SDK gas we charge *per byte* for compiling WASM code.
-const CompileCost uint64 = 2
+const CompileCost uint64 = 2 //original value = 2

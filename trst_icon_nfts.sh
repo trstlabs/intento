@@ -77,3 +77,21 @@ trstd tx item create-estimation 14000000 5000000 --interested 'Seems valuable to
 trstd tx item create-item "TRST Icon Collection - Mellow Yellow/Red" 'Yellow/Red is part of the 20 piece NFT TRST Icon Collection.' nft,icon --deposit_amount 5000000  --location 'Tuz Golu'  --estimation_count 3 --photos "https://firebasestorage.googleapis.com/v0/b/trustitems-cbb92.appspot.com/o/icon_nfts%2Fmellow_yellow_red.png?alt=media&token=961cad75-968e-47d8-b874-784a2ee9aff9" --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
 
 trstd tx item create-item "TRST Icon Collection - Welcome To The Jungle!" 'Welcome To The Jungle! is part of the 20 piece NFT TRST Icon Collection.' nft,icon --deposit_amount 5000000  --location 'Amazon Rainforest'  --estimation_count 3 --photos "https://firebasestorage.googleapis.com/v0/b/trustitems-cbb92.appspot.com/o/icon_nfts%2Fwelcome_to_the_jungle.png?alt=media&token=29b1d9c6-f293-4baa-9454-7d245ce2918b" --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+
+
+trstd tx item reveal-estimation 1 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item reveal-estimation 2 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item reveal-estimation 3 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item reveal-estimation 4 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item reveal-estimation 5 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item reveal-estimation 6 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item reveal-estimation 7 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+
+
+trstd tx item item-transferable 1 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item item-transferable 2 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item item-transferable 3 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item item-transferable 4 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item item-transferable 5 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item item-transferable 6 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst
+trstd tx item item-transferable 7 --from user1 -y --chain-id trst_chain_1 --keyring-backend test --fees 150utrst

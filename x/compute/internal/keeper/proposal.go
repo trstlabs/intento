@@ -1,0 +1,65 @@
+package keeper
+
+import (
+	"fmt"
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	"github.com/trstlabs/trst/x/compute/internal/types"
+)
+
+// NewWasmProposalHandler creates a new governance Handler for wasm proposals
+func NewWasmProposalHandler(k Keeper, enabledProposalTypes []types.ProposalType) govtypes.Handler {
+	return NewWasmProposalHandlerX(k, enabledProposalTypes)
+}
+
+// NewWasmProposalHandlerX creates a new governance Handler for wasm proposals
+func NewWasmProposalHandlerX(k Keeper, enabledProposalTypes []types.ProposalType) govtypes.Handler {
+	enabledTypes := make(map[string]struct{}, len(enabledProposalTypes))
+	for i := range enabledProposalTypes {
+		enabledTypes[string(enabledProposalTypes[i])] = struct{}{}
+	}
+	return func(ctx sdk.Context, content govtypes.Content) error {
+		if content == nil {
+			return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "content must not be empty")
+		}
+		if _, ok := enabledTypes[content.ProposalType()]; !ok {
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unsupported wasm proposal content type: %q", content.ProposalType())
+		}
+		switch c := content.(type) {
+		case *types.StoreCodeProposal:
+			return handleStoreCodeProposal(k, ctx, *c)
+
+		default:
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized wasm proposal content type: %T", c)
+		}
+	}
+}
+
+func handleStoreCodeProposal(k Keeper, ctx sdk.Context, p types.StoreCodeProposal) error {
+	if err := p.ValidateBasic(); err != nil {
+		return err
+	}
+
+	runAsAddr, err := sdk.AccAddressFromBech32(p.RunAs)
+	if err != nil {
+		return sdkerrors.Wrap(err, "run as address")
+	}
+	maxDuration, err := time.ParseDuration(p.ContractDuration)
+	fmt.Printf("duration %s \n", p.ContractDuration)
+	if err != nil {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
+	fmt.Printf("p %s \n", p.ContractTitle)
+	fmt.Printf("p %s \n", p.ContractDescription)
+	fmt.Printf("p %s \n", maxDuration)
+	fmt.Printf("p %s \n", runAsAddr)
+	_, err = k.Create(ctx, runAsAddr, p.WASMByteCode, "", "", maxDuration, p.ContractTitle, p.ContractDescription)
+	if err != nil {
+		return sdkerrors.Wrap(err, "err creating code")
+	}
+	return nil
+}

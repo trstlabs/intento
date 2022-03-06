@@ -67,6 +67,7 @@ func (w *Wasmer) Cleanup() {
 //
 // TODO: return gas cost? Add gas limit??? there is no metering here...
 func (w *Wasmer) Create(code WasmCode) (CodeID, error) {
+
 	return api.Create(w.cache, code)
 }
 

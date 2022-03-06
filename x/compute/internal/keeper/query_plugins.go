@@ -10,8 +10,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -56,9 +54,9 @@ func (q QueryHandler) Query(request wasmTypes.QueryRequest, gasLimit uint64) ([]
 	if request.Mint != nil {
 		return q.Plugins.Mint(q.Ctx, request.Mint)
 	}
-	if request.Gov != nil {
+	/*	if request.Gov != nil {
 		return q.Plugins.Gov(q.Ctx, request.Gov)
-	}
+	}*/
 	return nil, wasmTypes.Unknown{}
 }
 
@@ -75,10 +73,10 @@ type QueryPlugins struct {
 	Wasm    func(ctx sdk.Context, request *wasmTypes.WasmQuery) ([]byte, error)
 	Dist    func(ctx sdk.Context, request *wasmTypes.DistQuery) ([]byte, error)
 	Mint    func(ctx sdk.Context, request *wasmTypes.MintQuery) ([]byte, error)
-	Gov     func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error)
+	//Gov     func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error)
 }
 
-func DefaultQueryPlugins(gov govkeeper.Keeper, dist distrkeeper.Keeper, mint mintkeeper.Keeper, bank bankkeeper.Keeper, staking stakingkeeper.Keeper, wasm *Keeper) QueryPlugins {
+func DefaultQueryPlugins( /*gov govkeeper.Keeper,*/ dist distrkeeper.Keeper, mint mintkeeper.Keeper, bank bankkeeper.Keeper, staking stakingkeeper.Keeper, wasm *Keeper) QueryPlugins {
 	return QueryPlugins{
 		Bank:    BankQuerier(bank),
 		Custom:  NoCustomQuerier,
@@ -86,7 +84,7 @@ func DefaultQueryPlugins(gov govkeeper.Keeper, dist distrkeeper.Keeper, mint min
 		Wasm:    WasmQuerier(wasm),
 		Dist:    DistQuerier(dist),
 		Mint:    MintQuerier(staking), // MintQuerier(mint),
-		Gov:     GovQuerier(gov),
+		//Gov:     GovQuerier(gov),
 	}
 }
 
@@ -113,12 +111,13 @@ func (e QueryPlugins) Merge(o *QueryPlugins) QueryPlugins {
 	if o.Mint != nil {
 		e.Mint = o.Mint
 	}
-	if o.Gov != nil {
+	/*if o.Gov != nil {
 		e.Gov = o.Gov
-	}
+	}*/
 	return e
 }
 
+/*
 func GovQuerier(keeper govkeeper.Keeper) func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error) {
 		if request.Proposals != nil {
@@ -146,7 +145,7 @@ func GovQuerier(keeper govkeeper.Keeper) func(ctx sdk.Context, request *wasmType
 		return nil, wasmTypes.UnsupportedRequest{Kind: "unknown GovQuery variant"}
 	}
 }
-
+*/
 func MintQuerier(keeper stakingkeeper.Keeper) func(ctx sdk.Context, request *wasmTypes.MintQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmTypes.MintQuery) ([]byte, error) {
 		if request.BondedRatio != nil {

@@ -5,12 +5,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	// "github.com/cosmos/cosmos-sdk/x/supply/exported"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // RegisterCodec registers the account types and interface
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(MsgStoreCode{}, "wasm/MsgStoreCode", nil)
+	cdc.RegisterConcrete(MsgStoreCode{}, "wasm/MsgStoreCode", nil) //During testing only
+	cdc.RegisterConcrete(&StoreCodeProposal{}, "wasm/StoreCodeProposal", nil)
 	cdc.RegisterConcrete(MsgInstantiateContract{}, "wasm/MsgInstantiateContract", nil)
 	cdc.RegisterConcrete(MsgExecuteContract{}, "wasm/MsgExecuteContract", nil)
 
@@ -19,9 +22,14 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
-		&MsgStoreCode{},
+		&MsgStoreCode{}, //During testing only
+
 		&MsgInstantiateContract{},
 		&MsgExecuteContract{},
+	)
+	registry.RegisterImplementations(
+		(*govtypes.Content)(nil),
+		&StoreCodeProposal{},
 	)
 }
 

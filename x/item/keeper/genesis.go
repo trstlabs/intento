@@ -124,28 +124,23 @@ func (k Keeper) InitializeContracts(ctx sdk.Context) error {
 
 	userHomeDir, _ := os.UserHomeDir()
 
-	transferCode, err := os.ReadFile(filepath.Join(userHomeDir, "trst", "wasm_code", "transfer_contract.wasm.gz"))
+	transferableItemCode, err := os.ReadFile(filepath.Join(userHomeDir, "trst", "wasm_code", "transfer_contract.wasm.gz"))
 	if err != nil {
 		panic(err)
 	}
-	estimateOnlyCode, err := os.ReadFile(filepath.Join(userHomeDir, "trst", "wasm_code", "estimate_only_contract.wasm.gz"))
-	if err != nil {
-		panic(err)
-	}
-	//var codeID uint64
-	//var hash string
-
-	_, err = k.computeKeeper.Create(ctx, addr, transferCode, "", "", params.MaxActivePeriod, "Estimation aggregation", " for Trustless Transfer items. This code is used internally. This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically redistributed at the end of the contract period.")
-	if err != nil {
-		panic(err)
-	}
-	_, err = k.computeKeeper.Create(ctx, addr, estimateOnlyCode, "", "", params.MaxActivePeriod, "Estimation aggregation", " This code is used internally. This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically redistributed at the end of the contract period.")
+	estimateOnlyItemCode, err := os.ReadFile(filepath.Join(userHomeDir, "trst", "wasm_code", "estimate_only_contract.wasm.gz"))
 	if err != nil {
 		panic(err)
 	}
 
-	//store := ctx.KVStore(k.storeKey)
-	//store.Set([]byte(fmt.Sprint(codeID)), []byte(hash))
+	_, err = k.computeKeeper.Create(ctx, addr, transferableItemCode, "", "", params.MaxActivePeriod, "Estimation aggregation", " This code is used internally. This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically redistributed at the end of the contract period.")
+	if err != nil {
+		panic(err)
+	}
+	_, err = k.computeKeeper.Create(ctx, addr, estimateOnlyItemCode, "", "", params.MaxActivePeriod, "Estimation aggregation", " This code is used internally. This code is used to enable indepedent pricing through aggregating estimations. Users send their estimations after which the creator can reveal the final price. The funds are automatically redistributed at the end of the contract period.")
+	if err != nil {
+		panic(err)
+	}
 
 	return nil
 }

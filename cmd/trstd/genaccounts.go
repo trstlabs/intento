@@ -19,7 +19,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
 	"github.com/spf13/cobra"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
 )
@@ -193,9 +193,9 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 		Use:   "import-genesis-accounts-from-snapshot [input-snapshot-file] [input-non-airdrop-accounts-file]",
 		Short: "Import genesis accounts from fairdrop snapshot.json and an non-airdrop-accounts.json",
 		Long: `Import genesis accounts from fairdrop snapshot.json
-		20% of airdrop amount is liquid in accounts.
-		The remaining is placed in the claims module.
-		Must also pass in an trst.json file to airdrop genesis trst
+		1TRST of the airdrop coins to be received is liquid in accounts.
+		The remaining is placed in the claims module, to be claimed.
+		Must also pass in an snapshot.json file to airdrop genesis TRST coins
 		Example:
 		trstd import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-accounts.json
 		- Check input genesis:
@@ -286,14 +286,14 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 			normalizationFactor := genesisParams.AirdropSupply.ToDec().QuoInt(snapshot.TotalTrstAirdropAmount)
 
 			fmt.Printf("total snapshot accounts: %s\n", len(snapshot.Accounts))
-			fmt.Println("normalization factor: %s\n", normalizationFactor)
-			fmt.Println("snapshot total supply: %s\n", snapshot.TotalTrstAirdropAmount)
+			fmt.Printf("normalization factor: %s\n", normalizationFactor)
+			fmt.Printf("snapshot total supply: %s\n", snapshot.TotalTrstAirdropAmount)
 
 			// donating the remainder to the rainforrest foundation https://rainforestfoundation.org/
 			toDonate := genesisParams.AirdropSupply.Sub(snapshot.TotalTrstAirdropAmount)
 			rainForrestFoundationAddr, _ := sdk.AccAddressFromHex("17F318875145240F05259C65FCAB0E9C3DB92C0B")
 			nonAirdropAccs[rainForrestFoundationAddr.String()] = sdk.NewCoins(sdk.NewCoin("utrst", toDonate))
-			fmt.Println("donated: %s\n", toDonate)
+			fmt.Printf("donated: %s \n", toDonate)
 
 			bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 			liquidBalances := bankGenState.Balances
@@ -322,8 +322,8 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				normalizedTrstBalance := acc.TrstBalance.ToDec().Mul(normalizationFactor)
 
 				//liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, acc.TrstBalance))
-				liquidAmount := normalizedTrstBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
-				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, liquidAmount))
+				//liquidAmount := normalizedTrstBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
+				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, sdk.NewInt(6969696)))
 
 				if coins, ok := nonAirdropAccs[address.String()]; ok {
 					liquidCoins = liquidCoins.Add(coins...)
@@ -344,8 +344,11 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				accs = append(accs, baseAccount)
 
 				// claimable balances
-				claimableAmount := normalizedTrstBalance.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
-
+				claimableAmount := normalizedTrstBalance.TruncateInt().Sub(sdk.NewInt(6969696)) //.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
+				if normalizedTrstBalance.Sub(sdk.NewDec(6969696)).IsNegative() {
+					claimableAmount = sdk.ZeroInt()
+					liquidCoins = sdk.NewCoins(sdk.NewCoin("utrst", normalizedTrstBalance.TruncateInt()))
+				}
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
 					Address:                address.String(),
 					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, claimableAmount)),
@@ -362,9 +365,9 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 			for _, balance := range liquidBalances {
 				totalAirdrop = totalAirdrop.Add(balance.Coins...)
 			}
-			fmt.Printf("Total liquid coins %s", totalAirdrop.AmountOf("utrst"))
-			fmt.Printf("Total airdrop coins approx %s", totalAirdrop.AmountOf("utrst").MulRaw(5))
-			fmt.Printf("Total airdrop coins %s", claimModuleAccountBalance.Add(totalAirdrop.AmountOf("utrst")))
+			fmt.Printf("Total liquid coins %s \n", totalAirdrop.AmountOf("utrst"))
+			//fmt.Printf("Total airdrop coins approx %s", totalAirdrop.AmountOf("utrst").MulRaw(5))
+			fmt.Printf("Total airdrop coins %s \n", claimModuleAccountBalance.Add(totalAirdrop.AmountOf("utrst")))
 			//fmt.Println(supply.AmountOf("utrst"))
 
 			// distribute remaining trst to accounts not in fairdrop
@@ -392,9 +395,9 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 			for _, balance := range liquidBalances {
 				total = total.Add(balance.Coins...)
 			}
-			fmt.Printf("Total non-airdrop %s", total.Sub(totalAirdrop).AmountOf("utrst"))
+			fmt.Printf("Total non-airdrop %s \n", total.Sub(totalAirdrop).AmountOf("utrst"))
 
-			fmt.Printf("Total balances %s", claimModuleAccountBalance.Add(totalAirdrop.AmountOf("utrst")).Add(total.Sub(totalAirdrop).AmountOf("utrst")))
+			fmt.Printf("Total balances %s \n", claimModuleAccountBalance.Add(totalAirdrop.AmountOf("utrst")).Add(total.Sub(totalAirdrop).AmountOf("utrst")))
 
 			// auth module genesis
 			accs = authtypes.SanitizeGenesisAccounts(accs)
@@ -497,95 +500,4 @@ func contains(s []string, e string) bool {
 		}
 	}
 	return false
-}
-
-func removeDuplicates(m map[string]SnapshotAccount) map[string]SnapshotAccount {
-	list := make([]string, 0, len(m))
-
-	//append accounts to list so we have list of all acc
-	for acc, _ := range m {
-
-		list = append(list, acc)
-	}
-
-	for _, item := range list {
-
-		if contains(list, item) == false {
-			_, ok := m[item]
-			if ok {
-				delete(m, item)
-			}
-
-			//list = append(list, item)
-		}
-	}
-
-	return m
-}
-
-func removeDuplicatesFromSnapshot(first map[string]SnapshotAccount, second map[string]SnapshotAccount, third map[string]SnapshotAccount) map[string]SnapshotAccount {
-	list := make([]string, 0, len(first))
-
-	var duplicatesSecret uint64
-	var duplicatesTerra uint64
-	fmt.Printf("length cosmos accs %d\n", len(first))
-	fmt.Printf("length secret accs %d\n", len(second))
-	fmt.Printf("length terra accs %d\n", len(third))
-	//append accounts to list so we have list of all acc
-	for acc, _ := range first {
-
-		list = append(list, acc)
-
-	}
-	fmt.Println("appended cosmos accs")
-	//append accounts to list so we have list of all secret acc
-	for acc, value := range second {
-		newAcc, _ := cosmosConvertBech32(acc)
-		//if it does not contain the acc we append to it
-		if contains(list, newAcc) == false {
-
-			list = append(list, newAcc)
-			first[newAcc] = value
-
-		} else {
-			//	fmt.Println("delete secret acc  %s\n", acc)
-			var acct = first[newAcc]
-			acct.TrstBalance = acct.TrstBalance.Add(value.TrstBalance)
-			delete(second, acc)
-			first[newAcc] = acct
-			fmt.Println("merged scrt acc", acc)
-			duplicatesSecret = duplicatesSecret + 1
-		}
-	}
-	fmt.Println("removed duplicates secret")
-	//append accounts to list so we have list of all terra acc
-	for acc, value := range third {
-		newAcc, _ := cosmosConvertBech32(acc)
-		//if it does not contain the acc we append to it
-		if contains(list, newAcc) == false {
-
-			list = append(list, newAcc)
-			first[newAcc] = value
-		} else {
-			//	fmt.Println("delete secret acc  %s\n", acc)
-			var acct = first[newAcc]
-			acct.TrstBalance = acct.TrstBalance.Add(value.TrstBalance)
-			first[newAcc] = acct
-
-			fmt.Println("merged terra acc", acc)
-			delete(third, acc)
-			duplicatesTerra = duplicatesTerra + 1
-		}
-	}
-
-	fmt.Printf("final length secret accs: c\n", len(second))
-	fmt.Printf("final length terra accs: %d\n", len(third))
-	fmt.Printf("length list accs: %d\n", len(list))
-
-	fmt.Printf("duplicates secret accs: %d\n", duplicatesSecret)
-	fmt.Printf("duplicates terra accs: %d\n", duplicatesTerra)
-	//all := append(first, second)
-
-	fmt.Println("removed duplicates")
-	return first
 }

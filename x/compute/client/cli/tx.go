@@ -34,6 +34,8 @@ const (
 	flagIoMasterKey            = "enclave-key"
 	flagCodeHash               = "code-hash"
 	flagDuration               = "duration"
+	flagTitle                  = "contract-title"
+	flagDescription            = "contract-description"
 
 	// flagAdmin                  = "admin"
 )
@@ -62,9 +64,9 @@ func GetTxCmd() *cobra.Command {
 // StoreCodeCmd will upload code to be reused.
 func StoreCodeCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "store [wasm file] [title] [description]  --source [source] ",
+		Use:   "store [wasm file] --contract-title [text] --contract-description [text] --source [source] ",
 		Short: "Upload a wasm binary",
-		Args:  cobra.ExactArgs(3),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -85,6 +87,8 @@ func StoreCodeCmd() *cobra.Command {
 
 	cmd.Flags().String(flagSource, "", "A valid URI reference to the contract's source code, optional")
 	cmd.Flags().String(flagBuilder, "", "A valid docker tag for the build system, optional")
+	cmd.Flags().String(flagTitle, "", "Title of contract")
+	cmd.Flags().String(flagDescription, "", "Description of contract")
 	//cmd.Flags().String(flagInstantiateByEverybody, "", "Everybody can instantiate a contract from the code, optional")
 	//cmd.Flags().String(flagInstantiateByAddress, "", "Only this address can instantiate a contract instance from the code, optional")
 	cmd.Flags().String(flagDuration, "", "A duration for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
@@ -99,8 +103,14 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 		return types.MsgStoreCode{}, err
 	}
 
-	argsTitle := string(args[1])
-	argsDescription := string(args[2])
+	argsTitle, err := flags.GetString(flagTitle)
+	if err != nil {
+		return types.MsgStoreCode{}, fmt.Errorf("title: %s", err)
+	}
+	argsDescription, err := flags.GetString(flagDescription)
+	if err != nil {
+		return types.MsgStoreCode{}, fmt.Errorf("description: %s", err)
+	}
 
 	// gzip the wasm file
 	if wasmUtils.IsWasm(wasm) {
