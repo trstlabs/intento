@@ -82,13 +82,13 @@ mod protobuf {
             ),
             (
                 "src/cosmwasm",
-                &[from_base("proto/compute/msg.proto")],
+                &[from_base("proto/compute/v1beta1/msg.proto")],
             ),
             (
                 "src/item",
                 &[
-               from_base("proto/item/item.proto"),
-               from_base("proto/item/estimator.proto")],
+               from_base("proto/item/v1beta1/item.proto"),
+               from_base("proto/item/v1beta1/estimator.proto")],
             ),
         ];
 

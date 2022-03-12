@@ -45,12 +45,12 @@ extern "C" fn deallocate(pointer: u32) {
 }
 
 /// do_init should be wrapped in an external "C" export, containing a contract-specific function as arg
-pub fn do_init<T, U>(
+pub fn do_init<T,R, U>(
     init_fn: &dyn Fn(
         &mut Extern<ExternalStorage, ExternalApi, ExternalQuerier>,
         Env,
         T,
-        T,
+        R,
     ) -> InitResult<U>,
     env_ptr: u32,
     msg_ptr: u32,
@@ -118,12 +118,12 @@ where
     release_buffer(v) as u32
 }
 
-fn _do_init<T, U>(
+fn _do_init<T,R, U>(
     init_fn: &dyn Fn(
         &mut Extern<ExternalStorage, ExternalApi, ExternalQuerier>,
         Env,
         T,
-        T,
+        R,
     ) -> InitResult<U>,
     env_ptr: *mut Region,
     msg_ptr: *mut Region,
@@ -138,7 +138,7 @@ where
     let auto_msg: Vec<u8> = unsafe { consume_region(auto_msg_ptr) };
     let env: Env = from_slice(&env)?;
     let msg: T = from_slice(&msg)?;
-    let auto_msg: T = from_slice(&auto_msg)?;
+    let auto_msg: R = from_slice(&auto_msg)?;
     let mut deps = make_dependencies();
     init_fn(&mut deps, env, msg, auto_msg)
 }
