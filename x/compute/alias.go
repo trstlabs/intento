@@ -80,6 +80,7 @@ var (
 	StakingQuerier         = keeper.StakingQuerier
 	WasmQuerier            = keeper.WasmQuerier
 	NewWasmProposalHandler = keeper.NewWasmProposalHandler
+	NewMultiComputeHooks   = keeper.NewMultiComputeHooks
 	ConvertToProposals     = types.ConvertToProposals
 	GetConfig              = types.GetConfig
 

@@ -211,15 +211,6 @@ func (k Keeper) GetUserTotalClaimable(ctx sdk.Context, addr sdk.AccAddress) (sdk
 	return totalClaimable, nil
 }
 
-//ends the vesting for a claim
-func (k Keeper) EndClaimVesting(ctx sdk.Context, addr sdk.AccAddress, claimableAmount sdk.Coins) error {
-	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, claimableAmount)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // ClaimCoins remove claimable amount entry and transfer it to user's account
 func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action types.Action, duration string) (sdk.Coins, error) {
 	claimableAmount, err := k.GetClaimableAmountForAction(ctx, addr, action)
@@ -236,7 +227,13 @@ func (k Keeper) ClaimCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action
 		return claimableAmount, err
 	}
 
-	k.InsertVestingQueue(ctx, claimableAmount, addr.String(), ctx.BlockHeader().Time.Add(vestDuration))
+	claimsPortion := sdk.NewCoins(sdk.NewCoin(types.Denom, claimableAmount.AmountOf(types.Denom).QuoRaw(5)))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, claimsPortion)
+	if err != nil {
+		return claimableAmount, err
+	}
+
+	k.InsertEntriesIntoVestingQueue(ctx, claimsPortion, addr.String(), vestDuration, ctx.BlockHeader().Time)
 
 	claimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {

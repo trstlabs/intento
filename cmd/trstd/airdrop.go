@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	MaxCap = 50000000000
+	MaxCap = 5000000000 //5000 ATOM/LUNA/SCRT
 
 	TotalTrstAirdropAmountCosmos = 100000000000000 //We want to support cosmonauts and we love Cosmos <3
 	TotalTrstAirdropAmountTerra  = 50000000000000  //Terra is a huge ecosystem and growing, we would love to see developers use Trustless Contracts

@@ -34,11 +34,10 @@ func NewParams(
 func DefaultParams() Params {
 	return Params{
 		DistributionProportions: DistributionProportions{
-			Staking:                     sdk.NewDecWithPrec(4, 1), // 0.4
-			TrustlessContractIncentives: sdk.NewDecWithPrec(2, 1), // 0.3
-			ItemIncentives:              sdk.NewDecWithPrec(1, 1), // 0.3
-			DeveloperRewards:            sdk.NewDecWithPrec(2, 1), // 0.2
-			CommunityPool:               sdk.NewDecWithPrec(1, 1), // 0.1
+			Staking:                     sdk.MustNewDecFromStr("0.55"),
+			TrustlessContractIncentives: sdk.MustNewDecFromStr("0.25"),
+			DeveloperRewards:            sdk.MustNewDecFromStr("0.05"),
+			CommunityPool:               sdk.MustNewDecFromStr("0.15"),
 		},
 		WeightedDeveloperRewardsReceivers: []WeightedAddress{},
 	}
@@ -72,10 +71,11 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("contract incentives distribution ratio should not be negative")
 	}
 
-	if v.ItemIncentives.IsNegative() {
-		return errors.New("item incentives distribution ratio should not be negative")
-	}
-
+	/*
+			if v.ItemIncentives.IsNegative() {
+			return errors.New("item incentives distribution ratio should not be negative")
+		}
+	*/
 	if v.Staking.IsNegative() {
 		return errors.New("staking distribution ratio should not be negative")
 	}
@@ -88,7 +88,7 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("community pool distribution ratio should not be negative")
 	}
 
-	totalProportions := v.TrustlessContractIncentives.Add(v.DeveloperRewards).Add(v.ItemIncentives)
+	totalProportions := v.TrustlessContractIncentives.Add(v.DeveloperRewards) //.Add(v.ItemIncentives)
 
 	// at least 60% is allocated to incentives
 

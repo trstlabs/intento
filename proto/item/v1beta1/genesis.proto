@@ -1,0 +1,21 @@
+syntax = "proto3";
+package trstlabs.trst.item.v1beta1;
+
+// this line is used by starport scaffolding # genesis/proto/import
+import "item/v1beta1/estimator.proto";
+//import "item/v1beta1/buyer.proto";
+import "item/v1beta1/item.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/trstlabs/trst/x/item/types";
+
+// GenesisState defines the trst module's genesis state.
+message GenesisState {
+    // this line is used by starport scaffolding # genesis/proto/state
+		repeated Profile profileList = 3; // this line is used by starport scaffolding # genesis/proto/stateField
+	//	repeated Buyer buyerList = 2; // this line is used by starport scaffolding # genesis/proto/stateField
+		repeated Item itemList = 1; // this line is used by starport scaffolding # genesis/proto/stateField
+		Params params = 4 [ (gogoproto.nullable) = false ];
+		
+}
+

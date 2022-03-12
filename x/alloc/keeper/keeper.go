@@ -31,7 +31,7 @@ func NewKeeper(
 	storeKey,
 	memKey sdk.StoreKey,
 
-	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, distrKeeper types.DistrKeeper, //ck types.ComputeKeeper,
+	accountKeeper types.AccountKeeper, bankKeeper types.BankKeeper, stakingKeeper types.StakingKeeper, distrKeeper types.DistrKeeper,
 	ps paramtypes.Subspace,
 ) *Keeper {
 
@@ -73,11 +73,11 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
-	itemIncentiveCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.ItemIncentives))
+	/*itemIncentiveCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.ItemIncentives))
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "item_incentives", itemIncentiveCoins)
 	if err != nil {
 		return err
-	}
+	}*/
 	k.Logger(ctx).Debug("funded trustless contracts", "amount", contrIncentiveCoins.String(), "from", blockInflationAddr)
 
 	//staking incentives stay in the fee collector account and are to be moved to on next begin blocker
@@ -107,7 +107,7 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 	}
 
 	// subtract from original provision to ensure no coins left over after the allocations
-	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins).Sub(itemIncentiveCoins).Sub(contrIncentiveCoins).Sub(devRewardCoins)
+	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins)/*.Sub(itemIncentiveCoins)*/.Sub(contrIncentiveCoins).Sub(devRewardCoins)
 
 	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, blockInflationAddr)
 	if err != nil {

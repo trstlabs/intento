@@ -29,7 +29,11 @@ func (k Keeper) IterateVestingQueue(ctx sdk.Context, endTime time.Time, cb func(
 			fmt.Printf("coins string %s", stringCoins)
 			panic("Failed to parse coins")
 		}
-		k.EndClaimVesting(ctx, claimerAddr, coins)
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, claimerAddr, coins)
+		if err != nil {
+			return
+		}
+		k.RemoveFromVestingQueue(ctx, string(claimerAddr), endTime)
 		if cb(coins) {
 			break
 		}
@@ -42,6 +46,7 @@ func (k Keeper) VestingQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Ite
 	return store.Iterator(types.VestingQueuePrefix, sdk.PrefixEndBytes(types.VestingByTimeKey(endTime))) //we check the end of the bites array for the end time
 }
 
+/*
 // InsertVestingQueue Inserts a contract into the inactive item queue at endTime
 func (k Keeper) InsertVestingQueue(ctx sdk.Context, claimableAmount sdk.Coins, contractAddr string, endTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
@@ -49,6 +54,17 @@ func (k Keeper) InsertVestingQueue(ctx sdk.Context, claimableAmount sdk.Coins, c
 	bz := []byte(claimableAmount.String())
 	//here the key is time+contract appended (as bytes) and value is contract in bytes
 	store.Set(types.VestingQueueKey(contractAddr, endTime), bz)
+}*/
+
+// InsertVestingQueue Inserts a contract into the inactive item queue at endTime
+func (k Keeper) InsertEntriesIntoVestingQueue(ctx sdk.Context, claimableAmount sdk.Coins, contractAddr string, duration time.Duration, time time.Time) {
+	store := ctx.KVStore(k.storeKey)
+	bz := []byte(claimableAmount.String())
+	//here the key is time+contract appended (as bytes) and value is contract in bytes
+	store.Set(types.VestingQueueKey(contractAddr, time.Add(duration)), bz)
+	store.Set(types.VestingQueueKey(contractAddr, time.Add(duration*2)), bz)
+	store.Set(types.VestingQueueKey(contractAddr, time.Add(duration*3)), bz)
+	store.Set(types.VestingQueueKey(contractAddr, time.Add(duration*4)), bz)
 }
 
 // RemoveFromVestingQueue removes a contract from the Inactive Item Queue

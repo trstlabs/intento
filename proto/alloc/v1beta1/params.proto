@@ -27,11 +27,11 @@ message DistributionProportions {
     (gogoproto.moretags) = "yaml:\"trustless_contract_incentives\"",
     (gogoproto.nullable) = false
   ];
-   string item_incentives = 3 [
+ /*  string item_incentives = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"item_incentives\"",
     (gogoproto.nullable) = false
-  ];
+  ];*/
   string developer_rewards = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"developer_rewards\"",

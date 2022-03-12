@@ -34,7 +34,6 @@ import (
 	wasm "github.com/trstlabs/trst/go-cosmwasm"
 	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 
-	hooks "github.com/trstlabs/trst/x/compute/hooks"
 	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
@@ -52,7 +51,7 @@ type Keeper struct {
 	// queryGasLimit is the max wasm gas that can be spent on executing a query with a contract
 	queryGasLimit uint64
 	paramSpace    paramtypes.Subspace
-	hooks         hooks.ComputeHooks
+	hooks         ComputeHooks
 
 	// authZPolicy   AuthorizationPolicy
 
@@ -61,7 +60,7 @@ type Keeper struct {
 // NewKeeper creates a new contract Keeper instance
 // If customEncoders is non-nil, we can use this to override some of the message handler, especially custom
 func NewKeeper(cdc codec.BinaryCodec /*legacyAmino codec.LegacyAmino,*/, storeKey sdk.StoreKey, accountKeeper authkeeper.AccountKeeper, bankKeeper bankkeeper.Keeper /*(govKeeper govkeeper.Keeper,*/, distKeeper distrkeeper.Keeper, mintKeeper mintkeeper.Keeper, stakingKeeper stakingkeeper.Keeper,
-	router sdk.Router, homeDir string, wasmConfig *types.WasmConfig, supportedFeatures string, customEncoders *MessageEncoders, customPlugins *QueryPlugins, paramSpace paramtypes.Subspace, gh hooks.ComputeHooks) Keeper {
+	router sdk.Router, homeDir string, wasmConfig *types.WasmConfig, supportedFeatures string, customEncoders *MessageEncoders, customPlugins *QueryPlugins, paramSpace paramtypes.Subspace, gh ComputeHooks) Keeper {
 	wasmer, err := wasm.NewWasmer(filepath.Join(homeDir, "wasm"), supportedFeatures, wasmConfig.CacheSize, wasmConfig.EnclaveCacheSize)
 	if err != nil {
 		panic(err)

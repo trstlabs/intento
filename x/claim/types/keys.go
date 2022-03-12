@@ -29,6 +29,8 @@ const (
 	ActionKey = "action"
 
 	MemStoreKey = "mem_claim"
+
+	Denom = "utrst"
 )
 
 // nolint

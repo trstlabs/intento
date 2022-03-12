@@ -1,4 +1,4 @@
-2022-03-06 10:25:37,241 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 1 threads
+2022-03-12 16:30:04,584 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 1 threads
 DEBUG  [enclave_contract_engine::external::ecalls] inside ecall_configure_runtime: 5
 DEBUG  [enclave_contract_engine::module_cache] configuring module cache: 5
 Initializing genesis claims...

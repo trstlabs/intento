@@ -1,6 +1,42 @@
+# NOTE
+The module is under development, There are 2 methods to store code. One by Governance, one directly. In the mainnet chain code will be stored through governance. 
+
+The other store code method is only enabled for testing. 
+
 # Wasm Module
 
 This should be a brief overview of the functionality
+
+## Parameters
+
+Through governance, a number of compute parameters can be adjusted. The default values are the following:
+```golang
+
+const (
+	DefaultMaxContractPeriod time.Duration = time.Hour * 24 * 30 // 30 days
+
+	// Commission percentage to distribute to community pool for leftover balances (rounded up)
+
+	DefaultCommission int64 = 2 // %
+
+	// MinContractDurationForIncentive to distribute reward to contract
+
+	DefaultMinContractDurationForIncentive time.Duration = time.Hour * 24 // 1 day
+
+	// DefaultMaxContractIncentive max amount of utrst coins to give to a contract as incentive
+
+	DefaultMaxContractIncentive int64 = 500000000 // 500utrst
+
+	// MinContractBalanceForIncentive minimum balance required to be elligable for an incentive
+
+	DefaultMinContractBalanceForIncentive int64 = 50000000 // 50utrst
+)
+```
+
+
+## Endblocker (-> AfterEpochEnd)
+At the end of each block, the Endblock checks if there are Trustless Contracts that are elligable for an incentive (will be Epoch based once Epoch module is in SDK).
+MinContractDurationForIncentive,MaxContractIncentive, MinContractBalanceForIncentive can be adjusted by governane to ensure that the contract incentives are distributed in a fair manner.
 
 ## Configuration
 
@@ -39,7 +75,7 @@ was sent:
     },
     {
       "key": "signer",
-      "value": "secret1vx8knpllrj7n963p9ttd80w47kpacrhuts497x"
+      "value": "trust1vx8knpllrj7n963p9ttd80w47kpacrhuts497x"
     },
     {
       "key": "code_id",
@@ -47,7 +83,7 @@ was sent:
     },
     {
       "key": "contract_address",
-      "value": "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
+      "value": "trust18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
     }
   ]
 }
@@ -64,11 +100,11 @@ provide a initial balance in the same `MsgInstantiateContract`. We see the follo
     "Attr": [
       {
         "key": "recipient",
-        "value": "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
+        "value": "trust18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
       },
       {
         "key": "sender",
-        "value": "secret1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv"
+        "value": "trust1ffnqn02ft2psvyv4dyr56nnv6plllf9pm2kpmv"
       },
       {
         "key": "amount",
@@ -91,7 +127,7 @@ Here is an example from the escrow contract successfully releasing funds to the 
   "Attr": [
     {
       "key": "contract_address",
-      "value": "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
+      "value": "trust18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
     },
     {
       "key": "action",
@@ -99,7 +135,7 @@ Here is an example from the escrow contract successfully releasing funds to the 
     },
     {
       "key": "destination",
-      "value": "secret14k7v7ms4jxkk2etmg9gljxjm4ru3qjdugfsflq"
+      "value": "trust14k7v7ms4jxkk2etmg9gljxjm4ru3qjdugfsflq"
     }
   ]
 }
@@ -125,11 +161,11 @@ was executed (which always appears, while 2 is optional and has information as r
     "Attr": [
       {
         "key": "recipient",
-        "value": "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
+        "value": "trust18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
       },
       {
         "key": "sender",
-        "value": "secret1zm074khx32hqy20hlshlsd423n07pwlu9cpt37"
+        "value": "trust1zm074khx32hqy20hlshlsd423n07pwlu9cpt37"
       },
       {
         "key": "amount",
@@ -142,7 +178,7 @@ was executed (which always appears, while 2 is optional and has information as r
     "Attr": [
       {
         "key": "contract_address",
-        "value": "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
+        "value": "trust18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
       },
       {
         "key": "action",
@@ -150,7 +186,7 @@ was executed (which always appears, while 2 is optional and has information as r
       },
       {
         "key": "destination",
-        "value": "secret14k7v7ms4jxkk2etmg9gljxjm4ru3qjdugfsflq"
+        "value": "trust14k7v7ms4jxkk2etmg9gljxjm4ru3qjdugfsflq"
       }
     ]
   },
@@ -159,11 +195,11 @@ was executed (which always appears, while 2 is optional and has information as r
     "Attr": [
       {
         "key": "recipient",
-        "value": "secret14k7v7ms4jxkk2etmg9gljxjm4ru3qjdugfsflq"
+        "value": "trust14k7v7ms4jxkk2etmg9gljxjm4ru3qjdugfsflq"
       },
       {
         "key": "sender",
-        "value": "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
+        "value": "trust18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
       },
       {
         "key": "amount",
@@ -184,11 +220,11 @@ was executed (which always appears, while 2 is optional and has information as r
       },
       {
         "key": "signer",
-        "value": "secret1zm074khx32hqy20hlshlsd423n07pwlu9cpt37"
+        "value": "trust1zm074khx32hqy20hlshlsd423n07pwlu9cpt37"
       },
       {
         "key": "contract_address",
-        "value": "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
+        "value": "trust18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"
       }
     ]
   }
@@ -199,15 +235,3 @@ A note on this format. This is what we return from our module. However, it seems
 get merged together somewhere along the stack, so in this case, you _may_ end up with one "transfer" event with the info for
 both transfers. Double check when evaluating the event logs, I will document better with more experience, especially when I
 find out the entire path for the events.
-
-## Messages
-
-TODO
-
-## CLI
-
-TODO - working, but not the nicest interface (json + bash = bleh). Use to upload, but I suggest to focus on frontend / js tooling
-
-## Rest
-
-TODO - main supported interface, under rapid change

@@ -323,7 +323,7 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 
 				//liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, acc.TrstBalance))
 				//liquidAmount := normalizedTrstBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
-				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, sdk.NewInt(6969696)))
+				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, sdk.NewInt(696969)))
 
 				if coins, ok := nonAirdropAccs[address.String()]; ok {
 					liquidCoins = liquidCoins.Add(coins...)
@@ -344,8 +344,8 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				accs = append(accs, baseAccount)
 
 				// claimable balances
-				claimableAmount := normalizedTrstBalance.TruncateInt().Sub(sdk.NewInt(6969696)) //.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
-				if normalizedTrstBalance.Sub(sdk.NewDec(6969696)).IsNegative() {
+				claimableAmount := normalizedTrstBalance.TruncateInt().Sub(sdk.NewInt(696969)) //.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
+				if normalizedTrstBalance.Sub(sdk.NewDec(696969)).IsNegative() {
 					claimableAmount = sdk.ZeroInt()
 					liquidCoins = sdk.NewCoins(sdk.NewCoin("utrst", normalizedTrstBalance.TruncateInt()))
 				}

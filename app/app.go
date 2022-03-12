@@ -86,10 +86,10 @@ import (
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
 	"github.com/trstlabs/trst/x/compute"
 	computeclient "github.com/trstlabs/trst/x/compute/client"
-	computehooks "github.com/trstlabs/trst/x/compute/hooks"
-	item "github.com/trstlabs/trst/x/item"
-	itemkeeper "github.com/trstlabs/trst/x/item/keeper"
-	itemtypes "github.com/trstlabs/trst/x/item/types"
+
+	//item "github.com/trstlabs/trst/x/item"
+	//itemkeeper "github.com/trstlabs/trst/x/item/keeper"
+	//itemtypes "github.com/trstlabs/trst/x/item/types"
 	"github.com/trstlabs/trst/x/mint"
 	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
@@ -157,7 +157,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
-		item.AppModuleBasic{},
+		//	item.AppModuleBasic{},
 		compute.AppModuleBasic{},
 		reg.AppModuleBasic{},
 		claim.AppModuleBasic{},
@@ -167,18 +167,18 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:             nil,
-		distrtypes.ModuleName:                  nil,
-		minttypes.ModuleName:                   {authtypes.Minter},
-		stakingtypes.BondedPoolName:            {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:         {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                    {authtypes.Burner},
-		ibctransfertypes.ModuleName:            {authtypes.Minter, authtypes.Burner},
-		itemtypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
-		itemtypes.ItemIncentivesModuleAcctName: nil,
-		compute.ModuleName:                     {authtypes.Minter},
-		claimtypes.ModuleName:                  {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		alloctypes.ModuleName:                  {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		authtypes.FeeCollectorName:     nil,
+		distrtypes.ModuleName:          nil,
+		minttypes.ModuleName:           {authtypes.Minter},
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:            {authtypes.Burner},
+		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		//	itemtypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+		//	itemtypes.ItemIncentivesModuleAcctName: nil,
+		compute.ModuleName:    {authtypes.Minter},
+		claimtypes.ModuleName: {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		alloctypes.ModuleName: {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -241,7 +241,7 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	itemKeeper    itemkeeper.Keeper
+	//itemKeeper    itemkeeper.Keeper
 	computeKeeper compute.Keeper
 	regKeeper     reg.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
@@ -282,7 +282,7 @@ func NewTrstApp(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		itemtypes.StoreKey, compute.StoreKey,
+		/*itemtypes.StoreKey,*/ compute.StoreKey,
 		reg.StoreKey,
 		claimtypes.StoreKey,
 		alloctypes.StoreKey,
@@ -400,7 +400,7 @@ func NewTrstApp(
 
 	homeDir := viper.GetString(cli.HomeFlag)
 	computeDir := filepath.Join(homeDir, ".compute")
-	trstdir := filepath.Join(homeDir, ".trst")
+	//trstdir := filepath.Join(homeDir, ".trst")
 	/*
 		wasmConfig := compute.DefaultWasmConfig()
 		//trstwasmConfig := itemtypes.DefaultWasmConfig()
@@ -419,7 +419,7 @@ func NewTrstApp(
 		appCodec, /**legacyAmino,*/
 		keys[compute.StoreKey],
 		app.AccountKeeper, app.BankKeeper /* app.GovKeeper,*/, app.DistrKeeper, app.MintKeeper, stakingKeeper,
-		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(compute.ModuleName), computehooks.NewMultiComputeHooks(app.ClaimKeeper.Hooks()))
+		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(compute.ModuleName), compute.NewMultiComputeHooks(app.ClaimKeeper.Hooks()))
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	// The gov proposal types can be individually enabled
@@ -445,9 +445,11 @@ func NewTrstApp(
 	)
 	allocModule := alloc.NewAppModule(appCodec, app.AllocKeeper)
 
+	/* item module is disabled for the main chain
 	app.itemKeeper = *itemkeeper.NewKeeper(
-		appCodec, keys[itemtypes.StoreKey], keys[itemtypes.MemStoreKey], app.GetSubspace(itemtypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.DistrKeeper, trstdir /* trstwasmConfig, supportedFeatures,*/, app.computeKeeper,
+		appCodec, keys[itemtypes.StoreKey], keys[itemtypes.MemStoreKey], app.GetSubspace(itemtypes.ModuleName), app.AccountKeeper, app.BankKeeper, app.DistrKeeper, trstdir , app.computeKeeper,
 		itemtypes.NewMultiItemHooks(app.ClaimKeeper.Hooks()))
+	*/
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -477,7 +479,7 @@ func NewTrstApp(
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
-		item.NewAppModule(appCodec, app.itemKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
+		//item.NewAppModule(appCodec, app.itemKeeper, app.AccountKeeper, app.BankKeeper, app.computeKeeper),
 		compute.NewAppModule(appCodec, app.computeKeeper, app.AccountKeeper),
 		reg.NewAppModule(app.regKeeper),
 		claimModule,
@@ -494,7 +496,7 @@ func NewTrstApp(
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibchost.ModuleName,
 	)
 
-	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, compute.ModuleName, itemtypes.ModuleName, claimtypes.ModuleName)
+	app.mm.SetOrderEndBlockers(crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, compute.ModuleName /* itemtypes.ModuleName, */, claimtypes.ModuleName)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -517,7 +519,7 @@ func NewTrstApp(
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		itemtypes.ModuleName,
+		//itemtypes.ModuleName,
 		compute.ModuleName,
 		reg.ModuleName,
 		claimtypes.ModuleName,
@@ -729,7 +731,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
-	paramsKeeper.Subspace(itemtypes.ModuleName)
+	//paramsKeeper.Subspace(itemtypes.ModuleName)
 	paramsKeeper.Subspace(compute.ModuleName)
 	paramsKeeper.Subspace(reg.ModuleName)
 	paramsKeeper.Subspace(claimtypes.ModuleName)

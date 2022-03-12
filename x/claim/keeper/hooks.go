@@ -10,21 +10,21 @@ import (
 )
 
 func (k Keeper) AfterComputeExecuted(ctx sdk.Context, sender sdk.AccAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionComputeExecute, "60s") //"1440h") //vest for 60 days /2 months
+	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionComputeExecute, "60s") //"1440h") //vest for 240 days /8 months
 	if err != nil {
 		panic(err.Error())
 	}
 }
 
 func (k Keeper) AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionComputeInstantiate, "60s") // "168h") //vest for 1 week
+	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionComputeInstantiate, "60s") // "168h") //vest for 4 weeks
 	if err != nil {
 		panic(err.Error())
 	}
 }
 
 func (k Keeper) AfterItemBought(ctx sdk.Context, sender sdk.AccAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionItemBought, "336h") //vest for 2 weeks
+	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionItemBought, "336h") //vest for 8 weeks
 	if err != nil {
 		panic(err.Error())
 	}
@@ -39,7 +39,7 @@ func (k Keeper) AfterItemTokenized(ctx sdk.Context, creator sdk.AccAddress) {
 }*/
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, delAddr, types.ActionDelegateStake, "60s") //"720h") //vest for 30 days/ 1 month
+	_, err := k.ClaimCoinsForAction(ctx, delAddr, types.ActionDelegateStake, "60s") //"720h") //vest for 120 days/ 4 months
 	if err != nil {
 		panic(err.Error())
 	}

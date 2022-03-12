@@ -26,13 +26,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
 
-	//wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
 	appParams "github.com/trstlabs/trst/app/params"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
-
-	itemtypes "github.com/trstlabs/trst/x/item/types"
+	//	itemtypes "github.com/trstlabs/trst/x/item/types"
 )
 
 type GenesisParams struct {
@@ -55,7 +53,7 @@ type GenesisParams struct {
 	AllocParams    alloctypes.Params
 	ClaimParams    claimtypes.Params
 	MintParams     minttypes.Params
-	ItemParams     itemtypes.Params
+	//	ItemParams     itemtypes.Params
 }
 
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
@@ -240,14 +238,15 @@ func PrepareGenesis(
 	appState[alloctypes.ModuleName] = allocGenStateBz
 
 	// item module genesis
-	itemGenState := itemtypes.GetGenesisStateFromAppState(cdc, appState)
-	itemGenState.Params = genesisParams.ItemParams
-	itemGenStateBz, err := cdc.MarshalJSON(itemGenState)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal slashing genesis state: %w", err)
-	}
-	appState[itemtypes.ModuleName] = itemGenStateBz
-
+	/*
+		itemGenState := itemtypes.GetGenesisStateFromAppState(cdc, appState)
+		itemGenState.Params = genesisParams.ItemParams
+		itemGenStateBz, err := cdc.MarshalJSON(itemGenState)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to marshal slashing genesis state: %w", err)
+		}
+		appState[itemtypes.ModuleName] = itemGenStateBz
+	*/
 	// return appState and genDoc
 	return appState, genDoc, nil
 }
@@ -280,11 +279,11 @@ func MainnetGenesisParams() GenesisParams {
 	// alloc
 	genParams.AllocParams = alloctypes.DefaultParams()
 	genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
-		Staking:                     sdk.MustNewDecFromStr("0.35"), // 25%
-		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.40"), // 45%
-		ItemIncentives:              sdk.MustNewDecFromStr("0.05"), // 45%
-		DeveloperRewards:            sdk.MustNewDecFromStr("0.05"), // 25%
-		CommunityPool:               sdk.MustNewDecFromStr("0.15"), // 5%
+		Staking:                     sdk.MustNewDecFromStr("0.55"), // 25%
+		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.25"), // 45%
+		//ItemIncentives:              sdk.MustNewDecFromStr("0.05"), // 45%
+		DeveloperRewards: sdk.MustNewDecFromStr("0.05"), // 25%
+		CommunityPool:    sdk.MustNewDecFromStr("0.15"), // 5%
 	}
 	genParams.AllocParams.WeightedDeveloperRewardsReceivers = []alloctypes.WeightedAddress{
 		{
@@ -300,19 +299,20 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(250_000_000_000_000)
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3)
 	genParams.MintParams.BlocksPerYear = uint64(5737588)
+	// staking
 	genParams.StakingParams = stakingtypes.DefaultParams()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 7 * 2 // 2 weeks
 	genParams.StakingParams.MaxValidators = 50
 	genParams.StakingParams.BondDenom = genParams.NativeCoinMetadatas[0].Base
 
 	// genParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
-	//distr
+	// distr
 	genParams.DistributionParams = distributiontypes.DefaultParams()
 	genParams.DistributionParams.BaseProposerReward = sdk.MustNewDecFromStr("0.01")
 	genParams.DistributionParams.BonusProposerReward = sdk.MustNewDecFromStr("0.04")
 	genParams.DistributionParams.CommunityTax = sdk.MustNewDecFromStr("0.05")
 	genParams.DistributionParams.WithdrawAddrEnabled = true
-	//gov
+	// gov
 	genParams.GovParams = govtypes.DefaultParams()
 	genParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 14 // 2 weeks
 	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
@@ -321,12 +321,12 @@ func MainnetGenesisParams() GenesisParams {
 	))
 	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.2") // 20%
 	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 24 * 3    // 3 days
-	//crisis
+	// crisis
 	genParams.CrisisConstantFee = sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
 		sdk.NewInt(100_000_000_000),
 	)
-	//slash/
+	// slash
 	genParams.SlashingParams = slashingtypes.DefaultParams()
 	genParams.SlashingParams.SignedBlocksWindow = int64(25000)                       // ~41 hr at 6 second blocks
 	genParams.SlashingParams.MinSignedPerWindow = sdk.MustNewDecFromStr("0.05")      // 5% minimum liveness
@@ -334,12 +334,13 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.SlashingParams.SlashFractionDoubleSign = sdk.MustNewDecFromStr("0.05") // 5% double sign slashing
 	genParams.SlashingParams.SlashFractionDowntime = sdk.MustNewDecFromStr("0.0001") // 0.01% liveness slashing               // 0% liveness slashing
 	//item
-	genParams.ItemParams.MaxActivePeriod = time.Hour * 24 * 30
-	genParams.ItemParams.MaxEstimatorCreatorRatio = 50
-	genParams.ItemParams.MaxBuyerReward = 5000000000
-	genParams.ItemParams.EstimationRatioForNewItem = 0
-	genParams.ItemParams.CreateItemFee = 0
-
+	/*
+		genParams.ItemParams.MaxActivePeriod = time.Hour * 24 * 30
+		genParams.ItemParams.MaxEstimatorCreatorRatio = 50
+		genParams.ItemParams.MaxBuyerReward = 5000000000
+		genParams.ItemParams.EstimationRatioForNewItem = 0
+		genParams.ItemParams.CreateItemFee = 0
+	*/
 	//claim
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime.Add(time.Hour * 24 * 365) // 1 year (will be changed by gov)
 	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 60                           // 60 days = ~2 months
@@ -379,9 +380,10 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 5    // 5 days
 
 	//item
-	genParams.ItemParams.MaxActivePeriod = time.Hour * 24 * 5 // 5 days
-	genParams.ItemParams.MaxEstimatorCreatorRatio = 100
-	genParams.ItemParams.MaxBuyerReward = 500000000000
-
+	/*
+		genParams.ItemParams.MaxActivePeriod = time.Hour * 24 * 5 // 5 days
+		genParams.ItemParams.MaxEstimatorCreatorRatio = 100
+		genParams.ItemParams.MaxBuyerReward = 500000000000
+	*/
 	return genParams
 }
