@@ -45,7 +45,7 @@ extern "C" fn deallocate(pointer: u32) {
 }
 
 /// do_init should be wrapped in an external "C" export, containing a contract-specific function as arg
-pub fn do_init<T,R, U>(
+pub fn do_init<T, U>(
     init_fn: &dyn Fn(
         &mut Extern<ExternalStorage, ExternalApi, ExternalQuerier>,
         Env,
