@@ -1,6 +1,6 @@
 # The Trustless Hub
 
-![Welcome to the Trustless Hub](docs/images/web.jpeg)
+![Welcome to the Trustless Hub](docs/images/web.png)
 
 **The Trustless Hub (TRST)** is a smart contract hub built using the Cosmos SDK and Tendermint BFT consensus. The main token, TRST, is used to keep the Hub secure, pay for transaction fees and can be used as collateral in voting for proposals. The Trustless Hubs run CosmWasm contracts on Intel SGX Secure Enclaves, and provides flexibility in contracts.
 

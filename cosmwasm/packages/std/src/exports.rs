@@ -117,7 +117,7 @@ where
     release_buffer(v) as u32
 }
 
-pub fn do_init<T, U>(
+pub fn _do_init<T, U>(
     init_fn: &dyn Fn(
         &mut Extern<ExternalStorage, ExternalApi, ExternalQuerier>,
         Env,
