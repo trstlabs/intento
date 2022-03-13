@@ -40,8 +40,6 @@ node_modules
 go.sum
 vue
 
-/init.log
-
 genesis_secret_3.json
 genesis.cosmoshub_4.json
 
@@ -51,8 +49,13 @@ init_fresh.sh
 
 snapshot.json
 reserves.json
-
+reserves.json
+rest.log
+rest.sh
+init.sh
 redo.sh
+start.sh
+test.sh
 
 testitems.sh
 

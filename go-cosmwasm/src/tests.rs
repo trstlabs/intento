@@ -46,7 +46,7 @@ fn handle_cpu_loop_with_cache() {
     let mut instance = cache.get_instance(&code_id, deps, gas_limit).unwrap();
     let raw_msg = to_vec(&init_msg).unwrap();
     let raw_env = to_vec(&env).unwrap();
-    let res = call_init_raw(&mut instance, &raw_env,&raw_msg, &raw_msg, "");
+    let res = call_init_raw(&mut instance, &raw_env,&raw_msg, &raw_msg,);
     let gas_used = gas_limit - instance.get_gas_left();
     println!("Init used gas: {}", gas_used);
     res.unwrap();
