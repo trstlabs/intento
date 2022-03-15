@@ -515,8 +515,7 @@ impl WasmiApi for ContractInstance {
 
         let human_addr_str = match bech32::encode(BECH32_PREFIX_ACC_ADDR, canonical.to_base32()) {
             Err(err) => {
-                // Assaf: IMO This can never fail. From looking at bech32::encode, it only fails
-                // because input prefix issues. For us the prefix is always "secert" which is valid.
+                // Assaf: For us the prefix is always "trust" which is valid.
                 debug!("humanize_address() error while trying to encode canonical address {:?} to human: {:?}",  canonical, err);
                 return Ok(Some(RuntimeValue::I32(
                     self.write_to_memory(err.to_string().as_bytes())? as i32,

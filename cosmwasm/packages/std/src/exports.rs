@@ -50,7 +50,6 @@ pub fn do_init<T, U>(
         &mut Extern<ExternalStorage, ExternalApi, ExternalQuerier>,
         Env,
         T,
-    
     ) -> InitResult<U>,
     env_ptr: u32,
     msg_ptr: u32,

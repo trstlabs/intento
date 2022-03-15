@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/binary"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,7 +38,7 @@ var (
 
 	// ContractHistoryStorePrefix = []byte{0x05}
 	ContractEnclaveIdPrefix = []byte{0x06}
-	ContractLabelPrefix     = []byte{0x07}
+	ContractIdPrefix        = []byte{0x07}
 
 	ContractQueuePrefix  = []byte{0x08}
 	PublicContractPrefix = []byte{0x09}
@@ -54,10 +53,11 @@ func GetCodeKey(codeID uint64) []byte {
 	return append(CodeKeyPrefix, contractIDBz...)
 }
 
+/*
 func decodeCodeKey(src []byte) uint64 {
 	return binary.BigEndian.Uint64(src[len(CodeKeyPrefix):])
 }
-
+*/
 // GetContractAddressKey returns the key for the WASM contract instance
 func GetContractAddressKey(addr sdk.AccAddress) []byte {
 	return append(ContractKeyPrefix, addr...)
@@ -78,9 +78,9 @@ func GetContractStorePrefixKey(addr sdk.AccAddress) []byte {
 	return append(ContractStorePrefix, addr...)
 }
 
-// GetContractStorePrefixKey returns the store prefix for the WASM contract instance
-func GetContractLabelPrefix(addr string) []byte {
-	return append(ContractLabelPrefix, []byte(addr)...)
+// GetContractStorePrefixKey returns the store prefix for the WASM contract instance from an address
+func GetContractIdPrefix(id string) []byte {
+	return append(ContractIdPrefix, []byte(id)...)
 }
 
 ////queue types
@@ -100,9 +100,11 @@ func ContractByTimeKey(endTime time.Time) []byte {
 //from the key we get the contract and end time
 func splitKeyWithTime(key []byte) (contractAddr string, endTime time.Time) {
 
-	/*if len(key[1:]) != 8+lenTime {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+8))
-	}*/
+	/*
+		if len(key[1:]) != 8+lenTime {
+			panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+8))
+		}
+	*/
 
 	endTime, _ = sdk.ParseTimeBytes(key[1 : 1+lenTime])
 	//	if err != nil {

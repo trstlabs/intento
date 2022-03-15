@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,14 +32,15 @@ type BankEncoder func(sender sdk.AccAddress, msg *wasmTypes.BankMsg) ([]sdk.Msg,
 type CustomEncoder func(sender sdk.AccAddress, msg json.RawMessage) ([]sdk.Msg, error)
 type StakingEncoder func(sender sdk.AccAddress, msg *wasmTypes.StakingMsg) ([]sdk.Msg, error)
 type WasmEncoder func(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, error)
-type GovEncoder func(sender sdk.AccAddress, msg *wasmTypes.GovMsg) ([]sdk.Msg, error)
+
+//type GovEncoder func(sender sdk.AccAddress, msg *wasmTypes.GovMsg) ([]sdk.Msg, error)
 
 type MessageEncoders struct {
 	Bank    BankEncoder
 	Custom  CustomEncoder
 	Staking StakingEncoder
 	Wasm    WasmEncoder
-	Gov     GovEncoder
+	//Gov     GovEncoder
 }
 
 func DefaultEncoders() MessageEncoders {
@@ -49,7 +49,7 @@ func DefaultEncoders() MessageEncoders {
 		Custom:  NoCustomMsg,
 		Staking: EncodeStakingMsg,
 		Wasm:    EncodeWasmMsg,
-		Gov:     EncodeGovMsg,
+		//Gov:     EncodeGovMsg,
 	}
 }
 
@@ -69,9 +69,9 @@ func (e MessageEncoders) Merge(o *MessageEncoders) MessageEncoders {
 	if o.Wasm != nil {
 		e.Wasm = o.Wasm
 	}
-	if o.Gov != nil {
+	/*if o.Gov != nil {
 		e.Gov = o.Gov
-	}
+	}*/
 	return e
 }
 
@@ -85,8 +85,8 @@ func (e MessageEncoders) Encode(contractAddr sdk.AccAddress, msg wasmTypes.Cosmo
 		return e.Staking(contractAddr, msg.Staking)
 	case msg.Wasm != nil:
 		return e.Wasm(contractAddr, msg.Wasm)
-	case msg.Gov != nil:
-		return e.Gov(contractAddr, msg.Gov)
+		/*case msg.Gov != nil:
+		return e.Gov(contractAddr, msg.Gov)*/
 	}
 
 	return nil, sdkerrors.Wrap(types.ErrInvalidMsg, "Unknown variant of Wasm")
@@ -99,6 +99,7 @@ var VoteOptionMap = map[string]string{
 	"NoWithVeto": "VOTE_OPTION_NO_WITH_VETO",
 }
 
+/*
 func EncodeGovMsg(sender sdk.AccAddress, msg *wasmTypes.GovMsg) ([]sdk.Msg, error) {
 	if msg.Vote == nil {
 		return nil, sdkerrors.Wrap(types.ErrInvalidMsg, "Unknown variant of Gov")
@@ -118,6 +119,7 @@ func EncodeGovMsg(sender sdk.AccAddress, msg *wasmTypes.GovMsg) ([]sdk.Msg, erro
 	sdkMsg := govtypes.NewMsgVote(sender, msg.Vote.Proposal, option)
 	return []sdk.Msg{sdkMsg}, nil
 }
+*/
 
 func EncodeBankMsg(sender sdk.AccAddress, msg *wasmTypes.BankMsg) ([]sdk.Msg, error) {
 	if msg.Send == nil {
@@ -243,6 +245,7 @@ func EncodeStakingMsg(sender sdk.AccAddress, msg *wasmTypes.StakingMsg) ([]sdk.M
 func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, error) {
 	switch {
 	case msg.Execute != nil:
+		fmt.Printf("exec callback: %s", msg.Execute.CallbackSignature)
 		contractAddr, err := sdk.AccAddressFromBech32(msg.Execute.ContractAddr)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Execute.ContractAddr)
@@ -262,6 +265,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 		}
 		return []sdk.Msg{&sdkMsg}, nil
 	case msg.Instantiate != nil:
+		fmt.Printf("inst callback: %s", msg.Instantiate.CallbackSignature)
 		coins, err := convertWasmCoinsToSdkCoins(msg.Instantiate.Send)
 		if err != nil {
 			return nil, err
@@ -274,6 +278,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			ContractId:       msg.Instantiate.Label,
 			CallbackCodeHash: msg.Instantiate.CallbackCodeHash,
 			InitMsg:          msg.Instantiate.Msg,
+			AutoMsg:          msg.Instantiate.AutoMsg,
 			InitFunds:        coins,
 			CallbackSig:      msg.Instantiate.CallbackSignature,
 		}
@@ -287,13 +292,19 @@ func (k Keeper) Dispatch(ctx sdk.Context, contractAddr sdk.AccAddress, msg wasmT
 	fmt.Printf("Dispatching.. \n")
 	var result sdk.Result
 	sdkMsgs, err := k.messenger.encoders.Encode(contractAddr, msg)
+	fmt.Printf("Dispatching.. \n")
 	if err != nil {
+		fmt.Printf("Dispatching err.. %s \n", err)
 		return sdk.Result{}, nil, err
+
 	}
+	fmt.Printf("handling contract.. %s \n", contractAddr.String())
 
 	for _, sdkMsg := range sdkMsgs {
+		fmt.Printf("handling message.. %s \n", sdkMsg)
 		res, _, err := k.handleSdkMessage(ctx, contractAddr, sdkMsg)
 		if err != nil {
+			fmt.Printf("handling err.. %s \n", err)
 			return sdk.Result{}, nil, err
 		}
 		result.Data = append(result.Data, res.Data...)
@@ -304,9 +315,9 @@ func (k Keeper) Dispatch(ctx sdk.Context, contractAddr sdk.AccAddress, msg wasmT
 }
 
 func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg sdk.Msg) (sdk.Result, []byte, error) {
-	if err := msg.ValidateBasic(); err != nil {
+	/*if err := msg.ValidateBasic(); err != nil {
 		return sdk.Result{}, nil, err
-	}
+	}*/
 	fmt.Printf("handling.. \n")
 	// make sure this account can send it
 	for _, acct := range msg.GetSigners() {
@@ -321,14 +332,14 @@ func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg 
 	if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 
 		msgRoute := legacyMsg.Route()
-		//	fmt.Printf("Route is.. %s \n", msgRoute)
+		fmt.Printf("Route is.. %s \n", msgRoute)
 		handler := k.messenger.router.Route(ctx, msgRoute)
 		if handler == nil {
 			return sdk.Result{}, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msgRoute)
 		}
-		fmt.Printf("handler.. \n")
 		res, err = handler(ctx, msg)
 		if err != nil {
+			fmt.Printf("handling success... \n")
 			return sdk.Result{}, nil, err
 		}
 	} else {

@@ -4,8 +4,8 @@ kill -9 $(lsof -t -i:6060 -sTCP:LISTEN)
 kill -9 $(lsof -t -i:9090 -sTCP:LISTEN)
 kill -9 $(lsof -t -i:54246  -sTCP:LISTEN)
 kill -9 $(lsof -t -i:26656 -sTCP:LISTEN)
-sudo apt remove trustlesshub -y
+sudo apt remove trustless-hub-node -y
 make clean-files
-sudo apt install ./trustlesshub_0.7.5-1-gcc99a0b_amd64.deb -y
+sudo apt install ./trustless-hub-node_0.7.5-8-g449e79d_amd64.deb -y
 
-./inittest.sh
+./init.sh

@@ -101,7 +101,7 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	if err != nil {
 		return nil, err
 	}
-	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, nil, 0)
+	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, msg.CallbackSig, 0)
 	if err != nil {
 
 		return nil, err
@@ -133,10 +133,13 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	if err != nil {
 		return nil, err
 	}
-	info, _ := k.GetContractInfo(ctx, contract)
-	if info.CodeID < 2 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot execute on internal contract code")
+	info := k.GetContractInfo(ctx, contract)
+	if info == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract code does not exist")
 	}
+	/*	if info.CodeID < 2 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot execute on internal contract code")
+	}*/
 
 	res, err := k.Execute(
 		ctx,
@@ -144,23 +147,25 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 		sender,
 		msg.Msg,
 		msg.SentFunds,
-		nil,
+		msg.CallbackSig,
 	)
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Printf("handling exec... \n")
 	events := filteredMessageEvents(ctx.EventManager())
+	fmt.Printf("handling exec... \n")
 	custom := sdk.Events{sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
 		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
 		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract),
 	)}
+	fmt.Printf("handling exec... \n")
 	events = append(events, custom.ToABCIEvents()...)
-	//fmt.Print("events Execute handled")
+	fmt.Print("events Execute handled")
 	res.Events = events
-
+	fmt.Printf("handling exec... \n")
 	return res, nil
 }
 

@@ -14,9 +14,7 @@ yes kiwi obtain scrub aunt female shoulder dune shove budget salt mechanic plug 
 
 yes orchard thing tooth dismiss seat couple define atom antenna language fuel wrist napkin tired undo toddler virus cherry shock mimic toss rifle predict crisp |trstd keys add faucet --keyring-backend test --recover
 
-echo "Adding airdrop accounts..."
-trstd import-genesis-accounts-from-snapshot ./snapshot.json ./reserves.json 
-echo "Getting genesis time..."
+
 
 
 trstd add-genesis-account $(trstd keys show user1 -a --keyring-backend test) 8750000000000utrst

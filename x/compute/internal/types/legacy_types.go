@@ -7,7 +7,7 @@ const (
 	QueryGetContractPublicState = "contract-public-state"
 	QueryGetCode                = "code"
 	QueryListCode               = "list-code"
-	QueryContractAddress        = "label"
+	QueryContractAddress        = "contract-id"
 	QueryContractKey            = "contract-key"
 	QueryContractHash           = "contract-hash"
 

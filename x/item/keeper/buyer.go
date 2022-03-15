@@ -11,6 +11,76 @@ import (
 
 // Prepayment creates a buyer with a new id and update the count
 func (k Keeper) Prepayment(ctx sdk.Context, msg types.MsgPrepayment) (err error) {
+	//get item info
+
+	item := k.GetItem(ctx, msg.Itemid)
+
+	//check if item has a best estimator (and therefore a complete estimation)
+	if item.Estimation.EstimationPrice == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item does not have a price yet, cannot make prepayment")
+	}
+
+	//check if item is transferable
+	if !item.Properties.Transferable {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item not transferable, cannot make prepayment")
+	}
+
+	//check if item has a buyer already
+	if item.Transfer.Buyer != "" {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "item has a buyer, cannot make prepayment")
+	}
+
+	//item buyer cannot be the item creatorc
+	if msg.Buyer == item.Creator || msg.Buyer == item.Transfer.Seller {
+		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "buyer cannot be creator/seller")
+	}
+
+	estimationPrice := item.Estimation.EstimationPrice
+	if item.Transfer.Discount > 0 {
+		estimationPrice = item.Estimation.EstimationPrice - item.Transfer.Discount
+	}
+
+	if item.Transfer.ShippingCost > 0 && item.Transfer.Location == "" {
+		toPayShipping := estimationPrice + item.Transfer.ShippingCost
+		if toPayShipping != msg.Deposit {
+
+			return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit insufficient, cannot make prepayment")
+		}
+
+	}
+
+	if item.Transfer.ShippingCost == 0 && item.Transfer.Location != "" {
+
+		if estimationPrice != msg.Deposit {
+
+			return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit insufficient, cannot make prepayment")
+		}
+
+	}
+
+	if item.Transfer.ShippingCost > 0 && item.Transfer.Location != "" {
+
+		if estimationPrice == msg.Deposit {
+
+			item.Transfer.ShippingCost = 0
+
+		} else {
+			toPayShipping :=
+				estimationPrice + item.Transfer.ShippingCost
+
+			if toPayShipping == msg.Deposit {
+				item.Transfer.Location = ""
+
+			} else {
+
+				return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "deposit insufficient, cannot make prepayment")
+			}
+		}
+
+	}
+	item.Transfer.Buyer = msg.Buyer
+	k.RemoveFromListedItemQueue(ctx, msg.Itemid, item.ListingDuration.EndTime)
+	k.SetItem(ctx, item)
 
 	deposit := sdk.NewInt64Coin("utrst", msg.Deposit)
 

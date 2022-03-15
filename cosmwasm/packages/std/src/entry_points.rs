@@ -15,7 +15,6 @@
 ///     deps: &mut Extern<S, A, Q>,
 ///     env: Env,
 ///     msg: InitMsg,
-///
 /// ) -> InitResult {
 /// #   Ok(Default::default())
 /// }

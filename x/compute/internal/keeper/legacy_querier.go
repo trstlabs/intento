@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 
@@ -41,6 +42,7 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 		var (
 			rsp interface{}
 			err error
+			bz  []byte
 		)
 		switch path[0] {
 		case QueryGetContract:
@@ -96,35 +98,36 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 				rsp, err = queryContractHistory(ctx, contractAddr, keeper)
 		*/
 		case QueryContractAddress:
-			rsp, err = queryContractAddress(ctx, path[1], keeper)
+			bz, err = queryContractAddress(ctx, path[1], keeper)
 		case QueryContractKey:
 			addr, err := sdk.AccAddressFromBech32(path[1])
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 			}
-			rsp, err = queryContractKey(ctx, addr, keeper)
-			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-			}
+			bz, err = queryContractKey(ctx, addr, keeper)
 		case QueryContractHash:
 			addr, err := sdk.AccAddressFromBech32(path[1])
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, err.Error())
 			}
-			rsp, err = queryContractHash(ctx, addr, keeper)
-			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
-			}
+			bz, err = queryContractHash(ctx, addr, keeper)
 		default:
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "unknown data query endpoint")
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("unknown data query endpoint %v", path[0]))
 		}
 		if err != nil {
 			return nil, err
 		}
+
+		if bz != nil {
+			return bz, nil
+		}
+
 		if rsp == nil || reflect.ValueOf(rsp).IsNil() {
 			return nil, nil
 		}
-		bz, err := json.MarshalIndent(rsp, "", "  ")
+
+		//bz, err = keeper.legacyAmino.MarshalJSON(rsp)
+		bz, err = json.MarshalIndent(rsp, "", "  ")
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())
 		}

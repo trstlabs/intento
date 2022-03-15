@@ -1,7 +1,5 @@
-vue/node_modules
-vue/dist
-secret.yml
 
+secret.yml
 .DS_Store
 
 *.a
@@ -11,7 +9,6 @@ Enclave_t.h
 Enclave_u.c
 Enclave_u.h
 Enclave_u.o
-
 
 incubator-teaclave-sgx-sdk
 libenclave.a
@@ -38,10 +35,6 @@ ias_bin_sw.go
 node_modules
 
 go.sum
-vue
-
-genesis_secret_3.json
-genesis.cosmoshub_4.json
 
 init.log
 init.sh
@@ -56,7 +49,7 @@ init.sh
 redo.sh
 start.sh
 test.sh
-
+testcontr.sh
 testitems.sh
 
 docs/.vuepress/dist

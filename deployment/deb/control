@@ -1,9 +1,9 @@
-Package: trustlesshub
+Package: trustless-hub-node
 Priority: optional
 Architecture: amd64
-Homepage: https://github.com/trstlabs/trustlesshub
+Homepage: https://github.com/trstlabs/trst
 Maintainer: https://github.com/trstlabs
-Provides: trustlesshub
-Conflicts: trustlesshub
-Replaces: trustlesshub
-Description: The trst node
+Provides: trustless-hub-node
+Conflicts: trustless-hub-node
+Replaces: trustless-hub-node
+Description: The trst node for the trustless hub

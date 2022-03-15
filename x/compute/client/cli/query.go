@@ -39,14 +39,14 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	queryCmd.AddCommand(
-		GetCmdListCode(),
+		GetCmdListCodes(),
 		GetCmdListContractByCode(),
 		GetCmdQueryCode(),
 		GetCmdGetContractInfo(),
 		GetCmdGetContractState(),
 		GetCmdQuery(),
 		GetQueryDecryptTxCmd(),
-		GetCmdQueryLabel(),
+		GetCmdQueryContractID(),
 		GetCmdCodeHashByContract(),
 		CmdDecryptText(),
 		// GetCmdGetContractHistory(cdc),
@@ -54,8 +54,8 @@ func GetQueryCmd() *cobra.Command {
 	return queryCmd
 }
 
-// GetCmdListCode lists all wasm code uploaded
-func GetCmdListCode() *cobra.Command {
+// GetCmdListCodes lists all wasm code uploaded
+func GetCmdListCodes() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-codes",
 		Short: "List all wasm bytecode on the chain",
@@ -81,12 +81,12 @@ func GetCmdListCode() *cobra.Command {
 	return cmd
 }
 
-// GetCmdListCode lists all wasm code uploaded
-func GetCmdQueryLabel() *cobra.Command {
+// GetCmdQueryContractID checks if a contract-id is in use
+func GetCmdQueryContractID() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "label [label]",
-		Short: "Check if a label is in use",
-		Long:  "Check if a label is in use",
+		Use:   "contract-id [contract-id]",
+		Short: "Check if a contract-id is in use",
+		Long:  "Check if a contract-id is in use",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -98,21 +98,23 @@ func GetCmdQueryLabel() *cobra.Command {
 			res, _, err := clientCtx.Query(route)
 			if err != nil {
 				if err == sdkErrors.ErrUnknownAddress {
-					fmt.Printf("Label is available and not in use\n")
+					fmt.Printf("ContractId is available and not in use\n")
 					return nil
 				}
-
 				return fmt.Errorf("error querying: %s", err)
 			}
 
 			addr := sdk.AccAddress{}
-
+			if addr == nil {
+				fmt.Printf("no contract address found for this contract id: %s", args[0])
+				return nil
+			}
 			err = addr.Unmarshal(res)
 			if err != nil {
 				return fmt.Errorf("error unwrapping address: %s", err)
 			}
-
-			fmt.Printf("Label is in use by contract address: %s\n", addr)
+			fmt.Printf("ContractId exists")
+			fmt.Printf("Label is in use by contract address: %s\n", addr.String())
 			return nil
 		},
 	}
@@ -121,7 +123,7 @@ func GetCmdQueryLabel() *cobra.Command {
 	return cmd
 }
 
-// GetCmdListCode lists all wasm code uploaded
+// GetCmdCodeHashByContract gets the code hash given a contract address
 func GetCmdCodeHashByContract() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "code-hash [address]",
@@ -502,7 +504,7 @@ func GetQueryDecryptTxCmd() *cobra.Command {
 			return clientCtx.PrintObjectLegacy(&answer)
 		},
 	}
-
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }
 
@@ -525,12 +527,12 @@ func GetCmdQuery() *cobra.Command {
 
 			if len(args) == 1 {
 
-				label, err := cmd.Flags().GetString(flagContractId)
+				contractId, err := cmd.Flags().GetString(flagContractId)
 				if err != nil {
 					return fmt.Errorf("trustless Contract ID or bech32 contract address is required")
 				}
 
-				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, label)
+				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, contractId)
 				res, _, err := clientCtx.Query(route)
 				if err != nil {
 					return err
