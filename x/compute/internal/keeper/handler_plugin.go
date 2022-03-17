@@ -245,7 +245,7 @@ func EncodeStakingMsg(sender sdk.AccAddress, msg *wasmTypes.StakingMsg) ([]sdk.M
 func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, error) {
 	switch {
 	case msg.Execute != nil:
-		fmt.Printf("exec callback: %s", msg.Execute.CallbackSignature)
+
 		contractAddr, err := sdk.AccAddressFromBech32(msg.Execute.ContractAddr)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Execute.ContractAddr)
@@ -265,13 +265,14 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 		}
 		return []sdk.Msg{&sdkMsg}, nil
 	case msg.Instantiate != nil:
-		fmt.Printf("inst callback: %s", msg.Instantiate.CallbackSignature)
+		fmt.Printf("Contract AutoMsg: %s \n", msg.Instantiate.AutoMsg)
+		fmt.Printf("Contract CallbackSignature: %s \n", msg.Instantiate.CallbackSignature)
 		coins, err := convertWasmCoinsToSdkCoins(msg.Instantiate.Send)
 		if err != nil {
 			return nil, err
 		}
-
 		sdkMsg := types.MsgInstantiateContract{
+
 			Sender: sender.String(),
 			CodeID: msg.Instantiate.CodeID,
 			// TODO: add this to CosmWasm
@@ -289,22 +290,21 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 }
 
 func (k Keeper) Dispatch(ctx sdk.Context, contractAddr sdk.AccAddress, msg wasmTypes.CosmosMsg) (results sdk.Result, data []byte, err error) {
-	fmt.Printf("Dispatching.. \n")
+
 	var result sdk.Result
 	sdkMsgs, err := k.messenger.encoders.Encode(contractAddr, msg)
-	fmt.Printf("Dispatching.. \n")
+
 	if err != nil {
-		fmt.Printf("Dispatching err.. %s \n", err)
+
 		return sdk.Result{}, nil, err
 
 	}
-	fmt.Printf("handling contract.. %s \n", contractAddr.String())
 
 	for _, sdkMsg := range sdkMsgs {
-		fmt.Printf("handling message.. %s \n", sdkMsg)
+
 		res, _, err := k.handleSdkMessage(ctx, contractAddr, sdkMsg)
 		if err != nil {
-			fmt.Printf("handling err.. %s \n", err)
+
 			return sdk.Result{}, nil, err
 		}
 		result.Data = append(result.Data, res.Data...)
@@ -318,7 +318,7 @@ func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg 
 	/*if err := msg.ValidateBasic(); err != nil {
 		return sdk.Result{}, nil, err
 	}*/
-	fmt.Printf("handling.. \n")
+
 	// make sure this account can send it
 	for _, acct := range msg.GetSigners() {
 		if !acct.Equals(contractAddr) {
@@ -332,14 +332,14 @@ func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg 
 	if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 
 		msgRoute := legacyMsg.Route()
-		fmt.Printf("Route is.. %s \n", msgRoute)
+
 		handler := k.messenger.router.Route(ctx, msgRoute)
 		if handler == nil {
 			return sdk.Result{}, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msgRoute)
 		}
 		res, err = handler(ctx, msg)
 		if err != nil {
-			fmt.Printf("handling success... \n")
+
 			return sdk.Result{}, nil, err
 		}
 	} else {

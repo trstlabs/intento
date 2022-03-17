@@ -250,11 +250,14 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 
 	// persist instance
 	createdAt := types.NewAbsoluteTxPosition(ctx)
-	//fmt.Printf("created")
-	endTime := ctx.BlockHeader().Time.Add(codeInfo.Duration)
+
+	var endTime time.Time
 	if customDuration != 0 {
 		endTime = ctx.BlockHeader().Time.Add(customDuration)
+	} else if codeInfo.Duration != 0 {
+		endTime = ctx.BlockHeader().Time.Add(codeInfo.Duration)
 	}
+
 	if autoMsg != nil {
 		instance := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, endTime, autoMsg, callbackSig)
 		store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&instance))
@@ -298,7 +301,6 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 			return nil, err
 		}
-		//fmt.Printf("executing sig %s \n", signMode)
 	}
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
