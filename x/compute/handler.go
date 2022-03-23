@@ -152,20 +152,20 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("handling exec... \n")
+
 	events := filteredMessageEvents(ctx.EventManager())
-	fmt.Printf("handling exec... \n")
+
 	custom := sdk.Events{sdk.NewEvent(
 		sdk.EventTypeMessage,
 		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
 		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
 		sdk.NewAttribute(types.AttributeKeyContract, msg.Contract),
 	)}
-	fmt.Printf("handling exec... \n")
+
 	events = append(events, custom.ToABCIEvents()...)
-	fmt.Print("events Execute handled")
+
 	res.Events = events
-	fmt.Printf("handling exec... \n")
+
 	return res, nil
 }
 

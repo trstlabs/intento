@@ -16,7 +16,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	trst "github.com/trstlabs/trst/types"
+	prefix "github.com/trstlabs/trst/types"
 	"github.com/trstlabs/trst/x/compute"
 
 	//"github.com/tendermint/tendermint/libs/cli"
@@ -338,9 +338,9 @@ func initConfig(ctx *client.Context, cmd *cobra.Command) error {
 	//cmd.PersistentFlags().Bool(flagLegacyHdPath, false, "Flag to specify the command uses old HD path - use this for ledger compatibility")
 
 	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(trst.Bech32PrefixAccAddr, trst.Bech32PrefixAccPub)
-	config.SetBech32PrefixForValidator(trst.Bech32PrefixValAddr, trst.Bech32PrefixValPub)
-	config.SetBech32PrefixForConsensusNode(trst.Bech32PrefixConsAddr, trst.Bech32PrefixConsPub)
+	config.SetBech32PrefixForAccount(prefix.Bech32PrefixAccAddr, prefix.Bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(prefix.Bech32PrefixValAddr, prefix.Bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(prefix.Bech32PrefixConsAddr, prefix.Bech32PrefixConsPub)
 
 	/*oldHDPath, err := cmd.PersistentFlags().GetBool(flagLegacyHdPath)
 	if err != nil {

@@ -26,7 +26,7 @@ service Query {
     }
   
     rpc SmartContractState (QuerySmartContractStateRequest) returns (QuerySmartContractStateResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/smart/{query_data}";
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/smart";
     }
     rpc Code (QueryCodeRequest) returns (QueryCodeResponse) {
         option (google.api.http).get = "/compute/v1beta1/code/{code_id}";

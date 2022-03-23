@@ -286,7 +286,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 // Execute executes the contract instance
 func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins, callbackSig []byte) (*sdk.Result, error) {
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading compute module: execute")
-	//fmt.Printf("executing caller %s ", caller)
+
 	signBytes := []byte{}
 	signMode := sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED
 	modeInfoBytes := []byte{}
@@ -328,7 +328,6 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	if contractKey == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "contract key not found")
 	}
-	//fmt.Printf("Contract Execute: Got contract Key for contract %s: %s\n", contractAddress, base64.StdEncoding.EncodeToString(contractKey))
 	params := types.NewEnv(ctx, caller, coins, contractAddress, contractKey)
 
 	// prepare querier
@@ -338,7 +337,6 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	gas := gasForContract(ctx)
-	//	fmt.Printf("Execute message before wasm is %s \n", base64.StdEncoding.EncodeToString(msg))
 	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
 	consumeGas(ctx, gasUsed)
 
@@ -350,20 +348,19 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	events := types.ParseEvents(res.Log, contractAddress)
 	ctx.EventManager().EmitEvents(events)
 
-	// TODO: capture events here as well
 	err = k.dispatchMessages(ctx, contractAddress, res.Messages)
 	if err != nil {
 		return nil, err
 	}
 
-	k.hooks.AfterComputeExecuted(ctx, caller)
-
-	if res.Log[0].Value == "verifiable" && res.Log[0].Key == "output" {
+	if res.Log[0].Key == "output" && res.Log[0].Value == "public" {
 		k.SetContractPublicState(ctx, contractAddress, res.Log)
-		return &sdk.Result{Log: res.Log[1].Value}, nil
-	} else {
-		return &sdk.Result{}, nil
+		//return &sdk.Result{Data: res.Data,Log: res.Log[1].Value}, nil <-can be used for item module compatibilily
 	}
+
+	k.hooks.AfterComputeExecuted(ctx, caller)
+	return &sdk.Result{Data: res.Data}, nil
+
 }
 
 // Delete deletes the contract instance

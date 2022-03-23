@@ -163,9 +163,9 @@ build_linux_arm64_cli:
 
 build_all: build-linux build_windows_cli build_macos_cli build_linux_arm64_cli
 
-deb: build-linux deb-no-compile
+deb: build-linux-with-query deb-no-compile
 
-deb-q: build-linux-with-query deb-no-compile
+deb-no-query: build-linux deb-no-compile
 
 deb-no-compile:
     ifneq ($(UNAME_S),Linux)

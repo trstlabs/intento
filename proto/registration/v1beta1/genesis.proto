@@ -2,8 +2,8 @@ syntax = "proto3";
 package trst.x.registration.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "registration/types.proto";
-import "registration/msg.proto";
+import "registration/v1beta1/types.proto";
+import "registration/v1beta1/msg.proto";
 
 option go_package = "github.com/trstlabs/trst/x/registration/internal/types";
 option (gogoproto.goproto_getters_all) = false;

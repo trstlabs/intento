@@ -111,7 +111,7 @@ pub fn encrypt_output(
                 }
             }
             for log in ok.log.iter_mut().filter(|log| log.encrypted) {
-                if log.value.starts_with( "verifiable") && log.key.starts_with( "output"){
+                if  log.key == "output" && log.value == "public" {
                     return Ok(open_output)
                 } 
                 log.key = encrypt_preserialized_string(&key, &log.key)?;
