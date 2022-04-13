@@ -90,7 +90,9 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccA
 	prefixStoreKey := types.GetPublicContractStateKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 	for _, attr := range result {
-		prefixStore.Set([]byte(attr.Key), []byte(attr.Value))
+		if !attr.Encrypted {
+			prefixStore.Set([]byte(attr.Key), []byte(attr.Value))
+		}
 	}
 	return nil
 }

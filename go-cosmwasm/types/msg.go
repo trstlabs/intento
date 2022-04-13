@@ -54,8 +54,9 @@ type MigrateResponse struct {
 
 // LogAttribute
 type LogAttribute struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Key       string `json:"key"`
+	Value     string `json:"value"`
+	Encrypted bool   `json:"encrypted"`
 }
 
 // CosmosMsg is an rust enum and only (exactly) one of the fields should be set
@@ -166,8 +167,10 @@ type InstantiateMsg struct {
 	// AutoMsg is assumed to be a json-encoded message, which will be passed directly
 	// as `autoMsg` when calling `Handle` on the above-defined contract
 	AutoMsg []byte `json:"auto_msg"`
-	/// Label is a mandatory human-readbale label for the contract
-	Label string `json:"label"`
+	/// Label is a mandatory human-readbale id for the contract
+	ContractID string `json:"contract_id"`
+	/// Label is a mandatory human-readbale id for the contract
+	ContractDuration string `json:"contract_duration"`
 	// Send is an optional amount of coins this contract sends to the called contract
 	Send              Coins  `json:"send"`
 	CallbackSignature []byte `json:"callback_sig"` // Optional

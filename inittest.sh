@@ -1,5 +1,7 @@
 
 rm -rf ~/.trst
+kill -9 $(lsof -t -i:26657 -sTCP:LISTEN)
+kill -9 $(lsof -t -i:1317 -sTCP:LISTEN)
 
 trstd init FRST --chain-id=trst_chain_1
 
@@ -40,4 +42,4 @@ sed -i '129s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trst/c
 
 sed -i '181s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trst/config/app.toml
 
-trstd start --bootstrap > init.log --log_level info
+trstd start --bootstrap > init.log --log_level trace

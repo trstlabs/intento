@@ -338,6 +338,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	gas := gasForContract(ctx)
 	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+	//fmt.Printf("res for execute: %s \n", res.Log)
 	consumeGas(ctx, gasUsed)
 
 	if execErr != nil {
@@ -353,10 +354,8 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 		return nil, err
 	}
 
-	if res.Log[0].Key == "output" && res.Log[0].Value == "public" {
-		k.SetContractPublicState(ctx, contractAddress, res.Log)
-		//return &sdk.Result{Data: res.Data,Log: res.Log[1].Value}, nil <-can be used for item module compatibilily
-	}
+	k.SetContractPublicState(ctx, contractAddress, res.Log)
+	//return &sdk.Result{Data: res.Data,Log: res.Log[1].Value}, nil <-can be used for item module compatibilily
 
 	k.hooks.AfterComputeExecuted(ctx, caller)
 	return &sdk.Result{Data: res.Data}, nil
@@ -486,7 +485,7 @@ func (k Keeper) contractInstance(ctx sdk.Context, contractAddress sdk.AccAddress
 
 func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, msgs []wasmTypes.CosmosMsg) error {
 	for _, msg := range msgs {
-
+		fmt.Print("dispatch msg \n")
 		var err error
 
 		if _, _, err = k.Dispatch(ctx, contractAddr, msg); err != nil {

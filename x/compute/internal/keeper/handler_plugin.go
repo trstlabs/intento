@@ -276,7 +276,8 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			Sender: sender.String(),
 			CodeID: msg.Instantiate.CodeID,
 			// TODO: add this to CosmWasm
-			ContractId:       msg.Instantiate.Label,
+			ContractId:       msg.Instantiate.ContractID,
+			ContractPeriod:   msg.Instantiate.ContractDuration,
 			CallbackCodeHash: msg.Instantiate.CallbackCodeHash,
 			InitMsg:          msg.Instantiate.Msg,
 			AutoMsg:          msg.Instantiate.AutoMsg,
@@ -318,7 +319,7 @@ func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg 
 	/*if err := msg.ValidateBasic(); err != nil {
 		return sdk.Result{}, nil, err
 	}*/
-
+	//fmt.Print("handle msg \n")
 	// make sure this account can send it
 	for _, acct := range msg.GetSigners() {
 		if !acct.Equals(contractAddr) {

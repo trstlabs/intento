@@ -36,6 +36,7 @@ const (
 	flagDuration               = "duration"
 	flagTitle                  = "contract-title"
 	flagDescription            = "contract-description"
+	flagAutoMsg                = "auto_msg"
 
 	// flagAdmin                  = "admin"
 )
@@ -188,13 +189,14 @@ func InstantiateContractCmd() *cobra.Command {
 
 		},
 	}
-	var sendAutoMsg bool
+	//var sendAutoMsg bool
 	cmd.Flags().String(flagCodeHash, "", "For offline transactions, use this to specify the target contract's code hash")
 	cmd.Flags().String(flagIoMasterKey, "", "For offline transactions, use this to specify the path to the "+
 		"io-master-cert.der file, which you can get using the command `trstd q register trst-enclave-params` ")
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract during instantiation")
 	cmd.Flags().String(flagContractId, "", "A human-readable name for this contract in lists")
-	cmd.Flags().BoolVar(&sendAutoMsg, "auto_msg", false, "(A auto message to send, before the contract ends (optional)")
+	cmd.Flags().String(flagAutoMsg, "", "An automatic message to send, before the contract ends (optional)")
+	//cmd.Flags().BoolVar(&sendAutoMsg, "auto_msg", false, "An automatic message to send, before the contract ends (optional)")
 
 	// cmd.Flags().String(flagAdmin, "", "Address of an admin")
 	flags.AddTxFlagsToCmd(cmd)
@@ -218,11 +220,17 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		return types.MsgInstantiateContract{}, err
 	}
 
-	contractId, err := initFlags.GetString(flagContractId)
+	contractId, _ := initFlags.GetString(flagContractId)
 	if contractId == "" {
 		return types.MsgInstantiateContract{}, fmt.Errorf("contract id is required on all contracts")
 	}
-	sendAutoMsg, _ := initFlags.GetBool("auto_msg")
+
+	autoMsgString, err := initFlags.GetString(flagAutoMsg)
+	if err != nil {
+		return types.MsgInstantiateContract{}, err
+	}
+
+	//sendAutoMsg, _ := initFlags.GetBool("auto_msg")
 
 	if err != nil {
 		return types.MsgInstantiateContract{}, err
@@ -280,14 +288,14 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 	}
 	var autoMsgEncrypted []byte
 	autoMsgEncrypted = nil
-	if sendAutoMsg {
+	if autoMsgString != "" {
 		autoMsg := types.TrustlessMsg{}
-		auto := types.ParseAuto{}
+		/*auto := types.ParseAuto{}
 		autoMsg.Msg, err = json.Marshal(auto)
 		if err != nil {
 			return types.MsgInstantiateContract{}, err
-		}
-
+		}*/
+		autoMsg.Msg = []byte(autoMsgString)
 		autoMsg.CodeHash = initMsg.CodeHash
 		autoMsgEncrypted, err = wasmCtx.Encrypt(autoMsg.Serialize())
 		if err != nil {
