@@ -75,6 +75,12 @@ Install the latest version of the SGX tools by running the following script. Be 
 bash "$HOME/trst/installsgx.sh"
 ```
 
+and try alternatively:
+```sh
+
+bash "$HOME/trst/installsgx_alternative.sh"
+```
+
 
 ## Using `sgx-detect`:
 
@@ -92,7 +98,7 @@ sgx-detect
 ```
 
 When you do run sgx-detect, it should print at the end:
-AES Service should be running and all checks should be green. If this is not the case, try reinstalling using a different script. 
+AES Service should be running and all checks should be green. If this is not the case, redo (parts of) the above scripts.
 
 ```
 ✔  Able to launch enclaves

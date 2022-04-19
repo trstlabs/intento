@@ -42,4 +42,4 @@ sed -i '129s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trst/c
 
 sed -i '181s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trst/config/app.toml
 
-trstd start --bootstrap > init.log --log_level trace
+trstd start --bootstrap > init.log --log_level info

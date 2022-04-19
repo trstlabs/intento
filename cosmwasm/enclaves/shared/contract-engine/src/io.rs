@@ -149,13 +149,6 @@ fn encrypt_wasm_msg(
             callback_sig,
             send,
             ..
-        }
-        | WasmMsg::Instantiate {
-            msg,
-            callback_code_hash,
-            callback_sig,
-            send,
-            ..
         } => {
             let mut hash_appended_msg = callback_code_hash.as_bytes().to_vec();
             hash_appended_msg.extend_from_slice(msg.as_slice());
@@ -168,8 +161,40 @@ fn encrypt_wasm_msg(
 
             msg_to_pass.encrypt_in_place()?;
             *msg = Binary::from(msg_to_pass.to_vec().as_slice());
-
             *callback_sig = Some(create_callback_signature(contract_addr, &msg_to_pass, send));
+        }
+        WasmMsg::Instantiate {
+            msg,
+            auto_msg,
+            callback_code_hash,
+            callback_sig,
+            send,
+            ..
+        } => {
+            let mut hash_appended_msg = callback_code_hash.clone().as_bytes().to_vec();
+            hash_appended_msg.extend_from_slice(msg.as_slice());
+            let mut hash_appended_auto_msg = callback_code_hash.as_bytes().to_vec();
+            let mut msg_to_pass = SecretMessage::from_base64(
+                Binary(hash_appended_msg).to_base64(),
+                nonce,
+                user_public_key,
+            )?;
+            msg_to_pass.encrypt_in_place()?;
+            *msg = Binary::from(msg_to_pass.to_vec().as_slice());
+            *callback_sig = Some(create_callback_signature(contract_addr, &msg_to_pass, send));
+
+            if auto_msg.is_some() {
+                let auto_msg_unwrap = auto_msg.clone().unwrap();
+                hash_appended_auto_msg.extend_from_slice(auto_msg_unwrap.as_slice());
+                let mut auto_msg_to_pass = SecretMessage::from_base64(
+                    Binary(hash_appended_auto_msg).to_base64(),
+                    nonce,
+                    user_public_key,
+                )?;
+                auto_msg_to_pass.encrypt_in_place()?;
+                *auto_msg = Some(Binary::from(auto_msg_to_pass.to_vec().as_slice()));
+            }
+           
         }
     }
 

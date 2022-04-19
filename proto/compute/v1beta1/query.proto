@@ -34,6 +34,9 @@ service Query {
     rpc Codes (google.protobuf.Empty) returns (QueryCodesResponse) {
         option (google.api.http).get = "/compute/v1beta1/code";
     }
+    rpc CodeHash(QueryCodeHashRequest) returns (QueryCodeHashResponse) {
+		option (google.api.http).get = "/compute/v1beta1/code-hash/{codeid}";
+	}
 }
 
 // QueryContractInfoRequest is the request type for the Query/ContractInfo RPC method
@@ -134,6 +137,15 @@ message QueryContractHashResponse {
     bytes code_hash = 1 [(gogoproto.casttype) = "github.com/tendermint/tendermint/libs/bytes.HexBytes"];
 }
 
+message QueryCodeHashRequest {
+	uint64 codeid = 1;
+}
+
+message QueryCodeHashResponse {
+	bytes code_hash = 1;
+	string code_hash_string = 2;
+	
+}
 // DecryptedAnswer is a struct that represents a decrypted tx-query
 message DecryptedAnswer {
     option (gogoproto.equal) = false;

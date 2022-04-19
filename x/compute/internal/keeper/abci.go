@@ -43,7 +43,7 @@ func (k Keeper) ContractPayoutCreator(ctx sdk.Context, contractAddress sdk.AccAd
 			return err
 		}
 	} else {
-		k.Logger(ctx).Info("compute", "contract", "has no balance")
+		k.Logger(ctx).Info("compute", "contract", "has no public balance")
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"sort"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -126,6 +127,28 @@ func (q grpcQuerier) AddressByLabel(c context.Context, req *types.QueryContractA
 	}
 	return &types.QueryContractAddressByContractIdResponse{Address: rsp}, nil
 
+}
+
+func (q grpcQuerier) CodeHash(c context.Context, req *types.QueryCodeHashRequest) (*types.QueryCodeHashResponse, error) {
+	if req == nil {
+		return nil, types.ErrNotFound
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	rsp, err := queryCodeHash(ctx, req.Codeid, q.keeper)
+	switch {
+	case err != nil:
+		return nil, err
+	case rsp == nil:
+		return nil, types.ErrNotFound
+	}
+
+	if rsp == nil {
+		return nil, types.ErrNotFound
+	}
+
+	return &types.QueryCodeHashResponse{CodeHash: rsp, CodeHashString: hex.EncodeToString(rsp)}, nil
 }
 
 func (q grpcQuerier) ContractKey(c context.Context, req *types.QueryContractKeyRequest) (*types.QueryContractKeyResponse, error) {
@@ -280,6 +303,15 @@ func queryContractHistory(ctx sdk.Context, bech string, keeper Keeper) ([]byte, 
 
 func queryContractAddress(ctx sdk.Context, contractId string, keeper Keeper) (sdk.AccAddress, error) {
 	res := keeper.GetContractAddress(ctx, contractId)
+	if res == nil {
+		return nil, nil
+	}
+
+	return res, nil
+}
+
+func queryCodeHash(ctx sdk.Context, codeID uint64, keeper Keeper) ([]byte, error) {
+	res := keeper.GetCodeHash(ctx, codeID)
 	if res == nil {
 		return nil, nil
 	}

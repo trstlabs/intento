@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -265,8 +264,8 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 		}
 		return []sdk.Msg{&sdkMsg}, nil
 	case msg.Instantiate != nil:
-		fmt.Printf("Contract AutoMsg: %s \n", msg.Instantiate.AutoMsg)
-		fmt.Printf("Contract CallbackSignature: %s \n", msg.Instantiate.CallbackSignature)
+		//fmt.Printf("Contract AutoMsg: %s \n", msg.Instantiate.AutoMsg)
+		//fmt.Printf("Contract CallbackSignature: %s \n", msg.Instantiate.CallbackSignature)
 		coins, err := convertWasmCoinsToSdkCoins(msg.Instantiate.Send)
 		if err != nil {
 			return nil, err

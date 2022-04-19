@@ -270,9 +270,11 @@ pub enum WasmMsg {
         msg: Binary,
         auto_msg: Option<Binary>,
         send: Vec<Coin>,
-        /// Human-readable label for the contract
+        /// Human-readable contract_id for the contract
         #[serde(default)]
-        label: String,
+        contract_id: String,
+          /// Human-readable duration for the contract (e.g. 60s, 5h ect.)
+        contract_duration: String,
         callback_sig: Option<Vec<u8>>,
     },
 }

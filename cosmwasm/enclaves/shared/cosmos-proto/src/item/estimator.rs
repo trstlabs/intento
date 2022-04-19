@@ -17,7 +17,7 @@
 #![allow(trivial_casts)]
 #![allow(unused_imports)]
 #![allow(unused_results)]
-//! Generated file from `item/estimator.proto`
+//! Generated file from `item/v1beta1/estimator.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
@@ -70,7 +70,7 @@ impl Profile {
         ::std::mem::replace(&mut self.owner, ::std::string::String::new())
     }
 
-    // repeated .trstlabs.trst.trst.EstimationInfo estimations = 2;
+    // repeated .trstlabs.trst.item.v1beta1.EstimationInfo estimations = 2;
 
 
     pub fn get_estimations(&self) -> &[EstimationInfo] {
@@ -1468,25 +1468,25 @@ impl ::protobuf::reflect::ProtobufValue for MsgFlagItem {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x14item/estimator.proto\x12\x12trstlabs.trst.trst\"e\n\x07Profile\x12\
-    \x14\n\x05owner\x18\x01\x20\x01(\tR\x05owner\x12D\n\x0bestimations\x18\
-    \x02\x20\x03(\x0b2\".trstlabs.trst.trst.EstimationInfoR\x0bestimations\"\
-    k\n\x0eEstimationInfo\x12\x16\n\x06itemid\x18\x01\x20\x01(\x04R\x06itemi\
-    d\x12\x1e\n\ninterested\x18\x02\x20\x01(\x08R\ninterested\x12!\n\x0citem\
-    _creator\x18\x03\x20\x01(\tR\x0bitemCreator\"\xa8\x01\n\x13MsgCreateEsti\
-    mation\x12\x1c\n\testimator\x18\x01\x20\x01(\tR\testimator\x12!\n\x0cest\
-    imate_msg\x18\x02\x20\x01(\x0cR\x0bestimateMsg\x12\x16\n\x06itemid\x18\
-    \x03\x20\x01(\x04R\x06itemid\x12\x18\n\x07deposit\x18\x04\x20\x01(\x03R\
-    \x07deposit\x12\x1e\n\ninterested\x18\x05\x20\x01(\x08R\ninterested\"e\n\
-    \rMsgUpdateLike\x12\x1c\n\testimator\x18\x01\x20\x01(\tR\testimator\x12\
-    \x16\n\x06itemid\x18\x02\x20\x01(\x04R\x06itemid\x12\x1e\n\ninterested\
-    \x18\x03\x20\x01(\x08R\ninterested\"j\n\x13MsgDeleteEstimation\x12\x1c\n\
-    \testimator\x18\x01\x20\x01(\tR\testimator\x12\x16\n\x06itemid\x18\x02\
-    \x20\x01(\x04R\x06itemid\x12\x1d\n\ndelete_msg\x18\x03\x20\x01(\x0cR\tde\
-    leteMsg\"^\n\x0bMsgFlagItem\x12\x1c\n\testimator\x18\x01\x20\x01(\tR\tes\
-    timator\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04R\x06itemid\x12\x19\n\
-    \x08flag_msg\x18\x03\x20\x01(\x0cR\x07flagMsgB'Z%github.com/trstlabs/trs\
-    t/x/item/typesb\x06proto3\
+    \n\x1citem/v1beta1/estimator.proto\x12\x1atrstlabs.trst.item.v1beta1\"m\
+    \n\x07Profile\x12\x14\n\x05owner\x18\x01\x20\x01(\tR\x05owner\x12L\n\x0b\
+    estimations\x18\x02\x20\x03(\x0b2*.trstlabs.trst.item.v1beta1.Estimation\
+    InfoR\x0bestimations\"k\n\x0eEstimationInfo\x12\x16\n\x06itemid\x18\x01\
+    \x20\x01(\x04R\x06itemid\x12\x1e\n\ninterested\x18\x02\x20\x01(\x08R\nin\
+    terested\x12!\n\x0citem_creator\x18\x03\x20\x01(\tR\x0bitemCreator\"\xa8\
+    \x01\n\x13MsgCreateEstimation\x12\x1c\n\testimator\x18\x01\x20\x01(\tR\t\
+    estimator\x12!\n\x0cestimate_msg\x18\x02\x20\x01(\x0cR\x0bestimateMsg\
+    \x12\x16\n\x06itemid\x18\x03\x20\x01(\x04R\x06itemid\x12\x18\n\x07deposi\
+    t\x18\x04\x20\x01(\x03R\x07deposit\x12\x1e\n\ninterested\x18\x05\x20\x01\
+    (\x08R\ninterested\"e\n\rMsgUpdateLike\x12\x1c\n\testimator\x18\x01\x20\
+    \x01(\tR\testimator\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04R\x06itemid\
+    \x12\x1e\n\ninterested\x18\x03\x20\x01(\x08R\ninterested\"j\n\x13MsgDele\
+    teEstimation\x12\x1c\n\testimator\x18\x01\x20\x01(\tR\testimator\x12\x16\
+    \n\x06itemid\x18\x02\x20\x01(\x04R\x06itemid\x12\x1d\n\ndelete_msg\x18\
+    \x03\x20\x01(\x0cR\tdeleteMsg\"^\n\x0bMsgFlagItem\x12\x1c\n\testimator\
+    \x18\x01\x20\x01(\tR\testimator\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04\
+    R\x06itemid\x12\x19\n\x08flag_msg\x18\x03\x20\x01(\x0cR\x07flagMsgB'Z%gi\
+    thub.com/trstlabs/trst/x/item/typesb\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;

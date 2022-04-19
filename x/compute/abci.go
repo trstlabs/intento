@@ -27,20 +27,20 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	}
 
 	for _, contract := range contracts {
-		for _, addr := range incentiveList {
-			if addr == contract.Address.String() {
+		//for _, addr := range incentiveList {
+		if contract.Address.Equals(contract.Address) && contract.AutoMsg != nil {
 
-				_, err := k.Execute(ctx, contract.Address, contract.Address, contract.ContractInfo.AutoMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), contract.ContractInfo.CallbackSig)
-				if err != nil {
-					logger.Info(
-						"contract",
-						"err", err.Error(),
-					)
+			_, err := k.Execute(ctx, contract.Address, contract.Address, contract.ContractInfo.AutoMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), contract.ContractInfo.CallbackSig)
+			if err != nil {
+				logger.Info(
+					"contract",
+					"err", err.Error(),
+				)
 
-				}
-				break
 			}
+			//break
 		}
+		//}
 
 		logger.Info(
 			"expired",

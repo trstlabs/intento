@@ -30,7 +30,6 @@ impl SecretMessage {
 
     pub fn decrypt(&self) -> Result<Vec<u8>, EnclaveError> {
         let key = self.encryption_key();
-
         // pass
         let msg = key.decrypt_siv(self.msg.as_slice(), None).map_err(|err| {
             error!("got an error while trying to decrypt the msg: {:?}", err);

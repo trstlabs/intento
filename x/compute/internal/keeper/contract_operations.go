@@ -159,7 +159,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 
 // Instantiate creates an instance of a WASM contract
 func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, initMsg []byte, autoMsg []byte, id string, deposit sdk.Coins, callbackSig []byte, customDuration time.Duration) (sdk.AccAddress, error) {
-
+	fmt.Printf("init duration: %s \n", customDuration)
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading CosmWasm module: init")
 
 	signBytes := []byte{}
@@ -338,7 +338,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	gas := gasForContract(ctx)
 	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
-	//fmt.Printf("res for execute: %s \n", res.Log)
+
 	consumeGas(ctx, gasUsed)
 
 	if execErr != nil {

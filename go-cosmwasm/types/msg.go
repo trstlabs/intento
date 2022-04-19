@@ -165,11 +165,11 @@ type InstantiateMsg struct {
 	// as `userMsg` when calling `Handle` on the above-defined contract
 	Msg []byte `json:"msg"`
 	// AutoMsg is assumed to be a json-encoded message, which will be passed directly
-	// as `autoMsg` when calling `Handle` on the above-defined contract
+	// as `autoMsg` when calling `Handle` on the above-defined contract (optional)
 	AutoMsg []byte `json:"auto_msg"`
-	/// Label is a mandatory human-readbale id for the contract
+	/// ContractID is a mandatory human-readbale id for the contract
 	ContractID string `json:"contract_id"`
-	/// Label is a mandatory human-readbale id for the contract
+	/// ContractDuration is a mandatory human-readbale time duration for the contract (e.g. 60s 5h ect.)
 	ContractDuration string `json:"contract_duration"`
 	// Send is an optional amount of coins this contract sends to the called contract
 	Send              Coins  `json:"send"`

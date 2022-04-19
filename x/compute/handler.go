@@ -101,7 +101,14 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	if err != nil {
 		return nil, err
 	}
-	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, msg.CallbackSig, 0)
+	var duration time.Duration = 0
+	if msg.ContractPeriod != "" {
+		duration, err = time.ParseDuration(msg.ContractPeriod)
+		if err != nil {
+			return nil, err
+		}
+	}
+	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, msg.CallbackSig, duration)
 	if err != nil {
 
 		return nil, err
@@ -149,6 +156,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 		msg.SentFunds,
 		msg.CallbackSig,
 	)
+
 	if err != nil {
 		return nil, err
 	}

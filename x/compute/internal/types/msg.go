@@ -73,7 +73,7 @@ func (msg MsgInstantiateContract) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
 	}
 	if msg.CodeID == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "code_id is required")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "code ID is required")
 	}
 
 	if err := validateLabel(msg.ContractId); err != nil {
