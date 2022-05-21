@@ -14,13 +14,13 @@ import (
 //
 // CONTRACT: all types of accounts must have been already initialized/created
 // InitGenesis initializes the trst module state
-func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
+func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState, msgHandler sdk.Handler) error {
 	// NOTE: since the compute module is a module account, the auth module should
 	// take care of importing the amount into the account except for the
 	// genesis block
 
 	if k.GetComputeModuleBalance(ctx).IsZero() {
-		err := k.InitializeComputeModule(ctx, sdk.NewCoin("utrst", sdk.ZeroInt()))
+		err := k.InitializeComputeModule(ctx, sdk.NewCoin(types.Denom, sdk.ZeroInt()))
 		if err != nil {
 			panic(err)
 		}
@@ -62,7 +62,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
 	//fmt.Print("setting paams...")
 	k.SetParams(ctx, types.DefaultParams())
 	//keeper.setParams(ctx, data.Params)
-
+	for _, genTx := range gs.GenMsgs {
+		msg := genTx.AsMsg()
+		if msg == nil {
+			return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown message")
+		}
+		_, err := msgHandler(ctx, msg)
+		if err != nil {
+			return sdkerrors.Wrap(err, "genesis")
+		}
+	}
 	return nil
 }
 

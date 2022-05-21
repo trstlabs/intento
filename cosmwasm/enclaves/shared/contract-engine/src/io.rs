@@ -202,7 +202,7 @@ fn encrypt_wasm_msg(
 }
 
 pub fn create_callback_signature(
-    contract_addr: &CanonicalAddr,
+    sender_addr: &CanonicalAddr,
     msg_to_sign: &SecretMessage,
     funds_to_send: &[Coin],
 ) -> Vec<u8> {
@@ -213,7 +213,7 @@ pub fn create_callback_signature(
         .get()
         .to_vec();
 
-    callback_sig_bytes.extend(contract_addr.as_slice());
+    callback_sig_bytes.extend(sender_addr.as_slice());
     callback_sig_bytes.extend(msg_to_sign.msg.as_slice());
     callback_sig_bytes.extend(serde_json::to_vec(funds_to_send).unwrap());
 

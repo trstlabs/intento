@@ -140,6 +140,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig app.EncodingConfig) {
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
+		AddGenesisWasmMsgCmd(app.DefaultNodeHome),
 		ImportGenesisAccountsFromSnapshotCmd(app.DefaultNodeHome),
 		ExportAirdropSnapshotCmd(),
 		PrepareGenesisCmd(app.DefaultNodeHome, app.ModuleBasics),
@@ -302,7 +303,6 @@ func exportAppStateAndTMValidators(
 	} else {
 		wasmApp = app.NewTrstApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts, compute.DefaultWasmConfig(), app.GetEnabledProposals())
 	}
-
 	return wasmApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }
 

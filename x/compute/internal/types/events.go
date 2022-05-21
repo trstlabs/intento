@@ -2,7 +2,8 @@ package types
 
 // Governance module event types
 const (
-	EventTypeDistributedToContract = "DistributedToContract"
-
+	EventTypeDistributedToContract = "DistributedContractIncentive"
+	//EventTypeGovContractResult     = "gov_contract_result"
 	AttributeKeyAddress = "address"
+	//AttributeKeyResultDataHex = "result"
 )

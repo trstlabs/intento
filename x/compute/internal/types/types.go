@@ -12,6 +12,7 @@ import (
 	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 )
 
+const Denom = "utrst"
 const defaultLRUCacheSize = uint64(0)
 const defaultEnclaveLRUCacheSize = uint8(5) // can safely go up to 15
 const defaultQueryGasLimit = uint64(3000000)
@@ -213,6 +214,7 @@ func NewWasmCoins(cosmosCoins sdk.Coins) (wasmCoins []wasmTypes.Coin) {
 
 const CustomEventType = "wasm"
 const EventTypeContractExpired = "ContractExpired"
+const EventTypeAutoMsgContract = "ContractExecuted"
 const AttributeKeyContractAddr = "contract_address"
 
 // ParseEvents converts wasm LogAttributes into an sdk.Events (with 0 or 1 elements)

@@ -57,10 +57,10 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 	if err != nil {
 		return nil, err
 	}
-	activePeriod := k.GetParams(ctx).MaxActiveContractPeriod
+	activePeriod := k.GetParams(ctx).MaxContractDuration
 	//submitTime := ctx.BlockHeader().Time
 
-	duration, err := time.ParseDuration(msg.ContractPeriod)
+	duration, err := time.ParseDuration(msg.ContractDuration)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
@@ -102,8 +102,8 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 		return nil, err
 	}
 	var duration time.Duration = 0
-	if msg.ContractPeriod != "" {
-		duration, err = time.ParseDuration(msg.ContractPeriod)
+	if msg.ContractDuration != "" {
+		duration, err = time.ParseDuration(msg.ContractDuration)
 		if err != nil {
 			return nil, err
 		}
@@ -151,6 +151,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	res, err := k.Execute(
 		ctx,
 		contract,
+		sender,
 		sender,
 		msg.Msg,
 		msg.SentFunds,

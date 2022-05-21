@@ -9,23 +9,6 @@ import "cosmos/base/v1beta1/coin.proto";
 //import "x/compute/internal/types/types.proto";
 
 
-// StoreCodeProposal gov proposal content type to submit WASM code to the system
-message StoreCodeProposal {
-  // Title is a short summary
-  string title = 1;
-  // Description is a human readable text
-  string description = 2;
-  // RunAs is the address that is passed to the contract's environment as sender
-  string run_as = 3;
-  // WASMByteCode can be raw or gzip compressed
-  bytes wasm_byte_code = 4 [ (gogoproto.customname) = "WASMByteCode" ];
-  // ContractTitle is a short summary
-  string contract_title = 5;
-  // Description is a human readable text
-  string contract_description = 6;
-  // contract_duration is the max duration of the contract
-  string contract_duration = 7;
-}
 
 //StoreCode is used so we can upload code for testing, will be removed on mainnet
 message MsgStoreCode {
@@ -40,12 +23,11 @@ message MsgStoreCode {
   string builder = 4;
   // InstantiatePermission to apply on contract creation, optional
 //  AccessConfig InstantiatePermission = 5;
-    string contract_period = 5;
+    string contract_duration = 5;
     string title = 6;
      string description = 7;
     uint64 instances = 8;
 }
-
 
 message MsgInstantiateContract {
   option (gogoproto.goproto_getters) = false;
@@ -60,8 +42,9 @@ message MsgInstantiateContract {
    bytes auto_msg = 6;
   repeated cosmos.base.v1beta1.Coin init_funds = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
    bytes callback_sig = 8 [(gogoproto.customname) = "CallbackSig"];
-   //contract_period defines the time that the code should run for
-  string contract_period = 9;
+   //contract_duration defines the time that the code should run for, optional
+  string contract_duration = 9;
+
 }
 
 message MsgExecuteContract {

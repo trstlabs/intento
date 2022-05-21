@@ -323,12 +323,13 @@ fn get_verified_msg<'sd>(
     sent_msg: &SecretMessage,
 ) -> Option<&'sd CosmWasmMsg> {
     messages.iter().find(|&m| match m {
-        CosmWasmMsg::Execute { msg, sender, .. }
+        CosmWasmMsg::Execute { msg, sender, .. } 
         | CosmWasmMsg::Instantiate {
             init_msg: msg,
             sender,
             ..
         }
+       /*
         | CosmWasmMsg::CreateItem {
             init_msg: msg,
             creator: sender,
@@ -353,10 +354,12 @@ fn get_verified_msg<'sd>(
             reveal_msg: msg,
             creator: sender,
             ..
-        } => msg_sender == sender && &sent_msg.to_vec() == msg,
+        }  */ => msg_sender == sender && &sent_msg.to_vec() == msg,
+     
         CosmWasmMsg::Other => false,
     })
 }
+
 
 
 /// Check that the contract listed in the cosmwasm message matches the one in env
@@ -376,11 +379,11 @@ fn verify_contract(msg: &CosmWasmMsg, env: &Env) -> bool {
             is_verified
         }
         CosmWasmMsg::Instantiate { .. } => true,
-        CosmWasmMsg::CreateItem { .. } => true,
+      /* CosmWasmMsg::CreateItem { .. } => true,
         CosmWasmMsg::FlagItem { .. } => true,
         CosmWasmMsg::ItemTransferable { .. } => true,
         CosmWasmMsg::RevealEstimation { .. } => true,
-        CosmWasmMsg::CreateEstimation { .. } => true,
+        CosmWasmMsg::CreateEstimation { .. } => true,*/
         CosmWasmMsg::Other => false,
     }
 }
@@ -392,13 +395,14 @@ fn verify_funds(msg: &CosmWasmMsg, env: &Env) -> bool {
         | CosmWasmMsg::Instantiate {
             init_funds: sent_funds,
             ..
-        } => &env.message.sent_funds == sent_funds,
-        CosmWasmMsg::Other => false,
-        CosmWasmMsg::CreateItem { .. } => true,
+        }  => &env.message.sent_funds == sent_funds,
+       /*CosmWasmMsg::MsgSubmitProposal{ content: Other, ..} => false,
+       CosmWasmMsg::CreateItem { .. } => true,
         CosmWasmMsg::CreateEstimation { .. } => true,
         CosmWasmMsg::FlagItem { .. } => true,
         CosmWasmMsg::ItemTransferable { .. } => true,
-        CosmWasmMsg::RevealEstimation { .. } => true,
+        CosmWasmMsg::RevealEstimation { .. } => true, */ 
+        CosmWasmMsg::Other => false,
     }
 }
 fn verify_message_params(

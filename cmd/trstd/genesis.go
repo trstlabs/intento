@@ -24,12 +24,12 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	minttypes "github.com/trstlabs/trst/x/mint/types"
-
 	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
 	appParams "github.com/trstlabs/trst/app/params"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
+	compute "github.com/trstlabs/trst/x/compute"
+	minttypes "github.com/trstlabs/trst/x/mint/types"
 	//	itemtypes "github.com/trstlabs/trst/x/item/types"
 )
 
@@ -53,6 +53,7 @@ type GenesisParams struct {
 	AllocParams    alloctypes.Params
 	ClaimParams    claimtypes.Params
 	MintParams     minttypes.Params
+	ComputeParams  compute.Params
 	//	ItemParams     itemtypes.Params
 }
 
@@ -341,6 +342,14 @@ func MainnetGenesisParams() GenesisParams {
 		genParams.ItemParams.EstimationRatioForNewItem = 0
 		genParams.ItemParams.CreateItemFee = 0
 	*/
+	//compute
+	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 30
+	genParams.ComputeParams.MinContractDuration = time.Hour * 24
+	genParams.ComputeParams.Commission = 2
+	genParams.ComputeParams.MinContractDurationForIncentive = time.Hour * 24 * 4
+	genParams.ComputeParams.MinContractBalanceForIncentive = 50000000
+	genParams.ComputeParams.MaxContractIncentive = 500000000
+
 	//claim
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime.Add(time.Hour * 24 * 365) // 1 year (will be changed by gov)
 	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 60                           // 60 days = ~2 months
@@ -369,15 +378,21 @@ func TestnetGenesisParams() GenesisParams {
 
 	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
-		sdk.NewInt(1_000_000), // 1 STARS
+		sdk.NewInt(1_000_000), // 1 TRST
 	))
 
 	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.1") // 10%
-	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 24 * 1    // 1 day
-
+	genParams.GovParams.VotingParams.VotingPeriod = time.Minute           //time.Hour * 24 * 1    // 1 day
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime
 	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 5 // 5 days
 	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 5    // 5 days
+
+	//compute
+	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 30
+	genParams.ComputeParams.MinContractDuration = time.Second
+	genParams.ComputeParams.MinContractDurationForIncentive = time.Second
+	genParams.ComputeParams.MinContractBalanceForIncentive = 50000
+	genParams.ComputeParams.MaxContractIncentive = 500000
 
 	//item
 	/*

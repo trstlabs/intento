@@ -76,7 +76,7 @@ func (msg MsgInstantiateContract) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "code ID is required")
 	}
 
-	if err := validateLabel(msg.ContractId); err != nil {
+	if err := validateContractId(msg.ContractId); err != nil {
 		return err
 	}
 
@@ -107,6 +107,16 @@ func (msg MsgInstantiateContract) GetSigners() []sdk.AccAddress {
 		panic(err)
 	}
 	return []sdk.AccAddress{sender}
+}
+
+func validateContractId(contractId string) error {
+	if contractId == "" {
+		return sdkerrors.Wrap(ErrEmpty, "is required")
+	}
+	if len(contractId) > MaxContractIdSize {
+		return sdkerrors.Wrap(ErrLimit, "cannot be longer than 128 characters")
+	}
+	return nil
 }
 
 func (msg MsgExecuteContract) Route() string {

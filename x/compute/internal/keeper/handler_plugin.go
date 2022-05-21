@@ -276,7 +276,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			CodeID: msg.Instantiate.CodeID,
 			// TODO: add this to CosmWasm
 			ContractId:       msg.Instantiate.ContractID,
-			ContractPeriod:   msg.Instantiate.ContractDuration,
+			ContractDuration: msg.Instantiate.ContractDuration,
 			CallbackCodeHash: msg.Instantiate.CallbackCodeHash,
 			InitMsg:          msg.Instantiate.Msg,
 			AutoMsg:          msg.Instantiate.AutoMsg,

@@ -155,9 +155,9 @@ func GetCmdCodeHashByContract() *cobra.Command {
 // GetCmdListContractByCode lists all wasm code uploaded for given code id
 func GetCmdListContractByCode() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-contract-by-code [code_id]",
-		Short: "List wasm all bytecode on the chain for given code id",
-		Long:  "List wasm all bytecode on the chain for given code id",
+		Use:   "list-contracts-by-code [code_id]",
+		Short: "List all wasm bytecode on the chain for a given code id",
+		Long:  "List all wasm bytecode on the chain for a given code id",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -188,8 +188,8 @@ func GetCmdListContractByCode() *cobra.Command {
 func GetCmdQueryCode() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "code [code_id] [output filename]",
-		Short: "Downloads wasm bytecode for given code id",
-		Long:  "Downloads wasm bytecode for given code id",
+		Short: "Downloads wasm bytecode for a given code id",
+		Long:  "Downloads wasm bytecode for a given code id",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

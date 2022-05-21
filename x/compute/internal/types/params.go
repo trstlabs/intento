@@ -9,17 +9,21 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-// Default max period for a contract that is active
 const (
-	DefaultMaxContractPeriod time.Duration = time.Hour * 24 * 30 // 30 days
-
-	// Commission to distribute to community pool for leftover balances (rounded up)
+	// Commission percentage to distribute to community pool for leftover balances (rounded up)
 
 	DefaultCommission int64 = 2
 
-	// MinContractDurationForIncentive to distribute reward to contract
+	// Default max period for a contract that is self-executing
+	DefaultMaxContractDuration time.Duration = time.Hour * 24 * 30 // 30 days
 
-	DefaultMinContractDurationForIncentive time.Duration = time.Second // time.Hour * 24 // 1 day
+	// MinContractDuration sets the minimum duration for a self-executing contract
+
+	DefaultMinContractDuration time.Duration = time.Hour // time.Hour * 24 // 1 day
+
+	// MinContractDurationForIncentive to distribute reward to contracts we want to incentivize
+
+	DefaultMinContractDurationForIncentive time.Duration = time.Hour * 24 // time.Hour * 24 // 1 day
 
 	// DefaultMaxContractIncentive max amount of utrst coins to give to a contract as incentive
 
@@ -32,11 +36,13 @@ const (
 
 // Parameter store key
 var (
-	KeyMaxActiveContractPeriod = []byte("MaxActiveContractPeriod")
+	KeyCommission = []byte("Commission")
+
+	KeyMaxContractDuration = []byte("MaxContractDuration")
+
+	KeyMinContractDuration = []byte("MinContractDuration")
 
 	KeyMinContractDurationForIncentive = []byte("MinContractDurationForIncentive")
-
-	KeyCommission = []byte("Commission")
 
 	KeyMaxContractIncentive = []byte("MaxContractIncentive")
 
@@ -47,9 +53,9 @@ var (
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	//	fmt.Print("default ParamSetPairs params..")
 	return paramtypes.ParamSetPairs{
-
-		paramtypes.NewParamSetPair(KeyMaxActiveContractPeriod, &p.MaxActiveContractPeriod, validateMaxActiveContractPeriod),
 		paramtypes.NewParamSetPair(KeyCommission, &p.Commission, validateCommission),
+		paramtypes.NewParamSetPair(KeyMaxContractDuration, &p.MaxContractDuration, validateContractDuration),
+		paramtypes.NewParamSetPair(KeyMinContractDuration, &p.MinContractDuration, validateContractDuration),
 		paramtypes.NewParamSetPair(KeyMinContractDurationForIncentive, &p.MinContractDurationForIncentive, validateMinContractDurationForIncentive),
 		paramtypes.NewParamSetPair(KeyMaxContractIncentive, &p.MaxContractIncentive, validateMaxContractIncentive),
 		paramtypes.NewParamSetPair(KeyMinContractBalanceForIncentive, &p.MinContractBalanceForIncentive, validateMinContractBalanceForIncentive),
@@ -57,19 +63,22 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 // NewParams creates a new ActiveParams object
-func NewParams(maxActiveContractPeriod time.Duration, commission int64, minContractDurationForIncentive time.Duration, maxContractIncentive int64, minContractBalanceForIncentive int64) Params {
-	return Params{MaxActiveContractPeriod: maxActiveContractPeriod, Commission: commission, MinContractDurationForIncentive: minContractDurationForIncentive, MaxContractIncentive: maxContractIncentive, MinContractBalanceForIncentive: minContractBalanceForIncentive}
+func NewParams(commission int64, maxContractDuration time.Duration, minContractDuration time.Duration, minContractDurationForIncentive time.Duration, maxContractIncentive int64, minContractBalanceForIncentive int64) Params {
+	return Params{Commission: commission, MaxContractDuration: maxContractDuration, MinContractDuration: minContractDuration, MinContractDurationForIncentive: minContractDurationForIncentive, MaxContractIncentive: maxContractIncentive, MinContractBalanceForIncentive: minContractBalanceForIncentive}
 }
 
 // DefaultParams default parameters for Active
 func DefaultParams() Params {
 	//fmt.Print("default compute params..")
-	return NewParams(DefaultMaxContractPeriod, DefaultCommission, DefaultMinContractDurationForIncentive, DefaultMaxContractIncentive, DefaultMinContractBalanceForIncentive)
+	return NewParams(DefaultCommission, DefaultMaxContractDuration, DefaultMinContractDuration, DefaultMinContractDurationForIncentive, DefaultMaxContractIncentive, DefaultMinContractBalanceForIncentive)
 }
 
 // Validate validates all params
 func (p Params) Validate() error {
-	if err := validateMaxActiveContractPeriod(p.MaxActiveContractPeriod); err != nil {
+	if err := validateContractDuration(p.MaxContractDuration); err != nil {
+		return err
+	}
+	if err := validateContractDuration(p.MinContractDuration); err != nil {
 		return err
 	}
 
@@ -80,14 +89,14 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func validateMaxActiveContractPeriod(i interface{}) error {
+func validateContractDuration(i interface{}) error {
 	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if v <= 0 {
-		return fmt.Errorf("active contract period must be positive: %d", v)
+		return fmt.Errorf("self-executing contract period between iniiation and self-execuion must be longer: %d", v)
 	}
 
 	return nil

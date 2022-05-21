@@ -17,7 +17,7 @@ const (
 	QuerierRoute                  = types.QuerierRoute
 	RouterKey                     = types.RouterKey
 	MaxWasmSize                   = types.MaxWasmSize
-	MaxLabelSize                  = types.MaxLabelSize
+	MaxContractIdSize             = types.MaxContractIdSize
 	BuildTagRegexp                = types.BuildTagRegexp
 	MaxBuildTagSize               = types.MaxBuildTagSize
 	CustomEventType               = types.CustomEventType
@@ -105,6 +105,7 @@ var (
 
 type (
 	// ProposalType            = types.ProposalType
+	Params                 = types.Params
 	GenesisState           = types.GenesisState
 	Code                   = types.Code
 	Contract               = types.Contract

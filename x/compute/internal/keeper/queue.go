@@ -88,7 +88,7 @@ func (k Keeper) GetContractAddressesForBlock(ctx sdk.Context) (incentiveList []s
 		if contract.ContractInfo.AutoMsg != nil {
 			info := k.GetCodeInfo(ctx, contract.ContractInfo.CodeID)
 			if info.Duration >= params.MinContractDurationForIncentive {
-				if k.bankKeeper.GetBalance(ctx, contract.Address, "utrst").Amount.SubRaw(params.MinContractBalanceForIncentive).IsPositive() {
+				if k.bankKeeper.GetBalance(ctx, contract.Address, types.Denom).Amount.SubRaw(params.MinContractBalanceForIncentive).IsPositive() {
 					incentiveList = append(incentiveList, contract.Address.String())
 				}
 			}
@@ -109,7 +109,7 @@ func (k Keeper) GetContractAddresses(ctx sdk.Context) (incentiveList []string) {
 		if contract.ContractInfo.AutoMsg != nil {
 			info := k.GetCodeInfo(ctx, contract.ContractInfo.CodeID)
 			if info.Duration >= params.MinContractDurationForIncentive {
-				//if k.bankKeeper.GetBalance(contract.Address, "utrst") > params.MinContractBalanceForIncentive {
+				//if k.bankKeeper.GetBalance(contract.Address, types.Denom) > params.MinContractBalanceForIncentive {
 				incentiveList = append(incentiveList, contract.Address.String())
 				//}
 			}

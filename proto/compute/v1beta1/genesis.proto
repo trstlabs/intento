@@ -3,7 +3,7 @@ package trst.x.compute.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "compute/v1beta1/types.proto";
-
+import "compute/v1beta1/msg.proto";
 option go_package = "github.com/trstlabs/trst/x/compute/internal/types";
 
 // GenesisState - genesis state of x/wasm
@@ -12,6 +12,21 @@ message GenesisState {
     repeated Code codes = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "codes,omitempty"];
     repeated Contract contracts = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "contracts,omitempty"];
     repeated Sequence sequences = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sequences,omitempty"];
+     repeated GenMsgs gen_msgs = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag) = "gen_msgs,omitempty"
+  ];
+
+  // GenMsgs define the messages that can be executed during genesis phase in
+  // order. The intention is to have more human readable data that is auditable.
+  message GenMsgs {
+    // sum is a single message
+    oneof sum {
+      MsgStoreCode store_code = 1;
+      MsgInstantiateContract instantiate_contract = 2;
+      MsgExecuteContract execute_contract = 3;
+    }
+  }
 }
 
 // Code struct encompasses CodeInfo and CodeBytes

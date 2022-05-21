@@ -21,7 +21,6 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	sdktxsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-
 	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 	"github.com/trstlabs/trst/x/compute/internal/types"
 )
@@ -120,7 +119,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 		}
 	}
 	if pkIndex == -1 {
-		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Message sender: %v is not found in the tx signer set: %v, callback signature not provided", signer, _signers))
+		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Message sender: %s is not found in the tx signer set: %v, callback signature not provided", signer.String(), _signers))
 	}
 
 	signatures, _ := protobufTx.GetSignaturesV2()
@@ -254,8 +253,10 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	var endTime time.Time
 	if customDuration != 0 {
 		endTime = ctx.BlockHeader().Time.Add(customDuration)
+		k.InsertContractQueue(ctx, contractAddress.String(), endTime)
 	} else if codeInfo.Duration != 0 {
 		endTime = ctx.BlockHeader().Time.Add(codeInfo.Duration)
+		k.InsertContractQueue(ctx, contractAddress.String(), endTime)
 	}
 
 	if autoMsg != nil {
@@ -271,10 +272,10 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	store.Set(types.GetContractEnclaveKey(contractAddress), key)
 	store.Set(types.GetContractIdPrefix(id), contractAddress)
 
-	k.InsertContractQueue(ctx, contractAddress.String(), endTime)
-
+	//TODO we can add fairdrop actions based on the type of contract executed. Action 1. instantiate (AutoSwap) Action 2. Execute Action 3. Instantiate (Recurring send) 4. Stake
+	//if codeInfo.CodeHash == types.AutoSwapCodeHash {
 	k.hooks.AfterComputeInstantiated(ctx, creator)
-
+	//}
 	err = k.dispatchMessages(ctx, contractAddress, res.Messages)
 	if err != nil {
 		return nil, err
@@ -284,7 +285,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 }
 
 // Execute executes the contract instance
-func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins, callbackSig []byte) (*sdk.Result, error) {
+func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, sender sdk.AccAddress, msg []byte, coins sdk.Coins, callbackSig []byte) (*sdk.Result, error) {
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading compute module: execute")
 
 	signBytes := []byte{}
@@ -296,7 +297,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	// If no callback signature - we should send the actual msg sender sign bytes and signature
 	if callbackSig == nil {
-		signBytes, signMode, modeInfoBytes, pkBytes, signerSig, err = k.GetSignerInfo(ctx, caller)
+		signBytes, signMode, modeInfoBytes, pkBytes, signerSig, err = k.GetSignerInfo(ctx, sender)
 		if err != nil {
 
 			return nil, err
@@ -328,7 +329,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	if contractKey == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "contract key not found")
 	}
-	params := types.NewEnv(ctx, caller, coins, contractAddress, contractKey)
+	params := types.NewEnv(ctx, sender, coins, contractAddress, contractKey)
 
 	// prepare querier
 	querier := QueryHandler{
@@ -358,6 +359,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	//return &sdk.Result{Data: res.Data,Log: res.Log[1].Value}, nil <-can be used for item module compatibilily
 
 	k.hooks.AfterComputeExecuted(ctx, caller)
+
 	return &sdk.Result{Data: res.Data}, nil
 
 }
@@ -495,3 +497,23 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, m
 	}
 	return nil
 }
+
+/*
+// CreateCallbackSig creates a callback sig which can be used to execute a specific message for a specific code for the sender.
+// Important note: once callback signature is made, any node can run your message at any time on your behalf, therefore, the use of this could let nodes leak outputs related the specific code and message.
+/ /It could let e.g. governance instantiate code or execute code on behalf of the sender as well as save gas cost related to sender verification
+func (k Keeper) CreateCallbackSig(ctx sdk.Context, sender sdk.AccAddress, encryptedMessage []byte) (callbackSig []byte, err error) {
+	//create and pass along sig info, sender, encrypted message
+	api.CreateCallbackSig()
+	return callbackSig
+}
+
+// CreateCommunityPoolCallbackSig creates a callback sig which can be used to execute a specific message for a specific code for the community pool.
+// Important note: once callback signature is made, any node can run your message at any time on your behalf, therefore, the use of this could let nodes leak outputs related the specific code and message.
+// By hardcoding the distr module address in the enclave, we can use this for contract instantiation and execution over governance
+func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context,encryptedMessage []byte) (callbackSig []byte, err error) {
+	//create and pass along encrypted message
+	api.CreateCallbackSig()
+	return callbackSig
+}
+*/

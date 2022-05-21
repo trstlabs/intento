@@ -1,5 +1,7 @@
 
 rm -rf ~/.trst
+kill -9 $(lsof -t -i:26657 -sTCP:LISTEN)
+kill -9 $(lsof -t -i:1317 -sTCP:LISTEN)
 
 trstd init FRST --chain-id=trst_chain_1
 

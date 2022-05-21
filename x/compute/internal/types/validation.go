@@ -10,9 +10,9 @@ import (
 const (
 	MaxWasmSize = 2 * 1024 * 1024 // 2MB
 
-	// MaxLabelSize is the longest label that can be used when Instantiating a contract
-	MaxLabelSize = 128
-
+	// MaxContractIdSize is the longest label that can be used when Instantiating a contract
+	MaxContractIdSize = 128
+	ContractAddrLen   = 32
 	// BuildTagRegexp is a docker image regexp.
 	// We only support max 128 characters, with at least one organization name (subset of all legal names).
 	//
@@ -73,7 +73,7 @@ func validateLabel(label string) error {
 	if label == "" {
 		return sdkerrors.Wrap(ErrEmpty, "is required")
 	}
-	if len(label) > MaxLabelSize {
+	if len(label) > MaxContractIdSize {
 		return sdkerrors.Wrap(ErrLimit, "cannot be longer than 128 characters")
 	}
 	return nil

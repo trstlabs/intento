@@ -39,6 +39,11 @@ func (s GenesisState) ValidateBasic() error {
 			return sdkerrors.Wrapf(err, "contract: %d", i)
 		}
 	}
+	for i := range s.GenMsgs {
+		if err := s.GenMsgs[i].ValidateBasic(); err != nil {
+			return sdkerrors.Wrapf(err, "gen message: %d", i)
+		}
+	}
 	for i := range s.Sequences {
 		if err := s.Sequences[i].ValidateBasic(); err != nil {
 			return sdkerrors.Wrapf(err, "sequence: %d", i)
@@ -96,4 +101,26 @@ func (gs GenesisState) Validate() error {
 	}
 	//fmt.Println("Validated")
 	return nil
+}
+
+// AsMsg returns the underlying cosmos-sdk message instance. Null when can not be mapped to a known type.
+func (m GenesisState_GenMsgs) AsMsg() sdk.Msg {
+	if msg := m.GetStoreCode(); msg != nil {
+		return msg
+	}
+	if msg := m.GetInstantiateContract(); msg != nil {
+		return msg
+	}
+	if msg := m.GetExecuteContract(); msg != nil {
+		return msg
+	}
+	return nil
+}
+
+func (m GenesisState_GenMsgs) ValidateBasic() error {
+	msg := m.AsMsg()
+	if msg == nil {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown message")
+	}
+	return msg.ValidateBasic()
 }

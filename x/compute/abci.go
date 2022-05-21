@@ -25,28 +25,39 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		k.SetIncentiveCoins(ctx, incentiveList)
 
 	}
-
+	var gasUsed uint64
 	for _, contract := range contracts {
 		//for _, addr := range incentiveList {
 		if contract.Address.Equals(contract.Address) && contract.AutoMsg != nil {
-
-			_, err := k.Execute(ctx, contract.Address, contract.Address, contract.ContractInfo.AutoMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), contract.ContractInfo.CallbackSig)
-			if err != nil {
+			// attempt to execute all message
+			// Messages may mutate state thus we can use a cached context. If one of
+			// the handlers fails, no state mutation is written and the error
+			// message is logged.
+			cacheCtx, writeCache := ctx.CacheContext()
+			gas, err := k.SelfExecute(cacheCtx, contract.Address, contract.ContractInfo.AutoMsg, contract.ContractInfo.CallbackSig)
+			if err == nil {
 				logger.Info(
-					"contract",
-					"err", err.Error(),
+					"aut_omsg",
+					"gas", gas,
 				)
 
+				ctx.EventManager().EmitEvent(
+					sdk.NewEvent(
+						types.EventTypeAutoMsgContract,
+						sdk.NewAttribute(types.AttributeKeyContractAddr, contract.Address.String()),
+					),
+				)
+				writeCache()
 			}
-			//break
+			gasUsed = gas
+
 		}
-		//}
 
 		logger.Info(
 			"expired",
 			"contract", contract.Address.String(),
 		)
-		err := k.ContractPayoutCreator(ctx, contract.Address)
+		err := k.DeductFeesAndFundCreator(ctx, contract.Address, gasUsed)
 		if err != nil {
 			logger.Info(
 				"contract payout creator",
@@ -59,14 +70,12 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			"deleted",
 			"contract", contract.Address.String(),
 		)
-
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeContractExpired,
 				sdk.NewAttribute(types.AttributeKeyContractAddr, contract.Address.String()),
 			),
 		)
-
 	}
 
 	return []abci.ValidatorUpdate{}

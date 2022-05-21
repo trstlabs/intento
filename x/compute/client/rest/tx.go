@@ -65,7 +65,7 @@ func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "Binary size exceeds maximum limit")
 			return
 		}
-		contractPeriod := req.ContractDuration
+		contractDuration := req.ContractDuration
 		// gzip the wasm file
 		if wasmUtils.IsWasm(wasm) {
 			wasm, err = wasmUtils.GzipIt(wasm)
@@ -80,11 +80,11 @@ func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 
 		// build and sign the transaction, then broadcast to Tendermint
 		msg := types.MsgStoreCode{
-			Sender:         req.BaseReq.From,
-			WASMByteCode:   wasm,
-			ContractPeriod: contractPeriod,
-			Title:          req.Title,
-			Description:    req.Description,
+			Sender:           req.BaseReq.From,
+			WASMByteCode:     wasm,
+			ContractDuration: contractDuration,
+			Title:            req.Title,
+			Description:      req.Description,
 		}
 		err = msg.ValidateBasic()
 		if err != nil {

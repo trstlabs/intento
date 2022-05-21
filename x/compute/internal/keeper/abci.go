@@ -6,74 +6,119 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdktxsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
-// ContractPayoutCreator pays the creator of the contract
-func (k Keeper) ContractPayoutCreator(ctx sdk.Context, contractAddress sdk.AccAddress) error {
-	balance := k.bankKeeper.GetAllBalances(ctx, contractAddress)
+// SelfExecute executes the contract instance from the chain itself
+func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg []byte, callbackSig []byte) (uint64, error) {
+	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading compute module: execute")
 
-	if !balance.Empty() {
-		store := ctx.KVStore(k.storeKey)
-		contractBz := store.Get(types.GetContractAddressKey(contractAddress))
-		if contractBz == nil {
-			return sdkerrors.Wrap(types.ErrNotFound, "contract")
-		}
-		var contract types.ContractInfo
-		k.cdc.MustUnmarshal(contractBz, &contract)
+	signBytes := []byte{}
+	signMode := sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED
+	modeInfoBytes := []byte{}
+	pkBytes := []byte{}
+	signerSig := []byte{}
+	var err error
 
-		//returning the trst tokens
-		commission := k.GetParams(ctx).Commission
-		//percentageCreator := sdk.NewDecWithPrec(100-commission, 2)
-		percentageCommission := sdk.NewDecWithPrec(commission, 2)
-
-		toCommission := percentageCommission.MulInt(balance.AmountOf("utrst")).Ceil().TruncateInt()
-		toCommissionCoins := sdk.NewCoins(sdk.NewCoin("utrst", toCommission))
-		//toCreator := percentageCreator.MulInt(balance.AmountOf("utrst")).TruncateInt()
-		balance = balance.Sub(toCommissionCoins)
-
-		err := k.distrKeeper.FundCommunityPool(ctx, toCommissionCoins, contractAddress)
-		if err != nil {
-			return err
-		}
-
-		err = k.bankKeeper.SendCoins(ctx, contractAddress, contract.Creator, balance)
-		if err != nil {
-			return err
-		}
-	} else {
-		k.Logger(ctx).Info("compute", "contract", "has no public balance")
+	// If no callback signature - we should not execute
+	if callbackSig == nil {
+		return 0, sdkerrors.Wrap(types.ErrExecuteFailed, "no callback sig")
 	}
-	return nil
+
+	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
+
+	codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	if err != nil {
+		return 0, err
+	}
+
+	store := ctx.KVStore(k.storeKey)
+
+	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
+	if contractKey == nil {
+		return 0, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "contract key not found")
+	}
+	params := types.NewEnv(ctx, contractAddress, sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.ZeroInt())), contractAddress, contractKey)
+
+	// prepare querier
+	querier := QueryHandler{
+		Ctx:     ctx,
+		Plugins: k.queryPlugins,
+	}
+
+	gas := gasForContract(ctx)
+	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+
+	if execErr != nil {
+		return 0, sdkerrors.Wrap(types.ErrExecuteFailed, execErr.Error())
+	}
+
+	// emit all events from this contract itself
+	events := types.ParseEvents(res.Log, contractAddress)
+	ctx.EventManager().EmitEvents(events)
+
+	err = k.dispatchMessages(ctx, contractAddress, res.Messages)
+	if err != nil {
+		return 0, err
+	}
+
+	k.SetContractPublicState(ctx, contractAddress, res.Log)
+
+	return gasUsed, nil
+
 }
 
-/*
-// CallAutoMsg executes a final message before end-blocker deletion
-func (k Keeper) CallAutoMsg(ctx sdk.Context, contractAddress sdk.AccAddress) (err error) {
+// DeductFeesAndFundCreator handles remaining contract balance
+func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.AccAddress, gas uint64) error {
+	balance := k.bankKeeper.GetAllBalances(ctx, contractAddress)
 
-	//get codeid first
-	info, err := k.GetContractInfo(ctx, contractAddress)
+	if balance.Empty() {
+		k.Logger(ctx).Info("compute", "contract", "has no public balance")
+		return nil
+	}
+	store := ctx.KVStore(k.storeKey)
+	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
+	if contractBz == nil {
+		return sdkerrors.Wrap(types.ErrNotFound, "contract")
+	}
+	var contract types.ContractInfo
+	k.cdc.MustUnmarshal(contractBz, &contract)
+	gasUsed := (gas / types.GasMultiplier) + 1
+
+	//TODO multiply with a multiplier param
+	gasCoin := sdk.NewCoin(types.Denom, sdk.NewIntFromUint64(gasUsed/100000))
+
+	//take a commission of the utrst funds
+	percentageCommission := sdk.NewDecWithPrec(k.GetParams(ctx).Commission, 2)
+	toCommissionAmount := percentageCommission.MulInt(balance.AmountOf(types.Denom)).Ceil().TruncateInt()
+	feeCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, toCommissionAmount), gasCoin)
+
+	//if the contract cant pay, the contract creator pays as next in line
+	err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contractAddress)
+	if err != nil {
+		err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Creator)
+		if err != nil {
+			return err
+		}
+	}
+
+	//		balance = balance.Sub(feeCoins)
+	//pay out the balance after deducting commision and gas cost to the contract creator
+	err = k.bankKeeper.SendCoins(ctx, contractAddress, contract.Creator, balance)
 	if err != nil {
 		return err
 	}
-
-	if info.AutoMsg != nil {
-		res, err := k.Execute(ctx, contractAddress, contractAddress, info.AutoMsg, sdk.NewCoins(sdk.NewCoin("utrst", sdk.ZeroInt())), nil)
-		if err != nil {
-			return err
-		}
-		k.SetContractResult(ctx, contractAddress, res)
-	}
 	return nil
-}
-*/
 
-// SetIncentiveCoins distributes coins to the contracts in the compute module
+}
+
+// SetIncentiveCoins distributes compute module allocated coins to the self-ending contracts
 func (k Keeper) SetIncentiveCoins(ctx sdk.Context, addressList []string) {
 	params := k.GetParams(ctx)
 	//if len(addressList) > 0 {
-	total := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress("compute"), "utrst")
+	total := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress("compute"), types.Denom)
 	k.Logger(ctx).Info("sent", "total", total)
 
 	amount := total.Amount.QuoRaw(int64(len(addressList)))
@@ -81,11 +126,11 @@ func (k Keeper) SetIncentiveCoins(ctx sdk.Context, addressList []string) {
 		amount = sdk.NewInt(params.MaxContractIncentive)
 	}
 	k.Logger(ctx).Info("sent", "amount", amount)
-	//coins := sdk.NewCoins(sdk.NewCoin("utrst", amount))
+	//coins := sdk.NewCoins(sdk.NewCoin(types.Denom, amount))
 
 	for _, addr := range addressList {
 		sdkAddr, _ := sdk.AccAddressFromBech32(addr)
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdkAddr, sdk.NewCoins(sdk.NewCoin("utrst", amount)))
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdkAddr, sdk.NewCoins(sdk.NewCoin(types.Denom, amount)))
 		if err != nil {
 			k.Logger(ctx).Info("sent", "err", err)
 		}

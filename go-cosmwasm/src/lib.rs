@@ -91,6 +91,7 @@ pub extern "C" fn get_encrypted_seed(cert: Buffer, err: Option<&mut Buffer>) -> 
     }
 }
 
+
 #[no_mangle]
 pub extern "C" fn init_bootstrap(
     spid: Buffer,

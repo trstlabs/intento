@@ -1,0 +1,31 @@
+syntax = "proto3";
+package trst.x.compute.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/trstlabs/trst/x/compute/internal/types";
+
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.goproto_getters_all) = false;
+option (gogoproto.equal_all) = true;
+
+
+// StoreCodeProposal gov proposal content type to submit WASM code to the system
+message StoreCodeProposal {
+  // Title is a short summary
+  string title = 1;
+  // Description is a human readable text
+  string description = 2;
+  // RunAs is the address that is passed to the contract's environment as sender
+  string run_as = 3;
+  // WASMByteCode can be raw or gzip compressed
+  bytes wasm_byte_code = 4 [ (gogoproto.customname) = "WASMByteCode" ];
+  // ContractTitle is a short summary
+  string contract_title = 5;
+  // Description is a human readable text
+  string contract_description = 6;
+  // contract_duration is the max duration of the contract
+  string contract_duration = 7;
+}
+

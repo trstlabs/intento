@@ -151,7 +151,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 	var genesisState GenesisState
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
-	if err := am.keeper.InitGenesis(ctx, genesisState); err != nil {
+	if err := am.keeper.InitGenesis(ctx, genesisState, am.Route().Handler()); err != nil {
 		panic(err)
 	}
 	return []abci.ValidatorUpdate{}

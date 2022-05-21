@@ -38,7 +38,6 @@ pub mod tx {
 
 pub mod cosmwasm {
     pub mod msg;
-
     use super::base::coin;
 }
 
