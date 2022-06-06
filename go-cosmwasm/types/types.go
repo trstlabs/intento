@@ -68,6 +68,6 @@ type VerificationInfo struct {
 }
 
 type MsgInfo struct {
-	CodeId []byte `json:"code_id"`
-	Funds  []Coin `json:"funds"` // Optional
+	CodeHash []byte `json:"code_hash"`
+	Funds    []Coin `json:"funds"` // Optional
 }

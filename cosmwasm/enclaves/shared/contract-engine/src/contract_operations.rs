@@ -1,10 +1,10 @@
 use log::*;
 
 use enclave_ffi_types::{Ctx, EnclaveError};
-use std::str::from_utf8;
+//use std::str::from_utf8;
 use enclave_cosmos_types::types::{ContractCode, SigInfo, MsgInfo};
 use enclave_cosmwasm_types::encoding::Binary;
-use enclave_cosmwasm_types::types::{CanonicalAddr, HumanAddr, Env, WasmMsg};
+use enclave_cosmwasm_types::types::{CanonicalAddr, HumanAddr, Env};
 use enclave_crypto::Ed25519PublicKey;
 use enclave_utils::coalesce;
 use std::convert::TryInto;
@@ -404,10 +404,8 @@ pub fn create_callback_sig(
         EnclaveError::FailedToDeserialize
     })?;
 
-    let mut nonce_placeholder = [0u8; 32];
-    nonce_placeholder.copy_from_slice(&msg[0..32]);
-    let mut pubkey_placeholder = [0u8; 32];
-    pubkey_placeholder.copy_from_slice(&msg[32..64]);
+    let nonce_placeholder = [0u8; 32];
+    let pubkey_placeholder = [0u8; 32];
 
     let mut msg_callback = Binary::from(msg);
     let sig = encrypt_msg(&mut msg_callback, nonce_placeholder, pubkey_placeholder, &send_as_addr, hex::encode(&parsed_msg_info.code_hash.as_slice()), parsed_msg_info.funds).map_err(|err| {
@@ -426,9 +424,9 @@ pub fn create_callback_sig(
         encrypted_msg: msg_callback.as_slice().to_vec(),
     })
 }
-
+/*
 /// Look at the first 8 bytes of the input and reinterpret them as a u64
 fn read_be_u64(input: &[u8]) -> u64 {
     assert!(input.len() >= std::mem::size_of::<u64>());
     u64::from_be_bytes(input[0..std::mem::size_of::<u64>()].try_into().unwrap())
-}
+}*/

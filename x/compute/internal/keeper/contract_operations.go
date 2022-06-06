@@ -497,18 +497,9 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, m
 }
 
 // CreateCommunityPoolCallbackSig creates a callback sig which can be used to execute a specific message for a specific code for the community pool.
-// Important note: once callback signature is made, any node can 'run' the message at any time on the community pool's behalf, therefore, this could leak outputs related the specific code and message.
-// By hardcoding the distr module address in the enclave, we can use this for contract instantiation, execution migration over governance.
+// When callback signature is made, any node can 'run' the message at any time on the community pool's behalf, therefore, anyone can create outputs for the distribution module account.
+// By hardcoding the distribution module address in the enclave, we can use this for contract instantiation and execution over governance.
 func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context, msg []byte, codeID uint64, funds sdk.Coins) (callbackSig []byte, encryptedMessage []byte, err error) {
-	//create and pass along message
-	/*(msg := wasmTypes.ExecuteMsg{
-		ContractAddr:      "sadfsd",
-		CallbackCodeHash:  "asdfsadf",
-		CallbackSignature: nil,
-		Msg:               message,
-		Send:              wasmTypes.Coins{wasmTypes.NewCoin(0, types.Denom)},
-	}*/
-
 	// get contact info
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.GetCodeKey(codeID))
@@ -518,7 +509,7 @@ func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context, msg []byte, code
 	var codeInfo types.CodeInfo
 	k.cdc.MustUnmarshal(bz, &codeInfo)
 	msgInfo := types.NewMsgInfo(codeInfo.CodeHash, funds)
-	fmt.Printf("code hash: \t %v \n", msgInfo.CodeId)
+	fmt.Printf("code hash: \t %v \n", msgInfo.CodeHash)
 	callbackSig, encryptedMessage, err = api.GetCallbackSig(msg, msgInfo)
 	if err != nil {
 		return nil, nil, err
@@ -528,16 +519,3 @@ func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context, msg []byte, code
 
 	return callbackSig, encryptedMessage, nil
 }
-
-/*
-// CreateCallbackSig creates a callback sig which can be used to execute a specific message for a specific code for the sender.
-// Important note: once callback signature is made, any node can run your message at any time on your behalf, therefore, the use of this could let nodes leak outputs related the specific code and message.
-/ /It could let e.g. governance instantiate code or execute code on behalf of the sender as well as save gas cost related to sender verification
-func (k Keeper) CreateCallbackSig(ctx sdk.Context, sender sdk.AccAddress, encryptedMessage []byte) (callbackSig []byte, err error) {
-	//create and pass along sig info, sender, encrypted message
-	api.CreateCallbackSig()
-	return callbackSig
-}
-
-
-*/

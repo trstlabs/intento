@@ -273,12 +273,12 @@ func NewVerificationInfo(
 }
 
 func NewMsgInfo(
-	codeId []byte, funds sdk.Coins,
+	code_hash []byte, funds sdk.Coins,
 ) wasmTypes.MsgInfo {
 	wasmFunds := NewWasmCoins(funds)
 	return wasmTypes.MsgInfo{
-		CodeId: codeId,
-		Funds:  wasmFunds,
+		CodeHash: code_hash,
+		Funds:    wasmFunds,
 	}
 }
 
