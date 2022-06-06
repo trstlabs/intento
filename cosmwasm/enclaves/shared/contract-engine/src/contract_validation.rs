@@ -183,8 +183,6 @@ pub fn verify_params(
         "sender canonical address is: {:?}",
         sender_public_key.get_address().0.0
     );
-    trace!("sender signature is: {:?}", sig_info.signature);
-    trace!("sign bytes are: {:?}", sig_info.sign_bytes);
 
     sender_public_key
         .verify_bytes(
@@ -284,7 +282,7 @@ fn verify_callback_sig(
         msg,
         sent_funds,
     ) {
-        info!("Message verified! msg.sender is the calling contract");
+        info!("Message verified! the msg address is from the callback sig");
         return Ok(());
     }
 
@@ -306,8 +304,8 @@ fn verify_callback_sig_impl(
 
     if callback_signature != callback_sig {
         trace!(
-            "Contract signature does not match with the one sent: {:?}",
-            callback_signature
+            "Contract signature: {:?} does not match with the one sent: {:?}",
+            callback_sig, callback_signature
         );
         return false;
     }

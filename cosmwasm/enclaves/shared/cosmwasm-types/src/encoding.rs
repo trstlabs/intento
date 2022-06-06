@@ -3,7 +3,6 @@
 use std::fmt;
 
 use serde::{de, ser, Deserialize, Deserializer, Serialize};
-
 use enclave_ffi_types::EnclaveError;
 use log::*;
 

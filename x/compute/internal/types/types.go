@@ -272,6 +272,18 @@ func NewVerificationInfo(
 	}
 }
 
+func NewMsgInfo(
+	codeId []byte, contract string, contractId string, funds sdk.Coins,
+) wasmTypes.MsgInfo {
+	wasmFunds := NewWasmCoins(funds)
+	return wasmTypes.MsgInfo{
+		CodeId:     codeId,
+		Contract:   contract,
+		ContractId: contractId,
+		Funds:      wasmFunds,
+	}
+}
+
 type ParseAuto struct {
 	AutoMsg struct {
 	} `json:"auto_msg"`

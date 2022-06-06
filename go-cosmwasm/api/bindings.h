@@ -137,6 +137,8 @@ bool create_attestation_report(Buffer spid, Buffer api_key, Buffer *err);
 
 void free_rust(Buffer buf);
 
+Buffer get_callback_sig(Buffer msg, Buffer msg_info, Buffer *err);
+
 Buffer get_code(cache_t *cache, Buffer id, Buffer *err);
 
 Buffer get_encrypted_seed(Buffer cert, Buffer *err);

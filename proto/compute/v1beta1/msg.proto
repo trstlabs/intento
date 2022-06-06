@@ -42,7 +42,7 @@ message MsgInstantiateContract {
    bytes auto_msg = 6;
   repeated cosmos.base.v1beta1.Coin init_funds = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
    bytes callback_sig = 8 [(gogoproto.customname) = "CallbackSig"];
-   //contract_duration defines the time that the code should run for, optional
+   //contract_duration defines the time that the code should run for,0 for optional
   string contract_duration = 9;
 
 }

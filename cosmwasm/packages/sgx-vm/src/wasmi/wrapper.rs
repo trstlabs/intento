@@ -19,6 +19,7 @@ use serde::Deserialize;
 
 use super::exports::FullContext;
 use super::imports;
+
 use super::results::{
     handle_result_to_vm_result, init_result_to_vm_result, query_result_to_vm_result, HandleSuccess,
     InitSuccess, QuerySuccess,
@@ -258,6 +259,9 @@ where
     fn consume_gas(&mut self, used_gas: u64) {
         self.used_gas = self.used_gas.saturating_add(used_gas);
     }
+
+
+
 }
 
 impl<S, Q> Drop for Module<S, Q>

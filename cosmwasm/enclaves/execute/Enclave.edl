@@ -98,6 +98,13 @@ enclave {
             uintptr_t msg_len
         );
 
+        public CallbackSigResult ecall_create_callback_sig(
+            [in, count=msg_len] const uint8_t* msg,
+            uintptr_t msg_len,
+            [in, count=msg_info_len] const uint8_t* msg_info,
+            uintptr_t msg_info_len
+        );
+
         public HealthCheckResult ecall_health_check();
 
         public uint32_t ecall_run_tests();

@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -57,7 +58,6 @@ func StoreCodeProposalHandler(cliCtx client.Context) govrest.ProposalRESTHandler
 	}
 }
 
-/*
 type InstantiateProposalJSONReq struct {
 	BaseReq rest.BaseReq `json:"base_req" yaml:"base_req"`
 
@@ -67,25 +67,24 @@ type InstantiateProposalJSONReq struct {
 	Proposer string    `json:"proposer" yaml:"proposer"`
 	Deposit  sdk.Coins `json:"deposit" yaml:"deposit"`
 
-	RunAs      string          `json:"run_as" yaml:"run_as"`
+	//RunAs      string          `json:"run_as" yaml:"run_as"`
 	Code       uint64          `json:"code_id" yaml:"code_id"`
 	ContractId string          `json:"contract_id" yaml:"contract_id"`
 	InitMsg    json.RawMessage `json:"init_msg" yaml:"init_msg"`
 	AutoMsg    json.RawMessage `json:"auto_msg" yaml:"auto_msg"`
-	InitFunds  sdk.Coins       `json:"init_funds" yaml:"init_funds"`
+	Funds      sdk.Coins       `json:"funds" yaml:"funds"`
 }
 
 func (s InstantiateProposalJSONReq) Content() govtypes.Content {
 	return &types.InstantiateContractProposal{
 		Title:       s.Title,
 		Description: s.Description,
-		RunAs:       s.RunAs,
-		Proposer:    s.Proposer,
-		CodeID:      s.Code,
-		ContractId:  s.ContractId,
-		InitMsg:     []byte(s.InitMsg),
-		AutoMsg:     []byte(s.AutoMsg),
-		InitFunds:   s.InitFunds,
+		//RunAs:       s.RunAs,
+		//Proposer:   s.Proposer,
+		CodeID:     s.Code,
+		ContractId: s.ContractId,
+		InitMsg:    []byte(s.InitMsg),
+		Funds:      s.Funds,
 	}
 }
 func (s InstantiateProposalJSONReq) GetProposer() string {
@@ -123,8 +122,8 @@ type ExecuteProposalJSONReq struct {
 	Contract string          `json:"contract" yaml:"contract"`
 	Msg      json.RawMessage `json:"msg" yaml:"msg"`
 	// RunAs is the role that is passed to the contract's environment
-	RunAs     string    `json:"run_as" yaml:"run_as"`
-	SentFunds sdk.Coins `json:"sent_funds" yaml:"sent_funds"`
+	//RunAs     string    `json:"run_as" yaml:"run_as"`
+	Funds sdk.Coins `json:"funds" yaml:"funds"`
 }
 
 func (s ExecuteProposalJSONReq) Content() govtypes.Content {
@@ -133,9 +132,9 @@ func (s ExecuteProposalJSONReq) Content() govtypes.Content {
 		Description: s.Description,
 		Contract:    s.Contract,
 		Msg:         []byte(s.Msg),
-		RunAs:       s.RunAs,
-		Proposer:    s.Proposer,
-		SentFunds:   s.SentFunds,
+		//RunAs:       s.RunAs,
+		//Proposer:  s.Proposer,
+		Funds: s.Funds,
 	}
 }
 func (s ExecuteProposalJSONReq) GetProposer() string {
@@ -159,7 +158,7 @@ func ExecuteProposalHandler(cliCtx client.Context) govrest.ProposalRESTHandler {
 		},
 	}
 }
-*/
+
 type wasmProposalData interface {
 	Content() govtypes.Content
 	GetProposer() string

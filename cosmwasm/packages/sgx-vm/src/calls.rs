@@ -136,6 +136,25 @@ pub fn call_migrate_raw<S: Storage + 'static, A: Api + 'static, Q: Querier + 'st
     instance.call_migrate(env, msg)
 }
 
+/*
+/// Calls Wasm export "callback_sig" and returns raw data from the contract.
+/// The result is length limited to prevent abuse but otherwise unchecked.
+pub fn call_callback_sig_raw<S: Storage + 'static, A: Api + 'static, Q: Querier + 'static>(
+    instance: &mut Instance<S, A, Q>,
+    msg: &[u8],
+    auto_msg: &[u8],
+    code_id: &[u8],
+    contract: &[u8],
+    contract_id: &[u8],
+    contract_duration: &[u8],
+) -> VmResult<Vec<u8>> {
+    instance.set_storage_readonly(false);
+    /*
+    call_raw(instance, "init", &[env, msg], MAX_LENGTH_INIT)
+    */
+    instance.call_callback_sig(msg, auto_msg, code_id, contract, contract_id, contract_duration)
+}
+*/
 /// Calls Wasm export "query" and returns raw data from the contract.
 /// The result is length limited to prevent abuse but otherwise unchecked.
 pub fn call_query_raw<S: Storage + 'static, A: Api + 'static, Q: Querier + 'static>(

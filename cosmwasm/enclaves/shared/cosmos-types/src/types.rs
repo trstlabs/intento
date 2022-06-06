@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 use crate::multisig::MultisigThresholdPubKey;
 
 use enclave_crypto::{ sha_256,
-    secp256k1::Secp256k1PubKey,  AESKey,
-    CryptoError, Ed25519PublicKey, SIVEncryptable, HASH_SIZE,traits::VerifyingKey,
+    secp256k1::Secp256k1PubKey,  /*AESKey,Ed25519PublicKey, SIVEncryptable*/
+    CryptoError,  HASH_SIZE,traits::VerifyingKey,
 };
 
 use cosmos_proto as proto;
@@ -156,6 +156,16 @@ pub struct SigInfo {
     pub signature: Binary,
     pub callback_sig: Option<Binary>,
 }
+
+// Info of the msg to be signed
+#[derive(Deserialize, Clone, Debug, PartialEq)]
+pub struct MsgInfo {
+    pub code_id: Binary,
+    pub contract: String,
+    pub contract_id: String,
+    pub funds: Vec<Coin>,
+}
+
 
 // Should be in sync with https://github.com/cosmos/cosmos-sdk/blob/v0.38.3/x/auth/types/stdtx.go#L216
 #[derive(Deserialize, Clone, Default, Debug, PartialEq)]
@@ -781,10 +791,10 @@ impl CosmWasmMsg {
      
 
         if raw_msg.contract.clone().len() == 0  {
-          /*  warn!(
+         warn!(
                 "Contract address was empty: {}",
                 raw_msg.contract.len(),
-            );*/
+            );
             EnclaveError::FailedToDeserialize;
         };
        

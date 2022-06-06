@@ -26,7 +26,7 @@ trstd add-genesis-account $(trstd keys show user4 -a --keyring-backend test) 875
 trstd gentx user1 750000000000utrst --chain-id=trst_chain_1 --keyring-backend=test  --website="trustlesshub.com" --security-contact="trustlesshub@gmail.com" 
 
 
-trstd init-enclave 
+trstd init-enclave
 PUBLIC_KEY=$(trstd parse attestation_cert.der 2> /dev/null | cut -c 3-)
 echo $PUBLIC_KEY
 trstd init-bootstrap ./node-master-cert.der ./io-master-cert.der
@@ -40,6 +40,6 @@ trstd validate-genesis
 
 sed -i '129s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trst/config/app.toml
 
-sed -i '181s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trst/config/app.toml
+sed -i '181s/enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.trst/config/app.toml
 
 trstd start --bootstrap > init.log --log_level info

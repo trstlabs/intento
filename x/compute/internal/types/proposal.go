@@ -160,9 +160,9 @@ func (p InstantiateContractProposal) ValidateBasic() error {
 	if err := validateProposalCommons(p.Title, p.Description); err != nil {
 		return err
 	}
-	if _, err := sdk.AccAddressFromBech32(p.RunAs); err != nil {
+	/*if _, err := sdk.AccAddressFromBech32(p.RunAs); err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "run as")
-	}
+	}*/
 
 	if p.CodeID == 0 {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "code id is required")
@@ -170,10 +170,6 @@ func (p InstantiateContractProposal) ValidateBasic() error {
 
 	if err := validateContractId(p.ContractId); err != nil {
 		return err
-	}
-
-	if !p.InitFunds.IsValid() {
-		return sdkerrors.ErrInvalidCoins
 	}
 
 	return nil
@@ -184,34 +180,31 @@ func (p InstantiateContractProposal) String() string {
 	return fmt.Sprintf(`Instantiate Code Proposal:
   Title:       %s
   Description: %s
-  Run as:      %s
   Code id:     %d
   Contract id:     %s
   InitMsg:         %q
-  InitFunds:       %s
-`, p.Title, p.Description, p.RunAs, p.CodeID, p.ContractId, p.InitMsg, p.InitFunds)
+  Funds:         %q
+`, p.Title, p.Description, p.CodeID, p.ContractId, p.InitMsg, p.Funds)
 }
 
 // MarshalYAML pretty prints the init message
 func (p InstantiateContractProposal) MarshalYAML() (interface{}, error) {
 	return struct {
-		Title       string    `yaml:"title"`
-		Description string    `yaml:"description"`
-		RunAs       string    `yaml:"run_as"`
-		CodeID      uint64    `yaml:"code_id"`
-		ContractId  string    `yaml:"contract_id"`
-		InitMsg     string    `yaml:"init_msg"`
-		AutoMsg     string    `yaml:"auto_msg"`
-		InitFunds   sdk.Coins `yaml:"init_funds"`
+		Title       string `yaml:"title"`
+		Description string `yaml:"description"`
+		//RunAs       string    `yaml:"run_as"`
+		CodeID     uint64    `yaml:"code_id"`
+		ContractId string    `yaml:"contract_id"`
+		InitMsg    string    `yaml:"init_msg"`
+		Funds      sdk.Coins `yaml:"funds"`
 	}{
 		Title:       p.Title,
 		Description: p.Description,
-		RunAs:       p.RunAs,
-		CodeID:      p.CodeID,
-		ContractId:  p.ContractId,
-		InitMsg:     string(p.InitMsg),
-		AutoMsg:     string(p.AutoMsg),
-		InitFunds:   p.InitFunds,
+		//RunAs:       p.RunAs,
+		CodeID:     p.CodeID,
+		ContractId: p.ContractId,
+		InitMsg:    string(p.InitMsg),
+		Funds:      p.Funds,
 	}, nil
 }
 
@@ -235,26 +228,26 @@ func (p ExecuteContractProposal) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(p.Contract); err != nil {
 		return sdkerrors.Wrap(err, "contract")
 	}
-	if _, err := sdk.AccAddressFromBech32(p.RunAs); err != nil {
+	/*if _, err := sdk.AccAddressFromBech32(p.RunAs); err != nil {
 		return sdkerrors.Wrap(err, "run as")
 	}
 	if !p.SentFunds.IsValid() {
 		return sdkerrors.ErrInvalidCoins
-	}
+	}*/
 
 	return nil
 }
 
 // String implements the Stringer interface.
 func (p ExecuteContractProposal) String() string {
-	return fmt.Sprintf(`Migrate Contract Proposal:
+	return fmt.Sprintf(`Execute Contract Proposal:
   Title:       %s
   Description: %s
   Contract:    %s
-  Run as:      %s
+
   Msg:         %q
-  SentFunds:       %s
-`, p.Title, p.Description, p.Contract, p.RunAs, p.Msg, p.SentFunds)
+
+`, p.Title, p.Description, p.Contract, p.Msg)
 }
 
 // MarshalYAML pretty prints the migrate message
@@ -264,14 +257,15 @@ func (p ExecuteContractProposal) MarshalYAML() (interface{}, error) {
 		Description string    `yaml:"description"`
 		Contract    string    `yaml:"contract"`
 		Msg         string    `yaml:"msg"`
-		RunAs       string    `yaml:"run_as"`
-		SentFunds   sdk.Coins `yaml:"sent_funds"`
+		Funds       sdk.Coins `yaml:"funds"`
+		/*RunAs       string    `yaml:"run_as"`
+		SentFunds   sdk.Coins `yaml:"sent_funds"`*/
 	}{
 		Title:       p.Title,
 		Description: p.Description,
 		Contract:    p.Contract,
 		Msg:         string(p.Msg),
-		RunAs:       p.RunAs,
-		SentFunds:   p.SentFunds,
+		Funds:       p.Funds,
+		/*RunAs:       p.RunAs,*/
 	}, nil
 }

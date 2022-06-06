@@ -28,7 +28,7 @@ impl VerifyingKey for Secp256k1PubKey {
         let verifier = Secp256k1::verification_only();
 
         // Create `secp256k1`'s types
-        let sec_signature = secp256k1::Signature::from_compact(sig).map_err(|err| {
+        let sec_signature = secp256k1::ecdsa::Signature::from_compact(sig).map_err(|err| {
             warn!("Malformed signature: {:?}", err);
             CryptoError::VerificationError
         })?;
@@ -37,10 +37,9 @@ impl VerifyingKey for Secp256k1PubKey {
                 warn!("Malformed public key: {:?}", err);
                 CryptoError::VerificationError
             })?;
-//does not work with keplr direct signing
-       /* 
+        //May give an error with keplr direct signing
         verifier
-            .verify(&msg, &sec_signature, &sec_public_key)
+            .verify_ecdsa(&msg, &sec_signature, &sec_public_key)
             .map_err(|err| {
                 warn!(
                     "Failed to verify signatures for the given transaction: {:?}",
@@ -48,7 +47,7 @@ impl VerifyingKey for Secp256k1PubKey {
                 );
                 CryptoError::VerificationError
             })?;
-*/
+
         trace!("successfully verified this signature: {:?}", sig);
         Ok(())
     }

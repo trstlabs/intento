@@ -1,7 +1,7 @@
 use sgx_types::sgx_status_t;
 
 use enclave_ffi_types::{
-    EnclaveError, HandleResult, InitResult, QueryResult, UntrustedVmError, UserSpaceBuffer,
+    EnclaveError, HandleResult, InitResult, QueryResult, CallbackSigResult, UntrustedVmError, UserSpaceBuffer,
 };
 
 use crate::external::ocalls::ocall_allocate;
@@ -112,5 +112,41 @@ pub fn result_query_success_to_queryresult(
             }
         }
         Err(err) => QueryResult::Failure { err },
+    }
+}
+
+/// This struct is returned from a create callback method.
+pub struct CallbackSigSuccess {
+    /// The output of the calculation
+   // pub output: Vec<u8>,
+    pub callback_sig:[u8; 32],
+    pub encrypted_msg: Vec<u8>,
+}
+
+pub fn result_callback_sig_success_to_callbackresult(
+    result: Result<CallbackSigSuccess, EnclaveError>,
+) -> CallbackSigResult {
+    match result {
+        Ok(CallbackSigSuccess {  callback_sig, encrypted_msg }) => {
+            let user_buffer = unsafe {
+                let mut user_buffer = std::mem::MaybeUninit::<UserSpaceBuffer>::uninit();
+                match ocall_allocate(user_buffer.as_mut_ptr(), encrypted_msg.as_ptr(), encrypted_msg.len()) {
+                    sgx_status_t::SGX_SUCCESS => { /* continue */ }
+                    _ => {
+                        return CallbackSigResult::Failure {
+                            err: EnclaveError::FailedOcall {
+                                vm_error: UntrustedVmError::default(),
+                            },
+                        }
+                    }
+                }
+                user_buffer.assume_init()
+            };
+            CallbackSigResult::Success {
+                callback_sig: callback_sig,
+                encrypted_msg: user_buffer,
+            }
+        }
+        Err(err) => CallbackSigResult::Failure { err },
     }
 }

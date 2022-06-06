@@ -152,7 +152,6 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 		ctx,
 		contract,
 		sender,
-		sender,
 		msg.Msg,
 		msg.SentFunds,
 		msg.CallbackSig,

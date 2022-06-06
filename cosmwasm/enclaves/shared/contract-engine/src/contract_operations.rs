@@ -1,25 +1,25 @@
 use log::*;
 
 use enclave_ffi_types::{Ctx, EnclaveError};
-
-use enclave_cosmos_types::types::{ContractCode, SigInfo};
+use std::str::from_utf8;
+use enclave_cosmos_types::types::{ContractCode, SigInfo, MsgInfo};
 use enclave_cosmwasm_types::encoding::Binary;
-use enclave_cosmwasm_types::types::{CanonicalAddr, Env};
+use enclave_cosmwasm_types::types::{CanonicalAddr, HumanAddr, Env, WasmMsg};
 use enclave_crypto::Ed25519PublicKey;
 use enclave_utils::coalesce;
-
-use crate::external::results::{HandleSuccess, InitSuccess, QuerySuccess};
+use std::convert::TryInto;
+use crate::external::results::{HandleSuccess, InitSuccess, QuerySuccess, CallbackSigSuccess};
 
 use super::contract_validation::{
     extract_contract_key, generate_encryption_key, validate_contract_key, validate_msg,
     verify_params, ContractKey,
 };
 use super::gas::WasmCosts;
-use super::io::{create_callback_signature, encrypt_output, copy_into_array};
+use super::io::{create_callback_signature,  encrypt_output, copy_into_array, encrypt_msg};
 use super::module_cache::create_module_instance;
 use super::types::{IoNonce, SecretMessage};
 use super::wasm::{ContractInstance, ContractOperation, Engine};
-
+use crate::const_callback_sig_addresses::{COMMUNITY_POOL_ADDR};
 /*
 Each contract is compiled with these functions already implemented in wasm:
 fn cosmwasm_api_0_6() -> i32;  // Seems unused, but we should support it anyways
@@ -39,10 +39,10 @@ pub fn init(
     context: Ctx,       // need to pass this to read_db & write_db
     gas_limit: u64,     // gas limit for this execution
     used_gas: &mut u64, // out-parameter for gas used in execution
-    contract: &[u8],    // contract wasm bytes
+    contract: &[u8],    // contract code wasm bytes
     env: &[u8],         // blockchain state
-    msg: &[u8],         // probably function call and args
-    auto_msg: &[u8],    // auto function calls and args
+    msg: &[u8],         // can contain function calls and args
+    auto_msg: &[u8],    // can contain auto function calls and args. we create and return sigature.
     sig_info: &[u8],    // info about signature verification
 ) -> Result<InitSuccess, EnclaveError> {
     let contract_code = ContractCode::new(contract);
@@ -73,7 +73,7 @@ pub fn init(
 
     let parsed_sig_info: SigInfo = serde_json::from_slice(sig_info).map_err(|err| {
         warn!(
-            "got an error while trying to deserialize env input bytes into json {:?}: {}",
+            "got an error while trying to deserialize sig_info input bytes into json {:?}: {}",
             String::from_utf8_lossy(&sig_info),
             err
         );
@@ -383,3 +383,115 @@ fn start_engine(
     Ok(Engine::new(contract_instance, module))
 }
 
+
+
+pub fn create_callback_sig(
+    msg: &[u8], //message with args
+    msg_info: &[u8]
+   /*  auto_msg: &[u8], //optional automsg args for init
+   code_id: &[u8],    // contract code id
+    contract: &[u8],   //optional contract address for exec
+    contract_id: &[u8],  //optional contact id for init
+    contract_duration: &[u8],  //optional contact duration for init*/
+) -> Result<CallbackSigSuccess, EnclaveError> {
+
+    let parsed_msg_info: MsgInfo = serde_json::from_slice(msg_info).map_err(|err| {
+        warn!(
+            "got an error while trying to deserialize msg input bytes into json {:?}: {}",
+            String::from_utf8_lossy(&msg_info),
+            err
+        );
+        EnclaveError::FailedToDeserialize
+    })?;
+    trace!(
+        "msg input bytes into json {:?}",
+        String::from_utf8_lossy(&msg_info), );
+
+        trace!(
+            "HASH slice {:?}",
+            &parsed_msg_info.code_id.as_slice().clone());
+              
+   
+    let send_as_addr = CanonicalAddr::from_human(&HumanAddr(COMMUNITY_POOL_ADDR.to_string())).map_err(|err| {
+        warn!("failed to turn human addr to canonical addr when create_callback_sig: {:?}", err);
+        EnclaveError::FailedToDeserialize
+    })?;
+    let mut wasm_msg: WasmMsg;
+    if  !&parsed_msg_info.contract_id.is_empty()  {
+       let id = read_be_u64(&mut parsed_msg_info.code_id.as_slice());
+        trace!(
+            "id {:?}",
+            id);
+        wasm_msg = WasmMsg::Instantiate{code_id: id, msg:Binary::from(msg), auto_msg: None, contract_id: parsed_msg_info.contract_id.to_string(),callback_code_hash: hex::encode(&parsed_msg_info.code_id.as_slice()), contract_duration: "0".to_string(), send: parsed_msg_info.funds, callback_sig: None}
+    } else {
+  
+        let contract_addr = HumanAddr(parsed_msg_info.contract.to_string());
+        wasm_msg = WasmMsg::Execute{  msg: Binary::from(msg), contract_addr: contract_addr, callback_code_hash:hex::encode(&parsed_msg_info.code_id.as_slice()), send: parsed_msg_info.funds, callback_sig: None}
+    }
+    /*
+    contract_id.len() == 0 && contract.len() == 0 {
+        warn!(
+            "got an error while trying to create callback_sig no contract id or address provided",
+        );
+        return Err(EnclaveError::FailedToDeserialize);
+    } else if contract.len() != 0 {
+        let contract_addr = HumanAddr(from_utf8(contract).unwrap().to_string());
+        wasm_msg = WasmMsg::Execute{  msg: Binary::from(msg), contract_addr: contract_addr, callback_code_hash:hex::encode(contract_code.hash()), send: vec![], callback_sig: None}
+    } else {
+        let id = read_be_u64(&mut code_id.clone());
+        wasm_msg = WasmMsg::Instantiate{code_id: id, msg:Binary::from(msg), auto_msg: Some(Binary::from(auto_msg)), contract_id: from_utf8(contract_id).unwrap().to_string(),callback_code_hash: hex::encode(contract_code.hash()), contract_duration: from_utf8(contract_duration).unwrap().to_string(), send: vec![], callback_sig: None}
+    }
+*/  
+    //placeholders because empty bytes are not decrypting the msg
+    let mut nonce_placeholder = [0u8; 32];
+    nonce_placeholder.copy_from_slice(&msg[0..32]);
+    let mut pubkey_placeholder = [0u8; 32];
+    pubkey_placeholder.copy_from_slice(&msg/*parsed_msg_info.code_id.as_slice()*/[32..64]);
+
+    let sig = encrypt_msg(&mut wasm_msg, nonce_placeholder, pubkey_placeholder, &send_as_addr).map_err(|err| {
+        warn!(
+            "got an error while trying to encrypt wasm_msg into encrypted message {:?}: {}",
+            msg,
+            err
+        );
+        EnclaveError::FailedToDeserialize
+    })?;
+
+    let array = copy_into_array(&sig[..]);
+    let callback_sig: [u8; 32] = array;
+    let encrypted_output;
+    match wasm_msg {
+        WasmMsg::Instantiate{
+            msg, ..
+        } =>{  
+            trace!(
+                "encrypted_output {:?}",
+                msg.as_slice().to_vec(),);
+            
+            return Ok(CallbackSigSuccess {
+            callback_sig,
+            encrypted_msg: msg.as_slice().to_vec(),
+        });
+    }
+        WasmMsg::Execute{
+            msg, ..
+        } =>{  encrypted_output = serde_json::to_vec(&msg).map_err(|err| {
+            debug!(
+                "got an error while trying to serialize msg json into bytes {:?}: {}",
+                msg, err
+            );
+            EnclaveError::FailedToSerialize
+        })?;}
+    }
+
+    Ok(CallbackSigSuccess {
+        callback_sig,
+        encrypted_msg: encrypted_output.as_slice().to_vec(),
+    })
+}
+
+/// Look at the first 8 bytes of the input and reinterpret them as a u64
+fn read_be_u64(input: &[u8]) -> u64 {
+    assert!(input.len() >= std::mem::size_of::<u64>());
+    u64::from_be_bytes(input[0..std::mem::size_of::<u64>()].try_into().unwrap())
+}

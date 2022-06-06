@@ -7,6 +7,7 @@ package api
 import "C"
 
 import (
+	"encoding/json"
 	"fmt"
 	"runtime"
 	"syscall"
@@ -335,6 +336,38 @@ func GetEncryptedSeed(cert []byte) ([]byte, error) {
 		return nil, errorWithMessage(err, errmsg)
 	}
 	return receiveVector(res), nil
+}
+
+func GetCallbackSig(msg []byte, msgInfo types.MsgInfo /* auto_msg []byte, code_id []byte, contract string, contract_id string, contract_duration string*/) ([]byte, []byte, error) {
+	errmsg := C.Buffer{}
+	msgSlice := sendSlice(msg)
+	defer freeAfterSend(msgSlice)
+	msgInfoBin, err := json.Marshal(msgInfo)
+	if err != nil {
+		return nil, nil, err
+	}
+	msgInfoSlice := sendSlice(msgInfoBin)
+	defer freeAfterSend(msgInfoSlice)
+	/*autoMsgSlice := sendSlice(auto_msg)
+	defer freeAfterSend(autoMsgSlice)
+	id := sendSlice(code_id)
+	defer freeAfterSend(id)
+	contractSlice := sendSlice([]byte(contract))
+	defer freeAfterSend(contractSlice)
+	contractIdSlice := sendSlice([]byte(contract_id))
+	defer freeAfterSend(contractIdSlice)
+	contractDurationSlice := sendSlice([]byte(contract_duration))
+	defer freeAfterSend(contractDurationSlice)*/
+	res, err := C.get_callback_sig(msgSlice, msgInfoSlice /*autoMsgSlice, id, contractSlice, contractIdSlice, contractDurationSlice,*/, &errmsg)
+	if err != nil {
+		return nil, nil, errorWithMessage(err, errmsg)
+	}
+	data := receiveVector(res)
+	fmt.Printf("data: \t %v \n", data)
+	callbackSig := data[0:32]
+	encryptedMessage := data[32:]
+	fmt.Printf("msg: %s \n", string(encryptedMessage))
+	return callbackSig, encryptedMessage, nil
 }
 
 /**** To error module ***/

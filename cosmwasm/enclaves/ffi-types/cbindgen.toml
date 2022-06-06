@@ -37,6 +37,7 @@ include = [
     "InitResult",
     "HandleResult",
     "QueryResult",
+    "CallbackSigResult",
     "OcallReturn",
     "HealthCheckResult",
     "RuntimeConfiguration",

@@ -11,6 +11,7 @@ mod errors;
 pub mod external;
 mod gas;
 mod io;
+mod const_callback_sig_addresses;
 mod memory;
 pub(crate) mod module_cache;
 mod query_chain;

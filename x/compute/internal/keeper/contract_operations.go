@@ -21,6 +21,7 @@ import (
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 	sdktxsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	api "github.com/trstlabs/trst/go-cosmwasm/api"
 	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 	"github.com/trstlabs/trst/x/compute/internal/types"
 )
@@ -167,9 +168,8 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	pkBytes := []byte{}
 	signerSig := []byte{}
 	var err error
-
-	fmt.Printf("callbackSig.. %s \n", callbackSig)
-
+	fmt.Printf("init sender: %s", creator)
+	fmt.Printf("callbackSig: \t %v \n", callbackSig)
 	// If no callback signature - we should send the actual msg sender sign bytes and signature
 	if callbackSig == nil {
 		signBytes, signMode, modeInfoBytes, pkBytes, signerSig, err = k.GetSignerInfo(ctx, creator)
@@ -209,17 +209,15 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	}
 
 	// get contact info
-
 	bz := store.Get(types.GetCodeKey(codeID))
 	if bz == nil {
 		return nil, sdkerrors.Wrap(types.ErrNotFound, "code")
 	}
-
 	var codeInfo types.CodeInfo
 	k.cdc.MustUnmarshal(bz, &codeInfo)
-
-	// prepare params for contract instantiate call
-	params := types.NewEnv(ctx, creator, deposit, contractAddress, nil)
+	fmt.Printf("code hash: \t %v \n", codeInfo.CodeHash)
+	// prepare env for contract instantiate call
+	env := types.NewEnv(ctx, creator, deposit, contractAddress, nil)
 
 	// create prefixed data store
 	// 0x03 | contractAddress (sdk.AccAddress)
@@ -236,7 +234,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	}
 	// instantiate wasm contract
 	gas := gasForContract(ctx)
-	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, params, initMsg, autoMsg, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo)
+	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, env, initMsg, autoMsg, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo)
 	//fmt.Printf("ress")
 	consumeGas(ctx, gasUsed)
 	if err != nil {
@@ -285,7 +283,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 }
 
 // Execute executes the contract instance
-func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, sender sdk.AccAddress, msg []byte, coins sdk.Coins, callbackSig []byte) (*sdk.Result, error) {
+func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins, callbackSig []byte) (*sdk.Result, error) {
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading compute module: execute")
 
 	signBytes := []byte{}
@@ -297,7 +295,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	// If no callback signature - we should send the actual msg sender sign bytes and signature
 	if callbackSig == nil {
-		signBytes, signMode, modeInfoBytes, pkBytes, signerSig, err = k.GetSignerInfo(ctx, sender)
+		signBytes, signMode, modeInfoBytes, pkBytes, signerSig, err = k.GetSignerInfo(ctx, caller)
 		if err != nil {
 
 			return nil, err
@@ -329,7 +327,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	if contractKey == nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "contract key not found")
 	}
-	params := types.NewEnv(ctx, sender, coins, contractAddress, contractKey)
+	params := types.NewEnv(ctx, caller, coins, contractAddress, contractKey)
 
 	// prepare querier
 	querier := QueryHandler{
@@ -498,6 +496,39 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, m
 	return nil
 }
 
+// CreateCommunityPoolCallbackSig creates a callback sig which can be used to execute a specific message for a specific code for the community pool.
+// Important note: once callback signature is made, any node can 'run' the message at any time on the community pool's behalf, therefore, this could leak outputs related the specific code and message.
+// By hardcoding the distr module address in the enclave, we can use this for contract instantiation, execution migration over governance.
+func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context, msg []byte, codeID uint64, contract string, contractID string, funds sdk.Coins) (callbackSig []byte, encryptedMessage []byte, err error) {
+	//create and pass along message
+	/*(msg := wasmTypes.ExecuteMsg{
+		ContractAddr:      "sadfsd",
+		CallbackCodeHash:  "asdfsadf",
+		CallbackSignature: nil,
+		Msg:               message,
+		Send:              wasmTypes.Coins{wasmTypes.NewCoin(0, types.Denom)},
+	}*/
+
+	// get contact info
+	store := ctx.KVStore(k.storeKey)
+	bz := store.Get(types.GetCodeKey(codeID))
+	if bz == nil {
+		return nil, nil, sdkerrors.Wrap(types.ErrNotFound, "code")
+	}
+	var codeInfo types.CodeInfo
+	k.cdc.MustUnmarshal(bz, &codeInfo)
+	msgInfo := types.NewMsgInfo(codeInfo.CodeHash, contract, contractID, funds)
+	fmt.Printf("code hash: \t %v \n", msgInfo.CodeId)
+	callbackSig, encryptedMessage, err = api.GetCallbackSig(msg, msgInfo) /*autoMsg, codeID, contract, contractID, contractDuration)*/
+	if err != nil {
+		return nil, nil, err
+	}
+
+	fmt.Printf("callbackSig: \t %v \n", callbackSig)
+
+	return callbackSig, encryptedMessage, nil
+}
+
 /*
 // CreateCallbackSig creates a callback sig which can be used to execute a specific message for a specific code for the sender.
 // Important note: once callback signature is made, any node can run your message at any time on your behalf, therefore, the use of this could let nodes leak outputs related the specific code and message.
@@ -508,12 +539,5 @@ func (k Keeper) CreateCallbackSig(ctx sdk.Context, sender sdk.AccAddress, encryp
 	return callbackSig
 }
 
-// CreateCommunityPoolCallbackSig creates a callback sig which can be used to execute a specific message for a specific code for the community pool.
-// Important note: once callback signature is made, any node can run your message at any time on your behalf, therefore, the use of this could let nodes leak outputs related the specific code and message.
-// By hardcoding the distr module address in the enclave, we can use this for contract instantiation and execution over governance
-func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context,encryptedMessage []byte) (callbackSig []byte, err error) {
-	//create and pass along encrypted message
-	api.CreateCallbackSig()
-	return callbackSig
-}
+
 */

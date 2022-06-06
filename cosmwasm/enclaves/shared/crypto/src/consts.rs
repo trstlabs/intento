@@ -39,7 +39,7 @@ pub const MRSIGNER: [u8; 32] = [
 pub const SIGNING_METHOD: SigningMethod = SigningMethod::MRENCLAVE;
 
 #[cfg(all(not(feature = "production"), not(feature = "test")))]
-pub const SIGNING_METHOD: SigningMethod = SigningMethod::MRENCLAVE;
+pub const SIGNING_METHOD: SigningMethod = SigningMethod::MRSIGNER;
 
 #[cfg(all(not(feature = "production"), feature = "test"))]
 pub const SIGNING_METHOD: SigningMethod = SigningMethod::MRSIGNER;
@@ -75,4 +75,4 @@ pub const CONSENSUS_CALLBACK_SECRET_DERIVE_ORDER: u32 = 4;
 
 pub const SCRT_SGX_STORAGE_ENV_VAR: &str = "SCRT_SGX_STORAGE";
 
-const DEFAULT_SGX_SECRET_PATH: &str = "./.sgx_secrets/";
+const DEFAULT_SGX_SECRET_PATH: &str = "/opt/secret/.sgx_secrets/";

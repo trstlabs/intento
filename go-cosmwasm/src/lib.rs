@@ -18,14 +18,10 @@ use std::str::from_utf8;
 
 use crate::error::{clear_error, handle_c_error, set_error, Error};
 
-use cosmwasm_sgx_vm::untrusted_init_bootstrap;
 use cosmwasm_sgx_vm::{
-    call_handle_raw, call_init_raw, call_migrate_raw, call_query_raw, features_from_csv, Checksum,
+    untrusted_init_bootstrap,  create_attestation_report_u, untrusted_get_encrypted_seed, untrusted_health_check,
+    untrusted_init_node, untrusted_key_gen, call_handle_raw, call_init_raw, call_migrate_raw, call_query_raw, create_callback_sig_raw, features_from_csv, Checksum,
     CosmCache, Extern,
-};
-use cosmwasm_sgx_vm::{
-    create_attestation_report_u, untrusted_get_encrypted_seed, untrusted_health_check,
-    untrusted_init_node, untrusted_key_gen,
 };
 
 use ctor::ctor;
@@ -87,6 +83,91 @@ pub extern "C" fn get_encrypted_seed(cert: Buffer, err: Option<&mut Buffer>) -> 
         Ok(Ok(seed)) => {
             clear_error();
             Buffer::from_vec(seed.to_vec())
+        }
+    }
+}
+
+// store some common string for argument names
+static DATA_DIR_ARG: &str = "data_dir";
+static FEATURES_ARG: &str = "supported_features";
+static CACHE_ARG: &str = "cache";
+static WASM_ARG: &str = "wasm";
+static CODE_ID_ARG: &str = "code_id";
+//static CONTRACT_ARG: &str = "contract";
+//static CONTRACT_ID_ARG: &str = "contract_id";
+//static CONTRACT_DUR_ARG: &str = "contract_duration";
+static MSG_ARG: &str = "msg";
+static AUTO_MSG_ARG: &str = "auto_msg";
+static PARAMS_ARG: &str = "params";
+static GAS_USED_ARG: &str = "gas_used";
+static SIG_INFO_ARG: &str = "sig_info";
+
+#[no_mangle]
+pub extern "C" fn get_callback_sig(msg: Buffer,msg_info: Buffer /*auto_msg: Buffer, code_id: Buffer,contract: Buffer,contract_id: Buffer,contract_duration: Buffer*/, err: Option<&mut Buffer>) -> Buffer {
+    trace!("Called get_callback_sig");
+    let msg = match unsafe { msg.read() } {
+        None => {
+            set_error(Error::empty_arg("msg"), err);
+            return Buffer::default();
+        }
+        Some(r) => r,
+    };
+    let msg_info = match unsafe { msg_info.read() } {
+        None => {
+            set_error(Error::empty_arg("msg_info"), err);
+            return Buffer::default();
+        }
+        Some(r) => r,
+    };
+    /*let auto_msg = match unsafe { auto_msg.read() } {
+        None => {
+            set_error(Error::empty_arg("auto_msg"), err);
+            return Buffer::default();
+        }
+        Some(r) => r,
+    };
+    let code_id = match unsafe { code_id.read() } {
+        None => {
+            set_error(Error::empty_arg("code_id"), err);
+            return Buffer::default();
+        }
+        Some(r) => r,
+    };
+    let contract = match unsafe { contract.read() } {
+        None => {
+            set_error(Error::empty_arg("contract"), err);
+            return Buffer::default();
+        }
+        Some(r) => r,
+    };
+    let contract_id = match unsafe { contract_id.read() } {
+        None => {
+            set_error(Error::empty_arg("contract_id"), err);
+            return Buffer::default();
+        }
+        Some(r) => r,
+    };
+     let contract_duration = match unsafe { contract_duration.read() } {
+        None => {
+            set_error(Error::empty_arg("contract_duration"), err);
+            return Buffer::default();
+        }
+        Some(r) => r,
+    };*/
+    trace!("Hello from right before create_callback_sig_raw");
+    match create_callback_sig_raw(msg, msg_info /*auto_msg, code_id, contract, contract_id, contract_duration*/) {
+        Err(e) => {
+            // An error happened in the SGX sdk.
+            set_error(Error::enclave_err(e.to_string()), err);
+            Buffer::default()
+        }
+       /* Ok(Err(e)) => {
+            // An error was returned from the enclave.
+            set_error(Error::enclave_err(e.to_string()), err);
+            Buffer::default()
+        }*/
+        Ok(res) => {
+        Buffer::from_vec(res)
         }
     }
 }
@@ -221,17 +302,7 @@ pub extern "C" fn init_cache(
     }
 }
 
-// store some common string for argument names
-static DATA_DIR_ARG: &str = "data_dir";
-static FEATURES_ARG: &str = "supported_features";
-static CACHE_ARG: &str = "cache";
-static WASM_ARG: &str = "wasm";
-static CODE_ID_ARG: &str = "code_id";
-static MSG_ARG: &str = "msg";
-static AUTO_MSG_ARG: &str = "auto_msg";
-static PARAMS_ARG: &str = "params";
-static GAS_USED_ARG: &str = "gas_used";
-static SIG_INFO_ARG: &str = "sig_info";
+
 
 fn do_init_cache(
     data_dir: Buffer,

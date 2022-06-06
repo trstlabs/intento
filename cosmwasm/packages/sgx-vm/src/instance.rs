@@ -343,6 +343,7 @@ where
         let init_result = self.inner.query(env, msg)?;
         Ok(init_result.into_output())
     }
+    
 }
 
 #[cfg(test)]

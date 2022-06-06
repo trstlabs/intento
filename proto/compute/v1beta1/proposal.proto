@@ -29,3 +29,49 @@ message StoreCodeProposal {
   string contract_duration = 7;
 }
 
+
+// InstantiateContractProposal gov proposal content type to instantiate a
+// contract.
+message InstantiateContractProposal {
+  // Title is a short summary
+  string title = 1;
+  // Description is a human readable text
+  string description = 2;
+  // RunAs is the address that is passed to the contract's environment as sender
+  // string run_as = 3;
+  // Admin is an optional address that can execute migrations
+  // string admin = 4;
+  // CodeID is the reference to the stored WASM code
+  uint64 code_id = 3 [ (gogoproto.customname) = "CodeID" ];
+  // ContractID is optional metadata to be stored with a constract instance.
+  string contract_id = 4;
+  // Msg json encoded message to be passed to the contract on instantiation
+  bytes init_msg = 5;
+  //Funds coins that are transferred to the contract on instantiation
+  repeated cosmos.base.v1beta1.Coin funds = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+
+}
+
+
+// ExecuteContractProposal gov proposal content type to call execute on a
+// contract.
+message ExecuteContractProposal {
+  // Title is a short summary
+  string title = 1;
+  // Description is a human readable text
+  string description = 2;
+  // RunAs is the address that is passed to the contract's environment as sender
+  //string run_as = 3;
+  // Contract is the address of the smart contract
+  string contract = 3;
+  // Msg json encoded message to be passed to the contract as execute
+  bytes msg = 4;
+  // Funds coins that are transferred to the contract on instantiation
+  repeated cosmos.base.v1beta1.Coin funds = 5 [
+    (gogoproto.nullable) = false,
+   (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}

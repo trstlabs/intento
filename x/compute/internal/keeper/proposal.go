@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -27,10 +29,10 @@ func NewWasmProposalHandler(k Keeper, enabledProposalTypes []types.ProposalType)
 		switch c := content.(type) {
 		case *types.StoreCodeProposal:
 			return handleStoreCodeProposal(k, ctx, *c)
-		/*case *types.InstantiateContractProposal:
+		case *types.InstantiateContractProposal:
 			return handleInstantiateProposal(ctx, k, *c)
 		case *types.ExecuteContractProposal:
-			return handleExecuteProposal(ctx, k, *c)*/
+			return handleExecuteProposal(ctx, k, *c)
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized wasm proposal content type: %T", c)
 		}
@@ -62,25 +64,23 @@ func handleStoreCodeProposal(k Keeper, ctx sdk.Context, p types.StoreCodeProposa
 	return nil
 }
 
-/*
 func handleInstantiateProposal(ctx sdk.Context, k Keeper, p types.InstantiateContractProposal) error {
 	if err := p.ValidateBasic(); err != nil {
 		return err
 	}
-	runAsAddr, err := sdk.AccAddressFromBech32(p.RunAs)
-	if err != nil {
-		return sdkerrors.Wrap(err, "run as address")
-	}
-	proposerAddr, err := sdk.AccAddressFromBech32(p.Proposer)
-	if err != nil {
-		return sdkerrors.Wrap(err, "proposer as address")
-	}
+	byteCodeID := make([]byte, 8)
+	binary.LittleEndian.PutUint64(byteCodeID, p.CodeID)
+	fmt.Printf("byteCodeID: \t %v \n", byteCodeID)
 
-	addr, err := k.Instantiate(ctx, p.CodeID, runAsAddr, proposerAddr, p.InitMsg, p.AutoMsg, p.ContractId, p.InitFunds, nil, 0)
+	sig, encryptedMsg, err := k.CreateCommunityPoolCallbackSig(ctx, p.InitMsg, p.CodeID, "", p.ContractId, p.Funds)
 	if err != nil {
 		return err
 	}
 
+	addr, err := k.Instantiate(ctx, p.CodeID, k.accountKeeper.GetModuleAddress("distribution"), encryptedMsg, nil, p.ContractId, p.Funds, sig, 0)
+	if err != nil {
+		return err
+	}
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		types.EventTypeGovContractResult,
 		sdk.NewAttribute(types.AttributeKeyAddress, hex.EncodeToString(addr)),
@@ -97,16 +97,15 @@ func handleExecuteProposal(ctx sdk.Context, k Keeper, p types.ExecuteContractPro
 	if err != nil {
 		return sdkerrors.Wrap(err, "contract")
 	}
-	proposerAddr, err := sdk.AccAddressFromBech32(p.Proposer)
-	if err != nil {
-		return sdkerrors.Wrap(err, "proposer as address")
-	}
+	info := k.GetContractInfo(ctx, sdk.AccAddress(p.Contract))
 
-	runAsAddr, err := sdk.AccAddressFromBech32(p.RunAs)
+	fmt.Printf("contract info %s", info)
+	sig, encryptedMsg, err := k.CreateCommunityPoolCallbackSig(ctx, p.Msg, info.CodeID, p.Contract, "", p.Funds)
 	if err != nil {
-		return sdkerrors.Wrap(err, "run as address")
+		return err
 	}
-	res, err := k.Execute(ctx, contractAddr, runAsAddr, proposerAddr, p.Msg, p.SentFunds, nil)
+	fmt.Printf("sig %s", sig)
+	res, err := k.Execute(ctx, contractAddr, k.accountKeeper.GetModuleAddress("distribution"), encryptedMsg /*p.SentFunds*/, nil, sig)
 	if err != nil {
 		return err
 	}
@@ -117,4 +116,3 @@ func handleExecuteProposal(ctx sdk.Context, k Keeper, p types.ExecuteContractPro
 	))
 	return nil
 }
-*/

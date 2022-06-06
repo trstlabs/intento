@@ -84,19 +84,17 @@ type InstantiateContractProposal struct {
 	// Description is a human readable text
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	// RunAs is the address that is passed to the contract's environment as sender
-	RunAs string `protobuf:"bytes,3,opt,name=run_as,json=runAs,proto3" json:"run_as,omitempty"`
-	// Proposer is the address that is verified for the sender signature in the enclave
-	Proposer string `protobuf:"bytes,4,opt,name=proposer,proto3" json:"proposer,omitempty"`
+	// string run_as = 3;
+	// Admin is an optional address that can execute migrations
+	// string admin = 4;
 	// CodeID is the reference to the stored WASM code
-	CodeID uint64 `protobuf:"varint,5,opt,name=code_id,json=codeId,proto3" json:"code_id,omitempty"`
-	// Contract_id is optional metadata to be stored with a constract instance.
-	ContractId string `protobuf:"bytes,6,opt,name=contract_id,json=contractId,proto3" json:"contract_id,omitempty"`
+	CodeID uint64 `protobuf:"varint,3,opt,name=code_id,json=codeId,proto3" json:"code_id,omitempty"`
+	// ContractID is optional metadata to be stored with a constract instance.
+	ContractId string `protobuf:"bytes,4,opt,name=contract_id,json=contractId,proto3" json:"contract_id,omitempty"`
 	// Msg json encoded message to be passed to the contract on instantiation
-	InitMsg []byte `protobuf:"bytes,7,opt,name=init_msg,json=initMsg,proto3" json:"init_msg,omitempty"`
-	// AutoMsg json encoded message to be passed to the contract on instantiation
-	AutoMsg []byte `protobuf:"bytes,8,opt,name=auto_msg,json=autoMsg,proto3" json:"auto_msg,omitempty"`
-	// Funds coins that are transferred to the contract on instantiation
-	InitFunds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,9,rep,name=init_funds,json=initFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"init_funds"`
+	InitMsg []byte `protobuf:"bytes,5,opt,name=init_msg,json=initMsg,proto3" json:"init_msg,omitempty"`
+	//Funds coins that are transferred to the contract on instantiation
+	Funds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,6,rep,name=funds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"funds"`
 }
 
 func (m *InstantiateContractProposal) Reset()      { *m = InstantiateContractProposal{} }
@@ -139,15 +137,13 @@ type ExecuteContractProposal struct {
 	// Description is a human readable text
 	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	// RunAs is the address that is passed to the contract's environment as sender
-	RunAs string `protobuf:"bytes,3,opt,name=run_as,json=runAs,proto3" json:"run_as,omitempty"`
-	// Proposer is the address that is verified for the sender signature in the enclave
-	Proposer string `protobuf:"bytes,4,opt,name=proposer,proto3" json:"proposer,omitempty"`
+	//string run_as = 3;
 	// Contract is the address of the smart contract
-	Contract string `protobuf:"bytes,5,opt,name=contract,proto3" json:"contract,omitempty"`
+	Contract string `protobuf:"bytes,3,opt,name=contract,proto3" json:"contract,omitempty"`
 	// Msg json encoded message to be passed to the contract as execute
-	Msg []byte `protobuf:"bytes,6,opt,name=msg,proto3" json:"msg,omitempty"`
+	Msg []byte `protobuf:"bytes,4,opt,name=msg,proto3" json:"msg,omitempty"`
 	// Funds coins that are transferred to the contract on instantiation
-	SentFunds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=sent_funds,json=sentFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"sent_funds"`
+	Funds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=funds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"funds"`
 }
 
 func (m *ExecuteContractProposal) Reset()      { *m = ExecuteContractProposal{} }
@@ -191,43 +187,40 @@ func init() {
 func init() { proto.RegisterFile("compute/v1beta1/proposal.proto", fileDescriptor_eab99009f5724d2c) }
 
 var fileDescriptor_eab99009f5724d2c = []byte{
-	// 563 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x94, 0xd1, 0x6e, 0xd3, 0x3c,
-	0x14, 0xc7, 0x93, 0x6e, 0x4b, 0x5b, 0xb7, 0xdf, 0xd4, 0xe5, 0x2b, 0xd0, 0x15, 0xc9, 0xad, 0x8a,
-	0x90, 0x2a, 0x21, 0x12, 0x0a, 0x12, 0xf7, 0xeb, 0x06, 0x52, 0x2f, 0x26, 0xa1, 0x0c, 0x69, 0x12,
-	0x37, 0x91, 0x93, 0x98, 0x62, 0x68, 0xed, 0xc8, 0x76, 0xa0, 0x7d, 0x0b, 0x9e, 0x00, 0x89, 0x3b,
-	0xc4, 0x93, 0xf4, 0x72, 0x97, 0xbb, 0x2a, 0x2c, 0x7d, 0x01, 0x1e, 0x01, 0xd9, 0x4e, 0xba, 0xbe,
-	0xc0, 0xc4, 0x55, 0x7d, 0xce, 0xff, 0x7f, 0x4e, 0x8e, 0x7f, 0x3d, 0x32, 0x80, 0x31, 0x9b, 0xa7,
-	0x99, 0xc4, 0xfe, 0xe7, 0x51, 0x84, 0x25, 0x1a, 0xf9, 0x29, 0x67, 0x29, 0x13, 0x68, 0xe6, 0xa5,
-	0x9c, 0x49, 0xe6, 0xde, 0x97, 0x5c, 0x48, 0x6f, 0xe1, 0x15, 0x36, 0xaf, 0xb0, 0x75, 0xdb, 0x53,
-	0x36, 0x65, 0xda, 0xe2, 0xab, 0x93, 0x71, 0x77, 0x61, 0xcc, 0xc4, 0x9c, 0x09, 0x3f, 0x42, 0xe2,
-	0xb6, 0x63, 0xcc, 0x08, 0x35, 0xfa, 0xe0, 0x7b, 0x05, 0x1c, 0x5d, 0x48, 0xc6, 0xf1, 0x29, 0x4b,
-	0xf0, 0x9b, 0xe2, 0x4b, 0x6e, 0x1b, 0x1c, 0x48, 0x22, 0x67, 0xb8, 0x63, 0xf7, 0xed, 0x61, 0x3d,
-	0x30, 0x81, 0xdb, 0x07, 0x8d, 0x04, 0x8b, 0x98, 0x93, 0x54, 0x12, 0x46, 0x3b, 0x15, 0xad, 0xed,
-	0xa6, 0xdc, 0x7b, 0xc0, 0xe1, 0x19, 0x0d, 0x91, 0xe8, 0xec, 0x99, 0x42, 0x9e, 0xd1, 0x13, 0xe1,
-	0xbe, 0x04, 0x87, 0x5f, 0x90, 0x98, 0x87, 0xd1, 0x52, 0xe2, 0x30, 0x66, 0x09, 0xee, 0xec, 0xf7,
-	0xed, 0x61, 0x73, 0xdc, 0xca, 0xd7, 0xbd, 0xe6, 0xe5, 0xc9, 0xc5, 0xf9, 0x78, 0x29, 0xf5, 0x00,
-	0x41, 0x53, 0xf9, 0xca, 0xc8, 0x7d, 0x0c, 0x0e, 0x63, 0x46, 0x25, 0x47, 0xb1, 0x0c, 0xcd, 0x3c,
-	0x07, 0xba, 0xed, 0x7f, 0x65, 0xf6, 0xad, 0x9e, 0x6b, 0x04, 0xda, 0x5b, 0xdb, 0xee, 0x80, 0x8e,
-	0x36, 0xff, 0x5f, 0x6a, 0x67, 0x3b, 0x83, 0x3e, 0x01, 0x47, 0xb7, 0x25, 0x19, 0x47, 0xda, 0x5f,
-	0xd5, 0xfe, 0xd6, 0xd6, 0x5f, 0xe4, 0x07, 0x7f, 0x2a, 0xe0, 0xe1, 0x84, 0x0a, 0x89, 0xa8, 0x24,
-	0x48, 0x8d, 0x66, 0xf4, 0xbb, 0xa2, 0xd5, 0x05, 0x35, 0xf3, 0x97, 0x63, 0xae, 0x39, 0xd5, 0x83,
-	0x6d, 0xec, 0x3e, 0x02, 0x55, 0xc5, 0x2f, 0x24, 0x89, 0x46, 0xb1, 0x3f, 0x06, 0xf9, 0xba, 0xe7,
-	0x28, 0x58, 0x93, 0xb3, 0xc0, 0x51, 0xd2, 0x24, 0x71, 0x7b, 0xa0, 0xb1, 0xbd, 0x1c, 0x49, 0x0a,
-	0x0c, 0xa0, 0x4c, 0x4d, 0x12, 0xf7, 0x18, 0xd4, 0x08, 0x25, 0x32, 0x9c, 0x8b, 0xa9, 0xbe, 0x74,
-	0x33, 0xa8, 0xaa, 0xf8, 0x5c, 0x4c, 0x95, 0x84, 0x32, 0xc9, 0xb4, 0x54, 0x33, 0x92, 0x8a, 0x95,
-	0xf4, 0x11, 0x00, 0x5d, 0xf5, 0x3e, 0xa3, 0x89, 0xe8, 0xd4, 0xfb, 0x7b, 0xc3, 0xc6, 0xf3, 0x63,
-	0xcf, 0xec, 0x97, 0xa7, 0xf6, 0xab, 0x5c, 0x45, 0xef, 0x94, 0x11, 0x3a, 0x7e, 0xb6, 0x5a, 0xf7,
-	0xac, 0x9f, 0xbf, 0x7a, 0xc3, 0x29, 0x91, 0x1f, 0xb2, 0x48, 0xed, 0xab, 0x5f, 0x2c, 0xa3, 0xf9,
-	0x79, 0x2a, 0x92, 0x4f, 0xbe, 0x5c, 0xa6, 0x58, 0xe8, 0x02, 0x11, 0xd4, 0x55, 0xfb, 0xd7, 0xaa,
-	0xfb, 0xe0, 0x5b, 0x05, 0x3c, 0x78, 0xb5, 0xc0, 0x71, 0xf6, 0x6f, 0x71, 0x77, 0x41, 0xad, 0xc4,
-	0x56, 0xac, 0xde, 0x36, 0x76, 0x5b, 0x60, 0x4f, 0x41, 0x72, 0x34, 0x24, 0x75, 0x54, 0x80, 0x04,
-	0xa6, 0x25, 0xa0, 0xea, 0x1d, 0x00, 0x52, 0xed, 0x35, 0xa0, 0xf1, 0xe5, 0xea, 0x06, 0x5a, 0xd7,
-	0x37, 0xd0, 0xfa, 0x91, 0x43, 0x7b, 0x95, 0x43, 0xfb, 0x2a, 0x87, 0xf6, 0xef, 0x1c, 0xda, 0x5f,
-	0x37, 0xd0, 0xba, 0xda, 0x40, 0xeb, 0x7a, 0x03, 0xad, 0x77, 0xa3, 0x9d, 0xd6, 0xea, 0xd9, 0x98,
-	0xa1, 0x48, 0xe8, 0x83, 0xbf, 0xf0, 0xcb, 0x67, 0x86, 0x50, 0x89, 0x39, 0x45, 0x33, 0xf3, 0xa5,
-	0xc8, 0xd1, 0xef, 0xc2, 0x8b, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xdb, 0xb4, 0x42, 0xcc, 0x87,
-	0x04, 0x00, 0x00,
+	// 523 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x53, 0x41, 0x6f, 0xd3, 0x30,
+	0x14, 0x4e, 0xda, 0x35, 0xdd, 0xdc, 0x32, 0x75, 0xa1, 0x40, 0x57, 0x24, 0xb7, 0x2a, 0x42, 0xaa,
+	0x84, 0x48, 0x28, 0x48, 0xdc, 0xd7, 0x8d, 0x43, 0x0f, 0x93, 0x50, 0x86, 0x34, 0x89, 0x4b, 0xe4,
+	0x24, 0xa6, 0x58, 0xb4, 0x76, 0x64, 0x3b, 0xd0, 0xfe, 0x0b, 0xae, 0x1c, 0xb9, 0x21, 0x7e, 0x49,
+	0x8f, 0x3b, 0xee, 0x54, 0x58, 0xfa, 0x47, 0x90, 0xed, 0xa4, 0xed, 0x1d, 0x38, 0xc5, 0xef, 0xbd,
+	0xef, 0xbd, 0x7c, 0xef, 0xd3, 0xf7, 0x00, 0x8c, 0xd9, 0x3c, 0xcd, 0x24, 0xf6, 0x3f, 0x8f, 0x22,
+	0x2c, 0xd1, 0xc8, 0x4f, 0x39, 0x4b, 0x99, 0x40, 0x33, 0x2f, 0xe5, 0x4c, 0x32, 0xf7, 0xa1, 0xe4,
+	0x42, 0x7a, 0x0b, 0xaf, 0x80, 0x79, 0x05, 0xac, 0xdb, 0x9e, 0xb2, 0x29, 0xd3, 0x10, 0x5f, 0xbd,
+	0x0c, 0xba, 0x0b, 0x63, 0x26, 0xe6, 0x4c, 0xf8, 0x11, 0x12, 0xbb, 0x89, 0x31, 0x23, 0xd4, 0xd4,
+	0x07, 0xdf, 0x2b, 0xe0, 0xe4, 0x4a, 0x32, 0x8e, 0xcf, 0x59, 0x82, 0xdf, 0x16, 0x7f, 0x72, 0xdb,
+	0xa0, 0x26, 0x89, 0x9c, 0xe1, 0x8e, 0xdd, 0xb7, 0x87, 0x47, 0x81, 0x09, 0xdc, 0x3e, 0x68, 0x24,
+	0x58, 0xc4, 0x9c, 0xa4, 0x92, 0x30, 0xda, 0xa9, 0xe8, 0xda, 0x7e, 0xca, 0x7d, 0x00, 0x1c, 0x9e,
+	0xd1, 0x10, 0x89, 0x4e, 0xd5, 0x34, 0xf2, 0x8c, 0x9e, 0x09, 0xf7, 0x35, 0x38, 0xfe, 0x82, 0xc4,
+	0x3c, 0x8c, 0x96, 0x12, 0x87, 0x31, 0x4b, 0x70, 0xe7, 0xa0, 0x6f, 0x0f, 0x9b, 0xe3, 0x56, 0xbe,
+	0xee, 0x35, 0xaf, 0xcf, 0xae, 0x2e, 0xc7, 0x4b, 0xa9, 0x09, 0x04, 0x4d, 0x85, 0x2b, 0x23, 0xf7,
+	0x29, 0x38, 0x8e, 0x19, 0x95, 0x1c, 0xc5, 0x32, 0x34, 0x7c, 0x6a, 0x7a, 0xec, 0xbd, 0x32, 0xfb,
+	0x4e, 0xf3, 0x1a, 0x81, 0xf6, 0x16, 0xb6, 0x4f, 0xd0, 0xd1, 0xe0, 0xfb, 0x65, 0xed, 0x62, 0x8f,
+	0xe8, 0x33, 0x70, 0xb2, 0x6b, 0xc9, 0x38, 0xd2, 0xf8, 0xba, 0xc6, 0xb7, 0xb6, 0xf8, 0x22, 0x3f,
+	0xf8, 0x56, 0x01, 0x8f, 0x27, 0x54, 0x48, 0x44, 0x25, 0x41, 0x8a, 0x9a, 0xa9, 0xff, 0xb5, 0x5a,
+	0x4f, 0x40, 0x5d, 0x89, 0x11, 0x92, 0x44, 0xcb, 0x75, 0x30, 0x06, 0xf9, 0xba, 0xe7, 0xa8, 0xcd,
+	0x27, 0x17, 0x81, 0xa3, 0x4a, 0x93, 0xc4, 0xed, 0x81, 0xc6, 0x96, 0x29, 0x49, 0xb4, 0x70, 0x47,
+	0x01, 0x28, 0x53, 0x93, 0xc4, 0x3d, 0x05, 0x87, 0x84, 0x12, 0x19, 0xce, 0xc5, 0x54, 0xcb, 0xd3,
+	0x0c, 0xea, 0x2a, 0xbe, 0x14, 0x53, 0x17, 0x81, 0xda, 0x87, 0x8c, 0x26, 0xa2, 0xe3, 0xf4, 0xab,
+	0xc3, 0xc6, 0xcb, 0x53, 0xcf, 0x98, 0xc1, 0x53, 0x66, 0x28, 0x7d, 0xe3, 0x9d, 0x33, 0x42, 0xc7,
+	0x2f, 0x56, 0xeb, 0x9e, 0xf5, 0xf3, 0x57, 0x6f, 0x38, 0x25, 0xf2, 0x63, 0x16, 0x29, 0x73, 0xf9,
+	0x85, 0x73, 0xcc, 0xe7, 0xb9, 0x48, 0x3e, 0xf9, 0x72, 0x99, 0x62, 0xa1, 0x1b, 0x44, 0x60, 0x26,
+	0x0f, 0x72, 0x1b, 0x3c, 0x7a, 0xb3, 0xc0, 0x71, 0xf6, 0x0f, 0x75, 0xe9, 0x82, 0xc3, 0x72, 0xbf,
+	0xc2, 0x47, 0xdb, 0xd8, 0x6d, 0x81, 0xaa, 0x5a, 0x54, 0xfb, 0x27, 0x50, 0xcf, 0xdd, 0x92, 0xb5,
+	0xff, 0xb5, 0xe4, 0xf8, 0x7a, 0x75, 0x07, 0xad, 0xdb, 0x3b, 0x68, 0xfd, 0xc8, 0xa1, 0xbd, 0xca,
+	0xa1, 0x7d, 0x93, 0x43, 0xfb, 0x77, 0x0e, 0xed, 0xaf, 0x1b, 0x68, 0xdd, 0x6c, 0xa0, 0x75, 0xbb,
+	0x81, 0xd6, 0xfb, 0xd1, 0xde, 0x58, 0x75, 0xa3, 0x33, 0x14, 0x09, 0xfd, 0xf0, 0x17, 0x7e, 0x79,
+	0xd3, 0x84, 0x4a, 0xcc, 0x29, 0x9a, 0x99, 0xbf, 0x44, 0x8e, 0x3e, 0xc2, 0x57, 0x7f, 0x02, 0x00,
+	0x00, 0xff, 0xff, 0xbe, 0x6c, 0xd6, 0xfc, 0xf4, 0x03, 0x00, 0x00,
 }
 
 func (this *StoreCodeProposal) Equal(that interface{}) bool {
@@ -297,12 +290,6 @@ func (this *InstantiateContractProposal) Equal(that interface{}) bool {
 	if this.Description != that1.Description {
 		return false
 	}
-	if this.RunAs != that1.RunAs {
-		return false
-	}
-	if this.Proposer != that1.Proposer {
-		return false
-	}
 	if this.CodeID != that1.CodeID {
 		return false
 	}
@@ -312,14 +299,11 @@ func (this *InstantiateContractProposal) Equal(that interface{}) bool {
 	if !bytes.Equal(this.InitMsg, that1.InitMsg) {
 		return false
 	}
-	if !bytes.Equal(this.AutoMsg, that1.AutoMsg) {
+	if len(this.Funds) != len(that1.Funds) {
 		return false
 	}
-	if len(this.InitFunds) != len(that1.InitFunds) {
-		return false
-	}
-	for i := range this.InitFunds {
-		if !this.InitFunds[i].Equal(&that1.InitFunds[i]) {
+	for i := range this.Funds {
+		if !this.Funds[i].Equal(&that1.Funds[i]) {
 			return false
 		}
 	}
@@ -350,23 +334,17 @@ func (this *ExecuteContractProposal) Equal(that interface{}) bool {
 	if this.Description != that1.Description {
 		return false
 	}
-	if this.RunAs != that1.RunAs {
-		return false
-	}
-	if this.Proposer != that1.Proposer {
-		return false
-	}
 	if this.Contract != that1.Contract {
 		return false
 	}
 	if !bytes.Equal(this.Msg, that1.Msg) {
 		return false
 	}
-	if len(this.SentFunds) != len(that1.SentFunds) {
+	if len(this.Funds) != len(that1.Funds) {
 		return false
 	}
-	for i := range this.SentFunds {
-		if !this.SentFunds[i].Equal(&that1.SentFunds[i]) {
+	for i := range this.Funds {
+		if !this.Funds[i].Equal(&that1.Funds[i]) {
 			return false
 		}
 	}
@@ -464,10 +442,10 @@ func (m *InstantiateContractProposal) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
-	if len(m.InitFunds) > 0 {
-		for iNdEx := len(m.InitFunds) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Funds) > 0 {
+		for iNdEx := len(m.Funds) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.InitFunds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Funds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -475,48 +453,27 @@ func (m *InstantiateContractProposal) MarshalToSizedBuffer(dAtA []byte) (int, er
 				i = encodeVarintProposal(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x4a
+			dAtA[i] = 0x32
 		}
-	}
-	if len(m.AutoMsg) > 0 {
-		i -= len(m.AutoMsg)
-		copy(dAtA[i:], m.AutoMsg)
-		i = encodeVarintProposal(dAtA, i, uint64(len(m.AutoMsg)))
-		i--
-		dAtA[i] = 0x42
 	}
 	if len(m.InitMsg) > 0 {
 		i -= len(m.InitMsg)
 		copy(dAtA[i:], m.InitMsg)
 		i = encodeVarintProposal(dAtA, i, uint64(len(m.InitMsg)))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x2a
 	}
 	if len(m.ContractId) > 0 {
 		i -= len(m.ContractId)
 		copy(dAtA[i:], m.ContractId)
 		i = encodeVarintProposal(dAtA, i, uint64(len(m.ContractId)))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x22
 	}
 	if m.CodeID != 0 {
 		i = encodeVarintProposal(dAtA, i, uint64(m.CodeID))
 		i--
-		dAtA[i] = 0x28
-	}
-	if len(m.Proposer) > 0 {
-		i -= len(m.Proposer)
-		copy(dAtA[i:], m.Proposer)
-		i = encodeVarintProposal(dAtA, i, uint64(len(m.Proposer)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.RunAs) > 0 {
-		i -= len(m.RunAs)
-		copy(dAtA[i:], m.RunAs)
-		i = encodeVarintProposal(dAtA, i, uint64(len(m.RunAs)))
-		i--
-		dAtA[i] = 0x1a
+		dAtA[i] = 0x18
 	}
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
@@ -555,10 +512,10 @@ func (m *ExecuteContractProposal) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
-	if len(m.SentFunds) > 0 {
-		for iNdEx := len(m.SentFunds) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Funds) > 0 {
+		for iNdEx := len(m.Funds) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.SentFunds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Funds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -566,7 +523,7 @@ func (m *ExecuteContractProposal) MarshalToSizedBuffer(dAtA []byte) (int, error)
 				i = encodeVarintProposal(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x3a
+			dAtA[i] = 0x2a
 		}
 	}
 	if len(m.Msg) > 0 {
@@ -574,26 +531,12 @@ func (m *ExecuteContractProposal) MarshalToSizedBuffer(dAtA []byte) (int, error)
 		copy(dAtA[i:], m.Msg)
 		i = encodeVarintProposal(dAtA, i, uint64(len(m.Msg)))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x22
 	}
 	if len(m.Contract) > 0 {
 		i -= len(m.Contract)
 		copy(dAtA[i:], m.Contract)
 		i = encodeVarintProposal(dAtA, i, uint64(len(m.Contract)))
-		i--
-		dAtA[i] = 0x2a
-	}
-	if len(m.Proposer) > 0 {
-		i -= len(m.Proposer)
-		copy(dAtA[i:], m.Proposer)
-		i = encodeVarintProposal(dAtA, i, uint64(len(m.Proposer)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.RunAs) > 0 {
-		i -= len(m.RunAs)
-		copy(dAtA[i:], m.RunAs)
-		i = encodeVarintProposal(dAtA, i, uint64(len(m.RunAs)))
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -676,14 +619,6 @@ func (m *InstantiateContractProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovProposal(uint64(l))
 	}
-	l = len(m.RunAs)
-	if l > 0 {
-		n += 1 + l + sovProposal(uint64(l))
-	}
-	l = len(m.Proposer)
-	if l > 0 {
-		n += 1 + l + sovProposal(uint64(l))
-	}
 	if m.CodeID != 0 {
 		n += 1 + sovProposal(uint64(m.CodeID))
 	}
@@ -695,12 +630,8 @@ func (m *InstantiateContractProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovProposal(uint64(l))
 	}
-	l = len(m.AutoMsg)
-	if l > 0 {
-		n += 1 + l + sovProposal(uint64(l))
-	}
-	if len(m.InitFunds) > 0 {
-		for _, e := range m.InitFunds {
+	if len(m.Funds) > 0 {
+		for _, e := range m.Funds {
 			l = e.Size()
 			n += 1 + l + sovProposal(uint64(l))
 		}
@@ -722,14 +653,6 @@ func (m *ExecuteContractProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovProposal(uint64(l))
 	}
-	l = len(m.RunAs)
-	if l > 0 {
-		n += 1 + l + sovProposal(uint64(l))
-	}
-	l = len(m.Proposer)
-	if l > 0 {
-		n += 1 + l + sovProposal(uint64(l))
-	}
 	l = len(m.Contract)
 	if l > 0 {
 		n += 1 + l + sovProposal(uint64(l))
@@ -738,8 +661,8 @@ func (m *ExecuteContractProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovProposal(uint64(l))
 	}
-	if len(m.SentFunds) > 0 {
-		for _, e := range m.SentFunds {
+	if len(m.Funds) > 0 {
+		for _, e := range m.Funds {
 			l = e.Size()
 			n += 1 + l + sovProposal(uint64(l))
 		}
@@ -1123,70 +1046,6 @@ func (m *InstantiateContractProposal) Unmarshal(dAtA []byte) error {
 			m.Description = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RunAs", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowProposal
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthProposal
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthProposal
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RunAs = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Proposer", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowProposal
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthProposal
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthProposal
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Proposer = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CodeID", wireType)
 			}
@@ -1205,7 +1064,7 @@ func (m *InstantiateContractProposal) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ContractId", wireType)
 			}
@@ -1237,7 +1096,7 @@ func (m *InstantiateContractProposal) Unmarshal(dAtA []byte) error {
 			}
 			m.ContractId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InitMsg", wireType)
 			}
@@ -1271,43 +1130,9 @@ func (m *InstantiateContractProposal) Unmarshal(dAtA []byte) error {
 				m.InitMsg = []byte{}
 			}
 			iNdEx = postIndex
-		case 8:
+		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AutoMsg", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowProposal
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthProposal
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthProposal
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AutoMsg = append(m.AutoMsg[:0], dAtA[iNdEx:postIndex]...)
-			if m.AutoMsg == nil {
-				m.AutoMsg = []byte{}
-			}
-			iNdEx = postIndex
-		case 9:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InitFunds", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Funds", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1334,8 +1159,8 @@ func (m *InstantiateContractProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InitFunds = append(m.InitFunds, types.Coin{})
-			if err := m.InitFunds[len(m.InitFunds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Funds = append(m.Funds, types.Coin{})
+			if err := m.Funds[len(m.Funds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1455,70 +1280,6 @@ func (m *ExecuteContractProposal) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field RunAs", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowProposal
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthProposal
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthProposal
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.RunAs = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Proposer", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowProposal
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthProposal
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthProposal
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Proposer = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Contract", wireType)
 			}
 			var stringLen uint64
@@ -1549,7 +1310,7 @@ func (m *ExecuteContractProposal) Unmarshal(dAtA []byte) error {
 			}
 			m.Contract = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
 			}
@@ -1583,9 +1344,9 @@ func (m *ExecuteContractProposal) Unmarshal(dAtA []byte) error {
 				m.Msg = []byte{}
 			}
 			iNdEx = postIndex
-		case 7:
+		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SentFunds", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Funds", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1612,8 +1373,8 @@ func (m *ExecuteContractProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SentFunds = append(m.SentFunds, types.Coin{})
-			if err := m.SentFunds[len(m.SentFunds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Funds = append(m.Funds, types.Coin{})
+			if err := m.Funds[len(m.Funds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

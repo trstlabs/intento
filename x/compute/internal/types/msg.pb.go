@@ -86,7 +86,7 @@ type MsgInstantiateContract struct {
 	AutoMsg          []byte                                   `protobuf:"bytes,6,opt,name=auto_msg,json=autoMsg,proto3" json:"auto_msg,omitempty"`
 	InitFunds        github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=init_funds,json=initFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"init_funds"`
 	CallbackSig      []byte                                   `protobuf:"bytes,8,opt,name=callback_sig,json=callbackSig,proto3" json:"callback_sig,omitempty"`
-	//contract_duration defines the time that the code should run for, optional
+	//contract_duration defines the time that the code should run for,0 for optional
 	ContractDuration string `protobuf:"bytes,9,opt,name=contract_duration,json=contractDuration,proto3" json:"contract_duration,omitempty"`
 }
 

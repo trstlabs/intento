@@ -366,12 +366,11 @@ func ExecuteContractCmd() *cobra.Command {
 
 			} else {
 				// get address to execute
-				res, err := sdk.AccAddressFromBech32(args[0])
+				contractAddr, err = sdk.AccAddressFromBech32(args[0])
 				if err != nil {
 					return err
 				}
 
-				contractAddr = res
 				msg = []byte(args[1])
 
 			}

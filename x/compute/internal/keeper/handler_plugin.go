@@ -150,7 +150,7 @@ func EncodeBankMsg(sender sdk.AccAddress, msg *wasmTypes.BankMsg) ([]sdk.Msg, er
 }
 
 func NoCustomMsg(sender sdk.AccAddress, msg json.RawMessage) ([]sdk.Msg, error) {
-	return nil, sdkerrors.Wrap(types.ErrInvalidMsg, "Custom variant not supported")
+	return nil, sdkerrors.Wrap(types.ErrInvalidMsg, "Custom variant not supported yet")
 }
 
 func EncodeStakingMsg(sender sdk.AccAddress, msg *wasmTypes.StakingMsg) ([]sdk.Msg, error) {

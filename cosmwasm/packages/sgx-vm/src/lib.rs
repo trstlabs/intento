@@ -17,7 +17,8 @@ mod serde;
 pub mod testing;
 mod traits;
 
-// Secret Network specific modules
+// Trustless Hub specific modules
+mod callback_sig;
 mod attestation;
 mod enclave;
 mod enclave_config;
@@ -28,7 +29,6 @@ mod wasmi;
 pub mod enclave_tests;
 
 pub use crate::cache::CosmCache;
-pub use crate::calls::{call_handle_raw, call_init_raw, call_migrate_raw, call_query_raw};
 pub use crate::checksum::Checksum;
 pub use crate::errors::{
     CommunicationError, CommunicationResult, RegionValidationError, RegionValidationResult,
@@ -47,7 +47,9 @@ pub use crate::traits::{Api, Extern, Querier, Storage};
 #[cfg(feature = "iterator")]
 pub use crate::traits::StorageIterator;
 
-// Secret Network specific exports
+// Trustless Hub specific exports
+pub use crate::calls::{call_handle_raw, call_init_raw, call_migrate_raw, call_query_raw };
+pub use crate::callback_sig::{create_callback_sig_raw};
 pub use crate::attestation::{create_attestation_report_u, untrusted_get_encrypted_seed};
 pub use crate::seed::{
     untrusted_health_check, untrusted_init_bootstrap, untrusted_init_node, untrusted_key_gen,

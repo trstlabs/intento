@@ -94,11 +94,10 @@ func ProposalStoreCodeCmd() *cobra.Command {
 	return cmd
 }
 
-/*
 func ProposalInstantiateContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "instantiate-contract [code_id_int64] [json_encoded_init_args] --contractId [text] --title [text] --description [text] --run-as [address] --amount [coins,optional] --deposit [coins,optional]",
-		Short: "Submit an instantiate wasm contract proposal",
+		Use:   "instantiate-contract [code_id_int64] [json_encoded_init_args] --contract_id [text] --title [text] --description [text] --amount [coins,optional] --deposit [coins,optional]",
+		Short: "Submit an instantiate wasm contract proposal (run by community)",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -111,13 +110,13 @@ func ProposalInstantiateContractCmd() *cobra.Command {
 				return err
 			}
 
-			runAs, err := cmd.Flags().GetString(flagRunAs)
+			/*runAs, err := cmd.Flags().GetString(flagRunAs)
 			if err != nil {
 				return fmt.Errorf("run-as: %s", err)
 			}
 			if len(runAs) == 0 {
 				return errors.New("run-as address is required")
-			}
+			}*/
 			proposalTitle, err := cmd.Flags().GetString(cli.FlagTitle)
 			if err != nil {
 				return fmt.Errorf("proposal title: %s", err)
@@ -138,14 +137,13 @@ func ProposalInstantiateContractCmd() *cobra.Command {
 			content := types.InstantiateContractProposal{
 				Title:       proposalTitle,
 				Description: proposalDescr,
-				RunAs:       runAs,
-				Proposer:    clientCtx.GetFromAddress().String(),
+				//RunAs:       runAs,
+				//Proposer: clientCtx.GetFromAddress().String(),
 				//Admin:       src.Admin,
 				CodeID:     src.CodeID,
 				ContractId: src.ContractId,
-				InitMsg:    src.InitMsg,
-				AutoMsg:    src.AutoMsg,
-				InitFunds:  src.InitFunds,
+				InitMsg:    []byte(args[1]),
+				Funds:      src.InitFunds,
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
@@ -162,7 +160,7 @@ func ProposalInstantiateContractCmd() *cobra.Command {
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract during instantiation")
 	cmd.Flags().String(flagContractId, "", "A human-readable name for this contract in lists")
 	//cmd.Flags().String(flagAdmin, "", "Address of an admin")
-	cmd.Flags().String(flagRunAs, "", "The address that runs the contract. It is the creator of the contract and passed to the contract as sender on proposal execution")
+	//cmd.Flags().String(flagRunAs, "", "The address that runs the contract. It is the creator of the contract and passed to the contract as sender on proposal execution")
 	cmd.Flags().String(flagAutoMsg, "", "An automatic message to send, that the contract executes after a set duration (optional)")
 
 	// proposal flags
@@ -177,8 +175,8 @@ func ProposalInstantiateContractCmd() *cobra.Command {
 
 func ProposalExecuteContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "execute-contract [contract_addr_bech32] [json_encoded_migration_args]",
-		Short: "Submit a execute wasm contract proposal (run by any address)",
+		Use:   "execute-contract [contract_addr_bech32] [json_encoded_migration_args] --title [text] --description [text]  --amount [coins,optional]",
+		Short: "Submit a execute wasm contract proposal (run by community)",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -186,24 +184,35 @@ func ProposalExecuteContractCmd() *cobra.Command {
 				return err
 			}
 
-			contract := args[0]
-			execMsg := []byte(args[1])
+			//	contract := args[0]
+			//	execMsg := []byte(args[1])
 			amountStr, err := cmd.Flags().GetString(flagAmount)
 			if err != nil {
 				return fmt.Errorf("amount: %s", err)
 			}
-			funds, err := sdk.ParseCoinsNormalized(amountStr)
+			// get address to execute
+			contractAddr, err := sdk.AccAddressFromBech32(args[0])
 			if err != nil {
-				return fmt.Errorf("amount: %s", err)
+				return err
 			}
-			runAs, err := cmd.Flags().GetString(flagRunAs)
+			src, err := parseExecuteArgs(cmd, contractAddr, []byte(args[1]), amountStr, false, "", "", clientCtx)
 			if err != nil {
-				return fmt.Errorf("run-as: %s", err)
+				return err
 			}
+			/*
+				funds, err := sdk.ParseCoinsNormalized(amountStr)
+				if err != nil {
+					return fmt.Errorf("amount: %s", err)
+				}
 
-			if len(runAs) == 0 {
-				return errors.New("run-as address is required")
-			}
+					/*runAs, err := cmd.Flags().GetString(flagRunAs)
+					if err != nil {
+						return fmt.Errorf("run-as: %s", err)
+					}
+
+					if len(runAs) == 0 {
+						return errors.New("run-as address is required")
+					}*/
 			proposalTitle, err := cmd.Flags().GetString(cli.FlagTitle)
 			if err != nil {
 				return fmt.Errorf("proposal title: %s", err)
@@ -224,11 +233,11 @@ func ProposalExecuteContractCmd() *cobra.Command {
 			content := types.ExecuteContractProposal{
 				Title:       proposalTitle,
 				Description: proposalDescr,
-				Contract:    contract,
-				Msg:         execMsg,
-				RunAs:       runAs,
-				Proposer:    clientCtx.GetFromAddress().String(),
-				SentFunds:   funds,
+				Contract:    src.Contract,
+				Msg:         src.Msg,
+				//RunAs:       runAs,
+				//Proposer:  clientCtx.GetFromAddress().String(),
+				Funds: src.SentFunds,
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
@@ -255,4 +264,3 @@ func ProposalExecuteContractCmd() *cobra.Command {
 	cmd.Flags().String(flagProposalType, "", "Permission of proposal, types: store-code/instantiate/migrate/update-admin/clear-admin/text/parameter_change/software_upgrade")
 	return cmd
 }
-*/

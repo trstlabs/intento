@@ -11,7 +11,7 @@ use enclave_ffi_types::EnclaveError;
 use std::convert::TryInto;
 
 use enclave_cosmwasm_types::encoding::Binary;
-use enclave_cosmwasm_types::types::{CanonicalAddr, Coin, CosmosMsg, WasmMsg, WasmOutput};
+use enclave_cosmwasm_types::types::{CanonicalAddr,HumanAddr, Coin, CosmosMsg, WasmMsg, WasmOutput};
 use enclave_crypto::{AESKey, Ed25519PublicKey, Kdf, SIVEncryptable, KEY_MANAGER};
 
 use super::types::{IoNonce, SecretMessage};
@@ -136,6 +136,102 @@ pub fn encrypt_output(
 
     Ok(encrypted_output)
 }
+
+
+pub fn encrypt_msg(
+    msg: &mut WasmMsg,
+    nonce: IoNonce,
+    user_public_key: Ed25519PublicKey,
+    send_as_addr: &CanonicalAddr,
+) -> Result<Vec<u8>, EnclaveError> {
+    trace!(
+        "msg: {:?}",
+        msg
+    );
+    let callback_sig = encrypt_msg_callback_sig(msg, nonce, user_public_key, send_as_addr).map_err(|err| {
+        warn!(
+            "got an error while trying to encrypt msg into wasm msg {:?}: {}",
+            msg, err
+        );
+        EnclaveError::FailedToSerialize
+    })?;
+    *msg = msg.clone();
+    trace!(
+        "encrypted msg: {:?}",
+        msg
+    );
+    Ok( callback_sig)
+}
+
+
+fn encrypt_msg_callback_sig(
+    wasm_msg: &mut WasmMsg,
+    nonce: IoNonce,
+    user_public_key: Ed25519PublicKey,
+    send_as_addr: &CanonicalAddr,
+) -> Result<Vec<u8>, EnclaveError> {
+    let callback_sig_bytes;
+    match wasm_msg {
+        WasmMsg::Execute {
+            msg,
+            callback_code_hash,
+            callback_sig,
+            send,
+            ..
+        } => {
+            let mut hash_appended_msg = callback_code_hash.as_bytes().to_vec();
+            hash_appended_msg.extend_from_slice(msg.as_slice());
+
+            let mut msg_to_pass = SecretMessage::from_base64(
+                Binary(hash_appended_msg).to_base64(),
+                nonce,
+                user_public_key,
+            )?;
+
+            msg_to_pass.encrypt_in_place()?;
+            *msg = Binary::from(msg_to_pass.to_vec().as_slice());
+            callback_sig_bytes = create_callback_signature(send_as_addr, &msg_to_pass, send);
+            *callback_sig = Some(callback_sig_bytes.clone());
+            Ok(callback_sig_bytes)
+        }
+        WasmMsg::Instantiate {
+            msg,
+          //  auto_msg,
+            callback_code_hash,
+            callback_sig,
+            send,
+            ..
+        } => {
+            let mut hash_appended_msg = callback_code_hash.clone().as_bytes().to_vec();
+            hash_appended_msg.extend_from_slice(msg.as_slice());
+           // let mut hash_appended_auto_msg = callback_code_hash.as_bytes().to_vec();
+            let mut msg_to_pass = SecretMessage::from_base64(
+                Binary(hash_appended_msg).to_base64(),
+                nonce,
+                user_public_key,
+            )?;
+            msg_to_pass.encrypt_in_place()?;
+            *msg = Binary::from(msg_to_pass.to_vec().as_slice());
+            callback_sig_bytes = create_callback_signature(send_as_addr, &msg_to_pass, send);
+            *callback_sig = Some(callback_sig_bytes.clone());
+
+           /* if auto_msg.is_some() {
+                let auto_msg_unwrap = auto_msg.clone().unwrap();
+                hash_appended_auto_msg.extend_from_slice(auto_msg_unwrap.as_slice());
+                let mut auto_msg_to_pass = SecretMessage::from_base64(
+                    Binary(hash_appended_auto_msg).to_base64(),
+                    nonce,
+                    user_public_key,
+                )?;
+                auto_msg_to_pass.encrypt_in_place()?;
+                *auto_msg = Some(Binary::from(auto_msg_to_pass.to_vec().as_slice()));
+            }*/
+            Ok(callback_sig_bytes)
+        }
+      
+    }
+}
+
 fn encrypt_wasm_msg(
     wasm_msg: &mut WasmMsg,
     nonce: IoNonce,
@@ -206,6 +302,15 @@ pub fn create_callback_signature(
     msg_to_sign: &SecretMessage,
     funds_to_send: &[Coin],
 ) -> Vec<u8> {
+
+    trace!(
+        "callback sig sender_addr: {:?}",
+         &HumanAddr::from_canonical(sender_addr).or(Err(EnclaveError::FailedToSerialize)),
+    );
+    trace!(
+        "callback sig msg_to_sign: {:?}",
+        msg_to_sign
+    );
     // Hash(Enclave_secret | sender(current contract) | msg_to_pass | sent_funds)
     let mut callback_sig_bytes = KEY_MANAGER
         .get_consensus_callback_secret()
@@ -219,6 +324,7 @@ pub fn create_callback_signature(
 
     sha2::Sha256::digest(callback_sig_bytes.as_slice()).to_vec()
 }
+
 
 
 pub fn copy_into_array(slice: &[u8]) -> [u8; 32] {

@@ -41,4 +41,4 @@ echo "Validating genesis file..."
 trstd validate-genesis
 
 
-trstd start --bootstrap > init.log --log_level info
+trstd start --bootstrap > init.log --log_level trace
