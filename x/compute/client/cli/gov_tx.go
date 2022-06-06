@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -96,16 +97,11 @@ func ProposalStoreCodeCmd() *cobra.Command {
 
 func ProposalInstantiateContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "instantiate-contract [code_id_int64] [json_encoded_init_args] --contract_id [text] --title [text] --description [text] --amount [coins,optional] --deposit [coins,optional]",
+		Use:   "instantiate-contract [code_id_int64] [json_encoded_init_args] --contract_id [text] --title [text] --description [text] --amount [coins,optional] --deposit [coins,optional] --auto_msg [json args, optiona]",
 		Short: "Submit an instantiate wasm contract proposal (run by community)",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-
-			src, err := parseInstantiateArgs(args, clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -133,6 +129,27 @@ func ProposalInstantiateContractCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			codeID, err := strconv.ParseUint(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			contractId, _ := cmd.Flags().GetString(flagContractId)
+			if contractId == "" {
+				return fmt.Errorf("contract id is required on all contracts")
+			}
+			autoMsg, err := cmd.Flags().GetString(flagAutoMsg)
+			if err != nil {
+				return err
+			}
+			amountStr, err := cmd.Flags().GetString(flagAmount)
+			if err != nil {
+				return fmt.Errorf("amount: %s", err)
+			}
+
+			funds, err := sdk.ParseCoinsNormalized(amountStr)
+			if err != nil {
+				return err
+			}
 
 			content := types.InstantiateContractProposal{
 				Title:       proposalTitle,
@@ -140,10 +157,11 @@ func ProposalInstantiateContractCmd() *cobra.Command {
 				//RunAs:       runAs,
 				//Proposer: clientCtx.GetFromAddress().String(),
 				//Admin:       src.Admin,
-				CodeID:     src.CodeID,
-				ContractId: src.ContractId,
+				CodeID:     codeID,
+				ContractId: contractId,
 				InitMsg:    []byte(args[1]),
-				Funds:      src.InitFunds,
+				AutoMsg:    []byte(autoMsg),
+				Funds:      funds,
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())

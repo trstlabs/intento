@@ -160,9 +160,7 @@ pub struct SigInfo {
 // Info of the msg to be signed
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct MsgInfo {
-    pub code_id: Binary,
-    pub contract: String,
-    pub contract_id: String,
+    pub code_hash: Binary,
     pub funds: Vec<Coin>,
 }
 

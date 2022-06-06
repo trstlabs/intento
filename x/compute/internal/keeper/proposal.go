@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -68,16 +67,21 @@ func handleInstantiateProposal(ctx sdk.Context, k Keeper, p types.InstantiateCon
 	if err := p.ValidateBasic(); err != nil {
 		return err
 	}
-	byteCodeID := make([]byte, 8)
-	binary.LittleEndian.PutUint64(byteCodeID, p.CodeID)
-	fmt.Printf("byteCodeID: \t %v \n", byteCodeID)
-
-	sig, encryptedMsg, err := k.CreateCommunityPoolCallbackSig(ctx, p.InitMsg, p.CodeID, "", p.ContractId, p.Funds)
+	//byteCodeID := make([]byte, 8)
+	//binary.LittleEndian.PutUint64(byteCodeID, p.CodeID)
+	//fmt.Printf("byteCodeID: \t %v \n", byteCodeID)
+	var encryptedAutoMsg []byte = nil
+	sig, encryptedMsg, err := k.CreateCommunityPoolCallbackSig(ctx, p.InitMsg, p.CodeID, p.Funds)
 	if err != nil {
 		return err
 	}
-
-	addr, err := k.Instantiate(ctx, p.CodeID, k.accountKeeper.GetModuleAddress("distribution"), encryptedMsg, nil, p.ContractId, p.Funds, sig, 0)
+	if p.AutoMsg != nil {
+		_, encryptedAutoMsg, err = k.CreateCommunityPoolCallbackSig(ctx, p.AutoMsg, p.CodeID, nil)
+		if err != nil {
+			return err
+		}
+	}
+	addr, err := k.Instantiate(ctx, p.CodeID, k.accountKeeper.GetModuleAddress("distribution"), encryptedMsg, encryptedAutoMsg, p.ContractId, p.Funds, sig, 0)
 	if err != nil {
 		return err
 	}
@@ -100,12 +104,12 @@ func handleExecuteProposal(ctx sdk.Context, k Keeper, p types.ExecuteContractPro
 	info := k.GetContractInfo(ctx, sdk.AccAddress(p.Contract))
 
 	fmt.Printf("contract info %s", info)
-	sig, encryptedMsg, err := k.CreateCommunityPoolCallbackSig(ctx, p.Msg, info.CodeID, p.Contract, "", p.Funds)
+	sig, encryptedMsg, err := k.CreateCommunityPoolCallbackSig(ctx, p.Msg, info.CodeID, p.Funds)
 	if err != nil {
 		return err
 	}
 	fmt.Printf("sig %s", sig)
-	res, err := k.Execute(ctx, contractAddr, k.accountKeeper.GetModuleAddress("distribution"), encryptedMsg /*p.SentFunds*/, nil, sig)
+	res, err := k.Execute(ctx, contractAddr, k.accountKeeper.GetModuleAddress("distribution"), encryptedMsg, p.Funds, sig)
 	if err != nil {
 		return err
 	}

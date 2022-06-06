@@ -139,46 +139,13 @@ pub fn encrypt_output(
 
 
 pub fn encrypt_msg(
-    msg: &mut WasmMsg,
+    msg: &mut Binary,
     nonce: IoNonce,
     user_public_key: Ed25519PublicKey,
     send_as_addr: &CanonicalAddr,
+    callback_code_hash: String, 
+    funds: Vec<Coin>,
 ) -> Result<Vec<u8>, EnclaveError> {
-    trace!(
-        "msg: {:?}",
-        msg
-    );
-    let callback_sig = encrypt_msg_callback_sig(msg, nonce, user_public_key, send_as_addr).map_err(|err| {
-        warn!(
-            "got an error while trying to encrypt msg into wasm msg {:?}: {}",
-            msg, err
-        );
-        EnclaveError::FailedToSerialize
-    })?;
-    *msg = msg.clone();
-    trace!(
-        "encrypted msg: {:?}",
-        msg
-    );
-    Ok( callback_sig)
-}
-
-
-fn encrypt_msg_callback_sig(
-    wasm_msg: &mut WasmMsg,
-    nonce: IoNonce,
-    user_public_key: Ed25519PublicKey,
-    send_as_addr: &CanonicalAddr,
-) -> Result<Vec<u8>, EnclaveError> {
-    let callback_sig_bytes;
-    match wasm_msg {
-        WasmMsg::Execute {
-            msg,
-            callback_code_hash,
-            callback_sig,
-            send,
-            ..
-        } => {
             let mut hash_appended_msg = callback_code_hash.as_bytes().to_vec();
             hash_appended_msg.extend_from_slice(msg.as_slice());
 
@@ -187,49 +154,10 @@ fn encrypt_msg_callback_sig(
                 nonce,
                 user_public_key,
             )?;
-
             msg_to_pass.encrypt_in_place()?;
+            let callback_sig_bytes = create_callback_signature(send_as_addr, &msg_to_pass, &funds);
             *msg = Binary::from(msg_to_pass.to_vec().as_slice());
-            callback_sig_bytes = create_callback_signature(send_as_addr, &msg_to_pass, send);
-            *callback_sig = Some(callback_sig_bytes.clone());
             Ok(callback_sig_bytes)
-        }
-        WasmMsg::Instantiate {
-            msg,
-          //  auto_msg,
-            callback_code_hash,
-            callback_sig,
-            send,
-            ..
-        } => {
-            let mut hash_appended_msg = callback_code_hash.clone().as_bytes().to_vec();
-            hash_appended_msg.extend_from_slice(msg.as_slice());
-           // let mut hash_appended_auto_msg = callback_code_hash.as_bytes().to_vec();
-            let mut msg_to_pass = ContractMessage::from_base64(
-                Binary(hash_appended_msg).to_base64(),
-                nonce,
-                user_public_key,
-            )?;
-            msg_to_pass.encrypt_in_place()?;
-            *msg = Binary::from(msg_to_pass.to_vec().as_slice());
-            callback_sig_bytes = create_callback_signature(send_as_addr, &msg_to_pass, send);
-            *callback_sig = Some(callback_sig_bytes.clone());
-
-           /* if auto_msg.is_some() {
-                let auto_msg_unwrap = auto_msg.clone().unwrap();
-                hash_appended_auto_msg.extend_from_slice(auto_msg_unwrap.as_slice());
-                let mut auto_msg_to_pass = ContractMessage::from_base64(
-                    Binary(hash_appended_auto_msg).to_base64(),
-                    nonce,
-                    user_public_key,
-                )?;
-                auto_msg_to_pass.encrypt_in_place()?;
-                *auto_msg = Some(Binary::from(auto_msg_to_pass.to_vec().as_slice()));
-            }*/
-            Ok(callback_sig_bytes)
-        }
-      
-    }
 }
 
 fn encrypt_wasm_msg(

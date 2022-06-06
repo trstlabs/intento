@@ -499,7 +499,7 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, m
 // CreateCommunityPoolCallbackSig creates a callback sig which can be used to execute a specific message for a specific code for the community pool.
 // Important note: once callback signature is made, any node can 'run' the message at any time on the community pool's behalf, therefore, this could leak outputs related the specific code and message.
 // By hardcoding the distr module address in the enclave, we can use this for contract instantiation, execution migration over governance.
-func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context, msg []byte, codeID uint64, contract string, contractID string, funds sdk.Coins) (callbackSig []byte, encryptedMessage []byte, err error) {
+func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context, msg []byte, codeID uint64, funds sdk.Coins) (callbackSig []byte, encryptedMessage []byte, err error) {
 	//create and pass along message
 	/*(msg := wasmTypes.ExecuteMsg{
 		ContractAddr:      "sadfsd",
@@ -517,9 +517,9 @@ func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context, msg []byte, code
 	}
 	var codeInfo types.CodeInfo
 	k.cdc.MustUnmarshal(bz, &codeInfo)
-	msgInfo := types.NewMsgInfo(codeInfo.CodeHash, contract, contractID, funds)
+	msgInfo := types.NewMsgInfo(codeInfo.CodeHash, funds)
 	fmt.Printf("code hash: \t %v \n", msgInfo.CodeId)
-	callbackSig, encryptedMessage, err = api.GetCallbackSig(msg, msgInfo) /*autoMsg, codeID, contract, contractID, contractDuration)*/
+	callbackSig, encryptedMessage, err = api.GetCallbackSig(msg, msgInfo)
 	if err != nil {
 		return nil, nil, err
 	}
