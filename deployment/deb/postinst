@@ -15,7 +15,7 @@ After=network.target
 
 [Service]
 Type=simple
-Environment=SCRT_ENCLAVE_DIR=/usr/lib
+Environment=TRST_ENCLAVE_DIR=/usr/lib
 WorkingDirectory=$(eval echo ~"$SUDO_USER")
 ExecStart=/usr/local/bin/trstd start
 User=$SUDO_USER

@@ -14,7 +14,7 @@ use enclave_cosmwasm_types::encoding::Binary;
 use enclave_cosmwasm_types::types::{CanonicalAddr,HumanAddr, Coin, CosmosMsg, WasmMsg, WasmOutput};
 use enclave_crypto::{AESKey, Ed25519PublicKey, Kdf, SIVEncryptable, KEY_MANAGER};
 
-use super::types::{IoNonce, SecretMessage};
+use super::types::{IoNonce, ContractMessage};
 
 pub fn calc_encryption_key(nonce: &IoNonce, user_public_key: &Ed25519PublicKey) -> AESKey {
     let enclave_io_key = KEY_MANAGER.get_consensus_io_exchange_keypair().unwrap();
@@ -182,7 +182,7 @@ fn encrypt_msg_callback_sig(
             let mut hash_appended_msg = callback_code_hash.as_bytes().to_vec();
             hash_appended_msg.extend_from_slice(msg.as_slice());
 
-            let mut msg_to_pass = SecretMessage::from_base64(
+            let mut msg_to_pass = ContractMessage::from_base64(
                 Binary(hash_appended_msg).to_base64(),
                 nonce,
                 user_public_key,
@@ -205,7 +205,7 @@ fn encrypt_msg_callback_sig(
             let mut hash_appended_msg = callback_code_hash.clone().as_bytes().to_vec();
             hash_appended_msg.extend_from_slice(msg.as_slice());
            // let mut hash_appended_auto_msg = callback_code_hash.as_bytes().to_vec();
-            let mut msg_to_pass = SecretMessage::from_base64(
+            let mut msg_to_pass = ContractMessage::from_base64(
                 Binary(hash_appended_msg).to_base64(),
                 nonce,
                 user_public_key,
@@ -218,7 +218,7 @@ fn encrypt_msg_callback_sig(
            /* if auto_msg.is_some() {
                 let auto_msg_unwrap = auto_msg.clone().unwrap();
                 hash_appended_auto_msg.extend_from_slice(auto_msg_unwrap.as_slice());
-                let mut auto_msg_to_pass = SecretMessage::from_base64(
+                let mut auto_msg_to_pass = ContractMessage::from_base64(
                     Binary(hash_appended_auto_msg).to_base64(),
                     nonce,
                     user_public_key,
@@ -249,7 +249,7 @@ fn encrypt_wasm_msg(
             let mut hash_appended_msg = callback_code_hash.as_bytes().to_vec();
             hash_appended_msg.extend_from_slice(msg.as_slice());
 
-            let mut msg_to_pass = SecretMessage::from_base64(
+            let mut msg_to_pass = ContractMessage::from_base64(
                 Binary(hash_appended_msg).to_base64(),
                 nonce,
                 user_public_key,
@@ -270,7 +270,7 @@ fn encrypt_wasm_msg(
             let mut hash_appended_msg = callback_code_hash.clone().as_bytes().to_vec();
             hash_appended_msg.extend_from_slice(msg.as_slice());
             let mut hash_appended_auto_msg = callback_code_hash.as_bytes().to_vec();
-            let mut msg_to_pass = SecretMessage::from_base64(
+            let mut msg_to_pass = ContractMessage::from_base64(
                 Binary(hash_appended_msg).to_base64(),
                 nonce,
                 user_public_key,
@@ -282,7 +282,7 @@ fn encrypt_wasm_msg(
             if auto_msg.is_some() {
                 let auto_msg_unwrap = auto_msg.clone().unwrap();
                 hash_appended_auto_msg.extend_from_slice(auto_msg_unwrap.as_slice());
-                let mut auto_msg_to_pass = SecretMessage::from_base64(
+                let mut auto_msg_to_pass = ContractMessage::from_base64(
                     Binary(hash_appended_auto_msg).to_base64(),
                     nonce,
                     user_public_key,
@@ -299,7 +299,7 @@ fn encrypt_wasm_msg(
 
 pub fn create_callback_signature(
     sender_addr: &CanonicalAddr,
-    msg_to_sign: &SecretMessage,
+    msg_to_sign: &ContractMessage,
     funds_to_send: &[Coin],
 ) -> Vec<u8> {
 

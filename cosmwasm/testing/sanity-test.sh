@@ -16,8 +16,8 @@ mkdir -p /opt/.sgx_secrets
 
 rm -rf ~/.trstd
 
-export SECRET_NETWORK_CHAIN_ID=trstdev-1
-export SECRET_NETWORK_KEYRING_BACKEND=test
+export CHAIN_ID=trstdev-1
+export KEYRING_BACKEND=test
 trstd config keyring-backend test
 trstd config chain-id trstdev-1
 trstd config output json

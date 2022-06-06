@@ -1070,15 +1070,15 @@ pub mod tests {
         slice.extend_from_slice(&user_public_key);
         slice.extend_from_slice(msg.as_bytes());
 
-        let secret_msg = SecretMessage {
+        let contract_msg = ContractMessage {
             nonce,
             user_public_key,
             msg: msg.as_bytes().to_vec(),
         };
 
-        let msg_from_slice = SecretMessage::from_slice(&slice).unwrap();
+        let msg_from_slice = ContractMessage::from_slice(&slice).unwrap();
 
-        assert_eq!(secret_msg, msg_from_slice);
+        assert_eq!(contract_msg, msg_from_slice);
     }
 
     // This is commented out because it's trying to modify KEY_MANAGER which is immutable.
@@ -1098,13 +1098,13 @@ pub mod tests {
     //
     //     let encrypted_msg = key.encrypt_siv(msg.as_bytes(), &[&[]]);
     //
-    //     let secret_msg = SecretMessage {
+    //     let contract_msg = ContractMessage {
     //         nonce,
     //         user_public_key,
     //         msg: encrypted_msg,
     //     };
     //
-    //     let decrypted_msg = secret_msg.decrypt()?;
+    //     let decrypted_msg = contract_msg.decrypt()?;
     //
     //     assert_eq!(decrypted_msg, msg)
     // }

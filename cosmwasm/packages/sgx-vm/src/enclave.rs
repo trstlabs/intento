@@ -30,7 +30,7 @@ fn init_enclave(enclave_file: &str) -> SgxResult<SgxEnclave> {
 
     // Step : try to create a .enigma folder for storing all the files
     // Create a directory, returns `io::Result<()>`
-    let enclave_directory = env::var("SCRT_ENCLAVE_DIR").unwrap_or_else(|_| '.'.to_string());
+    let enclave_directory = env::var("TRST_ENCLAVE_DIR").unwrap_or_else(|_| '.'.to_string());
 
     let mut enclave_file_path = None;
     let dirs = [
@@ -50,7 +50,7 @@ fn init_enclave(enclave_file: &str) -> SgxResult<SgxEnclave> {
 
     let enclave_file_path = enclave_file_path.ok_or_else(|| {
         warn!(
-            "Cannot find the enclave file. Try pointing the SCRT_ENCLAVE_DIR environment variable to the directory that has {:?}",
+            "Cannot find the enclave file. Try pointing the TRST_ENCLAVE_DIR environment variable to the directory that has {:?}",
             enclave_file
         );
         sgx_status_t::SGX_ERROR_INVALID_ENCLAVE

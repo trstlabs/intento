@@ -9,7 +9,7 @@ use enclave_utils::recursion_depth;
 
 use super::errors::WasmEngineError;
 use crate::external::{ecalls, ocalls};
-use crate::types::{IoNonce, SecretMessage};
+use crate::types::{IoNonce, ContractMessage};
 
 use enclave_cosmwasm_types::{
     encoding::Binary,
@@ -270,7 +270,7 @@ fn encrypt_query_request(
         let mut hash_appended_msg = callback_code_hash.clone().into_bytes();
         hash_appended_msg.extend_from_slice(&msg.0);
 
-        let mut encrypted_msg = SecretMessage {
+        let mut encrypted_msg = ContractMessage {
             msg: hash_appended_msg,
             user_public_key,
             nonce,
@@ -299,13 +299,13 @@ fn decrypt_query_response(
 ) -> Result<Vec<u8>, WasmEngineError> {
     // query response returns without nonce and user_public_key appended to it
     // because the sender is supposed to have them already
-    let as_secret_msg = SecretMessage {
+    let as_contract_msg = ContractMessage {
         nonce,
         user_public_key,
         msg: response,
     };
 
-    let b64_decrypted = as_secret_msg.decrypt().map_err(|err| {
+    let b64_decrypted = as_contract_msg.decrypt().map_err(|err| {
         debug!(
             "encrypt_and_query_chain() got an error while trying to decrypt the result for query {:?}, stopping wasm: {:?}",
             String::from_utf8_lossy(query),
@@ -329,7 +329,7 @@ fn decrypt_query_response_error(
     nonce: IoNonce,
     user_public_key: Ed25519PublicKey,
 ) -> Result<Vec<u8>, WasmEngineError> {
-    let error_msg = SecretMessage {
+    let error_msg = ContractMessage {
         nonce,
         user_public_key,
         msg: error,

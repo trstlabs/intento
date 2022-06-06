@@ -9,13 +9,13 @@ use super::io::calc_encryption_key;
 pub type IoNonce = [u8; 32];
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
-pub struct SecretMessage {
+pub struct ContractMessage {
     pub nonce: IoNonce,
     pub user_public_key: Ed25519PublicKey,
     pub msg: Vec<u8>,
 }
 
-impl SecretMessage {
+impl ContractMessage {
     pub fn encrypt_in_place(&mut self) -> Result<(), EnclaveError> {
         self.msg = self
             .encryption_key()
@@ -56,7 +56,7 @@ impl SecretMessage {
             EnclaveError::FailedToDeserialize
         })?;
 
-        Ok(SecretMessage {
+        Ok(ContractMessage {
             msg,
             nonce,
             user_public_key,
@@ -83,12 +83,12 @@ impl SecretMessage {
         user_pubkey.copy_from_slice(&msg[32..64]);
 
         debug!(
-            "SecretMessage::from_slice nonce = {:?} pubkey = {:?}",
+            "ContractMessage::from_slice nonce = {:?} pubkey = {:?}",
             nonce,
             hex::encode(user_pubkey)
         );
 
-        Ok(SecretMessage {
+        Ok(ContractMessage {
             nonce,
             user_public_key: user_pubkey,
             msg: msg[64..].to_vec(),
@@ -118,14 +118,14 @@ pub mod tests {
         slice.extend_from_slice(&user_public_key);
         slice.extend_from_slice(msg.as_bytes());
 
-        let secret_msg = SecretMessage {
+        let contract_msg = ContractMessage {
             nonce,
             user_public_key,
             msg: msg.as_bytes().to_vec(),
         };
 
-        let msg_from_slice = SecretMessage::from_slice(&slice).unwrap();
+        let msg_from_slice = ContractMessage::from_slice(&slice).unwrap();
 
-        assert_eq!(secret_msg, msg_from_slice);
+        assert_eq!(contract_msg, msg_from_slice);
     }
 }

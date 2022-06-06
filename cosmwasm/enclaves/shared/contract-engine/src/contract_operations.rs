@@ -17,7 +17,7 @@ use super::contract_validation::{
 use super::gas::WasmCosts;
 use super::io::{create_callback_signature,  encrypt_output, copy_into_array, encrypt_msg};
 use super::module_cache::create_module_instance;
-use super::types::{IoNonce, SecretMessage};
+use super::types::{IoNonce, ContractMessage};
 use super::wasm::{ContractInstance, ContractOperation, Engine};
 use crate::const_callback_sig_addresses::{COMMUNITY_POOL_ADDR};
 /*
@@ -81,11 +81,11 @@ pub fn init(
     })?;
 
     trace!("Init input before decryption: {:?}", base64::encode(&msg));
-    let secret_msg = SecretMessage::from_slice(msg)?;
+    let contract_msg = ContractMessage::from_slice(msg)?;
 
-    verify_params(&parsed_sig_info, &parsed_env, &secret_msg)?;
+    verify_params(&parsed_sig_info, &parsed_env, &contract_msg)?;
 
-    let decrypted_msg = secret_msg.decrypt()?;
+    let decrypted_msg = contract_msg.decrypt()?;
 
     let validated_msg = validate_msg(&decrypted_msg, contract_code.hash())?;
 
@@ -100,8 +100,8 @@ pub fn init(
         contract_code,
         &contract_key,
         ContractOperation::Init,
-        secret_msg.nonce,
-        secret_msg.user_public_key,
+        contract_msg.nonce,
+        contract_msg.user_public_key,
     )?;
 
     let new_env = serde_json::to_vec(&parsed_env).map_err(|err| {
@@ -115,7 +115,7 @@ pub fn init(
     let env_ptr = engine.write_to_memory(&new_env)?;
     let msg_ptr = engine.write_to_memory(&validated_msg)?;
 
-    let auto_msg = SecretMessage::from_slice(auto_msg)?;
+    let auto_msg = ContractMessage::from_slice(auto_msg)?;
 
     let sent_funds = [];
     trace!("sent_funds {:?}...", sent_funds);
@@ -134,8 +134,8 @@ pub fn init(
         // TODO: ref: https://github.com/CosmWasm/cosmwasm/blob/b971c037a773bf6a5f5d08a88485113d9b9e8e7b/packages/std/src/query.rs#L13
         let output = encrypt_output(
             output,
-            secret_msg.nonce,
-            secret_msg.user_public_key,
+            contract_msg.nonce,
+            contract_msg.user_public_key,
             &canonical_contract_address,
         )?;
 
@@ -203,13 +203,13 @@ pub fn handle(
     })?;
 
     trace!("Handle input before decryption: {:?}", base64::encode(&msg));
-    let secret_msg = SecretMessage::from_slice(msg)?;
+    let contract_msg = ContractMessage::from_slice(msg)?;
 
     // Verify env parameters against the signed tx
-    verify_params(&parsed_sig_info, &parsed_env, &secret_msg)?;
+    verify_params(&parsed_sig_info, &parsed_env, &contract_msg)?;
 
-    let secret_msg = SecretMessage::from_slice(msg)?;
-    let decrypted_msg = secret_msg.decrypt()?;
+    let contract_msg = ContractMessage::from_slice(msg)?;
+    let decrypted_msg = contract_msg.decrypt()?;
 
     let validated_msg = validate_msg(&decrypted_msg, contract_code.hash())?;
 
@@ -228,8 +228,8 @@ pub fn handle(
         contract_code,
         &contract_key,
         ContractOperation::Handle,
-        secret_msg.nonce,
-        secret_msg.user_public_key,
+        contract_msg.nonce,
+        contract_msg.user_public_key,
     )?;
 
     let new_env = serde_json::to_vec(&parsed_env).map_err(|err| {
@@ -252,12 +252,12 @@ pub fn handle(
 
         debug!(
             "(2) nonce just before encrypt_output: nonce = {:?} pubkey = {:?}",
-            secret_msg.nonce, secret_msg.user_public_key
+            contract_msg.nonce, contract_msg.user_public_key
         );
         let output = encrypt_output(
             output,
-            secret_msg.nonce,
-            secret_msg.user_public_key,
+            contract_msg.nonce,
+            contract_msg.user_public_key,
             &canonical_contract_address,
         )?;
         Ok(output)
@@ -311,8 +311,8 @@ pub fn query(
     trace!("query contract key: {:?}", hex::encode(contract_key));
 
     trace!("query input before decryption: {:?}", base64::encode(&msg));
-    let secret_msg = SecretMessage::from_slice(msg)?;
-    let decrypted_msg = secret_msg.decrypt()?;
+    let contract_msg = ContractMessage::from_slice(msg)?;
+    let decrypted_msg = contract_msg.decrypt()?;
     trace!(
         "query input afer decryption: {:?}",
         String::from_utf8_lossy(&decrypted_msg)
@@ -325,8 +325,8 @@ pub fn query(
         contract_code,
         &contract_key,
         ContractOperation::Query,
-        secret_msg.nonce,
-        secret_msg.user_public_key,
+        contract_msg.nonce,
+        contract_msg.user_public_key,
     )?;
 
     let msg_ptr = engine.write_to_memory(&validated_msg)?;
@@ -340,8 +340,8 @@ pub fn query(
 
         let output = encrypt_output(
             output,
-            secret_msg.nonce,
-            secret_msg.user_public_key,
+            contract_msg.nonce,
+            contract_msg.user_public_key,
             &CanonicalAddr(Binary(Vec::new())), // Not used for queries (can't init a new contract from a query)
         )?;
         Ok(output)

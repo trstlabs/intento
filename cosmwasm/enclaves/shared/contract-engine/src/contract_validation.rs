@@ -11,7 +11,7 @@ use enclave_crypto::traits::VerifyingKey;
 use enclave_crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER};
 
 use crate::io::create_callback_signature;
-use crate::types::SecretMessage;
+use crate::types::ContractMessage;
 
 pub type ContractKey = [u8; CONTRACT_KEY_LENGTH];
 
@@ -158,7 +158,7 @@ pub fn validate_msg(msg: &[u8], contract_hash: [u8; HASH_SIZE]) -> Result<Vec<u8
 pub fn verify_params(
     sig_info: &SigInfo,
     env: &Env,
-    msg: &SecretMessage,
+    msg: &ContractMessage,
 ) -> Result<(), EnclaveError> {
     info!("Verifying message signatures for: {:?}", sig_info);
 
@@ -273,7 +273,7 @@ fn get_signer_and_messages(
 fn verify_callback_sig(
     callback_signature: &[u8],
     sender: &HumanAddr,
-    msg: &SecretMessage,
+    msg: &ContractMessage,
     sent_funds: &[Coin],
 ) -> Result<(), EnclaveError> {
     if verify_callback_sig_impl(
@@ -293,7 +293,7 @@ fn verify_callback_sig(
 fn verify_callback_sig_impl(
     callback_signature: &[u8],
     sender: &CanonicalAddr,
-    msg: &SecretMessage,
+    msg: &ContractMessage,
     sent_funds: &[Coin],
 ) -> bool {
     if callback_signature.is_empty() {
@@ -318,7 +318,7 @@ fn verify_callback_sig_impl(
 fn get_verified_msg<'sd>(
     messages: &'sd [CosmWasmMsg],
     msg_sender: &CanonicalAddr,
-    sent_msg: &SecretMessage,
+    sent_msg: &ContractMessage,
 ) -> Option<&'sd CosmWasmMsg> {
     messages.iter().find(|&m| match m {
         CosmWasmMsg::Execute { msg, sender, .. } 
@@ -407,7 +407,7 @@ fn verify_message_params(
     messages: &[CosmWasmMsg],
     env: &Env,
     signer_public_key: &CosmosPubKey,
-    sent_msg: &SecretMessage,
+    sent_msg: &ContractMessage,
 ) -> bool {
     info!("Verifying sender..");
 

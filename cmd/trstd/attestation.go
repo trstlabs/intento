@@ -38,7 +38,7 @@ blockchain. Writes the certificate in DER format to ~/attestation_cert
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			sgxSecretsPath := os.Getenv("SCRT_SGX_STORAGE")
+			sgxSecretsPath := os.Getenv("TRST_SGX_STORAGE")
 			if sgxSecretsPath == "" {
 				sgxSecretsPath = os.ExpandEnv("$HOME/.sgx_secrets")
 			}
@@ -320,7 +320,7 @@ func ResetEnclave() *cobra.Command {
 			}
 
 			// remove sgx_secrets
-			sgxSecretsDir := os.Getenv("SCRT_SGX_STORAGE")
+			sgxSecretsDir := os.Getenv("TRST_SGX_STORAGE")
 			if sgxSecretsDir == "" {
 				sgxSecretsDir = os.ExpandEnv("$HOME/.sgx_secrets")
 			}
