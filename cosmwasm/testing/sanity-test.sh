@@ -11,10 +11,10 @@ function wait_for_tx () {
 }
 
 # init the node
-rm -rf /opt/.sgx_secrets *.der ~/*.der
-mkdir -p /opt/.sgx_secrets
+rm -rf /opt/trustlesshub/.sgx_secrets *.der ~/*.der
+mkdir -p /opt/trustlesshub/.sgx_secrets
 
-rm -rf ~/.trstd
+rm -rf ~/.trst
 
 export CHAIN_ID=trstdev-1
 export KEYRING_BACKEND=test
@@ -23,7 +23,7 @@ trstd config chain-id trstdev-1
 trstd config output json
 
 trstd init banana --chain-id trstdev-1
-perl -i -pe 's/"stake"/"utrst"/g' ~/.trstd/config/genesis.json
+perl -i -pe 's/"stake"/"utrst"/g' ~/.trst/config/genesis.json
 echo "cost member exercise evoke isolate gift cattle move bundle assume spell face balance lesson resemble orange bench surge now unhappy potato dress number acid" |
     trstd keys add a --recover --keyring-backend test
 trstd add-genesis-account "$(trstd keys show -a --keyring-backend test a)" 1000000000000utrst

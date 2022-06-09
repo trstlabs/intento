@@ -43,7 +43,7 @@ func (k Keeper) IterateVestingQueue(ctx sdk.Context, endTime time.Time, cb func(
 // VestingQueueIterator returns an sdk.Iterator for all the items in the Inactive Queue that expire by endTime
 func (k Keeper) VestingQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
-	return store.Iterator(types.VestingQueuePrefix, sdk.PrefixEndBytes(types.VestingByTimeKey(endTime))) //we check the end of the bites array for the end time
+	return store.Iterator(types.VestingQueuePrefix, sdk.PrefixEndBytes(types.VestingByTimeKey(endTime))) //we check the end of the byte array for the end time
 }
 
 /*

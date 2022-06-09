@@ -2,21 +2,21 @@
 
 # init the node
 rm -rf ~/.trst*
-trstd config chain-id enigma-testnet
+trstd config chain-id trst_chain_1
 trstd config output json
 trstd config indent true
 trstd config trust-node true
 trstd config keyring-backend test
 
-trstd init banana --chain-id enigma-testnet
+trstd init banana --chain-id trst_chain_1
 
-cp ~/node_key.json ~/.trstd/config/node_key.json
+cp ~/node_key.json ~/.trst/config/node_key.json
 
-perl -i -pe 's/"stake"/"utrst"/g' ~/.trstd/config/genesis.json
+perl -i -pe 's/"stake"/"utrst"/g' ~/.trst/config/genesis.json
 trstd keys add a
 
-trstd add-genesis-account "$(trstd keys show -a a)" 1000000000000trst
-trstd gentx --name a --keyring-backend test --amount 1000000trst
+trstd add-genesis-account "$(trstd keys show -a a)" 1000000000000utrst
+trstd gentx --name a --keyring-backend test --amount 1000000utrst
 trstd collect-gentxs
 trstd validate-genesis
 

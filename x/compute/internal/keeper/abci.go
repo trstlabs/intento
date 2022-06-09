@@ -114,25 +114,25 @@ func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.Ac
 
 }
 
-// SetIncentiveCoins distributes compute module allocated coins to the self-ending contracts
+// SetIncentiveCoins distributes compute module allocated coins to selected contracts
 func (k Keeper) SetIncentiveCoins(ctx sdk.Context, addressList []string) {
 	params := k.GetParams(ctx)
-	//if len(addressList) > 0 {
+
 	total := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress("compute"), types.Denom)
-	k.Logger(ctx).Info("sent", "total", total)
+	k.Logger(ctx).Info("contract incentive", "total", total)
 
 	amount := total.Amount.QuoRaw(int64(len(addressList)))
 	if amount.Int64() > params.MaxContractIncentive {
 		amount = sdk.NewInt(params.MaxContractIncentive)
 	}
 	k.Logger(ctx).Info("sent", "amount", amount)
-	//coins := sdk.NewCoins(sdk.NewCoin(types.Denom, amount))
 
 	for _, addr := range addressList {
 		sdkAddr, _ := sdk.AccAddressFromBech32(addr)
 		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdkAddr, sdk.NewCoins(sdk.NewCoin(types.Denom, amount)))
 		if err != nil {
-			k.Logger(ctx).Info("sent", "err", err)
+			k.Logger(ctx).Info("sending", "err", err)
+			break
 		}
 
 		k.Logger(ctx).Info("allocated", "contract", addr, "coins", amount)

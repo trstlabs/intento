@@ -199,7 +199,7 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 		Example:
 		trstd import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-accounts.json
 		- Check input genesis:
-			file is at ~/.trstd/config/genesis.json
+			file is at ~/.trst/config/genesis.json
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -69,7 +69,7 @@ echo "initing enclave ..."
 
 
 
-trstd init-enclave --reset
+trstd init-attestation --reset
 PUBLIC_KEY=$(trstd parse attestation_cert.der 2> /dev/null | cut -c 3-)
 echo $PUBLIC_KEY
 trstd init-bootstrap ./node-master-cert.der ./io-master-cert.der

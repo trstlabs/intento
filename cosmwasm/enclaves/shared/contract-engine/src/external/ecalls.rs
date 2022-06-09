@@ -323,45 +323,20 @@ pub unsafe extern "C" fn ecall_create_callback_sig(
     msg_len: usize,
     msg_info: *const u8,
     msg_info_len: usize,
-   /* auto_msg: *const u8,
-    auto_msg_len: usize,
-    code_id: *const u8,
-    code_id_len: usize,
-    contract: *const u8,
-    contract_len: usize,
-    contract_id: *const u8,
-    contract_id_len: usize,
-    contract_duration: *const u8,
-    contract_duration_len: usize,*/
+
 ) -> CallbackSigResult {
     
     let failed_call = || result_callback_sig_success_to_callbackresult(Err(EnclaveError::FailedFunctionCall));
     validate_const_ptr!(msg, msg_len as usize, failed_call());
     validate_const_ptr!(msg_info, msg_info_len as usize, failed_call());
-  /*  validate_const_ptr!(auto_msg, auto_msg_len as usize, failed_call());
-    validate_const_ptr!(code_id, code_id_len as usize, failed_call());
-    validate_const_ptr!(contract, contract_len as usize, failed_call());
-    validate_const_ptr!(contract_id, contract_id_len as usize, failed_call());
-    validate_const_ptr!(contract_duration, contract_duration_len as usize, failed_call());*/
   
     let msg = std::slice::from_raw_parts(msg, msg_len);
     let msg_info = std::slice::from_raw_parts(msg_info, msg_info_len);
-    /*let code_id = std::slice::from_raw_parts(code_id, code_id_len);
-    let auto_msg = std::slice::from_raw_parts(auto_msg, msg_len);
-    let contract = std::slice::from_raw_parts(contract, contract_len);
-    let contract_id = std::slice::from_raw_parts(contract_id, contract_id_len);
-    let contract_duration = std::slice::from_raw_parts(contract_duration, contract_duration_len);*/
-  
+   
     let result = panic::catch_unwind(|| {
         let result = crate::contract_operations::create_callback_sig(
             msg,
             msg_info
-            /*auto_msg,
-            code_id,
-            contract, 
-            contract_id, 
-            contract_duration*/
-
         );
      
         result_callback_sig_success_to_callbackresult(result)

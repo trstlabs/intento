@@ -1,22 +1,22 @@
 accounts:
   - name: user1
-    coins: ["10000trst", "1000000stake"]
+    coins: ["200000000utrst"]
   - name: user2
-    coins: ["500000trst"]
+    coins: ["500000utrst"]
   - name: user3
-    coins: ["50000trst"]
+    coins: ["50000utrst"]
   - name: user4
-    coins: ["50000trst"]
+    coins: ["50000utrst"]
   - name: faucet
-    coins: ["1000000000trst"]
+    coins: ["1000000000utrst"]
     mnemonic: "yellow reveal rubber dumb picture cargo valid cover define inner demand solve panel behave analyst build edit stereo hope initial feed rare bleak army"
 
 validator:
   name: user1
-  staked: "100000000stake"
+  staked: "100000000utrst"
 
 genesis:
-  chain_id: "TRST_chain_1"
+  chain_id: "trst_chain_1"
     app_state: 
       staking: 
         params: 

@@ -195,7 +195,8 @@ impl Keychain {
             hex::encode(consensus_state_ikm.get())
         );
         self.set_consensus_state_ikm(consensus_state_ikm);
-
+        
+        // consensus_callback_secret
         let consensus_callback_secret = self
             .consensus_seed
             .unwrap()

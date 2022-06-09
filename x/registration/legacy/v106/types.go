@@ -1,7 +1,7 @@
 package v106
 
 const (
-	ModuleName = "register"
+	ModuleName = "registration"
 )
 
 type (

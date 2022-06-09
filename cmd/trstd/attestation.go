@@ -26,21 +26,21 @@ import (
 
 const flagReset = "reset"
 
-func InitAttestation() *cobra.Command {
+func InitAttestationCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:   "init-enclave [output-file]",
+		Use:   "init-attestation [output-file]",
 		Short: "Perform remote attestation of the enclave",
 		Long: `Create attestation report, signed by Intel which is used in the registation process of
 the node to the chain. This process, if successful, will output a certificate which is used to authenticate with the 
-blockchain. Writes the certificate in DER format to ~/attestation_cert
+blockchain. Writes the certificate in DER format to ~/attestation_cert.der
 `,
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			sgxSecretsPath := os.Getenv("TRST_SGX_STORAGE")
 			if sgxSecretsPath == "" {
-				sgxSecretsPath = os.ExpandEnv("$HOME/.sgx_secrets")
+				sgxSecretsPath = os.ExpandEnv("$HOME/trustlesshub/.sgx_secrets")
 			}
 
 			sgxSecretsPath += string(os.PathSeparator) + reg.EnclaveRegistrationKey
@@ -97,7 +97,7 @@ func InitBootstrapCmd() *cobra.Command {
 		Short: "Perform bootstrap initialization",
 		Long: `Create attestation report, signed by Intel which is used in the registration process of
 the node to the chain. This process, if successful, will output a certificate which is used to authenticate with the 
-blockchain. Writes the certificate in DER format to ~/attestation_cert
+blockchain. Writes the certificate in DER format to ~/attestation_cert.der
 `,
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -199,9 +199,8 @@ func ParseCert() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "parse [cert file]",
 		Short: "Verify and parse a certificate file",
-		Long: "Helper to verify generated credentials, and extract the public key of the node, which is used to" +
-			"register the node, during node initialization",
-		Args: cobra.ExactArgs(1),
+		Long:  "Helper to verify generated credentials, and extract the public key of the node, which is used to register the node, during node initialization",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// parse coins trying to be sent
@@ -223,12 +222,11 @@ func ParseCert() *cobra.Command {
 	return cmd
 }
 
-func ConfigureSecret() *cobra.Command {
+func ConfigureCredentialsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "configure-credentials [master-cert] [seed]",
-		Short: "After registration is successful, configure the node with the credentials file and the encrypted " +
-			"seed that was written on-chain",
-		Args: cobra.ExactArgs(2),
+		Use:   "configure-credentials [master-cert] [seed]",
+		Short: "After registration is successful, configure the node with the credentials file and the encrypted seed that was written on-chain",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			// parse coins trying to be sent
@@ -253,7 +251,7 @@ func ConfigureSecret() *cobra.Command {
 				return err
 			}
 
-			path := filepath.Join(app2.DefaultNodeHome, reg.SecretNodeCfgFolder, reg.SecretNodeSeedConfig)
+			path := filepath.Join(app2.DefaultNodeHome, reg.NodeCfgFolder, reg.NodeSeedConfig)
 			// fmt.Println("File Created Successfully", path)
 			if os.IsNotExist(err) {
 				var file, err = os.Create(path)
@@ -305,8 +303,8 @@ func ResetEnclave() *cobra.Command {
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			// remove .trstd/.node/seed.json
-			path := filepath.Join(app2.DefaultNodeHome, reg.SecretNodeCfgFolder, reg.SecretNodeSeedConfig)
+			// remove .trst/.node/seed.json
+			path := filepath.Join(app2.DefaultNodeHome, reg.NodeCfgFolder, reg.NodeSeedConfig)
 			if _, err := os.Stat(path); !os.IsNotExist(err) {
 				fmt.Printf("Removing %s\n", path)
 				err = os.Remove(path)
@@ -322,7 +320,7 @@ func ResetEnclave() *cobra.Command {
 			// remove sgx_secrets
 			sgxSecretsDir := os.Getenv("TRST_SGX_STORAGE")
 			if sgxSecretsDir == "" {
-				sgxSecretsDir = os.ExpandEnv("$HOME/.sgx_secrets")
+				sgxSecretsDir = os.ExpandEnv("$HOME/trustlesshub/.sgx_secrets")
 			}
 			if _, err := os.Stat(sgxSecretsDir); !os.IsNotExist(err) {
 				fmt.Printf("Removing %s\n", sgxSecretsDir)

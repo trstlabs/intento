@@ -2,7 +2,7 @@ package types
 
 const (
 	// ModuleName is the name of the contract module
-	ModuleName = "register"
+	ModuleName = "registration"
 
 	// StoreKey is the string store representation
 	StoreKey = ModuleName

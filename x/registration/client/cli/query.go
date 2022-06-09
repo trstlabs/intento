@@ -30,7 +30,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 	queryCmd.AddCommand(
 		GetCmdEncryptedSeed(),
-		GetCmdMasterParams(),
+		GetCmdNodeEnclaveParams(),
 	)
 	return queryCmd
 }
@@ -66,12 +66,12 @@ func GetCmdEncryptedSeed() *cobra.Command {
 	return cmd
 }
 
-// GetCmdMasterParams lists certificates
-func GetCmdMasterParams() *cobra.Command {
+// GetCmdNodeEnclaveParams lists certificates
+func GetCmdNodeEnclaveParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "trst-enclave-params",
-		Short: "Get parameters for trst enclave",
-		Long:  "Get parameters for trst - writes the parameters to [master-cert.der] by default",
+		Use:   "node-enclave-params",
+		Short: "Get and write parameters for the enclave",
+		Long:  "Get and write parameters for the enclave - writes the parameters to [master-cert.der] by default. ,Consensus IO pubkey for input encryption/decryption Node exchange pubkey for initiating enclave on new nodes",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 

@@ -11,7 +11,7 @@ const (
 	QueryContractKey            = "contract-key"
 	QueryContractHash           = "contract-hash"
 
-	RegisterQuerierRoute   = "register"
+	RegisterQuerierRoute   = "registration"
 	QueryMasterCertificate = "master-cert"
 
 	//QueryContractHistory    = "contract-history"

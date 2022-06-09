@@ -20,8 +20,8 @@ const (
 	EnclaveRegistrationKey = types.EnclaveRegistrationKey
 	QueryEncryptedSeed     = keeper.QueryEncryptedSeed
 	QueryMasterCertificate = keeper.QueryMasterCertificate
-	SecretNodeSeedConfig   = types.SecretNodeSeedConfig
-	SecretNodeCfgFolder    = types.SecretNodeCfgFolder
+	NodeSeedConfig         = types.NodeSeedConfig
+	NodeCfgFolder          = types.NodeCfgFolder
 	EncryptedKeyLength     = types.EncryptedKeyLength
 	AttestationCertPath    = types.AttestationCertPath
 	IoExchMasterCertPath   = types.IoExchMasterCertPath

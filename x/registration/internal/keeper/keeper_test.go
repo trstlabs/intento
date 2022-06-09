@@ -34,9 +34,9 @@ func TestNewKeeper_Node(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
 
-	seedPath := filepath.Join(tempDir, types.SecretNodeCfgFolder, types.SecretNodeSeedConfig)
+	seedPath := filepath.Join(tempDir, types.NodeCfgFolder, types.NodeSeedConfig)
 
-	err = os.MkdirAll(filepath.Join(tempDir, types.SecretNodeCfgFolder), 0700)
+	err = os.MkdirAll(filepath.Join(tempDir, types.NodeCfgFolder), 0700)
 	require.NoError(t, err)
 
 	err = os.WriteFile(seedPath, CreateTestSeedConfig(t), 0700)

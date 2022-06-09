@@ -14,7 +14,7 @@ import "cosmos/base/v1beta1/coin.proto";
 message MsgStoreCode {
   option (gogoproto.goproto_getters) = false;
 
-   string sender = 1;
+  string sender = 1;
   // WASMByteCode can be raw or gzip compressed
   bytes wasm_byte_code = 2 [(gogoproto.customname) = "WASMByteCode"];
   // Source is a valid absolute HTTPS URI to the contract's source code, optional
@@ -22,11 +22,11 @@ message MsgStoreCode {
   // Builder is a valid docker image name with tag, optional
   string builder = 4;
   // InstantiatePermission to apply on contract creation, optional
-//  AccessConfig InstantiatePermission = 5;
-    string contract_duration = 5;
-    string title = 6;
-     string description = 7;
-    uint64 instances = 8;
+  //  AccessConfig InstantiatePermission = 5;
+  string contract_duration = 5;
+  string title = 6;
+  string description = 7;
+  uint64 instances = 8;
 }
 
 message MsgInstantiateContract {
@@ -34,14 +34,14 @@ message MsgInstantiateContract {
 
    string sender = 1;
   // Admin is an optional address that can execute migrations
-//  bytes admin = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  // bytes admin = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   string callback_code_hash = 2;
   uint64 code_id = 3 [(gogoproto.customname) = "CodeID"];
   string contract_id = 4;
   bytes init_msg = 5;
-   bytes auto_msg = 6;
+  bytes auto_msg = 6;
   repeated cosmos.base.v1beta1.Coin init_funds = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-   bytes callback_sig = 8 [(gogoproto.customname) = "CallbackSig"];
+  bytes callback_sig = 8 [(gogoproto.customname) = "CallbackSig"];
    //contract_duration defines the time that the code should run for,0 for optional
   string contract_duration = 9;
 

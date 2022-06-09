@@ -264,24 +264,24 @@ pub fn create_attestation_report(
     the certificate uses curve P256, so that will cause issues anyway -- I'm leaving the code here
     as a reference in case we want to take another look at this at some point */
 
-    // let mut pub_k_gx = pub_k.gx.clone();
-    // pub_k_gx.reverse();
-    // let mut pub_k_gy = pub_k.gy.clone();
-    // pub_k_gy.reverse();
-    // report_data.d[..32].clone_from_slice(&pub_k_gx);
-    // report_data.d[32..].clone_from_slice(&pub_k_gy);
+    let mut pub_k_gx = pub_k.gx.clone();
+    pub_k_gx.reverse();
+    let mut pub_k_gy = pub_k.gy.clone();
+    pub_k_gy.reverse();
+    report_data.d[..32].clone_from_slice(&pub_k_gx);
+    report_data.d[32..].clone_from_slice(&pub_k_gy);
 
     let rep = match rsgx_create_report(&ti, &report_data) {
         Ok(r) => {
             match SIGNING_METHOD {
                 SigningMethod::MRENCLAVE => {
-                    trace!(
+                    trace!(//not sure if typo
                         "Report creation => success. Using MR_SIGNER: {:?}",
                         r.body.mr_signer.m
                     );
                 }
                 SigningMethod::MRSIGNER => {
-                    trace!(
+                    trace!(//not sure if typo
                         "Report creation => success. Got MR_ENCLAVE {:?}",
                         r.body.mr_signer.m
                     );

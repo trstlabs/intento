@@ -75,4 +75,4 @@ pub const CONSENSUS_CALLBACK_SECRET_DERIVE_ORDER: u32 = 4;
 
 pub const TRST_SGX_STORAGE_ENV_VAR: &str = "TRST_SGX_STORAGE";
 
-const DEFAULT_SGX_SECRET_PATH: &str = "/opt/secret/.sgx_secrets/";
+const DEFAULT_SGX_SECRET_PATH: &str = "/opt/trustlesshub/.sgx_secrets/";

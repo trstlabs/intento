@@ -10,8 +10,8 @@ const PublicKeyLength = 64    // encoded length
 const EncryptedKeyLength = 96 // encoded length
 const MasterNodeKeyId = "NodeExchMasterKey"
 const MasterIoKeyId = "IoExchMasterKey"
-const SecretNodeSeedConfig = "seed.json"
-const SecretNodeCfgFolder = ".node"
+const NodeSeedConfig = "seed.json"
+const NodeCfgFolder = ".node"
 
 const NodeExchMasterCertPath = "node-master-cert.der"
 const IoExchMasterCertPath = "io-master-cert.der"

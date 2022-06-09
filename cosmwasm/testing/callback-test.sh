@@ -10,23 +10,23 @@ function wait_for_tx() {
 }
 
 # init the node
-rm -rf ./.sgx_secrets
-mkdir -p ./.sgx_secrets
+rm -rf ./trustlesshub/.sgx_secrets
+mkdir -p ./trustlesshub/.sgx_secrets
 
 rm -rf ~/.secret*
 
-./trstd config chain-id enigma-testnet
+./trstd config chain-id trst_chain_1
 ./trstd config output json
 ./trstd config indent true
 ./trstd config trust-node true
 ./trstd config keyring-backend test
 
-./trstd init banana --chain-id enigma-testnet
-perl -i -pe 's/"stake"/"utrst"/g' ~/.trstd/config/genesis.json
+./trstd init banana --chain-id trst_chain_1
+perl -i -pe 's/"stake"/"utrst"/g' ~/.trst/config/genesis.json
 echo "cost member exercise evoke isolate gift cattle move bundle assume spell face balance lesson resemble orange bench surge now unhappy potato dress number acid" |
     ./trstd keys add a --recover
-./trstd add-genesis-account "$(./trstd keys show -a a)" 1000000000000trst
-./trstd gentx --name a --keyring-backend test --amount 1000000trst
+./trstd add-genesis-account "$(./trstd keys show -a a)" 1000000000000utrst
+./trstd gentx --name a --keyring-backend test --amount 1000000utrst
 ./trstd collect-gentxs
 ./trstd validate-genesis
 
@@ -43,7 +43,7 @@ until (./trstd status 2>&1 | jq -e '(.sync_info.latest_block_height | tonumber) 
     sleep 1
 done
 
-./trstd rest-server --chain-id enigma-testnet --laddr tcp://0.0.0.0:1337 &
+./trstd rest-server --chain-id trst_chain_1 --laddr tcp://0.0.0.0:1337 &
 export LCD_PID=$(echo $!)
 function cleanup() {
     kill -KILL "$trstd_PID" "$LCD_PID"

@@ -119,43 +119,9 @@ pub extern "C" fn get_callback_sig(msg: Buffer,msg_info: Buffer /*auto_msg: Buff
         }
         Some(r) => r,
     };
-    /*let auto_msg = match unsafe { auto_msg.read() } {
-        None => {
-            set_error(Error::empty_arg("auto_msg"), err);
-            return Buffer::default();
-        }
-        Some(r) => r,
-    };
-    let code_id = match unsafe { code_id.read() } {
-        None => {
-            set_error(Error::empty_arg("code_id"), err);
-            return Buffer::default();
-        }
-        Some(r) => r,
-    };
-    let contract = match unsafe { contract.read() } {
-        None => {
-            set_error(Error::empty_arg("contract"), err);
-            return Buffer::default();
-        }
-        Some(r) => r,
-    };
-    let contract_id = match unsafe { contract_id.read() } {
-        None => {
-            set_error(Error::empty_arg("contract_id"), err);
-            return Buffer::default();
-        }
-        Some(r) => r,
-    };
-     let contract_duration = match unsafe { contract_duration.read() } {
-        None => {
-            set_error(Error::empty_arg("contract_duration"), err);
-            return Buffer::default();
-        }
-        Some(r) => r,
-    };*/
+  
     trace!("Hello from right before create_callback_sig_raw");
-    match create_callback_sig_raw(msg, msg_info /*auto_msg, code_id, contract, contract_id, contract_duration*/) {
+    match create_callback_sig_raw(msg, msg_info ) {
         Err(e) => {
             // An error happened in the SGX sdk.
             set_error(Error::enclave_err(e.to_string()), err);

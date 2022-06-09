@@ -193,7 +193,7 @@ func InstantiateContractCmd() *cobra.Command {
 	//var sendAutoMsg bool
 	cmd.Flags().String(flagCodeHash, "", "For offline transactions, use this to specify the target contract's code hash")
 	cmd.Flags().String(flagIoMasterKey, "", "For offline transactions, use this to specify the path to the "+
-		"io-master-cert.der file, which you can get using the command `trstd q register trst-enclave-params` ")
+		"io-master-cert.der file, which you can get using the command `trstd q registration node-enclave-params` ")
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract during instantiation")
 	cmd.Flags().String(flagContractId, "", "A human-readable name for this contract in lists")
 	cmd.Flags().String(flagAutoMsg, "", "An automatic message to send, that the contract executes after a set duration (optional)")
@@ -407,7 +407,7 @@ func ExecuteContractCmd() *cobra.Command {
 
 	cmd.Flags().String(flagCodeHash, "", "For offline transactions, use this to specify the target contract's code hash")
 	cmd.Flags().String(flagIoMasterKey, "", "For offline transactions, use this to specify the path to the "+
-		"io-master-cert.der file, which you can get using the command `trstd q register trst-enclave-params` ")
+		"io-master-cert.der file, which you can get using the command `trstd q registration node-enclave-params` ")
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract along with command")
 	cmd.Flags().String(flagContractId, "", "A human-readable name for this contract in lists")
 	flags.AddTxFlagsToCmd(cmd)

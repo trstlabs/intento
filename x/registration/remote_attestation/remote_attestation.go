@@ -16,7 +16,7 @@ import (
  Verifies the remote attestation certificate, which is comprised of a the attestation report, intel signature, and enclave signature
 
  We verify that:
-	- the report is valid, that no outstanding issues exist (todo: match enclave hash or something?)
+	- the report is valid, that no outstanding issues exist
 	- Intel's certificate signed the report
 	- The public key of the enclave/node exists, so we can use that to encrypt the seed
 
@@ -27,13 +27,13 @@ func VerifyRaCert(rawCert []byte) ([]byte, error) {
 	// printCert(rawCert)
 	// get the pubkey and payload from raw data
 
-	pubK, payload, err := unmarshalCert(rawCert)
+	pubK, cert, err := unmarshalCert(rawCert)
 	if err != nil {
 		return nil, err
 	}
 
 	if !isSgxHardwareMode() {
-		pk, err := base64.StdEncoding.DecodeString(string(payload))
+		pk, err := base64.StdEncoding.DecodeString(string(cert))
 		if err != nil {
 			return nil, err
 		}
@@ -42,7 +42,7 @@ func VerifyRaCert(rawCert []byte) ([]byte, error) {
 	}
 
 	// Load Intel CA, Verify Cert and Signature
-	attnReportRaw, err := verifyCert(payload)
+	attnReportRaw, err := verifyCert(cert)
 	if err != nil {
 		return nil, err
 	}

@@ -72,7 +72,7 @@ pub fn untrusted_init_node(master_cert: &[u8], encrypted_seed: &[u8]) -> SgxResu
         .ok_or(sgx_status_t::SGX_ERROR_BUSY)?;
     let enclave = (*enclave_access_token)?;
 
-    info!("Initialized enclave successfully!");
+    
 
     let eid = enclave.geteid();
     let mut ret = sgx_status_t::SGX_SUCCESS;
@@ -87,7 +87,7 @@ pub fn untrusted_init_node(master_cert: &[u8], encrypted_seed: &[u8]) -> SgxResu
             encrypted_seed.len() as u32,
         )
     };
-
+    info!("Initialized enclave successfully!");
     if status != sgx_status_t::SGX_SUCCESS {
         return Err(status);
     }

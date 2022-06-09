@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	"github.com/trstlabs/trst/x/registration/internal/types"
 	ra "github.com/trstlabs/trst/x/registration/remote_attestation"
 
@@ -19,30 +18,30 @@ import (
 
 // Keeper will have a reference to Wasmer with it's own data directory.
 type Keeper struct {
-	storeKey sdk.StoreKey
-	cdc      codec.BinaryCodec
-	enclave  EnclaveInterface
-	router   sdk.Router
+	storeKey         sdk.StoreKey
+	cdc              codec.BinaryCodec
+	enclaveInterface EnclaveInterface
+	router           sdk.Router
 }
 
 // NewKeeper creates a new contract Keeper instance
-func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, router sdk.Router, enclave EnclaveInterface, homeDir string, bootstrap bool) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeKey sdk.StoreKey, router sdk.Router, enclaveInterface EnclaveInterface, homeDir string, bootstrap bool) Keeper {
 
 	if !bootstrap {
-		InitializeNode(homeDir, enclave)
+		InitializeNode(homeDir, enclaveInterface)
 	}
 
 	return Keeper{
-		storeKey: storeKey,
-		cdc:      cdc,
-		router:   router,
-		enclave:  enclave,
+		storeKey:         storeKey,
+		cdc:              cdc,
+		router:           router,
+		enclaveInterface: enclaveInterface,
 	}
 }
 
 func InitializeNode(homeDir string, enclave EnclaveInterface) {
 
-	seedPath := filepath.Join(homeDir, types.SecretNodeCfgFolder, types.SecretNodeSeedConfig)
+	seedPath := filepath.Join(homeDir, types.NodeCfgFolder, types.NodeSeedConfig)
 
 	if !fileExists(seedPath) {
 		panic(sdkerrors.Wrap(types.ErrSeedInitFailed, fmt.Sprintf("Seed configuration in path: %s was not found. Did you initialize the node?", seedPath)))
@@ -51,7 +50,9 @@ func InitializeNode(homeDir string, enclave EnclaveInterface) {
 	// get PK from CLI
 	// get encrypted master key
 	byteValue, err := getFile(seedPath)
-
+	if err != nil {
+		panic(sdkerrors.Wrap(types.ErrSeedInitFailed, err.Error()))
+	}
 	var seedCfg types.SeedConfig
 
 	err = json.Unmarshal(byteValue, &seedCfg)
@@ -73,12 +74,10 @@ func InitializeNode(homeDir string, enclave EnclaveInterface) {
 	if err != nil {
 		panic(sdkerrors.Wrap(types.ErrSeedInitFailed, err.Error()))
 	}
-
-	return
 }
 
 func (k Keeper) RegisterNode(ctx sdk.Context, certificate ra.Certificate) ([]byte, error) {
-	fmt.Println("RegisterNode")
+	//fmt.Println("RegisterNode")
 	var encSeed []byte
 
 	if isSimulationMode(ctx) {
@@ -100,7 +99,7 @@ func (k Keeper) RegisterNode(ctx sdk.Context, certificate ra.Certificate) ([]byt
 			return k.getRegistrationInfo(ctx, publicKey).EncryptedSeed, nil
 		}
 		//	log.Debug("After getRegistrationInfo")
-		encSeed, err = k.enclave.GetEncryptedSeed(certificate)
+		encSeed, err = k.enclaveInterface.GetEncryptedSeed(certificate)
 		if err != nil {
 			// return 0, sdkerrors.Wrap(err, "cosmwasm create")
 			return nil, sdkerrors.Wrap(types.ErrAuthenticateFailed, err.Error())
@@ -122,6 +121,7 @@ func isSimulationMode(ctx sdk.Context) bool {
 	return ctx.GasMeter().Limit() == 0 && ctx.BlockHeight() != 0
 }
 
+/*
 func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg sdk.Msg) error {
 	// make sure this account can send it
 	for _, acct := range msg.GetSigners() {
@@ -153,7 +153,7 @@ func (k Keeper) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg 
 	ctx.EventManager().EmitEvents(events)
 
 	return nil
-}
+}*/
 
 func validateSeedParams(config types.SeedConfig) error {
 	res, err := base64.StdEncoding.DecodeString(config.MasterCert)
@@ -161,7 +161,7 @@ func validateSeedParams(config types.SeedConfig) error {
 		return err
 	}
 
-	res, err = ra.VerifyRaCert(res)
+	_, err = ra.VerifyRaCert(res)
 	if err != nil {
 		return err
 	}

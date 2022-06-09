@@ -201,7 +201,7 @@ rename_for_release:
 	-rename "s/darwin-10.6-amd64/v${VERSION}-osx64/" *darwin*
 
 sign_for_release: rename_for_release
-	sha256sum enigma-blockchain*.deb > SHA256SUMS
+	sha256sum trst-blockchain*.deb > SHA256SUMS
 	-sha256sum trstd-* trstcli-* >> SHA256SUMS
 	gpg -u 91831DE812C6415123AFAA7B420BF1CB005FBCE6 --digest-algo sha256 --clearsign --yes SHA256SUMS
 	rm -f SHA256SUMS
@@ -209,7 +209,7 @@ sign_for_release: rename_for_release
 release: sign_for_release
 	rm -rf ./release/
 	mkdir -p ./release/
-	cp enigma-blockchain_*.deb ./release/
+	cp trst-blockchain_*.deb ./release/
 	cp trstcli-* ./release/
 	cp trstd-* ./release/
 	cp SHA256SUMS.asc ./release/
@@ -222,11 +222,11 @@ clean:
 #	-find -name libgo_cosmwasm.so -delete
 #	-find -name '*.so' -delete
 #	-find -name 'target' -type d -exec rm -rf \;
-	-rm -f ./enigma-blockchain*.deb
+	-rm -f ./trst-blockchain*.deb
 	-rm -f ./SHA256SUMS*
 	-rm -rf ./third_party/vendor/
-	-rm -rf ./.sgx_secrets/*
-	-rm -rf ./x/compute/internal/keeper/.sgx_secrets/*
+	-rm -rf ./trustlesshub/.sgx_secrets/*
+	-rm -rf ./x/compute/internal/keeper/trustlesshub/.sgx_secrets/*
 	-rm -rf ./*.der
 	-rm -rf ./x/compute/internal/keeper/*.der
 	-rm -rf ./cmd/trstd/ias_bin*
@@ -309,15 +309,15 @@ docker_node: docker_base
 #   -find -name 'target' -type d -exec rm -rf \;
 	-rm -f ./trst-blockchain*.deb
 	-rm -f ./SHA256SUMS*
-	-rm -rf ./.sgx_secrets/*
-	-rm -rf ./x/compute/internal/keeper/.sgx_secrets/*
+	-rm -rf ./trustlesshub/.sgx_secrets/*
+	-rm -rf ./x/compute/internal/keeper/trustlesshub/.sgx_secrets/*
 	-rm -rf ./*.der
 	-rm -rf ./x/compute/internal/keeper/*.der
 	-rm -rf ./cmd/trstd/ias_bin*
 
 docker_local_azure_hw: docker_base
-	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/local-node.Dockerfile -t ci-enigma-sgx-node .
-	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/local-node.Dockerfile -t ci-enigma-sgx-bootstrap .
+	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/local-node.Dockerfile -t ci-trst-sgx-node .
+	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/local-node.Dockerfile -t ci-trst-sgx-bootstrap .
 
 docker_enclave_test:
 	docker build --build-arg FEATURES="test ${FEATURES}" --build-arg SGX_MODE=${SGX_MODE} -f deployment/dockerfiles/enclave-test.Dockerfile -t rust-enclave-test .
@@ -368,16 +368,16 @@ go-tests: build-test-contract
 	# empty BUILD_PROFILE means debug mode which compiles faster
 	SGX_MODE=SW $(MAKE) build-linux
 	cp ./cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so ./x/compute/internal/keeper
-	rm -rf ./x/compute/internal/keeper/.sgx_secrets
-	mkdir -p ./x/compute/internal/keeper/.sgx_secrets
+	rm -rf ./x/compute/internal/keeper/trustlesshub/.sgx_secrets
+	mkdir -p ./x/compute/internal/keeper/trustlesshub/.sgx_secrets
 	GOMAXPROCS=8 SGX_MODE=SW TRST_SGX_STORAGE='./' go test -failfast -timeout 1200s -v ./x/compute/internal/... $(GO_TEST_ARGS)
 
 go-tests-hw: build-test-contract
 	# empty BUILD_PROFILE means debug mode which compiles faster
 	SGX_MODE=HW $(MAKE) build-linux
 	cp ./cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so ./x/compute/internal/keeper
-	rm -rf ./x/compute/internal/keeper/.sgx_secrets
-	mkdir -p ./x/compute/internal/keeper/.sgx_secrets
+	rm -rf ./x/compute/internal/keeper/trustlesshub/.sgx_secrets
+	mkdir -p ./x/compute/internal/keeper/trustlesshub/.sgx_secrets
 	GOMAXPROCS=8 SGX_MODE=HW go test -v ./x/compute/internal/... $(GO_TEST_ARGS)
 
 # When running this more than once, after the first time you'll want to remove the contents of the `ffi-types`

@@ -47,8 +47,6 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 )
 
-// thanks @terra-project for this fix
-///const flagLegacyHdPath = "legacy-hd-path"
 const flagIsBootstrap = "bootstrap"
 const cfgFileName = "config-cli.toml"
 
@@ -156,10 +154,10 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig app.EncodingConfig) {
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		InitAttestation(),
+		InitAttestationCmd(),
 		InitBootstrapCmd(),
 		ParseCert(),
-		ConfigureSecret(),
+		ConfigureCredentialsCmd(),
 		HealthCheck(),
 		ResetEnclave(),
 		keys.Commands(app.DefaultNodeHome),
@@ -341,18 +339,6 @@ func initConfig(ctx *client.Context, cmd *cobra.Command) error {
 	config.SetBech32PrefixForAccount(prefix.Bech32PrefixAccAddr, prefix.Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(prefix.Bech32PrefixValAddr, prefix.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(prefix.Bech32PrefixConsAddr, prefix.Bech32PrefixConsPub)
-
-	/*oldHDPath, err := cmd.PersistentFlags().GetBool(flagLegacyHdPath)
-	if err != nil {
-		return err
-	}
-	if !oldHDPath {
-		config.SetCoinType(529)
-		config.SetFullFundraiserPath("44'/529'/0'/0/0")
-	}*/
-	//fmt.Printf(sdk.GetConfig().GetFullBIP44Path())
-	//config.SetCoinType(933)
-	//config.SetFullFundraiserPath("44'/933'/0'/0/0")
 
 	cfgFilePath := filepath.Join(app.DefaultCLIHome, "config", cfgFileName)
 	if _, err := os.Stat(cfgFilePath); err == nil {

@@ -112,10 +112,10 @@ var (
 
 	// DefaultCLIHome default home directories for the application CLI
 	homeDir, _     = os.UserHomeDir()
-	DefaultCLIHome = filepath.Join(homeDir, ".trstd")
+	DefaultCLIHome = filepath.Join(homeDir, ".trst")
 
 	// DefaultNodeHome sets the folder where the applcation data and configuration will be stored
-	DefaultNodeHome = filepath.Join(homeDir, ".trstd")
+	DefaultNodeHome = filepath.Join(homeDir, ".trst")
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration

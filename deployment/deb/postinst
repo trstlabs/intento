@@ -32,5 +32,5 @@ EOF
 
 systemctl daemon-reload
 
-mkdir -p "$(eval echo ~"$SUDO_USER")/.sgx_secrets"
-chown -R "$SUDO_USER":"$SUDO_USER" "$(eval echo ~"$SUDO_USER")/.sgx_secrets"
+mkdir -p "$(eval echo ~"$SUDO_USER")/trustlesshub/.sgx_secrets"
+chown -R "$SUDO_USER":"$SUDO_USER" "$(eval echo ~"$SUDO_USER")/trustlesshub/.sgx_secrets"

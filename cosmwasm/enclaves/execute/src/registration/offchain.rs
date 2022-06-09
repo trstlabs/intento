@@ -37,7 +37,7 @@ use super::seed_exchange::decrypt_seed;
 /// public key (pk_io), which is saved on-chain, and used to propagate the seed to registering nodes
 ///
 /// # Safety
-///  Something should go here
+/// This function happens off-chain, so if we panic for some reason it _can_ be acceptable
 ///
 #[no_mangle]
 pub unsafe extern "C" fn ecall_init_bootstrap(
@@ -111,11 +111,8 @@ pub unsafe extern "C" fn ecall_init_bootstrap(
 ///
 /// The seed was encrypted using Diffie-Hellman in the function [ecall_get_encrypted_seed]
 ///
-/// This function happens off-chain, so if we panic for some reason it _can_ be acceptable,
-///  though probably not recommended
-///
 /// # Safety
-///  Something should go here
+/// This function happens off-chain, so if we panic for some reason it _can_ be acceptable
 ///
 #[no_mangle]
 pub unsafe extern "C" fn ecall_init_node(
