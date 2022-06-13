@@ -28,4 +28,10 @@ message Params {
   ];
   // denom of claimable asset
   string claim_denom = 4;
+  repeated google.protobuf.Duration duration_vesting_periods = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration_vesting_periods,omitempty",
+    (gogoproto.moretags) = "yaml:\"duration_vesting_periods\""
+  ];
 }

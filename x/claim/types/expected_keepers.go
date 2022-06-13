@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // BankKeeper defines the banking contract that must be fulfilled when
@@ -30,4 +31,6 @@ type DistrKeeper interface {
 type StakingKeeper interface {
 	// BondDenom - Bondable coin denomination
 	BondDenom(sdk.Context) string
+	// return all delegations for a delegator
+	GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation
 }

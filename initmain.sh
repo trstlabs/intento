@@ -63,7 +63,7 @@ trstd add-genesis-account trust1menylq7ttm3jne59lsj5xtc2all63l89lkglv3 875000000
     --vesting-end-time $vesting_end_time_two_years
 
 echo "Gen tx ..."
-trstd gentx validator 10000000utrst --chain-id=trst_chain_1 --keyring-backend=test  --website="trustlesshub.com" --security-contact="trustlesshub@gmail.com"
+trstd gentx validator 10000000utrst --chain-id=trst_chain_1 --keyring-backend=test  --website="trustlesshub.com" --security-contact="info@trstlabs.xyz"
 
 echo "initing enclave ..."
 

@@ -789,11 +789,11 @@ impl CosmWasmMsg {
      
 
         if raw_msg.contract.clone().len() == 0  {
-            /*  warn!(
+              warn!(
                   "Contract address was empty: {}",
                   raw_msg.contract.len(),
-              );*/
-              EnclaveError::FailedToDeserialize;
+              );
+              Err(EnclaveError::FailedToDeserialize);
         };
        
         let sent_funds = Self::parse_funds(raw_msg.sent_funds)?;
@@ -965,7 +965,7 @@ impl CosmWasmMsg {
         Ok(init_funds)
     }
 
-    fn parse_vec(
+   /* fn parse_vec(
         raw_vec: protobuf::RepeatedField<::std::string::String>,
     ) -> Result<Vec<String>, EnclaveError> {
         let mut vec = Vec::with_capacity(raw_vec.len());
@@ -974,7 +974,7 @@ impl CosmWasmMsg {
         }
 
         Ok(vec)
-    }
+    }*/
 
     pub fn sender(&self) -> Option<&CanonicalAddr> {
         match self {

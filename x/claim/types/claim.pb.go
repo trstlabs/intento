@@ -4,11 +4,16 @@
 package types
 
 import (
+	context "context"
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/gogo/protobuf/gogoproto"
+	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -30,21 +35,21 @@ type Action int32
 const (
 	ActionComputeInstantiate Action = 0
 	ActionComputeExecute     Action = 1
-	ActionItemBought         Action = 2
+	ActionGovernanceVote     Action = 2
 	ActionDelegateStake      Action = 3
 )
 
 var Action_name = map[int32]string{
 	0: "ActionComputeInstantiate",
 	1: "ActionComputeExecute",
-	2: "ActionItemBought",
+	2: "ActionGovernanceVote",
 	3: "ActionDelegateStake",
 }
 
 var Action_value = map[string]int32{
 	"ActionComputeInstantiate": 0,
 	"ActionComputeExecute":     1,
-	"ActionItemBought":         2,
+	"ActionGovernanceVote":     2,
 	"ActionDelegateStake":      3,
 }
 
@@ -58,13 +63,12 @@ func (Action) EnumDescriptor() ([]byte, []int) {
 
 // A Claim Records is the metadata of claim data per address
 type ClaimRecord struct {
-	// address of claim user
+	// address of recipient
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
-	// total initial claimable amount for the user
+	// total initial claimable amount for the address
 	InitialClaimableAmount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=initial_claimable_amount,json=initialClaimableAmount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"initial_claimable_amount" yaml:"initial_claimable_amount"`
-	// true if action is completed
-	// index of bool in array refers to action enum #
-	ActionCompleted []bool `protobuf:"varint,4,rep,packed,name=action_completed,json=actionCompleted,proto3" json:"action_completed,omitempty" yaml:"action_completed"`
+	// index of status array refers to action enum #
+	Status []Status `protobuf:"bytes,3,rep,name=status,proto3" json:"status" yaml:"status"`
 }
 
 func (m *ClaimRecord) Reset()         { *m = ClaimRecord{} }
@@ -114,9 +118,164 @@ func (m *ClaimRecord) GetInitialClaimableAmount() github_com_cosmos_cosmos_sdk_t
 	return nil
 }
 
-func (m *ClaimRecord) GetActionCompleted() []bool {
+func (m *ClaimRecord) GetStatus() []Status {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+//Status contains for an action if it is completed and claimed
+type Status struct {
+	// true if action is completed
+	ActionCompleted bool `protobuf:"varint,1,opt,name=action_completed,json=actionCompleted,proto3" json:"action_completed,omitempty" yaml:"action_completed"`
+	// true if action is completed
+	//index refers to the 4 vesting periods for the given action
+	VestingPeriodCompleted []bool `protobuf:"varint,2,rep,packed,name=vesting_period_completed,json=vestingPeriodCompleted,proto3" json:"vesting_period_completed,omitempty" yaml:"vesting_period_completed"`
+	// true if action is completed
+	//index refers to the 4 vesting periods for the given action
+	VestingPeriodClaimed []bool `protobuf:"varint,3,rep,packed,name=vesting_period_claimed,json=vestingPeriodClaimed,proto3" json:"vesting_period_claimed,omitempty" yaml:"vesting_period_claimed"`
+}
+
+func (m *Status) Reset()         { *m = Status{} }
+func (m *Status) String() string { return proto.CompactTextString(m) }
+func (*Status) ProtoMessage()    {}
+func (*Status) Descriptor() ([]byte, []int) {
+	return fileDescriptor_14c07c0e7ea7a052, []int{1}
+}
+func (m *Status) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Status) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Status.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Status) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Status.Merge(m, src)
+}
+func (m *Status) XXX_Size() int {
+	return m.Size()
+}
+func (m *Status) XXX_DiscardUnknown() {
+	xxx_messageInfo_Status.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Status proto.InternalMessageInfo
+
+func (m *Status) GetActionCompleted() bool {
 	if m != nil {
 		return m.ActionCompleted
+	}
+	return false
+}
+
+func (m *Status) GetVestingPeriodCompleted() []bool {
+	if m != nil {
+		return m.VestingPeriodCompleted
+	}
+	return nil
+}
+
+func (m *Status) GetVestingPeriodClaimed() []bool {
+	if m != nil {
+		return m.VestingPeriodClaimed
+	}
+	return nil
+}
+
+type MsgClaimClaimable struct {
+	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+}
+
+func (m *MsgClaimClaimable) Reset()         { *m = MsgClaimClaimable{} }
+func (m *MsgClaimClaimable) String() string { return proto.CompactTextString(m) }
+func (*MsgClaimClaimable) ProtoMessage()    {}
+func (*MsgClaimClaimable) Descriptor() ([]byte, []int) {
+	return fileDescriptor_14c07c0e7ea7a052, []int{2}
+}
+func (m *MsgClaimClaimable) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClaimClaimable) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClaimClaimable.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClaimClaimable) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClaimClaimable.Merge(m, src)
+}
+func (m *MsgClaimClaimable) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClaimClaimable) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClaimClaimable.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClaimClaimable proto.InternalMessageInfo
+
+func (m *MsgClaimClaimable) GetSender() string {
+	if m != nil {
+		return m.Sender
+	}
+	return ""
+}
+
+type MsgClaimClaimableResponse struct {
+	// returned claimable amount for the address
+	ClaimedAmount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=claimed_amount,json=claimedAmount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"claimed_amount" yaml:"claimed_amount"`
+}
+
+func (m *MsgClaimClaimableResponse) Reset()         { *m = MsgClaimClaimableResponse{} }
+func (m *MsgClaimClaimableResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgClaimClaimableResponse) ProtoMessage()    {}
+func (*MsgClaimClaimableResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_14c07c0e7ea7a052, []int{3}
+}
+func (m *MsgClaimClaimableResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClaimClaimableResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClaimClaimableResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClaimClaimableResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClaimClaimableResponse.Merge(m, src)
+}
+func (m *MsgClaimClaimableResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClaimClaimableResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClaimClaimableResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClaimClaimableResponse proto.InternalMessageInfo
+
+func (m *MsgClaimClaimableResponse) GetClaimedAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.ClaimedAmount
 	}
 	return nil
 }
@@ -124,39 +283,134 @@ func (m *ClaimRecord) GetActionCompleted() []bool {
 func init() {
 	proto.RegisterEnum("trst.x.claim.v1beta1.Action", Action_name, Action_value)
 	proto.RegisterType((*ClaimRecord)(nil), "trst.x.claim.v1beta1.ClaimRecord")
+	proto.RegisterType((*Status)(nil), "trst.x.claim.v1beta1.Status")
+	proto.RegisterType((*MsgClaimClaimable)(nil), "trst.x.claim.v1beta1.MsgClaimClaimable")
+	proto.RegisterType((*MsgClaimClaimableResponse)(nil), "trst.x.claim.v1beta1.MsgClaimClaimableResponse")
 }
 
 func init() { proto.RegisterFile("claim/v1beta1/claim.proto", fileDescriptor_14c07c0e7ea7a052) }
 
 var fileDescriptor_14c07c0e7ea7a052 = []byte{
-	// 419 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x92, 0xbd, 0x6e, 0xd4, 0x40,
-	0x14, 0x85, 0xed, 0xdd, 0x28, 0xc0, 0x44, 0x02, 0x6b, 0x58, 0x11, 0x67, 0x85, 0xc6, 0x2b, 0x17,
-	0x68, 0x85, 0xc0, 0x56, 0xa0, 0xa3, 0x62, 0x6d, 0x28, 0x42, 0xe9, 0x74, 0x34, 0xab, 0xb1, 0x7d,
-	0xe5, 0x8c, 0x62, 0x7b, 0x56, 0x9e, 0x6b, 0xb4, 0x79, 0x03, 0x4a, 0xde, 0x81, 0x06, 0x51, 0xf2,
-	0x14, 0x29, 0x53, 0x52, 0x2d, 0x68, 0xf7, 0x0d, 0xf6, 0x09, 0x90, 0x67, 0x6c, 0xfe, 0xa4, 0x54,
-	0x1e, 0x9f, 0x73, 0xf4, 0xe9, 0xcc, 0x9d, 0x4b, 0x4e, 0xb2, 0x92, 0x8b, 0x2a, 0xfc, 0x70, 0x9a,
-	0x02, 0xf2, 0xd3, 0x50, 0xff, 0x05, 0xab, 0x46, 0xa2, 0xa4, 0x13, 0x6c, 0x14, 0x06, 0xeb, 0xc0,
-	0x68, 0x7d, 0x62, 0x3a, 0x29, 0x64, 0x21, 0x75, 0x20, 0xec, 0x4e, 0x26, 0x3b, 0x65, 0x99, 0x54,
-	0x95, 0x54, 0x61, 0xca, 0x15, 0xfc, 0x81, 0x49, 0x51, 0x1b, 0xdf, 0xff, 0x36, 0x22, 0x47, 0x71,
-	0xc7, 0x49, 0x20, 0x93, 0x4d, 0x4e, 0x9f, 0x91, 0x3b, 0x3c, 0xcf, 0x1b, 0x50, 0xca, 0xb5, 0x67,
-	0xf6, 0xfc, 0x5e, 0x44, 0xf7, 0x1b, 0xef, 0xfe, 0x15, 0xaf, 0xca, 0x57, 0x7e, 0x6f, 0xf8, 0xc9,
-	0x10, 0xa1, 0x5f, 0x6c, 0xe2, 0x8a, 0x5a, 0xa0, 0xe0, 0xe5, 0x52, 0xb7, 0xe1, 0x69, 0x09, 0x4b,
-	0x5e, 0xc9, 0xb6, 0x46, 0x77, 0x34, 0x1b, 0xcf, 0x8f, 0x5e, 0x9c, 0x04, 0xa6, 0x41, 0xd0, 0x35,
-	0x18, 0xca, 0x06, 0xb1, 0x14, 0x75, 0x74, 0x7e, 0xbd, 0xf1, 0xac, 0xfd, 0xc6, 0xf3, 0x0c, 0xfe,
-	0x36, 0x90, 0xff, 0xf5, 0x87, 0x37, 0x2f, 0x04, 0x5e, 0xb4, 0x69, 0x90, 0xc9, 0x2a, 0xec, 0x6f,
-	0x64, 0x3e, 0xcf, 0x55, 0x7e, 0x19, 0xe2, 0xd5, 0x0a, 0x94, 0x66, 0xaa, 0xe4, 0x51, 0x8f, 0x89,
-	0x07, 0xca, 0x42, 0x43, 0xe8, 0x3b, 0xe2, 0xf0, 0x0c, 0x85, 0xac, 0x97, 0x99, 0xac, 0x56, 0x25,
-	0x20, 0xe4, 0xee, 0xc1, 0x6c, 0x3c, 0xbf, 0x1b, 0x79, 0x7d, 0x8d, 0xe3, 0xfe, 0x96, 0xff, 0xa5,
-	0xfc, 0xe4, 0x81, 0x91, 0xe2, 0x41, 0x79, 0xda, 0x92, 0xc3, 0x85, 0x96, 0xe8, 0x63, 0xe2, 0x2e,
-	0x7e, 0x9b, 0x2d, 0xc2, 0x59, 0xad, 0x90, 0xd7, 0x28, 0x38, 0x82, 0x63, 0x51, 0x97, 0x4c, 0xfe,
-	0x71, 0xdf, 0xae, 0x21, 0x6b, 0x11, 0x1c, 0x9b, 0x4e, 0x88, 0x63, 0x9c, 0x33, 0x84, 0x2a, 0x92,
-	0x6d, 0x71, 0x81, 0xce, 0x88, 0x1e, 0x93, 0x87, 0x46, 0x7d, 0x03, 0x25, 0x14, 0x1c, 0xe1, 0x1c,
-	0xf9, 0x25, 0x38, 0xe3, 0xe9, 0xc1, 0xc7, 0xcf, 0xcc, 0x8a, 0x5e, 0x5f, 0x6f, 0x99, 0x7d, 0xb3,
-	0x65, 0xf6, 0xcf, 0x2d, 0xb3, 0x3f, 0xed, 0x98, 0x75, 0xb3, 0x63, 0xd6, 0xf7, 0x1d, 0xb3, 0xde,
-	0x3f, 0xf9, 0x6b, 0x3c, 0xdd, 0x72, 0x94, 0x3c, 0x55, 0xfa, 0x10, 0xae, 0xcd, 0xe6, 0x98, 0x11,
-	0xa5, 0x87, 0xfa, 0xd1, 0x5f, 0xfe, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x9a, 0x84, 0x65, 0xb2, 0x5d,
-	0x02, 0x00, 0x00,
+	// 609 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0xcb, 0x6e, 0xd3, 0x40,
+	0x14, 0x8d, 0x13, 0x14, 0xca, 0x54, 0x2d, 0x61, 0x48, 0x53, 0x37, 0x14, 0xbb, 0x18, 0x09, 0x2a,
+	0x1e, 0xb6, 0x5a, 0x76, 0xac, 0xa8, 0xc3, 0x43, 0x15, 0xaa, 0x84, 0x5c, 0x09, 0x24, 0x24, 0x14,
+	0x4d, 0xec, 0x2b, 0x63, 0x6a, 0xcf, 0x04, 0xcf, 0xa4, 0x6a, 0xff, 0xa0, 0x12, 0x1b, 0xfe, 0x81,
+	0x0d, 0xb0, 0xe5, 0x27, 0xba, 0xec, 0x92, 0x55, 0x40, 0xed, 0x1f, 0xe4, 0x0b, 0x90, 0x67, 0xc6,
+	0x4d, 0x1f, 0xa9, 0x80, 0x95, 0x67, 0xee, 0x39, 0xf7, 0xf8, 0xcc, 0x99, 0xab, 0x41, 0x0b, 0x61,
+	0x4a, 0x92, 0xcc, 0xdb, 0x5e, 0xe9, 0x81, 0x20, 0x2b, 0x9e, 0xdc, 0xb9, 0xfd, 0x9c, 0x09, 0x86,
+	0x9b, 0x22, 0xe7, 0xc2, 0xdd, 0x71, 0x55, 0x4d, 0x33, 0xda, 0xcd, 0x98, 0xc5, 0x4c, 0x12, 0xbc,
+	0x62, 0xa5, 0xb8, 0x6d, 0x2b, 0x64, 0x3c, 0x63, 0xdc, 0xeb, 0x11, 0x0e, 0x63, 0x31, 0x96, 0x50,
+	0x85, 0x3b, 0x3f, 0xaa, 0x68, 0xba, 0x53, 0xe8, 0x04, 0x10, 0xb2, 0x3c, 0xc2, 0x0f, 0xd0, 0x65,
+	0x12, 0x45, 0x39, 0x70, 0x6e, 0x1a, 0x4b, 0xc6, 0xf2, 0x15, 0x1f, 0x8f, 0x86, 0xf6, 0xec, 0x2e,
+	0xc9, 0xd2, 0xc7, 0x8e, 0x06, 0x9c, 0xa0, 0xa4, 0xe0, 0xaf, 0x06, 0x32, 0x13, 0x9a, 0x88, 0x84,
+	0xa4, 0x5d, 0xe9, 0x86, 0xf4, 0x52, 0xe8, 0x92, 0x8c, 0x0d, 0xa8, 0x30, 0xab, 0x4b, 0xb5, 0xe5,
+	0xe9, 0xd5, 0x05, 0x57, 0x39, 0x70, 0x0b, 0x07, 0xa5, 0x59, 0xb7, 0xc3, 0x12, 0xea, 0x6f, 0xee,
+	0x0f, 0xed, 0xca, 0x68, 0x68, 0xdb, 0x4a, 0xfe, 0x22, 0x21, 0xe7, 0xfb, 0x2f, 0x7b, 0x39, 0x4e,
+	0xc4, 0xfb, 0x41, 0xcf, 0x0d, 0x59, 0xe6, 0xe9, 0x13, 0xa9, 0xcf, 0x43, 0x1e, 0x6d, 0x79, 0x62,
+	0xb7, 0x0f, 0x5c, 0x6a, 0xf2, 0xa0, 0xa5, 0x65, 0x3a, 0xa5, 0xca, 0x9a, 0x14, 0xc1, 0x2f, 0x51,
+	0x9d, 0x0b, 0x22, 0x06, 0xdc, 0xac, 0x49, 0x5f, 0x8b, 0xee, 0xa4, 0x14, 0xdd, 0x4d, 0xc9, 0xf1,
+	0xe7, 0xb4, 0xb5, 0x19, 0x65, 0x4d, 0x75, 0x3a, 0x81, 0x96, 0x70, 0xf6, 0xaa, 0xa8, 0xae, 0x98,
+	0xf8, 0x39, 0x6a, 0x90, 0x50, 0x24, 0x8c, 0x76, 0x43, 0x96, 0xf5, 0x53, 0x10, 0x10, 0xc9, 0xe4,
+	0xa6, 0xfc, 0x1b, 0xa3, 0xa1, 0x3d, 0xaf, 0x93, 0x3b, 0xc3, 0x70, 0x82, 0xab, 0xaa, 0xd4, 0x29,
+	0x2b, 0xf8, 0x1d, 0x32, 0xb7, 0x81, 0x8b, 0x84, 0xc6, 0xdd, 0x3e, 0xe4, 0x09, 0x8b, 0x4e, 0xe8,
+	0x15, 0x49, 0x4e, 0xf9, 0xb7, 0xc7, 0x51, 0x5d, 0xc4, 0x74, 0x82, 0x96, 0x86, 0x5e, 0x49, 0x64,
+	0x2c, 0xff, 0x06, 0xb5, 0xce, 0x36, 0x15, 0xe7, 0x86, 0x48, 0xc6, 0x31, 0xe5, 0xdf, 0x1a, 0x0d,
+	0xed, 0x9b, 0x93, 0xc5, 0x15, 0xcf, 0x09, 0x9a, 0xa7, 0xa5, 0x75, 0xf9, 0x3e, 0xba, 0xb6, 0xc1,
+	0x63, 0xb9, 0x3b, 0x8e, 0x1c, 0xb7, 0x50, 0x9d, 0x03, 0x8d, 0x20, 0x57, 0x43, 0x14, 0xe8, 0x9d,
+	0xf3, 0xcd, 0x40, 0x0b, 0xe7, 0xd8, 0x01, 0xf0, 0x3e, 0xa3, 0x1c, 0xf0, 0x27, 0x03, 0xcd, 0xea,
+	0xbf, 0x95, 0x33, 0x64, 0xfc, 0x6d, 0x86, 0xd6, 0xf5, 0x45, 0xcd, 0x29, 0xef, 0xa7, 0xdb, 0xff,
+	0x6f, 0x72, 0x66, 0x74, 0xb3, 0x1a, 0x98, 0x7b, 0xbb, 0xa8, 0xbe, 0x26, 0xef, 0x08, 0x2f, 0x22,
+	0x73, 0xed, 0xf8, 0xb6, 0x06, 0x02, 0xd6, 0x29, 0x17, 0x84, 0x8a, 0x84, 0x08, 0x68, 0x54, 0xb0,
+	0x89, 0x9a, 0xa7, 0xd0, 0x67, 0x3b, 0x10, 0x0e, 0x04, 0x34, 0x8c, 0x31, 0xf2, 0x82, 0x6d, 0x43,
+	0x4e, 0x09, 0x0d, 0xe1, 0x35, 0x13, 0xd0, 0xa8, 0xe2, 0x79, 0x74, 0x5d, 0x21, 0x4f, 0x21, 0x85,
+	0x98, 0x08, 0xd8, 0x14, 0x64, 0x0b, 0x1a, 0xb5, 0xf6, 0xa5, 0xbd, 0x2f, 0x56, 0x65, 0xf5, 0x23,
+	0xaa, 0x6d, 0xf0, 0x18, 0x7f, 0x40, 0xb3, 0x67, 0x72, 0xbd, 0x3b, 0x79, 0x68, 0xcf, 0x45, 0xda,
+	0xf6, 0xfe, 0x91, 0x58, 0x66, 0xef, 0x3f, 0xd9, 0x3f, 0xb4, 0x8c, 0x83, 0x43, 0xcb, 0xf8, 0x7d,
+	0x68, 0x19, 0x9f, 0x8f, 0xac, 0xca, 0xc1, 0x91, 0x55, 0xf9, 0x79, 0x64, 0x55, 0xde, 0xde, 0x39,
+	0x11, 0x60, 0x21, 0x9a, 0x92, 0x1e, 0x97, 0x0b, 0x6f, 0x47, 0xbd, 0x4a, 0x2a, 0xc4, 0x5e, 0x5d,
+	0x3e, 0x28, 0x8f, 0xfe, 0x04, 0x00, 0x00, 0xff, 0xff, 0x15, 0x03, 0xf7, 0x4d, 0xb9, 0x04, 0x00,
+	0x00,
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// MsgClient is the client API for Msg service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type MsgClient interface {
+	ClaimClaimable(ctx context.Context, in *MsgClaimClaimable, opts ...grpc.CallOption) (*MsgClaimClaimableResponse, error)
+}
+
+type msgClient struct {
+	cc grpc1.ClientConn
+}
+
+func NewMsgClient(cc grpc1.ClientConn) MsgClient {
+	return &msgClient{cc}
+}
+
+func (c *msgClient) ClaimClaimable(ctx context.Context, in *MsgClaimClaimable, opts ...grpc.CallOption) (*MsgClaimClaimableResponse, error) {
+	out := new(MsgClaimClaimableResponse)
+	err := c.cc.Invoke(ctx, "/trst.x.claim.v1beta1.Msg/ClaimClaimable", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MsgServer is the server API for Msg service.
+type MsgServer interface {
+	ClaimClaimable(context.Context, *MsgClaimClaimable) (*MsgClaimClaimableResponse, error)
+}
+
+// UnimplementedMsgServer can be embedded to have forward compatible implementations.
+type UnimplementedMsgServer struct {
+}
+
+func (*UnimplementedMsgServer) ClaimClaimable(ctx context.Context, req *MsgClaimClaimable) (*MsgClaimClaimableResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimClaimable not implemented")
+}
+
+func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
+	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_ClaimClaimable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClaimClaimable)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ClaimClaimable(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/trst.x.claim.v1beta1.Msg/ClaimClaimable",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ClaimClaimable(ctx, req.(*MsgClaimClaimable))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Msg_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "trst.x.claim.v1beta1.Msg",
+	HandlerType: (*MsgServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ClaimClaimable",
+			Handler:    _Msg_ClaimClaimable_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "claim/v1beta1/claim.proto",
 }
 
 func (m *ClaimRecord) Marshal() (dAtA []byte, err error) {
@@ -179,18 +433,19 @@ func (m *ClaimRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.ActionCompleted) > 0 {
-		for iNdEx := len(m.ActionCompleted) - 1; iNdEx >= 0; iNdEx-- {
-			i--
-			if m.ActionCompleted[iNdEx] {
-				dAtA[i] = 1
-			} else {
-				dAtA[i] = 0
+	if len(m.Status) > 0 {
+		for iNdEx := len(m.Status) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Status[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintClaim(dAtA, i, uint64(size))
 			}
+			i--
+			dAtA[i] = 0x1a
 		}
-		i = encodeVarintClaim(dAtA, i, uint64(len(m.ActionCompleted)))
-		i--
-		dAtA[i] = 0x22
 	}
 	if len(m.InitialClaimableAmount) > 0 {
 		for iNdEx := len(m.InitialClaimableAmount) - 1; iNdEx >= 0; iNdEx-- {
@@ -212,6 +467,132 @@ func (m *ClaimRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintClaim(dAtA, i, uint64(len(m.Address)))
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *Status) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Status) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Status) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.VestingPeriodClaimed) > 0 {
+		for iNdEx := len(m.VestingPeriodClaimed) - 1; iNdEx >= 0; iNdEx-- {
+			i--
+			if m.VestingPeriodClaimed[iNdEx] {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+		}
+		i = encodeVarintClaim(dAtA, i, uint64(len(m.VestingPeriodClaimed)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.VestingPeriodCompleted) > 0 {
+		for iNdEx := len(m.VestingPeriodCompleted) - 1; iNdEx >= 0; iNdEx-- {
+			i--
+			if m.VestingPeriodCompleted[iNdEx] {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+		}
+		i = encodeVarintClaim(dAtA, i, uint64(len(m.VestingPeriodCompleted)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.ActionCompleted {
+		i--
+		if m.ActionCompleted {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgClaimClaimable) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClaimClaimable) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClaimClaimable) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Sender) > 0 {
+		i -= len(m.Sender)
+		copy(dAtA[i:], m.Sender)
+		i = encodeVarintClaim(dAtA, i, uint64(len(m.Sender)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgClaimClaimableResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClaimClaimableResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClaimClaimableResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ClaimedAmount) > 0 {
+		for iNdEx := len(m.ClaimedAmount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ClaimedAmount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintClaim(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
 	}
 	return len(dAtA) - i, nil
 }
@@ -243,8 +624,57 @@ func (m *ClaimRecord) Size() (n int) {
 			n += 1 + l + sovClaim(uint64(l))
 		}
 	}
-	if len(m.ActionCompleted) > 0 {
-		n += 1 + sovClaim(uint64(len(m.ActionCompleted))) + len(m.ActionCompleted)*1
+	if len(m.Status) > 0 {
+		for _, e := range m.Status {
+			l = e.Size()
+			n += 1 + l + sovClaim(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *Status) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ActionCompleted {
+		n += 2
+	}
+	if len(m.VestingPeriodCompleted) > 0 {
+		n += 1 + sovClaim(uint64(len(m.VestingPeriodCompleted))) + len(m.VestingPeriodCompleted)*1
+	}
+	if len(m.VestingPeriodClaimed) > 0 {
+		n += 1 + sovClaim(uint64(len(m.VestingPeriodClaimed))) + len(m.VestingPeriodClaimed)*1
+	}
+	return n
+}
+
+func (m *MsgClaimClaimable) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sender)
+	if l > 0 {
+		n += 1 + l + sovClaim(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgClaimClaimableResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.ClaimedAmount) > 0 {
+		for _, e := range m.ClaimedAmount {
+			l = e.Size()
+			n += 1 + l + sovClaim(uint64(l))
+		}
 	}
 	return n
 }
@@ -350,7 +780,111 @@ func (m *ClaimRecord) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClaim
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClaim
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClaim
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Status = append(m.Status, Status{})
+			if err := m.Status[len(m.Status)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClaim(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthClaim
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Status) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClaim
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Status: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Status: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ActionCompleted", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClaim
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ActionCompleted = bool(v != 0)
+		case 2:
 			if wireType == 0 {
 				var v int
 				for shift := uint(0); ; shift += 7 {
@@ -367,7 +901,7 @@ func (m *ClaimRecord) Unmarshal(dAtA []byte) error {
 						break
 					}
 				}
-				m.ActionCompleted = append(m.ActionCompleted, bool(v != 0))
+				m.VestingPeriodCompleted = append(m.VestingPeriodCompleted, bool(v != 0))
 			} else if wireType == 2 {
 				var packedLen int
 				for shift := uint(0); ; shift += 7 {
@@ -396,8 +930,8 @@ func (m *ClaimRecord) Unmarshal(dAtA []byte) error {
 				}
 				var elementCount int
 				elementCount = packedLen
-				if elementCount != 0 && len(m.ActionCompleted) == 0 {
-					m.ActionCompleted = make([]bool, 0, elementCount)
+				if elementCount != 0 && len(m.VestingPeriodCompleted) == 0 {
+					m.VestingPeriodCompleted = make([]bool, 0, elementCount)
 				}
 				for iNdEx < postIndex {
 					var v int
@@ -415,11 +949,247 @@ func (m *ClaimRecord) Unmarshal(dAtA []byte) error {
 							break
 						}
 					}
-					m.ActionCompleted = append(m.ActionCompleted, bool(v != 0))
+					m.VestingPeriodCompleted = append(m.VestingPeriodCompleted, bool(v != 0))
 				}
 			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field ActionCompleted", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field VestingPeriodCompleted", wireType)
 			}
+		case 3:
+			if wireType == 0 {
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowClaim
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.VestingPeriodClaimed = append(m.VestingPeriodClaimed, bool(v != 0))
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowClaim
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthClaim
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthClaim
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				elementCount = packedLen
+				if elementCount != 0 && len(m.VestingPeriodClaimed) == 0 {
+					m.VestingPeriodClaimed = make([]bool, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowClaim
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.VestingPeriodClaimed = append(m.VestingPeriodClaimed, bool(v != 0))
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field VestingPeriodClaimed", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClaim(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthClaim
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClaimClaimable) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClaim
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClaimClaimable: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClaimClaimable: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClaim
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClaim
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthClaim
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sender = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClaim(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthClaim
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClaimClaimableResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClaim
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClaimClaimableResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClaimClaimableResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClaimedAmount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClaim
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClaim
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthClaim
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClaimedAmount = append(m.ClaimedAmount, types.Coin{})
+			if err := m.ClaimedAmount[len(m.ClaimedAmount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipClaim(dAtA[iNdEx:])

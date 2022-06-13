@@ -19,10 +19,11 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		ModuleAccountBalance: sdk.NewCoin(DefaultClaimDenom, sdk.ZeroInt()),
 		Params: Params{
-			AirdropStartTime:   time.Time{},
-			DurationUntilDecay: DefaultDurationUntilDecay, // 2 month
-			DurationOfDecay:    DefaultDurationOfDecay,    // 4 months
-			ClaimDenom:         DefaultClaimDenom,         // utrst
+			AirdropStartTime:       time.Time{},
+			DurationUntilDecay:     DefaultDurationUntilDecay, // 2 month
+			DurationOfDecay:        DefaultDurationOfDecay,    // 4 months
+			ClaimDenom:             DefaultClaimDenom,         // utrst
+			DurationVestingPeriods: DefaultDurationVestingPeriods,
 		},
 		ClaimRecords: []ClaimRecord{},
 	}

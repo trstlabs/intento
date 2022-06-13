@@ -1,30 +1,31 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/trstlabs/trst/x/claim/types"
-	itemtypes "github.com/trstlabs/trst/x/item/types"
 )
 
 func (k Keeper) AfterComputeExecuted(ctx sdk.Context, sender sdk.AccAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionComputeExecute, "60s") //"1440h") //vest for 240 days /8 months
+	_, err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionComputeExecute)
 	if err != nil {
 		panic(err.Error())
 	}
 }
 
 func (k Keeper) AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionComputeInstantiate, "60s") // "168h") //vest for 4 weeks
+	_, err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionComputeInstantiate)
 	if err != nil {
 		panic(err.Error())
 	}
 }
 
-func (k Keeper) AfterItemBought(ctx sdk.Context, sender sdk.AccAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, sender, types.ActionItemBought, "336h") //vest for 8 weeks
+func (k Keeper) AfterGovernanceVoted(ctx sdk.Context, sender sdk.AccAddress) {
+	_, err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionGovernanceVote)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -32,15 +33,16 @@ func (k Keeper) AfterItemBought(ctx sdk.Context, sender sdk.AccAddress) {
 
 /*
 func (k Keeper) AfterItemTokenized(ctx sdk.Context, creator sdk.AccAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, creator, types.ActionItemTokenized)
-	if err != nil {
-		panic(err.Error())
-	}
+    _, err := k.ClaimInitialCoinsForAction(ctx, creator, types.ActionItemTokenized)
+    if err != nil {
+        panic(err.Error())
+    }
 }*/
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	_, err := k.ClaimCoinsForAction(ctx, delAddr, types.ActionDelegateStake, "60s") //"720h") //vest for 120 days/ 4 months
+	_, err := k.ClaimInitialCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
 	if err != nil {
+		fmt.Printf("err: %v \n", err)
 		panic(err.Error())
 	}
 }
@@ -54,7 +56,7 @@ type Hooks struct {
 
 var _ stakingtypes.StakingHooks = Hooks{}
 
-var _ itemtypes.ItemHooks = Hooks{}
+//var _ itemtypes.ItemHooks = Hooks{}
 
 var _ govtypes.GovHooks = Hooks{}
 
@@ -72,6 +74,7 @@ func (h Hooks) AfterProposalVotingPeriodEnded(ctx sdk.Context, proposalID uint64
 func (h Hooks) AfterProposalFailedMinDeposit(ctx sdk.Context, proposalID uint64)  {}
 
 func (h Hooks) AfterProposalVote(ctx sdk.Context, proposalID uint64, voterAddr sdk.AccAddress) {
+	h.k.AfterGovernanceVoted(ctx, voterAddr)
 
 }
 
@@ -98,15 +101,16 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 }
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {}
 
+/*
 // item hooks
 
 func (h Hooks) AfterItemTokenized(ctx sdk.Context, senderAddr sdk.AccAddress) {
 	//h.k.AfterItemTokenized(ctx, senderAddr)
 }
 func (h Hooks) AfterItemBought(ctx sdk.Context, senderAddr sdk.AccAddress) {
-	h.k.AfterItemBought(ctx, senderAddr)
+	//h.k.AfterItemBought(ctx, senderAddr)
 }
-
+*/
 // Compute hooks
 func (h Hooks) AfterComputeExecuted(ctx sdk.Context, senderAddr sdk.AccAddress) {
 	h.k.AfterComputeExecuted(ctx, senderAddr)

@@ -7,7 +7,7 @@ use enclave_cosmwasm_types::encoding::Binary;
 use enclave_cosmwasm_types::types::{CanonicalAddr, HumanAddr, Env};
 use enclave_crypto::Ed25519PublicKey;
 use enclave_utils::coalesce;
-use std::convert::TryInto;
+//use std::convert::TryInto;
 use crate::external::results::{HandleSuccess, InitSuccess, QuerySuccess, CallbackSigSuccess};
 
 use super::contract_validation::{

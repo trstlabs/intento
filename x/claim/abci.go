@@ -13,10 +13,10 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		panic(err)
 	}
 
-	k.IterateVestingQueue(ctx, ctx.BlockHeader().Time, func(coins sdk.Coins) bool { return true })
+	k.IterateVestingQueue(ctx, ctx.BlockHeader().Time, func(period int32) bool { return true })
 	// End Airdrop
-	goneTime := ctx.BlockTime().Sub(params.AirdropStartTime)
-	if goneTime > params.DurationUntilDecay+params.DurationOfDecay {
+	timeElapsed := ctx.BlockTime().Sub(params.AirdropStartTime)
+	if timeElapsed > params.DurationUntilDecay+params.DurationOfDecay {
 		// airdrop time passed
 		err := k.EndAirdrop(ctx)
 		if err != nil {

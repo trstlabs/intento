@@ -11,7 +11,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// Params returns params of the mint module.
+// Params returns params of the claim module.
 func (k Keeper) ModuleAccountBalance(
 	c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
 
@@ -21,7 +21,7 @@ func (k Keeper) ModuleAccountBalance(
 	return &types.QueryModuleAccountBalanceResponse{ModuleAccountBalance: moduleAccBal}, nil
 }
 
-// Params returns params of the mint module.
+// Params returns params of the claim module.
 func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	params, err := k.GetParams(ctx)
@@ -32,7 +32,7 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 	return &types.QueryParamsResponse{Params: params}, nil
 }
 
-// Claimable returns claimable amount per user
+// ClaimRecord returns claimrecord per account
 func (k Keeper) ClaimRecord(
 	goCtx context.Context,
 	req *types.QueryClaimRecordRequest,
@@ -67,7 +67,7 @@ func (k Keeper) ClaimableForAction(
 		return nil, err
 	}
 
-	coins, err := k.GetClaimableAmountForAction(ctx, addr, req.Action)
+	coins, err := k.GetTotalClaimableAmountForAction(ctx, addr, req.Action)
 
 	return &types.QueryClaimableForActionResponse{
 		Coins: coins,
@@ -89,7 +89,7 @@ func (k Keeper) TotalClaimable(
 		return nil, err
 	}
 
-	coins, err := k.GetUserTotalClaimable(ctx, addr)
+	coins, err := k.GetTotalClaimableForAddr(ctx, addr)
 
 	return &types.QueryTotalClaimableResponse{
 		Coins: coins,

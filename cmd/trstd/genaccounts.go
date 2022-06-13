@@ -349,10 +349,11 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 					claimableAmount = sdk.ZeroInt()
 					liquidCoins = sdk.NewCoins(sdk.NewCoin("utrst", normalizedTrstBalance.TruncateInt()))
 				}
+				status := claimtypes.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
 					Address:                address.String(),
 					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, claimableAmount)),
-					ActionCompleted:        []bool{false, false, false, false},
+					Status:                 []claimtypes.Status{status, status, status, status},
 				})
 
 				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)

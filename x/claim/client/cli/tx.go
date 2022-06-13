@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 	"github.com/trstlabs/trst/x/claim/types"
 )
@@ -18,7 +20,33 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	claimTxCmd.AddCommand()
+	claimTxCmd.AddCommand(CmdClaimClaimable())
 
 	return claimTxCmd
+}
+
+func CmdClaimClaimable() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "claim",
+		Short: "Claim the amount that is currently available given that at least one vesting period for one claim has passed",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgClaimClaimable(
+				clientCtx.GetFromAddress(),
+			)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }
