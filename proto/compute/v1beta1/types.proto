@@ -139,24 +139,26 @@ message KeyPair {
 // Params defines the params for activeness of contracts on governance proposals.
 message Params {
    option (gogoproto.goproto_stringer) = false;
-    int64 Commission  = 1;
+    int64 AutoMsgFundsCommission  = 1;
+    int64 AutoMsgConstantFee = 2;
+    int64 ContinuousAutoMsgConstantFee = 3;
     //  Maximum period for self-executing contract
-   google.protobuf.Duration MaxContractDuration = 2 [
+   google.protobuf.Duration MaxContractDuration = 4 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "max_contract_duration,omitempty"
   ];
     //  Minimum period for self-executing contract
-   google.protobuf.Duration MinContractDuration = 3 [
+   google.protobuf.Duration MinContractDuration = 5 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "min_contract_duration,omitempty"
   ];
-    google.protobuf.Duration MinContractDurationForIncentive = 4 [
+    google.protobuf.Duration MinContractDurationForIncentive = 6 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "min_contract_duration_for_reward,omitempty"
   ];
-    int64 MaxContractIncentive = 5;
-    int64 MinContractBalanceForIncentive = 6;
+    int64 MaxContractIncentive = 7;
+    int64 MinContractBalanceForIncentive = 8;
 }

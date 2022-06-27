@@ -1,1 +1,0 @@
-trstd rest-server --laddr tcp://0.0.0.0:1317 --unsafe-cors

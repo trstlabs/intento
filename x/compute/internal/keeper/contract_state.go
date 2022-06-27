@@ -86,7 +86,7 @@ func (k Keeper) setContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress,
 }
 
 // SetContractPublicState sets the result of the contract from wasm attributes, it overrides existing keys
-func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress, result []wasmTypes.LogAttribute) error {
+func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress, result []wasmTypes.LogAttribute) {
 	prefixStoreKey := types.GetPublicContractStateKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 	for _, attr := range result {
@@ -94,7 +94,7 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccA
 			prefixStore.Set([]byte(attr.Key), []byte(attr.Value))
 		}
 	}
-	return nil
+	return
 }
 
 //GetContractPublicState

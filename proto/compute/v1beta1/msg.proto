@@ -26,7 +26,6 @@ message MsgStoreCode {
   string contract_duration = 5;
   string title = 6;
   string description = 7;
-  uint64 instances = 8;
 }
 
 message MsgInstantiateContract {

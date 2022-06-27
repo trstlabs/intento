@@ -1,6 +1,9 @@
 package claim
 
 import (
+	"fmt"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/trstlabs/trst/x/claim/keeper"
 )
@@ -13,7 +16,24 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		panic(err)
 	}
 
-	k.IterateVestingQueue(ctx, ctx.BlockHeader().Time, func(period int32) bool { return true })
+	k.IterateVestingQueue(ctx, ctx.BlockHeader().Time, func(recipientAddr sdk.AccAddress, action int32, period int32, endTime time.Time) bool {
+		claimRecord, err := k.GetClaimRecord(ctx, recipientAddr)
+		if err != nil {
+			fmt.Printf("err record for %s\n", recipientAddr.String())
+			panic("Failed to get claim record ")
+		}
+		//fmt.Printf("iteration for %s; current time %s; action: %v; period: %v\n", endTime, ctx.BlockHeader().Time, action, period)
+		claimRecord.Status[action].VestingPeriodCompleted[period] = true
+		err = k.SetClaimRecord(ctx, claimRecord)
+		if err != nil {
+			fmt.Printf("err record for %s\n", recipientAddr.String())
+			panic("Failed to set claim record ")
+
+		}
+		k.RemoveEntryFromVestingQueue(ctx, recipientAddr.String(), endTime)
+
+		return true
+	})
 	// End Airdrop
 	timeElapsed := ctx.BlockTime().Sub(params.AirdropStartTime)
 	if timeElapsed > params.DurationUntilDecay+params.DurationOfDecay {

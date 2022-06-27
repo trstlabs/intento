@@ -34,8 +34,7 @@ import (
 )
 
 type GenesisParams struct {
-	AirdropSupply sdk.Int
-
+	AirdropSupply            sdk.Int
 	StrategicReserveAccounts []banktypes.Balance
 	DistributedAccounts      []banktypes.Balance
 	ConsensusParams          *tmproto.ConsensusParams
@@ -255,9 +254,8 @@ func PrepareGenesis(
 func MainnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
-	genParams.AirdropSupply = sdk.NewInt(180_000_000_000_000)             // (180M TRST)
+	genParams.AirdropSupply = sdk.NewInt(100_000_000_000_000)             // (100M TRST)
 	genParams.GenesisTime = time.Date(2023, 02, 1, 17, 0, 0, 0, time.UTC) // 2023 2 Feb - 17:00 UTC
-
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{
 			Description: "The native token of TRST",
@@ -280,9 +278,9 @@ func MainnetGenesisParams() GenesisParams {
 	// alloc
 	genParams.AllocParams = alloctypes.DefaultParams()
 	genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
-		Staking:                     sdk.MustNewDecFromStr("0.55"), // 25%
+		Staking:                     sdk.MustNewDecFromStr("0.60"), // 25%
 		CommunityPool:               sdk.MustNewDecFromStr("0.25"), // 5%
-		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.15"), // 45%
+		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.10"), // 45%
 		//ItemIncentives:              sdk.MustNewDecFromStr("0.05"), // 45%
 		DeveloperRewards: sdk.MustNewDecFromStr("0.05"), // 25%
 
@@ -346,7 +344,9 @@ func MainnetGenesisParams() GenesisParams {
 	//compute
 	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 30
 	genParams.ComputeParams.MinContractDuration = time.Hour * 24
-	genParams.ComputeParams.Commission = 2
+	genParams.ComputeParams.AutoMsgFundsCommission = 2
+	genParams.ComputeParams.AutoMsgConstantFee = 1000000
+	genParams.ComputeParams.ContinuousAutoMsgConstantFee = 1000000
 	genParams.ComputeParams.MinContractDurationForIncentive = time.Hour * 24 * 4
 	genParams.ComputeParams.MinContractBalanceForIncentive = 50000000
 	genParams.ComputeParams.MaxContractIncentive = 500000000
@@ -389,7 +389,7 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime
 	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 5 // 5 days
 	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 5    // 5 days
-	genParams.ClaimParams.DurationVestingPeriods = []time.Duration{time.Minute, time.Minute * 2, time.Minute * 5, time.Minute * 3}
+	genParams.ClaimParams.DurationVestingPeriods = []time.Duration{time.Minute, time.Minute * 2, time.Minute * 5, time.Minute}
 
 	//compute
 	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 30

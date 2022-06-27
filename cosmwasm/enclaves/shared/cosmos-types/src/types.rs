@@ -793,7 +793,6 @@ impl CosmWasmMsg {
                   "Contract address was empty: {}",
                   raw_msg.contract.len(),
               );
-              Err(EnclaveError::FailedToDeserialize);
         };
        
         let sent_funds = Self::parse_funds(raw_msg.sent_funds)?;

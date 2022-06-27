@@ -150,12 +150,12 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genState types.GenesisState
-	fmt.Println("Initializing genesis claims...")
+	fmt.Println("Initializing claims genesis...")
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
 
 	InitGenesis(ctx, am.keeper, genState)
-
+	//fmt.Println("claims genesis initialized")
 	return []abci.ValidatorUpdate{}
 }
 

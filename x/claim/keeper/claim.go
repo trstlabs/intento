@@ -11,7 +11,7 @@ import (
 	"github.com/trstlabs/trst/x/claim/types"
 )
 
-// GetModuleAccountBalance gets the airdrop coin balance of module account
+// GetModuleAccountAddress gets the airdrop coin balance of module account
 func (k Keeper) GetModuleAccountAddress(ctx sdk.Context) sdk.AccAddress {
 	return k.accountKeeper.GetModuleAddress(types.ModuleName)
 }
@@ -26,7 +26,7 @@ func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
 	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, params.ClaimDenom)
 }
 
-// SetModuleAccountBalance set balance of airdrop module
+// CreateModuleAccount sets balance of airdrop module
 func (k Keeper) CreateModuleAccount(ctx sdk.Context, amount sdk.Coin) {
 	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, authtypes.Minter)
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
@@ -46,7 +46,7 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 	return nil
 }
 
-// ClearClaimables clear claimable amounts
+// clearInitialClaimables clear claimable amounts
 func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(types.ClaimRecordsStorePrefix))
@@ -56,7 +56,7 @@ func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
 	}
 }
 
-// SetClaimables set claimable amount from balances object
+// SetClaimRecords sets claim records
 func (k Keeper) SetClaimRecords(ctx sdk.Context, claimRecords []types.ClaimRecord) error {
 	for _, claimRecord := range claimRecords {
 		err := k.SetClaimRecord(ctx, claimRecord)
@@ -67,7 +67,7 @@ func (k Keeper) SetClaimRecords(ctx sdk.Context, claimRecords []types.ClaimRecor
 	return nil
 }
 
-// GetClaimRecords get claimarecords for genesis export
+// GetClaimRecords get claim records for genesis export
 func (k Keeper) GetClaimRecords(ctx sdk.Context) []types.ClaimRecord {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimRecordsStorePrefix))
@@ -95,7 +95,7 @@ func (k Keeper) GetClaimRecord(ctx sdk.Context, addr sdk.AccAddress) (types.Clai
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimRecordsStorePrefix))
 	if !prefixStore.Has(addr) {
-		return types.ClaimRecord{}, nil
+		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claim record")
 	}
 	bz := prefixStore.Get(addr)
 
@@ -104,7 +104,9 @@ func (k Keeper) GetClaimRecord(ctx sdk.Context, addr sdk.AccAddress) (types.Clai
 	if err != nil {
 		return types.ClaimRecord{}, err
 	}
-
+	if len(claimRecord.Status) == 0 {
+		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claim record")
+	}
 	return claimRecord, nil
 }
 
@@ -216,42 +218,45 @@ func (k Keeper) GetTotalClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) (
 }
 
 // ClaimInitialCoinsForAction remove claimable amount entry and transfer it to recipient's account
-func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action types.Action) (sdk.Coins, error) {
-	claimableCoin, err := k.GetTotalClaimableAmountForAction(ctx, addr, action)
+func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress, action types.Action) error {
+	claimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
-		return claimableCoin, err
+		return err
 	}
 
-	if claimableCoin.Empty() {
-		return claimableCoin, nil
+	if claimRecord.Status[action].ActionCompleted {
+		return nil //sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address already claimed tokens for this action")
 	}
-	//fmt.Printf("claimableCoin %v \n", claimableCoin)
+	claimableCoin, err := k.GetTotalClaimableAmountForAction(ctx, addr, action)
+	if err != nil {
+		return err
+	}
+	if claimableCoin.Empty() {
+		return nil
+	}
+
 	//we distribute 20% after action completion and the remaining become claimable after each vesting period (4)
 	claimsPortion := sdk.NewCoins(sdk.NewCoin(types.Denom, claimableCoin.AmountOf(types.Denom).QuoRaw(5)))
 	//fmt.Printf("claimsPortion %v \n", claimsPortion)
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, claimsPortion)
 	if err != nil {
-		return claimableCoin, err
+		return err
 	}
 
 	//creates entries into the endblocker ( 4 )
 	err = k.InsertEntriesIntoVestingQueue(ctx, addr.String(), byte(action), ctx.BlockHeader().Time)
 	if err != nil {
 		fmt.Printf("err %v \n", err)
-		return claimableCoin, err
+		return err
 	}
-	//fmt.Printf("test1 %v \n", claimableCoin)
+
 	//set claim record
-	claimRecord, err := k.GetClaimRecord(ctx, addr)
-	if err != nil {
-		return nil, err
-	}
 	//fmt.Printf("claimRecord %v \n", claimRecord)
 	claimRecord.Status[action].ActionCompleted = true
 	err = k.SetClaimRecord(ctx, claimRecord)
 	if err != nil {
 		//fmt.Printf("err %v \n", err)
-		return claimableCoin, err
+		return err
 	}
 	//fmt.Printf("test %v \n", claimableCoin)
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -262,47 +267,85 @@ func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress,
 		),
 	})
 
-	return claimableCoin, nil
+	return nil
 }
 
 // ClaimClaimableForAddr remove claimable amount entries and transfer it to the sender account
 func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) error {
 	claimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
+		fmt.Printf("err: %v\n", err)
 		return err
 	}
-	var claimableCoin sdk.Coin
+	fmt.Printf("record: %v\n", claimRecord)
+	claimableCoin := sdk.NewCoin(types.Denom, sdk.ZeroInt())
+	claimedCoin := sdk.NewCoin(types.Denom, sdk.ZeroInt())
+	var toClaimPeriods int64 = 0
+	var claimedPeriods int64 = 1
 	for action, status := range claimRecord.Status {
 		if !status.ActionCompleted {
-			break
+			continue
 		}
-		toClaimPeriods := 0
+		fmt.Printf("action %v\n", action)
 		for period, completed := range status.VestingPeriodCompleted {
-			if !completed {
+			fmt.Printf("period %v ; completed: %v\n", period, completed)
+			if completed && !status.VestingPeriodClaimed[period] {
 				toClaimPeriods = toClaimPeriods + 1
+			} else if completed && status.VestingPeriodClaimed[period] {
+				claimedPeriods = claimedPeriods + 1
 			}
-			//fmt.Printf("period %v \n", period)
 			claimRecord.Status[action].VestingPeriodClaimed[period] = true
 		}
-		//actionType := types.Action_name[int32(action)]
+
 		totalClaimableCoinsForAction, err := k.GetTotalClaimableAmountForAction(ctx, addr, types.Action(action))
 		if err != nil {
 			return err
 		}
-
-		claimableCoin.AddAmount(totalClaimableCoinsForAction.AmountOf(types.Denom).QuoRaw(int64(toClaimPeriods) / 4))
+		fmt.Printf("claimedPeriods %v\n", claimedPeriods)
+		fmt.Printf("toClaimPeriods %v\n", toClaimPeriods)
+		if toClaimPeriods != 0 {
+			/*	fmt.Printf("claimableCoin %v\n", claimableCoin)
+				fmt.Printf("totalClaimableCoinsForAction %v\n", totalClaimableCoinsForAction)
+				fmt.Printf("breuk %v\n", int64(toClaimPeriods/4))
+				fmt.Printf("dec %v\n", sdk.NewDec(toClaimPeriods))
+				fmt.Printf("quo %v\n", toClaimPercent)*/
+			toClaimPercent := sdk.NewDec(toClaimPeriods).Quo(sdk.NewDec(4))
+			claimableTotalDec := sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(types.Denom))
+			claimableDec := claimableTotalDec.Mul(toClaimPercent)
+			/*fmt.Printf("claimableTotalDec %v\n", claimableTotalDec)
+			fmt.Printf("claimableDec %v\n", claimableDec)
+			fmt.Printf("claimableDec %v\n", claimableDec.BigInt())
+			fmt.Printf("claimableDec int %v\n", claimableDec.TruncateInt())*/
+			claimableCoin = claimableCoin.AddAmount(claimableDec.TruncateInt())
+			//fmt.Printf("claimableCoin %v\n", claimableCoin)
+			//claimableCoin.AddAmount((sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(types.Denom)).Mul(percent)).TruncateInt())
+			//claimableCoin.AddAmount(totalClaimableCoinsForAction.AmountOf(types.Denom).MulRaw(int64(toClaimPeriods / 4)))
+			fmt.Printf("all: %v\n", (sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(types.Denom)).Mul(toClaimPercent)).TruncateInt())
+		}
+		if claimedPeriods != 0 {
+			claimedPercent := sdk.NewDec(claimedPeriods).Quo(sdk.NewDec(4))
+			claimedCoin = claimedCoin.AddAmount(sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(types.Denom)).Mul(claimedPercent).TruncateInt())
+			//fmt.Printf("claimedCoin %v\n", claimedCoin)
+			//claimedCoin.AddAmount(totalClaimableCoinsForAction.AmountOf(types.Denom).MulRaw(int64(claimedPeriods) / 4))
+		}
 	}
+	if toClaimPeriods == 0 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claimable tokens right now")
+	}
+	fmt.Printf("claimableCoin %v\n", claimableCoin)
+	fmt.Printf("claimedCoin %v\n", claimedCoin)
 	//get delegations and calculate min bonded ratio for claim
 	delegationInfo := k.stakingKeeper.GetAllDelegatorDelegations(ctx, addr)
+	//fmt.Printf("delegationInfo %v\n", delegationInfo)
 	totalDelegations := sdk.ZeroDec()
 	for _, delegation := range delegationInfo {
 		totalDelegations = totalDelegations.Add(delegation.Shares)
 	}
-	minBonded := sdk.NewDecWithPrec(67, 2).MulInt(claimRecord.InitialClaimableAmount.AmountOf(types.Denom))
-	fmt.Printf("totalDelegations: %v\n", totalDelegations)
+	fmt.Printf("totalDelegations %v\n", totalDelegations)
+	minBonded := sdk.NewDecWithPrec(67, 2).MulInt(claimedCoin.Amount)
 	fmt.Printf("minBonded amount: %v\n", minBonded)
 	if totalDelegations.Sub(minBonded).IsNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have enough staked")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have enough staked tokens")
 	}
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, sdk.NewCoins(claimableCoin))
 	if err != nil {

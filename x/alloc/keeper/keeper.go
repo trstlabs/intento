@@ -107,7 +107,7 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 	}
 
 	// subtract from original provision to ensure no coins left over after the allocations
-	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins)/*.Sub(itemIncentiveCoins)*/.Sub(contrIncentiveCoins).Sub(devRewardCoins)
+	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins). /*.Sub(itemIncentiveCoins)*/ Sub(contrIncentiveCoins).Sub(devRewardCoins)
 
 	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, blockInflationAddr)
 	if err != nil {

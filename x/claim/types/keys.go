@@ -53,12 +53,12 @@ func SplitVestingQueueKey(key []byte) (vestingAddr string, endTime time.Time) {
 	return splitKeyWithTime(key)
 }
 
-// VestingByTimeKey gets the listed item queue key by endTime
+// VestingByTimeKey gets the listed claim queue key by endTime
 func VestingByTimeKey(endTime time.Time) []byte {
 	return append(VestingQueuePrefix, sdk.FormatTimeBytes(endTime)...)
 }
 
-//from the key we get the contract and end time
+//from the key we get the claim and end time
 func splitKeyWithTime(key []byte) (vestingAddr string, endTime time.Time) {
 
 	/*if len(key[1:]) != 8+lenTime {
@@ -66,11 +66,7 @@ func splitKeyWithTime(key []byte) (vestingAddr string, endTime time.Time) {
 	}*/
 
 	endTime, _ = sdk.ParseTimeBytes(key[1 : 1+lenTime])
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//fmt.Printf("endTime is %s ", endTime)
-
+	//fmt.Printf("time %s \n", endTime)
 	//returns an id from bytes
 	vestingAddr = string(key[1+lenTime:])
 
@@ -78,7 +74,7 @@ func splitKeyWithTime(key []byte) (vestingAddr string, endTime time.Time) {
 	return
 }
 
-// VestingQueueKey returns the key with prefix for an contract in the Listed Item Queue
+// VestingQueueKey returns the key with prefix for an contract in the Listed claim Queue
 func VestingQueueKey(vestingAddr string, endTime time.Time) []byte {
 	return append(VestingByTimeKey(endTime), []byte(vestingAddr)...)
 }

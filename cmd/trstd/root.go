@@ -333,14 +333,12 @@ func updateTmParamsAndInit(mbm module.BasicManager, defaultNodeHome string) *cob
 }
 
 func initConfig(ctx *client.Context, cmd *cobra.Command) error {
-	//cmd.PersistentFlags().Bool(flagLegacyHdPath, false, "Flag to specify the command uses old HD path - use this for ledger compatibility")
-
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(prefix.Bech32PrefixAccAddr, prefix.Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(prefix.Bech32PrefixValAddr, prefix.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(prefix.Bech32PrefixConsAddr, prefix.Bech32PrefixConsPub)
 
-	cfgFilePath := filepath.Join(app.DefaultCLIHome, "config", cfgFileName)
+	cfgFilePath := filepath.Join(app.DefaultNodeHome, "config", cfgFileName)
 	if _, err := os.Stat(cfgFilePath); err == nil {
 		viper.SetConfigFile(cfgFilePath)
 

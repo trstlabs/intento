@@ -147,7 +147,6 @@ blockchain. Writes the certificate in DER format to ~/attestation_cert.der
 					return err
 				}
 			}
-			fmt.Print("cert", cert)
 			pubkey, err := ra.VerifyRaCert(cert)
 			if err != nil {
 				return err

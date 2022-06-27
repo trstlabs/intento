@@ -107,15 +107,10 @@ import (
 const Name = "trst"
 
 var (
+	homeDir, _ = os.UserHomeDir()
+
 	//// DefaultNodeHome default home directories for the application daemon
-	//DefaultNodeHome string
-
-	// DefaultCLIHome default home directories for the application CLI
-	homeDir, _     = os.UserHomeDir()
-	DefaultCLIHome = filepath.Join(homeDir, ".trst")
-
-	// DefaultNodeHome sets the folder where the applcation data and configuration will be stored
-	DefaultNodeHome = filepath.Join(homeDir, ".trst")
+	DefaultNodeHome = filepath.Join(homeDir, ".trstd")
 
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
@@ -323,7 +318,7 @@ func NewTrstApp(
 		appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, authtypes.FeeCollectorName, app.ModuleAccountAddrs(),
 	)
-	fmt.Print("Module Accounts: ", app.ModuleAccountAddrs())
+
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
 	)
@@ -542,7 +537,6 @@ func NewTrstApp(
 
 		crisistypes.ModuleName,
 		ibchost.ModuleName,
-		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		//itemtypes.ModuleName,
@@ -553,6 +547,7 @@ func NewTrstApp(
 		vestingtypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
+		genutiltypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -640,6 +635,8 @@ func (app *App) LoadHeight(height int64) error {
 func (app *App) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
+		fmt.Print("Module: ", acc)
+		fmt.Print("Module addr: ", authtypes.NewModuleAddress(acc).String())
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
 

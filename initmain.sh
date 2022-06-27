@@ -10,7 +10,7 @@ TWO_YEARS=$(($ONE_YEAR * 2))
 VALIDATOR_COINS=10000000$DENOM
 
 rm -rf $HOME/.trst
-
+mkdir $HOME/opt/trustlesshub/.sgx_secrets
 
 trstd init FRST --chain-id $CHAIN_ID
 trstd prepare-genesis mainnet $CHAIN_ID

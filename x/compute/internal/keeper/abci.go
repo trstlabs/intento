@@ -72,12 +72,7 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 
 // DeductFeesAndFundCreator handles remaining contract balance
 func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.AccAddress, gas uint64) error {
-	balance := k.bankKeeper.GetAllBalances(ctx, contractAddress)
 
-	if balance.Empty() {
-		k.Logger(ctx).Info("compute", "contract", "has no public balance")
-		return nil
-	}
 	store := ctx.KVStore(k.storeKey)
 	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
 	if contractBz == nil {
@@ -90,12 +85,20 @@ func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.Ac
 	//TODO multiply with a multiplier param
 	gasCoin := sdk.NewCoin(types.Denom, sdk.NewIntFromUint64(gasUsed/100000))
 
-	//take a commission of the utrst funds
-	percentageCommission := sdk.NewDecWithPrec(k.GetParams(ctx).Commission, 2)
-	toCommissionAmount := percentageCommission.MulInt(balance.AmountOf(types.Denom)).Ceil().TruncateInt()
-	feeCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, toCommissionAmount), gasCoin)
+	//direct a commission of the utrst contract balance towards the community pool
+	var feeCoins sdk.Coins
 
-	//if the contract cant pay, the contract creator pays as next in line
+	contractBalance := k.bankKeeper.GetAllBalances(ctx, contractAddress)
+	p := k.GetParams(ctx)
+	if !contractBalance.Empty() {
+		percentageAutoMsgFundsCommission := sdk.NewDecWithPrec(p.AutoMsgFundsCommission, 2)
+		toAutoMsgFundsCommissionAmount := percentageAutoMsgFundsCommission.MulInt(contractBalance.AmountOf(types.Denom)).Ceil().TruncateInt()
+		feeCoins = sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(p.AutoMsgConstantFee)).Add(sdk.NewCoin(types.Denom, toAutoMsgFundsCommissionAmount).Add(gasCoin)))
+	} else {
+		feeCoins = sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(p.AutoMsgConstantFee)).Add(gasCoin))
+	}
+
+	//if the contract is not able to pay, the contract creator pays as next in line
 	err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contractAddress)
 	if err != nil {
 		err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Creator)
@@ -104,9 +107,8 @@ func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.Ac
 		}
 	}
 
-	//		balance = balance.Sub(feeCoins)
-	//pay out the balance after deducting commision and gas cost to the contract creator
-	err = k.bankKeeper.SendCoins(ctx, contractAddress, contract.Creator, balance)
+	//pay out the remaining balance after deducting fee, commision and gas cost to the contract creator
+	err = k.bankKeeper.SendCoins(ctx, contractAddress, contract.Creator, contractBalance.Sub(feeCoins))
 	if err != nil {
 		return err
 	}

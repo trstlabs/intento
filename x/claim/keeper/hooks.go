@@ -11,39 +11,35 @@ import (
 )
 
 func (k Keeper) AfterComputeExecuted(ctx sdk.Context, sender sdk.AccAddress) {
-	_, err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionComputeExecute)
+	err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionComputeExecute)
 	if err != nil {
-		panic(err.Error())
+		fmt.Printf("error claiming tokens: %v \n", err)
+		//panic(err.Error())
 	}
 }
 
 func (k Keeper) AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress) {
-	_, err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionComputeInstantiate)
+	err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionComputeInstantiate)
 	if err != nil {
-		panic(err.Error())
+		fmt.Printf("error claiming tokens: %v \n", err)
+		//panic(err.Error())
 	}
 }
 
 func (k Keeper) AfterGovernanceVoted(ctx sdk.Context, sender sdk.AccAddress) {
-	_, err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionGovernanceVote)
+	err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionGovernanceVote)
 	if err != nil {
-		panic(err.Error())
+		fmt.Printf("error claiming tokens: %v \n", err)
+		//panic(err.Error())
 	}
 }
 
-/*
-func (k Keeper) AfterItemTokenized(ctx sdk.Context, creator sdk.AccAddress) {
-    _, err := k.ClaimInitialCoinsForAction(ctx, creator, types.ActionItemTokenized)
-    if err != nil {
-        panic(err.Error())
-    }
-}*/
-
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	_, err := k.ClaimInitialCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
+
+	err := k.ClaimInitialCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
 	if err != nil {
-		fmt.Printf("err: %v \n", err)
-		panic(err.Error())
+		fmt.Printf("error claiming tokens: %v \n", err)
+		//panic(err.Error())
 	}
 }
 
@@ -55,8 +51,6 @@ type Hooks struct {
 }
 
 var _ stakingtypes.StakingHooks = Hooks{}
-
-//var _ itemtypes.ItemHooks = Hooks{}
 
 var _ govtypes.GovHooks = Hooks{}
 
@@ -101,6 +95,27 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 }
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {}
 
+// Compute hooks
+func (h Hooks) AfterComputeExecuted(ctx sdk.Context, senderAddr sdk.AccAddress) {
+	h.k.AfterComputeExecuted(ctx, senderAddr)
+}
+func (h Hooks) AfterComputeInstantiated(ctx sdk.Context, senderAddr sdk.AccAddress) {
+	h.k.AfterComputeInstantiated(ctx, senderAddr)
+}
+
+// ________________________________________________________________________________________
+
+// for future reference
+/*
+func (k Keeper) AfterItemTokenized(ctx sdk.Context, creator sdk.AccAddress) {
+    _, err := k.ClaimInitialCoinsForAction(ctx, creator, types.ActionItemTokenized)
+    if err != nil {
+        panic(err.Error())
+    }
+}*/
+
+//var _ itemtypes.ItemHooks = Hooks{}
+
 /*
 // item hooks
 
@@ -110,13 +125,5 @@ func (h Hooks) AfterItemTokenized(ctx sdk.Context, senderAddr sdk.AccAddress) {
 func (h Hooks) AfterItemBought(ctx sdk.Context, senderAddr sdk.AccAddress) {
 	//h.k.AfterItemBought(ctx, senderAddr)
 }
-*/
-// Compute hooks
-func (h Hooks) AfterComputeExecuted(ctx sdk.Context, senderAddr sdk.AccAddress) {
-	h.k.AfterComputeExecuted(ctx, senderAddr)
-}
-func (h Hooks) AfterComputeInstantiated(ctx sdk.Context, senderAddr sdk.AccAddress) {
-	h.k.AfterComputeInstantiated(ctx, senderAddr)
-}
-
 //func (h Hooks) AfterItemEstimated(ctx sdk.Context, proposalID uint64) {}
+*/

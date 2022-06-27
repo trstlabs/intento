@@ -10,33 +10,37 @@ import (
 )
 
 const (
-	// Commission percentage to distribute to community pool for leftover balances (rounded up)
+	// AutoMsgFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
+	DefaultAutoMsgFundsCommission int64 = 2
 
-	DefaultCommission int64 = 2
+	// AutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
+	DefaultAutoMsgConstantFee int64 = 1000000 // 1utrst
+
+	// ContinuousAutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
+	DefaultContinuousAutoMsgConstantFee int64 = 1000000 // 1utrst
 
 	// Default max period for a contract that is self-executing
 	DefaultMaxContractDuration time.Duration = time.Hour * 24 * 30 // 30 days
-
 	// MinContractDuration sets the minimum duration for a self-executing contract
 
 	DefaultMinContractDuration time.Duration = time.Hour // time.Hour * 24 // 1 day
-
 	// MinContractDurationForIncentive to distribute reward to contracts we want to incentivize
-
 	DefaultMinContractDurationForIncentive time.Duration = time.Hour * 24 // time.Hour * 24 // 1 day
 
 	// DefaultMaxContractIncentive max amount of utrst coins to give to a contract as incentive
-
 	DefaultMaxContractIncentive int64 = 500000000 // 500utrst
 
 	// MinContractBalanceForIncentive minimum balance required to be elligable for an incentive
-
 	DefaultMinContractBalanceForIncentive int64 = 50000000 // 50utrst
 )
 
 // Parameter store key
 var (
-	KeyCommission = []byte("Commission")
+	KeyAutoMsgFundsCommission = []byte("AutoMsgFundsCommission")
+
+	KeyAutoMsgConstantFee = []byte("DefaultAutoMsgConstantFee")
+
+	KeyContinuousAutoMsgConstantFee = []byte("DefaultContinuousAutoMsgConstantFee")
 
 	KeyMaxContractDuration = []byte("MaxContractDuration")
 
@@ -53,7 +57,9 @@ var (
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	//	fmt.Print("default ParamSetPairs params..")
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyCommission, &p.Commission, validateCommission),
+		paramtypes.NewParamSetPair(KeyAutoMsgFundsCommission, &p.AutoMsgFundsCommission, validateAutoMsgFundsCommission),
+		paramtypes.NewParamSetPair(KeyAutoMsgConstantFee, &p.AutoMsgConstantFee, validateAutoMsgConstantFee),
+		paramtypes.NewParamSetPair(KeyContinuousAutoMsgConstantFee, &p.ContinuousAutoMsgConstantFee, validateContinuousAutoMsgConstantFee),
 		paramtypes.NewParamSetPair(KeyMaxContractDuration, &p.MaxContractDuration, validateContractDuration),
 		paramtypes.NewParamSetPair(KeyMinContractDuration, &p.MinContractDuration, validateContractDuration),
 		paramtypes.NewParamSetPair(KeyMinContractDurationForIncentive, &p.MinContractDurationForIncentive, validateMinContractDurationForIncentive),
@@ -63,14 +69,14 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 // NewParams creates a new ActiveParams object
-func NewParams(commission int64, maxContractDuration time.Duration, minContractDuration time.Duration, minContractDurationForIncentive time.Duration, maxContractIncentive int64, minContractBalanceForIncentive int64) Params {
-	return Params{Commission: commission, MaxContractDuration: maxContractDuration, MinContractDuration: minContractDuration, MinContractDurationForIncentive: minContractDurationForIncentive, MaxContractIncentive: maxContractIncentive, MinContractBalanceForIncentive: minContractBalanceForIncentive}
+func NewParams(autoMsgFundsCommission int64, autoMsgConstantFee int64, continuousAutoMsgConstantFee int64, maxContractDuration time.Duration, minContractDuration time.Duration, minContractDurationForIncentive time.Duration, maxContractIncentive int64, minContractBalanceForIncentive int64) Params {
+	return Params{AutoMsgFundsCommission: autoMsgFundsCommission, AutoMsgConstantFee: autoMsgConstantFee, ContinuousAutoMsgConstantFee: continuousAutoMsgConstantFee, MaxContractDuration: maxContractDuration, MinContractDuration: minContractDuration, MinContractDurationForIncentive: minContractDurationForIncentive, MaxContractIncentive: maxContractIncentive, MinContractBalanceForIncentive: minContractBalanceForIncentive}
 }
 
 // DefaultParams default parameters for Active
 func DefaultParams() Params {
 	//fmt.Print("default compute params..")
-	return NewParams(DefaultCommission, DefaultMaxContractDuration, DefaultMinContractDuration, DefaultMinContractDurationForIncentive, DefaultMaxContractIncentive, DefaultMinContractBalanceForIncentive)
+	return NewParams(DefaultAutoMsgFundsCommission, DefaultAutoMsgConstantFee, DefaultContinuousAutoMsgConstantFee, DefaultMaxContractDuration, DefaultMinContractDuration, DefaultMinContractDurationForIncentive, DefaultMaxContractIncentive, DefaultMinContractBalanceForIncentive)
 }
 
 // Validate validates all params
@@ -82,7 +88,7 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateCommission(p.Commission); err != nil {
+	if err := validateAutoMsgFundsCommission(p.AutoMsgFundsCommission); err != nil {
 		return err
 	}
 
@@ -115,13 +121,35 @@ func validateMinContractDurationForIncentive(i interface{}) error {
 	return nil
 }
 
-func validateCommission(i interface{}) error {
+func validateAutoMsgFundsCommission(i interface{}) error {
 	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v < 1 {
-		return fmt.Errorf("commission rate must be positive: %d", v)
+		return fmt.Errorf("AutoMsgFundsCommission rate must be positive: %d", v)
+	}
+
+	return nil
+}
+func validateAutoMsgConstantFee(i interface{}) error {
+	v, ok := i.(int64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v < 0 {
+		return fmt.Errorf("AutoMsgConstantFee rate must be 0 or higher: %d", v)
+	}
+
+	return nil
+}
+func validateContinuousAutoMsgConstantFee(i interface{}) error {
+	v, ok := i.(int64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	if v < 1 {
+		return fmt.Errorf("AutoMsgConstantFee rate must be 0 or higher:%d", v)
 	}
 
 	return nil
@@ -132,7 +160,7 @@ func validateMaxContractIncentive(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v < 1 {
-		return fmt.Errorf("commission rate must be positive: %d", v)
+		return fmt.Errorf("AutoMsgFundsCommission rate must be positive: %d", v)
 	}
 
 	return nil
@@ -143,7 +171,7 @@ func validateMinContractBalanceForIncentive(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v < 1 {
-		return fmt.Errorf("commission rate must be positive: %d", v)
+		return fmt.Errorf("AutoMsgFundsCommission rate must be positive: %d", v)
 	}
 
 	return nil

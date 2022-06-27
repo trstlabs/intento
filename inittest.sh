@@ -1,5 +1,6 @@
 
 rm -rf ~/.trst
+mkdir $HOME/opt/trustlesshub/.sgx_secrets
 kill -9 $(lsof -t -i:26657 -sTCP:LISTEN)
 kill -9 $(lsof -t -i:1317 -sTCP:LISTEN)
 
@@ -21,7 +22,7 @@ yes orchard thing tooth dismiss seat couple define atom antenna language fuel wr
 trstd add-genesis-account $(trstd keys show user1 -a --keyring-backend test) 8750000000000utrst
 trstd add-genesis-account $(trstd keys show user2 -a --keyring-backend test) 8750000000000utrst
 trstd add-genesis-account $(trstd keys show user3 -a --keyring-backend test) 8750000000000utrst
-trstd add-genesis-account $(trstd keys show user4 -a --keyring-backend test) 8750000000000utrst --vesting-amount 20000000000utrst  --vesting-end-time 1638485671
+trstd add-genesis-account $(trstd keys show user4 -a --keyring-backend test) 8750000000000utrst
 
 trstd gentx user1 750000000000utrst --chain-id=trst_chain_1 --keyring-backend=test  --website="trustlesshub.com" --security-contact="info@trstlabs.xyz" 
 
@@ -36,11 +37,7 @@ trstd collect-gentxs
 echo "Validating genesis file..."
 trstd validate-genesis
 
-
-
 sed -i '129s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trst/config/app.toml
-
 sed -i '181s/enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.trst/config/app.toml
 
 trstd start --bootstrap > init.log --log_level info
-

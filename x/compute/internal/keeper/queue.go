@@ -8,7 +8,7 @@ import (
 	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
-// IterateContractsQueue iterates over the items in the inactive item queue
+// IterateContractsQueue iterates over the items in the inactive contract queue
 // and performs a callback function
 func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func(contract types.ContractInfoWithAddress) (stop bool)) {
 	iterator := k.ContractQueueIterator(ctx, endTime)
@@ -16,15 +16,11 @@ func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 
-		//fmt.Printf("iterator key is:  %s ", string(iterator.Key()))
-		//get the contract from endTime (key)
 		addr, _ := types.SplitContractQueueKey(iterator.Key())
 		contractAddr, err := sdk.AccAddressFromBech32(addr)
 		if err != nil {
 			return
 		}
-		//fmt.Printf("addr is:  %s ", addr)
-
 		contract := k.GetContractInfoWithAddress(ctx, contractAddr)
 
 		//fmt.Printf("info creator is:  %s \n", contract.ContractInfo.Creator)

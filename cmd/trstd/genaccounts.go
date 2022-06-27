@@ -191,8 +191,8 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import-genesis-accounts-from-snapshot [input-snapshot-file] [input-non-airdrop-accounts-file]",
-		Short: "Import genesis accounts from fairdrop snapshot.json and an non-airdrop-accounts.json",
-		Long: `Import genesis accounts from fairdrop snapshot.json
+		Short: "Import genesis accounts from the rainbow airdrop snapshot.json and an non-airdrop-accounts.json",
+		Long: `Import genesis accounts from the rainbow airdrop snapshot.json
 		1TRST of the airdrop coins to be received is liquid in accounts.
 		The remaining is placed in the claims module, to be claimed.
 		Must also pass in an snapshot.json file to airdrop genesis TRST coins
