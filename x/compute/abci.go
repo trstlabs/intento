@@ -26,6 +26,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 
 	}
 	var gasUsed uint64
+	cacheCtx, writeCache := ctx.CacheContext()
 	for _, contract := range contracts {
 		//for _, addr := range incentiveList {
 		if contract.Address.Equals(contract.Address) && contract.AutoMsg != nil {
@@ -33,11 +34,11 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			// Messages may mutate state thus we can use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
-			cacheCtx, writeCache := ctx.CacheContext()
+
 			gas, err := k.SelfExecute(cacheCtx, contract.Address, contract.ContractInfo.AutoMsg, contract.ContractInfo.CallbackSig)
 			if err == nil {
 				logger.Info(
-					"aut_omsg",
+					"auto_msg",
 					"gas", gas,
 				)
 
@@ -47,7 +48,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 						sdk.NewAttribute(types.AttributeKeyContractAddr, contract.Address.String()),
 					),
 				)
-				writeCache()
+
 			}
 			gasUsed = gas
 
@@ -64,6 +65,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 				"err", err.Error(),
 			)
 		}
+		writeCache()
 		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.EndTime)
 		_ = k.Delete(ctx, contract.Address)
 		logger.Info(
