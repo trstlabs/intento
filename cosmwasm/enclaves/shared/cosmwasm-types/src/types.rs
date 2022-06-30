@@ -346,10 +346,10 @@ impl QueryResult {
 }
 
 /// A shorthand to produce a log attribute
-pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
+pub fn log<K: ToString, V: ToString>(_input_key: K, _input_value: V) -> LogAttribute {
     LogAttribute {
-        key:  Binary::from_base64(&key.to_string()).unwrap(),//Binary(Vec::new()),//
-        value: Binary::from_base64(&value.to_string()).unwrap(),
+        key:  Binary::default(),
+        value: Binary::default(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: true,
@@ -357,7 +357,7 @@ pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
 }
 
 /// A shorthand to produce a plaintext log attribute
-pub fn plaintext_log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
+pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
         key:  Binary::from_base64(&key.to_string()).unwrap(),
         value: Binary::from_base64(&value.to_string()).unwrap(),
@@ -388,3 +388,4 @@ pub fn acc_pub_db(key: Binary, value: Binary) -> LogAttribute {
         encrypted: false,
     }
 }
+
