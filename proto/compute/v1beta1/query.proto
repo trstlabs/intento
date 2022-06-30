@@ -20,11 +20,15 @@ service Query {
      rpc ContractPublicState (QueryContractPublicStateRequest) returns (QueryContractPublicStateResponse) {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}/public_state";
     }
-
+    rpc ContractPublicStateForAccount (QueryContractPublicStateForAccountRequest) returns (QueryContractPublicStateForAccountResponse) {
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/public_state/{account}";
+    }
+    rpc ContractPublicStateByKey(QueryContractPublicStateByKeyRequest) returns (QueryContractPublicStateByKeyResponse) {
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/public_state/{key}";
+    }
     rpc ContractsByCode (QueryContractsByCodeRequest) returns (QueryContractsByCodeResponse) {
         option (google.api.http).get = "/compute/v1beta1/code/{code_id}/contracts";
     }
-  
     rpc ContractPrivateState (QueryPrivateContractStateRequest) returns (QueryPrivateContractStateResponse) {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}/private_state";
     }
@@ -59,6 +63,30 @@ message QueryContractPublicStateRequest {
 // QueryContractPublicStateResponse is the response type for the Query/ContractPublicState RPC method
 message QueryContractPublicStateResponse {
     repeated KeyPair key_pairs = 1;
+}
+
+// QueryContractPublicStateForAccountRequest is the request type for the Query/QueryContractPublicStateForAccountRequest RPC method
+message QueryContractPublicStateForAccountRequest {
+    // address is the address of the contract to query
+    string address = 1;
+    // address is the address of the contract to query
+    string account = 2;
+}
+// QueryContractPublicStateForAccountResponse is the response type for the Query/QueryContractPublicStateForAccountResponse RPC method
+message QueryContractPublicStateForAccountResponse {
+    repeated KeyPair key_pairs = 1;
+}
+
+// QueryContractPublicStateByKeyRequest is the request type for the Query/QueryContractPublicStateByKeyRequest RPC method
+message QueryContractPublicStateByKeyRequest {
+    // address is the address of the contract to query
+    string address = 1;
+    // address is the address of the contract to query
+    string key = 2;
+}
+// QueryContractPublicStateByKeyResponse is the response type for the Query/QueryContractPublicStateByKeyResponse RPC method
+message QueryContractPublicStateByKeyResponse {
+     KeyPair key_pair = 1;
 }
 
 message QueryContractsByCodeRequest {

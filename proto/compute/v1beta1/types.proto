@@ -128,7 +128,7 @@ message Model {
 }
 
 
-// KeyPair is a struct that holds a public KV pair
+// KeyPair is a struct that holds a public KV pair in string format
 message KeyPair {
     string Key = 1;
     string Value = 2;
