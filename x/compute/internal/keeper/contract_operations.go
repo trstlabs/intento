@@ -441,6 +441,12 @@ func (k Keeper) QueryPublic(ctx sdk.Context, contractAddress sdk.AccAddress, key
 	return value
 }
 
+//QueryPublicForAddr queries the public contract state for a given address
+func (k Keeper) QueryPublicForAddr(ctx sdk.Context, contractAddress sdk.AccAddress, accountAddress sdk.AccAddress, key []byte) []byte {
+	value := k.GetContractPublicStateValueForAddr(ctx, contractAddress, accountAddress, key)
+	return value
+}
+
 func (k Keeper) contractInstance(ctx sdk.Context, contractAddress sdk.AccAddress) (types.CodeInfo, prefix.Store, error) {
 	store := ctx.KVStore(k.storeKey)
 

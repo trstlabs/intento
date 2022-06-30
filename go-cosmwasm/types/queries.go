@@ -215,8 +215,9 @@ type BondedDenomResponse struct {
 }
 
 type WasmQuery struct {
-	Private *PrivateQuery `json:"private,omitempty"`
-	Public  *PublicQuery  `json:"public,omitempty"`
+	Private       *PrivateQuery    `json:"private,omitempty"`
+	Public        *PublicQuery     `json:"public,omitempty"`
+	PublicForAddr *PublicAddrQuery `json:"public,omitempty"`
 }
 
 // PrivateQuery queries the private contract state
@@ -228,6 +229,13 @@ type PrivateQuery struct {
 // PublicQuery queries the public contract state
 type PublicQuery struct {
 	ContractAddr string `json:"contract_addr"`
+	Key          []byte `json:"key"`
+}
+
+// PublicQuery queries the public contract state
+type PublicAddrQuery struct {
+	ContractAddr string `json:"contract_addr"`
+	AccountAddr  string `json:"account_addr"`
 	Key          []byte `json:"key"`
 }
 

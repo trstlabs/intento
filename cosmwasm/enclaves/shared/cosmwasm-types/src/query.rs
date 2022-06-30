@@ -83,17 +83,25 @@ pub enum WasmQuery {
     /// return value is whatever the contract returns (caller should know)
     Private {
         contract_addr: HumanAddr,
-        /// This field is used to construct a callback message to another contract
+        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
+        /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         callback_code_hash: String,
         /// msg is the json-encoded QueryMsg struct
         msg: Binary,
     },
-    /// this queries the public kv-store of the contract.
+    /// this queries the raw kv-store of the contract.
+    /// returns the raw, unparsed data stored at that key (or `Ok(Err(StdError:NotFound{}))` if missing)
     Public {
         contract_addr: HumanAddr,
-        /// This field is used to construct a callback message to another contract
-       // callback_code_hash: String,
-        /// Key is the raw key used in the contract's public storage
+        /// Key is the key used in the public contract's Storage
+        key: Binary,
+    },
+     /// this queries the raw kv-store of the contract.
+    /// returns the raw, unparsed data stored at that key (or `Ok(Err(StdError:NotFound{}))` if missing)
+    PublicForAddr {
+        contract_addr: HumanAddr,
+        account_addr: HumanAddr,
+        /// Key is the key used in the public contract's Storage
         key: Binary,
     },
 }

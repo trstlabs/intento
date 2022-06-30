@@ -496,13 +496,26 @@ func WasmQuerier(wasm *Keeper) func(ctx sdk.Context, request *wasmTypes.WasmQuer
 			return wasm.QueryPrivate(ctx, addr, request.Private.Msg, true)
 		}
 		if request.Public != nil {
-			addr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
+			contrAddr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Public.ContractAddr)
 			}
-			return wasm.QueryPublic(ctx, addr, request.Public.Key), nil
+			return wasm.QueryPublic(ctx, contrAddr, request.Public.Key), nil
 
 		}
+		if request.PublicForAddr != nil {
+			contrAddr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Public.ContractAddr)
+			}
+			accAddr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
+			if err != nil {
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Public.ContractAddr)
+			}
+			return wasm.QueryPublicForAddr(ctx, contrAddr, accAddr, request.PublicForAddr.Key), nil
+
+		}
+
 		return nil, wasmTypes.UnsupportedRequest{Kind: "unknown WasmQuery variant"}
 	}
 }
