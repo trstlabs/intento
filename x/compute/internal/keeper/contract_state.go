@@ -87,7 +87,7 @@ func (k Keeper) setContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress,
 func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, result []wasmTypes.LogAttribute) {
 	prefixStoreKey := types.GetContractPubDbKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-	prefixAccStoreKey := types.GetContractAccPubDbKey(contractAddress)
+	prefixAccStoreKey := types.GetContractAccPubDbKey(contractAddress, caller)
 	prefixAccStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixAccStoreKey)
 	for _, attr := range result {
 		if attr.PubDb {
@@ -111,6 +111,31 @@ func (k Keeper) GetContractPublicState(ctx sdk.Context, contractAddress sdk.AccA
 		pKeyPair = append(pKeyPair, &types.KeyPair{Key: string(iter.Key()), Value: string(iter.Value())})
 	}
 	return pKeyPair
+}
+
+//GetContractPublicStateForAccount
+func (k Keeper) GetContractPublicStateForAccount(ctx sdk.Context, contractAddress sdk.AccAddress, account sdk.AccAddress) []*types.KeyPair {
+	prefixStoreKey := types.GetContractAccPubDbKey(contractAddress, account)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	iter := prefixStore.Iterator(nil, nil)
+	var pKeyPair []*types.KeyPair
+	for ; iter.Valid(); iter.Next() {
+		pKeyPair = append(pKeyPair, &types.KeyPair{Key: string(iter.Key()), Value: string(iter.Value())})
+	}
+	return pKeyPair
+}
+
+//GetContractPublicStateByKey
+func (k Keeper) GetContractPublicStateByKey(ctx sdk.Context, contractAddress sdk.AccAddress, key []byte) types.KeyPair {
+	prefixStoreKey := types.GetContractPubDbKey(contractAddress)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	iter := prefixStore.Iterator(nil, nil)
+	for ; iter.Valid(); iter.Next() {
+		if bytes.Compare(iter.Key(), key) == 0 {
+			return types.KeyPair{string(iter.Key()), string(iter.Value())}
+		}
+	}
+	return types.KeyPair{}
 }
 
 //GetContractPublicStateValue gets the value from the key-value store of the public state

@@ -259,7 +259,7 @@ fn encrypt_query_request(
     let mut is_encrypted = false;
 
     // encrypt message
-    if let QueryRequest::Wasm(WasmQuery::Smart {
+    if let QueryRequest::Wasm(WasmQuery::Private {
         msg,
         callback_code_hash,
         ..

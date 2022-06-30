@@ -84,7 +84,7 @@ pub enum WasmQuery {
     Private {
         contract_addr: HumanAddr,
         /// This field is used to construct a callback message to another contract
-       // callback_code_hash: String,
+        callback_code_hash: String,
         /// msg is the json-encoded QueryMsg struct
         msg: Binary,
     },

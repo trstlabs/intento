@@ -69,8 +69,9 @@ func GetContractPubDbKey(addr sdk.AccAddress) []byte {
 }
 
 // GetAccContractPubDbKey returns the key for the account-specific contract public state
-func GetContractAccPubDbKey(addr sdk.AccAddress) []byte {
-	return append(AccPubDbPrefix, addr...)
+func GetContractAccPubDbKey(addr sdk.AccAddress, caller sdk.AccAddress) []byte {
+
+	return append(append(AccPubDbPrefix, addr...), caller...)
 }
 
 // GetContractAddressKey returns the key for the WASM contract instance

@@ -145,56 +145,78 @@ impl<T: Clone + fmt::Debug + PartialEq + JsonSchema> From<WasmMsg> for CosmosMsg
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
 pub struct LogAttribute {
-    pub key: []byte,
-    pub value: []byte,
-    pub encrypted: bool,
+    pub key: Binary,
+    pub value: Binary,
     pub pub_db: bool,
     pub acc_pub_db: bool,
+    pub encrypted: bool,
+}
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum QueryResult {
+    Ok(Binary),
+    Err(String),
+}
+
+impl QueryResult {
+    // unwrap will panic on err, or give us the real data useful for tests
+    pub fn unwrap(self) -> Binary {
+        match self {
+            QueryResult::Err(msg) => panic!("Unexpected error: {}", msg),
+            QueryResult::Ok(res) => res,
+        }
+    }
+
+    pub fn is_err(&self) -> bool {
+        matches!(self, QueryResult::Err(_))
+    }
+}
 
 /// A shorthand to produce a log attribute
 pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key: []byte(key.to_string()),
-        value:[]byte(value.to_string()),
-        encrypted: true,
+        key:  Binary::from_base64(&key.to_string()).unwrap(),
+        value: Binary::from_base64(&value.to_string()).unwrap(),
         pub_db: false,
         acc_pub_db: false,
+        encrypted: true,
     }
 }
 
 /// A shorthand to produce a plaintext log attribute
 pub fn plaintext_log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key: []byte(key.to_string()),
-        value: []byte(value.to_string()),
-        encrypted: false,
+        key:  Binary::from_base64(&key.to_string()).unwrap(),
+        value: Binary::from_base64(&value.to_string()).unwrap(),
         pub_db: false,
         acc_pub_db: false,
+        encrypted: false,
     }
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn pub_db(key: []byte, value: []byte) -> LogAttribute {
+pub fn pub_db(key: Binary, value: Binary) -> LogAttribute {
     LogAttribute {
-        key: []byte(key),
-        value:[]byte(value),
-        encrypted: false,
+        key: key,
+        value: value,
         pub_db: true,
         acc_pub_db: false,
+        encrypted: false,
     }
 }
 
-/// A shorthand to set a account-spefic public state key-value pair
-pub fn acc_pub_db(key: []byte, value: []byte) -> LogAttribute {
+/// A shorthand to set a account-specific public state key-value pair
+pub fn acc_pub_db(key: Binary, value: Binary) -> LogAttribute {
     LogAttribute {
-        key: []byte(key),
-        value:[]byte(value),
-        encrypted: false,
+        key: key,
+        value: value,
         pub_db: true,
         acc_pub_db: true,
+        encrypted: false,
     }
 }
+
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitResponse<T = Empty>
@@ -373,8 +395,10 @@ mod test {
     #[test]
     fn log_works_for_different_types() {
         let expeceted = LogAttribute {
-            key: "foo".to_string(),
-            value: "42".to_string(),
+            key: Binary::from_base64(&"foo".to_string()).unwrap(),
+            value: Binary::from_base64(&"42".to_string()).unwrap(),
+            pub_db: false,
+            acc_pub_db: false,
             encrypted: true,
         };
 
@@ -405,8 +429,10 @@ mod test {
             }
             .into()],
             log: vec![LogAttribute {
-                key: "action".to_string(),
-                value: "release".to_string(),
+                key: Binary::from_base64(&"foo".to_string()).unwrap(),
+                value: Binary::from_base64(&"42".to_string()).unwrap(),
+                pub_db: false,
+                acc_pub_db: false,
                 encrypted: true,
             }],
         });
