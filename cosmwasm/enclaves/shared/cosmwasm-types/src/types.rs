@@ -346,10 +346,10 @@ impl QueryResult {
 }
 
 /// A shorthand to produce a log attribute
-pub fn log<K: ToString, V: ToString>(_input_key: K, _input_value: V) -> LogAttribute {
+pub fn log(key: &str, value: &str) -> LogAttribute {
     LogAttribute {
-        key:  Binary::default(),
-        value: Binary::default(),
+        key:  Binary::from_base64(&key).unwrap(),
+        value: Binary::from_base64(value).unwrap(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: true,
