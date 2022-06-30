@@ -174,10 +174,10 @@ impl QueryResult {
 }
 
 /// A shorthand to produce a log attribute
-pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
+pub fn log<K: ToString, V: ToString>(input_key: K, input_value: V) -> LogAttribute {
     LogAttribute {
-        key:  Binary::from_base64(&key.to_string()).unwrap(),
-        value: Binary::from_base64(&value.to_string()).unwrap(),
+        key:  Binary::from_base64(&input_key.to_string()).unwrap(),
+        value: Binary::from_base64(&input_value.to_string()).unwrap(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: true,
@@ -185,7 +185,7 @@ pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
 }
 
 /// A shorthand to produce a plaintext log attribute
-pub fn plaintext_log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
+pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
         key:  Binary::from_base64(&key.to_string()).unwrap(),
         value: Binary::from_base64(&value.to_string()).unwrap(),
@@ -374,6 +374,14 @@ where
 
     pub fn add_plaintext_log<K: ToString, V: ToString>(&mut self, key: K, value: V) {
         self.log.push(plaintext_log(key, value));
+    }
+
+    pub fn add_pub_db(&mut self, key: Binary, value: Binary) {
+        self.log.push(pub_db(key, value));
+    }
+
+    pub fn add_acc_pub_db(&mut self, key: Binary, value: Binary) {
+        self.log.push(acc_pub_db(key, value));
     }
 
     pub fn add_message<U: Into<CosmosMsg<T>>>(&mut self, msg: U) {

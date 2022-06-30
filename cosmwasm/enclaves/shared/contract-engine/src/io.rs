@@ -124,6 +124,9 @@ pub fn encrypt_output(
                 }
             }
             for log in ok.log.iter_mut().filter(|log| log.encrypted) {
+                trace!(
+                    "creating output for key {:?}",&log
+                );
                 log.key = encrypt_binary(&key, &log.key).map_err(|err| {
                     debug!(
                         "got an error while trying to encrypt binary key {:?}: {}",

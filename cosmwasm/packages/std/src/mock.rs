@@ -237,8 +237,9 @@ struct NoWasmQuerier {
 impl NoWasmQuerier {
     fn query(&self, request: &WasmQuery) -> QuerierResult {
         let addr = match request {
-            WasmQuery::Smart { contract_addr, .. } => contract_addr,
-            WasmQuery::Raw { contract_addr, .. } => contract_addr,
+            WasmQuery::Private { contract_addr, .. } => contract_addr,
+            WasmQuery::Public { contract_addr, .. } => contract_addr,
+            WasmQuery::PublicForAddr { contract_addr, .. } => contract_addr,
         }
         .clone();
         Err(SystemError::NoSuchContract { addr })

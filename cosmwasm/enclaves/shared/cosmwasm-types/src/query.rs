@@ -89,15 +89,13 @@ pub enum WasmQuery {
         /// msg is the json-encoded QueryMsg struct
         msg: Binary,
     },
-    /// this queries the raw kv-store of the contract.
-    /// returns the raw, unparsed data stored at that key (or `Ok(Err(StdError:NotFound{}))` if missing)
+    /// this queries the public kv-store of the contract.
     Public {
         contract_addr: HumanAddr,
         /// Key is the key used in the public contract's Storage
         key: Binary,
     },
-     /// this queries the raw kv-store of the contract.
-    /// returns the raw, unparsed data stored at that key (or `Ok(Err(StdError:NotFound{}))` if missing)
+     /// this queries the public kv-store of the contract for a given address.
     PublicForAddr {
         contract_addr: HumanAddr,
         account_addr: HumanAddr,

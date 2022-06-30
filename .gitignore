@@ -38,7 +38,6 @@ go.sum
 
 init.log
 init.sh
-init_fresh.sh
 
 snapshot.json
 reserves.json

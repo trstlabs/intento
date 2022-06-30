@@ -348,7 +348,7 @@ impl QueryResult {
 /// A shorthand to produce a log attribute
 pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key:  Binary::from_base64(&key.to_string()).unwrap(),
+        key:  Binary::from_base64(&key.to_string()).unwrap(),//Binary(Vec::new()),//
         value: Binary::from_base64(&value.to_string()).unwrap(),
         pub_db: false,
         acc_pub_db: false,
