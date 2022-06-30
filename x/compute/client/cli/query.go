@@ -570,7 +570,7 @@ func QueryWithData(contractAddress string, queryData []byte, cliCtx client.Conte
 		return err
 	}
 
-	route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryGetContractState, addr.String())
+	route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryGetContractPrivateState, addr.String())
 
 	wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 

@@ -24,10 +24,10 @@ func registerQueryRoutes(cliCtx client.Context, r *mux.Router) {
 	r.HandleFunc("/wasm/code/{codeID}/contracts", listContractsByCodeHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/wasm/contract/{contractAddr}", queryContractHandlerFn(cliCtx)).Methods("GET")
 	/*
-		r.HandleFunc("/wasm/contract/{contractAddr}/state", queryContractStateAllHandlerFn(cliCtx)).Methods("GET")
-		r.HandleFunc("/wasm/contract/{contractAddr}/raw/{key}", queryContractStateRawHandlerFn(cliCtx)).Queries("encoding", "{encoding}").Methods("GET")
+		r.HandleFunc("/wasm/contract/{contractAddr}/state", queryPrivateContractStateAllHandlerFn(cliCtx)).Methods("GET")
+		r.HandleFunc("/wasm/contract/{contractAddr}/raw/{key}", queryPrivateContractStateRawHandlerFn(cliCtx)).Queries("encoding", "{encoding}").Methods("GET")
 	*/
-	r.HandleFunc("/wasm/contract/{contractAddr}/query/{query}", queryContractStateHandlerFn(cliCtx)).Queries("encoding", "{encoding}").Methods("GET")
+	r.HandleFunc("/wasm/contract/{contractAddr}/query/{query}", queryContractPrivateStateHandlerFn(cliCtx)).Queries("encoding", "{encoding}").Methods("GET")
 	r.HandleFunc("/wasm/contract/{contractAddr}/public-state", queryContractPublicStateHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/wasm/code/{codeID}/hash", queryCodeHashHandlerFn(cliCtx)).Methods("GET")
 	r.HandleFunc("/wasm/contract/{contractAddr}/code-hash", queryContractHashHandlerFn(cliCtx)).Methods("GET")
@@ -141,7 +141,7 @@ func queryContractPublicStateHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractState, addr.String())
+		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractPrivateState, addr.String())
 		res, height, err := cliCtx.Query(route)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -154,7 +154,7 @@ func queryContractPublicStateHandlerFn(cliCtx client.Context) http.HandlerFunc {
 }
 
 /*
-func queryContractStateAllHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryPrivateContractStateAllHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		addr, err := sdk.AccAddressFromBech32(mux.Vars(r)["contractAddr"])
 		if err != nil {
@@ -166,7 +166,7 @@ func queryContractStateAllHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		route := fmt.Sprintf("custom/%s/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractState, addr.String(), keeper.QueryMethodContractStateAll)
+		route := fmt.Sprintf("custom/%s/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractPrivateState, addr.String(), keeper.QueryMethodContractStateAll)
 		res, height, err := cliCtx.Query(route)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -186,7 +186,7 @@ func queryContractStateAllHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 	}
 }
 
-func queryContractStateRawHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
+func queryPrivateContractStateRawHandlerFn(cliCtx context.CLIContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		decoder := newArgDecoder(hex.DecodeString)
 		addr, err := sdk.AccAddressFromBech32(mux.Vars(r)["contractAddr"])
@@ -205,7 +205,7 @@ func queryContractStateRawHandlerFn(cliCtx context.CLIContext) http.HandlerFunc 
 			return
 		}
 
-		route := fmt.Sprintf("custom/%s/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractState, addr.String(), keeper.QueryMethodContractStateRaw)
+		route := fmt.Sprintf("custom/%s/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractPrivateState, addr.String(), keeper.QueryMethodContractStateRaw)
 		res, height, err := cliCtx.QueryWithData(route, queryData)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
@@ -229,7 +229,7 @@ type smartResponse struct {
 	Smart []byte `json:"smart"`
 }
 
-func queryContractStateHandlerFn(cliCtx client.Context) http.HandlerFunc {
+func queryContractPrivateStateHandlerFn(cliCtx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		decoder := newArgDecoder(hex.DecodeString)
 		addr, err := sdk.AccAddressFromBech32(mux.Vars(r)["contractAddr"])
@@ -243,7 +243,7 @@ func queryContractStateHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractState, addr.String())
+		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractPrivateState, addr.String())
 
 		queryData, err := decoder.DecodeString(mux.Vars(r)["query"])
 		if err != nil {

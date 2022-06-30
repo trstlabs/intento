@@ -22,7 +22,7 @@ pub use crate::debug_print::debug_print;
 pub use crate::encoding::Binary;
 pub use crate::errors::{StdError, StdResult, SystemError, SystemResult};
 pub use crate::init_handle::{
-    log, plaintext_log, BankMsg, Context, CosmosMsg, GovMsg, HandleResponse, HandleResult,
+    log, plaintext_log, pub_db, acc_pub_db, BankMsg, Context, CosmosMsg, GovMsg, HandleResponse, HandleResult,
     InitResponse, InitResult, LogAttribute, MigrateResponse, MigrateResult, StakingMsg, VoteOption,
     WasmMsg,
 };

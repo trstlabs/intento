@@ -145,26 +145,54 @@ impl<T: Clone + fmt::Debug + PartialEq + JsonSchema> From<WasmMsg> for CosmosMsg
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
 pub struct LogAttribute {
-    pub key: String,
-    pub value: String,
+    pub key: []byte,
+    pub value: []byte,
     pub encrypted: bool,
-}
+    pub pub_db: bool,
+    pub acc_pub_db: bool,
+
 
 /// A shorthand to produce a log attribute
 pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key: key.to_string(),
-        value: value.to_string(),
+        key: []byte(key.to_string()),
+        value:[]byte(value.to_string()),
         encrypted: true,
+        pub_db: false,
+        acc_pub_db: false,
     }
 }
 
 /// A shorthand to produce a plaintext log attribute
 pub fn plaintext_log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key: key.to_string(),
-        value: value.to_string(),
+        key: []byte(key.to_string()),
+        value: []byte(value.to_string()),
         encrypted: false,
+        pub_db: false,
+        acc_pub_db: false,
+    }
+}
+
+/// A shorthand to set a public state key-value pair
+pub fn pub_db(key: []byte, value: []byte) -> LogAttribute {
+    LogAttribute {
+        key: []byte(key),
+        value:[]byte(value),
+        encrypted: false,
+        pub_db: true,
+        acc_pub_db: false,
+    }
+}
+
+/// A shorthand to set a account-spefic public state key-value pair
+pub fn acc_pub_db(key: []byte, value: []byte) -> LogAttribute {
+    LogAttribute {
+        key: []byte(key),
+        value:[]byte(value),
+        encrypted: false,
+        pub_db: true,
+        acc_pub_db: true,
     }
 }
 

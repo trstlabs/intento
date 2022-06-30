@@ -71,13 +71,13 @@ func (q grpcQuerier) ContractsByCode(c context.Context, req *types.QueryContract
 	}, nil
 }
 
-func (q grpcQuerier) SmartContractState(c context.Context, req *types.QuerySmartContractStateRequest) (*types.QuerySmartContractStateResponse, error) {
+func (q grpcQuerier) ContractPrivateState(c context.Context, req *types.QuerySmartContractStateRequest) (*types.QuerySmartContractStateResponse, error) {
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return nil, err
 	}
 	ctx := sdk.UnwrapSDKContext(c).WithGasMeter(sdk.NewGasMeter(q.keeper.queryGasLimit))
-	rsp, err := q.keeper.QuerySmart(ctx, addr, req.QueryData, false)
+	rsp, err := q.keeper.QueryPrivate(ctx, addr, req.QueryData, false)
 	switch {
 	case err != nil:
 		return nil, err

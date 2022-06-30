@@ -81,20 +81,19 @@ pub enum DistQuery {
 pub enum WasmQuery {
     /// this queries the public API of another contract at a known address (with known ABI)
     /// return value is whatever the contract returns (caller should know)
-    Smart {
+    Private {
         contract_addr: HumanAddr,
         /// This field is used to construct a callback message to another contract
-        callback_code_hash: String,
+       // callback_code_hash: String,
         /// msg is the json-encoded QueryMsg struct
         msg: Binary,
     },
-    /// this queries the raw kv-store of the contract.
-    /// returns the raw, unparsed data stored at that key (or `Ok(Err(StdError:NotFound{}))` if missing)
-    Raw {
+    /// this queries the public kv-store of the contract.
+    Public {
         contract_addr: HumanAddr,
         /// This field is used to construct a callback message to another contract
-        callback_code_hash: String,
-        /// Key is the raw key used in the contracts Storage
+       // callback_code_hash: String,
+        /// Key is the raw key used in the contract's public storage
         key: Binary,
     },
 }

@@ -18,15 +18,15 @@ service Query {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}";
     }
      rpc ContractPublicState (QueryContractPublicStateRequest) returns (QueryContractPublicStateResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/state";
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/public_state";
     }
 
     rpc ContractsByCode (QueryContractsByCodeRequest) returns (QueryContractsByCodeResponse) {
         option (google.api.http).get = "/compute/v1beta1/code/{code_id}/contracts";
     }
   
-    rpc SmartContractState (QuerySmartContractStateRequest) returns (QuerySmartContractStateResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/smart";
+    rpc ContractPrivateState (QueryPrivateContractStateRequest) returns (QueryPrivateContractStateResponse) {
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/private_state";
     }
     rpc Code (QueryCodeRequest) returns (QueryCodeResponse) {
         option (google.api.http).get = "/compute/v1beta1/code/{code_id}";
@@ -70,7 +70,7 @@ message QueryContractsByCodeResponse {
 }
 
 
-message QuerySmartContractStateRequest {
+message QueryPrivateContractStateRequest {
     // address is the address of the contract
     string address = 1;
     bytes query_data = 2;
@@ -90,7 +90,7 @@ message QueryContractHashRequest {
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
 
-message QuerySmartContractStateResponse {
+message QueryPrivateContractStateResponse {
     bytes data = 1 [(gogoproto.casttype) = "encoding/json.RawMessage"];
 }
 

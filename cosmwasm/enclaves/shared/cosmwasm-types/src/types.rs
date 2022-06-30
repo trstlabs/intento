@@ -313,8 +313,8 @@ fn bool_true() -> bool {
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct LogAttribute {
-    pub key: String,
-    pub value: String,
+    pub key: []byte,
+    pub value: []byte,
     /// nonstandard late addition, thus optional and only used in deserialization.
     /// The contracts may return this in newer versions that support distinguishing
     /// encrypted and plaintext logs. We naturally default to encrypted logs, and
@@ -322,6 +322,8 @@ pub struct LogAttribute {
     #[serde(default = "bool_true")]
     #[serde(skip_serializing)]
     pub encrypted: bool,
+    pub pub_db: bool,
+    pub acc_pub_db: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -348,17 +350,29 @@ impl QueryResult {
 /// A shorthand to produce a log attribute
 pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key: key.to_string(),
-        value: value.to_string(),
+        key: []byte(key.to_string()),
+        value:[]byte(value.to_string()),
         encrypted: true,
+        to_public_state: false,
     }
 }
 
 /// A shorthand to produce a plaintext log attribute
 pub fn plaintext_log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key: key.to_string(),
-        value: value.to_string(),
+        key: []byte(key.to_string()),
+        value: []byte(value.to_string()),
         encrypted: false,
+        to_public_state: false,
+    }
+}
+
+/// A shorthand to set a public state key-value pair
+pub fn set_public_state(key: []byte, value: []byte) -> LogAttribute {
+    LogAttribute {
+        key: []byte(key),
+        value:[]byte(value),
+        encrypted: false,
+        set_public_state: true,
     }
 }

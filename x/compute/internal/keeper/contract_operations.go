@@ -353,8 +353,8 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 		return nil, err
 	}
 
-	k.SetContractPublicState(ctx, contractAddress, res.Log)
-	//return &sdk.Result{Data: res.Data,Log: res.Log[1].Value}, nil <-can be used for item module compatibilily
+	k.SetContractPublicState(ctx, contractAddress, caller, res.Log)
+	//return &sdk.Result{Data: res.Data,Log: res.Log[1].Value}, nil //used for item module compatibilily
 
 	k.hooks.AfterComputeExecuted(ctx, caller)
 
@@ -391,18 +391,13 @@ func (k Keeper) Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error {
 	return nil
 }
 
-// QuerySmart queries the smart contract itself.
-func (k Keeper) QuerySmart(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool) ([]byte, error) {
-	return k.querySmartImpl(ctx, contractAddr, req, useDefaultGasLimit, false)
+// QueryPrivate queries the smart contract itself.
+func (k Keeper) QueryPrivate(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool) ([]byte, error) {
+	return k.queryPrivateContractImpl(ctx, contractAddr, req, useDefaultGasLimit, false)
 }
 
-/*
-// QuerySmartRecursive queries the smart contract itself. This should only be called when running inside another query recursively.
-func (k Keeper) querySmartRecursive(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool) ([]byte, error) {
-	return k.querySmartImpl(ctx, contractAddr, req, useDefaultGasLimit, true)
-}
-*/
-func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool, recursive bool) ([]byte, error) {
+// queryPrivateContractImpl queries the contract itself. This should only be called when running inside another query recursively.
+func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool, recursive bool) ([]byte, error) {
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "query")
 
 	if useDefaultGasLimit {
@@ -443,23 +438,10 @@ func (k Keeper) querySmartImpl(ctx sdk.Context, contractAddr sdk.AccAddress, req
 	return queryResult, nil
 }
 
-// We don't use this function since we have an encrypted state. It's here for upstream compatibility
-// QueryRaw returns the contract's state for give key. For a `nil` key a empty slice result is returned.
-func (k Keeper) QueryRaw(ctx sdk.Context, contractAddress sdk.AccAddress, key []byte) []types.Model {
-	result := make([]types.Model, 0)
-	if key == nil {
-		return result
-	}
-	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-
-	if val := prefixStore.Get(key); val != nil {
-		return append(result, types.Model{
-			Key:   key,
-			Value: val,
-		})
-	}
-	return result
+//QueryPublic queries the public contract state
+func (k Keeper) QueryPublic(ctx sdk.Context, contractAddress sdk.AccAddress, key []byte) []byte {
+	value := k.GetContractPublicStateValue(ctx, contractAddress, key)
+	return value
 }
 
 func (k Keeper) contractInstance(ctx sdk.Context, contractAddress sdk.AccAddress) (types.CodeInfo, prefix.Store, error) {
