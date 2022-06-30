@@ -313,8 +313,8 @@ fn bool_true() -> bool {
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct LogAttribute {
-    pub key: Binary,
-    pub value: Binary,
+    pub key: Vec<u8>,
+    pub value: Vec<u8>,
     pub pub_db: bool,
     pub acc_pub_db: bool,
     /// For logs, we naturally default to encrypted logs, and
@@ -346,10 +346,10 @@ impl QueryResult {
 }
 
 /// A shorthand to produce a log attribute
-pub fn log(key: &str, value: &str) -> LogAttribute {
+pub fn log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
-        key:  Binary::from_base64(&key).unwrap(),
-        value: Binary::from_base64(value).unwrap(),
+        key:  key.to_string().as_bytes().to_vec(),
+        value: value.to_string().as_bytes().to_vec(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: true,
@@ -359,8 +359,8 @@ pub fn log(key: &str, value: &str) -> LogAttribute {
 /// A shorthand to produce a plaintext log attribute
 pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
-        key:  Binary::from_base64(&key.to_string()).unwrap(),
-        value: Binary::from_base64(&value.to_string()).unwrap(),
+        key:  key.to_string().as_bytes().to_vec(),
+        value: value.to_string().as_bytes().to_vec(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: false,
@@ -368,7 +368,7 @@ pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute 
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn pub_db(key: Binary, value: Binary) -> LogAttribute {
+pub fn pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
     LogAttribute {
         key: key,
         value: value,
@@ -379,7 +379,7 @@ pub fn pub_db(key: Binary, value: Binary) -> LogAttribute {
 }
 
 /// A shorthand to set a account-specific public state key-value pair
-pub fn acc_pub_db(key: Binary, value: Binary) -> LogAttribute {
+pub fn acc_pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
     LogAttribute {
         key: key,
         value: value,
@@ -388,4 +388,3 @@ pub fn acc_pub_db(key: Binary, value: Binary) -> LogAttribute {
         encrypted: false,
     }
 }
-
