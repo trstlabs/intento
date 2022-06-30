@@ -229,13 +229,15 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		Ctx:     ctx,
 		Plugins: k.queryPlugins,
 	}
-	if autoMsg == nil {
-		autoMsg = make([]byte, 256)
+
+	autoMsgToSend := make([]byte, 256)
+	if autoMsg != nil {
+		autoMsgToSend = autoMsg
 	}
 	// instantiate wasm contract
 	gas := gasForContract(ctx)
-	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, env, initMsg, autoMsg, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo)
-	//fmt.Printf("ress")
+	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, env, initMsg, autoMsgToSend, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo)
+
 	consumeGas(ctx, gasUsed)
 	if err != nil {
 		return contractAddress, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
@@ -257,13 +259,8 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		k.InsertContractQueue(ctx, contractAddress.String(), endTime)
 	}
 
-	if autoMsg != nil {
-		instance := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, endTime, autoMsg, callbackSig)
-		store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&instance))
-	} else {
-		instance := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, endTime, nil, nil)
-		store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&instance))
-	}
+	instance := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, endTime, autoMsg, callbackSig)
+	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&instance))
 
 	codeInfo.Instances = codeInfo.Instances + 1
 	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(&codeInfo))

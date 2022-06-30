@@ -57,21 +57,18 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 	if err != nil {
 		return nil, err
 	}
-	activePeriod := k.GetParams(ctx).MaxContractDuration
-	//submitTime := ctx.BlockHeader().Time
-
+	p := k.GetParams(ctx)
 	duration, err := time.ParseDuration(msg.ContractDuration)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
-	maxDuration := activePeriod
+	if duration > p.MaxContractDuration {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be shorter than maximum duration")
+	}
+	if duration != 0 && duration < p.MinContractDuration {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be longer than minimum duration")
+	}
 
-	if duration == 0 {
-		duration = maxDuration
-	}
-	if duration > maxDuration {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Time period must be smaller than maximum period")
-	}
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
@@ -107,6 +104,16 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 		if err != nil {
 			return nil, err
 		}
+	}
+	p := k.GetParams(ctx)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
+	if duration > p.MaxContractDuration {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be shorter than maximum duration")
+	}
+	if duration != 0 && duration < p.MinContractDuration {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be longer than minimum duration")
 	}
 	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, msg.CallbackSig, duration)
 	if err != nil {
