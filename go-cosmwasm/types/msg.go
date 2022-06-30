@@ -54,9 +54,11 @@ type MigrateResponse struct {
 
 // LogAttribute
 type LogAttribute struct {
-	Key       string `json:"key"`
-	Value     string `json:"value"`
+	Key       []byte `json:"key"`
+	Value     []byte `json:"value"`
 	Encrypted bool   `json:"encrypted"`
+	PubDb     bool   `json:"pub_db"`
+	AccPubDb  bool   `json:"acc_pub_db"`
 }
 
 // CosmosMsg is an rust enum and only (exactly) one of the fields should be set

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"sort"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -55,6 +56,47 @@ func (q grpcQuerier) ContractPublicState(c context.Context, req *types.QueryCont
 	}, nil
 }
 
+func (q grpcQuerier) ContractPublicStateForAccount(c context.Context, req *types.QueryContractPublicStateForAccountRequest) (*types.QueryContractPublicStateForAccountResponse, error) {
+	//contract addr to query
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+	//user account to query
+	acc, err := sdk.AccAddressFromBech32(req.Account)
+	if err != nil {
+		return nil, err
+	}
+	rsp, err := queryContractPublicStateForAccount(sdk.UnwrapSDKContext(c), addr, acc, q.keeper)
+	switch {
+	case err != nil:
+		return nil, err
+	case rsp == nil:
+		return nil, types.ErrNotFound
+	}
+	return &types.QueryContractPublicStateForAccountResponse{
+		KeyPairs: rsp,
+	}, nil
+}
+
+func (q grpcQuerier) ContractPublicStateByKey(c context.Context, req *types.QueryContractPublicStateByKeyRequest) (*types.QueryContractPublicStateByKeyResponse, error) {
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+	rsp, err := queryContractPublicStateByKey(sdk.UnwrapSDKContext(c), addr, req.Key, q.keeper)
+	switch {
+	case err != nil:
+		return nil, err
+	case rsp == types.KeyPair{}:
+		fmt.Printf("not found or empty keypair \n")
+		return nil, types.ErrNotFound
+	}
+	return &types.QueryContractPublicStateByKeyResponse{
+		KeyPair: &rsp,
+	}, nil
+}
+
 func (q grpcQuerier) ContractsByCode(c context.Context, req *types.QueryContractsByCodeRequest) (*types.QueryContractsByCodeResponse, error) {
 	if req.CodeId == 0 {
 		return nil, sdkerrors.Wrap(types.ErrInvalid, "code id")
@@ -71,20 +113,20 @@ func (q grpcQuerier) ContractsByCode(c context.Context, req *types.QueryContract
 	}, nil
 }
 
-func (q grpcQuerier) SmartContractState(c context.Context, req *types.QuerySmartContractStateRequest) (*types.QuerySmartContractStateResponse, error) {
+func (q grpcQuerier) ContractPrivateState(c context.Context, req *types.QueryContractPrivateStateRequest) (*types.QueryContractPrivateStateResponse, error) {
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {
 		return nil, err
 	}
 	ctx := sdk.UnwrapSDKContext(c).WithGasMeter(sdk.NewGasMeter(q.keeper.queryGasLimit))
-	rsp, err := q.keeper.QuerySmart(ctx, addr, req.QueryData, false)
+	rsp, err := q.keeper.QueryPrivate(ctx, addr, req.QueryData, false)
 	switch {
 	case err != nil:
 		return nil, err
 	case rsp == nil:
 		return nil, types.ErrNotFound
 	}
-	return &types.QuerySmartContractStateResponse{Data: rsp}, nil
+	return &types.QueryContractPrivateStateResponse{Data: rsp}, nil
 
 }
 
@@ -201,6 +243,18 @@ func queryContractPublicState(ctx sdk.Context, addr sdk.AccAddress, keeper Keepe
 	pS := keeper.GetContractPublicState(ctx, addr)
 
 	return pS, nil
+}
+func queryContractPublicStateForAccount(ctx sdk.Context, addr sdk.AccAddress, acc sdk.AccAddress, keeper Keeper) ([]*types.KeyPair, error) {
+	//var res sdk.Result
+	pSA := keeper.GetContractPublicStateForAccount(ctx, addr, acc)
+
+	return pSA, nil
+}
+func queryContractPublicStateByKey(ctx sdk.Context, addr sdk.AccAddress, key string, keeper Keeper) (types.KeyPair, error) {
+	//var res sdk.Result
+	kv := keeper.GetContractPublicStateByKey(ctx, addr, []byte(key))
+
+	return kv, nil
 }
 
 func queryContractListByCode(ctx sdk.Context, codeID uint64, keeper Keeper) ([]types.ContractInfoWithAddress, error) {

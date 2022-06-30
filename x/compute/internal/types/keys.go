@@ -40,11 +40,11 @@ var (
 	ContractEnclaveIdPrefix = []byte{0x06}
 	ContractIdPrefix        = []byte{0x07}
 
-	ContractQueuePrefix  = []byte{0x08}
-	PublicContractPrefix = []byte{0x09}
-
-	KeyLastCodeID     = append(SequenceKeyPrefix, []byte("lastCodeId")...)
-	KeyLastInstanceID = append(SequenceKeyPrefix, []byte("lastContractId")...)
+	ContractQueuePrefix = []byte{0x08}
+	PubDbPrefix         = []byte{0x09}
+	AccPubDbPrefix      = []byte{0x10}
+	KeyLastCodeID       = append(SequenceKeyPrefix, []byte("lastCodeId")...)
+	KeyLastInstanceID   = append(SequenceKeyPrefix, []byte("lastContractId")...)
 )
 
 // GetCodeKey constructs the key for retreiving the ID for the WASM code
@@ -63,9 +63,15 @@ func GetContractAddressKey(addr sdk.AccAddress) []byte {
 	return append(ContractKeyPrefix, addr...)
 }
 
-// GetPublicContractStateKey returns the key for the WASM contract instance
-func GetPublicContractStateKey(addr sdk.AccAddress) []byte {
-	return append(PublicContractPrefix, addr...)
+// GetContractPubDbKey returns the key for the contract public state
+func GetContractPubDbKey(addr sdk.AccAddress) []byte {
+	return append(PubDbPrefix, addr...)
+}
+
+// GetAccContractPubDbKey returns the key for the account-specific contract public state
+func GetContractAccPubDbKey(addr sdk.AccAddress, caller sdk.AccAddress) []byte {
+
+	return append(append(AccPubDbPrefix, addr...), caller...)
 }
 
 // GetContractAddressKey returns the key for the WASM contract instance

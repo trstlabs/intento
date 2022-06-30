@@ -63,9 +63,6 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 	if err != nil {
 		return 0, err
 	}
-
-	k.SetContractPublicState(ctx, contractAddress, res.Log)
-
 	return gasUsed, nil
 
 }

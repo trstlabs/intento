@@ -488,21 +488,20 @@ func getAccumulatedRewards(ctx sdk.Context, distKeeper distrkeeper.Keeper, deleg
 
 func WasmQuerier(wasm *Keeper) func(ctx sdk.Context, request *wasmTypes.WasmQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmTypes.WasmQuery) ([]byte, error) {
-		if request.Smart != nil {
-			addr, err := sdk.AccAddressFromBech32(request.Smart.ContractAddr)
+		if request.Private != nil {
+			addr, err := sdk.AccAddressFromBech32(request.Private.ContractAddr)
 			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Smart.ContractAddr)
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Private.ContractAddr)
 			}
-			return wasm.QuerySmart(ctx, addr, request.Smart.Msg, true)
+			return wasm.QueryPrivate(ctx, addr, request.Private.Msg, true)
 		}
-		if request.Raw != nil {
-			addr, err := sdk.AccAddressFromBech32(request.Raw.ContractAddr)
+		if request.Public != nil {
+			addr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
 			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Raw.ContractAddr)
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Public.ContractAddr)
 			}
-			models := wasm.QueryRaw(ctx, addr, request.Raw.Key)
-			// TODO: do we want to change the return value?
-			return json.Marshal(models)
+			return wasm.QueryPublic(ctx, addr, request.Public.Key), nil
+
 		}
 		return nil, wasmTypes.UnsupportedRequest{Kind: "unknown WasmQuery variant"}
 	}

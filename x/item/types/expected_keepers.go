@@ -44,7 +44,6 @@ type ComputeKeeper interface {
 	Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string, duration time.Duration, title string, description string) (codeID uint64, err error)
 	Instantiate(ctx sdk.Context, codeID uint64, creator sdk.AccAddress, initMsg []byte, autoMsg []byte, label string, deposit sdk.Coins, callbackSig []byte, customDuration time.Duration) (sdk.AccAddress, error)
 	Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, msg []byte, coins sdk.Coins, callbackSig []byte) (*sdk.Result, error)
-	QuerySmart(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool) ([]byte, error)
 	GetCodeHash(ctx sdk.Context, codeID uint64) (CodeHash []byte)
 	Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error
 	//GetMasterIoPubKeyArray(ctx sdk.Context) []byte

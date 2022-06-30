@@ -313,11 +313,11 @@ fn bool_true() -> bool {
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct LogAttribute {
-    pub key: String,
-    pub value: String,
-    /// nonstandard late addition, thus optional and only used in deserialization.
-    /// The contracts may return this in newer versions that support distinguishing
-    /// encrypted and plaintext logs. We naturally default to encrypted logs, and
+    pub key: Binary,
+    pub value: Binary,
+    pub pub_db: bool,
+    pub acc_pub_db: bool,
+    /// For logs, we naturally default to encrypted logs, and
     /// don't serialize the field later so it doesn't leak up to the Go layers.
     #[serde(default = "bool_true")]
     #[serde(skip_serializing)]
@@ -348,8 +348,10 @@ impl QueryResult {
 /// A shorthand to produce a log attribute
 pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key: key.to_string(),
-        value: value.to_string(),
+        key:  Binary::from_base64(&key.to_string()).unwrap(),
+        value: Binary::from_base64(&value.to_string()).unwrap(),
+        pub_db: false,
+        acc_pub_db: false,
         encrypted: true,
     }
 }
@@ -357,8 +359,32 @@ pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
 /// A shorthand to produce a plaintext log attribute
 pub fn plaintext_log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key: key.to_string(),
-        value: value.to_string(),
+        key:  Binary::from_base64(&key.to_string()).unwrap(),
+        value: Binary::from_base64(&value.to_string()).unwrap(),
+        pub_db: false,
+        acc_pub_db: false,
+        encrypted: false,
+    }
+}
+
+/// A shorthand to set a public state key-value pair
+pub fn pub_db(key: Binary, value: Binary) -> LogAttribute {
+    LogAttribute {
+        key: key,
+        value: value,
+        pub_db: true,
+        acc_pub_db: false,
+        encrypted: false,
+    }
+}
+
+/// A shorthand to set a account-specific public state key-value pair
+pub fn acc_pub_db(key: Binary, value: Binary) -> LogAttribute {
+    LogAttribute {
+        key: key,
+        value: value,
+        pub_db: true,
+        acc_pub_db: true,
         encrypted: false,
     }
 }

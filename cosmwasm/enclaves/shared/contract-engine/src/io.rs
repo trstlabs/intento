@@ -65,6 +65,19 @@ fn encrypt_preserialized_string(key: &AESKey, val: &str) -> Result<String, Encla
     Ok(b64_encode(encrypted_data.as_slice()))
 }
 
+// use this to encrypt a Binary value
+fn encrypt_binary(key: &AESKey, val: &Binary) -> Result<Binary, EnclaveError> {
+    let encrypted_data = key.encrypt_siv(val.as_slice(), None).map_err(|err| {
+        debug!(
+            "got an error while trying to encrypt binary output error {:?}: {}",
+            err, err
+        );
+        EnclaveError::EncryptionError
+    })?;
+
+    Ok(Binary(encrypted_data))
+}
+
 fn b64_encode(data: &[u8]) -> String {
     base64::encode(data)
 }
@@ -76,7 +89,7 @@ pub fn encrypt_output(
     contract_addr: &CanonicalAddr,
 ) -> Result<Vec<u8>, EnclaveError> {
     let key = calc_encryption_key(&nonce, &user_public_key);
-    let open_output = output.clone();
+    //let open_output = output.clone();
 
     trace!(
         "Output before encryption: {:?}",
@@ -111,11 +124,20 @@ pub fn encrypt_output(
                 }
             }
             for log in ok.log.iter_mut().filter(|log| log.encrypted) {
-                if  log.key == "output" && log.value == "public" {
-                    return Ok(open_output)
-                } 
-                log.key = encrypt_preserialized_string(&key, &log.key)?;
-                log.value = encrypt_preserialized_string(&key, &log.value)?;
+                log.key = encrypt_binary(&key, &log.key).map_err(|err| {
+                    debug!(
+                        "got an error while trying to encrypt binary key {:?}: {}",
+                        &log.key, err
+                    );
+                    EnclaveError::FailedToDeserialize
+                })?;
+                log.value = encrypt_binary(&key, &log.value).map_err(|err| {
+                    debug!(
+                        "got an error while trying to encrypt binary value {:?}: {}",
+                        &log.value, err
+                    );
+                    EnclaveError::FailedToDeserialize
+                })?;
             }
 
             if let Some(data) = &mut ok.data {

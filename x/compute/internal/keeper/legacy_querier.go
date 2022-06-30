@@ -13,16 +13,16 @@ import (
 )
 
 const (
-	QueryListContractByCode     = types.QueryListContractByCode
-	QueryGetContract            = types.QueryGetContract
-	QueryGetContractPublicState = types.QueryGetContractPublicState
-	QueryGetContractState       = types.QueryGetContractState
-	QueryGetCode                = types.QueryGetCode
-	QueryListCode               = types.QueryListCode
-	QueryContractAddress        = types.QueryContractAddress
-	QueryContractKey            = types.QueryContractKey
-	QueryContractHash           = types.QueryContractHash
-	QueryMasterCertificate      = types.QueryMasterCertificate
+	QueryListContractByCode      = types.QueryListContractByCode
+	QueryGetContract             = types.QueryGetContract
+	QueryGetContractPublicState  = types.QueryGetContractPublicState
+	QueryGetContractPrivateState = types.QueryGetContractPrivateState
+	QueryGetCode                 = types.QueryGetCode
+	QueryListCode                = types.QueryListCode
+	QueryContractAddress         = types.QueryContractAddress
+	QueryContractKey             = types.QueryContractKey
+	QueryContractHash            = types.QueryContractHash
+	QueryMasterCertificate       = types.QueryMasterCertificate
 	//QueryContractHistory    = "contract-history"
 )
 
@@ -72,12 +72,10 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 			}
-		case QueryGetContractState:
-			//if len(path) < 3 {
-			//	return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "path invalid, unknown data query endpoint")
-			//	}
-			return queryContractState(ctx, path[1], req, keeper)
-			//rsp, err = queryContractState(ctx, path[1], path[2], req.Data, keeper)
+		case QueryGetContractPrivateState:
+
+			return queryPrivateContractState(ctx, path[1], req, keeper)
+
 		case QueryGetCode:
 			codeID, err := strconv.ParseUint(path[1], 10, 64)
 			if err != nil {
@@ -135,7 +133,7 @@ func NewLegacyQuerier(keeper Keeper) sdk.Querier {
 	}
 }
 
-func queryContractState(ctx sdk.Context, bech string, req abci.RequestQuery, keeper Keeper) (json.RawMessage, error) {
+func queryPrivateContractState(ctx sdk.Context, bech string, req abci.RequestQuery, keeper Keeper) (json.RawMessage, error) {
 	contractAddr, err := sdk.AccAddressFromBech32(bech)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, bech)
@@ -165,7 +163,7 @@ func queryContractState(ctx sdk.Context, bech string, req abci.RequestQuery, kee
 	// we enforce a subjective gas limit on all queries to avoid infinite loops
 	ctx = ctx.WithGasMeter(sdk.NewGasMeter(keeper.queryGasLimit))
 	// this returns raw bytes (must be base64-encoded)
-	return keeper.QuerySmart(ctx, contractAddr, req.Data, false)
+	return keeper.QueryPrivate(ctx, contractAddr, req.Data, false)
 
 	/*
 			default:

@@ -27,7 +27,7 @@ const (
 	QueryListContractByCode       = keeper.QueryListContractByCode
 	QueryGetContract              = keeper.QueryGetContract
 	QueryGetContractPublicState   = keeper.QueryGetContractPublicState
-	QueryGetContractState         = keeper.QueryGetContractState
+	QueryGetContractPrivateState  = keeper.QueryGetContractPrivateState
 	QueryGetCode                  = keeper.QueryGetCode
 	QueryListCode                 = keeper.QueryListCode
 	QueryContractKey              = keeper.QueryContractKey
@@ -50,7 +50,7 @@ var (
 	ValidateGenesis           = types.ValidateGenesis
 	GetCodeKey                = types.GetCodeKey
 	GetContractAddressKey     = types.GetContractAddressKey
-	GetPublicContractStateKey = types.GetPublicContractStateKey
+	GetContractPubDbKey       = types.GetContractPubDbKey
 	GetContractStorePrefixKey = types.GetContractStorePrefixKey
 	NewCodeInfo               = types.NewCodeInfo
 	NewAbsoluteTxPosition     = types.NewAbsoluteTxPosition

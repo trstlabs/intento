@@ -1,12 +1,10 @@
 package keeper
 
 import (
+	"bytes"
 	"encoding/binary"
 
 	//"encoding/json"
-
-	//"log"
-
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -86,12 +84,18 @@ func (k Keeper) setContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress,
 }
 
 // SetContractPublicState sets the result of the contract from wasm attributes, it overrides existing keys
-func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress, result []wasmTypes.LogAttribute) {
-	prefixStoreKey := types.GetPublicContractStateKey(contractAddress)
+func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress, caller sdk.AccAddress, result []wasmTypes.LogAttribute) {
+	prefixStoreKey := types.GetContractPubDbKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	prefixAccStoreKey := types.GetContractAccPubDbKey(contractAddress, caller)
+	prefixAccStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixAccStoreKey)
 	for _, attr := range result {
-		if !attr.Encrypted {
-			prefixStore.Set([]byte(attr.Key), []byte(attr.Value))
+		if attr.PubDb {
+			if attr.AccPubDb {
+				prefixAccStore.Set(attr.Key, attr.Value)
+				continue
+			}
+			prefixStore.Set(attr.Key, attr.Value)
 		}
 	}
 	return
@@ -99,7 +103,7 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccA
 
 //GetContractPublicState
 func (k Keeper) GetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress) []*types.KeyPair {
-	prefixStoreKey := types.GetPublicContractStateKey(contractAddress)
+	prefixStoreKey := types.GetContractPubDbKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 	iter := prefixStore.Iterator(nil, nil)
 	var pKeyPair []*types.KeyPair
@@ -107,6 +111,44 @@ func (k Keeper) GetContractPublicState(ctx sdk.Context, contractAddress sdk.AccA
 		pKeyPair = append(pKeyPair, &types.KeyPair{Key: string(iter.Key()), Value: string(iter.Value())})
 	}
 	return pKeyPair
+}
+
+//GetContractPublicStateForAccount
+func (k Keeper) GetContractPublicStateForAccount(ctx sdk.Context, contractAddress sdk.AccAddress, account sdk.AccAddress) []*types.KeyPair {
+	prefixStoreKey := types.GetContractAccPubDbKey(contractAddress, account)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	iter := prefixStore.Iterator(nil, nil)
+	var pKeyPair []*types.KeyPair
+	for ; iter.Valid(); iter.Next() {
+		pKeyPair = append(pKeyPair, &types.KeyPair{Key: string(iter.Key()), Value: string(iter.Value())})
+	}
+	return pKeyPair
+}
+
+//GetContractPublicStateByKey
+func (k Keeper) GetContractPublicStateByKey(ctx sdk.Context, contractAddress sdk.AccAddress, key []byte) types.KeyPair {
+	prefixStoreKey := types.GetContractPubDbKey(contractAddress)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	iter := prefixStore.Iterator(nil, nil)
+	for ; iter.Valid(); iter.Next() {
+		if bytes.Compare(iter.Key(), key) == 0 {
+			return types.KeyPair{string(iter.Key()), string(iter.Value())}
+		}
+	}
+	return types.KeyPair{}
+}
+
+//GetContractPublicStateValue gets the value from the key-value store of the public state
+func (k Keeper) GetContractPublicStateValue(ctx sdk.Context, contractAddress sdk.AccAddress, key []byte) []byte {
+	prefixStoreKey := types.GetContractPubDbKey(contractAddress)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+	iter := prefixStore.Iterator(nil, nil)
+	for ; iter.Valid(); iter.Next() {
+		if bytes.Compare(iter.Key(), key) == 0 {
+			return iter.Value()
+		}
+	}
+	return nil
 }
 
 func (k Keeper) IterateContractInfo(ctx sdk.Context, cb func(sdk.AccAddress, types.ContractInfo) bool) {

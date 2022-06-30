@@ -215,18 +215,18 @@ type BondedDenomResponse struct {
 }
 
 type WasmQuery struct {
-	Smart *SmartQuery `json:"smart,omitempty"`
-	Raw   *RawQuery   `json:"raw,omitempty"`
+	Private *PrivateQuery `json:"private,omitempty"`
+	Public  *PublicQuery  `json:"public,omitempty"`
 }
 
-// SmartQuery respone is raw bytes ([]byte)
-type SmartQuery struct {
+// PrivateQuery queries the private contract state
+type PrivateQuery struct {
 	ContractAddr string `json:"contract_addr"`
 	Msg          []byte `json:"msg"`
 }
 
-// RawQuery response is raw bytes ([]byte)
-type RawQuery struct {
+// PublicQuery queries the public contract state
+type PublicQuery struct {
 	ContractAddr string `json:"contract_addr"`
 	Key          []byte `json:"key"`
 }
