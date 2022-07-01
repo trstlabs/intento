@@ -230,7 +230,7 @@ func ParseEvents(logs []wasmTypes.LogAttribute, contractAddr sdk.AccAddress) sdk
 		}
 		// and reserve the contract_address key for our use (not contract)
 		if string(l.Key) != AttributeKeyContractAddr {
-			attr := sdk.NewAttribute(string(l.Key), string(l.Value))
+			attr := sdk.NewAttribute(l.Key, string(l.Value))
 			attrs = append(attrs, attr)
 		}
 	}

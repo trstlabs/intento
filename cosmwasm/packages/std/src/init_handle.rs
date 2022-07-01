@@ -146,7 +146,7 @@ impl<T: Clone + fmt::Debug + PartialEq + JsonSchema> From<WasmMsg> for CosmosMsg
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
 pub struct LogAttribute {
     pub key: String,
-    pub value:  Binary,
+    pub value:  Vec<u8>,
     pub pub_db: bool,
     pub acc_pub_db: bool,
     pub encrypted: bool,
@@ -177,7 +177,7 @@ impl QueryResult {
 pub fn log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
         key:  key.to_string(),//.as_bytes().to_vec(),
-        value: Binary::from_base64(&value.to_string()).unwrap(),
+        value: value.to_string().as_bytes().to_vec(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: true,
@@ -188,7 +188,7 @@ pub fn log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
 pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
         key:  key.to_string(),//.as_bytes().to_vec(),
-        value: Binary::from_base64(&value.to_string()).unwrap(),
+        value: value.to_string().as_bytes().to_vec(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: false,
@@ -199,7 +199,7 @@ pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute 
 pub fn pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
     LogAttribute {
         key: String::from_utf8_lossy(key.as_slice()).into_owned(),
-        value: Binary(value),
+        value: value,
         pub_db: true,
         acc_pub_db: false,
         encrypted: false,
@@ -210,7 +210,7 @@ pub fn pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
 pub fn acc_pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
     LogAttribute {
         key: String::from_utf8_lossy(key.as_slice()).into_owned(),
-        value: Binary(value),
+        value: value,
         pub_db: true,
         acc_pub_db: true,
         encrypted: false,
@@ -404,7 +404,7 @@ mod test {
     fn log_works_for_different_types() {
         let expeceted = LogAttribute {
             key: "foo".to_string(),//.as_bytes().to_vec(),
-            value: Binary::from_base64(&"42".to_string()).unwrap(),
+            value: "42".to_string().as_bytes().to_vec(),
             pub_db: false,
             acc_pub_db: false,
             encrypted: true,
@@ -438,7 +438,7 @@ mod test {
             .into()],
             log: vec![LogAttribute {
                 key: "foo".to_string(),//.as_bytes().to_vec(),
-                value: Binary::from_base64(&"42".to_string()).unwrap(),
+                value: "42".to_string().as_bytes().to_vec(),
                 pub_db: false,
                 acc_pub_db: false,
                 encrypted: true,

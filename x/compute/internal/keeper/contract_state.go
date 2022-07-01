@@ -92,10 +92,10 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccA
 	for _, attr := range result {
 		if attr.PubDb {
 			if attr.AccPubDb {
-				prefixAccStore.Set(attr.Key, attr.Value)
+				prefixAccStore.Set([]byte(attr.Key), attr.Value)
 				continue
 			}
-			prefixStore.Set(attr.Key, attr.Value)
+			prefixStore.Set([]byte(attr.Key), attr.Value)
 		}
 	}
 }

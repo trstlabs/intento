@@ -54,7 +54,7 @@ type MigrateResponse struct {
 
 // LogAttribute
 type LogAttribute struct {
-	Key       []byte `json:"key"`
+	Key       string `json:"key"`
 	Value     []byte `json:"value"`
 	Encrypted bool   `json:"encrypted"`
 	PubDb     bool   `json:"pub_db"`

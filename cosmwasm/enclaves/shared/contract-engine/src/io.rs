@@ -157,9 +157,9 @@ pub fn encrypt_output(
             }*/
             for log in ok.log.iter_mut().filter(|log| log.encrypted) {
                 log.key = encrypt_preserialized_string(&key, &log.key)?;
-                log.value = encrypt_binary(&key, &log.value).map_err(|err| {
+                log.value = encrypt_vec(&key, log.value.clone()).map_err(|err| {
                     debug!(
-                        "got an error while trying to encrypt binary value {:?}: {}",
+                        "got an error while trying to encrypt vec value {:?}: {}",
                         &log.value, err
                     );
                     EnclaveError::FailedToDeserialize
