@@ -313,8 +313,8 @@ fn bool_true() -> bool {
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct LogAttribute {
-    pub key: Vec<u8>,
-    pub value: Vec<u8>,
+    pub key: String,
+    pub value: String,
     pub pub_db: bool,
     pub acc_pub_db: bool,
     /// For logs, we naturally default to encrypted logs, and
@@ -348,8 +348,8 @@ impl QueryResult {
 /// A shorthand to produce a log attribute
 pub fn log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
-        key:  key.to_string().as_bytes().to_vec(),
-        value: value.to_string().as_bytes().to_vec(),
+        key:  key.to_string(),//.as_bytes().to_vec(),
+        value: value.to_string(),//.as_bytes().to_vec(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: true,
@@ -359,8 +359,8 @@ pub fn log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
 /// A shorthand to produce a plaintext log attribute
 pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
-        key:  key.to_string().as_bytes().to_vec(),
-        value: value.to_string().as_bytes().to_vec(),
+        key:  key.to_string(),//.as_bytes().to_vec(),
+        value: value.to_string(),//.as_bytes().to_vec(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: false,
@@ -370,8 +370,8 @@ pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute 
 /// A shorthand to set a public state key-value pair
 pub fn pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
     LogAttribute {
-        key: key,
-        value: value,
+        key: String::from_utf8_lossy(key.as_slice()).into_owned(),
+        value: String::from_utf8_lossy(value.as_slice()).into_owned(),
         pub_db: true,
         acc_pub_db: false,
         encrypted: false,
@@ -381,8 +381,8 @@ pub fn pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
 /// A shorthand to set a account-specific public state key-value pair
 pub fn acc_pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
     LogAttribute {
-        key: key,
-        value: value,
+        key: String::from_utf8_lossy(key.as_slice()).into_owned(),
+        value: String::from_utf8_lossy(value.as_slice()).into_owned(),
         pub_db: true,
         acc_pub_db: true,
         encrypted: false,

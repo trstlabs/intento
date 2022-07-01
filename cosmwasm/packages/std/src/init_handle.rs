@@ -145,8 +145,8 @@ impl<T: Clone + fmt::Debug + PartialEq + JsonSchema> From<WasmMsg> for CosmosMsg
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
 pub struct LogAttribute {
-    pub key: Vec<u8>,
-    pub value: Vec<u8>,
+    pub key: String,
+    pub value:  String,
     pub pub_db: bool,
     pub acc_pub_db: bool,
     pub encrypted: bool,
@@ -176,8 +176,8 @@ impl QueryResult {
 /// A shorthand to produce a log attribute
 pub fn log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
-        key:  key.to_string().as_bytes().to_vec(),
-        value: value.to_string().as_bytes().to_vec(),
+        key:  key.to_string(),//.as_bytes().to_vec(),
+        value: value.to_string(),//.as_bytes().to_vec(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: true,
@@ -187,8 +187,8 @@ pub fn log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
 /// A shorthand to produce a plaintext log attribute
 pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
-        key:  key.to_string().as_bytes().to_vec(),
-        value: value.to_string().as_bytes().to_vec(),
+        key:  key.to_string(),//.as_bytes().to_vec(),
+        value: value.to_string(),//.as_bytes().to_vec(),
         pub_db: false,
         acc_pub_db: false,
         encrypted: false,
@@ -198,8 +198,8 @@ pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute 
 /// A shorthand to set a public state key-value pair
 pub fn pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
     LogAttribute {
-        key: key,
-        value: value,
+        key: String::from_utf8_lossy(key.as_slice()).into_owned(),
+        value: String::from_utf8_lossy(value.as_slice()).into_owned(),
         pub_db: true,
         acc_pub_db: false,
         encrypted: false,
@@ -209,8 +209,8 @@ pub fn pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
 /// A shorthand to set a account-specific public state key-value pair
 pub fn acc_pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
     LogAttribute {
-        key: key,
-        value: value,
+        key: String::from_utf8_lossy(key.as_slice()).into_owned(),
+        value: String::from_utf8_lossy(value.as_slice()).into_owned(),
         pub_db: true,
         acc_pub_db: true,
         encrypted: false,
@@ -403,8 +403,8 @@ mod test {
     #[test]
     fn log_works_for_different_types() {
         let expeceted = LogAttribute {
-            key: "foo".to_string().as_bytes().to_vec(),
-            value: "42".to_string().as_bytes().to_vec(),
+            key: "foo".to_string(),//.as_bytes().to_vec(),
+            value: "42".to_string(),//.as_bytes().to_vec(),
             pub_db: false,
             acc_pub_db: false,
             encrypted: true,
@@ -437,8 +437,8 @@ mod test {
             }
             .into()],
             log: vec![LogAttribute {
-                key: "foo".to_string().as_bytes().to_vec(),
-                value: "42".to_string().as_bytes().to_vec(),
+                key: "foo".to_string(),//.as_bytes().to_vec(),
+                value: "42".to_string(),//.as_bytes().to_vec(),
                 pub_db: false,
                 acc_pub_db: false,
                 encrypted: true,

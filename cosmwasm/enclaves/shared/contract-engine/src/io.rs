@@ -65,9 +65,9 @@ fn encrypt_preserialized_string(key: &AESKey, val: &str) -> Result<String, Encla
     Ok(b64_encode(encrypted_data.as_slice()))
 }
 
-// use this to encrypt a Binary value
-fn encrypt_binary(key: &AESKey, val: &Binary) -> Result<Binary, EnclaveError> {
-    let encrypted_data = key.encrypt_siv(val.as_slice(), None).map_err(|err| {
+// use this to encrypt a vec value
+fn encrypt_vec(key: &AESKey, val: Vec<u8>) -> Result<Vec<u8>, EnclaveError> {
+    let encrypted_data = key.encrypt_siv(&val, None).map_err(|err| {
         debug!(
             "got an error while trying to encrypt binary output error {:?}: {}",
             err, err
@@ -75,7 +75,7 @@ fn encrypt_binary(key: &AESKey, val: &Binary) -> Result<Binary, EnclaveError> {
         EnclaveError::EncryptionError
     })?;
 
-    Ok(Binary(encrypted_data))
+    Ok(encrypted_data.as_slice().to_vec())
 }
 
 fn b64_encode(data: &[u8]) -> String {
@@ -123,24 +123,28 @@ pub fn encrypt_output(
                     encrypt_wasm_msg(wasm_msg, nonce, user_public_key, contract_addr)?;
                 }
             }
-            for log in ok.log.iter_mut().filter(|log| log.encrypted) {
+           /* for log in ok.log.iter_mut().filter(|log| log.encrypted) {
                 trace!(
                     "creating output for key {:?}",&log
                 );
-                log.key = encrypt_binary(&key, &log.key).map_err(|err| {
+                log.key = encrypt_vec(&key, log.key.clone()).map_err(|err| {
                     debug!(
                         "got an error while trying to encrypt binary key {:?}: {}",
                         &log.key, err
                     );
                     EnclaveError::FailedToDeserialize
                 })?;
-                log.value = encrypt_binary(&key, &log.value).map_err(|err| {
+                log.value = //encrypt_vec(&key, log.value.clone()).map_err(|err| {
                     debug!(
                         "got an error while trying to encrypt binary value {:?}: {}",
                         &log.value, err
                     );
                     EnclaveError::FailedToDeserialize
                 })?;
+            }*/
+            for log in ok.log.iter_mut().filter(|log| log.encrypted) {
+                log.key = encrypt_preserialized_string(&key, &log.key)?;
+                log.value = encrypt_preserialized_string(&key, &log.value)?;
             }
 
             if let Some(data) = &mut ok.data {
