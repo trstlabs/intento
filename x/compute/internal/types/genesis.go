@@ -7,7 +7,6 @@ import (
 
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
-	//fmt.Print("DefaultGenesis")
 	return &GenesisState{
 
 		// this line is used by starport scaffolding # genesis/types/default

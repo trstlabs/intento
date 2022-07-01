@@ -196,9 +196,9 @@ pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute 
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
+pub fn pub_db<K: ToString>(key: K,value: Vec<u8>) -> LogAttribute {
     LogAttribute {
-        key: String::from_utf8_lossy(key.as_slice()).into_owned(),
+        key: key.to_string(),
         value: value,
         pub_db: true,
         acc_pub_db: false,
@@ -206,10 +206,10 @@ pub fn pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
     }
 }
 
-/// A shorthand to set a account-specific public state key-value pair
-pub fn acc_pub_db(key: Vec<u8>, value: Vec<u8>) -> LogAttribute {
+/// A shorthand to set a public state key-value pair
+pub fn acc_pub_db<K: ToString>(key: K,value: Vec<u8>)  -> LogAttribute {
     LogAttribute {
-        key: String::from_utf8_lossy(key.as_slice()).into_owned(),
+        key: key.to_string(),
         value: value,
         pub_db: true,
         acc_pub_db: true,
@@ -376,11 +376,11 @@ where
         self.log.push(plaintext_log(key, value));
     }
 
-    pub fn add_pub_db(&mut self, key: Vec<u8>, value: Vec<u8>) {
+    pub fn add_pub_db<K: ToString>(&mut self, key: K, value: Vec<u8>) {
         self.log.push(pub_db(key, value));
     }
 
-    pub fn add_acc_pub_db(&mut self, key: Vec<u8>, value: Vec<u8>) {
+    pub fn add_acc_pub_db<K: ToString>(&mut self, key: K, value: Vec<u8>) {
         self.log.push(acc_pub_db(key, value));
     }
 

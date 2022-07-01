@@ -20,10 +20,10 @@ const (
 	DefaultContinuousAutoMsgConstantFee int64 = 1000000 // 1utrst
 
 	// Default max period for a contract that is self-executing
-	DefaultMaxContractDuration time.Duration = time.Hour * 24 * 30 // 30 days
+	DefaultMaxContractDuration time.Duration = time.Hour * 24 * 366 // 366 days
 	// MinContractDuration sets the minimum duration for a self-executing contract
 
-	DefaultMinContractDuration time.Duration = time.Hour // time.Hour * 24 // 1 day
+	DefaultMinContractDuration time.Duration = time.Second * 45 // time.Hour * 24 // 1 day
 	// MinContractDurationForIncentive to distribute reward to contracts we want to incentivize
 	DefaultMinContractDurationForIncentive time.Duration = time.Hour * 24 // time.Hour * 24 // 1 day
 
@@ -38,9 +38,9 @@ const (
 var (
 	KeyAutoMsgFundsCommission = []byte("AutoMsgFundsCommission")
 
-	KeyAutoMsgConstantFee = []byte("DefaultAutoMsgConstantFee")
+	KeyAutoMsgConstantFee = []byte("AutoMsgConstantFee")
 
-	KeyContinuousAutoMsgConstantFee = []byte("DefaultContinuousAutoMsgConstantFee")
+	KeyContinuousAutoMsgConstantFee = []byte("ContinuousAutoMsgConstantFee")
 
 	KeyMaxContractDuration = []byte("MaxContractDuration")
 
@@ -68,12 +68,12 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-// NewParams creates a new ActiveParams object
+// NewParams creates a new Params object
 func NewParams(autoMsgFundsCommission int64, autoMsgConstantFee int64, continuousAutoMsgConstantFee int64, maxContractDuration time.Duration, minContractDuration time.Duration, minContractDurationForIncentive time.Duration, maxContractIncentive int64, minContractBalanceForIncentive int64) Params {
 	return Params{AutoMsgFundsCommission: autoMsgFundsCommission, AutoMsgConstantFee: autoMsgConstantFee, ContinuousAutoMsgConstantFee: continuousAutoMsgConstantFee, MaxContractDuration: maxContractDuration, MinContractDuration: minContractDuration, MinContractDurationForIncentive: minContractDurationForIncentive, MaxContractIncentive: maxContractIncentive, MinContractBalanceForIncentive: minContractBalanceForIncentive}
 }
 
-// DefaultParams default parameters for Active
+// DefaultParams default parameters for compute
 func DefaultParams() Params {
 	//fmt.Print("default compute params..")
 	return NewParams(DefaultAutoMsgFundsCommission, DefaultAutoMsgConstantFee, DefaultContinuousAutoMsgConstantFee, DefaultMaxContractDuration, DefaultMinContractDuration, DefaultMinContractDurationForIncentive, DefaultMaxContractIncentive, DefaultMinContractBalanceForIncentive)
@@ -102,7 +102,7 @@ func validateContractDuration(i interface{}) error {
 	}
 
 	if v <= 0 {
-		return fmt.Errorf("self-executing contract period between iniiation and self-execuion must be longer: %d", v)
+		return fmt.Errorf("self-executing contract period between initiation and self-execuion must be longer: %d", v)
 	}
 
 	return nil
