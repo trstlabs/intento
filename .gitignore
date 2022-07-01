@@ -1,7 +1,6 @@
 
 secret.yml
 .DS_Store
-
 *.a
 *.deb
 Enclave_t.c
@@ -9,7 +8,6 @@ Enclave_t.h
 Enclave_u.c
 Enclave_u.h
 Enclave_u.o
-
 incubator-teaclave-sgx-sdk
 libenclave.a
 libEnclave_u.a
@@ -33,12 +31,9 @@ ias_bin_dev.go
 ias_bin_prod.go
 ias_bin_sw.go
 node_modules
-
 go.sum
-
-init.log
+*.log
 init.sh
-
 snapshot.json
 reserves.json
 reserves.json
@@ -51,5 +46,4 @@ test.sh
 testcontr.sh
 testitems.sh
 testswap.sh
-
 docs/.vuepress/dist

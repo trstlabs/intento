@@ -65,6 +65,19 @@ fn encrypt_preserialized_string(key: &AESKey, val: &str) -> Result<String, Encla
     Ok(b64_encode(encrypted_data.as_slice()))
 }
 
+// use this to encrypt a Binary value
+fn encrypt_binary(key: &AESKey, val: &Binary) -> Result<Binary, EnclaveError> {
+    let encrypted_data = key.encrypt_siv(val.as_slice(), None).map_err(|err| {
+        debug!(
+            "got an error while trying to encrypt binary output error {:?}: {}",
+            err, err
+        );
+        EnclaveError::EncryptionError
+    })?;
+
+    Ok(Binary(encrypted_data))
+}
+
 // use this to encrypt a vec value
 fn encrypt_vec(key: &AESKey, val: Vec<u8>) -> Result<Vec<u8>, EnclaveError> {
     let encrypted_data = key.encrypt_siv(&val, None).map_err(|err| {
@@ -144,7 +157,13 @@ pub fn encrypt_output(
             }*/
             for log in ok.log.iter_mut().filter(|log| log.encrypted) {
                 log.key = encrypt_preserialized_string(&key, &log.key)?;
-                log.value = encrypt_preserialized_string(&key, &log.value)?;
+                log.value = encrypt_binary(&key, &log.value).map_err(|err| {
+                    debug!(
+                        "got an error while trying to encrypt binary value {:?}: {}",
+                        &log.value, err
+                    );
+                    EnclaveError::FailedToDeserialize
+                })?;
             }
 
             if let Some(data) = &mut ok.data {
@@ -287,3 +306,4 @@ pub fn create_callback_signature(
 pub fn copy_into_array(slice: &[u8]) -> [u8; 32] {
     slice.try_into().expect("slice with incorrect length")
 }
+
