@@ -267,6 +267,8 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	store.Set(types.GetContractEnclaveKey(contractAddress), key)
 	store.Set(types.GetContractIdPrefix(id), contractAddress)
 
+	k.SetContractPublicState(ctx, contractAddress, creator, res.Log)
+
 	//TODO we can add fairdrop actions based on the type of contract executed. Action 1. instantiate (AutoSwap) Action 2. Execute Action 3. Instantiate (Recurring send) 4. Stake
 	//if codeInfo.CodeHash == types.AutoSwapCodeHash {
 	k.hooks.AfterComputeInstantiated(ctx, creator)

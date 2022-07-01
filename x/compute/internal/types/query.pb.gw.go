@@ -503,15 +503,15 @@ func request_Query_CodeHash_0(ctx context.Context, marshaler runtime.Marshaler, 
 		_   = err
 	)
 
-	val, ok = pathParams["codeid"]
+	val, ok = pathParams["code_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "codeid")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "code_id")
 	}
 
-	protoReq.Codeid, err = runtime.Uint64(val)
+	protoReq.CodeId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "codeid", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "code_id", err)
 	}
 
 	msg, err := client.CodeHash(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -530,15 +530,15 @@ func local_request_Query_CodeHash_0(ctx context.Context, marshaler runtime.Marsh
 		_   = err
 	)
 
-	val, ok = pathParams["codeid"]
+	val, ok = pathParams["code_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "codeid")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "code_id")
 	}
 
-	protoReq.Codeid, err = runtime.Uint64(val)
+	protoReq.CodeId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "codeid", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "code_id", err)
 	}
 
 	msg, err := server.CodeHash(ctx, &protoReq)
@@ -986,21 +986,21 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_ContractInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"compute", "v1beta1", "contract", "address"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ContractPublicState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"compute", "v1beta1", "contract", "address", "public_state"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ContractPublicState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"compute", "v1beta1", "contract", "address", "public-state"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ContractPublicStateForAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"compute", "v1beta1", "contract", "address", "public_state", "account"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ContractPublicStateForAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"compute", "v1beta1", "contract", "address", "public-state", "account"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ContractPublicStateByKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"compute", "v1beta1", "contract", "address", "public_state", "key"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ContractPublicStateByKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"compute", "v1beta1", "contract", "address", "public-state", "key"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_ContractsByCode_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"compute", "v1beta1", "code", "code_id", "contracts"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ContractPrivateState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"compute", "v1beta1", "contract", "address", "private_state"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ContractPrivateState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"compute", "v1beta1", "contract", "address", "private-state"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_Code_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"compute", "v1beta1", "code", "code_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_Codes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"compute", "v1beta1", "code"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_CodeHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"compute", "v1beta1", "code-hash", "codeid"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_CodeHash_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"compute", "v1beta1", "code-hash", "code_id"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

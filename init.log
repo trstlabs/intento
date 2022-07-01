@@ -1,4 +1,42 @@
-Module: bonded_tokens_poolModule addr: trust1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uxh6d5Module: transferModule addr: trust1yl6hdjhmkf37639730gffanpzndzdpmh8zgurqModule: claimModule addr: trust1m5dncvfv7lvpvycr23zja93fecun2kcvtvhda3Module: allocModule addr: trust1hnfmrp9k0lmepmt0rsktkjj4aqh3w40m9qy4ayModule: computeModule addr: trust1kp9p9ajg863y5urtl5xpqxt6dp75u4yxeegmg8Module: fee_collectorModule addr: trust17xpfvakm2amg962yls6f84z3kell8c5leya4l7Module: distributionModule addr: trust1jv65s3grqf6v6jl3dp4t6c9t9rk99cd8wz6fauModule: mintModule addr: trust1m3h30wlvsf8llruxtpukdvsy0km2kum8pvednrModule: not_bonded_tokens_poolModule addr: trust1tygms3xhhs3yv487phx3dw4a95jn7t7lgxttmqModule: govModule addr: trust10d07y265gmmuvt4z0w9aw880jnsr700jnldszs2022-07-01 12:00:21,860 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 8 threads
+Module: 
+computeModule addr: 
+trust1kp9p9ajg863y5urtl5xpqxt6dp75u4yxeegmg8Module: 
+allocModule addr: 
+trust1hnfmrp9k0lmepmt0rsktkjj4aqh3w40m9qy4ayModule: 
+mintModule addr: 
+trust1m3h30wlvsf8llruxtpukdvsy0km2kum8pvednrModule: 
+bonded_tokens_poolModule addr: 
+trust1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uxh6d5Module: 
+not_bonded_tokens_poolModule addr: 
+trust1tygms3xhhs3yv487phx3dw4a95jn7t7lgxttmqModule: 
+govModule addr: 
+trust10d07y265gmmuvt4z0w9aw880jnsr700jnldszsModule: 
+transferModule addr: 
+trust1yl6hdjhmkf37639730gffanpzndzdpmh8zgurqModule: 
+claimModule addr: 
+trust1m5dncvfv7lvpvycr23zja93fecun2kcvtvhda3Module: 
+fee_collectorModule addr: 
+trust17xpfvakm2amg962yls6f84z3kell8c5leya4l7Module: 
+distributionModule addr: 
+trust1jv65s3grqf6v6jl3dp4t6c9t9rk99cd8wz6fau2022-07-01 16:07:03,399 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 8 threads
 DEBUG  [enclave_contract_engine::external::ecalls] inside ecall_configure_runtime: 5
 DEBUG  [enclave_contract_engine::module_cache] configuring module cache: 5
-2022-07-01 12:00:40,643 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 4 threads
+2022-07-01 16:07:20,984 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 4 threads
+setting  modulessetting  module: capabilitysetting  module: authsetting  module: banksetting  module: distributionsetting  module: stakingsetting  module: slashingsetting  module: govsetting  module: mintsetting  module: crisissetting  module: ibcsetting  module: evidencesetting  module: transfersetting  module: computesetting  module: registrationsetting  module: claimInitializing claims genesis...
+setting  module: allocsetting  module: vestingsetting  module: upgradesetting  module: genutilerror claiming tokens: address does not have claim record: invalid address [/root/trst/x/claim/keeper/claim.go:98] 
+queryContractPublicState addr: trust13aktep558cx6lny74c8st5qwt0jj66zgv8qhnj 
+get state 
+returning [] 
+,queryContractPublicState addr: trust13aktep558cx6lny74c8st5qwt0jj66zgv8qhnj 
+get state 
+returning [] 
+,queryContractPublicState addr: trust13aktep558cx6lny74c8st5qwt0jj66zgv8qhnj 
+get state 
+returning [] 
+,queryContractPublicState addr: trust13aktep558cx6lny74c8st5qwt0jj66zgv8qhnj 
+get state 
+returning [] 
+,queryContractPublicState addr: trust13aktep558cx6lny74c8st5qwt0jj66zgv8qhnj 
+get state 
+returning [] 
+,

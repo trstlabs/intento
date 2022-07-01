@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 
 	//"encoding/json"
 	"github.com/tendermint/tendermint/crypto"
@@ -92,9 +93,11 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccA
 	for _, attr := range result {
 		if attr.PubDb {
 			if attr.AccPubDb {
+				fmt.Printf("set acc state key %s \n,", string(attr.Key))
 				prefixAccStore.Set([]byte(attr.Key), attr.Value)
 				continue
 			}
+			fmt.Printf("set state key %s \n,", string(attr.Key))
 			prefixStore.Set([]byte(attr.Key), attr.Value)
 		}
 	}
@@ -102,13 +105,23 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccA
 
 //GetContractPublicState
 func (k Keeper) GetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress) []*types.KeyPair {
+	fmt.Print("get state NEW \n")
 	prefixStoreKey := types.GetContractPubDbKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 	iter := prefixStore.Iterator(nil, nil)
+
+	prefixStore.Set([]byte("haha"), []byte("asdfsd"))
+	testset := prefixStore.Get([]byte("haha"))
+	fmt.Printf("get testset val %s \n", string(testset))
+	defer iter.Close()
+	test := prefixStore.Get([]byte("init"))
+	fmt.Printf("get test val %s \n", string(test))
 	var pKeyPair []*types.KeyPair
 	for ; iter.Valid(); iter.Next() {
+		fmt.Printf("get state key %s \n", string(iter.Key()))
 		pKeyPair = append(pKeyPair, &types.KeyPair{Key: string(iter.Key()), Value: string(iter.Value())})
 	}
+	fmt.Printf("returning NEW %s \n", pKeyPair)
 	return pKeyPair
 }
 

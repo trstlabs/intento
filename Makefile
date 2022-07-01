@@ -299,7 +299,8 @@ docker_bootstrap: docker_base
 
 docker_node: docker_base
 	docker build --build-arg SGX_MODE=${SGX_MODE} --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/local-node.Dockerfile -t enigmampc/secret-network-node-${ext}:${DOCKER_TAG} .
-	clean-files:
+
+clean-files:
 	-rm -rf /trst
 
 	-rm -f ./trstd*

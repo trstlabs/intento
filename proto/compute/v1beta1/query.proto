@@ -18,19 +18,19 @@ service Query {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}";
     }
      rpc ContractPublicState (QueryContractPublicStateRequest) returns (QueryContractPublicStateResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/public_state";
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/public-state";
     }
     rpc ContractPublicStateForAccount (QueryContractPublicStateForAccountRequest) returns (QueryContractPublicStateForAccountResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/public_state/{account}";
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/public-state/{account}";
     }
     rpc ContractPublicStateByKey(QueryContractPublicStateByKeyRequest) returns (QueryContractPublicStateByKeyResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/public_state/{key}";
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/public-state/{key}";
     }
     rpc ContractsByCode (QueryContractsByCodeRequest) returns (QueryContractsByCodeResponse) {
         option (google.api.http).get = "/compute/v1beta1/code/{code_id}/contracts";
     }
     rpc ContractPrivateState (QueryContractPrivateStateRequest) returns (QueryContractPrivateStateResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/private_state";
+        option (google.api.http).get = "/compute/v1beta1/contract/{address}/private-state";
     }
     rpc Code (QueryCodeRequest) returns (QueryCodeResponse) {
         option (google.api.http).get = "/compute/v1beta1/code/{code_id}";
@@ -39,7 +39,7 @@ service Query {
         option (google.api.http).get = "/compute/v1beta1/code";
     }
     rpc CodeHash(QueryCodeHashRequest) returns (QueryCodeHashResponse) {
-		option (google.api.http).get = "/compute/v1beta1/code-hash/{codeid}";
+		option (google.api.http).get = "/compute/v1beta1/code-hash/{code_id}";
 	}
 }
 
@@ -166,7 +166,7 @@ message QueryContractHashResponse {
 }
 
 message QueryCodeHashRequest {
-	uint64 codeid = 1;
+	uint64 code_id = 1;
 }
 
 message QueryCodeHashResponse {

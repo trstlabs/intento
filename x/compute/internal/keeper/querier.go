@@ -178,7 +178,7 @@ func (q grpcQuerier) CodeHash(c context.Context, req *types.QueryCodeHashRequest
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	rsp, err := queryCodeHash(ctx, req.Codeid, q.keeper)
+	rsp, err := queryCodeHash(ctx, req.CodeId, q.keeper)
 	switch {
 	case err != nil:
 		return nil, err
@@ -240,12 +240,14 @@ func queryContractInfo(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) (*ty
 
 func queryContractPublicState(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) ([]*types.KeyPair, error) {
 	//var res sdk.Result
+	fmt.Printf("queryContractPublicState NEW addr: %s \n", addr.String())
 	pS := keeper.GetContractPublicState(ctx, addr)
 
 	return pS, nil
 }
 func queryContractPublicStateForAccount(ctx sdk.Context, addr sdk.AccAddress, acc sdk.AccAddress, keeper Keeper) ([]*types.KeyPair, error) {
 	//var res sdk.Result
+	fmt.Printf("queryContractPublicState acc addr: %s \n", acc.String())
 	pSA := keeper.GetContractPublicStateForAccount(ctx, addr, acc)
 
 	return pSA, nil

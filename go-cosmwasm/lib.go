@@ -121,7 +121,7 @@ func (w *Wasmer) Instantiate(
 	key := data[0:64]
 	callback_sig := data[64:96]
 
-	fmt.Println(string(callback_sig))
+	//fmt.Println(string(callback_sig))
 
 	var resp types.InitResult
 	err = json.Unmarshal(data[96:], &resp)

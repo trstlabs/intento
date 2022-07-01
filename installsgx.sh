@@ -1,7 +1,10 @@
 #! /bin/bash
 
+sudo apt-get update && sudo apt upgrade -y 
+sudo apt-get install make build-essential gcc git jq chrony -y
+
 UBUNTUVERSION=$(lsb_release -r -s | cut -d '.' -f 1)
-PSW_PACKAGES='libsgx-enclave-common libsgx-enclave-common-dev libsgx-urts sgx-aesm-service libsgx-uae-service libsgx-launch libsgx-aesm-launch-plugin libsgx-ae-le autoconf libtool gcc'
+PSW_PACKAGES='libsgx-enclave-common libsgx-urts sgx-aesm-service libsgx-uae-service autoconf libtool make gcc'
 
 if (($UBUNTUVERSION < 16)); then
 	echo "Your version of Ubuntu is not supported. Must have Ubuntu 16.04 and up. Aborting installation script..."
@@ -68,12 +71,10 @@ if (($UBUNTUVERSION > 18)); then
    sudo apt install -y gdebi
    # Install all the additional necessary dependencies (besides the driver and the SDK)
    # for building a rust enclave
-   wget -O /tmp/libprotobuf28_3.17.3-2_amd64.deb http://ftp.br.debian.org/debian/pool/main/p/protobuf/libprotobuf28_3.17.3-2_amd64.deb
-   yes | sudo gdebi /tmp/libprotobuf28_3.17.3-2_amd64.deb
+   wget -O /tmp/libprotobuf30_3.19.4-1_amd64.deb https://engfilestorage.blob.core.windows.net/filestorage/libprotobuf30_3.19.4-1_amd64.deb
+   yes | sudo gdebi /tmp/libprotobuf30_3.19.4-1_amd64.deb
 else
    PSW_PACKAGES+=' libprotobuf-dev'
 fi
 
-sudo apt install -y $PSW_PACKAGES./
-
-sudo reboot
+sudo apt install -y $PSW_PACKAGES

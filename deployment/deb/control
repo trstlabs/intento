@@ -6,4 +6,4 @@ Maintainer: https://github.com/trstlabs
 Provides: trustless-hub-node
 Conflicts: trustless-hub-node
 Replaces: trustless-hub-node
-Description: The trst node for the trustless hub
+Description: The trst node package for running a node on Trustless Hub
