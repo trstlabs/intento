@@ -147,7 +147,7 @@ pub struct LogAttribute {
     pub key: String,
     pub value: Vec<u8>,
     pub pub_db: bool,
-    pub acc_addr: String,
+    pub acc_addr: Option<String>,
     pub encrypted: bool,
 }
 
@@ -178,7 +178,7 @@ pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
         key: key.to_string(), //.as_bytes().to_vec(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: false,
-        acc_addr: "".to_string(),
+        acc_addr:  None,
         encrypted: true,
     }
 }
@@ -189,7 +189,7 @@ pub fn plaintext_log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute
         key: key.to_string(), //.as_bytes().to_vec(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: false,
-        acc_addr: "".to_string(),
+        acc_addr: None,
         encrypted: false,
     }
 }
@@ -200,7 +200,7 @@ pub fn store_pub_db<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute 
         key: key.to_string(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: true,
-        acc_addr: "".to_string(),
+        acc_addr: None,
         encrypted: false,
     }
 }
@@ -215,7 +215,7 @@ pub fn store_acc_pub_db<K: ToString, V: ToString, A: ToString>(
         key: key.to_string(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: true,
-        acc_addr: addr.to_string(),
+        acc_addr: Some(addr.to_string()),
         encrypted: false,
     }
 }
@@ -226,7 +226,7 @@ pub fn store_pub_db_bytes<K: ToString>(key: K, value: &[u8]) -> LogAttribute {
         key: key.to_string(),
         value: value.to_vec(),
         pub_db: true,
-        acc_addr: "".to_string(),
+        acc_addr: None,
         encrypted: false,
     }
 }
@@ -241,7 +241,7 @@ pub fn store_acc_pub_bytes<K: ToString, A: ToString>(
         key: key.to_string(),
         value: value.to_vec(),
         pub_db: true,
-        acc_addr: addr.to_string(),
+        acc_addr: Some(addr.to_string()),
         encrypted: false,
     }
 }
@@ -435,7 +435,7 @@ mod test {
             key: "foo".to_string(), //.as_bytes().to_vec(),
             value: "42".to_string().as_bytes().to_vec(),
             pub_db: false,
-            acc_addr: "".to_string(),
+            acc_addr: None,
             encrypted: true,
         };
 
@@ -469,7 +469,7 @@ mod test {
                 key: "foo".to_string(), //.as_bytes().to_vec(),
                 value: "42".to_string().as_bytes().to_vec(),
                 pub_db: false,
-                acc_addr: "".to_string(),
+                acc_addr: None,
                 encrypted: true,
             }],
         });
