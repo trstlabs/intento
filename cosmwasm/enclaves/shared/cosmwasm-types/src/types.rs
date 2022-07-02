@@ -368,10 +368,10 @@ pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute 
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn pub_db<K: ToString>(key: K,value: Vec<u8>) -> LogAttribute {
+pub fn store_pub_db<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
     LogAttribute {
         key: key.to_string(),
-        value: value,
+        value: value.to_string().as_bytes().to_vec(),
         pub_db: true,
         acc_pub_db: false,
         encrypted: false,
@@ -379,13 +379,36 @@ pub fn pub_db<K: ToString>(key: K,value: Vec<u8>) -> LogAttribute {
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn acc_pub_db<K: ToString>(key: K,value: Vec<u8>)  -> LogAttribute {
+pub fn store_acc_pub_db<K: ToString, V: ToString>(key: K,value: V)  -> LogAttribute {
     LogAttribute {
         key: key.to_string(),
-        value: value,
+        value: value.to_string().as_bytes().to_vec(),
         pub_db: true,
         acc_pub_db: true,
         encrypted: false,
     }
 }
+
+/// A shorthand to set a public state key-value pair
+pub fn store_pub_db_bytes<K: ToString>(key: K,value: &[u8]) -> LogAttribute {
+    LogAttribute {
+        key: key.to_string(),
+        value: value.to_vec(),
+        pub_db: true,
+        acc_pub_db: false,
+        encrypted: false,
+    }
+}
+
+/// A shorthand to set a public state key-value pair
+pub fn store_acc_pub_bytes<K: ToString>(key: K,value: &[u8]) -> LogAttribute {
+    LogAttribute {
+        key: key.to_string(),
+        value: value.to_vec(),
+        pub_db: true,
+        acc_pub_db: true,
+        encrypted: false,
+    }
+}
+
 

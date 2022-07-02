@@ -52,7 +52,7 @@ func (q grpcQuerier) ContractPublicState(c context.Context, req *types.QueryCont
 		return nil, types.ErrNotFound
 	}
 	return &types.QueryContractPublicStateResponse{
-		KeyPairs: rsp,
+		PublicContractState: rsp,
 	}, nil
 }
 
@@ -75,7 +75,7 @@ func (q grpcQuerier) ContractPublicStateForAccount(c context.Context, req *types
 		return nil, types.ErrNotFound
 	}
 	return &types.QueryContractPublicStateForAccountResponse{
-		KeyPairs: rsp,
+		PublicContractState: rsp,
 	}, nil
 }
 
@@ -239,15 +239,12 @@ func queryContractInfo(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) (*ty
 }
 
 func queryContractPublicState(ctx sdk.Context, addr sdk.AccAddress, keeper Keeper) ([]*types.KeyPair, error) {
-	//var res sdk.Result
-	fmt.Printf("queryContractPublicState NEW addr: %s \n", addr.String())
+
 	pS := keeper.GetContractPublicState(ctx, addr)
 
 	return pS, nil
 }
 func queryContractPublicStateForAccount(ctx sdk.Context, addr sdk.AccAddress, acc sdk.AccAddress, keeper Keeper) ([]*types.KeyPair, error) {
-	//var res sdk.Result
-	fmt.Printf("queryContractPublicState acc addr: %s \n", acc.String())
 	pSA := keeper.GetContractPublicStateForAccount(ctx, addr, acc)
 
 	return pSA, nil

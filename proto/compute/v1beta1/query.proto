@@ -62,7 +62,7 @@ message QueryContractPublicStateRequest {
 }
 // QueryContractPublicStateResponse is the response type for the Query/ContractPublicState RPC method
 message QueryContractPublicStateResponse {
-    repeated KeyPair key_pairs = 1;
+    repeated KeyPair public_contract_state = 1;
 }
 
 // QueryContractPublicStateForAccountRequest is the request type for the Query/QueryContractPublicStateForAccountRequest RPC method
@@ -74,7 +74,7 @@ message QueryContractPublicStateForAccountRequest {
 }
 // QueryContractPublicStateForAccountResponse is the response type for the Query/QueryContractPublicStateForAccountResponse RPC method
 message QueryContractPublicStateForAccountResponse {
-    repeated KeyPair key_pairs = 1;
+    repeated KeyPair public_contract_state = 1;
 }
 
 // QueryContractPublicStateByKeyRequest is the request type for the Query/QueryContractPublicStateByKeyRequest RPC method
