@@ -273,7 +273,7 @@ pub enum WasmMsg {
         /// Human-readable contract_id for the contract
         #[serde(default)]
         contract_id: String,
-          /// Human-readable duration for the contract (e.g. 60s, 5h ect.)
+        /// Human-readable duration for the contract (e.g. 60s, 5h ect.)
         contract_duration: String,
         callback_sig: Option<Vec<u8>>,
     },
@@ -314,9 +314,9 @@ fn bool_true() -> bool {
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct LogAttribute {
     pub key: String,
-    pub value:  Vec<u8>,
+    pub value: Vec<u8>,
     pub pub_db: bool,
-    pub acc_pub_db: bool,
+    pub acc_addr: Option<String>,
     /// For logs, we naturally default to encrypted logs, and
     /// don't serialize the field later so it doesn't leak up to the Go layers.
     #[serde(default = "bool_true")]
@@ -346,69 +346,75 @@ impl QueryResult {
 }
 
 /// A shorthand to produce a log attribute
-pub fn log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
+pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key:  key.to_string(),//.as_bytes().to_vec(),
+        key: key.to_string(), //.as_bytes().to_vec(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: false,
-        acc_pub_db: false,
+        acc_addr: None,
         encrypted: true,
     }
 }
 
 /// A shorthand to produce a plaintext log attribute
-pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
+pub fn plaintext_log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key:  key.to_string(),//.as_bytes().to_vec(),
+        key: key.to_string(), //.as_bytes().to_vec(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: false,
-        acc_pub_db: false,
+        acc_addr: None,
         encrypted: false,
     }
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn store_pub_db<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
+pub fn store_pub_db<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
         key: key.to_string(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: true,
-        acc_pub_db: false,
+        acc_addr: None,
         encrypted: false,
     }
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn store_acc_pub_db<K: ToString, V: ToString>(key: K,value: V)  -> LogAttribute {
+pub fn store_acc_pub_db<K: ToString, V: ToString, A: ToString>(
+    key: K,
+    value: V,
+    addr: A,
+) -> LogAttribute {
     LogAttribute {
         key: key.to_string(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: true,
-        acc_pub_db: true,
+        acc_addr: Some(addr.to_string()),
         encrypted: false,
     }
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn store_pub_db_bytes<K: ToString>(key: K,value: &[u8]) -> LogAttribute {
+pub fn store_pub_db_bytes<K: ToString>(key: K, value: &[u8]) -> LogAttribute {
     LogAttribute {
         key: key.to_string(),
         value: value.to_vec(),
         pub_db: true,
-        acc_pub_db: false,
+        acc_addr: None,
         encrypted: false,
     }
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn store_acc_pub_bytes<K: ToString>(key: K,value: &[u8]) -> LogAttribute {
+pub fn store_acc_pub_bytes<K: ToString, A: ToString>(
+    key: K,
+    value: &[u8],
+    addr: A,
+) -> LogAttribute {
     LogAttribute {
         key: key.to_string(),
         value: value.to_vec(),
         pub_db: true,
-        acc_pub_db: true,
+        acc_addr: Some(addr.to_string()),
         encrypted: false,
     }
 }
-
-

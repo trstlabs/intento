@@ -58,7 +58,7 @@ type LogAttribute struct {
 	Value     []byte `json:"value"`
 	Encrypted bool   `json:"encrypted"`
 	PubDb     bool   `json:"pub_db"`
-	AccPubDb  bool   `json:"acc_pub_db"`
+	AccAddr   string `json:"acc_addr"`
 }
 
 // CosmosMsg is an rust enum and only (exactly) one of the fields should be set

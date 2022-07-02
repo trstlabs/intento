@@ -114,7 +114,6 @@ pub enum WasmMsg {
         contract_id: String,
         /// mandatory human-readbale id for the contract
         contract_duration: String,
-
     },
 }
 
@@ -146,9 +145,9 @@ impl<T: Clone + fmt::Debug + PartialEq + JsonSchema> From<WasmMsg> for CosmosMsg
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
 pub struct LogAttribute {
     pub key: String,
-    pub value:  Vec<u8>,
+    pub value: Vec<u8>,
     pub pub_db: bool,
-    pub acc_pub_db: bool,
+    pub acc_addr: Option<String>,
     pub encrypted: bool,
 }
 
@@ -174,72 +173,78 @@ impl QueryResult {
 }
 
 /// A shorthand to produce a log attribute
-pub fn log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
+pub fn log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key:  key.to_string(),//.as_bytes().to_vec(),
+        key: key.to_string(), //.as_bytes().to_vec(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: false,
-        acc_pub_db: false,
+        acc_addr: None,
         encrypted: true,
     }
 }
 
 /// A shorthand to produce a plaintext log attribute
-pub fn plaintext_log<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
+pub fn plaintext_log<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
-        key:  key.to_string(),//.as_bytes().to_vec(),
+        key: key.to_string(), //.as_bytes().to_vec(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: false,
-        acc_pub_db: false,
+        acc_addr: None,
         encrypted: false,
     }
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn store_pub_db<K: ToString, V: ToString>(key: K,value: V) -> LogAttribute {
+pub fn store_pub_db<K: ToString, V: ToString>(key: K, value: V) -> LogAttribute {
     LogAttribute {
         key: key.to_string(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: true,
-        acc_pub_db: false,
+        acc_addr: None,
         encrypted: false,
     }
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn store_acc_pub_db<K: ToString, V: ToString>(key: K,value: V)  -> LogAttribute {
+pub fn store_acc_pub_db<K: ToString, V: ToString, A: ToString>(
+    key: K,
+    value: V,
+    addr: A,
+) -> LogAttribute {
     LogAttribute {
         key: key.to_string(),
         value: value.to_string().as_bytes().to_vec(),
         pub_db: true,
-        acc_pub_db: true,
+        acc_addr: Some(addr.to_string()),
         encrypted: false,
     }
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn store_pub_db_bytes<K: ToString>(key: K,value: &[u8]) -> LogAttribute {
+pub fn store_pub_db_bytes<K: ToString>(key: K, value: &[u8]) -> LogAttribute {
     LogAttribute {
         key: key.to_string(),
         value: value.to_vec(),
         pub_db: true,
-        acc_pub_db: false,
+        acc_addr: None,
         encrypted: false,
     }
 }
 
 /// A shorthand to set a public state key-value pair
-pub fn store_acc_pub_bytes<K: ToString>(key: K,value: &[u8]) -> LogAttribute {
+pub fn store_acc_pub_bytes<K: ToString, A: ToString>(
+    key: K,
+    value: &[u8],
+    addr: A,
+) -> LogAttribute {
     LogAttribute {
         key: key.to_string(),
         value: value.to_vec(),
         pub_db: true,
-        acc_pub_db: true,
+        acc_addr: Some(addr.to_string()),
         encrypted: false,
     }
 }
-
-
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitResponse<T = Empty>
@@ -399,12 +404,12 @@ where
         self.log.push(plaintext_log(key, value));
     }
 
-    pub fn add_pub_db<K: ToString,V: ToString>(&mut self, key: K, value: V) {
+    pub fn add_pub_db<K: ToString, V: ToString>(&mut self, key: K, value: V) {
         self.log.push(store_pub_db(key, value));
     }
 
-    pub fn add_acc_pub_db<K: ToString,V: ToString>(&mut self, key: K, value: V) {
-        self.log.push(store_acc_pub_db(key, value));
+    pub fn add_acc_pub_db<K: ToString, V: ToString, A: ToString>(&mut self, key: K, value: V, addr: A) {
+        self.log.push(store_acc_pub_db(key, value, addr));
     }
 
     pub fn add_message<U: Into<CosmosMsg<T>>>(&mut self, msg: U) {
@@ -426,10 +431,10 @@ mod test {
     #[test]
     fn log_works_for_different_types() {
         let expeceted = LogAttribute {
-            key: "foo".to_string(),//.as_bytes().to_vec(),
+            key: "foo".to_string(), //.as_bytes().to_vec(),
             value: "42".to_string().as_bytes().to_vec(),
             pub_db: false,
-            acc_pub_db: false,
+            acc_addr: None,
             encrypted: true,
         };
 
@@ -460,10 +465,10 @@ mod test {
             }
             .into()],
             log: vec![LogAttribute {
-                key: "foo".to_string(),//.as_bytes().to_vec(),
+                key: "foo".to_string(), //.as_bytes().to_vec(),
                 value: "42".to_string().as_bytes().to_vec(),
                 pub_db: false,
-                acc_pub_db: false,
+                acc_addr: None,
                 encrypted: true,
             }],
         });
@@ -554,4 +559,3 @@ mod test {
         assert_eq!(&migrate.data, &expected_data);
     }
 }
-

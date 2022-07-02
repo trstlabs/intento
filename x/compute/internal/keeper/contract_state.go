@@ -84,15 +84,20 @@ func (k Keeper) setContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress,
 }
 
 // SetContractPublicState sets the result of the contract from wasm attributes, it overrides existing keys
-func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress, caller sdk.AccAddress, result []wasmTypes.LogAttribute) {
+func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress, result []wasmTypes.LogAttribute) error {
 	prefixStoreKey := types.GetContractPubDbKey(contrAddr)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-	prefixAccStoreKey := types.GetContractAccPubDbKey(contrAddr, caller)
-	prefixAccStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixAccStoreKey)
+
 	for _, attr := range result {
 		if attr.PubDb {
-			if attr.AccPubDb {
-				fmt.Printf(" caller: %s \n", caller.String())
+			if attr.AccAddr != "" {
+				accAddr, err := sdk.AccAddressFromBech32(attr.AccAddr)
+				if err != nil {
+					return err
+				}
+				prefixAccStoreKey := types.GetContractAccPubDbKey(contrAddr, accAddr)
+				prefixAccStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixAccStoreKey)
+				fmt.Printf(" caller: %s \n", attr.AccAddr)
 				fmt.Printf("set acc state key %s \n,", string(attr.Key))
 				prefixAccStore.Set([]byte(attr.Key), attr.Value)
 				break
@@ -102,6 +107,7 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 			prefixStore.Set([]byte(attr.Key), attr.Value)
 		}
 	}
+	return nil
 }
 
 /*
