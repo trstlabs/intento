@@ -89,146 +89,24 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	for _, attr := range result {
-		if attr.PubDb {
-			if attr.AccAddr != "" {
-				accAddr, err := sdk.AccAddressFromBech32(attr.AccAddr)
-				if err != nil {
-					return err
-				}
-				prefixAccStoreKey := types.GetContractAccPubDbKey(contrAddr, accAddr)
-				prefixAccStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixAccStoreKey)
-				fmt.Printf(" caller: %s \n", attr.AccAddr)
-				fmt.Printf("set acc state key %s \n,", string(attr.Key))
-				prefixAccStore.Set([]byte(attr.Key), attr.Value)
-				break
+		if attr.Encrypted {
+			continue
+		} else if len(attr.AccAddr) == 44 {
+			accAddr, err := sdk.AccAddressFromBech32(attr.AccAddr)
+			if err != nil {
+				return err
 			}
-			fmt.Printf(" contrAddr: %s \n", contrAddr.String())
-			fmt.Printf("set state key %s \n,", string(attr.Key))
+			prefixAccStoreKey := types.GetContractAccPubDbKey(contrAddr, accAddr)
+			prefixAccStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixAccStoreKey)
+
+			prefixAccStore.Set([]byte(attr.Key), attr.Value)
+		} else if attr.PubDb {
+
 			prefixStore.Set([]byte(attr.Key), attr.Value)
 		}
 	}
 	return nil
 }
-
-/*
-// SetContractPublicState sets the result of the contract from wasm attributes, it overrides existing keys
-func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress, accAddr sdk.AccAddress, result []wasmTypes.LogAttribute) {
-	for _, attr := range result {
-		if attr.PubDb {
-			if attr.AccPubDb {
-				k.SetContractPublicStateAccVal(ctx, attr, contrAddr, accAddr)
-				break
-			}
-			k.SetContractPublicStateVal(ctx, attr, contrAddr)
-		}
-	}
-}
-*/
-/*
-// TEST SetContractPublicState sets the result of the contract from wasm attributes, it overrides existing keys
-func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress, result []wasmTypes.LogAttribute) {
-	prefixStoreKey := types.GetContractPubDbKey(contrAddr)
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-	for i, attr := range result {
-		fmt.Printf(" contrAddr: %s \n", contrAddr.String())
-		fmt.Printf(" key: %s \n", attr.Key)
-		fmt.Printf(" val: %s \n", attr.Value)
-		fmt.Printf(" pub: %v \n", attr.PubDb)
-		fmt.Printf(" acc: %v \n", attr.AccPubDb)
-		fmt.Printf(" enc: %v \n", attr.Encrypted)
-		if attr.PubDb && !attr.AccPubDb {
-			fmt.Printf("set key: %s \n", attr.Key)
-			fmt.Printf("set val: %s \n", attr.Value)
-			//up until here works for this..
-			prefixStore.Set([]byte(attr.Key), attr.Value)
-			prefixStore.Set([]byte("pub key test"), []byte("pub key test"))
-			prefixStore.Set([]byte("pub key test2"), []byte("pub key test2"))
-		} else if attr.AccPubDb {
-			fmt.Printf("set acc key: %s \n", attr.Key)
-			fmt.Printf("set acc val: %s \n", attr.Value)
-			//up until here works for this..
-			prefixStore.Set([]byte("acc key test"), []byte("acc key test"))
-			prefixStore.Set([]byte("acc key test"), []byte("acc key test"))
-		} else if !attr.PubDb {
-			fmt.Printf("set encrypted2 key: %s \n", attr.Key)
-			fmt.Printf("set encrypted2 val: %s \n", attr.Value)
-			prefixStore.Set([]byte("encrypted key2 test"), []byte("encrypted key2 test"))
-			prefixStore.Set([]byte("encrypted key2 test2"), []byte("encrypted key2 test"))
-			prefixStore.Set([]byte("encrypted key2 test3"), []byte("encrypted key2 test"))
-		} else {
-			fmt.Printf("else: %s \n", attr.Key)
-		}
-		fmt.Printf("done for val: %s \n", attr.Key)
-		fmt.Printf("done for: %d \n", i)
-		prefixStore.Set([]byte("done for key"), attr.Value)
-	}
-}
-
-//SetContractPublicStateVal sets value for public contract state
-func (k Keeper) SetContractPublicStateVal(ctx sdk.Context, kv wasmTypes.LogAttribute, contrAddr sdk.AccAddress) {
-	prefixStoreKey := types.GetContractPubDbKey(contrAddr)
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-	prefixStore.Set([]byte(kv.Key), kv.Value)
-	fmt.Printf("set state key %s \n", kv.Key)
-}
-
-//SetContractPublicStateVal sets value for an account specific public contract state
-func (k Keeper) SetContractPublicStateAccVal(ctx sdk.Context, kv wasmTypes.LogAttribute, contrAddr sdk.AccAddress, accAddr sdk.AccAddress) {
-	prefixAccStoreKey := types.GetContractAccPubDbKey(contrAddr, accAddr)
-	prefixAccStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixAccStoreKey)
-	prefixAccStore.Set([]byte(kv.Key), kv.Value)
-}
-
-
-// SetContractPublicState sets the result of the contract from wasm attributes, it overrides existing keys
-func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress, accAddr sdk.AccAddress, result []wasmTypes.LogAttribute) {
-	var toSet []*types.KeyPair
-	var toSetAcc []*types.KeyPair
-
-	store := ctx.KVStore(k.storeKey)
-	prefixStoreKey := types.GetContractPubDbKey(contrAddr)
-	pS := store.Get(prefixStoreKey)
-	err := proto.Unmarshal(&pS, toSet)
-	if err != nil {
-		panic(err)
-	}
-
-	prefixStoreKeyAcc := types.GetContractAccPubDbKey(contrAddr, accAddr)
-	pSAcc := store.Get(prefixStoreKeyAcc)
-	err = proto.Unmarshal(&pS, toSetAcc)
-	if err != nil {
-		panic(err)
-	}
-	for _, attr := range result {
-		if attr.PubDb {
-			if attr.AccPubDb {
-				toSetAcc = append(toSetAcc, &types.KeyPair{Key: attr.Key, Value: string(attr.Value)})
-				break
-			}
-			toSet = append(toSet, &types.KeyPair{Key: attr.Key, Value: string(attr.Value)})
-		}
-	}
-
-	bz, err := proto.Marshal(&toSet)
-	if err != nil {
-		panic(err)
-	}
-	//prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-	store.Set(prefixStoreKey, bz)
-
-}
-*/
-/*
-// WORKS OLD SetContractPublicState sets the result of the contract from wasm attributes, it overrides existing keys
-func (k Keeper) SetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress, result []wasmTypes.LogAttribute) {
-	prefixStoreKey := types.GetContractPubDbKey(contractAddress)
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-	for _, attr := range result {
-		if !attr.Encrypted {
-			prefixStore.Set([]byte(attr.Key), []byte(attr.Value))
-		}
-	}
-}*/
 
 //GetContractPublicState gets the public contract state
 func (k Keeper) GetContractPublicState(ctx sdk.Context, contractAddress sdk.AccAddress) []*types.KeyPair {
