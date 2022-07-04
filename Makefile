@@ -239,28 +239,28 @@ build-rocksdb-image:
 build-dev-image:
 	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=SW --build-arg FEATURES="${FEATURES},debug-print" -f deployment/dockerfiles/base.Dockerfile -t rust-go-base-image .
 	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trstdev-1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trstdev-1 -f deployment/dockerfiles/dev-image.Dockerfile -t enigmampc/secret-network-sw-dev:${DOCKER_TAG} .
+	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trstdev-1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/trst-sw-dev:${DOCKER_TAG} .
 
 build-custom-dev-image:
     # .dockerignore excludes .so files so we rename these so that the dockerfile can find them
 	cd go-cosmwasm/api && cp libgo_cosmwasm.so libgo_cosmwasm.so.x
 	cd cosmwasm/enclaves/execute && cp librust_cosmwasm_enclave.signed.so librust_cosmwasm_enclave.signed.so.x
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/custom-node.Dockerfile -t enigmampc/secret-network-sw-dev-custom-bootstrap:${DOCKER_TAG} .
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/custom-node.Dockerfile -t enigmampc/secret-network-sw-dev-custom-node:${DOCKER_TAG} .
+	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/custom-node.Dockerfile -t trstlabs/trst-sw-dev-custom-bootstrap:${DOCKER_TAG} .
+	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/custom-node.Dockerfile -t trstlabs/trst-sw-dev-custom-node:${DOCKER_TAG} .
     # delete the copies created above
 	rm go-cosmwasm/api/libgo_cosmwasm.so.x cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so.x
 
 build-testnet: docker_base
 	@mkdir build 2>&3 || true
-	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/release.Dockerfile -t enigmampc/secret-network-bootstrap:v$(VERSION)-testnet .
-	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/release.Dockerfile -t enigmampc/secret-network-node:v$(VERSION)-testnet .
+	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/release.Dockerfile -t trstlabs/trst-bootstrap:v$(VERSION)-testnet .
+	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/release.Dockerfile -t trstlabs/trst-node:v$(VERSION)-testnet .
 	docker build --build-arg SGX_MODE=HW -f deployment/dockerfiles/build-deb.Dockerfile -t deb_build .
 	docker run -e VERSION=${VERSION} -v $(CUR_DIR)/build:/build deb_build
 
 build-mainnet: docker_base
 	@mkdir build 2>&3 || true
-	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/release.Dockerfile -t enigmampc/secret-network-bootstrap:v$(VERSION)-mainnet .
-	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/release.Dockerfile -t enigmampc/secret-network-node:v$(VERSION)-mainnet .
+	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/release.Dockerfile -t trstlabs/trst-bootstrap:v$(VERSION)-mainnet .
+	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/release.Dockerfile -t trstlabs/trst-node:v$(VERSION)-mainnet .
 	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=HW -f deployment/dockerfiles/build-deb.Dockerfile -t deb_build .
 	docker run -e VERSION=${VERSION} -v $(CUR_DIR)/build:/build deb_build
 
@@ -295,10 +295,10 @@ endif
 
 
 docker_bootstrap: docker_base
-	docker build --build-arg SGX_MODE=${SGX_MODE} --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/local-node.Dockerfile -t enigmampc/secret-network-bootstrap-${ext}:${DOCKER_TAG} .
+	docker build --build-arg SGX_MODE=${SGX_MODE} --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/local-node.Dockerfile -t trstlabs/trst-bootstrap-${ext}:${DOCKER_TAG} .
 
 docker_node: docker_base
-	docker build --build-arg SGX_MODE=${SGX_MODE} --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/local-node.Dockerfile -t enigmampc/secret-network-node-${ext}:${DOCKER_TAG} .
+	docker build --build-arg SGX_MODE=${SGX_MODE} --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/local-node.Dockerfile -t trstlabs/trst-node-${ext}:${DOCKER_TAG} .
 
 clean-files:
 	-rm -rf /trst
@@ -433,11 +433,11 @@ bin-data-production:
 	cd ./cmd/trstd && go-bindata -o ias_bin_prod.go -prefix "../../ias_keys/production/" -tags "production,hw" ../../ias_keys/production/...
 
 secret-contract-optimizer:
-	docker build -f deployment/dockerfiles/secret-contract-optimizer.Dockerfile -t enigmampc/secret-contract-optimizer:${TAG} .
-	docker tag enigmampc/secret-contract-optimizer:${TAG} enigmampc/secret-contract-optimizer:latest
+	docker build -f deployment/dockerfiles/secret-contract-optimizer.Dockerfile -t cosmwasm/rust-optimizer:${TAG} .
+	docker tag cosmwasm/rust-optimizer:${TAG} cosmwasm/rust-optimizer:latest
 
 aesm-image:
-	docker build -f deployment/dockerfiles/aesm.Dockerfile -t enigmampc/aesm .
+	docker build -f deployment/dockerfiles/aesm.Dockerfile -t trstlabs/aesm .
 
 ###############################################################################
 ###                                Swagger                                  ###

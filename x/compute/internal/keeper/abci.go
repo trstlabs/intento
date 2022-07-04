@@ -87,14 +87,17 @@ func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.Ac
 
 	contractBalance := k.bankKeeper.GetAllBalances(ctx, contractAddress)
 	p := k.GetParams(ctx)
-	if !contractBalance.Empty() {
-		percentageAutoMsgFundsCommission := sdk.NewDecWithPrec(p.AutoMsgFundsCommission, 2)
-		toAutoMsgFundsCommissionAmount := percentageAutoMsgFundsCommission.MulInt(contractBalance.AmountOf(types.Denom)).Ceil().TruncateInt()
-		feeCoins = sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(p.AutoMsgConstantFee)).Add(sdk.NewCoin(types.Denom, toAutoMsgFundsCommissionAmount).Add(gasCoin)))
-	} else {
+	if contractBalance.Empty() {
 		feeCoins = sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(p.AutoMsgConstantFee)).Add(gasCoin))
+		err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Creator)
+		if err != nil {
+			return err
+		}
+		return nil
 	}
-
+	percentageAutoMsgFundsCommission := sdk.NewDecWithPrec(p.AutoMsgFundsCommission, 2)
+	amountAutoMsgFundsCommission := percentageAutoMsgFundsCommission.MulInt(contractBalance.AmountOf(types.Denom)).Ceil().TruncateInt()
+	feeCoins = sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(p.AutoMsgConstantFee)).Add(sdk.NewCoin(types.Denom, amountAutoMsgFundsCommission).Add(gasCoin)))
 	//if the contract is not able to pay, the contract creator pays as next in line
 	err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contractAddress)
 	if err != nil {
@@ -103,14 +106,14 @@ func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.Ac
 			return err
 		}
 	}
-
-	//pay out the remaining balance after deducting fee, commision and gas cost to the contract creator
-	err = k.bankKeeper.SendCoins(ctx, contractAddress, contract.Creator, contractBalance.Sub(feeCoins))
-	if err != nil {
-		return err
+	if contractBalance.Sub(feeCoins).AmountOf(types.Denom).IsPositive() {
+		//pay out the remaining balance after deducting fee, commision and gas cost to the contract creator
+		err = k.bankKeeper.SendCoins(ctx, contractAddress, contract.Creator, contractBalance.Sub(feeCoins))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
-
 }
 
 // SetIncentiveCoins distributes compute module allocated coins to selected contracts
