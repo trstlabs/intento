@@ -355,7 +355,7 @@ fn query_recurse<S: Storage, A: Api, Q: Querier>(
             contract: contract.clone(),
             contract_code_hash: contract_code_hash.clone(),
         };
-        let query = QueryRequest::Wasm(WasmQuery::Smart {
+        let query = QueryRequest::Wasm(WasmQuery::Private {
             contract_addr: contract,
             msg: to_binary(&req)?,
             callback_code_hash: contract_code_hash.clone(),

@@ -823,7 +823,7 @@ mod test {
     fn do_query_chain_fails_for_missing_contract() {
         let mut instance = make_instance();
 
-        let request: QueryRequest<Empty> = QueryRequest::Wasm(WasmQuery::Smart {
+        let request: QueryRequest<Empty> = QueryRequest::Wasm(WasmQuery::Private {
             contract_addr: HumanAddr::from("non-existent"),
             msg: Binary::from(b"{}" as &[u8]),
         });
