@@ -17,6 +17,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(MsgInstantiateContract{}, "wasm/MsgInstantiateContract", nil)
 	cdc.RegisterConcrete(MsgExecuteContract{}, "wasm/MsgExecuteContract", nil)
 
+	cdc.RegisterConcrete(MsgDiscardAutoMsg{}, "wasm/MsgDiscardAutoMsg", nil)
+
 	cdc.RegisterConcrete(&InstantiateContractProposal{}, "wasm/InstantiateContractProposal", nil)
 	cdc.RegisterConcrete(&ExecuteContractProposal{}, "wasm/ExecuteContractProposal", nil)
 
@@ -28,6 +30,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgStoreCode{}, //TODO Remove for mainnet, code to be uploaded through governance
 		&MsgInstantiateContract{},
 		&MsgExecuteContract{},
+		&MsgDiscardAutoMsg{},
 	)
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),

@@ -5,9 +5,9 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 type ComputeHooks interface {
 
 	// AfterExitPool is called after ExitPool, ExitSwapShareAmountIn, and ExitSwapExternAmountOut
-	AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress)
-	// AfterComputeExecuted is called after SwapExactAmountIn and SwapExactAmountOut
-	AfterComputeExecuted(ctx sdk.Context, sender sdk.AccAddress)
+	AfterRecurringSend(ctx sdk.Context, sender sdk.AccAddress)
+	// AfterAutoSwap is called after SwapExactAmountIn and SwapExactAmountOut
+	AfterAutoSwap(ctx sdk.Context, sender sdk.AccAddress)
 }
 
 var _ ComputeHooks = MultiComputeHooks{}
@@ -20,14 +20,14 @@ func NewMultiComputeHooks(hooks ...ComputeHooks) MultiComputeHooks {
 	return hooks
 }
 
-func (h MultiComputeHooks) AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress) {
+func (h MultiComputeHooks) AfterRecurringSend(ctx sdk.Context, sender sdk.AccAddress) {
 	for i := range h {
-		h[i].AfterComputeInstantiated(ctx, sender)
+		h[i].AfterRecurringSend(ctx, sender)
 	}
 }
 
-func (h MultiComputeHooks) AfterComputeExecuted(ctx sdk.Context, sender sdk.AccAddress) {
+func (h MultiComputeHooks) AfterAutoSwap(ctx sdk.Context, sender sdk.AccAddress) {
 	for i := range h {
-		h[i].AfterComputeExecuted(ctx, sender)
+		h[i].AfterAutoSwap(ctx, sender)
 	}
 }

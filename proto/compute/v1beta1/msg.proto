@@ -57,6 +57,12 @@ message MsgExecuteContract {
   bytes callback_sig = 6 [(gogoproto.customname) = "CallbackSig"];
 }
 
+message MsgDiscardAutoMsg {
+  option (gogoproto.goproto_getters) = false;
+  bytes sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  bytes contract_address = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+}
+
 /*
 message MsgMigrateContract {
   option (gogoproto.goproto_getters) = false;
@@ -81,6 +87,8 @@ message MsgClearAdmin {
   string sender = 1;
   bytes contract = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
+
+
  */
 
 

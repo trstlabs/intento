@@ -24,6 +24,8 @@ func NewHandler(k Keeper) sdk.Handler {
 			return handleInstantiate(ctx, k, msg)
 		case *MsgExecuteContract:
 			return handleExecute(ctx, k, msg)
+		case *types.MsgDiscardAutoMsg:
+			return handleDiscardAutoMsg(ctx, k, msg)
 			/*
 				case MsgMigrateContract:
 					return handleMigration(ctx, k, &msg)
@@ -182,6 +184,42 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	res.Events = events
 
 	return res, nil
+}
+
+func handleDiscardAutoMsg(ctx sdk.Context, k Keeper, msg *types.MsgDiscardAutoMsg) (*sdk.Result, error) {
+
+	info := k.GetContractInfo(ctx, msg.ContractAddress)
+	if info == nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract code does not exist")
+	}
+
+	err := k.DiscardAutoMsg(
+		ctx,
+		*info,
+		msg.ContractAddress,
+		msg.Sender,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	events := filteredMessageEvents(ctx.EventManager())
+
+	custom := sdk.Events{sdk.NewEvent(
+		sdk.EventTypeMessage,
+		sdk.NewAttribute(sdk.AttributeKeyModule, ModuleName),
+		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender.String()),
+		sdk.NewAttribute(types.AttributeKeyContract, msg.ContractAddress.String()),
+		sdk.NewAttribute("cancelled", msg.ContractAddress.String()),
+	)}
+
+	events = append(events, custom.ToABCIEvents()...)
+
+	return &sdk.Result{
+		Data:   msg.ContractAddress,
+		Events: events,
+	}, nil
 }
 
 /*

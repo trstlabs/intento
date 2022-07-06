@@ -271,15 +271,15 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	if err != nil {
 		return nil, err
 	}
-	//TODO we can add fairdrop actions based on the type of contract executed. Action 1. instantiate (AutoSwap) Action 2. Execute Action 3. Instantiate (Recurring send) 4. Stake
-	//if codeInfo.CodeHash == types.AutoSwapCodeHash {
-	k.hooks.AfterComputeInstantiated(ctx, creator)
-	//}
+
 	err = k.dispatchMessages(ctx, contractAddress, res.Messages)
 	if err != nil {
 		return nil, err
 	}
-
+	//both compute actions are performed through callbacksig
+	if callbackSig != nil {
+		k.SetAirdropAction(ctx, res.Log)
+	}
 	return contractAddress, nil
 }
 
@@ -338,7 +338,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	gas := gasForContract(ctx)
 	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
-
+	//fmt.Printf("res: %v \n", res.Log)
 	consumeGas(ctx, gasUsed)
 
 	if execErr != nil {
@@ -358,9 +358,8 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	if err != nil {
 		return nil, err
 	}
-	//return &sdk.Result{Data: res.Data,Log: res.Log[1].Value}, nil //used for item module compatibilily
 
-	k.hooks.AfterComputeExecuted(ctx, caller)
+	//return &sdk.Result{Data: res.Data,Log: res.Log[1].Value}, nil //used for item module compatibilily
 
 	return &sdk.Result{Data: res.Data}, nil
 
@@ -510,4 +509,24 @@ func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context, msg []byte, code
 	fmt.Printf("callbackSig: \t %v \n", callbackSig)
 
 	return callbackSig, encryptedMessage, nil
+}
+
+// DiscardAutoMsg cancels the automessage for a given contract
+func (k Keeper) DiscardAutoMsg(ctx sdk.Context, info types.ContractInfo, contractAddress sdk.AccAddress, sender sdk.AccAddress) error {
+	store := ctx.KVStore(k.storeKey)
+	// get contact info
+	min, err := time.ParseDuration("60s")
+	if err != nil {
+		return err
+	}
+	if info.EndTime.Before(ctx.BlockHeader().Time.Add(min)) {
+		return sdkerrors.Wrap(types.ErrNotFound, "contract info")
+	}
+	k.RemoveFromContractQueue(ctx, contractAddress.String(), info.EndTime)
+	info.AutoMsg = nil
+	info.EndTime = ctx.BlockHeader().Time
+	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&info))
+	fmt.Printf("info: \t %v \n", info)
+
+	return nil
 }

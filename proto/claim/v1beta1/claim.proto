@@ -14,8 +14,8 @@ service Msg {
 
 enum Action {
   option (gogoproto.goproto_enum_prefix) = false;
-  ActionComputeInstantiate= 0;
-  ActionComputeExecute = 1;
+  ActionAutoSwap = 0;
+  ActionRecurringSend = 1;
   ActionGovernanceVote = 2;
   ActionDelegateStake = 3;
 }

@@ -21,15 +21,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
-
 	authrest "github.com/cosmos/cosmos-sdk/x/auth/client/rest"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -76,6 +76,8 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
+	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -142,6 +144,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
 		//	item.AppModuleBasic{},
 		compute.AppModuleBasic{},
 		reg.AppModuleBasic{},
@@ -222,6 +225,7 @@ type App struct {
 	TransferKeeper   ibctransferkeeper.Keeper
 	ClaimKeeper      *claimkeeper.Keeper
 	AllocKeeper      allockeeper.Keeper
+	AuthzKeeper      authzkeeper.Keeper
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -266,7 +270,7 @@ func NewTrstApp(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
+		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, authzkeeper.StoreKey,
 		/*itemtypes.StoreKey,*/ compute.StoreKey,
 		reg.StoreKey,
 		claimtypes.StoreKey,
@@ -306,6 +310,12 @@ func NewTrstApp(
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
+	)
+	app.AuthzKeeper = authzkeeper.NewKeeper(
+		keys[authzkeeper.StoreKey],
+		appCodec,
+		app.MsgServiceRouter(),
+		/*app.AccountKeeper,TODO SDKv46 req this*/
 	)
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
@@ -451,6 +461,7 @@ func NewTrstApp(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
@@ -478,6 +489,7 @@ func NewTrstApp(
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		authtypes.ModuleName,
+		authz.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
 		crisistypes.ModuleName,
@@ -501,6 +513,7 @@ func NewTrstApp(
 		stakingtypes.ModuleName,
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
+		authz.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -539,6 +552,7 @@ func NewTrstApp(
 		ibchost.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		authz.ModuleName,
 		//itemtypes.ModuleName,
 		compute.ModuleName,
 		reg.ModuleName,

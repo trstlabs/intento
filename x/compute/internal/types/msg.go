@@ -161,6 +161,50 @@ func (msg MsgExecuteContract) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
+// TypeMsgDiscardAutoMsg defines the type value for a MsgDiscardAutoMsg.
+const TypeMsgDiscardAutoMsg = "msg_cancel_auto_msg"
+
+var _ sdk.Msg = &MsgDiscardAutoMsg{}
+
+// NewMsgDiscardAutoMsg returns a reference to a new MsgDiscardAutoMsg.
+//nolint:interfacer
+func NewMsgDiscardAutoMsg(sender sdk.AccAddress, contractAddr sdk.AccAddress) *MsgDiscardAutoMsg {
+	return &MsgDiscardAutoMsg{
+		Sender:          sender,
+		ContractAddress: contractAddr,
+	}
+}
+
+// Route returns the message route for a MsgDiscardAutoMsg.
+func (msg MsgDiscardAutoMsg) Route() string { return RouterKey }
+
+// Type returns the message type for a MsgDiscardAutoMsg.
+func (msg MsgDiscardAutoMsg) Type() string { return TypeMsgDiscardAutoMsg }
+
+// ValidateBasic Implements Msg.
+func (msg MsgDiscardAutoMsg) ValidateBasic() error {
+	/*if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
+	}*/
+
+	return nil
+}
+
+// GetSignBytes returns the bytes all expected signers must sign over for a
+// MsgDiscardAutoMsg.
+func (msg MsgDiscardAutoMsg) GetSignBytes() []byte {
+	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
+}
+
+// GetSigners returns the expected signers for a MsgDiscardAutoMsg.
+func (msg MsgDiscardAutoMsg) GetSigners() []sdk.AccAddress {
+	/*(addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}*/
+	return []sdk.AccAddress{msg.Sender}
+}
+
 /*
 type MsgMigrateContract struct {
 	Sender     sdk.AccAddress  `json:"sender" yaml:"sender"`

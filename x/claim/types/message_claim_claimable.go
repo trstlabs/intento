@@ -6,7 +6,7 @@ import (
 )
 
 // TypeMsgClaimClaimable defines the type value for a MsgClaimClaimable.
-const TypeMsgClaimClaimable = "msg_claim_claimablet"
+const TypeMsgClaimClaimable = "msg_claim_claimable"
 
 var _ sdk.Msg = &MsgClaimClaimable{}
 

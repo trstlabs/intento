@@ -334,7 +334,7 @@ func (m *QueryClaimableForActionRequest) GetAction() Action {
 	if m != nil {
 		return m.Action
 	}
-	return ActionComputeInstantiate
+	return ActionAutoSwap
 }
 
 type QueryClaimableForActionResponse struct {

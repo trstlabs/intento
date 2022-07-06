@@ -52,9 +52,10 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 	txCmd.AddCommand(
-		StoreCodeCmd(),
-		InstantiateContractCmd(),
-		ExecuteContractCmd(),
+		CmdStoreCode(),
+		CmdInstantiateContract(),
+		CmdExecuteContract(),
+		CmdDiscardAutoMsg(),
 		// Currently not supporting these commands
 		//MigrateContractCmd(cdc),
 		//UpdateContractAdminCmd(cdc),
@@ -63,8 +64,8 @@ func GetTxCmd() *cobra.Command {
 	return txCmd
 }
 
-// StoreCodeCmd will upload code to be reused.
-func StoreCodeCmd() *cobra.Command {
+// CmdStoreCode will upload code to be reused.
+func CmdStoreCode() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "store [wasm file] --contract-title [text] --contract-description [text] --source [source] ",
 		Short: "Upload a wasm binary",
@@ -166,8 +167,8 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 	return msg, nil
 }
 
-// InstantiateContractCmd will instantiate a contract from previously uploaded code.
-func InstantiateContractCmd() *cobra.Command {
+// CmdInstantiateContract will instantiate a contract from previously uploaded code.
+func CmdInstantiateContract() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "instantiate [code id] [JSON args] --contract_id [unique contractId] " /* --admin [address,optional] */ + "--amount [coins] (optional)",
 		Short: "Instantiate a Trustless Contract",
@@ -318,8 +319,8 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 	return msg, nil
 }
 
-// ExecuteContractCmd will execute a contract from previously instantiated code.
-func ExecuteContractCmd() *cobra.Command {
+// CmdExecuteContract will execute a contract from previously instantiated code.
+func CmdExecuteContract() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "execute [contract address] [json encoded send args]",
 		Short: "Execute a command on a wasm-based Trustless Contract",
@@ -479,4 +480,36 @@ func GetCodeHashByContractAddr(cliCtx client.Context, contractAddr sdk.AccAddres
 	}
 
 	return []byte(hex.EncodeToString(res)), nil
+}
+
+func CmdDiscardAutoMsg() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cancel-auto-msg",
+		Short: "Cancel the auto-message for an automated contract",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			// get address to execute
+			contractAddr, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgDiscardAutoMsg(
+				clientCtx.GetFromAddress(),
+				contractAddr,
+			)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
 }

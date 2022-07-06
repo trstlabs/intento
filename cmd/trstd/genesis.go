@@ -346,7 +346,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ComputeParams.MinContractDuration = time.Second * 45
 	genParams.ComputeParams.AutoMsgFundsCommission = 2
 	genParams.ComputeParams.AutoMsgConstantFee = 1000000
-	genParams.ComputeParams.ContinuousAutoMsgConstantFee = 1000000
+	genParams.ComputeParams.RecurringAutoMsgConstantFee = 1000000
 	genParams.ComputeParams.MinContractDurationForIncentive = time.Hour * 24 * 4
 	genParams.ComputeParams.MinContractBalanceForIncentive = 50000000
 	genParams.ComputeParams.MaxContractIncentive = 500000000

@@ -89,6 +89,7 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	for _, attr := range result {
+
 		if attr.Encrypted {
 			continue
 		} else if len(attr.AccAddr) == 44 {
@@ -105,6 +106,32 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 			prefixStore.Set([]byte(attr.Key), attr.Value)
 		}
 	}
+	return nil
+}
+
+// SetAirdropAction sets the airdrop from the contract attributes
+func (k Keeper) SetAirdropAction(ctx sdk.Context, result []wasmTypes.LogAttribute) error {
+
+	for _, attr := range result {
+		fmt.Printf("result key: %s \n,", attr.Key)
+
+		if attr.Key == "init_auto_swap" {
+			acc, err := sdk.AccAddressFromBech32(string(attr.Value))
+			if err != nil {
+				return err
+			}
+			k.hooks.AfterAutoSwap(ctx, acc)
+		} else if attr.Key == "init_recurring_send" {
+			//fmt.Printf("initiated key: %s \n,", (attr.Key))
+			//fmt.Printf("initiated val: %s \n,", string(attr.Value))
+			acc, err := sdk.AccAddressFromBech32(string(attr.Value))
+			if err != nil {
+				return err
+			}
+			k.hooks.AfterRecurringSend(ctx, acc)
+		}
+	}
+
 	return nil
 }
 

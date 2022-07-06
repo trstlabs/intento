@@ -10,16 +10,16 @@ import (
 	"github.com/trstlabs/trst/x/claim/types"
 )
 
-func (k Keeper) AfterComputeExecuted(ctx sdk.Context, sender sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionComputeExecute)
+func (k Keeper) AfterAutoSwap(ctx sdk.Context, sender sdk.AccAddress) {
+	err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionAutoSwap)
 	if err != nil {
 		fmt.Printf("error claiming tokens: %v \n", err)
 		//panic(err.Error())
 	}
 }
 
-func (k Keeper) AfterComputeInstantiated(ctx sdk.Context, sender sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionComputeInstantiate)
+func (k Keeper) AfterRecurringSend(ctx sdk.Context, sender sdk.AccAddress) {
+	err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionRecurringSend)
 	if err != nil {
 		fmt.Printf("error claiming tokens: %v \n", err)
 		//panic(err.Error())
@@ -96,11 +96,11 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {}
 
 // Compute hooks
-func (h Hooks) AfterComputeExecuted(ctx sdk.Context, senderAddr sdk.AccAddress) {
-	h.k.AfterComputeExecuted(ctx, senderAddr)
+func (h Hooks) AfterAutoSwap(ctx sdk.Context, senderAddr sdk.AccAddress) {
+	h.k.AfterAutoSwap(ctx, senderAddr)
 }
-func (h Hooks) AfterComputeInstantiated(ctx sdk.Context, senderAddr sdk.AccAddress) {
-	h.k.AfterComputeInstantiated(ctx, senderAddr)
+func (h Hooks) AfterRecurringSend(ctx sdk.Context, senderAddr sdk.AccAddress) {
+	h.k.AfterRecurringSend(ctx, senderAddr)
 }
 
 // ________________________________________________________________________________________

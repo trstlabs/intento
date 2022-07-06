@@ -16,8 +16,8 @@ const (
 	// AutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultAutoMsgConstantFee int64 = 1000000 // 1utrst
 
-	// ContinuousAutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultContinuousAutoMsgConstantFee int64 = 1000000 // 1utrst
+	// RecurringAutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
+	DefaultRecurringAutoMsgConstantFee int64 = 1000000 // 1utrst
 
 	// Default max period for a contract that is self-executing
 	DefaultMaxContractDuration time.Duration = time.Hour * 24 * 366 // 366 days
@@ -40,7 +40,7 @@ var (
 
 	KeyAutoMsgConstantFee = []byte("AutoMsgConstantFee")
 
-	KeyContinuousAutoMsgConstantFee = []byte("ContinuousAutoMsgConstantFee")
+	KeyRecurringAutoMsgConstantFee = []byte("RecurringAutoMsgConstantFee")
 
 	KeyMaxContractDuration = []byte("MaxContractDuration")
 
@@ -59,7 +59,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyAutoMsgFundsCommission, &p.AutoMsgFundsCommission, validateAutoMsgFundsCommission),
 		paramtypes.NewParamSetPair(KeyAutoMsgConstantFee, &p.AutoMsgConstantFee, validateAutoMsgConstantFee),
-		paramtypes.NewParamSetPair(KeyContinuousAutoMsgConstantFee, &p.ContinuousAutoMsgConstantFee, validateContinuousAutoMsgConstantFee),
+		paramtypes.NewParamSetPair(KeyRecurringAutoMsgConstantFee, &p.RecurringAutoMsgConstantFee, validateRecurringAutoMsgConstantFee),
 		paramtypes.NewParamSetPair(KeyMaxContractDuration, &p.MaxContractDuration, validateContractDuration),
 		paramtypes.NewParamSetPair(KeyMinContractDuration, &p.MinContractDuration, validateContractDuration),
 		paramtypes.NewParamSetPair(KeyMinContractDurationForIncentive, &p.MinContractDurationForIncentive, validateMinContractDurationForIncentive),
@@ -69,14 +69,14 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 // NewParams creates a new Params object
-func NewParams(autoMsgFundsCommission int64, autoMsgConstantFee int64, continuousAutoMsgConstantFee int64, maxContractDuration time.Duration, minContractDuration time.Duration, minContractDurationForIncentive time.Duration, maxContractIncentive int64, minContractBalanceForIncentive int64) Params {
-	return Params{AutoMsgFundsCommission: autoMsgFundsCommission, AutoMsgConstantFee: autoMsgConstantFee, ContinuousAutoMsgConstantFee: continuousAutoMsgConstantFee, MaxContractDuration: maxContractDuration, MinContractDuration: minContractDuration, MinContractDurationForIncentive: minContractDurationForIncentive, MaxContractIncentive: maxContractIncentive, MinContractBalanceForIncentive: minContractBalanceForIncentive}
+func NewParams(autoMsgFundsCommission int64, autoMsgConstantFee int64, RecurringAutoMsgConstantFee int64, maxContractDuration time.Duration, minContractDuration time.Duration, minContractDurationForIncentive time.Duration, maxContractIncentive int64, minContractBalanceForIncentive int64) Params {
+	return Params{AutoMsgFundsCommission: autoMsgFundsCommission, AutoMsgConstantFee: autoMsgConstantFee, RecurringAutoMsgConstantFee: RecurringAutoMsgConstantFee, MaxContractDuration: maxContractDuration, MinContractDuration: minContractDuration, MinContractDurationForIncentive: minContractDurationForIncentive, MaxContractIncentive: maxContractIncentive, MinContractBalanceForIncentive: minContractBalanceForIncentive}
 }
 
 // DefaultParams default parameters for compute
 func DefaultParams() Params {
 	//fmt.Print("default compute params..")
-	return NewParams(DefaultAutoMsgFundsCommission, DefaultAutoMsgConstantFee, DefaultContinuousAutoMsgConstantFee, DefaultMaxContractDuration, DefaultMinContractDuration, DefaultMinContractDurationForIncentive, DefaultMaxContractIncentive, DefaultMinContractBalanceForIncentive)
+	return NewParams(DefaultAutoMsgFundsCommission, DefaultAutoMsgConstantFee, DefaultRecurringAutoMsgConstantFee, DefaultMaxContractDuration, DefaultMinContractDuration, DefaultMinContractDurationForIncentive, DefaultMaxContractIncentive, DefaultMinContractBalanceForIncentive)
 }
 
 // Validate validates all params
@@ -143,7 +143,7 @@ func validateAutoMsgConstantFee(i interface{}) error {
 
 	return nil
 }
-func validateContinuousAutoMsgConstantFee(i interface{}) error {
+func validateRecurringAutoMsgConstantFee(i interface{}) error {
 	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

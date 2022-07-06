@@ -141,7 +141,7 @@ message Params {
    option (gogoproto.goproto_stringer) = false;
     int64 AutoMsgFundsCommission  = 1;
     int64 AutoMsgConstantFee = 2;
-    int64 ContinuousAutoMsgConstantFee = 3;
+    int64 RecurringAutoMsgConstantFee = 3;
     //  Maximum period for self-executing contract
    google.protobuf.Duration MaxContractDuration = 4 [
         (gogoproto.nullable)    = false,
