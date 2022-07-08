@@ -1,7 +1,7 @@
 use sgx_types::sgx_status_t;
 
 use enclave_ffi_types::{
-    EnclaveError, HandleResult, InitResult, QueryResult, CallbackSigResult, UntrustedVmError, UserSpaceBuffer,
+    EnclaveError, HandleResult, InitResult, QueryResult,CallbackSigResult, UntrustedVmError, UserSpaceBuffer,
 };
 
 use crate::external::ocalls::ocall_allocate;
@@ -22,7 +22,6 @@ pub fn result_init_success_to_initresult(result: Result<InitSuccess, EnclaveErro
             output,
             contract_key,
             callback_sig,
-            
         }) => {
             let user_buffer = unsafe {
                 let mut user_buffer = std::mem::MaybeUninit::<UserSpaceBuffer>::uninit();
@@ -42,7 +41,6 @@ pub fn result_init_success_to_initresult(result: Result<InitSuccess, EnclaveErro
                 output: user_buffer,
                 contract_key,
                 callback_sig
-                
             }
         }
         Err(err) => InitResult::Failure { err },

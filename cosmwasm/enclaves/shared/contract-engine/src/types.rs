@@ -7,7 +7,6 @@ use enclave_ffi_types::EnclaveError;
 use super::io::calc_encryption_key;
 
 pub type IoNonce = [u8; 32];
-
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct ContractMessage {
     pub nonce: IoNonce,
@@ -30,6 +29,7 @@ impl ContractMessage {
 
     pub fn decrypt(&self) -> Result<Vec<u8>, EnclaveError> {
         let key = self.encryption_key();
+
         // pass
         let msg = key.decrypt_siv(self.msg.as_slice(), None).map_err(|err| {
             error!("got an error while trying to decrypt the msg: {:?}", err);

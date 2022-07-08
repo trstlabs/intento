@@ -246,7 +246,7 @@ impl Default for HealthCheckResult {
 // into the enclave, and then finally unwrap the `VmError`, which gets propagated up the normal stack.
 //
 // For a more detailed discussion, see:
-// https://github.com/enigmampc/SecretNetwork/pull/307#issuecomment-651157410
+// https://github.com/scrtlabs/SecretNetwork/pull/307#issuecomment-651157410
 #[repr(C)]
 #[derive(Debug, Display)]
 #[display(fmt = "VmError")]
@@ -297,8 +297,6 @@ pub enum InitResult {
         output: UserSpaceBuffer,
         /// The contract_key for this contract.
         contract_key: [u8; 64],
-        /// The callback_sig for this contract.
-        callback_sig: [u8; 32],
     },
     Failure {
         /// The error that happened in the enclave
@@ -327,22 +325,6 @@ pub enum QueryResult {
     Success {
         /// A pointer to the output of the calculation
         output: UserSpaceBuffer,
-    },
-    Failure {
-        /// The error that happened in the enclave
-        err: EnclaveError,
-    },
-}
-
-/// This struct is returned from ecall_create_callback_sig.
-/// cbindgen:prefix-with-name
-#[repr(C)]
-pub enum CallbackSigResult {
-    Success {
-        /// The callback_sig created.
-        callback_sig: [u8; 32],
-        /// The encrypted message for this code.
-        encrypted_msg: UserSpaceBuffer,
     },
     Failure {
         /// The error that happened in the enclave

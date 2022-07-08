@@ -305,7 +305,7 @@ type InstantiateRecurringMsg struct {
 	/// ContractID is a mandatory human-readbale id for the contract
 	ContractID string `json:"contract_id"`
 	// Interval is a mandatory human-readbale time duration for the contract interval (e.g. 60s 5h ect.)
-	Interval string `json:"contract_duration"`
+	Interval string `json:"interval"`
 	/// ContractDuration is a mandatory human-readbale time duration for the contract (e.g. 60s 5h ect.)
 	ContractDuration string `json:"contract_duration"`
 	// Send is an optional amount of coins this contract sends to the called contract

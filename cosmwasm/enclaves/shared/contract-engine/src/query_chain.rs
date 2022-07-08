@@ -11,9 +11,10 @@ use super::errors::WasmEngineError;
 use crate::external::{ecalls, ocalls};
 use crate::types::{IoNonce, ContractMessage};
 
+
 use enclave_cosmwasm_types::{
     encoding::Binary,
-    query::{QueryRequest, WasmQuery},
+    query::{QueryRequest, WasmQuery, },
     std_error::{StdError, StdResult},
     system_error::{SystemError, SystemResult},
 };
@@ -133,10 +134,21 @@ pub fn encrypt_and_query_chain(
         answer
     );
 
-    let answer_as_vec = serde_json::to_vec(&answer).map_err(|err| {
-        debug!("encrypt_and_query_chain() got an error while trying to serialize the decrypted answer to bytes: {:?}", err);
-        WasmEngineError::SerializationError
-    })?;
+    let answer_as_vec = match answer {
+            Ok(o) => {
+                match o {
+                    Ok(o2) => Ok(o2),
+                    Err(e) => Err(format!("{:?}", e)),
+                }
+            },
+            Err(e) => V1SmartQueryAnswer::Err(e),
+        }; 
+        
+        serde_json::to_vec(&answer).map_err(|err| {
+            debug!("encrypt_and_query_chain() got an error while trying to serialize the decrypted answer to bytes: {:?}", err);
+            WasmEngineError::SerializationError
+            })? 
+
 
     Ok(answer_as_vec)
 }

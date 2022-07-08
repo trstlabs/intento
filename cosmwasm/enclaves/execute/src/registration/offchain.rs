@@ -36,9 +36,6 @@ use super::seed_exchange::decrypt_seed;
 /// key (seed + pk_io/sk_io). This happens once at the initialization of a chain. Returns the master
 /// public key (pk_io), which is saved on-chain, and used to propagate the seed to registering nodes
 ///
-/// # Safety
-/// This function happens off-chain, so if we panic for some reason it _can_ be acceptable
-///
 #[no_mangle]
 pub unsafe extern "C" fn ecall_init_bootstrap(
     public_key: &mut [u8; PUBLIC_KEY_SIZE],
@@ -111,9 +108,8 @@ pub unsafe extern "C" fn ecall_init_bootstrap(
 ///
 /// The seed was encrypted using Diffie-Hellman in the function [ecall_get_encrypted_seed]
 ///
-/// # Safety
-/// This function happens off-chain, so if we panic for some reason it _can_ be acceptable
-///
+/// This function happens off-chain, so if we panic for some reason it _can_ be acceptable,
+///  though probably not recommended
 #[no_mangle]
 pub unsafe extern "C" fn ecall_init_node(
     master_cert: *const u8,
