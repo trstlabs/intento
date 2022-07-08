@@ -6,9 +6,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::multisig::MultisigThresholdPubKey;
 
-use enclave_crypto::{ sha_256,
-    secp256k1::Secp256k1PubKey,  /*AESKey,Ed25519PublicKey, SIVEncryptable*/
-    CryptoError,  HASH_SIZE,traits::VerifyingKey,
+use enclave_crypto::{
+    hash::sha::HASH_SIZE, secp256k1::Secp256k1PubKey, sha_256, traits::VerifyingKey, CryptoError,
 };
 
 use cosmos_proto as proto;
@@ -17,11 +16,9 @@ use enclave_cosmwasm_types::{
     coins::Coin,
     encoding::Binary,
     math::Uint128,
-    types::{CanonicalAddr, HumanAddr},
+    //todo change to HumanAddr to Addr
+    address::{CanonicalAddr, HumanAddr},
 };
-
-
-pub type IoNonce = [u8; 32];
 
 use crate::traits::CosmosAminoPubkey;
 
@@ -145,6 +142,26 @@ pub enum SignModeDef {
     SIGN_MODE_LEGACY_AMINO_JSON = 127,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Deserialize, Clone, Debug, PartialEq)]
+pub enum HandleType {
+    HANDLE_TYPE_EXECUTE = 0,
+    HANDLE_TYPE_REPLY = 1,
+}
+
+impl HandleType {
+    pub fn try_from(value: u8) -> Result<Self, EnclaveError> {
+        match value {
+            0 => Ok(HandleType::HANDLE_TYPE_EXECUTE),
+            1 => Ok(HandleType::HANDLE_TYPE_REPLY),
+            _ => {
+                error!("unrecognized handle type: {}", value);
+                Err(EnclaveError::FailedToDeserialize)
+            }
+        }
+    }
+}
+
 // This is called `VerificationInfo` on the Go side
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 pub struct SigInfo {
@@ -156,14 +173,6 @@ pub struct SigInfo {
     pub signature: Binary,
     pub callback_sig: Option<Binary>,
 }
-
-// Info of the msg to be signed
-#[derive(Deserialize, Clone, Debug, PartialEq)]
-pub struct MsgInfo {
-    pub code_hash: Binary,
-    pub funds: Vec<Coin>,
-}
-
 
 // Should be in sync with https://github.com/cosmos/cosmos-sdk/blob/v0.38.3/x/auth/types/stdtx.go#L216
 #[derive(Deserialize, Clone, Default, Debug, PartialEq)]
@@ -182,7 +191,6 @@ pub struct SignDoc {
     pub chain_id: String,
     pub account_number: u64,
 }
-
 
 impl SignDoc {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, EnclaveError> {
@@ -214,7 +222,6 @@ pub struct TxBody {
     memo: (),
     timeout_height: (),
 }
-
 
 impl TxBody {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, EnclaveError> {
@@ -250,7 +257,7 @@ pub enum StdCosmWasmMsg {
         contract: HumanAddr,
         /// msg is the json-encoded HandleMsg struct (as raw Binary)
         msg: String,
-        sent_funds: Vec<Coin>,
+        funds: Vec<Coin>,
         callback_sig: Option<Vec<u8>>,
     },
     #[serde(alias = "wasm/MsgInstantiateContract")]
@@ -259,73 +266,33 @@ pub enum StdCosmWasmMsg {
         code_id: String,
         init_msg: String,
         auto_msg: String,
-        init_funds: Vec<Coin>,
+        funds: Vec<Coin>,
         contract_id: String,
+        contract_duration: String,
         callback_sig: Option<Vec<u8>>,
     },
-  
-  /* #[serde(alias = "trstlabs.trst.trst.MsgCreateItem")]
-    CreateItem {
-    // message fields
-     creator: HumanAddr,
-    title: String,
-    description: String,
-    shipping_cost: i64,
-    location: String,
-    estimation_count: i64,
-    tags: Vec<String>,// ::protobuf::RepeatedField<::std::string::String>,//std::string::String,//Vec<String>,
-    condition: i64,
-    shipping_region: Vec<String>,// ::protobuf::RepeatedField<::std::string::String>,//std::string::String,//Vec<String>,
-    deposit_amount: i64,
-    init_msg: String,
-    auto_msg: String,
-    photos: Vec<String>,
-    token_uri: String,// ::protobuf::RepeatedField<::std::string::String>,//std::string::String,//Vec<String>,
+    #[serde(alias = "wasm/MsgInstantiateRecurringContract")]
+    InstantiateRecurring {
+        sender: HumanAddr,
+        code_id: String,
+        init_msg: String,
+        auto_msg: String,
+        funds: Vec<Coin>,
+        contract_id: String,
+        contract_duration: String,
+        interval: String,
+        callback_sig: Option<Vec<u8>>,
     },
-    #[serde(alias = "trstlabs.trst.trst.MsgCreateEstimation")]
-CreateEstimation {
-// message fields
-estimator: HumanAddr,
-estimate_msg: String,
-itemid: u64,
-deposit: i64,
-interested: bool,
-},
-
-#[serde(alias = "trstlabs.trst.trst.MsgFlagItem")]
-FlagItem {
-// message fields
-estimator: HumanAddr,
-itemid: u64,
-flag_msg: String,
-},
-
-#[serde(alias = "trstlabs.trst.trst.MsgItemTransferable")]
-ItemTransferable {
-// message fields
-seller: HumanAddr,
-transferable_msg: String,
-itemid: u64,
-
-},
-
-#[serde(alias = "trstlabs.trst.trst.MsgRevealEstimation")]
-RevealEstimation {
-// message fields
-creator: HumanAddr,
-itemid: u64,
-reveal_msg: String,
-}
- */ 
 }
 
 impl StdCosmWasmMsg {
-    pub fn into_cosmwasm_msg(self) -> Result<CosmWasmMsg, EnclaveError> {        match self {
+    pub fn into_cosmwasm_msg(self) -> Result<CosmWasmMsg, EnclaveError> {
+        match self {
             Self::Execute {
                 sender,
                 contract,
                 msg,
-                sent_funds,
+                funds,
                 callback_sig,
             } => {
                 let sender = CanonicalAddr::from_human(&sender).map_err(|err| {
@@ -344,17 +311,17 @@ impl StdCosmWasmMsg {
                     sender,
                     contract,
                     msg,
-                    sent_funds,
+                    funds,
                     callback_sig,
                 })
             }
-        
             Self::Instantiate {
                 sender,
-                init_msg,
+                init_msg, 
                 auto_msg,
-                init_funds,
+                funds,
                 contract_id,
+                contract_duration,
                 callback_sig,
                 code_id: _,
             } => {
@@ -382,286 +349,57 @@ impl StdCosmWasmMsg {
                     sender,
                     init_msg,
                     auto_msg, 
-                    init_funds,
+                    funds,
                     contract_id,
+                    contract_duration,
                     callback_sig,
                 })
             },
-         
-          /* Self::CreateItem {
-                creator,
-                title,
-                description,
-                shipping_cost,
-                location,
-                estimation_count,
-                tags,
-                condition,
-                shipping_region,
-                deposit_amount,
-                init_msg,
+            Self::InstantiateRecurring {
+                sender,
+                init_msg, 
                 auto_msg,
-                photos,
-                token_uri
+                funds,
+                contract_id,
+                contract_duration,
+                interval,
+                callback_sig,
+                code_id: _,
             } => {
-               let creator = CanonicalAddr::from_human(&creator).map_err(|err| {
+                let sender = CanonicalAddr::from_human(&sender).map_err(|err| {
                     warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
                     EnclaveError::FailedToDeserialize
                 })?;
-
                 let init_msg = Binary::from_base64(&init_msg).map_err(|err| {
                     warn!(
-                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
+                        "failed to parse base64 init_msg when parsing CosmWasmMsg: {:?}",
+                        err
+                    );
+                    EnclaveError::FailedToDeserialize
+                })?;
+                let auto_msg = Binary::from_base64(&auto_msg).map_err(|err| {
+                    warn!(
+                        "failed to parse base64 auto_msg when parsing last CosmWasmMsg: {:?}",
                         err
                     );
                     EnclaveError::FailedToDeserialize
                 })?;
                 let init_msg = init_msg.0;
-
-                let auto_msg = Binary::from_base64(&auto_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
                 let auto_msg = auto_msg.0;
-            
-                Ok(CosmWasmMsg::CreateItem {
-                creator,
-                title,
-                description,
-                shipping_cost,
-                location,
-                estimation_count,
-                tags,
-                condition,
-                shipping_region,
-                deposit_amount,
-                init_msg,
-                auto_msg,
-                photos,
-                token_uri
-                })
-            },
-            Self::FlagItem {
-                estimator,
-                itemid,
-                flag_msg,
-            } => {
-               let estimator = CanonicalAddr::from_human(&estimator).map_err(|err| {
-                    warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
-                    EnclaveError::FailedToDeserialize
-                })?;
-
-                let flag_msg = Binary::from_base64(&flag_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let flag_msg = flag_msg.0;
-            
-                Ok(CosmWasmMsg::FlagItem {
-                    estimator,
-                    itemid,
-                    flag_msg,
-                })
-            },
-            Self::ItemTransferable {
-                seller,
-                transferable_msg,
-                itemid,
-             
-            } => {
-               let seller = CanonicalAddr::from_human(&seller).map_err(|err| {
-                    warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
-                    EnclaveError::FailedToDeserialize
-                })?;
-
-                let transferable_msg = Binary::from_base64(&transferable_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let transferable_msg = transferable_msg.0;
-            
-                Ok(CosmWasmMsg::ItemTransferable {
-                    seller,
-                    itemid,
-                    transferable_msg,
+                Ok(CosmWasmMsg::InstantiateRecurring {
+                    sender,
+                    init_msg,
+                    auto_msg, 
+                    funds,
+                    contract_id,
+                    contract_duration,
+                    interval,
+                    callback_sig,
                 })
             }
-             Self::CreateItem {
-                creator,
-                title,
-                description,
-                shipping_cost,
-                location,
-                estimation_count,
-                tags,
-                condition,
-                shipping_region,
-                deposit_amount,
-                init_msg,
-                auto_msg,
-                photos,
-                token_uri,
-            } => {
-               let creator = CanonicalAddr::from_human(&creator).map_err(|err| {
-                    warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
-                    EnclaveError::FailedToDeserialize
-                })?;
-
-                let init_msg = Binary::from_base64(&init_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let init_msg = init_msg.0;
-            
-                let auto_msg = Binary::from_base64(&auto_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let auto_msg = auto_msg.0;
-            
-
-                Ok(CosmWasmMsg::CreateItem {
-                creator,
-                title,
-                description,
-                shipping_cost,
-                location,
-                estimation_count,
-                tags,
-                condition,
-                shipping_region,
-                deposit_amount,
-                init_msg,
-                auto_msg,
-                photos,
-                token_uri
-                })
-            }
-            Self::RevealEstimation {
-                creator,
-                itemid,
-                reveal_msg,
-            } => {
-               let creator = CanonicalAddr::from_human(&creator).map_err(|err| {
-                    warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
-                    EnclaveError::FailedToDeserialize
-                })?;
-
-                let reveal_msg = Binary::from_base64(&reveal_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let reveal_msg = reveal_msg.0;
-            
-                Ok(CosmWasmMsg::RevealEstimation {
-                    creator,
-                    itemid,
-                    reveal_msg,
-                })
-            }
-            Self::FlagItem {
-                estimator,
-                itemid,
-                flag_msg,
-            } => {
-               let estimator = CanonicalAddr::from_human(&estimator).map_err(|err| {
-                    warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
-                    EnclaveError::FailedToDeserialize
-                })?;
-
-                let flag_msg = Binary::from_base64(&flag_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let flag_msg = flag_msg.0;
-            
-                Ok(CosmWasmMsg::FlagItem {
-                    estimator,
-                    itemid,
-                    flag_msg,
-                })
-            }
-            Self::ItemTransferable {
-                seller,
-                transferable_msg,
-                itemid,
-          
-            } => {
-               let seller = CanonicalAddr::from_human(&seller).map_err(|err| {
-                    warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
-                    EnclaveError::FailedToDeserialize
-                })?;
-
-                let transferable_msg = Binary::from_base64(&transferable_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let transferable_msg = transferable_msg.0;
-            
-                Ok(CosmWasmMsg::ItemTransferable {
-                    seller,
-                    transferable_msg,
-                    itemid,
-                })
-            }
-            Self::CreateEstimation {
-                estimator,
-                estimate_msg,
-                itemid,
-                deposit,
-                interested,
-            } => {
-               let estimator = CanonicalAddr::from_human(&estimator).map_err(|err| {
-                    warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
-                    EnclaveError::FailedToDeserialize
-                })?;
-
-                let estimate_msg = Binary::from_base64(&estimate_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let estimate_msg = estimate_msg.0;
-            
-                Ok(CosmWasmMsg::CreateEstimation {
-                    estimator,
-                    estimate_msg,
-                    itemid,
-                    deposit,
-                    interested,
-                   
-                })
-            }*/ 
-        } 
+        }
     }
 }
-
 
 #[derive(Debug)]
 pub enum CosmWasmMsg {
@@ -669,65 +407,35 @@ pub enum CosmWasmMsg {
         sender: CanonicalAddr,
         contract: HumanAddr,
         msg: Vec<u8>,
-        sent_funds: Vec<Coin>,
+        funds: Vec<Coin>,
         callback_sig: Option<Vec<u8>>,
     },
     Instantiate {
         sender: CanonicalAddr,
         init_msg: Vec<u8>,
         auto_msg: Vec<u8>,
-        init_funds: Vec<Coin>,
+        funds: Vec<Coin>,
         contract_id: String,
+        contract_duration: String,
         callback_sig: Option<Vec<u8>>,
     },
-   
-    /*CreateItem {
-        creator: CanonicalAddr,
-        title: String,
-        description:String,
-        shipping_cost: i64,
-        location:String,
-        estimation_count: i64,
-        tags: Vec<String>,//V ::protobuf::RepeatedField<::std::string::String>,//std::string::String,
-        condition: i64,
-        shipping_region: Vec<String>,//V ::protobuf::RepeatedField<::std::string::String>,//std::string::String,
-        deposit_amount: i64,
+    InstantiateRecurring {
+        sender: CanonicalAddr,
         init_msg: Vec<u8>,
         auto_msg: Vec<u8>,
-        photos:  Vec<String>,
-        token_uri:  String,//V ::protobuf::RepeatedField<::std::string::String>,//std::string::String,
+        funds: Vec<Coin>,
+        contract_id: String,
+        contract_duration: String,
+        callback_sig: Option<Vec<u8>>,
     },
-    CreateEstimation {
-        estimator: CanonicalAddr,
-        estimate_msg:  Vec<u8>,
-        itemid: u64,
-        deposit: i64,
-        interested:bool,
-    },
-    FlagItem {
-        estimator: CanonicalAddr,
-        itemid: u64,
-        flag_msg:  Vec<u8>,
-    },
-    ItemTransferable {
-        seller: CanonicalAddr,
-        transferable_msg:  Vec<u8>,
-        itemid: u64,
-    },
-    RevealEstimation {
-        creator: CanonicalAddr,
-        itemid: u64,
-        reveal_msg:  Vec<u8>,
-    },
-    */
     Other,
 }
 
 impl CosmWasmMsg {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, EnclaveError> {
-      //  Self::try_parse_reveal_estimation(bytes)
-        //    .or_else(|_| Self::try_parse_instantiate(bytes)).or_else(|_| Self::try_parse_create_item(bytes)).or_else(|_| Self::try_parse_create_estimation(bytes)).or_else(|_| Self::try_parse_execute(bytes)).or_else(|_| Self::try_parse_flag_item(bytes))
-        Self::try_parse_instantiate(bytes).or_else(|_| Self::try_parse_execute(bytes)).or_else(|_| {
+        Self::try_parse_execute(bytes)
+            .or_else(|_| Self::try_parse_instantiate(bytes))
+            .or_else(|_| {
                 warn!(
                     "got an error while trying to deserialize cosmwasm message bytes from protobuf: {}",
                     Binary(bytes.into())
@@ -747,20 +455,16 @@ impl CosmWasmMsg {
             raw_msg.sender.len(),
             raw_msg.sender
         );
-        let sender = CanonicalAddr::from_human(&HumanAddr(raw_msg.sender)).map_err(|err| {
-            warn!("failed to turn human addr to canonical addr when try_parse_instantiate CosmWasmMsg: {:?}", err);
-            EnclaveError::FailedToDeserialize
-        })?;
 
-        let init_funds = Self::parse_funds(raw_msg.init_funds)?;
+        let funds = Self::parse_funds(raw_msg.funds)?;
 
         let callback_sig = Some(raw_msg.callback_sig);
 
         Ok(CosmWasmMsg::Instantiate {
-            sender: sender,
+            sender: CanonicalAddr(Binary(raw_msg.sender)),
             init_msg: raw_msg.init_msg,
             auto_msg: raw_msg.auto_msg,
-            init_funds,
+            funds,
             contract_id: raw_msg.contract_id,
             callback_sig,
         })
@@ -782,171 +486,35 @@ impl CosmWasmMsg {
             raw_msg.contract.len(),
             raw_msg.contract
         );
-        let sender = CanonicalAddr::from_human(&HumanAddr(raw_msg.sender)).map_err(|err| {
-            warn!("failed to turn human addr to canonical addr when try_parse_execute CosmWasmMsg: {:?}", err);
-            EnclaveError::FailedToDeserialize
-        })?;
-     
 
-        if raw_msg.contract.clone().len() == 0  {
-              warn!(
-                  "Contract address was empty: {}",
-                  raw_msg.contract.len(),
-              );
-        };
-       
-        let sent_funds = Self::parse_funds(raw_msg.sent_funds)?;
+        // humanize address
+        let contract = HumanAddr::from_canonical(&CanonicalAddr(Binary(raw_msg.contract)))
+            .map_err(|err| {
+                warn!(
+                    "Contract address to execute was not a valid string: {}",
+                    err,
+                );
+                EnclaveError::FailedToDeserialize
+            })?;
+
+        let funds = Self::parse_funds(raw_msg.funds)?;
 
         let callback_sig = Some(raw_msg.callback_sig);
 
         Ok(CosmWasmMsg::Execute {
-            sender,
-            contract: HumanAddr(raw_msg.contract),
+            sender: CanonicalAddr(Binary(raw_msg.sender)),
+            contract,
             msg: raw_msg.msg,
-            sent_funds,
+            funds,
             callback_sig,
         })
     }
-   /*  
-     fn try_parse_create_item(bytes: &[u8]) -> Result<Self, EnclaveError> {
-        use proto::item::item::MsgCreateItem;
 
-        let raw_msg = MsgCreateItem::parse_from_bytes(bytes)
-            .map_err(|_| EnclaveError::FailedToDeserialize)?;
-
-        trace!(
-            "try_parse_create_item creator: len={} val={:?}",
-            raw_msg.creator.len(),
-            raw_msg.creator
-        );
-
-        let sender = CanonicalAddr::from_human(&HumanAddr(raw_msg.creator)).map_err(|err| {
-            warn!("failed to turn human addr to canonical addr when try_parse_create_item CosmWasmMsg: {:?}", err);
-            EnclaveError::FailedToDeserialize
-        })?;
-
-        let tags = Self::parse_vec(raw_msg.tags)?;
-        let shipping_region = Self::parse_vec(raw_msg.shipping_region)?;
-
-        let photos = Self::parse_vec(raw_msg.photos)?;
-
-
-        Ok(CosmWasmMsg::CreateItem {
-            creator: sender,
-            title: raw_msg.title,
-            description:raw_msg.description,
-            shipping_cost: raw_msg.shipping_cost,
-            location:raw_msg.location,
-            estimation_count: raw_msg.estimation_count,
-            tags: tags,
-            condition: raw_msg.condition,
-            shipping_region: shipping_region,
-            deposit_amount: raw_msg.deposit_amount,
-            init_msg: raw_msg.init_msg,
-            auto_msg: raw_msg.auto_msg,
-            photos: photos,
-            token_uri: raw_msg.token_uri,
-        })
-    }
-
-    fn try_parse_create_estimation(bytes: &[u8]) -> Result<Self, EnclaveError> {
-        use proto::item::estimator::MsgCreateEstimation;
-
-        let raw_msg = MsgCreateEstimation::parse_from_bytes(bytes)
-            .map_err(|_| EnclaveError::FailedToDeserialize)?;
-
-        trace!(
-            "try_parse_create_estimation sender: len={} val={:?}",
-            raw_msg.estimator.len(),
-            raw_msg.estimator
-        );
-        let sender = CanonicalAddr::from_human(&HumanAddr(raw_msg.estimator)).map_err(|err| {
-            warn!("failed to turn human addr to canonical addr when try_parse_create_item CosmWasmMsg: {:?}", err);
-            EnclaveError::FailedToDeserialize
-        })?;
-
-      //  let deposit_funds = Self::parse_funds(raw_msg.deposit)?;
-
-        Ok(CosmWasmMsg::CreateEstimation {
-            estimator: sender,
-            estimate_msg: raw_msg.estimate_msg,
-            itemid: raw_msg.itemid,
-            deposit:  raw_msg.deposit,
-            interested: raw_msg.interested,
-        })
-    }
-    fn try_parse_flag_item(bytes: &[u8]) -> Result<Self, EnclaveError> {
-        use proto::item::estimator::MsgFlagItem;
-
-        let raw_msg = MsgFlagItem::parse_from_bytes(bytes)
-            .map_err(|_| EnclaveError::FailedToDeserialize)?;
-
-        trace!(
-            "try_parse_flag_item sender: len={} val={:?}",
-            raw_msg.estimator.len(),
-            raw_msg.estimator
-        );
-        let sender = CanonicalAddr::from_human(&HumanAddr(raw_msg.estimator)).map_err(|err| {
-            warn!("failed to turn human addr to canonical addr when try_parse_flag_item CosmWasmMsg: {:?}", err);
-            EnclaveError::FailedToDeserialize
-        })?;
-
-        Ok(CosmWasmMsg::FlagItem {
-            estimator:sender,
-            itemid: raw_msg.itemid,
-            flag_msg: raw_msg.flag_msg,
-        })
-    }
-    fn try_parse_item_transferable(bytes: &[u8]) -> Result<Self, EnclaveError> {
-        use proto::item::item::MsgItemTransferable;
-
-        let raw_msg = MsgItemTransferable::parse_from_bytes(bytes)
-            .map_err(|_| EnclaveError::FailedToDeserialize)?;
-
-        trace!(
-            "try_parse_flag_item sender: len={} val={:?}",
-            raw_msg.seller.len(),
-            raw_msg.seller
-        );
-        let sender = CanonicalAddr::from_human(&HumanAddr(raw_msg.seller)).map_err(|err| {
-            warn!("failed to turn human addr to canonical addr when try_parse_flag_item CosmWasmMsg: {:?}", err);
-            EnclaveError::FailedToDeserialize
-        })?;
-
-        Ok(CosmWasmMsg::ItemTransferable {
-            seller:sender,
-            transferable_msg: raw_msg.transferable_msg,
-            itemid: raw_msg.itemid,
-           
-        })
-    }
-    fn try_parse_reveal_estimation(bytes: &[u8]) -> Result<Self, EnclaveError> {
-        use proto::item::item::MsgRevealEstimation;
-
-        let raw_msg = MsgRevealEstimation::parse_from_bytes(bytes)
-            .map_err(|_| EnclaveError::FailedToDeserialize)?;
-
-        trace!(
-            "try_parse_reveal_estimation sender: len={} val={:?}",
-            raw_msg.creator.len(),
-            raw_msg.creator
-        );
-        let sender = CanonicalAddr::from_human(&HumanAddr(raw_msg.creator)).map_err(|err| {
-            warn!("failed to turn human addr to canonical addr when try_parse_reveal_estimation CosmWasmMsg: {:?}", err);
-            EnclaveError::FailedToDeserialize
-        })?;
-
-        Ok(CosmWasmMsg::RevealEstimation {
-            creator: sender,
-            itemid: raw_msg.itemid,
-            reveal_msg: raw_msg.reveal_msg,
-        })
-    }*/
-    pub fn parse_funds(
-        raw_init_funds: protobuf::RepeatedField<proto::base::coin::Coin>,
+    fn parse_funds(
+        raw_funds: protobuf::RepeatedField<proto::base::coin::Coin>,
     ) -> Result<Vec<Coin>, EnclaveError> {
-        let mut init_funds = Vec::with_capacity(raw_init_funds.len());
-        for raw_coin in raw_init_funds {
+        let mut funds = Vec::with_capacity(raw_funds.len());
+        for raw_coin in raw_funds {
             let amount: u128 = raw_coin.amount.parse().map_err(|_err| {
                 warn!(
                     "instantiate message funds were not a numeric string: {:?}",
@@ -958,26 +526,15 @@ impl CosmWasmMsg {
                 amount: Uint128(amount),
                 denom: raw_coin.denom,
             };
-            init_funds.push(coin);
+            funds.push(coin);
         }
 
-        Ok(init_funds)
+        Ok(funds)
     }
-
-   /* fn parse_vec(
-        raw_vec: protobuf::RepeatedField<::std::string::String>,
-    ) -> Result<Vec<String>, EnclaveError> {
-        let mut vec = Vec::with_capacity(raw_vec.len());
-        for raw_string in raw_vec {
-            vec.push(raw_string)
-        }
-
-        Ok(vec)
-    }*/
 
     pub fn sender(&self) -> Option<&CanonicalAddr> {
         match self {
-            CosmWasmMsg::Execute { sender, .. } |  CosmWasmMsg::Instantiate { sender, .. } /*| CosmWasmMsg::CreateItem { creator: sender, .. }| CosmWasmMsg::RevealEstimation { creator: sender, .. } | CosmWasmMsg::FlagItem { estimator: sender, .. }| CosmWasmMsg::ItemTransferable { seller: sender, .. }| CosmWasmMsg::CreateEstimation { estimator: sender, .. }*/=> {
+            CosmWasmMsg::Execute { sender, .. } | CosmWasmMsg::Instantiate { sender, .. } | CosmWasmMsg::InstantiateRecurring { sender, .. } => {
                 Some(sender)
             }
             CosmWasmMsg::Other => None,
@@ -1049,60 +606,4 @@ impl SignerInfo {
         };
         Ok(signer_info)
     }
-}
-
-#[cfg(feature = "test")]
-pub mod tests {
-
-    use super::*;
-    // use crate::crypto::{AESKey, SIVEncryptable, Seed, KEY_MANAGER};
-
-    // todo: fix test vectors to actually work
-    pub fn test_new_from_slice() {
-        let nonce = [0u8; 32];
-        let user_public_key = [0u8; 32];
-        let msg = "{\"ok\": \"{\"balance\": \"108\"}\"}";
-
-        let mut slice = nonce.to_vec();
-        slice.extend_from_slice(&user_public_key);
-        slice.extend_from_slice(msg.as_bytes());
-
-        let contract_msg = ContractMessage {
-            nonce,
-            user_public_key,
-            msg: msg.as_bytes().to_vec(),
-        };
-
-        let msg_from_slice = ContractMessage::from_slice(&slice).unwrap();
-
-        assert_eq!(contract_msg, msg_from_slice);
-    }
-
-    // This is commented out because it's trying to modify KEY_MANAGER which is immutable.
-    // // todo: fix test vectors to actually work
-    // pub fn test_msg_decrypt() {
-    //     let seed = Seed::new().unwrap();
-    //
-    //     KEY_MANAGER
-    //         .set_consensus_seed(seed)
-    //         .expect("Failed to set seed");
-    //
-    //     let nonce = [0u8; 32];
-    //     let user_public_key = [0u8; 32];
-    //
-    //     let msg = "{\"ok\": \"{\"balance\": \"108\"}\"}";
-    //     let key = calc_encryption_key(&nonce, &user_public_key);
-    //
-    //     let encrypted_msg = key.encrypt_siv(msg.as_bytes(), &[&[]]);
-    //
-    //     let contract_msg = ContractMessage {
-    //         nonce,
-    //         user_public_key,
-    //         msg: encrypted_msg,
-    //     };
-    //
-    //     let decrypted_msg = contract_msg.decrypt()?;
-    //
-    //     assert_eq!(decrypted_msg, msg)
-    // }
 }

@@ -2,6 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::system_error::SystemError;
+
 use super::coins::Coin;
 use super::encoding::Binary;
 use super::math::Decimal;

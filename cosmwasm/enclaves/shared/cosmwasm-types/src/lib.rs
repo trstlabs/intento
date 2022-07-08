@@ -1,11 +1,12 @@
-// Trick to get the IDE to use sgx_tstd even when it doesn't know we're targeting SGX
-#[cfg(not(target_env = "sgx"))]
-extern crate sgx_tstd as std;
-
+#![feature(min_const_generics)]
+pub mod addresses;
 pub mod coins;
+pub mod errors;
+pub mod math;
+pub mod results;
+pub mod timestamp;
 pub mod consts;
 pub mod encoding;
-pub mod math;
 pub mod query;
 pub mod std_error;
 pub mod system_error;
