@@ -213,8 +213,8 @@ func NewWasmCoins(cosmosCoins sdk.Coins) (wasmCoins []wasmTypes.Coin) {
 }
 
 const CustomEventType = "wasm"
-const EventTypeContractExpired = "ContractExpired"
-const EventTypeAutoMsgContract = "ContractExecuted"
+const EventTypeContractExpired = "contract_expired"
+const EventTypeAutoMsgContract = "eontract_executed"
 const AttributeKeyContractAddr = "contract_address"
 
 // ParseEvents converts wasm LogAttributes into an sdk.Events (with 0 or 1 elements)

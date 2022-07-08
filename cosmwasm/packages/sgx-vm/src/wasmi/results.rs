@@ -8,16 +8,15 @@ pub struct InitSuccess {
     output: Vec<u8>,
     /// The contract_key for this contract.
     contract_key: [u8; 64],
-  /// The sig for this contract.
-    callback_sig: [u8; 32],
-}
+ /// The sig for this contract.
+ callback_sig: [u8; 32],
 
 impl InitSuccess {
     pub fn into_output(self) -> Vec<u8> {
         let mut out_vec = self.contract_key.to_vec();
         let out_vec_callback = self.callback_sig.to_vec();
         out_vec.extend_from_slice(&out_vec_callback);
-        out_vec.extend_from_slice(&self.output);
+        _vec.extend_from_slice(&self.output);
         out_vec
     }
 }
@@ -31,7 +30,6 @@ pub fn init_result_to_vm_result(other: InitResult) -> VmResult<InitSuccess> {
         } => Ok(InitSuccess {
             output: unsafe { exports::recover_buffer(output) }.unwrap_or_else(Vec::new),
             contract_key, callback_sig,
-        }),
         InitResult::Failure { err } => Err(err.into()),
     }
 }

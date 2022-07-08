@@ -19,7 +19,6 @@ use serde::Deserialize;
 
 use super::exports::FullContext;
 use super::imports;
-
 use super::results::{
     handle_result_to_vm_result, init_result_to_vm_result, query_result_to_vm_result, HandleSuccess,
     InitSuccess, QuerySuccess,
@@ -93,8 +92,13 @@ where
         VmError::generic_err("The enclave is too busy and can not respond to this query")
     }
 
-    pub fn init(&mut self, env: &[u8], msg: &[u8], auto_msg: &[u8], sig_info: &[u8]) -> VmResult<InitSuccess> {
-
+    pub fn init(
+        &mut self,
+        env: &[u8],
+        msg: &[u8],
+        auto_msg: &[u8],
+        sig_info: &[u8],
+    ) -> VmResult<InitSuccess> {
         trace!(
             "init() called with env: {:?} msg: {:?}  auto_msg: {:?} , gas_left: {}",
             String::from_utf8_lossy(env),
@@ -128,7 +132,7 @@ where
                 msg.len(),
                 auto_msg.as_ptr(),
                 auto_msg.len(),
-                  sig_info.as_ptr(),
+                sig_info.as_ptr(),
                 sig_info.len(),
             )
         };
@@ -149,7 +153,13 @@ where
         }
     }
 
-    pub fn handle(&mut self, env: &[u8], msg: &[u8], sig_info: &[u8]) -> VmResult<HandleSuccess> {
+    pub fn handle(
+        &mut self,
+        env: &[u8],
+        msg: &[u8],
+        sig_info: &[u8],
+        handle_type: u8,
+    ) -> VmResult<HandleSuccess> {
         trace!(
             "handle() called with env: {:?} msg: {:?} gas_left: {}",
             String::from_utf8_lossy(env),
@@ -182,6 +192,7 @@ where
                 msg.len(),
                 sig_info.as_ptr(),
                 sig_info.len(),
+                handle_type,
             )
         };
 
@@ -259,9 +270,6 @@ where
     fn consume_gas(&mut self, used_gas: u64) {
         self.used_gas = self.used_gas.saturating_add(used_gas);
     }
-
-
-
 }
 
 impl<S, Q> Drop for Module<S, Q>

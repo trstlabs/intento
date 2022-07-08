@@ -1,4 +1,4 @@
-//! Types and helpers for init and handle
+/*//! Types and helpers for init and handle
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -559,4 +559,4 @@ mod test {
         assert_eq!(&migrate.log, &expected_log);
         assert_eq!(&migrate.data, &expected_data);
     }
-}
+}*/
