@@ -67,7 +67,16 @@ type VerificationInfo struct {
 	CallbackSignature []byte `json:"callback_sig"` // Optional
 }
 
-type MsgInfo struct {
-	CodeHash []byte `json:"code_hash"`
-	Funds    []Coin `json:"funds"` // Optional
-}
+type HandleType int
+
+const (
+	HandleTypeExecute HandleType = iota
+	HandleTypeReply
+)
+
+type CosmosMsgVersion int
+
+const (
+	CosmosMsgVersionV010 CosmosMsgVersion = iota
+	CosmosMsgVersionV1
+)

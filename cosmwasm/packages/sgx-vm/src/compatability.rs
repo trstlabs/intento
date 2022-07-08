@@ -6,28 +6,6 @@ use std::iter::FromIterator;
 use crate::errors::{VmError, VmResult};
 use crate::features::required_features_from_module;
 
-/// Lists all v0.10 imports we provide upon instantiating the instance in Instance::from_module()
-/// This should be updated when new imports are added
-const SUPPORTED_IMPORTS_V010: &[&str] = &[
-    "env.db_read",
-    "env.db_write",
-    "env.db_remove",
-    "env.canonicalize_address",
-    "env.humanize_address",
-    "env.query_chain",
-    "env.secp256k1_verify",
-    "env.secp256k1_recover_pubkey",
-    "env.secp256k1_sign",
-    "env.ed25519_verify",
-    "env.ed25519_batch_verify",
-    "env.ed25519_sign",
-    #[cfg(feature = "iterator")]
-    "env.db_scan",
-    #[cfg(feature = "iterator")]
-    "env.db_next",
-    #[cfg(feature = "debug-print")]
-    "env.debug_print",
-];
 
 /// Lists all v1 imports we provide upon instantiating the instance in Instance::from_module()
 /// This should be updated when new imports are added
@@ -52,17 +30,6 @@ const SUPPORTED_IMPORTS_V1: &[&str] = &[
     "env.db_next",
 ];
 
-/// Lists all entry points we expect to be present when calling a v0.10 contract.
-/// Basically, anything that is used in calls.rs
-/// This is unlikely to change much, must be frozen at 1.0 to avoid breaking existing contracts
-const REQUIRED_EXPORTS_V010: &[&str] = &[
-    "cosmwasm_vm_version_3",
-    "query",
-    "init",
-    "handle",
-    "allocate",
-    "deallocate",
-];
 
 /// Lists all entry points we expect to be present when calling a v1 contract.
 /// Basically, anything that is used in calls.rs
@@ -101,23 +68,17 @@ pub fn check_wasm(wasm_code: &[u8], supported_features: &HashSet<String>) -> VmR
     check_wasm_memories(&module)?;
     check_wasm_features(&module, supported_features)?;
 
-    let check_v010_exports_result = check_wasm_exports(&module, REQUIRED_EXPORTS_V010);
-    let check_v010_imports_result = check_wasm_imports(&module, SUPPORTED_IMPORTS_V010);
-    let is_v010 = check_v010_exports_result.is_ok() && check_v010_imports_result.is_ok();
-
     let check_v1_exports_result = check_wasm_exports(&module, REQUIRED_EXPORTS_V1);
     let check_v1_imports_result = check_wasm_imports(&module, SUPPORTED_IMPORTS_V1);
     let is_v1 = check_v1_exports_result.is_ok() && check_v1_imports_result.is_ok();
 
-    if !is_v010 && !is_v1 {
+    if !is_v1 {
         let errors = vec![
-            check_v010_exports_result,
-            check_v010_imports_result,
             check_v1_exports_result,
             check_v1_imports_result,
         ];
 
-        return Err(VmError::static_validation_err(format!("Contract is not CosmWasm v0.10 or v1. To support v0.10 please fix the former two errors, to supports v1 please fix the latter two errors: ${:?}", errors)));
+        return Err(VmError::static_validation_err(format!("Contract is not CosmWasm v1, to supports v1 please fix the latter two errors: ${:?}", errors)));
     }
 
     Ok(())

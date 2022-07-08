@@ -8,8 +8,9 @@ pub struct InitSuccess {
     output: Vec<u8>,
     /// The contract_key for this contract.
     contract_key: [u8; 64],
- /// The sig for this contract.
- callback_sig: [u8; 32],
+    /// The sig for this contract.
+    callback_sig: [u8; 32],
+}
 
 impl InitSuccess {
     pub fn into_output(self) -> Vec<u8> {

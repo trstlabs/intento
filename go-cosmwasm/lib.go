@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/trstlabs/trst/go-cosmwasm/api"
 	"github.com/trstlabs/trst/go-cosmwasm/types"
 )
@@ -67,7 +68,6 @@ func (w *Wasmer) Cleanup() {
 //
 // TODO: return gas cost? Add gas limit??? there is no metering here...
 func (w *Wasmer) Create(code WasmCode) (CodeID, error) {
-
 	return api.Create(w.cache, code)
 }
 
@@ -91,7 +91,7 @@ func (w *Wasmer) GetCode(code CodeID) (WasmCode, error) {
 // Under the hood, we may recompile the wasm, use a cached native compile, or even use a cached instance
 // for performance.
 func (w *Wasmer) Instantiate(
-	code CodeID,
+	codeId CodeID,
 	env types.Env,
 	initMsg []byte,
 	autoMsg []byte,
@@ -101,25 +101,26 @@ func (w *Wasmer) Instantiate(
 	gasMeter GasMeter,
 	gasLimit uint64,
 	sigInfo types.VerificationInfo,
-) (*types.InitResponse, []byte, []byte, uint64, error) {
+	contractAddress sdk.AccAddress,
+) (interface{}, []byte, uint64, error) {
 	paramBin, err := json.Marshal(env)
 	if err != nil {
-		return nil, nil, nil, 0, err
+		return nil, nil, 0, err
 	}
 
 	sigInfoBin, err := json.Marshal(sigInfo)
 	if err != nil {
-		return nil, nil, nil, 0, err
+		return nil, nil, 0, err
 	}
-	//fmt.Printf("Auto msg")
 
-	data, gasUsed, err := api.Instantiate(w.cache, code, paramBin, initMsg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
+	data, gasUsed, err := api.Instantiate(w.cache, codeId, paramBin, initMsg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
 	if err != nil {
-		return nil, nil, nil, gasUsed, err
+		return nil, nil, gasUsed, err
 	}
-	//fmt.Println("success")
+
 	key := data[0:64]
 	callback_sig := data[64:96]
+	//data = data[96:]
 
 	//fmt.Println(string(callback_sig))
 
@@ -152,7 +153,8 @@ func (w *Wasmer) Execute(
 	gasMeter GasMeter,
 	gasLimit uint64,
 	sigInfo types.VerificationInfo,
-) (*types.HandleResponse, uint64, error) {
+	handleType types.HandleType,
+) (interface{}, uint64, error) {
 	paramBin, err := json.Marshal(env)
 	if err != nil {
 		return nil, 0, err
@@ -162,7 +164,7 @@ func (w *Wasmer) Execute(
 		return nil, 0, err
 	}
 
-	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
+	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
 	if err != nil {
 		return nil, gasUsed, err
 	}

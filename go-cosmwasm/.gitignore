@@ -16,5 +16,3 @@ libgo*.a
 muslc.exe
 tmp
 a.out
-
-init.libgo

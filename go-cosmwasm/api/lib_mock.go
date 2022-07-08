@@ -111,7 +111,6 @@ func Instantiate(
 	code_id []byte,
 	params []byte,
 	msg []byte,
-	auto_msg []byte,
 	gasMeter *GasMeter,
 	store KVStore,
 	api *GoAPI,
@@ -150,6 +149,7 @@ func Handle(
 	querier *Querier,
 	gasLimit uint64,
 	sigInfo []byte,
+	handleType types.HandleType,
 ) ([]byte, uint64, error) {
 	//id := sendSlice(code_id)
 	//defer freeAfterSend(id)
@@ -229,6 +229,26 @@ func Query(
 	//}
 	//return receiveVector(res), uint64(gasUsed), nil
 	return nil, 0, nil
+}
+
+func AnalyzeCode(
+	cache Cache,
+	codeHash []byte,
+) (*v1types.AnalysisReport, error) {
+	//cs := sendSlice(codeHash)
+	//defer runtime.KeepAlive(codeHash)
+	//errMsg := C.Buffer{}
+	//report, err := C.analyze_code(cache.ptr, cs, &errMsg)
+	//
+	//if err != nil {
+	//	return nil, errorWithMessage(err, errMsg)
+	//}
+	//res := v1types.AnalysisReport{
+	//	HasIBCEntryPoints: bool(report.has_ibc_entry_points),
+	//	RequiredFeatures:  string(receiveVector(report.required_features)),
+	//}
+	//return &res, nil
+	return nil, nil
 }
 
 // KeyGen Send KeyGen request to enclave
