@@ -83,7 +83,7 @@ type MsgInstantiateContract struct {
 	ContractId       string                                   `protobuf:"bytes,4,opt,name=contract_id,json=contractId,proto3" json:"contract_id,omitempty"`
 	InitMsg          []byte                                   `protobuf:"bytes,5,opt,name=init_msg,json=initMsg,proto3" json:"init_msg,omitempty"`
 	AutoMsg          []byte                                   `protobuf:"bytes,6,opt,name=auto_msg,json=autoMsg,proto3" json:"auto_msg,omitempty"`
-	InitFunds        github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=init_funds,json=initFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"init_funds"`
+	Funds        github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=funds,json=initFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"funds"`
 	CallbackSig      []byte                                   `protobuf:"bytes,8,opt,name=callback_sig,json=callbackSig,proto3" json:"callback_sig,omitempty"`
 	//contract_duration defines the time that the code should run for,0 for optional
 	ContractDuration string `protobuf:"bytes,9,opt,name=contract_duration,json=contractDuration,proto3" json:"contract_duration,omitempty"`
@@ -127,7 +127,7 @@ type MsgExecuteContract struct {
 	Contract         string                                   `protobuf:"bytes,2,opt,name=contract,proto3" json:"contract,omitempty"`
 	Msg              []byte                                   `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
 	CallbackCodeHash string                                   `protobuf:"bytes,4,opt,name=callback_code_hash,json=callbackCodeHash,proto3" json:"callback_code_hash,omitempty"`
-	SentFunds        github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=sent_funds,json=sentFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"sent_funds"`
+	Funds        github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=funds,json=sentFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"funds"`
 	CallbackSig      []byte                                   `protobuf:"bytes,6,opt,name=callback_sig,json=callbackSig,proto3" json:"callback_sig,omitempty"`
 }
 
@@ -363,10 +363,10 @@ func (m *MsgInstantiateContract) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 		i--
 		dAtA[i] = 0x42
 	}
-	if len(m.InitFunds) > 0 {
-		for iNdEx := len(m.InitFunds) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Funds) > 0 {
+		for iNdEx := len(m.Funds) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.InitFunds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Funds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -447,10 +447,10 @@ func (m *MsgExecuteContract) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x32
 	}
-	if len(m.SentFunds) > 0 {
-		for iNdEx := len(m.SentFunds) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Funds) > 0 {
+		for iNdEx := len(m.Funds) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.SentFunds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Funds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -606,8 +606,8 @@ func (m *MsgInstantiateContract) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovMsg(uint64(l))
 	}
-	if len(m.InitFunds) > 0 {
-		for _, e := range m.InitFunds {
+	if len(m.Funds) > 0 {
+		for _, e := range m.Funds {
 			l = e.Size()
 			n += 1 + l + sovMsg(uint64(l))
 		}
@@ -645,8 +645,8 @@ func (m *MsgExecuteContract) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovMsg(uint64(l))
 	}
-	if len(m.SentFunds) > 0 {
-		for _, e := range m.SentFunds {
+	if len(m.Funds) > 0 {
+		for _, e := range m.Funds {
 			l = e.Size()
 			n += 1 + l + sovMsg(uint64(l))
 		}
@@ -1171,7 +1171,7 @@ func (m *MsgInstantiateContract) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 7:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InitFunds", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Funds", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1198,8 +1198,8 @@ func (m *MsgInstantiateContract) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InitFunds = append(m.InitFunds, types.Coin{})
-			if err := m.InitFunds[len(m.InitFunds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Funds = append(m.Funds, types.Coin{})
+			if err := m.Funds[len(m.Funds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1451,7 +1451,7 @@ func (m *MsgExecuteContract) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SentFunds", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Funds", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1478,8 +1478,8 @@ func (m *MsgExecuteContract) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SentFunds = append(m.SentFunds, types.Coin{})
-			if err := m.SentFunds[len(m.SentFunds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Funds = append(m.Funds, types.Coin{})
+			if err := m.Funds[len(m.Funds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -242,9 +242,8 @@ type StargateMsg struct {
 }
 
 type WasmMsg struct {
-	Execute              *ExecuteMsg              `json:"execute,omitempty"`
-	Instantiate          *InstantiateMsg          `json:"instantiate,omitempty"`
-	InstantiateRecurring *InstantiateRecurringMsg `json:"instantiate_recurring,omitempty"`
+	Execute     *ExecuteMsg     `json:"execute,omitempty"`
+	Instantiate *InstantiateMsg `json:"instantiate,omitempty"`
 }
 
 // ExecuteMsg is used to call another defined contract on this chain.
@@ -283,31 +282,10 @@ type InstantiateMsg struct {
 	AutoMsg []byte `json:"auto_msg"`
 	/// ContractID is a mandatory human-readbale id for the contract
 	ContractID string `json:"contract_id"`
-	/// ContractDuration is a mandatory human-readbale time duration for the contract (e.g. 60s 5h ect.)
+	/// ContractDuration is a mandatory human-readbale time.duration for the contract (e.g. 60s 5h ect.)
 	ContractDuration string `json:"contract_duration"`
-	// Send is an optional amount of coins this contract sends to the called contract
-	Send              Coins  `json:"send"`
-	CallbackSignature []byte `json:"callback_sig"` // Optional
-}
-
-type InstantiateRecurringMsg struct {
-	// CodeID is the reference to the wasm byte code as used by the Cosmos-SDK
-	CodeID uint64 `json:"code_id"`
-	// Custom addition to support binding a message to specific code to harden against offline & replay attacks
-	// This is only needed when creating a callback message
-	CallbackCodeHash string `json:"callback_code_hash"`
-	// Msg is assumed to be a json-encoded message, which will be passed directly
-	// as `userMsg` when calling `Handle` on the above-defined contract
-	Msg []byte `json:"msg"`
-	// AutoMsg is assumed to be a json-encoded message, which will be passed directly
-	// as `autoMsg` when calling `Handle` on the above-defined contract (optional)
-	AutoMsg []byte `json:"auto_msg"`
-	/// ContractID is a mandatory human-readbale id for the contract
-	ContractID string `json:"contract_id"`
-	// Interval is a mandatory human-readbale time duration for the contract interval (e.g. 60s 5h ect.)
-	Interval string `json:"interval"`
-	/// ContractDuration is a mandatory human-readbale time duration for the contract (e.g. 60s 5h ect.)
-	ContractDuration string `json:"contract_duration"`
+	/// AutoMsgInterval is a mandatory human-readbale time.duration for the contract (e.g. 60s 5h ect.)
+	AutoMsgInterval string `json:"auto_msg_interval"`
 	// Send is an optional amount of coins this contract sends to the called contract
 	Send              Coins  `json:"send"`
 	CallbackSignature []byte `json:"callback_sig"` // Optional

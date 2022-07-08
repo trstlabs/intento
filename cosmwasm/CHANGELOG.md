@@ -225,7 +225,7 @@ https://github.com/CosmWasm/cosmwasm/issues/451).
   please use the `Querier` to get this info. As of Cosmos-SDK 0.39 this needs
   extra storage queries to get the balance, so we only do those queries when
   needed.
-- `Env.message.sent_funds` is a `Vec<Coin>` not `Option<Vec<Coin>>`. We will
+- `Env.message.funds` is a `Vec<Coin>` not `Option<Vec<Coin>>`. We will
   normalize the go response in `go-cosmwasm` before sending it to the contract.
 - `Env.message.signer` was renamed to `Env.message.sender`.
 - `Env.block.{height,time}` are now `u64` rather than `i64`.

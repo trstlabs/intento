@@ -106,7 +106,7 @@ func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
 //		msg := types.MsgInstantiateContract{
 //			Sender:    cliCtx.GetFromAddress(),
 //			Code:      codeID,
-//			InitFunds: req.Deposit,
+//			Funds: req.Deposit,
 //			InitMsg:   req.InitMsg,
 //		}
 //
@@ -143,7 +143,7 @@ func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
 //			Sender:    cliCtx.GetFromAddress(),
 //			Contract:  contractAddress,
 //			Msg:       req.ExecMsg,
-//			SentFunds: req.Amount,
+//			Funds: req.Amount,
 //		}
 //
 //		err = msg.ValidateBasic()

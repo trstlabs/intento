@@ -255,7 +255,7 @@ func ProposalExecuteContractCmd() *cobra.Command {
 				Msg:         src.Msg,
 				//RunAs:       runAs,
 				//Proposer:  clientCtx.GetFromAddress().String(),
-				Funds: src.SentFunds,
+				Funds: src.Funds,
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())

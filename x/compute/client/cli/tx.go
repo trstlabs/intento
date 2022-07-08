@@ -312,7 +312,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		CallbackCodeHash: "",
 		CodeID:           codeID,
 		ContractId:       contractId,
-		InitFunds:        amount,
+		Funds:            amount,
 		InitMsg:          encryptedInitMsg,
 		AutoMsg:          autoMsgEncrypted,
 	}
@@ -446,7 +446,7 @@ func parseExecuteArgs(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []
 		Sender:           cliCtx.GetFromAddress().String(),
 		Contract:         contractAddress.String(),
 		CallbackCodeHash: "",
-		SentFunds:        coins,
+		Funds:            coins,
 		Msg:              encryptedMsg,
 	}
 

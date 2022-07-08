@@ -117,7 +117,7 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	if duration != 0 && duration < p.MinContractDuration {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be longer than minimum duration")
 	}
-	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, msg.CallbackSig, duration)
+	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.Funds, msg.CallbackSig, duration)
 	if err != nil {
 
 		return nil, err
@@ -162,7 +162,7 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 		contract,
 		sender,
 		msg.Msg,
-		msg.SentFunds,
+		msg.Funds,
 		msg.CallbackSig,
 	)
 

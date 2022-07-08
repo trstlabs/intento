@@ -120,7 +120,7 @@ func instantiateContractHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			Sender:           cliCtx.GetFromAddress().String(),
 			CodeID:           codeID,
 			CallbackCodeHash: "",
-			InitFunds:        req.Deposit,
+			Funds:            req.Deposit,
 			InitMsg:          req.InitMsg,
 			AutoMsg:          req.AutoMsg,
 			ContractId:       req.ContractId,
@@ -161,7 +161,7 @@ func executeContractHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			Contract:         contractAddress.String(),
 			CallbackCodeHash: "",
 			Msg:              req.ExecMsg,
-			SentFunds:        req.Amount,
+			Funds:            req.Amount,
 		}
 
 		err = msg.ValidateBasic()

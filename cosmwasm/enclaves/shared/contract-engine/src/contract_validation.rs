@@ -205,7 +205,7 @@ pub fn verify_params(
             callback_sig.as_slice(),
             &env.message.sender,
             msg,
-            &env.message.sent_funds,
+            &env.message.funds,
         );
     }
 
@@ -313,13 +313,13 @@ fn verify_callback_sig(
     callback_signature: &[u8],
     sender: &HumanAddr,
     msg: &ContractMessage,
-    sent_funds: &[Coin],
+    funds: &[Coin],
 ) -> Result<(), EnclaveError> {
     if verify_callback_sig_impl(
         callback_signature,
         &CanonicalAddr::from_human(sender).or(Err(EnclaveError::FailedToSerialize))?,
         msg,
-        sent_funds,
+        funds,
     ) {
         info!("Message verified! the msg address is from the callback sig");
         return Ok(());
@@ -333,13 +333,13 @@ fn verify_callback_sig_impl(
     callback_signature: &[u8],
     sender: &CanonicalAddr,
     msg: &ContractMessage,
-    sent_funds: &[Coin],
+    funds: &[Coin],
 ) -> bool {
     if callback_signature.is_empty() {
         return false;
     }
 
-    let callback_sig = create_callback_signature(sender, msg, sent_funds);
+    let callback_sig = create_callback_signature(sender, msg, funds);
 
     if callback_signature != callback_sig {
         trace!(
@@ -364,11 +364,7 @@ fn get_verified_msg<'sd>(
             init_msg: msg,
             sender,
             ..
-        } | CosmWasmMsg::InstantiateRecurring {
-            init_msg: msg,
-            sender,
-            ..
-        } => msg_sender == sender && &sent_msg.to_vec() == msg,
+        }
         CosmWasmMsg::Other => false,
     })
 }
@@ -390,7 +386,6 @@ fn verify_contract(msg: &CosmWasmMsg, env: &Env) -> bool {
             is_verified
         }
         CosmWasmMsg::Instantiate { .. } => true,
-        CosmWasmMsg::InstantiateRecurring { .. } => true,
         CosmWasmMsg::Other => false,
     }
 }
@@ -398,11 +393,11 @@ fn verify_contract(msg: &CosmWasmMsg, env: &Env) -> bool {
 /// Check that the funds listed in the cosmwasm message matches the ones in env
 fn verify_funds(msg: &CosmWasmMsg, env: &Env) -> bool {
     match msg {
-        CosmWasmMsg::Execute { sent_funds, .. }
+        CosmWasmMsg::Execute { funds, .. }
         | CosmWasmMsg::Instantiate {
-            init_funds: sent_funds,
+            funds: funds,
             ..
-        } => &env.message.sent_funds == sent_funds,
+        } => &env.message.funds == funds,
         CosmWasmMsg::Other => false,
     }
 }

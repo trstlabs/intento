@@ -259,7 +259,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			Contract:         contractAddr.String(),
 			CallbackCodeHash: msg.Execute.CallbackCodeHash,
 			Msg:              msg.Execute.Msg,
-			SentFunds:        coins,
+			Funds:            coins,
 			CallbackSig:      msg.Execute.CallbackSignature,
 		}
 		return []sdk.Msg{&sdkMsg}, nil
@@ -280,7 +280,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			CallbackCodeHash: msg.Instantiate.CallbackCodeHash,
 			InitMsg:          msg.Instantiate.Msg,
 			AutoMsg:          msg.Instantiate.AutoMsg,
-			InitFunds:        coins,
+			Funds:            coins,
 			CallbackSig:      msg.Instantiate.CallbackSignature,
 		}
 		return []sdk.Msg{&sdkMsg}, nil

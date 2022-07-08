@@ -140,7 +140,7 @@ pub fn bond<S: Storage, A: Api, Q: Querier>(
     // payment finds the proper coin (or throws an error)
     let payment = env
         .message
-        .sent_funds
+        .funds
         .iter()
         .find(|x| x.denom == invest.bond_denom)
         .ok_or_else(|| StdError::generic_err(format!("No {} tokens sent", &invest.bond_denom)))?;

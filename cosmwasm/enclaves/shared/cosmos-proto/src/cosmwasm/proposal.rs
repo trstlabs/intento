@@ -445,7 +445,7 @@ pub struct InstantiateContractProposal {
     pub contract_id: ::std::string::String,
     pub init_msg: ::std::vec::Vec<u8>,
     pub auto_msg: ::std::vec::Vec<u8>,
-    pub init_funds: ::protobuf::RepeatedField<super::coin::Coin>,
+    pub funds: ::protobuf::RepeatedField<super::coin::Coin>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -659,35 +659,35 @@ impl InstantiateContractProposal {
         ::std::mem::replace(&mut self.auto_msg, ::std::vec::Vec::new())
     }
 
-    // repeated .cosmos.base.v1beta1.Coin init_funds = 9;
+    // repeated .cosmos.base.v1beta1.Coin funds = 9;
 
 
-    pub fn get_init_funds(&self) -> &[super::coin::Coin] {
-        &self.init_funds
+    pub fn get_funds(&self) -> &[super::coin::Coin] {
+        &self.funds
     }
-    pub fn clear_init_funds(&mut self) {
-        self.init_funds.clear();
+    pub fn clear_funds(&mut self) {
+        self.funds.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_init_funds(&mut self, v: ::protobuf::RepeatedField<super::coin::Coin>) {
-        self.init_funds = v;
+    pub fn set_funds(&mut self, v: ::protobuf::RepeatedField<super::coin::Coin>) {
+        self.funds = v;
     }
 
     // Mutable pointer to the field.
-    pub fn mut_init_funds(&mut self) -> &mut ::protobuf::RepeatedField<super::coin::Coin> {
-        &mut self.init_funds
+    pub fn mut_funds(&mut self) -> &mut ::protobuf::RepeatedField<super::coin::Coin> {
+        &mut self.funds
     }
 
     // Take field
-    pub fn take_init_funds(&mut self) -> ::protobuf::RepeatedField<super::coin::Coin> {
-        ::std::mem::replace(&mut self.init_funds, ::protobuf::RepeatedField::new())
+    pub fn take_funds(&mut self) -> ::protobuf::RepeatedField<super::coin::Coin> {
+        ::std::mem::replace(&mut self.funds, ::protobuf::RepeatedField::new())
     }
 }
 
 impl ::protobuf::Message for InstantiateContractProposal {
     fn is_initialized(&self) -> bool {
-        for v in &self.init_funds {
+        for v in &self.funds {
             if !v.is_initialized() {
                 return false;
             }
@@ -728,7 +728,7 @@ impl ::protobuf::Message for InstantiateContractProposal {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.auto_msg)?;
                 },
                 9 => {
-                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.init_funds)?;
+                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.funds)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -766,7 +766,7 @@ impl ::protobuf::Message for InstantiateContractProposal {
         if !self.auto_msg.is_empty() {
             my_size += ::protobuf::rt::bytes_size(8, &self.auto_msg);
         }
-        for value in &self.init_funds {
+        for value in &self.funds {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         };
@@ -800,7 +800,7 @@ impl ::protobuf::Message for InstantiateContractProposal {
         if !self.auto_msg.is_empty() {
             os.write_bytes(8, &self.auto_msg)?;
         }
-        for v in &self.init_funds {
+        for v in &self.funds {
             os.write_tag(9, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
@@ -884,9 +884,9 @@ impl ::protobuf::Message for InstantiateContractProposal {
                 |m: &mut InstantiateContractProposal| { &mut m.auto_msg },
             ));
             fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<super::coin::Coin>>(
-                "init_funds",
-                |m: &InstantiateContractProposal| { &m.init_funds },
-                |m: &mut InstantiateContractProposal| { &mut m.init_funds },
+                "funds",
+                |m: &InstantiateContractProposal| { &m.funds },
+                |m: &mut InstantiateContractProposal| { &mut m.funds },
             ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<InstantiateContractProposal>(
                 "InstantiateContractProposal",
@@ -912,7 +912,7 @@ impl ::protobuf::Clear for InstantiateContractProposal {
         self.contract_id.clear();
         self.init_msg.clear();
         self.auto_msg.clear();
-        self.init_funds.clear();
+        self.funds.clear();
         self.unknown_fields.clear();
     }
 }
@@ -938,7 +938,7 @@ pub struct ExecuteContractProposal {
     pub proposer: ::std::string::String,
     pub contract: ::std::string::String,
     pub msg: ::std::vec::Vec<u8>,
-    pub sent_funds: ::protobuf::RepeatedField<super::coin::Coin>,
+    pub funds: ::protobuf::RepeatedField<super::coin::Coin>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -1111,35 +1111,35 @@ impl ExecuteContractProposal {
         ::std::mem::replace(&mut self.msg, ::std::vec::Vec::new())
     }
 
-    // repeated .cosmos.base.v1beta1.Coin sent_funds = 7;
+    // repeated .cosmos.base.v1beta1.Coin funds = 7;
 
 
-    pub fn get_sent_funds(&self) -> &[super::coin::Coin] {
-        &self.sent_funds
+    pub fn get_funds(&self) -> &[super::coin::Coin] {
+        &self.funds
     }
-    pub fn clear_sent_funds(&mut self) {
-        self.sent_funds.clear();
+    pub fn clear_funds(&mut self) {
+        self.funds.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_sent_funds(&mut self, v: ::protobuf::RepeatedField<super::coin::Coin>) {
-        self.sent_funds = v;
+    pub fn set_funds(&mut self, v: ::protobuf::RepeatedField<super::coin::Coin>) {
+        self.funds = v;
     }
 
     // Mutable pointer to the field.
-    pub fn mut_sent_funds(&mut self) -> &mut ::protobuf::RepeatedField<super::coin::Coin> {
-        &mut self.sent_funds
+    pub fn mut_funds(&mut self) -> &mut ::protobuf::RepeatedField<super::coin::Coin> {
+        &mut self.funds
     }
 
     // Take field
-    pub fn take_sent_funds(&mut self) -> ::protobuf::RepeatedField<super::coin::Coin> {
-        ::std::mem::replace(&mut self.sent_funds, ::protobuf::RepeatedField::new())
+    pub fn take_funds(&mut self) -> ::protobuf::RepeatedField<super::coin::Coin> {
+        ::std::mem::replace(&mut self.funds, ::protobuf::RepeatedField::new())
     }
 }
 
 impl ::protobuf::Message for ExecuteContractProposal {
     fn is_initialized(&self) -> bool {
-        for v in &self.sent_funds {
+        for v in &self.funds {
             if !v.is_initialized() {
                 return false;
             }
@@ -1170,7 +1170,7 @@ impl ::protobuf::Message for ExecuteContractProposal {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.msg)?;
                 },
                 7 => {
-                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.sent_funds)?;
+                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.funds)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -1202,7 +1202,7 @@ impl ::protobuf::Message for ExecuteContractProposal {
         if !self.msg.is_empty() {
             my_size += ::protobuf::rt::bytes_size(6, &self.msg);
         }
-        for value in &self.sent_funds {
+        for value in &self.funds {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         };
@@ -1230,7 +1230,7 @@ impl ::protobuf::Message for ExecuteContractProposal {
         if !self.msg.is_empty() {
             os.write_bytes(6, &self.msg)?;
         }
-        for v in &self.sent_funds {
+        for v in &self.funds {
             os.write_tag(7, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
@@ -1304,9 +1304,9 @@ impl ::protobuf::Message for ExecuteContractProposal {
                 |m: &mut ExecuteContractProposal| { &mut m.msg },
             ));
             fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<super::coin::Coin>>(
-                "sent_funds",
-                |m: &ExecuteContractProposal| { &m.sent_funds },
-                |m: &mut ExecuteContractProposal| { &mut m.sent_funds },
+                "funds",
+                |m: &ExecuteContractProposal| { &m.funds },
+                |m: &mut ExecuteContractProposal| { &mut m.funds },
             ));
             ::protobuf::reflect::MessageDescriptor::new_pb_name::<ExecuteContractProposal>(
                 "ExecuteContractProposal",
@@ -1330,7 +1330,7 @@ impl ::protobuf::Clear for ExecuteContractProposal {
         self.proposer.clear();
         self.contract.clear();
         self.msg.clear();
-        self.sent_funds.clear();
+        self.funds.clear();
         self.unknown_fields.clear();
     }
 }
@@ -1363,14 +1363,14 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\tR\x08proposer\x12#\n\x07code_id\x18\x05\x20\x01(\x04R\x06code\
     IdB\n\xe2\xde\x1f\x06CodeID\x12\x1f\n\x0bcontract_id\x18\x06\x20\x01(\tR\
     \ncontractId\x12\x19\n\x08init_msg\x18\x07\x20\x01(\x0cR\x07initMsg\x12\
-    \x19\n\x08auto_msg\x18\x08\x20\x01(\x0cR\x07autoMsg\x12j\n\ninit_funds\
+    \x19\n\x08auto_msg\x18\x08\x20\x01(\x0cR\x07autoMsg\x12j\n\nfunds\
     \x18\t\x20\x03(\x0b2\x19.cosmos.base.v1beta1.CoinR\tinitFundsB0\xaa\xdf\
     \x1f(github.com/cosmos/cosmos-sdk/types.Coins\xc8\xde\x1f\0\"\x9e\x02\n\
     \x17ExecuteContractProposal\x12\x14\n\x05title\x18\x01\x20\x01(\tR\x05ti\
     tle\x12\x20\n\x0bdescription\x18\x02\x20\x01(\tR\x0bdescription\x12\x15\
     \n\x06run_as\x18\x03\x20\x01(\tR\x05runAs\x12\x1a\n\x08proposer\x18\x04\
     \x20\x01(\tR\x08proposer\x12\x1a\n\x08contract\x18\x05\x20\x01(\tR\x08co\
-    ntract\x12\x10\n\x03msg\x18\x06\x20\x01(\x0cR\x03msg\x12j\n\nsent_funds\
+    ntract\x12\x10\n\x03msg\x18\x06\x20\x01(\x0cR\x03msg\x12j\n\nfunds\
     \x18\x07\x20\x03(\x0b2\x19.cosmos.base.v1beta1.CoinR\tsentFundsB0\xaa\
     \xdf\x1f(github.com/cosmos/cosmos-sdk/types.Coins\xc8\xde\x1f\0B?Z1githu\
     b.com/trstlabs/trst/x/compute/internal/types\xd8\xe1\x1e\0\xc8\xe1\x1e\0\

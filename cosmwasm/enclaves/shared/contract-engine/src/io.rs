@@ -393,7 +393,7 @@ pub fn create_callback_signature(
         "callback sig msg_to_sign: {:?}",
         msg_to_sign
     );
-    // Hash(Enclave_secret | sender(current contract) | msg_to_pass | sent_funds)
+    // Hash(Enclave_secret | sender(current contract) | msg_to_pass | funds)
     let mut callback_sig_bytes = KEY_MANAGER
         .get_consensus_callback_secret()
         .unwrap()

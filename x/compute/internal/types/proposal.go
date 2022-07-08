@@ -231,7 +231,7 @@ func (p ExecuteContractProposal) ValidateBasic() error {
 	/*if _, err := sdk.AccAddressFromBech32(p.RunAs); err != nil {
 		return sdkerrors.Wrap(err, "run as")
 	}
-	if !p.SentFunds.IsValid() {
+	if !p.Funds.IsValid() {
 		return sdkerrors.ErrInvalidCoins
 	}*/
 
@@ -259,7 +259,7 @@ func (p ExecuteContractProposal) MarshalYAML() (interface{}, error) {
 		Msg         string    `yaml:"msg"`
 		Funds       sdk.Coins `yaml:"funds"`
 		/*RunAs       string    `yaml:"run_as"`
-		SentFunds   sdk.Coins `yaml:"sent_funds"`*/
+		Funds   sdk.Coins `yaml:"funds"`*/
 	}{
 		Title:       p.Title,
 		Description: p.Description,

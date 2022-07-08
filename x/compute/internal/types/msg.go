@@ -80,7 +80,7 @@ func (msg MsgInstantiateContract) ValidateBasic() error {
 		return err
 	}
 
-	if !msg.InitFunds.IsValid() {
+	if !msg.Funds.IsValid() {
 		return sdkerrors.ErrInvalidCoins
 	}
 
@@ -137,7 +137,7 @@ func (msg MsgExecuteContract) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
 	}
 
-	if !msg.SentFunds.IsValid() {
+	if !msg.Funds.IsValid() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "sentFunds")
 	}
 

@@ -129,9 +129,9 @@ pub fn init(
     let msg_ptr = engine.write_to_memory(&validated_msg)?;
     let auto_msg = ContractMessage::from_slice(auto_msg)?;
 
-    let sent_funds = [];
-    trace!("sent_funds {:?}...", sent_funds);
-    let sig = create_callback_signature(&canonical_contract_address, &auto_msg, &sent_funds);
+    let funds = [];
+    trace!("funds {:?}...", funds);
+    let sig = create_callback_signature(&canonical_contract_address, &auto_msg, &funds);
 
     let array = copy_into_array(&sig[..]);
     let callback_sig: [u8; 32] = array;
@@ -824,7 +824,7 @@ fn parse_msg_info_bytes(
                 sender: Addr(env.message.sender.0.clone()),
                 funds: env
                     .message
-                    .sent_funds
+                    .funds
                     .iter()
                     .map(|coin| {
                         Coin::new(

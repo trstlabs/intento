@@ -140,25 +140,8 @@ pub enum WasmMsg {
         contract_id: String,
         /// custom duration (e.g. 5h/60d, 0 for no duration) 
         contract_duration: String,
-    },
-    /// this instantiates a new recurringly executing contract from previously uploaded wasm code
-    InstantiateRecurring {
-        code_id: u64,
-        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
-        /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
-        callback_code_hash: String,
-        /// msg is the json-encoded InitMsg struct (as raw Binary)
-        msg: Binary,
-        /// auto_msg is the json-encoded AutoMsg struct (as raw Binary)
-        auto_msg: Option<Binary>,
-        /// Public coins to send
-        funds: Vec<Coin>,
-        /// mandatory human-readbale id for the contract
-        contract_id: String,
-        /// mandatory time interval (e.g. 60s/5h)
-        interval: String,
-        /// custom duration (e.g. 5h/60d, 0 for no duration) 
-        contract_duration: String,
+         /// time interval (e.g. 60s/5h)
+        auto_msg_interval: String,
     },
 }
 
@@ -179,63 +162,17 @@ pub enum VoteOption {
     Abstain,
     NoWithVeto,
 }
-
 /// Shortcut helper as the construction of WasmMsg::Instantiate can be quite verbose in contract code.
 ///
 pub fn wasm_instantiate(
     code_id: u64,
     code_hash: impl Into<String>,
     msg: &impl Serialize,
-    funds: Vec<Coin>,
-    contract_id: String,
-    contract_duration: String,
-) -> StdResult<WasmMsg> {
-    let payload = to_binary(msg)?;
-    Ok(WasmMsg::Instantiate {
-        code_id,
-        code_hash: code_hash.into(),
-        msg: payload,
-        funds,
-        contract_id,
-        contract_duration
-    })
-}
-
-/// Shortcut helper as the construction of WasmMsg::Instantiate can be quite verbose in contract code.
-///
-pub fn wasm_instantiate_auto(
-    code_id: u64,
-    code_hash: impl Into<String>,
-    msg: &impl Serialize,
     auto_msg: &impl Serialize,
     funds: Vec<Coin>,
     contract_id: String,
     contract_duration: String,
-) -> StdResult<WasmMsg> {
-    let payload = to_binary(msg)?;
-    let payload_auto_msg = to_binary(msg)?;
-    Ok(WasmMsg::Instantiate {
-        code_id,
-        code_hash: code_hash.into(),
-        msg: payload,
-        auto_msg: payload_auto_msg,
-        funds,
-        contract_id,
-        contract_duration
-    })
-}
-
-/// Shortcut helper as the construction of WasmMsg::Instantiate can be quite verbose in contract code.
-///
-pub fn wasm_instantiate_recurring(
-    code_id: u64,
-    code_hash: impl Into<String>,
-    msg: &impl Serialize,
-    auto_msg: &impl Serialize,
-    funds: Vec<Coin>,
-    contract_id: String,
     interval: String,
-    contract_duration: String,
 ) -> StdResult<WasmMsg> {
     let payload = to_binary(msg)?;
     let payload_auto_msg = to_binary(msg)?;
@@ -246,11 +183,10 @@ pub fn wasm_instantiate_recurring(
         auto_msg: payload_auto_msg,
         funds,
         contract_id,
+        contract_duration,
         interval,
-        contract_duration
     })
 }
-
 
 /// Shortcut helper as the construction of WasmMsg::Instantiate can be quite verbose in contract code
 pub fn wasm_execute(

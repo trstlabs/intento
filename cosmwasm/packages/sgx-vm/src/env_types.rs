@@ -35,7 +35,7 @@ pub struct MessageInfoV010 {
     /// There is a discussion to open up this field to multiple initiators, which you're welcome to join
     /// if you have a specific need for that feature: https://github.com/CosmWasm/cosmwasm/issues/293
     pub sender: HumanAddr,
-    pub sent_funds: Vec<Coin>,
+    pub funds: Vec<Coin>,
 }
 
 /// ContractInfoV010 is ContractInfo that's used by cosmwasm v0.10 contracts
