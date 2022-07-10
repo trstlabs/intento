@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdktxsigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
-
+	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
@@ -29,7 +29,7 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
 
-	codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	contractInfo, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
 	if err != nil {
 		return 0, err
 	}
@@ -49,17 +49,17 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 	}
 
 	gas := gasForContract(ctx)
-	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, wasmTypes.HandleTypeExecute)
 
 	if execErr != nil {
 		return 0, sdkerrors.Wrap(types.ErrExecuteFailed, execErr.Error())
 	}
 
 	// emit all events from this contract itself
-	events := types.ParseEvents(res.Log, contractAddress)
+	events := types.ParseEvents(res.Attributes, contractAddress)
 	ctx.EventManager().EmitEvents(events)
 
-	err = k.dispatchMessages(ctx, contractAddress, res.Messages)
+	_, err = k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, *res, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
 		return 0, err
 	}

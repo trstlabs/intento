@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/base64"
+	fmt "fmt"
+	"strings"
 	"time"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -46,6 +48,65 @@ func (c CodeInfo) ValidateBasic() error {
 		}
 	*/
 	return nil
+}
+
+// ParseEvents converts wasm LogAttributes into an sdk.Events (with 0 or 1 elements)
+func ContractLogsToSdkEvents(logs []wasmTypes.Attribute, contractAddr sdk.AccAddress) sdk.Events {
+	// we always tag with the contract address issuing this event
+	attrs := []sdk.Attribute{sdk.NewAttribute(AttributeKeyContractAddr, contractAddr.String())}
+	// append attributes from wasm to the sdk.Event
+	for _, l := range logs {
+		// and reserve the contract_address key for our use (not contract)
+		if l.Key != AttributeKeyContractAddr {
+			attr := sdk.NewAttribute(l.Key, string(l.Value))
+			attrs = append(attrs, attr)
+		}
+	}
+	// each wasm invokation always returns one sdk.Event
+	return sdk.Events{sdk.NewEvent(CustomEventType, attrs...)}
+}
+
+const eventTypeMinLength = 2
+
+// NewCustomEvents converts wasm events from a contract response to sdk type events
+func NewCustomEvents(evts wasmTypes.Events, contractAddr sdk.AccAddress) (sdk.Events, error) {
+	events := make(sdk.Events, 0, len(evts))
+	for _, e := range evts {
+		typ := strings.TrimSpace(e.Type)
+		if len(typ) <= eventTypeMinLength {
+			return nil, sdkerrors.Wrap(ErrInvalidEvent, fmt.Sprintf("Event type too short: '%s'", typ))
+		}
+		attributes, err := contractSDKEventAttributes(e.Attributes, contractAddr)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, sdk.NewEvent(fmt.Sprintf("%s%s", CustomContractEventPrefix, typ), attributes...))
+	}
+	return events, nil
+}
+
+// convert and add contract address issuing this event
+func contractSDKEventAttributes(customAttributes []wasmTypes.Attribute, contractAddr sdk.AccAddress) ([]sdk.Attribute, error) {
+	attrs := []sdk.Attribute{sdk.NewAttribute(AttributeKeyContractAddr, contractAddr.String())}
+	// append attributes from wasm to the sdk.Event
+	for _, l := range customAttributes {
+		// ensure key and value are non-empty (and trim what is there)
+		key := strings.TrimSpace(l.Key)
+		if len(key) == 0 {
+			return nil, sdkerrors.Wrap(ErrInvalidEvent, fmt.Sprintf("Empty attribute key. Value: %s", l.Value))
+		}
+		value := strings.TrimSpace(string(l.Value))
+		// TODO: check if this is legal in the SDK - if it is, we can remove this check
+		if len(value) == 0 {
+			return nil, sdkerrors.Wrap(ErrInvalidEvent, fmt.Sprintf("Empty attribute value. Key: %s", key))
+		}
+		// and reserve all _* keys for our use (not contract)
+		if strings.HasPrefix(key, AttributeReservedPrefix) {
+			return nil, sdkerrors.Wrap(ErrInvalidEvent, fmt.Sprintf("Attribute key starts with reserved prefix %s: '%s'", AttributeReservedPrefix, key))
+		}
+		attrs = append(attrs, sdk.NewAttribute(key, value))
+	}
+	return attrs, nil
 }
 
 // NewCodeInfo fills a new Contract struct
@@ -217,8 +278,8 @@ const EventTypeContractExpired = "contract_expired"
 const EventTypeAutoMsgContract = "eontract_executed"
 const AttributeKeyContractAddr = "contract_address"
 
-// ParseEvents converts wasm LogAttributes into an sdk.Events (with 0 or 1 elements)
-func ParseEvents(logs []wasmTypes.LogAttribute, contractAddr sdk.AccAddress) sdk.Events {
+// ParseEvents converts wasm Attributes into an sdk.Events (with 0 or 1 elements)
+func ParseEvents(logs []wasmTypes.Attribute, contractAddr sdk.AccAddress) sdk.Events {
 	if len(logs) == 0 {
 		return nil
 	}

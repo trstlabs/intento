@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use snafu::Snafu;
-
+use cosmwasm_crypto::CryptoError;
 #[derive(Debug, Serialize, Deserialize, Snafu, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum VerificationError {
@@ -59,6 +59,36 @@ impl PartialEq<VerificationError> for VerificationError {
                     false
                 }
             }
+        }
+    }
+}
+
+
+#[cfg(not(target_arch = "wasm32"))]
+impl From<CryptoError> for VerificationError {
+    fn from(original: CryptoError) -> Self {
+        match original {
+            CryptoError::InvalidHashFormat { .. } => VerificationError::InvalidHashFormat,
+            CryptoError::InvalidPubkeyFormat { .. } => VerificationError::InvalidPubkeyFormat,
+            CryptoError::InvalidSignatureFormat { .. } => VerificationError::InvalidSignatureFormat,
+            CryptoError::GenericErr { .. } => VerificationError::GenericErr,
+            CryptoError::InvalidRecoveryParam { .. } => VerificationError::InvalidRecoveryParam,
+            CryptoError::BatchErr { .. } => VerificationError::BatchErr,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // constructors
+    #[test]
+    fn unknown_err_works() {
+        let error = VerificationError::unknown_err(123);
+        match error {
+            VerificationError::UnknownErr { error_code, .. } => assert_eq!(error_code, 123),
+            _ => panic!("wrong error type!"),
         }
     }
 }

@@ -1,4 +1,4 @@
-use enclave_cosmwasm_types::types::LogAttribute;
+
 use serde::{Deserialize, Serialize};
 /// A full [*Cosmos SDK* event].
 ///
@@ -18,5 +18,14 @@ pub struct Event {
     /// You can learn more about these from [*Cosmos SDK* docs].
     ///
     /// [*Cosmos SDK* docs]: https://docs.cosmos.network/v0.42/core/events.html
-    pub attributes: Vec<LogAttribute>,
+    pub attributes: Vec<Attribute>,
+}
+/// An key value pair that is used in the context of event attributes in logs
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Attribute {
+    pub key: String,
+    pub value: String,
+    pub pub_db: bool,
+    pub acc_addr: Option<String>,
+    pub encrypted: bool,
 }

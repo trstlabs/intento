@@ -1,6 +1,6 @@
 use cosmwasm_std::{Binary, CanonicalAddr, HumanAddr, StdResult, SystemResult};
 #[cfg(feature = "iterator")]
-use cosmwasm_std::{Order, KV};
+use cosmwasm_std::{Order, Pair};
 
 #[cfg(feature = "iterator")]
 use crate::ffi::FfiError;
@@ -31,14 +31,14 @@ impl<S: Storage, A: Api, Q: Querier> Extern<S, A, Q> {
 
 #[cfg(feature = "iterator")]
 pub trait StorageIterator {
-    fn next(&mut self) -> FfiResult<Option<KV>>;
+    fn next(&mut self) -> FfiResult<Option<Pair>>;
 
     /// Collects all elements, ignoring gas costs
-    fn elements(mut self) -> Result<Vec<KV>, FfiError>
+    fn elements(mut self) -> Result<Vec<Pair>, FfiError>
     where
         Self: Sized,
     {
-        let mut out: Vec<KV> = Vec::new();
+        let mut out: Vec<Pair> = Vec::new();
         loop {
             let (result, _gas_info) = self.next();
             match result {
@@ -53,7 +53,7 @@ pub trait StorageIterator {
 
 #[cfg(feature = "iterator")]
 impl<I: StorageIterator + ?Sized> StorageIterator for Box<I> {
-    fn next(&mut self) -> FfiResult<Option<KV>> {
+    fn next(&mut self) -> FfiResult<Option<Pair>> {
         (**self).next()
     }
 }

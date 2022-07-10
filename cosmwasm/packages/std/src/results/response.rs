@@ -113,9 +113,20 @@ where
 
     /// Add an attribute included in the main `wasm` event.
     pub fn add_attribute(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
-        self.attributes.push(Attribute::new(key, value));
+        self.attributes.push(Attribute::new_log(key, value));
         self
     }
+    /// Add a public state entry included in the main `wasm` event.
+    pub fn add_pub_db(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.attributes.push(Attribute::store_pub_db(key, value));
+        self
+    }
+    /// Add a public state entry included in the main `wasm` event.
+    pub fn add_acc_pub_db(mut self, key: impl Into<String>, value: impl Into<String>,acc: impl Into<String>) -> Self {
+        self.attributes.push(Attribute::store_acc_pub_db(key, value, acc));
+        self
+    }
+
 
     /// This creates a "fire and forget" message, by using `SubMsg::new()` to wrap it,
     /// and adds it to the list of messages to process.

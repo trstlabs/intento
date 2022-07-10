@@ -74,9 +74,7 @@ const (
 	HandleTypeReply
 )
 
-type CosmosMsgVersion int
-
-const (
-	CosmosMsgVersionV010 CosmosMsgVersion = iota
-	CosmosMsgVersionV1
-)
+type MsgInfo struct {
+	CodeHash []byte `json:"code_hash"`
+	Funds    []Coin `json:"funds"` // Optional
+}

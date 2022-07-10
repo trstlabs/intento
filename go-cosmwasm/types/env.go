@@ -35,4 +35,6 @@ type MessageInfo struct {
 type ContractInfo struct {
 	// binary encoding of sdk.AccAddress of the contract, to be used when sending messages
 	Address HumanAddress `json:"address"`
+	// binary encoding of sdk.AccAddress of the contract, to be used when sending messages
+	CodeHash string `json:"code_hash"`
 }

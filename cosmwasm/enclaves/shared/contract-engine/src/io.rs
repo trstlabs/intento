@@ -3,11 +3,12 @@
 /// that is unique to the user and the enclave
 ///
 use super::types::{IoNonce, ContractMessage};
-use enclave_cosmwasm_types as cosmwasm_v010_types;
 use enclave_cosmwasm_types::encoding::Binary;
-use enclave_cosmwasm_types::types::{CanonicalAddr, Coin, REPLY_ENCRYPTION_MAGIC_BYTES, WasmMsg, Coin, Uint128};
-use {Event, Reply, ReplyOn, SubMsgResponse, SubMsgResult};
-
+use enclave_cosmwasm_types::math::Uint128;
+use enclave_cosmwasm_types::results::{Event, Response, CosmosMsg, WasmMsg, Reply, ReplyOn, SubMsgResponse,REPLY_ENCRYPTION_MAGIC_BYTES, SubMsgResult};
+use enclave_cosmwasm_types::coins::Coin;
+use enclave_cosmwasm_types::addresses::{CanonicalAddr,HumanAddr};
+use std::convert::TryInto;
 use enclave_ffi_types::EnclaveError;
 
 use enclave_crypto::{AESKey, Ed25519PublicKey, Kdf, SIVEncryptable, KEY_MANAGER};
@@ -170,18 +171,21 @@ pub fn encrypt_output(
                         );
                         EnclaveError::FailedToSerialize
                     })?;
-                    let tmp_secret_msg = ContractMessage {
+                    let tmp_contract_msg = ContractMessage {
                         nonce,
                         user_public_key,
                         msg: reply_as_vec.clone(),
                     };
 
                     Some(Binary::from(
-                        create_callback_signature(sender_addr, &tmp_secret_msg, &[]).as_slice(),
+                        create_callback_signature(sender_addr, &tmp_contract_msg, &[]).as_slice(),
                     ))
                 }
                 None => None, // Not a reply, we don't need enclave sig
             }
+        }
+        WasmOutput::QueryOk { ok } => {
+            *ok = encrypt_serializable(&encryption_key, ok, &reply_params)?;
         }
         WasmOutput::Ok {
             ok,
@@ -264,14 +268,14 @@ pub fn encrypt_output(
                         );
                         EnclaveError::FailedToSerialize
                     })?;
-                    let tmp_secret_msg = ContractMessage {
+                    let tmp_contract_msg = ContractMessage {
                         nonce,
                         user_public_key,
                         msg: reply_as_vec.clone(),
                     };
 
                     Some(Binary::from(
-                        create_callback_signature(sender_addr, &tmp_secret_msg, &[]).as_slice(),
+                        create_callback_signature(sender_addr, &tmp_contract_msg, &[]).as_slice(),
                     ))
                 }
                 None => None, // Not a reply, we don't need enclave sig
@@ -292,6 +296,28 @@ pub fn encrypt_output(
     Ok(encrypted_output)
 }
 
+pub fn encrypt_msg(
+    msg: &mut Binary,
+    nonce: IoNonce,
+    user_public_key: Ed25519PublicKey,
+    send_as_addr: &CanonicalAddr,
+    callback_code_hash: String, 
+    funds: Vec<Coin>,
+) -> Result<Vec<u8>, EnclaveError> {
+            let mut hash_appended_msg = callback_code_hash.as_bytes().to_vec();
+            hash_appended_msg.extend_from_slice(msg.as_slice());
+
+            let mut msg_to_pass = ContractMessage::from_base64(
+                Binary(hash_appended_msg).to_base64(),
+                nonce,
+                user_public_key,
+            )?;
+            msg_to_pass.encrypt_in_place()?;
+            let callback_sig_bytes = create_callback_signature(send_as_addr, &msg_to_pass, &funds);
+            *msg = Binary::from(msg_to_pass.to_vec().as_slice());
+            Ok(callback_sig_bytes)
+}
+
 fn encrypt_wasm_msg(
     wasm_msg: &mut WasmMsg,
     reply_on: &ReplyOn,
@@ -308,29 +334,7 @@ fn encrypt_wasm_msg(
             callback_sig,
             funds,
             ..
-        }
-        | :WasmMsg::Instantiate {
-            msg,
-            code_hash,
-            auto_msg,
-            callback_sig,
-            funds,
-            ..
-        } |  | :WasmMsg::Instantiate {
-            msg,
-            code_hash,
-            auto_msg,
-            callback_sig,
-            funds,
-            interval
-            ..
         } => {
-            // On cosmwasm v1 submessages' outputs can be sent back to the original caller by using "Reply"
-            // The output is encrpyted but the historically wasn't ment to be  sent back to the enclave as an input of another contract
-            // To support "sending back" behaviour, the enclave expects every encrypted input to be prepended with the recipient wasm hash.
-            // In this context, we prepend the message with both hashes to signal to the next wasm call that its output is going to be an input to this contract as a "Reply"
-            // On the other side when decrypting the input, the enclave will try to parse the message as usual, if the message (After reading the first code-hash) can't be parsed into json,
-            // it will treat the next 64 bytes as a recipient code-hash and prepend this code-hash to its output.
             let mut hash_appended_msg = code_hash.as_bytes().to_vec();
             if *reply_on != ReplyOn::Never {
                 hash_appended_msg.extend_from_slice(
@@ -338,10 +342,7 @@ fn encrypt_wasm_msg(
                 );
                 hash_appended_msg.extend_from_slice(&msg_id.to_be_bytes());
                 hash_appended_msg.extend_from_slice(reply_recipient_contract_hash.as_bytes());
-            }
-            hash_appended_msg.extend_from_slice(msg.as_slice());
-            let mut hash_appended_auto_msg = code_hash.as_bytes().to_vec();
-
+            };
             let mut msg_to_pass = ContractMessage::from_base64(
                 Binary(hash_appended_msg).to_base64(),
                 nonce,
@@ -350,9 +351,38 @@ fn encrypt_wasm_msg(
 
             msg_to_pass.encrypt_in_place()?;
             *msg = Binary::from(msg_to_pass.to_vec().as_slice());
-            if Some(auto_msg) = (auto_msg) {
-           
-                hash_appended_auto_msg.extend_from_slice(auto_msg.as_slice());
+            *callback_sig = Some(create_callback_signature(contract_addr, &msg_to_pass,  &funds));
+        }
+        | WasmMsg::Instantiate {
+            msg,
+            code_hash,
+            auto_msg,
+            callback_sig,
+            funds,
+            ..
+        } => {
+            let mut hash_appended_msg = code_hash.as_bytes().to_vec();
+            if *reply_on != ReplyOn::Never {
+                hash_appended_msg.extend_from_slice(
+                    REPLY_ENCRYPTION_MAGIC_BYTES,
+                );
+                hash_appended_msg.extend_from_slice(&msg_id.to_be_bytes());
+                hash_appended_msg.extend_from_slice(reply_recipient_contract_hash.as_bytes());
+            };
+            let mut hash_appended_auto_msg = code_hash.as_bytes().to_vec();
+            let mut msg_to_pass = ContractMessage::from_base64(
+                Binary(hash_appended_msg).to_base64(),
+                nonce,
+                user_public_key,
+            )?;
+            msg_to_pass.encrypt_in_place()?;
+            *msg = Binary::from(msg_to_pass.to_vec().as_slice());
+            *callback_sig = Some(create_callback_signature(contract_addr, &msg_to_pass, &funds
+        ));
+
+            if auto_msg.is_some() {
+                let auto_msg_unwrap = auto_msg.clone().unwrap();
+                hash_appended_auto_msg.extend_from_slice(auto_msg_unwrap.as_slice());
                 let mut auto_msg_to_pass = ContractMessage::from_base64(
                     Binary(hash_appended_auto_msg).to_base64(),
                     nonce,
@@ -361,18 +391,6 @@ fn encrypt_wasm_msg(
                 auto_msg_to_pass.encrypt_in_place()?;
                 *auto_msg = Some(Binary::from(auto_msg_to_pass.to_vec().as_slice()));
             }
-
-            *callback_sig = Some(create_callback_signature(
-                contract_addr,
-                &msg_to_pass,
-                &funds
-                    .iter()
-                    .map(|coin| Coin {
-                        denom: coin.denom.clone(),
-                        amount: Uint128(coin.amount.u128()),
-                    })
-                    .collect::<Vec<Coin>>()[..],
-            ));
         }
     }
 

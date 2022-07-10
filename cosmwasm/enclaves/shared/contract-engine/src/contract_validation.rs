@@ -7,10 +7,12 @@ use enclave_cosmos_types::traits::CosmosAminoPubkey;
 use enclave_cosmos_types::types::{
     ContractCode, CosmWasmMsg, CosmosPubKey, SigInfo, SignDoc, StdSignDoc,
 };
-use enclave_cosmwasm_types::types::{CanonicalAddr, Coin, Env, HumanAddr};
+
+use enclave_cosmwasm_types::addresses::{CanonicalAddr, Addr, HumanAddr};
+use enclave_cosmwasm_types::coins::Coin;
 use enclave_crypto::traits::VerifyingKey;
 use enclave_crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER};
-
+use enclave_cosmwasm_types::full_env::FullEnv as Env;
 use crate::io::create_callback_signature;
 use crate::types::ContractMessage;
 
@@ -253,7 +255,7 @@ fn get_signer_and_messages(
             let sign_doc = SignDoc::from_bytes(sign_info.sign_bytes.as_slice())?;
             trace!("sign doc: {:?}", sign_doc);
 
-            let sender = CanonicalAddr::from_human(&env.message.sender).map_err(|err| {
+            let sender = CanonicalAddr::from_addr(&env.message.sender).map_err(|err| {
                 warn!(
                     "failed to canonicalize message sender: {} {}",
                     env.message.sender, err
@@ -311,13 +313,13 @@ fn get_signer_and_messages(
 ///This is used when contracts send callbacks to each other.
 fn verify_callback_sig(
     callback_signature: &[u8],
-    sender: &HumanAddr,
+    sender: &Addr,
     msg: &ContractMessage,
     funds: &[Coin],
 ) -> Result<(), EnclaveError> {
     if verify_callback_sig_impl(
         callback_signature,
-        &CanonicalAddr::from_human(sender).or(Err(EnclaveError::FailedToSerialize))?,
+        &CanonicalAddr::from_addr(sender).or(Err(EnclaveError::FailedToSerialize))?,
         msg,
         funds,
     ) {
@@ -359,12 +361,13 @@ fn get_verified_msg<'sd>(
     sent_msg: &ContractMessage,
 ) -> Option<&'sd CosmWasmMsg> {
     messages.iter().find(|&m| match m {
-        CosmWasmMsg::Execute { msg, sender, .. }
+        CosmWasmMsg::Execute { msg, sender, .. } 
         | CosmWasmMsg::Instantiate {
             init_msg: msg,
             sender,
             ..
-        }
+        } => msg_sender == sender && &sent_msg.to_vec() == msg,
+     
         CosmWasmMsg::Other => false,
     })
 }
@@ -375,7 +378,7 @@ fn verify_contract(msg: &CosmWasmMsg, env: &Env) -> bool {
     match msg {
         CosmWasmMsg::Execute { contract, .. } => {
             info!("Verifying contract address..");
-            let is_verified = env.contract.address == *contract;
+            let is_verified = env.contract.address.as_str() == contract.as_str();
             if !is_verified {
                 trace!(
                     "Contract address sent to enclave {:?} is not the same as the signed one {:?}",
@@ -410,7 +413,7 @@ fn verify_message_params(
 ) -> bool {
     info!("Verifying sender..");
 
-    let msg_sender = match CanonicalAddr::from_human(&env.message.sender) {
+    let msg_sender = match CanonicalAddr::from_addr(&env.message.sender) {
         Ok(msg_sender) => msg_sender,
         _ => return false,
     };

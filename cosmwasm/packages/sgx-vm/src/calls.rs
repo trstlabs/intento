@@ -78,13 +78,14 @@ pub fn call_init_raw<S: Storage + 'static, A: Api + 'static, Q: Querier + 'stati
     instance: &mut Instance<S, A, Q>,
     env: &[u8],
     msg: &[u8],
+    auto_msg: &[u8],
     sig_info: &[u8],
 ) -> VmResult<Vec<u8>> {
     instance.set_storage_readonly(false);
     /*
     call_raw(instance, "init", &[env, msg], MAX_LENGTH_INIT)
     */
-    instance.call_init(env, msg, sig_info)
+    instance.call_init(env, msg,auto_msg, sig_info)
 }
 
 /// Calls Wasm export "handle" and returns raw data from the contract.

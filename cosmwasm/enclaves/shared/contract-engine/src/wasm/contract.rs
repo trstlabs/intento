@@ -95,7 +95,6 @@ impl ContractInstance {
             operation,
             user_nonce,
             user_public_key,
-            cosmwasm_api_version,
         })
     }
 
@@ -455,57 +454,7 @@ impl WasmiApi for ContractInstance {
         Ok(None)
     }
 
-    /// Convert an address represented as bytes into its human readable form
-    /// v0.10
-    ///
-    /// Args:
-    /// 1. "canonical" to convert to human address (buffer of bytes)
-    /// 2. "human" a buffer to write the result (humanized string) into (buffer of bytes)
-    /// Both of them are pointers to a region "struct" of "pointer" and "length"
-    /// A Region looks like { ptr: u32, len: u32 }
-    fn humanize_address(
-        &mut self,
-        canonical_ptr: i32,
-        human_ptr: i32,
-    ) -> Result<Option<RuntimeValue>, Trap> {
-        self.use_gas_externally(self.gas_costs.external_humanize_address as u64)?;
-
-        let canonical = self.extract_vector(canonical_ptr as u32).map_err(|err| {
-            debug!(
-                "humanize_address() error while trying to read canonical address from wasm memory",
-            );
-            err
-        })?;
-
-        trace!(
-            "humanize_address() was called from WASM code with {:?}",
-            canonical
-        );
-
-        let human_addr_str = match bech32::encode(BECH32_PREFIX_ACC_ADDR, canonical.to_base32()) {
-            Err(err) => {
-                debug!("humanize_address() error while trying to encode canonical address {:?} to human: {:?}",  canonical, err);
-                return Ok(Some(RuntimeValue::I32(
-                    self.write_to_memory(err.to_string().as_bytes())? as i32,
-                )));
-            }
-            Ok(x) => x,
-        };
-
-        let human_bytes = human_addr_str.into_bytes();
-        self.write_to_allocated_memory(&human_bytes, human_ptr as u32)
-            .map_err(|err| {
-                debug!(
-                    "humanize_address() error while trying to write the answer {:?} to the destination buffer",
-                    human_bytes,
-                );
-                err
-            })?;
-        Ok(Some(RuntimeValue::I32(0)))
-    }
-
     /// Query another contract
-    /// v0.10 + v1
     fn query_chain(&mut self, query_ptr_ptr: i32) -> Result<Option<RuntimeValue>, Trap> {
         let query_buffer = self.extract_vector(query_ptr_ptr as u32).map_err(|err| {
             debug!("query_chain() error while trying to read canonical address from wasm memory",);
@@ -695,17 +644,54 @@ impl WasmiApi for ContractInstance {
         // https://github.com/scrtlabs/SecretNetwork/blob/2aacc3333ba3a10ed54c03c56576d72c7c9dcc59/cosmwasm/packages/std/src/imports.rs?plain=1#L181
         Ok(Some(RuntimeValue::I32(0)))
     }
-
-    /// This is identical to humanize_address from v0.10
-    /// v1
     fn addr_humanize(
         &mut self,
         canonical_ptr: i32,
         human_ptr: i32,
     ) -> Result<Option<RuntimeValue>, Trap> {
-        self.humanize_address(canonical_ptr, human_ptr)
-    }
+        self.use_gas_externally(self.gas_costs.external_humanize_address as u64)?;
 
+        let canonical = self.extract_vector(canonical_ptr as u32).map_err(|err| {
+            debug!(
+                "humanize_address() error while trying to read canonical address from wasm memory",
+            );
+            err
+        })?;
+
+        trace!(
+            "humanize_address() was called from WASM code with {:?}",
+            canonical
+        );
+
+        let human_addr_str = match bech32::encode(BECH32_PREFIX_ACC_ADDR, canonical.to_base32()) {
+            Err(err) => {
+                // Assaf: IMO This can never fail. From looking at bech32::encode, it only fails
+                // because input prefix issues. For us the prefix is always "secert" which is valid.
+                debug!("humanize_address() error while trying to encode canonical address {:?} to human: {:?}",  canonical, err);
+                return Ok(Some(RuntimeValue::I32(
+                    self.write_to_memory(err.to_string().as_bytes())? as i32,
+                )));
+            }
+            Ok(x) => x,
+        };
+
+        let human_bytes = human_addr_str.into_bytes();
+
+        // write the result to the output buffer
+        // https://github.com/scrtlabs/SecretNetwork/blob/2aacc3333ba3a10ed54c03c56576d72c7c9dcc59/cosmwasm/packages/std/src/imports.rs?plain=1#L207
+        self.write_to_allocated_memory(&human_bytes, human_ptr as u32)
+            .map_err(|err| {
+                debug!(
+                    "humanize_address() error while trying to write the answer {:?} to the destination buffer",
+                    human_bytes,
+                );
+                err
+            })?;
+
+        // return 0 == ok
+        // https://github.com/scrtlabs/SecretNetwork/blob/2aacc3333ba3a10ed54c03c56576d72c7c9dcc59/cosmwasm/packages/std/src/imports.rs?plain=1#L199
+        Ok(Some(RuntimeValue::I32(0)))
+    }
     fn debug_print_index(&self, message_ptr_ptr: i32) -> Result<Option<RuntimeValue>, Trap> {
         let message_buffer = self.extract_vector(message_ptr_ptr as u32).map_err(|err| {
             debug!("debug_print() error while trying to read message from wasm memory",);

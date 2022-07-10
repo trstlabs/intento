@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	//"log"
-
 	codedctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -158,7 +156,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 }
 
 // Instantiate creates an instance of a WASM contract
-func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, initMsg []byte, autoMsg []byte, id string, deposit sdk.Coins, callbackSig []byte, customDuration time.Duration) (sdk.AccAddress, error) {
+func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, initMsg []byte, autoMsg []byte, id string, deposit sdk.Coins, callbackSig []byte, customDuration time.Duration) (sdk.AccAddress, []byte, error) {
 	fmt.Printf("init duration: %s \n", customDuration)
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading CosmWasm module: init")
 
@@ -174,7 +172,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	if callbackSig == nil {
 		signBytes, signMode, modeInfoBytes, pkBytes, signerSig, err = k.GetSignerInfo(ctx, creator)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
@@ -184,23 +182,23 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	existingAddress := store.Get(types.GetContractIdPrefix(id))
 
 	if existingAddress != nil {
-		return nil, sdkerrors.Wrap(types.ErrAccountExists, id)
+		return nil, nil, sdkerrors.Wrap(types.ErrAccountExists, id)
 	}
 
 	contractAddress := k.generateContractAddress(ctx, codeID)
 	existingAcct := k.accountKeeper.GetAccount(ctx, contractAddress)
 	if existingAcct != nil {
-		return nil, sdkerrors.Wrap(types.ErrAccountExists, existingAcct.GetAddress().String())
+		return nil, nil, sdkerrors.Wrap(types.ErrAccountExists, existingAcct.GetAddress().String())
 	}
 
 	// deposit initial contract funds
 	if !deposit.IsZero() {
 		if k.bankKeeper.BlockedAddr(creator) {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "blocked address can not be used")
+			return nil, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "blocked address can not be used")
 		}
 		sdkerr := k.bankKeeper.SendCoins(ctx, creator, contractAddress, deposit)
 		if sdkerr != nil {
-			return nil, sdkerr
+			return nil, nil, sdkerr
 		}
 	} else {
 		// create an empty account (so we don't have issues later)
@@ -211,7 +209,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	// get contact info
 	bz := store.Get(types.GetCodeKey(codeID))
 	if bz == nil {
-		return nil, sdkerrors.Wrap(types.ErrNotFound, "code")
+		return nil, nil, sdkerrors.Wrap(types.ErrNotFound, "code")
 	}
 	var codeInfo types.CodeInfo
 	k.cdc.MustUnmarshal(bz, &codeInfo)
@@ -236,15 +234,17 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	}
 	// instantiate wasm contract
 	gas := gasForContract(ctx)
-	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, env, initMsg, autoMsgToSend, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo)
-
+	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, env, initMsg, autoMsgToSend, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo, contractAddress)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
+	}
 	consumeGas(ctx, gasUsed)
 	if err != nil {
-		return contractAddress, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
+		return contractAddress, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
 	}
 
 	// emit all events from this contract itself
-	events := types.ParseEvents(res.Log, contractAddress)
+	events := types.ParseEvents(res.Attributes, contractAddress)
 	ctx.EventManager().EmitEvents(events)
 
 	// persist instance
@@ -259,28 +259,43 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		k.InsertContractQueue(ctx, contractAddress.String(), endTime)
 	}
 
-	instance := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, endTime, autoMsg, callbackSig)
-	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&instance))
+	contractInfo := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, endTime, autoMsg, callbackSig)
+	// check for IBC flag
+	report, err := k.wasmer.AnalyzeCode(codeInfo.CodeHash)
+	if err != nil {
+		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
+	}
+	if report.HasIBCEntryPoints {
+		// register IBC port
+		ibcPort, err := k.ensureIbcPort(ctx, contractAddress)
+		if err != nil {
+			return nil, nil, err
+		}
+		contractInfo.IBCPortID = ibcPort
+	}
+
+	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&contractInfo))
 
 	codeInfo.Instances = codeInfo.Instances + 1
 	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(&codeInfo))
 	store.Set(types.GetContractEnclaveKey(contractAddress), key)
 	store.Set(types.GetContractIdPrefix(id), contractAddress)
 
-	err = k.SetContractPublicState(ctx, contractAddress, res.Log)
+	err = k.SetContractPublicState(ctx, contractAddress, res.Attributes)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	err = k.dispatchMessages(ctx, contractAddress, res.Messages)
+	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, *res, res.Messages, res.Events, res.Data, initMsg, verificationInfo)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
 	//both compute actions are performed through callbacksig
 	if callbackSig != nil {
-		k.SetAirdropAction(ctx, res.Log)
+		k.SetAirdropAction(ctx, res.Attributes)
 	}
-	return contractAddress, nil
+	return contractAddress, data, nil
 }
 
 // Execute executes the contract instance
@@ -305,7 +320,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
 
-	codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	contractInfo, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -337,7 +352,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	gas := gasForContract(ctx)
-	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, wasmTypes.HandleTypeExecute)
 	//fmt.Printf("res: %v \n", res.Log)
 	consumeGas(ctx, gasUsed)
 
@@ -346,29 +361,29 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	// emit all events from this contract itself
-	events := types.ParseEvents(res.Log, contractAddress)
+	events := types.ParseEvents(res.Attributes, contractAddress)
 	ctx.EventManager().EmitEvents(events)
 
-	err = k.dispatchMessages(ctx, contractAddress, res.Messages)
+	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, *res, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.SetContractPublicState(ctx, contractAddress, res.Log)
+	err = k.SetContractPublicState(ctx, contractAddress, res.Attributes)
 	if err != nil {
 		return nil, err
 	}
 
 	//return &sdk.Result{Data: res.Data,Log: res.Log[1].Value}, nil //used for item module compatibilily
 
-	return &sdk.Result{Data: res.Data}, nil
+	return &sdk.Result{Data: data}, nil
 
 }
 
 // Delete deletes the contract instance
 func (k Keeper) Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error {
 
-	_, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	_, _, prefixStore, err := k.contractInstance(ctx, contractAddress)
 	if err != nil {
 		return err
 	}
@@ -408,7 +423,7 @@ func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAd
 	}
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading CosmWasm module: query")
 
-	codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddr)
+	_, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -453,27 +468,27 @@ func (k Keeper) QueryPublicForAddr(ctx sdk.Context, contractAddress sdk.AccAddre
 	return value
 }
 
-func (k Keeper) contractInstance(ctx sdk.Context, contractAddress sdk.AccAddress) (types.CodeInfo, prefix.Store, error) {
+func (k Keeper) contractInstance(ctx sdk.Context, contractAddress sdk.AccAddress) (types.ContractInfo, types.CodeInfo, prefix.Store, error) {
 	store := ctx.KVStore(k.storeKey)
-
 	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
 	if contractBz == nil {
-		return types.CodeInfo{}, prefix.Store{}, sdkerrors.Wrap(types.ErrNotFound, "contract")
+		return types.ContractInfo{}, types.CodeInfo{}, prefix.Store{}, sdkerrors.Wrap(types.ErrNotFound, "contract")
 	}
-	var contract types.ContractInfo
-	k.cdc.MustUnmarshal(contractBz, &contract)
+	var contractInfo types.ContractInfo
+	k.cdc.MustUnmarshal(contractBz, &contractInfo)
 
-	contractInfoBz := store.Get(types.GetCodeKey(contract.CodeID))
-	if contractInfoBz == nil {
-		return types.CodeInfo{}, prefix.Store{}, sdkerrors.Wrap(types.ErrNotFound, "contract info")
+	codeInfoBz := store.Get(types.GetCodeKey(contractInfo.CodeID))
+	if codeInfoBz == nil {
+		return types.ContractInfo{}, types.CodeInfo{}, prefix.Store{}, sdkerrors.Wrap(types.ErrNotFound, "contract info")
 	}
 	var codeInfo types.CodeInfo
-	k.cdc.MustUnmarshal(contractInfoBz, &codeInfo)
+	k.cdc.MustUnmarshal(codeInfoBz, &codeInfo)
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
-	return codeInfo, prefixStore, nil
+	return contractInfo, codeInfo, prefixStore, nil
 }
 
+/*
 func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, msgs []wasmTypes.CosmosMsg) error {
 	for _, msg := range msgs {
 		fmt.Print("dispatch msg \n")
@@ -486,7 +501,7 @@ func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, m
 	}
 	return nil
 }
-
+*/
 // CreateCommunityPoolCallbackSig creates a callback sig which can be used to execute a specific message for a specific code for the community pool.
 // When callback signature is made, any node can 'run' the message at any time on the community pool's behalf, therefore, anyone can create outputs for the distribution module account.
 // By hardcoding the distribution module address in the enclave, we can use this for contract instantiation and execution over governance.

@@ -13,11 +13,11 @@ use enclave_crypto::{
 use cosmos_proto as proto;
 
 use enclave_cosmwasm_types::{
+    //todo change to HumanAddr to Addr
+    addresses::{CanonicalAddr, HumanAddr},
     coins::Coin,
     encoding::Binary,
     math::Uint128,
-    //todo change to HumanAddr to Addr
-    address::{CanonicalAddr, HumanAddr},
 };
 
 use crate::traits::CosmosAminoPubkey;
@@ -127,6 +127,13 @@ impl VerifyingKey for CosmosPubKey {
             CosmosPubKey::Multisig(pubkey) => pubkey.verify_bytes(bytes, sig),
         }
     }
+}
+
+// Info of the msg to be signed
+#[derive(Deserialize, Clone, Debug, PartialEq)]
+pub struct MsgInfo {
+    pub code_hash: Binary,
+    pub funds: Vec<Coin>,
 }
 
 // This type is a copy of the `proto::tx::signing::SignMode` allowing us
@@ -269,17 +276,6 @@ pub enum StdCosmWasmMsg {
         funds: Vec<Coin>,
         contract_id: String,
         contract_duration: String,
-        callback_sig: Option<Vec<u8>>,
-    },
-    #[serde(alias = "wasm/MsgInstantiateRecurringContract")]
-    InstantiateRecurring {
-        sender: HumanAddr,
-        code_id: String,
-        init_msg: String,
-        auto_msg: String,
-        funds: Vec<Coin>,
-        contract_id: String,
-        contract_duration: String,
         interval: String,
         callback_sig: Option<Vec<u8>>,
     },
@@ -317,47 +313,7 @@ impl StdCosmWasmMsg {
             }
             Self::Instantiate {
                 sender,
-                init_msg, 
-                auto_msg,
-                funds,
-                contract_id,
-                contract_duration,
-                callback_sig,
-                code_id: _,
-            } => {
-                let sender = CanonicalAddr::from_human(&sender).map_err(|err| {
-                    warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let init_msg = Binary::from_base64(&init_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 init_msg when parsing CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let auto_msg = Binary::from_base64(&auto_msg).map_err(|err| {
-                    warn!(
-                        "failed to parse base64 auto_msg when parsing last CosmWasmMsg: {:?}",
-                        err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-                let init_msg = init_msg.0;
-                let auto_msg = auto_msg.0;
-                Ok(CosmWasmMsg::Instantiate {
-                    sender,
-                    init_msg,
-                    auto_msg, 
-                    funds,
-                    contract_id,
-                    contract_duration,
-                    callback_sig,
-                })
-            },
-            Self::InstantiateRecurring {
-                sender,
-                init_msg, 
+                init_msg,
                 auto_msg,
                 funds,
                 contract_id,
@@ -386,10 +342,10 @@ impl StdCosmWasmMsg {
                 })?;
                 let init_msg = init_msg.0;
                 let auto_msg = auto_msg.0;
-                Ok(CosmWasmMsg::InstantiateRecurring {
+                Ok(CosmWasmMsg::Instantiate {
                     sender,
                     init_msg,
-                    auto_msg, 
+                    auto_msg,
                     funds,
                     contract_id,
                     contract_duration,
@@ -417,17 +373,10 @@ pub enum CosmWasmMsg {
         funds: Vec<Coin>,
         contract_id: String,
         contract_duration: String,
+        interval: String,
         callback_sig: Option<Vec<u8>>,
     },
-    InstantiateRecurring {
-        sender: CanonicalAddr,
-        init_msg: Vec<u8>,
-        auto_msg: Vec<u8>,
-        funds: Vec<Coin>,
-        contract_id: String,
-        contract_duration: String,
-        callback_sig: Option<Vec<u8>>,
-    },
+
     Other,
 }
 
@@ -455,17 +404,23 @@ impl CosmWasmMsg {
             raw_msg.sender.len(),
             raw_msg.sender
         );
+        let sender = CanonicalAddr::from_human(&HumanAddr(raw_msg.sender)).map_err(|err| {
+            warn!("failed to turn human addr to canonical addr when try_parse_instantiate CosmWasmMsg: {:?}", err);
+            EnclaveError::FailedToDeserialize
+        })?;
 
         let funds = Self::parse_funds(raw_msg.funds)?;
 
         let callback_sig = Some(raw_msg.callback_sig);
 
         Ok(CosmWasmMsg::Instantiate {
-            sender: CanonicalAddr(Binary(raw_msg.sender)),
+            sender, //: CanonicalAddr(Binary(raw_msg.sender)),
             init_msg: raw_msg.init_msg,
             auto_msg: raw_msg.auto_msg,
             funds,
             contract_id: raw_msg.contract_id,
+            contract_duration: raw_msg.contract_duration,
+            interval: raw_msg.interval,
             callback_sig,
         })
     }
@@ -487,23 +442,26 @@ impl CosmWasmMsg {
             raw_msg.contract
         );
 
-        // humanize address
-        let contract = HumanAddr::from_canonical(&CanonicalAddr(Binary(raw_msg.contract)))
-            .map_err(|err| {
-                warn!(
-                    "Contract address to execute was not a valid string: {}",
-                    err,
-                );
-                EnclaveError::FailedToDeserialize
-            })?;
+        let sender = CanonicalAddr::from_human(&HumanAddr(raw_msg.sender)).map_err(|err| {
+            warn!("failed to turn human addr to canonical addr when try_parse_execute CosmWasmMsg: {:?}", err);
+            EnclaveError::FailedToDeserialize
+        })?;
+     
 
+        if raw_msg.contract.clone().len() == 0  {
+              warn!(
+                  "Contract address was empty: {}",
+                  raw_msg.contract.len(),
+              );
+        };
+       
         let funds = Self::parse_funds(raw_msg.funds)?;
 
         let callback_sig = Some(raw_msg.callback_sig);
 
         Ok(CosmWasmMsg::Execute {
-            sender: CanonicalAddr(Binary(raw_msg.sender)),
-            contract,
+            sender,
+            contract: HumanAddr(raw_msg.contract),
             msg: raw_msg.msg,
             funds,
             callback_sig,
@@ -523,7 +481,7 @@ impl CosmWasmMsg {
                 EnclaveError::FailedToDeserialize
             })?;
             let coin = Coin {
-                amount: Uint128(amount),
+                amount: Uint128::new(amount),
                 denom: raw_coin.denom,
             };
             funds.push(coin);
@@ -534,7 +492,7 @@ impl CosmWasmMsg {
 
     pub fn sender(&self) -> Option<&CanonicalAddr> {
         match self {
-            CosmWasmMsg::Execute { sender, .. } | CosmWasmMsg::Instantiate { sender, .. } | CosmWasmMsg::InstantiateRecurring { sender, .. } => {
+            CosmWasmMsg::Execute { sender, .. } | CosmWasmMsg::Instantiate { sender, .. } => {
                 Some(sender)
             }
             CosmWasmMsg::Other => None,

@@ -102,20 +102,20 @@ func (w *Wasmer) Instantiate(
 	gasLimit uint64,
 	sigInfo types.VerificationInfo,
 	contractAddress sdk.AccAddress,
-) (interface{}, []byte, uint64, error) {
+) (*types.Response, []byte, []byte, uint64, error) {
 	paramBin, err := json.Marshal(env)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, nil, 0, err
 	}
 
 	sigInfoBin, err := json.Marshal(sigInfo)
 	if err != nil {
-		return nil, nil, 0, err
+		return nil, nil, nil, 0, err
 	}
 
 	data, gasUsed, err := api.Instantiate(w.cache, codeId, paramBin, initMsg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
 	if err != nil {
-		return nil, nil, gasUsed, err
+		return nil, nil, nil, gasUsed, err
 	}
 
 	key := data[0:64]
@@ -124,17 +124,15 @@ func (w *Wasmer) Instantiate(
 
 	//fmt.Println(string(callback_sig))
 
-	var resp types.InitResult
-	err = json.Unmarshal(data[96:], &resp)
-
+	var result types.ContractResult
+	err = json.Unmarshal(data, &result)
 	if err != nil {
 		return nil, nil, nil, gasUsed, err
 	}
-
-	if resp.Err != nil {
-		return nil, nil, nil, gasUsed, fmt.Errorf("%v", resp.Err)
+	if result.Err != "" {
+		return nil, nil, nil, gasUsed, fmt.Errorf("%s", result.Err)
 	}
-	return resp.Ok, key, callback_sig, gasUsed, nil
+	return result.Ok, key, callback_sig, gasUsed, nil
 }
 
 // Execute calls a given contract. Since the only difference between contracts with the same CodeID is the
@@ -154,7 +152,7 @@ func (w *Wasmer) Execute(
 	gasLimit uint64,
 	sigInfo types.VerificationInfo,
 	handleType types.HandleType,
-) (interface{}, uint64, error) {
+) (*types.Response, uint64, error) {
 	paramBin, err := json.Marshal(env)
 	if err != nil {
 		return nil, 0, err
@@ -169,18 +167,15 @@ func (w *Wasmer) Execute(
 		return nil, gasUsed, err
 	}
 
-	var resp types.HandleResult
-	err = json.Unmarshal(data, &resp)
-
+	var result types.ContractResult
+	err = json.Unmarshal(data, &result)
 	if err != nil {
 		return nil, gasUsed, err
 	}
-
-	if resp.Err != nil {
-		return nil, gasUsed, fmt.Errorf("%v", resp.Err)
+	if result.Err != "" {
+		return nil, gasUsed, fmt.Errorf("%s", result.Err)
 	}
-
-	return resp.Ok, gasUsed, nil
+	return result.Ok, gasUsed, nil
 }
 
 // Query allows a client to execute a contract-specific query. If the result is not empty, it should be
@@ -211,43 +206,16 @@ func (w *Wasmer) Query(
 		return nil, gasUsed, err
 	}
 	if resp.Err != nil {
-		return nil, gasUsed, fmt.Errorf("%v", resp.Err)
+		return nil, gasUsed, fmt.Errorf("%s", resp.Err)
 	}
 	return resp.Ok, gasUsed, nil
 }
 
-// Migrate will migrate an existing contract to a new code binary.
-// This takes storage of the data from the original contract and the CodeID of the new contract that should
-// replace it. This allows it to run a migration step if needed, or return an error if unable to migrate
-// the given data.
-//
-// MigrateMsg has some data on how to perform the migration.
-func (w *Wasmer) Migrate(
-	code CodeID,
-	env types.Env,
-	migrateMsg []byte,
-	store KVStore,
-	goapi GoAPI,
-	querier Querier,
-	gasMeter GasMeter,
-	gasLimit uint64,
-) (*types.MigrateResponse, uint64, error) {
-	paramBin, err := json.Marshal(env)
-	if err != nil {
-		return nil, 0, err
-	}
-	data, gasUsed, err := api.Migrate(w.cache, code, paramBin, migrateMsg, &gasMeter, store, &goapi, &querier, gasLimit)
-	if err != nil {
-		return nil, gasUsed, err
-	}
-
-	var resp types.MigrateResult
-	err = json.Unmarshal(data, &resp)
-	if err != nil {
-		return nil, gasUsed, err
-	}
-	if resp.Err != nil {
-		return nil, gasUsed, fmt.Errorf("%v", resp.Err)
-	}
-	return resp.Ok, gasUsed, nil
+// AnalyzeCode returns a report of static analysis of the wasm contract (uncompiled).
+// This contract must have been stored in the cache previously (via Create).
+// Only info currently returned is if it exposes all ibc entry points, but this may grow later
+func (w *Wasmer) AnalyzeCode(
+	codeHash []byte,
+) (*types.AnalysisReport, error) {
+	return api.AnalyzeCode(w.cache, codeHash)
 }

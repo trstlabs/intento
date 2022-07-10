@@ -1,7 +1,7 @@
 use serde::{de::DeserializeOwned, Serialize};
 use std::ops::Deref;
 
-use crate::addresses::{Addr, CanonicalAddr, HumanAddr};
+use crate::addresses::{Addr, CanonicalAddr};
 use crate::binary::Binary;
 use crate::coins::Coin;
 use crate::errors::{RecoverPubkeyError, SigningError, StdError, StdResult, VerificationError};
@@ -63,7 +63,7 @@ pub trait Storage {
 ///
 /// We can use feature flags to opt-in to non-essential methods
 /// for backwards compatibility in systems that don't have them all.
-pub trait Api: Copy + Clone + Send {
+pub trait Api/*: Copy + Clone + Send */{
     /// Takes a human readable address and validates if it's correctly formatted.
     /// If it succeeds, a Addr is returned.
     ///
@@ -91,13 +91,13 @@ pub trait Api: Copy + Clone + Send {
 
     /// Takes a human readable address and returns a canonical binary representation of it.
     /// This can be used when a compact fixed length representation is needed.
-    fn canonical_address(&self, human: &HumanAddr) -> StdResult<CanonicalAddr>;
+    //fn canonical_address(&self, human: &HumanAddr) -> StdResult<CanonicalAddr>;
 
     /// Takes a canonical address and returns a human readble address.
     /// This is the inverse of [`canonical_address`].
     ///
     /// [`canonical_address`]: Api::canonical_address
-    fn human_address(&self, canonical: &CanonicalAddr) -> StdResult<HumanAddr>;
+    //fn human_address(&self, canonical: &CanonicalAddr) -> StdResult<HumanAddr>;
 
     /// ECDSA secp256k1 signature verification.
     ///
@@ -293,12 +293,14 @@ impl<'a> QuerierWrapper<'a> {
 
     // this queries another wasm contract. You should know a priori the proper types for T and U
     // (response and request) based on the contract API
-    pub fn query_wasm_smart<T: DeserializeOwned>(
+    pub fn query_wasm_private<T: DeserializeOwned>(
         &self,
         contract_addr: impl Into<String>,
         msg: &impl Serialize,
+        callback_code_hash: impl Into<String>,
     ) -> StdResult<T> {
-        let request = WasmQuery::Smart {
+        let request = WasmQuery::Private {
+            callback_code_hash: callback_code_hash.into(),
             contract_addr: contract_addr.into(),
             msg: to_binary(msg)?,
         }
@@ -308,17 +310,51 @@ impl<'a> QuerierWrapper<'a> {
 
     // this queries the raw storage from another wasm contract.
     // you must know the exact layout and are implementation dependent
-    // (not tied to an interface like query_wasm_smart)
+    // (not tied to an interface like query_wasm_private)
     // that said, if you are building a few contracts together, this is a much cheaper approach
     //
     // Similar return value to Storage.get(). Returns Some(val) or None if the data is there.
     // It only returns error on some runtime issue, not on any data cases.
-    pub fn query_wasm_raw(
+    pub fn query_wasm_public(
         &self,
         contract_addr: impl Into<String>,
         key: impl Into<Binary>,
     ) -> StdResult<Option<Vec<u8>>> {
-        let request: QueryRequest<Empty> = WasmQuery::Raw {
+        let request: QueryRequest<Empty> = WasmQuery::Public {
+            contract_addr: contract_addr.into(),
+            key: key.into(),
+        }
+        .into();
+        // we cannot use query, as it will try to parse the binary data, when we just want to return it,
+        // so a bit of code copy here...
+        let raw = to_vec(&request).map_err(|serialize_err| {
+            StdError::generic_err(format!("Serializing QueryRequest: {}", serialize_err))
+        })?;
+        match self.raw_query(&raw) {
+            SystemResult::Err(system_err) => Err(StdError::generic_err(format!(
+                "Querier system error: {}",
+                system_err
+            ))),
+            SystemResult::Ok(ContractResult::Err(contract_err)) => Err(StdError::generic_err(
+                format!("Querier contract error: {}", contract_err),
+            )),
+            SystemResult::Ok(ContractResult::Ok(value)) => {
+                if value.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some(value.into()))
+                }
+            }
+        }
+    }
+    pub fn query_wasm_public_for_addr(
+        &self,
+        contract_addr: impl Into<String>,
+        key: impl Into<Binary>,
+        acc: impl Into<String>,
+    ) -> StdResult<Option<Vec<u8>>> {
+        let request: QueryRequest<Empty> = WasmQuery::PublicForAddr {
+            account_addr: acc.into(),
             contract_addr: contract_addr.into(),
             key: key.into(),
         }

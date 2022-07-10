@@ -326,8 +326,8 @@ where
         Ok(function)
     }
 
-    pub fn call_init(&mut self, env: &[u8], msg: &[u8], sig_info: &[u8]) -> VmResult<Vec<u8>> {
-        let result = self.inner.init(env, msg, sig_info)?;
+    pub fn call_init(&mut self, env: &[u8], msg: &[u8],  auto_msg: &[u8],sig_info: &[u8]) -> VmResult<Vec<u8>> {
+        let result = self.inner.init(env, msg, auto_msg, sig_info)?;
         Ok(result.into_output())
     }
 

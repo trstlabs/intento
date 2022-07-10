@@ -496,8 +496,9 @@ struct NoWasmQuerier {
 impl NoWasmQuerier {
     fn query(&self, request: &WasmQuery) -> QuerierResult {
         let addr = match request {
-            WasmQuery::Smart { contract_addr, .. } => contract_addr,
-            WasmQuery::Raw { contract_addr, .. } => contract_addr,
+            WasmQuery::Private { contract_addr, .. } => contract_addr,
+            WasmQuery::Public { contract_addr, .. } => contract_addr,
+            WasmQuery::PublicForAddr { contract_addr, .. } => contract_addr,
         }
         .clone();
         SystemResult::Err(SystemError::NoSuchContract { addr })
@@ -690,7 +691,9 @@ pub fn digit_sum(input: &[u8]) -> usize {
 pub fn mock_wasmd_attr(key: impl Into<String>, value: impl Into<String>) -> Attribute {
     Attribute {
         key: key.into(),
-        value: value.into(),
+        value: value.into().as_bytes().to_vec(),
+        acc_addr: None,
+        pub_db: false,
         encrypted: true,
     }
 }

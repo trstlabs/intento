@@ -35,9 +35,9 @@ type Response struct {
 
 // Used to serialize both the data and the internal reply information in order to keep the api without changes
 type DataWithInternalReplyInfo struct {
-	InternaReplyEnclaveSig []byte `json:"internal_reply_enclave_sig"`
-	InternalMsgId          []byte `json:"internal_msg_id"`
-	Data                   []byte `json:"data,omitempty"`
+	InternalReplyEnclaveSig []byte `json:"internal_reply_enclave_sig"`
+	InternalMsgId           []byte `json:"internal_msg_id"`
+	Data                    []byte `json:"data,omitempty"`
 }
 
 // Attributes must encode empty array as []

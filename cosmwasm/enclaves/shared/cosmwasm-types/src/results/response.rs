@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use enclave_cosmwasm_types::{encoding::Binary, types::LogAttribute};
-
-use super::{Empty, Event, SubMsg};
+use crate::encoding::Binary;
+use crate::results::events::Attribute;
+use super::{Empty, Event,SubMsg};
 
 /// A response of a contract entry point, such as `instantiate` or `execute`.
 ///
@@ -75,7 +75,7 @@ where
     /// More info about events (and their attributes) can be found in [*Cosmos SDK* docs].
     ///
     /// [*Cosmos SDK* docs]: https://docs.cosmos.network/v0.42/core/events.html
-    pub attributes: Vec<LogAttribute>,
+    pub attributes: Vec<Attribute>,
     /// Extra, custom events separate from the main `wasm` one. These will have
     /// `wasm-` prepended to the type.
     ///

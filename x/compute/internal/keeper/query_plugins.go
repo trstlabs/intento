@@ -76,7 +76,7 @@ type QueryPlugins struct {
 	//Gov     func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error)
 }
 
-func DefaultQueryPlugins( /*gov govkeeper.Keeper,*/ dist distrkeeper.Keeper, mint mintkeeper.Keeper, bank bankkeeper.Keeper, staking stakingkeeper.Keeper, wasm *Keeper) QueryPlugins {
+func DefaultQueryPlugins( /*gov govkeeper.Keeper, */ dist distrkeeper.Keeper, mint mintkeeper.Keeper, bank bankkeeper.Keeper, staking stakingkeeper.Keeper, wasm *Keeper) QueryPlugins {
 	return QueryPlugins{
 		Bank:    BankQuerier(bank),
 		Custom:  NoCustomQuerier,

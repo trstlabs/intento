@@ -262,7 +262,7 @@ func Query(
 func AnalyzeCode(
 	cache Cache,
 	codeHash []byte,
-) (*v1types.AnalysisReport, error) {
+) (*types.AnalysisReport, error) {
 	cs := sendSlice(codeHash)
 	defer runtime.KeepAlive(codeHash)
 	errMsg := C.Buffer{}
@@ -271,7 +271,7 @@ func AnalyzeCode(
 	if err != nil {
 		return nil, errorWithMessage(err, errMsg)
 	}
-	res := v1types.AnalysisReport{
+	res := types.AnalysisReport{
 		HasIBCEntryPoints: bool(report.has_ibc_entry_points),
 		RequiredFeatures:  string(receiveVector(report.required_features)),
 	}

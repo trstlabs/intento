@@ -14,7 +14,7 @@ mod instance;
 // mod middleware;
 // mod modules;
 mod serde;
-pub mod testing;
+//pub mod testing;
 mod traits;
 
 // Trustless Hub specific modules

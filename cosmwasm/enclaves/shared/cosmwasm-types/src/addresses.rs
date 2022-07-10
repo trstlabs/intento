@@ -2,7 +2,9 @@
 
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
+use crate::consts::BECH32_PREFIX_ACC_ADDR;
+use crate::encoding::Binary;
+use bech32::{FromBase32, ToBase32};
 /// A human readable address.
 ///
 /// In Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no
@@ -119,8 +121,6 @@ impl From<&Addr> for String {
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
 pub struct HumanAddr(pub String);
 
-#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
-pub struct CanonicalAddr(pub Binary);
 
 impl HumanAddr {
     pub fn as_str(&self) -> &str {
@@ -160,6 +160,9 @@ impl From<&HumanAddr> for HumanAddr {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
+pub struct CanonicalAddr(pub Binary);
+
 impl CanonicalAddr {
     pub fn as_slice(&self) -> &[u8] {
         &self.0.as_slice()
@@ -172,6 +175,18 @@ impl CanonicalAddr {
     }
     pub fn from_human(human_addr: &HumanAddr) -> Result<Self, bech32::Error> {
         let (decoded_prefix, data) = bech32::decode(human_addr.as_str())?;
+        let canonical = Vec::<u8>::from_base32(&data)?;
+
+        Ok(CanonicalAddr(Binary(canonical)))
+    }
+    pub fn from_addr(val: &Addr) -> Result<Self, bech32::Error> {
+        let (decoded_prefix, data) = bech32::decode(val.as_str())?;
+        let canonical = Vec::<u8>::from_base32(&data)?;
+
+        Ok(CanonicalAddr(Binary(canonical)))
+    }
+    pub fn from_str(val: &str) -> Result<Self, bech32::Error> {
+        let (decoded_prefix, data) = bech32::decode(val)?;
         let canonical = Vec::<u8>::from_base32(&data)?;
 
         Ok(CanonicalAddr(Binary(canonical)))

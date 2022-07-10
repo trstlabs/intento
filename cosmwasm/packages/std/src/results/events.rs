@@ -36,7 +36,9 @@ impl Event {
     pub fn add_attribute(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.attributes.push(Attribute {
             key: key.into(),
-            value: value.into(),
+            value: value.into().as_bytes().to_vec(),
+            acc_addr: None,
+            pub_db: false,
             encrypted: true,
         });
         self
@@ -50,7 +52,37 @@ impl Event {
     ) -> Self {
         self.attributes.push(Attribute {
             key: key.into(),
-            value: value.into(),
+            value: value.into().as_bytes().to_vec(),
+            acc_addr: None,
+            pub_db: false,
+            encrypted: false,
+        });
+        self
+    }
+
+    /// Add a plaintext attribute to the event.
+    pub fn store_pub_db(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.attributes.push(Attribute {
+            key: key.into(),
+            value: value.into().as_bytes().to_vec(),
+            acc_addr: None,
+            pub_db: true,
+            encrypted: false,
+        });
+        self
+    }
+    /// Add a plaintext attribute to the event.
+    pub fn store_acc_pub_db(
+        mut self,
+        key: impl Into<String>,
+        value: impl Into<String>,
+        acc: impl Into<String>,
+    ) -> Self {
+        self.attributes.push(Attribute {
+            key: key.into(),
+            value: value.into().as_bytes().to_vec(),
+            acc_addr: Some(acc.into()),
+            pub_db: true,
             encrypted: false,
         });
         self
@@ -80,7 +112,7 @@ fn bool_true() -> bool {
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
 pub struct Attribute {
     pub key: String,
-    pub value: String,
+    pub value: Vec<u8>,
     pub pub_db: bool,
     pub acc_addr: Option<String>,
     pub encrypted: bool,
@@ -108,7 +140,7 @@ impl Attribute {
         }
     }
 
-    /// Creates a new plaintext log. 
+    /// Creates a new plaintext log.
     pub fn new_plaintext_log(key: impl Into<String>, value: impl Into<String>) -> Self {
         let key = key.into();
 
@@ -128,8 +160,8 @@ impl Attribute {
             encrypted: false,
         }
     }
-     /// Creates a new public state Attribute. 
-     pub fn store_pub_db(key: impl Into<String>, value: impl Into<String>) -> Self {
+    /// Creates a new public state Attribute.
+    pub fn store_pub_db(key: impl Into<String>, value: impl Into<String>) -> Self {
         let key = key.into();
 
         #[cfg(debug_assertions)]
@@ -148,8 +180,12 @@ impl Attribute {
             encrypted: false,
         }
     }
-     /// Creates a new public state Attribute for an account
-     pub fn store_acc_pub_db(key: impl Into<String>, value: impl Into<String>, addr: impl Into<String>) -> Self {
+    /// Creates a new public state Attribute for an account
+    pub fn store_acc_pub_db(
+        key: impl Into<String>,
+        value: impl Into<String>,
+        addr: impl Into<String>,
+    ) -> Self {
         let key = key.into();
 
         #[cfg(debug_assertions)]
@@ -164,12 +200,12 @@ impl Attribute {
             key,
             value: value.into().as_bytes().to_vec(),
             pub_db: true,
-            acc_addr: addr.into(),
+            acc_addr: Some(addr.into()),
             encrypted: false,
         }
     }
-     /// Creates a new public state Attribute for an account
-     pub fn store_pub_db_bytes(key: impl Into<String>, value: &[u8]>) -> Self {
+    /// Creates a new public state Attribute for an account
+    pub fn store_pub_db_bytes(key: impl Into<String>, value: &[u8]) -> Self {
         let key = key.into();
 
         #[cfg(debug_assertions)]
@@ -188,8 +224,12 @@ impl Attribute {
             encrypted: false,
         }
     }
-     /// Creates a new public state Attribute for an account
-     pub fn store_acc_pub_db_bytes(key: impl Into<String>, value: &[u8]>, addr: impl Into<String>) -> Self {
+    /// Creates a new public state Attribute for an account
+    pub fn store_acc_pub_db_bytes(
+        key: impl Into<String>,
+        value: &[u8],
+        addr: impl Into<String>,
+    ) -> Self {
         let key = key.into();
 
         #[cfg(debug_assertions)]
@@ -204,7 +244,7 @@ impl Attribute {
             key,
             value: value.to_vec(),
             pub_db: true,
-            acc_addr: addr.into(),
+            acc_addr: Some(addr.into()),
             encrypted: false,
         }
     }
@@ -216,25 +256,27 @@ impl<K: Into<String>, V: Into<String>> From<(K, V)> for Attribute {
     }
 }
 
-impl<K: AsRef<str>, V: AsRef<str>> PartialEq<(K, V)> for Attribute {
+impl<K: AsRef<str>, V: AsRef<Vec<u8>>> PartialEq<(K, V)> for Attribute {
     fn eq(&self, (k, v): &(K, V)) -> bool {
-        (self.key.as_str(), self.value.as_str()) == (k.as_ref(), v.as_ref())
+        (self.key.as_str(),  self.value.clone()) == (k.as_ref(), v.as_ref().to_vec())
     }
 }
 
-impl<K: AsRef<str>, V: AsRef<str>> PartialEq<Attribute> for (K, V) {
+impl<K: AsRef<str>, V: AsRef<str> + std::convert::AsRef<std::vec::Vec<u8>>> PartialEq<Attribute> for (K, V) {
     fn eq(&self, attr: &Attribute) -> bool {
         attr == self
     }
 }
 
-impl<K: AsRef<str>, V: AsRef<str>> PartialEq<(K, V)> for &Attribute {
+impl<K: AsRef<str>, V: AsRef<Vec<u8>>> PartialEq<(K, V)> for &Attribute {
     fn eq(&self, (k, v): &(K, V)) -> bool {
-        (self.key.as_str(), self.value.as_str()) == (k.as_ref(), v.as_ref())
+        (self.key.as_str(), self.value.clone()) == (k.as_ref(), v.as_ref().to_vec())
     }
 }
 
-impl<K: AsRef<str>, V: AsRef<str>> PartialEq<&Attribute> for (K, V) {
+impl<K: AsRef<str>, V: AsRef<str> + std::convert::AsRef<std::vec::Vec<u8>>> PartialEq<&Attribute>
+    for (K, V)
+{
     fn eq(&self, attr: &&Attribute) -> bool {
         attr == self
     }
@@ -279,10 +321,7 @@ pub fn store_acc_pub_db(
 }
 /// A shorthand to set a public state key-value pair
 #[inline]
-pub fn store_pub_db_bytes(
-    key: impl Into<String>,
-    value: &[u8],
-) -> Attribute {
+pub fn store_pub_db_bytes(key: impl Into<String>, value: &[u8]) -> Attribute {
     Attribute::store_pub_db_bytes(key, value)
 }
 /// A shorthand to set a public state key-value pair for a given account

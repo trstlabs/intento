@@ -84,7 +84,7 @@ func (k Keeper) setContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress,
 }
 
 // SetContractPublicState sets the result of the contract from wasm attributes, it overrides existing keys
-func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress, result []wasmTypes.LogAttribute) error {
+func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress, result []wasmTypes.Attribute) error {
 	prefixStoreKey := types.GetContractPubDbKey(contrAddr)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
@@ -110,7 +110,7 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 }
 
 // SetAirdropAction sets the airdrop from the contract attributes
-func (k Keeper) SetAirdropAction(ctx sdk.Context, result []wasmTypes.LogAttribute) error {
+func (k Keeper) SetAirdropAction(ctx sdk.Context, result []wasmTypes.Attribute) error {
 
 	for _, attr := range result {
 		fmt.Printf("result key: %s \n,", attr.Key)

@@ -265,17 +265,6 @@ pub extern "C" fn init_cache(
     }
 }
 
-// store some common string for argument names
-static DATA_DIR_ARG: &str = "data_dir";
-static FEATURES_ARG: &str = "supported_features";
-static CACHE_ARG: &str = "cache";
-static WASM_ARG: &str = "wasm";
-static CODE_ID_ARG: &str = "code_id";
-static MSG_ARG: &str = "msg";
-static PARAMS_ARG: &str = "params";
-static GAS_USED_ARG: &str = "gas_used";
-static SIG_INFO_ARG: &str = "sig_info";
-
 fn do_init_cache(
     data_dir: Buffer,
     supported_features: Buffer,

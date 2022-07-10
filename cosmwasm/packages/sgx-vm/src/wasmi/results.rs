@@ -17,7 +17,7 @@ impl InitSuccess {
         let mut out_vec = self.contract_key.to_vec();
         let out_vec_callback = self.callback_sig.to_vec();
         out_vec.extend_from_slice(&out_vec_callback);
-        _vec.extend_from_slice(&self.output);
+        out_vec.extend_from_slice(&self.output);
         out_vec
     }
 }
@@ -28,9 +28,10 @@ pub fn init_result_to_vm_result(other: InitResult) -> VmResult<InitSuccess> {
             output,
             contract_key,
             callback_sig,
-        } => Ok(InitSuccess {
+        } =>Ok(InitSuccess {
             output: unsafe { exports::recover_buffer(output) }.unwrap_or_else(Vec::new),
-            contract_key, callback_sig,
+            contract_key, callback_sig
+        }),
         InitResult::Failure { err } => Err(err.into()),
     }
 }

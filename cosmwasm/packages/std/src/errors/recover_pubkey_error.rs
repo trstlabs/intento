@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use snafu::Snafu;
-
+use cosmwasm_crypto::CryptoError;
 #[derive(Debug, Serialize, Deserialize, Snafu, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum RecoverPubkeyError {
@@ -48,6 +48,22 @@ impl PartialEq<RecoverPubkeyError> for RecoverPubkeyError {
                     false
                 }
             }
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl From<CryptoError> for RecoverPubkeyError {
+    fn from(original: CryptoError) -> Self {
+        match original {
+            CryptoError::InvalidHashFormat { .. } => RecoverPubkeyError::InvalidHashFormat,
+            CryptoError::InvalidPubkeyFormat { .. } => panic!("Conversion not supported"),
+            CryptoError::InvalidSignatureFormat { .. } => {
+                RecoverPubkeyError::InvalidSignatureFormat
+            }
+            CryptoError::GenericErr { .. } => RecoverPubkeyError::unknown_err(original.code()),
+            CryptoError::InvalidRecoveryParam { .. } => RecoverPubkeyError::InvalidRecoveryParam,
+            CryptoError::BatchErr { .. } => panic!("Conversion not supported"),
         }
     }
 }

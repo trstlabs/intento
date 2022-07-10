@@ -8,7 +8,7 @@ use crate::errors::StdResult;
 #[cfg(feature = "stargate")]
 use crate::ibc::IbcMsg;
 use crate::serde::to_binary;
-
+use crate::addresses::Addr;
 use super::Empty;
 
 #[non_exhaustive]
@@ -117,19 +117,19 @@ pub enum WasmMsg {
     /// this dispatches a call to another contract at a known address (with known ABI)
     Execute {
         contract_addr: Addr,
-        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
-        callback_code_hash: String,
+        code_hash: String,
         /// msg is the json-encoded HandleMsg struct (as raw Binary)
         msg: Binary,
-        send: Vec<Coin>,
+        funds: Vec<Coin>,
     },
     /// this instantiates a new contract from previously uploaded wasm code
     Instantiate {
         code_id: u64,
-        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
-        callback_code_hash: String,
+        code_hash: String,
         /// msg is the json-encoded InitMsg struct (as raw Binary)
         msg: Binary,
         /// auto_msg is the json-encoded AutoMsg struct (as raw Binary)
@@ -141,7 +141,7 @@ pub enum WasmMsg {
         /// custom duration (e.g. 5h/60d, 0 for no duration) 
         contract_duration: String,
          /// time interval (e.g. 60s/5h)
-        auto_msg_interval: String,
+        interval: String,
     },
 }
 
@@ -180,7 +180,7 @@ pub fn wasm_instantiate(
         code_id,
         code_hash: code_hash.into(),
         msg: payload,
-        auto_msg: payload_auto_msg,
+        auto_msg: Some(payload_auto_msg),
         funds,
         contract_id,
         contract_duration,
@@ -197,7 +197,7 @@ pub fn wasm_execute(
 ) -> StdResult<WasmMsg> {
     let payload = to_binary(msg)?;
     Ok(WasmMsg::Execute {
-        contract_addr: contract_addr.into(),
+        contract_addr: Addr(contract_addr.into()),
         code_hash: code_hash.into(),
         msg: payload,
         funds,

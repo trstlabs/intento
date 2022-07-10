@@ -8,15 +8,15 @@ use log::*;
 use sgx_types::sgx_status_t;
 
 use enclave_ffi_types::{
-    Ctx, EnclaveBuffer, EnclaveError, HandleResult, HealthCheckResult, InitResult, QueryResult,
-    CallbackSigResult,  RuntimeConfiguration,
+    CallbackSigResult, Ctx, EnclaveBuffer, EnclaveError, HandleResult, HealthCheckResult,
+    InitResult, QueryResult, RuntimeConfiguration,
 };
 
 use enclave_utils::{oom_handler, recursion_depth, validate_const_ptr, validate_mut_ptr};
 
 use crate::external::results::{
-    result_handle_success_to_handleresult, result_init_success_to_initresult,
-    result_query_success_to_queryresult, result_callback_sig_success_to_callbackresult
+    result_callback_sig_success_to_callbackresult, result_handle_success_to_handleresult,
+    result_init_success_to_initresult, result_query_success_to_queryresult,
 };
 
 lazy_static! {
@@ -166,16 +166,12 @@ pub unsafe extern "C" fn ecall_init(
     let _recursion_guard = match recursion_depth::guard() {
         Ok(rg) => rg,
         Err(err) => {
-            // https://github.com/scrtlabs/SecretNetwork/pull/517#discussion_r481924571
-            // I believe that this error condition is currently unreachable.
-            // I think we can safely remove it completely right now, and have
-            // recursion_depth::increment() simply increment the counter with no further checks,
-            // but i wanted to stay on the safe side here, in case something changes in the
-            // future, and we can easily spot that we forgot to add a limit somewhere.
+            //err may be redundant
             error!("recursion limit exceeded, can not perform init!");
             return InitResult::Failure { err };
         }
     };
+
     if let Err(err) = oom_handler::register_oom_handler() {
         error!("Could not register OOM handler!");
         return InitResult::Failure { err };
@@ -185,12 +181,14 @@ pub unsafe extern "C" fn ecall_init(
     validate_mut_ptr!(used_gas as _, std::mem::size_of::<u64>(), failed_call());
     validate_const_ptr!(env, env_len as usize, failed_call());
     validate_const_ptr!(msg, msg_len as usize, failed_call());
+    validate_const_ptr!(auto_msg, auto_msg_len as usize, failed_call());
     validate_const_ptr!(contract, contract_len as usize, failed_call());
     validate_const_ptr!(sig_info, sig_info_len as usize, failed_call());
 
     let contract = std::slice::from_raw_parts(contract, contract_len);
     let env = std::slice::from_raw_parts(env, env_len);
     let msg = std::slice::from_raw_parts(msg, msg_len);
+    let auto_msg = std::slice::from_raw_parts(auto_msg, auto_msg_len);
     let sig_info = std::slice::from_raw_parts(sig_info, sig_info_len);
     let result = panic::catch_unwind(|| {
         let mut local_used_gas = *used_gas;
@@ -201,6 +199,7 @@ pub unsafe extern "C" fn ecall_init(
             contract,
             env,
             msg,
+            auto_msg,
             sig_info,
         );
         *used_gas = local_used_gas;
@@ -251,12 +250,7 @@ pub unsafe extern "C" fn ecall_handle(
     let _recursion_guard = match recursion_depth::guard() {
         Ok(rg) => rg,
         Err(err) => {
-            // https://github.com/scrtlabs/SecretNetwork/pull/517#discussion_r481924571
-            // I believe that this error condition is currently unreachable.
-            // I think we can safely remove it completely right now, and have
-            // recursion_depth::increment() simply increment the counter with no further checks,
-            // but i wanted to stay on the safe side here, in case something changes in the
-            // future, and we can easily spot that we forgot to add a limit somewhere.
+            //err may be redundant
             error!("recursion limit exceeded, can not perform handle!");
             return HandleResult::Failure { err };
         }
@@ -326,22 +320,18 @@ pub unsafe extern "C" fn ecall_create_callback_sig(
     msg_len: usize,
     msg_info: *const u8,
     msg_info_len: usize,
-
 ) -> CallbackSigResult {
-    
-    let failed_call = || result_callback_sig_success_to_callbackresult(Err(EnclaveError::FailedFunctionCall));
+    let failed_call =
+        || result_callback_sig_success_to_callbackresult(Err(EnclaveError::FailedFunctionCall));
     validate_const_ptr!(msg, msg_len as usize, failed_call());
     validate_const_ptr!(msg_info, msg_info_len as usize, failed_call());
-  
+
     let msg = std::slice::from_raw_parts(msg, msg_len);
     let msg_info = std::slice::from_raw_parts(msg_info, msg_info_len);
-   
+
     let result = panic::catch_unwind(|| {
-        let result = crate::contract_operations::create_callback_sig(
-            msg,
-            msg_info
-        );
-     
+        let result = crate::contract_operations::create_callback_sig(msg, msg_info);
+
         result_callback_sig_success_to_callbackresult(result)
     });
 
@@ -351,9 +341,8 @@ pub unsafe extern "C" fn ecall_create_callback_sig(
     }
 
     if let Ok(res) = result {
-       res
+        res
     } else {
-
         if oom_handler::get_then_clear_oom_happened() {
             error!("Call ecall_create_callback_sig failed because the enclave ran out of memory!");
             CallbackSigResult::Failure {

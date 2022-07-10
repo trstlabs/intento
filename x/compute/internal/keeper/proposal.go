@@ -81,7 +81,7 @@ func handleInstantiateProposal(ctx sdk.Context, k Keeper, p types.InstantiateCon
 			return err
 		}
 	}
-	addr, err := k.Instantiate(ctx, p.CodeID, k.accountKeeper.GetModuleAddress("distribution"), encryptedMsg, encryptedAutoMsg, p.ContractId, p.Funds, sig, 0)
+	addr, _, err := k.Instantiate(ctx, p.CodeID, k.accountKeeper.GetModuleAddress("distribution"), encryptedMsg, encryptedAutoMsg, p.ContractId, p.Funds, sig, 0)
 	if err != nil {
 		return err
 	}

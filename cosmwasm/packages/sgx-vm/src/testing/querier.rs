@@ -2,8 +2,8 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use cosmwasm_std::testing::{MockQuerier as StdMockQuerier, MockQuerierCustomHandlerResult};
 use cosmwasm_std::{
-    to_binary, to_vec, Binary, Coin, Empty, HumanAddr, Querier as _, QueryRequest, StdResult,
-    SystemError, SystemResult,
+    to_binary, to_vec, Binary, Coin, Empty, Querier as _, QueryRequest, StdResult,
+    SystemError, SystemResult,CustomQuery
 };
 
 use crate::{FfiError, FfiResult, GasInfo, Querier};
@@ -21,14 +21,14 @@ pub struct MockQuerier<C: DeserializeOwned = Empty> {
 }
 
 impl<C: DeserializeOwned> MockQuerier<C> {
-    pub fn new(balances: &[(&HumanAddr, &[Coin])]) -> Self {
+    pub fn new(balances: &[(&String, &[Coin])]) -> Self {
         MockQuerier {
             querier: StdMockQuerier::new(balances),
         }
     }
 
     // set a new balance for the given address and return the old balance
-    pub fn update_balance<U: Into<HumanAddr>>(
+    pub fn update_balance<U: Into<String>>(
         &mut self,
         addr: U,
         balance: Vec<Coin>,
@@ -81,7 +81,7 @@ impl<C: DeserializeOwned> Querier for MockQuerier<C> {
 }
 
 impl MockQuerier {
-    pub fn query<T: Serialize>(
+    pub fn query<T: CustomQuery>(
         &self,
         request: &QueryRequest<T>,
         gas_limit: u64,
@@ -113,7 +113,7 @@ mod test {
 
     #[test]
     fn query_raw_fails_when_out_of_gas() {
-        let addr = HumanAddr::from("foobar");
+        let addr = String::from("foobar");
         let balance = vec![coin(123, "ELF"), coin(777, "FLY")];
         let querier: MockQuerier<Empty> = MockQuerier::new(&[(&addr, &balance)]);
 
@@ -127,7 +127,7 @@ mod test {
 
     #[test]
     fn bank_querier_all_balances() {
-        let addr = HumanAddr::from("foobar");
+        let addr = String::from("foobar");
         let balance = vec![coin(123, "ELF"), coin(777, "FLY")];
         let querier = MockQuerier::new(&[(&addr, &balance)]);
 
@@ -150,7 +150,7 @@ mod test {
 
     #[test]
     fn bank_querier_one_balance() {
-        let addr = HumanAddr::from("foobar");
+        let addr = String::from("foobar");
         let balance = vec![coin(123, "ELF"), coin(777, "FLY")];
         let querier = MockQuerier::new(&[(&addr, &balance)]);
 
@@ -191,7 +191,7 @@ mod test {
 
     #[test]
     fn bank_querier_missing_account() {
-        let addr = HumanAddr::from("foobar");
+        let addr = String::from("foobar");
         let balance = vec![coin(123, "ELF"), coin(777, "FLY")];
         let querier = MockQuerier::new(&[(&addr, &balance)]);
 
@@ -199,7 +199,7 @@ mod test {
         let all = querier
             .query::<Empty>(
                 &BankQuery::AllBalances {
-                    address: HumanAddr::from("elsewhere"),
+                    address: String::from("elsewhere"),
                 }
                 .into(),
                 DEFAULT_QUERY_GAS_LIMIT,
@@ -215,7 +215,7 @@ mod test {
         let miss = querier
             .query::<Empty>(
                 &BankQuery::Balance {
-                    address: HumanAddr::from("elsewhere"),
+                    address: String::from("elsewhere"),
                     denom: "ELF".to_string(),
                 }
                 .into(),

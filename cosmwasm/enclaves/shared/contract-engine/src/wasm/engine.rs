@@ -45,13 +45,13 @@ impl Engine {
             .module
             .invoke_export(
                 "instantiate",
-                vec![
+               &[
                     RuntimeValue::I32(env_ptr as i32),
                     RuntimeValue::I32(msg_info_ptr as i32),
                     RuntimeValue::I32(msg_ptr as i32),
                 ],
-            ),
-        };
+                &mut self.contract_instance
+            )
             .map_err(wasmi_error_to_enclave_error)?
         {
             Some(RuntimeValue::I32(offset)) => Ok(offset as u32),
@@ -112,7 +112,7 @@ impl Engine {
         //     }
         // }?;
 
-        let (func_name, args) = match match handle_type {
+        let (func_name, args) = match handle_type {
                 HandleType::HANDLE_TYPE_EXECUTE => (
                     "execute",
                     vec![
@@ -154,10 +154,10 @@ impl Engine {
         match self
         .module
         .invoke_export(
-            "query",
-            &RuntimeValue::I32(env_ptr as i32),
-            &/*[*/RuntimeValue::I32(msg_ptr as i32)/*]*/,
-            &mut self.contract_instance,
+            "query", &[
+            RuntimeValue::I32(env_ptr as i32),
+            RuntimeValue::I32(msg_ptr as i32)],
+            &mut self.contract_instance
         )
         .map_err(wasmi_error_to_enclave_error)?
     {

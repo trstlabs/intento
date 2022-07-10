@@ -4,7 +4,7 @@ use std::fmt;
 use crate::coins::Coin;
 #[cfg(feature = "stargate")]
 use crate::ibc::IbcMsg;
-use enclave_cosmwasm_types::encoding::Binary;
+use crate::encoding::Binary;
 
 use super::Empty;
 
