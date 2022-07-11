@@ -7,6 +7,7 @@ description = "Crypto bindings for cosmwasm contracts"
 repository = "https://github.com/CosmWasm/cosmwasm/tree/main/packages/crypto"
 license = "Apache-2.0"
 resolver = "2"
+
 [features]
 
 default = []
