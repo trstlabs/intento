@@ -116,7 +116,7 @@ pub enum DistributionMsg {
 pub enum WasmMsg {
     /// this dispatches a call to another contract at a known address (with known ABI)
     Execute {
-        contract_addr: Addr,
+        contract_addr: String,
         /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         code_hash: String,
@@ -197,7 +197,7 @@ pub fn wasm_execute(
 ) -> StdResult<WasmMsg> {
     let payload = to_binary(msg)?;
     Ok(WasmMsg::Execute {
-        contract_addr: Addr(contract_addr.into()),
+        contract_addr: contract_addr.into(),
         code_hash: code_hash.into(),
         msg: payload,
         funds,
