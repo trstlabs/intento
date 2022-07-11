@@ -307,7 +307,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 	}
 
 	// build and sign the transaction, then broadcast to Tendermint
-	msg := types.MsgInstantiateContract{
+	msgInit := types.MsgInstantiateContract{
 		Sender:     cliCtx.GetFromAddress().String(),
 		CodeHash:   "",
 		CodeID:     codeID,
@@ -316,7 +316,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		Msg:        encryptedMsg,
 		AutoMsg:    autoMsgEncrypted,
 	}
-	return msg, nil
+	return msgInit, nil
 }
 
 // CmdExecuteContract will execute a contract from previously instantiated code.

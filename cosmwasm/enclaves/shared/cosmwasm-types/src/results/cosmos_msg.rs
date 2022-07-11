@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 use crate::coins::Coin;
+use crate::encoding::Binary;
 #[cfg(feature = "stargate")]
 use crate::ibc::IbcMsg;
-use crate::encoding::Binary;
 
 use super::Empty;
 
@@ -144,6 +144,8 @@ pub enum WasmMsg {
         contract_duration: String,
         /// callback_sig is used validate messages that are originating from other contracts or the specified governance address
         callback_sig: Option<Vec<u8>>,
+        /// time interval (e.g. 60s/5h)
+        interval: String,
     },
 }
 
