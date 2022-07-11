@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
-
 use super::math::Uint128;
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq)]
