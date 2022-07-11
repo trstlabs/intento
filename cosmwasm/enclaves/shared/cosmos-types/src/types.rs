@@ -271,7 +271,7 @@ pub enum StdCosmWasmMsg {
     Instantiate {
         sender: HumanAddr,
         code_id: String,
-        init_msg: String,
+        msg: String,
         auto_msg: String,
         funds: Vec<Coin>,
         contract_id: String,
@@ -313,7 +313,7 @@ impl StdCosmWasmMsg {
             }
             Self::Instantiate {
                 sender,
-                init_msg,
+                msg,
                 auto_msg,
                 funds,
                 contract_id,
@@ -326,9 +326,9 @@ impl StdCosmWasmMsg {
                     warn!("failed to turn human addr to canonical addr when parsing CosmWasmMsg: {:?}", err);
                     EnclaveError::FailedToDeserialize
                 })?;
-                let init_msg = Binary::from_base64(&init_msg).map_err(|err| {
+                let msg = Binary::from_base64(&msg).map_err(|err| {
                     warn!(
-                        "failed to parse base64 init_msg when parsing CosmWasmMsg: {:?}",
+                        "failed to parse base64 msg when parsing CosmWasmMsg: {:?}",
                         err
                     );
                     EnclaveError::FailedToDeserialize
@@ -340,11 +340,11 @@ impl StdCosmWasmMsg {
                     );
                     EnclaveError::FailedToDeserialize
                 })?;
-                let init_msg = init_msg.0;
+                let msg = msg.0;
                 let auto_msg = auto_msg.0;
                 Ok(CosmWasmMsg::Instantiate {
                     sender,
-                    init_msg,
+                    msg,
                     auto_msg,
                     funds,
                     contract_id,
@@ -368,7 +368,7 @@ pub enum CosmWasmMsg {
     },
     Instantiate {
         sender: CanonicalAddr,
-        init_msg: Vec<u8>,
+        msg: Vec<u8>,
         auto_msg: Vec<u8>,
         funds: Vec<Coin>,
         contract_id: String,
@@ -415,7 +415,7 @@ impl CosmWasmMsg {
 
         Ok(CosmWasmMsg::Instantiate {
             sender, //: CanonicalAddr(Binary(raw_msg.sender)),
-            init_msg: raw_msg.init_msg,
+            msg: raw_msg.msg,
             auto_msg: raw_msg.auto_msg,
             funds,
             contract_id: raw_msg.contract_id,

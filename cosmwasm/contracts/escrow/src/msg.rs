@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct InitMsg {
+pub struct Msg {
     pub arbiter: HumanAddr,
     pub recipient: HumanAddr,
     /// When end height set and block height exceeds this value, the escrow is expired.

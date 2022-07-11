@@ -83,7 +83,7 @@ func (w *Wasmer) GetCode(code CodeID) (WasmCode, error) {
 }
 
 // Instantiate will create a new contract based on the given codeID.
-// We can set the initMsg (contract "genesis") here, and it then receives
+// We can set the msg (contract "genesis") here, and it then receives
 // an account and address and can be invoked (Execute) many times.
 //
 // Storage should be set with a PrefixedKVStore that this code can safely access.
@@ -93,7 +93,7 @@ func (w *Wasmer) GetCode(code CodeID) (WasmCode, error) {
 func (w *Wasmer) Instantiate(
 	codeId CodeID,
 	env types.Env,
-	initMsg []byte,
+	msg []byte,
 	autoMsg []byte,
 	store KVStore,
 	goapi GoAPI,
@@ -113,7 +113,7 @@ func (w *Wasmer) Instantiate(
 		return nil, nil, nil, 0, err
 	}
 
-	data, gasUsed, err := api.Instantiate(w.cache, codeId, paramBin, initMsg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
+	data, gasUsed, err := api.Instantiate(w.cache, codeId, paramBin, msg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
 	if err != nil {
 		return nil, nil, nil, gasUsed, err
 	}

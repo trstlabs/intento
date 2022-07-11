@@ -382,7 +382,7 @@ func GetQueryDecryptTxCmd() *cobra.Command {
 						return fmt.Errorf("TX is not a compute transaction")
 					}
 				} else {
-					encryptedInput = txInput2.InitMsg
+					encryptedInput = txInput2.Msg
 					dataOutputHexB64 = result.Data
 					answer.Type = "instantiate"
 				}

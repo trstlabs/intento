@@ -76,12 +76,12 @@ var xxx_messageInfo_MsgStoreCode proto.InternalMessageInfo
 
 type MsgInstantiateContract struct {
 	Sender           string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
-	CallbackCodeHash string `protobuf:"bytes,2,opt,name=callback_code_hash,json=callbackCodeHash,proto3" json:"callback_code_hash,omitempty"`
+	CodeHash string `protobuf:"bytes,2,opt,name=code_hash,json=codeHash,proto3" json:"code_hash,omitempty"`
 	CodeID           uint64 `protobuf:"varint,3,opt,name=code_id,json=codeId,proto3" json:"code_id,omitempty"`
 	//contract_id is a unique name for the contract
 	ContractId string `protobuf:"bytes,4,opt,name=contract_id,json=contractId,proto3" json:"contract_id,omitempty"`
-	//init_msg instantiates a new contract instance
-	InitMsg []byte `protobuf:"bytes,5,opt,name=init_msg,json=initMsg,proto3" json:"init_msg,omitempty"`
+	//msg instantiates a new contract instance
+	Msg []byte `protobuf:"bytes,5,opt,name=msg,json=msg,proto3" json:"msg,omitempty"`
 	//auto_msg is a message sent after a set period of time
 	AutoMsg []byte                                   `protobuf:"bytes,6,opt,name=auto_msg,json=autoMsg,proto3" json:"auto_msg,omitempty"`
 	Funds   github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,7,rep,name=funds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"funds"`
@@ -129,7 +129,7 @@ type MsgExecuteContract struct {
 	Sender           string                                   `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	Contract         string                                   `protobuf:"bytes,2,opt,name=contract,proto3" json:"contract,omitempty"`
 	Msg              []byte                                   `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
-	CallbackCodeHash string                                   `protobuf:"bytes,4,opt,name=callback_code_hash,json=callbackCodeHash,proto3" json:"callback_code_hash,omitempty"`
+	CodeHash string                                   `protobuf:"bytes,4,opt,name=code_hash,json=codeHash,proto3" json:"code_hash,omitempty"`
 	Funds            github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=funds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"funds"`
 	CallbackSig      []byte                                   `protobuf:"bytes,6,opt,name=callback_sig,json=callbackSig,proto3" json:"callback_sig,omitempty"`
 }
@@ -394,10 +394,10 @@ func (m *MsgInstantiateContract) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 		i--
 		dAtA[i] = 0x32
 	}
-	if len(m.InitMsg) > 0 {
-		i -= len(m.InitMsg)
-		copy(dAtA[i:], m.InitMsg)
-		i = encodeVarintMsg(dAtA, i, uint64(len(m.InitMsg)))
+	if len(m.Msg) > 0 {
+		i -= len(m.Msg)
+		copy(dAtA[i:], m.Msg)
+		i = encodeVarintMsg(dAtA, i, uint64(len(m.Msg)))
 		i--
 		dAtA[i] = 0x2a
 	}
@@ -413,10 +413,10 @@ func (m *MsgInstantiateContract) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 		i--
 		dAtA[i] = 0x18
 	}
-	if len(m.CallbackCodeHash) > 0 {
-		i -= len(m.CallbackCodeHash)
-		copy(dAtA[i:], m.CallbackCodeHash)
-		i = encodeVarintMsg(dAtA, i, uint64(len(m.CallbackCodeHash)))
+	if len(m.CodeHash) > 0 {
+		i -= len(m.CodeHash)
+		copy(dAtA[i:], m.CodeHash)
+		i = encodeVarintMsg(dAtA, i, uint64(len(m.CodeHash)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -471,10 +471,10 @@ func (m *MsgExecuteContract) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x2a
 		}
 	}
-	if len(m.CallbackCodeHash) > 0 {
-		i -= len(m.CallbackCodeHash)
-		copy(dAtA[i:], m.CallbackCodeHash)
-		i = encodeVarintMsg(dAtA, i, uint64(len(m.CallbackCodeHash)))
+	if len(m.CodeHash) > 0 {
+		i -= len(m.CodeHash)
+		copy(dAtA[i:], m.CodeHash)
+		i = encodeVarintMsg(dAtA, i, uint64(len(m.CodeHash)))
 		i--
 		dAtA[i] = 0x22
 	}
@@ -597,7 +597,7 @@ func (m *MsgInstantiateContract) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovMsg(uint64(l))
 	}
-	l = len(m.CallbackCodeHash)
+	l = len(m.CodeHash)
 	if l > 0 {
 		n += 1 + l + sovMsg(uint64(l))
 	}
@@ -608,7 +608,7 @@ func (m *MsgInstantiateContract) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovMsg(uint64(l))
 	}
-	l = len(m.InitMsg)
+	l = len(m.Msg)
 	if l > 0 {
 		n += 1 + l + sovMsg(uint64(l))
 	}
@@ -655,7 +655,7 @@ func (m *MsgExecuteContract) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovMsg(uint64(l))
 	}
-	l = len(m.CallbackCodeHash)
+	l = len(m.CodeHash)
 	if l > 0 {
 		n += 1 + l + sovMsg(uint64(l))
 	}
@@ -1034,7 +1034,7 @@ func (m *MsgInstantiateContract) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CallbackCodeHash", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CodeHash", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1062,7 +1062,7 @@ func (m *MsgInstantiateContract) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.CallbackCodeHash = string(dAtA[iNdEx:postIndex])
+			m.CodeHash = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 0 {
@@ -1117,7 +1117,7 @@ func (m *MsgInstantiateContract) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InitMsg", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -1144,9 +1144,9 @@ func (m *MsgInstantiateContract) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InitMsg = append(m.InitMsg[:0], dAtA[iNdEx:postIndex]...)
-			if m.InitMsg == nil {
-				m.InitMsg = []byte{}
+			m.Msg = append(m.Msg[:0], dAtA[iNdEx:postIndex]...)
+			if m.Msg == nil {
+				m.Msg = []byte{}
 			}
 			iNdEx = postIndex
 		case 6:
@@ -1465,7 +1465,7 @@ func (m *MsgExecuteContract) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CallbackCodeHash", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CodeHash", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1493,7 +1493,7 @@ func (m *MsgExecuteContract) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.CallbackCodeHash = string(dAtA[iNdEx:postIndex])
+			m.CodeHash = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {

@@ -32,12 +32,12 @@ message MsgInstantiateContract {
   option (gogoproto.goproto_getters) = false;
 
   string sender = 1;
-  string callback_code_hash = 2;
+  string code_hash = 2;
   uint64 code_id = 3 [(gogoproto.customname) = "CodeID"];
   //contract_id is a unique name for the contract
   string contract_id = 4;
-  //init_msg instantiates a new contract instance
-  bytes init_msg = 5;
+  //msg instantiates a new contract instance
+  bytes msg = 5;
   //auto_msg is a message sent after a set period of time
   bytes auto_msg = 6;
   repeated cosmos.base.v1beta1.Coin funds = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
@@ -54,7 +54,7 @@ message MsgExecuteContract {
   string sender = 1;
   string contract = 2;
   bytes msg = 3;
-  string callback_code_hash = 4;
+  string code_hash = 4;
   repeated cosmos.base.v1beta1.Coin funds = 5 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   bytes callback_sig = 6 [(gogoproto.customname) = "CallbackSig"];
 }

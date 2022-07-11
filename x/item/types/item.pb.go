@@ -515,7 +515,7 @@ type MsgCreateItem struct {
 	Condition       int64    `protobuf:"varint,8,opt,name=condition,proto3" json:"condition,omitempty"`
 	ShippingRegion  []string `protobuf:"bytes,9,rep,name=shipping_region,json=shippingRegion,proto3" json:"shipping_region,omitempty"`
 	DepositAmount   int64    `protobuf:"varint,10,opt,name=deposit_amount,json=depositAmount,proto3" json:"deposit_amount,omitempty"`
-	InitMsg         []byte   `protobuf:"bytes,11,opt,name=init_msg,json=initMsg,proto3" json:"init_msg,omitempty"`
+	Msg         []byte   `protobuf:"bytes,11,opt,name=msg,json=msg,proto3" json:"msg,omitempty"`
 	AutoMsg         []byte   `protobuf:"bytes,12,opt,name=auto_msg,json=autoMsg,proto3" json:"auto_msg,omitempty"`
 	Photos          []string `protobuf:"bytes,13,rep,name=photos,proto3" json:"photos,omitempty"`
 	TokenUri        string   `protobuf:"bytes,14,opt,name=token_uri,json=tokenUri,proto3" json:"token_uri,omitempty"`
@@ -624,9 +624,9 @@ func (m *MsgCreateItem) GetDepositAmount() int64 {
 	return 0
 }
 
-func (m *MsgCreateItem) GetInitMsg() []byte {
+func (m *MsgCreateItem) GetMsg() []byte {
 	if m != nil {
-		return m.InitMsg
+		return m.Msg
 	}
 	return nil
 }
@@ -1790,10 +1790,10 @@ func (m *MsgCreateItem) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x62
 	}
-	if len(m.InitMsg) > 0 {
-		i -= len(m.InitMsg)
-		copy(dAtA[i:], m.InitMsg)
-		i = encodeVarintItem(dAtA, i, uint64(len(m.InitMsg)))
+	if len(m.Msg) > 0 {
+		i -= len(m.Msg)
+		copy(dAtA[i:], m.Msg)
+		i = encodeVarintItem(dAtA, i, uint64(len(m.Msg)))
 		i--
 		dAtA[i] = 0x5a
 	}
@@ -2520,7 +2520,7 @@ func (m *MsgCreateItem) Size() (n int) {
 	if m.DepositAmount != 0 {
 		n += 1 + sovItem(uint64(m.DepositAmount))
 	}
-	l = len(m.InitMsg)
+	l = len(m.Msg)
 	if l > 0 {
 		n += 1 + l + sovItem(uint64(l))
 	}
@@ -4359,7 +4359,7 @@ func (m *MsgCreateItem) Unmarshal(dAtA []byte) error {
 			}
 		case 11:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InitMsg", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -4386,9 +4386,9 @@ func (m *MsgCreateItem) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InitMsg = append(m.InitMsg[:0], dAtA[iNdEx:postIndex]...)
-			if m.InitMsg == nil {
-				m.InitMsg = []byte{}
+			m.Msg = append(m.Msg[:0], dAtA[iNdEx:postIndex]...)
+			if m.Msg == nil {
+				m.Msg = []byte{}
 			}
 			iNdEx = postIndex
 		case 12:

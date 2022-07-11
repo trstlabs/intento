@@ -217,7 +217,7 @@ func CmdFlagItem() *cobra.Command {
 			flagMsg := types.TrustlessMsg{}
 			flag := types.ParseFlag{}
 
-			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
+			//msg.Msg = []byte("{\"estimationcount\": \"3\"}")
 			flagMsg.Msg, err = json.Marshal(flag)
 			//fmt.Printf("json message: %X\n", estimation)
 			if err != nil {

@@ -37,7 +37,7 @@ static WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/ha
 
 const DESERIALIZATION_LIMIT: usize = 20_000;
 
-fn make_init_msg() -> (InstantiateMsg, String) {
+fn make_msg() -> (InstantiateMsg, String) {
     let verifier = String::from("verifies");
     let beneficiary = String::from("benefits");
     let creator = String::from("creator");
@@ -310,7 +310,7 @@ fn execute_release_fails_for_wrong_sender() {
 fn execute_cpu_loop() {
     let mut deps = mock_instance(WASM, &[]);
 
-    let (instantiate_msg, creator) = make_init_msg();
+    let (instantiate_msg, creator) = make_msg();
     let init_info = mock_info(creator.as_str(), &[]);
     let init_res: Response =
         instantiate(&mut deps, mock_env(), init_info, instantiate_msg).unwrap();
@@ -332,7 +332,7 @@ fn execute_cpu_loop() {
 fn execute_storage_loop() {
     let mut deps = mock_instance(WASM, &[]);
 
-    let (instantiate_msg, creator) = make_init_msg();
+    let (instantiate_msg, creator) = make_msg();
     let init_info = mock_info(creator.as_str(), &[]);
     let init_res: Response =
         instantiate(&mut deps, mock_env(), init_info, instantiate_msg).unwrap();
@@ -354,7 +354,7 @@ fn execute_storage_loop() {
 fn execute_memory_loop() {
     let mut deps = mock_instance(WASM, &[]);
 
-    let (instantiate_msg, creator) = make_init_msg();
+    let (instantiate_msg, creator) = make_msg();
     let init_info = mock_info(creator.as_str(), &[]);
     let init_res: Response =
         instantiate(&mut deps, mock_env(), init_info, instantiate_msg).unwrap();
@@ -379,7 +379,7 @@ fn execute_memory_loop() {
 fn execute_allocate_large_memory() {
     let mut deps = mock_instance(WASM, &[]);
 
-    let (instantiate_msg, creator) = make_init_msg();
+    let (instantiate_msg, creator) = make_msg();
     let init_info = mock_info(creator.as_str(), &[]);
     let init_res: Response =
         instantiate(&mut deps, mock_env(), init_info, instantiate_msg).unwrap();
@@ -437,7 +437,7 @@ fn execute_allocate_large_memory() {
 fn execute_panic() {
     let mut deps = mock_instance(WASM, &[]);
 
-    let (instantiate_msg, creator) = make_init_msg();
+    let (instantiate_msg, creator) = make_msg();
     let init_info = mock_info(creator.as_str(), &[]);
     let init_res: Response =
         instantiate(&mut deps, mock_env(), init_info, instantiate_msg).unwrap();
@@ -462,7 +462,7 @@ fn execute_panic() {
 fn execute_user_errors_in_api_calls() {
     let mut deps = mock_instance(WASM, &[]);
 
-    let (instantiate_msg, creator) = make_init_msg();
+    let (instantiate_msg, creator) = make_msg();
     let init_info = mock_info(creator.as_str(), &[]);
     let _init_res: Response =
         instantiate(&mut deps, mock_env(), init_info, instantiate_msg).unwrap();

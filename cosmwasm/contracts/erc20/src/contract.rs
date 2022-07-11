@@ -2,7 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::convert::TryInto;
 
-use crate::msg::{AllowanceResponse, BalanceResponse, HandleMsg, InitMsg, QueryMsg};
+use crate::msg::{AllowanceResponse, BalanceResponse, HandleMsg, Msg, QueryMsg};
 use cosmwasm_std::{
     log, to_binary, to_vec, Api, Binary, CanonicalAddr, Env, Extern, HandleResponse, HumanAddr,
     InitResponse, Querier, ReadonlyStorage, StdError, StdResult, Storage, Uint128,
@@ -26,7 +26,7 @@ pub const KEY_TOTAL_SUPPLY: &[u8] = b"total_supply";
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     _env: Env,
-    msg: InitMsg,
+    msg: Msg,
 ) -> StdResult<InitResponse> {
     let mut total_supply: u128 = 0;
     {

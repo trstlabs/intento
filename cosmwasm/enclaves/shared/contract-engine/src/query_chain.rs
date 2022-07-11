@@ -289,13 +289,13 @@ fn encrypt_query_request(
     // encrypt message
     if let QueryRequest::Wasm(WasmQuery::Private {
         msg,
-        callback_code_hash,
+        code_hash,
         ..
     }) = query_struct
     {
         is_encrypted = true;
 
-        let mut hash_appended_msg = callback_code_hash.clone().into_bytes();
+        let mut hash_appended_msg = code_hash.clone().into_bytes();
         hash_appended_msg.extend_from_slice(&msg.0);
 
         let mut encrypted_msg = ContractMessage {

@@ -4,12 +4,12 @@ use cosmwasm_std::{
     VoteOption,
 };
 
-use crate::msg::{HandleMsg, InitMsg};
+use crate::msg::{HandleMsg, Msg};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
     _env: Env,
-    _msg: InitMsg,
+    _msg: Msg,
 ) -> InitResult {
     Ok(InitResponse::default())
 }

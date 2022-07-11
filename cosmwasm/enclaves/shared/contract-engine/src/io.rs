@@ -301,10 +301,10 @@ pub fn encrypt_msg(
     nonce: IoNonce,
     user_public_key: Ed25519PublicKey,
     send_as_addr: &CanonicalAddr,
-    callback_code_hash: String, 
+    code_hash: String, 
     funds: Vec<Coin>,
 ) -> Result<Vec<u8>, EnclaveError> {
-            let mut hash_appended_msg = callback_code_hash.as_bytes().to_vec();
+            let mut hash_appended_msg = code_hash.as_bytes().to_vec();
             hash_appended_msg.extend_from_slice(msg.as_slice());
 
             let mut msg_to_pass = ContractMessage::from_base64(

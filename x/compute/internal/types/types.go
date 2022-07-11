@@ -178,12 +178,12 @@ func (c *ContractInfo) ValidateBasic() error {
 }
 
 /*
-func (c ContractInfo) InitialHistory(initMsg []byte) ContractCodeHistoryEntry {
+func (c ContractInfo) InitialHistory(msg []byte) ContractCodeHistoryEntry {
 	return ContractCodeHistoryEntry{
 		Operation: InitContractCodeHistoryType,
 		CodeID:    c.CodeID,
 		Updated:   c.Created,
-		Msg:       initMsg,
+		Msg:       msg,
 	}
 }
 

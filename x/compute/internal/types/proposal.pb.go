@@ -92,7 +92,7 @@ type InstantiateContractProposal struct {
 	// ContractID is optional metadata to be stored with a constract instance.
 	ContractId string `protobuf:"bytes,4,opt,name=contract_id,json=contractId,proto3" json:"contract_id,omitempty"`
 	// Msg json encoded message to be passed to the contract on instantiation
-	InitMsg []byte `protobuf:"bytes,5,opt,name=init_msg,json=initMsg,proto3" json:"init_msg,omitempty"`
+	Msg []byte `protobuf:"bytes,5,opt,name=msg,json=msg,proto3" json:"msg,omitempty"`
 	// AutoMsg json encoded message to be passed to the contract on instantiation, optional
 	AutoMsg []byte `protobuf:"bytes,6,opt,name=auto_msg,json=autoMsg,proto3" json:"auto_msg,omitempty"`
 	//Funds coins that are transferred to the contract on instantiation
@@ -299,7 +299,7 @@ func (this *InstantiateContractProposal) Equal(that interface{}) bool {
 	if this.ContractId != that1.ContractId {
 		return false
 	}
-	if !bytes.Equal(this.InitMsg, that1.InitMsg) {
+	if !bytes.Equal(this.Msg, that1.Msg) {
 		return false
 	}
 	if !bytes.Equal(this.AutoMsg, that1.AutoMsg) {
@@ -469,10 +469,10 @@ func (m *InstantiateContractProposal) MarshalToSizedBuffer(dAtA []byte) (int, er
 		i--
 		dAtA[i] = 0x32
 	}
-	if len(m.InitMsg) > 0 {
-		i -= len(m.InitMsg)
-		copy(dAtA[i:], m.InitMsg)
-		i = encodeVarintProposal(dAtA, i, uint64(len(m.InitMsg)))
+	if len(m.Msg) > 0 {
+		i -= len(m.Msg)
+		copy(dAtA[i:], m.Msg)
+		i = encodeVarintProposal(dAtA, i, uint64(len(m.Msg)))
 		i--
 		dAtA[i] = 0x2a
 	}
@@ -639,7 +639,7 @@ func (m *InstantiateContractProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovProposal(uint64(l))
 	}
-	l = len(m.InitMsg)
+	l = len(m.Msg)
 	if l > 0 {
 		n += 1 + l + sovProposal(uint64(l))
 	}
@@ -1115,7 +1115,7 @@ func (m *InstantiateContractProposal) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field InitMsg", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -1142,9 +1142,9 @@ func (m *InstantiateContractProposal) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.InitMsg = append(m.InitMsg[:0], dAtA[iNdEx:postIndex]...)
-			if m.InitMsg == nil {
-				m.InitMsg = []byte{}
+			m.Msg = append(m.Msg[:0], dAtA[iNdEx:postIndex]...)
+			if m.Msg == nil {
+				m.Msg = []byte{}
 			}
 			iNdEx = postIndex
 		case 6:

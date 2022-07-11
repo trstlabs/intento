@@ -11,9 +11,9 @@ pub enum WasmQuery {
     /// return value is whatever the contract returns (caller should know)
     Private {
         contract_addr: String,
-        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
-        callback_code_hash: String,
+        code_hash: String,
         /// msg is the json-encoded QueryMsg struct
         msg: Binary,
     },
@@ -21,9 +21,9 @@ pub enum WasmQuery {
     /// returns the raw, unparsed data stored at that key (or `Ok(Err(StdError:NotFound{}))` if missing)
     Public {
         contract_addr: String,
-        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
-        //callback_code_hash: String,
+        //code_hash: String,
         /// Key is the key used in the public contract's Storage
         key: Binary,
     },

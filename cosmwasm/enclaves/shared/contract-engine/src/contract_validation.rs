@@ -363,7 +363,7 @@ fn get_verified_msg<'sd>(
     messages.iter().find(|&m| match m {
         CosmWasmMsg::Execute { msg, sender, .. } 
         | CosmWasmMsg::Instantiate {
-            init_msg: msg,
+            msg: msg,
             sender,
             ..
         } => msg_sender == sender && &sent_msg.to_vec() == msg,

@@ -438,10 +438,10 @@ impl ::protobuf::reflect::ProtobufValue for MsgStoreCode {
 pub struct MsgInstantiateContract {
     // message fields
     pub sender: ::std::string::String,
-    pub callback_code_hash: ::std::string::String,
+    pub code_hash: ::std::string::String,
     pub code_id: u64,
     pub contract_id: ::std::string::String,
-    pub init_msg: ::std::vec::Vec<u8>,
+    pub msg: ::std::vec::Vec<u8>,
     pub auto_msg: ::std::vec::Vec<u8>,
     pub funds: ::protobuf::RepeatedField<super::coin::Coin>,
     pub contract_duration: ::std::string::String,
@@ -489,30 +489,30 @@ impl MsgInstantiateContract {
         ::std::mem::replace(&mut self.sender, ::std::string::String::new())
     }
 
-    // string callback_code_hash = 2;
+    // string code_hash = 2;
 
 
-    pub fn get_callback_code_hash(&self) -> &str {
-        &self.callback_code_hash
+    pub fn get_code_hash(&self) -> &str {
+        &self.code_hash
     }
-    pub fn clear_callback_code_hash(&mut self) {
-        self.callback_code_hash.clear();
+    pub fn clear_code_hash(&mut self) {
+        self.code_hash.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_callback_code_hash(&mut self, v: ::std::string::String) {
-        self.callback_code_hash = v;
+    pub fn set_code_hash(&mut self, v: ::std::string::String) {
+        self.code_hash = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_callback_code_hash(&mut self) -> &mut ::std::string::String {
-        &mut self.callback_code_hash
+    pub fn mut_code_hash(&mut self) -> &mut ::std::string::String {
+        &mut self.code_hash
     }
 
     // Take field
-    pub fn take_callback_code_hash(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.callback_code_hash, ::std::string::String::new())
+    pub fn take_code_hash(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.code_hash, ::std::string::String::new())
     }
 
     // uint64 code_id = 3;
@@ -556,30 +556,30 @@ impl MsgInstantiateContract {
         ::std::mem::replace(&mut self.contract_id, ::std::string::String::new())
     }
 
-    // bytes init_msg = 5;
+    // bytes msg = 5;
 
 
-    pub fn get_init_msg(&self) -> &[u8] {
-        &self.init_msg
+    pub fn get_msg(&self) -> &[u8] {
+        &self.msg
     }
-    pub fn clear_init_msg(&mut self) {
-        self.init_msg.clear();
+    pub fn clear_msg(&mut self) {
+        self.msg.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_init_msg(&mut self, v: ::std::vec::Vec<u8>) {
-        self.init_msg = v;
+    pub fn set_msg(&mut self, v: ::std::vec::Vec<u8>) {
+        self.msg = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_init_msg(&mut self) -> &mut ::std::vec::Vec<u8> {
-        &mut self.init_msg
+    pub fn mut_msg(&mut self) -> &mut ::std::vec::Vec<u8> {
+        &mut self.msg
     }
 
     // Take field
-    pub fn take_init_msg(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.init_msg, ::std::vec::Vec::new())
+    pub fn take_msg(&mut self) -> ::std::vec::Vec<u8> {
+        ::std::mem::replace(&mut self.msg, ::std::vec::Vec::new())
     }
 
     // bytes auto_msg = 6;
@@ -730,7 +730,7 @@ impl ::protobuf::Message for MsgInstantiateContract {
                     ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.sender)?;
                 },
                 2 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.callback_code_hash)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.code_hash)?;
                 },
                 3 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
@@ -743,7 +743,7 @@ impl ::protobuf::Message for MsgInstantiateContract {
                     ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.contract_id)?;
                 },
                 5 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.init_msg)?;
+                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.msg)?;
                 },
                 6 => {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.auto_msg)?;
@@ -775,8 +775,8 @@ impl ::protobuf::Message for MsgInstantiateContract {
         if !self.sender.is_empty() {
             my_size += ::protobuf::rt::string_size(1, &self.sender);
         }
-        if !self.callback_code_hash.is_empty() {
-            my_size += ::protobuf::rt::string_size(2, &self.callback_code_hash);
+        if !self.code_hash.is_empty() {
+            my_size += ::protobuf::rt::string_size(2, &self.code_hash);
         }
         if self.code_id != 0 {
             my_size += ::protobuf::rt::value_size(3, self.code_id, ::protobuf::wire_format::WireTypeVarint);
@@ -784,8 +784,8 @@ impl ::protobuf::Message for MsgInstantiateContract {
         if !self.contract_id.is_empty() {
             my_size += ::protobuf::rt::string_size(4, &self.contract_id);
         }
-        if !self.init_msg.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(5, &self.init_msg);
+        if !self.msg.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(5, &self.msg);
         }
         if !self.auto_msg.is_empty() {
             my_size += ::protobuf::rt::bytes_size(6, &self.auto_msg);
@@ -812,8 +812,8 @@ impl ::protobuf::Message for MsgInstantiateContract {
         if !self.sender.is_empty() {
             os.write_string(1, &self.sender)?;
         }
-        if !self.callback_code_hash.is_empty() {
-            os.write_string(2, &self.callback_code_hash)?;
+        if !self.code_hash.is_empty() {
+            os.write_string(2, &self.code_hash)?;
         }
         if self.code_id != 0 {
             os.write_uint64(3, self.code_id)?;
@@ -821,8 +821,8 @@ impl ::protobuf::Message for MsgInstantiateContract {
         if !self.contract_id.is_empty() {
             os.write_string(4, &self.contract_id)?;
         }
-        if !self.init_msg.is_empty() {
-            os.write_bytes(5, &self.init_msg)?;
+        if !self.msg.is_empty() {
+            os.write_bytes(5, &self.msg)?;
         }
         if !self.auto_msg.is_empty() {
             os.write_bytes(6, &self.auto_msg)?;
@@ -885,9 +885,9 @@ impl ::protobuf::Message for MsgInstantiateContract {
                 |m: &mut MsgInstantiateContract| { &mut m.sender },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                "callback_code_hash",
-                |m: &MsgInstantiateContract| { &m.callback_code_hash },
-                |m: &mut MsgInstantiateContract| { &mut m.callback_code_hash },
+                "code_hash",
+                |m: &MsgInstantiateContract| { &m.code_hash },
+                |m: &mut MsgInstantiateContract| { &mut m.code_hash },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
                 "code_id",
@@ -900,9 +900,9 @@ impl ::protobuf::Message for MsgInstantiateContract {
                 |m: &mut MsgInstantiateContract| { &mut m.contract_id },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
-                "init_msg",
-                |m: &MsgInstantiateContract| { &m.init_msg },
-                |m: &mut MsgInstantiateContract| { &mut m.init_msg },
+                "msg",
+                |m: &MsgInstantiateContract| { &m.msg },
+                |m: &mut MsgInstantiateContract| { &mut m.msg },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
                 "auto_msg",
@@ -946,10 +946,10 @@ impl ::protobuf::Message for MsgInstantiateContract {
 impl ::protobuf::Clear for MsgInstantiateContract {
     fn clear(&mut self) {
         self.sender.clear();
-        self.callback_code_hash.clear();
+        self.code_hash.clear();
         self.code_id = 0;
         self.contract_id.clear();
-        self.init_msg.clear();
+        self.msg.clear();
         self.auto_msg.clear();
         self.funds.clear();
         self.contract_duration.clear();
@@ -977,7 +977,7 @@ pub struct MsgExecuteContract {
     pub sender: ::std::string::String,
     pub contract: ::std::string::String,
     pub msg: ::std::vec::Vec<u8>,
-    pub callback_code_hash: ::std::string::String,
+    pub code_hash: ::std::string::String,
     pub funds: ::protobuf::RepeatedField<super::coin::Coin>,
     pub callback_sig: ::std::vec::Vec<u8>,
     // special fields
@@ -1074,30 +1074,30 @@ impl MsgExecuteContract {
         ::std::mem::replace(&mut self.msg, ::std::vec::Vec::new())
     }
 
-    // string callback_code_hash = 4;
+    // string code_hash = 4;
 
 
-    pub fn get_callback_code_hash(&self) -> &str {
-        &self.callback_code_hash
+    pub fn get_code_hash(&self) -> &str {
+        &self.code_hash
     }
-    pub fn clear_callback_code_hash(&mut self) {
-        self.callback_code_hash.clear();
+    pub fn clear_code_hash(&mut self) {
+        self.code_hash.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_callback_code_hash(&mut self, v: ::std::string::String) {
-        self.callback_code_hash = v;
+    pub fn set_code_hash(&mut self, v: ::std::string::String) {
+        self.code_hash = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_callback_code_hash(&mut self) -> &mut ::std::string::String {
-        &mut self.callback_code_hash
+    pub fn mut_code_hash(&mut self) -> &mut ::std::string::String {
+        &mut self.code_hash
     }
 
     // Take field
-    pub fn take_callback_code_hash(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.callback_code_hash, ::std::string::String::new())
+    pub fn take_code_hash(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.code_hash, ::std::string::String::new())
     }
 
     // repeated .cosmos.base.v1beta1.Coin funds = 5;
@@ -1176,7 +1176,7 @@ impl ::protobuf::Message for MsgExecuteContract {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.msg)?;
                 },
                 4 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.callback_code_hash)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.code_hash)?;
                 },
                 5 => {
                     ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.funds)?;
@@ -1205,8 +1205,8 @@ impl ::protobuf::Message for MsgExecuteContract {
         if !self.msg.is_empty() {
             my_size += ::protobuf::rt::bytes_size(3, &self.msg);
         }
-        if !self.callback_code_hash.is_empty() {
-            my_size += ::protobuf::rt::string_size(4, &self.callback_code_hash);
+        if !self.code_hash.is_empty() {
+            my_size += ::protobuf::rt::string_size(4, &self.code_hash);
         }
         for value in &self.funds {
             let len = value.compute_size();
@@ -1230,8 +1230,8 @@ impl ::protobuf::Message for MsgExecuteContract {
         if !self.msg.is_empty() {
             os.write_bytes(3, &self.msg)?;
         }
-        if !self.callback_code_hash.is_empty() {
-            os.write_string(4, &self.callback_code_hash)?;
+        if !self.code_hash.is_empty() {
+            os.write_string(4, &self.code_hash)?;
         }
         for v in &self.funds {
             os.write_tag(5, ::protobuf::wire_format::WireTypeLengthDelimited)?;
@@ -1295,9 +1295,9 @@ impl ::protobuf::Message for MsgExecuteContract {
                 |m: &mut MsgExecuteContract| { &mut m.msg },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                "callback_code_hash",
-                |m: &MsgExecuteContract| { &m.callback_code_hash },
-                |m: &mut MsgExecuteContract| { &mut m.callback_code_hash },
+                "code_hash",
+                |m: &MsgExecuteContract| { &m.code_hash },
+                |m: &mut MsgExecuteContract| { &mut m.code_hash },
             ));
             fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<super::coin::Coin>>(
                 "funds",
@@ -1328,7 +1328,7 @@ impl ::protobuf::Clear for MsgExecuteContract {
         self.sender.clear();
         self.contract.clear();
         self.msg.clear();
-        self.callback_code_hash.clear();
+        self.code_hash.clear();
         self.funds.clear();
         self.callback_sig.clear();
         self.unknown_fields.clear();
@@ -1559,10 +1559,10 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x20\x01(\tR\x05title\x12\x20\n\x0bdescription\x18\x07\x20\x01(\tR\x0bde\
     scription:\x04\x88\xa0\x1f\0\"\xc0\x03\n\x16MsgInstantiateContract\x12\
     \x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x12,\n\x12callback_code_h\
-    ash\x18\x02\x20\x01(\tR\x10callbackCodeHash\x12#\n\x07code_id\x18\x03\
+    ash\x18\x02\x20\x01(\tR\x10codeHash\x12#\n\x07code_id\x18\x03\
     \x20\x01(\x04R\x06codeIdB\n\xe2\xde\x1f\x06CodeID\x12\x1f\n\x0bcontract_\
-    id\x18\x04\x20\x01(\tR\ncontractId\x12\x19\n\x08init_msg\x18\x05\x20\x01\
-    (\x0cR\x07initMsg\x12\x19\n\x08auto_msg\x18\x06\x20\x01(\x0cR\x07autoMsg\
+    id\x18\x04\x20\x01(\tR\ncontractId\x12\x19\n\x08msg\x18\x05\x20\x01\
+    (\x0cR\x07msg\x12\x19\n\x08auto_msg\x18\x06\x20\x01(\x0cR\x07autoMsg\
     \x12a\n\x05funds\x18\x07\x20\x03(\x0b2\x19.cosmos.base.v1beta1.CoinR\x05\
     fundsB0\xaa\xdf\x1f(github.com/cosmos/cosmos-sdk/types.Coins\xc8\xde\x1f\
     \0\x12+\n\x11contract_duration\x18\x08\x20\x01(\tR\x10contractDuration\
@@ -1571,7 +1571,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x04\x88\xa0\x1f\0\"\xa5\x02\n\x12MsgExecuteContract\x12\x16\n\x06sender\
     \x18\x01\x20\x01(\tR\x06sender\x12\x1a\n\x08contract\x18\x02\x20\x01(\tR\
     \x08contract\x12\x10\n\x03msg\x18\x03\x20\x01(\x0cR\x03msg\x12,\n\x12cal\
-    lback_code_hash\x18\x04\x20\x01(\tR\x10callbackCodeHash\x12a\n\x05funds\
+    lback_code_hash\x18\x04\x20\x01(\tR\x10codeHash\x12a\n\x05funds\
     \x18\x05\x20\x03(\x0b2\x19.cosmos.base.v1beta1.CoinR\x05fundsB0\xaa\xdf\
     \x1f(github.com/cosmos/cosmos-sdk/types.Coins\xc8\xde\x1f\0\x122\n\x0cca\
     llback_sig\x18\x06\x20\x01(\x0cR\x0bcallbackSigB\x0f\xe2\xde\x1f\x0bCall\

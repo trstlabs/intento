@@ -159,7 +159,7 @@ func ProposalInstantiateContractCmd() *cobra.Command {
 				//Admin:       src.Admin,
 				CodeID:     codeID,
 				ContractId: contractId,
-				InitMsg:    []byte(args[1]),
+				Msg:        []byte(args[1]),
 				AutoMsg:    []byte(autoMsg),
 				Funds:      funds,
 			}

@@ -71,7 +71,7 @@ func handleInstantiateProposal(ctx sdk.Context, k Keeper, p types.InstantiateCon
 	//binary.LittleEndian.PutUint64(byteCodeID, p.CodeID)
 	//fmt.Printf("byteCodeID: \t %v \n", byteCodeID)
 	var encryptedAutoMsg []byte = nil
-	sig, encryptedMsg, err := k.CreateCommunityPoolCallbackSig(ctx, p.InitMsg, p.CodeID, p.Funds)
+	sig, encryptedMsg, err := k.CreateCommunityPoolCallbackSig(ctx, p.Msg, p.CodeID, p.Funds)
 	if err != nil {
 		return err
 	}

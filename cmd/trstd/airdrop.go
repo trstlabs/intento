@@ -1573,11 +1573,11 @@ type TerraGenesis struct {
 					Admin   string `json:"admin"`
 					CodeID  string `json:"code_id"`
 					Creator string `json:"creator"`
-					InitMsg struct {
+					Msg struct {
 						IsPublic            bool   `json:"is_public"`
 						PoolManager         string `json:"pool_manager"`
 						SparFactoryContract string `json:"spar_factory_contract"`
-					} `json:"init_msg"`
+					} `json:"msg"`
 				} `json:"contract_info"`
 				ContractStore []struct {
 					Key   string `json:"key"`

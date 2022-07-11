@@ -90,7 +90,7 @@ func (msg MsgInstantiateContract) ValidateBasic() error {
 				return err
 			}
 		}
-		if !json.Valid(msg.InitMsg) {
+		if !json.Valid(msg.Msg) {
 			return sdkerrors.Wrap(ErrInvalid, "init msg json")
 		}
 	*/

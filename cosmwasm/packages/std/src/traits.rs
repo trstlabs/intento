@@ -297,10 +297,10 @@ impl<'a> QuerierWrapper<'a> {
         &self,
         contract_addr: impl Into<String>,
         msg: &impl Serialize,
-        callback_code_hash: impl Into<String>,
+        code_hash: impl Into<String>,
     ) -> StdResult<T> {
         let request = WasmQuery::Private {
-            callback_code_hash: callback_code_hash.into(),
+            code_hash: code_hash.into(),
             contract_addr: contract_addr.into(),
             msg: to_binary(msg)?,
         }

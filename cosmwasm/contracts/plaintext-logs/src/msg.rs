@@ -1,9 +1,9 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-/// InitMsg is a placeholder where we don't take any input
+/// Msg is a placeholder where we don't take any input
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct InitMsg {}
+pub struct Msg {}
 
 /// HandleMsg is a placeholder where we don't take any input
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

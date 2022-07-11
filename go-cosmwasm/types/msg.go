@@ -259,7 +259,7 @@ type ExecuteMsg struct {
 	ContractAddr string `json:"contract_addr"`
 	// Custom addition to support binding a message to specific code to harden against offline & replay attacks
 	// This is only needed when creating a callback message
-	CallbackCodeHash string `json:"callback_code_hash"`
+	CodeHash string `json:"code_hash"`
 	// Msg is assumed to be a json-encoded message, which will be passed directly
 	// as `userMsg` when calling `Handle` on the above-defined contract
 	Msg []byte `json:"msg"`
@@ -273,7 +273,7 @@ type InstantiateMsg struct {
 	CodeID uint64 `json:"code_id"`
 	// Custom addition to support binding a message to specific code to harden against offline & replay attacks
 	// This is only needed when creating a callback message
-	CallbackCodeHash string `json:"callback_code_hash"`
+	CodeHash string `json:"code_hash"`
 	// Msg is assumed to be a json-encoded message, which will be passed directly
 	// as `userMsg` when calling `Handle` on the above-defined contract
 	Msg []byte `json:"msg"`

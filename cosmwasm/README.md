@@ -183,7 +183,7 @@ If you followed the [instructions above](#Creating), you should have a runable
 smart contract. You may notice that all of the Wasm exports are taken care of by
 `lib.rs`, which should shouldn't need to modify. What you need to do is simply
 look in `contract.rs` and implement `init` and `handle` functions, defining your
-custom `InitMsg` and `HandleMsg` structs for parsing your custom message types
+custom `Msg` and `HandleMsg` structs for parsing your custom message types
 (as json):
 
 ```rust

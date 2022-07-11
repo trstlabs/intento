@@ -48,7 +48,7 @@ Executing code is done by encrypting the message with the code hash and sender p
 The inputs are private and are only decrypted once the message is in the Trusted Execution Environment (TEE), where the inputs are then securely handled. The TEE, that runs through Intel SGX, and is designed in such a way that no other process or application is able to view or currupt the contents.
 
 ### Instantiating 
-Next to the standard InitMsg, an AutoMessage can to be sent to automatically execute code. 
+Next to the standard Msg, an AutoMessage can to be sent to automatically execute code. 
 The instantiation message and the automated message are encrypted and only decrypted once the message is in in the Trusted Execution Environment 
 
 ### Querying 

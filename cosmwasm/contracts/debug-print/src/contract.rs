@@ -2,12 +2,12 @@ use cosmwasm_std::{
     Api, Binary, Env, Extern, HandleResponse, InitResponse, Querier, StdError, StdResult, Storage,
 };
 
-use crate::msg::{HandleMsg, InitMsg, QueryMsg};
+use crate::msg::{HandleMsg, Msg, QueryMsg};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
     _env: Env,
-    _msg: InitMsg,
+    _msg: Msg,
 ) -> StdResult<InitResponse> {
     Ok(InitResponse::default())
 }

@@ -70,7 +70,7 @@ type InstantiateProposalJSONReq struct {
 	//RunAs      string          `json:"run_as" yaml:"run_as"`
 	Code       uint64          `json:"code_id" yaml:"code_id"`
 	ContractId string          `json:"contract_id" yaml:"contract_id"`
-	InitMsg    json.RawMessage `json:"init_msg" yaml:"init_msg"`
+	Msg        json.RawMessage `json:"msg" yaml:"msg"`
 	AutoMsg    json.RawMessage `json:"auto_msg" yaml:"auto_msg"`
 	Funds      sdk.Coins       `json:"funds" yaml:"funds"`
 }
@@ -83,7 +83,7 @@ func (s InstantiateProposalJSONReq) Content() govtypes.Content {
 		//Proposer:   s.Proposer,
 		CodeID:     s.Code,
 		ContractId: s.ContractId,
-		InitMsg:    []byte(s.InitMsg),
+		Msg:        []byte(s.Msg),
 		Funds:      s.Funds,
 	}
 }

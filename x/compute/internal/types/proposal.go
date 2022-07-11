@@ -182,9 +182,9 @@ func (p InstantiateContractProposal) String() string {
   Description: %s
   Code id:     %d
   Contract id:     %s
-  InitMsg:         %q
+  Msg:         %q
   Funds:         %q
-`, p.Title, p.Description, p.CodeID, p.ContractId, p.InitMsg, p.Funds)
+`, p.Title, p.Description, p.CodeID, p.ContractId, p.Msg, p.Funds)
 }
 
 // MarshalYAML pretty prints the init message
@@ -195,7 +195,7 @@ func (p InstantiateContractProposal) MarshalYAML() (interface{}, error) {
 		//RunAs       string    `yaml:"run_as"`
 		CodeID     uint64    `yaml:"code_id"`
 		ContractId string    `yaml:"contract_id"`
-		InitMsg    string    `yaml:"init_msg"`
+		Msg        string    `yaml:"msg"`
 		Funds      sdk.Coins `yaml:"funds"`
 	}{
 		Title:       p.Title,
@@ -203,7 +203,7 @@ func (p InstantiateContractProposal) MarshalYAML() (interface{}, error) {
 		//RunAs:       p.RunAs,
 		CodeID:     p.CodeID,
 		ContractId: p.ContractId,
-		InitMsg:    string(p.InitMsg),
+		Msg:        string(p.Msg),
 		Funds:      p.Funds,
 	}, nil
 }

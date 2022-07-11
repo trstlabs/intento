@@ -2161,7 +2161,7 @@ pub struct MsgCreateItem {
     pub condition: i64,
     pub shipping_region: ::protobuf::RepeatedField<::std::string::String>,
     pub deposit_amount: i64,
-    pub init_msg: ::std::vec::Vec<u8>,
+    pub msg: ::std::vec::Vec<u8>,
     pub auto_msg: ::std::vec::Vec<u8>,
     pub photos: ::protobuf::RepeatedField<::std::string::String>,
     pub token_uri: ::std::string::String,
@@ -2395,30 +2395,30 @@ impl MsgCreateItem {
         self.deposit_amount = v;
     }
 
-    // bytes init_msg = 11;
+    // bytes msg = 11;
 
 
-    pub fn get_init_msg(&self) -> &[u8] {
-        &self.init_msg
+    pub fn get_msg(&self) -> &[u8] {
+        &self.msg
     }
-    pub fn clear_init_msg(&mut self) {
-        self.init_msg.clear();
+    pub fn clear_msg(&mut self) {
+        self.msg.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_init_msg(&mut self, v: ::std::vec::Vec<u8>) {
-        self.init_msg = v;
+    pub fn set_msg(&mut self, v: ::std::vec::Vec<u8>) {
+        self.msg = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_init_msg(&mut self) -> &mut ::std::vec::Vec<u8> {
-        &mut self.init_msg
+    pub fn mut_msg(&mut self) -> &mut ::std::vec::Vec<u8> {
+        &mut self.msg
     }
 
     // Take field
-    pub fn take_init_msg(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.init_msg, ::std::vec::Vec::new())
+    pub fn take_msg(&mut self) -> ::std::vec::Vec<u8> {
+        ::std::mem::replace(&mut self.msg, ::std::vec::Vec::new())
     }
 
     // bytes auto_msg = 12;
@@ -2555,7 +2555,7 @@ impl ::protobuf::Message for MsgCreateItem {
                     self.deposit_amount = tmp;
                 },
                 11 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.init_msg)?;
+                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.msg)?;
                 },
                 12 => {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.auto_msg)?;
@@ -2608,8 +2608,8 @@ impl ::protobuf::Message for MsgCreateItem {
         if self.deposit_amount != 0 {
             my_size += ::protobuf::rt::value_size(10, self.deposit_amount, ::protobuf::wire_format::WireTypeVarint);
         }
-        if !self.init_msg.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(11, &self.init_msg);
+        if !self.msg.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(11, &self.msg);
         }
         if !self.auto_msg.is_empty() {
             my_size += ::protobuf::rt::bytes_size(12, &self.auto_msg);
@@ -2656,8 +2656,8 @@ impl ::protobuf::Message for MsgCreateItem {
         if self.deposit_amount != 0 {
             os.write_int64(10, self.deposit_amount)?;
         }
-        if !self.init_msg.is_empty() {
-            os.write_bytes(11, &self.init_msg)?;
+        if !self.msg.is_empty() {
+            os.write_bytes(11, &self.msg)?;
         }
         if !self.auto_msg.is_empty() {
             os.write_bytes(12, &self.auto_msg)?;
@@ -2757,9 +2757,9 @@ impl ::protobuf::Message for MsgCreateItem {
                 |m: &mut MsgCreateItem| { &mut m.deposit_amount },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
-                "init_msg",
-                |m: &MsgCreateItem| { &m.init_msg },
-                |m: &mut MsgCreateItem| { &mut m.init_msg },
+                "msg",
+                |m: &MsgCreateItem| { &m.msg },
+                |m: &mut MsgCreateItem| { &mut m.msg },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
                 "auto_msg",
@@ -2802,7 +2802,7 @@ impl ::protobuf::Clear for MsgCreateItem {
         self.condition = 0;
         self.shipping_region.clear();
         self.deposit_amount = 0;
-        self.init_msg.clear();
+        self.msg.clear();
         self.auto_msg.clear();
         self.photos.clear();
         self.token_uri.clear();
@@ -5166,8 +5166,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x03R\x0festimationCount\x12\x12\n\x04tags\x18\x07\x20\x03(\tR\x04tags\
     \x12\x1c\n\tcondition\x18\x08\x20\x01(\x03R\tcondition\x12'\n\x0fshippin\
     g_region\x18\t\x20\x03(\tR\x0eshippingRegion\x12%\n\x0edeposit_amount\
-    \x18\n\x20\x01(\x03R\rdepositAmount\x12\x19\n\x08init_msg\x18\x0b\x20\
-    \x01(\x0cR\x07initMsg\x12\x19\n\x08auto_msg\x18\x0c\x20\x01(\x0cR\x07aut\
+    \x18\n\x20\x01(\x03R\rdepositAmount\x12\x19\n\x08msg\x18\x0b\x20\
+    \x01(\x0cR\x07msg\x12\x19\n\x08auto_msg\x18\x0c\x20\x01(\x0cR\x07aut\
     oMsg\x12\x16\n\x06photos\x18\r\x20\x03(\tR\x06photos\x12\x1b\n\ttoken_ur\
     i\x18\x0e\x20\x01(\tR\x08tokenUri\"\xa1\x01\n\rMsgUpdateItem\x12\x16\n\
     \x06seller\x18\x01\x20\x01(\tR\x06seller\x12\x0e\n\x02id\x18\x02\x20\x01\
