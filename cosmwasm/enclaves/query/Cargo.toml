@@ -1,5 +1,5 @@
 [package]
-name = "secret-query-enclave"
+name = "query-enclave"
 version = "1.2.4"
 authors = ["SCRT Labs <info@scrtlabs.com>"]
 edition = "2018"
