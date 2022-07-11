@@ -1,4 +1,4 @@
-use cosmwasm_std::{StdResult, Storage};
+use trustless_cosmwasm_std::{StdResult, Storage};
 
 use crate::Singleton;
 

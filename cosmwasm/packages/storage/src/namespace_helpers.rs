@@ -1,6 +1,6 @@
-use cosmwasm_std::Storage;
+use trustless_cosmwasm_std::Storage;
 #[cfg(feature = "iterator")]
-use cosmwasm_std::{Order, Pair};
+use trustless_cosmwasm_std::{Order, Pair};
 
 pub(crate) fn get_with_prefix(
     storage: &dyn Storage,

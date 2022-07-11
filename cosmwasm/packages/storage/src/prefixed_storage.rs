@@ -1,6 +1,6 @@
-use cosmwasm_std::Storage;
+use trustless_cosmwasm_std::Storage;
 #[cfg(feature = "iterator")]
-use cosmwasm_std::{Order, Pair};
+use trustless_cosmwasm_std::{Order, Pair};
 
 use crate::length_prefixed::{to_length_prefixed, to_length_prefixed_nested};
 #[cfg(feature = "iterator")]

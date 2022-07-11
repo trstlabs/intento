@@ -2,8 +2,8 @@ use serde::de::DeserializeOwned;
 use std::any::type_name;
 
 #[cfg(feature = "iterator")]
-use cosmwasm_std::Pair;
-use cosmwasm_std::{from_slice, StdError, StdResult};
+use trustless_cosmwasm_std::Pair;
+use trustless_cosmwasm_std::{from_slice, StdError, StdResult};
 
 /// may_deserialize parses json bytes from storage (Option), returning Ok(None) if no data present
 ///

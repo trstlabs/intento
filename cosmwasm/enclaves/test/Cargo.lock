@@ -867,7 +867,7 @@ dependencies = [
 
 [[package]]
 name = "trustless-cosmwasm-std"
-version = "0.10.0"
+version = "1.0.0"
 dependencies = [
  "base64 0.13.0",
  "cosmwasm-crypto",
