@@ -467,6 +467,7 @@ name = "go-cosmwasm"
 version = "0.10.0"
 dependencies = [
  "cbindgen 0.14.3",
+ "cosmwasm-crypto",
  "cosmwasm-sgx-vm",
  "ctor",
  "errno",

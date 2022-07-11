@@ -8,7 +8,7 @@ use cosmos_proto::tx::signing::SignMode;
 use enclave_cosmos_types::types::{ContractCode, HandleType, SigInfo, MsgInfo};
 
 use enclave_cosmwasm_types::encoding::Binary;
-use enclave_cosmwasm_types::addresses::{CanonicalAddr,HumanAddr, Addr};
+use enclave_cosmwasm_types::addresses::{CanonicalAddr, Addr};
 use enclave_cosmwasm_types::coins::Coin;
 use enclave_cosmwasm_types::results::{
     DecryptedReply, Event, Reply, SubMsgResponse, SubMsgResult, 
@@ -16,7 +16,7 @@ use enclave_cosmwasm_types::results::{
 use enclave_cosmwasm_types::types::{ BlockInfo, ContractInfo, MessageInfo};
 use enclave_cosmwasm_types::full_env::FullEnv as Env;
 use enclave_cosmwasm_types::types::EnvV1;
-use enclave_cosmwasm_types::timestamp::Timestamp;
+//use enclave_cosmwasm_types::timestamp::Timestamp;
 
 use enclave_crypto::{Ed25519PublicKey, HASH_SIZE};
 use enclave_utils::coalesce;

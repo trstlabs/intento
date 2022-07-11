@@ -8,7 +8,7 @@ use enclave_cosmos_types::types::{
     ContractCode, CosmWasmMsg, CosmosPubKey, SigInfo, SignDoc, StdSignDoc,
 };
 
-use enclave_cosmwasm_types::addresses::{CanonicalAddr, Addr, HumanAddr};
+use enclave_cosmwasm_types::addresses::{CanonicalAddr, Addr};
 use enclave_cosmwasm_types::coins::Coin;
 use enclave_crypto::traits::VerifyingKey;
 use enclave_crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER};
@@ -398,7 +398,7 @@ fn verify_funds(msg: &CosmWasmMsg, env: &Env) -> bool {
     match msg {
         CosmWasmMsg::Execute { funds, .. }
         | CosmWasmMsg::Instantiate {
-            funds: funds,
+            funds,
             ..
         } => &env.message.funds == funds,
         CosmWasmMsg::Other => false,

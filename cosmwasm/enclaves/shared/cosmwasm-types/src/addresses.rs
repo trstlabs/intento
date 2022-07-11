@@ -174,19 +174,19 @@ impl CanonicalAddr {
         self.0.is_empty()
     }
     pub fn from_human(human_addr: &HumanAddr) -> Result<Self, bech32::Error> {
-        let (decoded_prefix, data) = bech32::decode(human_addr.as_str())?;
+        let (_decoded_prefix, data) = bech32::decode(human_addr.as_str())?;
         let canonical = Vec::<u8>::from_base32(&data)?;
 
         Ok(CanonicalAddr(Binary(canonical)))
     }
     pub fn from_addr(val: &Addr) -> Result<Self, bech32::Error> {
-        let (decoded_prefix, data) = bech32::decode(val.as_str())?;
+        let (_decoded_prefix, data) = bech32::decode(val.as_str())?;
         let canonical = Vec::<u8>::from_base32(&data)?;
 
         Ok(CanonicalAddr(Binary(canonical)))
     }
     pub fn from_str(val: &str) -> Result<Self, bech32::Error> {
-        let (decoded_prefix, data) = bech32::decode(val)?;
+        let (_decoded_prefix, data) = bech32::decode(val)?;
         let canonical = Vec::<u8>::from_base32(&data)?;
 
         Ok(CanonicalAddr(Binary(canonical)))

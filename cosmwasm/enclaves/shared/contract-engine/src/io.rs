@@ -4,7 +4,7 @@
 ///
 use super::types::{IoNonce, ContractMessage};
 use enclave_cosmwasm_types::encoding::Binary;
-use enclave_cosmwasm_types::math::Uint128;
+//use enclave_cosmwasm_types::math::Uint128;
 use enclave_cosmwasm_types::results::{Event, Response, CosmosMsg, WasmMsg, Reply, ReplyOn, SubMsgResponse,REPLY_ENCRYPTION_MAGIC_BYTES, SubMsgResult};
 use enclave_cosmwasm_types::coins::Coin;
 use enclave_cosmwasm_types::addresses::{CanonicalAddr,HumanAddr};
