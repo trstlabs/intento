@@ -25,7 +25,7 @@ use cosmwasm_storage::to_length_prefixed;
 use cosmwasm_vm::testing::{handle, init, mock_env, mock_instance};
 use cosmwasm_vm::{from_slice, Api, Storage};
 
-use cw_escrow::msg::{HandleMsg, Msg};
+use cw_escrow::msg::{HandleMsg, InitMsg};
 use cw_escrow::state::State;
 
 // This line will test the output of cargo wasm
@@ -33,8 +33,8 @@ static WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/cw
 // You can uncomment this line instead to test productionified build from rust-optimizer
 // static WASM: &[u8] = include_bytes!("../contract.wasm");
 
-fn msg_expire_by_height(height: u64) -> Msg {
-    Msg {
+fn init_msg_expire_by_height(height: u64) -> InitMsg {
+    InitMsg {
         arbiter: HumanAddr::from("verifies"),
         recipient: HumanAddr::from("benefits"),
         end_height: Some(height),
@@ -53,7 +53,7 @@ fn mock_env_height<A: Api>(api: &A, signer: &str, sent: &[Coin], height: u64, ti
 fn proper_initialization() {
     let mut deps = mock_instance(WASM, &[]);
 
-    let msg = msg_expire_by_height(1000);
+    let msg = init_msg_expire_by_height(1000);
     let env = mock_env_height(&deps.api, "creator", &coins(1000, "earth"), 876, 0);
     let res: InitResponse = init(&mut deps, env, msg).unwrap();
     assert_eq!(0, res.messages.len());
@@ -82,7 +82,7 @@ fn proper_initialization() {
 fn cannot_initialize_expired() {
     let mut deps = mock_instance(WASM, &[]);
 
-    let msg = msg_expire_by_height(1000);
+    let msg = init_msg_expire_by_height(1000);
     let env = mock_env_height(&deps.api, "creator", &coins(1000, "earth"), 1001, 0);
     let res: InitResult = init(&mut deps, env, msg);
     match res.unwrap_err() {
@@ -99,7 +99,7 @@ fn handle_approve() {
     let init_amount = coins(1000, "earth");
     let init_env = mock_env_height(&deps.api, "creator", &init_amount, 876, 0);
     let contract_addr = deps.api.human_address(&init_env.contract.address).unwrap();
-    let msg = msg_expire_by_height(1000);
+    let msg = init_msg_expire_by_height(1000);
     let init_res: InitResponse = init(&mut deps, init_env, msg).unwrap();
     assert_eq!(0, init_res.messages.len());
 
@@ -167,7 +167,7 @@ fn handle_refund() {
     let init_amount = coins(1000, "earth");
     let init_env = mock_env_height(&deps.api, "creator", &init_amount, 876, 0);
     let contract_addr = deps.api.human_address(&init_env.contract.address).unwrap();
-    let msg = msg_expire_by_height(1000);
+    let msg = init_msg_expire_by_height(1000);
     let init_res: InitResponse = init(&mut deps, init_env, msg).unwrap();
     assert_eq!(0, init_res.messages.len());
 

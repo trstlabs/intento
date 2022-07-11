@@ -66,14 +66,14 @@ docker run --rm -v "$(pwd)":/code \
 The development contracts in this folder contain a variety of different entry
 points in order to demonstrate and test the flexibility we have.
 
-| Contract    | Macro                                         | Has `query` | 
-| ----------- | --------------------------------------------- | ----------- |
-| burner      | `#[entry_point]`                              | no          |
-| hackatom    | [`create_entry_points_with_migration!`][cepm] | yes         |
-| ibc-reflect | `#[entry_point]`                              | yes         |
-| queue       | mixed<sup>1</sup>                             | yes         |
-| reflect     | [`create_entry_points!`][cep]                 | yes         |
-| staking     | `#[entry_point]`                              | yes         |
+| Contract    | Macro                                         | Has `query` | Has `migrate` |
+| ----------- | --------------------------------------------- | ----------- | ------------- |
+| burner      | `#[entry_point]`                              | no          | yes           |
+| hackatom    | [`create_entry_points_with_migration!`][cepm] | yes         | yes           |
+| ibc-reflect | `#[entry_point]`                              | yes         | no            |
+| queue       | mixed<sup>1</sup>                             | yes         | yes           |
+| reflect     | [`create_entry_points!`][cep]                 | yes         | no            |
+| staking     | `#[entry_point]`                              | yes         | no            |
 
 <sup>1</sup> Because we can. Don't try this at home.
 
