@@ -93,7 +93,7 @@ Integration tests:
 
 `Cargo.toml` dependencies:
 
-- Update to `schemars = "0.7"`
+- Update to `schemars = "0.8.1"`
 - Replace `cosmwasm = "0.7"` with `cosmwasm-std = "0.8"`
 - Replace `cosmwasm-vm = "0.7"` with `cosmwasm-vm = "0.8"`
 - Replace `cw-storage = "0.2"` with `cosmwasm-storage = "0.8"`
