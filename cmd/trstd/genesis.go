@@ -24,7 +24,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	appParams "github.com/trstlabs/trst/app/params"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"

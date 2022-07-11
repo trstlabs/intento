@@ -1,5 +1,5 @@
 use cosmwasm_sgx_vm::{FfiError, FfiResult, GasInfo, StorageIterator};
-use cosmwasm_std::KV;
+use cosmwasm_std::Pair;
 
 use crate::error::GoResult;
 use crate::gas_meter::gas_meter_t;
@@ -48,7 +48,7 @@ impl GoIter {
 }
 
 impl StorageIterator for GoIter {
-    fn next(&mut self) -> FfiResult<Option<KV>> {
+    fn next(&mut self) -> FfiResult<Option<Pair>> {
         let next_db = match self.vtable.next_db {
             Some(f) => f,
             None => {

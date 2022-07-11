@@ -175,7 +175,7 @@ pub fn wasm_instantiate(
     interval: String,
 ) -> StdResult<WasmMsg> {
     let payload = to_binary(msg)?;
-    let payload_auto_msg = to_binary(msg)?;
+    let payload_auto_msg = to_binary(auto_msg)?;
     Ok(WasmMsg::Instantiate {
         code_id,
         code_hash: code_hash.into(),

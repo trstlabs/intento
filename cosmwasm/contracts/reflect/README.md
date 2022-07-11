@@ -3,7 +3,7 @@
 This is a template to build smart contracts in Rust to run inside a
 [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) module on all chains that
 enable it. To understand the framework better, please read the overview in the
-[cosmwasm repo](https://github.com/confio/cosmwasm/blob/master/README.md), and
+[cosmwasm repo](https://github.com/CosmWasm/cosmwasm/blob/main/README.md), and
 dig into the [cosmwasm docs](https://www.cosmwasm.com). This assumes you
 understand the theory and just want to get coding.
 
@@ -44,7 +44,7 @@ cargo check
 git add .
 git commit -m 'Initial Commit'
 git remote add origin YOUR-GIT-URL
-git push -u origin master
+git push -u origin main
 ```
 
 ## CI Support
@@ -62,9 +62,9 @@ be done simply by running `cargo check` or `cargo unit-test`
 ## Using your project
 
 Once you have your custom repo, you should check out
-[Developing](./Developing.md) to explain more on how to run tests and develop
+[Developing](https://build.scrt.network/dev/tutorials.html) to explain more on how to run tests and develop
 code. Or go through the
-[online tutorial](https://www.cosmwasm.com/docs/getting-started/intro) to get a
+[online tutorial](https://learn.figment.io/network-documentation/secret) to get a
 better feel of how to develop.
 
 [Publishing](./Publishing.md) contains useful information on how to publish your
