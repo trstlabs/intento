@@ -126,7 +126,7 @@ librust_cosmwasm_query_enclave.so: $(CUSTOM_LIBRARY_PATH)/libenclave.a Enclave_t
 
 $(CUSTOM_LIBRARY_PATH)/libenclave.a: $(CUSTOM_LIBRARY_PATH) $(Rust_Crate_Source)
 	RUST_TARGET_PATH=$(Rust_Target_Path) RUSTFLAGS=$(Rust_Flags) xargo build --features "$(FEATURES)" --target x86_64-unknown-linux-sgx -Z unstable-options --profile $(BUILD_PROFILE) --locked
-	cp ../target/x86_64-unknown-linux-sgx/$(BUILD_PROFILE)/libsecret_query_enclave.a $(CUSTOM_LIBRARY_PATH)/libenclave.a
+	cp ../target/x86_64-unknown-linux-sgx/$(BUILD_PROFILE)/libquery_enclave.a $(CUSTOM_LIBRARY_PATH)/libenclave.a
 
 $(CUSTOM_LIBRARY_PATH):
 	mkdir $(CUSTOM_LIBRARY_PATH)

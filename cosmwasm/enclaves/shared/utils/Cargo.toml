@@ -1,7 +1,6 @@
 [package]
 name = "enclave_utils"
-version = "1.2.4"
-authors = ["Cashmaney <itzik@enigma.co>"]
+version = "1.0.0"
 edition = "2018"
 
 [features]

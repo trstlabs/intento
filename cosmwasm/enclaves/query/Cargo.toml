@@ -1,12 +1,11 @@
 [package]
 name = "query-enclave"
-version = "1.2.4"
-authors = ["SCRT Labs <info@scrtlabs.com>"]
+version = "1.0.0"
 edition = "2018"
 description = "An enclave running wasmi, to be used by cosmwasm-sgx-vm"
 
 [lib]
-name = "secret_query_enclave"
+name = "query_enclave"
 crate-type = ["staticlib"]
 
 [features]
