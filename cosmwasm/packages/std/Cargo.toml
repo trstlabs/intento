@@ -45,7 +45,7 @@ serde-json-wasm = { version = "0.3.1" }
 schemars = "0.8.1"
 cosmwasm-derive = { path = "../derive", version = "1.0.0" }
 uint = "=0.9.1"
-serde = { version = "1.0.117", default-features = false, features = [
+serde = { version = "1.0.139", default-features = false, features = [
     "derive",
     "alloc"
 ] }

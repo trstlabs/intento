@@ -20,7 +20,7 @@ iterator = ["trustless-cosmwasm-std/iterator"]
 [dependencies]
 # Uses the path when built locally; uses the given version from crates.io when published
 trustless-cosmwasm-std = { path = "../std", version = "1.0.0" }
-serde = { version = "1.0.117", default-features = false, features = ["derive", "alloc"] }
+serde = { version = "1.0.139", default-features = false, features = ["derive", "alloc"] }
 
 [dev-dependencies]
 snafu = { version = "0.6.3" }
