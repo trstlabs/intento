@@ -10,7 +10,7 @@ pub struct InitialBalance {
 }
 
 #[derive(Serialize, Deserialize, JsonSchema)]
-pub struct Msg {
+pub struct InitMsg {
     pub name: String,
     pub symbol: String,
     pub decimals: u8,

@@ -31,7 +31,7 @@ cranelift = ["cosmwasm-vm/cranelift"]
 backtraces = ["cosmwasm-std/backtraces", "cosmwasm-vm/backtraces"]
 
 [dependencies]
-cosmwasm-std = { package = "secret-cosmwasm-std", version = "0.10.1", features = ["staking"] }
+cosmwasm-std = { package = "trustless-cosmwasm-std", version = "1.0.0", features = ["staking"] }
 cosmwasm-storage = { package = "secret-cosmwasm-storage", version = "0.10.0" }
 schemars = "0.8.1"
 serde = { version = "1.0.103", default-features = false, features = ["derive"] }

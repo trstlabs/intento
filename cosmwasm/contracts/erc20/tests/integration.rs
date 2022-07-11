@@ -26,7 +26,7 @@ use cw_erc20::contract::{
     bytes_to_u128, Constants, KEY_CONSTANTS, KEY_TOTAL_SUPPLY, PREFIX_ALLOWANCES, PREFIX_BALANCES,
     PREFIX_CONFIG,
 };
-use cw_erc20::msg::{HandleMsg, Msg, InitialBalance, QueryMsg};
+use cw_erc20::msg::{HandleMsg, InitMsg, InitialBalance, QueryMsg};
 
 static WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/cw_erc20.wasm");
 
@@ -112,8 +112,8 @@ fn address(index: u8) -> HumanAddr {
     }
 }
 
-fn msg() -> Msg {
-    Msg {
+fn init_msg() -> InitMsg {
+    InitMsg {
         decimals: 5,
         name: "Ash token".to_string(),
         symbol: "ASH".to_string(),
@@ -138,9 +138,9 @@ fn msg() -> Msg {
 #[test]
 fn init_works() {
     let mut deps = mock_instance(WASM, &[]);
-    let msg = msg();
+    let init_msg = init_msg();
     let params = mock_env_height(&address(0), 876, 0);
-    let res: InitResponse = init(&mut deps, params, msg).unwrap();
+    let res: InitResponse = init(&mut deps, params, init_msg).unwrap();
     assert_eq!(0, res.messages.len());
 
     // query the store directly
@@ -166,9 +166,9 @@ fn init_works() {
 #[test]
 fn transfer_works() {
     let mut deps = mock_instance(WASM, &[]);
-    let msg = msg();
+    let init_msg = init_msg();
     let env1 = mock_env_height(&address(0), 876, 0);
-    let res: InitResponse = init(&mut deps, env1, msg).unwrap();
+    let res: InitResponse = init(&mut deps, env1, init_msg).unwrap();
     assert_eq!(0, res.messages.len());
 
     let sender = address(1);
@@ -212,9 +212,9 @@ fn transfer_works() {
 #[test]
 fn approve_works() {
     let mut deps = mock_instance(WASM, &[]);
-    let msg = msg();
+    let init_msg = init_msg();
     let env1 = mock_env_height(&address(0), 876, 0);
-    let res: InitResponse = init(&mut deps, env1, msg).unwrap();
+    let res: InitResponse = init(&mut deps, env1, init_msg).unwrap();
     assert_eq!(0, res.messages.len());
 
     let owner = address(1);
@@ -256,9 +256,9 @@ fn approve_works() {
 #[test]
 fn transfer_from_works() {
     let mut deps = mock_instance(WASM, &[]);
-    let msg = msg();
+    let init_msg = init_msg();
     let env1 = mock_env_height(&address(0), 876, 0);
-    let res: InitResponse = init(&mut deps, env1, msg).unwrap();
+    let res: InitResponse = init(&mut deps, env1, init_msg).unwrap();
     assert_eq!(0, res.messages.len());
 
     let owner = address(1);
@@ -325,9 +325,9 @@ fn transfer_from_works() {
 #[test]
 fn burn_works() {
     let mut deps = mock_instance(WASM, &[]);
-    let msg = msg();
+    let init_msg = init_msg();
     let env1 = mock_env_height(&address(0), 876, 0);
-    let res: InitResponse = init(&mut deps, env1, msg).unwrap();
+    let res: InitResponse = init(&mut deps, env1, init_msg).unwrap();
     assert_eq!(0, res.messages.len());
 
     let owner = address(1);
@@ -367,9 +367,9 @@ fn burn_works() {
 #[test]
 fn can_query_balance_of_existing_address() {
     let mut deps = mock_instance(WASM, &[]);
-    let msg = msg();
+    let init_msg = init_msg();
     let env1 = mock_env_height(&address(0), 450, 550);
-    let res: InitResponse = init(&mut deps, env1, msg).unwrap();
+    let res: InitResponse = init(&mut deps, env1, init_msg).unwrap();
     assert_eq!(0, res.messages.len());
 
     let query_msg = QueryMsg::Balance {
