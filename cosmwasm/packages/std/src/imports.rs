@@ -6,7 +6,7 @@ use crate::errors::{
     RecoverPubkeyError, SigningError, StdError, StdResult, SystemError, VerificationError,
 };
 #[cfg(feature = "iterator")]
-use crate::iterator::{Order, Pair};
+use crate::iterator::{Order, Record};
 use crate::memory::{
     alloc, build_region, consume_region, encode_sections, get_optional_region_address, Region,
 };
@@ -125,7 +125,7 @@ impl Storage for ExternalStorage {
         start: Option<&[u8]>,
         end: Option<&[u8]>,
         order: Order,
-    ) -> Box<dyn Iterator<Item = Pair>> {
+    ) -> Box<dyn Iterator<Item = Record>> {
         // There is lots of gotchas on turning options into regions for FFI, thus this design
         // See: https://github.com/CosmWasm/cosmwasm/pull/509
         let start_region = start.map(build_region);
@@ -147,7 +147,7 @@ struct ExternalIterator {
 
 #[cfg(feature = "iterator")]
 impl Iterator for ExternalIterator {
-    type Item = Pair;
+    type Item = Record;
 
     fn next(&mut self) -> Option<Self::Item> {
         let next_result = unsafe { db_next(self.iterator_id) };

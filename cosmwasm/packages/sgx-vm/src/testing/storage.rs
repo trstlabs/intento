@@ -120,10 +120,10 @@ fn range_bounds(start: Option<&[u8]>, end: Option<&[u8]>) -> impl RangeBounds<Ve
 #[cfg(feature = "iterator")]
 /// The BTreeMap specific key-value pair reference type, as returned by BTreeMap<Vec<u8>, T>::range.
 /// This is internal as it can change any time if the map implementation is swapped out.
-type BTreeMapPairRef<'a, T = Vec<u8>> = (&'a Vec<u8>, &'a T);
+type BTreeMapRecordRef<'a, T = Vec<u8>> = (&'a Vec<u8>, &'a T);
 
 #[cfg(feature = "iterator")]
-fn clone_item<T: Clone>(item_ref: BTreeMapPairRef<T>) -> KV<T> {
+fn clone_item<T: Clone>(item_ref: BTreeMapRecordRef<T>) -> KV<T> {
     let (key, value) = item_ref;
     (key.clone(), value.clone())
 }
