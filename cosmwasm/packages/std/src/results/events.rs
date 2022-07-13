@@ -312,7 +312,7 @@ pub fn store_pub_db(key: impl Into<String>, value: impl Into<String>) -> Attribu
 }
 /// A shorthand to set a public state key-value pair for a given account
 #[inline]
-pub fn store_acc_pub_db(
+pub fn acc_pub_db(
     key: impl Into<String>,
     value: impl Into<String>,
     addr: impl Into<String>,
@@ -321,12 +321,12 @@ pub fn store_acc_pub_db(
 }
 /// A shorthand to set a public state key-value pair
 #[inline]
-pub fn store_pub_db_bytes(key: impl Into<String>, value: &[u8]) -> Attribute {
+pub fn pub_db_bytes(key: impl Into<String>, value: &[u8]) -> Attribute {
     Attribute::store_pub_db_bytes(key, value)
 }
 /// A shorthand to set a public state key-value pair for a given account
 #[inline]
-pub fn store_acc_pub_db_bytes(
+pub fn acc_pub_db_bytes(
     key: impl Into<String>,
     value: &[u8],
     addr: impl Into<String>,
