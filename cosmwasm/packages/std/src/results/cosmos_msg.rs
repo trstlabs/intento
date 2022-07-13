@@ -141,7 +141,7 @@ pub enum WasmMsg {
         /// custom duration (e.g. 5h/60d, 0 for no duration) 
         contract_duration: String,
          /// time interval (e.g. 60s/5h)
-        interval: String,
+        interval: Option<String>,
     },
 }
 
@@ -184,7 +184,7 @@ pub fn wasm_instantiate(
         funds,
         contract_id,
         contract_duration,
-        interval,
+        interval: Some(interval),
     })
 }
 

@@ -142,10 +142,11 @@ pub enum WasmMsg {
         contract_id: String,
         /// Human-readable duration for the contract (e.g. 60s, 5h ect.)
         contract_duration: String,
+        /// time interval (e.g. 60s/5h)
+        interval: Option<String>,
         /// callback_sig is used validate messages that are originating from other contracts or the specified governance address
         callback_sig: Option<Vec<u8>>,
-        /// time interval (e.g. 60s/5h)
-        interval: String,
+
     },
 }
 
