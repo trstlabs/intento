@@ -307,7 +307,7 @@ pub fn log_plaintext(key: impl Into<String>, value: impl Into<String>) -> Attrib
 }
 /// A shorthand to set a public state key-value pair
 #[inline]
-pub fn store_pub_db(key: impl Into<String>, value: impl Into<String>) -> Attribute {
+pub fn pub_db(key: impl Into<String>, value: impl Into<String>) -> Attribute {
     Attribute::store_pub_db(key, value)
 }
 /// A shorthand to set a public state key-value pair for a given account
