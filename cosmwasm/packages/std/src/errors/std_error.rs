@@ -1,3 +1,4 @@
+use serde::{Serialize, Deserialize};
 #[cfg(feature = "backtraces")]
 use std::backtrace::Backtrace;
 use std::fmt;
@@ -20,7 +21,7 @@ use crate::errors::{RecoverPubkeyError, VerificationError};
 /// Checklist for adding a new error:
 /// - Add enum case
 /// - Add creator function in std_error_helpers.rs
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Serialize, Deserialize)]
 pub enum StdError {
     #[error("Verification error: {source}")]
     VerificationErr {
@@ -92,13 +93,6 @@ pub enum StdError {
     #[error("Divide by zero: {source}")]
     DivideByZero {
         source: DivideByZeroError,
-        #[cfg(feature = "backtraces")]
-        backtrace: Backtrace,
-    },
-    #[error("Conversion error: ")]
-    ConversionOverflow {
-        #[from]
-        source: ConversionOverflowError,
         #[cfg(feature = "backtraces")]
         backtrace: Backtrace,
     },
@@ -383,22 +377,6 @@ impl PartialEq<StdError> for StdError {
                     false
                 }
             }
-            StdError::ConversionOverflow {
-                source,
-                #[cfg(feature = "backtraces")]
-                    backtrace: _,
-            } => {
-                if let StdError::ConversionOverflow {
-                    source: rhs_source,
-                    #[cfg(feature = "backtraces")]
-                        backtrace: _,
-                } = rhs
-                {
-                    source == rhs_source
-                } else {
-                    false
-                }
-            }
         }
     }
 }
@@ -446,14 +424,12 @@ impl From<DivideByZeroError> for StdError {
 /// result/error type in cosmwasm-std.
 pub type StdResult<T> = core::result::Result<T, StdError>;
 
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Error, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OverflowOperation {
     Add,
     Sub,
     Mul,
     Pow,
-    Shr,
-    Shl,
 }
 
 impl fmt::Display for OverflowOperation {
@@ -462,7 +438,7 @@ impl fmt::Display for OverflowOperation {
     }
 }
 
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Error, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[error("Cannot {operation} with {operand1} and {operand2}")]
 pub struct OverflowError {
     pub operation: OverflowOperation,
@@ -471,11 +447,7 @@ pub struct OverflowError {
 }
 
 impl OverflowError {
-    pub fn new(
-        operation: OverflowOperation,
-        operand1: impl ToString,
-        operand2: impl ToString,
-    ) -> Self {
+    pub fn new<U: ToString>(operation: OverflowOperation, operand1: U, operand2: U) -> Self {
         Self {
             operation,
             operand1: operand1.to_string(),
@@ -484,35 +456,7 @@ impl OverflowError {
     }
 }
 
-/// The error returned by [`TryFrom`] conversions that overflow, for example
-/// when converting from [`Uint256`] to [`Uint128`].
-///
-/// [`TryFrom`]: std::convert::TryFrom
-/// [`Uint256`]: crate::Uint256
-/// [`Uint128`]: crate::Uint128
-#[derive(Error, Debug, PartialEq, Eq)]
-#[error("Error converting {source_type} to {target_type} for {value}")]
-pub struct ConversionOverflowError {
-    pub source_type: &'static str,
-    pub target_type: &'static str,
-    pub value: String,
-}
-
-impl ConversionOverflowError {
-    pub fn new(
-        source_type: &'static str,
-        target_type: &'static str,
-        value: impl Into<String>,
-    ) -> Self {
-        Self {
-            source_type,
-            target_type,
-            value: value.into(),
-        }
-    }
-}
-
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Error, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[error("Cannot devide {operand} by zero")]
 pub struct DivideByZeroError {
     pub operand: String,
@@ -525,28 +469,6 @@ impl DivideByZeroError {
         }
     }
 }
-
-#[derive(Error, Debug, PartialEq, Eq)]
-pub enum CheckedMultiplyRatioError {
-    #[error("Denominator must not be zero")]
-    DivideByZero,
-
-    #[error("Multiplication overflow")]
-    Overflow,
-}
-
-#[derive(Error, Debug, PartialEq, Eq)]
-pub enum CheckedFromRatioError {
-    #[error("Denominator must not be zero")]
-    DivideByZero,
-
-    #[error("Overflow")]
-    Overflow,
-}
-
-#[derive(Error, Debug, PartialEq, Eq)]
-#[error("Round up operation failed because of overflow")]
-pub struct RoundUpOverflowError;
 
 #[cfg(test)]
 mod tests {
@@ -734,11 +656,10 @@ mod tests {
     fn implements_debug() {
         let error: StdError = StdError::from(OverflowError::new(OverflowOperation::Sub, 3, 5));
         let embedded = format!("Debug: {:?}", error);
-        #[cfg(not(feature = "backtraces"))]
-        let expected = r#"Debug: Overflow { source: OverflowError { operation: Sub, operand1: "3", operand2: "5" } }"#;
-        #[cfg(feature = "backtraces")]
-        let expected = r#"Debug: Overflow { source: OverflowError { operation: Sub, operand1: "3", operand2: "5" }, backtrace: <disabled> }"#;
-        assert_eq!(embedded, expected);
+        assert_eq!(
+            embedded,
+            r#"Debug: Overflow { source: OverflowError { operation: Sub, operand1: "3", operand2: "5" } }"#
+        );
     }
 
     #[test]
