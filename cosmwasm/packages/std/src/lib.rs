@@ -6,6 +6,7 @@ mod addresses;
 mod binary;
 mod coins;
 mod conversion;
+mod sections;
 mod deps;
 mod entry_points;
 mod errors;

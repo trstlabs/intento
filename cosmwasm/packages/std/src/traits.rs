@@ -5,7 +5,7 @@ use std::ops::Deref;
 use crate::addresses::{Addr, CanonicalAddr};
 use crate::binary::Binary;
 use crate::coins::Coin;
-use crate::errors::{RecoverPubkeyError, StdError, StdResult, VerificationError};
+use crate::errors::{RecoverPubkeyError, StdError, StdResult, VerificationError, SigningError};
 #[cfg(feature = "iterator")]
 use crate::iterator::{Order, Record};
 use crate::query::{
@@ -138,7 +138,7 @@ pub trait Api {
     ///
     /// - message: Arbitrary message.
     /// - private key: Raw secp256k1 private key (32 bytes)
-    fn secp256k1_sign(&self, message: &[u8], private_key: &[u8]) -> Result<Vec<u8>, VerificationError>;
+    fn secp256k1_sign(&self, message: &[u8], private_key: &[u8]) -> Result<Vec<u8>, SigningError>;
 
     /// EdDSA Ed25519 signing.
     ///
@@ -146,7 +146,7 @@ pub trait Api {
     ///
     /// - message: Arbitrary message.
     /// - private key: Raw ED25519 private key (32 bytes)
-    fn ed25519_sign(&self, message: &[u8], private_key: &[u8]) -> Result<Vec<u8>, VerificationError>;
+    fn ed25519_sign(&self, message: &[u8], private_key: &[u8]) -> Result<Vec<u8>, SigningError>;
 
 }
 

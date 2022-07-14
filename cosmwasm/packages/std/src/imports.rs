@@ -226,24 +226,6 @@ impl Api for ExternalApi {
         Ok(Addr::unchecked(address))
     }
 
-    fn addr_validate(&self, canonical: &CanonicalAddr) -> StdResult<Addr> {
-        let send = build_region(&canonical);
-        let send_ptr = &*send as *const Region as u32;
-        let human = alloc(HUMAN_ADDRESS_BUFFER_LENGTH);
-
-        let result = unsafe { addr_humanize(send_ptr, human as u32) };
-        if result != 0 {
-            let error = unsafe { consume_string_region_written_by_vm(result as *mut Region) };
-            return Err(StdError::generic_err(format!(
-                "addr_humanize errored: {}",
-                error
-            )));
-        }
-
-        let address = unsafe { consume_string_region_written_by_vm(human) };
-        Ok(Addr::unchecked(address))
-    }
-
     fn debug(&self, message: &str) {
         // keep the boxes in scope, so we free it at the end (don't cast to pointers same line as build_region)
         let region = build_region(message.as_bytes());
