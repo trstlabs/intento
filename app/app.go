@@ -403,9 +403,10 @@ func NewTrstApp(
 
 	homeDir := viper.GetString(cli.HomeFlag)
 	computeDir := filepath.Join(homeDir, ".compute")
-	//trstdir := filepath.Join(homeDir, ".trst")
 
-	supportedFeatures := "staking"
+	// The last arguments can contain custom message handlers, and custom query handlers,
+	// if we want to allow any custom callbacks
+	supportedFeatures := "iterator,staking,stargate"
 
 	app.regKeeper = reg.NewKeeper(appCodec, keys[reg.StoreKey], regRouter, reg.EnclaveApi{}, homeDir, app.bootstrap)
 	app.computeKeeper = compute.NewKeeper(
