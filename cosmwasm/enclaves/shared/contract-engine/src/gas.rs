@@ -26,10 +26,10 @@ pub struct WasmCosts {
     pub opcodes_mul: u32,
     /// Cost of wasm opcode is calculated as TABLE_ENTRY_COST * `opcodes_mul` / `opcodes_div`
     pub opcodes_div: u32,
-    /// Cost invoking humanize_address from WASM
-    pub external_humanize_address: u32,
-    /// Cost invoking canonicalize_address from WASM
-    pub external_canonicalize_address: u32,
+    /// Cost invoking addr_humanize from WASM
+    pub external_addr_humanize: u32,
+    /// Cost invoking addr_canonicalize from WASM
+    pub external_addr_canonicalize: u32,
     /// Cost invoking addr_validate from WASM
     pub external_addr_validate: u32,
     /// Cost invoking secp256k1_verify from WASM
@@ -63,8 +63,8 @@ impl Default for WasmCosts {
             max_stack_height: 64 * 1024, // Assaf: I don't think that this goes anywhere
             opcodes_mul: 3,
             opcodes_div: 8,
-            external_humanize_address: 8192,
-            external_canonicalize_address: 8192,
+            external_addr_humanize: 8192,
+            external_addr_canonicalize: 8192,
             external_addr_validate: 8192,
             external_secp256k1_verify: 98304,
             external_secp256k1_recover_pubkey: 98304,

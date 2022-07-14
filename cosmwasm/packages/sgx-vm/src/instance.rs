@@ -29,7 +29,7 @@ use crate::errors::VmResult;
 /*
 use crate::features::required_features_from_wasmer_instance;
 use crate::imports::{
-    do_canonicalize_address, do_humanize_address, do_query_chain, do_read, do_remove, do_write,
+    do_addr_canonicalize, do_addr_humanize, do_query_chain, do_read, do_remove, do_write,
 };
 #[cfg(feature = "iterator")]
 use crate::imports::{do_next, do_scan};
@@ -127,15 +127,22 @@ where
                 // A prepared and sufficiently large memory Region is expected at destination_ptr that points to pre-allocated memory.
                 // Returns 0 on success. Returns a non-zero memory location to a Region containing an UTF-8 encoded error string for invalid inputs.
                 // Ownership of both input and output pointer is not transferred to the host.
-                "canonicalize_address" => Func::new(move |ctx: &mut Ctx, source_ptr: u32, destination_ptr: u32| -> VmResult<u32> {
-                    do_canonicalize_address::<A, S, Q>(api, ctx, source_ptr, destination_ptr)
+                "addr_canonicalize" => Func::new(move |ctx: &mut Ctx, source_ptr: u32, destination_ptr: u32| -> VmResult<u32> {
+                    do_addr_canonicalize::<A, S, Q>(api, ctx, source_ptr, destination_ptr)
                 }),
                 // Reads canonical address from source_ptr and writes humanized representation to destination_ptr.
                 // A prepared and sufficiently large memory Region is expected at destination_ptr that points to pre-allocated memory.
                 // Returns 0 on success. Returns a non-zero memory location to a Region containing an UTF-8 encoded error string for invalid inputs.
                 // Ownership of both input and output pointer is not transferred to the host.
-                "humanize_address" => Func::new(move |ctx: &mut Ctx, source_ptr: u32, destination_ptr: u32| -> VmResult<u32> {
-                    do_humanize_address::<A, S, Q>(api, ctx, source_ptr, destination_ptr)
+                "addr_humanize" => Func::new(move |ctx: &mut Ctx, source_ptr: u32, destination_ptr: u32| -> VmResult<u32> {
+                    do_addr_humanize::<A, S, Q>(api, ctx, source_ptr, destination_ptr)
+                }),
+                  // Reads canonical address from source_ptr and writes humanized representation to destination_ptr.
+                // A prepared and sufficiently large memory Region is expected at destination_ptr that points to pre-allocated memory.
+                // Returns 0 on success. Returns a non-zero memory location to a Region containing an UTF-8 encoded error string for invalid inputs.
+                // Ownership of both input and output pointer is not transferred to the host.
+                "addr_validate" => Func::new(move |ctx: &mut Ctx, source_ptr: u32, destination_ptr: u32| -> VmResult<u32> {
+                    do_addr_validate::<A, S, Q>(api, ctx, source_ptr, destination_ptr)
                 }),
                 "query_chain" => Func::new(move |ctx: &mut Ctx, request_ptr: u32| -> VmResult<u32> {
                     do_query_chain::<S, Q>(ctx, request_ptr)

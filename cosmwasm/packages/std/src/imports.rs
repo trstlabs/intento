@@ -37,6 +37,7 @@ extern "C" {
     fn addr_validate(source_ptr: u32) -> u32;
     fn addr_canonicalize(source_ptr: u32, destination_ptr: u32) -> u32;
     fn addr_humanize(source_ptr: u32, destination_ptr: u32) -> u32;
+    //fn addr_validate(source_ptr: u32, destination_ptr: u32) -> u32;
 
     fn debug(source_ptr: u32);
 
@@ -224,6 +225,66 @@ impl Api for ExternalApi {
         let address = unsafe { consume_string_region_written_by_vm(human) };
         Ok(Addr::unchecked(address))
     }
+
+    fn addr_validate(&self, canonical: &CanonicalAddr) -> StdResult<Addr> {
+        let send = build_region(&canonical);
+        let send_ptr = &*send as *const Region as u32;
+        let human = alloc(HUMAN_ADDRESS_BUFFER_LENGTH);
+
+        let result = unsafe { addr_humanize(send_ptr, human as u32) };
+        if result != 0 {
+            let error = unsafe { consume_string_region_written_by_vm(result as *mut Region) };
+            return Err(StdError::generic_err(format!(
+                "addr_humanize errored: {}",
+                error
+            )));
+        }
+
+        let address = unsafe { consume_string_region_written_by_vm(human) };
+        Ok(Addr::unchecked(address))
+    }
+
+
+pub fn do_addr_validate<A: BackendApi, S: Storage, Q: Querier>(
+    env: &Environment<A, S, Q>,
+    source_ptr: u32,
+) -> VmResult<u32> {
+    let source_data = read_region(&env.memory(), source_ptr, MAX_LENGTH_HUMAN_ADDRESS)?;
+    if source_data.is_empty() {
+        return write_to_contract::<A, S, Q>(env, b"Input is empty");
+    }
+
+    let source_string = match String::from_utf8(source_data) {
+        Ok(s) => s,
+        Err(_) => return write_to_contract::<A, S, Q>(env, b"Input is not valid UTF-8"),
+    };
+
+    let (result, gas_info) = env.api.canonical_address(&source_string);
+    process_gas_info::<A, S, Q>(env, gas_info)?;
+    let canonical = match result {
+        Ok(data) => data,
+        Err(BackendError::UserErr { msg, .. }) => {
+            return write_to_contract::<A, S, Q>(env, msg.as_bytes())
+        }
+        Err(err) => return Err(VmError::from(err)),
+    };
+
+    let (result, gas_info) = env.api.human_address(&canonical);
+    process_gas_info::<A, S, Q>(env, gas_info)?;
+    let normalized = match result {
+        Ok(addr) => addr,
+        Err(BackendError::UserErr { msg, .. }) => {
+            return write_to_contract::<A, S, Q>(env, msg.as_bytes())
+        }
+        Err(err) => return Err(VmError::from(err)),
+    };
+
+    if normalized != source_string {
+        return write_to_contract::<A, S, Q>(env, b"Address is not normalized");
+    }
+
+    Ok(0)
+}
 
     fn debug(&self, message: &str) {
         // keep the boxes in scope, so we free it at the end (don't cast to pointers same line as build_region)

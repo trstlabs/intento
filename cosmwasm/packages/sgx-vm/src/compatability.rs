@@ -9,7 +9,7 @@ use crate::features::required_features_from_module;
 
 /// Lists all v1 imports we provide upon instantiating the instance in Instance::from_module()
 /// This should be updated when new imports are added
-const SUPPORTED_IMPORTS_V1: &[&str] = &[
+const SUPPORTED_IMPORTS: &[&str] = &[
     "env.db_read",
     "env.db_write",
     "env.db_remove",
@@ -34,7 +34,7 @@ const SUPPORTED_IMPORTS_V1: &[&str] = &[
 /// Lists all entry points we expect to be present when calling a v1 contract.
 /// Basically, anything that is used in calls.rs
 /// This is unlikely to change much, must be frozen at 1.0 to avoid breaking existing contracts
-const REQUIRED_EXPORTS_V1: &[&str] = &[
+const REQUIRED_EXPORTS: &[&str] = &[
     "interface_version_8",
     // IO
     "allocate",
@@ -68,8 +68,8 @@ pub fn check_wasm(wasm_code: &[u8], supported_features: &HashSet<String>) -> VmR
     check_wasm_memories(&module)?;
     check_wasm_features(&module, supported_features)?;
 
-    let check_v1_exports_result = check_wasm_exports(&module, REQUIRED_EXPORTS_V1);
-    let check_v1_imports_result = check_wasm_imports(&module, SUPPORTED_IMPORTS_V1);
+    let check_v1_exports_result = check_wasm_exports(&module, REQUIRED_EXPORTS);
+    let check_v1_imports_result = check_wasm_imports(&module, SUPPORTED_IMPORTS);
     let is_v1 = check_v1_exports_result.is_ok() && check_v1_imports_result.is_ok();
 
     if !is_v1 {
@@ -78,7 +78,7 @@ pub fn check_wasm(wasm_code: &[u8], supported_features: &HashSet<String>) -> VmR
             check_v1_imports_result,
         ];
 
-        return Err(VmError::static_validation_err(format!("Contract is not CosmWasm v1, to supports v1 please fix the latter two errors: ${:?}", errors)));
+        return Err(VmError::static_validation_err(format!("Contract is not CosmWasm v1, to supports v1 please fix these errors: ${:?}", errors)));
     }
 
     Ok(())
@@ -369,8 +369,9 @@ mod test {
             (import "env" "db_read" (func (param i32 i32) (result i32)))
             (import "env" "db_write" (func (param i32 i32) (result i32)))
             (import "env" "db_remove" (func (param i32) (result i32)))
-            (import "env" "canonicalize_address" (func (param i32 i32) (result i32)))
-            (import "env" "humanize_address" (func (param i32 i32) (result i32)))
+            (import "env" "addr_canonicalize" (func (param i32 i32) (result i32)))
+            (import "env" "addr_humanize" (func (param i32 i32) (result i32)))
+            (import "env" "addr_validate" (func (param i32 i32) (result i32)))
         )"#,
         )
         .unwrap();
@@ -383,7 +384,7 @@ mod test {
         match check_wasm_imports(&module, SUPPORTED_IMPORTS_V010) {
             Err(VmError::StaticValidationErr { msg, .. }) => {
                 assert!(
-                    msg.starts_with("Wasm contract requires unsupported import: \"env.read_db\"")
+                    msg.starts_with("Wasm contract requires unsupported import: \"env.db_read\"")
                 );
             }
             Err(e) => panic!("Unexpected error {:?}", e),
