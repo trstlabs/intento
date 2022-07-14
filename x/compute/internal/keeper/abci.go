@@ -101,9 +101,13 @@ func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.Ac
 	//if the contract is not able to pay, the contract creator pays as next in line
 	err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contractAddress)
 	if err != nil {
-		err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Creator)
-		if err != nil {
-			return err
+		// if a contract instantiated the contract, we do not deduct fees from it and the AutoMsg won't execute
+		if !store.Has(types.GetContractEnclaveKey(contract.Creator)) {
+
+			err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Creator)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if contractBalance.Sub(feeCoins).AmountOf(types.Denom).IsPositive() {

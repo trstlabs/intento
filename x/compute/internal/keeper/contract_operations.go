@@ -398,11 +398,10 @@ func (k Keeper) Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error {
 	k.cdc.MustUnmarshal(contractBz, &contract)
 
 	prefixStoreKey := types.GetContractStorePrefixKey(contractAddress)
-	//prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
+
 	prefixStore.Delete(prefixStoreKey)
 
-	//prefixStore.Delete()
-	store.Delete(types.GetContractEnclaveKey(contractAddress))
+	//store.Delete(types.GetContractEnclaveKey(contractAddress))
 	store.Delete(types.GetContractIdPrefix(contract.ContractId))
 	store.Delete(types.GetContractAddressKey(contractAddress))
 
