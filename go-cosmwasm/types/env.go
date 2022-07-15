@@ -20,8 +20,8 @@ type ContractKey string
 type BlockInfo struct {
 	// block height this transaction is executed
 	Height uint64 `json:"height"`
-	// time in seconds since unix epoch - since cosmwasm 0.3
-	Time    uint64 `json:"time"`
+	// time in nanoseconds since unix epoch. Uses string to ensure json compatibility.
+	Time    uint64 `json:"time,string"`
 	ChainID string `json:"chain_id"`
 }
 
