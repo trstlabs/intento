@@ -1,7 +1,5 @@
-use ed25519_zebra::{batch, Signature, VerificationKey};
+use ed25519_zebra::{batch, Signature, SigningKey, VerificationKey};
 use rand_core::OsRng;
-use std::convert::TryFrom;
-use std::convert::TryInto;
 
 use crate::errors::{CryptoError, CryptoResult};
 
@@ -25,7 +23,7 @@ pub fn ed25519_verify(message: &[u8], signature: &[u8], public_key: &[u8]) -> Cr
 
     // Verification
     match VerificationKey::try_from(pubkey)
-        .and_then(|vk| vk.verify(&Signature::from(signature), &message))
+        .and_then(|vk| vk.verify(&Signature::from(signature), message))
     {
         Ok(()) => Ok(true),
         Err(_) => Ok(false),
@@ -111,6 +109,21 @@ pub fn ed25519_batch_verify(
     }
 }
 
+pub fn ed25519_sign(message: &[u8], private_key: &[u8]) -> CryptoResult<Vec<u8>> {
+    let privkey = read_privkey(private_key)?;
+
+    let ed25519_signing_key = match SigningKey::try_from(privkey.as_slice()) {
+        Ok(x) => x,
+        Err(_) => {
+            return Err(InvalidEd25519PrivkeyFormat.into());
+        }
+    };
+
+    let sig: [u8; 64] = ed25519_signing_key.sign(message).into();
+
+    Ok(sig.into())
+}
+
 /// Error raised when signature is not 64 bytes long
 struct InvalidEd25519SignatureFormat;
 
@@ -137,6 +150,19 @@ fn read_pubkey(data: &[u8]) -> Result<[u8; 32], InvalidEd25519PubkeyFormat> {
     data.try_into().map_err(|_| InvalidEd25519PubkeyFormat)
 }
 
+/// Error raised when privkey is not 32 bytes long
+struct InvalidEd25519PrivkeyFormat;
+
+impl From<InvalidEd25519PrivkeyFormat> for CryptoError {
+    fn from(_original: InvalidEd25519PrivkeyFormat) -> Self {
+        CryptoError::invalid_privkey_format()
+    }
+}
+
+fn read_privkey(data: &[u8]) -> Result<[u8; 32], InvalidEd25519PrivkeyFormat> {
+    data.try_into().map_err(|_| InvalidEd25519PrivkeyFormat)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -161,6 +187,7 @@ mod tests {
     #[derive(Deserialize, Debug)]
     struct Encoded {
         #[serde(rename = "privkey")]
+        #[allow(dead_code)]
         private_key: String,
         #[serde(rename = "pubkey")]
         public_key: String,
@@ -184,7 +211,7 @@ mod tests {
         let message = MSG.as_bytes();
         // Signing
         let secret_key = SigningKey::new(&mut OsRng);
-        let signature = secret_key.sign(&message);
+        let signature = secret_key.sign(message);
 
         let public_key = VerificationKey::from(&secret_key);
 
@@ -193,7 +220,7 @@ mod tests {
         let public_key_bytes: [u8; 32] = public_key.into();
 
         // Verification
-        assert!(ed25519_verify(&message, &signature_bytes, &public_key_bytes).unwrap());
+        assert!(ed25519_verify(message, &signature_bytes, &public_key_bytes).unwrap());
 
         // Wrong message fails
         let bad_message = [message, b"\0"].concat();
@@ -203,7 +230,7 @@ mod tests {
         let other_secret_key = SigningKey::new(&mut OsRng);
         let other_public_key = VerificationKey::from(&other_secret_key);
         let other_public_key_bytes: [u8; 32] = other_public_key.into();
-        assert!(!ed25519_verify(&message, &signature_bytes, &other_public_key_bytes).unwrap());
+        assert!(!ed25519_verify(message, &signature_bytes, &other_public_key_bytes).unwrap());
     }
 
     #[test]
@@ -220,7 +247,7 @@ mod tests {
                 .as_slice(),
         )
         .unwrap();
-        let signature = secret_key.sign(&COSMOS_ED25519_MSG.as_bytes());
+        let signature = secret_key.sign(COSMOS_ED25519_MSG.as_bytes());
 
         let signature_bytes: [u8; 64] = signature.into();
         let public_key_bytes: [u8; 32] = public_key.into();
@@ -233,7 +260,7 @@ mod tests {
         );
 
         assert!(ed25519_verify(
-            &COSMOS_ED25519_MSG.as_bytes(),
+            COSMOS_ED25519_MSG.as_bytes(),
             &signature_bytes,
             &public_key_bytes
         )

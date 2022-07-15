@@ -228,7 +228,7 @@ mod test {
     static CONTRACT: &[u8] = include_bytes!("../testdata/contract.wasm");
 
     fn default_features() -> HashSet<String> {
-        features_from_csv("staking")
+        features_from_csv("staking, iterator, stargate")
     }
 
     #[test]

@@ -31,6 +31,8 @@ backtraces = ["snafu/backtraces"]
 # we keep this optional, to allow possible future integration (or different Cosmos Backends)
 iterator = ["cosmwasm-std/iterator"]
 staking = ["cosmwasm-std/staking"]
+# this enables all stargate-related functionality, including the ibc entry points
+stargate = ["cosmwasm-std/stargate", "cosmwasm-std/ibc3"]
 enclave-tests = []
 production = []
 # This flag enales storing contracts that require the debug-print function

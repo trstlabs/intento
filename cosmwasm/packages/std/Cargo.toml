@@ -2,18 +2,14 @@
 name = "trustless-cosmwasm-std"
 version = "1.0.0"
 authors = ["TRST Labs <info@trstlabs.xyz>"]
-edition = "2018"
+edition = "2021"
 description = "Standard library for CosmWasm-based Trustless Contracts"
 repository = "https://github.com/trstlabs/trst/tree/master/cosmwasm/packages/std"
 license = "Apache-2.0"
 readme = "README.md"
 
-[badges]
-#circle-ci = { repository = "CosmWasm/cosmwasm", branch = "master" }
-maintenance = { status = "actively-developed" }
-
 [package.metadata.docs.rs]
-features = ["staking", "stargate"]
+features = ["stargate", "staking", "ibc3"]
 
 [features]
 default = ["staking", "stargate"]
@@ -38,6 +34,9 @@ stargate = []
 # and loading the contract for execution will fail if this is used a HW mode
 # enclave. This is done in order to provent leaking secrets in production.
 debug-print = []
+# ibc3 extends ibc messages with ibc-v3 only features. This should only be enabled on contracts
+# that require these types. Without this, they get the smaller ibc-v1 API.
+ibc3 = ["stargate"]
 
 [dependencies]
 base64 = "0.13.0"

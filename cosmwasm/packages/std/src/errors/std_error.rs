@@ -4,7 +4,7 @@ use std::backtrace::Backtrace;
 use std::fmt;
 use thiserror::Error;
 
-use crate::errors::{RecoverPubkeyError, VerificationError};
+use crate::errors::{RecoverPubkeyError, SigningError, VerificationError};
 
 /// Structured error type for init, execute and query.
 ///
@@ -26,6 +26,12 @@ pub enum StdError {
     #[error("Verification error: {source}")]
     VerificationErr {
         source: VerificationError,
+        #[cfg(feature = "backtraces")]
+        backtrace: Backtrace,
+    },
+    #[error("Signing error: {source}")]
+    SigningErr {
+        source: SigningError,
         #[cfg(feature = "backtraces")]
         backtrace: Backtrace,
     },
@@ -93,6 +99,13 @@ pub enum StdError {
     #[error("Divide by zero: {source}")]
     DivideByZero {
         source: DivideByZeroError,
+        #[cfg(feature = "backtraces")]
+        backtrace: Backtrace,
+    },
+    #[error("Conversion error: {source}")]
+    ConversionOverflow {
+
+        source: ConversionOverflowError,
         #[cfg(feature = "backtraces")]
         backtrace: Backtrace,
     },
@@ -177,6 +190,7 @@ impl StdError {
 
     pub fn overflow(source: OverflowError) -> Self {
         StdError::Overflow {
+    
             source,
             #[cfg(feature = "backtraces")]
             backtrace: Backtrace::capture(),
@@ -185,6 +199,13 @@ impl StdError {
 
     pub fn divide_by_zero(source: DivideByZeroError) -> Self {
         StdError::DivideByZero {
+            source,
+            #[cfg(feature = "backtraces")]
+            backtrace: Backtrace::capture(),
+        }
+    }
+    pub fn conversion_overflow_error(source: ConversionOverflowError) -> Self {
+        StdError::ConversionOverflow {
             source,
             #[cfg(feature = "backtraces")]
             backtrace: Backtrace::capture(),
@@ -377,6 +398,38 @@ impl PartialEq<StdError> for StdError {
                     false
                 }
             }
+            StdError::ConversionOverflow {
+                source,
+                #[cfg(feature = "backtraces")]
+                    backtrace: _,
+            } => {
+                if let StdError::ConversionOverflow {
+                    source: rhs_source,
+                    #[cfg(feature = "backtraces")]
+                        backtrace: _,
+                } = rhs
+                {
+                    source == rhs_source
+                } else {
+                    false
+                }
+            }
+            StdError::SigningErr {
+                source,
+                #[cfg(feature = "backtraces")]
+                    backtrace: _,
+            } => {
+                if let StdError::SigningErr {
+                    source: rhs_source,
+                    #[cfg(feature = "backtraces")]
+                        backtrace: _,
+                } = rhs
+                {
+                    source == rhs_source
+                } else {
+                    false
+                }
+            }
         }
     }
 }
@@ -417,6 +470,12 @@ impl From<DivideByZeroError> for StdError {
     }
 }
 
+impl From<ConversionOverflowError> for StdError {
+    fn from(source: ConversionOverflowError) -> Self {
+        Self::conversion_overflow_error(source)
+    }
+}
+
 /// The return type for init, execute and query. Since the error type cannot be serialized to JSON,
 /// this is only available within the contract and its unit tests.
 ///
@@ -430,6 +489,8 @@ pub enum OverflowOperation {
     Sub,
     Mul,
     Pow,
+    Shr,
+    Shl,
 }
 
 impl fmt::Display for OverflowOperation {
@@ -447,11 +508,43 @@ pub struct OverflowError {
 }
 
 impl OverflowError {
-    pub fn new<U: ToString>(operation: OverflowOperation, operand1: U, operand2: U) -> Self {
+    pub fn new(
+        operation: OverflowOperation,
+        operand1: impl ToString,
+        operand2: impl ToString,
+    ) -> Self {
         Self {
             operation,
             operand1: operand1.to_string(),
             operand2: operand2.to_string(),
+        }
+    }
+}
+
+/// The error returned by [`TryFrom`] conversions that overflow, for example
+/// when converting from [`Uint256`] to [`Uint128`].
+///
+/// [`TryFrom`]: std::convert::TryFrom
+/// [`Uint256`]: crate::Uint256
+/// [`Uint128`]: crate::Uint128
+#[derive(Error, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[error("Error converting {source_type} to {target_type} for {value}")]
+pub struct ConversionOverflowError {
+    pub source_type:  String,
+    pub target_type:  String,
+    pub value: String,
+}
+
+impl ConversionOverflowError {
+    pub fn new(
+        source_type:  impl ToString,
+        target_type: impl ToString,
+        value: impl Into<String>,
+    ) -> Self {
+        Self {
+            source_type: source_type.to_string(),
+            target_type: target_type.to_string(),
+            value: value.into(),
         }
     }
 }
@@ -468,6 +561,24 @@ impl DivideByZeroError {
             operand: operand.to_string(),
         }
     }
+}
+
+#[derive(Error, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum CheckedMultiplyRatioError {
+    #[error("Denominator must not be zero")]
+    DivideByZero,
+
+    #[error("Multiplication overflow")]
+    Overflow,
+}
+
+#[derive(Error, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum CheckedFromRatioError {
+    #[error("Denominator must not be zero")]
+    DivideByZero,
+
+    #[error("Overflow")]
+    Overflow,
 }
 
 #[cfg(test)]
@@ -656,10 +767,11 @@ mod tests {
     fn implements_debug() {
         let error: StdError = StdError::from(OverflowError::new(OverflowOperation::Sub, 3, 5));
         let embedded = format!("Debug: {:?}", error);
-        assert_eq!(
-            embedded,
-            r#"Debug: Overflow { source: OverflowError { operation: Sub, operand1: "3", operand2: "5" } }"#
-        );
+        #[cfg(not(feature = "backtraces"))]
+        let expected = r#"Debug: Overflow { source: OverflowError { operation: Sub, operand1: "3", operand2: "5" } }"#;
+        #[cfg(feature = "backtraces")]
+        let expected = r#"Debug: Overflow { source: OverflowError { operation: Sub, operand1: "3", operand2: "5" }, backtrace: <disabled> }"#;
+        assert_eq!(embedded, expected);
     }
 
     #[test]

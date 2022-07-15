@@ -1,33 +1,46 @@
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use snafu::Snafu;
+
+
+#[cfg(feature = "backtraces")]
+use std::backtrace::Backtrace;
+use std::fmt::Debug;
+use thiserror::Error;
+
+#[cfg(not(target_arch = "wasm32"))]
 use cosmwasm_crypto::CryptoError;
-#[derive(Debug, Serialize, Deserialize, Snafu, JsonSchema)]
+
+#[derive(Error, Debug, Serialize, Deserialize,  JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum VerificationError {
-    #[snafu(display("Batch error"))]
+    #[error("Batch error")]
     BatchErr,
-    #[snafu(display("Generic error"))]
+    #[error("Generic error")]
     GenericErr,
-    #[snafu(display("Invalid hash format"))]
+    #[error("Invalid hash format")]
     InvalidHashFormat,
-    #[snafu(display("Invalid signature format"))]
+    #[error("Invalid signature format")]
     InvalidSignatureFormat,
-    #[snafu(display("Invalid public key format"))]
+    #[error("Invalid public key format")]
     InvalidPubkeyFormat,
-    #[snafu(display("Invalid recovery parameter. Supported values: 0 and 1."))]
+    #[error("Invalid recovery parameter. Supported values: 0 and 1.")]
     InvalidRecoveryParam,
-    #[snafu(display("Unknown error: {}", error_code))]
+    #[error("Unknown error: {error_code}")]
     UnknownErr {
         error_code: u32,
-        #[serde(skip)]
-        backtrace: Option<snafu::Backtrace>,
+        #[cfg(feature = "backtraces")]
+        backtrace: Backtrace,
     },
 }
 
 impl VerificationError {
     pub fn unknown_err(error_code: u32) -> Self {
-        UnknownErr { error_code }.build()
+        VerificationError::UnknownErr {
+            error_code,
+            #[cfg(feature = "backtraces")]
+            backtrace: Backtrace::capture(),
+        }
     }
 }
 
@@ -63,7 +76,6 @@ impl PartialEq<VerificationError> for VerificationError {
     }
 }
 
-
 #[cfg(not(target_arch = "wasm32"))]
 impl From<CryptoError> for VerificationError {
     fn from(original: CryptoError) -> Self {
@@ -74,6 +86,10 @@ impl From<CryptoError> for VerificationError {
             CryptoError::GenericErr { .. } => VerificationError::GenericErr,
             CryptoError::InvalidRecoveryParam { .. } => VerificationError::InvalidRecoveryParam,
             CryptoError::BatchErr { .. } => VerificationError::BatchErr,
+            CryptoError::InvalidPrivateKeyFormat { .. } => {
+                // should never get here
+                VerificationError::UnknownErr { error_code: 0 }
+            }
         }
     }
 }

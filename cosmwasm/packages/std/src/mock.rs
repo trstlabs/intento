@@ -199,11 +199,11 @@ impl Api for MockApi {
         &self,
         _message: &[u8],
         _private_key: &[u8],
-    ) -> Result<Vec<u8>, VerificationError> {
+    ) -> Result<Vec<u8>, SigningError> {
         Ok(vec![])
     }
 
-    fn ed25519_sign(&self, _message: &[u8], _private_key: &[u8]) -> Result<Vec<u8>, VerificationError> {
+    fn ed25519_sign(&self, _message: &[u8], _private_key: &[u8]) -> Result<Vec<u8>, SigningError> {
         Ok(vec![])
     }
 }

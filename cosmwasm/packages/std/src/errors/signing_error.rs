@@ -1,23 +1,37 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use snafu::Snafu;
 
-#[derive(Debug, Serialize, Deserialize, Snafu, JsonSchema)]
+
+
+
+#[cfg(feature = "backtraces")]
+use std::backtrace::Backtrace;
+use std::fmt::Debug;
+use thiserror::Error;
+
+#[cfg(not(target_arch = "wasm32"))]
+use cosmwasm_crypto::CryptoError;
+
+#[derive(Error, Debug, Serialize, Deserialize,  JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum SigningError {
-    #[snafu(display("Invalid private key format"))]
+    #[error("Invalid private key format")]
     InvalidPrivateKeyFormat,
-    #[snafu(display("Unknown error: {}", error_code))]
+    #[error("Unknown error: {error_code}")]
     UnknownErr {
         error_code: u32,
-        #[serde(skip)]
-        backtrace: Option<snafu::Backtrace>,
+        #[cfg(feature = "backtraces")]
+        backtrace: Backtrace,
     },
 }
 
 impl SigningError {
     pub fn unknown_err(error_code: u32) -> Self {
-        UnknownErr { error_code }.build()
+        SigningError::UnknownErr {
+            error_code,
+            #[cfg(feature = "backtraces")]
+            backtrace: Backtrace::capture(),
+        }
     }
 }
 
@@ -38,6 +52,16 @@ impl PartialEq<SigningError> for SigningError {
                     false
                 }
             }
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl From<CryptoError> for SigningError {
+    fn from(original: CryptoError) -> Self {
+        match original {
+            CryptoError::InvalidPrivateKeyFormat { .. } => SigningError::InvalidPrivateKeyFormat,
+            _ => SigningError::UnknownErr { error_code: 0 }, // should never get here
         }
     }
 }

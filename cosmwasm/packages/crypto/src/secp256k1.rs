@@ -2,10 +2,9 @@ use digest::Digest; // trait
 use k256::{
     ecdsa::recoverable,
     ecdsa::signature::{DigestVerifier, Signature as _}, // traits
-    ecdsa::{Signature, VerifyingKey},                   // type aliases
+    ecdsa::{signature::Signer, Signature, SigningKey, VerifyingKey}, // type aliases
     elliptic_curve::sec1::ToEncodedPoint,
 };
-use std::convert::TryInto;
 
 use crate::errors::{CryptoError, CryptoResult};
 use crate::identity_digest::Identity256;
@@ -51,9 +50,9 @@ pub fn secp256k1_verify(
     let mut signature =
         Signature::from_bytes(&signature).map_err(|e| CryptoError::generic_err(e.to_string()))?;
     // Non low-S signatures require normalization
-    signature
-        .normalize_s()
-        .map_err(|e| CryptoError::generic_err(e.to_string()))?;
+    if let Some(normalized) = signature.normalize_s() {
+        signature = normalized;
+    }
 
     let public_key = VerifyingKey::from_sec1_bytes(public_key)
         .map_err(|e| CryptoError::generic_err(e.to_string()))?;
@@ -99,6 +98,17 @@ pub fn secp256k1_recover_pubkey(
         .map_err(|e| CryptoError::generic_err(e.to_string()))?;
     let encoded: Vec<u8> = pubkey.to_encoded_point(false).as_bytes().into();
     Ok(encoded)
+}
+
+pub fn secp256k1_sign(message: &[u8], private_key: &[u8]) -> CryptoResult<Vec<u8>> {
+    let privkey = read_privkey(private_key)?;
+
+    let secp256k_signing_key =
+        SigningKey::from_bytes(&privkey).map_err(|_e| CryptoError::invalid_privkey_format())?;
+
+    let sig: Signature = secp256k_signing_key.sign(message);
+
+    Ok(sig.to_vec())
 }
 
 /// Error raised when hash is not 32 bytes long
@@ -151,17 +161,29 @@ fn check_pubkey(data: &[u8]) -> Result<(), InvalidSecp256k1PubkeyFormat> {
     }
 }
 
+/// Error raised when privkey is not 32 bytes long
+struct InvalidSecp256k1PrivkeyFormat;
+
+impl From<InvalidSecp256k1PrivkeyFormat> for CryptoError {
+    fn from(_original: InvalidSecp256k1PrivkeyFormat) -> Self {
+        CryptoError::invalid_privkey_format()
+    }
+}
+
+fn read_privkey(data: &[u8]) -> Result<[u8; 32], InvalidSecp256k1PrivkeyFormat> {
+    data.try_into().map_err(|_| InvalidSecp256k1PrivkeyFormat)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use elliptic_curve::rand_core::OsRng;
-    use elliptic_curve::sec1::ToEncodedPoint;
 
     use hex_literal::hex;
     use k256::{
         ecdsa::signature::DigestSigner, // trait
         ecdsa::SigningKey,              // type alias
+        elliptic_curve::rand_core::OsRng,
+        elliptic_curve::sec1::ToEncodedPoint,
     };
     use sha2::Sha256;
 

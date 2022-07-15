@@ -1,27 +1,38 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use snafu::Snafu;
+
+
+#[cfg(not(target_arch = "wasm32"))]
 use cosmwasm_crypto::CryptoError;
-#[derive(Debug, Serialize, Deserialize, Snafu, JsonSchema)]
+#[cfg(feature = "backtraces")]
+use std::backtrace::Backtrace;
+use std::fmt::Debug;
+use thiserror::Error;
+
+#[derive(Error, Debug, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum RecoverPubkeyError {
-    #[snafu(display("Invalid hash format"))]
+    #[error("Invalid hash format")]
     InvalidHashFormat,
-    #[snafu(display("Invalid signature format"))]
+    #[error("Invalid signature format")]
     InvalidSignatureFormat,
-    #[snafu(display("Invalid recovery parameter. Supported values: 0 and 1."))]
+    #[error("Invalid recovery parameter. Supported values: 0 and 1.")]
     InvalidRecoveryParam,
-    #[snafu(display("Unknown error: {}", error_code))]
+    #[error("Unknown error: {error_code}")]
     UnknownErr {
         error_code: u32,
-        #[serde(skip)]
-        backtrace: Option<snafu::Backtrace>,
+        #[cfg(feature = "backtraces")]
+        backtrace: Backtrace,
     },
 }
 
 impl RecoverPubkeyError {
     pub fn unknown_err(error_code: u32) -> Self {
-        UnknownErr { error_code }.build()
+        RecoverPubkeyError::UnknownErr {
+            error_code,
+            #[cfg(feature = "backtraces")]
+            backtrace: Backtrace::capture(),
+        }
     }
 }
 
@@ -64,6 +75,10 @@ impl From<CryptoError> for RecoverPubkeyError {
             CryptoError::GenericErr { .. } => RecoverPubkeyError::unknown_err(original.code()),
             CryptoError::InvalidRecoveryParam { .. } => RecoverPubkeyError::InvalidRecoveryParam,
             CryptoError::BatchErr { .. } => panic!("Conversion not supported"),
+            CryptoError::InvalidPrivateKeyFormat { .. } => {
+                // should never get here
+                RecoverPubkeyError::UnknownErr { error_code: 0 }
+            }
         }
     }
 }
