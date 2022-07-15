@@ -14,7 +14,7 @@ use enclave_cosmwasm_types::results::{
     DecryptedReply, Event, Reply, SubMsgResponse, SubMsgResult, 
 };
 use enclave_cosmwasm_types::types::{ BlockInfo, ContractInfo, MessageInfo};
-use enclave_cosmwasm_types::full_env::FullEnv as Env;
+use enclave_cosmwasm_types::full_env::FullEnv;
 use enclave_cosmwasm_types::types::EnvV1;
 //use enclave_cosmwasm_types::timestamp::Timestamp;
 
@@ -60,7 +60,7 @@ pub fn init(
     sig_info: &[u8],    // info about signature verification
 ) -> Result<InitSuccess, EnclaveError> {
     let contract_code = ContractCode::new(contract);
-    let mut parsed_env: Env = serde_json::from_slice(env).map_err(|err| {
+    let mut parsed_env: FullEnv = serde_json::from_slice(env).map_err(|err| {
         warn!(
             "got an error while trying to deserialize env input bytes into json {:?}: {}",
             String::from_utf8_lossy(&env),
@@ -544,7 +544,7 @@ pub fn handle(
 ) -> Result<HandleSuccess, EnclaveError> {
     let contract_code = ContractCode::new(contract);
 
-    let mut parsed_env: Env = serde_json::from_slice(env).map_err(|err| {
+    let mut parsed_env: FullEnv = serde_json::from_slice(env).map_err(|err| {
         warn!(
             "got an error while trying to deserialize env input bytes into json {:?}: {}",
             env, err
@@ -690,7 +690,7 @@ pub fn query(
 ) -> Result<QuerySuccess, EnclaveError> {
     let contract_code = ContractCode::new(contract);
 
-    let mut parsed_env: Env = serde_json::from_slice(env).map_err(|err| {
+    let mut parsed_env: FullEnv = serde_json::from_slice(env).map_err(|err| {
         warn!(
             "query got an error while trying to deserialize env input bytes into json {:?}: {}",
             env, err

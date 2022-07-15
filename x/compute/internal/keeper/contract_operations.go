@@ -78,83 +78,6 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 	return nil
 }
 
-func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, sdktxsigning.SignMode, []byte, []byte, []byte, error) {
-	tx := sdktx.Tx{}
-	err := k.cdc.Unmarshal(ctx.TxBytes(), &tx)
-	if err != nil {
-		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to decode transaction from bytes: %s", err.Error()))
-	}
-
-	// for MsgInstantiateContract, there is only one signer which is msg.Sender
-	// (https://github.com/enigmampc/SecretNetwork/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L192-L194)
-	signerAcc, err := ante.GetSignerAcc(ctx, k.accountKeeper, signer)
-	if err != nil {
-
-		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to retrieve account by address: %s", err.Error()))
-	}
-
-	txConfig := authtx.NewTxConfig(k.cdc.(*codec.ProtoCodec), authtx.DefaultSignModes)
-	modeHandler := txConfig.SignModeHandler()
-	signingData := authsigning.SignerData{
-		ChainID:       ctx.ChainID(),
-		AccountNumber: signerAcc.GetAccountNumber(),
-		Sequence:      signerAcc.GetSequence() - 1,
-	}
-
-	protobufTx := authtx.WrapTx(&tx).GetTx()
-
-	pubKeys, err := protobufTx.GetPubKeys()
-	if err != nil {
-		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to get public keys for instantiate: %s", err.Error()))
-	}
-
-	pkIndex := -1
-	var _signers [][]byte // This is just used for the error message below
-	for index, pubKey := range pubKeys {
-		thisSigner := pubKey.Address().Bytes()
-		_signers = append(_signers, thisSigner)
-		if bytes.Equal(thisSigner, signer.Bytes()) {
-			pkIndex = index
-		}
-	}
-	if pkIndex == -1 {
-		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Message sender: %s is not found in the tx signer set: %v, callback signature not provided", signer.String(), _signers))
-	}
-
-	signatures, _ := protobufTx.GetSignaturesV2()
-	var signMode sdktxsigning.SignMode
-	switch signData := signatures[pkIndex].Data.(type) {
-	case *sdktxsigning.SingleSignatureData:
-		signMode = signData.SignMode
-	case *sdktxsigning.MultiSignatureData:
-		signMode = sdktxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
-	}
-
-	signBytes, err := modeHandler.GetSignBytes(signMode, signingData, protobufTx)
-	if err != nil {
-		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to recreate sign bytes for the tx: %s", err.Error()))
-	}
-
-	modeInfoBytes, err := sdktxsigning.SignatureDataToProto(signatures[pkIndex].Data).Marshal()
-	if err != nil {
-		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, "couldn't marshal mode info")
-	}
-
-	var pkBytes []byte
-	pubKey := pubKeys[pkIndex]
-	anyPubKey, err := codedctypes.NewAnyWithValue(pubKey)
-	if err != nil {
-		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, "couldn't turn public key into Any")
-	}
-
-	pkBytes, err = k.cdc.Marshal(anyPubKey)
-	if err != nil {
-		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, "couldn't marshal public key")
-	}
-
-	return signBytes, signMode, modeInfoBytes, pkBytes, tx.Signatures[pkIndex], nil
-}
-
 // Instantiate creates an instance of a WASM contract
 func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, msg []byte, autoMsg []byte, id string, deposit sdk.Coins, callbackSig []byte, customDuration time.Duration) (sdk.AccAddress, []byte, error) {
 	fmt.Printf("init duration: %s \n", customDuration)
@@ -380,6 +303,83 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 }
 
+func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, sdktxsigning.SignMode, []byte, []byte, []byte, error) {
+	tx := sdktx.Tx{}
+	err := k.cdc.Unmarshal(ctx.TxBytes(), &tx)
+	if err != nil {
+		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to decode transaction from bytes: %s", err.Error()))
+	}
+
+	// for MsgInstantiateContract, there is only one signer which is msg.Sender
+	// (https://github.com/enigmampc/SecretNetwork/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L192-L194)
+	signerAcc, err := ante.GetSignerAcc(ctx, k.accountKeeper, signer)
+	if err != nil {
+
+		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to retrieve account by address: %s", err.Error()))
+	}
+
+	txConfig := authtx.NewTxConfig(k.cdc.(*codec.ProtoCodec), authtx.DefaultSignModes)
+	modeHandler := txConfig.SignModeHandler()
+	signingData := authsigning.SignerData{
+		ChainID:       ctx.ChainID(),
+		AccountNumber: signerAcc.GetAccountNumber(),
+		Sequence:      signerAcc.GetSequence() - 1,
+	}
+
+	protobufTx := authtx.WrapTx(&tx).GetTx()
+
+	pubKeys, err := protobufTx.GetPubKeys()
+	if err != nil {
+		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to get public keys for instantiate: %s", err.Error()))
+	}
+
+	pkIndex := -1
+	var _signers [][]byte // This is just used for the error message below
+	for index, pubKey := range pubKeys {
+		thisSigner := pubKey.Address().Bytes()
+		_signers = append(_signers, thisSigner)
+		if bytes.Equal(thisSigner, signer.Bytes()) {
+			pkIndex = index
+		}
+	}
+	if pkIndex == -1 {
+		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Message sender: %s is not found in the tx signer set: %v, callback signature not provided", signer.String(), _signers))
+	}
+
+	signatures, _ := protobufTx.GetSignaturesV2()
+	var signMode sdktxsigning.SignMode
+	switch signData := signatures[pkIndex].Data.(type) {
+	case *sdktxsigning.SingleSignatureData:
+		signMode = signData.SignMode
+	case *sdktxsigning.MultiSignatureData:
+		signMode = sdktxsigning.SignMode_SIGN_MODE_LEGACY_AMINO_JSON
+	}
+
+	signBytes, err := modeHandler.GetSignBytes(signMode, signingData, protobufTx)
+	if err != nil {
+		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, fmt.Sprintf("Unable to recreate sign bytes for the tx: %s", err.Error()))
+	}
+
+	modeInfoBytes, err := sdktxsigning.SignatureDataToProto(signatures[pkIndex].Data).Marshal()
+	if err != nil {
+		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, "couldn't marshal mode info")
+	}
+
+	var pkBytes []byte
+	pubKey := pubKeys[pkIndex]
+	anyPubKey, err := codedctypes.NewAnyWithValue(pubKey)
+	if err != nil {
+		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, "couldn't turn public key into Any")
+	}
+
+	pkBytes, err = k.cdc.Marshal(anyPubKey)
+	if err != nil {
+		return nil, 0, nil, nil, nil, sdkerrors.Wrap(types.ErrSigFailed, "couldn't marshal public key")
+	}
+
+	return signBytes, signMode, modeInfoBytes, pkBytes, tx.Signatures[pkIndex], nil
+}
+
 // Delete deletes the contract instance
 func (k Keeper) Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error {
 
@@ -487,20 +487,6 @@ func (k Keeper) contractInstance(ctx sdk.Context, contractAddress sdk.AccAddress
 	return contractInfo, codeInfo, prefixStore, nil
 }
 
-/*
-func (k Keeper) dispatchMessages(ctx sdk.Context, contractAddr sdk.AccAddress, msgs []wasmTypes.CosmosMsg) error {
-	for _, msg := range msgs {
-		fmt.Print("dispatch msg \n")
-		var err error
-
-		if _, _, err = k.Dispatch(ctx, contractAddr, msg); err != nil {
-			fmt.Printf("error dispatching messages \n")
-			return err
-		}
-	}
-	return nil
-}
-*/
 // CreateCommunityPoolCallbackSig creates a callback sig which can be used to execute a specific message for a specific code for the community pool.
 // When callback signature is made, any node can 'run' the message at any time on the community pool's behalf, therefore, anyone can create outputs for the distribution module account.
 // By hardcoding the distribution module address in the enclave, we can use this for contract instantiation and execution over governance.
@@ -525,11 +511,12 @@ func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context, msg []byte, code
 	return callbackSig, encryptedMessage, nil
 }
 
-// DiscardAutoMsg cancels the automessage for a given contract
+// DiscardAutoMsg cancels the automessage for a given contract on request of the instantiator
 func (k Keeper) DiscardAutoMsg(ctx sdk.Context, info types.ContractInfo, contractAddress sdk.AccAddress, sender sdk.AccAddress) error {
 	store := ctx.KVStore(k.storeKey)
-	// get contact info
-	min, err := time.ParseDuration("60s")
+
+	// have a sufficient runway before discarding the contract (can be adjusted later on)
+	min, err := time.ParseDuration("1h")
 	if err != nil {
 		return err
 	}
