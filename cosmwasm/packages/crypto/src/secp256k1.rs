@@ -5,6 +5,7 @@ use k256::{
     ecdsa::{signature::Signer, Signature, SigningKey, VerifyingKey}, // type aliases
     elliptic_curve::sec1::ToEncodedPoint,
 };
+use std::convert::TryInto;
 
 use crate::errors::{CryptoError, CryptoResult};
 use crate::identity_digest::Identity256;
@@ -50,9 +51,9 @@ pub fn secp256k1_verify(
     let mut signature =
         Signature::from_bytes(&signature).map_err(|e| CryptoError::generic_err(e.to_string()))?;
     // Non low-S signatures require normalization
-    if let Some(normalized) = signature.normalize_s() {
-        signature = normalized;
-    }
+    signature
+        .normalize_s()
+        .map_err(|e| CryptoError::generic_err(e.to_string()))?;
 
     let public_key = VerifyingKey::from_sec1_bytes(public_key)
         .map_err(|e| CryptoError::generic_err(e.to_string()))?;
@@ -108,9 +109,8 @@ pub fn secp256k1_sign(message: &[u8], private_key: &[u8]) -> CryptoResult<Vec<u8
 
     let sig: Signature = secp256k_signing_key.sign(message);
 
-    Ok(sig.to_vec())
+    Ok(sig.as_ref().to_vec())
 }
-
 /// Error raised when hash is not 32 bytes long
 struct InvalidSecp256k1HashFormat;
 
@@ -173,17 +173,17 @@ impl From<InvalidSecp256k1PrivkeyFormat> for CryptoError {
 fn read_privkey(data: &[u8]) -> Result<[u8; 32], InvalidSecp256k1PrivkeyFormat> {
     data.try_into().map_err(|_| InvalidSecp256k1PrivkeyFormat)
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use elliptic_curve::sec1::ToEncodedPoint;
+    use rand_core::OsRng;
 
     use hex_literal::hex;
     use k256::{
         ecdsa::signature::DigestSigner, // trait
         ecdsa::SigningKey,              // type alias
-        elliptic_curve::rand_core::OsRng,
-        elliptic_curve::sec1::ToEncodedPoint,
     };
     use sha2::Sha256;
 
@@ -338,7 +338,7 @@ mod tests {
                 hex!("3c9229289a6125f7fdf1885a77bb12c37a8d3b4962d936f7e3084dece32a3ca1");
             let expected = SigningKey::from_bytes(&private_key)
                 .unwrap()
-                .verifying_key()
+                .verify_key()
                 .to_encoded_point(false)
                 .as_bytes()
                 .to_vec();
