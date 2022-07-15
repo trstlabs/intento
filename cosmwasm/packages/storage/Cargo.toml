@@ -1,7 +1,6 @@
 [package]
-name = "cosmwasm-storage"
+name = "trustless-cosmwasm-storage"
 version = "1.0.0"
-authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
 edition = "2021"
 description = "CosmWasm library with useful helpers for Storage patterns"
 repository = "https://github.com/CosmWasm/cosmwasm/tree/main/packages/storage"
