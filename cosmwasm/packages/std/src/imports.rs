@@ -8,8 +8,10 @@ use crate::errors::{
 #[cfg(feature = "iterator")]
 use crate::iterator::{Order, Record};
 use crate::memory::{
-    alloc, build_region, consume_region, encode_sections, get_optional_region_address, Region,
+    alloc, build_region, consume_region, encode_sections, Region,
 };
+#[cfg(feature = "iterator")]
+use crate::memory::get_optional_region_address;
 use crate::results::SystemResult;
 use crate::sections::decode_sections2;
 use crate::serde::from_slice;
