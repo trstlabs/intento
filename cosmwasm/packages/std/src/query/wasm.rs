@@ -35,4 +35,32 @@ pub enum WasmQuery {
         /// Key is the key used in the public contract's Storage
         key: Binary,
     },
+    /// returns a ContractInfoResponse with metadata on the contract from the runtime
+    ContractInfo { contract_addr: String },
+}
+
+
+#[non_exhaustive]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct ContractInfoResponse {
+    pub code_id: u64,
+    /// address that instantiated this contract
+    pub creator: String,
+    /// if set, the contract is pinned to the cache, and thus uses less gas when called
+    pub pinned: bool,
+    /// set if this contract has bound an IBC port
+    pub ibc_port: Option<String>,
+}
+
+impl ContractInfoResponse {
+    /// Convenience constructor for tests / mocks
+    #[doc(hidden)]
+    pub fn new(code_id: u64, creator: impl Into<String>) -> Self {
+        Self {
+            code_id,
+            creator: creator.into(),
+            pinned: false,
+            ibc_port: None,
+        }
+    }
 }

@@ -57,8 +57,8 @@ pub use crate::query::{
 };
 #[cfg(feature = "stargate")]
 pub use crate::query::{ChannelResponse, IbcQuery, ListChannelsResponse, PortIdResponse};
-#[allow(deprecated)]
-pub use crate::results::SubMsgExecutionResponse;
+//#[allow(deprecated)]
+//ub use crate::results::SubMsgExecutionResponse;
 pub use crate::results::{
     log, log_plaintext, pub_db, acc_pub_db, acc_pub_db_bytes, pub_db_bytes, wasm_execute, wasm_instantiate, Attribute, BankMsg, ContractResult,
     CosmosMsg, CustomMsg, Empty, Event, QueryResponse, Reply, ReplyOn, Response, SubMsg,

@@ -7,6 +7,10 @@ use crate::timestamp::Timestamp;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Env {
     pub block: BlockInfo,
+    /// Information on the transaction this message was executed in.
+    /// The field is unset when the `MsgExecuteContract`/`MsgInstantiateContract`/`MsgMigrateContract`
+    /// is not executed as part of a transaction.
+    pub transaction: Option<TransactionInfo>,
     pub contract: ContractInfo,
 }
 
@@ -92,4 +96,15 @@ pub struct ContractInfo {
     pub address: Addr,
     #[serde(default)]
     pub code_hash: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct TransactionInfo {
+    /// The position of this transaction in the block. The first
+    /// transaction has index 0.
+    ///
+    /// This allows you to get a unique transaction indentifier in this chain
+    /// using the pair (`env.block.height`, `env.transaction.index`).
+    ///
+    pub index: u32,
 }

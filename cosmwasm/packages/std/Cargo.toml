@@ -50,6 +50,7 @@ serde = { version = "1.0.139", default-features = false, features = [
 ] }
 thiserror = "1.0"
 snafu = { version = "0.6.6" }
+forward_ref = "1"
 
 # [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 cosmwasm-crypto = { path = "../crypto", version = "1.0.0" }

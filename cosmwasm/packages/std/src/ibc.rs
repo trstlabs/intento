@@ -525,7 +525,7 @@ impl<T> IbcBasicResponse<T> {
 
     /// Add an attribute included in the main `wasm` event.
     pub fn add_attribute(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
-        self.attributes.push(Attribute::new(key, value));
+        self.attributes.push(Attribute::new_log(key, value));
         self
     }
 
@@ -677,7 +677,7 @@ impl<T> IbcReceiveResponse<T> {
 
     /// Add an attribute included in the main `wasm` event.
     pub fn add_attribute(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
-        self.attributes.push(Attribute::new(key, value));
+        self.attributes.push(Attribute::new_log(key, value));
         self
     }
 

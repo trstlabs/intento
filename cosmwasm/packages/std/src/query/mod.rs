@@ -22,7 +22,7 @@ pub use staking::{
 #[cfg(feature = "stargate")]
 pub use stargate::StargateResponse;
 pub use wasm::WasmQuery;
-//pub use wasm::ContractInfoResponse;
+pub use wasm::ContractInfoResponse;
 
 #[non_exhaustive]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
