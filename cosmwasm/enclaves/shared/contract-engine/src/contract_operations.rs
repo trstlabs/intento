@@ -14,8 +14,7 @@ use enclave_cosmwasm_types::results::{
     DecryptedReply, Event, Reply, SubMsgResponse, SubMsgResult, 
 };
 use enclave_cosmwasm_types::types::{ BlockInfo, ContractInfo, MessageInfo};
-use enclave_cosmwasm_types::full_env::FullEnv;
-use enclave_cosmwasm_types::types::EnvV1;
+use enclave_cosmwasm_types::types::{FullEnv,Env};
 //use enclave_cosmwasm_types::timestamp::Timestamp;
 
 use enclave_crypto::{Ed25519PublicKey, HASH_SIZE};
@@ -126,7 +125,7 @@ pub fn init(
     )?;
 
     let (contract_env_bytes, contract_msg_info_bytes) =
-        parse_msg_info_bytes(&engine, &mut parsed_env)?;
+        parse_msg_info_bytes(&mut parsed_env)?;
 
     let env_ptr = engine.write_to_memory(&contract_env_bytes)?;
     let msg_info_ptr = engine.write_to_memory(&contract_msg_info_bytes)?;
@@ -642,7 +641,7 @@ pub fn handle(
     )?;
 
     let (contract_env_bytes, contract_msg_info_bytes) =
-        parse_msg_info_bytes(&engine, &mut parsed_env)?;
+        parse_msg_info_bytes(&mut parsed_env)?;
 
     let env_ptr = engine.write_to_memory(&contract_env_bytes)?;
     let msg_info_ptr = engine.write_to_memory(&contract_msg_info_bytes)?;
@@ -739,7 +738,7 @@ pub fn query(
     )?;
 
     let (contract_env_bytes, _ /* no msg_info in query */) =
-        parse_msg_info_bytes(&engine, &mut parsed_env)?;
+        parse_msg_info_bytes(&mut parsed_env)?;
 
     let env_ptr = engine.write_to_memory(&contract_env_bytes)?;
     let msg_ptr = engine.write_to_memory(&validated_msg)?;
@@ -800,11 +799,10 @@ fn start_engine(
 }
 
 fn parse_msg_info_bytes(
-    engine: &Engine,
-    env: &mut Env,
+    env: &mut FullEnv,
 ) -> Result<(Vec<u8>, Vec<u8>), EnclaveError> {
     
-            let new_env = EnvV1 {
+            let new_env = Env {
                 block: BlockInfo {
                     height: env.block.height,
                     time: env.block.time,

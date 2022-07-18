@@ -12,7 +12,7 @@ use enclave_cosmwasm_types::addresses::{CanonicalAddr, Addr};
 use enclave_cosmwasm_types::coins::Coin;
 use enclave_crypto::traits::VerifyingKey;
 use enclave_crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER};
-use enclave_cosmwasm_types::full_env::FullEnv as Env;
+use enclave_cosmwasm_types::types::FullEnv;
 use crate::io::create_callback_signature;
 use crate::types::ContractMessage;
 
@@ -24,7 +24,7 @@ const HEX_ENCODED_HASH_SIZE: usize = HASH_SIZE * 2;
 const SIZE_OF_U64: usize = 8;
 
 pub fn generate_encryption_key(
-    env: &Env,
+    env: &FullEnv,
     contract_hash: [u8; HASH_SIZE],
     contract_address: &[u8],
 ) -> Result<[u8; CONTRACT_KEY_LENGTH], EnclaveError> {
@@ -56,7 +56,7 @@ pub fn generate_encryption_key(
     Ok(encryption_key)
 }
 
-pub fn extract_contract_key(env: &Env) -> Result<[u8; CONTRACT_KEY_LENGTH], EnclaveError> {
+pub fn extract_contract_key(env: &FullEnv) -> Result<[u8; CONTRACT_KEY_LENGTH], EnclaveError> {
     if env.contract_key.is_none() {
         warn!("Contract execute with empty contract key");
         return Err(EnclaveError::FailedContractAuthentication);
@@ -196,7 +196,7 @@ pub fn validate_msg(
 /// Verify all the parameters sent to the enclave match up, and were signed by the right account.
 pub fn verify_params(
     sig_info: &SigInfo,
-    env: &Env,
+    env: &FullEnv,
     msg: &ContractMessage,
 ) -> Result<(), EnclaveError> {
     info!("Verifying message signatures for: {:?}", sig_info);
@@ -247,7 +247,7 @@ pub fn verify_params(
 
 fn get_signer_and_messages(
     sign_info: &SigInfo,
-    env: &Env,
+    env: &FullEnv,
 ) -> Result<(CosmosPubKey, Vec<CosmWasmMsg>), EnclaveError> {
     use cosmos_proto::tx::signing::SignMode::*;
     match sign_info.sign_mode {
@@ -373,7 +373,7 @@ fn get_verified_msg<'sd>(
 }
 
 /// Check that the contract listed in the cosmwasm message matches the one in env
-fn verify_contract(msg: &CosmWasmMsg, env: &Env) -> bool {
+fn verify_contract(msg: &CosmWasmMsg, env: &FullEnv) -> bool {
     // Contract address is relevant only to execute, since during sending an instantiate message the contract address is not yet known
     match msg {
         CosmWasmMsg::Execute { contract, .. } => {
@@ -394,7 +394,7 @@ fn verify_contract(msg: &CosmWasmMsg, env: &Env) -> bool {
 }
 
 /// Check that the funds listed in the cosmwasm message matches the ones in env
-fn verify_funds(msg: &CosmWasmMsg, env: &Env) -> bool {
+fn verify_funds(msg: &CosmWasmMsg, env: &FullEnv) -> bool {
     match msg {
         CosmWasmMsg::Execute { funds, .. }
         | CosmWasmMsg::Instantiate {
@@ -407,7 +407,7 @@ fn verify_funds(msg: &CosmWasmMsg, env: &Env) -> bool {
 
 fn verify_message_params(
     messages: &[CosmWasmMsg],
-    env: &Env,
+    env: &FullEnv,
     signer_public_key: &CosmosPubKey,
     sent_msg: &ContractMessage,
 ) -> bool {

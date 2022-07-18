@@ -6,7 +6,6 @@ pub mod math;
 pub mod query;
 pub mod results;
 pub mod timestamp;
-pub mod full_env;
 pub mod consts;
 pub mod encoding;
 pub mod std_error;

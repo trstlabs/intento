@@ -60,7 +60,7 @@ pub use crate::query::{ChannelResponse, IbcQuery, ListChannelsResponse, PortIdRe
 #[allow(deprecated)]
 pub use crate::results::SubMsgExecutionResponse;
 pub use crate::results::{
-    attr, attr_plaintext, wasm_execute, wasm_instantiate, Attribute, BankMsg, ContractResult,
+    log, log_plaintext, pub_db, acc_pub_db, acc_pub_db_bytes, pub_db_bytes, wasm_execute, wasm_instantiate, Attribute, BankMsg, ContractResult,
     CosmosMsg, CustomMsg, Empty, Event, QueryResponse, Reply, ReplyOn, Response, SubMsg,
     SubMsgResponse, SubMsgResult, SystemResult, WasmMsg,
 };

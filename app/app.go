@@ -406,7 +406,7 @@ func NewTrstApp(
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate"
+	supportedFeatures := "staking,stargate"
 
 	app.regKeeper = reg.NewKeeper(appCodec, keys[reg.StoreKey], regRouter, reg.EnclaveApi{}, homeDir, app.bootstrap)
 	app.computeKeeper = compute.NewKeeper(

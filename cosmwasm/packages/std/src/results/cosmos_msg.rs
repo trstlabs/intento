@@ -8,17 +8,20 @@ use crate::errors::StdResult;
 #[cfg(feature = "stargate")]
 use crate::ibc::IbcMsg;
 use crate::serde::to_binary;
-use crate::addresses::Addr;
+
 use super::Empty;
+
+/// Like CustomQuery for better type clarity.
+/// Also makes it shorter to use as a trait bound.
+pub trait CustomMsg: Serialize + Clone + fmt::Debug + PartialEq + JsonSchema {}
+
+impl CustomMsg for Empty {}
 
 #[non_exhaustive]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 // See https://github.com/serde-rs/serde/issues/1296 why we cannot add De-Serialize trait bounds to T
-pub enum CosmosMsg<T = Empty>
-where
-    T: Clone + fmt::Debug + PartialEq + JsonSchema,
-{
+pub enum CosmosMsg<T = Empty> {
     Bank(BankMsg),
     // by default we use RawMsg, but a contract can override that
     // to call into more app-specific code (whatever they define)
@@ -114,7 +117,10 @@ pub enum DistributionMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum WasmMsg {
-    /// this dispatches a call to another contract at a known address (with known ABI)
+    /// Dispatches a call to another contract at a known address (with known ABI).
+    ///
+    /// This is translated to a [MsgExecuteContract](https://github.com/CosmWasm/wasmd/blob/v0.14.0/x/wasm/internal/types/tx.proto#L68-L78).
+    /// `sender` is automatically filled with the current contract's address.
     Execute {
         contract_addr: String,
         /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
@@ -162,8 +168,8 @@ pub enum VoteOption {
     Abstain,
     NoWithVeto,
 }
+
 /// Shortcut helper as the construction of WasmMsg::Instantiate can be quite verbose in contract code.
-///
 pub fn wasm_instantiate(
     code_id: u64,
     code_hash: impl Into<String>,
@@ -204,59 +210,41 @@ pub fn wasm_execute(
     })
 }
 
-impl<T> From<BankMsg> for CosmosMsg<T>
-where
-    T: Clone + fmt::Debug + PartialEq + JsonSchema,
-{
+impl<T> From<BankMsg> for CosmosMsg<T> {
     fn from(msg: BankMsg) -> Self {
         CosmosMsg::Bank(msg)
     }
 }
 
 #[cfg(feature = "staking")]
-impl<T> From<StakingMsg> for CosmosMsg<T>
-where
-    T: Clone + fmt::Debug + PartialEq + JsonSchema,
-{
+impl<T> From<StakingMsg> for CosmosMsg<T> {
     fn from(msg: StakingMsg) -> Self {
         CosmosMsg::Staking(msg)
     }
 }
 
 #[cfg(feature = "staking")]
-impl<T> From<DistributionMsg> for CosmosMsg<T>
-where
-    T: Clone + fmt::Debug + PartialEq + JsonSchema,
-{
+impl<T> From<DistributionMsg> for CosmosMsg<T> {
     fn from(msg: DistributionMsg) -> Self {
         CosmosMsg::Distribution(msg)
     }
 }
 
-impl<T> From<WasmMsg> for CosmosMsg<T>
-where
-    T: Clone + fmt::Debug + PartialEq + JsonSchema,
-{
+impl<T> From<WasmMsg> for CosmosMsg<T> {
     fn from(msg: WasmMsg) -> Self {
         CosmosMsg::Wasm(msg)
     }
 }
 
 #[cfg(feature = "stargate")]
-impl<T> From<IbcMsg> for CosmosMsg<T>
-where
-    T: Clone + fmt::Debug + PartialEq + JsonSchema,
-{
+impl<T> From<IbcMsg> for CosmosMsg<T> {
     fn from(msg: IbcMsg) -> Self {
         CosmosMsg::Ibc(msg)
     }
 }
 
 #[cfg(feature = "stargate")]
-impl<T> From<GovMsg> for CosmosMsg<T>
-where
-    T: Clone + fmt::Debug + PartialEq + JsonSchema,
-{
+impl<T> From<GovMsg> for CosmosMsg<T> {
     fn from(msg: GovMsg) -> Self {
         CosmosMsg::Gov(msg)
     }
