@@ -2,19 +2,17 @@ use log::*;
 
 use enclave_ffi_types::{Ctx, EnclaveError};
 
-use crate::external::results::{HandleSuccess, InitSuccess, QuerySuccess, CallbackSigSuccess};
+use crate::external::results::{CallbackSigSuccess, HandleSuccess, InitSuccess, QuerySuccess};
 use cosmos_proto::tx::signing::SignMode;
 
-use enclave_cosmos_types::types::{ContractCode, HandleType, SigInfo, MsgInfo};
+use enclave_cosmos_types::types::{ContractCode, HandleType, MsgInfo, SigInfo};
 
-use enclave_cosmwasm_types::encoding::Binary;
-use enclave_cosmwasm_types::addresses::{CanonicalAddr, Addr};
+use enclave_cosmwasm_types::addresses::{Addr, CanonicalAddr};
 use enclave_cosmwasm_types::coins::Coin;
-use enclave_cosmwasm_types::results::{
-    DecryptedReply, Event, Reply, SubMsgResponse, SubMsgResult, 
-};
-use enclave_cosmwasm_types::types::{ BlockInfo, ContractInfo, MessageInfo};
-use enclave_cosmwasm_types::types::{FullEnv,Env};
+use enclave_cosmwasm_types::encoding::Binary;
+use enclave_cosmwasm_types::results::{DecryptedReply, Event, Reply, SubMsgResponse, SubMsgResult};
+use enclave_cosmwasm_types::types::{BlockInfo, ContractInfo, MessageInfo};
+use enclave_cosmwasm_types::types::{Env, FullEnv};
 //use enclave_cosmwasm_types::timestamp::Timestamp;
 
 use enclave_crypto::{Ed25519PublicKey, HASH_SIZE};
@@ -25,11 +23,11 @@ use super::contract_validation::{
     verify_params, ContractKey,
 };
 use super::gas::WasmCosts;
-use super::io::{create_callback_signature,  encrypt_output, copy_into_array, encrypt_msg};
+use super::io::{copy_into_array, create_callback_signature, encrypt_msg, encrypt_output};
 use super::module_cache::create_module_instance;
-use super::types::{IoNonce, ContractMessage};
+use super::types::{ContractMessage, IoNonce};
 use super::wasm::{ContractInstance, ContractOperation, Engine};
-use crate::const_callback_sig_addresses::{COMMUNITY_POOL_ADDR};
+use crate::const_callback_sig_addresses::COMMUNITY_POOL_ADDR;
 
 const HEX_ENCODED_HASH_SIZE: usize = HASH_SIZE * 2;
 
@@ -124,8 +122,7 @@ pub fn init(
         contract_msg.user_public_key,
     )?;
 
-    let (contract_env_bytes, contract_msg_info_bytes) =
-        parse_msg_info_bytes(&mut parsed_env)?;
+    let (contract_env_bytes, contract_msg_info_bytes) = parse_msg_info_bytes(&mut parsed_env)?;
 
     let env_ptr = engine.write_to_memory(&contract_env_bytes)?;
     let msg_info_ptr = engine.write_to_memory(&contract_msg_info_bytes)?;
@@ -568,7 +565,6 @@ pub fn handle(
         EnclaveError::FailedToDeserialize
     })?;
 
-
     let contract_key = extract_contract_key(&parsed_env)?;
 
     if !validate_contract_key(&contract_key, &canonical_contract_address, &contract_code) {
@@ -640,8 +636,7 @@ pub fn handle(
         contract_msg.user_public_key,
     )?;
 
-    let (contract_env_bytes, contract_msg_info_bytes) =
-        parse_msg_info_bytes(&mut parsed_env)?;
+    let (contract_env_bytes, contract_msg_info_bytes) = parse_msg_info_bytes(&mut parsed_env)?;
 
     let env_ptr = engine.write_to_memory(&contract_env_bytes)?;
     let msg_info_ptr = engine.write_to_memory(&contract_msg_info_bytes)?;
@@ -737,8 +732,7 @@ pub fn query(
         contract_msg.user_public_key,
     )?;
 
-    let (contract_env_bytes, _ /* no msg_info in query */) =
-        parse_msg_info_bytes(&mut parsed_env)?;
+    let (contract_env_bytes, _ /* no msg_info in query */) = parse_msg_info_bytes(&mut parsed_env)?;
 
     let env_ptr = engine.write_to_memory(&contract_env_bytes)?;
     let msg_ptr = engine.write_to_memory(&validated_msg)?;
@@ -798,64 +792,52 @@ fn start_engine(
     Ok(Engine::new(contract_instance, module))
 }
 
-fn parse_msg_info_bytes(
-    env: &mut FullEnv,
-) -> Result<(Vec<u8>, Vec<u8>), EnclaveError> {
-    
-            let new_env = Env {
-                block: BlockInfo {
-                    height: env.block.height,
-                    time: env.block.time,
-                    chain_id: env.block.chain_id.clone(),
-                },
-                contract: ContractInfo {
-                    address: Addr(env.contract.address.0.clone()),
-                    code_hash: env.contract.code_hash.clone(),
-                },
+fn parse_msg_info_bytes(env: &mut FullEnv) -> Result<(Vec<u8>, Vec<u8>), EnclaveError> {
+    let new_env = Env {
+        block: BlockInfo {
+            height: env.block.height,
+            time: env.block.time,
+            chain_id: env.block.chain_id.clone(),
+        },
+        contract: ContractInfo {
+            address: Addr(env.contract.address.0.clone()),
+            code_hash: env.contract.code_hash.clone(),
+        },
+    };
 
-            };
+    let env_bytes = serde_json::to_vec(&new_env).map_err(|err| {
+        warn!(
+            "got an error while trying to serialize env (CosmWasm v1) into bytes {:?}: {}",
+            env, err
+        );
+        EnclaveError::FailedToSerialize
+    })?;
 
-            let env_bytes =  serde_json::to_vec(&new_env).map_err(|err| {
-                warn!(
-                    "got an error while trying to serialize env (CosmWasm v1) into bytes {:?}: {}",
-                    env, err
-                );
-                EnclaveError::FailedToSerialize
-            })?;
+    let msg_info = MessageInfo {
+        sender: Addr(env.message.sender.clone().to_string()),
+        funds: env
+            .message
+            .funds
+            .iter()
+            .map(|coin| Coin::new(coin.amount.u128(), coin.denom.clone()))
+            .collect::<Vec<enclave_cosmwasm_types::coins::Coin>>(),
+    };
 
-            let msg_info = MessageInfo {
-                sender: Addr(env.message.sender.clone().to_string()),
-                funds: env
-                    .message
-                    .funds
-                    .iter()
-                    .map(|coin| {
-                        Coin::new(
-                            coin.amount.u128(),
-                            coin.denom.clone(),
-                        )
-                    })
-                    .collect::<Vec<enclave_cosmwasm_types::coins::Coin>>(),
-            };
+    let msg_info_bytes = serde_json::to_vec(&msg_info).map_err(|err| {
+        warn!(
+            "got an error while trying to serialize msg_info (CosmWasm v1) into bytes {:?}: {}",
+            msg_info, err
+        );
+        EnclaveError::FailedToSerialize
+    })?;
 
-            let msg_info_bytes =  serde_json::to_vec(&msg_info).map_err(|err| {
-                warn!(
-                    "got an error while trying to serialize msg_info (CosmWasm v1) into bytes {:?}: {}",
-                    msg_info, err
-                );
-                EnclaveError::FailedToSerialize
-            })?;
-
-            Ok((env_bytes, msg_info_bytes))
-
-
+    Ok((env_bytes, msg_info_bytes))
 }
 
 pub fn create_callback_sig(
-    msg: &[u8], //message with args
-    msg_info: &[u8] //code hash and funds
+    msg: &[u8],      //message with args
+    msg_info: &[u8], //code hash and funds
 ) -> Result<CallbackSigSuccess, EnclaveError> {
-
     let parsed_msg_info: MsgInfo = serde_json::from_slice(msg_info).map_err(|err| {
         warn!(
             "got an error while trying to deserialize msg input bytes into json {:?}: {}",
@@ -863,22 +845,33 @@ pub fn create_callback_sig(
             err
         );
         EnclaveError::FailedToDeserialize
-    })?;              
-   
-    let send_as_addr = CanonicalAddr::from_addr(&Addr(COMMUNITY_POOL_ADDR.to_string())).map_err(|err| {
-        warn!("failed to turn human addr to canonical addr when create_callback_sig: {:?}", err);
-        EnclaveError::FailedToDeserialize
     })?;
+
+    let send_as_addr =
+        CanonicalAddr::from_addr(&Addr(COMMUNITY_POOL_ADDR.to_string())).map_err(|err| {
+            warn!(
+                "failed to turn human addr to canonical addr when create_callback_sig: {:?}",
+                err
+            );
+            EnclaveError::FailedToDeserialize
+        })?;
 
     let nonce_placeholder = [0u8; 32];
     let pubkey_placeholder = [0u8; 32];
 
     let mut msg_callback = Binary::from(msg);
-    let sig = encrypt_msg(&mut msg_callback, nonce_placeholder, pubkey_placeholder, &send_as_addr, hex::encode(&parsed_msg_info.code_hash.as_slice()), parsed_msg_info.funds).map_err(|err| {
+    let sig = encrypt_msg(
+        &mut msg_callback,
+        nonce_placeholder,
+        pubkey_placeholder,
+        &send_as_addr,
+        hex::encode(&parsed_msg_info.code_hash.as_slice()),
+        parsed_msg_info.funds,
+    )
+    .map_err(|err| {
         warn!(
             "got an error while trying to encrypt wasm_msg into encrypted message {:?}: {}",
-            msg,
-            err
+            msg, err
         );
         EnclaveError::FailedToDeserialize
     })?;

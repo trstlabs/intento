@@ -120,7 +120,7 @@ func (w *Wasmer) Instantiate(
 
 	key := data[0:64]
 	callback_sig := data[64:96]
-	//data = data[96:]
+	data = data[96:]
 
 	//fmt.Println(string(callback_sig))
 

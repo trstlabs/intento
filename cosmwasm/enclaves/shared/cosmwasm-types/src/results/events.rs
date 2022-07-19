@@ -24,7 +24,7 @@ pub struct Event {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Attribute {
     pub key: String,
-    pub value: String,
+    pub value: Vec<u8>,
     pub pub_db: bool,
     pub acc_addr: Option<String>,
     pub encrypted: bool,
