@@ -31,7 +31,7 @@ use sha2::Digest;
 enum WasmOutput {
     Err {
         #[serde(rename = "error")]
-        err: Value,
+        err: String,
         internal_msg_id: Option<Binary>,
         internal_reply_enclave_sig: Option<Binary>,
     },
@@ -167,10 +167,10 @@ pub fn encrypt_output(
             internal_reply_enclave_sig,
             internal_msg_id,
         } => {
-            let encrypted_err = encrypt_serializable(&encryption_key, err, &reply_params)?;
+            *err = encrypt_serializable(&encryption_key, err, &reply_params)?;
 
             // Putting the error inside a 'generic_err' envelope, so we can encrypt the error itself
-            *err = json!({"generic_err":{"msg":encrypted_err}});
+            //*err = json!({"generic_err":{"msg":encrypted_err}});
 
             let msg_id = match reply_params {
                 Some(ref r) => {
@@ -191,7 +191,7 @@ pub fn encrypt_output(
                 Some(_) => {
                     let reply = Reply {
                         id: msg_id.unwrap(),
-                        result: SubMsgResult::Err(encrypted_err),
+                        result: SubMsgResult::Err(err.to_string()),
                     };
                     let reply_as_vec = serde_json::to_vec(&reply).map_err(|err| {
                         warn!(
