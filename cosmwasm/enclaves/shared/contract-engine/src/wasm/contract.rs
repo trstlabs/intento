@@ -653,13 +653,13 @@ impl WasmiApi for ContractInstance {
 
         let canonical = self.extract_vector(canonical_ptr as u32).map_err(|err| {
             debug!(
-                "humanize_address() error while trying to read canonical address from wasm memory",
+                "addr_humanize() error while trying to read canonical address from wasm memory",
             );
             err
         })?;
 
         trace!(
-            "humanize_address() was called from WASM code with {:?}",
+            "addr_humanize() was called from WASM code with {:?}",
             canonical
         );
 
@@ -667,7 +667,7 @@ impl WasmiApi for ContractInstance {
             Err(err) => {
                 // Assaf: IMO This can never fail. From looking at bech32::encode, it only fails
                 // because input prefix issues. For us the prefix is always "secert" which is valid.
-                debug!("humanize_address() error while trying to encode canonical address {:?} to human: {:?}",  canonical, err);
+                debug!("addr_humanize() error while trying to encode canonical address {:?} to human: {:?}",  canonical, err);
                 return Ok(Some(RuntimeValue::I32(
                     self.write_to_memory(err.to_string().as_bytes())? as i32,
                 )));
