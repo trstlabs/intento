@@ -113,9 +113,9 @@ fn bool_true() -> bool {
 pub struct Attribute {
     pub key: String,
     pub value: Vec<u8>,
-    pub pub_db: bool,
-    pub acc_addr: Option<String>,
-    pub encrypted: bool,
+    pub pub_db: bool, // true + acc_addr: None to write to public contract state.
+    pub acc_addr: Option<String>, // pubdb true and Some(trust... ) to write to public account-specific state. 
+    pub encrypted: bool, //True for an encrypted output log of the transaction
 }
 
 impl Attribute {

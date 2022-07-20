@@ -111,7 +111,17 @@ where
         Self::default()
     }
 
-    /// Add an attribute included in the main `wasm` event.
+    /// Add an encrypted log included in the main `wasm` event. Same as 'add_attribute'
+    pub fn add_log(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.attributes.push(Attribute::new_log(key, value));
+        self
+    }
+      /// Add a public log included in the main `wasm` event.
+      pub fn add_plaintext_log(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+        self.attributes.push(Attribute::new_plaintext_log(key, value));
+        self
+    }
+    /// For CW compatibility, adds an encrypted log attribute included in the main `wasm` event.
     pub fn add_attribute(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
         self.attributes.push(Attribute::new_log(key, value));
         self
@@ -156,16 +166,24 @@ where
     ///
     /// Anything that can be turned into an iterator and yields something
     /// that can be converted into an `Attribute` is accepted.
-    ///
+    /// 
+    /// Attribute struct: 
+    /// pub struct Attribute {
+    ///    pub key: String,
+    ///    pub value: Vec<u8>,
+    ///    pub pub_db: bool, // true + acc_addr: None to write to public contract state.
+    ///    pub acc_addr: Option<String>, // pubdb true and Some(trust... ) to write to public account-specific state. 
+    ///    pub encrypted: bool, //True for an encrypted output log of the transaction
+    ///  }
     /// ## Examples
     ///
     /// ```
     /// use cosmwasm_std::{attr, Response};
     ///
     /// let attrs = vec![
-    ///     ("action", "reaction"),
-    ///     ("answer", "42"),
-    ///     ("another", "attribute"),
+    ///     ("action", "reaction").as_bytes().to_vec(), true, Some("trust..."), false),
+    ///     ("answer", "42".as_bytes().to_vec(), false, None, true),
+    ///     ("another", "attribute".as_bytes().to_vec(), true, None, false),
     /// ];
     /// let res: Response = Response::new().add_attributes(attrs.clone());
     /// assert_eq!(res.attributes, attrs);
