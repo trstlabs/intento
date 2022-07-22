@@ -4,6 +4,7 @@ import (
 
 	//"encoding/json"
 	"encoding/json"
+	"fmt"
 
 	//"log"
 
@@ -76,7 +77,7 @@ func (k Keeper) reply(ctx sdk.Context, contractAddress sdk.AccAddress, reply was
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Printf("reply for %s \n", contractAddress.String())
 	// always consider this pinned
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading Compute module: reply")
 

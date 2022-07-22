@@ -8,13 +8,13 @@ use enclave_cosmos_types::types::{
     ContractCode, CosmWasmMsg, CosmosPubKey, SigInfo, SignDoc, StdSignDoc,
 };
 
-use enclave_cosmwasm_types::addresses::{CanonicalAddr, Addr};
-use enclave_cosmwasm_types::coins::Coin;
-use enclave_crypto::traits::VerifyingKey;
-use enclave_crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER};
-use enclave_cosmwasm_types::types::FullEnv;
 use crate::io::create_callback_signature;
 use crate::types::ContractMessage;
+use enclave_cosmwasm_types::addresses::{Addr, CanonicalAddr};
+use enclave_cosmwasm_types::coins::Coin;
+use enclave_cosmwasm_types::types::FullEnv;
+use enclave_crypto::traits::VerifyingKey;
+use enclave_crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER};
 
 pub type ContractKey = [u8; CONTRACT_KEY_LENGTH];
 
@@ -135,12 +135,22 @@ pub fn validate_contract_key(
     calculated_authentication_id == expected_authentication_id
 }
 
+pub struct ValidatedMessage {
+    pub validated_msg: Vec<u8>,
+    pub reply_params: Option<ReplyParams>,
+}
+
+pub struct ReplyParams {
+    pub recipient_contract_hash: Vec<u8>,
+    pub sub_msg_id: u64,
+}
+
 /// Validate that the message sent to the enclave (after decryption) was actually addressed to this contract.
 pub fn validate_msg(
     msg: &[u8],
     contract_hash: [u8; HASH_SIZE],
     contract_hash_for_validation: Option<Vec<u8>>,
-) -> Result<(Vec<u8>, Option<(Vec<u8>, u64)>), EnclaveError> {
+) -> Result<ValidatedMessage, EnclaveError> {
     if msg.len() < HEX_ENCODED_HASH_SIZE {
         warn!("Malformed message - expected contract code hash to be prepended to the msg");
         return Err(EnclaveError::ValidationFailure);
@@ -184,13 +194,19 @@ pub fn validate_msg(
         let mut reply_recipient_contract_hash: [u8; HEX_ENCODED_HASH_SIZE] =
             [0u8; HEX_ENCODED_HASH_SIZE];
         reply_recipient_contract_hash.copy_from_slice(&validated_msg[0..HEX_ENCODED_HASH_SIZE]);
-        return Ok((
-            validated_msg[HEX_ENCODED_HASH_SIZE..].to_vec(),
-            Some((reply_recipient_contract_hash.to_vec(), sub_msg_id)),
-        ));
+        return Ok(ValidatedMessage {
+            validated_msg: validated_msg[HEX_ENCODED_HASH_SIZE..].to_vec(),
+            reply_params: Some(ReplyParams {
+                recipient_contract_hash: reply_recipient_contract_hash.to_vec(),
+                sub_msg_id,
+            }),
+        });
     }
 
-    Ok((validated_msg, None))
+    Ok(ValidatedMessage {
+        validated_msg,
+        reply_params: None,
+    })
 }
 
 /// Verify all the parameters sent to the enclave match up, and were signed by the right account.
@@ -220,7 +236,7 @@ pub fn verify_params(
 
     trace!(
         "sender canonical address is: {:?}",
-        sender_public_key.get_address().0.0
+        sender_public_key.get_address().0 .0
     );
     trace!("sender signature is: {:?}", sig_info.signature);
     trace!("sign bytes are: {:?}", sig_info.sign_bytes);
@@ -262,7 +278,7 @@ fn get_signer_and_messages(
                 );
                 EnclaveError::FailedTxVerification
             })?;
-            trace!("sender canonical address is: {:?}", sender.0.0);
+            trace!("sender canonical address is: {:?}", sender.0 .0);
 
             // This verifies that signatures and sign bytes are self consistent
             let sender_public_key =
@@ -361,13 +377,10 @@ fn get_verified_msg<'sd>(
     sent_msg: &ContractMessage,
 ) -> Option<&'sd CosmWasmMsg> {
     messages.iter().find(|&m| match m {
-        CosmWasmMsg::Execute { msg, sender, .. } 
-        | CosmWasmMsg::Instantiate {
-            msg,
-            sender,
-            ..
-        } => msg_sender == sender && &sent_msg.to_vec() == msg,
-     
+        CosmWasmMsg::Execute { msg, sender, .. } | CosmWasmMsg::Instantiate { msg, sender, .. } => {
+            msg_sender == sender && &sent_msg.to_vec() == msg
+        }
+
         CosmWasmMsg::Other => false,
     })
 }
@@ -396,11 +409,9 @@ fn verify_contract(msg: &CosmWasmMsg, env: &FullEnv) -> bool {
 /// Check that the funds listed in the cosmwasm message matches the ones in env
 fn verify_funds(msg: &CosmWasmMsg, env: &FullEnv) -> bool {
     match msg {
-        CosmWasmMsg::Execute { funds, .. }
-        | CosmWasmMsg::Instantiate {
-            funds,
-            ..
-        } => &env.message.funds == funds,
+        CosmWasmMsg::Execute { funds, .. } | CosmWasmMsg::Instantiate { funds, .. } => {
+            &env.message.funds == funds
+        }
         CosmWasmMsg::Other => false,
     }
 }

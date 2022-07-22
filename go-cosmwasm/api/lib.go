@@ -164,8 +164,7 @@ func Instantiate(
 	defer runtime.UnlockOSThread()
 
 	res, err := C.instantiate(cache.ptr, id, p, m, am, db, a, q, u64(gasLimit), &gasUsed, &errmsg, s)
-	fmt.Printf("res %v \n", res)
-	fmt.Printf("err %s \n", err)
+
 	if err != nil && err.(syscall.Errno) != C.ErrnoValue_Success {
 		// Depending on the nature of the error, `gasUsed` will either have a meaningful value, or just 0.
 		return nil, uint64(gasUsed), errorWithMessage(err, errmsg)

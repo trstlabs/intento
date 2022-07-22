@@ -113,8 +113,6 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 func (k Keeper) SetAirdropAction(ctx sdk.Context, result []wasmTypes.Attribute) error {
 
 	for _, attr := range result {
-		fmt.Printf("result key: %s \n,", attr.Key)
-
 		if attr.Key == "init_auto_swap" {
 			acc, err := sdk.AccAddressFromBech32(string(attr.Value))
 			if err != nil {

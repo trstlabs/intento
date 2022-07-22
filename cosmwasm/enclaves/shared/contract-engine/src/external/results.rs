@@ -9,7 +9,7 @@ use crate::external::ocalls::ocall_allocate;
 
 /// This struct is returned from module initialization.
 pub struct InitSuccess {
-    /// The output of the calculation
+    /// The output of the execution
     pub output: Vec<u8>,
     /// The contract_key of this contract.
     pub contract_key: [u8; 64],
@@ -50,7 +50,7 @@ pub fn result_init_success_to_initresult(result: Result<InitSuccess, EnclaveErro
 
 /// This struct is returned from a handle method.
 pub struct HandleSuccess {
-    /// The output of the calculation
+    /// The output of the execution
     pub output: Vec<u8>,
 }
 
@@ -83,7 +83,7 @@ pub fn result_handle_success_to_handleresult(
 
 /// This struct is returned from a query method.
 pub struct QuerySuccess {
-    /// The output of the calculation
+    /// The output of the query
     pub output: Vec<u8>,
 }
 
@@ -116,7 +116,7 @@ pub fn result_query_success_to_queryresult(
 
 /// This struct is returned from a create callback method.
 pub struct CallbackSigSuccess {
-    /// The output of the calculation
+    /// The output of the callback sig creation
     // pub output: Vec<u8>,
     pub callback_sig: [u8; 32],
     pub encrypted_msg: Vec<u8>,

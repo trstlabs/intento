@@ -119,20 +119,24 @@ func (w *Wasmer) Instantiate(
 	}
 
 	key := data[0:64]
-	callback_sig := data[64:96]
+	callbackSig := data[64:96]
 	data = data[96:]
 
-	//fmt.Println(string(callback_sig))
+	//fmt.Println(string(callbackSig))
 
 	var result types.ContractResult
 	err = json.Unmarshal(data, &result)
 	if err != nil {
 		return nil, nil, nil, gasUsed, err
 	}
+	result.Ok.Data, err = AppendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
+	if err != nil {
+		return nil, nil, nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+	}
 	if result.Err != "" {
 		return nil, nil, nil, gasUsed, fmt.Errorf("%s", result.Err)
 	}
-	return result.Ok, key, callback_sig, gasUsed, nil
+	return result.Ok, key, callbackSig, gasUsed, nil
 }
 
 // Execute calls a given contract. Since the only difference between contracts with the same CodeID is the
@@ -163,6 +167,7 @@ func (w *Wasmer) Execute(
 	}
 
 	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
+
 	if err != nil {
 		return nil, gasUsed, err
 	}
@@ -174,6 +179,10 @@ func (w *Wasmer) Execute(
 	}
 	if result.Err != "" {
 		return nil, gasUsed, fmt.Errorf("%s", result.Err)
+	}
+	result.Ok.Data, err = AppendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
+	if err != nil {
+		return nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
 	}
 	return result.Ok, gasUsed, nil
 }
@@ -218,4 +227,14 @@ func (w *Wasmer) AnalyzeCode(
 	codeHash []byte,
 ) (*types.AnalysisReport, error) {
 	return api.AnalyzeCode(w.cache, codeHash)
+}
+
+func AppendReplyInternalDataToData(data []byte, internalReplyEnclaveSig []byte, internalMsgId []byte) ([]byte, error) {
+	dataWithInternalReply := types.DataWithInternalReplyInfo{
+		InternalReplyEnclaveSig: internalReplyEnclaveSig,
+		InternalMsgId:           internalMsgId,
+		Data:                    data,
+	}
+
+	return json.Marshal(dataWithInternalReply)
 }

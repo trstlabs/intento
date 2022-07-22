@@ -286,6 +286,7 @@ func ParseEvents(logs []wasmTypes.Attribute, contractAddr sdk.AccAddress) sdk.Ev
 	// we always tag with the contract address issuing this event
 	attrs := []sdk.Attribute{sdk.NewAttribute(AttributeKeyContractAddr, contractAddr.String())}
 	for _, l := range logs {
+		fmt.Printf("Log Key: %v \n", l.Key)
 		if l.PubDb {
 			continue
 		}

@@ -46,51 +46,6 @@ func filterEvents(events []sdk.Event) []sdk.Event {
 	return res
 }
 
-/*
-func sdkAttributesToWasmVMAttributes(attrs []abci.EventAttribute) []wasmTypes.Attribute {
-	res := make([]wasmTypes.Attribute, len(attrs))
-	for i, attr := range attrs {
-		if !attr.PubDb {
-			res[i] = wasmTypes.Attribute{
-				Key:   string(attr.Key),
-				Value: (attr.Value),
-			}
-		}
-	}
-	return res
-}
-
-func sdkEventsToWasmVMEvents(events []sdk.Event) []wasmTypes.Event {
-	res := make([]wasmTypes.Event, len(events))
-	for i, ev := range events {
-		res[i] = wasmTypes.Event{
-			Type:       ev.Type,
-			Attributes: ev.Attributes,
-		}
-	}
-	return res
-}
-
-func WasmVMEventsToSdk(events []wasmTypes.Event) []sdk.Event {
-	res := make([]sdk.Event, len(events))
-	for i, ev := range events {
-		attributes := make([]sdk.Attribute, len(ev.Attributes))
-		for _, attr := range ev.Attributes {
-			if attr.PubDb {
-				continue
-			}
-			var attribute sdk.Attribute
-			attribute.Key = attr.Key
-			attribute.Value = string(attr.Value)
-			attributes = append(attributes, attribute)
-		}
-		res[i] = sdk.Event{
-			Type:       ev.Type,
-			Attributes: attributes,
-		}
-	}
-	return res
-}*/
 func sdkAttributesToWasmVMAttributes(attrs []abci.EventAttribute) []wasmTypes.Attribute {
 	res := make([]wasmTypes.Attribute, len(attrs))
 	for i, attr := range attrs {
@@ -117,7 +72,7 @@ func sdkEventsToWasmVMEvents(events []sdk.Event) []wasmTypes.Event {
 func (d MessageDispatcher) dispatchMsgWithGasLimit(ctx sdk.Context, contractAddr sdk.AccAddress, ibcPort string, msg wasmTypes.CosmosMsg, gasLimit uint64) (events []sdk.Event, data [][]byte, err error) {
 	limitedMeter := sdk.NewGasMeter(gasLimit)
 	subCtx := ctx.WithGasMeter(limitedMeter)
-
+	fmt.Printf("Dispatch for %s \n", contractAddr.String())
 	// catch out of gas panic and just charge the entire gas limit
 	defer func() {
 		if r := recover(); r != nil {
@@ -222,7 +177,7 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 		default:
 			return nil, sdkerrors.Wrap(types.ErrInvalid, "replyOn value")
 		}
-
+		fmt.Printf("SubMsg for %s \n", contractAddr.String())
 		// first, we build a sub-context which we can use inside the submessages
 		subCtx, commit := ctx.CacheContext()
 		em := sdk.NewEventManager()
@@ -236,12 +191,13 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 		var events []sdk.Event
 		var data [][]byte
 		if limitGas {
+			fmt.Printf("Dispatch msg with limit gas for %s \n", contractAddr.String())
 			events, data, err = d.dispatchMsgWithGasLimit(subCtx, contractAddr, ibcPort, msg.Msg, *msg.GasLimit)
 		} else {
+			fmt.Printf("Dispatch msg with no limit gas for %s \n", contractAddr.String())
 			events, data, err = d.messenger.DispatchMsg(subCtx, contractAddr, ibcPort, msg.Msg)
 		}
 		ctx.EventManager().EmitEvents(events)
-		// if it succeeds, commit state changes from submessage, and pass on events to Event Manager
 		// if it succeeds, commit state changes from submessage, and pass on events to Event Manager
 		var filteredEvents []sdk.Event
 		if err == nil {
@@ -314,14 +270,14 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			if reply.Result.Ok != nil {
 				err = json.Unmarshal(reply.Result.Ok.Data, &dataWithInternalReplyInfo)
 				if err != nil {
-					return nil, fmt.Errorf("cannot serialize v1 DataWithInternalReplyInfo into json : %w", err)
+					return nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into json : %w", err)
 				}
 
 				reply.Result.Ok.Data = dataWithInternalReplyInfo.Data
 			} else {
 				err = json.Unmarshal(data[0], &dataWithInternalReplyInfo)
 				if err != nil {
-					return nil, fmt.Errorf("cannot serialize v1 DataWithInternalReplyInfo into json : %w", err)
+					return nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into json : %w", err)
 				}
 			}
 
@@ -335,12 +291,15 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			replySigInfo.CallbackSignature = dataWithInternalReplyInfo.InternalReplyEnclaveSig
 
 		}
-
+		fmt.Printf("Dispatch reply for %s \n", contractAddr.String())
 		rspData, err := d.keeper.reply(ctx, contractAddr, reply, ogTx, replySigInfo, replyToContractHash)
+
 		switch {
 		case err != nil:
+			fmt.Printf("Got err for SubMsg for %v \n", err.Error())
 			return nil, err
 		case rspData != nil:
+			fmt.Printf("Got response for SubMsg for %v \n", rspData)
 			rsp = rspData
 		}
 	}

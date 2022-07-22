@@ -20,7 +20,7 @@ use enclave_utils::coalesce;
 
 use super::contract_validation::{
     extract_contract_key, generate_encryption_key, validate_contract_key, validate_msg,
-    verify_params, ContractKey,
+    verify_params, ContractKey, ReplyParams, ValidatedMessage,
 };
 use super::gas::WasmCosts;
 use super::io::{copy_into_array, create_callback_signature, encrypt_msg, encrypt_output};
@@ -106,7 +106,11 @@ pub fn init(
 
     let decrypted_msg = contract_msg.decrypt()?;
 
-    let (validated_msg, reply_params) = validate_msg(&decrypted_msg, contract_code.hash(), None)?;
+    let ValidatedMessage {
+        validated_msg,
+        reply_params,
+    } = validate_msg(&decrypted_msg, contract_code.hash(), None)?;
+
     trace!(
         "init input after decryption: {:?}",
         String::from_utf8_lossy(&validated_msg)
@@ -146,8 +150,7 @@ pub fn init(
         // TODO: ref: https://github.com/CosmWasm/cosmwasm/blob/b971c037a773bf6a5f5d08a88485113d9b9e8e7b/packages/std/src/query.rs#L13
         let output = encrypt_output(
             output,
-            contract_msg.nonce,
-            contract_msg.user_public_key,
+            &contract_msg,
             &canonical_contract_address,
             &parsed_env.contract.code_hash,
             reply_params,
@@ -187,8 +190,13 @@ impl Into<bool> for TaggedBool {
     }
 }
 
-type ShouldValidateSigInfo = TaggedBool;
-type WasMessageEncrypted = TaggedBool;
+pub struct ParsedMessage {
+    pub should_validate_sig_info: bool,
+    pub was_msg_encrypted: bool,
+    pub contract_msg: ContractMessage,
+    pub decrypted_msg: Vec<u8>,
+    pub contract_hash_for_validation: Option<Vec<u8>>,
+}
 
 pub fn reduct_custom_events(reply: &mut Reply) {
     reply.result = match &reply.result {
@@ -232,32 +240,24 @@ pub fn parse_message(
     message: &[u8],
     sig_info: &SigInfo,
     handle_type: &HandleType,
-) -> Result<
-    (
-        ShouldValidateSigInfo,
-        WasMessageEncrypted,
-        ContractMessage,
-        Vec<u8>,
-        Option<Vec<u8>>,
-    ),
-    EnclaveError,
-> {
+) -> Result<ParsedMessage, EnclaveError> {
     let orig_contract_msg = ContractMessage::from_slice(message)?;
 
     return match handle_type {
         HandleType::HANDLE_TYPE_EXECUTE => {
+            trace!("handle input bytes before decryption: {:?}", &message);
             trace!(
                 "handle input before decryption: {:?}",
                 base64::encode(&message)
             );
             let decrypted_msg = orig_contract_msg.decrypt()?;
-            Ok((
-                ShouldValidateSigInfo::from(true),
-                WasMessageEncrypted::from(true),
-                orig_contract_msg,
+            Ok(ParsedMessage {
+                should_validate_sig_info: true,
+                was_msg_encrypted: true,
+                contract_msg: orig_contract_msg,
                 decrypted_msg,
-                None,
-            ))
+                contract_hash_for_validation: None,
+            })
         }
 
         HandleType::HANDLE_TYPE_REPLY => {
@@ -319,13 +319,13 @@ pub fn parse_message(
                     EnclaveError::FailedToSerialize
                 })?;
 
-                return Ok((
-                    ShouldValidateSigInfo::from(false),
-                    WasMessageEncrypted::from(false),
-                    reply_contract_msg,
-                    serialized_reply,
-                    None,
-                ));
+                return Ok(ParsedMessage {
+                    should_validate_sig_info: false,
+                    was_msg_encrypted: false,
+                    contract_msg: reply_contract_msg,
+                    decrypted_msg: serialized_reply,
+                    contract_hash_for_validation: None,
+                });
             }
 
             // Here we are sure the reply is OK because only OK is encrypted
@@ -424,13 +424,15 @@ pub fn parse_message(
                         msg: serialized_encrypted_reply,
                     };
 
-                    Ok((
-                        ShouldValidateSigInfo::from(true),
-                        WasMessageEncrypted::from(true),
-                        reply_contract_msg,
-                        decrypted_reply_as_vec,
-                        Some(tmp_decrypted_msg_id[..HEX_ENCODED_HASH_SIZE].to_vec()),
-                    ))
+                    Ok(ParsedMessage {
+                        should_validate_sig_info: true,
+                        was_msg_encrypted: true,
+                        contract_msg: reply_contract_msg,
+                        decrypted_msg: decrypted_reply_as_vec,
+                        contract_hash_for_validation: Some(
+                            tmp_decrypted_msg_id[..HEX_ENCODED_HASH_SIZE].to_vec(),
+                        ),
+                    })
                 }
                 SubMsgResult::Err(response) => {
                     let contract_msg = ContractMessage {
@@ -515,13 +517,15 @@ pub fn parse_message(
                         msg: serialized_encrypted_reply,
                     };
 
-                    Ok((
-                        ShouldValidateSigInfo::from(true),
-                        WasMessageEncrypted::from(true),
-                        reply_contract_msg,
-                        decrypted_reply_as_vec,
-                        Some(tmp_decrypted_msg_id[..HEX_ENCODED_HASH_SIZE].to_vec()),
-                    ))
+                    Ok(ParsedMessage {
+                        should_validate_sig_info: true,
+                        was_msg_encrypted: true,
+                        contract_msg: reply_contract_msg,
+                        decrypted_msg: decrypted_reply_as_vec,
+                        contract_hash_for_validation: Some(
+                            tmp_decrypted_msg_id[..HEX_ENCODED_HASH_SIZE].to_vec(),
+                        ),
+                    })
                 }
             }
         }
@@ -585,33 +589,33 @@ pub fn handle(
     // When the message is handle, we expect it always to be encrypted while in Reply for example it might be plaintext
     let parsed_handle_type = HandleType::try_from(handle_type)?;
 
-    let (
+    let ParsedMessage {
         should_validate_sig_info,
         was_msg_encrypted,
         contract_msg,
         decrypted_msg,
         contract_hash_for_validation,
-    ) = parse_message(msg, &parsed_sig_info, &parsed_handle_type)?;
+    } = parse_message(msg, &parsed_sig_info, &parsed_handle_type)?;
 
     // There is no signature to verify when the input isn't signed.
     // Receiving unsigned messages is only possible in Handle. (Init tx are always signed)
     // All of these functions go through handle but the data isn't signed:
     //  Reply (that is not WASM reply)
-    if should_validate_sig_info.into() {
+    if should_validate_sig_info {
         // Verify env parameters against the signed tx
         verify_params(&parsed_sig_info, &parsed_env, &contract_msg)?;
     }
 
     let mut validated_msg = decrypted_msg.clone();
-    let mut reply_params: Option<(Vec<u8>, u64)> = None;
-    if was_msg_encrypted.into() {
+    let mut reply_params: Option<ReplyParams> = None;
+    if was_msg_encrypted {
         let x = validate_msg(
             &decrypted_msg,
             contract_code.hash(),
             contract_hash_for_validation,
         )?;
-        validated_msg = x.0;
-        reply_params = x.1;
+        validated_msg = x.validated_msg;
+        reply_params = x.reply_params;
     }
 
     trace!(
@@ -656,13 +660,13 @@ pub fn handle(
 
         let output = encrypt_output(
             output,
-            contract_msg.nonce,
-            contract_msg.user_public_key,
+            &contract_msg,
             &canonical_contract_address,
             &parsed_env.contract.code_hash,
             reply_params,
             &canonical_sender_address,
         )?;
+
         Ok(output)
     })
     .map_err(|err| {
@@ -720,7 +724,8 @@ pub fn query(
         "query input afer decryption: {:?}",
         String::from_utf8_lossy(&decrypted_msg)
     );
-    let validated_msg = validate_msg(&decrypted_msg, contract_code.hash(), None)?.0;
+    let ValidatedMessage { validated_msg, .. } =
+        validate_msg(&decrypted_msg, contract_code.hash(), None)?;
 
     let mut engine = start_engine(
         context,
@@ -746,8 +751,7 @@ pub fn query(
 
         let output = encrypt_output(
             output,
-            contract_msg.nonce,
-            contract_msg.user_public_key,
+            &contract_msg,
             &CanonicalAddr(Binary(Vec::new())), // Not used for queries (can't init a new contract from a query)
             &"".to_string(), // Not used for queries (can't call a sub-message from a query),
             None,            // Not used for queries (Query response is not replied to the caller),

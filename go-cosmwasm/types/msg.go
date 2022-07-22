@@ -12,8 +12,10 @@ import (
 // ContractResult is the raw response from the instantiate/execute/migrate calls.
 // This is mirrors Rust's ContractResult<Response>.
 type ContractResult struct {
-	Ok  *Response `json:"ok,omitempty"`
-	Err string    `json:"error,omitempty"`
+	Ok                      *Response `json:"ok,omitempty"`
+	Err                     string    `json:"error,omitempty"`
+	InternalReplyEnclaveSig []byte    `json:"internal_reply_enclave_sig"`
+	InternalMsgId           []byte    `json:"internal_msg_id"`
 }
 
 // Response defines the return value on a successful instantiate/execute/migrate.

@@ -80,7 +80,7 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 
 // Instantiate creates an instance of a WASM contract
 func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, msg []byte, autoMsg []byte, id string, deposit sdk.Coins, callbackSig []byte, customDuration time.Duration) (sdk.AccAddress, []byte, error) {
-	fmt.Printf("init duration: %s \n", customDuration)
+	fmt.Printf("Init duration: %s \n", customDuration)
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading CosmWasm module: init")
 
 	signBytes := []byte{}
@@ -89,14 +89,14 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	pkBytes := []byte{}
 	signerSig := []byte{}
 	var err error
-	fmt.Printf("init sender: %s", creator)
-	fmt.Printf("callbackSig: \t %v \n", callbackSig)
+	fmt.Printf("Initiator: %s \n", creator)
 	// If no callback signature - we should send the actual msg sender sign bytes and signature
 	if callbackSig == nil {
 		signBytes, signMode, modeInfoBytes, pkBytes, signerSig, err = k.GetSignerInfo(ctx, creator)
 		if err != nil {
 			return nil, nil, err
 		}
+		fmt.Printf("Init by account \n")
 	}
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
@@ -158,7 +158,9 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	// instantiate wasm contract
 	gas := gasForContract(ctx)
 	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, env, msg, autoMsgToSend, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo, contractAddress)
+	//fmt.Printf("res: %v \n", res)
 	if err != nil {
+		fmt.Printf("err: %v \n", err.Error())
 		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
 	}
 	consumeGas(ctx, gasUsed)
@@ -166,6 +168,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		return contractAddress, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
 	}
 
+	fmt.Printf("Attributes: %v \n", res.Attributes)
 	// emit all events from this contract itself
 	events := types.ParseEvents(res.Attributes, contractAddress)
 	ctx.EventManager().EmitEvents(events)
@@ -214,7 +217,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		return nil, nil, err
 	}
 
-	//both compute actions are performed through callbacksig
+	//both airdrop actions are performed through callbacksig
 	if callbackSig != nil {
 		k.SetAirdropAction(ctx, res.Attributes)
 	}
@@ -239,6 +242,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 			return nil, err
 		}
+		fmt.Printf("Execute by account \n")
 	}
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
@@ -275,13 +279,13 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	gas := gasForContract(ctx)
-	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, wasmTypes.HandleTypeExecute)
-	//fmt.Printf("res: %v \n", res.Log)
-	consumeGas(ctx, gasUsed)
-
-	if execErr != nil {
-		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, execErr.Error())
+	res, gasUsed, err := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, wasmTypes.HandleTypeExecute)
+	//fmt.Printf("res: %v \n", res)
+	if err != nil {
+		fmt.Printf("err: %v \n", err.Error())
+		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
+	consumeGas(ctx, gasUsed)
 
 	// emit all events from this contract itself
 	events := types.ParseEvents(res.Attributes, contractAddress)
