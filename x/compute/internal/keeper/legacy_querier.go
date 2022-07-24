@@ -23,18 +23,7 @@ const (
 	QueryContractKey             = types.QueryContractKey
 	QueryContractHash            = types.QueryContractHash
 	QueryMasterCertificate       = types.QueryMasterCertificate
-	//QueryContractHistory    = "contract-history"
 )
-
-const QueryMethodContractStateSmart = "smart"
-
-/*
-const (
-	QueryMethodContractStateSmart = "smart"
-	QueryMethodContractStateAll   = "all"
-	QueryMethodContractStateRaw   = "raw"
-)
-*/
 
 // NewLegacyQuerier creates a new querier
 func NewLegacyQuerier(keeper Keeper) sdk.Querier {

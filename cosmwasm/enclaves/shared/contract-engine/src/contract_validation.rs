@@ -147,15 +147,15 @@ pub struct ReplyParams {
 
 /// Validate that the message sent to the enclave (after decryption) was actually addressed to this contract.
 pub fn validate_msg(
-    msg: &[u8],
+    msg: &[u8], //for reply it is different, events are reducted
     contract_hash: [u8; HASH_SIZE],
     contract_hash_for_validation: Option<Vec<u8>>,
 ) -> Result<ValidatedMessage, EnclaveError> {
-    if msg.len() < HEX_ENCODED_HASH_SIZE {
+   /* if msg.len() < HEX_ENCODED_HASH_SIZE {
         warn!("Malformed message - expected contract code hash to be prepended to the msg");
         return Err(EnclaveError::ValidationFailure);
     }
-
+*/
     let mut received_contract_hash: [u8; HEX_ENCODED_HASH_SIZE] = [0u8; HEX_ENCODED_HASH_SIZE];
     let mut validated_msg: Vec<u8>;
     match contract_hash_for_validation {

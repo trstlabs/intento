@@ -21,7 +21,7 @@ type Messenger interface {
 
 // Replyer is a subset of keeper that can handle replies to submessages
 type Replyer interface {
-	reply(ctx sdk.Context, contractAddress sdk.AccAddress, reply wasmTypes.Reply, ogTx []byte, ogSigInfo wasmTypes.VerificationInfo, replyToContractHash []byte) ([]byte, error)
+	reply(ctx sdk.Context, contractAddress sdk.AccAddress, reply wasmTypes.Reply, ogTx []byte, ogSigInfo wasmTypes.VerificationInfo) ([]byte, error)
 }
 
 // MessageDispatcher coordinates message sending and submessage reply/ state commits
@@ -50,8 +50,11 @@ func sdkAttributesToWasmVMAttributes(attrs []abci.EventAttribute) []wasmTypes.At
 	res := make([]wasmTypes.Attribute, len(attrs))
 	for i, attr := range attrs {
 		res[i] = wasmTypes.Attribute{
-			Key:   string(attr.Key),
-			Value: (attr.Value),
+			Key:       string(attr.Key),
+			Value:     attr.Value,
+			Encrypted: false,
+			PubDb:     false,
+			AccAddr:   "",
 		}
 	}
 	return res
@@ -82,7 +85,7 @@ func (d MessageDispatcher) dispatchMsgWithGasLimit(ctx sdk.Context, contractAddr
 				ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName)).Info("SubMsg rethrowing panic: %#v", r)
 				panic(r)
 			}
-			ctx.GasMeter().ConsumeGas(gasLimit, "Sub-Message OutOfGas panic")
+			ctx.GasMeter().ConsumeGas(gasLimit, "SubMsg OutOfGas panic")
 			err = sdkerrors.Wrap(sdkerrors.ErrOutOfGas, "SubMsg hit gas limit")
 		}
 	}()
@@ -90,7 +93,7 @@ func (d MessageDispatcher) dispatchMsgWithGasLimit(ctx sdk.Context, contractAddr
 
 	// make sure we charge the parent what was spent
 	spent := subCtx.GasMeter().GasConsumed()
-	ctx.GasMeter().ConsumeGas(spent, "From limited Sub-Message")
+	ctx.GasMeter().ConsumeGas(spent, "From gas-limited SubMsg")
 
 	return events, data, err
 }
@@ -177,7 +180,8 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 		default:
 			return nil, sdkerrors.Wrap(types.ErrInvalid, "replyOn value")
 		}
-		fmt.Printf("SubMsg for %s \n", contractAddr.String())
+		//fmt.Printf("SubMsg for %s \n", contractAddr.String())
+		//fmt.Printf("SubMsg %+v\n", msg)
 		// first, we build a sub-context which we can use inside the submessages
 		subCtx, commit := ctx.CacheContext()
 		em := sdk.NewEventManager()
@@ -221,17 +225,18 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 		// We need to create a SubMsgResult and pass it into the calling contract
 		var result wasmTypes.SubMsgResult
 		if err == nil {
+
 			// just take the first one for now if there are multiple sub-sdk messages
 			// and safely return nothing if no data
 			var responseData []byte
 			if len(data) > 0 {
 				responseData = data[0]
 			}
+			//fmt.Printf("SubMsg responseData %v \n", responseData)
 
 			result = wasmTypes.SubMsgResult{
-				// Copy first 64 bytes of the OG message in order to preserve the pubkey.
 				Ok: &wasmTypes.SubMsgResponse{
-					Events: sdkEventsToWasmVMEvents(filteredEvents),
+					Events: sdkEventsToWasmVMEvents(filteredEvents), //wasmTypes.Events{}, //
 					Data:   responseData,
 				},
 			}
@@ -249,6 +254,11 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			ID:     msg_id,
 			Result: result,
 		}
+		/*fmt.Printf("msg.ReplyOn %+v\n", msg.ReplyOn)
+		fmt.Printf("msg.ID %+v\n", msg.ID)
+		fmt.Printf("Reply %+v \n", reply)
+		fmt.Printf("Reply ID %+v \n", reply.ID)
+		fmt.Printf("Reply result Ok %+v \n", reply.Result.Ok)*/
 
 		// we can ignore any result returned as there is nothing to do with the data
 		// and the events are already in the ctx.EventManager()
@@ -263,17 +273,19 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			SignMode:  "SIGN_MODE_UNSPECIFIED",
 		}
 
-		var replyToContractHash []byte
 		if isReplyEncrypted(msg.Msg, reply) {
 			var dataWithInternalReplyInfo wasmTypes.DataWithInternalReplyInfo
 
 			if reply.Result.Ok != nil {
+				//fmt.Printf("Reply data raw %v \n", reply.Result.Ok.Data)
 				err = json.Unmarshal(reply.Result.Ok.Data, &dataWithInternalReplyInfo)
 				if err != nil {
 					return nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into json : %w", err)
 				}
 
 				reply.Result.Ok.Data = dataWithInternalReplyInfo.Data
+				//fmt.Printf("Reply Ok %v \n", reply.Result.Ok)
+
 			} else {
 				err = json.Unmarshal(data[0], &dataWithInternalReplyInfo)
 				if err != nil {
@@ -284,15 +296,13 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			if len(dataWithInternalReplyInfo.InternalMsgId) == 0 || len(dataWithInternalReplyInfo.InternalReplyEnclaveSig) == 0 {
 				return nil, fmt.Errorf("when sending a reply both InternalReplyEnclaveSig and InternalMsgId are expected to be initialized")
 			}
-
 			replySigInfo = ogSigInfo
-			replyToContractHash = dataWithInternalReplyInfo.Data[0:64] // First 64 bytes of the data is the contract hash
 			reply.ID = dataWithInternalReplyInfo.InternalMsgId
 			replySigInfo.CallbackSignature = dataWithInternalReplyInfo.InternalReplyEnclaveSig
 
 		}
 		fmt.Printf("Dispatch reply for %s \n", contractAddr.String())
-		rspData, err := d.keeper.reply(ctx, contractAddr, reply, ogTx, replySigInfo, replyToContractHash)
+		rspData, err := d.keeper.reply(ctx, contractAddr, reply, ogTx, replySigInfo)
 
 		switch {
 		case err != nil:

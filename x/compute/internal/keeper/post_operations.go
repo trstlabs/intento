@@ -23,7 +23,7 @@ func (k *Keeper) handleContractResponse(
 	msgs []wasmTypes.SubMsg,
 	evts wasmTypes.Events,
 	data []byte,
-	// original TX in order to extract the first 64bytes of signing info
+	// original TX message in order to extract the first 64bytes of signing info
 	ogTx []byte,
 	// sigInfo of the initial message that triggered the original contract call
 	// This is used mainly in replies in order to decrypt their data.
@@ -64,15 +64,17 @@ func (h ContractResponseHandler) Handle(ctx sdk.Context, contractAddr sdk.AccAdd
 	result := origRspData
 	switch rsp, err := h.md.DispatchSubmessages(ctx, contractAddr, ibcPort, messages, ogTx, ogSigInfo); {
 	case err != nil:
+		fmt.Printf("Dispatch err: %s", err.Error())
 		return nil, sdkerrors.Wrap(err, "submessages")
 	case rsp != nil:
+		fmt.Printf("Dispatch res: %v", result)
 		result = rsp
 	}
 	return result, nil
 }
 
 // reply is only called from keeper internal functions (dispatchSubmessages) after processing the submessage
-func (k Keeper) reply(ctx sdk.Context, contractAddress sdk.AccAddress, reply wasmTypes.Reply, ogTx []byte, ogSigInfo wasmTypes.VerificationInfo, replyToContractHash []byte) ([]byte, error) {
+func (k Keeper) reply(ctx sdk.Context, contractAddress sdk.AccAddress, reply wasmTypes.Reply, ogTx []byte, ogSigInfo wasmTypes.VerificationInfo) ([]byte, error) {
 	contractInfo, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
 	if err != nil {
 		return nil, err
@@ -95,12 +97,10 @@ func (k Keeper) reply(ctx sdk.Context, contractAddress sdk.AccAddress, reply was
 	// instantiate wasm contract
 	gas := gasForContract(ctx)
 	marshaledReply, error := json.Marshal(reply)
-	//marshaledReply = append(replyToContractHash, marshaledReply...)
-	marshaledReply = append(ogTx[0:64], marshaledReply...)
-
 	if error != nil {
 		return nil, error
 	}
+	marshaledReply = append(ogTx[0:64], marshaledReply...)
 
 	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, env, marshaledReply, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, ogSigInfo, wasmTypes.HandleTypeReply)
 	if execErr != nil {

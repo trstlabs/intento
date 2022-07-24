@@ -10,7 +10,7 @@ use enclave_cosmwasm_types::addresses::{CanonicalAddr, HumanAddr};
 use enclave_cosmwasm_types::coins::Coin;
 use enclave_cosmwasm_types::results::{
     CosmosMsg, Reply, ReplyOn, Response, SubMsgResponse, SubMsgResult, WasmMsg,
-    REPLY_ENCRYPTION_MAGIC_BYTES,
+    REPLY_ENCRYPTION_MAGIC_BYTES,Event,Attribute,
 };
 use enclave_ffi_types::EnclaveError;
 use std::convert::TryInto;
@@ -19,6 +19,7 @@ use enclave_crypto::{AESKey, Ed25519PublicKey, Kdf, SIVEncryptable, KEY_MANAGER}
 use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use serde_json::json;
 
 use sha2::Digest;
 
@@ -30,13 +31,13 @@ use sha2::Digest;
 #[serde(untagged)]
 enum WasmOutput {
     Err {
-        #[serde(rename = "error")]
+        #[serde(rename = "Err")]
         err: Value,
         internal_msg_id: Option<Binary>,
         internal_reply_enclave_sig: Option<Binary>,
     },
     QueryOk {
-        #[serde(rename = "ok")]
+       #[serde(rename = "ok")]
         ok: String,
     },
     Ok {
@@ -157,9 +158,9 @@ pub fn encrypt_output(
             internal_msg_id,
         } => {
             let encrypted_err = encrypt_serializable(&encryption_key, err, &reply_params)?;
-
+            //trace!("output error: {:?}", encrypted_err);
             // Putting the error inside a 'generic_err' envelope, so we can encrypt the error itself
-            //*err = json!({"generic_err":{"msg":encrypted_err}});
+            *err = json!({"generic_err":{"msg":encrypted_err}});
 
             let msg_id = match reply_params {
                 Some(ref r) => {
@@ -203,6 +204,7 @@ pub fn encrypt_output(
             }
         }
         WasmOutput::QueryOk { ok } => {
+            trace!("output QueryOk: {:?}", ok);
             *ok = encrypt_serializable(&encryption_key, ok, &reply_params)?;
         }
         WasmOutput::Ok {
@@ -211,6 +213,7 @@ pub fn encrypt_output(
             internal_msg_id,
         } => {
             for sub_msg in &mut ok.messages {
+                trace!("submsg id: {:?}", sub_msg.id.clone());
                 if let CosmosMsg::Wasm(wasm_msg) = &mut sub_msg.msg {
                     encrypt_wasm_msg(
                         wasm_msg,
@@ -281,13 +284,32 @@ pub fn encrypt_output(
 
             *internal_reply_enclave_sig = match reply_params {
                 Some(_) => {
+                  /*  let mut attributes: Vec<Attribute> = vec![];
+                    for a in ok.attributes.clone(){
+                        attributes.push(a.to_kv());
+                    };
+                     let events = match ok.attributes.len() {
+                            0 => vec![],
+                            _ => vec![Event {
+                                ty: "wasm".to_string(),
+                                attributes,
+                            }],
+                        };
                     let reply = Reply {
                         id: msg_id.unwrap(),
                         result: SubMsgResult::Ok(SubMsgResponse {
-                            events: ok.events.clone(),
+                            events,
+                            data: ok.data.clone(),
+                        }),
+                    };*/
+                    let reply = Reply {
+                        id: msg_id.unwrap(),
+                        result: SubMsgResult::Ok(SubMsgResponse {
+                            events: vec![],
                             data: ok.data.clone(),
                         }),
                     };
+                    trace!("reply : {:?}", reply.clone());
                     let reply_as_vec = serde_json::to_vec(&reply).map_err(|err| {
                         warn!(
                             "got an error while trying to serialize reply into bytes for internal_reply_enclave_sig  {:?}: {}",
@@ -295,12 +317,13 @@ pub fn encrypt_output(
                         );
                         EnclaveError::FailedToSerialize
                     })?;
+                    trace!("reply_as_vec: {:?}", reply_as_vec.clone());
                     let tmp_contract_msg = ContractMessage {
                         nonce: contract_msg.nonce,
                         user_public_key: contract_msg.user_public_key,
                         msg: reply_as_vec,
                     };
-
+         
                     Some(Binary::from(
                         create_callback_signature(sender_addr, &tmp_contract_msg, &[]).as_slice(),
                     ))

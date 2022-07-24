@@ -56,8 +56,9 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 	}
 
 	// emit all events from this contract itself
-	events := types.ParseEvents(res.Attributes, contractAddress)
-	ctx.EventManager().EmitEvents(events)
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeExecute,
+		sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String())))
 
 	_, err = k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, *res, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {

@@ -14,6 +14,6 @@ pub use cosmos_msg::{DistributionMsg, StakingMsg};
 #[cfg(feature = "stargate")]
 pub use cosmos_msg::{GovMsg, VoteOption};
 pub use empty::Empty;
-pub use events::Event;
+pub use events::{Event,Attribute};
 pub use response::Response;
 pub use submessages::{DecryptedReply, Reply, SubMsgResponse, SubMsgResult, ReplyOn, SubMsg, SubMsgExecutionResponse};

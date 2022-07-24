@@ -6,17 +6,16 @@ use enclave_ffi_types::{Ctx, EnclaveBuffer, OcallReturn, UntrustedVmError};
 
 use enclave_crypto::Ed25519PublicKey;
 use enclave_utils::recursion_depth;
-use serde::{Serialize, Deserialize};
+
 use super::errors::WasmEngineError;
 use crate::external::{ecalls, ocalls};
-use crate::types::{ContractMessage, IoNonce};
+use crate::types::{IoNonce, ContractMessage};
 
 use enclave_cosmwasm_types::{
     encoding::Binary,
     query::{QueryRequest, WasmQuery},
     std_error::{StdError, StdResult},
     system_error::{SystemError, SystemResult},
-   results::Empty
 };
 
 pub fn encrypt_and_query_chain(
@@ -31,7 +30,7 @@ pub fn encrypt_and_query_chain(
         return serialize_error_response(&answer);
     }
 
-    let mut query_struct: QueryRequest<Empty> = match serde_json::from_slice(query) {
+    let mut query_struct: QueryRequest = match serde_json::from_slice(query) {
         Ok(query_struct) => query_struct,
         Err(err) => {
             *gas_used = 500; // Should we charge gas for this to prevent spam?
@@ -134,39 +133,13 @@ pub fn encrypt_and_query_chain(
         answer
     );
 
-    let answer = match answer {
-        Ok(o) => match o {
-            Ok(o2) => SmartQueryAnswer::Ok(SmartQueryResult::Ok(o2)),
-            Err(e) => SmartQueryAnswer::Ok(SmartQueryResult::Err(format!("{:?}", e))),
-        },
-        Err(e) => SmartQueryAnswer::Err(e),
-    };
-
-   let vec = serde_json::to_vec(&answer).map_err(|err| {
-            debug!("encrypt_and_query_chain() got an error while trying to serialize the decrypted answer to bytes: {:?}", err);
-            WasmEngineError::SerializationError
-            })?;
-
-    Ok(vec)
+    let answer_as_vec = serde_json::to_vec(&answer).map_err(|err| {
+        debug!("encrypt_and_query_chain() got an error while trying to serialize the decrypted answer to bytes: {:?}", err);
+        WasmEngineError::SerializationError
+    })?;
+    
+    Ok(answer_as_vec)
 }
-
-
-#[derive(Serialize, Deserialize, Debug)]
-pub enum SmartQueryResult {
-    #[serde(rename = "ok")]
-    Ok(Binary),
-    #[serde(rename = "error")]
-    Err(String),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub enum SmartQueryAnswer {
-    #[serde(rename = "ok")]
-    Ok(SmartQueryResult),
-    #[serde(rename = "error")]
-    Err(SystemError),
-}
-
 
 /// Safe wrapper around quering other contracts and modules
 fn query_chain(
@@ -278,9 +251,8 @@ fn serialize_error_response(
     })
 }
 
-
 fn encrypt_query_request(
-    query_struct: &mut QueryRequest<Empty>,
+    query_struct: &mut QueryRequest,
     nonce: IoNonce,
     user_public_key: Ed25519PublicKey,
 ) -> Result<bool, WasmEngineError> {

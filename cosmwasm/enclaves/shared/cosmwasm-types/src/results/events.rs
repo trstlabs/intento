@@ -1,5 +1,6 @@
 
 use serde::{Deserialize, Serialize};
+
 /// A full [*Cosmos SDK* event].
 ///
 /// This version uses string attributes (similar to [*Cosmos SDK* StringEvent]),
@@ -24,8 +25,28 @@ pub struct Event {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Attribute {
     pub key: String,
+    #[serde(with = "serde_bytes")]
     pub value: Vec<u8>,
+    #[serde(skip_deserializing)]
     pub pub_db: bool,
+    #[serde(skip_deserializing)]
     pub acc_addr: Option<String>,
+    #[serde(skip_deserializing)]
     pub encrypted: bool,
 }
+
+impl Attribute {
+    /// helper.
+    pub fn to_kv(&self) -> Self {
+
+        Self {
+            key: self.key.clone(),
+            value: self.value.clone(),
+            pub_db: false,
+            acc_addr: None,
+            encrypted: false,
+        }
+    }
+}
+
+

@@ -90,6 +90,9 @@ func contractSDKEventAttributes(customAttributes []wasmTypes.Attribute, contract
 	attrs := []sdk.Attribute{sdk.NewAttribute(AttributeKeyContractAddr, contractAddr.String())}
 	// append attributes from wasm to the sdk.Event
 	for _, l := range customAttributes {
+		if l.PubDb {
+			continue
+		}
 		// ensure key and value are non-empty (and trim what is there)
 		key := strings.TrimSpace(l.Key)
 		if len(key) == 0 {
@@ -278,6 +281,7 @@ const EventTypeContractExpired = "contract_expired"
 const EventTypeAutoMsgContract = "eontract_executed"
 const AttributeKeyContractAddr = "contract_address"
 
+/*
 // ParseEvents converts wasm Attributes into an sdk.Events (with 0 or 1 elements)
 func ParseEvents(logs []wasmTypes.Attribute, contractAddr sdk.AccAddress) sdk.Events {
 	if len(logs) == 0 {
@@ -297,7 +301,7 @@ func ParseEvents(logs []wasmTypes.Attribute, contractAddr sdk.AccAddress) sdk.Ev
 		}
 	}
 	return sdk.Events{sdk.NewEvent(CustomEventType, attrs...)}
-}
+}*/
 
 // WasmConfig is the extra config required for wasm
 type WasmConfig struct {

@@ -129,10 +129,14 @@ func (w *Wasmer) Instantiate(
 	if err != nil {
 		return nil, nil, nil, gasUsed, err
 	}
-	result.Ok.Data, err = AppendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
+	//fmt.Printf("Init Result Ok Data: %+v\n", result.Ok.Data)
+	result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
+	//fmt.Printf("Init Result %+v\n", result)
+
 	if err != nil {
 		return nil, nil, nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
 	}
+
 	if result.Err != "" {
 		return nil, nil, nil, gasUsed, fmt.Errorf("%s", result.Err)
 	}
@@ -180,7 +184,8 @@ func (w *Wasmer) Execute(
 	if result.Err != "" {
 		return nil, gasUsed, fmt.Errorf("%s", result.Err)
 	}
-	result.Ok.Data, err = AppendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
+	//fmt.Printf("Execute Result %+v\n", result)
+	result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
 	if err != nil {
 		return nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
 	}
@@ -211,9 +216,11 @@ func (w *Wasmer) Query(
 
 	var resp types.QueryResponse
 	err = json.Unmarshal(data, &resp)
+	fmt.Printf("query response %+v\n", resp)
 	if err != nil {
 		return nil, gasUsed, err
 	}
+
 	if resp.Err != nil {
 		return nil, gasUsed, fmt.Errorf("%s", resp.Err)
 	}
@@ -229,7 +236,7 @@ func (w *Wasmer) AnalyzeCode(
 	return api.AnalyzeCode(w.cache, codeHash)
 }
 
-func AppendReplyInternalDataToData(data []byte, internalReplyEnclaveSig []byte, internalMsgId []byte) ([]byte, error) {
+func appendReplyInternalDataToData(data []byte, internalReplyEnclaveSig []byte, internalMsgId []byte) ([]byte, error) {
 	dataWithInternalReply := types.DataWithInternalReplyInfo{
 		InternalReplyEnclaveSig: internalReplyEnclaveSig,
 		InternalMsgId:           internalMsgId,

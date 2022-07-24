@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 //-------- Queries --------
@@ -37,6 +38,7 @@ type QuerierResult struct {
 
 func ToQuerierResult(response []byte, err error) QuerierResult {
 	if err == nil {
+		fmt.Printf("response ToQuerierResult : %+v\n", response)
 		return QuerierResult{
 			Ok: &QueryResponse{
 				Ok: response,
@@ -45,11 +47,13 @@ func ToQuerierResult(response []byte, err error) QuerierResult {
 	}
 	syserr := ToSystemError(err)
 	if syserr != nil {
+		fmt.Printf("syserr ToQuerierResult : %s\n", syserr.Error())
 		return QuerierResult{
 			Err: syserr,
 		}
 	}
 	stderr := ToStdError(err)
+	fmt.Printf("stderr ToQuerierResult : %s\n", stderr.Error())
 	return QuerierResult{
 		Ok: &QueryResponse{
 			Err: stderr,

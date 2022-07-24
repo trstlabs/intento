@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"strconv"
 
 	//"encoding/json"
 	"fmt"
@@ -170,8 +171,13 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 
 	fmt.Printf("Attributes: %v \n", res.Attributes)
 	// emit all events from this contract itself
-	events := types.ParseEvents(res.Attributes, contractAddress)
-	ctx.EventManager().EmitEvents(events)
+	//events := types.ParseEvents(res.Attributes, contractAddress)
+	//ctx.EventManager().EmitEvents(events)
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeInstantiate,
+		sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String()),
+		sdk.NewAttribute(types.AttributeKeyCodeID, strconv.FormatUint(codeID, 10)),
+	))
 
 	// persist instance
 	createdAt := types.NewAbsoluteTxPosition(ctx)
@@ -288,8 +294,10 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	consumeGas(ctx, gasUsed)
 
 	// emit all events from this contract itself
-	events := types.ParseEvents(res.Attributes, contractAddress)
-	ctx.EventManager().EmitEvents(events)
+	ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeExecute,
+		sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String()),
+	))
 
 	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, *res, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
@@ -452,8 +460,9 @@ func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAd
 
 	queryResult, gasUsed, qErr := k.wasmer.Query(codeInfo.CodeHash, params, req, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gasForContract(ctx))
 	consumeGas(ctx, gasUsed)
-
+	fmt.Printf("Query queryResult %+v \n", queryResult)
 	if qErr != nil {
+		fmt.Printf("Query err %s \n", err.Error())
 		return nil, sdkerrors.Wrap(types.ErrQueryFailed, qErr.Error())
 	}
 	return queryResult, nil
