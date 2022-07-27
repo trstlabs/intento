@@ -141,7 +141,7 @@ pub enum WasmMsg {
         /// Human-readable contract_id for the contract
         contract_id: String,
         /// Human-readable duration for the contract (e.g. 60s, 5h ect.)
-        contract_duration: String,
+        contract_duration: Option<String>,
         /// time interval (e.g. 60s/5h)
         interval: Option<String>,
         /// callback_sig is used validate messages that are originating from other contracts or the specified governance address

@@ -145,7 +145,7 @@ pub enum WasmMsg {
         /// mandatory human-readbale id for the contract
         contract_id: String,
         /// custom duration (e.g. 5h/60d, 0 for no duration) 
-        contract_duration: String,
+        contract_duration: Option<String>,
          /// time interval (e.g. 60s/5h)
         interval: Option<String>,
     },
@@ -189,7 +189,7 @@ pub fn wasm_instantiate(
         auto_msg: Some(payload_auto_msg),
         funds,
         contract_id,
-        contract_duration,
+        contract_duration: Some(contract_duration),
         interval: Some(interval),
     })
 }
