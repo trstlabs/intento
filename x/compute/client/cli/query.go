@@ -529,7 +529,7 @@ func GetCmdQuery() *cobra.Command {
 
 				contractId, err := cmd.Flags().GetString(flagContractId)
 				if err != nil {
-					return fmt.Errorf("trustless Contract ID or bech32 contract address is required")
+					return fmt.Errorf("Trustless Contract ID or bech32 contract address is required")
 				}
 
 				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, contractId)

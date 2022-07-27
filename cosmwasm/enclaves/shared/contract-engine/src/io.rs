@@ -10,7 +10,7 @@ use enclave_cosmwasm_types::addresses::{CanonicalAddr, HumanAddr};
 use enclave_cosmwasm_types::coins::Coin;
 use enclave_cosmwasm_types::results::{
     CosmosMsg, Reply, ReplyOn, Response, SubMsgResponse, SubMsgResult, WasmMsg,
-    REPLY_ENCRYPTION_MAGIC_BYTES,Event,Attribute,
+    REPLY_ENCRYPTION_MAGIC_BYTES,/*Event,Attribute,*/
 };
 use enclave_ffi_types::EnclaveError;
 use std::convert::TryInto;
@@ -37,11 +37,11 @@ enum WasmOutput {
         internal_reply_enclave_sig: Option<Binary>,
     },
     QueryOk {
-       #[serde(rename = "ok")]
+       #[serde(rename = "Ok")]
         ok: String,
     },
     Ok {
-        #[serde(rename = "ok")]
+        #[serde(rename = "Ok")]
         ok: Response,
         internal_reply_enclave_sig: Option<Binary>,
         internal_msg_id: Option<Binary>,
@@ -260,11 +260,30 @@ pub fn encrypt_output(
             }
 
             if let Some(data) = &mut ok.data {
-                *data = Binary::from_base64(&encrypt_serializable(
+                trace!("reply data: {:?}", data);
+              /*    *data = Binary::from_base64(&encrypt_serializable(
                     &encryption_key,
                     data,
                     &reply_params,
-                )?)?;
+                )?)?;*/
+                let mut tmp_msg = ContractMessage {
+                    nonce: contract_msg.nonce,
+                    user_public_key: contract_msg.user_public_key,
+                    msg: data.as_slice().to_vec(),
+                };
+                    /*    *data = Binary::from_base64(&encrypt_preserialized_string(
+                    &encryption_key,
+                    &data.to_base64(),
+                    &reply_params,
+                )?)?;*/
+             /*  *data = Binary(encrypt_vec(
+                    &encryption_key,
+                    data.clone().as_slice().to_vec(),
+                   // &reply_params,
+                )?);*/
+                tmp_msg.encrypt_in_place()?;
+                 *data =Binary(tmp_msg.to_vec());
+                trace!("reply data encrypted: {:?}", data);
             }
 
             let msg_id = match reply_params {

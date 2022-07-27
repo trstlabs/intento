@@ -227,7 +227,7 @@ pub fn reduct_custom_events(reply: &mut Reply) {
 
                 }
             }*/
-            
+
             SubMsgResult::Ok(SubMsgResponse {
                 events,
                 data: r.data.clone(),
@@ -265,13 +265,16 @@ pub fn parse_message(
         HandleType::HANDLE_TYPE_REPLY => {
             if sig_info.sign_mode == SignMode::SIGN_MODE_UNSPECIFIED {
                 let deserialized_msg = orig_contract_msg.msg.clone();
-                let mut reply: Reply =
-                    serde_json::from_slice(&deserialized_msg).map_err(|err| {
-                err
-            );
-                        EnclaveError::FailedToDeserialize
-                    })?;
-              //  trace!("reply msg {:?}", reply.clone());
+                let mut reply: Reply = serde_json::from_slice(&deserialized_msg)
+                .map_err(|err| {
+                    warn!(
+            "reply got an error while trying to deserialize decrypted reply bytes into json {:?}: {}",
+            String::from_utf8_lossy(&deserialized_msg),
+            err
+        );
+                    EnclaveError::FailedToDeserialize
+                })?;
+                //  trace!("reply msg {:?}", reply.clone());
                 let msg_id = String::from_utf8(reply.id.as_slice().to_vec()).map_err(|err| {
                     warn!(
                         "Failed to parse message id as string {:?}: {}",
@@ -351,24 +354,32 @@ pub fn parse_message(
                                 "reply data before decryption: {:?}",
                                 &data.as_slice().to_vec().clone()
                             );
-                            let tmp_contract_msg_data = ContractMessage {
+                            /*let tmp_contract_msg_data = ContractMessage {
                                 nonce: orig_contract_msg.nonce,
                                 user_public_key: orig_contract_msg.user_public_key,
                                 msg: data.as_slice().to_vec(),
-                            };
+                            };*/
+                            let data_msg = ContractMessage::from_slice(data.as_slice())?;
+                            let decrypted_msg = data_msg.decrypt()?;
                             trace!(
+                                "data_msg input afer decryption: {:?}",
+                                String::from_utf8_lossy(&decrypted_msg)
+                            );
+                            trace!(
+                                "data_msg binary afer decryption: {:?}",
+                                Binary(decrypted_msg.clone())
+                            );
+                            /*  trace!(
                                 "reply data after decryption: {:?}",
                                 Binary(
                                     tmp_contract_msg_data.decrypt()?[HEX_ENCODED_HASH_SIZE..].to_vec(),
                                 )
-                            );
-                            Some(Binary(
-                                tmp_contract_msg_data.decrypt()?[HEX_ENCODED_HASH_SIZE..].to_vec(),
-                            ))
+                            );*/
+                            Some(Binary(decrypted_msg))
                         }
                         None => None,
                     };
-                   
+
                     let tmp_contract_msg_id = ContractMessage {
                         nonce: orig_contract_msg.nonce,
                         user_public_key: orig_contract_msg.user_public_key,
@@ -737,47 +748,46 @@ pub fn query(
     let ValidatedMessage { validated_msg, .. } =
         validate_msg(&decrypted_msg, contract_code.hash(), None)?;
 
-        let mut engine = start_engine(
-            context,
-            gas_limit,
-            contract_code,
-            &contract_key,
-            ContractOperation::Query,
-            contract_msg.nonce,
-            contract_msg.user_public_key,
+    let mut engine = start_engine(
+        context,
+        gas_limit,
+        contract_code,
+        &contract_key,
+        ContractOperation::Query,
+        contract_msg.nonce,
+        contract_msg.user_public_key,
+    )?;
+
+    let (contract_env_bytes, _ /* no msg_info in query */) = parse_msg_info_bytes(&mut parsed_env)?;
+
+    let env_ptr = engine.write_to_memory(&contract_env_bytes)?;
+    let msg_ptr = engine.write_to_memory(&validated_msg)?;
+
+    // This wrapper is used to coalesce all errors in this block to one object
+    // so we can `.map_err()` in one place for all of them
+    let output = coalesce!(EnclaveError, {
+        let vec_ptr = engine.query(env_ptr, msg_ptr)?;
+
+        let output = engine.extract_vector(vec_ptr)?;
+
+        let output = encrypt_output(
+            output,
+            &contract_msg,
+            &CanonicalAddr(Binary(Vec::new())), // Not used for queries (can't init a new contract from a query)
+            &"".to_string(), // Not used for queries (can't call a sub-message from a query),
+            None,            // Not used for queries (Query response is not replied to the caller),
+            &CanonicalAddr(Binary(Vec::new())), // Not used for queries (used only for replies)
         )?;
-    
-        let (contract_env_bytes, _ /* no msg_info in query */) = parse_msg_info_bytes(&mut parsed_env)?;
-    
-        let env_ptr = engine.write_to_memory(&contract_env_bytes)?;
-        let msg_ptr = engine.write_to_memory(&validated_msg)?;
-    
-        // This wrapper is used to coalesce all errors in this block to one object
-        // so we can `.map_err()` in one place for all of them
-        let output = coalesce!(EnclaveError, {
-            let vec_ptr = engine.query(env_ptr, msg_ptr)?;
-    
-            let output = engine.extract_vector(vec_ptr)?;
-    
-            let output = encrypt_output(
-                output,
-                &contract_msg,
-                &CanonicalAddr(Binary(Vec::new())), // Not used for queries (can't init a new contract from a query)
-                &"".to_string(), // Not used for queries (can't call a sub-message from a query),
-                None,            // Not used for queries (Query response is not replied to the caller),
-                &CanonicalAddr(Binary(Vec::new())), // Not used for queries (used only for replies)
-            )?;
-            Ok(output)
-        })
-        .map_err(|err| {
-            *used_gas = engine.gas_used();
-            err
-        })?;
-    
+        Ok(output)
+    })
+    .map_err(|err| {
         *used_gas = engine.gas_used();
-        Ok(QuerySuccess { output })
+        err
+    })?;
+
+    *used_gas = engine.gas_used();
+    Ok(QuerySuccess { output })
 }
-    
 
 fn start_engine(
     context: Ctx,

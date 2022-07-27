@@ -15,7 +15,7 @@ DB_BACKEND ?= goleveldb
 
 SGX_MODE ?= HW
 BRANCH ?= develop
-DEBUG ?= 0
+
 DOCKER_TAG ?= latest
 
 ifeq ($(SGX_MODE), HW)

@@ -16,14 +16,6 @@ pub enum QueryRequest {
     Dist(DistQuery),
     Mint(MintQuery),
     Gov(GovQuery),
-    Ibc(IbcQuery),
-    Stargate {
-        /// this is the fully qualified service path used for routing,
-        /// eg. custom/cosmos_sdk.x.bank.v1.Query/QueryBalance
-        path: String,
-        /// this is the expected protobuf message type (not any), binary encoded
-        data: Binary,
-    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -56,6 +48,24 @@ pub enum GovQuery {
     Proposals {},
 }
 
+/// ProposalsResponse is data format returned from GovQuery::Proposals query
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub struct ProposalsResponse {
+    pub proposals: Vec<Proposal>,
+}
+
+/// ProposalsResponse is data format returned from GovQuery::Proposals query
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub struct Proposal {
+    pub id: u64,
+    /// Time of the block where MinDeposit was reached. -1 if MinDeposit is not reached
+    pub voting_start_time: u64,
+    /// Time that the VotingPeriod for this proposal will end and votes will be tallied
+    pub voting_end_time: u64,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum DistQuery {
@@ -65,7 +75,6 @@ pub enum DistQuery {
     Rewards { delegator: String },
 }
 
-#[non_exhaustive]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum WasmQuery {
@@ -99,6 +108,43 @@ pub enum WasmQuery {
     },
 }
 
+impl From<GovQuery> for QueryRequest {
+    fn from(msg: GovQuery) -> Self {
+        QueryRequest::Gov(msg)
+    }
+}
+
+impl From<MintQuery> for QueryRequest {
+    fn from(msg: MintQuery) -> Self {
+        QueryRequest::Mint(msg)
+    }
+}
+
+impl From<DistQuery> for QueryRequest {
+    fn from(msg: DistQuery) -> Self {
+        QueryRequest::Dist(msg)
+    }
+}
+
+impl From<BankQuery> for QueryRequest {
+    fn from(msg: BankQuery) -> Self {
+        QueryRequest::Bank(msg)
+    }
+}
+
+#[cfg(feature = "staking")]
+impl From<StakingQuery> for QueryRequest {
+    fn from(msg: StakingQuery) -> Self {
+        QueryRequest::Staking(msg)
+    }
+}
+
+impl From<WasmQuery> for QueryRequest {
+    fn from(msg: WasmQuery) -> Self {
+        QueryRequest::Wasm(msg)
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum StakingQuery {
@@ -118,25 +164,70 @@ pub enum StakingQuery {
     UnbondingDelegations { delegator: String },
 }
 
+/// Delegation is basic (cheap to query) data about a delegation
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Delegation {
+    pub delegator: String,
+    pub validator: String,
+    /// How much we have locked in the delegation
+    pub amount: Coin,
+}
+
+impl From<FullDelegation> for Delegation {
+    fn from(full: FullDelegation) -> Self {
+        Delegation {
+            delegator: full.delegator,
+            validator: full.validator,
+            amount: full.amount,
+        }
+    }
+}
+
+/// UnbondingDelegationsResponse is data format returned from StakingRequest::UnbondingDelegations query
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
-pub enum IbcQuery {
-    /// Gets the Port ID the current contract is bound to.
-    ///
-    /// Returns a `PortIdResponse`.
-    PortId {},
-    /// Lists all channels that are bound to a given port.
-    /// If `port_id` is omitted, this list all channels bound to the contract's port.
-    ///
-    /// Returns a `ListChannelsResponse`.
-    ListChannels { port_id: Option<String> },
-    /// Lists all information for a (portID, channelID) pair.
-    /// If port_id is omitted, it will default to the contract's own channel.
-    /// (To save a PortId{} call)
-    ///
-    /// Returns a `ChannelResponse`.
-    Channel {
-        channel_id: String,
-        port_id: Option<String>,
-    },
+pub struct UnbondingDelegationsResponse {
+    pub delegations: Vec<Delegation>,
+}
+
+/// FullDelegation is all the info on the delegation, some (like accumulated_reward and can_redelegate)
+/// is expensive to query
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct FullDelegation {
+    pub delegator: String,
+    pub validator: String,
+    /// How much we have locked in the delegation
+    pub amount: Coin,
+    /// can_redelegate captures how much can be immediately redelegated.
+    /// 0 is no redelegation and can_redelegate == amount is redelegate all
+    /// but there are many places between the two
+    pub can_redelegate: Coin,
+    /// How much we can currently withdraw
+    pub accumulated_rewards: Coin,
+}
+
+/// Delegation is basic (cheap to query) data about a delegation
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct RewardsResponse {
+    pub rewards: Vec<ValidatorRewards>,
+    pub total: Vec<Coin>,
+}
+
+/// Delegation is basic (cheap to query) data about a delegation
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct ValidatorRewards {
+    pub validator_address: String,
+    pub reward: Vec<Coin>,
+}
+
+/// Inflation response
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct InflationResponse {
+    pub inflation_rate: String,
+}
+
+/// Bonded Ratio response
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct BondedRatioResponse {
+    pub bonded_ratio: String,
 }
