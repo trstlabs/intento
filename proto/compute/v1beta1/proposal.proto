@@ -13,34 +13,34 @@ option (gogoproto.equal_all) = true;
 
 // StoreCodeProposal gov proposal content type to submit WASM code to the system
 message StoreCodeProposal {
-  // Title is a short summary
+  // Title is a short summary for the proposal
   string title = 1;
-  // Description is a human readable text
+  // Description is a human readable text for the proposal
   string description = 2;
-  // RunAs is the address that is passed to the contract's environment as sender
-  string run_as = 3;
+  // creator is the address that is displayed as the code creator
+  string creator = 3;
   // WASMByteCode can be raw or gzip compressed
   bytes wasm_byte_code = 4 [ (gogoproto.customname) = "WASMByteCode" ];
   // ContractTitle is a short summary
   string contract_title = 5;
   // Description is a human readable text
   string contract_description = 6;
-  // contract_duration is the max duration of the contract
-  string contract_duration = 7;
+  // default_duration is the default duration of the contract, optional
+  string default_duration = 7;
+    // default_interval is the default self-execution interval of the contract, optional
+  string default_interval = 8;
 }
 
 
 // InstantiateContractProposal gov proposal content type to instantiate a
 // contract.
 message InstantiateContractProposal {
-  // Title is a short summary
+  // Title is a short summary for the proposal
   string title = 1;
-  // Description is a human readable text
+  // Description is a human readable text for the proposal
   string description = 2;
   // RunAs is the address that is passed to the contract's environment as sender
   // string run_as = 3;
-  // Admin is an optional address that can execute migrations
-  // string admin = 4;
   // CodeID is the reference to the stored WASM code
   uint64 code_id = 3 [ (gogoproto.customname) = "CodeID" ];
   // ContractID is optional metadata to be stored with a constract instance.
@@ -54,16 +54,20 @@ message InstantiateContractProposal {
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
-
+  // duration is the default duration of the contract, optional
+  string duration = 8;
+    // interval is the default self-execution interval of the contract, optional
+  string interval = 9;
+   uint64 start_duration_at = 10;
 }
 
 
 // ExecuteContractProposal gov proposal content type to call execute on a
 // contract.
 message ExecuteContractProposal {
-  // Title is a short summary
+  // Title is a short summary for the proposal
   string title = 1;
-  // Description is a human readable text
+  // Description is a human readable text for the proposal
   string description = 2;
   // RunAs is the address that is passed to the contract's environment as sender
   //string run_as = 3;
@@ -71,9 +75,40 @@ message ExecuteContractProposal {
   string contract = 3;
   // Msg json encoded message to be passed to the contract as execute
   bytes msg = 4;
-  // Funds coins that are transferred to the contract on instantiation
+  // Funds are coins that are transferred to the contract on execution
   repeated cosmos.base.v1beta1.Coin funds = 5 [
     (gogoproto.nullable) = false,
    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
+}
+
+// UpdateContractProposal gov proposal content type to call execute on a
+// contract.
+message UpdateContractProposal {
+  option (gogoproto.goproto_stringer) = true;
+  // Title is a short summary for the proposal
+  string title = 1;
+  // Description is a human readable text for the proposal
+  string description = 2;
+   string contract = 3;
+  string owner = 4;
+  int64 start_time = 5;
+  int64 end_time = 6;
+  string interval = 7;
+}
+
+// UpdateCodeProposal gov proposal content type to update code data
+message UpdateCodeProposal {
+    option (gogoproto.goproto_stringer) = true;
+  // Title is a short summary for the proposal
+  string title = 1;
+  // Description is a human readable text for the proposal
+  string description = 2;
+   uint64 code_id = 3;
+  // creator is the address that is passed to the contract's environment as sender
+  string creator = 4;
+  // default_duration is the default duration of the contract
+  string default_duration = 8;
+  // default_duration is the default duration of the contract
+  string default_interval= 9;
 }

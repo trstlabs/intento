@@ -26,7 +26,7 @@ import (
 )
 
 // Create uploads and compiles a WASM contract, returning a short identifier for the contract
-func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string, maxDuration time.Duration, title string, description string) (codeID uint64, err error) {
+func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte, source string, builder string, duration time.Duration, interval time.Duration, title string, description string) (codeID uint64, err error) {
 
 	wasmCode, err = uncompress(wasmCode)
 	if err != nil {
@@ -49,7 +49,7 @@ func (k Keeper) Create(ctx sdk.Context, creator sdk.AccAddress, wasmCode []byte,
 			instantiateAccess = &defaultAccessConfig
 		}
 	*/
-	codeInfo := types.NewCodeInfo(codeHash, creator, source, builder, maxDuration /* , *instantiateAccess */, title, description)
+	codeInfo := types.NewCodeInfo(codeHash, creator, source, builder, duration, interval /* , *instantiateAccess */, title, description)
 	// 0x01 | codeID (uint64) -> ContractInfo
 	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(&codeInfo))
 
@@ -80,8 +80,8 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 }
 
 // Instantiate creates an instance of a WASM contract
-func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, msg []byte, autoMsg []byte, id string, deposit sdk.Coins, callbackSig []byte, customDuration time.Duration) (sdk.AccAddress, []byte, error) {
-	fmt.Printf("Init duration: %s \n", customDuration)
+func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, msg []byte, autoMsg []byte, id string, deposit sdk.Coins, callbackSig []byte, duration time.Duration, interval time.Duration, startTime time.Time) (sdk.AccAddress, []byte, error) {
+	fmt.Printf("Init duration: %s \n", duration)
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading CosmWasm module: init")
 
 	signBytes := []byte{}
@@ -183,15 +183,27 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	createdAt := types.NewAbsoluteTxPosition(ctx)
 
 	var endTime time.Time
-	if customDuration != 0 {
-		endTime = ctx.BlockHeader().Time.Add(customDuration)
-		k.InsertContractQueue(ctx, contractAddress.String(), endTime)
-	} else if codeInfo.Duration != 0 {
-		endTime = ctx.BlockHeader().Time.Add(codeInfo.Duration)
-		k.InsertContractQueue(ctx, contractAddress.String(), endTime)
+
+	//if default duration, this duration is executed. Instantiators can have a custom duration and interval (validated in handler).
+	if codeInfo.DefaultDuration != 0 {
+		endTime = startTime.Add(codeInfo.DefaultDuration)
+		if duration != 0 {
+			endTime = startTime.Add(duration)
+		}
+		var intervalTime time.Time
+		if codeInfo.DefaultInterval == 0 {
+			k.InsertContractQueue(ctx, contractAddress.String(), endTime)
+		} else {
+			endTime = startTime.Add(codeInfo.DefaultDuration)
+			intervalTime = startTime.Add(codeInfo.DefaultInterval)
+			if interval != 0 {
+				intervalTime = startTime.Add(interval)
+			}
+			k.InsertContractQueue(ctx, contractAddress.String(), intervalTime)
+		}
 	}
 
-	contractInfo := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, endTime, autoMsg, callbackSig)
+	contractInfo := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, startTime, endTime, interval, autoMsg, callbackSig)
 	// check for IBC flag
 	report, err := k.wasmer.AnalyzeCode(codeInfo.CodeHash)
 	if err != nil {
@@ -457,7 +469,6 @@ func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAd
 		contractKey,
 	)
 	params.Recursive = recursive
-
 	queryResult, gasUsed, qErr := k.wasmer.Query(codeInfo.CodeHash, params, req, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gasForContract(ctx))
 	consumeGas(ctx, gasUsed)
 	fmt.Printf("Query queryResult %+v \n", queryResult)

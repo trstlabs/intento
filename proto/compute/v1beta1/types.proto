@@ -16,15 +16,21 @@ message CodeInfo {
     bytes creator = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     string source = 3;
     string builder = 4;
-
-   google.protobuf.Duration duration = 5 [
+//if set to zero, self-execution is disabled
+   google.protobuf.Duration default_duration = 5 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
-    (gogoproto.jsontag)     = "duration,omitempty"
+    (gogoproto.jsontag)     = "default_duration,omitempty"
   ];
-  string title = 6;
+    string title = 6;
     string description = 7;
-    uint64 instances = 8;
+    //if set to zero, recurring execution is disabled
+    google.protobuf.Duration default_interval = 8 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "default_interval,omitempty"
+  ];
+    uint64 instances = 9;
 }
 
 
@@ -32,14 +38,25 @@ message CodeInfo {
 message ContractInfo {
     uint64 code_id = 1 [(gogoproto.customname) = "CodeID"];
     bytes creator = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes owner = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     string contract_id = 4;
     // never show this in query results, just use for sorting
-    // (Note: when using json tag "-" amino refused to serialize it...)
     AbsoluteTxPosition created = 5;
-      google.protobuf.Timestamp end_time = 6  [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    bytes auto_msg = 7;
-    bytes callback_sig = 8;
-    string ibc_port_id = 9 [ (gogoproto.customname) = "IBCPortID" ];
+    bytes auto_msg = 6;
+     google.protobuf.Duration duration = 7[
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "duration,omitempty"
+  ];
+    google.protobuf.Duration interval = 8 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "interval,omitempty"
+  ];
+    google.protobuf.Timestamp start_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp end_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    string ibc_port_id = 11[ (gogoproto.customname) = "IBCPortID" ];
+    bytes callback_sig = 12;
 }
 
 
@@ -124,6 +141,12 @@ message Params {
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "min_contract_duration_for_reward,omitempty"
   ];
-    int64 MaxContractIncentive = 7;
-    int64 MinContractBalanceForIncentive = 8;
+   //  Minimum period for self-executing contract
+   google.protobuf.Duration MinContractInterval = 7 [
+        (gogoproto.nullable)    = false,
+        (gogoproto.stdduration) = true,
+        (gogoproto.jsontag)     = "min_contract_duration,omitempty"
+  ];
+    int64 MaxContractIncentive = 8;
+    int64 MinContractBalanceForIncentive = 9;
 }

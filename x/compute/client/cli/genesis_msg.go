@@ -67,7 +67,7 @@ func GenesisStoreCodeCmd(defaultNodeHome string, genesisMutator GenesisMutator) 
 			})
 		},
 	}
-	cmd.Flags().String(flagRunAs, "", "The address that is stored as code creator")
+	cmd.Flags().String(flagCreator, "", "The address that is stored as code creator")
 	cmd.Flags().String(flagInstantiateByEverybody, "", "Everybody can instantiate a contract from the code, optional")
 	cmd.Flags().String(flagInstantiateByAddress, "", "Only this address can instantiate a contract instance from the code, optional")
 
@@ -487,11 +487,11 @@ func codeSeqValue(state *types.GenesisState) uint64 {
 	return seq
 }
 
-// getActorAddress returns the account address for the `--run-as` flag.
+// getActorAddress returns the account address for the `--creator` flag.
 // The flag value can either be an address already or a key name where the
 // address is read from the keyring instead.
 func getActorAddress(cmd *cobra.Command) (sdk.AccAddress, error) {
-	actorArg, err := cmd.Flags().GetString(flagRunAs)
+	actorArg, err := cmd.Flags().GetString(flagCreator)
 	if err != nil {
 		return nil, fmt.Errorf("run-as: %s", err.Error())
 	}

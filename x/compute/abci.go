@@ -28,10 +28,9 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	var gasUsed uint64
 	cacheCtx, writeCache := ctx.CacheContext()
 	for _, contract := range contracts {
-		//for _, addr := range incentiveList {
 		if contract.Address.Equals(contract.Address) && contract.AutoMsg != nil {
-			// attempt to execute all message
-			// Messages may mutate state thus we can use a cached context. If one of
+			// attempt to self-execute
+			// AutoMessage may mutate state thus we can use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
 
@@ -55,10 +54,12 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		}
 
 		logger.Info(
-			"expired",
+			"executed",
 			"contract", contract.Address.String(),
 		)
-		err := k.DeductFeesAndFundCreator(ctx, contract.Address, gasUsed)
+
+		isRecurring := ctx.BlockHeader().Time != contract.EndTime
+		err := k.DeductFeesAndFundOwner(ctx, contract.Address, gasUsed, isRecurring)
 		if err != nil {
 			logger.Info(
 				"contract payout creator",
@@ -66,18 +67,28 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			)
 		}
 		writeCache()
-		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.EndTime)
-		_ = k.Delete(ctx, contract.Address)
-		logger.Info(
-			"deleted",
-			"contract", contract.Address.String(),
-		)
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeContractExpired,
-				sdk.NewAttribute(types.AttributeKeyContractAddr, contract.Address.String()),
-			),
-		)
+
+		// if the contract is recurring, we add a new entry to the queue with the current blockheader time(= time of current entry) and the custom duration
+		if isRecurring {
+			execTime := ctx.BlockHeader().Time.Add(contract.Duration)
+			if execTime.Before(contract.EndTime) {
+				k.InsertContractQueue(ctx, contract.Address.String(), execTime)
+			}
+		} else {
+
+			k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.EndTime)
+			_ = k.Delete(ctx, contract.Address)
+			logger.Info(
+				"deleted",
+				"contract", contract.Address.String(),
+			)
+			ctx.EventManager().EmitEvent(
+				sdk.NewEvent(
+					types.EventTypeContractExpired,
+					sdk.NewAttribute(types.AttributeKeyContractAddr, contract.Address.String()),
+				),
+			)
+		}
 	}
 
 	return []abci.ValidatorUpdate{}

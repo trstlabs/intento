@@ -82,7 +82,7 @@ func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		msg := types.MsgStoreCode{
 			Sender:           req.BaseReq.From,
 			WASMByteCode:     wasm,
-			ContractDuration: contractDuration,
+			DefaultDuration: contractDuration,
 			Title:            req.Title,
 			Description:      req.Description,
 		}

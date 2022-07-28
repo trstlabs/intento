@@ -30,7 +30,8 @@ pub struct MsgStoreCode {
     pub wasm_byte_code: ::std::vec::Vec<u8>,
     pub source: ::std::string::String,
     pub builder: ::std::string::String,
-    pub contract_duration: ::std::string::String,
+    pub default_duration: ::std::string::String,
+    pub default_interval: ::std::string::String,
     pub title: ::std::string::String,
     pub description: ::std::string::String,
     // special fields
@@ -153,33 +154,59 @@ impl MsgStoreCode {
         ::std::mem::replace(&mut self.builder, ::std::string::String::new())
     }
 
-    // string contract_duration = 5;
+    // string default_duration = 5;
 
 
-    pub fn get_contract_duration(&self) -> &str {
-        &self.contract_duration
+    pub fn get_default_duration(&self) -> &str {
+        &self.default_duration
     }
-    pub fn clear_contract_duration(&mut self) {
-        self.contract_duration.clear();
+    pub fn clear_default_duration(&mut self) {
+        self.default_duration.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_contract_duration(&mut self, v: ::std::string::String) {
-        self.contract_duration = v;
+    pub fn set_default_duration(&mut self, v: ::std::string::String) {
+        self.default_duration = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_contract_duration(&mut self) -> &mut ::std::string::String {
-        &mut self.contract_duration
+    pub fn mut_default_duration(&mut self) -> &mut ::std::string::String {
+        &mut self.default_duration
     }
 
     // Take field
-    pub fn take_contract_duration(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.contract_duration, ::std::string::String::new())
+    pub fn take_default_duration(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.default_duration, ::std::string::String::new())
     }
 
-    // string title = 6;
+    // string default_interval = 6;
+
+
+    pub fn get_default_interval(&self) -> &str {
+        &self.default_interval
+    }
+    pub fn clear_default_interval(&mut self) {
+        self.default_interval.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_default_interval(&mut self, v: ::std::string::String) {
+        self.default_interval = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_default_interval(&mut self) -> &mut ::std::string::String {
+        &mut self.default_interval
+    }
+
+    // Take field
+    pub fn take_default_interval(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.default_interval, ::std::string::String::new())
+    }
+
+    // string title = 7;
 
 
     pub fn get_title(&self) -> &str {
@@ -205,7 +232,7 @@ impl MsgStoreCode {
         ::std::mem::replace(&mut self.title, ::std::string::String::new())
     }
 
-    // string description = 7;
+    // string description = 8;
 
 
     pub fn get_description(&self) -> &str {
@@ -254,12 +281,15 @@ impl ::protobuf::Message for MsgStoreCode {
                     ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.builder)?;
                 },
                 5 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.contract_duration)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.default_duration)?;
                 },
                 6 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.title)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.default_interval)?;
                 },
                 7 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.title)?;
+                },
+                8 => {
                     ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.description)?;
                 },
                 _ => {
@@ -286,14 +316,17 @@ impl ::protobuf::Message for MsgStoreCode {
         if !self.builder.is_empty() {
             my_size += ::protobuf::rt::string_size(4, &self.builder);
         }
-        if !self.contract_duration.is_empty() {
-            my_size += ::protobuf::rt::string_size(5, &self.contract_duration);
+        if !self.default_duration.is_empty() {
+            my_size += ::protobuf::rt::string_size(5, &self.default_duration);
+        }
+        if !self.default_interval.is_empty() {
+            my_size += ::protobuf::rt::string_size(6, &self.default_interval);
         }
         if !self.title.is_empty() {
-            my_size += ::protobuf::rt::string_size(6, &self.title);
+            my_size += ::protobuf::rt::string_size(7, &self.title);
         }
         if !self.description.is_empty() {
-            my_size += ::protobuf::rt::string_size(7, &self.description);
+            my_size += ::protobuf::rt::string_size(8, &self.description);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
@@ -313,14 +346,17 @@ impl ::protobuf::Message for MsgStoreCode {
         if !self.builder.is_empty() {
             os.write_string(4, &self.builder)?;
         }
-        if !self.contract_duration.is_empty() {
-            os.write_string(5, &self.contract_duration)?;
+        if !self.default_duration.is_empty() {
+            os.write_string(5, &self.default_duration)?;
+        }
+        if !self.default_interval.is_empty() {
+            os.write_string(6, &self.default_interval)?;
         }
         if !self.title.is_empty() {
-            os.write_string(6, &self.title)?;
+            os.write_string(7, &self.title)?;
         }
         if !self.description.is_empty() {
-            os.write_string(7, &self.description)?;
+            os.write_string(8, &self.description)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -381,9 +417,14 @@ impl ::protobuf::Message for MsgStoreCode {
                 |m: &mut MsgStoreCode| { &mut m.builder },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                "contract_duration",
-                |m: &MsgStoreCode| { &m.contract_duration },
-                |m: &mut MsgStoreCode| { &mut m.contract_duration },
+                "default_duration",
+                |m: &MsgStoreCode| { &m.default_duration },
+                |m: &mut MsgStoreCode| { &mut m.default_duration },
+            ));
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                "default_interval",
+                |m: &MsgStoreCode| { &m.default_interval },
+                |m: &mut MsgStoreCode| { &mut m.default_interval },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
                 "title",
@@ -415,7 +456,8 @@ impl ::protobuf::Clear for MsgStoreCode {
         self.wasm_byte_code.clear();
         self.source.clear();
         self.builder.clear();
-        self.contract_duration.clear();
+        self.default_duration.clear();
+        self.default_interval.clear();
         self.title.clear();
         self.description.clear();
         self.unknown_fields.clear();
@@ -444,7 +486,8 @@ pub struct MsgInstantiateContract {
     pub msg: ::std::vec::Vec<u8>,
     pub auto_msg: ::std::vec::Vec<u8>,
     pub funds: ::protobuf::RepeatedField<super::coin::Coin>,
-    pub contract_duration: ::std::string::String,
+    pub duration: ::std::string::String,
+    pub start_duration_at: u64,
     pub interval: ::std::string::String,
     pub callback_sig: ::std::vec::Vec<u8>,
     // special fields
@@ -633,33 +676,48 @@ impl MsgInstantiateContract {
         ::std::mem::replace(&mut self.funds, ::protobuf::RepeatedField::new())
     }
 
-    // string contract_duration = 8;
+    // string duration = 8;
 
 
-    pub fn get_contract_duration(&self) -> &str {
-        &self.contract_duration
+    pub fn get_duration(&self) -> &str {
+        &self.duration
     }
-    pub fn clear_contract_duration(&mut self) {
-        self.contract_duration.clear();
+    pub fn clear_duration(&mut self) {
+        self.duration.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_contract_duration(&mut self, v: ::std::string::String) {
-        self.contract_duration = v;
+    pub fn set_duration(&mut self, v: ::std::string::String) {
+        self.duration = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_contract_duration(&mut self) -> &mut ::std::string::String {
-        &mut self.contract_duration
+    pub fn mut_duration(&mut self) -> &mut ::std::string::String {
+        &mut self.duration
     }
 
     // Take field
-    pub fn take_contract_duration(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.contract_duration, ::std::string::String::new())
+    pub fn take_duration(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.duration, ::std::string::String::new())
     }
 
-    // string interval = 9;
+    // uint64 start_duration_at = 9;
+
+
+    pub fn get_start_duration_at(&self) -> u64 {
+        self.start_duration_at
+    }
+    pub fn clear_start_duration_at(&mut self) {
+        self.start_duration_at = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_start_duration_at(&mut self, v: u64) {
+        self.start_duration_at = v;
+    }
+
+    // string interval = 10;
 
 
     pub fn get_interval(&self) -> &str {
@@ -685,7 +743,7 @@ impl MsgInstantiateContract {
         ::std::mem::replace(&mut self.interval, ::std::string::String::new())
     }
 
-    // bytes callback_sig = 10;
+    // bytes callback_sig = 11;
 
 
     pub fn get_callback_sig(&self) -> &[u8] {
@@ -752,12 +810,19 @@ impl ::protobuf::Message for MsgInstantiateContract {
                     ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.funds)?;
                 },
                 8 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.contract_duration)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.duration)?;
                 },
                 9 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.interval)?;
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_uint64()?;
+                    self.start_duration_at = tmp;
                 },
                 10 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.interval)?;
+                },
+                11 => {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.callback_sig)?;
                 },
                 _ => {
@@ -794,14 +859,17 @@ impl ::protobuf::Message for MsgInstantiateContract {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         };
-        if !self.contract_duration.is_empty() {
-            my_size += ::protobuf::rt::string_size(8, &self.contract_duration);
+        if !self.duration.is_empty() {
+            my_size += ::protobuf::rt::string_size(8, &self.duration);
+        }
+        if self.start_duration_at != 0 {
+            my_size += ::protobuf::rt::value_size(9, self.start_duration_at, ::protobuf::wire_format::WireTypeVarint);
         }
         if !self.interval.is_empty() {
-            my_size += ::protobuf::rt::string_size(9, &self.interval);
+            my_size += ::protobuf::rt::string_size(10, &self.interval);
         }
         if !self.callback_sig.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(10, &self.callback_sig);
+            my_size += ::protobuf::rt::bytes_size(11, &self.callback_sig);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
@@ -832,14 +900,17 @@ impl ::protobuf::Message for MsgInstantiateContract {
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         };
-        if !self.contract_duration.is_empty() {
-            os.write_string(8, &self.contract_duration)?;
+        if !self.duration.is_empty() {
+            os.write_string(8, &self.duration)?;
+        }
+        if self.start_duration_at != 0 {
+            os.write_uint64(9, self.start_duration_at)?;
         }
         if !self.interval.is_empty() {
-            os.write_string(9, &self.interval)?;
+            os.write_string(10, &self.interval)?;
         }
         if !self.callback_sig.is_empty() {
-            os.write_bytes(10, &self.callback_sig)?;
+            os.write_bytes(11, &self.callback_sig)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -915,9 +986,14 @@ impl ::protobuf::Message for MsgInstantiateContract {
                 |m: &mut MsgInstantiateContract| { &mut m.funds },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                "contract_duration",
-                |m: &MsgInstantiateContract| { &m.contract_duration },
-                |m: &mut MsgInstantiateContract| { &mut m.contract_duration },
+                "duration",
+                |m: &MsgInstantiateContract| { &m.duration },
+                |m: &mut MsgInstantiateContract| { &mut m.duration },
+            ));
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
+                "start_duration_at",
+                |m: &MsgInstantiateContract| { &m.start_duration_at },
+                |m: &mut MsgInstantiateContract| { &mut m.start_duration_at },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
                 "interval",
@@ -952,7 +1028,8 @@ impl ::protobuf::Clear for MsgInstantiateContract {
         self.msg.clear();
         self.auto_msg.clear();
         self.funds.clear();
-        self.contract_duration.clear();
+        self.duration.clear();
+        self.start_duration_at = 0;
         self.interval.clear();
         self.callback_sig.clear();
         self.unknown_fields.clear();
@@ -1350,7 +1427,7 @@ impl ::protobuf::reflect::ProtobufValue for MsgExecuteContract {
 #[derive(PartialEq,Clone,Default)]
 pub struct MsgDiscardAutoMsg {
     // message fields
-    pub sender: ::std::vec::Vec<u8>,
+    pub sender: ::std::string::String,
     pub contract_address: ::std::vec::Vec<u8>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
@@ -1368,10 +1445,10 @@ impl MsgDiscardAutoMsg {
         ::std::default::Default::default()
     }
 
-    // bytes sender = 1;
+    // string sender = 1;
 
 
-    pub fn get_sender(&self) -> &[u8] {
+    pub fn get_sender(&self) -> &str {
         &self.sender
     }
     pub fn clear_sender(&mut self) {
@@ -1379,19 +1456,19 @@ impl MsgDiscardAutoMsg {
     }
 
     // Param is passed by value, moved
-    pub fn set_sender(&mut self, v: ::std::vec::Vec<u8>) {
+    pub fn set_sender(&mut self, v: ::std::string::String) {
         self.sender = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_sender(&mut self) -> &mut ::std::vec::Vec<u8> {
+    pub fn mut_sender(&mut self) -> &mut ::std::string::String {
         &mut self.sender
     }
 
     // Take field
-    pub fn take_sender(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.sender, ::std::vec::Vec::new())
+    pub fn take_sender(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.sender, ::std::string::String::new())
     }
 
     // bytes contract_address = 3;
@@ -1431,7 +1508,7 @@ impl ::protobuf::Message for MsgDiscardAutoMsg {
             let (field_number, wire_type) = is.read_tag_unpack()?;
             match field_number {
                 1 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.sender)?;
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.sender)?;
                 },
                 3 => {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.contract_address)?;
@@ -1449,7 +1526,7 @@ impl ::protobuf::Message for MsgDiscardAutoMsg {
     fn compute_size(&self) -> u32 {
         let mut my_size = 0;
         if !self.sender.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(1, &self.sender);
+            my_size += ::protobuf::rt::string_size(1, &self.sender);
         }
         if !self.contract_address.is_empty() {
             my_size += ::protobuf::rt::bytes_size(3, &self.contract_address);
@@ -1461,7 +1538,7 @@ impl ::protobuf::Message for MsgDiscardAutoMsg {
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::ProtobufResult<()> {
         if !self.sender.is_empty() {
-            os.write_bytes(1, &self.sender)?;
+            os.write_string(1, &self.sender)?;
         }
         if !self.contract_address.is_empty() {
             os.write_bytes(3, &self.contract_address)?;
@@ -1504,7 +1581,7 @@ impl ::protobuf::Message for MsgDiscardAutoMsg {
         static descriptor: ::protobuf::rt::LazyV2<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::LazyV2::INIT;
         descriptor.get(|| {
             let mut fields = ::std::vec::Vec::new();
-            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
+            fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
                 "sender",
                 |m: &MsgDiscardAutoMsg| { &m.sender },
                 |m: &mut MsgDiscardAutoMsg| { &mut m.sender },
@@ -1550,37 +1627,38 @@ impl ::protobuf::reflect::ProtobufValue for MsgDiscardAutoMsg {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x19compute/v1beta1/msg.proto\x12\x16trst.x.compute.v1beta1\x1a\x14gog\
-    oproto/gogo.proto\x1a\x1ecosmos/base/v1beta1/coin.proto\"\xfb\x01\n\x0cM\
+    oproto/gogo.proto\x1a\x1ecosmos/base/v1beta1/coin.proto\"\xa4\x02\n\x0cM\
     sgStoreCode\x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x126\n\x0e\
     wasm_byte_code\x18\x02\x20\x01(\x0cR\x0cwasmByteCodeB\x10\xe2\xde\x1f\
     \x0cWASMByteCode\x12\x16\n\x06source\x18\x03\x20\x01(\tR\x06source\x12\
-    \x18\n\x07builder\x18\x04\x20\x01(\tR\x07builder\x12+\n\x11contract_dura\
-    tion\x18\x05\x20\x01(\tR\x10contractDuration\x12\x14\n\x05title\x18\x06\
-    \x20\x01(\tR\x05title\x12\x20\n\x0bdescription\x18\x07\x20\x01(\tR\x0bde\
-    scription:\x04\x88\xa0\x1f\0\"\xc0\x03\n\x16MsgInstantiateContract\x12\
-    \x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x12,\n\x12callback_code_h\
-    ash\x18\x02\x20\x01(\tR\x10codeHash\x12#\n\x07code_id\x18\x03\
-    \x20\x01(\x04R\x06codeIdB\n\xe2\xde\x1f\x06CodeID\x12\x1f\n\x0bcontract_\
-    id\x18\x04\x20\x01(\tR\ncontractId\x12\x19\n\x08msg\x18\x05\x20\x01\
-    (\x0cR\x07msg\x12\x19\n\x08auto_msg\x18\x06\x20\x01(\x0cR\x07autoMsg\
-    \x12a\n\x05funds\x18\x07\x20\x03(\x0b2\x19.cosmos.base.v1beta1.CoinR\x05\
+    \x18\n\x07builder\x18\x04\x20\x01(\tR\x07builder\x12)\n\x10default_durat\
+    ion\x18\x05\x20\x01(\tR\x0fdefaultDuration\x12)\n\x10default_interval\
+    \x18\x06\x20\x01(\tR\x0fdefaultInterval\x12\x14\n\x05title\x18\x07\x20\
+    \x01(\tR\x05title\x12\x20\n\x0bdescription\x18\x08\x20\x01(\tR\x0bdescri\
+    ption:\x04\x88\xa0\x1f\0\"\xc1\x03\n\x16MsgInstantiateContract\x12\x16\n\
+    \x06sender\x18\x01\x20\x01(\tR\x06sender\x12\x1b\n\tcode_hash\x18\x02\
+    \x20\x01(\tR\x08codeHash\x12#\n\x07code_id\x18\x03\x20\x01(\x04R\x06code\
+    IdB\n\xe2\xde\x1f\x06CodeID\x12\x1f\n\x0bcontract_id\x18\x04\x20\x01(\tR\
+    \ncontractId\x12\x10\n\x03msg\x18\x05\x20\x01(\x0cR\x03msg\x12\x19\n\x08\
+    auto_msg\x18\x06\x20\x01(\x0cR\x07autoMsg\x12a\n\x05funds\x18\x07\x20\
+    \x03(\x0b2\x19.cosmos.base.v1beta1.CoinR\x05fundsB0\xaa\xdf\x1f(github.c\
+    om/cosmos/cosmos-sdk/types.Coins\xc8\xde\x1f\0\x12\x1a\n\x08duration\x18\
+    \x08\x20\x01(\tR\x08duration\x12*\n\x11start_duration_at\x18\t\x20\x01(\
+    \x04R\x0fstartDurationAt\x12\x1a\n\x08interval\x18\n\x20\x01(\tR\x08inte\
+    rval\x122\n\x0ccallback_sig\x18\x0b\x20\x01(\x0cR\x0bcallbackSigB\x0f\
+    \xe2\xde\x1f\x0bCallbackSig:\x04\x88\xa0\x1f\0\"\x94\x02\n\x12MsgExecute\
+    Contract\x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x12\x1a\n\x08\
+    contract\x18\x02\x20\x01(\tR\x08contract\x12\x10\n\x03msg\x18\x03\x20\
+    \x01(\x0cR\x03msg\x12\x1b\n\tcode_hash\x18\x04\x20\x01(\tR\x08codeHash\
+    \x12a\n\x05funds\x18\x05\x20\x03(\x0b2\x19.cosmos.base.v1beta1.CoinR\x05\
     fundsB0\xaa\xdf\x1f(github.com/cosmos/cosmos-sdk/types.Coins\xc8\xde\x1f\
-    \0\x12+\n\x11contract_duration\x18\x08\x20\x01(\tR\x10contractDuration\
-    \x12\x1a\n\x08interval\x18\t\x20\x01(\tR\x08interval\x122\n\x0ccallback_\
-    sig\x18\n\x20\x01(\x0cR\x0bcallbackSigB\x0f\xe2\xde\x1f\x0bCallbackSig:\
-    \x04\x88\xa0\x1f\0\"\xa5\x02\n\x12MsgExecuteContract\x12\x16\n\x06sender\
-    \x18\x01\x20\x01(\tR\x06sender\x12\x1a\n\x08contract\x18\x02\x20\x01(\tR\
-    \x08contract\x12\x10\n\x03msg\x18\x03\x20\x01(\x0cR\x03msg\x12,\n\x12cal\
-    lback_code_hash\x18\x04\x20\x01(\tR\x10codeHash\x12a\n\x05funds\
-    \x18\x05\x20\x03(\x0b2\x19.cosmos.base.v1beta1.CoinR\x05fundsB0\xaa\xdf\
-    \x1f(github.com/cosmos/cosmos-sdk/types.Coins\xc8\xde\x1f\0\x122\n\x0cca\
-    llback_sig\x18\x06\x20\x01(\x0cR\x0bcallbackSigB\x0f\xe2\xde\x1f\x0bCall\
-    backSig:\x04\x88\xa0\x1f\0\"\xc2\x01\n\x11MsgDiscardAutoMsg\x12I\n\x06se\
-    nder\x18\x01\x20\x01(\x0cR\x06senderB1\xfa\xde\x1f-github.com/cosmos/cos\
-    mos-sdk/types.AccAddress\x12\\\n\x10contract_address\x18\x03\x20\x01(\
-    \x0cR\x0fcontractAddressB1\xfa\xde\x1f-github.com/cosmos/cosmos-sdk/type\
-    s.AccAddress:\x04\x88\xa0\x1f\0B3Z1github.com/trstlabs/trst/x/compute/in\
-    ternal/typesb\x06proto3\
+    \0\x122\n\x0ccallback_sig\x18\x06\x20\x01(\x0cR\x0bcallbackSigB\x0f\xe2\
+    \xde\x1f\x0bCallbackSig:\x04\x88\xa0\x1f\0\"\xc2\x01\n\x11MsgDiscardAuto\
+    Msg\x12I\n\x06sender\x18\x01\x20\x01(\tR\x06senderB1\xfa\xde\x1f-github.\
+    com/cosmos/cosmos-sdk/types.AccAddress\x12\\\n\x10contract_address\x18\
+    \x03\x20\x01(\x0cR\x0fcontractAddressB1\xfa\xde\x1f-github.com/cosmos/co\
+    smos-sdk/types.AccAddress:\x04\x88\xa0\x1f\0B3Z1github.com/trstlabs/trst\
+    /x/compute/internal/typesb\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;

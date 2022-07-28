@@ -68,8 +68,8 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 
 }
 
-// DeductFeesAndFundCreator handles remaining contract balance
-func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.AccAddress, gas uint64) error {
+// DeductFeesAndFundOwner deducts AutoMessage fees and handles remaining contract balance
+func (k Keeper) DeductFeesAndFundOwner(ctx sdk.Context, contractAddress sdk.AccAddress, gas uint64, isRecurring bool) error {
 
 	store := ctx.KVStore(k.storeKey)
 	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
@@ -87,10 +87,17 @@ func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.Ac
 	var feeCoins sdk.Coins
 
 	contractBalance := k.bankKeeper.GetAllBalances(ctx, contractAddress)
+
 	p := k.GetParams(ctx)
+	//depending on the type of self-execution the fee may differ (gov param)
+	constantFee := sdk.NewInt(p.AutoMsgConstantFee)
+	if isRecurring {
+		constantFee = sdk.NewInt(p.RecurringAutoMsgConstantFee)
+	}
+
 	if contractBalance.Empty() {
-		feeCoins = sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(p.AutoMsgConstantFee)).Add(gasCoin))
-		err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Creator)
+		feeCoins = sdk.NewCoins(sdk.NewCoin(types.Denom, constantFee).Add(gasCoin))
+		err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Owner)
 		if err != nil {
 			return err
 		}
@@ -98,14 +105,14 @@ func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.Ac
 	}
 	percentageAutoMsgFundsCommission := sdk.NewDecWithPrec(p.AutoMsgFundsCommission, 2)
 	amountAutoMsgFundsCommission := percentageAutoMsgFundsCommission.MulInt(contractBalance.AmountOf(types.Denom)).Ceil().TruncateInt()
-	feeCoins = sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(p.AutoMsgConstantFee)).Add(sdk.NewCoin(types.Denom, amountAutoMsgFundsCommission).Add(gasCoin)))
+	feeCoins = sdk.NewCoins(sdk.NewCoin(types.Denom, constantFee).Add(sdk.NewCoin(types.Denom, amountAutoMsgFundsCommission).Add(gasCoin)))
 	//if the contract is not able to pay, the contract creator pays as next in line
 	err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contractAddress)
 	if err != nil {
 		// if a contract instantiated the contract, we do not deduct fees from it and the AutoMsg won't execute
-		if !store.Has(types.GetContractEnclaveKey(contract.Creator)) {
+		if !store.Has(types.GetContractEnclaveKey(contract.Owner)) {
 
-			err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Creator)
+			err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Owner)
 			if err != nil {
 				return err
 			}
@@ -113,7 +120,7 @@ func (k Keeper) DeductFeesAndFundCreator(ctx sdk.Context, contractAddress sdk.Ac
 	}
 	if contractBalance.Sub(feeCoins).AmountOf(types.Denom).IsPositive() {
 		//pay out the remaining balance after deducting fee, commision and gas cost to the contract creator
-		err = k.bankKeeper.SendCoins(ctx, contractAddress, contract.Creator, contractBalance.Sub(feeCoins))
+		err = k.bankKeeper.SendCoins(ctx, contractAddress, contract.Owner, contractBalance.Sub(feeCoins))
 		if err != nil {
 			return err
 		}

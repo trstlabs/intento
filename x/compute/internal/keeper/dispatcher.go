@@ -225,7 +225,8 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 		// We need to create a SubMsgResult and pass it into the calling contract
 		var result wasmTypes.SubMsgResult
 		if err == nil {
-
+			fmt.Printf("Reply data %v \n", data)
+			fmt.Printf("Reply data0 %v \n", data[0])
 			// just take the first one for now if there are multiple sub-sdk messages
 			// and safely return nothing if no data
 			var responseData []byte

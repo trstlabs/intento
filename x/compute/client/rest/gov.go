@@ -22,7 +22,7 @@ type StoreCodeProposalJSONReq struct {
 	Proposer    string    `json:"proposer" yaml:"proposer"`
 	Deposit     sdk.Coins `json:"deposit" yaml:"deposit"`
 
-	RunAs string `json:"run_as" yaml:"run_as"`
+	Creator string `json:"creator" yaml:"creator"`
 	// WASMByteCode can be raw or gzip compressed
 	WASMByteCode []byte `json:"wasm_byte_code" yaml:"wasm_byte_code"`
 }
@@ -31,7 +31,7 @@ func (s StoreCodeProposalJSONReq) Content() govtypes.Content {
 	return &types.StoreCodeProposal{
 		Title:        s.Title,
 		Description:  s.Description,
-		RunAs:        s.RunAs,
+		Creator:      s.Creator,
 		WASMByteCode: s.WASMByteCode,
 	}
 }

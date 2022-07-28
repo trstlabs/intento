@@ -31,59 +31,14 @@ func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func
 	}
 }
 
-/*
-// IterateContractsQueue iterates over the items in the inactive item queue
-// and performs a callback function
-func (k Keeper) IterateContractsInQueueForReward(ctx sdk.Context, endTime time.Time, cb func(contract types.ContractInfoWithAddress) (stop bool)) {
-	iterator := k.ContractQueueIterator(ctx, endTime)
-	params := k.GetParams(ctx)
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-
-		addr, _ := types.SplitContractQueueKey(iterator.Key())
-		contractAddr, err := sdk.AccAddressFromBech32(addr)
-		if err != nil {
-			return
-		}
-
-		contract := k.GetContractInfoWithAddress(ctx, contractAddr)
-		info := k.GetCodeInfo(ctx, contract.ContractInfo.CodeID)
-		if info.Duration >= params.MinContractDurationForIncentive {
-
-			if cb(contract) {
-				fmt.Printf("found addr:  %s ", addr)
-				break
-			}
-		} else {
-			return
-		}
-
-	}
-}
-
-
-// IterateContractsQueue iterates over the items in the inactive item queue
-// and performs a callback function
-func (k Keeper) IterateContractQueueAddressOnly(ctx sdk.Context, endTime time.Time, cb func(addr string) (stop bool)) {
-	iterator := k.ContractQueueIterator(ctx, endTime)
-
-	defer iterator.Close()
-	for ; iterator.Valid(); iterator.Next() {
-		addr, _ := types.SplitContractQueueKey(iterator.Key())
-		if cb(addr) {
-			break
-		}
-	}
-}*/
-
 // GetContractAddressesForBlock returns all expiring contracts for a block
 func (k Keeper) GetContractAddressesForBlock(ctx sdk.Context) (incentiveList []string, contracts []types.ContractInfoWithAddress) {
 	params := k.GetParams(ctx)
 	k.IterateContractQueue(ctx, ctx.BlockHeader().Time, func(contract types.ContractInfoWithAddress) bool {
 
 		if contract.ContractInfo.AutoMsg != nil {
-			info := k.GetCodeInfo(ctx, contract.ContractInfo.CodeID)
-			if info.Duration >= params.MinContractDurationForIncentive {
+			//info := k.GetCodeInfo(ctx, contract.ContractInfo.CodeID)
+			if contract.Duration >= params.MinContractDurationForIncentive {
 				if k.bankKeeper.GetBalance(ctx, contract.Address, types.Denom).Amount.SubRaw(params.MinContractBalanceForIncentive).IsPositive() {
 					incentiveList = append(incentiveList, contract.Address.String())
 				}

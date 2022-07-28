@@ -113,16 +113,17 @@ func contractSDKEventAttributes(customAttributes []wasmTypes.Attribute, contract
 }
 
 // NewCodeInfo fills a new Contract struct
-func NewCodeInfo(codeHash []byte, creator sdk.AccAddress, source string, builder string, duration time.Duration /* , instantiatePermission AccessConfig */, title string, description string) CodeInfo {
+func NewCodeInfo(codeHash []byte, creator sdk.AccAddress, source string, builder string, default_duration time.Duration, default_interval time.Duration /* , instantiatePermission AccessConfig */, title string, description string) CodeInfo {
 	return CodeInfo{
-		CodeHash:    codeHash,
-		Creator:     creator,
-		Source:      source,
-		Builder:     builder,
-		Duration:    duration,
-		Title:       title,
-		Description: description,
-		Instances:   0,
+		CodeHash:        codeHash,
+		Creator:         creator,
+		Source:          source,
+		Builder:         builder,
+		DefaultDuration: default_duration,
+		DefaultInterval: default_interval,
+		Title:           title,
+		Description:     description,
+		Instances:       0,
 		// InstantiateConfig: instantiatePermission,
 	}
 }
@@ -148,14 +149,17 @@ type ContractCodeHistoryEntry struct {
 */
 
 // NewContractInfo creates a new instance of a given WASM contract info
-func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, endTime time.Time, autoMsg []byte, callbackSig []byte) ContractInfo {
+func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, startTime time.Time, endTime time.Time, interval time.Duration, autoMsg []byte, callbackSig []byte) ContractInfo {
 	return ContractInfo{
 		CodeID:  codeID,
 		Creator: creator,
+		Owner:   creator,
 		// Admin:   admin,
 		ContractId:  label,
 		Created:     createdAt,
+		StartTime:   startTime,
 		EndTime:     endTime,
+		Interval:    interval,
 		AutoMsg:     autoMsg,
 		CallbackSig: callbackSig,
 	}

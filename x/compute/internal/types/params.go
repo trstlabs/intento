@@ -22,8 +22,9 @@ const (
 	// Default max period for a contract that is self-executing
 	DefaultMaxContractDuration time.Duration = time.Hour * 24 * 366 // 366 days
 	// MinContractDuration sets the minimum duration for a self-executing contract
-
 	DefaultMinContractDuration time.Duration = time.Second * 45 // time.Hour * 24 // 1 day
+	// MinContractInterval sets the minimum interval self-execution
+	DefaultMinContractInterval time.Duration = time.Second * 45 // time.Hour * 24 // 1 day
 	// MinContractDurationForIncentive to distribute reward to contracts we want to incentivize
 	DefaultMinContractDurationForIncentive time.Duration = time.Hour * 24 // time.Hour * 24 // 1 day
 
@@ -46,6 +47,8 @@ var (
 
 	KeyMinContractDuration = []byte("MinContractDuration")
 
+	KeyMinContractInterval = []byte("MinContractInterval")
+
 	KeyMinContractDurationForIncentive = []byte("MinContractDurationForIncentive")
 
 	KeyMaxContractIncentive = []byte("MaxContractIncentive")
@@ -62,6 +65,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyRecurringAutoMsgConstantFee, &p.RecurringAutoMsgConstantFee, validateRecurringAutoMsgConstantFee),
 		paramtypes.NewParamSetPair(KeyMaxContractDuration, &p.MaxContractDuration, validateContractDuration),
 		paramtypes.NewParamSetPair(KeyMinContractDuration, &p.MinContractDuration, validateContractDuration),
+		paramtypes.NewParamSetPair(KeyMinContractInterval, &p.MinContractInterval, validateContractInterval),
 		paramtypes.NewParamSetPair(KeyMinContractDurationForIncentive, &p.MinContractDurationForIncentive, validateMinContractDurationForIncentive),
 		paramtypes.NewParamSetPair(KeyMaxContractIncentive, &p.MaxContractIncentive, validateMaxContractIncentive),
 		paramtypes.NewParamSetPair(KeyMinContractBalanceForIncentive, &p.MinContractBalanceForIncentive, validateMinContractBalanceForIncentive),
@@ -69,14 +73,14 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 // NewParams creates a new Params object
-func NewParams(autoMsgFundsCommission int64, autoMsgConstantFee int64, RecurringAutoMsgConstantFee int64, maxContractDuration time.Duration, minContractDuration time.Duration, minContractDurationForIncentive time.Duration, maxContractIncentive int64, minContractBalanceForIncentive int64) Params {
-	return Params{AutoMsgFundsCommission: autoMsgFundsCommission, AutoMsgConstantFee: autoMsgConstantFee, RecurringAutoMsgConstantFee: RecurringAutoMsgConstantFee, MaxContractDuration: maxContractDuration, MinContractDuration: minContractDuration, MinContractDurationForIncentive: minContractDurationForIncentive, MaxContractIncentive: maxContractIncentive, MinContractBalanceForIncentive: minContractBalanceForIncentive}
+func NewParams(autoMsgFundsCommission int64, autoMsgConstantFee int64, RecurringAutoMsgConstantFee int64, maxContractDuration time.Duration, minContractDuration time.Duration, minContractInterval time.Duration, minContractDurationForIncentive time.Duration, maxContractIncentive int64, minContractBalanceForIncentive int64) Params {
+	return Params{AutoMsgFundsCommission: autoMsgFundsCommission, AutoMsgConstantFee: autoMsgConstantFee, RecurringAutoMsgConstantFee: RecurringAutoMsgConstantFee, MaxContractDuration: maxContractDuration, MinContractDuration: minContractDuration, MinContractInterval: minContractInterval, MinContractDurationForIncentive: minContractDurationForIncentive, MaxContractIncentive: maxContractIncentive, MinContractBalanceForIncentive: minContractBalanceForIncentive}
 }
 
 // DefaultParams default parameters for compute
 func DefaultParams() Params {
 	//fmt.Print("default compute params..")
-	return NewParams(DefaultAutoMsgFundsCommission, DefaultAutoMsgConstantFee, DefaultRecurringAutoMsgConstantFee, DefaultMaxContractDuration, DefaultMinContractDuration, DefaultMinContractDurationForIncentive, DefaultMaxContractIncentive, DefaultMinContractBalanceForIncentive)
+	return NewParams(DefaultAutoMsgFundsCommission, DefaultAutoMsgConstantFee, DefaultRecurringAutoMsgConstantFee, DefaultMaxContractDuration, DefaultMinContractDuration, DefaultMinContractInterval, DefaultMinContractDurationForIncentive, DefaultMaxContractIncentive, DefaultMinContractBalanceForIncentive)
 }
 
 // Validate validates all params
@@ -85,6 +89,10 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateContractDuration(p.MinContractDuration); err != nil {
+		return err
+	}
+
+	if err := validateContractInterval(p.MinContractInterval); err != nil {
 		return err
 	}
 
@@ -102,7 +110,20 @@ func validateContractDuration(i interface{}) error {
 	}
 
 	if v <= 0 {
-		return fmt.Errorf("self-executing contract period between initiation and self-execuion must be longer: %d", v)
+		return fmt.Errorf("self-executing contract period (between initiation and last self-execuion) must be longer: %d", v)
+	}
+
+	return nil
+}
+
+func validateContractInterval(i interface{}) error {
+	v, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v <= 0 {
+		return fmt.Errorf("self-executing contract interval must be longer: %d", v)
 	}
 
 	return nil

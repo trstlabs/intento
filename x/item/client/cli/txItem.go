@@ -116,11 +116,11 @@ func CmdCreateItem() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), argsShippingCost, string(argsLocation), int64(argsEstimationCount), []string(argsTags), int64(argsCondition), []string(argsShippingRegion), int64(argsDepositAmount), encryptedMsg, autoMsgEncrypted, []string(argsPhotos), argsTokenURI)
-			if err := msg.ValidateBasic(); err != nil {
+			txMsg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), argsShippingCost, string(argsLocation), int64(argsEstimationCount), []string(argsTags), int64(argsCondition), []string(argsShippingRegion), int64(argsDepositAmount), encryptedMsg, autoMsgEncrypted, []string(argsPhotos), argsTokenURI)
+			if err := txMsg.ValidateBasic(); err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), txMsg)
 		},
 	}
 	//Estimation related
@@ -290,11 +290,11 @@ func CmdItemTransferable() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(), encryptedMsg, uint64(itemID))
-			if err := msg.ValidateBasic(); err != nil {
+			txMsg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(), encryptedMsg, uint64(itemID))
+			if err := txMsg.ValidateBasic(); err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), txMsg)
 		},
 	}
 

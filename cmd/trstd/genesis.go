@@ -343,7 +343,8 @@ func MainnetGenesisParams() GenesisParams {
 	*/
 	//compute
 	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 366
-	genParams.ComputeParams.MinContractDuration = time.Second * 45
+	genParams.ComputeParams.MinContractDuration = time.Second * 30
+	genParams.ComputeParams.MinContractInterval = time.Second * 60
 	genParams.ComputeParams.AutoMsgFundsCommission = 2
 	genParams.ComputeParams.AutoMsgConstantFee = 1000000
 	genParams.ComputeParams.RecurringAutoMsgConstantFee = 1000000
@@ -393,7 +394,8 @@ func TestnetGenesisParams() GenesisParams {
 
 	//compute
 	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 60
-	genParams.ComputeParams.MinContractDuration = time.Second
+	genParams.ComputeParams.MinContractDuration = time.Second * 10
+	genParams.ComputeParams.MinContractInterval = time.Second * 20
 	genParams.ComputeParams.MinContractDurationForIncentive = time.Second
 	genParams.ComputeParams.MinContractBalanceForIncentive = 50000
 	genParams.ComputeParams.MaxContractIncentive = 500000

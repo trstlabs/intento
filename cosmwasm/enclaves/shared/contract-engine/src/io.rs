@@ -266,7 +266,7 @@ pub fn encrypt_output(
                     data,
                     &reply_params,
                 )?)?;*/
-                let mut tmp_msg = ContractMessage {
+                let mut data_msg = ContractMessage {
                     nonce: contract_msg.nonce,
                     user_public_key: contract_msg.user_public_key,
                     msg: data.as_slice().to_vec(),
@@ -281,8 +281,8 @@ pub fn encrypt_output(
                     data.clone().as_slice().to_vec(),
                    // &reply_params,
                 )?);*/
-                tmp_msg.encrypt_in_place()?;
-                 *data =Binary(tmp_msg.to_vec());
+                data_msg.encrypt_in_place()?;
+                 *data =Binary(data_msg.to_vec());
                 trace!("reply data encrypted: {:?}", data);
             }
 

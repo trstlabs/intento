@@ -30,11 +30,11 @@ func ProposalStoreCodeCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			runAs, err := cmd.Flags().GetString(flagRunAs)
+			creator, err := cmd.Flags().GetString(flagCreator)
 			if err != nil {
 				return fmt.Errorf("run-as: %s", err)
 			}
-			if len(runAs) == 0 {
+			if len(creator) == 0 {
 				return errors.New("run-as address is required")
 			}
 			proposalTitle, err := cmd.Flags().GetString(cli.FlagTitle)
@@ -57,11 +57,11 @@ func ProposalStoreCodeCmd() *cobra.Command {
 			content := types.StoreCodeProposal{
 				Title:               proposalTitle,
 				Description:         proposalDescr,
-				RunAs:               runAs,
+				Creator:             creator,
 				WASMByteCode:        src.WASMByteCode,
 				ContractTitle:       src.Title,
 				ContractDescription: src.Description,
-				ContractDuration:    src.ContractDuration,
+				DefaultDuration:     src.DefaultDuration,
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
@@ -76,7 +76,7 @@ func ProposalStoreCodeCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagRunAs, "", "The address that is stored as code creator")
+	cmd.Flags().String(flagCreator, "", "The address that is stored as code creator")
 	//cmd.Flags().String(flagInstantiateByEverybody, "", "Everybody can instantiate a contract from the code, optional")
 	//cmd.Flags().String(flagInstantiateByAddress, "", "Only this address can instantiate a contract instance from the code, optional")
 	cmd.Flags().String(flagSource, "", "A valid URI reference to the contract's source code, optional")
@@ -269,7 +269,7 @@ func ProposalExecuteContractCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().String(flagRunAs, "", "The address that is passed as sender to the contract on proposal execution")
+	//cmd.Flags().String(flagRunAs, "", "The address that is passed as sender to the contract on proposal execution")
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract during instantiation")
 	cmd.Flags().String(flagContractId, "", "A human-readable name for this contract in lists")
 

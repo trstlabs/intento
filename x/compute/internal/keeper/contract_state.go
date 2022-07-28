@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	//"encoding/json"
 	"github.com/tendermint/tendermint/crypto"
@@ -246,6 +247,39 @@ func (k Keeper) GetCodeInfo(ctx sdk.Context, codeID uint64) *types.CodeInfo {
 	return &codeInfo
 }
 
+func (k Keeper) SetCodeInfo(ctx sdk.Context, codeID uint64, creator string, defaultDuration string, defaultInterval string) error {
+	store := ctx.KVStore(k.storeKey)
+
+	info := k.GetCodeInfo(ctx, codeID)
+
+	if creator != "" {
+		addr, err := sdk.AccAddressFromBech32(creator)
+		if err == nil {
+			return err
+		}
+		info.Creator = addr
+	}
+	if defaultDuration != "" {
+		newDur, err := time.ParseDuration(defaultDuration)
+		if err == nil {
+			return err
+		}
+		info.DefaultDuration = newDur
+
+	}
+	if defaultInterval != "" {
+		newInter, err := time.ParseDuration(defaultInterval)
+		if err == nil {
+			return err
+		}
+		info.DefaultInterval = newInter
+
+	}
+
+	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(info))
+	return nil
+}
+
 func (k Keeper) GetCodeHash(ctx sdk.Context, codeID uint64) (codeHash []byte) {
 	store := ctx.KVStore(k.storeKey)
 	var codeInfo types.CodeInfo
@@ -363,4 +397,46 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 	addr[0] = 'C'
 	binary.PutUvarint(addr[1:], id)
 	return sdk.AccAddress(crypto.AddressHash(addr))
+}
+
+func (k Keeper) SetContractInfo(ctx sdk.Context, contrAddr string, owner string, startTime int64, endTime int64, interval string) error {
+	store := ctx.KVStore(k.storeKey)
+	contractAddr, err := sdk.AccAddressFromBech32(contrAddr)
+	if err == nil {
+		return err
+	}
+
+	info := k.GetContractInfo(ctx, contractAddr)
+
+	if owner != "" {
+		addr, err := sdk.AccAddressFromBech32(owner)
+		if err == nil {
+			return err
+		}
+		info.Creator = addr
+	}
+	if startTime != 0 && info.StartTime.After(ctx.BlockHeader().Time) {
+		newTime := time.Unix(startTime, 0)
+		if newTime.Before(info.EndTime) {
+
+			if err == nil {
+				return err
+			}
+			info.StartTime = newTime
+		}
+	}
+
+	if interval != "" {
+		newInter, err := time.ParseDuration(interval)
+		if err == nil {
+			return err
+		}
+		p := k.GetParams(ctx)
+		if newInter <= p.MinContractDuration {
+			info.Interval = newInter
+		}
+	}
+
+	store.Set(types.GetContractAddressKey(contractAddr), k.cdc.MustMarshal(info))
+	return nil
 }

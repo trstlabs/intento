@@ -28,7 +28,7 @@ const (
 	flagSource                 = "source"
 	flagBuilder                = "builder"
 	flagContractId             = "contract_id"
-	flagRunAs                  = "run-as"
+	flagCreator                = "creator"
 	flagInstantiateByEverybody = "instantiate-everybody"
 	flagInstantiateByAddress   = "instantiate-only-address"
 	flagProposalType           = "type"
@@ -155,13 +155,13 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgStoreCode{
-		Sender:           cliCtx.GetFromAddress().String(),
-		WASMByteCode:     wasm,
-		Source:           source,
-		Builder:          builder,
-		ContractDuration: contractDuration,
-		Title:            argsTitle,
-		Description:      argsDescription,
+		Sender:          cliCtx.GetFromAddress().String(),
+		WASMByteCode:    wasm,
+		Source:          source,
+		Builder:         builder,
+		DefaultDuration: contractDuration,
+		Title:           argsTitle,
+		Description:     argsDescription,
 		// InstantiatePermission: perm,
 	}
 	return msg, nil
