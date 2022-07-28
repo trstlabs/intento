@@ -275,8 +275,9 @@ pub enum StdCosmWasmMsg {
         auto_msg: String,
         funds: Vec<Coin>,
         contract_id: String,
-        contract_duration: String,
+        duration: String,
         interval: String,
+        start_duration_at: u64,
         callback_sig: Option<Vec<u8>>,
     },
 }
@@ -317,8 +318,9 @@ impl StdCosmWasmMsg {
                 auto_msg,
                 funds,
                 contract_id,
-                contract_duration,
+                duration,
                 interval,
+                start_duration_at,
                 callback_sig,
                 code_id: _,
             } => {
@@ -348,8 +350,9 @@ impl StdCosmWasmMsg {
                     auto_msg,
                     funds,
                     contract_id,
-                    contract_duration,
+                    duration,
                     interval,
+                    start_duration_at,
                     callback_sig,
                 })
             }
@@ -372,8 +375,9 @@ pub enum CosmWasmMsg {
         auto_msg: Vec<u8>,
         funds: Vec<Coin>,
         contract_id: String,
-        contract_duration: String,
+        duration: String,
         interval: String,
+        start_duration_at: u64,
         callback_sig: Option<Vec<u8>>,
     },
 
@@ -419,8 +423,9 @@ impl CosmWasmMsg {
             auto_msg: raw_msg.auto_msg,
             funds,
             contract_id: raw_msg.contract_id,
-            contract_duration: raw_msg.contract_duration,
+            duration: raw_msg.duration,
             interval: raw_msg.interval,
+            start_duration_at: raw_msg.start_duration_at,
             callback_sig,
         })
     }

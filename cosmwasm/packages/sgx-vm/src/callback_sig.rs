@@ -19,17 +19,7 @@ extern "C" {
         msg_len: u32,
         msg_info: *const u8,
         msg_info_len: u32,
-        /*auto_msg: *const u8,
-        auto_msg_len: u32,
-        code_id: *const u8,
-        code_id_len: u32,
-        contract: *const u8,
-        contract_len: u32,
-        contract_id: *const u8,
-        contract_id_len: u32,
-        contract_duration: *const u8,
-        contract_duration_len: u32,*/
-       // callback_sig: &mut [u8; 32],
+
     ) -> sgx_status_t;
 }
 
@@ -38,11 +28,7 @@ extern "C" {
 pub fn create_callback_sig_raw(
     msg: &[u8],
     msg_info: &[u8]
-    /*auto_msg: &[u8],
-    code_id: &[u8],
-    contract: &[u8],
-    contract_id: &[u8],
-    contract_duration: &[u8],*/
+
 ) -> SgxResult<Vec<u8>> {
    // Bind the token to a local variable to ensure its
         // destructor runs in the end of the function
@@ -62,17 +48,7 @@ pub fn create_callback_sig_raw(
             msg.len() as u32,
             msg_info.as_ptr(),
             msg_info.len() as u32,
-          /*  auto_msg.as_ptr(),
-            auto_msg.len() as u32,
-            code_id.as_ptr(),
-            code_id.len() as u32,
-            contract.as_ptr(),
-            contract.len() as u32,
-            contract_id.as_ptr(),
-            contract_id.len() as u32,
-            contract_duration.as_ptr(),
-            contract_duration.len() as u32,*/
-          //  &mut callback_sig,
+
         )
     };
 

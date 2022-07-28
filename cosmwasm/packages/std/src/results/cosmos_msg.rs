@@ -145,9 +145,11 @@ pub enum WasmMsg {
         /// mandatory human-readbale id for the contract
         contract_id: String,
         /// custom duration (e.g. 5h/60d, 0 for no duration) 
-        contract_duration: Option<String>,
+        duration: Option<String>,
          /// time interval (e.g. 60s/5h)
         interval: Option<String>,
+         /// start contract duration at a certain UNIX time (e.g. 60s/5h)
+         start_duration_at: Option<u64>,
     },
 }
 
@@ -177,8 +179,9 @@ pub fn wasm_instantiate(
     auto_msg: &impl Serialize,
     funds: Vec<Coin>,
     contract_id: String,
-    contract_duration: String,
+    duration: String,
     interval: String,
+    start_duration_at: u64,
 ) -> StdResult<WasmMsg> {
     let payload = to_binary(msg)?;
     let payload_auto_msg = to_binary(auto_msg)?;
@@ -189,8 +192,9 @@ pub fn wasm_instantiate(
         auto_msg: Some(payload_auto_msg),
         funds,
         contract_id,
-        contract_duration: Some(contract_duration),
+        duration: Some(duration),
         interval: Some(interval),
+        start_duration_at: Some(start_duration_at),
     })
 }
 
