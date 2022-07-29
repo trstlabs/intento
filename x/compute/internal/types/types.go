@@ -149,7 +149,7 @@ type ContractCodeHistoryEntry struct {
 */
 
 // NewContractInfo creates a new instance of a given WASM contract info
-func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, startTime time.Time, endTime time.Time, interval time.Duration, autoMsg []byte, callbackSig []byte) ContractInfo {
+func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, startTime time.Time, execTime time.Time, endTime time.Time, interval time.Duration, autoMsg []byte, callbackSig []byte) ContractInfo {
 	return ContractInfo{
 		CodeID:  codeID,
 		Creator: creator,
@@ -158,6 +158,7 @@ func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label 
 		ContractId:  label,
 		Created:     createdAt,
 		StartTime:   startTime,
+		ExecTime:    execTime,
 		EndTime:     endTime,
 		Interval:    interval,
 		AutoMsg:     autoMsg,

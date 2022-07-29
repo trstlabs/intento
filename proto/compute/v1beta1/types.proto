@@ -54,9 +54,10 @@ message ContractInfo {
     (gogoproto.jsontag)     = "interval,omitempty"
   ];
     google.protobuf.Timestamp start_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    google.protobuf.Timestamp end_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    string ibc_port_id = 11[ (gogoproto.customname) = "IBCPortID" ];
-    bytes callback_sig = 12;
+     google.protobuf.Timestamp exec_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp end_time = 11 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    string ibc_port_id = 12[ (gogoproto.customname) = "IBCPortID" ];
+    bytes callback_sig = 14;
 }
 
 
@@ -122,31 +123,32 @@ message KeyPair {
 message Params {
    option (gogoproto.goproto_stringer) = false;
     int64 AutoMsgFundsCommission  = 1;
-    int64 AutoMsgConstantFee = 2;
-    int64 RecurringAutoMsgConstantFee = 3;
+     int64 AutoMsgFlexFeeDenom = 2;
+    int64 AutoMsgConstantFee = 3;
+    int64 RecurringAutoMsgConstantFee = 4;
     //  Maximum period for self-executing contract
-   google.protobuf.Duration MaxContractDuration = 4 [
+   google.protobuf.Duration MaxContractDuration = 5 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "max_contract_duration,omitempty"
   ];
     //  Minimum period for self-executing contract
-   google.protobuf.Duration MinContractDuration = 5 [
+   google.protobuf.Duration MinContractDuration = 6 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "min_contract_duration,omitempty"
   ];
-    google.protobuf.Duration MinContractDurationForIncentive = 6 [
+    google.protobuf.Duration MinContractDurationForIncentive = 7 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "min_contract_duration_for_reward,omitempty"
   ];
    //  Minimum period for self-executing contract
-   google.protobuf.Duration MinContractInterval = 7 [
+   google.protobuf.Duration MinContractInterval = 8 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "min_contract_duration,omitempty"
   ];
-    int64 MaxContractIncentive = 8;
-    int64 MinContractBalanceForIncentive = 9;
+    int64 MaxContractIncentive = 9;
+    int64 MinContractBalanceForIncentive = 10;
 }

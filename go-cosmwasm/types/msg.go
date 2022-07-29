@@ -266,7 +266,7 @@ type ExecuteMsg struct {
 	// as `userMsg` when calling `Handle` on the above-defined contract
 	Msg []byte `json:"msg"`
 	// Send is an optional amount of coins this contract sends to the called contract
-	Send              Coins  `json:"send"`
+	Funds             Coins  `json:"funds"`
 	CallbackSignature []byte `json:"callback_sig"` // Optional
 }
 
@@ -284,11 +284,13 @@ type InstantiateMsg struct {
 	AutoMsg []byte `json:"auto_msg"`
 	/// ContractID is a mandatory human-readbale id for the contract
 	ContractID string `json:"contract_id"`
-	/// ContractDuration is a mandatory human-readbale time.duration for the contract (e.g. 60s 5h ect.)
-	ContractDuration string `json:"contract_duration"`
+	/// Duration is a mandatory human-readbale time.duration for the contract (e.g. 60s 5h ect.)
+	Duration string `json:"duration"`
 	/// AutoMsgInterval is a mandatory human-readbale time.duration for the contract (e.g. 60s 5h ect.)
-	AutoMsgInterval string `json:"auto_msg_interval"`
+	Interval string `json:"interval"`
+	/// A specific UNIX time to start the contract duration from
+	StartDurationAt uint64 `json:"start_duration_at"`
 	// Send is an optional amount of coins this contract sends to the called contract
-	Send              Coins  `json:"send"`
+	Funds             Coins  `json:"funds"`
 	CallbackSignature []byte `json:"callback_sig"` // Optional
 }

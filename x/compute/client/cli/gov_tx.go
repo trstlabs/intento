@@ -62,6 +62,7 @@ func ProposalStoreCodeCmd() *cobra.Command {
 				ContractTitle:       src.Title,
 				ContractDescription: src.Description,
 				DefaultDuration:     src.DefaultDuration,
+				DefaultInterval:     src.DefaultInterval,
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
@@ -81,9 +82,9 @@ func ProposalStoreCodeCmd() *cobra.Command {
 	//cmd.Flags().String(flagInstantiateByAddress, "", "Only this address can instantiate a contract instance from the code, optional")
 	cmd.Flags().String(flagSource, "", "A valid URI reference to the contract's source code, optional")
 	cmd.Flags().String(flagBuilder, "", "A valid docker tag for the build system, optional")
-
-	cmd.Flags().String(flagDuration, "", "A max duration for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
 	// proposal flags
+	cmd.Flags().String(flagDuration, "", "A default duration for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
+	cmd.Flags().String(flagInterval, "", "A default interval for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
 	cmd.Flags().String(cli.FlagTitle, "", "Title of proposal")
 	cmd.Flags().String(cli.FlagDescription, "", "Description of proposal")
 	cmd.Flags().String(flagTitle, "", "Title of contract")
@@ -97,7 +98,7 @@ func ProposalStoreCodeCmd() *cobra.Command {
 
 func ProposalInstantiateContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "instantiate-contract [code_id_int64] [json_encoded_init_args] --contract_id [text] --title [text] --description [text] --amount [coins,optional] --deposit [coins,optional] --auto_msg [json args, optiona]",
+		Use:   "instantiate-contract [code_id_int64] [json_encoded_init_args] --contract_id [text] --title [proposal text] --description [proposal text] --amount [coins,optional] --deposit [coins,optional] --auto_msg [json args, optional]  --duration [custom duration e.g. 400s/5h] (optional)  --interval [custom dration e.g. 400s/5h]  (optional) --start_at [UNIX time]",
 		Short: "Submit an instantiate wasm contract proposal (run by community)",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -150,18 +151,38 @@ func ProposalInstantiateContractCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			duration, err := cmd.Flags().GetString(flagDuration) //strconv.ParseInt(args[3], 10, 64)
+			if err != nil {
+				return fmt.Errorf("contract duration: %s", err)
+			}
+			interval, err := cmd.Flags().GetString(flagInterval) //strconv.ParseInt(args[3], 10, 64)
+			if err != nil {
+				return fmt.Errorf("contract interval: %s", err)
+			}
 
+			startAtStr, err := cmd.Flags().GetString(flagStartAt) //strconv.ParseInt(args[3], 10, 64)
+			if err != nil {
+				return fmt.Errorf("startAt string: %s", err)
+			}
+
+			startAt, err := strconv.ParseUint(startAtStr, 10, 64)
+			if err != nil {
+				return fmt.Errorf("failed to parse start duration at: %s", err)
+			}
 			content := types.InstantiateContractProposal{
 				Title:       proposalTitle,
 				Description: proposalDescr,
 				//RunAs:       runAs,
 				//Proposer: clientCtx.GetFromAddress().String(),
 				//Admin:       src.Admin,
-				CodeID:     codeID,
-				ContractId: contractId,
-				Msg:        []byte(args[1]),
-				AutoMsg:    []byte(autoMsg),
-				Funds:      funds,
+				CodeID:          codeID,
+				ContractId:      contractId,
+				Msg:             []byte(args[1]),
+				AutoMsg:         []byte(autoMsg),
+				Funds:           funds,
+				Duration:        duration,
+				Interval:        interval,
+				StartDurationAt: startAt,
 			}
 
 			msg, err := govtypes.NewMsgSubmitProposal(&content, deposit, clientCtx.GetFromAddress())
@@ -188,6 +209,9 @@ func ProposalInstantiateContractCmd() *cobra.Command {
 	cmd.Flags().String(cli.FlagProposal, "", "Proposal file path (if this path is given, other proposal flags are ignored)")
 	// type values must match the "ProposalHandler" "routes" in cli
 	cmd.Flags().String(flagProposalType, "", "Permission of proposal, types: store-code/instantiate/migrate/update-admin/clear-admin/text/parameter_change/software_upgrade")
+	cmd.Flags().String(flagDuration, "", "A custom duration for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
+	cmd.Flags().String(flagInterval, "", "A custom interval for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
+	cmd.Flags().String(flagStartAt, "0", "A custom start time for the contract self-execution, in UNIX time")
 	return cmd
 }
 

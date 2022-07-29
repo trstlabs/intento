@@ -181,7 +181,7 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			return nil, sdkerrors.Wrap(types.ErrInvalid, "replyOn value")
 		}
 		//fmt.Printf("SubMsg for %s \n", contractAddr.String())
-		//fmt.Printf("SubMsg %+v\n", msg)
+		fmt.Printf("SubMsg %+v\n", msg)
 		// first, we build a sub-context which we can use inside the submessages
 		subCtx, commit := ctx.CacheContext()
 		em := sdk.NewEventManager()
@@ -225,15 +225,13 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 		// We need to create a SubMsgResult and pass it into the calling contract
 		var result wasmTypes.SubMsgResult
 		if err == nil {
-			fmt.Printf("Reply data %v \n", data)
-			fmt.Printf("Reply data0 %v \n", data[0])
+			//fmt.Printf("Reply data0 %v \n", data[0])
 			// just take the first one for now if there are multiple sub-sdk messages
 			// and safely return nothing if no data
 			var responseData []byte
 			if len(data) > 0 {
 				responseData = data[0]
 			}
-			//fmt.Printf("SubMsg responseData %v \n", responseData)
 
 			result = wasmTypes.SubMsgResult{
 				Ok: &wasmTypes.SubMsgResponse{
@@ -302,7 +300,6 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			replySigInfo.CallbackSignature = dataWithInternalReplyInfo.InternalReplyEnclaveSig
 
 		}
-		fmt.Printf("Dispatch reply for %s \n", contractAddr.String())
 		rspData, err := d.keeper.reply(ctx, contractAddr, reply, ogTx, replySigInfo)
 
 		switch {
@@ -310,7 +307,7 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			fmt.Printf("Got err for SubMsg for %v \n", err.Error())
 			return nil, err
 		case rspData != nil:
-			fmt.Printf("Got response for SubMsg for %v \n", rspData)
+			//fmt.Printf("Got response for SubMsg for %v \n", rspData)
 			rsp = rspData
 		}
 	}

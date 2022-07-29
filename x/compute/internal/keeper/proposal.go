@@ -163,7 +163,7 @@ func handleUpdateContractProposal(ctx sdk.Context, k Keeper, p types.UpdateContr
 		return err
 	}
 
-	err := k.SetContractInfo(ctx, p.Contract, p.Owner, p.StartTime, p.EndTime, p.Interval)
+	err := k.UpdateContractInfo(ctx, p.Contract, p.Owner, p.StartTime, p.EndTime, p.Interval)
 	if err != nil {
 		return err
 	}

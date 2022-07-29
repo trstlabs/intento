@@ -431,7 +431,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Execute.ContractAddr)
 		}
-		coins, err := convertWasmCoinsToSdkCoins(msg.Execute.Send)
+		coins, err := convertWasmCoinsToSdkCoins(msg.Execute.Funds)
 		if err != nil {
 			return nil, err
 		}
@@ -446,21 +446,23 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 		}
 		return []sdk.Msg{&sdkMsg}, nil
 	case msg.Instantiate != nil:
-		coins, err := convertWasmCoinsToSdkCoins(msg.Instantiate.Send)
+		coins, err := convertWasmCoinsToSdkCoins(msg.Instantiate.Funds)
 		if err != nil {
 			return nil, err
 		}
 
 		sdkMsg := types.MsgInstantiateContract{
-			Sender: sender.String(),
-			CodeID: msg.Instantiate.CodeID,
-			// TODO: add this to CosmWasm
-			ContractId:  msg.Instantiate.ContractID,
-			CodeHash:    msg.Instantiate.CodeHash,
-			Msg:         msg.Instantiate.Msg,
-			AutoMsg:     msg.Instantiate.AutoMsg,
-			Funds:       coins,
-			CallbackSig: msg.Instantiate.CallbackSignature,
+			Sender:          sender.String(),
+			CodeID:          msg.Instantiate.CodeID,
+			ContractId:      msg.Instantiate.ContractID,
+			CodeHash:        msg.Instantiate.CodeHash,
+			Msg:             msg.Instantiate.Msg,
+			AutoMsg:         msg.Instantiate.AutoMsg,
+			Duration:        msg.Instantiate.Duration,
+			Interval:        msg.Instantiate.Interval,
+			StartDurationAt: msg.Instantiate.StartDurationAt,
+			Funds:           coins,
+			CallbackSig:     msg.Instantiate.CallbackSignature,
 		}
 		return []sdk.Msg{&sdkMsg}, nil
 	default:

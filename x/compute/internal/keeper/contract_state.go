@@ -61,7 +61,7 @@ func (k Keeper) GetContractInfoWithAddress(ctx sdk.Context, contractAddress sdk.
 
 	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
 	if contractBz == nil {
-		return types.ContractInfoWithAddress{} //sdkerrors.Wrap(types.ErrNotFound, "contract")
+		return types.ContractInfoWithAddress{}
 	}
 
 	var info types.ContractInfo
@@ -399,7 +399,7 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash(addr))
 }
 
-func (k Keeper) SetContractInfo(ctx sdk.Context, contrAddr string, owner string, startTime int64, endTime int64, interval string) error {
+func (k Keeper) UpdateContractInfo(ctx sdk.Context, contrAddr string, owner string, startTime int64, endTime int64, interval string) error {
 	store := ctx.KVStore(k.storeKey)
 	contractAddr, err := sdk.AccAddressFromBech32(contrAddr)
 	if err == nil {
@@ -439,4 +439,9 @@ func (k Keeper) SetContractInfo(ctx sdk.Context, contrAddr string, owner string,
 
 	store.Set(types.GetContractAddressKey(contractAddr), k.cdc.MustMarshal(info))
 	return nil
+}
+
+func (k Keeper) SetContractInfo(ctx sdk.Context, contract types.ContractInfoWithAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetContractAddressKey(contract.Address), k.cdc.MustMarshal(contract.ContractInfo))
 }

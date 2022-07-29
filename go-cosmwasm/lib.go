@@ -129,7 +129,7 @@ func (w *Wasmer) Instantiate(
 	if err != nil {
 		return nil, nil, nil, gasUsed, err
 	}
-	fmt.Printf("Init Result Ok Data: %+v\n", result.Ok.Data)
+	//fmt.Printf("Init Result Ok Data: %+v\n", result.Ok.Data)
 	result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
 	//fmt.Printf("Init Result %+v\n", result)
 
@@ -184,7 +184,7 @@ func (w *Wasmer) Execute(
 	if result.Err != "" {
 		return nil, gasUsed, fmt.Errorf("%s", result.Err)
 	}
-	fmt.Printf("Execute Result Data %+v\n", result.Ok.Data)
+	//fmt.Printf("Execute Result Data %+v\n", result.Ok.Data)
 	result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
 	if err != nil {
 		return nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
