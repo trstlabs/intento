@@ -1,6 +1,5 @@
 package keeper_test
 
-/*
 import (
 	gocontext "context"
 	"testing"
@@ -51,4 +50,3 @@ func (suite *MintTestSuite) TestGRPCParams() {
 func TestMintTestSuite(t *testing.T) {
 	suite.Run(t, new(MintTestSuite))
 }
-*/

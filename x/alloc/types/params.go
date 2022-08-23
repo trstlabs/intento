@@ -10,8 +10,8 @@ import (
 
 // Parameter store keys
 var (
-	KeyDistributionProportions  = []byte("DistributionProportions")
-	KeyDeveloperRewardsReceiver = []byte("DeveloperRewardsReceiver")
+	KeyDistributionProportions    = []byte("DistributionProportions")
+	KeyContributorRewardsReceiver = []byte("ContributorRewardsReceiver")
 )
 
 // ParamTable for module.
@@ -25,8 +25,8 @@ func NewParams(
 ) Params {
 
 	return Params{
-		DistributionProportions:           distrProportions,
-		WeightedDeveloperRewardsReceivers: weightedDevRewardsReceivers,
+		DistributionProportions:             distrProportions,
+		WeightedContributorRewardsReceivers: weightedDevRewardsReceivers,
 	}
 }
 
@@ -34,12 +34,12 @@ func NewParams(
 func DefaultParams() Params {
 	return Params{
 		DistributionProportions: DistributionProportions{
-			Staking:                     sdk.MustNewDecFromStr("0.55"),
-			TrustlessContractIncentives: sdk.MustNewDecFromStr("0.25"),
-			DeveloperRewards:            sdk.MustNewDecFromStr("0.05"),
-			CommunityPool:               sdk.MustNewDecFromStr("0.15"),
+			Staking:                     sdk.MustNewDecFromStr("0.60"),
+			TrustlessContractIncentives: sdk.MustNewDecFromStr("0.10"),
+			ContributorRewards:          sdk.MustNewDecFromStr("0.05"),
+			CommunityPool:               sdk.MustNewDecFromStr("0.25"),
 		},
-		WeightedDeveloperRewardsReceivers: []WeightedAddress{},
+		WeightedContributorRewardsReceivers: []WeightedAddress{},
 	}
 }
 
@@ -48,7 +48,7 @@ func (p Params) Validate() error {
 	if err := validateDistributionProportions(p.DistributionProportions); err != nil {
 		return err
 	}
-	err := validateWeightedDeveloperRewardsReceivers(p.WeightedDeveloperRewardsReceivers)
+	err := validateWeightedContributorRewardsReceivers(p.WeightedContributorRewardsReceivers)
 	return err
 }
 
@@ -57,7 +57,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDistributionProportions, &p.DistributionProportions, validateDistributionProportions),
 		paramtypes.NewParamSetPair(
-			KeyDeveloperRewardsReceiver, &p.WeightedDeveloperRewardsReceivers, validateWeightedDeveloperRewardsReceivers),
+			KeyContributorRewardsReceiver, &p.WeightedContributorRewardsReceivers, validateWeightedContributorRewardsReceivers),
 	}
 }
 
@@ -80,7 +80,7 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("staking distribution ratio should not be negative")
 	}
 
-	if v.DeveloperRewards.IsNegative() {
+	if v.ContributorRewards.IsNegative() {
 		return errors.New("developer rewards distribution ratio should not be negative")
 	}
 
@@ -88,7 +88,7 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("community pool distribution ratio should not be negative")
 	}
 
-	totalProportions := v.TrustlessContractIncentives.Add(v.DeveloperRewards) //.Add(v.ItemIncentives)
+	totalProportions := v.TrustlessContractIncentives.Add(v.ContributorRewards) //.Add(v.ItemIncentives)
 
 	// at least 60% is allocated to incentives
 
@@ -99,7 +99,7 @@ func validateDistributionProportions(i interface{}) error {
 	return nil
 }
 
-func validateWeightedDeveloperRewardsReceivers(i interface{}) error {
+func validateWeightedContributorRewardsReceivers(i interface{}) error {
 	v, ok := i.([]WeightedAddress)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

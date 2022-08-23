@@ -78,36 +78,37 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}*/
+
 	k.Logger(ctx).Debug("funded trustless contracts", "amount", contrIncentiveCoins.String(), "from", blockInflationAddr)
 
 	//staking incentives stay in the fee collector account and are to be moved to on next begin blocker
 	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.Staking))
 
-	devRewardCoin := k.GetProportions(ctx, blockInflation, proportions.DeveloperRewards)
-	devRewardCoins := sdk.NewCoins(devRewardCoin)
+	rewardCoin := k.GetProportions(ctx, blockInflation, proportions.ContributorRewards)
+	rewardCoins := sdk.NewCoins(rewardCoin)
 
-	for _, w := range params.WeightedDeveloperRewardsReceivers {
-		devRewardPortionCoins := sdk.NewCoins(k.GetProportions(ctx, devRewardCoin, w.Weight))
+	for _, w := range params.WeightedContributorRewardsReceivers {
+		rewardPortionCoins := sdk.NewCoins(k.GetProportions(ctx, rewardCoin, w.Weight))
 		if w.Address == "" {
-			err := k.distrKeeper.FundCommunityPool(ctx, devRewardPortionCoins, blockInflationAddr)
+			err := k.distrKeeper.FundCommunityPool(ctx, rewardPortionCoins, blockInflationAddr)
 			if err != nil {
 				return err
 			}
 		} else {
-			devRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
+			contributorRewardsAddr, err := sdk.AccAddressFromBech32(w.Address)
 			if err != nil {
 				return err
 			}
-			err = k.bankKeeper.SendCoins(ctx, blockInflationAddr, devRewardsAddr, devRewardPortionCoins)
+			err = k.bankKeeper.SendCoins(ctx, blockInflationAddr, contributorRewardsAddr, rewardPortionCoins)
 			if err != nil {
 				return err
 			}
-			k.Logger(ctx).Debug("sent coins to developer", "amount", devRewardPortionCoins.String(), "from", blockInflationAddr)
+			k.Logger(ctx).Debug("sent coins to contributor", "amount", rewardPortionCoins.String(), "from", blockInflationAddr)
 		}
 	}
 
 	// subtract from original provision to ensure no coins left over after the allocations
-	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins). /*.Sub(itemIncentiveCoins)*/ Sub(contrIncentiveCoins).Sub(devRewardCoins)
+	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins). /*.Sub(itemIncentiveCoins)*/ Sub(contrIncentiveCoins).Sub(rewardCoins)
 
 	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, blockInflationAddr)
 	if err != nil {

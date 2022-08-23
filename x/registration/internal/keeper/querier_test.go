@@ -29,7 +29,7 @@ func TestNewQuerier(t *testing.T) {
 
 	querier := NewLegacyQuerier(keeper) // TODO: Should test NewQuerier() as well
 
-	cert, err := os.ReadFile("../../testdata/attestation_cert_sw")
+	cert, err := ioutil.ReadFile("../../testdata/attestation_cert_sw")
 	require.NoError(t, err)
 
 	regInfo := types.RegistrationNodeInfo{
@@ -62,7 +62,7 @@ func TestNewQuerier(t *testing.T) {
 		"query malformed node id": {
 			[]string{QueryEncryptedSeed, nodeIdInvalid},
 			abci.RequestQuery{Data: []byte("")},
-			types.ErrInvalidType,
+			sdkErrors.ErrInvalidAddress,
 			"",
 		},
 		"query invalid node id": {
@@ -91,7 +91,7 @@ func TestNewQuerier(t *testing.T) {
 			require.True(t, spec.expErr.Is(err), err)
 
 			if spec.result != "" {
-				require.Equal(t, string(binResult), spec.result)
+				require.Equal(t, spec.result, string(binResult))
 			}
 		})
 	}
