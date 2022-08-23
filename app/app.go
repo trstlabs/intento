@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -664,8 +663,8 @@ func (app *App) LoadHeight(height int64) error {
 func (app *App) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
-		fmt.Print("Module: \n", acc)
-		fmt.Printf("Module addr: %s \n", authtypes.NewModuleAddress(acc).String())
+		//fmt.Print("Module: \n", acc)
+		//fmt.Printf("Module addr: %s \n", authtypes.NewModuleAddress(acc).String())
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
 

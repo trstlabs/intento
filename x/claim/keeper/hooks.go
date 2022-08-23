@@ -10,24 +10,24 @@ import (
 	"github.com/trstlabs/trst/x/claim/types"
 )
 
-func (k Keeper) AfterAutoSwap(ctx sdk.Context, sender sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionAutoSwap)
+func (k Keeper) AfterAutoSwap(ctx sdk.Context, recipient sdk.AccAddress) {
+	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionAutoSwap)
 	if err != nil {
 		fmt.Printf("error claiming tokens: %v \n", err)
 		//panic(err.Error())
 	}
 }
 
-func (k Keeper) AfterRecurringSend(ctx sdk.Context, sender sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionRecurringSend)
+func (k Keeper) AfterRecurringSend(ctx sdk.Context, recipient sdk.AccAddress) {
+	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionRecurringSend)
 	if err != nil {
 		fmt.Printf("error claiming tokens: %v \n", err)
 		//panic(err.Error())
 	}
 }
 
-func (k Keeper) AfterGovernanceVoted(ctx sdk.Context, sender sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, sender, types.ActionGovernanceVote)
+func (k Keeper) AfterGovernanceVoted(ctx sdk.Context, recipient sdk.AccAddress) {
+	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionGovernanceVote)
 	if err != nil {
 		fmt.Printf("error claiming tokens: %v \n", err)
 		//panic(err.Error())
@@ -96,11 +96,11 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {}
 
 // Compute hooks
-func (h Hooks) AfterAutoSwap(ctx sdk.Context, senderAddr sdk.AccAddress) {
-	h.k.AfterAutoSwap(ctx, senderAddr)
+func (h Hooks) AfterAutoSwap(ctx sdk.Context, recipientAddr sdk.AccAddress) {
+	h.k.AfterAutoSwap(ctx, recipientAddr)
 }
-func (h Hooks) AfterRecurringSend(ctx sdk.Context, senderAddr sdk.AccAddress) {
-	h.k.AfterRecurringSend(ctx, senderAddr)
+func (h Hooks) AfterRecurringSend(ctx sdk.Context, recipientAddr sdk.AccAddress) {
+	h.k.AfterRecurringSend(ctx, recipientAddr)
 }
 
 // ________________________________________________________________________________________
@@ -119,11 +119,11 @@ func (k Keeper) AfterItemTokenized(ctx sdk.Context, creator sdk.AccAddress) {
 /*
 // item hooks
 
-func (h Hooks) AfterItemTokenized(ctx sdk.Context, senderAddr sdk.AccAddress) {
-	//h.k.AfterItemTokenized(ctx, senderAddr)
+func (h Hooks) AfterItemTokenized(ctx sdk.Context, recipientAddr sdk.AccAddress) {
+	//h.k.AfterItemTokenized(ctx, recipientAddr)
 }
-func (h Hooks) AfterItemBought(ctx sdk.Context, senderAddr sdk.AccAddress) {
-	//h.k.AfterItemBought(ctx, senderAddr)
+func (h Hooks) AfterItemBought(ctx sdk.Context, recipientAddr sdk.AccAddress) {
+	//h.k.AfterItemBought(ctx, recipientAddr)
 }
 //func (h Hooks) AfterItemEstimated(ctx sdk.Context, proposalID uint64) {}
 */
