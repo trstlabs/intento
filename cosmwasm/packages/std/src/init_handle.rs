@@ -94,7 +94,7 @@ pub enum WasmMsg {
         /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         code_hash: String,
-        /// msg is the json-encoded HandleMsg struct (as raw Binary)
+        /// msg is the json-encoded ExecuteMsg struct (as raw Binary)
         msg: Binary,
         send: Vec<Coin>,
     },

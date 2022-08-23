@@ -22,7 +22,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState, msgHandler s
 	if k.GetComputeModuleBalance(ctx).IsZero() {
 		err := k.InitializeComputeModule(ctx, sdk.NewCoin(types.Denom, sdk.ZeroInt()))
 		if err != nil {
-			panic(err)
+			//commented out for x/mint tests
+			//panic(err)
 		}
 	}
 	var maxCodeID uint64

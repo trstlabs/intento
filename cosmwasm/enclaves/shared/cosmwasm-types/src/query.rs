@@ -160,6 +160,11 @@ pub enum StakingQuery {
     },
     /// Returns all registered Validators on the system
     Validators {},
+     /// The query response type is `ValidatorResponse`.
+    Validator {
+        /// The validator's address (e.g. (e.g. cosmosvaloper1...))
+        address: String,
+    },
     /// Returns all the unbonding delegations by the delegator
     UnbondingDelegations { delegator: String },
 }

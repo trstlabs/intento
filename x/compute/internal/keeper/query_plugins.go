@@ -275,6 +275,23 @@ func StakingQuerier(keeper stakingkeeper.Keeper, distKeeper distrkeeper.Keeper) 
 			}
 			return json.Marshal(res)
 		}
+		if request.Validator != nil {
+			valAddr, err := sdk.ValAddressFromBech32(request.Validator.Address)
+			if err != nil {
+				return nil, err
+			}
+			v, found := keeper.GetValidator(ctx, valAddr)
+			res := wasmTypes.ValidatorResponse{}
+			if found {
+				res.Validator = &wasmTypes.Validator{
+					Address:       v.OperatorAddress,
+					Commission:    v.Commission.Rate.String(),
+					MaxCommission: v.Commission.MaxRate.String(),
+					MaxChangeRate: v.Commission.MaxChangeRate.String(),
+				}
+			}
+			return json.Marshal(res)
+		}
 		if request.Validators != nil {
 			validators := keeper.GetBondedValidatorsByPower(ctx)
 			//validators := keeper.GetAllValidators(ctx)

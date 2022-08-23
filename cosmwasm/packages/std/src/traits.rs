@@ -13,7 +13,7 @@ use crate::query::{
 };
 #[cfg(feature = "staking")]
 use crate::query::{
-    AllDelegationsResponse, AllValidatorsResponse, BondedDenomResponse, Delegation,
+    AllDelegationsResponse, ValidatorsResponse, BondedDenomResponse, Delegation,
     DelegationResponse, FullDelegation, StakingQuery, Validator, ValidatorResponse,
 };
 use crate::results::{ContractResult, Empty, SystemResult};
@@ -329,8 +329,8 @@ impl<'a, C: CustomQuery> QuerierWrapper<'a, C> {
 
     #[cfg(feature = "staking")]
     pub fn query_all_validators(&self) -> StdResult<Vec<Validator>> {
-        let request = StakingQuery::AllValidators {}.into();
-        let res: AllValidatorsResponse = self.query(&request)?;
+        let request = StakingQuery::Validators {}.into();
+        let res: ValidatorsResponse = self.query(&request)?;
         Ok(res.validators)
     }
 

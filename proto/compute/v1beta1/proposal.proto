@@ -27,7 +27,7 @@ message StoreCodeProposal {
   string contract_description = 6;
   // default_duration is the default duration of the contract, optional
   string default_duration = 7;
-    // default_interval is the default self-execution interval of the contract, optional
+  // default_interval is the default self-execution interval of the contract, optional
   string default_interval = 8;
 }
 

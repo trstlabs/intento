@@ -21,8 +21,8 @@ pub enum StakingQuery {
     },
     /// Returns all validators in the currently active validator set.
     ///
-    /// The query response type is `AllValidatorsResponse`.
-    AllValidators {},
+    /// The query response type is `ValidatorsResponse`.
+    Validators {},
     /// Returns the validator at the given address. Returns None if the validator is
     /// not part of the currently active validator set.
     ///
@@ -95,9 +95,9 @@ pub struct FullDelegation {
     pub accumulated_rewards: Vec<Coin>,
 }
 
-/// The data format returned from StakingRequest::AllValidators query
+/// The data format returned from StakingRequest::Validators query
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct AllValidatorsResponse {
+pub struct ValidatorsResponse {
     pub validators: Vec<Validator>,
 }
 

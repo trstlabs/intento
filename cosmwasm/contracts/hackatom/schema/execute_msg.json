@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ExecuteMsg",
-  "anyOf": [
+  "oneOf": [
     {
       "description": "Releasing all funds in the contract to the beneficiary. This is the only \"proper\" action of this demo contract.",
       "type": "object",
@@ -11,6 +11,37 @@
       "properties": {
         "release": {
           "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Hashes some data. Uses CPU and memory, but no external calls.",
+      "type": "object",
+      "required": [
+        "argon2"
+      ],
+      "properties": {
+        "argon2": {
+          "type": "object",
+          "required": [
+            "mem_cost",
+            "time_cost"
+          ],
+          "properties": {
+            "mem_cost": {
+              "description": "The amount of memory requested (KB).",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "time_cost": {
+              "description": "The number of passes.",
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            }
+          }
         }
       },
       "additionalProperties": false
@@ -49,6 +80,19 @@
       ],
       "properties": {
         "memory_loop": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "description": "Infinite loop sending message to itself",
+      "type": "object",
+      "required": [
+        "message_loop"
+      ],
+      "properties": {
+        "message_loop": {
           "type": "object"
         }
       },

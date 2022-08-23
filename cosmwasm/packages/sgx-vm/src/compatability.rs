@@ -10,6 +10,7 @@ use crate::features::required_features_from_module;
 /// Lists all v1 imports we provide upon instantiating the instance in Instance::from_module()
 /// This should be updated when new imports are added
 const SUPPORTED_IMPORTS: &[&str] = &[
+    "env.abort",
     "env.db_read",
     "env.db_write",
     "env.db_remove",

@@ -282,10 +282,10 @@ func MainnetGenesisParams() GenesisParams {
 		CommunityPool:               sdk.MustNewDecFromStr("0.25"), // 5%
 		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.10"), // 45%
 		//ItemIncentives:              sdk.MustNewDecFromStr("0.05"), // 45%
-		DeveloperRewards: sdk.MustNewDecFromStr("0.05"), // 25%
+		ContributorRewards: sdk.MustNewDecFromStr("0.05"), // 25%
 
 	}
-	genParams.AllocParams.WeightedDeveloperRewardsReceivers = []alloctypes.WeightedAddress{
+	genParams.AllocParams.WeightedContributorRewardsReceivers = []alloctypes.WeightedAddress{
 		{
 			Address: "trust1sns5l9cvkgf4fy770nmg98e7uzet5xhhmv8njv",
 			Weight:  sdk.NewDecWithPrec(100, 2),
@@ -295,7 +295,7 @@ func MainnetGenesisParams() GenesisParams {
 	// mint
 	genParams.MintParams = minttypes.DefaultParams()
 	genParams.MintParams.MintDenom = appParams.BaseCoinUnit
-	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(1, 0, 0)
+	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(0, 6, 0)
 	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(250_000_000_000_000)
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3)
 	genParams.MintParams.BlocksPerYear = uint64(5737588)
@@ -375,7 +375,7 @@ func TestnetGenesisParams() GenesisParams {
 
 	// genParams.GenesisTime = time.Now()
 	genParams.GenesisTime = time.Now()
-
+	genParams.MintParams.StartTime = time.Now()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 3 // 3 days
 
 	//gov

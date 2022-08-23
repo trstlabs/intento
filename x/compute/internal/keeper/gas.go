@@ -26,6 +26,7 @@ func gasForContract(ctx sdk.Context) uint64 {
 func consumeGas(ctx sdk.Context, gas uint64) {
 	consumed := (gas / types.GasMultiplier) + 1
 	ctx.GasMeter().ConsumeGas(consumed, "wasm contract")
+	fmt.Printf("consumeGas: %v \n", gas)
 	// throw OutOfGas error if we ran out (got exactly to zero due to better limit enforcing)
 	if ctx.GasMeter().IsOutOfGas() {
 		fmt.Printf("Out of Gas \n")

@@ -22,6 +22,7 @@ use crate::errors::{RecoverPubkeyError, SigningError, VerificationError};
 /// - Add enum case
 /// - Add creator function in std_error_helpers.rs
 #[derive(Error, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum StdError {
     #[error("Verification error: {source}")]
     VerificationErr {

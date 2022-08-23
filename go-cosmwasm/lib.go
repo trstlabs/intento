@@ -130,15 +130,16 @@ func (w *Wasmer) Instantiate(
 		return nil, nil, nil, gasUsed, err
 	}
 	//fmt.Printf("Init Result Ok Data: %+v\n", result.Ok.Data)
-	result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
-	//fmt.Printf("Init Result %+v\n", result)
-
-	if err != nil {
-		return nil, nil, nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+	if result.InternalReplyEnclaveSig != nil {
+		result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
+		if err != nil {
+			return nil, nil, nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+		}
 	}
+	fmt.Printf("Init Result %+v\n", result)
 
-	if result.Err != "" {
-		return nil, nil, nil, gasUsed, fmt.Errorf("%s", result.Err)
+	if result.Err != nil {
+		return nil, nil, nil, gasUsed, fmt.Errorf("%s", result.Err.Error())
 	}
 	return result.Ok, key, callbackSig, gasUsed, nil
 }
@@ -171,7 +172,9 @@ func (w *Wasmer) Execute(
 	}
 
 	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
-
+	fmt.Printf("data: %+v", data)
+	fmt.Printf("err: %+v", err)
+	fmt.Printf("gasUsed: %+v", gasUsed)
 	if err != nil {
 		return nil, gasUsed, err
 	}
@@ -181,13 +184,16 @@ func (w *Wasmer) Execute(
 	if err != nil {
 		return nil, gasUsed, err
 	}
-	if result.Err != "" {
-		return nil, gasUsed, fmt.Errorf("%s", result.Err)
+	fmt.Printf("resullt: %+v", result)
+	if result.Err != nil {
+		return nil, gasUsed, fmt.Errorf("%s", result.Err.Error())
 	}
-	//fmt.Printf("Execute Result Data %+v\n", result.Ok.Data)
-	result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
-	if err != nil {
-		return nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+	if result.InternalReplyEnclaveSig != nil {
+		result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
+
+		if err != nil {
+			return nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+		}
 	}
 	return result.Ok, gasUsed, nil
 }

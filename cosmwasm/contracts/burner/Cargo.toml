@@ -2,8 +2,9 @@
 name = "burner"
 version = "0.0.0"
 authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
-edition = "2018"
+edition = "2021"
 publish = false
+license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -31,10 +32,12 @@ cranelift = ["cosmwasm-vm/cranelift"]
 backtraces = ["cosmwasm-std/backtraces", "cosmwasm-vm/backtraces"]
 
 [dependencies]
-cosmwasm-std = { package = "trustless-cosmwasm-std", version = "1.0.0", features = ["iterator"] }
+cosmwasm-std = { path="../../packages/std",  package = "trustless-cosmwasm-std", version = "1.0.0" }
 schemars = "0.8.1"
 serde = { version = "1.0.139", default-features = false, features = ["derive"] }
 
 [dev-dependencies]
-cosmwasm-vm = { path = "../../packages/vm", default-features = false, features = ["iterator"] }
+cosmwasm-vm = { path = "../../packages/sgx-vm", package="cosmwasm-sgx-vm",  default-features = false, features = ["iterator"] }
 cosmwasm-schema = { path = "../../packages/schema" }
+
+

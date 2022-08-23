@@ -250,7 +250,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 	}
 
 	wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
-	msg := types.TrustlessMsg{}
+	msg := types.ContractMsg{}
 
 	var encryptedMsg []byte
 	genOnly, err := initFlags.GetBool(flags.FlagGenerateOnly)
@@ -295,7 +295,7 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 	var autoMsgEncrypted []byte
 	autoMsgEncrypted = nil
 	if autoMsgString != "" {
-		autoMsg := types.TrustlessMsg{}
+		autoMsg := types.ContractMsg{}
 
 		autoMsg.Msg = []byte(autoMsgString)
 		autoMsg.CodeHash = msg.CodeHash
@@ -419,7 +419,7 @@ func CmdExecuteContract() *cobra.Command {
 
 func parseExecuteArgs(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []byte, amount string, genOnly bool, ioMasterKeyPath string, codeHash string, cliCtx client.Context) (types.MsgExecuteContract, error) {
 	wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
-	execMsg := types.TrustlessMsg{}
+	execMsg := types.ContractMsg{}
 
 	execMsg.Msg = msg
 

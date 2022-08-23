@@ -3,12 +3,12 @@ use std::convert::TryFrom;
 
 /// A Key-Value pair, returned from our iterators
 pub type Record<V = Vec<u8>> = (Vec<u8>, V);
-
+/*
 /// KV is a Key-Value pair, returned from our iterators
 #[deprecated(since = "0.14.0", note = "Renamed to Record")]
 #[allow(clippy::upper_case_acronyms)]
 pub type KV<V = Vec<u8>> = Record<V>;
-
+*/
 #[derive(Copy, Clone)]
 // We assign these to integers to provide a stable API for passing over FFI (to wasm and Go)
 pub enum Order {

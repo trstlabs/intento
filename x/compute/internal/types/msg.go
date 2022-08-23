@@ -109,6 +109,7 @@ func (msg MsgInstantiateContract) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
+/*
 func validateContractId(contractId string) error {
 	if contractId == "" {
 		return sdkerrors.Wrap(ErrEmpty, "is required")
@@ -117,7 +118,7 @@ func validateContractId(contractId string) error {
 		return sdkerrors.Wrap(ErrLimit, "cannot be longer than 128 characters")
 	}
 	return nil
-}
+}*/
 
 func (msg MsgExecuteContract) Route() string {
 	return RouterKey

@@ -60,7 +60,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 
 		isRecurring := contract.ContractInfo.ExecTime.Before(contract.ContractInfo.EndTime)
 		//deducts execution fees and distributes SDK-native coins from contract balance
-		err := k.DistributeCoins(ctx, contract.Address, gasUsed, isRecurring)
+		err := k.DistributeCoins(ctx, contract, gasUsed, isRecurring)
 		if err != nil {
 			//fmt.Printf("couldnt deduct fee %s\n", err)
 			logger.Info(

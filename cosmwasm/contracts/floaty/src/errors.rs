@@ -7,6 +7,6 @@ pub enum HackError {
     /// this is needed so we can use `bucket.load(...)?` and have it auto-converted to the custom error
     Std(#[from] StdError),
     // this is whatever we want
-    #[error("Unauthorized")]
+    #[error("unauthorized")]
     Unauthorized {},
 }

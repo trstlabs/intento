@@ -1,7 +1,7 @@
 use cosmwasm_std::{
     coin, entry_point, to_binary, BankMsg, Decimal, Deps, DepsMut, DistributionMsg, Env,
     MessageInfo, QuerierWrapper, QueryResponse, Response, StakingMsg, StdError, StdResult, Uint128,
-    WasmMsg,
+    WasmMsg,CosmosMsg
 };
 
 use crate::errors::{StakingError, Unauthorized};
@@ -173,10 +173,10 @@ pub fn bond(deps: DepsMut, env: Env, info: MessageInfo) -> StdResult<Response> {
         .add_attribute("from", info.sender)
         .add_attribute("bonded", payment.amount)
         .add_attribute("minted", to_mint)
-        .add_message(StakingMsg::Delegate {
+        .add_message(CosmosMsg::Staking(StakingMsg::Delegate {
             validator: invest.validator,
             amount: payment.clone(),
-        });
+        }));
     Ok(res)
 }
 
@@ -235,10 +235,10 @@ pub fn unbond(deps: DepsMut, env: Env, info: MessageInfo, amount: Uint128) -> St
         .add_attribute("to", info.sender)
         .add_attribute("unbonded", unbond)
         .add_attribute("burnt", amount)
-        .add_message(StakingMsg::Undelegate {
+        .add_message(CosmosMsg::Staking(StakingMsg::Undelegate {
             validator: invest.validator,
             amount: coin(unbond.u128(), &invest.bond_denom),
-        });
+        }));
     Ok(res)
 }
 
@@ -297,6 +297,7 @@ pub fn reinvest(deps: DepsMut, env: Env, _info: MessageInfo) -> StdResult<Respon
         })
         .add_message(WasmMsg::Execute {
             contract_addr: contract_addr.into(),
+            code_hash: env.contract.code_hash,
             msg,
             funds: vec![],
         });
@@ -338,10 +339,10 @@ pub fn _bond_all_tokens(
     let res = Response::new()
         .add_attribute("action", "reinvest")
         .add_attribute("bonded", balance.amount)
-        .add_message(StakingMsg::Delegate {
+        .add_message(CosmosMsg::Staking(StakingMsg::Delegate {
             validator: invest.validator,
             amount: balance,
-        });
+        }));
     Ok(res)
 }
 
@@ -734,7 +735,7 @@ mod tests {
         assert_eq!(1, res.messages.len());
         let delegate = &res.messages[0].msg;
         match delegate {
-            CosmosMsg::Staking(StakingMsg::Undelegate { validator, amount }) => {
+            CosmosMsg::Staking(StakingMsg::Undelegate { validator, amount })=> {
                 assert_eq!(validator.as_str(), DEFAULT_VALIDATOR);
                 assert_eq!(amount, &coin(bobs_claim.u128(), "ustake"));
             }

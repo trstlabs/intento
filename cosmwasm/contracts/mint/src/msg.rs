@@ -8,7 +8,7 @@ pub struct InitMsg {}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum HandleMsg {
+pub enum ExecuteMsg {
     InflationRate {},
     BondedRatio {},
 }

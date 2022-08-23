@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -201,18 +203,29 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			fmt.Printf("Dispatch msg with no limit gas for %s \n", contractAddr.String())
 			events, data, err = d.messenger.DispatchMsg(subCtx, contractAddr, ibcPort, msg.Msg)
 		}
-		ctx.EventManager().EmitEvents(events)
+		//ctx.EventManager().EmitEvents(events)
+
 		// if it succeeds, commit state changes from submessage, and pass on events to Event Manager
 		var filteredEvents []sdk.Event
 		if err == nil {
 			commit()
 			filteredEvents = filterEvents(append(em.Events(), events...))
 			ctx.EventManager().EmitEvents(filteredEvents)
+
+			if msg.Msg.Wasm == nil {
+				filteredEvents = []sdk.Event{}
+			} else {
+				for _, e := range filteredEvents {
+					attributes := e.Attributes
+					sort.SliceStable(attributes, func(i, j int) bool {
+						return bytes.Compare(attributes[i].Key, attributes[j].Key) < 0
+					})
+				}
+			}
 		} // on failure, revert state from sandbox, and ignore events (just skip doing the above)
 
 		// we only callback if requested. Short-circuit here the cases we don't want to
 		if (msg.ReplyOn == wasmTypes.ReplySuccess || msg.ReplyOn == wasmTypes.ReplyNever) && err != nil {
-			// Note: this also handles the case of v010 submessage for which the execution failed
 			return nil, err
 		}
 
@@ -253,12 +266,6 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			ID:     msg_id,
 			Result: result,
 		}
-		/*fmt.Printf("msg.ReplyOn %+v\n", msg.ReplyOn)
-		fmt.Printf("msg.ID %+v\n", msg.ID)
-		fmt.Printf("Reply %+v \n", reply)
-		fmt.Printf("Reply ID %+v \n", reply.ID)
-		fmt.Printf("Reply result Ok %+v \n", reply.Result.Ok)*/
-
 		// we can ignore any result returned as there is nothing to do with the data
 		// and the events are already in the ctx.EventManager()
 
@@ -307,9 +314,9 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			fmt.Printf("Got err for SubMsg for %v \n", err.Error())
 			return nil, err
 		case rspData != nil:
-			//fmt.Printf("Got response for SubMsg for %v \n", rspData)
 			rsp = rspData
 		}
 	}
+
 	return rsp, nil
 }

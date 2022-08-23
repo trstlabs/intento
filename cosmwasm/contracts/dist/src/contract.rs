@@ -1,38 +1,42 @@
 use cosmwasm_std::{
-    log, to_binary, Api, Binary, Coin, CosmosMsg, DistQuery, Env, Extern, GovQuery, HandleResponse,
-    HumanAddr, InitResponse, InitResult, Querier, RewardsResponse, StdResult, Storage, VoteOption,
+    entry_point, log, to_binary, Api, Binary, Coin, CosmosMsg, Env, Response,
+    HumanAddr, DepsMut, MessageInfo, StdError, Querier, StdResult, Storage, VoteOption,
 };
 
-use crate::msg::{HandleMsg, InitMsg};
+use crate::msg::{ExecuteMsg, InstantiateMsg};
 
-pub fn init<S: Storage, A: Api, Q: Querier>(
-    _deps: &mut Extern<S, A, Q>,
+#[entry_point]
+pub fn instantiate(
+    deps: DepsMut,
     _env: Env,
-    _msg: InitMsg,
-) -> InitResult {
-    Ok(InitResponse::default())
+    _info: MessageInfo,
+    msg: InstantiateMsg,
+) -> StdResult<Response> {
+    Ok(Response::default())
 }
 
-pub fn handle<S: Storage, A: Api, Q: Querier>(
-    deps: &mut Extern<S, A, Q>,
+#[entry_point]
+pub fn execute(
+    deps: DepsMut,
     env: Env,
-    msg: HandleMsg,
-) -> StdResult<HandleResponse> {
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response,StdError> {
     match msg {
-        HandleMsg::Rewards { address } => try_query_rewards(deps, env, address),
+        ExecuteMsg::Rewards { address } => execute_query_rewards(deps, env, address),
     }
 }
 
-pub fn try_query_rewards<S: Storage, A: Api, Q: Querier>(
-    deps: &mut Extern<S, A, Q>,
+pub fn execute_query_rewards(
+    deps: DepsMut,
     env: Env,
-    address: HumanAddr,
-) -> StdResult<HandleResponse> {
+    address: String,
+) -> StdResult<Response> {
     let query = DistQuery::Rewards {
         delegator: address.clone(),
     };
 
-    let mut query_rewards: RewardsResponse =
+    let mut query_rewards =
         deps.querier
             .query(&query.into())
             .unwrap_or_else(|_| RewardsResponse {
@@ -50,9 +54,6 @@ pub fn try_query_rewards<S: Storage, A: Api, Q: Querier>(
         .amount
         .0 as u64;
 
-    Ok(HandleResponse {
-        messages: vec![],
-        log: vec![],
-        data: Some(Binary::from(active_proposal.to_be_bytes().to_vec())),
-    })
+    Ok(Response.new().set_data(Binary::from(active_proposal.to_be_bytes().to_vec())))
+    
 }

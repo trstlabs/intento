@@ -229,7 +229,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		return nil, nil, err
 	}
 
-	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, *res, res.Messages, res.Events, res.Data, msg, verificationInfo)
+	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -298,25 +298,25 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 
 	gas := gasForContract(ctx)
 	res, gasUsed, err := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, wasmTypes.HandleTypeExecute)
-	//fmt.Printf("res: %v \n", res)
+	consumeGas(ctx, gasUsed)
+
 	if err != nil {
 		fmt.Printf("err: %v \n", err.Error())
 		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
-	consumeGas(ctx, gasUsed)
+	fmt.Printf("gasUsed: %v \n", gasUsed)
 
-	// emit all events from this contract itself
-	ctx.EventManager().EmitEvent(sdk.NewEvent(
-		types.EventTypeExecute,
-		sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String()),
-	))
-
-	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, *res, res.Messages, res.Events, res.Data, msg, verificationInfo)
+	err = k.SetContractPublicState(ctx, contractAddress, res.Attributes)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.SetContractPublicState(ctx, contractAddress, res.Attributes)
+	/*ctx.EventManager().EmitEvent(sdk.NewEvent(
+		types.EventTypeExecute,
+		sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String()),
+	))*/
+
+	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,7 @@ func (k Keeper) GetSignerInfo(ctx sdk.Context, signer sdk.AccAddress) ([]byte, s
 	}
 
 	// for MsgInstantiateContract, there is only one signer which is msg.Sender
-	// (https://github.com/enigmampc/SecretNetwork/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L192-L194)
+	// (https://github.com/trstlabs/trst/blob/d7813792fa07b93a10f0885eaa4c5e0a0a698854/x/compute/internal/types/msg.go#L192-L194)
 	signerAcc, err := ante.GetSignerAcc(ctx, k.accountKeeper, signer)
 	if err != nil {
 
@@ -474,7 +474,7 @@ func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAd
 	consumeGas(ctx, gasUsed)
 	//fmt.Printf("Query queryResult %+v \n", queryResult)
 	if qErr != nil {
-		fmt.Printf("Query err %s \n", err.Error())
+
 		return nil, sdkerrors.Wrap(types.ErrQueryFailed, qErr.Error())
 	}
 	return queryResult, nil

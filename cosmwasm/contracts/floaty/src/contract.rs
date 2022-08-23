@@ -93,7 +93,13 @@ fn query_other_balance(deps: Deps, address: String) -> StdResult<AllBalanceRespo
     Ok(AllBalanceResponse { amount })
 }
 
-fn query_recurse(deps: Deps, depth: u32, work: u32, contract: Addr) -> StdResult<RecurseResponse> {
+fn query_recurse(
+    deps: Deps,
+    depth: u32,
+    work: u32,
+    contract: Addr,
+    code_hash: String,
+) -> StdResult<RecurseResponse> {
     // perform all hashes as requested
     let mut hashed: Vec<u8> = contract.as_str().into();
     for _ in 0..work {
@@ -113,6 +119,7 @@ fn query_recurse(deps: Deps, depth: u32, work: u32, contract: Addr) -> StdResult
         };
         let query = QueryRequest::Wasm(WasmQuery::Smart {
             contract_addr: contract.into(),
+            code_hash,
             msg: to_binary(&req)?,
         });
         deps.querier.query(&query)
@@ -131,7 +138,7 @@ mod tests {
 
     #[test]
     fn proper_initialization() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         let verifier = String::from("verifies");
         let beneficiary = String::from("benefits");
@@ -161,7 +168,7 @@ mod tests {
 
     #[test]
     fn instantiate_and_query() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         let verifier = String::from("verifies");
         let beneficiary = String::from("benefits");
@@ -196,7 +203,7 @@ mod tests {
 
     #[test]
     fn execute_release_works() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         // initialize the store
         let creator = String::from("creator");
@@ -246,7 +253,7 @@ mod tests {
 
     #[test]
     fn execute_release_fails_for_wrong_sender() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         // initialize the store
         let creator = String::from("creator");
@@ -293,7 +300,7 @@ mod tests {
         // the test framework doesn't handle contracts querying contracts yet,
         // let's just make sure the last step looks right
 
-        let deps = mock_dependencies(&[]);
+        let deps = mock_dependencies();
         let contract = Addr::unchecked("my-contract");
         let bin_contract: &[u8] = b"my-contract";
 

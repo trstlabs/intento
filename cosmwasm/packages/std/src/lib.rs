@@ -52,7 +52,7 @@ pub use crate::query::{
 };
 #[cfg(feature = "staking")]
 pub use crate::query::{
-    AllDelegationsResponse, AllValidatorsResponse, BondedDenomResponse, Delegation,
+    AllDelegationsResponse, ValidatorsResponse, BondedDenomResponse, Delegation,
     DelegationResponse, FullDelegation, StakingQuery, Validator, ValidatorResponse,
 };
 #[cfg(feature = "stargate")]

@@ -262,7 +262,7 @@ pub enum StdCosmWasmMsg {
     Execute {
         sender: HumanAddr,
         contract: HumanAddr,
-        /// msg is the json-encoded HandleMsg struct (as raw Binary)
+        /// msg is the json-encoded ExecuteMsg struct (as raw Binary)
         msg: String,
         funds: Vec<Coin>,
         callback_sig: Option<Vec<u8>>,

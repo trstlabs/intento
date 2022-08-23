@@ -36,9 +36,13 @@ func (k Keeper) GetContractHash(ctx sdk.Context, contractAddress sdk.AccAddress)
 
 	info := k.GetContractInfo(ctx, contractAddress)
 
-	hash := k.GetCodeInfo(ctx, info.CodeID).CodeHash
+	var hash []byte
+	if info != nil {
+		hash = k.GetCodeInfo(ctx, info.CodeID).CodeHash
 
+	}
 	return hash
+
 }
 
 //GetContractInfo

@@ -3,7 +3,7 @@ use cosmwasm_std::{
     StdResult, Storage,
 };
 
-use crate::msg::{HandleMsg, InitMsg, QueryMsg};
+use crate::msg::{ExecuteMsg, InitMsg, QueryMsg};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
@@ -16,7 +16,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
 pub fn handle<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
     _env: Env,
-    _msg: HandleMsg,
+    _msg: ExecuteMsg,
 ) -> StdResult<HandleResponse> {
     let response = HandleResponse {
         messages: vec![],

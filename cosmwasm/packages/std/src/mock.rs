@@ -22,7 +22,7 @@ use crate::query::{
 };
 #[cfg(feature = "staking")]
 use crate::query::{
-    AllDelegationsResponse, AllValidatorsResponse, BondedDenomResponse, DelegationResponse,
+    AllDelegationsResponse, ValidatorsResponse, BondedDenomResponse, DelegationResponse,
     FullDelegation, StakingQuery, Validator, ValidatorResponse,
 };
 use crate::results::{ContractResult, Empty, SystemResult};
@@ -644,8 +644,8 @@ impl StakingQuerier {
                 };
                 to_binary(&res).into()
             }
-            StakingQuery::AllValidators {} => {
-                let res = AllValidatorsResponse {
+            StakingQuery::Validators {} => {
+                let res = ValidatorsResponse {
                     validators: self.validators.clone(),
                 };
                 to_binary(&res).into()
@@ -1166,10 +1166,10 @@ mod tests {
 
         // one match
         let raw = staking
-            .query(&StakingQuery::AllValidators {})
+            .query(&StakingQuery::Validators {})
             .unwrap()
             .unwrap();
-        let vals: AllValidatorsResponse = from_binary(&raw).unwrap();
+        let vals: ValidatorsResponse = from_binary(&raw).unwrap();
         assert_eq!(vals.validators, vec![val1, val2]);
     }
 
@@ -1348,9 +1348,9 @@ mod tests {
         let any_addr = "foo".to_string();
         let any_code_hash = "goo".to_string();
 
-        // Query WasmQuery::Smart
+        // Query WasmQuery::Private
         let system_err = querier
-            .query(&WasmQuery::Smart {
+            .query(&WasmQuery::Private {
                 contract_addr: any_addr.clone(),
                 code_hash: any_code_hash.clone(),
                 msg: b"{}".into(),
@@ -1378,7 +1378,7 @@ mod tests {
             storage1.insert(b"the key".into(), b"the value".into());
 
             match request {
-                WasmQuery::Smart {
+                WasmQuery::Private {
                     contract_addr, msg, ..
                 } => {
                     if *contract_addr == constract1 {
@@ -1416,8 +1416,8 @@ mod tests {
             }
         });
 
-        // WasmQuery::Smart
-        let result = querier.query(&WasmQuery::Smart {
+        // WasmQuery::Private
+        let result = querier.query(&WasmQuery::Private {
             contract_addr: "contract1".into(),
             code_hash: "code_hash1".into(),
             msg: b"{}".into(),
@@ -1429,7 +1429,7 @@ mod tests {
             ),
             res => panic!("Unexpected result: {:?}", res),
         }
-        let result = querier.query(&WasmQuery::Smart {
+        let result = querier.query(&WasmQuery::Private {
             contract_addr: "contract1".into(),
             code_hash: "code_hash1".into(),
             msg: b"a broken request".into(),

@@ -4,7 +4,7 @@ use cosmwasm_std::{
     StdResult, Storage, VoteOption,
 };
 
-use crate::msg::{HandleMsg, InitMsg};
+use crate::msg::{ExecuteMsg, InitMsg};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
@@ -17,11 +17,11 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
 pub fn handle<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-    msg: HandleMsg,
+    msg: ExecuteMsg,
 ) -> StdResult<HandleResponse> {
     match msg {
-        HandleMsg::InflationRate {} => try_inflation_rate(deps, env),
-        HandleMsg::BondedRatio {} => try_bonded_ratio(deps, env),
+        ExecuteMsg::InflationRate {} => try_inflation_rate(deps, env),
+        ExecuteMsg::BondedRatio {} => try_bonded_ratio(deps, env),
     }
 }
 

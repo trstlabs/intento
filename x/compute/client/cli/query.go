@@ -114,7 +114,7 @@ func GetCmdQueryContractID() *cobra.Command {
 				return fmt.Errorf("error unwrapping address: %s", err)
 			}
 			fmt.Printf("ContractId exists")
-			fmt.Printf("Label is in use by contract address: %s\n", addr.String())
+			fmt.Printf("ContractId is in use by contract address: %s\n", addr.String())
 			return nil
 		},
 	}
@@ -591,7 +591,7 @@ func QueryWithData(contractAddress string, queryData []byte, cliCtx client.Conte
 	}
 
 	//codeHash := hex.EncodeToString(res)
-	msg := types.TrustlessMsg{
+	msg := types.ContractMsg{
 		CodeHash: []byte(hex.EncodeToString(hash)),
 		Msg:      queryData,
 	}

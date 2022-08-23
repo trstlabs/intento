@@ -8,7 +8,7 @@ type WasmConfig struct {
 	CacheSize          uint64 `mapstructure:"lru_size"`
 }
 
-type TrustlessMsg struct {
+type ContractMsg struct {
 	CodeHash []byte
 	Msg      []byte
 }
@@ -78,7 +78,7 @@ func DefaultWasmConfig() WasmConfig {
 	}
 }
 
-func (m TrustlessMsg) Serialize() []byte {
+func (m ContractMsg) Serialize() []byte {
 	return append(m.CodeHash, m.Msg...)
 }
 

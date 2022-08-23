@@ -62,7 +62,7 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 		types.EventTypeExecute,
 		sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String())))
 
-	_, err = k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, *res, res.Messages, res.Events, res.Data, msg, verificationInfo)
+	_, err = k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
 		return 0, err
 	}
@@ -71,15 +71,7 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 }
 
 // DistributeCoins distributes AutoMessage fees and handles remaining contract balance
-func (k Keeper) DistributeCoins(ctx sdk.Context, contractAddress sdk.AccAddress, gas uint64, isRecurring bool) error {
-
-	store := ctx.KVStore(k.storeKey)
-	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
-	if contractBz == nil {
-		return sdkerrors.Wrap(types.ErrNotFound, "contract")
-	}
-	var contract types.ContractInfo
-	k.cdc.MustUnmarshal(contractBz, &contract)
+func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWithAddress, gas uint64, isRecurring bool) error {
 
 	p := k.GetParams(ctx)
 
@@ -88,7 +80,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contractAddress sdk.AccAddress,
 	fmt.Printf("autoMsgFlexFee  %v\n", autoMsgFlexFee)
 	//direct a commission of the utrst contract balance towards the community pool
 
-	contractBalance := k.bankKeeper.GetAllBalances(ctx, contractAddress)
+	contractBalance := k.bankKeeper.GetAllBalances(ctx, contract.Address)
 
 	//depending on the type of self-execution the constant fee may differ (gov param)
 	constantFee := sdk.NewInt(p.AutoMsgConstantFee)
@@ -99,25 +91,27 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contractAddress sdk.AccAddress,
 	percentageAutoMsgFundsCommission := sdk.NewDecWithPrec(p.AutoMsgFundsCommission, 2)
 	amountAutoMsgFundsCommission := percentageAutoMsgFundsCommission.MulInt(contractBalance.AmountOf(types.Denom)).Ceil().TruncateInt()
 	feeCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, constantFee).Add(sdk.NewCoin(types.Denom, amountAutoMsgFundsCommission).Add(autoMsgFlexFee)))
-
 	fmt.Printf("fee coins %v\n", feeCoins)
+
 	//the contract should be funded with the fee. Iif the contract is not able to pay, the contract owner pays next in line
-	err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contractAddress)
+	err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Address)
 	if err != nil {
+		store := ctx.KVStore(k.storeKey)
 		// if a contract instantiated the contract, we do not deduct fees from it and the AutoMsg won't be written to Cache
 		if !store.Has(types.GetContractEnclaveKey(contract.Owner)) {
-			err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.Owner)
+			err := k.distrKeeper.FundCommunityPool(ctx, feeCoins, contract.ContractInfo.Owner)
 			if err != nil {
 				return err
 			}
 		}
 	}
+
 	fmt.Printf("contractBalance %v\n", contractBalance)
 	//pay out the remaining balance to the contract owner after deducting fee, commision and gas cost
 	contractBalance.Sort()
-	toOwnerCoins, positive := contractBalance.SafeSub(feeCoins)
+	toOwnerCoins, positive := contractBalance.SafeSub(feeCoins.Add(feeCoins[0]))
 	if positive {
-		err = k.bankKeeper.SendCoins(ctx, contractAddress, contract.Owner, toOwnerCoins)
+		err = k.bankKeeper.SendCoins(ctx, contract.Address, contract.ContractInfo.Owner, toOwnerCoins)
 		if err != nil {
 			return err
 		}
@@ -131,19 +125,20 @@ func (k Keeper) SetIncentiveCoins(ctx sdk.Context, addressList []string) {
 	params := k.GetParams(ctx)
 
 	total := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress("compute"), types.Denom)
-	k.Logger(ctx).Info("contract incentive", "total", total)
+	k.Logger(ctx).Info("TC reward", "total", total)
 
 	amount := total.Amount.QuoRaw(int64(len(addressList)))
 	if amount.Int64() > params.MaxContractIncentive {
 		amount = sdk.NewInt(params.MaxContractIncentive)
 	}
-	k.Logger(ctx).Info("sent", "amount", amount)
+
+	k.Logger(ctx).Info("TC reward", "amount", amount)
 
 	for _, addr := range addressList {
-		sdkAddr, _ := sdk.AccAddressFromBech32(addr)
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdkAddr, sdk.NewCoins(sdk.NewCoin(types.Denom, amount)))
+		contrAddr, _ := sdk.AccAddressFromBech32(addr)
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, contrAddr, sdk.NewCoins(sdk.NewCoin(types.Denom, amount)))
 		if err != nil {
-			k.Logger(ctx).Info("sending", "err", err)
+			k.Logger(ctx).Info("TC reward", "send_err", err)
 			break
 		}
 

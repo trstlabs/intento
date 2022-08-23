@@ -337,15 +337,15 @@ pub fn verify_ra_cert(
                 return Err(NodeAuthResult::MrEnclaveMismatch);
             }
         }
-        SigningMethod::MRSIGNER => {
-            if report.sgx_quote_body.isv_enclave_report.mr_signer != MRSIGNER {
+     SigningMethod::MRSIGNER => {
+           /*    if report.sgx_quote_body.isv_enclave_report.mr_signer != MRSIGNER {
                 error!("Got a different mrsigner than expected. Invalid certificate");
                 warn!(
                     "received: {:?} \n expected: {:?}",
                     report.sgx_quote_body.isv_enclave_report.mr_signer, MRSIGNER
-                );
-                return Err(NodeAuthResult::MrSignerMismatch);
-            }
+                );*/
+                return Err(NodeAuthResult::MrEnclaveMismatch);
+            //}
         }
         SigningMethod::NONE => {}
     }

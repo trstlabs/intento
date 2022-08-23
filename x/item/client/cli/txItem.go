@@ -71,7 +71,7 @@ func CmdCreateItem() *cobra.Command {
 
 			count := map[string]string{"estimation_count": strconv.FormatInt(argsEstimationCount, 10), "deposit_required": strconv.FormatInt(argsDepositAmount, 10)}
 
-			msg := types.TrustlessMsg{}
+			msg := types.ContractMsg{}
 			msg.Msg, err = json.Marshal(count)
 
 			if err != nil {
@@ -98,7 +98,7 @@ func CmdCreateItem() *cobra.Command {
 				return err
 			}
 
-			autoMsg := types.TrustlessMsg{}
+			autoMsg := types.ContractMsg{}
 			auto := types.ParseAuto{}
 			autoMsg.Msg, err = json.Marshal(auto)
 			if err != nil {
@@ -189,7 +189,7 @@ func CmdRevealEstimation() *cobra.Command {
 
 			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
-			revealMsg := types.TrustlessMsg{}
+			revealMsg := types.ContractMsg{}
 			reveal := types.ParseReveal{}
 
 			//msg.Msg = []byte("{\"estimationcount\": \"3\"}")
@@ -266,7 +266,7 @@ func CmdItemTransferable() *cobra.Command {
 
 			//msgTransfer := map[string]string{"transferable": ""}
 			//msg.Msg = []byte("{\"estimationcount\": \"3\"}")
-			msg := types.TrustlessMsg{}
+			msg := types.ContractMsg{}
 			init := types.ParseTransferable{}
 			msg.Msg, err = json.Marshal(init)
 			//fmt.Printf("json message: %X\n", estimation)

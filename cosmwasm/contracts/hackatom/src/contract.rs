@@ -3,15 +3,17 @@ use sha2::{Digest, Sha256};
 use cosmwasm_std::{
     entry_point, from_slice, to_binary, to_vec, Addr, AllBalanceResponse, Api, BankMsg,
     CanonicalAddr, Deps, DepsMut, Env, Event, MessageInfo, QueryRequest, QueryResponse, Response,
-    StdError, StdResult, WasmQuery,
+    StdError, StdResult, WasmMsg, WasmQuery,
 };
 
 use crate::errors::HackError;
 use crate::msg::{
-    ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, RecurseResponse, SudoMsg, VerifierResponse,
+    ExecuteMsg, InstantiateMsg, IntResponse, MigrateMsg, QueryMsg, RecurseResponse, SudoMsg,
+    VerifierResponse,
 };
 use crate::state::{State, CONFIG_KEY};
 
+#[entry_point]
 pub fn instantiate(
     deps: DepsMut,
     _env: Env,
@@ -33,6 +35,7 @@ pub fn instantiate(
     Ok(Response::new().add_attribute("Let the", "hacking begin"))
 }
 
+#[entry_point]
 pub fn migrate(deps: DepsMut, _env: Env, msg: MigrateMsg) -> Result<Response, HackError> {
     let data = deps
         .storage
@@ -58,6 +61,7 @@ pub fn sudo(_deps: DepsMut, _env: Env, msg: SudoMsg) -> Result<Response, HackErr
     }
 }
 
+#[entry_point]
 pub fn execute(
     deps: DepsMut,
     env: Env,
@@ -66,9 +70,14 @@ pub fn execute(
 ) -> Result<Response, HackError> {
     match msg {
         ExecuteMsg::Release {} => do_release(deps, env, info),
+        ExecuteMsg::Argon2 {
+            mem_cost,
+            time_cost,
+        } => do_argon2(mem_cost, time_cost),
         ExecuteMsg::CpuLoop {} => do_cpu_loop(),
         ExecuteMsg::StorageLoop {} => do_storage_loop(deps),
         ExecuteMsg::MemoryLoop {} => do_memory_loop(),
+        ExecuteMsg::MessageLoop {} => do_message_loop(env),
         ExecuteMsg::AllocateLargeMemory { pages } => do_allocate_large_memory(pages),
         ExecuteMsg::Panic {} => do_panic(),
         ExecuteMsg::UserErrorsInApiCalls {} => do_user_errors_in_api_calls(deps.api),
@@ -101,6 +110,28 @@ fn do_release(deps: DepsMut, env: Env, info: MessageInfo) -> Result<Response, Ha
     }
 }
 
+fn do_argon2(mem_cost: u32, time_cost: u32) -> Result<Response, HackError> {
+    let password = b"password";
+    let salt = b"othersalt";
+    let config = argon2::Config {
+        variant: argon2::Variant::Argon2i,
+        version: argon2::Version::Version13,
+        mem_cost,
+        time_cost,
+        lanes: 4,
+        thread_mode: argon2::ThreadMode::Sequential,
+        secret: &[],
+        ad: &[],
+        hash_length: 32,
+    };
+    let hash = argon2::hash_encoded(password, salt, &config)
+        .map_err(|e| StdError::generic_err(format!("hash_encoded errored: {}", e)))?;
+    // let matches = argon2::verify_encoded(&hash, password).unwrap();
+    // assert!(matches);
+    Ok(Response::new().set_data(hash.into_bytes()))
+    //Ok(Response::new())
+}
+
 fn do_cpu_loop() -> Result<Response, HackError> {
     let mut counter = 0u64;
     loop {
@@ -128,6 +159,16 @@ fn do_memory_loop() -> Result<Response, HackError> {
     }
 }
 
+fn do_message_loop(env: Env) -> Result<Response, HackError> {
+    let resp = Response::new().add_message(WasmMsg::Execute {
+        contract_addr: env.contract.address.into(),
+        code_hash: env.contract.code_hash,
+        msg: to_binary(&ExecuteMsg::MessageLoop {})?,
+        funds: vec![],
+    });
+    Ok(resp)
+}
+
 #[allow(unused_variables)]
 fn do_allocate_large_memory(pages: u32) -> Result<Response, HackError> {
     // We create memory pages explicitely since Rust's default allocator seems to be clever enough
@@ -149,7 +190,22 @@ fn do_allocate_large_memory(pages: u32) -> Result<Response, HackError> {
 }
 
 fn do_panic() -> Result<Response, HackError> {
+    // Uncomment your favourite panic case
+
+    // panicked at 'This page intentionally faulted', src/contract.rs:53:5
     panic!("This page intentionally faulted");
+
+    // panicked at 'oh no (a = 3)', src/contract.rs:56:5
+    // let a = 3;
+    // panic!("oh no (a = {a})");
+
+    // panicked at 'attempt to subtract with overflow', src/contract.rs:59:13
+    // #[allow(arithmetic_overflow)]
+    // let _ = 5u32 - 8u32;
+
+    // panicked at 'no entry found for key', src/contract.rs:62:13
+    // let map = std::collections::HashMap::<String, String>::new();
+    // let _ = map["foo"];
 }
 
 fn do_user_errors_in_api_calls(api: &dyn Api) -> Result<Response, HackError> {
@@ -221,13 +277,19 @@ fn do_user_errors_in_api_calls(api: &dyn Api) -> Result<Response, HackError> {
     Ok(Response::default())
 }
 
+#[entry_point]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
     match msg {
         QueryMsg::Verifier {} => to_binary(&query_verifier(deps)?),
         QueryMsg::OtherBalance { address } => to_binary(&query_other_balance(deps, address)?),
-        QueryMsg::Recurse { depth, work } => {
-            to_binary(&query_recurse(deps, depth, work, env.contract.address)?)
-        }
+        QueryMsg::Recurse { depth, work } => to_binary(&query_recurse(
+            deps,
+            depth,
+            work,
+            env.contract.address,
+            env.contract.code_hash,
+        )?),
+        QueryMsg::GetInt {} => to_binary(&query_int()),
     }
 }
 
@@ -247,7 +309,13 @@ fn query_other_balance(deps: Deps, address: String) -> StdResult<AllBalanceRespo
     Ok(AllBalanceResponse { amount })
 }
 
-fn query_recurse(deps: Deps, depth: u32, work: u32, contract: Addr) -> StdResult<RecurseResponse> {
+fn query_recurse(
+    deps: Deps,
+    depth: u32,
+    work: u32,
+    contract: Addr,
+    code_hash: String,
+) -> StdResult<RecurseResponse> {
     // perform all hashes as requested
     let mut hashed: Vec<u8> = contract.as_str().into();
     for _ in 0..work {
@@ -265,12 +333,17 @@ fn query_recurse(deps: Deps, depth: u32, work: u32, contract: Addr) -> StdResult
             depth: depth - 1,
             work,
         };
-        let query = QueryRequest::Wasm(WasmQuery::Smart {
+        let query = QueryRequest::Wasm(WasmQuery::Private {
             contract_addr: contract.into(),
+            code_hash,
             msg: to_binary(&req)?,
         });
         deps.querier.query(&query)
     }
+}
+
+fn query_int() -> IntResponse {
+    IntResponse { int: 0xf00baa }
 }
 
 #[cfg(test)]
@@ -284,7 +357,7 @@ mod tests {
 
     #[test]
     fn proper_initialization() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         let verifier = String::from("verifies");
         let beneficiary = String::from("benefits");
@@ -312,7 +385,7 @@ mod tests {
 
     #[test]
     fn instantiate_and_query() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         let verifier = String::from("verifies");
         let beneficiary = String::from("benefits");
@@ -332,7 +405,7 @@ mod tests {
 
     #[test]
     fn migrate_verifier() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         let verifier = String::from("verifies");
         let beneficiary = String::from("benefits");
@@ -364,7 +437,7 @@ mod tests {
 
     #[test]
     fn sudo_can_steal_tokens() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         let verifier = String::from("verifies");
         let beneficiary = String::from("benefits");
@@ -407,7 +480,7 @@ mod tests {
 
     #[test]
     fn execute_release_works() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         // initialize the store
         let creator = String::from("creator");
@@ -453,7 +526,7 @@ mod tests {
 
     #[test]
     fn execute_release_fails_for_wrong_sender() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         // initialize the store
         let creator = String::from("creator");
@@ -498,7 +571,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "This page intentionally faulted")]
     fn execute_panic() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         // initialize the store
         let verifier = String::from("verifies");
@@ -525,7 +598,7 @@ mod tests {
 
     #[test]
     fn execute_user_errors_in_api_calls() {
-        let mut deps = mock_dependencies(&[]);
+        let mut deps = mock_dependencies();
 
         let instantiate_msg = InstantiateMsg {
             verifier: String::from("verifies"),
@@ -550,12 +623,14 @@ mod tests {
         // the test framework doesn't handle contracts querying contracts yet,
         // let's just make sure the last step looks right
 
-        let deps = mock_dependencies(&[]);
+        let deps = mock_dependencies();
         let contract = Addr::unchecked("my-contract");
+        let code_hash = String::from("my-code-hash");
         let bin_contract: &[u8] = b"my-contract";
 
         // return the unhashed value here
-        let no_work_query = query_recurse(deps.as_ref(), 0, 0, contract.clone()).unwrap();
+        let no_work_query =
+            query_recurse(deps.as_ref(), 0, 0, contract.clone(), code_hash.clone()).unwrap();
         assert_eq!(no_work_query.hashed, Binary::from(bin_contract));
 
         // let's see if 5 hashes are done right
@@ -563,7 +638,13 @@ mod tests {
         for _ in 0..4 {
             expected_hash = Sha256::digest(&expected_hash);
         }
-        let work_query = query_recurse(deps.as_ref(), 0, 5, contract).unwrap();
+        let work_query = query_recurse(deps.as_ref(), 0, 5, contract, code_hash).unwrap();
         assert_eq!(work_query.hashed, expected_hash.to_vec());
+    }
+
+    #[test]
+    fn get_int() {
+        let get_int_query = query_int();
+        assert_eq!(get_int_query.int, 0xf00baa);
     }
 }

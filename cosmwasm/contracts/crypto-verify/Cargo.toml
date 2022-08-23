@@ -2,8 +2,9 @@
 name = "crypto-verify"
 version = "0.0.0"
 authors = ["Mauro Lacy <maurolacy@users.noreply.github.com>"]
-edition = "2018"
+edition = "2021"
 publish = false
+license = "Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -32,8 +33,8 @@ cranelift = ["cosmwasm-vm/cranelift"]
 backtraces = ["cosmwasm-std/backtraces", "cosmwasm-vm/backtraces"]
 
 [dependencies]
-cosmwasm-std = { path = "../../packages/std", features = ["iterator"] }
-cosmwasm-storage = { path = "../../packages/storage", features = ["iterator"] }
+cosmwasm-std = { path="../../packages/std",  package = "trustless-cosmwasm-std", version = "1.0.0" }
+cosmwasm-storage = { path="../../packages/storage",  package = "trustless-cosmwasm-storage", version = "1.0.0" }
 hex = "0.4"
 rlp = "0.5"
 schemars = "0.8.1"

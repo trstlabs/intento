@@ -179,7 +179,7 @@ func (c *ContractInfo) ValidateBasic() error {
 			}
 		}
 	*/
-	if err := validateLabel(c.ContractId); err != nil {
+	if err := validateContractId(c.ContractId); err != nil {
 		return sdkerrors.Wrap(err, "label")
 	}
 	return nil
@@ -324,12 +324,12 @@ func DefaultWasmConfig() *WasmConfig {
 	}
 }
 
-type TrustlessMsg struct {
+type ContractMsg struct {
 	CodeHash []byte
 	Msg      []byte
 }
 
-func (m TrustlessMsg) Serialize() []byte {
+func (m ContractMsg) Serialize() []byte {
 	return append(m.CodeHash, m.Msg...)
 }
 

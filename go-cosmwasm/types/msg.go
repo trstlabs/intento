@@ -13,7 +13,7 @@ import (
 // This is mirrors Rust's ContractResult<Response>.
 type ContractResult struct {
 	Ok                      *Response `json:"ok,omitempty"`
-	Err                     string    `json:"error,omitempty"`
+	Err                     *StdError `json:"Err,omitempty"`
 	InternalReplyEnclaveSig []byte    `json:"internal_reply_enclave_sig"`
 	InternalMsgId           []byte    `json:"internal_msg_id"`
 }
