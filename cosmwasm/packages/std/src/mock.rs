@@ -1373,7 +1373,7 @@ mod tests {
         }
 
         querier.update_handler(|request| {
-            let constract1 = Addr::unchecked("contract1");
+            let contract1 = Addr::unchecked("contract1");
             let mut storage1 = HashMap::<Binary, Binary>::default();
             storage1.insert(b"the key".into(), b"the value".into());
 
@@ -1381,7 +1381,7 @@ mod tests {
                 WasmQuery::Private {
                     contract_addr, msg, ..
                 } => {
-                    if *contract_addr == constract1 {
+                    if *contract_addr == contract1 {
                         #[derive(Deserialize)]
                         struct MyMsg {}
                         let _msg: MyMsg = match from_binary(msg) {
@@ -1399,7 +1399,7 @@ mod tests {
                     }
                 }
                 WasmQuery::ContractInfo { contract_addr } => {
-                    if *contract_addr == constract1 {
+                    if *contract_addr == contract1 {
                         let response = ContractInfoResponse {
                             code_id: 4,
                             creator: "lalala".into(),
@@ -1407,6 +1407,40 @@ mod tests {
                             ibc_port: None,
                         };
                         SystemResult::Ok(ContractResult::Ok(to_binary(&response).unwrap()))
+                    } else {
+                        SystemResult::Err(SystemError::NoSuchContract {
+                            addr: contract_addr.clone(),
+                        })
+                    }
+                }
+                //TODO find a way to test this
+                WasmQuery::Public {
+                    contract_addr, key, ..
+                } => {
+                    if *contract_addr == contract1 {
+                      
+                       if let Some(value) = storage1.get(key) {
+                            SystemResult::Ok(ContractResult::Ok(value.clone()))
+                     } else {
+                           SystemResult::Ok(ContractResult::Ok(Binary::default()))
+                   }
+                    } else {
+                        SystemResult::Err(SystemError::NoSuchContract {
+                            addr: contract_addr.clone(),
+                        })
+                    }
+                }
+                //TODO find a way to test this
+                WasmQuery::PublicForAddr {
+                    contract_addr, key, ..
+                } => {
+                    if *contract_addr == contract1 {
+                      
+                       if let Some(value) = storage1.get(key) {
+                            SystemResult::Ok(ContractResult::Ok(value.clone()))
+                     } else {
+                           SystemResult::Ok(ContractResult::Ok(Binary::default()))
+                   }
                     } else {
                         SystemResult::Err(SystemError::NoSuchContract {
                             addr: contract_addr.clone(),
@@ -1436,7 +1470,7 @@ mod tests {
         });
         match result {
             SystemResult::Ok(ContractResult::Err(err)) => {
-                assert_eq!(err, "Error parsing into type cosmwasm_std::mock::tests::wasm_querier_works::{{closure}}::MyMsg: Invalid type")
+                assert_eq!(err, "Error parsing into type trustless_cosmwasm_std::mock::tests::wasm_querier_works::{{closure}}::MyMsg: Invalid type")
             }
             res => panic!("Unexpected result: {:?}", res),
         }

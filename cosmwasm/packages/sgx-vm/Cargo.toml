@@ -6,7 +6,6 @@ authors = [
 ]
 edition = "2018"
 description = "VM bindings to run cosmwams contracts"
-repository = "https://github.com/CosmWasm/cosmwasm/tree/master/packages/sgx-vm"
 license = "Apache-2.0"
 
 [badges]

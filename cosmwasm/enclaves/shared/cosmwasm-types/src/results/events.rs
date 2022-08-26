@@ -27,11 +27,11 @@ pub struct Attribute {
     pub key: String,
     #[serde(with = "serde_bytes")]
     pub value: Vec<u8>,
-    #[serde(skip_deserializing)]
+   // #[serde(skip_deserializing)]
     pub pub_db: bool,
-    #[serde(skip_deserializing)]
+    //#[serde(skip_deserializing)]
     pub acc_addr: Option<String>,
-    #[serde(skip_deserializing)]
+   // #[serde(skip_deserializing)]
     pub encrypted: bool,
 }
 

@@ -27,6 +27,7 @@ pub fn instantiate(
     // we store the reflect_id for creating accounts later
     let cfg = Config {
         reflect_code_id: msg.reflect_code_id,
+        reflect_code_hash: msg.reflect_code_hash,
     };
     config(deps.storage).save(&cfg)?;
 
@@ -157,11 +158,15 @@ pub fn ibc_channel_connect(
     let chan_id = &channel.endpoint.channel_id;
 
     let msg = WasmMsg::Instantiate {
-        admin: None,
         code_id: cfg.reflect_code_id,
         msg: b"{}".into(),
         funds: vec![],
         contract_id: format!("ibc-reflect-{}", chan_id),
+        code_hash: cfg.reflect_code_hash,
+        auto_msg: None,
+        duration: None,
+        start_duration_at: None, 
+        interval: None,
     };
     let msg = SubMsg::reply_on_success(msg, INIT_CALLBACK_ID);
 

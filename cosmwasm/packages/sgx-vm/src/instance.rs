@@ -411,10 +411,8 @@ mod test {
     #[test]
     fn func_works() {
         let instance = mock_instance(&CONTRACT, &[]);
-
         // can get func
         let allocate: Func<u32, u32> = instance.func("allocate").expect("error getting func");
-
         // can call a few times
         let _ptr1 = allocate.call(0).expect("error calling allocate func");
         let _ptr2 = allocate.call(1).expect("error calling allocate func");
@@ -719,7 +717,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::Balance {
-                            address: rich_addr.clone(),
+                            address: rich_addr.to_string(),
                             denom: "silver".to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,
@@ -741,7 +739,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::AllBalances {
-                            address: rich_addr.clone(),
+                            address: rich_addr.to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,
                     )
@@ -775,7 +773,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::Balance {
-                            address: rich_addr.clone(),
+                            address: rich_addr.to_string(),
                             denom: "silver".to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,
@@ -804,7 +802,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::Balance {
-                            address: rich_addr.clone(),
+                            address: rich_addr.to_string(),
                             denom: "silver".to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,

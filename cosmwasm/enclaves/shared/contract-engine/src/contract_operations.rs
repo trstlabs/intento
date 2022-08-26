@@ -45,7 +45,7 @@ down to the wasm implementations, but because they are buffers
 we need to allocate memory regions inside the VM's instance and copy
 `env` & `msg` into those memory regions inside the VM's instance.
 */
-
+#[allow(clippy::too_many_arguments)]
 pub fn init(
     context: Ctx,       // need to pass this to read_db & write_db
     gas_limit: u64,     // gas limit for this execution
@@ -67,7 +67,7 @@ pub fn init(
     })?;
     parsed_env.contract.code_hash = hex::encode(contract_code.hash());
 
-    let canonical_contract_address = CanonicalAddr::from_addr(&parsed_env.contract.address.clone()).map_err(|err| {
+    let canonical_contract_address = CanonicalAddr::from_addr(&parsed_env.contract.address).map_err(|err| {
         warn!(
             "got an error while trying to deserialize parsed_env.contract.address from bech32 string to bytes {:?}: {}",
             parsed_env.contract.address, err
@@ -75,7 +75,7 @@ pub fn init(
         EnclaveError::FailedToDeserialize
     })?;
 
-    let canonical_sender_address = CanonicalAddr::from_addr(&parsed_env.message.sender.clone()).map_err(|err| {
+    let canonical_sender_address = CanonicalAddr::from_addr(&parsed_env.message.sender).map_err(|err| {
         warn!(
             "init got an error while trying to deserialize parsed_env.message.sender from bech32 string to bytes {:?}: {}",
             parsed_env.message.sender, err
@@ -352,7 +352,7 @@ pub fn parse_message(
                         Some(data) => {
                             trace!(
                                 "reply data before decryption: {:?}",
-                                &data.as_slice().to_vec().clone()
+                                &data.as_slice().to_vec()
                             );
                             /*let tmp_contract_msg_data = ContractMessage {
                                 nonce: orig_contract_msg.nonce,
@@ -426,9 +426,9 @@ pub fn parse_message(
                             );
                             EnclaveError::FailedToSerialize
                         })?;
-                    info!("reply {:?}", &parsed_encrypted_reply.clone());
+                    info!("reply {:?}", &parsed_encrypted_reply);
                     reduct_custom_events(&mut parsed_encrypted_reply);
-                    info!("reduct_custom_events {:?}", &parsed_encrypted_reply.clone());
+                    info!("reduct_custom_events {:?}", &parsed_encrypted_reply);
                     //  let msg_for_sig = parse_data(&parsed_encrypted_reply);
                     // info!("msg_for_sig {}", msg_for_sig.clone());
                     let serialized_encrypted_reply : Vec<u8> = serde_json::to_vec(&parsed_encrypted_reply).map_err(|err| {
@@ -553,6 +553,7 @@ pub fn parse_message(
     };
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn handle(
     context: Ctx,
     gas_limit: u64,
@@ -620,7 +621,7 @@ pub fn handle(
 
     trace!(
         "handle input after decryption: {:?}",
-        String::from_utf8_lossy(&decrypted_msg.clone())
+        String::from_utf8_lossy(&decrypted_msg)
     );
 
     // There is no signature to verify when the input isn't signed.

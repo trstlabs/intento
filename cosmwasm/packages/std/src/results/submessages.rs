@@ -217,9 +217,10 @@ mod tests {
             data: Some(Binary::from_base64("MTIzCg==").unwrap()),
             events: vec![Event::new("wasm").add_attribute("fo", "ba")],
         });
+
         assert_eq!(
             &to_vec(&result).unwrap(),
-            br#"{"ok":{"events":[{"type":"wasm","attributes":[{"key":"fo","value":"ba"}]}],"data":"MTIzCg=="}}"#
+            br#"{"ok":{"events":[{"type":"wasm","attributes":[{"key":"fo","value":"ba","pub_db":false,"acc_addr":null,"encrypted":true}]}],"data":"MTIzCg=="}}"#
         );
 
         let result: SubMsgResult = SubMsgResult::Err("broken".to_string());
@@ -228,17 +229,8 @@ mod tests {
 
     #[test]
     fn sub_msg_result_deserialization_works() {
-        let result: SubMsgResult = from_slice(br#"{"ok":{"events":[],"data":null}}"#).unwrap();
-        assert_eq!(
-            result,
-            SubMsgResult::Ok(SubMsgResponse {
-                events: vec![],
-                data: None,
-            })
-        );
-
         let result: SubMsgResult = from_slice(
-            br#"{"ok":{"events":[{"type":"wasm","attributes":[{"key":"fo","value":"ba"}]}],"data":"MTIzCg=="}}"#).unwrap();
+            br#"{"ok":{"events":[{"type":"wasm","attributes":[{"key":"fo","value":"ba","pub_db":false,"acc_addr":null,"encrypted":true}]}],"data":"MTIzCg=="}}"#).unwrap();
         assert_eq!(
             result,
             SubMsgResult::Ok(SubMsgResponse {

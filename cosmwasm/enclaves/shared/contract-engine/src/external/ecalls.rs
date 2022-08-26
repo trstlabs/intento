@@ -342,17 +342,15 @@ pub unsafe extern "C" fn ecall_create_callback_sig(
 
     if let Ok(res) = result {
         res
+    } else if oom_handler::get_then_clear_oom_happened() {
+        error!("Call ecall_create_callback_sig failed because the enclave ran out of memory!");
+        CallbackSigResult::Failure {
+            err: EnclaveError::OutOfMemory,
+        }
     } else {
-        if oom_handler::get_then_clear_oom_happened() {
-            error!("Call ecall_create_callback_sig failed because the enclave ran out of memory!");
-            CallbackSigResult::Failure {
-                err: EnclaveError::OutOfMemory,
-            }
-        } else {
-            error!("Call ecall_create_callback_sig panicked unexpectedly!");
-            CallbackSigResult::Failure {
-                err: EnclaveError::Panic,
-            }
+        error!("Call ecall_create_callback_sig panicked unexpectedly!");
+        CallbackSigResult::Failure {
+            err: EnclaveError::Panic,
         }
     }
 }

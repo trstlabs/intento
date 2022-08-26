@@ -35,6 +35,9 @@ use super::seed_exchange::decrypt_seed;
 /// Function to handle the initialization of the bootstrap node. Generates the master private/public
 /// key (seed + pk_io/sk_io). This happens once at the initialization of a chain. Returns the master
 /// public key (pk_io), which is saved on-chain, and used to propagate the seed to registering nodes
+/// 
+/// # Safety
+///  Something should go here
 ///
 #[no_mangle]
 pub unsafe extern "C" fn ecall_init_bootstrap(
@@ -110,6 +113,10 @@ pub unsafe extern "C" fn ecall_init_bootstrap(
 ///
 /// This function happens off-chain, so if we panic for some reason it _can_ be acceptable,
 ///  though probably not recommended
+/// 
+/// # Safety
+///  Something should go here
+///
 #[no_mangle]
 pub unsafe extern "C" fn ecall_init_node(
     master_cert: *const u8,

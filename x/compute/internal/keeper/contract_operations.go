@@ -157,7 +157,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	// instantiate wasm contract
 	gas := gasForContract(ctx)
 	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, env, msg, autoMsgToSend, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo, contractAddress)
-	//fmt.Printf("res: %v \n", res)
+	fmt.Printf("res: %v \n", res)
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
 	}

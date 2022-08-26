@@ -1101,7 +1101,7 @@ pub fn transfer_money(_deps: DepsMut, amount: u64) -> StdResult<Response> {
         id: 1337,
         msg: CosmosMsg::Bank(BankMsg::Send {
             to_address: "trust105w4vl4gm7q00yg5jngewt5kp7aj0xjk7zrnhw".to_string(),
-            amount: coins(amount as u128, "uscrt"),
+            amount: coins(amount as u128, "utrst"),
         }),
         gas_limit: Some(10000000_u64),
         reply_on: ReplyOn::Always,
@@ -1201,7 +1201,7 @@ pub fn send_multiple_sub_messages(env: Env, _deps: DepsMut) -> StdResult<Respons
         id: 1602,
         msg: CosmosMsg::Bank(BankMsg::Send {
             to_address: "trust105w4vl4gm7q00yg5jngewt5kp7aj0xjk7zrnhw".to_string(),
-            amount: coins(1200 as u128, "uscrt"),
+            amount: coins(1200 as u128, "utrst"),
         }),
         gas_limit: Some(10000000_u64),
         reply_on: ReplyOn::Always,

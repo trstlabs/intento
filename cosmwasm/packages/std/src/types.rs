@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::addresses::Addr;
 use crate::coins::Coin;
 use crate::timestamp::Timestamp;
-
+use schemars::JsonSchema;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Env {
     pub block: BlockInfo,
@@ -14,7 +14,7 @@ pub struct Env {
     pub contract: ContractInfo,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct BlockInfo {
     /// The height of a block is the number of blocks preceding it in the blockchain.
     pub height: u64,

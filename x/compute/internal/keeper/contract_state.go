@@ -94,8 +94,9 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	for _, attr := range result {
-
+		//	fmt.Printf("attr %+v \n", attr)
 		if attr.Encrypted {
+			//		fmt.Printf("attr Encrypted %+v \n", attr.Key)
 			continue
 		} else if len(attr.AccAddr) == 44 {
 			accAddr, err := sdk.AccAddressFromBech32(attr.AccAddr)
@@ -104,10 +105,10 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 			}
 			prefixAccStoreKey := types.GetContractAccPubDbKey(contrAddr, accAddr)
 			prefixAccStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixAccStoreKey)
-
+			//fmt.Printf("acc_pubdb key %+v \n", attr.Key)
 			prefixAccStore.Set([]byte(attr.Key), attr.Value)
 		} else if attr.PubDb {
-
+			//fmt.Printf("pubdb key %+v \n", attr.Key)
 			prefixStore.Set([]byte(attr.Key), attr.Value)
 		}
 	}

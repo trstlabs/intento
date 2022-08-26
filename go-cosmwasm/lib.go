@@ -114,6 +114,7 @@ func (w *Wasmer) Instantiate(
 	}
 
 	data, gasUsed, err := api.Instantiate(w.cache, codeId, paramBin, msg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
+
 	if err != nil {
 		return nil, nil, nil, gasUsed, err
 	}
@@ -125,6 +126,8 @@ func (w *Wasmer) Instantiate(
 	//fmt.Println(string(callbackSig))
 
 	var result types.ContractResult
+	fmt.Printf("Init Result : %+v\n", result)
+
 	err = json.Unmarshal(data, &result)
 	if err != nil {
 		return nil, nil, nil, gasUsed, err

@@ -328,7 +328,7 @@ pub fn encrypt_output(
                             data: ok.data.clone(),
                         }),
                     };
-                    trace!("reply : {:?}", reply.clone());
+                    trace!("reply : {:?}", reply);
                     let reply_as_vec = serde_json::to_vec(&reply).map_err(|err| {
                         warn!(
                             "got an error while trying to serialize reply into bytes for internal_reply_enclave_sig  {:?}: {}",
@@ -336,7 +336,7 @@ pub fn encrypt_output(
                         );
                         EnclaveError::FailedToSerialize
                     })?;
-                    trace!("reply_as_vec: {:?}", reply_as_vec.clone());
+                    trace!("reply_as_vec: {:?}", reply_as_vec);
                     let tmp_contract_msg = ContractMessage {
                         nonce: contract_msg.nonce,
                         user_public_key: contract_msg.user_public_key,

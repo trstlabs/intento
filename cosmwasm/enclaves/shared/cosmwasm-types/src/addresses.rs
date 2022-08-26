@@ -185,7 +185,7 @@ impl CanonicalAddr {
 
         Ok(CanonicalAddr(Binary(canonical)))
     }
-    pub fn from_str(val: &str) -> Result<Self, bech32::Error> {
+    pub fn from_string(val: &str) -> Result<Self, bech32::Error> {
         let (_decoded_prefix, data) = bech32::decode(val)?;
         let canonical = Vec::<u8>::from_base32(&data)?;
 

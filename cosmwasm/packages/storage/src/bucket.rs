@@ -169,8 +169,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmwasm_std::testing::MockStorage;
-    use cosmwasm_std::StdError;
+    use trustless_cosmwasm_std::testing::MockStorage;
+    use trustless_cosmwasm_std::StdError;
     use serde::{Deserialize, Serialize};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]

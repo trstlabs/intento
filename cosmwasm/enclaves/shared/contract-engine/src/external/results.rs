@@ -149,7 +149,7 @@ pub fn result_callback_sig_success_to_callbackresult(
                 user_buffer.assume_init()
             };
             CallbackSigResult::Success {
-                callback_sig: callback_sig,
+                callback_sig,
                 encrypted_msg: user_buffer,
             }
         }

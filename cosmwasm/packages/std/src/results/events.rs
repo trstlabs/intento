@@ -256,9 +256,10 @@ impl<K: Into<String>, V: Into<String>> From<(K, V)> for Attribute {
     }
 }
 
-impl<K: AsRef<str>, V: AsRef<Vec<u8>>> PartialEq<(K, V)> for Attribute {
+
+impl<K: AsRef<str>, V:  AsRef<str>> PartialEq<(K, V)> for Attribute {
     fn eq(&self, (k, v): &(K, V)) -> bool {
-        (self.key.as_str(),  self.value.clone()) == (k.as_ref(), v.as_ref().to_vec())
+        (self.key.as_str(), self.value.clone()) == (k.as_ref(), v.as_ref().as_bytes().to_vec())
     }
 }
 
@@ -343,7 +344,7 @@ mod tests {
     fn event_construction() {
         let event_direct = Event {
             ty: "test".to_string(),
-            attributes: vec![attr("foo", "bar"), attr("bar", "baz")],
+            attributes: vec![log("foo", "bar"), log("bar", "baz")],
         };
         let event_builder = Event::new("test").add_attributes(vec![("foo", "bar"), ("bar", "baz")]);
 
@@ -353,22 +354,22 @@ mod tests {
     #[test]
     #[should_panic]
     fn attribute_new_reserved_key_panicks() {
-        Attribute::new("_invalid", "value");
+        Attribute::new_log("_invalid", "value");
     }
 
     #[test]
     #[should_panic]
     fn attribute_new_reserved_key_panicks2() {
-        Attribute::new("_", "value");
+        Attribute::new_log("_", "value");
     }
 
     #[test]
     fn attr_works_for_different_types() {
         let expected = ("foo", "42");
 
-        assert_eq!(attr("foo", "42"), expected);
-        assert_eq!(attr("foo", "42"), expected);
-        assert_eq!(attr("foo", "42"), expected);
-        assert_eq!(attr("foo", Uint128::new(42)), expected);
+        assert_eq!(log("foo", "42"), expected);
+        assert_eq!(log("foo", "42"), expected);
+        assert_eq!(log("foo", "42"), expected);
+        assert_eq!(log("foo", Uint128::new(42)), expected);
     }
 }

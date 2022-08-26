@@ -278,8 +278,10 @@ mod tests {
             ],
             attributes: vec![Attribute {
                 key: "action".to_string(),
-                value: "release".to_string(),
+                value: "release".to_string().as_bytes().to_vec(),
                 encrypted: true,
+                pub_db: false,
+                acc_addr: None,
             }],
             events: vec![],
             data: Some(Binary::from([0xAA, 0xBB])),

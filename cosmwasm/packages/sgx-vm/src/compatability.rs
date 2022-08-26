@@ -338,7 +338,7 @@ mod test {
         let wasm_missing_exports = wat2wasm(WAT_MISSING_EXPORTS).unwrap();
 
         let module = deserialize_buffer(&wasm_missing_exports).unwrap();
-        match check_wasm_exports(&module, REQUIRED_EXPORTS_V010) {
+        match check_wasm_exports(&module, REQUIRED_EXPORTS) {
             Err(VmError::StaticValidationErr { msg, .. }) => {
                 assert!(msg.starts_with(
                     "Wasm contract doesn't have required export: \"cosmwasm_vm_version_3\""
@@ -352,7 +352,7 @@ mod test {
     #[test]
     fn test_check_wasm_exports_of_old_contract() {
         let module = deserialize_buffer(CONTRACT_0_7).unwrap();
-        match check_wasm_exports(&module, REQUIRED_EXPORTS_V010) {
+        match check_wasm_exports(&module, REQUIRED_EXPORTS) {
             Err(VmError::StaticValidationErr { msg, .. }) => {
                 assert!(msg.starts_with(
                     "Wasm contract doesn't have required export: \"cosmwasm_vm_version_3\""
@@ -376,13 +376,13 @@ mod test {
         )"#,
         )
         .unwrap();
-        check_wasm_imports(&deserialize_buffer(&wasm).unwrap(), SUPPORTED_IMPORTS_V010).unwrap();
+        check_wasm_imports(&deserialize_buffer(&wasm).unwrap(), SUPPORTED_IMPORTS).unwrap();
     }
 
     #[test]
     fn test_check_wasm_imports_of_old_contract() {
         let module = deserialize_buffer(CONTRACT_0_7).unwrap();
-        match check_wasm_imports(&module, SUPPORTED_IMPORTS_V010) {
+        match check_wasm_imports(&module, SUPPORTED_IMPORTS) {
             Err(VmError::StaticValidationErr { msg, .. }) => {
                 assert!(
                     msg.starts_with("Wasm contract requires unsupported import: \"env.db_read\"")
@@ -396,7 +396,7 @@ mod test {
     #[test]
     fn test_check_wasm_imports_wrong_type() {
         let wasm = wat2wasm(r#"(module (import "env" "db_read" (memory 1 1)))"#).unwrap();
-        match check_wasm_imports(&deserialize_buffer(&wasm).unwrap(), SUPPORTED_IMPORTS_V010) {
+        match check_wasm_imports(&deserialize_buffer(&wasm).unwrap(), SUPPORTED_IMPORTS) {
             Err(VmError::StaticValidationErr { msg, .. }) => {
                 assert!(
                     msg.starts_with("Wasm contract requires non-function import: \"env.db_read\"")

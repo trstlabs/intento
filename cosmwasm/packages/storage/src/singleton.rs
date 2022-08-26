@@ -128,10 +128,10 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmwasm_std::testing::MockStorage;
+    use trustless_cosmwasm_std::testing::MockStorage;
     use serde::{Deserialize, Serialize};
 
-    use cosmwasm_std::{OverflowError, OverflowOperation, StdError};
+    use trustless_cosmwasm_std::{OverflowError, OverflowOperation, StdError};
 
     #[derive(Serialize, Deserialize, PartialEq, Debug)]
     struct Config {

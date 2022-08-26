@@ -23,10 +23,10 @@ use yasna::models::ObjectIdentifier;
 
 use enclave_ffi_types::NodeAuthResult;
 
-use enclave_crypto::consts::{SigningMethod, CERTEXPIRYDAYS};
+use enclave_crypto::consts::{MRSIGNER, SigningMethod, CERTEXPIRYDAYS};
 
 #[cfg(feature = "SGX_MODE_HW")]
-use enclave_crypto::consts::{MRSIGNER, SIGNING_METHOD};
+use enclave_crypto::consts::{SIGNING_METHOD};
 
 #[cfg(feature = "SGX_MODE_HW")]
 use super::attestation::get_mr_enclave;
@@ -338,14 +338,17 @@ pub fn verify_ra_cert(
             }
         }
      SigningMethod::MRSIGNER => {
-           /*    if report.sgx_quote_body.isv_enclave_report.mr_signer != MRSIGNER {
+            #[cfg(feature = "test")]
+            if report.sgx_quote_body.isv_enclave_report.mr_signer != MRSIGNER {
                 error!("Got a different mrsigner than expected. Invalid certificate");
                 warn!(
                     "received: {:?} \n expected: {:?}",
                     report.sgx_quote_body.isv_enclave_report.mr_signer, MRSIGNER
-                );*/
+                );
                 return Err(NodeAuthResult::MrEnclaveMismatch);
-            //}
+           }
+           #[cfg(not(feature = "test"))]
+           return Err(NodeAuthResult::MrEnclaveMismatch);
         }
         SigningMethod::NONE => {}
     }

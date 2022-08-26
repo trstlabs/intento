@@ -453,7 +453,7 @@ impl CosmWasmMsg {
         })?;
      
 
-        if raw_msg.contract.clone().len() == 0  {
+        if raw_msg.contract.is_empty()  {
               warn!(
                   "Contract address was empty: {}",
                   raw_msg.contract.len(),
