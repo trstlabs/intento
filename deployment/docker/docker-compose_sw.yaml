@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  bootstrap:
+    image: trstlabs/trustless-hub-bootstrap-sw:latest
+    container_name: bootstrap
+    volumes:
+      - /tmp/trstd:/root/.trstd
+      - /tmp/trstcli:/root/.trstcli
+    stdin_open: true
+    tty: true
+    environment:
+      - http_proxy
+      - https_proxy
+    expose:
+      - 26656
+      - 26657
+
+  node:
+    image: trstlabs/trustless-hub-node-sw
+    depends_on:
+      - bootstrap
+    volumes:
+      - /tmp/trstd:/tmp/.trstd
+      - /tmp/trstcli:/root/.trstcli
+    stdin_open: true
+    tty: true
+    environment:
+      - http_proxy
+      - https_proxy

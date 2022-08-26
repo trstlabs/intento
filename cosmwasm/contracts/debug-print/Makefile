@@ -3,7 +3,7 @@ start-server: # CTRL+C to stop
 	docker run -it --rm \
 		-p 26657:26657 -p 26656:26656 -p 1317:1317 \
 		-v $$(pwd):/root/code \
-		--name trst_chain_1 enigmampc/secret-network-sw-dev:latest
+		--name trst_chain_1 trstlabs/trustless-hub-sw-dev:latest
 
 .PHONY: compile-optimized _compile-optimized
 compile-optimized: _compile-optimized contract.wasm.gz
