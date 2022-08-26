@@ -131,7 +131,7 @@ build_cli:
 
 xgo_build_trstcli: go.sum
 	@echo "--> WARNING! This builds from origin/$(CURRENT_BRANCH)!"
-	xgo --image techknowlogick/xgo:go-1.15.15 --targets $(XGO_TARGET) -tags="$(GO_TAGS) trstcli" -ldflags '$(LD_FLAGS)' --branch "$(CURRENT_BRANCH)" github.com/trstlabs/trst/cmd/trstd
+	xgo --targets $(XGO_TARGET) -tags="$(GO_TAGS) trstcli" -ldflags '$(LD_FLAGS)' --branch "$(CURRENT_BRANCH)" github.com/trstlabs/trst/cmd/trstd
 
 build_local_no_rust: bin-data-$(IAS_BUILD)
 	cp go-cosmwasm/target/$(BUILD_PROFILE)/libgo_cosmwasm.so go-cosmwasm/api
@@ -237,9 +237,9 @@ build-rocksdb-image:
 	docker build --build-arg BUILD_VERSION=${VERSION} -f deployment/dockerfiles/db-compile.Dockerfile -t trstlabs/rocksdb:${VERSION} .
 
 build-localtrst:
-	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=SW --build-arg FEATURES_U="${FEATURES_U}" --build-arg FEATURES="${FEATURES},debug-print" -f deployment/dockerfiles/base.Dockerfile -t rust-go-base-image .
+	docker build --build-arg BUILD_VERSION=${VERSI{ON} --build-arg SGX_MODE=SW --build-arg FEATURES_U="${FEATURES_U}" --build-arg FEATURES="${FEATURES},debug-print" -f deployment/dockerfiles/base.Dockerfile -t rust-go-base-image .
 	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/scrtlabs/localsecret:${DOCKER_TAG} .
+	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/localtrst:${DOCKER_TAG} .
 
 
 build-dev-image:

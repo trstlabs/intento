@@ -24,7 +24,7 @@ use yasna::models::ObjectIdentifier;
 use enclave_ffi_types::NodeAuthResult;
 #[cfg(feature = "test")]
 use enclave_crypto::consts::MRSIGNER;
-use enclave_crypto::consts::{igningMethod, CERTEXPIRYDAYS};
+use enclave_crypto::consts::{SigningMethod, CERTEXPIRYDAYS};
 
 #[cfg(feature = "SGX_MODE_HW")]
 use enclave_crypto::consts::{SIGNING_METHOD};
