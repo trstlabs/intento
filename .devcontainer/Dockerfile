@@ -156,7 +156,7 @@ RUN echo -e 'no\n/opt' | ./sgx/sgx_linux_x64_sdk_${SGX_VERSION}.bin && \
 
 # ENV LD_LIBRARY_PATH=/opt/sgxsdk/libsgx-enclave-common/
 
-RUN echo 'export SCRT_ENCLAVE_DIR=/home/vscode/trst/go-cosmwasm/' >> /etc/bash.bashrc
+RUN echo 'export TRST_ENCLAVE_DIR=/home/vscode/trst/go-cosmwasm/' >> /etc/bash.bashrc
 
 USER $USERNAME
 

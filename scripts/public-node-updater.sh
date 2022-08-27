@@ -39,9 +39,9 @@ install_sgx () {
 
 check_release () {
 
-        LATEST_VERSION=$(curl -sL https://api.github.com/repos/scrtlabs/secretnetwork/releases/latest | jq -r ".tag_name" | sed 's/v//');
-        GOLEVELDB_LINK=`curl -sL https://api.github.com/repos/scrtlabs/secretnetwork/releases/latest | jq -r ".assets[].browser_download_url" | grep "$NETWORK"_goleveldb_amd64.deb`;
-        ROCKSDB_LINK=`curl -sL https://api.github.com/repos/scrtlabs/secretnetwork/releases/latest | jq -r ".assets[].browser_download_url" | grep "$NETWORK"_rocksdb_amd64.deb`;
+        LATEST_VERSION=$(curl -sL https://api.github.com/repos/trstlabs/trst/releases/latest | jq -r ".tag_name" | sed 's/v//');
+        GOLEVELDB_LINK=`curl -sL https://api.github.com/repos/trstlabs/trst/releases/latest | jq -r ".assets[].browser_download_url" | grep "$NETWORK"_goleveldb_amd64.deb`;
+        ROCKSDB_LINK=`curl -sL https://api.github.com/repos/trstlabs/trst/releases/latest | jq -r ".assets[].browser_download_url" | grep "$NETWORK"_rocksdb_amd64.deb`;
 
 }
 

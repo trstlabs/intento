@@ -11,7 +11,7 @@ RUN tar -C /usr/local -xzf go1.18.3.linux-amd64.tar.gz
 RUN go install github.com/jteeuwen/go-bindata/go-bindata@latest && go-bindata -version
 
 # Set working directory for the build
-WORKDIR /go/src/github.com/trstlabs/SecretNetwork
+WORKDIR /go/src/github.com/trstlabs/trst
 
 ARG BUILD_VERSION="v0.0.0"
 ARG SGX_MODE=SW

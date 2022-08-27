@@ -60,7 +60,7 @@ RUN . /opt/sgxsdk/environment && env \
     && MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} FEATURES_U=${FEATURES_U} SGX_MODE=${SGX_MODE} make build-rust
 
 # Set working directory for the build
-WORKDIR /go/src/github.com/trstlabs/SecretNetwork
+WORKDIR /go/src/github.com/trstlabs/trst
 
 COPY --from=trstlabs/rocksdb:v6.24.2 /usr/local/lib/librocksdb.a /usr/local/lib/librocksdb.a
 

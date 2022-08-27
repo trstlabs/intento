@@ -74,7 +74,7 @@ RUN . /opt/sgxsdk/environment && env \
     && MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} FEATURES_U=${FEATURES_U} SGX_MODE=${SGX_MODE} make build-rust
 
 # Set working directory for the build
-WORKDIR /go/src/github.com/trstlabs/SecretNetwork
+WORKDIR /go/src/github.com/trstlabs/trst
 
 # Add source files
 COPY go-cosmwasm go-cosmwasm
