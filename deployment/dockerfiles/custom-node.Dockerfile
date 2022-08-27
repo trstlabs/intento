@@ -69,7 +69,7 @@ RUN mkdir -p /root/.trstd/.node/
 ####### Node parameters
 ARG MONIKER=default
 ARG CHAINID=trst_chain_1
-ARG GENESISPATH=https://raw.githubusercontent.com/trstlabs/SecretNetwork/master/secret-testnet-genesis.json
+ARG GENESISPATH=https://raw.githubusercontent.com/trstlabs/trst/master/secret-testnet-genesis.json
 ARG PERSISTENT_PEERS=201cff36d13c6352acfc4a373b60e83211cd3102@bootstrap.southuk.azure.com:26656
 
 ENV GENESISPATH="${GENESISPATH}"

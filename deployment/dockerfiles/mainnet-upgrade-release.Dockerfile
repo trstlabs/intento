@@ -45,10 +45,10 @@ RUN STORAGE_PATH=`echo ${VERSION} | sed -e 's/\.//g' | head -c 2` \
 
 # Copy over binaries from the build-env
 
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
-# COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /usr/lib/
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/trstd /usr/bin/trstd
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/trstcli /usr/bin/trstcli
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
+# COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /usr/lib/
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/trstd /usr/bin/trstd
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/trstcli /usr/bin/trstcli
 
 COPY deployment/docker/node/mainnet_node.sh .
 

@@ -25,11 +25,11 @@ RUN mkdir -p ./go-cosmwasm/api/
 COPY Makefile .
 
 # Copy over binaries from the build-env
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so ./go-cosmwasm/api/
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so ./go-cosmwasm/
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so ./go-cosmwasm/
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/trstd trstd
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/trstcli trstcli
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/target/release/libgo_cosmwasm.so ./go-cosmwasm/api/
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_enclave.signed.so ./go-cosmwasm/
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so ./go-cosmwasm/
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/trstd trstd
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/trstcli trstcli
 
 COPY ./deployment/deb ./deployment/deb
 COPY ./deployment/docker/builder/build_deb.sh .

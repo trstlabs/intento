@@ -44,18 +44,18 @@ COPY client client
 
 RUN ln -s /usr/lib/x86_64-linux-gnu/liblz4.so /usr/local/lib/liblz4.so  && ln -s /usr/lib/x86_64-linux-gnu/libzstd.so /usr/local/lib/libzstd.so
 
-RUN mkdir -p /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/target/release/
+RUN mkdir -p /go/src/github.com/trstlabs/trst/go-cosmwasm/target/release/
 
-COPY --from=build-env-rust /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so
-COPY --from=build-env-rust /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so
-COPY --from=build-env-rust /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so
+COPY --from=build-env-rust /go/src/github.com/trstlabs/trst/go-cosmwasm/target/release/libgo_cosmwasm.so /go/src/github.com/trstlabs/trst/go-cosmwasm/target/release/libgo_cosmwasm.so
+COPY --from=build-env-rust /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_enclave.signed.so /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_enclave.signed.so
+COPY --from=build-env-rust /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so
 
-COPY api_key.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/develop/
-COPY spid.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/develop/
-COPY api_key.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/production/
-COPY spid.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/production/
-COPY api_key.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/sw_dummy/
-COPY spid.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/sw_dummy/
+COPY api_key.txt /go/src/github.com/trstlabs/trst/ias_keys/develop/
+COPY spid.txt /go/src/github.com/trstlabs/trst/ias_keys/develop/
+COPY api_key.txt /go/src/github.com/trstlabs/trst/ias_keys/production/
+COPY spid.txt /go/src/github.com/trstlabs/trst/ias_keys/production/
+COPY api_key.txt /go/src/github.com/trstlabs/trst/ias_keys/sw_dummy/
+COPY spid.txt /go/src/github.com/trstlabs/trst/ias_keys/sw_dummy/
 
 RUN . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${DB_BACKEND} MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_local_no_rust
 RUN . /opt/sgxsdk/environment && env && MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_cli
@@ -63,10 +63,10 @@ RUN . /opt/sgxsdk/environment && env && MITIGATION_CVE_2020_0551=LOAD VERSION=${
 # workaround because paths seem kind of messed up
 # RUN cp /opt/sgxsdk/lib64/libsgx_urts_sim.so /usr/lib/libsgx_urts_sim.so
 # RUN cp /opt/sgxsdk/lib64/libsgx_uae_service_sim.so /usr/lib/libsgx_uae_service_sim.so
-# RUN cp /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/libgo_cosmwasm.so
-# RUN cp /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/librust_cosmwasm_enclave.signed.so
-# RUN cp /go/src/github.com/trstlabs/SecretNetwork/cosmwasm/packages/wasmi-runtime/librust_cosmwasm_enclave.signed.so x/compute/internal/keeper
-# RUN mkdir -p /go/src/github.com/trstlabs/SecretNetwork/x/compute/internal/keeper/.sgx_secrets
+# RUN cp /go/src/github.com/trstlabs/trst/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/libgo_cosmwasm.so
+# RUN cp /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/librust_cosmwasm_enclave.signed.so
+# RUN cp /go/src/github.com/trstlabs/trst/cosmwasm/packages/wasmi-runtime/librust_cosmwasm_enclave.signed.so x/compute/internal/keeper
+# RUN mkdir -p /go/src/github.com/trstlabs/trst/x/compute/internal/keeper/.sgx_secrets
 
 #COPY deployment/ci/go-tests.sh .
 #

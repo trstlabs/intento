@@ -40,10 +40,10 @@ RUN cp /opt/sgxsdk/lib64/libsgx_uae_service_sim.so /usr/lib/libsgx_uae_service_s
 WORKDIR /root
 
 # Copy over binaries from the build-env
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /usr/lib/
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/SecretNetwork/trstd /usr/bin/trstd
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /usr/lib/
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/trstd /usr/bin/trstd
 
 COPY deployment/docker/bootstrap/bootstrap_init.sh .
 COPY deployment/docker/node/node_init.sh .
@@ -69,7 +69,7 @@ RUN mkdir -p /root/config/
 ####### Node parameters
 ARG MONIKER=default
 ARG CHAINID=trst_chain_1
-ARG GENESISPATH=https://raw.githubusercontent.com/trstlabs/SecretNetwork/master/secret-testnet-genesis.json
+ARG GENESISPATH=https://raw.githubusercontent.com/trstlabs/trst/master/secret-testnet-genesis.json
 ARG PERSISTENT_PEERS=201cff36d13c6352acfc4a373b60e83211cd3102@bootstrap.southuk.azure.com:26656
 
 ENV GENESISPATH="${GENESISPATH}"

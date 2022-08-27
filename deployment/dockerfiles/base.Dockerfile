@@ -33,7 +33,7 @@ RUN apt-get update &&  \
 
 # rm -rf /tmp/rocksdb
 # Set working directory for the build
-WORKDIR /go/src/github.com/trstlabs/SecretNetwork/
+WORKDIR /go/src/github.com/trstlabs/trst/
 
 ARG BUILD_VERSION="v0.0.0"
 ARG SGX_MODE=SW
@@ -54,21 +54,21 @@ COPY third_party/build third_party/build
 COPY go-cosmwasm go-cosmwasm/
 COPY cosmwasm cosmwasm/
 
-WORKDIR /go/src/github.com/trstlabs/SecretNetwork/
+WORKDIR /go/src/github.com/trstlabs/trst/
 
 COPY deployment/docker/MakefileCopy Makefile
 
 # RUN make clean
 RUN make vendor
 
-WORKDIR /go/src/github.com/trstlabs/SecretNetwork/go-cosmwasm
+WORKDIR /go/src/github.com/trstlabs/trst/go-cosmwasm
 
-COPY api_key.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/develop/
-COPY spid.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/develop/
-COPY api_key.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/production/
-COPY spid.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/production/
-COPY api_key.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/sw_dummy/
-COPY spid.txt /go/src/github.com/trstlabs/SecretNetwork/ias_keys/sw_dummy/
+COPY api_key.txt /go/src/github.com/trstlabs/trst/ias_keys/develop/
+COPY spid.txt /go/src/github.com/trstlabs/trst/ias_keys/develop/
+COPY api_key.txt /go/src/github.com/trstlabs/trst/ias_keys/production/
+COPY spid.txt /go/src/github.com/trstlabs/trst/ias_keys/production/
+COPY api_key.txt /go/src/github.com/trstlabs/trst/ias_keys/sw_dummy/
+COPY spid.txt /go/src/github.com/trstlabs/trst/ias_keys/sw_dummy/
 
 RUN . /opt/sgxsdk/environment && env \
     && MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} FEATURES_U=${FEATURES_U} SGX_MODE=${SGX_MODE} make build-rust
