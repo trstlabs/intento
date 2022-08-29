@@ -959,6 +959,17 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 	// require.Equal(t, gasLimit, ctx.GasMeter().GasConsumed())
 }
 
+type Msg struct {
+	Verifier    sdk.AccAddress `json:"verifier"`
+	Beneficiary sdk.AccAddress `json:"beneficiary"`
+}
+
+type InstantiateMsg struct {
+	Counter uint64 `json:"counter"`
+	Expires uint64 `json:"expires"`
+}
+
+/*
 func TestExecuteWithStorageLoop(t *testing.T) {
 	encodingConfig := MakeEncodingConfig()
 	var transferPortSource types.ICS20TransferPortSource
@@ -1033,7 +1044,7 @@ func TestExecuteWithStorageLoop(t *testing.T) {
 	_, err = keeper.Execute(ctx, addr, fred, msgBz, nil, nil)
 	require.True(t, false, "We must panic before this line")
 }
-
+*/
 /*
 func TestMigrate(t *testing.T) {
 	t.SkipNow() // we do not support migrate
@@ -1445,13 +1456,3 @@ func TestClearContractAdmin(t *testing.T) {
 	}
 }
 */
-
-type Msg struct {
-	Verifier    sdk.AccAddress `json:"verifier"`
-	Beneficiary sdk.AccAddress `json:"beneficiary"`
-}
-
-type InstantiateMsg struct {
-	Counter uint64 `json:"counter"`
-	Expires uint64 `json:"expires"`
-}

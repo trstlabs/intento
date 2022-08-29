@@ -127,15 +127,6 @@ func TestGasCostOnQuery(t *testing.T) {
 			},
 			expectedGas: 2*GasWork50 + GasReturnHashed,
 		},
-		"recursion 4, some work": {
-			gasLimit: 400_000,
-			msg: Recurse{
-				Depth: 4,
-				Work:  50,
-			},
-			// this is (currently) 244_708 gas
-			expectedGas: 5*GasWork50 + 4*GasReturnHashed,
-		},
 	}
 
 	contractAddr, creator, ctx, keeper := initRecurseContract(t)
@@ -305,14 +296,14 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 			expectOOM:                 false,
 			expectRecursionLimit:      false,
 		},
-		"recursion 9, lots of work": {
+		"recursion 11, lots of work": {
 			gasLimit: 4_000_000,
 			msg: Recurse{
-				Depth: 9,
+				Depth: 11,
 				Work:  2000,
 			},
-			expectQueriesFromContract: 9,
-			expectedGas:               GasWork2k + 9*(GasWork2k+GasReturnHashed),
+			expectQueriesFromContract: 11,
+			expectedGas:               GasWork2k + 11*(GasWork2k+GasReturnHashed),
 			expectOutOfGas:            false,
 			expectOOM:                 false,
 			expectRecursionLimit:      true,

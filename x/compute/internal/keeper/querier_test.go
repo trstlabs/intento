@@ -22,8 +22,8 @@ import (
 
 func TestQueryContractContractId(t *testing.T) {
 	encodingConfig := MakeEncodingConfig()
-
-	transferPortSource := MockIBCTransferKeeper{GetPortFn: func(ctx sdk.Context) string {
+	var transferPortSource types.ICS20TransferPortSource
+	transferPortSource = MockIBCTransferKeeper{GetPortFn: func(ctx sdk.Context) string {
 		return "myTransferPort"
 	}}
 	encoders := DefaultEncoders(transferPortSource, encodingConfig.Marshaler)
@@ -125,8 +125,8 @@ func TestQueryContractState(t *testing.T) {
 	t.SkipNow() // cannot interact directly with state
 
 	encodingConfig := MakeEncodingConfig()
-
-	transferPortSource := MockIBCTransferKeeper{GetPortFn: func(ctx sdk.Context) string {
+	var transferPortSource types.ICS20TransferPortSource
+	transferPortSource = MockIBCTransferKeeper{GetPortFn: func(ctx sdk.Context) string {
 		return "myTransferPort"
 	}}
 	encoders := DefaultEncoders(transferPortSource, encodingConfig.Marshaler)
@@ -266,8 +266,8 @@ func TestQueryContractState(t *testing.T) {
 
 func TestListContractByCodeOrdering(t *testing.T) {
 	encodingConfig := MakeEncodingConfig()
-
-	transferPortSource := MockIBCTransferKeeper{GetPortFn: func(ctx sdk.Context) string {
+	var transferPortSource types.ICS20TransferPortSource
+	transferPortSource = MockIBCTransferKeeper{GetPortFn: func(ctx sdk.Context) string {
 		return "myTransferPort"
 	}}
 	encoders := DefaultEncoders(transferPortSource, encodingConfig.Marshaler)

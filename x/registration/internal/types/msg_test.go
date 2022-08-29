@@ -29,7 +29,6 @@ func TestMsgSendValidation(t *testing.T) {
 
 	_ = os.Setenv("SGX_MODE", "SW")
 
-	addressTooShort := sdk.AccAddress([]byte("from"))
 	addr0 := sdk.AccAddress([]byte("qwlnmxj7prpx8rysxm2u"))
 
 	cert, err := os.ReadFile("../../testdata/attestation_cert_sw")
@@ -49,10 +48,7 @@ func TestMsgSendValidation(t *testing.T) {
 		addr0,
 		cert,
 	}},
-		{false, RaAuthenticate{
-			addressTooShort,
-			cert,
-		}}, // invalid address send
+
 		{false, RaAuthenticate{
 			addr0,
 			invalidCert,
@@ -65,9 +61,11 @@ func TestMsgSendValidation(t *testing.T) {
 
 	for _, tc := range cases {
 		err := tc.tx.ValidateBasic()
+
 		if tc.valid {
 			require.Nil(t, err)
 		} else {
+
 			require.NotNil(t, err)
 		}
 	}

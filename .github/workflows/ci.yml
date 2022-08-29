@@ -169,6 +169,18 @@ jobs:
           cp libgo_cosmwasm.so ./go-cosmwasm/api/libgo_cosmwasm.so
           cp librust_cosmwasm_enclave.signed.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so
           find "$(pwd)" -name \*.wasm
+      - name: Test x/alloc
+        run: |
+          source "$HOME/.sgxsdk/sgxsdk/environment"
+          go test -v ./x/alloc/keeper/...
+      - name: Test x/claim
+        run: |
+          source "$HOME/.sgxsdk/sgxsdk/environment"
+          go test -v ./x/claim/keeper/...
+      - name: Test x/mint
+        run: |
+          source "$HOME/.sgxsdk/sgxsdk/environment"
+          go test -v ./x/mint/keeper/...
       - name: Test x/registration
         run: |
           source "$HOME/.sgxsdk/sgxsdk/environment"
@@ -184,18 +196,6 @@ jobs:
           echo "not_a_key" > ias_keys/develop/api_key.txt
           LOG_LEVEL=ERROR go test -v ./x/compute/client/...
           LOG_LEVEL=ERROR go test -p 1 -timeout 20m -v ./x/compute/internal/...
-      - name: Test x/claim
-        run: |
-          source "$HOME/.sgxsdk/sgxsdk/environment"
-          go test -v ./x/claim/keeper/...
-      - name: Test x/alloc
-        run: |
-          source "$HOME/.sgxsdk/sgxsdk/environment"
-          go test -v ./x/alloc/keeper/...
-      - name: Test x/mint
-        run: |
-          source "$HOME/.sgxsdk/sgxsdk/environment"
-          go test -v ./x/mint/keeper/...
   Clippy:
     runs-on: ubuntu-20.04
     steps:
