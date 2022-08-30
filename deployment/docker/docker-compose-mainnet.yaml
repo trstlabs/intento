@@ -12,7 +12,7 @@ services:
     tty: true
 
   node:
-    image: ghcr.io/trstlabs/trustless_hub-node:0.0.0-docker
+    image: ghcr.io/trstlabs/trst:0.0.0-docker
     devices:
       - /dev/sgx/enclave
       - /dev/sgx/provision

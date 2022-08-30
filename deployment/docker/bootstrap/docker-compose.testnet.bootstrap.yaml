@@ -11,7 +11,7 @@ services:
     tty: true
 
   bootstrap:
-    image: trstlabs/trustless-hub-bootstrap:testnet
+    image: trstlabs/trst-bootstrap:testnet
     container_name: bootstrap
     devices:
       - /dev/sgx

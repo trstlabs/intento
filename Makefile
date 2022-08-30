@@ -201,7 +201,7 @@ rename_for_release:
 	-rename "s/darwin-10.6-amd64/v${VERSION}-osx64/" *darwin*
 
 sign_for_release: rename_for_release
-	sha256sum trustless-hub*.deb > SHA256SUMS
+	sha256sum trst*.deb > SHA256SUMS
 	-sha256sum trstd-* trstcli-* >> SHA256SUMS
 	gpg -u 91831DE812C6415123AFAA7B420BF1CB005FBCE6 --digest-algo sha256 --clearsign --yes SHA256SUMS
 	rm -f SHA256SUMS
@@ -209,7 +209,7 @@ sign_for_release: rename_for_release
 release: sign_for_release
 	rm -rf ./release/
 	mkdir -p ./release/
-	cp trustless-hub_*.deb ./release/
+	cp trst_*.deb ./release/
 	cp trstcli-* ./release/
 	cp trstd-* ./release/
 	cp SHA256SUMS.asc ./release/
@@ -222,7 +222,7 @@ clean:
 #	-find -name libgo_cosmwasm.so -delete
 #	-find -name '*.so' -delete
 #	-find -name 'target' -type d -exec rm -rf \;
-	-rm -f ./trustless-hub*.deb
+	-rm -f ./trst*.deb
 	-rm -f ./SHA256SUMS*
 	-rm -rf ./third_party/vendor/
 	-rm -rf ./trustlesshub/.sgx_secrets/*
@@ -313,7 +313,7 @@ clean-files:
 #   -find -name libgo_cosmwasm.so -delete
 #   -find -name '*.so' -delete
 #   -find -name 'target' -type d -exec rm -rf \;
-	-rm -f ./trustless-hub*.deb
+	-rm -f ./trst*.deb
 	-rm -f ./SHA256SUMS*
 	-rm -rf ./trustlesshub/.sgx_secrets/*
 	-rm -rf ./x/compute/internal/keeper/trustlesshub/.sgx_secrets/*

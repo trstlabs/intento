@@ -2,7 +2,7 @@ version: '3'
 
 services:
   bootstrap:
-    image: trstlabs/trustless-hub-sw-dev-custom-bootstrap:latest
+    image: trstlabs/trst-sw-dev-custom-bootstrap:latest
     container_name: bootstrap
     volumes:
 #      - /tmp/trstcli:/root/.trstcli
@@ -25,7 +25,7 @@ services:
       - 1337:1337
 
 #  node:
-#    image: trstlabs/trustless-hub-sw-dev-custom-node:latest
+#    image: trstlabs/trst-sw-dev-custom-node:latest
 #    container_name: node
 #    depends_on:
 #      - bootstrap

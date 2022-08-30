@@ -22,7 +22,7 @@ install_jq () {
 install_trstd () {
         if command_exists wget; then
                 wget "$GOLEVELDB_LINK"
-  	        sudo apt install -y ./trustlesshub_"$LATEST_VERSION"_"$NETWORK"_goleveldb_amd64.deb    
+  	        sudo apt install -y ./trst_"$LATEST_VERSION"_"$NETWORK"_goleveldb_amd64.deb    
         fi
 
         if ! command_exists trstd; then
@@ -91,14 +91,14 @@ else
 	echo "This is a golevelDB install"
   	sudo systemctl stop trst-node
   	wget "$GOLEVELDB_LINK"
-  	sudo apt install -y ./trustlesshub_"$LATEST_VERSION"_"$NETWORK"_goleveldb_amd64.deb
+  	sudo apt install -y ./trst_"$LATEST_VERSION"_"$NETWORK"_goleveldb_amd64.deb
 
  else
 
   	echo "This is a Rocksdb install"
   	sudo systemctl stop trst-node
   	wget "$ROCKSDB_LINK"
-  	sudo apt install -y ./trustlesshub_"$LATEST_VERSION"_"$NETWORK"_rocksdb_amd64.deb
+  	sudo apt install -y ./trst_"$LATEST_VERSION"_"$NETWORK"_rocksdb_amd64.deb
  fi
 
 
