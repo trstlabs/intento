@@ -2,8 +2,6 @@ name: Tests
 
 on: [push]
 
-env:
-  TRST_ENCLAVE_DIR: /usr/lib
 
 jobs:
   Enclave-Unit-Tests:
@@ -176,15 +174,12 @@ jobs:
           go test -v ./x/registration/internal/...
       - name: Test x/alloc
         run: |
-          source "$HOME/.sgxsdk/sgxsdk/environment"
           go test -v ./x/alloc/keeper/...
       - name: Test x/claim
         run: |
-          source "$HOME/.sgxsdk/sgxsdk/environment"
           go test -v ./x/claim/keeper/...
       - name: Test x/mint
         run: |
-          source "$HOME/.sgxsdk/sgxsdk/environment"
           go test -v ./x/mint/keeper/...
       - name: Test x/compute
         run: |
