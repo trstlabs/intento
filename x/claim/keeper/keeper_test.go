@@ -210,7 +210,7 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 	balanceCoins = s.app.BankKeeper.GetAllBalances(s.ctx, addr2)
 
 	s.Require().Equal(
-		balanceCoins.AmountOf(sdk.DefaultBondDenom), sdk.NewInt(332))
+		balanceCoins.AmountOf(sdk.DefaultBondDenom), sdk.NewInt(232))
 	s.Require().Equal(
 		totalDelegations, sdk.NewDec(268))
 

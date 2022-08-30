@@ -218,7 +218,6 @@ func (w *Wasmer) Query(
 	}
 	data, gasUsed, err := api.Query(w.cache, code, paramBin, queryMsg, &gasMeter, store, &goapi, &querier, gasLimit)
 	if err != nil {
-		fmt.Printf("query response err %+v\n", err.Error())
 		return nil, gasUsed, err
 	}
 

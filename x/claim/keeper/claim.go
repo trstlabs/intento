@@ -295,6 +295,7 @@ func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) erro
 		if err != nil {
 			return err
 		}
+		fmt.Printf("totalClaimableCoinsForAction %v\n", totalClaimableCoinsForAction)
 		var toClaimPeriodsForAction int64 = 0
 		var claimedPeriodsForAction int64 = 1
 		for period, completed := range status.VestingPeriodCompleted {
@@ -308,13 +309,16 @@ func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) erro
 
 		}
 
-		if toClaimPeriods != 0 {
+		if toClaimPeriodsForAction != 0 {
 
-			toClaimPercent := sdk.NewDec(toClaimPeriods).Quo(sdk.NewDec(5))
+			toClaimPercent := sdk.NewDec(toClaimPeriodsForAction).Quo(sdk.NewDec(5))
+			fmt.Printf("toClaimPercent %v\n", toClaimPercent)
 			claimableTotalDec := sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(p.ClaimDenom))
+			fmt.Printf("claimableTotalDec %v\n", claimableTotalDec)
 			claimableDec := claimableTotalDec.Mul(toClaimPercent)
-
+			fmt.Printf("claimableDec %v\n", claimableDec)
 			claimableCoin = claimableCoin.AddAmount(claimableDec.TruncateInt())
+			fmt.Printf("claimableCoin %v\n", claimableCoin)
 		}
 		claimedPercent := sdk.NewDec(claimedPeriodsForAction).Quo(sdk.NewDec(5))
 		fmt.Printf("claimedPercent %v\n", claimedPercent)
@@ -325,7 +329,7 @@ func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) erro
 		claimedPeriods = claimedPeriods + claimedPeriodsForAction
 		toClaimPeriods = toClaimPeriods + toClaimPeriodsForAction
 	}
-	if toClaimPeriods == 0 {
+	if toClaimPeriods == 0 || claimableCoin.Amount == sdk.ZeroInt() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claimable tokens right now")
 	}
 	fmt.Printf("toClaimPeriods %v\n", toClaimPeriods)

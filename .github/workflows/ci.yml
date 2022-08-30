@@ -174,12 +174,27 @@ jobs:
           go test -v ./x/registration/internal/...
       - name: Test x/alloc
         run: |
+          source "$HOME/.sgxsdk/sgxsdk/environment"
+          export SGX_MODE=SW
+          cp librust_cosmwasm_enclave.signed.so ./x/alloc/keeper
+          mkdir -p ias_keys/develop
+          mkdir -p /opt/trustlesshub/.sgx_secrets/
           go test -v ./x/alloc/keeper/...
       - name: Test x/claim
         run: |
+          source "$HOME/.sgxsdk/sgxsdk/environment"
+          export SGX_MODE=SW
+          cp librust_cosmwasm_enclave.signed.so ./x/claim/keeper
+          mkdir -p ias_keys/develop
+          mkdir -p /opt/trustlesshub/.sgx_secrets/
           go test -v ./x/claim/keeper/...
       - name: Test x/mint
-        run: |
+      run: |
+          source "$HOME/.sgxsdk/sgxsdk/environment"
+          export SGX_MODE=SW
+          cp librust_cosmwasm_enclave.signed.so ./x/mint/keeper
+          mkdir -p ias_keys/develop
+          mkdir -p /opt/trustlesshub/.sgx_secrets/
           go test -v ./x/mint/keeper/...
       - name: Test x/compute
         run: |
