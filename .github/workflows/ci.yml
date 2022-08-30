@@ -2,6 +2,9 @@ name: Tests
 
 on: [push]
 
+env:
+  TRST_ENCLAVE_DIR: /usr/lib
+
 jobs:
   Enclave-Unit-Tests:
     runs-on: ubuntu-20.04
@@ -165,10 +168,12 @@ jobs:
           path: ./x/compute/internal/keeper/testdata/v1-sanity-contract
       - name: Setup Files
         run: |
-          find "$(pwd)" -name \*.wasm
           cp libgo_cosmwasm.so ./go-cosmwasm/api/libgo_cosmwasm.so
           cp librust_cosmwasm_enclave.signed.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so
-          find "$(pwd)" -name \*.wasm
+      - name: Test x/registration
+        run: |
+          source "$HOME/.sgxsdk/sgxsdk/environment"
+          go test -v ./x/registration/internal/...
       - name: Test x/alloc
         run: |
           source "$HOME/.sgxsdk/sgxsdk/environment"
@@ -181,10 +186,6 @@ jobs:
         run: |
           source "$HOME/.sgxsdk/sgxsdk/environment"
           go test -v ./x/mint/keeper/...
-      - name: Test x/registration
-        run: |
-          source "$HOME/.sgxsdk/sgxsdk/environment"
-          go test -v ./x/registration/internal/...
       - name: Test x/compute
         run: |
           source "$HOME/.sgxsdk/sgxsdk/environment"
@@ -192,10 +193,8 @@ jobs:
           cp librust_cosmwasm_enclave.signed.so ./x/compute/internal/keeper
           mkdir -p ias_keys/develop
           mkdir -p /opt/trustlesshub/.sgx_secrets/
-          echo "not_a_key" > ias_keys/develop/spid.txt
-          echo "not_a_key" > ias_keys/develop/api_key.txt
           LOG_LEVEL=ERROR go test -v ./x/compute/client/...
-          LOG_LEVEL=ERROR go test -p 1 -timeout 20m -v ./x/compute/internal/...
+          LOG_LEVEL=ERROR go test -p 1 -timeout 40m -v ./x/compute/internal/...
   Clippy:
     runs-on: ubuntu-20.04
     steps:
