@@ -139,7 +139,7 @@ func (msg MsgExecuteContract) ValidateBasic() error {
 	}
 
 	if !msg.Funds.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "sentFunds")
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "funds")
 	}
 
 	/*

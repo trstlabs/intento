@@ -189,7 +189,7 @@ jobs:
           mkdir -p /opt/trustlesshub/.sgx_secrets/
           go test -v ./x/claim/keeper/...
       - name: Test x/mint
-      run: |
+        run: |
           source "$HOME/.sgxsdk/sgxsdk/environment"
           export SGX_MODE=SW
           cp librust_cosmwasm_enclave.signed.so ./x/mint/keeper

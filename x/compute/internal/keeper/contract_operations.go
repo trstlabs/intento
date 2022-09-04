@@ -136,6 +136,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	var codeInfo types.CodeInfo
 	k.cdc.MustUnmarshal(bz, &codeInfo)
 
+	//fmt.Printf("funds %v \n", funds)
 	// prepare env for contract instantiate call
 	env := types.NewEnv(ctx, creator, funds, contractAddress, nil)
 
@@ -157,7 +158,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	// instantiate wasm contract
 	gas := gasForContract(ctx)
 	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, env, msg, autoMsgToSend, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo, contractAddress)
-	fmt.Printf("res: %v \n", res)
+
 	if err != nil {
 		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
 	}
@@ -301,10 +302,9 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	consumeGas(ctx, gasUsed)
 
 	if err != nil {
-		fmt.Printf("err: %v \n", err.Error())
+
 		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
-	fmt.Printf("gasUsed: %v \n", gasUsed)
 
 	err = k.SetContractPublicState(ctx, contractAddress, res.Attributes)
 	if err != nil {
@@ -525,13 +525,13 @@ func (k Keeper) CreateCommunityPoolCallbackSig(ctx sdk.Context, msg []byte, code
 	var codeInfo types.CodeInfo
 	k.cdc.MustUnmarshal(bz, &codeInfo)
 	msgInfo := types.NewMsgInfo(codeInfo.CodeHash, funds)
-	fmt.Printf("code hash: \t %v \n", msgInfo.CodeHash)
+	//fmt.Printf("code hash: \t %v \n", msgInfo.CodeHash)
 	callbackSig, encryptedMessage, err = api.GetCallbackSig(msg, msgInfo)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	fmt.Printf("callbackSig: \t %v \n", callbackSig)
+	//fmt.Printf("callbackSig: \t %v \n", callbackSig)
 
 	return callbackSig, encryptedMessage, nil
 }
@@ -552,7 +552,7 @@ func (k Keeper) DiscardAutoMsg(ctx sdk.Context, info types.ContractInfo, contrac
 	info.AutoMsg = nil
 	info.EndTime = ctx.BlockHeader().Time
 	store.Set(types.GetContractAddressKey(contractAddress), k.cdc.MustMarshal(&info))
-	fmt.Printf("info: \t %v \n", info)
+	//info: \t %v \n", info)
 
 	return nil
 }

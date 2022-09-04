@@ -118,7 +118,7 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 		}
 	}
 	var interval time.Duration = 0
-	if msg.Duration != "" {
+	if msg.Interval != "" {
 		interval, err = time.ParseDuration(msg.Interval)
 		if err != nil {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
@@ -188,7 +188,6 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	/*	if info.CodeID < 2 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot execute on internal contract code")
 	}*/
-
 	res, err := k.Execute(
 		ctx,
 		contract,
