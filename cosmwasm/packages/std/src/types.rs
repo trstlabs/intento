@@ -28,15 +28,17 @@ pub struct BlockInfo {
     /// Using chrono:
     ///
     /// ```
-    /// # use cosmwasm_std::{Addr, BlockInfo, ContractInfo, Env, MessageInfo, Timestamp};
+    /// # use trustless_cosmwasm_std::{Addr, BlockInfo, ContractInfo, Env, MessageInfo, Timestamp, TransactionInfo};
     /// # let env = Env {
     /// #     block: BlockInfo {
     /// #         height: 12_345,
     /// #         time: Timestamp::from_nanos(1_571_797_419_879_305_533),
     /// #         chain_id: "cosmos-testnet-14002".to_string(),
     /// #     },
+    /// #     transaction: Some(TransactionInfo { index: 3 }),
     /// #     contract: ContractInfo {
     /// #         address: Addr::unchecked("contract"),
+    /// #         code_hash: "".to_string()
     /// #     },
     /// # };
     /// # extern crate chrono;
@@ -49,15 +51,17 @@ pub struct BlockInfo {
     /// Creating a simple millisecond-precision timestamp (as used in JavaScript):
     ///
     /// ```
-    /// # use cosmwasm_std::{Addr, BlockInfo, ContractInfo, Env, MessageInfo, Timestamp};
+    /// # use trustless_cosmwasm_std::{Addr, BlockInfo, ContractInfo, Env, MessageInfo, Timestamp, TransactionInfo};
     /// # let env = Env {
     /// #     block: BlockInfo {
     /// #         height: 12_345,
     /// #         time: Timestamp::from_nanos(1_571_797_419_879_305_533),
     /// #         chain_id: "cosmos-testnet-14002".to_string(),
     /// #     },
+    /// #     transaction: Some(TransactionInfo { index: 3 }),
     /// #     contract: ContractInfo {
     /// #         address: Addr::unchecked("contract"),
+    /// #         code_hash: "".to_string()
     /// #     },
     /// # };
     /// let millis = env.block.time.nanos() / 1_000_000;

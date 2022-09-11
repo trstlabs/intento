@@ -5,7 +5,7 @@
 /// should be the name of a second rust module that is imported in the invocation scope.
 /// The second module should export three functions with the following signatures:
 /// ```
-/// # use cosmwasm_std::{
+/// # use trustless_cosmwasm_std::{
 /// #     Storage, Api, Querier, DepsMut, Deps, Env, StdError, MessageInfo,
 /// #     Response, QueryResponse,
 /// # };
@@ -93,7 +93,7 @@ macro_rules! create_entry_points {
 
 /// This macro is very similar to the `create_entry_points` macro, except it also requires the `migrate` method:
 /// ```
-/// # use cosmwasm_std::{
+/// # use trustless_cosmwasm_std::{
 /// #     Storage, Api, Querier, DepsMut, Env, StdError, Response, MessageInfo,
 /// # };
 /// # type MigrateMsg = ();

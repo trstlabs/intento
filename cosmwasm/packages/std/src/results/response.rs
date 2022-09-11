@@ -17,10 +17,10 @@ use super::{Attribute, CosmosMsg, Empty, Event, SubMsg};
 /// Direct:
 ///
 /// ```
-/// # use cosmwasm_std::{Binary, DepsMut, Env, MessageInfo};
+/// # use trustless_cosmwasm_std::{Binary, DepsMut, Env, MessageInfo};
 /// # type InstantiateMsg = ();
 /// #
-/// use cosmwasm_std::{attr, Response, StdResult};
+/// use trustless_cosmwasm_std::{log, Response, StdResult};
 ///
 /// pub fn instantiate(
 ///     deps: DepsMut,
@@ -37,11 +37,11 @@ use super::{Attribute, CosmosMsg, Empty, Event, SubMsg};
 /// Mutating:
 ///
 /// ```
-/// # use cosmwasm_std::{coins, BankMsg, Binary, DepsMut, Env, MessageInfo, SubMsg};
+/// # use trustless_cosmwasm_std::{coins, BankMsg, Binary, DepsMut, Env, MessageInfo, SubMsg};
 /// # type InstantiateMsg = ();
 /// # type MyError = ();
 /// #
-/// use cosmwasm_std::Response;
+/// use trustless_cosmwasm_std::Response;
 ///
 /// pub fn instantiate(
 ///     deps: DepsMut,
@@ -166,27 +166,40 @@ where
     ///
     /// Anything that can be turned into an iterator and yields something
     /// that can be converted into an `Attribute` is accepted.
-    /// 
-    /// Attribute struct: 
-    /// pub struct Attribute {
-    ///    pub key: String,
-    ///    pub value: Vec<u8>,
-    ///    pub pub_db: bool, // true + acc_addr: None to write to public contract state.
-    ///    pub acc_addr: Option<String>, // pubdb true and Some(trust... ) to write to public account-specific state. 
-    ///    pub encrypted: bool, //True for an encrypted output log of the transaction
-    ///  }
+    ///
     /// ## Examples
     ///
+    /// Adding a list of attributes using the pair notation for key and value:
+    ///
     /// ```
-    /// use cosmwasm_std::{attr, Response};
+    /// use trustless_cosmwasm_std::Response;
     ///
     /// let attrs = vec![
-    ///     ("action", "reaction").as_bytes().to_vec(), true, Some("trust..."), false),
-    ///     ("answer", "42".as_bytes().to_vec(), false, None, true),
-    ///     ("another", "attribute".as_bytes().to_vec(), true, None, false),
+    ///     ("action", "reaction".as_bytes().to_vec(), false, Some("trust..."), true),
+    ///     ("answer", "42".as_bytes().to_vec(), false, Some("trust..."), true),
+    ///     ("another", "attribute".as_bytes().to_vec(), false, Some("trust..."), true),
     /// ];
-    /// let res: Response = Response::new().add_attributes(attrs.clone());
-    /// assert_eq!(res.attributes, attrs);
+    /// ```
+    ///
+    /// Adding an optional value as an optional attribute by turning it into a list of 0 or 1 elements:
+    ///
+    /// ```
+    /// use trustless_cosmwasm_std::{Attribute, Response};
+    ///
+    /// // Some value
+    /// let value: Option<String> = Some("sarah".to_string());
+    /// let attribute: Option<Attribute> = value.map(|v| Attribute::new_log("winner", v));
+    /// let res: Response = Response::new().add_attributes(attribute);
+    /// assert_eq!(res.attributes, [Attribute {
+    ///     key: "winner".to_string(),
+    ///     value: "sarah".as_bytes().to_vec(), pub_db: false, acc_addr: None, encrypted: true,
+    /// }]);
+    ///
+    /// // No value
+    /// let value: Option<String> = None;
+    /// let attribute: Option<Attribute> = value.map(|v| Attribute::new_log("winner", v));
+    /// let res: Response = Response::new().add_attributes(attribute);
+    /// assert_eq!(res.attributes.len(), 0);
     /// ```
     pub fn add_attributes<A: Into<Attribute>>(
         mut self,
@@ -201,7 +214,7 @@ where
     /// ## Examples
     ///
     /// ```
-    /// use cosmwasm_std::{CosmosMsg, Response};
+    /// use trustless_cosmwasm_std::{CosmosMsg, Response};
     ///
     /// fn make_response_with_msgs(msgs: Vec<CosmosMsg>) -> Response {
     ///     Response::new().add_messages(msgs)
@@ -216,7 +229,7 @@ where
     /// ## Examples
     ///
     /// ```
-    /// use cosmwasm_std::{SubMsg, Response};
+    /// use trustless_cosmwasm_std::{SubMsg, Response};
     ///
     /// fn make_response_with_submsgs(msgs: Vec<SubMsg>) -> Response {
     ///     Response::new().add_submessages(msgs)

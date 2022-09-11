@@ -15,16 +15,16 @@ use std::fmt;
 /// Success:
 ///
 /// ```
-/// # use cosmwasm_std::{to_vec, ContractResult, Response};
+/// # use trustless_cosmwasm_std::{to_vec, ContractResult, Response};
 /// let response: Response = Response::default();
 /// let result: ContractResult<Response> = ContractResult::Ok(response);
-/// assert_eq!(to_vec(&result).unwrap(), br#"{"ok":{"messages":[],"attributes":[],"events":[],"data":null}}"#.to_vec());
+/// assert_eq!(to_vec(&result).unwrap(), br#"{"Ok":{"messages":[],"attributes":[],"events":[],"data":null}}"#.to_vec());
 /// ```
 ///
 /// Failure:
 ///
 /// ```
-/// # use cosmwasm_std::{to_vec, ContractResult, Response};
+/// # use trustless_cosmwasm_std::{to_vec, ContractResult, Response};
 /// let error_msg = String::from("Something went wrong");
 /// let result: ContractResult<Response> = ContractResult::Err(error_msg);
 /// assert_eq!(to_vec(&result).unwrap(), br#"{"Err":"Something went wrong"}"#.to_vec());

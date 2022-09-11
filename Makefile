@@ -313,7 +313,6 @@ clean-files:
 #   -find -name libgo_cosmwasm.so -delete
 #   -find -name '*.so' -delete
 #   -find -name 'target' -type d -exec rm -rf \;
-	-rm -f ./trst*.deb
 	-rm -f ./SHA256SUMS*
 	-rm -rf ./trustlesshub/.sgx_secrets/*
 	-rm -rf ./x/compute/internal/keeper/trustlesshub/.sgx_secrets/*

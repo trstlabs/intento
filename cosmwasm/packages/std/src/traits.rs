@@ -82,8 +82,8 @@ pub trait Api {
     /// ## Examples
     ///
     /// ```
-    /// # use cosmwasm_std::{Api, Addr};
-    /// # use cosmwasm_std::testing::MockApi;
+    /// # use trustless_cosmwasm_std::{Api, Addr};
+    /// # use trustless_cosmwasm_std::testing::MockApi;
     /// # let api = MockApi::default();
     /// let input = "what-users-provide";
     /// let validated: Addr = api.addr_validate(input).unwrap();
