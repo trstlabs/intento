@@ -310,6 +310,14 @@ pub enum ExecuteMsg {
         code_hash: String,
         msg: String,
     },
+    CallToQueryPublic {
+        addr: String,
+        key: String,
+    },
+    CallToQueryPublicAddr {
+        addr: String,
+        key: String,
+    },
     StoreReallyLongKey {},
     StoreReallyShortKey {},
     StoreReallyLongValue {},

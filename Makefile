@@ -218,10 +218,10 @@ clean:
 	-rm -rf /tmp/trst
 	-rm -f ./trstcli*
 	-rm -f ./trstd*
-#	-find -name librust_cosmwasm_enclave.signed.so -delete
-#	-find -name libgo_cosmwasm.so -delete
-#	-find -name '*.so' -delete
-#	-find -name 'target' -type d -exec rm -rf \;
+	-find -name librust_cosmwasm_enclave.signed.so -delete
+	-find -name libgo_cosmwasm.so -delete
+	-find -name '*.so' -delete
+	-find -name 'target' -type d -exec rm -rf \;
 	-rm -f ./trst*.deb
 	-rm -f ./SHA256SUMS*
 	-rm -rf ./third_party/vendor/
@@ -405,19 +405,12 @@ build-all-test-contracts: build-test-contract
 	wasm-opt -Os ./cosmwasm/contracts/hackatom/target/wasm32-unknown-unknown/release/hackatom.wasm -o ./x/compute/internal/keeper/testdata/contract.wasm
 	cat ./x/compute/internal/keeper/testdata/contract.wasm | gzip > ./x/compute/internal/keeper/testdata/contract.wasm.gzip
 
-build-non-test-contracts: build-test-contract
-	cd ./cosmwasm/contracts/mint && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
-	wasm-opt -Os ./cosmwasm/contracts/mint/target/wasm32-unknown-unknown/release/mint.wasm -o ./mint.wasm
-
-	cd ./cosmwasm/contracts/dist && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
-	wasm-opt -Os ./cosmwasm/contracts/dist/target/wasm32-unknown-unknown/release/dist.wasm -o ./x/compute/internal/keeper/testdata/dist.wasm
-
+build-non-test-contracts: build-test-contracts
 	cd ./cosmwasm/contracts/ibc-reflect && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
 	wasm-opt -Os ./cosmwasm/contracts/reflect/target/wasm32-unknown-unknown/release/reflect.wasm -o ./x/compute/internal/keeper/testdata/ibc-reflect.wasm
 
 	cd ./cosmwasm/contracts/burner && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
 	wasm-opt -Os ./cosmwasm/contracts/burner/target/wasm32-unknown-unknown/release/burner.wasm -o ./x/compute/internal/keeper/testdata/burner.wasm
-
 
 bin-data: bin-data-sw bin-data-develop bin-data-production
 

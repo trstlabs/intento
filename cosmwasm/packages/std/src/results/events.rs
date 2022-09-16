@@ -101,13 +101,6 @@ impl Event {
     }
 }
 
-/// Return true
-///
-/// Only used for serde annotations
-fn bool_true() -> bool {
-    true
-}
-
 /// An key value pair that is used in the context of event attributes in logs
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
 pub struct Attribute {

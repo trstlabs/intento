@@ -66,9 +66,8 @@ impl ContractMessage {
     pub fn from_slice(msg: &[u8]) -> Result<Self, EnclaveError> {
         // 32 bytes of nonce
         // 32 bytes of 25519 compressed public key
-        // 16+ bytes of encrypted data
 
-        if msg.len() < 82 {
+        if msg.len() < 64 {
             error!(
                 "Encrypted message length {:?} is too short. Cannot parse",
                 msg.len()

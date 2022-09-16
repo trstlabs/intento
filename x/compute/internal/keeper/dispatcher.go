@@ -141,25 +141,29 @@ func (e UnsupportedRequest) Error() string {
 }
 
 // Reply is encrypted only when it is a contract reply
-func isReplyEncrypted(msg wasmTypes.CosmosMsg, reply wasmTypes.Reply) bool {
-	return (msg.Wasm != nil)
+func isReplyEncrypted(msg wasmTypes.SubMsg, reply wasmTypes.Reply) bool {
+	if msg.Msg.Wasm == nil {
+		return false
+	}
+
+	return msg.WasMsgEncrypted
 }
 
 // Issue #759 - we don't return error string for worries of non-determinism
-func redactError(err error) error {
+func redactError(err error) (bool, error) {
 	// Do not redact encrypted wasm contract errors
 	if strings.HasPrefix(err.Error(), "encrypted:") {
 		// remove encrypted sign
 		e := strings.ReplaceAll(err.Error(), "encrypted: ", "")
 		e = strings.ReplaceAll(e, ": execute contract failed", "")
 		e = strings.ReplaceAll(e, ": instantiate contract failed", "")
-		return fmt.Errorf("%s", e)
+		return false, fmt.Errorf("%s", e)
 	}
 
 	// Do not redact system errors
 	// SystemErrors must be created in x/wasm and we can ensure determinism
 	if wasmTypes.ToSystemError(err) != nil {
-		return err
+		return false, err
 	}
 
 	// FIXME: do we want to hardcode some constant string mappings here as well?
@@ -168,7 +172,7 @@ func redactError(err error) error {
 	// sdk/5 is insufficient funds (on bank send)
 	// (we can theoretically redact less in the future, but this is a first step to safety)
 	codespace, code, _ := sdkerrors.ABCIInfo(err, false)
-	return fmt.Errorf("codespace: %s, code: %d", codespace, code)
+	return true, fmt.Errorf("codespace: %s, code: %d. For more info please use the following link: https://github.com/scrtlabs/cosmos-sdk/blob/HEAD/types/errors/errors.go", codespace, code)
 }
 
 // DispatchSubmessages builds a sandbox to execute these messages and returns the execution result to the contract
@@ -237,6 +241,9 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 		// Basically, handle replying to the contract
 		// We need to create a SubMsgResult and pass it into the calling contract
 		var result wasmTypes.SubMsgResult
+		var redactedErr error
+
+		isSdkError := false
 		if err == nil {
 			//fmt.Printf("Reply data0 %v \n", data[0])
 			// just take the first one for now if there are multiple sub-sdk messages
@@ -253,18 +260,20 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 				},
 			}
 		} else {
-			// Issue #759 - we don't return error string for worries of non-determinism
+			// we don't return error string for worries of non-determinism
 			ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName)).Info("Redacting submessage error", "cause", err)
+			isSdkError, redactedErr = redactError(err)
 			result = wasmTypes.SubMsgResult{
-				Err: redactError(err).Error(),
+				Err: redactedErr.Error(),
 			}
 		}
 
 		msg_id := []byte(fmt.Sprint(msg.ID))
 		// now handle the reply, we use the parent context, and abort on error
 		reply := wasmTypes.Reply{
-			ID:     msg_id,
-			Result: result,
+			ID:              msg_id,
+			Result:          result,
+			WasMsgEncrypted: msg.WasMsgEncrypted,
 		}
 		// we can ignore any result returned as there is nothing to do with the data
 		// and the events are already in the ctx.EventManager()
@@ -278,19 +287,23 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			Signature: []byte{},
 			SignMode:  "SIGN_MODE_UNSPECIFIED",
 		}
+		// In a case when the reply is encrypted but the sdk failed (Most likely, funds issue)
+		// we return a error
+		if isReplyEncrypted(msg, reply) && isSdkError {
+			return nil, fmt.Errorf("an sdk error occoured while sending a sub-message: %s", redactedErr.Error())
+		}
 
-		if isReplyEncrypted(msg.Msg, reply) {
+		if isReplyEncrypted(msg, reply) {
 			var dataWithInternalReplyInfo wasmTypes.DataWithInternalReplyInfo
-
+			fmt.Printf("Reply res %v \n", reply.Result)
+			fmt.Printf("Reply data %v \n", data[0])
 			if reply.Result.Ok != nil {
-				//fmt.Printf("Reply data raw %v \n", reply.Result.Ok.Data)
 				err = json.Unmarshal(reply.Result.Ok.Data, &dataWithInternalReplyInfo)
 				if err != nil {
 					return nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into json : %w", err)
 				}
 
 				reply.Result.Ok.Data = dataWithInternalReplyInfo.Data
-				//fmt.Printf("Reply Ok %v \n", reply.Result.Ok)
 
 			} else {
 				err = json.Unmarshal(data[0], &dataWithInternalReplyInfo)

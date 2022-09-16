@@ -94,9 +94,7 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	for _, attr := range result {
-		//	fmt.Printf("attr %+v \n", attr)
 		if attr.Encrypted {
-			//		fmt.Printf("attr Encrypted %+v \n", attr.Key)
 			continue
 		} else if len(attr.AccAddr) == 44 {
 			accAddr, err := sdk.AccAddressFromBech32(attr.AccAddr)
@@ -105,10 +103,8 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 			}
 			prefixAccStoreKey := types.GetContractAccPubDbKey(contrAddr, accAddr)
 			prefixAccStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixAccStoreKey)
-			//fmt.Printf("acc_pubdb key %+v \n", attr.Key)
 			prefixAccStore.Set([]byte(attr.Key), attr.Value)
 		} else if attr.PubDb {
-			//fmt.Printf("pubdb key %+v \n", attr.Key)
 			prefixStore.Set([]byte(attr.Key), attr.Value)
 		}
 	}
@@ -181,12 +177,12 @@ func (k Keeper) GetContractPublicStateByKey(ctx sdk.Context, contractAddress sdk
 }
 
 //GetContractPublicStateValue gets the value from the key-value store of the public state
-func (k Keeper) GetContractPublicStateValue(ctx sdk.Context, contractAddress sdk.AccAddress, key []byte) []byte {
+func (k Keeper) GetContractPublicStateValue(ctx sdk.Context, contractAddress sdk.AccAddress, key string) []byte {
 	prefixStoreKey := types.GetContractPubDbKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
-		if bytes.Equal(iter.Key(), key) {
+		if bytes.Equal(iter.Key(), []byte(key)) {
 			return iter.Value()
 		}
 	}
@@ -194,12 +190,12 @@ func (k Keeper) GetContractPublicStateValue(ctx sdk.Context, contractAddress sdk
 }
 
 //GetContractPublicStateValueForAddr gets the value from the key-value store of the public state for a given address
-func (k Keeper) GetContractPublicStateValueForAddr(ctx sdk.Context, contractAddress sdk.AccAddress, accAddr sdk.AccAddress, key []byte) []byte {
+func (k Keeper) GetContractPublicStateValueForAddr(ctx sdk.Context, contractAddress sdk.AccAddress, accAddr sdk.AccAddress, key string) []byte {
 	prefixStoreKey := types.GetContractAccPubDbKey(contractAddress, accAddr)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
-		if bytes.Equal(iter.Key(), key) {
+		if bytes.Equal(iter.Key(), []byte(key)) {
 			return iter.Value()
 		}
 	}

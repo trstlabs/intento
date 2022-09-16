@@ -510,9 +510,10 @@ func WasmQuerier(wasm *Keeper) func(ctx sdk.Context, request *wasmTypes.WasmQuer
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Private.ContractAddr)
 			}
-			return wasm.QueryPrivate(ctx, addr, request.Private.Msg, true)
+			return wasm.queryPrivateRecursive(ctx, addr, request.Private.Msg, true)
 		}
 		if request.Public != nil {
+
 			contrAddr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Public.ContractAddr)
@@ -521,13 +522,13 @@ func WasmQuerier(wasm *Keeper) func(ctx sdk.Context, request *wasmTypes.WasmQuer
 
 		}
 		if request.PublicForAddr != nil {
-			contrAddr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
+			contrAddr, err := sdk.AccAddressFromBech32(request.PublicForAddr.ContractAddr)
 			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Public.ContractAddr)
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.PublicForAddr.ContractAddr)
 			}
-			accAddr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
+			accAddr, err := sdk.AccAddressFromBech32(request.PublicForAddr.ContractAddr)
 			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Public.ContractAddr)
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.PublicForAddr.ContractAddr)
 			}
 			return wasm.QueryPublicForAddr(ctx, contrAddr, accAddr, request.PublicForAddr.Key), nil
 

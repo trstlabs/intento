@@ -102,21 +102,21 @@ func (w *Wasmer) Instantiate(
 	gasLimit uint64,
 	sigInfo types.VerificationInfo,
 	contractAddress sdk.AccAddress,
-) (*types.Response, []byte, []byte, uint64, error) {
+) (*types.Response, []byte, []byte, uint64, []byte, error) {
 	paramBin, err := json.Marshal(env)
 	if err != nil {
-		return nil, nil, nil, 0, err
+		return nil, nil, nil, 0, nil, err
 	}
 
 	sigInfoBin, err := json.Marshal(sigInfo)
 	if err != nil {
-		return nil, nil, nil, 0, err
+		return nil, nil, nil, 0, nil, err
 	}
 
 	data, gasUsed, err := api.Instantiate(w.cache, codeId, paramBin, msg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
 
 	if err != nil {
-		return nil, nil, nil, gasUsed, err
+		return nil, nil, nil, gasUsed, nil, err
 	}
 
 	key := data[0:64]
@@ -128,21 +128,30 @@ func (w *Wasmer) Instantiate(
 	var result types.ContractResult
 	err = json.Unmarshal(data, &result)
 	if err != nil {
-		return nil, nil, nil, gasUsed, err
+		return nil, nil, nil, gasUsed, nil, err
 	}
-	//fmt.Printf("Init Result Ok Data: %+v\n", result.Ok.Data)
+
+	if result.Err != nil {
+		errData, err := appendReplyInternalDataToData(nil, result.InternalReplyEnclaveSig, result.InternalMsgId)
+		if err != nil {
+			return nil, nil, nil, gasUsed, nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+		}
+		return result.Ok, nil, nil, gasUsed, errData, fmt.Errorf("%s", result.Err.Error())
+	}
+
 	if result.InternalReplyEnclaveSig != nil {
 		result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
 		if err != nil {
-			return nil, nil, nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+			return nil, nil, nil, gasUsed, nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
 		}
 	}
-	fmt.Printf("Init Result %+v\n", result)
+	//fmt.Printf("Init Result %+v\n", result)
 
 	if result.Err != nil {
-		return nil, nil, nil, gasUsed, fmt.Errorf("%s", result.Err.Error())
+
+		return result.Ok, nil, nil, gasUsed, nil, fmt.Errorf("%s", result.Err.Error())
 	}
-	return result.Ok, key, callbackSig, gasUsed, nil
+	return result.Ok, key, callbackSig, gasUsed, nil, nil
 }
 
 // Execute calls a given contract. Since the only difference between contracts with the same CodeID is the
@@ -162,41 +171,44 @@ func (w *Wasmer) Execute(
 	gasLimit uint64,
 	sigInfo types.VerificationInfo,
 	handleType types.HandleType,
-) (*types.Response, uint64, error) {
+) (*types.Response, uint64, []byte, error) {
 	paramBin, err := json.Marshal(env)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, nil, err
 	}
 	sigInfoBin, err := json.Marshal(sigInfo)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, nil, err
 	}
 
 	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
-	fmt.Printf("data: %+v", data)
-	fmt.Printf("err: %+v", err)
-	fmt.Printf("gasUsed: %+v", gasUsed)
 	if err != nil {
-		return nil, gasUsed, err
+		return nil, gasUsed, nil, err
 	}
 
 	var result types.ContractResult
 	err = json.Unmarshal(data, &result)
 	if err != nil {
-		return nil, gasUsed, err
+		return nil, gasUsed, nil, err
 	}
-	fmt.Printf("resullt: %+v", result)
+
 	if result.Err != nil {
-		return nil, gasUsed, fmt.Errorf("%s", result.Err.Error())
+		errData, err := appendReplyInternalDataToData(nil, result.InternalReplyEnclaveSig, result.InternalMsgId)
+		if err != nil {
+			return nil, gasUsed, nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+		}
+		return nil, gasUsed, errData, fmt.Errorf("%s", result.Err.Error())
 	}
+
 	if result.InternalReplyEnclaveSig != nil {
 		result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
 
 		if err != nil {
-			return nil, gasUsed, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+			return nil, gasUsed, nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
 		}
 	}
-	return result.Ok, gasUsed, nil
+
+	return result.Ok, gasUsed, nil, nil
 }
 
 // Query allows a client to execute a contract-specific query. If the result is not empty, it should be

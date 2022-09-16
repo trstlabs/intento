@@ -25,7 +25,7 @@ pub enum WasmQuery {
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         //code_hash: String,
         /// Key is the key used in the public contract's Storage
-        key: Binary,
+        key: String,
     },
      /// this queries the raw kv-store of the contract.
     /// returns the raw, unparsed data stored at that key (or `Ok(Err(StdError:NotFound{}))` if missing)
@@ -33,7 +33,7 @@ pub enum WasmQuery {
         contract_addr: String,
         account_addr: String,
         /// Key is the key used in the public contract's Storage
-        key: Binary,
+        key: String,
     },
     /// returns a ContractInfoResponse with metadata on the contract from the runtime
     ContractInfo { contract_addr: String },

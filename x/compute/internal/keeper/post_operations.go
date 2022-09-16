@@ -67,10 +67,10 @@ func (h ContractResponseHandler) Handle(ctx sdk.Context, contractAddr sdk.AccAdd
 	result := origRspData
 	switch rsp, err := h.md.DispatchSubmessages(ctx, contractAddr, ibcPort, messages, ogTx, ogSigInfo); {
 	case err != nil:
-		fmt.Printf("Dispatch err: %s", err.Error())
+		fmt.Printf("Dispatch err: %s \n", err.Error())
 		return nil, sdkerrors.Wrap(err, "submessages")
 	case rsp != nil:
-		fmt.Printf("Dispatch res: %v", result)
+		fmt.Printf("Dispatch res: %v 'n", result)
 		result = rsp
 	}
 	return result, nil
@@ -105,9 +105,9 @@ func (k Keeper) reply(ctx sdk.Context, contractAddress sdk.AccAddress, reply was
 	}
 	marshaledReply = append(ogTx[0:64], marshaledReply...)
 
-	res, gasUsed, execErr := k.wasmer.Execute(codeInfo.CodeHash, env, marshaledReply, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, ogSigInfo, wasmTypes.HandleTypeReply)
+	res, gasUsed, errData, execErr := k.wasmer.Execute(codeInfo.CodeHash, env, marshaledReply, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, ogSigInfo, wasmTypes.HandleTypeReply)
 	if execErr != nil {
-		return nil, sdkerrors.Wrap(types.ErrReplyFailed, execErr.Error())
+		return errData, sdkerrors.Wrap(types.ErrReplyFailed, execErr.Error())
 	}
 
 	consumeGas(ctx, gasUsed)

@@ -9,17 +9,17 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	wasmTypes "github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 type StakingMsg struct {
@@ -95,14 +95,14 @@ type InvestmentResponse struct {
 
 func TestInitializeStaking(t *testing.T) {
 	encodingConfig := MakeEncodingConfig()
-
-	transferPortSource := MockIBCTransferKeeper{GetPortFn: func(ctx sdk.Context) string {
+	var transferPortSource wasmTypes.ICS20TransferPortSource
+	transferPortSource = MockIBCTransferKeeper{GetPortFn: func(ctx sdk.Context) string {
 		return "myTransferPort"
 	}}
 	encoders := DefaultEncoders(transferPortSource, encodingConfig.Marshaler)
 	ctx, keepers := CreateTestInput(t, false, SupportedFeatures, &encoders, nil)
 	accKeeper, stakingKeeper, keeper := keepers.AccountKeeper, keepers.StakingKeeper, keepers.WasmKeeper
-
+	keepers.DistKeeper.SetFeePool(ctx, distrtypes.InitialFeePool())
 	valAddr := addValidator(ctx, stakingKeeper, accKeeper, keeper.bankKeeper, sdk.NewInt64Coin("stake", 1234567))
 	ctx = nextBlock(ctx, stakingKeeper)
 	v, found := stakingKeeper.GetValidator(ctx, valAddr)
@@ -111,7 +111,6 @@ func TestInitializeStaking(t *testing.T) {
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000), sdk.NewInt64Coin("stake", 500000))
 	creator, creatorPrivKey := CreateFakeFundedAccount(ctx, accKeeper, keeper.bankKeeper, deposit)
-
 	// upload staking derivates code
 	stakingCode, err := ioutil.ReadFile("./testdata/staking.wasm")
 	require.NoError(t, err)
@@ -154,7 +153,7 @@ func TestInitializeStaking(t *testing.T) {
 	badBz, err := json.Marshal(&badMsg)
 	require.NoError(t, err)
 
-	_, _, _, _, initErr := initHelper(t, keeper, ctx, stakingID, creator, creatorPrivKey, string(badBz), true, false, defaultGasForTests)
+	_, _, _, _, initErr := initHelper(t, keeper, ctx, stakingID, creator, creatorPrivKey, string(badBz), true, defaultGasForTests)
 	require.Error(t, initErr)
 	require.Error(t, initErr.GenericErr)
 	require.Contains(t, initErr.GenericErr.Msg, fmt.Sprintf("%s is not in the current validator set", sdk.ValAddress(bob).String()))
@@ -172,7 +171,7 @@ type initInfo struct {
 	ctx           sdk.Context
 	accKeeper     authkeeper.AccountKeeper
 	stakingKeeper stakingkeeper.Keeper
-	distKeeper    distributionkeeper.Keeper
+	distKeeper    distrkeeper.Keeper
 	bankKeeper    bankkeeper.Keeper
 	wasmKeeper    Keeper
 
@@ -181,19 +180,19 @@ type initInfo struct {
 
 func initializeStaking(t *testing.T) initInfo {
 	encodingConfig := MakeEncodingConfig()
-	//var transferPortSource wasmTypes.ICS20TransferPortSource
-	transferPortSource := MockIBCTransferKeeper{GetPortFn: func(ctx sdk.Context) string {
+	var transferPortSource wasmTypes.ICS20TransferPortSource
+	transferPortSource = MockIBCTransferKeeper{GetPortFn: func(ctx sdk.Context) string {
 		return "myTransferPort"
 	}}
 	encoders := DefaultEncoders(transferPortSource, encodingConfig.Marshaler)
 	ctx, keepers := CreateTestInput(t, false, SupportedFeatures, &encoders, nil)
 	accKeeper, stakingKeeper, keeper := keepers.AccountKeeper, keepers.StakingKeeper, keepers.WasmKeeper
-
+	keepers.DistKeeper.SetFeePool(ctx, distrtypes.InitialFeePool())
 	valAddr := addValidator(ctx, stakingKeeper, accKeeper, keeper.bankKeeper, sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000000))
 	ctx = nextBlock(ctx, stakingKeeper)
 
 	// set some baseline - this seems to be needed
-	keepers.DistKeeper.SetValidatorHistoricalRewards(ctx, valAddr, 0, distributiontypes.ValidatorHistoricalRewards{
+	keepers.DistKeeper.SetValidatorHistoricalRewards(ctx, valAddr, 0, distrtypes.ValidatorHistoricalRewards{
 		CumulativeRewardRatio: sdk.DecCoins{},
 		ReferenceCount:        1,
 	})
@@ -466,9 +465,7 @@ func addValidator(ctx sdk.Context, stakingKeeper stakingkeeper.Keeper, accountKe
 	_, pub, accAddr := keyPubAddr()
 
 	addr := sdk.ValAddress(accAddr)
-
 	owner, _ := CreateFakeFundedAccount(ctx, accountKeeper, bankKeeper, sdk.Coins{value})
-
 	anypub, _ := types.NewAnyWithValue(pub)
 	msg := stakingtypes.MsgCreateValidator{
 		Description: stakingtypes.Description{
@@ -503,7 +500,7 @@ func nextBlock(ctx sdk.Context, stakingKeeper stakingkeeper.Keeper) sdk.Context 
 	return ctx
 }
 
-func setValidatorRewards(ctx sdk.Context, bankKeeper bankkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, distKeeper distributionkeeper.Keeper, valAddr sdk.ValAddress, rewards ...sdk.Coin) {
+func setValidatorRewards(ctx sdk.Context, bankKeeper bankkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, distKeeper distrkeeper.Keeper, valAddr sdk.ValAddress, rewards ...sdk.Coin) {
 	// allocate some rewards
 	validator := stakingKeeper.Validator(ctx, valAddr)
 	payout := sdk.NewDecCoinsFromCoins(rewards...)
@@ -515,7 +512,7 @@ func setValidatorRewards(ctx sdk.Context, bankKeeper bankkeeper.Keeper, stakingK
 		panic(err)
 	}
 
-	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, distributiontypes.ModuleName, rewards)
+	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, distrtypes.ModuleName, rewards)
 	if err != nil {
 		panic(err)
 	}
@@ -530,7 +527,7 @@ func assertBalance(t *testing.T, ctx sdk.Context, keeper Keeper, contract sdk.Ac
 	queryBz, err := json.Marshal(query)
 	require.NoError(t, err)
 
-	res, qErr := queryHelper(t, keeper, ctx, contract, string(queryBz), true, false, defaultGasForTests)
+	res, qErr := queryHelper(t, keeper, ctx, contract, string(queryBz), true, defaultGasForTests)
 	require.Empty(t, qErr)
 	var balance BalanceResponse
 	err = json.Unmarshal([]byte(res), &balance)
@@ -547,7 +544,7 @@ func assertClaims(t *testing.T, ctx sdk.Context, keeper Keeper, contract sdk.Acc
 	queryBz, err := json.Marshal(query)
 	require.NoError(t, err)
 
-	res, qErr := queryHelper(t, keeper, ctx, contract, string(queryBz), true, false, defaultGasForTests)
+	res, qErr := queryHelper(t, keeper, ctx, contract, string(queryBz), true, defaultGasForTests)
 	require.Empty(t, qErr)
 	var claims ClaimsResponse
 	err = json.Unmarshal([]byte(res), &claims)
@@ -559,7 +556,7 @@ func assertSupply(t *testing.T, ctx sdk.Context, keeper Keeper, contract sdk.Acc
 	query := StakingQueryMsg{Investment: &struct{}{}}
 	queryBz, err := json.Marshal(query)
 	require.NoError(t, err)
-	res, qErr := queryHelper(t, keeper, ctx, contract, string(queryBz), true, false, defaultGasForTests)
+	res, qErr := queryHelper(t, keeper, ctx, contract, string(queryBz), true, defaultGasForTests)
 	require.Empty(t, qErr)
 
 	var invest InvestmentResponse

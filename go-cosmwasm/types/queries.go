@@ -242,14 +242,14 @@ type PrivateQuery struct {
 // PublicQuery queries the public contract state
 type PublicQuery struct {
 	ContractAddr string `json:"contract_addr"`
-	Key          []byte `json:"key"`
+	Key          string `json:"key"`
 }
 
 // PublicQuery queries the public contract state
 type PublicAddrQuery struct {
 	ContractAddr string `json:"contract_addr"`
 	AccountAddr  string `json:"account_addr"`
-	Key          []byte `json:"key"`
+	Key          string `json:"key"`
 }
 
 type DistQuery struct {

@@ -157,20 +157,21 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	}
 	// instantiate wasm contract
 	gas := gasForContract(ctx)
-	res, key, callbackSig, gasUsed, err := k.wasmer.Instantiate(codeInfo.CodeHash, env, msg, autoMsgToSend, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo, contractAddress)
-
-	if err != nil {
-		return nil, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
-	}
+	res, key, callbackSig, gasUsed, errData, err := k.wasmer.Instantiate(codeInfo.CodeHash, env, msg, autoMsgToSend, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo, contractAddress)
 	consumeGas(ctx, gasUsed)
 	if err != nil {
-		return contractAddress, nil, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
+		return nil, errData, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
+	}
+
+	if err != nil {
+		return contractAddress, res.Data, sdkerrors.Wrap(types.ErrInstantiateFailed, err.Error())
 	}
 
 	//fmt.Printf("Attributes: %v \n", res.Attributes)
 	// emit all events from this contract itself
 	//events := types.ParseEvents(res.Attributes, contractAddress)
 	//ctx.EventManager().EmitEvents(events)
+
 	ctx.EventManager().EmitEvent(sdk.NewEvent(
 		types.EventTypeInstantiate,
 		sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String()),
@@ -298,12 +299,11 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	}
 
 	gas := gasForContract(ctx)
-	res, gasUsed, err := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, wasmTypes.HandleTypeExecute)
+	res, gasUsed, errData, err := k.wasmer.Execute(codeInfo.CodeHash, params, msg, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, wasmTypes.HandleTypeExecute)
 	consumeGas(ctx, gasUsed)
 
 	if err != nil {
-
-		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
+		return &sdk.Result{Data: errData}, sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
 
 	err = k.SetContractPublicState(ctx, contractAddress, res.Attributes)
@@ -438,6 +438,11 @@ func (k Keeper) QueryPrivate(ctx sdk.Context, contractAddr sdk.AccAddress, req [
 	return k.queryPrivateContractImpl(ctx, contractAddr, req, useDefaultGasLimit, false)
 }
 
+// queryPrivateRecursive queries the smart contract itself. This should only be called when running inside another query recursively.
+func (k Keeper) queryPrivateRecursive(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool) ([]byte, error) {
+	return k.queryPrivateContractImpl(ctx, contractAddr, req, useDefaultGasLimit, true)
+}
+
 // queryPrivateContractImpl queries the contract itself. This should only be called when running inside another query recursively.
 func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool, recursive bool) ([]byte, error) {
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "query")
@@ -481,13 +486,13 @@ func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAd
 }
 
 //QueryPublic queries the public contract state
-func (k Keeper) QueryPublic(ctx sdk.Context, contractAddress sdk.AccAddress, key []byte) []byte {
+func (k Keeper) QueryPublic(ctx sdk.Context, contractAddress sdk.AccAddress, key string) []byte {
 	value := k.GetContractPublicStateValue(ctx, contractAddress, key)
 	return value
 }
 
 //QueryPublicForAddr queries the public contract state for a given address
-func (k Keeper) QueryPublicForAddr(ctx sdk.Context, contractAddress sdk.AccAddress, accountAddress sdk.AccAddress, key []byte) []byte {
+func (k Keeper) QueryPublicForAddr(ctx sdk.Context, contractAddress sdk.AccAddress, accountAddress sdk.AccAddress, key string) []byte {
 	value := k.GetContractPublicStateValueForAddr(ctx, contractAddress, accountAddress, key)
 	return value
 }

@@ -38,6 +38,15 @@ where
     pub msg: CosmosMsg<T>,
     pub gas_limit: Option<u64>,
     pub reply_on: ReplyOn,
+    // An indication that will be passed to the reply that will indicate wether the original message,
+    // which is the one who create the submessages, was encrypted or not.
+    // Plaintext replies will be encrypted only if the original message was.
+    #[serde(default = "bool_false")]
+    pub was_msg_encrypted: bool,
+}
+
+fn bool_false() -> bool {
+    false
 }
 
 /// The information we get back from a successful sub message execution,
@@ -65,6 +74,7 @@ pub struct Reply {
     /// Use this to identify which submessage triggered the `reply`.
     pub id: Binary,
     pub result: SubMsgResult,
+    pub was_msg_encrypted: bool
 }
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct DecryptedReply {

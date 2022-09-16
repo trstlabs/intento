@@ -1,9 +1,9 @@
 use core::time;
 use mem::MaybeUninit;
-use std::{mem, thread, vec};
+use std::{mem, str, thread, vec};
 
 use cosmwasm_std::{
-    log, coins, entry_point, to_binary, BankMsg, Binary, CosmosMsg, Deps, DepsMut, Empty, Env,
+    coins, entry_point, log, to_binary, BankMsg, Binary, CosmosMsg, Deps, DepsMut, Empty, Env,
     Event, MessageInfo, QueryRequest, Reply, ReplyOn, Response, StdError, StdResult, Storage,
     SubMsg, SubMsgResult, WasmMsg, WasmQuery,
 };
@@ -173,7 +173,6 @@ pub fn instantiate(
                 gas_limit: None,
             }))
         }
-        // These were ported from the v0.10 test-contract:
         InstantiateMsg::Nop {} => Ok(Response::new().add_log("init", "🌈")),
         InstantiateMsg::Callback {
             contract_addr,
@@ -201,7 +200,7 @@ pub fn instantiate(
         InstantiateMsg::NoLogs {} => Ok(Response::new()),
         InstantiateMsg::CallbackToInit { code_id, code_hash } => Ok(Response::new()
             .add_message(CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
+                auto_msg: None,
                 duration: None,
                 interval: None,
                 start_duration_at: None,
@@ -250,7 +249,7 @@ pub fn instantiate(
             msg,
         } => Ok(Response::new()
             .add_message(CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
+                auto_msg: None,
                 duration: None,
                 interval: None,
                 start_duration_at: None,
@@ -501,10 +500,10 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             resp.messages.push(SubMsg {
                 id: 1700,
                 msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
-                duration: None,
-                interval: None,
-                start_duration_at: None,
+                    auto_msg: None,
+                    duration: None,
+                    interval: None,
+                    start_duration_at: None,
                     code_hash,
                     msg: Binary::from(msg.as_bytes().to_vec()),
                     funds: vec![],
@@ -546,10 +545,10 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             resp.messages.push(SubMsg {
                 id: 8888,
                 msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
-                duration: None,
-                interval: None,
-                start_duration_at: None,
+                    auto_msg: None,
+                    duration: None,
+                    interval: None,
+                    start_duration_at: None,
                     code_hash,
                     msg: Binary::from(msg.as_bytes().to_vec()),
                     funds: vec![],
@@ -588,9 +587,9 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
 
             match response {
                 QueryRes::Get { count } => {
-                    let mut resp = Response::default();
-                    resp.data = Some((count as u32).to_be_bytes().into());
-                    return Ok(resp);
+                    return Ok(Response::new().add_log("resp", format!("{}", count)));
+                    //  resp. = Some((count as u32).to_be_bytes().into());
+                    // return Ok(resp);
                 }
             }
         }
@@ -602,10 +601,10 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             resp.messages.push(SubMsg {
                 id: 2000,
                 msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
-                duration: None,
-                interval: None,
-                start_duration_at: None,
+                    auto_msg: None,
+                    duration: None,
+                    interval: None,
+                    start_duration_at: None,
                     code_hash,
                     msg: Binary::from(msg.as_bytes().to_vec()),
                     funds: vec![],
@@ -642,10 +641,10 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             resp.messages.push(SubMsg {
                 id: 8890,
                 msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
-                duration: None,
-                interval: None,
-                start_duration_at: None,
+                    auto_msg: None,
+                    duration: None,
+                    interval: None,
+                    start_duration_at: None,
                     code_hash,
                     msg: Binary::from(msg.as_bytes().to_vec()),
                     funds: vec![],
@@ -794,7 +793,7 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             code_hash,
         } => Ok(
             Response::new().add_message(CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
+                auto_msg: None,
                 duration: None,
                 interval: None,
                 start_duration_at: None,
@@ -831,7 +830,7 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             msg,
         } => Ok(Response::new()
             .add_message(CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
+                auto_msg: None,
                 duration: None,
                 interval: None,
                 start_duration_at: None,
@@ -872,6 +871,21 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
 
             Ok(Response::new().add_log("c", format!("{}", answer)))
         }
+        ExecuteMsg::CallToQueryPublic { addr, key } => {
+            let answer = deps.querier.query_wasm_public(addr, key).map_err(|err| {
+                StdError::generic_err(format!("Got an error from query: {:?}", err))
+            })?;
+            Ok(Response::new().add_log("public", str::from_utf8(answer.as_slice()).unwrap()))
+        }
+        ExecuteMsg::CallToQueryPublicAddr { addr, key } => {
+            let answer = deps
+                .querier
+                .query_wasm_public_addr(addr.clone(), addr, key)
+                .map_err(|err| {
+                    StdError::generic_err(format!("Got an error from query: {:?}", err))
+                })?;
+            Ok(Response::new().add_log("public", str::from_utf8(answer.as_slice()).unwrap()))
+        }
         ExecuteMsg::StoreReallyLongKey {} => {
             let mut store = PrefixedStorage::new(deps.storage, b"my_prefix");
             store.set(REALLY_LONG, b"hello");
@@ -902,9 +916,7 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
                     sig.as_slice(),
                     pubkey.as_slice(),
                 ) {
-                    Ok(result) => {
-                        Ok(Response::new().add_log("result", format!("{}", result)))
-                    }
+                    Ok(result) => Ok(Response::new().add_log("result", format!("{}", result))),
                     Err(err) => Err(StdError::generic_err(format!("{:?}", err))),
                 };
             }
@@ -964,9 +976,7 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
                         .api
                         .ed25519_verify(msg.as_slice(), sig.as_slice(), pubkey.as_slice())
                     {
-                        Ok(result) => {
-                            Ok(Response::new().add_log("result", format!("{}", result)))
-                        }
+                        Ok(result) => Ok(Response::new().add_log("result", format!("{}", result))),
                         Err(err) => Err(StdError::generic_err(format!("{:?}", err))),
                     };
             }
@@ -998,9 +1008,7 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
                         .collect::<Vec<&[u8]>>()
                         .as_slice(),
                 ) {
-                    Ok(result) => {
-                        Ok(Response::new().add_log("result", format!("{}", result)))
-                    }
+                    Ok(result) => Ok(Response::new().add_log("result", format!("{}", result))),
                     Err(err) => Err(StdError::generic_err(format!("{:?}", err))),
                 };
             }
@@ -1089,10 +1097,10 @@ pub fn increment(deps: DepsMut, c: u64) -> StdResult<Response> {
     let new_count = count_read(deps.storage).load()? + c;
     count(deps.storage).save(&new_count)?;
 
-    let mut resp = Response::default();
-    resp.data = Some((new_count as u32).to_be_bytes().into());
-
-    Ok(resp)
+    // let mut resp = Response::default();
+    // resp.data = Some((new_count as u32).to_be_bytes().into());
+    //Ok(resp)
+    Ok(Response::new().add_log("resp", format!("{}", new_count)))
 }
 
 pub fn transfer_money(_deps: DepsMut, amount: u64) -> StdResult<Response> {
@@ -1158,8 +1166,8 @@ pub fn sub_msg_loop_iner(_env: Env, deps: DepsMut, iter: u64) -> StdResult<Respo
 
     let mut resp = Response::default();
     resp.data = Some(((iter - 1) as u64).to_string().as_bytes().into());
-
-    Ok(resp)
+    //Ok(resp)
+    Ok(resp.add_log("resp", format!("{}", iter - 1)))
 }
 
 pub fn send_multiple_sub_messages(env: Env, _deps: DepsMut) -> StdResult<Response> {
@@ -1179,10 +1187,10 @@ pub fn send_multiple_sub_messages(env: Env, _deps: DepsMut) -> StdResult<Respons
     resp.messages.push(SubMsg {
         id: 1601,
         msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
-                duration: None,
-                interval: None,
-                start_duration_at: None,
+            auto_msg: None,
+            duration: None,
+            interval: None,
+            start_duration_at: None,
             code_hash: env.contract.code_hash.clone(),
             msg: Binary::from(
                 "{\"counter\":{\"counter\":150, \"expires\":100}}"
@@ -1223,7 +1231,7 @@ pub fn send_multiple_sub_messages(env: Env, _deps: DepsMut) -> StdResult<Respons
 }
 
 pub fn send_multiple_sub_messages_no_reply(env: Env, deps: DepsMut) -> StdResult<Response> {
-    let mut resp = Response::default();
+    let mut resp = Response::new();
 
     resp.messages.push(SubMsg {
         id: 1610,
@@ -1252,10 +1260,10 @@ pub fn send_multiple_sub_messages_no_reply(env: Env, deps: DepsMut) -> StdResult
     resp.messages.push(SubMsg {
         id: 1612,
         msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
-                duration: None,
-                interval: None,
-                start_duration_at: None,
+            auto_msg: None,
+            duration: None,
+            interval: None,
+            start_duration_at: None,
             code_hash: env.contract.code_hash.clone(),
             msg: Binary::from(
                 "{\"counter\":{\"counter\":150, \"expires\":100}}"
@@ -1281,13 +1289,13 @@ pub fn send_multiple_sub_messages_no_reply(env: Env, deps: DepsMut) -> StdResult
         gas_limit: Some(10000000_u64),
         reply_on: ReplyOn::Never,
     });
-
-    resp.data = Some(
+    Ok(resp.add_log("resp", format!("{}", count_read(deps.storage).load()?)))
+    /*resp.data = Some(
         (count_read(deps.storage).load()? as u32)
             .to_be_bytes()
             .into(),
     );
-    Ok(resp)
+    Ok(resp)*/
 }
 
 pub fn recursive_reply_fail(env: Env, _deps: DepsMut) -> StdResult<Response> {
@@ -1312,10 +1320,10 @@ pub fn init_new_contract(env: Env, _deps: DepsMut) -> StdResult<Response> {
     resp.messages.push(SubMsg {
         id: 1404,
         msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
-                duration: None,
-                interval: None,
-                start_duration_at: None,
+            auto_msg: None,
+            duration: None,
+            interval: None,
+            start_duration_at: None,
             code_hash: env.contract.code_hash,
             msg: Binary::from(
                 "{\"counter\":{\"counter\":150, \"expires\":100}}"
@@ -1338,10 +1346,10 @@ pub fn init_new_contract_with_error(env: Env, _deps: DepsMut) -> StdResult<Respo
     resp.messages.push(SubMsg {
         id: 1405,
         msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
-                duration: None,
-                interval: None,
-                start_duration_at: None,
+            auto_msg: None,
+            duration: None,
+            interval: None,
+            start_duration_at: None,
             code_hash: env.contract.code_hash,
             msg: Binary::from(
                 "{\"counter\":{\"counter\":0, \"expires\":100}}"
@@ -1418,6 +1426,7 @@ pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> StdResult<Binary> {
 pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
     match (reply.id, reply.result) {
         (1337, SubMsgResult::Err(_)) => {
+            /*
             let mut resp = Response::default();
             resp.data = Some(
                 (count_read(deps.storage).load()? as u32)
@@ -1425,7 +1434,8 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
                     .into(),
             );
 
-            Ok(resp)
+            Ok(resp)*/
+            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
         (1337, SubMsgResult::Ok(_)) => Err(StdError::generic_err("got wrong bank answer")),
 
@@ -1434,51 +1444,67 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
             e
         ))),
         (1304, SubMsgResult::Ok(_)) => {
-            let mut resp = Response::default();
+            /* let mut resp = Response::default();
             resp.data = Some(
-                (count_read(deps.storage).load()? as u32)
-                    .to_be_bytes()
-                    .into(),
-            );
+                 (count_read(deps.storage).load()? as u32)
+                     .to_be_bytes()
+                     .into(),
+             );
 
-            Ok(resp)
+             Ok(resp)*/
+            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
         (1305, SubMsgResult::Ok(_)) => {
             Err(StdError::generic_err(format!("recursive reply failed")))
         }
         (1305, SubMsgResult::Err(_)) => {
-            let mut resp = Response::default();
             let new_count = 10;
             count(deps.storage).save(&new_count)?;
 
+            /*   let mut resp = Response::default();
             resp.data = Some(
-                (count_read(deps.storage).load()? as u32)
-                    .to_be_bytes()
-                    .into(),
-            );
+                 (count_read(deps.storage).load()? as u32)
+                     .to_be_bytes()
+                     .into(),
+             );
 
-            Ok(resp)
+             Ok(resp)*/
+            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
 
         (1404, SubMsgResult::Err(e)) => Err(StdError::generic_err(format!(
             "recursive init failed: {}",
             e
         ))),
-        (1404, SubMsgResult::Ok(s)) => match s.data {
-            Some(x) => {
+        /*   (1404, SubMsgResult::Ok(_)) => {
                 let response = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Private {
                     code_hash: env.contract.code_hash,
-                    contract_addr: String::from_utf8(
-                        Binary::from_base64(String::from_utf8(x.to_vec())?.as_str())?.to_vec(),
-                    )?,
+                    contract_addr: env.contract.address.to_string(),
                     msg: to_binary(&QueryMsg::Get {})?,
                 }))?;
 
                 match response {
                     QueryRes::Get { count } => {
-                        let mut resp = Response::default();
-                        resp.data = Some((count as u32).to_be_bytes().into());
-                        return Ok(resp);
+                       // let mut resp = Response::default();
+                        //resp.data = Some((count as u32).to_be_bytes().into());
+                       //return Ok(resp);
+                       return Ok(Response::new().add_log("resp", format!("{}", count)));
+                    }
+                }
+
+        },*/
+        (1404, SubMsgResult::Ok(s)) => match s.data {
+            Some(x) => {
+                let contr_addr = String::from_utf8(x.to_vec())?;
+                let response = deps.querier.query(&QueryRequest::Wasm(WasmQuery::Private {
+                    code_hash: env.contract.code_hash,
+                    contract_addr: contr_addr,
+                    msg: to_binary(&QueryMsg::Get {})?,
+                }))?;
+
+                match response {
+                    QueryRes::Get { count } => {
+                        return Ok(Response::new().add_log("resp", format!("{}", count)));
                     }
                 }
             }
@@ -1490,24 +1516,24 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
             "recursive init with error failed"
         ))),
         (1405, SubMsgResult::Err(_)) => {
-            let mut resp = Response::default();
             let new_count = 1337;
             count(deps.storage).save(&new_count)?;
 
+            /*
+            let mut resp = Response::default();
             resp.data = Some(
                 (count_read(deps.storage).load()? as u32)
                     .to_be_bytes()
                     .into(),
             );
 
-            Ok(resp)
+            Ok(resp)*/
+            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
 
         (1500, SubMsgResult::Ok(iter)) => match iter.data {
             Some(x) => {
-                let it = String::from_utf8(
-                    Binary::from_base64(String::from_utf8(x.to_vec())?.as_str())?.to_vec(),
-                )?;
+                let it = String::from_utf8(x.to_vec())?;
                 let mut resp = Response::default();
 
                 let msg = "{\"sub_msg_loop_iner\":{\"iter\":".to_string() + it.as_str() + "}}";
@@ -1530,50 +1556,57 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
             ))),
         },
         (1500, SubMsgResult::Err(_)) => {
-            let mut resp = Response::default();
+            /*  let mut resp = Response::default();
             resp.data = Some(
                 (count_read(deps.storage).load()? as u32)
                     .to_be_bytes()
                     .into(),
             );
 
-            Ok(resp)
+            Ok(resp)*/
+            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
 
         (1601, SubMsgResult::Err(e)) => Err(StdError::generic_err(format!(
             "recursive init failed: {}",
             e
         ))),
-        (1601, SubMsgResult::Ok(s)) => match s.data {
-            Some(_) => {
-                let mut resp = Response::default();
-                let new_count = 101;
-                count(deps.storage).save(&new_count)?;
+        (1601, SubMsgResult::Ok(s)) => {
+            match s.data {
+                Some(_) => {
+                    let new_count = 101;
+                    count(deps.storage).save(&new_count)?;
 
-                resp.data = Some(
-                    (count_read(deps.storage).load()? as u32)
-                        .to_be_bytes()
-                        .into(),
-                );
+                    /*
+                     let mut resp = Response::default();
+                    resp.data = Some(
+                          (count_read(deps.storage).load()? as u32)
+                              .to_be_bytes()
+                              .into(),
+                      );
 
-                Ok(resp)
+                      Ok(resp)*/
+                    Ok(Response::new()
+                        .add_log("resp", format!("{}", count_read(deps.storage).load()?)))
+                }
+                None => Err(StdError::generic_err(format!(
+                    "Init didn't response with contract address",
+                ))),
             }
-            None => Err(StdError::generic_err(format!(
-                "Init didn't response with contract address",
-            ))),
-        },
+        }
         (1602, SubMsgResult::Err(_)) => {
-            let mut resp = Response::default();
+            //let mut resp = Response::default();
             let new_count = 102;
             count(deps.storage).save(&new_count)?;
 
-            resp.data = Some(
+            /*resp.data = Some(
                 (count_read(deps.storage).load()? as u32)
                     .to_be_bytes()
                     .into(),
             );
 
-            Ok(resp)
+            Ok(resp)*/
+            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
         (1602, SubMsgResult::Ok(_)) => Err(StdError::generic_err("got wrong bank answer")),
         (1700, SubMsgResult::Ok(s)) => {
@@ -1596,10 +1629,11 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
                 )));
             }
 
-            let mut resp = Response::default();
+            /* let mut resp = Response::default();
             resp.data = Some(Binary(s.events[0].attributes[0].value.to_vec()));
 
-            Ok(resp)
+            Ok(resp)*/
+            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
         (1700, SubMsgResult::Err(_)) => Err(StdError::generic_err("Failed to init v010 contract")),
         (1800, SubMsgResult::Ok(s)) => match s.data {
@@ -1720,8 +1754,8 @@ fn send_external_query_recursion_limit(
             ),
         }));
 
-    // 5 is the current recursion limit.
-    if depth != 5 {
+    // 10 is the current recursion limit.
+    if depth != 10 {
         result
     } else {
         match result {
@@ -1962,10 +1996,10 @@ pub fn exec_callback_to_init(
 ) -> Response {
     Response::new()
         .add_message(CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None, 
-                duration: None,
-                interval: None,
-                start_duration_at: None,
+            auto_msg: None,
+            duration: None,
+            interval: None,
+            start_duration_at: None,
             code_id,
             msg: Binary::from("{\"nop\":{}}".as_bytes().to_vec()),
             code_hash,

@@ -182,6 +182,7 @@ pub fn encrypt_output(
                     let reply = Reply {
                         id: msg_id.unwrap(),
                         result: SubMsgResult::Err(encrypted_err),
+                        was_msg_encrypted: true,
                     };
                     let reply_as_vec = serde_json::to_vec(&reply).map_err(|err| {
                         warn!(
@@ -204,7 +205,6 @@ pub fn encrypt_output(
             }
         }
         WasmOutput::QueryOk { ok } => {
-            trace!("output QueryOk: {:?}", ok);
             *ok = encrypt_serializable(&encryption_key, ok, &reply_params)?;
         }
         WasmOutput::Ok {
@@ -230,11 +230,12 @@ pub fn encrypt_output(
                     sub_msg.id = 0;
                     trace!("encpypted submsg: {:?}", &wasm_msg);
                 }
+                sub_msg.was_msg_encrypted = true;
             }
 
             // v1: The logs that will be emitted as part of a "wasm" event.
             for log in ok.attributes.iter_mut().filter(|log| log.encrypted) {
-                log.key = encrypt_preserialized_string(&encryption_key, &log.key, &reply_params)?;
+                log.key = encrypt_preserialized_string(&encryption_key, &log.key, &None)?;
                 log.value = encrypt_vec(&encryption_key, log.value.clone()).map_err(|err| {
                     debug!(
                         "got an error while trying to encrypt vec value {:?}: {}",
@@ -248,7 +249,7 @@ pub fn encrypt_output(
             for event in ok.events.iter_mut() {
                 for log in event.attributes.iter_mut().filter(|log| log.encrypted) {
                     log.key =
-                        encrypt_preserialized_string(&encryption_key, &log.key, &reply_params)?;
+                        encrypt_preserialized_string(&encryption_key, &log.key, &None)?;
                     log.value = encrypt_vec(&encryption_key, log.value.clone()).map_err(|err| {
                         debug!(
                             "got an error while trying to encrypt vec value {:?}: {}",
@@ -327,6 +328,7 @@ pub fn encrypt_output(
                             events: vec![],
                             data: ok.data.clone(),
                         }),
+                        was_msg_encrypted: true,
                     };
                     trace!("reply : {:?}", reply);
                     let reply_as_vec = serde_json::to_vec(&reply).map_err(|err| {

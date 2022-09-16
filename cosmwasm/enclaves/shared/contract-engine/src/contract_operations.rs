@@ -274,7 +274,7 @@ pub fn parse_message(
         );
                     EnclaveError::FailedToDeserialize
                 })?;
-                //  trace!("reply msg {:?}", reply.clone());
+                 trace!("reply msg {:?}", reply.clone());
                 let msg_id = String::from_utf8(reply.id.as_slice().to_vec()).map_err(|err| {
                     warn!(
                         "Failed to parse message id as string {:?}: {}",

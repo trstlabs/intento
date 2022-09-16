@@ -151,8 +151,8 @@ pub fn validate_msg(
     contract_hash: [u8; HASH_SIZE],
     contract_hash_for_validation: Option<Vec<u8>>,
 ) -> Result<ValidatedMessage, EnclaveError> {
-  if msg.len() < HEX_ENCODED_HASH_SIZE {
-        warn!("Malformed message - expected contract code hash to be prepended to the msg");
+    if contract_hash_for_validation.is_none() && msg.len() < HEX_ENCODED_HASH_SIZE {
+        warn!("Malformed message - expected contract code hash to be prepended to the msg: len: {:?}, should be longer than: {:?}", msg.len(), HEX_ENCODED_HASH_SIZE);
         return Err(EnclaveError::ValidationFailure);
     }
 

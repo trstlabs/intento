@@ -454,7 +454,7 @@ func TestMultiSigExecute(t *testing.T) {
 		multisigAccount.address, walletB.String(),
 	)
 
-	_, _, contractAddress, _, error := initHelper(t, keeper, ctx, codeID, walletB, privKeyB, initMsg, true, false, defaultGasForTests)
+	_, _, contractAddress, _, error := initHelper(t, keeper, ctx, codeID, walletB, privKeyB, initMsg, true, defaultGasForTests)
 	require.Empty(t, error)
 
 	execMsg := fmt.Sprintf(`{"transfer":{"amount":"10","recipient":"%s"}}`, walletB.String())
@@ -1003,9 +1003,9 @@ func TestWrongContractAddress(t *testing.T) {
 
 	initMsg := fmt.Sprintf(`{"decimals":10,"initial_balances":[{"address":"%s","amount":"108"},{"address":"%s","amount":"53"}],"name":"ReuvenPersonalRustCoin","symbol":"RPRC"}`, walletA.String(), walletB.String())
 
-	_, _, contractAddress, _, stderr := initHelper(t, keeper, ctx, codeID, walletB, privKeyB, initMsg, true, false, defaultGasForTests)
+	_, _, contractAddress, _, stderr := initHelper(t, keeper, ctx, codeID, walletB, privKeyB, initMsg, true, defaultGasForTests)
 	require.Empty(t, stderr)
-	_, _, differentContractAddress, _, stderr := initHelper(t, keeper, ctx, codeID, walletB, privKeyB, initMsg, true, false, defaultGasForTests)
+	_, _, differentContractAddress, _, stderr := initHelper(t, keeper, ctx, codeID, walletB, privKeyB, initMsg, true, defaultGasForTests)
 	require.Empty(t, stderr)
 
 	require.NotEqual(t, contractAddress, differentContractAddress)

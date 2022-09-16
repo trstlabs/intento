@@ -13,7 +13,7 @@ use crate::memory::{
 #[cfg(feature = "iterator")]
 use crate::memory::get_optional_region_address;
 use crate::results::SystemResult;
-use crate::sections::decode_sections2;
+//use crate::sections::decode_sections2;
 use crate::serde::from_slice;
 use crate::traits::{Api, Querier, QuerierResult, Storage};
 

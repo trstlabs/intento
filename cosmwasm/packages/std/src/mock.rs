@@ -1419,7 +1419,7 @@ mod tests {
                 } => {
                     if *contract_addr == contract1 {
                       
-                       if let Some(value) = storage1.get(key) {
+                       if let Some(value) = storage1.get(&Binary::from(key.as_bytes().to_vec())) {
                             SystemResult::Ok(ContractResult::Ok(value.clone()))
                      } else {
                            SystemResult::Ok(ContractResult::Ok(Binary::default()))
@@ -1436,7 +1436,7 @@ mod tests {
                 } => {
                     if *contract_addr == contract1 {
                       
-                       if let Some(value) = storage1.get(key) {
+                       if let Some(value) = storage1.get(&Binary::from(key.as_bytes().to_vec())) {
                             SystemResult::Ok(ContractResult::Ok(value.clone()))
                      } else {
                            SystemResult::Ok(ContractResult::Ok(Binary::default()))

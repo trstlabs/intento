@@ -253,18 +253,14 @@ impl<'a, C: CustomQuery> QuerierWrapper<'a, C> {
         self.query(&request)
     }
 
-    // this queries the raw storage from another wasm contract.
+    // this queries the public storage from another wasm contract.
     // you must know the exact layout and are implementation dependent
-    // (not tied to an interface like query_wasm_private)
-    // that said, if you are building a few contracts together, this is a much cheaper approach
-    //
-    // Similar return value to Storage.get(). Returns Some(val) or None if the data is there.
     // It only returns error on some runtime issue, not on any data cases.
     pub fn query_wasm_public(
         &self,
         contract_addr: impl Into<String>,
-        key: impl Into<Binary>,
-    ) -> StdResult<Option<Vec<u8>>> {
+        key: impl Into<String>,
+    ) -> StdResult<Vec<u8>> {
         let request: QueryRequest<Empty> = WasmQuery::Public {
             contract_addr: contract_addr.into(),
             key: key.into(),
@@ -283,24 +279,21 @@ impl<'a, C: CustomQuery> QuerierWrapper<'a, C> {
             SystemResult::Ok(ContractResult::Err(contract_err)) => Err(StdError::generic_err(
                 format!("Querier contract error: {}", contract_err),
             )),
-            SystemResult::Ok(ContractResult::Ok(value)) => {
-                if value.is_empty() {
-                    Ok(None)
-                } else {
-                    Ok(Some(value.into()))
-                }
+            SystemResult::Ok(ContractResult::Ok(value)) => {   
+                 Ok(value.to_vec())
             }
         }
     }
-    pub fn query_wasm_public_for_addr(
+
+    pub fn query_wasm_public_addr(
         &self,
         contract_addr: impl Into<String>,
-        key: impl Into<Binary>,
-        acc: impl Into<String>,
-    ) -> StdResult<Option<Vec<u8>>> {
+        account_addr: impl Into<String>,
+        key: impl Into<String>,
+    ) -> StdResult<Vec<u8>> {
         let request: QueryRequest<Empty> = WasmQuery::PublicForAddr {
-            account_addr: acc.into(),
             contract_addr: contract_addr.into(),
+            account_addr: account_addr.into(),
             key: key.into(),
         }
         .into();
@@ -317,13 +310,9 @@ impl<'a, C: CustomQuery> QuerierWrapper<'a, C> {
             SystemResult::Ok(ContractResult::Err(contract_err)) => Err(StdError::generic_err(
                 format!("Querier contract error: {}", contract_err),
             )),
-            SystemResult::Ok(ContractResult::Ok(value)) => {
-                if value.is_empty() {
-                    Ok(None)
-                } else {
-                    Ok(Some(value.into()))
-                }
-            }
+            SystemResult::Ok(ContractResult::Ok(value)) => {   
+                Ok(value.to_vec())
+           }
         }
     }
 
