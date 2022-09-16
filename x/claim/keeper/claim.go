@@ -143,11 +143,6 @@ func (k Keeper) GetTotalClaimableAmountForAction(
 		return sdk.Coins{}, nil
 	}
 
-	// if action already completed, nothing is claimable
-	//if claimRecord.Status[action].ActionCompleted {
-	//	return sdk.Coins{}, nil
-	//}
-
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		return nil, err
@@ -224,6 +219,11 @@ func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress,
 		return err
 	}
 
+	p, err := k.GetParams(ctx)
+	if err != nil {
+		return err
+	}
+
 	if claimRecord.Status[action].ActionCompleted {
 		return nil //sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address already claimed tokens for this action")
 	}
@@ -231,13 +231,14 @@ func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress,
 	if err != nil {
 		return err
 	}
+
 	if claimableCoin.Empty() {
 		return nil
 	}
 
 	//we distribute 20% after action completion and the remaining become claimable after each vesting period (4)
-	claimsPortion := sdk.NewCoins(sdk.NewCoin(types.Denom, claimableCoin.AmountOf(types.Denom).QuoRaw(5)))
-	//fmt.Printf("claimsPortion %v \n", claimsPortion)
+	claimsPortion := sdk.NewCoins(sdk.NewCoin(p.ClaimDenom, claimableCoin.AmountOf(p.ClaimDenom).QuoRaw(5)))
+
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, claimsPortion)
 	if err != nil {
 		return err
@@ -246,7 +247,7 @@ func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress,
 	//creates entries into the endblocker ( 4 )
 	err = k.InsertEntriesIntoVestingQueue(ctx, addr.String(), byte(action), ctx.BlockHeader().Time)
 	if err != nil {
-		fmt.Printf("err %v \n", err)
+		fmt.Printf("err: %v \n", err)
 		return err
 	}
 
@@ -255,7 +256,7 @@ func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress,
 	claimRecord.Status[action].ActionCompleted = true
 	err = k.SetClaimRecord(ctx, claimRecord)
 	if err != nil {
-		//fmt.Printf("err %v \n", err)
+		fmt.Printf("err: %v \n", err)
 		return err
 	}
 	//fmt.Printf("test %v \n", claimableCoin)
@@ -274,66 +275,57 @@ func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress,
 func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) error {
 	claimRecord, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
+
 		return err
 	}
-	fmt.Printf("record: %v\n", claimRecord)
-	claimableCoin := sdk.NewCoin(types.Denom, sdk.ZeroInt())
-	claimedCoin := sdk.NewCoin(types.Denom, sdk.ZeroInt())
+	p, err := k.GetParams(ctx)
+	if err != nil {
+		return err
+	}
+
+	claimableCoin := sdk.NewCoin(p.ClaimDenom, sdk.ZeroInt())
+	claimedCoin := sdk.NewCoin(p.ClaimDenom, sdk.ZeroInt())
 	var toClaimPeriods int64 = 0
-	var claimedPeriods int64 = 1
+	var claimedPeriods int64 = 0
 	for action, status := range claimRecord.Status {
 		if !status.ActionCompleted {
 			continue
 		}
-		fmt.Printf("action %v\n", action)
-		for period, completed := range status.VestingPeriodCompleted {
-			fmt.Printf("period %v ; completed: %v\n", period, completed)
-			if completed && !status.VestingPeriodClaimed[period] {
-				toClaimPeriods = toClaimPeriods + 1
-			} else if completed && status.VestingPeriodClaimed[period] {
-				claimedPeriods = claimedPeriods + 1
-			}
-			claimRecord.Status[action].VestingPeriodClaimed[period] = true
-		}
-
 		totalClaimableCoinsForAction, err := k.GetTotalClaimableAmountForAction(ctx, addr, types.Action(action))
 		if err != nil {
 			return err
 		}
-		fmt.Printf("claimedPeriods %v\n", claimedPeriods)
-		fmt.Printf("toClaimPeriods %v\n", toClaimPeriods)
-		if toClaimPeriods != 0 {
-			/*	fmt.Printf("claimableCoin %v\n", claimableCoin)
-				fmt.Printf("totalClaimableCoinsForAction %v\n", totalClaimableCoinsForAction)
-				fmt.Printf("breuk %v\n", int64(toClaimPeriods/4))
-				fmt.Printf("dec %v\n", sdk.NewDec(toClaimPeriods))
-				fmt.Printf("quo %v\n", toClaimPercent)*/
-			toClaimPercent := sdk.NewDec(toClaimPeriods).Quo(sdk.NewDec(4))
-			claimableTotalDec := sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(types.Denom))
+
+		var toClaimPeriodsForAction int64 = 0
+		var claimedPeriodsForAction int64 = 1
+		for period, completed := range status.VestingPeriodCompleted {
+			//	fmt.Printf("period %v ; completed: %v\n", period, completed)
+			if completed && !status.VestingPeriodClaimed[period] {
+				toClaimPeriodsForAction = toClaimPeriodsForAction + 1
+				claimRecord.Status[action].VestingPeriodClaimed[period] = true
+			} else if completed && status.VestingPeriodClaimed[period] {
+				claimedPeriodsForAction = claimedPeriodsForAction + 1
+			}
+
+		}
+
+		if toClaimPeriodsForAction != 0 {
+
+			toClaimPercent := sdk.NewDec(toClaimPeriodsForAction).Quo(sdk.NewDec(5))
+			claimableTotalDec := sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(p.ClaimDenom))
 			claimableDec := claimableTotalDec.Mul(toClaimPercent)
-			/*fmt.Printf("claimableTotalDec %v\n", claimableTotalDec)
-			fmt.Printf("claimableDec %v\n", claimableDec)
-			fmt.Printf("claimableDec %v\n", claimableDec.BigInt())
-			fmt.Printf("claimableDec int %v\n", claimableDec.TruncateInt())*/
 			claimableCoin = claimableCoin.AddAmount(claimableDec.TruncateInt())
-			//fmt.Printf("claimableCoin %v\n", claimableCoin)
-			//claimableCoin.AddAmount((sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(types.Denom)).Mul(percent)).TruncateInt())
-			//claimableCoin.AddAmount(totalClaimableCoinsForAction.AmountOf(types.Denom).MulRaw(int64(toClaimPeriods / 4)))
-			fmt.Printf("all: %v\n", (sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(types.Denom)).Mul(toClaimPercent)).TruncateInt())
 		}
-		if claimedPeriods != 0 {
-			claimedPercent := sdk.NewDec(claimedPeriods).Quo(sdk.NewDec(4))
-			claimedCoin = claimedCoin.AddAmount(sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(types.Denom)).Mul(claimedPercent).TruncateInt())
-			//fmt.Printf("claimedCoin %v\n", claimedCoin)
-			//claimedCoin.AddAmount(totalClaimableCoinsForAction.AmountOf(types.Denom).MulRaw(int64(claimedPeriods) / 4))
-		}
+		claimedPercent := sdk.NewDec(claimedPeriodsForAction).Quo(sdk.NewDec(5))
+		claimedCoin = claimedCoin.AddAmount(sdk.NewDecFromInt(totalClaimableCoinsForAction.AmountOf(p.ClaimDenom)).Mul(claimedPercent).TruncateInt())
+
+		claimedPeriods = claimedPeriods + claimedPeriodsForAction
+		toClaimPeriods = toClaimPeriods + toClaimPeriodsForAction
 	}
-	if toClaimPeriods == 0 {
+	if toClaimPeriods == 0 || claimableCoin.Amount == sdk.ZeroInt() {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claimable tokens right now")
 	}
-	fmt.Printf("claimableCoin %v\n", claimableCoin)
-	fmt.Printf("claimedCoin %v\n", claimedCoin)
+
 	//get delegations and calculate min bonded ratio for claim
 	delegationInfo := k.stakingKeeper.GetAllDelegatorDelegations(ctx, addr)
 	//fmt.Printf("delegationInfo %v\n", delegationInfo)
@@ -341,16 +333,17 @@ func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) erro
 	for _, delegation := range delegationInfo {
 		totalDelegations = totalDelegations.Add(delegation.Shares)
 	}
-	fmt.Printf("totalDelegations %v\n", totalDelegations)
+	//fmt.Printf("totalDelegations %v\n", totalDelegations)
 	minBonded := sdk.NewDecWithPrec(67, 2).MulInt(claimedCoin.Amount)
-	fmt.Printf("minBonded amount: %v\n", minBonded)
+	//fmt.Printf("minBonded amount: %v\n", minBonded)
 	if totalDelegations.Sub(minBonded).IsNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have enough staked tokens")
+		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, "address does not have enough tokens staked")
 	}
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, sdk.NewCoins(claimableCoin))
 	if err != nil {
 		return err
 	}
+	fmt.Printf("record %v \n", claimRecord)
 	err = k.SetClaimRecord(ctx, claimRecord)
 	if err != nil {
 		return err

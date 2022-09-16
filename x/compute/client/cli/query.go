@@ -114,7 +114,7 @@ func GetCmdQueryContractID() *cobra.Command {
 				return fmt.Errorf("error unwrapping address: %s", err)
 			}
 			fmt.Printf("ContractId exists")
-			fmt.Printf("Label is in use by contract address: %s\n", addr.String())
+			fmt.Printf("ContractId is in use by contract address: %s\n", addr.String())
 			return nil
 		},
 	}
@@ -221,7 +221,7 @@ func GetCmdQueryCode() *cobra.Command {
 			}
 
 			fmt.Printf("Downloading wasm code to %s\n", args[1])
-			fmt.Printf("This code has a contract duration of %s\n hours", code.ContractDuration)
+			fmt.Printf("This code has a contract duration of %s\n hours", code.DefaultDuration)
 			return os.WriteFile(args[1], code.Data, 0644)
 		},
 	}
@@ -382,7 +382,7 @@ func GetQueryDecryptTxCmd() *cobra.Command {
 						return fmt.Errorf("TX is not a compute transaction")
 					}
 				} else {
-					encryptedInput = txInput2.InitMsg
+					encryptedInput = txInput2.Msg
 					dataOutputHexB64 = result.Data
 					answer.Type = "instantiate"
 				}
@@ -529,7 +529,7 @@ func GetCmdQuery() *cobra.Command {
 
 				contractId, err := cmd.Flags().GetString(flagContractId)
 				if err != nil {
-					return fmt.Errorf("trustless Contract ID or bech32 contract address is required")
+					return fmt.Errorf("Trustless Contract ID or bech32 contract address is required")
 				}
 
 				route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, contractId)
@@ -591,7 +591,7 @@ func QueryWithData(contractAddress string, queryData []byte, cliCtx client.Conte
 	}
 
 	//codeHash := hex.EncodeToString(res)
-	msg := types.TrustlessMsg{
+	msg := types.ContractMsg{
 		CodeHash: []byte(hex.EncodeToString(hash)),
 		Msg:      queryData,
 	}

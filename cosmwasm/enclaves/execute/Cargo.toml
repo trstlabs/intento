@@ -1,12 +1,12 @@
 [package]
 name = "trustless-contract-enclave"
-version = "1.2.4"
+version = "1.0.0"
 authors = ["TRST Labs <info@trstlabs.xys>"]
 edition = "2018"
 description = "An enclave running wasmi, to be used by cosmwasm-sgx-vm"
 
 [lib]
-name = "secret_enclave"
+name = "trst_enclave"
 crate-type = ["staticlib"]
 
 [features]

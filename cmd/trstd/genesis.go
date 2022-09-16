@@ -24,7 +24,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	appParams "github.com/trstlabs/trst/app/params"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
@@ -282,10 +282,10 @@ func MainnetGenesisParams() GenesisParams {
 		CommunityPool:               sdk.MustNewDecFromStr("0.25"), // 5%
 		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.10"), // 45%
 		//ItemIncentives:              sdk.MustNewDecFromStr("0.05"), // 45%
-		DeveloperRewards: sdk.MustNewDecFromStr("0.05"), // 25%
+		ContributorRewards: sdk.MustNewDecFromStr("0.05"), // 25%
 
 	}
-	genParams.AllocParams.WeightedDeveloperRewardsReceivers = []alloctypes.WeightedAddress{
+	genParams.AllocParams.WeightedContributorRewardsReceivers = []alloctypes.WeightedAddress{
 		{
 			Address: "trust1sns5l9cvkgf4fy770nmg98e7uzet5xhhmv8njv",
 			Weight:  sdk.NewDecWithPrec(100, 2),
@@ -295,7 +295,7 @@ func MainnetGenesisParams() GenesisParams {
 	// mint
 	genParams.MintParams = minttypes.DefaultParams()
 	genParams.MintParams.MintDenom = appParams.BaseCoinUnit
-	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(1, 0, 0)
+	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(0, 6, 0)
 	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(250_000_000_000_000)
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3)
 	genParams.MintParams.BlocksPerYear = uint64(5737588)
@@ -343,7 +343,8 @@ func MainnetGenesisParams() GenesisParams {
 	*/
 	//compute
 	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 366
-	genParams.ComputeParams.MinContractDuration = time.Second * 45
+	genParams.ComputeParams.MinContractDuration = time.Second * 30
+	genParams.ComputeParams.MinContractInterval = time.Second * 60
 	genParams.ComputeParams.AutoMsgFundsCommission = 2
 	genParams.ComputeParams.AutoMsgConstantFee = 1000000
 	genParams.ComputeParams.RecurringAutoMsgConstantFee = 1000000
@@ -374,7 +375,7 @@ func TestnetGenesisParams() GenesisParams {
 
 	// genParams.GenesisTime = time.Now()
 	genParams.GenesisTime = time.Now()
-
+	genParams.MintParams.StartTime = time.Now()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 3 // 3 days
 
 	//gov
@@ -393,7 +394,8 @@ func TestnetGenesisParams() GenesisParams {
 
 	//compute
 	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 60
-	genParams.ComputeParams.MinContractDuration = time.Second
+	genParams.ComputeParams.MinContractDuration = time.Second * 10
+	genParams.ComputeParams.MinContractInterval = time.Second * 20
 	genParams.ComputeParams.MinContractDurationForIncentive = time.Second
 	genParams.ComputeParams.MinContractBalanceForIncentive = 50000
 	genParams.ComputeParams.MaxContractIncentive = 500000

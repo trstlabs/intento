@@ -15,7 +15,7 @@ DB_BACKEND ?= goleveldb
 
 SGX_MODE ?= HW
 BRANCH ?= develop
-DEBUG ?= 0
+
 DOCKER_TAG ?= latest
 
 ifeq ($(SGX_MODE), HW)
@@ -131,7 +131,7 @@ build_cli:
 
 xgo_build_trstcli: go.sum
 	@echo "--> WARNING! This builds from origin/$(CURRENT_BRANCH)!"
-	xgo --image techknowlogick/xgo:go-1.15.15 --targets $(XGO_TARGET) -tags="$(GO_TAGS) trstcli" -ldflags '$(LD_FLAGS)' --branch "$(CURRENT_BRANCH)" github.com/enigmampc/trst/cmd/trstd
+	xgo --targets $(XGO_TARGET) -tags="$(GO_TAGS) trstcli" -ldflags '$(LD_FLAGS)' --branch "$(CURRENT_BRANCH)" github.com/trstlabs/trst/cmd/trstd
 
 build_local_no_rust: bin-data-$(IAS_BUILD)
 	cp go-cosmwasm/target/$(BUILD_PROFILE)/libgo_cosmwasm.so go-cosmwasm/api
@@ -201,7 +201,7 @@ rename_for_release:
 	-rename "s/darwin-10.6-amd64/v${VERSION}-osx64/" *darwin*
 
 sign_for_release: rename_for_release
-	sha256sum trst-blockchain*.deb > SHA256SUMS
+	sha256sum trst*.deb > SHA256SUMS
 	-sha256sum trstd-* trstcli-* >> SHA256SUMS
 	gpg -u 91831DE812C6415123AFAA7B420BF1CB005FBCE6 --digest-algo sha256 --clearsign --yes SHA256SUMS
 	rm -f SHA256SUMS
@@ -209,7 +209,7 @@ sign_for_release: rename_for_release
 release: sign_for_release
 	rm -rf ./release/
 	mkdir -p ./release/
-	cp trst-blockchain_*.deb ./release/
+	cp trst_*.deb ./release/
 	cp trstcli-* ./release/
 	cp trstd-* ./release/
 	cp SHA256SUMS.asc ./release/
@@ -218,11 +218,11 @@ clean:
 	-rm -rf /tmp/trst
 	-rm -f ./trstcli*
 	-rm -f ./trstd*
-#	-find -name librust_cosmwasm_enclave.signed.so -delete
-#	-find -name libgo_cosmwasm.so -delete
-#	-find -name '*.so' -delete
-#	-find -name 'target' -type d -exec rm -rf \;
-	-rm -f ./trst-blockchain*.deb
+	-find -name librust_cosmwasm_enclave.signed.so -delete
+	-find -name libgo_cosmwasm.so -delete
+	-find -name '*.so' -delete
+	-find -name 'target' -type d -exec rm -rf \;
+	-rm -f ./trst*.deb
 	-rm -f ./SHA256SUMS*
 	-rm -rf ./third_party/vendor/
 	-rm -rf ./trustlesshub/.sgx_secrets/*
@@ -234,12 +234,17 @@ clean:
 	$(MAKE) -C cosmwasm/enclaves/test clean
 
 build-rocksdb-image:
-	docker build --build-arg BUILD_VERSION=${VERSION} -f deployment/dockerfiles/db-compile.Dockerfile -t enigmampc/rocksdb:${VERSION} .
+	docker build --build-arg BUILD_VERSION=${VERSION} -f deployment/dockerfiles/db-compile.Dockerfile -t trstlabs/rocksdb:${VERSION} .
+
+build-localtrst:
+	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=SW --build-arg FEATURES_U="${FEATURES_U}" --build-arg FEATURES="${FEATURES},debug-print" -f deployment/dockerfiles/base.Dockerfile -t rust-go-base-image .
+	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
+	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/localtrst:${DOCKER_TAG} .
 
 build-dev-image:
 	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=SW --build-arg FEATURES="${FEATURES},debug-print" -f deployment/dockerfiles/base.Dockerfile -t rust-go-base-image .
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trstdev-1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trstdev-1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/trst-sw-dev:${DOCKER_TAG} .
+	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
+	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/trst-sw-dev:${DOCKER_TAG} .
 
 build-custom-dev-image:
     # .dockerignore excludes .so files so we rename these so that the dockerfile can find them
@@ -308,7 +313,6 @@ clean-files:
 #   -find -name libgo_cosmwasm.so -delete
 #   -find -name '*.so' -delete
 #   -find -name 'target' -type d -exec rm -rf \;
-	-rm -f ./trst-blockchain*.deb
 	-rm -f ./SHA256SUMS*
 	-rm -rf ./trustlesshub/.sgx_secrets/*
 	-rm -rf ./x/compute/internal/keeper/trustlesshub/.sgx_secrets/*
@@ -358,7 +362,7 @@ build-test-contract:
 	# echo "" | sudo add-apt-repository ppa:hnakamur/binaryen
 	# sudo apt update
 	# sudo apt install -y binaryen
-	$(MAKE) -C ./x/compute/internal/keeper/testdata/test-contract
+	$(MAKE) -C ./x/compute/internal/keeper/testdata/v1-sanity-contract
 
 prep-go-tests: build-test-contract
 	# empty BUILD_PROFILE means debug mode which compiles faster
@@ -392,34 +396,21 @@ build-all-test-contracts: build-test-contract
 	# echo "" | sudo add-apt-repository ppa:hnakamur/binaryen
 	# sudo apt update
 	# sudo apt install -y binaryen
-	cd ./cosmwasm/contracts/gov && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
-	wasm-opt -Os ./cosmwasm/contracts/gov/target/wasm32-unknown-unknown/release/gov.wasm -o ./x/compute/internal/keeper/testdata/gov.wasm
 
-	cd ./cosmwasm/contracts/dist && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
-	wasm-opt -Os ./cosmwasm/contracts/dist/target/wasm32-unknown-unknown/release/dist.wasm -o ./x/compute/internal/keeper/testdata/dist.wasm
 
-	cd ./cosmwasm/contracts/mint && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
-	wasm-opt -Os ./cosmwasm/contracts/mint/target/wasm32-unknown-unknown/release/mint.wasm -o ./x/compute/internal/keeper/testdata/mint.wasm
-
-	cd ./cosmwasm/contracts/staking && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
+	cd ./cosmwasm/contracts/staking && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
 	wasm-opt -Os ./cosmwasm/contracts/staking/target/wasm32-unknown-unknown/release/staking.wasm -o ./x/compute/internal/keeper/testdata/staking.wasm
 
-	cd ./cosmwasm/contracts/reflect && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
-	wasm-opt -Os ./cosmwasm/contracts/reflect/target/wasm32-unknown-unknown/release/reflect.wasm -o ./x/compute/internal/keeper/testdata/reflect.wasm
-
-	cd ./cosmwasm/contracts/burner && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
-	wasm-opt -Os ./cosmwasm/contracts/burner/target/wasm32-unknown-unknown/release/burner.wasm -o ./x/compute/internal/keeper/testdata/burner.wasm
-
-	cd ./cosmwasm/contracts/erc20 && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
-	wasm-opt -Os ./cosmwasm/contracts/erc20/target/wasm32-unknown-unknown/release/cw_erc20.wasm -o ./x/compute/internal/keeper/testdata/erc20.wasm
-
-	cd ./cosmwasm/contracts/hackatom && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
+	cd ./cosmwasm/contracts/hackatom && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
 	wasm-opt -Os ./cosmwasm/contracts/hackatom/target/wasm32-unknown-unknown/release/hackatom.wasm -o ./x/compute/internal/keeper/testdata/contract.wasm
 	cat ./x/compute/internal/keeper/testdata/contract.wasm | gzip > ./x/compute/internal/keeper/testdata/contract.wasm.gzip
 
-build-erc20-contract: build-test-contract
-	cd ./cosmwasm/contracts/erc20 && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown --locked
-	wasm-opt -Os ./cosmwasm/contracts/erc20/target/wasm32-unknown-unknown/release/cw_erc20.wasm -o ./erc20.wasm
+build-non-test-contracts: build-test-contracts
+	cd ./cosmwasm/contracts/ibc-reflect && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
+	wasm-opt -Os ./cosmwasm/contracts/reflect/target/wasm32-unknown-unknown/release/reflect.wasm -o ./x/compute/internal/keeper/testdata/ibc-reflect.wasm
+
+	cd ./cosmwasm/contracts/burner && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
+	wasm-opt -Os ./cosmwasm/contracts/burner/target/wasm32-unknown-unknown/release/burner.wasm -o ./x/compute/internal/keeper/testdata/burner.wasm
 
 bin-data: bin-data-sw bin-data-develop bin-data-production
 

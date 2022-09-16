@@ -31,87 +31,26 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type AccessType int32
-
-const (
-	AccessTypeUndefined   AccessType = 0
-	AccessTypeNobody      AccessType = 1
-	AccessTypeOnlyAddress AccessType = 2
-	AccessTypeEverybody   AccessType = 3
-)
-
-var AccessType_name = map[int32]string{
-	0: "UNDEFINED",
-	1: "NOBODY",
-	2: "ONLY_ADDRESS",
-	3: "EVERYBODY",
-}
-
-var AccessType_value = map[string]int32{
-	"UNDEFINED":    0,
-	"NOBODY":       1,
-	"ONLY_ADDRESS": 2,
-	"EVERYBODY":    3,
-}
-
-func (AccessType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_69f362cfe47c68a8, []int{0}
-}
-
-type AccessTypeParam struct {
-	Value AccessType `protobuf:"varint,1,opt,name=value,proto3,enum=trst.x.compute.v1beta1.AccessType" json:"value,omitempty" yaml:"value"`
-}
-
-func (m *AccessTypeParam) Reset()         { *m = AccessTypeParam{} }
-func (m *AccessTypeParam) String() string { return proto.CompactTextString(m) }
-func (*AccessTypeParam) ProtoMessage()    {}
-func (*AccessTypeParam) Descriptor() ([]byte, []int) {
-	return fileDescriptor_69f362cfe47c68a8, []int{0}
-}
-func (m *AccessTypeParam) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *AccessTypeParam) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_AccessTypeParam.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *AccessTypeParam) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AccessTypeParam.Merge(m, src)
-}
-func (m *AccessTypeParam) XXX_Size() int {
-	return m.Size()
-}
-func (m *AccessTypeParam) XXX_DiscardUnknown() {
-	xxx_messageInfo_AccessTypeParam.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_AccessTypeParam proto.InternalMessageInfo
-
 // CodeInfo is data for the uploaded contract WASM code
 type CodeInfo struct {
-	CodeHash    []byte                                        `protobuf:"bytes,1,opt,name=code_hash,json=codeHash,proto3" json:"code_hash,omitempty"`
-	Creator     github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=creator,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"creator,omitempty"`
-	Source      string                                        `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
-	Builder     string                                        `protobuf:"bytes,4,opt,name=builder,proto3" json:"builder,omitempty"`
-	Duration    time.Duration                                 `protobuf:"bytes,5,opt,name=duration,proto3,stdduration" json:"duration,omitempty"`
-	Title       string                                        `protobuf:"bytes,6,opt,name=title,proto3" json:"title,omitempty"`
-	Description string                                        `protobuf:"bytes,7,opt,name=description,proto3" json:"description,omitempty"`
-	Instances   uint64                                        `protobuf:"varint,8,opt,name=instances,proto3" json:"instances,omitempty"`
+	CodeHash []byte                                        `protobuf:"bytes,1,opt,name=code_hash,json=codeHash,proto3" json:"code_hash,omitempty"`
+	Creator  github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=creator,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"creator,omitempty"`
+	Source   string                                        `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
+	Builder  string                                        `protobuf:"bytes,4,opt,name=builder,proto3" json:"builder,omitempty"`
+	//if set to zero, self-execution is disabled
+	DefaultDuration time.Duration `protobuf:"bytes,5,opt,name=default_duration,json=defaultDuration,proto3,stdduration" json:"default_duration,omitempty"`
+	Title           string        `protobuf:"bytes,6,opt,name=title,proto3" json:"title,omitempty"`
+	Description     string        `protobuf:"bytes,7,opt,name=description,proto3" json:"description,omitempty"`
+	//if set to zero, recurring execution is disabled
+	DefaultInterval time.Duration `protobuf:"bytes,8,opt,name=default_interval,json=defaultInterval,proto3,stdduration" json:"default_interval,omitempty"`
+	Instances       uint64        `protobuf:"varint,9,opt,name=instances,proto3" json:"instances,omitempty"`
 }
 
 func (m *CodeInfo) Reset()         { *m = CodeInfo{} }
 func (m *CodeInfo) String() string { return proto.CompactTextString(m) }
 func (*CodeInfo) ProtoMessage()    {}
 func (*CodeInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_69f362cfe47c68a8, []int{1}
+	return fileDescriptor_69f362cfe47c68a8, []int{0}
 }
 func (m *CodeInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -142,27 +81,27 @@ var xxx_messageInfo_CodeInfo proto.InternalMessageInfo
 
 // ContractInfo stores a WASM contract instance
 type ContractInfo struct {
-	CodeID  uint64                                        `protobuf:"varint,1,opt,name=code_id,json=codeId,proto3" json:"code_id,omitempty"`
-	Creator github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=creator,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"creator,omitempty"`
-	//    bytes admin = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-	ContractId string `protobuf:"bytes,4,opt,name=contract_id,json=contractId,proto3" json:"contract_id,omitempty"`
+	CodeID     uint64                                        `protobuf:"varint,1,opt,name=code_id,json=codeId,proto3" json:"code_id,omitempty"`
+	Creator    github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,2,opt,name=creator,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"creator,omitempty"`
+	Owner      github_com_cosmos_cosmos_sdk_types.AccAddress `protobuf:"bytes,3,opt,name=owner,proto3,casttype=github.com/cosmos/cosmos-sdk/types.AccAddress" json:"owner,omitempty"`
+	ContractId string                                        `protobuf:"bytes,4,opt,name=contract_id,json=contractId,proto3" json:"contract_id,omitempty"`
 	// never show this in query results, just use for sorting
-	// (Note: when using json tag "-" amino refused to serialize it...)
-	Created *AbsoluteTxPosition `protobuf:"bytes,5,opt,name=created,proto3" json:"created,omitempty"`
-	EndTime time.Time           `protobuf:"bytes,6,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`
-	//    bytes init_msg = 5 [(gogoproto.casttype) = "encoding/json.RawMessage"];
-	//
-	//    AbsoluteTxPosition last_updated = 7;
-	//    uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
-	AutoMsg     []byte `protobuf:"bytes,7,opt,name=auto_msg,json=autoMsg,proto3" json:"auto_msg,omitempty"`
-	CallbackSig []byte `protobuf:"bytes,8,opt,name=callback_sig,json=callbackSig,proto3" json:"callback_sig,omitempty"`
+	Created     *AbsoluteTxPosition `protobuf:"bytes,5,opt,name=created,proto3" json:"created,omitempty"`
+	AutoMsg     []byte              `protobuf:"bytes,6,opt,name=auto_msg,json=autoMsg,proto3" json:"auto_msg,omitempty"`
+	Duration    time.Duration       `protobuf:"bytes,7,opt,name=duration,proto3,stdduration" json:"duration,omitempty"`
+	Interval    time.Duration       `protobuf:"bytes,8,opt,name=interval,proto3,stdduration" json:"interval,omitempty"`
+	StartTime   time.Time           `protobuf:"bytes,9,opt,name=start_time,json=startTime,proto3,stdtime" json:"start_time"`
+	ExecTime    time.Time           `protobuf:"bytes,10,opt,name=exec_time,json=execTime,proto3,stdtime" json:"exec_time"`
+	EndTime     time.Time           `protobuf:"bytes,11,opt,name=end_time,json=endTime,proto3,stdtime" json:"end_time"`
+	IBCPortID   string              `protobuf:"bytes,12,opt,name=ibc_port_id,json=ibcPortId,proto3" json:"ibc_port_id,omitempty"`
+	CallbackSig []byte              `protobuf:"bytes,14,opt,name=callback_sig,json=callbackSig,proto3" json:"callback_sig,omitempty"`
 }
 
 func (m *ContractInfo) Reset()         { *m = ContractInfo{} }
 func (m *ContractInfo) String() string { return proto.CompactTextString(m) }
 func (*ContractInfo) ProtoMessage()    {}
 func (*ContractInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_69f362cfe47c68a8, []int{2}
+	return fileDescriptor_69f362cfe47c68a8, []int{1}
 }
 func (m *ContractInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -201,7 +140,7 @@ func (m *ContractInfoWithAddress) Reset()         { *m = ContractInfoWithAddress
 func (m *ContractInfoWithAddress) String() string { return proto.CompactTextString(m) }
 func (*ContractInfoWithAddress) ProtoMessage()    {}
 func (*ContractInfoWithAddress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_69f362cfe47c68a8, []int{3}
+	return fileDescriptor_69f362cfe47c68a8, []int{2}
 }
 func (m *ContractInfoWithAddress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -242,7 +181,7 @@ func (m *AbsoluteTxPosition) Reset()         { *m = AbsoluteTxPosition{} }
 func (m *AbsoluteTxPosition) String() string { return proto.CompactTextString(m) }
 func (*AbsoluteTxPosition) ProtoMessage()    {}
 func (*AbsoluteTxPosition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_69f362cfe47c68a8, []int{4}
+	return fileDescriptor_69f362cfe47c68a8, []int{3}
 }
 func (m *AbsoluteTxPosition) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -283,7 +222,7 @@ func (m *Model) Reset()         { *m = Model{} }
 func (m *Model) String() string { return proto.CompactTextString(m) }
 func (*Model) ProtoMessage()    {}
 func (*Model) Descriptor() ([]byte, []int) {
-	return fileDescriptor_69f362cfe47c68a8, []int{5}
+	return fileDescriptor_69f362cfe47c68a8, []int{4}
 }
 func (m *Model) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -322,7 +261,7 @@ func (m *KeyPair) Reset()         { *m = KeyPair{} }
 func (m *KeyPair) String() string { return proto.CompactTextString(m) }
 func (*KeyPair) ProtoMessage()    {}
 func (*KeyPair) Descriptor() ([]byte, []int) {
-	return fileDescriptor_69f362cfe47c68a8, []int{6}
+	return fileDescriptor_69f362cfe47c68a8, []int{5}
 }
 func (m *KeyPair) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -354,21 +293,24 @@ var xxx_messageInfo_KeyPair proto.InternalMessageInfo
 // Params defines the params for activeness of contracts on governance proposals.
 type Params struct {
 	AutoMsgFundsCommission      int64 `protobuf:"varint,1,opt,name=AutoMsgFundsCommission,proto3" json:"AutoMsgFundsCommission,omitempty"`
-	AutoMsgConstantFee          int64 `protobuf:"varint,2,opt,name=AutoMsgConstantFee,proto3" json:"AutoMsgConstantFee,omitempty"`
-	RecurringAutoMsgConstantFee int64 `protobuf:"varint,3,opt,name=RecurringAutoMsgConstantFee,proto3" json:"RecurringAutoMsgConstantFee,omitempty"`
+	AutoMsgFlexFeeDenom         int64 `protobuf:"varint,2,opt,name=AutoMsgFlexFeeDenom,proto3" json:"AutoMsgFlexFeeDenom,omitempty"`
+	AutoMsgConstantFee          int64 `protobuf:"varint,3,opt,name=AutoMsgConstantFee,proto3" json:"AutoMsgConstantFee,omitempty"`
+	RecurringAutoMsgConstantFee int64 `protobuf:"varint,4,opt,name=RecurringAutoMsgConstantFee,proto3" json:"RecurringAutoMsgConstantFee,omitempty"`
 	//  Maximum period for self-executing contract
-	MaxContractDuration time.Duration `protobuf:"bytes,4,opt,name=MaxContractDuration,proto3,stdduration" json:"max_contract_duration,omitempty"`
+	MaxContractDuration time.Duration `protobuf:"bytes,5,opt,name=MaxContractDuration,proto3,stdduration" json:"max_contract_duration,omitempty"`
 	//  Minimum period for self-executing contract
-	MinContractDuration             time.Duration `protobuf:"bytes,5,opt,name=MinContractDuration,proto3,stdduration" json:"min_contract_duration,omitempty"`
-	MinContractDurationForIncentive time.Duration `protobuf:"bytes,6,opt,name=MinContractDurationForIncentive,proto3,stdduration" json:"min_contract_duration_for_reward,omitempty"`
-	MaxContractIncentive            int64         `protobuf:"varint,7,opt,name=MaxContractIncentive,proto3" json:"MaxContractIncentive,omitempty"`
-	MinContractBalanceForIncentive  int64         `protobuf:"varint,8,opt,name=MinContractBalanceForIncentive,proto3" json:"MinContractBalanceForIncentive,omitempty"`
+	MinContractDuration             time.Duration `protobuf:"bytes,6,opt,name=MinContractDuration,proto3,stdduration" json:"min_contract_duration,omitempty"`
+	MinContractDurationForIncentive time.Duration `protobuf:"bytes,7,opt,name=MinContractDurationForIncentive,proto3,stdduration" json:"min_contract_duration_for_reward,omitempty"`
+	//  Minimum period for self-executing contract
+	MinContractInterval            time.Duration `protobuf:"bytes,8,opt,name=MinContractInterval,proto3,stdduration" json:"min_contract_duration,omitempty"`
+	MaxContractIncentive           int64         `protobuf:"varint,9,opt,name=MaxContractIncentive,proto3" json:"MaxContractIncentive,omitempty"`
+	MinContractBalanceForIncentive int64         `protobuf:"varint,10,opt,name=MinContractBalanceForIncentive,proto3" json:"MinContractBalanceForIncentive,omitempty"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }
 func (*Params) ProtoMessage() {}
 func (*Params) Descriptor() ([]byte, []int) {
-	return fileDescriptor_69f362cfe47c68a8, []int{7}
+	return fileDescriptor_69f362cfe47c68a8, []int{6}
 }
 func (m *Params) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -398,8 +340,6 @@ func (m *Params) XXX_DiscardUnknown() {
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterEnum("trst.x.compute.v1beta1.AccessType", AccessType_name, AccessType_value)
-	proto.RegisterType((*AccessTypeParam)(nil), "trst.x.compute.v1beta1.AccessTypeParam")
 	proto.RegisterType((*CodeInfo)(nil), "trst.x.compute.v1beta1.CodeInfo")
 	proto.RegisterType((*ContractInfo)(nil), "trst.x.compute.v1beta1.ContractInfo")
 	proto.RegisterType((*ContractInfoWithAddress)(nil), "trst.x.compute.v1beta1.ContractInfoWithAddress")
@@ -412,102 +352,77 @@ func init() {
 func init() { proto.RegisterFile("compute/v1beta1/types.proto", fileDescriptor_69f362cfe47c68a8) }
 
 var fileDescriptor_69f362cfe47c68a8 = []byte{
-	// 1104 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0x4d, 0x4f, 0x1b, 0xc7,
-	0x1b, 0xf7, 0x62, 0xfc, 0x36, 0xb6, 0xfe, 0x7f, 0x6b, 0x42, 0x89, 0x31, 0xd5, 0xae, 0xeb, 0x56,
-	0x11, 0x22, 0x8d, 0x2d, 0x68, 0x15, 0x55, 0xb9, 0xb4, 0x18, 0x1b, 0xe1, 0x50, 0x5e, 0xb4, 0x40,
-	0x2a, 0x7a, 0xb1, 0x66, 0x77, 0x07, 0x7b, 0xc4, 0xee, 0x8e, 0x35, 0x33, 0xa6, 0xf6, 0x37, 0xa8,
-	0x38, 0xe5, 0x18, 0xa9, 0x42, 0xaa, 0xd4, 0x1e, 0xf2, 0x05, 0x7a, 0xe9, 0x07, 0xa8, 0x38, 0x22,
-	0xf5, 0xd2, 0x93, 0xdb, 0x82, 0xd4, 0x43, 0x8e, 0x3d, 0xe6, 0x54, 0xcd, 0xec, 0x6e, 0x6c, 0xc0,
-	0x90, 0xa8, 0xea, 0xc9, 0xf3, 0xbc, 0xfe, 0x9e, 0xf9, 0x3d, 0xf3, 0x3c, 0x6b, 0x30, 0x6f, 0x53,
-	0xaf, 0xdb, 0x13, 0xb8, 0x7a, 0xbc, 0x64, 0x61, 0x81, 0x96, 0xaa, 0x62, 0xd0, 0xc5, 0xbc, 0xd2,
-	0x65, 0x54, 0x50, 0x38, 0x2b, 0x18, 0x17, 0x95, 0x7e, 0x25, 0xf4, 0xa9, 0x84, 0x3e, 0xc5, 0x99,
-	0x36, 0x6d, 0x53, 0xe5, 0x52, 0x95, 0xa7, 0xc0, 0xbb, 0x68, 0xb4, 0x29, 0x6d, 0xbb, 0xb8, 0xaa,
-	0x24, 0xab, 0x77, 0x58, 0x15, 0xc4, 0xc3, 0x5c, 0x20, 0xaf, 0x1b, 0x3a, 0xe8, 0xd7, 0x1d, 0x9c,
-	0x1e, 0x43, 0x82, 0x50, 0x3f, 0xb0, 0x97, 0x6d, 0xf0, 0xff, 0x15, 0xdb, 0xc6, 0x9c, 0xef, 0x0d,
-	0xba, 0x78, 0x07, 0x31, 0xe4, 0xc1, 0xa7, 0x20, 0x71, 0x8c, 0xdc, 0x1e, 0x2e, 0x68, 0x25, 0x6d,
-	0xe1, 0x7f, 0xcb, 0xe5, 0xca, 0xe4, 0x8a, 0x2a, 0xa3, 0xb8, 0x5a, 0xfe, 0xef, 0xa1, 0x91, 0x1b,
-	0x20, 0xcf, 0x7d, 0x52, 0x56, 0xa1, 0x65, 0x33, 0x48, 0xf1, 0x64, 0xfa, 0xc5, 0xf7, 0x86, 0x56,
-	0xfe, 0x75, 0x0a, 0xa4, 0x57, 0xa9, 0x83, 0x9b, 0xfe, 0x21, 0x85, 0xf3, 0x20, 0x63, 0x53, 0x07,
-	0xb7, 0x3a, 0x88, 0x77, 0x14, 0x44, 0xce, 0x4c, 0x4b, 0xc5, 0x3a, 0xe2, 0x1d, 0xb8, 0x01, 0x52,
-	0x36, 0xc3, 0x48, 0x50, 0x56, 0x98, 0x92, 0xa6, 0xda, 0xd2, 0xeb, 0xa1, 0xf1, 0xa8, 0x4d, 0x44,
-	0xa7, 0x67, 0xc9, 0x02, 0xaa, 0x36, 0xe5, 0x1e, 0xe5, 0xe1, 0xcf, 0x23, 0xee, 0x1c, 0x85, 0xe4,
-	0xad, 0xd8, 0xf6, 0x8a, 0xe3, 0x30, 0xcc, 0xb9, 0x19, 0x65, 0x80, 0xb3, 0x20, 0xc9, 0x69, 0x8f,
-	0xd9, 0xb8, 0x10, 0x2f, 0x69, 0x0b, 0x19, 0x33, 0x94, 0x60, 0x01, 0xa4, 0xac, 0x1e, 0x71, 0x1d,
-	0xcc, 0x0a, 0xd3, 0xca, 0x10, 0x89, 0x70, 0x1f, 0xa4, 0x23, 0x7e, 0x0a, 0x89, 0x92, 0xb6, 0x90,
-	0x5d, 0x9e, 0xab, 0x04, 0x04, 0x56, 0x22, 0x02, 0x2b, 0xf5, 0xd0, 0xa1, 0xa6, 0x9f, 0x0d, 0x8d,
-	0xd8, 0xab, 0xa1, 0x01, 0xa3, 0x90, 0x8f, 0xa9, 0x47, 0x04, 0xf6, 0xba, 0x62, 0xf0, 0xe2, 0x77,
-	0x43, 0x33, 0xdf, 0xa4, 0x82, 0x33, 0x20, 0x21, 0x88, 0x70, 0x71, 0x21, 0xa9, 0xe0, 0x02, 0x01,
-	0x96, 0x40, 0xd6, 0xc1, 0xdc, 0x66, 0xa4, 0xab, 0xf0, 0x52, 0xca, 0x36, 0xae, 0x82, 0xef, 0x83,
-	0x0c, 0xf1, 0xb9, 0x40, 0xbe, 0x8d, 0x79, 0x21, 0x5d, 0xd2, 0x16, 0xa6, 0xcd, 0x91, 0xa2, 0xfc,
-	0xd7, 0x14, 0xc8, 0xad, 0x52, 0x5f, 0x30, 0x64, 0x0b, 0xc5, 0xec, 0x87, 0x20, 0xa5, 0x98, 0x25,
-	0x8e, 0xe2, 0x75, 0xba, 0x06, 0x2e, 0x86, 0x46, 0x52, 0x11, 0x5f, 0x37, 0x93, 0xd2, 0xd4, 0x74,
-	0xfe, 0x5b, 0x86, 0x0d, 0x90, 0xb5, 0xc3, 0x0a, 0x24, 0x6a, 0xc0, 0x26, 0x88, 0x54, 0x4d, 0x07,
-	0xd6, 0x43, 0x34, 0xec, 0x84, 0x7c, 0x2e, 0xde, 0xfa, 0x9a, 0x2c, 0x4e, 0xdd, 0x9e, 0xc0, 0x7b,
-	0xfd, 0x1d, 0xca, 0x89, 0xbc, 0xbe, 0x19, 0x85, 0xc2, 0xcf, 0x41, 0x1a, 0xfb, 0x4e, 0x4b, 0xbe,
-	0x6d, 0x45, 0x61, 0x76, 0xb9, 0x78, 0xa3, 0x2d, 0x7b, 0xd1, 0xc3, 0xaf, 0xa5, 0x65, 0x5f, 0x9e,
-	0xcb, 0x0e, 0xa4, 0xb0, 0xef, 0x48, 0x3d, 0x9c, 0x03, 0x69, 0xd4, 0x13, 0xb4, 0xe5, 0xf1, 0xb6,
-	0xe2, 0x39, 0x67, 0xa6, 0xa4, 0xbc, 0xc9, 0xdb, 0xf0, 0x03, 0x90, 0xb3, 0x91, 0xeb, 0x5a, 0xc8,
-	0x3e, 0x6a, 0x71, 0xd2, 0x56, 0x34, 0xe7, 0xcc, 0x6c, 0xa4, 0xdb, 0x25, 0xed, 0xf2, 0xcf, 0x1a,
-	0xb8, 0x3f, 0x4e, 0xf4, 0x57, 0x44, 0x74, 0x42, 0x2a, 0x24, 0x9d, 0x28, 0x38, 0x06, 0x6f, 0xf9,
-	0x5f, 0xd1, 0x19, 0x66, 0x80, 0xe6, 0xd5, 0x86, 0xaa, 0x06, 0x65, 0x97, 0x3f, 0xba, 0x8d, 0xb2,
-	0x71, 0xdf, 0x5a, 0xfa, 0x7c, 0x68, 0x68, 0xaf, 0x86, 0x46, 0xcc, 0xbc, 0x92, 0xa3, 0x6c, 0x02,
-	0x78, 0x93, 0x5a, 0x79, 0x6b, 0xcb, 0xa5, 0xf6, 0x51, 0xab, 0x83, 0x49, 0xbb, 0x23, 0x54, 0xed,
-	0x71, 0x33, 0xab, 0x74, 0xeb, 0x4a, 0x25, 0x39, 0x13, 0xfd, 0x16, 0xf1, 0x1d, 0xdc, 0x57, 0x85,
-	0x4c, 0x9b, 0x29, 0xd1, 0x6f, 0x4a, 0xb1, 0x4c, 0x40, 0x62, 0x93, 0x3a, 0xd8, 0x85, 0x4f, 0x41,
-	0x7c, 0x03, 0x0f, 0xc2, 0x9b, 0x7f, 0xf6, 0x7a, 0x68, 0x7c, 0x3a, 0x76, 0x73, 0x81, 0x7d, 0x07,
-	0x33, 0x8f, 0xf8, 0x62, 0xfc, 0xe8, 0x12, 0x8b, 0x57, 0xad, 0x81, 0xc0, 0xbc, 0xb2, 0x8e, 0xfb,
-	0x35, 0x79, 0x30, 0x65, 0x12, 0x39, 0x24, 0xcf, 0xd4, 0xda, 0x51, 0xcf, 0xd2, 0x0c, 0x84, 0xf2,
-	0x12, 0x48, 0x6d, 0xe0, 0xc1, 0x0e, 0x22, 0x0c, 0xe6, 0x47, 0x60, 0x99, 0x09, 0x21, 0x99, 0x28,
-	0xe4, 0x97, 0x04, 0x48, 0xaa, 0x4d, 0xc6, 0xe1, 0x63, 0x30, 0xbb, 0x12, 0xf4, 0x79, 0xad, 0xe7,
-	0x3b, 0x7c, 0x95, 0x7a, 0x1e, 0xe1, 0x5c, 0x4e, 0x5b, 0x70, 0xe1, 0x5b, 0xac, 0xb0, 0x02, 0x60,
-	0x68, 0x59, 0xa5, 0x6a, 0xde, 0xc4, 0x1a, 0x0e, 0x50, 0xe2, 0xe6, 0x04, 0x0b, 0xfc, 0x02, 0xcc,
-	0x9b, 0xd8, 0xee, 0x31, 0x46, 0xfc, 0xf6, 0x84, 0xc0, 0xb8, 0x0a, 0xbc, 0xcb, 0x05, 0xf6, 0xc1,
-	0xbd, 0x4d, 0xd4, 0x8f, 0x3a, 0x17, 0xed, 0x18, 0x35, 0x51, 0x77, 0x2e, 0xa1, 0x87, 0xe1, 0x12,
-	0x32, 0x3c, 0xd4, 0x6f, 0xbd, 0x99, 0xc5, 0x5b, 0x36, 0xd2, 0x24, 0x08, 0x85, 0x4c, 0xfc, 0x1b,
-	0xc8, 0x89, 0x77, 0x47, 0x26, 0xfe, 0x3b, 0x20, 0xdf, 0x84, 0x80, 0xdf, 0x69, 0xc0, 0x98, 0xa0,
-	0x5f, 0xa3, 0xac, 0xe9, 0xdb, 0xd8, 0x17, 0xe4, 0x38, 0x1a, 0xf7, 0x3b, 0xca, 0x78, 0x1c, 0x96,
-	0xb1, 0x38, 0xb1, 0x8c, 0xd6, 0x21, 0x65, 0x2d, 0x86, 0xbf, 0x41, 0xcc, 0xb9, 0x56, 0xd1, 0xdb,
-	0x90, 0xe1, 0x32, 0x98, 0x19, 0xa3, 0x6b, 0x54, 0x51, 0x4a, 0x35, 0x73, 0xa2, 0x0d, 0xae, 0x01,
-	0x7d, 0x2c, 0x6d, 0x0d, 0xb9, 0x72, 0x53, 0x5f, 0xb9, 0x4f, 0x5a, 0x45, 0xbf, 0xc5, 0x4b, 0x7d,
-	0x36, 0x63, 0x8b, 0x3f, 0x69, 0x00, 0x8c, 0x3e, 0xb2, 0xf0, 0x01, 0xc8, 0xec, 0x6f, 0xd5, 0x1b,
-	0x6b, 0xcd, 0xad, 0x46, 0x3d, 0x1f, 0x2b, 0xde, 0x3f, 0x39, 0x2d, 0xdd, 0x1b, 0x99, 0xf7, 0x7d,
-	0x07, 0x1f, 0x12, 0x1f, 0x3b, 0xb0, 0x04, 0x92, 0x5b, 0xdb, 0xb5, 0xed, 0xfa, 0x41, 0x5e, 0x2b,
-	0xce, 0x9c, 0x9c, 0x96, 0xf2, 0x23, 0xa7, 0x2d, 0x6a, 0x51, 0x67, 0x00, 0x1f, 0x82, 0xdc, 0xf6,
-	0xd6, 0x97, 0x07, 0xad, 0x95, 0x7a, 0xdd, 0x6c, 0xec, 0xee, 0xe6, 0xa7, 0x8a, 0x73, 0x27, 0xa7,
-	0xa5, 0xf7, 0x46, 0x7e, 0xdb, 0xbe, 0x3b, 0x88, 0x36, 0xdc, 0x03, 0x90, 0x69, 0x3c, 0x6b, 0x98,
-	0x07, 0x2a, 0x63, 0xfc, 0x3a, 0x6c, 0xe3, 0x18, 0xb3, 0x81, 0x4c, 0x5a, 0x4c, 0x7f, 0xfb, 0x83,
-	0x1e, 0x7b, 0xf9, 0xa3, 0x1e, 0xab, 0xed, 0x9e, 0xfd, 0xa9, 0xc7, 0x5e, 0x5e, 0xe8, 0xda, 0xd9,
-	0x85, 0xae, 0x9d, 0x5f, 0xe8, 0xda, 0x1f, 0x17, 0xba, 0xf6, 0xfc, 0x52, 0x8f, 0x9d, 0x5f, 0xea,
-	0xb1, 0xdf, 0x2e, 0xf5, 0xd8, 0xd7, 0x4b, 0xe3, 0x6b, 0x82, 0x71, 0xe1, 0x22, 0x8b, 0xab, 0x43,
-	0xb5, 0x5f, 0x8d, 0xfe, 0x1c, 0x11, 0x5f, 0x60, 0xe6, 0x23, 0x37, 0xd8, 0x97, 0x56, 0x52, 0xb5,
-	0xfe, 0x93, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x8d, 0x37, 0x9d, 0x12, 0x3d, 0x09, 0x00, 0x00,
+	// 1087 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0x4f, 0x6f, 0xe3, 0x44,
+	0x14, 0x8f, 0x49, 0x9a, 0xc4, 0x93, 0x02, 0xab, 0xd9, 0xaa, 0x64, 0x5b, 0x64, 0x97, 0x80, 0x50,
+	0xb5, 0x50, 0x87, 0x16, 0xb4, 0x42, 0x5c, 0xa0, 0x49, 0x54, 0x1a, 0xaa, 0x4a, 0x95, 0x77, 0x01,
+	0x89, 0x8b, 0x35, 0xb6, 0xa7, 0xce, 0xa8, 0xb6, 0x27, 0x9a, 0x19, 0x77, 0xdd, 0x6f, 0xb1, 0x07,
+	0x0e, 0x2b, 0x71, 0xe1, 0xc8, 0x67, 0xe0, 0x13, 0xf4, 0xd8, 0xe3, 0x9e, 0x02, 0xa4, 0xb7, 0x3d,
+	0x72, 0xdc, 0x13, 0x9a, 0xb1, 0x9d, 0xa6, 0x6d, 0x42, 0xff, 0x68, 0x4f, 0x99, 0xf7, 0xef, 0xf7,
+	0xde, 0x9b, 0xdf, 0x9b, 0xe7, 0x80, 0x55, 0x8f, 0x46, 0xc3, 0x44, 0xe0, 0xf6, 0xf1, 0xa6, 0x8b,
+	0x05, 0xda, 0x6c, 0x8b, 0x93, 0x21, 0xe6, 0xd6, 0x90, 0x51, 0x41, 0xe1, 0xb2, 0x60, 0x5c, 0x58,
+	0xa9, 0x95, 0xfb, 0x58, 0xb9, 0xcf, 0xca, 0x52, 0x40, 0x03, 0xaa, 0x5c, 0xda, 0xf2, 0x94, 0x79,
+	0xaf, 0x98, 0x01, 0xa5, 0x41, 0x88, 0xdb, 0x4a, 0x72, 0x93, 0xc3, 0xb6, 0x20, 0x11, 0xe6, 0x02,
+	0x45, 0xc3, 0xdc, 0xc1, 0xb8, 0xea, 0xe0, 0x27, 0x0c, 0x09, 0x42, 0xe3, 0xcc, 0xde, 0x7a, 0x55,
+	0x06, 0xf5, 0x2e, 0xf5, 0x71, 0x3f, 0x3e, 0xa4, 0x70, 0x15, 0xe8, 0x1e, 0xf5, 0xb1, 0x33, 0x40,
+	0x7c, 0xd0, 0xd4, 0xd6, 0xb4, 0xf5, 0x45, 0xbb, 0x2e, 0x15, 0xbb, 0x88, 0x0f, 0xe0, 0x1e, 0xa8,
+	0x79, 0x0c, 0x23, 0x41, 0x59, 0xf3, 0x1d, 0x69, 0xea, 0x6c, 0xbe, 0x19, 0x99, 0x1b, 0x01, 0x11,
+	0x83, 0xc4, 0x95, 0xd5, 0xb6, 0x3d, 0xca, 0x23, 0xca, 0xf3, 0x9f, 0x0d, 0xee, 0x1f, 0xe5, 0x7d,
+	0x6d, 0x7b, 0xde, 0xb6, 0xef, 0x33, 0xcc, 0xb9, 0x5d, 0x20, 0xc0, 0x65, 0x50, 0xe5, 0x34, 0x61,
+	0x1e, 0x6e, 0x96, 0xd7, 0xb4, 0x75, 0xdd, 0xce, 0x25, 0xd8, 0x04, 0x35, 0x37, 0x21, 0xa1, 0x8f,
+	0x59, 0xb3, 0xa2, 0x0c, 0x85, 0x08, 0x43, 0xf0, 0xc0, 0xc7, 0x87, 0x28, 0x09, 0x85, 0x53, 0xb4,
+	0xd0, 0x5c, 0x58, 0xd3, 0xd6, 0x1b, 0x5b, 0x8f, 0xac, 0xac, 0x47, 0xab, 0xe8, 0xd1, 0xea, 0xe5,
+	0x0e, 0x9d, 0x4f, 0x4f, 0x47, 0x66, 0xe9, 0xf5, 0xc8, 0x5c, 0xb9, 0x1a, 0xfa, 0x39, 0x8d, 0x88,
+	0xc0, 0xd1, 0x50, 0x9c, 0xbc, 0xfc, 0xcb, 0xd4, 0xec, 0xf7, 0x73, 0x7b, 0x11, 0x08, 0x97, 0xc0,
+	0x82, 0x20, 0x22, 0xc4, 0xcd, 0xaa, 0xaa, 0x22, 0x13, 0xe0, 0x1a, 0x68, 0xf8, 0x98, 0x7b, 0x8c,
+	0x0c, 0x55, 0xfa, 0x9a, 0xb2, 0x4d, 0xab, 0xa6, 0xab, 0x24, 0xb1, 0xc0, 0xec, 0x18, 0x85, 0xcd,
+	0xfa, 0x9d, 0xab, 0x2c, 0x42, 0xe7, 0x54, 0xd9, 0xcf, 0xcd, 0xf0, 0x43, 0xa0, 0x93, 0x98, 0x0b,
+	0x14, 0x7b, 0x98, 0x37, 0xf5, 0x35, 0x6d, 0xbd, 0x62, 0x5f, 0x28, 0x5a, 0xbf, 0x56, 0xc1, 0x62,
+	0x97, 0xc6, 0x82, 0x21, 0x4f, 0x28, 0x7a, 0x3f, 0x06, 0x35, 0x45, 0x2f, 0xf1, 0x15, 0xb9, 0x95,
+	0x0e, 0x18, 0x8f, 0xcc, 0xaa, 0x62, 0xbf, 0x67, 0x57, 0xa5, 0xa9, 0xef, 0xbf, 0x5d, 0x9a, 0xbf,
+	0x07, 0x0b, 0xf4, 0x79, 0x8c, 0x99, 0x62, 0xf9, 0x5e, 0x50, 0x59, 0x3c, 0x34, 0x41, 0xc3, 0xcb,
+	0x5b, 0x91, 0xe5, 0x67, 0xb3, 0x01, 0x0a, 0x55, 0xdf, 0x87, 0xbd, 0xbc, 0x6c, 0xec, 0xe7, 0x53,
+	0xf1, 0xd8, 0x9a, 0xfd, 0x90, 0xac, 0x6d, 0x97, 0xd3, 0x30, 0x11, 0xf8, 0x59, 0x7a, 0x40, 0x39,
+	0x91, 0x04, 0xd8, 0x45, 0x28, 0x7c, 0x04, 0xea, 0x28, 0x11, 0xd4, 0x89, 0x78, 0xa0, 0x98, 0x5f,
+	0xb4, 0x6b, 0x52, 0xde, 0xe7, 0x01, 0xfc, 0x11, 0xd4, 0x27, 0x73, 0x57, 0xbb, 0x89, 0x51, 0x23,
+	0x67, 0x14, 0xce, 0x99, 0xb7, 0x09, 0x94, 0x84, 0xbd, 0xfd, 0xa0, 0x4c, 0x60, 0xe7, 0x0c, 0xc8,
+	0x04, 0x0a, 0x76, 0x01, 0xe0, 0x02, 0x31, 0xe1, 0xc8, 0x7d, 0xa0, 0x46, 0xa3, 0xb1, 0xb5, 0x72,
+	0x0d, 0xf8, 0x59, 0xb1, 0x2c, 0x3a, 0x75, 0x89, 0xfc, 0x42, 0x62, 0xe8, 0x2a, 0x4e, 0x5a, 0xe0,
+	0x36, 0xd0, 0x71, 0x8a, 0xbd, 0x0c, 0x03, 0xdc, 0x01, 0xa3, 0x2e, 0xc3, 0x14, 0xc4, 0xb7, 0xa0,
+	0x8e, 0x63, 0x3f, 0x43, 0x68, 0xdc, 0x01, 0xa1, 0x86, 0x63, 0x5f, 0x01, 0x6c, 0x80, 0x06, 0x71,
+	0x3d, 0x67, 0x48, 0x99, 0x22, 0x7e, 0x51, 0x12, 0xdf, 0x79, 0x77, 0x3c, 0x32, 0xf5, 0x7e, 0xa7,
+	0x7b, 0x40, 0x99, 0xe8, 0xf7, 0x6c, 0x9d, 0xb8, 0x9e, 0x3a, 0xfa, 0xf0, 0x23, 0xb0, 0xe8, 0xa1,
+	0x30, 0x74, 0x91, 0x77, 0xe4, 0x70, 0x12, 0x34, 0xdf, 0x53, 0x24, 0x36, 0x0a, 0xdd, 0x53, 0x12,
+	0xb4, 0xfe, 0xd4, 0xc0, 0x07, 0xd3, 0xcf, 0xe2, 0x67, 0x22, 0x06, 0xf9, 0xb4, 0xc9, 0xe1, 0x47,
+	0xd9, 0x31, 0x5b, 0x7f, 0xf7, 0x1a, 0xfe, 0x1c, 0x01, 0xda, 0x97, 0x9f, 0x9f, 0x7a, 0x4e, 0x8d,
+	0xad, 0x4f, 0xe6, 0xcd, 0xe5, 0xb4, 0x6f, 0xa7, 0x7e, 0x36, 0x32, 0xb5, 0xd7, 0x23, 0xb3, 0x64,
+	0x5f, 0xc2, 0x68, 0xd9, 0x00, 0x5e, 0x9f, 0x5f, 0xd9, 0xb5, 0x1b, 0x52, 0xef, 0xc8, 0x19, 0x60,
+	0x12, 0x0c, 0x84, 0xaa, 0xbd, 0x6c, 0x37, 0x94, 0x6e, 0x57, 0xa9, 0xe4, 0x64, 0x8b, 0xd4, 0x21,
+	0xb1, 0x8f, 0x53, 0x55, 0x48, 0xc5, 0xae, 0x89, 0xb4, 0x2f, 0xc5, 0x16, 0x01, 0x0b, 0xfb, 0xd4,
+	0xc7, 0x21, 0xfc, 0x01, 0x94, 0xf7, 0xf0, 0x49, 0xde, 0xf9, 0xd7, 0x6f, 0x46, 0xe6, 0x57, 0x53,
+	0x9d, 0x0b, 0x1c, 0xfb, 0x98, 0x45, 0x24, 0x16, 0xd3, 0xc7, 0x90, 0xb8, 0xbc, 0xed, 0x9e, 0x08,
+	0xcc, 0xad, 0x5d, 0x9c, 0x76, 0xe4, 0xc1, 0x96, 0x20, 0x72, 0x81, 0xfe, 0x84, 0xc2, 0x04, 0x67,
+	0x4b, 0xc4, 0xce, 0x84, 0xd6, 0x26, 0xa8, 0xed, 0xe1, 0x93, 0x03, 0x44, 0x18, 0x7c, 0x70, 0x91,
+	0x4c, 0x9f, 0x11, 0xa2, 0x17, 0x21, 0xff, 0x56, 0x41, 0xf5, 0x00, 0x31, 0x14, 0x71, 0xf8, 0x04,
+	0x2c, 0x6f, 0x67, 0xaf, 0x71, 0x27, 0x89, 0x7d, 0xde, 0xa5, 0x51, 0x44, 0x38, 0x97, 0x0f, 0x32,
+	0x6b, 0x78, 0x8e, 0x15, 0x7e, 0x01, 0x1e, 0x16, 0x96, 0x10, 0xa7, 0x3b, 0x18, 0xf7, 0x70, 0x4c,
+	0x23, 0x95, 0xa6, 0x6c, 0xcf, 0x32, 0x41, 0x0b, 0xc0, 0x5c, 0xdd, 0xa5, 0x6a, 0x9f, 0x8a, 0x1d,
+	0x9c, 0x7d, 0xaa, 0xca, 0xf6, 0x0c, 0x0b, 0xfc, 0x0e, 0xac, 0xda, 0xd8, 0x4b, 0x18, 0x23, 0x71,
+	0x30, 0x23, 0xb0, 0xa2, 0x02, 0xff, 0xcf, 0x05, 0xa6, 0xe0, 0xe1, 0x3e, 0x4a, 0x0b, 0xae, 0x7b,
+	0xb7, 0xfe, 0xc2, 0x7d, 0x96, 0xaf, 0x04, 0x33, 0x42, 0xa9, 0x33, 0x59, 0x91, 0x73, 0xd6, 0xce,
+	0xac, 0x14, 0x2a, 0x33, 0x89, 0xaf, 0x65, 0xae, 0xde, 0x3e, 0x33, 0x89, 0x6f, 0x91, 0xf9, 0x7a,
+	0x0a, 0xf8, 0x9b, 0x06, 0xcc, 0x19, 0xfa, 0x1d, 0xca, 0xfa, 0xb1, 0x87, 0x63, 0x41, 0x8e, 0xf1,
+	0xcd, 0xab, 0xf6, 0x49, 0x5e, 0xc6, 0xe3, 0x99, 0x65, 0x38, 0x87, 0x94, 0x39, 0x0c, 0x3f, 0x47,
+	0xcc, 0xbf, 0x52, 0xd1, 0x4d, 0x99, 0xaf, 0xdc, 0x4b, 0xff, 0xd6, 0x4b, 0xfa, 0xde, 0xf7, 0x32,
+	0xf9, 0xac, 0x6f, 0x81, 0xa5, 0x29, 0xa2, 0x2e, 0xee, 0x42, 0x57, 0x63, 0x34, 0xd3, 0x06, 0x77,
+	0x80, 0x31, 0x05, 0xd5, 0x41, 0xa1, 0xfc, 0x0f, 0x70, 0xe9, 0x26, 0x81, 0x8a, 0xbe, 0xc1, 0xeb,
+	0x9b, 0xca, 0xcb, 0xdf, 0xcd, 0x52, 0xe7, 0xe9, 0xe9, 0x3f, 0x46, 0xe9, 0x8f, 0xb1, 0xa1, 0x9d,
+	0x8e, 0x0d, 0xed, 0x6c, 0x6c, 0x68, 0x7f, 0x8f, 0x0d, 0xed, 0xc5, 0xb9, 0x51, 0x3a, 0x3b, 0x37,
+	0x4a, 0xaf, 0xce, 0x8d, 0xd2, 0x2f, 0x9b, 0xd3, 0xab, 0x81, 0x71, 0x11, 0x22, 0x97, 0xab, 0x43,
+	0x3b, 0x6d, 0x17, 0x7f, 0x6f, 0xd5, 0xd7, 0x28, 0x46, 0x61, 0xb6, 0x23, 0xdd, 0xaa, 0xba, 0xab,
+	0x2f, 0xff, 0x0b, 0x00, 0x00, 0xff, 0xff, 0xb5, 0xdd, 0x7a, 0x43, 0xff, 0x0a, 0x00, 0x00,
 }
 
-func (this *AccessTypeParam) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*AccessTypeParam)
-	if !ok {
-		that2, ok := that.(AccessTypeParam)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Value != that1.Value {
-		return false
-	}
-	return true
-}
 func (this *CodeInfo) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -539,13 +454,16 @@ func (this *CodeInfo) Equal(that interface{}) bool {
 	if this.Builder != that1.Builder {
 		return false
 	}
-	if this.Duration != that1.Duration {
+	if this.DefaultDuration != that1.DefaultDuration {
 		return false
 	}
 	if this.Title != that1.Title {
 		return false
 	}
 	if this.Description != that1.Description {
+		return false
+	}
+	if this.DefaultInterval != that1.DefaultInterval {
 		return false
 	}
 	if this.Instances != that1.Instances {
@@ -578,16 +496,34 @@ func (this *ContractInfo) Equal(that interface{}) bool {
 	if !bytes.Equal(this.Creator, that1.Creator) {
 		return false
 	}
+	if !bytes.Equal(this.Owner, that1.Owner) {
+		return false
+	}
 	if this.ContractId != that1.ContractId {
 		return false
 	}
 	if !this.Created.Equal(that1.Created) {
 		return false
 	}
+	if !bytes.Equal(this.AutoMsg, that1.AutoMsg) {
+		return false
+	}
+	if this.Duration != that1.Duration {
+		return false
+	}
+	if this.Interval != that1.Interval {
+		return false
+	}
+	if !this.StartTime.Equal(that1.StartTime) {
+		return false
+	}
+	if !this.ExecTime.Equal(that1.ExecTime) {
+		return false
+	}
 	if !this.EndTime.Equal(that1.EndTime) {
 		return false
 	}
-	if !bytes.Equal(this.AutoMsg, that1.AutoMsg) {
+	if this.IBCPortID != that1.IBCPortID {
 		return false
 	}
 	if !bytes.Equal(this.CallbackSig, that1.CallbackSig) {
@@ -725,6 +661,9 @@ func (this *Params) Equal(that interface{}) bool {
 	if this.AutoMsgFundsCommission != that1.AutoMsgFundsCommission {
 		return false
 	}
+	if this.AutoMsgFlexFeeDenom != that1.AutoMsgFlexFeeDenom {
+		return false
+	}
 	if this.AutoMsgConstantFee != that1.AutoMsgConstantFee {
 		return false
 	}
@@ -740,6 +679,9 @@ func (this *Params) Equal(that interface{}) bool {
 	if this.MinContractDurationForIncentive != that1.MinContractDurationForIncentive {
 		return false
 	}
+	if this.MinContractInterval != that1.MinContractInterval {
+		return false
+	}
 	if this.MaxContractIncentive != that1.MaxContractIncentive {
 		return false
 	}
@@ -748,34 +690,6 @@ func (this *Params) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (m *AccessTypeParam) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AccessTypeParam) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *AccessTypeParam) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.Value != 0 {
-		i = encodeVarintTypes(dAtA, i, uint64(m.Value))
-		i--
-		dAtA[i] = 0x8
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *CodeInfo) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -799,8 +713,16 @@ func (m *CodeInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.Instances != 0 {
 		i = encodeVarintTypes(dAtA, i, uint64(m.Instances))
 		i--
-		dAtA[i] = 0x40
+		dAtA[i] = 0x48
 	}
+	n1, err1 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.DefaultInterval, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.DefaultInterval):])
+	if err1 != nil {
+		return 0, err1
+	}
+	i -= n1
+	i = encodeVarintTypes(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x42
 	if len(m.Description) > 0 {
 		i -= len(m.Description)
 		copy(dAtA[i:], m.Description)
@@ -815,12 +737,12 @@ func (m *CodeInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x32
 	}
-	n1, err1 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration):])
-	if err1 != nil {
-		return 0, err1
+	n2, err2 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.DefaultDuration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.DefaultDuration):])
+	if err2 != nil {
+		return 0, err2
 	}
-	i -= n1
-	i = encodeVarintTypes(dAtA, i, uint64(n1))
+	i -= n2
+	i = encodeVarintTypes(dAtA, i, uint64(n2))
 	i--
 	dAtA[i] = 0x2a
 	if len(m.Builder) > 0 {
@@ -879,23 +801,62 @@ func (m *ContractInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.CallbackSig)
 		i = encodeVarintTypes(dAtA, i, uint64(len(m.CallbackSig)))
 		i--
-		dAtA[i] = 0x42
+		dAtA[i] = 0x72
 	}
+	if len(m.IBCPortID) > 0 {
+		i -= len(m.IBCPortID)
+		copy(dAtA[i:], m.IBCPortID)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.IBCPortID)))
+		i--
+		dAtA[i] = 0x62
+	}
+	n3, err3 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime):])
+	if err3 != nil {
+		return 0, err3
+	}
+	i -= n3
+	i = encodeVarintTypes(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x5a
+	n4, err4 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.ExecTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.ExecTime):])
+	if err4 != nil {
+		return 0, err4
+	}
+	i -= n4
+	i = encodeVarintTypes(dAtA, i, uint64(n4))
+	i--
+	dAtA[i] = 0x52
+	n5, err5 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.StartTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime):])
+	if err5 != nil {
+		return 0, err5
+	}
+	i -= n5
+	i = encodeVarintTypes(dAtA, i, uint64(n5))
+	i--
+	dAtA[i] = 0x4a
+	n6, err6 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Interval, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Interval):])
+	if err6 != nil {
+		return 0, err6
+	}
+	i -= n6
+	i = encodeVarintTypes(dAtA, i, uint64(n6))
+	i--
+	dAtA[i] = 0x42
+	n7, err7 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.Duration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration):])
+	if err7 != nil {
+		return 0, err7
+	}
+	i -= n7
+	i = encodeVarintTypes(dAtA, i, uint64(n7))
+	i--
+	dAtA[i] = 0x3a
 	if len(m.AutoMsg) > 0 {
 		i -= len(m.AutoMsg)
 		copy(dAtA[i:], m.AutoMsg)
 		i = encodeVarintTypes(dAtA, i, uint64(len(m.AutoMsg)))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x32
 	}
-	n2, err2 := github_com_gogo_protobuf_types.StdTimeMarshalTo(m.EndTime, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime):])
-	if err2 != nil {
-		return 0, err2
-	}
-	i -= n2
-	i = encodeVarintTypes(dAtA, i, uint64(n2))
-	i--
-	dAtA[i] = 0x32
 	if m.Created != nil {
 		{
 			size, err := m.Created.MarshalToSizedBuffer(dAtA[:i])
@@ -914,6 +875,13 @@ func (m *ContractInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintTypes(dAtA, i, uint64(len(m.ContractId)))
 		i--
 		dAtA[i] = 0x22
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintTypes(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0x1a
 	}
 	if len(m.Creator) > 0 {
 		i -= len(m.Creator)
@@ -1102,44 +1070,57 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.MinContractBalanceForIncentive != 0 {
 		i = encodeVarintTypes(dAtA, i, uint64(m.MinContractBalanceForIncentive))
 		i--
-		dAtA[i] = 0x40
+		dAtA[i] = 0x50
 	}
 	if m.MaxContractIncentive != 0 {
 		i = encodeVarintTypes(dAtA, i, uint64(m.MaxContractIncentive))
 		i--
-		dAtA[i] = 0x38
+		dAtA[i] = 0x48
 	}
-	n5, err5 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MinContractDurationForIncentive, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinContractDurationForIncentive):])
-	if err5 != nil {
-		return 0, err5
+	n10, err10 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MinContractInterval, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinContractInterval):])
+	if err10 != nil {
+		return 0, err10
 	}
-	i -= n5
-	i = encodeVarintTypes(dAtA, i, uint64(n5))
+	i -= n10
+	i = encodeVarintTypes(dAtA, i, uint64(n10))
+	i--
+	dAtA[i] = 0x42
+	n11, err11 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MinContractDurationForIncentive, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinContractDurationForIncentive):])
+	if err11 != nil {
+		return 0, err11
+	}
+	i -= n11
+	i = encodeVarintTypes(dAtA, i, uint64(n11))
+	i--
+	dAtA[i] = 0x3a
+	n12, err12 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MinContractDuration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinContractDuration):])
+	if err12 != nil {
+		return 0, err12
+	}
+	i -= n12
+	i = encodeVarintTypes(dAtA, i, uint64(n12))
 	i--
 	dAtA[i] = 0x32
-	n6, err6 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MinContractDuration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinContractDuration):])
-	if err6 != nil {
-		return 0, err6
+	n13, err13 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MaxContractDuration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MaxContractDuration):])
+	if err13 != nil {
+		return 0, err13
 	}
-	i -= n6
-	i = encodeVarintTypes(dAtA, i, uint64(n6))
+	i -= n13
+	i = encodeVarintTypes(dAtA, i, uint64(n13))
 	i--
 	dAtA[i] = 0x2a
-	n7, err7 := github_com_gogo_protobuf_types.StdDurationMarshalTo(m.MaxContractDuration, dAtA[i-github_com_gogo_protobuf_types.SizeOfStdDuration(m.MaxContractDuration):])
-	if err7 != nil {
-		return 0, err7
-	}
-	i -= n7
-	i = encodeVarintTypes(dAtA, i, uint64(n7))
-	i--
-	dAtA[i] = 0x22
 	if m.RecurringAutoMsgConstantFee != 0 {
 		i = encodeVarintTypes(dAtA, i, uint64(m.RecurringAutoMsgConstantFee))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x20
 	}
 	if m.AutoMsgConstantFee != 0 {
 		i = encodeVarintTypes(dAtA, i, uint64(m.AutoMsgConstantFee))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.AutoMsgFlexFeeDenom != 0 {
+		i = encodeVarintTypes(dAtA, i, uint64(m.AutoMsgFlexFeeDenom))
 		i--
 		dAtA[i] = 0x10
 	}
@@ -1162,18 +1143,6 @@ func encodeVarintTypes(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *AccessTypeParam) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.Value != 0 {
-		n += 1 + sovTypes(uint64(m.Value))
-	}
-	return n
-}
-
 func (m *CodeInfo) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1196,7 +1165,7 @@ func (m *CodeInfo) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
-	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration)
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.DefaultDuration)
 	n += 1 + l + sovTypes(uint64(l))
 	l = len(m.Title)
 	if l > 0 {
@@ -1206,6 +1175,8 @@ func (m *CodeInfo) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.DefaultInterval)
+	n += 1 + l + sovTypes(uint64(l))
 	if m.Instances != 0 {
 		n += 1 + sovTypes(uint64(m.Instances))
 	}
@@ -1225,6 +1196,10 @@ func (m *ContractInfo) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
 	l = len(m.ContractId)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
@@ -1233,9 +1208,21 @@ func (m *ContractInfo) Size() (n int) {
 		l = m.Created.Size()
 		n += 1 + l + sovTypes(uint64(l))
 	}
+	l = len(m.AutoMsg)
+	if l > 0 {
+		n += 1 + l + sovTypes(uint64(l))
+	}
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Duration)
+	n += 1 + l + sovTypes(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.Interval)
+	n += 1 + l + sovTypes(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.StartTime)
+	n += 1 + l + sovTypes(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.ExecTime)
+	n += 1 + l + sovTypes(uint64(l))
 	l = github_com_gogo_protobuf_types.SizeOfStdTime(m.EndTime)
 	n += 1 + l + sovTypes(uint64(l))
-	l = len(m.AutoMsg)
+	l = len(m.IBCPortID)
 	if l > 0 {
 		n += 1 + l + sovTypes(uint64(l))
 	}
@@ -1321,6 +1308,9 @@ func (m *Params) Size() (n int) {
 	if m.AutoMsgFundsCommission != 0 {
 		n += 1 + sovTypes(uint64(m.AutoMsgFundsCommission))
 	}
+	if m.AutoMsgFlexFeeDenom != 0 {
+		n += 1 + sovTypes(uint64(m.AutoMsgFlexFeeDenom))
+	}
 	if m.AutoMsgConstantFee != 0 {
 		n += 1 + sovTypes(uint64(m.AutoMsgConstantFee))
 	}
@@ -1332,6 +1322,8 @@ func (m *Params) Size() (n int) {
 	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinContractDuration)
 	n += 1 + l + sovTypes(uint64(l))
 	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinContractDurationForIncentive)
+	n += 1 + l + sovTypes(uint64(l))
+	l = github_com_gogo_protobuf_types.SizeOfStdDuration(m.MinContractInterval)
 	n += 1 + l + sovTypes(uint64(l))
 	if m.MaxContractIncentive != 0 {
 		n += 1 + sovTypes(uint64(m.MaxContractIncentive))
@@ -1347,75 +1339,6 @@ func sovTypes(x uint64) (n int) {
 }
 func sozTypes(x uint64) (n int) {
 	return sovTypes(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *AccessTypeParam) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTypes
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AccessTypeParam: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AccessTypeParam: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
-			}
-			m.Value = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Value |= AccessType(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTypes(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *CodeInfo) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1580,7 +1503,7 @@ func (m *CodeInfo) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field DefaultDuration", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1607,7 +1530,7 @@ func (m *CodeInfo) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.DefaultDuration, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1676,6 +1599,39 @@ func (m *CodeInfo) Unmarshal(dAtA []byte) error {
 			m.Description = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DefaultInterval", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.DefaultInterval, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Instances", wireType)
 			}
@@ -1797,6 +1753,40 @@ func (m *ContractInfo) Unmarshal(dAtA []byte) error {
 				m.Creator = []byte{}
 			}
 			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = append(m.Owner[:0], dAtA[iNdEx:postIndex]...)
+			if m.Owner == nil {
+				m.Owner = []byte{}
+			}
+			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ContractId", wireType)
@@ -1867,39 +1857,6 @@ func (m *ContractInfo) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 6:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTypes
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTypes
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTypes
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AutoMsg", wireType)
 			}
 			var byteLen int
@@ -1932,7 +1889,204 @@ func (m *ContractInfo) Unmarshal(dAtA []byte) error {
 				m.AutoMsg = []byte{}
 			}
 			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Duration, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Interval", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.Interval, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.StartTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExecTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.ExecTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndTime", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdTimeUnmarshal(&m.EndTime, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IBCPortID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IBCPortID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 14:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CallbackSig", wireType)
 			}
@@ -2477,6 +2631,25 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AutoMsgFlexFeeDenom", wireType)
+			}
+			m.AutoMsgFlexFeeDenom = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AutoMsgFlexFeeDenom |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AutoMsgConstantFee", wireType)
 			}
 			m.AutoMsgConstantFee = 0
@@ -2494,7 +2667,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field RecurringAutoMsgConstantFee", wireType)
 			}
@@ -2513,7 +2686,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 4:
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaxContractDuration", wireType)
 			}
@@ -2546,7 +2719,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 5:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MinContractDuration", wireType)
 			}
@@ -2579,7 +2752,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MinContractDurationForIncentive", wireType)
 			}
@@ -2612,7 +2785,40 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinContractInterval", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTypes
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTypes
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTypes
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_gogo_protobuf_types.StdDurationUnmarshal(&m.MinContractInterval, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaxContractIncentive", wireType)
 			}
@@ -2631,7 +2837,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 8:
+		case 10:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MinContractBalanceForIncentive", wireType)
 			}

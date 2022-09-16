@@ -14,9 +14,9 @@ It allocates inflation through the following default params:
 		DistributionProportions: DistributionProportions{
 			Staking:                     sdk.MustNewDecFromStr("0.55"),
 			TrustlessContractIncentives: sdk.MustNewDecFromStr("0.25"),
-			DeveloperRewards:            sdk.MustNewDecFromStr("0.05"),
+			ContributorRewards:            sdk.MustNewDecFromStr("0.05"),
 			CommunityPool:               sdk.MustNewDecFromStr("0.15"),
 		},
-		WeightedDeveloperRewardsReceivers: []WeightedAddress{},
+		WeightedContributorRewardsReceivers: []WeightedAddress{},
 	}
 ```

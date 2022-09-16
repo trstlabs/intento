@@ -38,6 +38,6 @@ echo "Validating genesis file..."
 trstd validate-genesis
 
 sed -i '129s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trst/config/app.toml
-sed -i '181s/enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.trst/config/app.toml
+
 
 trstd start --bootstrap > init.log --log_level info

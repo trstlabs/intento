@@ -20,8 +20,8 @@ type ContractKey string
 type BlockInfo struct {
 	// block height this transaction is executed
 	Height uint64 `json:"height"`
-	// time in seconds since unix epoch - since cosmwasm 0.3
-	Time    uint64 `json:"time"`
+	// time in nanoseconds since unix epoch. Uses string to ensure json compatibility.
+	Time    uint64 `json:"time,string"`
 	ChainID string `json:"chain_id"`
 }
 
@@ -29,10 +29,12 @@ type MessageInfo struct {
 	// binary encoding of sdk.AccAddress executing the contract
 	Sender HumanAddress `json:"sender"`
 	// amount of funds send to the contract along with this message
-	SentFunds Coins `json:"sent_funds"`
+	Funds Coins `json:"funds"`
 }
 
 type ContractInfo struct {
 	// binary encoding of sdk.AccAddress of the contract, to be used when sending messages
 	Address HumanAddress `json:"address"`
+	// binary encoding of sdk.AccAddress of the contract, to be used when sending messages
+	CodeHash string `json:"code_hash"`
 }

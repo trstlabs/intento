@@ -28,16 +28,18 @@ const (
 	flagSource                 = "source"
 	flagBuilder                = "builder"
 	flagContractId             = "contract_id"
-	flagRunAs                  = "run-as"
+	flagCreator                = "creator"
 	flagInstantiateByEverybody = "instantiate-everybody"
 	flagInstantiateByAddress   = "instantiate-only-address"
 	flagProposalType           = "type"
 	flagIoMasterKey            = "enclave-key"
 	flagCodeHash               = "code-hash"
 	flagDuration               = "duration"
+	flagInterval               = "interval"
 	flagTitle                  = "contract-title"
 	flagDescription            = "contract-description"
 	flagAutoMsg                = "auto_msg"
+	flagStartAt                = "start_at"
 
 	// flagAdmin                  = "admin"
 )
@@ -83,7 +85,7 @@ func CmdStoreCode() *cobra.Command {
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
-
+			fmt.Printf("CLI TX with duration: %s \n", msg.DefaultDuration)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
 		},
 	}
@@ -92,9 +94,8 @@ func CmdStoreCode() *cobra.Command {
 	cmd.Flags().String(flagBuilder, "", "A valid docker tag for the build system, optional")
 	cmd.Flags().String(flagTitle, "", "Title of contract")
 	cmd.Flags().String(flagDescription, "", "Description of contract")
-	//cmd.Flags().String(flagInstantiateByEverybody, "", "Everybody can instantiate a contract from the code, optional")
-	//cmd.Flags().String(flagInstantiateByAddress, "", "Only this address can instantiate a contract instance from the code, optional")
-	cmd.Flags().String(flagDuration, "", "A duration for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
+	cmd.Flags().String(flagDuration, "", "A default duration for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
+	cmd.Flags().String(flagInterval, "", "A default interval for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -126,23 +127,14 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 		return types.MsgStoreCode{}, fmt.Errorf("invalid input file. Use wasm binary or gzip")
 	}
 
-	contractDuration, err := flags.GetString(flagDuration) //strconv.ParseInt(args[3], 10, 64)
+	duration, err := flags.GetString(flagDuration) //strconv.ParseInt(args[3], 10, 64)
 	if err != nil {
 		return types.MsgStoreCode{}, fmt.Errorf("contract duration: %s", err)
 	}
-	/*
-	   var perm *types.AccessConfig
-	   if onlyAddrStr := viper.GetString(flagInstantiateByAddress); onlyAddrStr != "" {
-	       allowedAddr, err := sdk.AccAddressFromBech32(onlyAddrStr)
-	       if err != nil {
-	           return types.MsgStoreCode{}, sdkerrors.Wrap(err, flagInstantiateByAddress)
-	       }
-	       x := types.OnlyAddress.With(allowedAddr)
-	       perm = &x
-	   } else if everybody := viper.GetBool(flagInstantiateByEverybody); everybody {
-	       perm = &types.AllowEverybody
-	   }
-	*/
+	interval, err := flags.GetString(flagInterval) //strconv.ParseInt(args[3], 10, 64)
+	if err != nil {
+		return types.MsgStoreCode{}, fmt.Errorf("contract interval: %s", err)
+	}
 
 	source, err := flags.GetString(flagSource)
 	if err != nil {
@@ -155,14 +147,14 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msg := types.MsgStoreCode{
-		Sender:           cliCtx.GetFromAddress().String(),
-		WASMByteCode:     wasm,
-		Source:           source,
-		Builder:          builder,
-		ContractDuration: contractDuration,
-		Title:            argsTitle,
-		Description:      argsDescription,
-		// InstantiatePermission: perm,
+		Sender:          cliCtx.GetFromAddress().String(),
+		WASMByteCode:    wasm,
+		Source:          source,
+		Builder:         builder,
+		DefaultDuration: duration,
+		DefaultInterval: interval,
+		Title:           argsTitle,
+		Description:     argsDescription,
 	}
 	return msg, nil
 }
@@ -170,7 +162,7 @@ func parseStoreCodeArgs(args []string, cliCtx client.Context, flags *flag.FlagSe
 // CmdInstantiateContract will instantiate a contract from previously uploaded code.
 func CmdInstantiateContract() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "instantiate [code id] [JSON args] --contract_id [unique contractId] " /* --admin [address,optional] */ + "--amount [coins] (optional)",
+		Use:   "instantiate [code id] [JSON args] --contract_id [unique contract ID] " /* --admin [address,optional] */ + "--amount [coins] (optional)  --auto_msg [json args, optional] --duration [custom duration e.g. 400s/5h] (optional)  --interval [custom dration e.g. 400s/5h]  (optional) --start_at [UNIX time]",
 		Short: "Instantiate a Trustless Contract",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -198,9 +190,10 @@ func CmdInstantiateContract() *cobra.Command {
 	cmd.Flags().String(flagAmount, "", "Coins to send to the contract during instantiation")
 	cmd.Flags().String(flagContractId, "", "A human-readable name for this contract in lists")
 	cmd.Flags().String(flagAutoMsg, "", "An automatic message to send, that the contract executes after a set duration (optional)")
-	//cmd.Flags().BoolVar(&sendAutoMsg, "auto_msg", false, "An automatic message to send, before the contract ends (optional)")
+	cmd.Flags().String(flagDuration, "", "A custom duration for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
+	cmd.Flags().String(flagInterval, "", "A custom interval for the contract e.g. 2h, 6000s, 72h3m0.5s, optional")
+	cmd.Flags().String(flagStartAt, "0", "A custom start time for the contract self-execution, in UNIX time")
 
-	// cmd.Flags().String(flagAdmin, "", "Address of an admin")
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
 }
@@ -212,12 +205,12 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		return types.MsgInstantiateContract{}, err
 	}
 
-	amountStr, err := initFlags.GetString(flagAmount)
+	amount, err := initFlags.GetString(flagAmount)
 	if err != nil {
 		return types.MsgInstantiateContract{}, fmt.Errorf("amount: %s", err)
 	}
 
-	amount, err := sdk.ParseCoinsNormalized(amountStr)
+	funds, err := sdk.ParseCoinsNormalized(amount)
 	if err != nil {
 		return types.MsgInstantiateContract{}, err
 	}
@@ -231,6 +224,24 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 	if err != nil {
 		return types.MsgInstantiateContract{}, err
 	}
+	duration, err := initFlags.GetString(flagDuration) //strconv.ParseInt(args[3], 10, 64)
+	if err != nil {
+		return types.MsgInstantiateContract{}, fmt.Errorf("contract duration: %s", err)
+	}
+	interval, err := initFlags.GetString(flagInterval) //strconv.ParseInt(args[3], 10, 64)
+	if err != nil {
+		return types.MsgInstantiateContract{}, fmt.Errorf("contract interval: %s", err)
+	}
+
+	startAtStr, err := initFlags.GetString(flagStartAt) //strconv.ParseInt(args[3], 10, 64)
+	if err != nil {
+		return types.MsgInstantiateContract{}, fmt.Errorf("startAt string: %s", err)
+	}
+
+	startAt, err := strconv.ParseUint(startAtStr, 10, 64)
+	if err != nil {
+		return types.MsgInstantiateContract{}, fmt.Errorf("failed to parse start duration at: %s", err)
+	}
 
 	//sendAutoMsg, _ := initFlags.GetBool("auto_msg")
 
@@ -239,9 +250,9 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 	}
 
 	wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
-	initMsg := types.TrustlessMsg{}
+	msg := types.ContractMsg{}
 
-	var encryptedInitMsg []byte
+	var encryptedMsg []byte
 	genOnly, err := initFlags.GetBool(flags.FlagGenerateOnly)
 	if err != nil && genOnly {
 		// if we're creating an offline transaction we just need the path to the io master key
@@ -260,9 +271,9 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 		if codeHash == "" {
 			return types.MsgInstantiateContract{}, fmt.Errorf("missing flag --%s. To create an offline transaction, you must set the target contract's code hash", flagCodeHash)
 		}
-		initMsg.CodeHash = []byte(codeHash)
+		msg.CodeHash = []byte(codeHash)
 
-		encryptedInitMsg, _ = wasmCtx.OfflineEncrypt(initMsg.Serialize(), ioKeyPath)
+		encryptedMsg, _ = wasmCtx.OfflineEncrypt(msg.Serialize(), ioKeyPath)
 	} else {
 		// if we aren't creating an offline transaction we can validate the chosen contractId
 		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, types.QueryContractAddress, contractId)
@@ -271,52 +282,43 @@ func parseInstantiateArgs(args []string, cliCtx client.Context, initFlags *flag.
 			return types.MsgInstantiateContract{}, fmt.Errorf("contractId already exists. You must choose a unique contractId for your contract instance")
 		}
 
-		initMsg.CodeHash, err = GetCodeHashByCodeId(cliCtx, args[0])
+		msg.CodeHash, err = GetCodeHashByCodeId(cliCtx, args[0])
 		if err != nil {
 			return types.MsgInstantiateContract{}, err
 		}
 
-		//fmt.Printf("Got code hash: %X\n", initMsg.CodeHash)
-		// todo: Add check that this is valid json and stuff
-		initMsg.Msg = []byte(args[1])
-		//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
-		//initMsg.Msg, err = json.Marshal(estimation)
-		//fmt.Printf("json message: %X\n", estimation)
+		msg.Msg = []byte(args[1])
 
-		//initMsg.Msg = []byte(initMsg.Msg)
-
-		encryptedInitMsg, _ = wasmCtx.Encrypt(initMsg.Serialize())
+		encryptedMsg, _ = wasmCtx.Encrypt(msg.Serialize())
 
 	}
 	var autoMsgEncrypted []byte
 	autoMsgEncrypted = nil
 	if autoMsgString != "" {
-		autoMsg := types.TrustlessMsg{}
-		/*auto := types.ParseAuto{}
-		autoMsg.Msg, err = json.Marshal(auto)
-		if err != nil {
-			return types.MsgInstantiateContract{}, err
-		}*/
+		autoMsg := types.ContractMsg{}
+
 		autoMsg.Msg = []byte(autoMsgString)
-		autoMsg.CodeHash = initMsg.CodeHash
+		autoMsg.CodeHash = msg.CodeHash
 		autoMsgEncrypted, err = wasmCtx.Encrypt(autoMsg.Serialize())
 		if err != nil {
 			return types.MsgInstantiateContract{}, err
 		}
-
 	}
 
 	// build and sign the transaction, then broadcast to Tendermint
-	msg := types.MsgInstantiateContract{
-		Sender:           cliCtx.GetFromAddress().String(),
-		CallbackCodeHash: "",
-		CodeID:           codeID,
-		ContractId:       contractId,
-		InitFunds:        amount,
-		InitMsg:          encryptedInitMsg,
-		AutoMsg:          autoMsgEncrypted,
+	msgInit := types.MsgInstantiateContract{
+		Sender:          cliCtx.GetFromAddress().String(),
+		CodeHash:        "",
+		CodeID:          codeID,
+		ContractId:      contractId,
+		Funds:           funds,
+		Msg:             encryptedMsg,
+		AutoMsg:         autoMsgEncrypted,
+		Duration:        duration,
+		Interval:        interval,
+		StartDurationAt: startAt,
 	}
-	return msg, nil
+	return msgInit, nil
 }
 
 // CmdExecuteContract will execute a contract from previously instantiated code.
@@ -417,11 +419,11 @@ func CmdExecuteContract() *cobra.Command {
 
 func parseExecuteArgs(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []byte, amount string, genOnly bool, ioMasterKeyPath string, codeHash string, cliCtx client.Context) (types.MsgExecuteContract, error) {
 	wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
-	execMsg := types.TrustlessMsg{}
+	execMsg := types.ContractMsg{}
 
 	execMsg.Msg = msg
 
-	coins, err := sdk.ParseCoinsNormalized(amount)
+	funds, err := sdk.ParseCoinsNormalized(amount)
 	if err != nil {
 		return types.MsgExecuteContract{}, err
 	}
@@ -443,11 +445,11 @@ func parseExecuteArgs(cmd *cobra.Command, contractAddress sdk.AccAddress, msg []
 
 	// build and sign the transaction, then broadcast to Tendermint
 	msgExec := types.MsgExecuteContract{
-		Sender:           cliCtx.GetFromAddress().String(),
-		Contract:         contractAddress.String(),
-		CallbackCodeHash: "",
-		SentFunds:        coins,
-		Msg:              encryptedMsg,
+		Sender:   cliCtx.GetFromAddress().String(),
+		Contract: contractAddress.String(),
+		CodeHash: "",
+		Funds:    funds,
+		Msg:      encryptedMsg,
 	}
 
 	//	fmt.Printf("Execute message before is %s \n", string(encryptedMsg))

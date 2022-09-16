@@ -8,7 +8,7 @@ pub struct InitSuccess {
     output: Vec<u8>,
     /// The contract_key for this contract.
     contract_key: [u8; 64],
-  /// The sig for this contract.
+    /// The sig for this contract.
     callback_sig: [u8; 32],
 }
 
@@ -28,9 +28,9 @@ pub fn init_result_to_vm_result(other: InitResult) -> VmResult<InitSuccess> {
             output,
             contract_key,
             callback_sig,
-        } => Ok(InitSuccess {
+        } =>Ok(InitSuccess {
             output: unsafe { exports::recover_buffer(output) }.unwrap_or_else(Vec::new),
-            contract_key, callback_sig,
+            contract_key, callback_sig
         }),
         InitResult::Failure { err } => Err(err.into()),
     }

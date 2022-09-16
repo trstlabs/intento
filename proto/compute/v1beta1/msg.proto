@@ -23,47 +23,59 @@ message MsgStoreCode {
   string builder = 4;
   // InstantiatePermission to apply on contract creation, optional
   //  AccessConfig InstantiatePermission = 5;
-  string contract_duration = 5;
-  string title = 6;
-  string description = 7;
+  string default_duration = 5;
+  string default_interval = 6;
+  string title = 7;
+  string description = 8;
 }
 
 message MsgInstantiateContract {
   option (gogoproto.goproto_getters) = false;
 
-   string sender = 1;
-  // Admin is an optional address that can execute migrations
-  // bytes admin = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  string callback_code_hash = 2;
+  string sender = 1;
+  string code_hash = 2;
   uint64 code_id = 3 [(gogoproto.customname) = "CodeID"];
+  //contract_id is a unique name for the contract
   string contract_id = 4;
-  bytes init_msg = 5;
+  //msg instantiates a new contract instance
+  bytes msg = 5;
+  //auto_msg is a message sent after a set period of time
   bytes auto_msg = 6;
-  repeated cosmos.base.v1beta1.Coin init_funds = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
-  bytes callback_sig = 8 [(gogoproto.customname) = "CallbackSig"];
-   //contract_duration defines the time that the code should run for,0 for optional
-  string contract_duration = 9;
-
+  repeated cosmos.base.v1beta1.Coin funds = 7 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  //duration defines the time that the code should run for
+  string duration = 8;
+  uint64 start_duration_at = 9;
+  //interval defines the interval between auto_msg calls
+  string interval = 10;
+  bytes callback_sig = 11 [(gogoproto.customname) = "CallbackSig"];
 }
 
 message MsgExecuteContract {
   option (gogoproto.goproto_getters) = false;
-
-   string sender = 1;
+  string sender = 1;
   string contract = 2;
   bytes msg = 3;
-  string callback_code_hash = 4;
-  repeated cosmos.base.v1beta1.Coin sent_funds = 5 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
+  string code_hash = 4;
+  repeated cosmos.base.v1beta1.Coin funds = 5 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   bytes callback_sig = 6 [(gogoproto.customname) = "CallbackSig"];
 }
 
 message MsgDiscardAutoMsg {
   option (gogoproto.goproto_getters) = false;
-  bytes sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string sender = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   bytes contract_address = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }
-
 /*
+message MsgUpdateContract {
+  option (gogoproto.goproto_getters) = false;
+  string owner = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string contract_address = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string new_owner = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string interval = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string end_time = 7;
+  uint64 start_duration_at = 8;
+}
+
 message MsgMigrateContract {
   option (gogoproto.goproto_getters) = false;
 
@@ -75,7 +87,6 @@ message MsgMigrateContract {
 
 message MsgUpdateAdmin {
   option (gogoproto.goproto_getters) = false;
-
   string sender = 1;
   bytes new_admin = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   bytes contract = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
@@ -83,7 +94,6 @@ message MsgUpdateAdmin {
 
 message MsgClearAdmin {
   option (gogoproto.goproto_getters) = false;
-
   string sender = 1;
   bytes contract = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
 }

@@ -11,29 +11,28 @@ import (
 )
 
 const (
-	ModuleName                    = types.ModuleName
-	StoreKey                      = types.StoreKey
-	TStoreKey                     = types.TStoreKey
-	QuerierRoute                  = types.QuerierRoute
-	RouterKey                     = types.RouterKey
-	MaxWasmSize                   = types.MaxWasmSize
-	MaxContractIdSize             = types.MaxContractIdSize
-	BuildTagRegexp                = types.BuildTagRegexp
-	MaxBuildTagSize               = types.MaxBuildTagSize
-	CustomEventType               = types.CustomEventType
-	AttributeKeyContractAddr      = types.AttributeKeyContractAddr
-	GasMultiplier                 = types.GasMultiplier
-	MaxGas                        = types.MaxGas
-	QueryListContractByCode       = keeper.QueryListContractByCode
-	QueryGetContract              = keeper.QueryGetContract
-	QueryGetContractPublicState   = keeper.QueryGetContractPublicState
-	QueryGetContractPrivateState  = keeper.QueryGetContractPrivateState
-	QueryGetCode                  = keeper.QueryGetCode
-	QueryListCode                 = keeper.QueryListCode
-	QueryContractKey              = keeper.QueryContractKey
-	QueryContractAddress          = keeper.QueryContractAddress
-	QueryMethodContractStateSmart = keeper.QueryMethodContractStateSmart
-	DefaultConfigTemplate         = types.DefaultConfigTemplate
+	ModuleName                   = types.ModuleName
+	StoreKey                     = types.StoreKey
+	TStoreKey                    = types.TStoreKey
+	QuerierRoute                 = types.QuerierRoute
+	RouterKey                    = types.RouterKey
+	MaxWasmSize                  = types.MaxWasmSize
+	MaxContractIdSize            = types.MaxContractIdSize
+	BuildTagRegexp               = types.BuildTagRegexp
+	MaxBuildTagSize              = types.MaxBuildTagSize
+	CustomEventType              = types.CustomEventType
+	AttributeKeyContractAddr     = types.AttributeKeyContractAddr
+	GasMultiplier                = types.GasMultiplier
+	MaxGas                       = types.MaxGas
+	QueryListContractByCode      = keeper.QueryListContractByCode
+	QueryGetContract             = keeper.QueryGetContract
+	QueryGetContractPublicState  = keeper.QueryGetContractPublicState
+	QueryGetContractPrivateState = keeper.QueryGetContractPrivateState
+	QueryGetCode                 = keeper.QueryGetCode
+	QueryListCode                = keeper.QueryListCode
+	QueryContractKey             = keeper.QueryContractKey
+	QueryContractAddress         = keeper.QueryContractAddress
+	DefaultConfigTemplate        = types.DefaultConfigTemplate
 
 	/*
 		QueryMethodContractStateAll   = keeper.QueryMethodContractStateAll
@@ -42,9 +41,7 @@ const (
 )
 
 var (
-	// functions aliases
-	// ConvertToProposals        = types.ConvertToProposals
-	// DefaultParams             = types.DefaultParams
+	// function aliases
 	RegisterCodec             = types.RegisterLegacyAminoCodec
 	RegisterInterfaces        = types.RegisterInterfaces
 	ValidateGenesis           = types.ValidateGenesis
@@ -57,32 +54,30 @@ var (
 	NewContractInfo           = types.NewContractInfo
 	NewEnv                    = types.NewEnv
 	NewWasmCoins              = types.NewWasmCoins
-	ParseEvents               = types.ParseEvents
 	DefaultWasmConfig         = types.DefaultWasmConfig
 	IsEncryptedError          = types.IsEncryptedErrorCode
 	ErrContainsQueryError     = types.ErrContainsQueryError
 	EnableAllProposals        = types.EnableAllProposals
 	DisableAllProposals       = types.DisableAllProposals
-	//InitGenesis               = keeper.InitGenesis
-	ExportGenesis          = keeper.ExportGenesis
-	NewMessageHandler      = keeper.NewMessageHandler
-	DefaultEncoders        = keeper.DefaultEncoders
-	EncodeBankMsg          = keeper.EncodeBankMsg
-	NoCustomMsg            = keeper.NoCustomMsg
-	EncodeStakingMsg       = keeper.EncodeStakingMsg
-	EncodeWasmMsg          = keeper.EncodeWasmMsg
-	NewKeeper              = keeper.NewKeeper
-	NewQuerier             = keeper.NewQuerier
-	NewLegacyQuerier       = keeper.NewLegacyQuerier
-	DefaultQueryPlugins    = keeper.DefaultQueryPlugins
-	BankQuerier            = keeper.BankQuerier
-	NoCustomQuerier        = keeper.NoCustomQuerier
-	StakingQuerier         = keeper.StakingQuerier
-	WasmQuerier            = keeper.WasmQuerier
-	NewWasmProposalHandler = keeper.NewWasmProposalHandler
-	NewMultiComputeHooks   = keeper.NewMultiComputeHooks
-	ConvertToProposals     = types.ConvertToProposals
-	GetConfig              = types.GetConfig
+	ExportGenesis             = keeper.ExportGenesis
+	NewMessageHandler         = keeper.NewMessageHandler
+	DefaultEncoders           = keeper.DefaultEncoders
+	EncodeBankMsg             = keeper.EncodeBankMsg
+	NoCustomMsg               = keeper.NoCustomMsg
+	EncodeStakingMsg          = keeper.EncodeStakingMsg
+	EncodeWasmMsg             = keeper.EncodeWasmMsg
+	NewKeeper                 = keeper.NewKeeper
+	NewQuerier                = keeper.NewQuerier
+	NewLegacyQuerier          = keeper.NewLegacyQuerier
+	DefaultQueryPlugins       = keeper.DefaultQueryPlugins
+	BankQuerier               = keeper.BankQuerier
+	NoCustomQuerier           = keeper.NoCustomQuerier
+	StakingQuerier            = keeper.StakingQuerier
+	WasmQuerier               = keeper.WasmQuerier
+	NewWasmProposalHandler    = keeper.NewWasmProposalHandler
+	NewMultiComputeHooks      = keeper.NewMultiComputeHooks
+	ConvertToProposals        = types.ConvertToProposals
+	GetConfig                 = types.GetConfig
 
 	// variable aliases
 	ModuleCdc            = types.ModuleCdc
@@ -104,27 +99,25 @@ var (
 )
 
 type (
-	// ProposalType            = types.ProposalType
-	Params                 = types.Params
-	GenesisState           = types.GenesisState
-	Code                   = types.Code
-	Contract               = types.Contract
-	MsgStoreCode           = types.MsgStoreCode
-	MsgInstantiateContract = types.MsgInstantiateContract
-	MsgExecuteContract     = types.MsgExecuteContract
-	Model                  = types.Model
-	CodeInfo               = types.CodeInfo
-	ContractInfo           = types.ContractInfo
-	CreatedAt              = types.AbsoluteTxPosition
-	WasmConfig             = types.WasmConfig
-	CodeInfoResponse       = types.CodeInfoResponse
-	ProposalType           = types.ProposalType
-	MessageHandler         = keeper.MessageHandler
-	BankEncoder            = keeper.BankEncoder
-	CustomEncoder          = keeper.CustomEncoder
-	StakingEncoder         = keeper.StakingEncoder
-	WasmEncoder            = keeper.WasmEncoder
-	//GovEncoder              = keeper.GovEncoder
+	Params                  = types.Params
+	GenesisState            = types.GenesisState
+	Code                    = types.Code
+	Contract                = types.Contract
+	MsgStoreCode            = types.MsgStoreCode
+	MsgInstantiateContract  = types.MsgInstantiateContract
+	MsgExecuteContract      = types.MsgExecuteContract
+	Model                   = types.Model
+	CodeInfo                = types.CodeInfo
+	ContractInfo            = types.ContractInfo
+	CreatedAt               = types.AbsoluteTxPosition
+	WasmConfig              = types.WasmConfig
+	CodeInfoResponse        = types.CodeInfoResponse
+	ProposalType            = types.ProposalType
+	MessageHandler          = keeper.MessageHandler
+	BankEncoder             = keeper.BankEncoder
+	CustomEncoder           = keeper.CustomEncoder
+	StakingEncoder          = keeper.StakingEncoder
+	WasmEncoder             = keeper.WasmEncoder
 	MessageEncoders         = keeper.MessageEncoders
 	Keeper                  = keeper.Keeper
 	ContractInfoWithAddress = types.ContractInfoWithAddress

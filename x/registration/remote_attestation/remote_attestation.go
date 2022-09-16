@@ -52,6 +52,7 @@ func VerifyRaCert(rawCert []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	// verifyAttReport returns all the report_data field, which is 64 bytes - we just want the first 32 of them (rest are 0)
 	return pubK[0:32], nil
 }

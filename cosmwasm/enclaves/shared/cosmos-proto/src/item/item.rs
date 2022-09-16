@@ -2161,7 +2161,7 @@ pub struct MsgCreateItem {
     pub condition: i64,
     pub shipping_region: ::protobuf::RepeatedField<::std::string::String>,
     pub deposit_amount: i64,
-    pub init_msg: ::std::vec::Vec<u8>,
+    pub msg: ::std::vec::Vec<u8>,
     pub auto_msg: ::std::vec::Vec<u8>,
     pub photos: ::protobuf::RepeatedField<::std::string::String>,
     pub token_uri: ::std::string::String,
@@ -2395,30 +2395,30 @@ impl MsgCreateItem {
         self.deposit_amount = v;
     }
 
-    // bytes init_msg = 11;
+    // bytes msg = 11;
 
 
-    pub fn get_init_msg(&self) -> &[u8] {
-        &self.init_msg
+    pub fn get_msg(&self) -> &[u8] {
+        &self.msg
     }
-    pub fn clear_init_msg(&mut self) {
-        self.init_msg.clear();
+    pub fn clear_msg(&mut self) {
+        self.msg.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_init_msg(&mut self, v: ::std::vec::Vec<u8>) {
-        self.init_msg = v;
+    pub fn set_msg(&mut self, v: ::std::vec::Vec<u8>) {
+        self.msg = v;
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_init_msg(&mut self) -> &mut ::std::vec::Vec<u8> {
-        &mut self.init_msg
+    pub fn mut_msg(&mut self) -> &mut ::std::vec::Vec<u8> {
+        &mut self.msg
     }
 
     // Take field
-    pub fn take_init_msg(&mut self) -> ::std::vec::Vec<u8> {
-        ::std::mem::replace(&mut self.init_msg, ::std::vec::Vec::new())
+    pub fn take_msg(&mut self) -> ::std::vec::Vec<u8> {
+        ::std::mem::replace(&mut self.msg, ::std::vec::Vec::new())
     }
 
     // bytes auto_msg = 12;
@@ -2555,7 +2555,7 @@ impl ::protobuf::Message for MsgCreateItem {
                     self.deposit_amount = tmp;
                 },
                 11 => {
-                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.init_msg)?;
+                    ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.msg)?;
                 },
                 12 => {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.auto_msg)?;
@@ -2608,8 +2608,8 @@ impl ::protobuf::Message for MsgCreateItem {
         if self.deposit_amount != 0 {
             my_size += ::protobuf::rt::value_size(10, self.deposit_amount, ::protobuf::wire_format::WireTypeVarint);
         }
-        if !self.init_msg.is_empty() {
-            my_size += ::protobuf::rt::bytes_size(11, &self.init_msg);
+        if !self.msg.is_empty() {
+            my_size += ::protobuf::rt::bytes_size(11, &self.msg);
         }
         if !self.auto_msg.is_empty() {
             my_size += ::protobuf::rt::bytes_size(12, &self.auto_msg);
@@ -2656,8 +2656,8 @@ impl ::protobuf::Message for MsgCreateItem {
         if self.deposit_amount != 0 {
             os.write_int64(10, self.deposit_amount)?;
         }
-        if !self.init_msg.is_empty() {
-            os.write_bytes(11, &self.init_msg)?;
+        if !self.msg.is_empty() {
+            os.write_bytes(11, &self.msg)?;
         }
         if !self.auto_msg.is_empty() {
             os.write_bytes(12, &self.auto_msg)?;
@@ -2757,9 +2757,9 @@ impl ::protobuf::Message for MsgCreateItem {
                 |m: &mut MsgCreateItem| { &mut m.deposit_amount },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
-                "init_msg",
-                |m: &MsgCreateItem| { &m.init_msg },
-                |m: &mut MsgCreateItem| { &mut m.init_msg },
+                "msg",
+                |m: &MsgCreateItem| { &m.msg },
+                |m: &mut MsgCreateItem| { &mut m.msg },
             ));
             fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
                 "auto_msg",
@@ -2802,7 +2802,7 @@ impl ::protobuf::Clear for MsgCreateItem {
         self.condition = 0;
         self.shipping_region.clear();
         self.deposit_amount = 0;
-        self.init_msg.clear();
+        self.msg.clear();
         self.auto_msg.clear();
         self.photos.clear();
         self.token_uri.clear();
@@ -5158,7 +5158,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     '\n\x0festimation_only\x18\x04\x20\x01(\x08R\x0eestimationOnly\x12\x12\n\
     \x04tags\x18\x05\x20\x03(\tR\x04tags\x12\x1b\n\ttoken_uri\x18\x06\x20\
     \x01(\tR\x08tokenUri\x12\"\n\x0ctransferable\x18\x07\x20\x01(\x08R\x0ctr\
-    ansferable\"\xba\x03\n\rMsgCreateItem\x12\x18\n\x07creator\x18\x01\x20\
+    ansferable\"\xb1\x03\n\rMsgCreateItem\x12\x18\n\x07creator\x18\x01\x20\
     \x01(\tR\x07creator\x12\x14\n\x05title\x18\x02\x20\x01(\tR\x05title\x12\
     \x20\n\x0bdescription\x18\x03\x20\x01(\tR\x0bdescription\x12#\n\rshippin\
     g_cost\x18\x04\x20\x01(\x03R\x0cshippingCost\x12\x1a\n\x08location\x18\
@@ -5166,41 +5166,41 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x03R\x0festimationCount\x12\x12\n\x04tags\x18\x07\x20\x03(\tR\x04tags\
     \x12\x1c\n\tcondition\x18\x08\x20\x01(\x03R\tcondition\x12'\n\x0fshippin\
     g_region\x18\t\x20\x03(\tR\x0eshippingRegion\x12%\n\x0edeposit_amount\
-    \x18\n\x20\x01(\x03R\rdepositAmount\x12\x19\n\x08init_msg\x18\x0b\x20\
-    \x01(\x0cR\x07initMsg\x12\x19\n\x08auto_msg\x18\x0c\x20\x01(\x0cR\x07aut\
-    oMsg\x12\x16\n\x06photos\x18\r\x20\x03(\tR\x06photos\x12\x1b\n\ttoken_ur\
-    i\x18\x0e\x20\x01(\tR\x08tokenUri\"\xa1\x01\n\rMsgUpdateItem\x12\x16\n\
+    \x18\n\x20\x01(\x03R\rdepositAmount\x12\x10\n\x03msg\x18\x0b\x20\x01(\
+    \x0cR\x03msg\x12\x19\n\x08auto_msg\x18\x0c\x20\x01(\x0cR\x07autoMsg\x12\
+    \x16\n\x06photos\x18\r\x20\x03(\tR\x06photos\x12\x1b\n\ttoken_uri\x18\
+    \x0e\x20\x01(\tR\x08tokenUri\"\xa1\x01\n\rMsgUpdateItem\x12\x16\n\x06sel\
+    ler\x18\x01\x20\x01(\tR\x06seller\x12\x0e\n\x02id\x18\x02\x20\x01(\x04R\
+    \x02id\x12#\n\rshipping_cost\x18\x03\x20\x01(\x03R\x0cshippingCost\x12\
+    \x1a\n\x08location\x18\x04\x20\x01(\tR\x08location\x12'\n\x0fshipping_re\
+    gion\x18\x05\x20\x03(\tR\x0eshippingRegion\"7\n\rMsgDeleteItem\x12\x16\n\
     \x06seller\x18\x01\x20\x01(\tR\x06seller\x12\x0e\n\x02id\x18\x02\x20\x01\
-    (\x04R\x02id\x12#\n\rshipping_cost\x18\x03\x20\x01(\x03R\x0cshippingCost\
-    \x12\x1a\n\x08location\x18\x04\x20\x01(\tR\x08location\x12'\n\x0fshippin\
-    g_region\x18\x05\x20\x03(\tR\x0eshippingRegion\"7\n\rMsgDeleteItem\x12\
-    \x16\n\x06seller\x18\x01\x20\x01(\tR\x06seller\x12\x0e\n\x02id\x18\x02\
-    \x20\x01(\x04R\x02id\"f\n\x13MsgRevealEstimation\x12\x18\n\x07creator\
-    \x18\x01\x20\x01(\tR\x07creator\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04\
-    R\x06itemid\x12\x1d\n\nreveal_msg\x18\x03\x20\x01(\x0cR\trevealMsg\"p\n\
-    \x13MsgItemTransferable\x12\x16\n\x06seller\x18\x01\x20\x01(\tR\x06selle\
-    r\x12)\n\x10transferable_msg\x18\x02\x20\x01(\x0cR\x0ftransferableMsg\
-    \x12\x16\n\x06itemid\x18\x03\x20\x01(\x04R\x06itemid\"]\n\x0fMsgItemShip\
-    ping\x12\x16\n\x06seller\x18\x01\x20\x01(\tR\x06seller\x12\x1a\n\x08trac\
-    king\x18\x02\x20\x01(\x08R\x08tracking\x12\x16\n\x06itemid\x18\x03\x20\
-    \x01(\x04R\x06itemid\"\xd9\x01\n\rMsgItemResell\x12\x16\n\x06seller\x18\
-    \x01\x20\x01(\tR\x06seller\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04R\x06\
-    itemid\x12#\n\rshipping_cost\x18\x03\x20\x01(\x03R\x0cshippingCost\x12\
-    \x1a\n\x08discount\x18\x04\x20\x01(\x03R\x08discount\x12\x1a\n\x08locati\
-    on\x18\x05\x20\x01(\tR\x08location\x12'\n\x0fshipping_region\x18\x06\x20\
-    \x03(\tR\x0eshippingRegion\x12\x12\n\x04note\x18\x07\x20\x01(\tR\x04note\
-    \"\xc4\x02\n\x06Params\x12l\n\x0fMaxActivePeriod\x18\x01\x20\x01(\x0b2\
-    \x19.google.protobuf.DurationR\x0fMaxActivePeriodB'\xc8\xde\x1f\0\x98\
-    \xdf\x1f\x01\xea\xde\x1f\x1bmax_active_period,omitempty\x12:\n\x18MaxEst\
-    imatorCreatorRatio\x18\x02\x20\x01(\x03R\x18MaxEstimatorCreatorRatio\x12\
-    <\n\x19EstimationRatioForNewItem\x18\x03\x20\x01(\x03R\x19EstimationRati\
-    oForNewItem\x12$\n\rCreateItemFee\x18\x04\x20\x01(\x03R\rCreateItemFee\
-    \x12&\n\x0eMaxBuyerReward\x18\x05\x20\x01(\x03R\x0eMaxBuyerReward:\x04\
-    \x98\xa0\x1f\0\"9\n\x0fMsgTokenizeItem\x12\x16\n\x06sender\x18\x01\x20\
-    \x01(\tR\x06sender\x12\x0e\n\x02id\x18\x03\x20\x01(\x04R\x02id\";\n\x11M\
-    sgUnTokenizeItem\x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x12\
-    \x0e\n\x02id\x18\x03\x20\x01(\x04R\x02idB'Z%github.com/trstlabs/trst/x/i\
-    tem/typesb\x06proto3\
+    (\x04R\x02id\"f\n\x13MsgRevealEstimation\x12\x18\n\x07creator\x18\x01\
+    \x20\x01(\tR\x07creator\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04R\x06ite\
+    mid\x12\x1d\n\nreveal_msg\x18\x03\x20\x01(\x0cR\trevealMsg\"p\n\x13MsgIt\
+    emTransferable\x12\x16\n\x06seller\x18\x01\x20\x01(\tR\x06seller\x12)\n\
+    \x10transferable_msg\x18\x02\x20\x01(\x0cR\x0ftransferableMsg\x12\x16\n\
+    \x06itemid\x18\x03\x20\x01(\x04R\x06itemid\"]\n\x0fMsgItemShipping\x12\
+    \x16\n\x06seller\x18\x01\x20\x01(\tR\x06seller\x12\x1a\n\x08tracking\x18\
+    \x02\x20\x01(\x08R\x08tracking\x12\x16\n\x06itemid\x18\x03\x20\x01(\x04R\
+    \x06itemid\"\xd9\x01\n\rMsgItemResell\x12\x16\n\x06seller\x18\x01\x20\
+    \x01(\tR\x06seller\x12\x16\n\x06itemid\x18\x02\x20\x01(\x04R\x06itemid\
+    \x12#\n\rshipping_cost\x18\x03\x20\x01(\x03R\x0cshippingCost\x12\x1a\n\
+    \x08discount\x18\x04\x20\x01(\x03R\x08discount\x12\x1a\n\x08location\x18\
+    \x05\x20\x01(\tR\x08location\x12'\n\x0fshipping_region\x18\x06\x20\x03(\
+    \tR\x0eshippingRegion\x12\x12\n\x04note\x18\x07\x20\x01(\tR\x04note\"\
+    \xc4\x02\n\x06Params\x12l\n\x0fMaxActivePeriod\x18\x01\x20\x01(\x0b2\x19\
+    .google.protobuf.DurationR\x0fMaxActivePeriodB'\xc8\xde\x1f\0\x98\xdf\
+    \x1f\x01\xea\xde\x1f\x1bmax_active_period,omitempty\x12:\n\x18MaxEstimat\
+    orCreatorRatio\x18\x02\x20\x01(\x03R\x18MaxEstimatorCreatorRatio\x12<\n\
+    \x19EstimationRatioForNewItem\x18\x03\x20\x01(\x03R\x19EstimationRatioFo\
+    rNewItem\x12$\n\rCreateItemFee\x18\x04\x20\x01(\x03R\rCreateItemFee\x12&\
+    \n\x0eMaxBuyerReward\x18\x05\x20\x01(\x03R\x0eMaxBuyerReward:\x04\x98\
+    \xa0\x1f\0\"9\n\x0fMsgTokenizeItem\x12\x16\n\x06sender\x18\x01\x20\x01(\
+    \tR\x06sender\x12\x0e\n\x02id\x18\x03\x20\x01(\x04R\x02id\";\n\x11MsgUnT\
+    okenizeItem\x12\x16\n\x06sender\x18\x01\x20\x01(\tR\x06sender\x12\x0e\n\
+    \x02id\x18\x03\x20\x01(\x04R\x02idB'Z%github.com/trstlabs/trst/x/item/ty\
+    pesb\x06proto3\
 ";
 
 static file_descriptor_proto_lazy: ::protobuf::rt::LazyV2<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::rt::LazyV2::INIT;

@@ -60,7 +60,8 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 		return nil, err
 	}
 	p := k.GetParams(ctx)
-	duration, err := time.ParseDuration(msg.ContractDuration)
+	duration, err := time.ParseDuration(msg.DefaultDuration)
+
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
@@ -70,12 +71,20 @@ func handleStoreCode(ctx sdk.Context, k Keeper, msg *MsgStoreCode) (*sdk.Result,
 	if duration != 0 && duration < p.MinContractDuration {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be longer than minimum duration")
 	}
+	interval, err := time.ParseDuration(msg.DefaultInterval)
+
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
+	if interval != 0 && interval < p.MinContractInterval {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract interval must be longer than minimum interval")
+	}
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
 	}
-	codeID, err := k.Create(ctx, sender, msg.WASMByteCode, msg.Source, msg.Builder, duration, msg.Title, msg.Description)
+	codeID, err := k.Create(ctx, sender, msg.WASMByteCode, msg.Source, msg.Builder, duration, interval, msg.Title, msg.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -100,9 +109,24 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	if err != nil {
 		return nil, err
 	}
+
 	var duration time.Duration = 0
-	if msg.ContractDuration != "" {
-		duration, err = time.ParseDuration(msg.ContractDuration)
+	if msg.Duration != "" {
+		duration, err = time.ParseDuration(msg.Duration)
+		if err != nil {
+			return nil, err
+		}
+	}
+	var interval time.Duration = 0
+	if msg.Interval != "" {
+		interval, err = time.ParseDuration(msg.Interval)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+		}
+	}
+	var startTime time.Time = ctx.BlockHeader().Time
+	if msg.StartDurationAt != 0 {
+		startTime = time.Unix(int64(msg.StartDurationAt), 0)
 		if err != nil {
 			return nil, err
 		}
@@ -111,13 +135,22 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
-	if duration > p.MaxContractDuration {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be shorter than maximum duration")
+	if interval != 0 && interval < p.MinContractInterval {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract interval must be longer than minimum interval")
 	}
-	if duration != 0 && duration < p.MinContractDuration {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be longer than minimum duration")
+	if duration != 0 {
+		if duration > p.MaxContractDuration {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be shorter than maximum duration")
+		}
+		if duration < p.MinContractDuration {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be longer than minimum duration")
+		}
+		if startTime.After(ctx.BlockHeader().Time.Add(duration)) {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "start time must be before contract end time")
+		}
+
 	}
-	contractAddr, err := k.Instantiate(ctx, msg.CodeID, sender, msg.InitMsg, msg.AutoMsg, msg.ContractId, msg.InitFunds, msg.CallbackSig, duration)
+	contractAddr, data, err := k.Instantiate(ctx, msg.CodeID, sender, msg.Msg, msg.AutoMsg, msg.ContractId, msg.Funds, msg.CallbackSig, duration, interval, startTime)
 	if err != nil {
 
 		return nil, err
@@ -134,11 +167,10 @@ func handleInstantiate(ctx sdk.Context, k Keeper, msg *MsgInstantiateContract) (
 	events = append(events, custom.ToABCIEvents()...)
 
 	return &sdk.Result{
-		Data:   contractAddr,
+		Data:   data,
 		Events: events,
 	}, nil
 }
-
 func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Result, error) {
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -156,13 +188,12 @@ func handleExecute(ctx sdk.Context, k Keeper, msg *MsgExecuteContract) (*sdk.Res
 	/*	if info.CodeID < 2 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot execute on internal contract code")
 	}*/
-
 	res, err := k.Execute(
 		ctx,
 		contract,
 		sender,
 		msg.Msg,
-		msg.SentFunds,
+		msg.Funds,
 		msg.CallbackSig,
 	)
 

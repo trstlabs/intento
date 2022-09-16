@@ -144,7 +144,7 @@ pub fn mock_env<U: Into<HumanAddr>>(sender: U, sent: &[Coin]) -> Env {
         },
         message: MessageInfo {
             sender: sender.into(),
-            sent_funds: sent.to_vec(),
+            funds: sent.to_vec(),
         },
         contract: ContractInfo {
             address: HumanAddr::from(MOCK_CONTRACT_ADDR),

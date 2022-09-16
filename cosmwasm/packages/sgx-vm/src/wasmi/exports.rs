@@ -194,7 +194,7 @@ fn ocall_query_chain_concrete(
                     unsafe { *gas_used = gas_cost };
 
                     // wasm code expects to get this as Result<Result<Binary, StdError>, SystemError> which is called SystemResult
-                    // see CosmWasm's implementation https://github.com/enigmampc/SecretNetwork/blob/508e99c990dd656eb61f456584dab054487ba178/cosmwasm/packages/sgx-vm/src/imports.rs#L124
+                    // see CosmWasm's implementation https://github.com/trstlabs/trst/blob/508e99c990dd656eb61f456584dab054487ba178/cosmwasm/packages/sgx-vm/src/imports.rs#L124
 
                     crate::serde::to_vec(&system_result)
                         .map(|val| alloc_impl(&val).map_err(|_| OcallReturn::Failure))

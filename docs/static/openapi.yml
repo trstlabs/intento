@@ -14055,7 +14055,7 @@ paths:
                             AbsoluteTxPosition last_updated = 7;
                                uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
                           title: >-
-                            bytes init_msg = 5 [(gogoproto.casttype) =
+                            bytes msg = 5 [(gogoproto.casttype) =
                             "encoding/json.RawMessage"];
                       title: ContractInfo stores a WASM contract instance
                   title: >-
@@ -14522,7 +14522,7 @@ paths:
                       AbsoluteTxPosition last_updated = 7;
                          uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
                     title: >-
-                      bytes init_msg = 5 [(gogoproto.casttype) =
+                      bytes msg = 5 [(gogoproto.casttype) =
                       "encoding/json.RawMessage"];
                 title: ContractInfo stores a WASM contract instance
             title: >-
@@ -23167,7 +23167,7 @@ definitions:
           AbsoluteTxPosition last_updated = 7;
              uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
         title: >-
-          bytes init_msg = 5 [(gogoproto.casttype) =
+          bytes msg = 5 [(gogoproto.casttype) =
           "encoding/json.RawMessage"];
     title: ContractInfo stores a WASM contract instance
   trst.x.compute.v1beta1.ContractInfoWithAddress:
@@ -23216,7 +23216,7 @@ definitions:
               AbsoluteTxPosition last_updated = 7;
                  uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
             title: >-
-              bytes init_msg = 5 [(gogoproto.casttype) =
+              bytes msg = 5 [(gogoproto.casttype) =
               "encoding/json.RawMessage"];
         title: ContractInfo stores a WASM contract instance
     title: >-
@@ -23316,7 +23316,7 @@ definitions:
               AbsoluteTxPosition last_updated = 7;
                  uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
             title: >-
-              bytes init_msg = 5 [(gogoproto.casttype) =
+              bytes msg = 5 [(gogoproto.casttype) =
               "encoding/json.RawMessage"];
         title: ContractInfo stores a WASM contract instance
     title: >-
@@ -23388,7 +23388,7 @@ definitions:
                     AbsoluteTxPosition last_updated = 7;
                        uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
                   title: >-
-                    bytes init_msg = 5 [(gogoproto.casttype) =
+                    bytes msg = 5 [(gogoproto.casttype) =
                     "encoding/json.RawMessage"];
               title: ContractInfo stores a WASM contract instance
           title: >-

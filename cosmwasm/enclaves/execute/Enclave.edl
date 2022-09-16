@@ -66,7 +66,7 @@ enclave {
             uintptr_t env_len,
             [in, count=msg_len] const uint8_t* msg,
             uintptr_t msg_len,
-             [in, count=auto_msg_len] const uint8_t* auto_msg,
+            [in, count=auto_msg_len] const uint8_t* auto_msg,
             uintptr_t auto_msg_len,
             [in, count=sig_info_len] const uint8_t* sig_info,
             uintptr_t sig_info_len
@@ -83,7 +83,8 @@ enclave {
             [in, count=msg_len] const uint8_t* msg,
             uintptr_t msg_len,
             [in, count=sig_info_len] const uint8_t* sig_info,
-            uintptr_t sig_info_len
+            uintptr_t sig_info_len,
+            uint8_t handle_type
         );
 
         public QueryResult ecall_query(
@@ -104,7 +105,7 @@ enclave {
             [in, count=msg_info_len] const uint8_t* msg_info,
             uintptr_t msg_info_len
         );
-
+        
         public HealthCheckResult ecall_health_check();
 
         public uint32_t ecall_run_tests();

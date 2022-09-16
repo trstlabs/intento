@@ -4,8 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::coins::Coin;
 use super::encoding::Binary;
-use super::math::Decimal;
-use super::types::HumanAddr;
+
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -34,11 +33,11 @@ pub enum MintQuery {
 pub enum BankQuery {
     /// This calls into the native bank module for one denomination
     /// Return value is BalanceResponse
-    Balance { address: HumanAddr, denom: String },
+    Balance { address: String, denom: String },
     /// This calls into the native bank module for all denominations.
     /// Note that this may be much more expensive than Balance and should be avoided if possible.
     /// Return value is AllBalanceResponse.
-    AllBalances { address: HumanAddr },
+    AllBalances { address: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -73,7 +72,7 @@ pub enum DistQuery {
     /// This calls into the native bank module for all denominations.
     /// Note that this may be much more expensive than Balance and should be avoided if possible.
     /// Return value is AllBalanceResponse.
-    Rewards { delegator: HumanAddr },
+    Rewards { delegator: String },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -82,25 +81,30 @@ pub enum WasmQuery {
     /// this queries the public API of another contract at a known address (with known ABI)
     /// return value is whatever the contract returns (caller should know)
     Private {
-        contract_addr: HumanAddr,
-        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
+        contract_addr: String,
+        /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
-        callback_code_hash: String,
+        code_hash: String,
         /// msg is the json-encoded QueryMsg struct
         msg: Binary,
     },
-    /// this queries the public kv-store of the contract.
+    /// this queries the raw kv-store of the contract.
+    /// returns the raw, unparsed data stored at that key (or `Ok(Err(StdError:NotFound{}))` if missing)
     Public {
-        contract_addr: HumanAddr,
+        contract_addr: String,
+        /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
+        /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
+        //code_hash: String,
         /// Key is the key used in the public contract's Storage
-        key: Binary,
+        key: String,
     },
-     /// this queries the public kv-store of the contract for a given address.
+     /// this queries the raw kv-store of the contract.
+    /// returns the raw, unparsed data stored at that key (or `Ok(Err(StdError:NotFound{}))` if missing)
     PublicForAddr {
-        contract_addr: HumanAddr,
-        account_addr: HumanAddr,
+        contract_addr: String,
+        account_addr: String,
         /// Key is the key used in the public contract's Storage
-        key: Binary,
+        key: String,
     },
 }
 
@@ -147,24 +151,29 @@ pub enum StakingQuery {
     /// Returns the denomination that can be bonded (if there are multiple native tokens on the chain)
     BondedDenom {},
     /// AllDelegations will return all delegations by the delegator
-    AllDelegations { delegator: HumanAddr },
+    AllDelegations { delegator: String },
     /// Delegation will return more detailed info on a particular
     /// delegation, defined by delegator/validator pair
     Delegation {
-        delegator: HumanAddr,
-        validator: HumanAddr,
+        delegator: String,
+        validator: String,
     },
     /// Returns all registered Validators on the system
     Validators {},
+     /// The query response type is `ValidatorResponse`.
+    Validator {
+        /// The validator's address (e.g. (e.g. cosmosvaloper1...))
+        address: String,
+    },
     /// Returns all the unbonding delegations by the delegator
-    UnbondingDelegations { delegator: HumanAddr },
+    UnbondingDelegations { delegator: String },
 }
 
 /// Delegation is basic (cheap to query) data about a delegation
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Delegation {
-    pub delegator: HumanAddr,
-    pub validator: HumanAddr,
+    pub delegator: String,
+    pub validator: String,
     /// How much we have locked in the delegation
     pub amount: Coin,
 }
@@ -190,8 +199,8 @@ pub struct UnbondingDelegationsResponse {
 /// is expensive to query
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct FullDelegation {
-    pub delegator: HumanAddr,
-    pub validator: HumanAddr,
+    pub delegator: String,
+    pub validator: String,
     /// How much we have locked in the delegation
     pub amount: Coin,
     /// can_redelegate captures how much can be immediately redelegated.
@@ -200,15 +209,6 @@ pub struct FullDelegation {
     pub can_redelegate: Coin,
     /// How much we can currently withdraw
     pub accumulated_rewards: Coin,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct Validator {
-    pub address: HumanAddr,
-    pub commission: Decimal,
-    pub max_commission: Decimal,
-    /// TODO: what units are these (in terms of time)?
-    pub max_change_rate: Decimal,
 }
 
 /// Delegation is basic (cheap to query) data about a delegation
@@ -221,7 +221,7 @@ pub struct RewardsResponse {
 /// Delegation is basic (cheap to query) data about a delegation
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct ValidatorRewards {
-    pub validator_address: HumanAddr,
+    pub validator_address: String,
     pub reward: Vec<Coin>,
 }
 

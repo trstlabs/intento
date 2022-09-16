@@ -79,7 +79,7 @@ func (k Keeper) CreateItem(ctx sdk.Context, msg types.MsgCreateItem) error {
 		seller = ""
 	}
 	count := k.GetItemCount(ctx)
-	contractAddr, err := k.computeKeeper.Instantiate(ctx, code, userAddress, msg.InitMsg, msg.AutoMsg, fmt.Sprint(count)+", "+msg.Title, sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.ZeroInt())), nil, activePeriod)
+	contractAddr, err := k.computeKeeper.Instantiate(ctx, code, userAddress, msg.Msg, msg.AutoMsg, fmt.Sprint(count)+", "+msg.Title, sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.ZeroInt())), nil, activePeriod)
 	if err != nil {
 		return err
 	}

@@ -45,11 +45,13 @@ func ToQuerierResult(response []byte, err error) QuerierResult {
 	}
 	syserr := ToSystemError(err)
 	if syserr != nil {
+
 		return QuerierResult{
 			Err: syserr,
 		}
 	}
 	stderr := ToStdError(err)
+
 	return QuerierResult{
 		Ok: &QueryResponse{
 			Err: stderr,
@@ -95,10 +97,21 @@ type AllBalancesResponse struct {
 
 type StakingQuery struct {
 	Validators           *ValidatorsQuery         `json:"validators,omitempty"`
+	Validator            *ValidatorQuery          `json:"validator,omitempty"`
 	AllDelegations       *AllDelegationsQuery     `json:"all_delegations,omitempty"`
 	Delegation           *DelegationQuery         `json:"delegation,omitempty"`
 	UnBondingDelegations *UnbondingDeletionsQuery `json:"unbonding_delegations, omitempty"`
 	BondedDenom          *struct{}                `json:"bonded_denom,omitempty"`
+}
+
+type ValidatorQuery struct {
+	/// Address is the validator's address (e.g. cosmosvaloper1...)
+	Address string `json:"address"`
+}
+
+// ValidatorResponse is the expected response to ValidatorQuery
+type ValidatorResponse struct {
+	Validator *Validator `json:"validator"` // serializes to `null` when unset which matches Rust's Option::None serialization
 }
 
 type UnbondingDeletionsQuery struct {
@@ -217,7 +230,7 @@ type BondedDenomResponse struct {
 type WasmQuery struct {
 	Private       *PrivateQuery    `json:"private,omitempty"`
 	Public        *PublicQuery     `json:"public,omitempty"`
-	PublicForAddr *PublicAddrQuery `json:"public,omitempty"`
+	PublicForAddr *PublicAddrQuery `json:"public_for_addr,omitempty"`
 }
 
 // PrivateQuery queries the private contract state
@@ -229,14 +242,14 @@ type PrivateQuery struct {
 // PublicQuery queries the public contract state
 type PublicQuery struct {
 	ContractAddr string `json:"contract_addr"`
-	Key          []byte `json:"key"`
+	Key          string `json:"key"`
 }
 
 // PublicQuery queries the public contract state
 type PublicAddrQuery struct {
 	ContractAddr string `json:"contract_addr"`
 	AccountAddr  string `json:"account_addr"`
-	Key          []byte `json:"key"`
+	Key          string `json:"key"`
 }
 
 type DistQuery struct {

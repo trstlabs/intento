@@ -6,8 +6,6 @@ import (
 
 	//"log"
 
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	wasm "github.com/trstlabs/trst/go-cosmwasm"
 
@@ -28,7 +26,6 @@ func consumeGas(ctx sdk.Context, gas uint64) {
 	ctx.GasMeter().ConsumeGas(consumed, "wasm contract")
 	// throw OutOfGas error if we ran out (got exactly to zero due to better limit enforcing)
 	if ctx.GasMeter().IsOutOfGas() {
-		fmt.Printf("Out of Gas \n")
 		panic(sdk.ErrorOutOfGas{})
 	}
 }

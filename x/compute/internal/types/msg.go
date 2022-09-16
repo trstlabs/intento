@@ -80,7 +80,7 @@ func (msg MsgInstantiateContract) ValidateBasic() error {
 		return err
 	}
 
-	if !msg.InitFunds.IsValid() {
+	if !msg.Funds.IsValid() {
 		return sdkerrors.ErrInvalidCoins
 	}
 
@@ -90,7 +90,7 @@ func (msg MsgInstantiateContract) ValidateBasic() error {
 				return err
 			}
 		}
-		if !json.Valid(msg.InitMsg) {
+		if !json.Valid(msg.Msg) {
 			return sdkerrors.Wrap(ErrInvalid, "init msg json")
 		}
 	*/
@@ -109,6 +109,7 @@ func (msg MsgInstantiateContract) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{sender}
 }
 
+/*
 func validateContractId(contractId string) error {
 	if contractId == "" {
 		return sdkerrors.Wrap(ErrEmpty, "is required")
@@ -117,7 +118,7 @@ func validateContractId(contractId string) error {
 		return sdkerrors.Wrap(ErrLimit, "cannot be longer than 128 characters")
 	}
 	return nil
-}
+}*/
 
 func (msg MsgExecuteContract) Route() string {
 	return RouterKey
@@ -137,8 +138,8 @@ func (msg MsgExecuteContract) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
 	}
 
-	if !msg.SentFunds.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "sentFunds")
+	if !msg.Funds.IsValid() {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "funds")
 	}
 
 	/*

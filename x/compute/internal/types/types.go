@@ -2,6 +2,8 @@ package types
 
 import (
 	"encoding/base64"
+	fmt "fmt"
+	"strings"
 	"time"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -48,17 +50,80 @@ func (c CodeInfo) ValidateBasic() error {
 	return nil
 }
 
+// ParseEvents converts wasm LogAttributes into an sdk.Events (with 0 or 1 elements)
+func ContractLogsToSdkEvents(logs []wasmTypes.Attribute, contractAddr sdk.AccAddress) sdk.Events {
+	// we always tag with the contract address issuing this event
+	attrs := []sdk.Attribute{sdk.NewAttribute(AttributeKeyContractAddr, contractAddr.String())}
+	// append attributes from wasm to the sdk.Event
+	for _, l := range logs {
+		// and reserve the contract_address key for our use (not contract)
+		if l.Key != AttributeKeyContractAddr {
+			attr := sdk.NewAttribute(l.Key, string(l.Value))
+			attrs = append(attrs, attr)
+		}
+	}
+	// each wasm invokation always returns one sdk.Event
+	return sdk.Events{sdk.NewEvent(CustomEventType, attrs...)}
+}
+
+const eventTypeMinLength = 2
+
+// NewCustomEvents converts wasm events from a contract response to sdk type events
+func NewCustomEvents(evts wasmTypes.Events, contractAddr sdk.AccAddress) (sdk.Events, error) {
+	events := make(sdk.Events, 0, len(evts))
+	for _, e := range evts {
+		typ := strings.TrimSpace(e.Type)
+		if len(typ) <= eventTypeMinLength {
+			return nil, sdkerrors.Wrap(ErrInvalidEvent, fmt.Sprintf("Event type too short: '%s'", typ))
+		}
+		attributes, err := contractSDKEventAttributes(e.Attributes, contractAddr)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, sdk.NewEvent(fmt.Sprintf("%s%s", CustomContractEventPrefix, typ), attributes...))
+	}
+	return events, nil
+}
+
+// convert and add contract address issuing this event
+func contractSDKEventAttributes(customAttributes []wasmTypes.Attribute, contractAddr sdk.AccAddress) ([]sdk.Attribute, error) {
+	attrs := []sdk.Attribute{sdk.NewAttribute(AttributeKeyContractAddr, contractAddr.String())}
+	// append attributes from wasm to the sdk.Event
+	for _, l := range customAttributes {
+		if l.PubDb {
+			continue
+		}
+		// ensure key and value are non-empty (and trim what is there)
+		key := strings.TrimSpace(l.Key)
+		if len(key) == 0 {
+			return nil, sdkerrors.Wrap(ErrInvalidEvent, fmt.Sprintf("Empty attribute key. Value: %s", l.Value))
+		}
+		value := strings.TrimSpace(string(l.Value))
+		// TODO: check if this is legal in the SDK - if it is, we can remove this check
+		if len(value) == 0 {
+			return nil, sdkerrors.Wrap(ErrInvalidEvent, fmt.Sprintf("Empty attribute value. Key: %s", key))
+		}
+		// and reserve all _* keys for our use (not contract)
+		if strings.HasPrefix(key, AttributeReservedPrefix) {
+			return nil, sdkerrors.Wrap(ErrInvalidEvent, fmt.Sprintf("Attribute key starts with reserved prefix %s: '%s'", AttributeReservedPrefix, key))
+		}
+		attrs = append(attrs, sdk.NewAttribute(key, value))
+	}
+	return attrs, nil
+}
+
 // NewCodeInfo fills a new Contract struct
-func NewCodeInfo(codeHash []byte, creator sdk.AccAddress, source string, builder string, duration time.Duration /* , instantiatePermission AccessConfig */, title string, description string) CodeInfo {
+func NewCodeInfo(codeHash []byte, creator sdk.AccAddress, source string, builder string, default_duration time.Duration, default_interval time.Duration /* , instantiatePermission AccessConfig */, title string, description string) CodeInfo {
 	return CodeInfo{
-		CodeHash:    codeHash,
-		Creator:     creator,
-		Source:      source,
-		Builder:     builder,
-		Duration:    duration,
-		Title:       title,
-		Description: description,
-		Instances:   0,
+		CodeHash:        codeHash,
+		Creator:         creator,
+		Source:          source,
+		Builder:         builder,
+		DefaultDuration: default_duration,
+		DefaultInterval: default_interval,
+		Title:           title,
+		Description:     description,
+		Instances:       0,
 		// InstantiateConfig: instantiatePermission,
 	}
 }
@@ -84,14 +149,18 @@ type ContractCodeHistoryEntry struct {
 */
 
 // NewContractInfo creates a new instance of a given WASM contract info
-func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, endTime time.Time, autoMsg []byte, callbackSig []byte) ContractInfo {
+func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, startTime time.Time, execTime time.Time, endTime time.Time, interval time.Duration, autoMsg []byte, callbackSig []byte) ContractInfo {
 	return ContractInfo{
 		CodeID:  codeID,
 		Creator: creator,
+		Owner:   creator,
 		// Admin:   admin,
 		ContractId:  label,
 		Created:     createdAt,
+		StartTime:   startTime,
+		ExecTime:    execTime,
 		EndTime:     endTime,
+		Interval:    interval,
 		AutoMsg:     autoMsg,
 		CallbackSig: callbackSig,
 	}
@@ -110,19 +179,19 @@ func (c *ContractInfo) ValidateBasic() error {
 			}
 		}
 	*/
-	if err := validateLabel(c.ContractId); err != nil {
+	if err := validateContractId(c.ContractId); err != nil {
 		return sdkerrors.Wrap(err, "label")
 	}
 	return nil
 }
 
 /*
-func (c ContractInfo) InitialHistory(initMsg []byte) ContractCodeHistoryEntry {
+func (c ContractInfo) InitialHistory(msg []byte) ContractCodeHistoryEntry {
 	return ContractCodeHistoryEntry{
 		Operation: InitContractCodeHistoryType,
 		CodeID:    c.CodeID,
 		Updated:   c.Created,
-		Msg:       initMsg,
+		Msg:       msg,
 	}
 }
 
@@ -189,8 +258,8 @@ func NewEnv(ctx sdk.Context, creator sdk.AccAddress, deposit sdk.Coins, contract
 			ChainID: ctx.ChainID(),
 		},
 		Message: wasmTypes.MessageInfo{
-			Sender:    creator.String(),
-			SentFunds: NewWasmCoins(deposit),
+			Sender: creator.String(),
+			Funds:  NewWasmCoins(deposit),
 		},
 		Contract: wasmTypes.ContractInfo{
 			Address: contractAddr.String(),
@@ -213,18 +282,20 @@ func NewWasmCoins(cosmosCoins sdk.Coins) (wasmCoins []wasmTypes.Coin) {
 }
 
 const CustomEventType = "wasm"
-const EventTypeContractExpired = "ContractExpired"
-const EventTypeAutoMsgContract = "ContractExecuted"
+const EventTypeContractExpired = "contract_expired"
+const EventTypeAutoMsgContract = "eontract_executed"
 const AttributeKeyContractAddr = "contract_address"
 
-// ParseEvents converts wasm LogAttributes into an sdk.Events (with 0 or 1 elements)
-func ParseEvents(logs []wasmTypes.LogAttribute, contractAddr sdk.AccAddress) sdk.Events {
+/*
+// ParseEvents converts wasm Attributes into an sdk.Events (with 0 or 1 elements)
+func ParseEvents(logs []wasmTypes.Attribute, contractAddr sdk.AccAddress) sdk.Events {
 	if len(logs) == 0 {
 		return nil
 	}
 	// we always tag with the contract address issuing this event
 	attrs := []sdk.Attribute{sdk.NewAttribute(AttributeKeyContractAddr, contractAddr.String())}
 	for _, l := range logs {
+		fmt.Printf("Log Key: %v \n", l.Key)
 		if l.PubDb {
 			continue
 		}
@@ -235,7 +306,7 @@ func ParseEvents(logs []wasmTypes.LogAttribute, contractAddr sdk.AccAddress) sdk
 		}
 	}
 	return sdk.Events{sdk.NewEvent(CustomEventType, attrs...)}
-}
+}*/
 
 // WasmConfig is the extra config required for wasm
 type WasmConfig struct {
@@ -253,12 +324,12 @@ func DefaultWasmConfig() *WasmConfig {
 	}
 }
 
-type TrustlessMsg struct {
+type ContractMsg struct {
 	CodeHash []byte
 	Msg      []byte
 }
 
-func (m TrustlessMsg) Serialize() []byte {
+func (m ContractMsg) Serialize() []byte {
 	return append(m.CodeHash, m.Msg...)
 }
 

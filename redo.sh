@@ -1,5 +1,3 @@
-sudo apt remove trustless-hub-node -y
+sudo apt remove trst -y
 make clean-files
-sudo apt install ./trustless-hub-node_0.7.7-25-gc9f88b0_amd64.deb -y
-
-./inittest.sh
+sudo apt install ./trst_0.7.7-112-gfdc3d895_amd64.deb -y

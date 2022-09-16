@@ -12,7 +12,7 @@ import (
 
 // RegisterCodec registers the account types and interface
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(MsgStoreCode{}, "wasm/MsgStoreCode", nil) //TODO Remove for mainnet, code is to be uploaded through governance
+	cdc.RegisterConcrete(MsgStoreCode{}, "wasm/MsgStoreCode", nil) //TODO Remove for mainnet, code is then to be uploaded through governance
 	cdc.RegisterConcrete(&StoreCodeProposal{}, "wasm/StoreCodeProposal", nil)
 	cdc.RegisterConcrete(MsgInstantiateContract{}, "wasm/MsgInstantiateContract", nil)
 	cdc.RegisterConcrete(MsgExecuteContract{}, "wasm/MsgExecuteContract", nil)
@@ -21,6 +21,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 
 	cdc.RegisterConcrete(&InstantiateContractProposal{}, "wasm/InstantiateContractProposal", nil)
 	cdc.RegisterConcrete(&ExecuteContractProposal{}, "wasm/ExecuteContractProposal", nil)
+	cdc.RegisterConcrete(&UpdateCodeProposal{}, "wasm/UpdateCodeProposal", nil)
+	cdc.RegisterConcrete(&UpdateContractProposal{}, "wasm/UpdateContractProposal", nil)
 
 }
 
@@ -37,6 +39,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&StoreCodeProposal{},
 		&InstantiateContractProposal{},
 		&ExecuteContractProposal{},
+		&UpdateCodeProposal{},
+		&UpdateContractProposal{},
 	)
 }
 

@@ -77,7 +77,7 @@ type DistributionProportions struct {
 	//(gogoproto.moretags) = "yaml:\"item_incentives\"",
 	//(gogoproto.nullable) = false
 	//];
-	DeveloperRewards github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=developer_rewards,json=developerRewards,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"developer_rewards" yaml:"developer_rewards"`
+	ContributorRewards github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=developer_rewards,json=ContributorRewards,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"developer_rewards" yaml:"developer_rewards"`
 	// community_pool defines the proportion of the minted minted_denom that is
 	// to be allocated to the community pool.
 	CommunityPool github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,5,opt,name=community_pool,json=communityPool,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"community_pool" yaml:"community_pool"`
@@ -120,7 +120,7 @@ type Params struct {
 	// distribution_proportions defines the proportion of the minted denom
 	DistributionProportions DistributionProportions `protobuf:"bytes,1,opt,name=distribution_proportions,json=distributionProportions,proto3" json:"distribution_proportions"`
 	// address to receive developer rewards
-	WeightedDeveloperRewardsReceivers []WeightedAddress `protobuf:"bytes,2,rep,name=weighted_developer_rewards_receivers,json=weightedDeveloperRewardsReceivers,proto3" json:"weighted_developer_rewards_receivers" yaml:"developer_rewards_receiver"`
+	WeightedContributorRewardsReceivers []WeightedAddress `protobuf:"bytes,2,rep,name=weighted_developer_rewards_receivers,json=weightedContributorRewardsReceivers,proto3" json:"weighted_developer_rewards_receivers" yaml:"developer_rewards_receiver"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }
@@ -163,9 +163,9 @@ func (m *Params) GetDistributionProportions() DistributionProportions {
 	return DistributionProportions{}
 }
 
-func (m *Params) GetWeightedDeveloperRewardsReceivers() []WeightedAddress {
+func (m *Params) GetWeightedContributorRewardsReceivers() []WeightedAddress {
 	if m != nil {
-		return m.WeightedDeveloperRewardsReceivers
+		return m.WeightedContributorRewardsReceivers
 	}
 	return nil
 }
@@ -286,9 +286,9 @@ func (m *DistributionProportions) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	i--
 	dAtA[i] = 0x2a
 	{
-		size := m.DeveloperRewards.Size()
+		size := m.ContributorRewards.Size()
 		i -= size
-		if _, err := m.DeveloperRewards.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.ContributorRewards.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintParams(dAtA, i, uint64(size))
@@ -338,10 +338,10 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.WeightedDeveloperRewardsReceivers) > 0 {
-		for iNdEx := len(m.WeightedDeveloperRewardsReceivers) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.WeightedContributorRewardsReceivers) > 0 {
+		for iNdEx := len(m.WeightedContributorRewardsReceivers) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.WeightedDeveloperRewardsReceivers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.WeightedContributorRewardsReceivers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -401,7 +401,7 @@ func (m *DistributionProportions) Size() (n int) {
 	n += 1 + l + sovParams(uint64(l))
 	l = m.TrustlessContractIncentives.Size()
 	n += 1 + l + sovParams(uint64(l))
-	l = m.DeveloperRewards.Size()
+	l = m.ContributorRewards.Size()
 	n += 1 + l + sovParams(uint64(l))
 	l = m.CommunityPool.Size()
 	n += 1 + l + sovParams(uint64(l))
@@ -416,8 +416,8 @@ func (m *Params) Size() (n int) {
 	_ = l
 	l = m.DistributionProportions.Size()
 	n += 1 + l + sovParams(uint64(l))
-	if len(m.WeightedDeveloperRewardsReceivers) > 0 {
-		for _, e := range m.WeightedDeveloperRewardsReceivers {
+	if len(m.WeightedContributorRewardsReceivers) > 0 {
+		for _, e := range m.WeightedContributorRewardsReceivers {
 			l = e.Size()
 			n += 1 + l + sovParams(uint64(l))
 		}
@@ -646,7 +646,7 @@ func (m *DistributionProportions) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DeveloperRewards", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ContributorRewards", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -674,7 +674,7 @@ func (m *DistributionProportions) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.DeveloperRewards.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.ContributorRewards.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -797,7 +797,7 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field WeightedDeveloperRewardsReceivers", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field WeightedContributorRewardsReceivers", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -824,8 +824,8 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.WeightedDeveloperRewardsReceivers = append(m.WeightedDeveloperRewardsReceivers, WeightedAddress{})
-			if err := m.WeightedDeveloperRewardsReceivers[len(m.WeightedDeveloperRewardsReceivers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.WeightedContributorRewardsReceivers = append(m.WeightedContributorRewardsReceivers, WeightedAddress{})
+			if err := m.WeightedContributorRewardsReceivers[len(m.WeightedContributorRewardsReceivers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

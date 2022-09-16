@@ -164,12 +164,14 @@ func Instantiate(
 	defer runtime.UnlockOSThread()
 
 	res, err := C.instantiate(cache.ptr, id, p, m, am, db, a, q, u64(gasLimit), &gasUsed, &errmsg, s)
+
 	if err != nil && err.(syscall.Errno) != C.ErrnoValue_Success {
 		// Depending on the nature of the error, `gasUsed` will either have a meaningful value, or just 0.
 		return nil, uint64(gasUsed), errorWithMessage(err, errmsg)
 	}
 	return receiveVector(res), uint64(gasUsed), nil
 }
+
 func Handle(
 	cache Cache,
 	code_id []byte,
@@ -181,6 +183,7 @@ func Handle(
 	querier *Querier,
 	gasLimit uint64,
 	sigInfo []byte,
+	handleType types.HandleType,
 ) ([]byte, uint64, error) {
 	id := sendSlice(code_id)
 	defer freeAfterSend(id)
@@ -207,49 +210,7 @@ func Handle(
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	res, err := C.handle(cache.ptr, id, p, m, db, a, q, u64(gasLimit), &gasUsed, &errmsg, s)
-	if err != nil && err.(syscall.Errno) != C.ErrnoValue_Success {
-		// Depending on the nature of the error, `gasUsed` will either have a meaningful value, or just 0.
-		return nil, uint64(gasUsed), errorWithMessage(err, errmsg)
-	}
-	return receiveVector(res), uint64(gasUsed), nil
-}
-
-func Migrate(
-	cache Cache,
-	code_id []byte,
-	params []byte,
-	msg []byte,
-	gasMeter *GasMeter,
-	store KVStore,
-	api *GoAPI,
-	querier *Querier,
-	gasLimit uint64,
-) ([]byte, uint64, error) {
-	id := sendSlice(code_id)
-	defer freeAfterSend(id)
-	p := sendSlice(params)
-	defer freeAfterSend(p)
-	m := sendSlice(msg)
-	defer freeAfterSend(m)
-
-	// set up a new stack frame to handle iterators
-	counter := startContract()
-	defer endContract(counter)
-
-	dbState := buildDBState(store, counter)
-	db := buildDB(&dbState, gasMeter)
-	a := buildAPI(api)
-	q := buildQuerier(querier)
-	var gasUsed u64
-	errmsg := C.Buffer{}
-
-	// This is done in order to ensure that goroutines don't
-	// swap threads between recursive calls to the enclave.
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-
-	res, err := C.migrate(cache.ptr, id, p, m, db, a, q, u64(gasLimit), &gasUsed, &errmsg)
+	res, err := C.handle(cache.ptr, id, p, m, db, a, q, u64(gasLimit), &gasUsed, &errmsg, s, u8(handleType))
 	if err != nil && err.(syscall.Errno) != C.ErrnoValue_Success {
 		// Depending on the nature of the error, `gasUsed` will either have a meaningful value, or just 0.
 		return nil, uint64(gasUsed), errorWithMessage(err, errmsg)
@@ -299,21 +260,37 @@ func Query(
 	return receiveVector(res), uint64(gasUsed), nil
 }
 
+func AnalyzeCode(
+	cache Cache,
+	codeHash []byte,
+) (*types.AnalysisReport, error) {
+	cs := sendSlice(codeHash)
+	defer runtime.KeepAlive(codeHash)
+	errMsg := C.Buffer{}
+	report, err := C.analyze_code(cache.ptr, cs, &errMsg)
+
+	if err != nil {
+		return nil, errorWithMessage(err, errMsg)
+	}
+	res := types.AnalysisReport{
+		HasIBCEntryPoints: bool(report.has_ibc_entry_points),
+		RequiredFeatures:  string(receiveVector(report.required_features)),
+	}
+	return &res, nil
+}
+
 // KeyGen Send KeyGen request to enclave
 func KeyGen() ([]byte, error) {
 	errmsg := C.Buffer{}
-	fmt.Print("keygen", KeyGen)
 	res, err := C.key_gen(&errmsg)
 	if err != nil {
 		return nil, errorWithMessage(err, errmsg)
 	}
-
 	return receiveVector(res), nil
 }
 
 // CreateAttestationReport Send CreateAttestationReport request to enclave
 func CreateAttestationReport(spid []byte, apiKey []byte) (bool, error) {
-
 	errmsg := C.Buffer{}
 	spidSlice := sendSlice(spid)
 	defer freeAfterSend(spidSlice)
@@ -348,16 +325,6 @@ func GetCallbackSig(msg []byte, msgInfo types.MsgInfo /* auto_msg []byte, code_i
 	}
 	msgInfoSlice := sendSlice(msgInfoBin)
 	defer freeAfterSend(msgInfoSlice)
-	/*autoMsgSlice := sendSlice(auto_msg)
-	defer freeAfterSend(autoMsgSlice)
-	id := sendSlice(code_id)
-	defer freeAfterSend(id)
-	contractSlice := sendSlice([]byte(contract))
-	defer freeAfterSend(contractSlice)
-	contractIdSlice := sendSlice([]byte(contract_id))
-	defer freeAfterSend(contractIdSlice)
-	contractDurationSlice := sendSlice([]byte(contract_duration))
-	defer freeAfterSend(contractDurationSlice)*/
 	res, err := C.get_callback_sig(msgSlice, msgInfoSlice /*autoMsgSlice, id, contractSlice, contractIdSlice, contractDurationSlice,*/, &errmsg)
 	if err != nil {
 		return nil, nil, errorWithMessage(err, errmsg)

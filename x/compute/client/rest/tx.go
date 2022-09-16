@@ -36,7 +36,7 @@ type instantiateContractReq struct {
 	BaseReq rest.BaseReq `json:"base_req" yaml:"base_req"`
 	Deposit sdk.Coins    `json:"deposit" yaml:"deposit"`
 	// Admin   sdk.AccAddress `json:"admin,omitempty" yaml:"admin"`
-	InitMsg    []byte `json:"init_msg" yaml:"init_msg"`
+	Msg        []byte `json:"msg" yaml:"msg"`
 	AutoMsg    []byte `json:"auto_msg" yaml:"auto_msg"`
 	ContractId string `json:"contract_id" yaml:"contract_id"`
 }
@@ -82,7 +82,7 @@ func storeCodeHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		msg := types.MsgStoreCode{
 			Sender:           req.BaseReq.From,
 			WASMByteCode:     wasm,
-			ContractDuration: contractDuration,
+			DefaultDuration: contractDuration,
 			Title:            req.Title,
 			Description:      req.Description,
 		}
@@ -117,13 +117,13 @@ func instantiateContractHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		msg := types.MsgInstantiateContract{
-			Sender:           cliCtx.GetFromAddress().String(),
-			CodeID:           codeID,
-			CallbackCodeHash: "",
-			InitFunds:        req.Deposit,
-			InitMsg:          req.InitMsg,
-			AutoMsg:          req.AutoMsg,
-			ContractId:       req.ContractId,
+			Sender:     cliCtx.GetFromAddress().String(),
+			CodeID:     codeID,
+			CodeHash:   "",
+			Funds:      req.Deposit,
+			Msg:        req.Msg,
+			AutoMsg:    req.AutoMsg,
+			ContractId: req.ContractId,
 			// Admin:            req.Admin,
 		}
 
@@ -157,11 +157,11 @@ func executeContractHandlerFn(cliCtx client.Context) http.HandlerFunc {
 		}
 
 		msg := types.MsgExecuteContract{
-			Sender:           cliCtx.GetFromAddress().String(),
-			Contract:         contractAddress.String(),
-			CallbackCodeHash: "",
-			Msg:              req.ExecMsg,
-			SentFunds:        req.Amount,
+			Sender:   cliCtx.GetFromAddress().String(),
+			Contract: contractAddress.String(),
+			CodeHash: "",
+			Msg:      req.ExecMsg,
+			Funds:    req.Amount,
 		}
 
 		err = msg.ValidateBasic()

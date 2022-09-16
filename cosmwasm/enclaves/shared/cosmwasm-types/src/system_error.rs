@@ -3,7 +3,8 @@
 use serde::{Deserialize, Serialize};
 
 use super::encoding::Binary;
-use super::types::HumanAddr;
+//use super::types::HumanAddr;
+use super::addresses::Addr;
 
 /// SystemError is used for errors inside the VM and is API friendly (i.e. serializable).
 ///
@@ -20,7 +21,7 @@ use super::types::HumanAddr;
 pub enum SystemError {
     InvalidRequest { error: String, request: Binary },
     InvalidResponse { error: String, response: Binary },
-    NoSuchContract { addr: HumanAddr },
+    NoSuchContract { addr: Addr },
     Unknown {},
     UnsupportedRequest { kind: String },
     ExceededRecursionLimit {},

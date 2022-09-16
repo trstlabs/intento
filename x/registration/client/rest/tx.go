@@ -22,7 +22,7 @@ func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
 //type instantiateContractReq struct {
 //	BaseReq rest.BaseReq `json:"base_req" yaml:"base_req"`
 //	Deposit sdk.Coins    `json:"deposit" yaml:"deposit"`
-//	InitMsg []byte       `json:"init_msg" yaml:"init_msg"`
+//	Msg []byte       `json:"msg" yaml:"msg"`
 //}
 //
 //type executeContractReq struct {
@@ -106,8 +106,8 @@ func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
 //		msg := types.MsgInstantiateContract{
 //			Sender:    cliCtx.GetFromAddress(),
 //			Code:      codeID,
-//			InitFunds: req.Deposit,
-//			InitMsg:   req.InitMsg,
+//			Funds: req.Deposit,
+//			Msg:   req.Msg,
 //		}
 //
 //		err = msg.ValidateBasic()
@@ -143,7 +143,7 @@ func registerTxRoutes(cliCtx client.Context, r *mux.Router) {
 //			Sender:    cliCtx.GetFromAddress(),
 //			Contract:  contractAddress,
 //			Msg:       req.ExecMsg,
-//			SentFunds: req.Amount,
+//			Funds: req.Amount,
 //		}
 //
 //		err = msg.ValidateBasic()

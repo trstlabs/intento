@@ -123,7 +123,7 @@ pub fn mock_instance_with_options(
 
     let deps = Extern {
         storage: MockStorage::default(),
-        querier: MockQuerier::new(&balances),
+        querier: MockQuerier::new(&balances.as_bytes()),
         api,
     };
     Instance::from_code(wasm, deps, options.gas_limit).unwrap()

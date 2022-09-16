@@ -1,13 +1,13 @@
 [package]
 name = "go-cosmwasm"
-version = "0.10.0"
-authors = ["Ethan Frey <ethanfrey@users.noreply.github.com>"]
-edition = "2018"
+version = "1.0.0"
+edition = "2021"
 description = "Go bindings for cosmwasm contracts"
 repository = "https://github.com/CosmWasm/go-cosmwasm"
 license = "Apache-2.0"
 readme = "README.md"
 exclude = [".circleci/*", ".gitignore"]
+
 
 [lib]
 #crate-type = ["staticlib"]
@@ -36,19 +36,17 @@ debug-print = ["cosmwasm-sgx-vm/debug-print"]
 query-node = ["cosmwasm-sgx-vm/query-node"]
 
 [dependencies]
-cosmwasm-std = { path = "../cosmwasm/packages/std", package = "trustless-cosmwasm-std", features = ["iterator"] }
-cosmwasm-sgx-vm = { path = "../cosmwasm/packages/sgx-vm", features = [
-    "iterator"
-] }
+cosmwasm-std = { path = "../cosmwasm/packages/std", package = "trustless-cosmwasm-std", features = ["staking", "stargate"] }
+cosmwasm-sgx-vm = { path = "../cosmwasm/packages/sgx-vm", features = ["staking", "stargate", "iterator"] }
 errno = "0.2"
 snafu = "0.6.3"
 serde_json = "1.0"
 ctor = "0.1.13"
-simple_logger = "1.6.0"
+simple_logger = "=1.6"
 log = "0.4.8"
 
 [dev-dependencies]
-serde = { version = "1.0.103", default-features = false, features = ["derive"] }
+serde = { version = "1.0.117", default-features = false, features = ["derive"] }
 tempfile = "3.1.0"
 
 [build-dependencies]

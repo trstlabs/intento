@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/trstlabs/trst/go-cosmwasm/api"
 	"github.com/trstlabs/trst/go-cosmwasm/types"
 )
@@ -67,7 +68,6 @@ func (w *Wasmer) Cleanup() {
 //
 // TODO: return gas cost? Add gas limit??? there is no metering here...
 func (w *Wasmer) Create(code WasmCode) (CodeID, error) {
-
 	return api.Create(w.cache, code)
 }
 
@@ -83,7 +83,7 @@ func (w *Wasmer) GetCode(code CodeID) (WasmCode, error) {
 }
 
 // Instantiate will create a new contract based on the given codeID.
-// We can set the initMsg (contract "genesis") here, and it then receives
+// We can set the msg (contract "genesis") here, and it then receives
 // an account and address and can be invoked (Execute) many times.
 //
 // Storage should be set with a PrefixedKVStore that this code can safely access.
@@ -91,9 +91,9 @@ func (w *Wasmer) GetCode(code CodeID) (WasmCode, error) {
 // Under the hood, we may recompile the wasm, use a cached native compile, or even use a cached instance
 // for performance.
 func (w *Wasmer) Instantiate(
-	code CodeID,
+	codeId CodeID,
 	env types.Env,
-	initMsg []byte,
+	msg []byte,
 	autoMsg []byte,
 	store KVStore,
 	goapi GoAPI,
@@ -101,39 +101,57 @@ func (w *Wasmer) Instantiate(
 	gasMeter GasMeter,
 	gasLimit uint64,
 	sigInfo types.VerificationInfo,
-) (*types.InitResponse, []byte, []byte, uint64, error) {
+	contractAddress sdk.AccAddress,
+) (*types.Response, []byte, []byte, uint64, []byte, error) {
 	paramBin, err := json.Marshal(env)
 	if err != nil {
-		return nil, nil, nil, 0, err
+		return nil, nil, nil, 0, nil, err
 	}
 
 	sigInfoBin, err := json.Marshal(sigInfo)
 	if err != nil {
-		return nil, nil, nil, 0, err
+		return nil, nil, nil, 0, nil, err
 	}
-	//fmt.Printf("Auto msg")
 
-	data, gasUsed, err := api.Instantiate(w.cache, code, paramBin, initMsg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
+	data, gasUsed, err := api.Instantiate(w.cache, codeId, paramBin, msg, autoMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
+
 	if err != nil {
-		return nil, nil, nil, gasUsed, err
+		return nil, nil, nil, gasUsed, nil, err
 	}
-	//fmt.Println("success")
+
 	key := data[0:64]
-	callback_sig := data[64:96]
+	callbackSig := data[64:96]
+	data = data[96:]
 
-	//fmt.Println(string(callback_sig))
+	//fmt.Println(string(callbackSig))
 
-	var resp types.InitResult
-	err = json.Unmarshal(data[96:], &resp)
-
+	var result types.ContractResult
+	err = json.Unmarshal(data, &result)
 	if err != nil {
-		return nil, nil, nil, gasUsed, err
+		return nil, nil, nil, gasUsed, nil, err
 	}
 
-	if resp.Err != nil {
-		return nil, nil, nil, gasUsed, fmt.Errorf("%v", resp.Err)
+	if result.Err != nil {
+		errData, err := appendReplyInternalDataToData(nil, result.InternalReplyEnclaveSig, result.InternalMsgId)
+		if err != nil {
+			return nil, nil, nil, gasUsed, nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+		}
+		return result.Ok, nil, nil, gasUsed, errData, fmt.Errorf("%s", result.Err.Error())
 	}
-	return resp.Ok, key, callback_sig, gasUsed, nil
+
+	if result.InternalReplyEnclaveSig != nil {
+		result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
+		if err != nil {
+			return nil, nil, nil, gasUsed, nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+		}
+	}
+	//fmt.Printf("Init Result %+v\n", result)
+
+	if result.Err != nil {
+
+		return result.Ok, nil, nil, gasUsed, nil, fmt.Errorf("%s", result.Err.Error())
+	}
+	return result.Ok, key, callbackSig, gasUsed, nil, nil
 }
 
 // Execute calls a given contract. Since the only difference between contracts with the same CodeID is the
@@ -152,33 +170,45 @@ func (w *Wasmer) Execute(
 	gasMeter GasMeter,
 	gasLimit uint64,
 	sigInfo types.VerificationInfo,
-) (*types.HandleResponse, uint64, error) {
+	handleType types.HandleType,
+) (*types.Response, uint64, []byte, error) {
 	paramBin, err := json.Marshal(env)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, nil, err
 	}
 	sigInfoBin, err := json.Marshal(sigInfo)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, nil, err
 	}
 
-	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin)
+	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
 	if err != nil {
-		return nil, gasUsed, err
+		return nil, gasUsed, nil, err
 	}
 
-	var resp types.HandleResult
-	err = json.Unmarshal(data, &resp)
-
+	var result types.ContractResult
+	err = json.Unmarshal(data, &result)
 	if err != nil {
-		return nil, gasUsed, err
+		return nil, gasUsed, nil, err
 	}
 
-	if resp.Err != nil {
-		return nil, gasUsed, fmt.Errorf("%v", resp.Err)
+	if result.Err != nil {
+		errData, err := appendReplyInternalDataToData(nil, result.InternalReplyEnclaveSig, result.InternalMsgId)
+		if err != nil {
+			return nil, gasUsed, nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+		}
+		return nil, gasUsed, errData, fmt.Errorf("%s", result.Err.Error())
 	}
 
-	return resp.Ok, gasUsed, nil
+	if result.InternalReplyEnclaveSig != nil {
+		result.Ok.Data, err = appendReplyInternalDataToData(result.Ok.Data, result.InternalReplyEnclaveSig, result.InternalMsgId)
+
+		if err != nil {
+			return nil, gasUsed, nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into binary : %w", err)
+		}
+	}
+
+	return result.Ok, gasUsed, nil, nil
 }
 
 // Query allows a client to execute a contract-specific query. If the result is not empty, it should be
@@ -208,44 +238,28 @@ func (w *Wasmer) Query(
 	if err != nil {
 		return nil, gasUsed, err
 	}
+
 	if resp.Err != nil {
-		return nil, gasUsed, fmt.Errorf("%v", resp.Err)
+		return nil, gasUsed, fmt.Errorf("%s", resp.Err)
 	}
 	return resp.Ok, gasUsed, nil
 }
 
-// Migrate will migrate an existing contract to a new code binary.
-// This takes storage of the data from the original contract and the CodeID of the new contract that should
-// replace it. This allows it to run a migration step if needed, or return an error if unable to migrate
-// the given data.
-//
-// MigrateMsg has some data on how to perform the migration.
-func (w *Wasmer) Migrate(
-	code CodeID,
-	env types.Env,
-	migrateMsg []byte,
-	store KVStore,
-	goapi GoAPI,
-	querier Querier,
-	gasMeter GasMeter,
-	gasLimit uint64,
-) (*types.MigrateResponse, uint64, error) {
-	paramBin, err := json.Marshal(env)
-	if err != nil {
-		return nil, 0, err
-	}
-	data, gasUsed, err := api.Migrate(w.cache, code, paramBin, migrateMsg, &gasMeter, store, &goapi, &querier, gasLimit)
-	if err != nil {
-		return nil, gasUsed, err
+// AnalyzeCode returns a report of static analysis of the wasm contract (uncompiled).
+// This contract must have been stored in the cache previously (via Create).
+// Only info currently returned is if it exposes all ibc entry points, but this may grow later
+func (w *Wasmer) AnalyzeCode(
+	codeHash []byte,
+) (*types.AnalysisReport, error) {
+	return api.AnalyzeCode(w.cache, codeHash)
+}
+
+func appendReplyInternalDataToData(data []byte, internalReplyEnclaveSig []byte, internalMsgId []byte) ([]byte, error) {
+	dataWithInternalReply := types.DataWithInternalReplyInfo{
+		InternalReplyEnclaveSig: internalReplyEnclaveSig,
+		InternalMsgId:           internalMsgId,
+		Data:                    data,
 	}
 
-	var resp types.MigrateResult
-	err = json.Unmarshal(data, &resp)
-	if err != nil {
-		return nil, gasUsed, err
-	}
-	if resp.Err != nil {
-		return nil, gasUsed, fmt.Errorf("%v", resp.Err)
-	}
-	return resp.Ok, gasUsed, nil
+	return json.Marshal(dataWithInternalReply)
 }

@@ -22,7 +22,7 @@ type StoreCodeProposalJSONReq struct {
 	Proposer    string    `json:"proposer" yaml:"proposer"`
 	Deposit     sdk.Coins `json:"deposit" yaml:"deposit"`
 
-	RunAs string `json:"run_as" yaml:"run_as"`
+	Creator string `json:"creator" yaml:"creator"`
 	// WASMByteCode can be raw or gzip compressed
 	WASMByteCode []byte `json:"wasm_byte_code" yaml:"wasm_byte_code"`
 }
@@ -31,7 +31,7 @@ func (s StoreCodeProposalJSONReq) Content() govtypes.Content {
 	return &types.StoreCodeProposal{
 		Title:        s.Title,
 		Description:  s.Description,
-		RunAs:        s.RunAs,
+		Creator:      s.Creator,
 		WASMByteCode: s.WASMByteCode,
 	}
 }
@@ -70,7 +70,7 @@ type InstantiateProposalJSONReq struct {
 	//RunAs      string          `json:"run_as" yaml:"run_as"`
 	Code       uint64          `json:"code_id" yaml:"code_id"`
 	ContractId string          `json:"contract_id" yaml:"contract_id"`
-	InitMsg    json.RawMessage `json:"init_msg" yaml:"init_msg"`
+	Msg        json.RawMessage `json:"msg" yaml:"msg"`
 	AutoMsg    json.RawMessage `json:"auto_msg" yaml:"auto_msg"`
 	Funds      sdk.Coins       `json:"funds" yaml:"funds"`
 }
@@ -83,7 +83,7 @@ func (s InstantiateProposalJSONReq) Content() govtypes.Content {
 		//Proposer:   s.Proposer,
 		CodeID:     s.Code,
 		ContractId: s.ContractId,
-		InitMsg:    []byte(s.InitMsg),
+		Msg:        []byte(s.Msg),
 		Funds:      s.Funds,
 	}
 }

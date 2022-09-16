@@ -1,7 +1,6 @@
 # cosmwasm-storage
 
 [![cosmwasm-storage on crates.io](https://img.shields.io/crates/v/cosmwasm-storage.svg)](https://crates.io/crates/cosmwasm-storage)
-[![CircleCI](https://circleci.com/gh/CosmWasm/cosmwasm/tree/master.svg?style=shield)](https://circleci.com/gh/CosmWasm/cosmwasm/tree/master)
 
 CosmWasm library with useful helpers for Storage patterns. You can use `Storage`
 implementations in `cosmwasm-std`, or rely on these to remove some common
@@ -9,10 +8,13 @@ boilterplate.
 
 ## Contents
 
-- [PrefixedStorage](#prefixed-storage)
-- [TypedStoreage](#typed-storage)
-- [Bucket](#bucket)
-- [Singleton](#singleton)
+- [cosmwasm-storage](#cosmwasm-storage)
+  - [Contents](#contents)
+    - [Prefixed Storage](#prefixed-storage)
+    - [Typed Storage](#typed-storage)
+    - [Bucket](#bucket)
+    - [Singleton](#singleton)
+  - [License](#license)
 
 ### Prefixed Storage
 
@@ -27,7 +29,7 @@ Since we have different types for `Storage` and `ReadonlyStorage`, we use two
 different constructors:
 
 ```rust
-use cosmwasm_std::testing::MockStorage;
+use trustless_cosmwasm_std::testing::MockStorage;
 use cosmwasm_storage::{prefixed, prefixed_read};
 
 let mut store = MockStorage::new();
@@ -65,7 +67,7 @@ Note that `TypedStorage` itself does not implement the `Storage` interface, so
 when combining with `PrefixStorage`, make sure to wrap the prefix first.
 
 ```rust
-use cosmwasm_std::testing::MockStorage;
+use trustless_cosmwasm_std::testing::MockStorage;
 use cosmwasm_storage::{prefixed, typed};
 
 let mut store = MockStorage::new();
@@ -118,8 +120,8 @@ often combined into a `Bucket`. A Bucket works just like the example above,
 except the creation can be in another function:
 
 ```rust
-use cosmwasm_std::StdResult;
-use cosmwasm_std::testing::MockStorage;
+use trustless_cosmwasm_std::StdResult;
+use trustless_cosmwasm_std::testing::MockStorage;
 use cosmwasm_storage::{bucket, Bucket};
 
 fn people<'a, S: Storage>(storage: &'a mut S) -> Bucket<'a, S, Data> {
@@ -151,8 +153,8 @@ Please note that in this context, the term "singleton" does not refer to
 container for a single element.
 
 ```rust
-use cosmwasm_std::{Coin, coin, StdResult};
-use cosmwasm_std::testing::MockStorage;
+use trustless_cosmwasm_std::{Coin, coin, StdResult};
+use trustless_cosmwasm_std::testing::MockStorage;
 
 use cosmwasm_storage::{singleton};
 
@@ -191,6 +193,5 @@ let the `TypedStorage` APIs take care of all the boilerplate.
 ## License
 
 This package is part of the cosmwasm repository, licensed under the Apache
-License 2.0 (see
-[NOTICE](https://github.com/CosmWasm/cosmwasm/blob/master/NOTICE) and
-[LICENSE](https://github.com/CosmWasm/cosmwasm/blob/master/LICENSE)).
+License 2.0 (see [NOTICE](https://github.com/CosmWasm/cosmwasm/blob/main/NOTICE)
+and [LICENSE](https://github.com/CosmWasm/cosmwasm/blob/main/LICENSE)).

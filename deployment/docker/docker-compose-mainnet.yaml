@@ -1,0 +1,42 @@
+version: '3.4'
+
+services:
+  aesm:
+    image: fortanix/aesmd:2.13.103.1-1
+    devices:
+      - /dev/sgx/enclave
+      - /dev/sgx/provision
+    volumes:
+      - /tmp/aesmd:/var/run/aesmd
+    stdin_open: true
+    tty: true
+
+  node:
+    image: ghcr.io/trstlabs/trst:0.0.0-docker
+    devices:
+      - /dev/sgx/enclave
+      - /dev/sgx/provision
+    volumes:
+      - /tmp/aesmd:/var/run/aesmd
+      - /tmp/.trstd:/root/.trstd
+      - /tmp/.trstcli:/root/.trstcli
+      - /tmp/.sgx_secrets:/opt/trustlesshub/.sgx_secrets
+    environment:
+      - SGX_MODE=HW
+      - MONIKER
+      - CHAINID
+      - STATE_SYNC1
+      - STATE_SYNC2
+      - REGISTRATION_SERVICE
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:26657"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    ports:
+      - "26656:26656"
+      - "26657:26657"
+      - "1317:1317"
+      - "9091:9091"

@@ -9,36 +9,6 @@ option go_package = "github.com/trstlabs/trst/x/compute/internal/types";
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = true;
 
-enum AccessType {
-    option (gogoproto.goproto_enum_prefix) = false;
-    option (gogoproto.goproto_enum_stringer) = false;
-    UNDEFINED = 0 [(gogoproto.enumvalue_customname) = "AccessTypeUndefined"];
-    NOBODY = 1 [(gogoproto.enumvalue_customname) = "AccessTypeNobody"];
-    ONLY_ADDRESS = 2 [(gogoproto.enumvalue_customname) = "AccessTypeOnlyAddress"];
-    EVERYBODY = 3 [(gogoproto.enumvalue_customname) = "AccessTypeEverybody"];
-}
-
-message AccessTypeParam {
-    option (gogoproto.goproto_stringer) = true;
-    AccessType value = 1 [(gogoproto.moretags) = "yaml:\"value\""];
-}
-
-/*
-message AccessConfig {
-    option (gogoproto.goproto_stringer) = true;
-    AccessType permission = 1 [(gogoproto.moretags) = "yaml:\"permission\""];
-    bytes address = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress", (gogoproto.moretags) = "yaml:\"address\""];
-}
- */
-
-/*
-// Params defines the set of wasm parameters.
-message Params {
-    option (gogoproto.goproto_stringer) = false;
-    AccessConfig code_upload_access = 1 [(gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"code_upload_access\""];
-    AccessType instantiate_default_permission = 2 [(gogoproto.moretags) = "yaml:\"instantiate_default_permission\""];
-}
-*/
 
 // CodeInfo is data for the uploaded contract WASM code
 message CodeInfo {
@@ -46,16 +16,21 @@ message CodeInfo {
     bytes creator = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     string source = 3;
     string builder = 4;
-//    AccessConfig instantiate_config = 5 [(gogoproto.nullable) = false];
-
-   google.protobuf.Duration duration = 5 [
+//if set to zero, self-execution is disabled
+   google.protobuf.Duration default_duration = 5 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
-    (gogoproto.jsontag)     = "duration,omitempty"
+    (gogoproto.jsontag)     = "default_duration,omitempty"
   ];
-  string title = 6;
+    string title = 6;
     string description = 7;
-    uint64 instances = 8;
+    //if set to zero, recurring execution is disabled
+    google.protobuf.Duration default_interval = 8 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "default_interval,omitempty"
+  ];
+    uint64 instances = 9;
 }
 
 
@@ -63,18 +38,26 @@ message CodeInfo {
 message ContractInfo {
     uint64 code_id = 1 [(gogoproto.customname) = "CodeID"];
     bytes creator = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-//    bytes admin = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    bytes owner = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     string contract_id = 4;
     // never show this in query results, just use for sorting
-    // (Note: when using json tag "-" amino refused to serialize it...)
     AbsoluteTxPosition created = 5;
-      google.protobuf.Timestamp end_time = 6  [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    //    bytes init_msg = 5 [(gogoproto.casttype) = "encoding/json.RawMessage"];
-    //
-    //    AbsoluteTxPosition last_updated = 7;
-    //    uint64 previous_code_id = 8 [(gogoproto.customname) = "PreviousCodeID"];
-    bytes auto_msg = 7;
-    bytes callback_sig = 8;
+    bytes auto_msg = 6;
+     google.protobuf.Duration duration = 7[
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "duration,omitempty"
+  ];
+    google.protobuf.Duration interval = 8 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "interval,omitempty"
+  ];
+    google.protobuf.Timestamp start_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+     google.protobuf.Timestamp exec_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp end_time = 11 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    string ibc_port_id = 12[ (gogoproto.customname) = "IBCPortID" ];
+    bytes callback_sig = 14;
 }
 
 
@@ -140,25 +123,32 @@ message KeyPair {
 message Params {
    option (gogoproto.goproto_stringer) = false;
     int64 AutoMsgFundsCommission  = 1;
-    int64 AutoMsgConstantFee = 2;
-    int64 RecurringAutoMsgConstantFee = 3;
+     int64 AutoMsgFlexFeeDenom = 2;
+    int64 AutoMsgConstantFee = 3;
+    int64 RecurringAutoMsgConstantFee = 4;
     //  Maximum period for self-executing contract
-   google.protobuf.Duration MaxContractDuration = 4 [
+   google.protobuf.Duration MaxContractDuration = 5 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "max_contract_duration,omitempty"
   ];
     //  Minimum period for self-executing contract
-   google.protobuf.Duration MinContractDuration = 5 [
+   google.protobuf.Duration MinContractDuration = 6 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "min_contract_duration,omitempty"
   ];
-    google.protobuf.Duration MinContractDurationForIncentive = 6 [
+    google.protobuf.Duration MinContractDurationForIncentive = 7 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "min_contract_duration_for_reward,omitempty"
   ];
-    int64 MaxContractIncentive = 7;
-    int64 MinContractBalanceForIncentive = 8;
+   //  Minimum period for self-executing contract
+   google.protobuf.Duration MinContractInterval = 8 [
+        (gogoproto.nullable)    = false,
+        (gogoproto.stdduration) = true,
+        (gogoproto.jsontag)     = "min_contract_duration,omitempty"
+  ];
+    int64 MaxContractIncentive = 9;
+    int64 MinContractBalanceForIncentive = 10;
 }

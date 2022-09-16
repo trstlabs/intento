@@ -75,7 +75,7 @@ message MsgCreateItem {
   int64 condition = 8; 
   repeated string shipping_region = 9; 
   int64 deposit_amount = 10;
-  bytes init_msg = 11;
+  bytes msg = 11;
   bytes auto_msg = 12;
   repeated string photos = 13;
   string token_uri = 14; 

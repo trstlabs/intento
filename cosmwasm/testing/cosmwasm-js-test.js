@@ -22,7 +22,7 @@ async function sleep(ms) {
   const contract = (await client.getContracts(1))[0].address;
 
   const resQuery = await client.queryContractSmart(contract, {
-    balance: { address: "secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t" },
+    balance: { address: "trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh" },
   });
   const initBalance = +resQuery.balance;
 
@@ -61,7 +61,7 @@ async function sleep(ms) {
   const execTx = await signingClient.execute(contract, {
     transfer: {
       amount: "10",
-      recipient: "secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t",
+      recipient: "trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh",
     },
   });
 
@@ -87,12 +87,12 @@ async function sleep(ms) {
     },
     {
       key: "recipient",
-      value: "secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t",
+      value: "trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh",
     },
   ]);
 
   const qRes = await client.queryContractSmart(contract, {
-    balance: { address: "secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t" },
+    balance: { address: "trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh" },
   });
 
   assert.equal(+qRes.balance, initBalance + 10);
@@ -105,7 +105,7 @@ async function sleep(ms) {
     await signingClient.execute(contract, {
       transfer: {
         amount: "1000",
-        recipient: "secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t",
+        recipient: "trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh",
       },
     });
   } catch (err) {

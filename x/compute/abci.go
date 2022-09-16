@@ -2,6 +2,7 @@ package compute
 
 import (
 	//"fmt"
+	"fmt"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -18,7 +19,6 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 
 	logger := k.Logger(ctx)
 
-	//	addressList := k.GetAllContractAddresses
 	incentiveList, contracts := k.GetContractAddressesForBlock(ctx)
 	//var rewardCoins sdk.Coins
 	if len(incentiveList) > 0 {
@@ -28,10 +28,9 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	var gasUsed uint64
 	cacheCtx, writeCache := ctx.CacheContext()
 	for _, contract := range contracts {
-		//for _, addr := range incentiveList {
-		if contract.Address.Equals(contract.Address) && contract.AutoMsg != nil {
-			// attempt to execute all message
-			// Messages may mutate state thus we can use a cached context. If one of
+		if contract.Address.Equals(contract.Address) && contract.ContractInfo.AutoMsg != nil {
+			// attempt to self-execute
+			// AutoMessage may mutate state thus we can use a cached context. If one of
 			// the handlers fails, no state mutation is written and the error
 			// message is logged.
 
@@ -55,21 +54,45 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 		}
 
 		logger.Info(
-			"expired",
+			"executed",
 			"contract", contract.Address.String(),
 		)
-		err := k.DeductFeesAndFundCreator(ctx, contract.Address, gasUsed)
+
+		isRecurring := contract.ContractInfo.ExecTime.Before(contract.ContractInfo.EndTime)
+		//deducts execution fees and distributes SDK-native coins from contract balance
+		err := k.DistributeCoins(ctx, contract, gasUsed, isRecurring)
 		if err != nil {
+			//fmt.Printf("couldnt deduct fee %s\n", err)
 			logger.Info(
 				"contract payout creator",
 				"err", err.Error(),
 			)
+
+		} else {
+			//fmt.Printf("write to cache\n")
+			writeCache()
+			// if the contract execution is recurring and successful, we add a new entry to the queue with current entry time + interval
+			if isRecurring {
+				fmt.Printf("self-executed recurring :%s \n", contract.Address.String())
+				k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.ExecTime)
+				fmt.Printf("exec Time %+v \n", contract.ContractInfo.ExecTime)
+				nextExecTime := contract.ContractInfo.ExecTime.Add(contract.ContractInfo.Interval)
+				fmt.Printf("exec Time2 %+v \n", nextExecTime)
+				if nextExecTime.Before(contract.ContractInfo.EndTime) {
+					k.InsertContractQueue(ctx, contract.Address.String(), nextExecTime)
+					contract.ContractInfo.ExecTime = nextExecTime
+					k.SetContractInfo(ctx, contract)
+
+					continue
+				}
+
+			}
 		}
-		writeCache()
-		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.EndTime)
+		//fmt.Printf("executed \n")
+		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.ExecTime)
 		_ = k.Delete(ctx, contract.Address)
 		logger.Info(
-			"deleted",
+			"expired",
 			"contract", contract.Address.String(),
 		)
 		ctx.EventManager().EmitEvent(

@@ -29,7 +29,7 @@ use crate::errors::VmResult;
 /*
 use crate::features::required_features_from_wasmer_instance;
 use crate::imports::{
-    do_canonicalize_address, do_humanize_address, do_query_chain, do_read, do_remove, do_write,
+    do_addr_canonicalize, do_addr_humanize, do_query_chain, do_read, do_remove, do_write,
 };
 #[cfg(feature = "iterator")]
 use crate::imports::{do_next, do_scan};
@@ -127,15 +127,22 @@ where
                 // A prepared and sufficiently large memory Region is expected at destination_ptr that points to pre-allocated memory.
                 // Returns 0 on success. Returns a non-zero memory location to a Region containing an UTF-8 encoded error string for invalid inputs.
                 // Ownership of both input and output pointer is not transferred to the host.
-                "canonicalize_address" => Func::new(move |ctx: &mut Ctx, source_ptr: u32, destination_ptr: u32| -> VmResult<u32> {
-                    do_canonicalize_address::<A, S, Q>(api, ctx, source_ptr, destination_ptr)
+                "addr_canonicalize" => Func::new(move |ctx: &mut Ctx, source_ptr: u32, destination_ptr: u32| -> VmResult<u32> {
+                    do_addr_canonicalize::<A, S, Q>(api, ctx, source_ptr, destination_ptr)
                 }),
                 // Reads canonical address from source_ptr and writes humanized representation to destination_ptr.
                 // A prepared and sufficiently large memory Region is expected at destination_ptr that points to pre-allocated memory.
                 // Returns 0 on success. Returns a non-zero memory location to a Region containing an UTF-8 encoded error string for invalid inputs.
                 // Ownership of both input and output pointer is not transferred to the host.
-                "humanize_address" => Func::new(move |ctx: &mut Ctx, source_ptr: u32, destination_ptr: u32| -> VmResult<u32> {
-                    do_humanize_address::<A, S, Q>(api, ctx, source_ptr, destination_ptr)
+                "addr_humanize" => Func::new(move |ctx: &mut Ctx, source_ptr: u32, destination_ptr: u32| -> VmResult<u32> {
+                    do_addr_humanize::<A, S, Q>(api, ctx, source_ptr, destination_ptr)
+                }),
+                  // Reads canonical address from source_ptr and writes humanized representation to destination_ptr.
+                // A prepared and sufficiently large memory Region is expected at destination_ptr that points to pre-allocated memory.
+                // Returns 0 on success. Returns a non-zero memory location to a Region containing an UTF-8 encoded error string for invalid inputs.
+                // Ownership of both input and output pointer is not transferred to the host.
+                "addr_validate" => Func::new(move |ctx: &mut Ctx, source_ptr: u32, destination_ptr: u32| -> VmResult<u32> {
+                    do_addr_validate::<A, S, Q>(api, ctx, source_ptr, destination_ptr)
                 }),
                 "query_chain" => Func::new(move |ctx: &mut Ctx, request_ptr: u32| -> VmResult<u32> {
                     do_query_chain::<S, Q>(ctx, request_ptr)
@@ -325,25 +332,21 @@ where
         let function = self.inner.exports.get(name)?;
         Ok(function)
     }
-    pub fn call_init(&mut self, env: &[u8], msg: &[u8], auto_msg: &[u8], sig_info: &[u8]) -> VmResult<Vec<u8>> {
-        let init_result = self.inner.init(env, msg, auto_msg, sig_info)?;
-        Ok(init_result.into_output())
+
+    pub fn call_init(&mut self, env: &[u8], msg: &[u8],  auto_msg: &[u8],sig_info: &[u8]) -> VmResult<Vec<u8>> {
+        let result = self.inner.init(env, msg, auto_msg, sig_info)?;
+        Ok(result.into_output())
     }
 
-    pub fn call_handle(&mut self, env: &[u8], msg: &[u8], sig_info: &[u8]) -> VmResult<Vec<u8>> {
-        let init_result = self.inner.handle(env, msg, sig_info)?;
-        Ok(init_result.into_output())
-    }
-
-    pub fn call_migrate(&mut self, _env: &[u8], _msg: &[u8]) -> VmResult<Vec<u8>> {
-        Ok(Vec::new())
+    pub fn call_handle(&mut self, env: &[u8], msg: &[u8], sig_info: &[u8], handle_type: u8) -> VmResult<Vec<u8>> {
+        let result = self.inner.handle(env, msg, sig_info, handle_type)?;
+        Ok(result.into_output())
     }
 
     pub fn call_query(&mut self, env: &[u8], msg: &[u8]) -> VmResult<Vec<u8>> {
-        let init_result = self.inner.query(env, msg)?;
-        Ok(init_result.into_output())
+        let result = self.inner.query(env, msg)?;
+        Ok(result.into_output())
     }
-    
 }
 
 #[cfg(test)]
@@ -408,10 +411,8 @@ mod test {
     #[test]
     fn func_works() {
         let instance = mock_instance(&CONTRACT, &[]);
-
         // can get func
         let allocate: Func<u32, u32> = instance.func("allocate").expect("error getting func");
-
         // can call a few times
         let _ptr1 = allocate.call(0).expect("error calling allocate func");
         let _ptr2 = allocate.call(1).expect("error calling allocate func");
@@ -716,7 +717,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::Balance {
-                            address: rich_addr.clone(),
+                            address: rich_addr.to_string(),
                             denom: "silver".to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,
@@ -738,7 +739,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::AllBalances {
-                            address: rich_addr.clone(),
+                            address: rich_addr.to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,
                     )
@@ -772,7 +773,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::Balance {
-                            address: rich_addr.clone(),
+                            address: rich_addr.to_string(),
                             denom: "silver".to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,
@@ -801,7 +802,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::Balance {
-                            address: rich_addr.clone(),
+                            address: rich_addr.to_string(),
                             denom: "silver".to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,

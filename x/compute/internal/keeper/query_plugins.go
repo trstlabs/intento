@@ -76,7 +76,7 @@ type QueryPlugins struct {
 	//Gov     func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error)
 }
 
-func DefaultQueryPlugins( /*gov govkeeper.Keeper,*/ dist distrkeeper.Keeper, mint mintkeeper.Keeper, bank bankkeeper.Keeper, staking stakingkeeper.Keeper, wasm *Keeper) QueryPlugins {
+func DefaultQueryPlugins( /*gov govkeeper.Keeper, */ dist distrkeeper.Keeper, mint mintkeeper.Keeper, bank bankkeeper.Keeper, staking stakingkeeper.Keeper, wasm *Keeper) QueryPlugins {
 	return QueryPlugins{
 		Bank:    BankQuerier(bank),
 		Custom:  NoCustomQuerier,
@@ -272,6 +272,23 @@ func StakingQuerier(keeper stakingkeeper.Keeper, distKeeper distrkeeper.Keeper) 
 			denom := keeper.BondDenom(ctx)
 			res := wasmTypes.BondedDenomResponse{
 				Denom: denom,
+			}
+			return json.Marshal(res)
+		}
+		if request.Validator != nil {
+			valAddr, err := sdk.ValAddressFromBech32(request.Validator.Address)
+			if err != nil {
+				return nil, err
+			}
+			v, found := keeper.GetValidator(ctx, valAddr)
+			res := wasmTypes.ValidatorResponse{}
+			if found {
+				res.Validator = &wasmTypes.Validator{
+					Address:       v.OperatorAddress,
+					Commission:    v.Commission.Rate.String(),
+					MaxCommission: v.Commission.MaxRate.String(),
+					MaxChangeRate: v.Commission.MaxChangeRate.String(),
+				}
 			}
 			return json.Marshal(res)
 		}
@@ -493,9 +510,10 @@ func WasmQuerier(wasm *Keeper) func(ctx sdk.Context, request *wasmTypes.WasmQuer
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Private.ContractAddr)
 			}
-			return wasm.QueryPrivate(ctx, addr, request.Private.Msg, true)
+			return wasm.queryPrivateRecursive(ctx, addr, request.Private.Msg, true)
 		}
 		if request.Public != nil {
+
 			contrAddr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Public.ContractAddr)
@@ -504,13 +522,13 @@ func WasmQuerier(wasm *Keeper) func(ctx sdk.Context, request *wasmTypes.WasmQuer
 
 		}
 		if request.PublicForAddr != nil {
-			contrAddr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
+			contrAddr, err := sdk.AccAddressFromBech32(request.PublicForAddr.ContractAddr)
 			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Public.ContractAddr)
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.PublicForAddr.ContractAddr)
 			}
-			accAddr, err := sdk.AccAddressFromBech32(request.Public.ContractAddr)
+			accAddr, err := sdk.AccAddressFromBech32(request.PublicForAddr.ContractAddr)
 			if err != nil {
-				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Public.ContractAddr)
+				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.PublicForAddr.ContractAddr)
 			}
 			return wasm.QueryPublicForAddr(ctx, contrAddr, accAddr, request.PublicForAddr.Key), nil
 

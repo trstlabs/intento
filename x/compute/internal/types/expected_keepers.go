@@ -22,3 +22,8 @@ type BankKeeper interface {
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
+
+// ICS20TransferPortSource is a subset of the ibc transfer keeper.
+type ICS20TransferPortSource interface {
+	GetPort(ctx sdk.Context) string
+}

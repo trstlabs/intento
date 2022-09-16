@@ -26,10 +26,26 @@ pub struct WasmCosts {
     pub opcodes_mul: u32,
     /// Cost of wasm opcode is calculated as TABLE_ENTRY_COST * `opcodes_mul` / `opcodes_div`
     pub opcodes_div: u32,
-    /// Cost invoking humanize_address from WASM
-    pub external_humanize_address: u32,
-    /// Cost invoking canonicalize_address from WASM
-    pub external_canonicalize_address: u32,
+    /// Cost invoking addr_humanize from WASM
+    pub external_addr_humanize: u32,
+    /// Cost invoking addr_canonicalize from WASM
+    pub external_addr_canonicalize: u32,
+    /// Cost invoking addr_validate from WASM
+    pub external_addr_validate: u32,
+    /// Cost invoking secp256k1_verify from WASM
+    pub external_secp256k1_verify: u32,
+    /// Cost invoking secp256k1_recover_pubkey from WASM
+    pub external_secp256k1_recover_pubkey: u32,
+    /// Cost invoking ed25519_verify from WASM
+    pub external_ed25519_verify: u32,
+    /// Cost invoking ed25519_batch_verify from WASM
+    pub external_ed25519_batch_verify_base: u32,
+    /// Cost invoking ed25519_batch_verify from WASM
+    pub external_ed25519_batch_verify_each: u32,
+    /// Cost invoking secp256k1_sign from WASM
+    pub external_secp256k1_sign: u32,
+    /// Cost invoking ed25519_sign from WASM
+    pub external_ed25519_sign: u32,
 }
 
 impl Default for WasmCosts {
@@ -44,11 +60,19 @@ impl Default for WasmCosts {
             initial_mem: 8192,
             grow_mem: 8192,
             memcpy: 1,
-            max_stack_height: 64 * 1024, // Assaf: I don't think this goes anywhere
+            max_stack_height: 64 * 1024, // Assaf: I don't think that this goes anywhere
             opcodes_mul: 3,
             opcodes_div: 8,
-            external_humanize_address: 8192,
-            external_canonicalize_address: 8192,
+            external_addr_humanize: 8192,
+            external_addr_canonicalize: 8192,
+            external_addr_validate: 8192,
+            external_secp256k1_verify: 98304,
+            external_secp256k1_recover_pubkey: 98304,
+            external_ed25519_verify: 73728,
+            external_ed25519_batch_verify_base: 5000,
+            external_ed25519_batch_verify_each: 70000,
+            external_secp256k1_sign: 100000,
+            external_ed25519_sign: 75000,
         }
     }
 }

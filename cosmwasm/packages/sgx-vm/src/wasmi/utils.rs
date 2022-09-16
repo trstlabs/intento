@@ -18,4 +18,3 @@
 //     }
 //     Err(Error::SdkErr { inner: sgx_status_t::SGX_ERROR_SERVICE_UNAVAILABLE }.into())
 // }
-

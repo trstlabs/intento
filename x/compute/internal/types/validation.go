@@ -69,7 +69,7 @@ func validateWasmCode(s []byte) error {
 	return nil
 }
 
-func validateLabel(label string) error {
+func validateContractId(label string) error {
 	if label == "" {
 		return sdkerrors.Wrap(ErrEmpty, "is required")
 	}

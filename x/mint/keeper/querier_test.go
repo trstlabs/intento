@@ -1,6 +1,5 @@
 package keeper_test
 
-/*
 import (
 	"testing"
 
@@ -66,4 +65,3 @@ func TestQueryAnnualProvisions(t *testing.T) {
 
 	require.Equal(t, app.MintKeeper.GetMinter(ctx).AnnualProvisions, annualProvisions)
 }
-*/

@@ -6,33 +6,51 @@ use std::iter::FromIterator;
 use crate::errors::{VmError, VmResult};
 use crate::features::required_features_from_module;
 
-/// Lists all imports we provide upon instantiating the instance in Instance::from_module()
+
+/// Lists all v1 imports we provide upon instantiating the instance in Instance::from_module()
 /// This should be updated when new imports are added
 const SUPPORTED_IMPORTS: &[&str] = &[
+    "env.abort",
     "env.db_read",
     "env.db_write",
     "env.db_remove",
-    "env.canonicalize_address",
-    "env.humanize_address",
+    "env.addr_validate",
+    "env.addr_canonicalize",
+    "env.addr_humanize",
+    "env.secp256k1_verify",
+    "env.secp256k1_recover_pubkey",
+    "env.secp256k1_sign",
+    "env.ed25519_verify",
+    "env.ed25519_batch_verify",
+    "env.ed25519_sign",
+    "env.debug",
     "env.query_chain",
     #[cfg(feature = "iterator")]
     "env.db_scan",
     #[cfg(feature = "iterator")]
     "env.db_next",
-    #[cfg(feature = "debug-print")]
-    "env.debug_print",
 ];
 
-/// Lists all entry points we expect to be present when calling a contract.
+
+/// Lists all entry points we expect to be present when calling a v1 contract.
 /// Basically, anything that is used in calls.rs
 /// This is unlikely to change much, must be frozen at 1.0 to avoid breaking existing contracts
 const REQUIRED_EXPORTS: &[&str] = &[
-    "cosmwasm_vm_version_3",
-    "query",
-    "init",
-    "handle",
+    "interface_version_8",
+    // IO
     "allocate",
     "deallocate",
+    // Required entry points
+    "instantiate",
+];
+
+pub const REQUIRED_IBC_EXPORTS: &[&str] = &[
+    "ibc_channel_open",
+    "ibc_channel_connect",
+    "ibc_channel_close",
+    "ibc_packet_receive",
+    "ibc_packet_ack",
+    "ibc_packet_timeout",
 ];
 
 const MEMORY_LIMIT: u32 = 512; // in pages
@@ -49,9 +67,21 @@ pub fn check_wasm(wasm_code: &[u8], supported_features: &HashSet<String>) -> VmR
         }
     };
     check_wasm_memories(&module)?;
-    check_wasm_exports(&module)?;
-    check_wasm_imports(&module)?;
     check_wasm_features(&module, supported_features)?;
+
+    let check_v1_exports_result = check_wasm_exports(&module, REQUIRED_EXPORTS);
+    let check_v1_imports_result = check_wasm_imports(&module, SUPPORTED_IMPORTS);
+    let is_v1 = check_v1_exports_result.is_ok() && check_v1_imports_result.is_ok();
+
+    if !is_v1 {
+        let errors = vec![
+            check_v1_exports_result,
+            check_v1_imports_result,
+        ];
+
+        return Err(VmError::static_validation_err(format!("Contract is not CosmWasm v1, to supports v1 please fix these errors: ${:?}", errors)));
+    }
+
     Ok(())
 }
 
@@ -91,7 +121,7 @@ fn check_wasm_memories(module: &Module) -> VmResult<()> {
     Ok(())
 }
 
-fn check_wasm_exports(module: &Module) -> VmResult<()> {
+pub fn check_wasm_exports(module: &Module, required_exports: &[&str]) -> VmResult<()> {
     let available_exports: Vec<String> = module.export_section().map_or(vec![], |export_section| {
         export_section
             .entries()
@@ -100,11 +130,11 @@ fn check_wasm_exports(module: &Module) -> VmResult<()> {
             .collect()
     });
 
-    for required_export in REQUIRED_EXPORTS {
+    for required_export in required_exports {
         if !available_exports.iter().any(|x| x == required_export) {
             return Err(VmError::static_validation_err(format!(
-                "Wasm contract doesn't have required export: \"{}\". Exports required by VM: {:?}. Contract version too old for this VM?",
-                required_export, REQUIRED_EXPORTS
+                "Wasm contract doesn't have required export: \"{}\". Exports required by VM: {:?}.",
+                required_export, required_exports
             )));
         }
     }
@@ -114,17 +144,16 @@ fn check_wasm_exports(module: &Module) -> VmResult<()> {
 /// Checks if the import requirements of the contract are satisfied.
 /// When this is not the case, we either have an incompatibility between contract and VM
 /// or a error in the contract.
-fn check_wasm_imports(module: &Module) -> VmResult<()> {
+fn check_wasm_imports(module: &Module, supported_imports: &[&str]) -> VmResult<()> {
     let required_imports: Vec<ImportEntry> = module
         .import_section()
         .map_or(vec![], |import_section| import_section.entries().to_vec());
-
     for required_import in required_imports {
         let full_name = format!("{}.{}", required_import.module(), required_import.field());
-        if !SUPPORTED_IMPORTS.contains(&full_name.as_str()) {
+        if !supported_imports.contains(&full_name.as_str()) {
             return Err(VmError::static_validation_err(format!(
-                "Wasm contract requires unsupported import: \"{}\". Imports supported by VM: {:?}. Contract version too new for this VM?",
-                full_name, SUPPORTED_IMPORTS
+                "Wasm contract requires unsupported import: \"{}\". Imports supported by VM: {:?}.",
+                full_name, supported_imports
             )));
         }
 
@@ -136,6 +165,7 @@ fn check_wasm_imports(module: &Module) -> VmResult<()> {
             ))),
         };
     }
+
     Ok(())
 }
 
@@ -308,7 +338,7 @@ mod test {
         let wasm_missing_exports = wat2wasm(WAT_MISSING_EXPORTS).unwrap();
 
         let module = deserialize_buffer(&wasm_missing_exports).unwrap();
-        match check_wasm_exports(&module) {
+        match check_wasm_exports(&module, REQUIRED_EXPORTS) {
             Err(VmError::StaticValidationErr { msg, .. }) => {
                 assert!(msg.starts_with(
                     "Wasm contract doesn't have required export: \"cosmwasm_vm_version_3\""
@@ -322,7 +352,7 @@ mod test {
     #[test]
     fn test_check_wasm_exports_of_old_contract() {
         let module = deserialize_buffer(CONTRACT_0_7).unwrap();
-        match check_wasm_exports(&module) {
+        match check_wasm_exports(&module, REQUIRED_EXPORTS) {
             Err(VmError::StaticValidationErr { msg, .. }) => {
                 assert!(msg.starts_with(
                     "Wasm contract doesn't have required export: \"cosmwasm_vm_version_3\""
@@ -340,21 +370,22 @@ mod test {
             (import "env" "db_read" (func (param i32 i32) (result i32)))
             (import "env" "db_write" (func (param i32 i32) (result i32)))
             (import "env" "db_remove" (func (param i32) (result i32)))
-            (import "env" "canonicalize_address" (func (param i32 i32) (result i32)))
-            (import "env" "humanize_address" (func (param i32 i32) (result i32)))
+            (import "env" "addr_canonicalize" (func (param i32 i32) (result i32)))
+            (import "env" "addr_humanize" (func (param i32 i32) (result i32)))
+            (import "env" "addr_validate" (func (param i32 i32) (result i32)))
         )"#,
         )
         .unwrap();
-        check_wasm_imports(&deserialize_buffer(&wasm).unwrap()).unwrap();
+        check_wasm_imports(&deserialize_buffer(&wasm).unwrap(), SUPPORTED_IMPORTS).unwrap();
     }
 
     #[test]
     fn test_check_wasm_imports_of_old_contract() {
         let module = deserialize_buffer(CONTRACT_0_7).unwrap();
-        match check_wasm_imports(&module) {
+        match check_wasm_imports(&module, SUPPORTED_IMPORTS) {
             Err(VmError::StaticValidationErr { msg, .. }) => {
                 assert!(
-                    msg.starts_with("Wasm contract requires unsupported import: \"env.read_db\"")
+                    msg.starts_with("Wasm contract requires unsupported import: \"env.db_read\"")
                 );
             }
             Err(e) => panic!("Unexpected error {:?}", e),
@@ -365,7 +396,7 @@ mod test {
     #[test]
     fn test_check_wasm_imports_wrong_type() {
         let wasm = wat2wasm(r#"(module (import "env" "db_read" (memory 1 1)))"#).unwrap();
-        match check_wasm_imports(&deserialize_buffer(&wasm).unwrap()) {
+        match check_wasm_imports(&deserialize_buffer(&wasm).unwrap(), SUPPORTED_IMPORTS) {
             Err(VmError::StaticValidationErr { msg, .. }) => {
                 assert!(
                     msg.starts_with("Wasm contract requires non-function import: \"env.db_read\"")

@@ -71,8 +71,8 @@ func CmdCreateItem() *cobra.Command {
 
 			count := map[string]string{"estimation_count": strconv.FormatInt(argsEstimationCount, 10), "deposit_required": strconv.FormatInt(argsDepositAmount, 10)}
 
-			initMsg := types.TrustlessMsg{}
-			initMsg.Msg, err = json.Marshal(count)
+			msg := types.ContractMsg{}
+			msg.Msg, err = json.Marshal(count)
 
 			if err != nil {
 				return err
@@ -92,20 +92,20 @@ func CmdCreateItem() *cobra.Command {
 
 			var encryptedMsg []byte
 
-			initMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
-			encryptedMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
+			msg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
+			encryptedMsg, err = wasmCtx.Encrypt(msg.Serialize())
 			if err != nil {
 				return err
 			}
 
-			autoMsg := types.TrustlessMsg{}
+			autoMsg := types.ContractMsg{}
 			auto := types.ParseAuto{}
 			autoMsg.Msg, err = json.Marshal(auto)
 			if err != nil {
 				return err
 			}
 
-			autoMsg.CodeHash = initMsg.CodeHash
+			autoMsg.CodeHash = msg.CodeHash
 			autoMsgEncrypted, err := wasmCtx.Encrypt(autoMsg.Serialize())
 			if err != nil {
 				return err
@@ -116,11 +116,11 @@ func CmdCreateItem() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), argsShippingCost, string(argsLocation), int64(argsEstimationCount), []string(argsTags), int64(argsCondition), []string(argsShippingRegion), int64(argsDepositAmount), encryptedMsg, autoMsgEncrypted, []string(argsPhotos), argsTokenURI)
-			if err := msg.ValidateBasic(); err != nil {
+			txMsg := types.NewMsgCreateItem(clientCtx.GetFromAddress().String(), string(argsTitle), string(argsDescription), argsShippingCost, string(argsLocation), int64(argsEstimationCount), []string(argsTags), int64(argsCondition), []string(argsShippingRegion), int64(argsDepositAmount), encryptedMsg, autoMsgEncrypted, []string(argsPhotos), argsTokenURI)
+			if err := txMsg.ValidateBasic(); err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), txMsg)
 		},
 	}
 	//Estimation related
@@ -189,10 +189,10 @@ func CmdRevealEstimation() *cobra.Command {
 
 			wasmCtx := wasmUtils.WASMContext{CLIContext: cliCtx}
 
-			revealMsg := types.TrustlessMsg{}
+			revealMsg := types.ContractMsg{}
 			reveal := types.ParseReveal{}
 
-			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
+			//msg.Msg = []byte("{\"estimationcount\": \"3\"}")
 			revealMsg.Msg, err = json.Marshal(reveal)
 			//fmt.Printf("json message: %X\n", estimation)
 			if err != nil {
@@ -265,10 +265,10 @@ func CmdItemTransferable() *cobra.Command {
 			}
 
 			//msgTransfer := map[string]string{"transferable": ""}
-			//initMsg.Msg = []byte("{\"estimationcount\": \"3\"}")
-			initMsg := types.TrustlessMsg{}
+			//msg.Msg = []byte("{\"estimationcount\": \"3\"}")
+			msg := types.ContractMsg{}
 			init := types.ParseTransferable{}
-			initMsg.Msg, err = json.Marshal(init)
+			msg.Msg, err = json.Marshal(init)
 			//fmt.Printf("json message: %X\n", estimation)
 			if err != nil {
 				return err
@@ -284,17 +284,17 @@ func CmdItemTransferable() *cobra.Command {
 
 			var encryptedMsg []byte
 
-			initMsg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
-			encryptedMsg, err = wasmCtx.Encrypt(initMsg.Serialize())
+			msg.CodeHash = []byte(hex.EncodeToString(res.Codehash))
+			encryptedMsg, err = wasmCtx.Encrypt(msg.Serialize())
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(), encryptedMsg, uint64(itemID))
-			if err := msg.ValidateBasic(); err != nil {
+			txMsg := types.NewMsgItemTransferable(clientCtx.GetFromAddress().String(), encryptedMsg, uint64(itemID))
+			if err := txMsg.ValidateBasic(); err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), txMsg)
 		},
 	}
 

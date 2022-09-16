@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	//	"io/ioutil"
+	"io/ioutil"
 	"os"
 
 	wasm "github.com/trstlabs/trst/go-cosmwasm"
@@ -12,7 +12,7 @@ import (
 func main() {
 	file := os.Args[1]
 	fmt.Printf("Running %s...\n", file)
-	bz, err := os.ReadFile(file)
+	bz, err := ioutil.ReadFile(file)
 	if err != nil {
 		panic(err)
 	}

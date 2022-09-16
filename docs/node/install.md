@@ -4,16 +4,16 @@ title: Install SGX
 description: Steps to install a Trustless Hub Daemon on your local computer or dedicated server.
 ---
 
-[Install Trustless Hub](#install-trustless-hub)
+[Install Trustless Hub](#install-trst)
   - [Prerequisites](#prerequisites)
     - [Operating Systems](#operating-systems)
     - [Go and Rust](#go-and-rust)
     - [SGX tools](#sgx-tools)
     - [Using `sgx-detect`](Using-`sgx-detect`)
 
-  - [Install Trustless Hub daemon](#install-trustless-hub-daemon)
+  - [Install Trustless Hub daemon](#install-trst-daemon)
     - [Install the debian package](#Install-the-debian-package)
-  - [Uninstall](#uninstall-trustless-hub)
+  - [Uninstall](#uninstall-trst)
   - [Uninstall SGX](#uninstall-sgx)
 
 
@@ -126,7 +126,7 @@ To install Trustless Hub daemon, run the following command in the trst directoty
 
 ```sh
 make deb
-sudo apt install ./trustlesshub_[version].deb -y
+sudo apt install ./trst_[version].deb -y
 
 ```
 
@@ -145,7 +145,7 @@ Success! You are now ready to start a local node or join the mainnet! :)
 To uninstall Trustless Hub, run the following command in the trst directoty:
 
 ```sh
-sudo apt remove trustlesshub -y
+sudo apt remove trst -y
 make clean
 ```
 

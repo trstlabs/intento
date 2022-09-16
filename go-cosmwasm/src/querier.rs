@@ -66,7 +66,7 @@ impl Querier for GoQuerier {
 
         let bin_result = unsafe { result_buf.consume() };
         let result = serde_json::from_slice(&bin_result).or_else(|e| {
-            Ok(Err(SystemError::InvalidResponse {
+            Ok(SystemResult::Err(SystemError::InvalidResponse {
                 error: format!("Parsing Go response: {}", e),
                 response: bin_result.into(),
             }))

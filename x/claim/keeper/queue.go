@@ -77,16 +77,19 @@ func (k Keeper) VestingQueueIterator(ctx sdk.Context, endTime time.Time) sdk.Ite
 // InsertVestingQueue Inserts a contract into the vesting queue at endTime
 func (k Keeper) InsertEntriesIntoVestingQueue(ctx sdk.Context, recipientAddr string, action byte, timeNow time.Time) error {
 	store := ctx.KVStore(k.storeKey)
-	//duration of 1 vesting entry for the given action
-	params, err := k.GetParams(ctx)
+
+	p, err := k.GetParams(ctx)
 	if err != nil {
 		return err
 	}
-	vestDuration := params.DurationVestingPeriods[action]
-	timeElapsed := ctx.BlockTime().Sub(params.AirdropStartTime)
-	timeLeft := (params.DurationUntilDecay + params.DurationOfDecay) - timeElapsed
+	//duration of 1 vesting entry for the given action
+	vestDuration := p.DurationVestingPeriods[action]
+
+	timeElapsed := ctx.BlockTime().Sub(p.AirdropStartTime)
+	timeLeft := (p.DurationUntilDecay + p.DurationOfDecay) - timeElapsed
+	//	fmt.Printf("timeLeft %v \n", timeLeft)
 	for i := 0; i < 4; i++ {
-		fmt.Printf("period %v \n", i)
+		//	fmt.Printf("period %v \n", i)
 		//exclude if vestduration is longer than timeLeft
 		if vestDuration*time.Duration(i+1) > timeLeft {
 			fmt.Printf("break")
@@ -94,7 +97,7 @@ func (k Keeper) InsertEntriesIntoVestingQueue(ctx sdk.Context, recipientAddr str
 		}
 		//fmt.Printf("duration %v \n", vestDuration*time.Duration(i+1))
 		store.Set(types.VestingQueueKey(recipientAddr, timeNow.Add(vestDuration*time.Duration(i+1))), []byte{action, byte(i)})
-		fmt.Printf("set %v \n", []byte{action, byte(i)})
+		//		fmt.Printf("set %v \n", []byte{action, byte(i)})
 	}
 	return nil
 

@@ -23,7 +23,7 @@ var (
 	ErrQueryFailed = sdkErrors.Register(DefaultCodespace, 4, "query contract failed")
 
 	// ErrMigrationFailed error for rust execution contract failure
-	ErrMigrationFailed = sdkErrors.Register(DefaultCodespace, 5, "migrate contract failed")
+	//ErrMigrationFailed = sdkErrors.Register(DefaultCodespace, 5, "migrate contract failed")
 
 	// ErrAccountExists error for a contract account that already exists
 	ErrAccountExists = sdkErrors.Register(DefaultCodespace, 6, "contract account already exists")
@@ -57,6 +57,18 @@ var (
 
 	// ErrSigFailed error for wasm code that has already been uploaded or failed
 	ErrSigFailed = sdkErrors.Register(DefaultCodespace, 16, "parse signature failed")
+
+	// ErrUnsupportedForContract error when a feature is used that is not supported for/ by this contract
+	ErrUnsupportedForContract = sdkErrors.Register(DefaultCodespace, 17, "unsupported for this contract")
+
+	// ErrUnknownMsg error by a message handler to show that it is not responsible for this message type
+	ErrUnknownMsg = sdkErrors.Register(DefaultCodespace, 18, "unknown message from the contract")
+
+	// ErrReplyFailed error for rust execution contract failure
+	ErrReplyFailed = sdkErrors.Register(DefaultCodespace, 19, "reply to contract failed")
+
+	// ErrInvalidEvent error if an attribute/event from the contract is invalid
+	ErrInvalidEvent = sdkErrors.Register(DefaultCodespace, 21, "invalid event")
 )
 
 func IsEncryptedErrorCode(code uint32) bool {

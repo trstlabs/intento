@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	//"encoding/json"
 	"github.com/tendermint/tendermint/crypto"
@@ -35,9 +36,13 @@ func (k Keeper) GetContractHash(ctx sdk.Context, contractAddress sdk.AccAddress)
 
 	info := k.GetContractInfo(ctx, contractAddress)
 
-	hash := k.GetCodeInfo(ctx, info.CodeID).CodeHash
+	var hash []byte
+	if info != nil {
+		hash = k.GetCodeInfo(ctx, info.CodeID).CodeHash
 
+	}
 	return hash
+
 }
 
 //GetContractInfo
@@ -60,7 +65,7 @@ func (k Keeper) GetContractInfoWithAddress(ctx sdk.Context, contractAddress sdk.
 
 	contractBz := store.Get(types.GetContractAddressKey(contractAddress))
 	if contractBz == nil {
-		return types.ContractInfoWithAddress{} //sdkerrors.Wrap(types.ErrNotFound, "contract")
+		return types.ContractInfoWithAddress{}
 	}
 
 	var info types.ContractInfo
@@ -84,12 +89,11 @@ func (k Keeper) setContractInfo(ctx sdk.Context, contractAddress sdk.AccAddress,
 }
 
 // SetContractPublicState sets the result of the contract from wasm attributes, it overrides existing keys
-func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress, result []wasmTypes.LogAttribute) error {
+func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress, result []wasmTypes.Attribute) error {
 	prefixStoreKey := types.GetContractPubDbKey(contrAddr)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 
 	for _, attr := range result {
-
 		if attr.Encrypted {
 			continue
 		} else if len(attr.AccAddr) == 44 {
@@ -99,10 +103,8 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 			}
 			prefixAccStoreKey := types.GetContractAccPubDbKey(contrAddr, accAddr)
 			prefixAccStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixAccStoreKey)
-
 			prefixAccStore.Set([]byte(attr.Key), attr.Value)
 		} else if attr.PubDb {
-
 			prefixStore.Set([]byte(attr.Key), attr.Value)
 		}
 	}
@@ -110,11 +112,9 @@ func (k Keeper) SetContractPublicState(ctx sdk.Context, contrAddr sdk.AccAddress
 }
 
 // SetAirdropAction sets the airdrop from the contract attributes
-func (k Keeper) SetAirdropAction(ctx sdk.Context, result []wasmTypes.LogAttribute) error {
+func (k Keeper) SetAirdropAction(ctx sdk.Context, result []wasmTypes.Attribute) error {
 
 	for _, attr := range result {
-		fmt.Printf("result key: %s \n,", attr.Key)
-
 		if attr.Key == "init_auto_swap" {
 			acc, err := sdk.AccAddressFromBech32(string(attr.Value))
 			if err != nil {
@@ -177,12 +177,12 @@ func (k Keeper) GetContractPublicStateByKey(ctx sdk.Context, contractAddress sdk
 }
 
 //GetContractPublicStateValue gets the value from the key-value store of the public state
-func (k Keeper) GetContractPublicStateValue(ctx sdk.Context, contractAddress sdk.AccAddress, key []byte) []byte {
+func (k Keeper) GetContractPublicStateValue(ctx sdk.Context, contractAddress sdk.AccAddress, key string) []byte {
 	prefixStoreKey := types.GetContractPubDbKey(contractAddress)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
-		if bytes.Equal(iter.Key(), key) {
+		if bytes.Equal(iter.Key(), []byte(key)) {
 			return iter.Value()
 		}
 	}
@@ -190,12 +190,12 @@ func (k Keeper) GetContractPublicStateValue(ctx sdk.Context, contractAddress sdk
 }
 
 //GetContractPublicStateValueForAddr gets the value from the key-value store of the public state for a given address
-func (k Keeper) GetContractPublicStateValueForAddr(ctx sdk.Context, contractAddress sdk.AccAddress, accAddr sdk.AccAddress, key []byte) []byte {
+func (k Keeper) GetContractPublicStateValueForAddr(ctx sdk.Context, contractAddress sdk.AccAddress, accAddr sdk.AccAddress, key string) []byte {
 	prefixStoreKey := types.GetContractAccPubDbKey(contractAddress, accAddr)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), prefixStoreKey)
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
-		if bytes.Equal(iter.Key(), key) {
+		if bytes.Equal(iter.Key(), []byte(key)) {
 			return iter.Value()
 		}
 	}
@@ -246,6 +246,39 @@ func (k Keeper) GetCodeInfo(ctx sdk.Context, codeID uint64) *types.CodeInfo {
 	}
 	k.cdc.MustUnmarshal(codeInfoBz, &codeInfo)
 	return &codeInfo
+}
+
+func (k Keeper) SetCodeInfo(ctx sdk.Context, codeID uint64, creator string, defaultDuration string, defaultInterval string) error {
+	store := ctx.KVStore(k.storeKey)
+
+	info := k.GetCodeInfo(ctx, codeID)
+
+	if creator != "" {
+		addr, err := sdk.AccAddressFromBech32(creator)
+		if err == nil {
+			return err
+		}
+		info.Creator = addr
+	}
+	if defaultDuration != "" {
+		newDur, err := time.ParseDuration(defaultDuration)
+		if err == nil {
+			return err
+		}
+		info.DefaultDuration = newDur
+
+	}
+	if defaultInterval != "" {
+		newInter, err := time.ParseDuration(defaultInterval)
+		if err == nil {
+			return err
+		}
+		info.DefaultInterval = newInter
+
+	}
+
+	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(info))
+	return nil
 }
 
 func (k Keeper) GetCodeHash(ctx sdk.Context, codeID uint64) (codeHash []byte) {
@@ -365,4 +398,51 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 	addr[0] = 'C'
 	binary.PutUvarint(addr[1:], id)
 	return sdk.AccAddress(crypto.AddressHash(addr))
+}
+
+func (k Keeper) UpdateContractInfo(ctx sdk.Context, contrAddr string, owner string, startTime int64, endTime int64, interval string) error {
+	store := ctx.KVStore(k.storeKey)
+	contractAddr, err := sdk.AccAddressFromBech32(contrAddr)
+	if err == nil {
+		return err
+	}
+
+	info := k.GetContractInfo(ctx, contractAddr)
+
+	if owner != "" {
+		addr, err := sdk.AccAddressFromBech32(owner)
+		if err == nil {
+			return err
+		}
+		info.Creator = addr
+	}
+	if startTime != 0 && info.StartTime.After(ctx.BlockHeader().Time) {
+		newTime := time.Unix(startTime, 0)
+		if newTime.Before(info.EndTime) {
+
+			if err == nil {
+				return err
+			}
+			info.StartTime = newTime
+		}
+	}
+
+	if interval != "" {
+		newInter, err := time.ParseDuration(interval)
+		if err == nil {
+			return err
+		}
+		p := k.GetParams(ctx)
+		if newInter <= p.MinContractDuration {
+			info.Interval = newInter
+		}
+	}
+
+	store.Set(types.GetContractAddressKey(contractAddr), k.cdc.MustMarshal(info))
+	return nil
+}
+
+func (k Keeper) SetContractInfo(ctx sdk.Context, contract types.ContractInfoWithAddress) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetContractAddressKey(contract.Address), k.cdc.MustMarshal(contract.ContractInfo))
 }

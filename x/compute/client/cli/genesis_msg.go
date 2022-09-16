@@ -67,7 +67,7 @@ func GenesisStoreCodeCmd(defaultNodeHome string, genesisMutator GenesisMutator) 
 			})
 		},
 	}
-	cmd.Flags().String(flagRunAs, "", "The address that is stored as code creator")
+	cmd.Flags().String(flagCreator, "", "The address that is stored as code creator")
 	cmd.Flags().String(flagInstantiateByEverybody, "", "Everybody can instantiate a contract from the code, optional")
 	cmd.Flags().String(flagInstantiateByAddress, "", "Only this address can instantiate a contract instance from the code, optional")
 
@@ -105,7 +105,7 @@ func GenesisInstantiateContractCmd(defaultNodeHome string, genesisMutator Genesi
 
 			return genesisMutator.AlterWasmModuleState(cmd, func(state *types.GenesisState, appState map[string]json.RawMessage) error {
 				// simple sanity check that sender has some balance although it may be consumed by appState previous message already
-				switch ok, err := hasAccountBalance(cmd, appState, senderAddr, msg.InitFunds); {
+				switch ok, err := hasAccountBalance(cmd, appState, senderAddr, msg.Funds); {
 				case err != nil:
 					return err
 				case !ok:
@@ -187,7 +187,7 @@ func GenesisExecuteContractCmd(defaultNodeHome string, genesisMutator GenesisMut
 
 			return genesisMutator.AlterWasmModuleState(cmd, func(state *types.GenesisState, appState map[string]json.RawMessage) error {
 				// simple sanity check that sender has some balance although it may be consumed by appState previous message already
-				switch ok, err := hasAccountBalance(cmd, appState, senderAddr, msg.SentFunds); {
+				switch ok, err := hasAccountBalance(cmd, appState, senderAddr, msg.Funds); {
 				case err != nil:
 					return err
 				case !ok:
@@ -487,11 +487,11 @@ func codeSeqValue(state *types.GenesisState) uint64 {
 	return seq
 }
 
-// getActorAddress returns the account address for the `--run-as` flag.
+// getActorAddress returns the account address for the `--creator` flag.
 // The flag value can either be an address already or a key name where the
 // address is read from the keyring instead.
 func getActorAddress(cmd *cobra.Command) (sdk.AccAddress, error) {
-	actorArg, err := cmd.Flags().GetString(flagRunAs)
+	actorArg, err := cmd.Flags().GetString(flagCreator)
 	if err != nil {
 		return nil, fmt.Errorf("run-as: %s", err.Error())
 	}

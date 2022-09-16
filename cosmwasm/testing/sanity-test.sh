@@ -16,18 +16,18 @@ mkdir -p /opt/trustlesshub/.sgx_secrets
 
 rm -rf ~/.trst
 
-export CHAIN_ID=trstdev-1
+export CHAIN_ID=trst_chain_1
 export KEYRING_BACKEND=test
 trstd config keyring-backend test
-trstd config chain-id trstdev-1
+trstd config chain-id trst_chain_1
 trstd config output json
 
-trstd init banana --chain-id trstdev-1
+trstd init banana --chain-id trst_chain_1
 perl -i -pe 's/"stake"/"utrst"/g' ~/.trst/config/genesis.json
 echo "cost member exercise evoke isolate gift cattle move bundle assume spell face balance lesson resemble orange bench surge now unhappy potato dress number acid" |
     trstd keys add a --recover --keyring-backend test
 trstd add-genesis-account "$(trstd keys show -a --keyring-backend test a)" 1000000000000utrst
-trstd gentx a 1000000utrst --chain-id trstdev-1 --keyring-backend test
+trstd gentx a 1000000utrst --chain-id trst_chain_1 --keyring-backend test
 trstd collect-gentxs
 trstd validate-genesis
 
@@ -37,7 +37,7 @@ trstd validate-genesis
 RUST_BACKTRACE=1 trstd start --bootstrap --log_level error &
 
 
-export SECRETD_PID=$(echo $!)
+export trstd_PID=$(echo $!)
 
 
 until (trstd status 2>&1 | jq -e '(.SyncInfo.latest_block_height | tonumber) > 0' &>/dev/null); do
@@ -46,13 +46,13 @@ until (trstd status 2>&1 | jq -e '(.SyncInfo.latest_block_height | tonumber) > 0
 done
 
 function cleanup() {
-    kill -KILL "$SECRETD_PID"
+    kill -KILL "$trstd_PID"
 }
 trap cleanup EXIT ERR
 
 # store wasm code on-chain so we could later instansiate it
 export STORE_TX_HASH=$(
-    trstd tx compute store erc20.wasm --from a --gas 10000000 --gas-prices 0.25trst --output json -y |
+    trstd tx compute store erc20.wasm --from a --gas 10000000 --gas-prices 0.25utrst --output json -y |
         jq -r .txhash
 )
 
@@ -64,10 +64,10 @@ trstd q tx "$STORE_TX_HASH" --output json |
 
 # init the contract (ocall_init + write_db + canonicalize_address)
 # a is a tendermint address (will be used in transfer: https://github.com/CosmWasm/cosmwasm-examples/blob/f5ea00a85247abae8f8cbcba301f94ef21c66087/erc20/src/contract.rs#L110)
-# secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t is just a random address
+# trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh is just a random address
 # balances are set to 108 & 53 at init
 export INIT_TX_HASH=$(
-    trstd tx compute instantiate 1 "{\"decimals\":10,\"initial_balances\":[{\"address\":\"$(trstd keys show a -a)\",\"amount\":\"108\"},{\"address\":\"secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t\",\"amount\":\"53\"}],\"name\":\"ReuvenPersonalRustCoin\",\"symbol\":\"RPRC\"}" --label RPRCCoin2 --from a --output json -y --gas-prices 0.25trst |
+    trstd tx compute instantiate 1 "{\"decimals\":10,\"initial_balances\":[{\"address\":\"$(trstd keys show a -a)\",\"amount\":\"108\"},{\"address\":\"trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh\",\"amount\":\"53\"}],\"name\":\"ReuvenPersonalRustCoin\",\"symbol\":\"RPRC\"}" --label RPRCCoin2 --from a --output json -y --gas-prices 0.25utrst |
         jq -r .txhash
 )
 
@@ -84,18 +84,18 @@ export CONTRACT_ADDRESS=$(
 # test balances after init (ocall_query + read_db + canonicalize_address)
 trstd q compute query "$CONTRACT_ADDRESS" "{\"balance\":{\"address\":\"$(trstd keys show a -a)\"}}" |
     jq -e '.balance == "108"'
-trstd q compute query "$CONTRACT_ADDRESS" "{\"balance\":{\"address\":\"secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t\"}}" |
+trstd q compute query "$CONTRACT_ADDRESS" "{\"balance\":{\"address\":\"trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh\"}}" |
     jq -e '.balance == "53"'
 
 # transfer 10 balance (ocall_handle + read_db + write_db + humanize_address + canonicalize_address)
-trstd tx compute execute "$CONTRACT_ADDRESS" '{"transfer":{"amount":"10","recipient":"secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t"}}' --gas-prices 0.25trst --from a -b block -y --output json |
+trstd tx compute execute "$CONTRACT_ADDRESS" '{"transfer":{"amount":"10","recipient":"trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh"}}' --gas-prices 0.25utrst --from a -b block -y --output json |
     jq -r .txhash |
     xargs trstd q compute tx
 
 # test balances after transfer (ocall_query + read_db)
 trstd q compute query "$CONTRACT_ADDRESS" "{\"balance\":{\"address\":\"$(trstd keys show a -a)\"}}" |
     jq -e '.balance == "98"'
-trstd q compute query "$CONTRACT_ADDRESS" "{\"balance\":{\"address\":\"secret1f395p0gg67mmfd5zcqvpnp9cxnu0hg6rjep44t\"}}" |
+trstd q compute query "$CONTRACT_ADDRESS" "{\"balance\":{\"address\":\"trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh\"}}" |
     jq -e '.balance == "63"'
 
 (trstd q compute query "$CONTRACT_ADDRESS" "{\"balance\":{\"address\":\"secret1zzzzzzzzzzzzzzzzzz\"}}" || true) 2>&1 | grep -c 'canonicalize_address errored: invalid checksum'

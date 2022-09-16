@@ -5,7 +5,6 @@ mod gas_meter;
 mod iterator;
 mod memory;
 mod querier;
-mod tests;
 
 pub use api::GoApi;
 pub use db::{db_t, DB};
@@ -16,12 +15,13 @@ use std::convert::TryInto;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::str::from_utf8;
 
-use crate::error::{clear_error, handle_c_error, set_error, Error};
+use crate::error::{clear_error, handle_c_error, handle_c_error_default, set_error, Error};
 
+use cosmwasm_sgx_vm::untrusted_init_bootstrap;
 use cosmwasm_sgx_vm::{
-    untrusted_init_bootstrap,  create_attestation_report_u, untrusted_get_encrypted_seed, untrusted_health_check,
-    untrusted_init_node, untrusted_key_gen, call_handle_raw, call_init_raw, call_migrate_raw, call_query_raw, create_callback_sig_raw, features_from_csv, Checksum,
-    CosmCache, Extern,
+    call_handle_raw, call_init_raw, call_query_raw, features_from_csv, Checksum, CosmCache, Extern,
+    create_attestation_report_u,create_callback_sig_raw, untrusted_get_encrypted_seed, untrusted_health_check,
+    untrusted_init_node, untrusted_key_gen
 };
 
 use ctor::ctor;
@@ -93,14 +93,12 @@ static FEATURES_ARG: &str = "supported_features";
 static CACHE_ARG: &str = "cache";
 static WASM_ARG: &str = "wasm";
 static CODE_ID_ARG: &str = "code_id";
-//static CONTRACT_ARG: &str = "contract";
-//static CONTRACT_ID_ARG: &str = "contract_id";
-//static CONTRACT_DUR_ARG: &str = "contract_duration";
 static MSG_ARG: &str = "msg";
 static AUTO_MSG_ARG: &str = "auto_msg";
 static PARAMS_ARG: &str = "params";
 static GAS_USED_ARG: &str = "gas_used";
 static SIG_INFO_ARG: &str = "sig_info";
+
 
 #[no_mangle]
 pub extern "C" fn get_callback_sig(msg: Buffer,msg_info: Buffer /*auto_msg: Buffer, code_id: Buffer,contract: Buffer,contract_id: Buffer,contract_duration: Buffer*/, err: Option<&mut Buffer>) -> Buffer {
@@ -137,7 +135,6 @@ pub extern "C" fn get_callback_sig(msg: Buffer,msg_info: Buffer /*auto_msg: Buff
         }
     }
 }
-
 
 #[no_mangle]
 pub extern "C" fn init_bootstrap(
@@ -267,8 +264,6 @@ pub extern "C" fn init_cache(
         }
     }
 }
-
-
 
 fn do_init_cache(
     data_dir: Buffer,
@@ -447,11 +442,12 @@ pub extern "C" fn handle(
     gas_used: Option<&mut u64>,
     err: Option<&mut Buffer>,
     sig_info: Buffer,
+    handle_type: u8,
 ) -> Buffer {
     let r = match to_cache(cache) {
         Some(c) => catch_unwind(AssertUnwindSafe(move || {
             do_handle(
-                c, code_id, params, msg, db, api, querier, gas_limit, gas_used, sig_info,
+                c, code_id, params, msg, db, api, querier, gas_limit, gas_used, sig_info, handle_type
             )
         }))
         .unwrap_or_else(|_| Err(Error::panic())),
@@ -473,6 +469,7 @@ fn do_handle(
     gas_limit: u64,
     gas_used: Option<&mut u64>,
     sig_info: Buffer,
+    handle_type: u8
 ) -> Result<Vec<u8>, Error> {
     let gas_used = gas_used.ok_or_else(|| Error::empty_arg(GAS_USED_ARG))?;
     let code_id: Checksum = unsafe { code_id.read() }
@@ -485,68 +482,7 @@ fn do_handle(
     let deps = to_extern(db, api, querier);
     let mut instance = cache.get_instance(&code_id, deps, gas_limit)?;
     // We only check this result after reporting gas usage and returning the instance into the cache.
-    let res = call_handle_raw(&mut instance, params, msg, sig_info);
-    *gas_used = instance.create_gas_report().used_internally;
-    instance.recycle();
-    Ok(res?)
-}
-
-#[no_mangle]
-pub extern "C" fn migrate(
-    cache: *mut cache_t,
-    contract_id: Buffer,
-    params: Buffer,
-    msg: Buffer,
-    db: DB,
-    api: GoApi,
-    querier: GoQuerier,
-    gas_limit: u64,
-    gas_used: Option<&mut u64>,
-    err: Option<&mut Buffer>,
-) -> Buffer {
-    let r = match to_cache(cache) {
-        Some(c) => catch_unwind(AssertUnwindSafe(move || {
-            do_migrate(
-                c,
-                contract_id,
-                params,
-                msg,
-                db,
-                api,
-                querier,
-                gas_limit,
-                gas_used,
-            )
-        }))
-        .unwrap_or_else(|_| Err(Error::panic())),
-        None => Err(Error::empty_arg(CACHE_ARG)),
-    };
-    let data = handle_c_error(r, err);
-    Buffer::from_vec(data)
-}
-
-fn do_migrate(
-    cache: &mut CosmCache<DB, GoApi, GoQuerier>,
-    code_id: Buffer,
-    params: Buffer,
-    msg: Buffer,
-    db: DB,
-    api: GoApi,
-    querier: GoQuerier,
-    gas_limit: u64,
-    gas_used: Option<&mut u64>,
-) -> Result<Vec<u8>, Error> {
-    let gas_used = gas_used.ok_or_else(|| Error::empty_arg(GAS_USED_ARG))?;
-    let code_id: Checksum = unsafe { code_id.read() }
-        .ok_or_else(|| Error::empty_arg(CODE_ID_ARG))?
-        .try_into()?;
-    let params = unsafe { params.read() }.ok_or_else(|| Error::empty_arg(PARAMS_ARG))?;
-    let msg = unsafe { msg.read() }.ok_or_else(|| Error::empty_arg(MSG_ARG))?;
-
-    let deps = to_extern(db, api, querier);
-    let mut instance = cache.get_instance(&code_id, deps, gas_limit)?;
-    // We only check this result after reporting gas usage and returning the instance into the cache.
-    let res = call_migrate_raw(&mut instance, params, msg);
+    let res = call_handle_raw(&mut instance, params, msg, sig_info, handle_type);
     *gas_used = instance.create_gas_report().used_internally;
     instance.recycle();
     Ok(res?)
@@ -578,7 +514,6 @@ pub extern "C" fn query(
     Buffer::from_vec(data)
 }
 
-
 fn do_query(
     cache: &mut CosmCache<DB, GoApi, GoQuerier>,
     code_id: Buffer,
@@ -606,6 +541,59 @@ fn do_query(
     Ok(res?)
 }
 
+/// The result type of the FFI function analyze_code.
+///
+/// Please note that the unmanaged vector in `required_features`
+/// has to be destroyed exactly once. When calling `analyze_code`
+/// from Go this is done via `C.destroy_unmanaged_vector`.
+#[repr(C)]
+#[derive(Clone, Default, Debug, PartialEq)]
+pub struct AnalysisReport {
+    pub has_ibc_entry_points: bool,
+    /// An UTF-8 encoded comma separated list of required features.
+    /// This is never None/nil.
+    pub required_features: Buffer,
+}
+
+#[no_mangle]
+pub extern "C" fn analyze_code(
+    cache: *mut cache_t,
+    checksum: Buffer,
+    error_msg: Option<&mut Buffer>,
+) -> AnalysisReport {
+    let r = match to_cache(cache) {
+        Some(c) => catch_unwind(AssertUnwindSafe(move || {
+            do_analyze_code(c, checksum)
+        }))
+            .unwrap_or_else(|_| Err(Error::panic())),
+        None => Err(Error::empty_arg(CACHE_ARG)),
+    };
+
+    handle_c_error_default(r, error_msg)
+}
+
+fn do_analyze_code(
+    cache: &mut CosmCache<DB, GoApi, GoQuerier>,
+    checksum: Buffer,
+) -> Result<AnalysisReport, Error> {
+    let checksum: Checksum = unsafe { checksum.read() }
+        .ok_or_else(|| Error::empty_arg(CODE_ID_ARG))?
+        .try_into()?;
+    let report = cache.analyze(&checksum)?;
+    let mut features_vec : Vec<u8> = vec!();
+    for feature in &report.required_features {
+        if features_vec.len() > 0 {
+            features_vec.append(&mut (",".as_bytes().to_vec()))
+        }
+
+        features_vec.append(&mut feature.as_bytes().to_vec())
+    }
+
+    Ok(AnalysisReport{
+        has_ibc_entry_points: report.has_ibc_entry_points,
+        required_features: Buffer::from_vec(features_vec),
+    })
+}
 
 #[no_mangle]
 pub extern "C" fn key_gen(err: Option<&mut Buffer>) -> Buffer {

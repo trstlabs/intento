@@ -239,7 +239,7 @@
                   "$ref": "#/definitions/HumanAddr"
                 },
                 "msg": {
-                  "description": "msg is the json-encoded HandleMsg struct (as raw Binary)",
+                  "description": "msg is the json-encoded ExecuteMsg struct (as raw Binary)",
                   "allOf": [
                     {
                       "$ref": "#/definitions/Binary"
@@ -284,7 +284,7 @@
                   ]
                 },
                 "msg": {
-                  "description": "msg is the json-encoded InitMsg struct (as raw Binary)",
+                  "description": "msg is the json-encoded Msg struct (as raw Binary)",
                   "allOf": [
                     {
                       "$ref": "#/definitions/Binary"

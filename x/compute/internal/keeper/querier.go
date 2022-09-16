@@ -158,7 +158,7 @@ func (q grpcQuerier) Codes(c context.Context, _ *empty.Empty) (*types.QueryCodes
 	return &types.QueryCodesResponse{CodeInfos: rsp}, nil
 }
 
-func (q grpcQuerier) AddressByLabel(c context.Context, req *types.QueryContractAddressByContractIdRequest) (*types.QueryContractAddressByContractIdResponse, error) {
+func (q grpcQuerier) AddressByContractId(c context.Context, req *types.QueryContractAddressByContractIdRequest) (*types.QueryContractAddressByContractIdResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c).WithGasMeter(sdk.NewGasMeter(q.keeper.queryGasLimit))
 	rsp, err := queryContractAddress(ctx, req.ContractId, q.keeper)
 	switch {
@@ -292,15 +292,15 @@ func QueryCode(ctx sdk.Context, codeID uint64, keeper Keeper) (*types.QueryCodeR
 		return nil, nil
 	}
 	info := types.CodeInfoResponse{
-		CodeID:           codeID,
-		Creator:          res.Creator,
-		CodeHash:         res.CodeHash,
-		Source:           res.Source,
-		Builder:          res.Builder,
-		ContractDuration: res.Duration,
-		Title:            res.Title,
-		Description:      res.Description,
-		Instances:        res.Instances,
+		CodeID:          codeID,
+		Creator:         res.Creator,
+		CodeHash:        res.CodeHash,
+		Source:          res.Source,
+		Builder:         res.Builder,
+		DefaultDuration: res.DefaultDuration,
+		Title:           res.Title,
+		Description:     res.Description,
+		Instances:       res.Instances,
 	}
 
 	code, err := keeper.GetByteCode(ctx, codeID)
@@ -315,15 +315,15 @@ func queryCodeList(ctx sdk.Context, keeper Keeper) ([]types.CodeInfoResponse, er
 	var info []types.CodeInfoResponse
 	keeper.IterateCodeInfos(ctx, func(i uint64, res types.CodeInfo) bool {
 		info = append(info, types.CodeInfoResponse{
-			CodeID:           i,
-			Creator:          res.Creator,
-			CodeHash:         res.CodeHash,
-			Source:           res.Source,
-			Builder:          res.Builder,
-			ContractDuration: res.Duration,
-			Title:            res.Title,
-			Description:      res.Description,
-			Instances:        res.Instances,
+			CodeID:          i,
+			Creator:         res.Creator,
+			CodeHash:        res.CodeHash,
+			Source:          res.Source,
+			Builder:         res.Builder,
+			DefaultDuration: res.DefaultDuration,
+			Title:           res.Title,
+			Description:     res.Description,
+			Instances:       res.Instances,
 		})
 		return false
 	})

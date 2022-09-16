@@ -1,4 +1,4 @@
-//! Types and helpers for init and handle
+/*//! Types and helpers for init and handle
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -91,20 +91,20 @@ pub enum WasmMsg {
     /// this dispatches a call to another contract at a known address (with known ABI)
     Execute {
         contract_addr: HumanAddr,
-        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
-        callback_code_hash: String,
-        /// msg is the json-encoded HandleMsg struct (as raw Binary)
+        code_hash: String,
+        /// msg is the json-encoded ExecuteMsg struct (as raw Binary)
         msg: Binary,
         send: Vec<Coin>,
     },
     /// this instantiates a new contracts from previously uploaded wasm code
     Instantiate {
         code_id: u64,
-        /// callback_code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
-        callback_code_hash: String,
-        /// msg is the json-encoded InitMsg struct (as raw Binary)
+        code_hash: String,
+        /// msg is the json-encoded Msg struct (as raw Binary)
         msg: Binary,
         /// auto_msg is the json-encoded AutoMsg struct (as raw Binary)
         auto_msg: Option<Binary>,
@@ -559,4 +559,4 @@ mod test {
         assert_eq!(&migrate.log, &expected_log);
         assert_eq!(&migrate.data, &expected_data);
     }
-}
+}*/
