@@ -10,8 +10,8 @@ On [Youtube](https://www.youtube.com/results?sp=mAEB&search_query=CosmWasm). the
 [CosmWasm](https://docs.cosmwasm.com/docs/1.0/) provides extensive documentation
 
 
-## CosmWasm on TRST
-CosmWasm is a smart contract standard within the Cosmos Ecosystem. Many chains use these, including Juno, Osmosis, Terra, Secret Network, Stargaze and Archway.  
+## CosmWasm on Trustless Hub
+CosmWasm is a smart contract standard within the Cosmos Ecosystem. Many chains including Juno, Osmosis, Terra, Secret Network, Stargaze and Archway use these to power safe and effient decentralized applications.  
 
 CosmWasm code should be designed to be:
 1) Stored

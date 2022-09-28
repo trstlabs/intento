@@ -1,17 +1,8 @@
-![Welcome to Trustless Hub](./images/transfer.png)
+![Welcome to Trustless Hub](./images/banner.png)
 
 # Trustless Hub
 
 [Trustless Hub](https://github.com/trstlabs/trst) is a private smart contract hub within the Cosmos ecosystem. Here you can build and deploy Trustless Contracts to a large decentralized worldwide community. Trustless Hub is built on the [Cosmos SDK](https://docs.cosmos.network), the world’s most popular blockchain framework. Trustless Hub enables new services using private inputs, time-based messages, 1-click recurring execution and verifiable outcomes. Use-cases include recurring swaps for DeFi, 1-click recurring transactions for payment and in-game battles with time-based winner appointment for gaming. 
-
-## What is TRST?
-
-TRST is the native token of Trustless Hub and is used to pay for gas fees. It is used for:
-
-* Transactions
-* Storing, instantiating and executing Trustless Contracts. 
-
-You can also stake your TRST by delegating your TRST to validators. Trough governance, you can vote on important proposals such as upgrades and parameter changes. 
 
 
 ## Why Trustless Contracts?
@@ -68,6 +59,16 @@ And much more...
 
 
 Read more on the use-cases and existing examples in this article.
+
+## What is TRST?
+
+TRST is the native token of Trustless Hub and is used to pay for:
+
+* Time-based and recurring execution
+* Storing, instantiating and executing Trustless Contracts
+* General transactions
+
+You can also stake your TRST by delegating your TRST to validators. Trough governance, you can vote on important proposals such as upgrades and parameter changes. 
 
 
 ## Using BFT consensus and Cosmos SDK
