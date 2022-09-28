@@ -1,17 +1,14 @@
 ---
 order: 5
 parent:
-  title: Contract Result
+  title: Contract State
   order: 5
 ---
 
-# Contract Result
+# Contract State
 
-- When the contract gets executed, the transaction response gets saved on-chain
-- Contract Results can be queried by anyone. 
-- It is basically a publicly viewable state of the private smart contract. 
-- This is also the case for the AutoMessage.
+Contracts are private-by-default. State is encrypted. There is a public state avaliable too. 
 
- *The Contract Result (last available result) can be queried through:*
+TODO 
 
- {RCP API URL}/compute/v1beta1/contract/{contract_address}/result
+ {RCP API URL}/compute/v1beta1/contract/{contract_address}/public-state
