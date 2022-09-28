@@ -11,33 +11,28 @@ On [Youtube](https://www.youtube.com/results?sp=mAEB&search_query=CosmWasm). the
 
 
 ## CosmWasm on TRST
-CosmWasm is a smart contract standard within the Cosmos Ecosystem. Many chains use these, including Juno, Terra, Stargaze, Irisnet, Omniflix and Secret Network. 
+CosmWasm is a smart contract standard within the Cosmos Ecosystem. Many chains use these, including Juno, Osmosis, Terra, Secret Network, Stargaze and Archway.  
 
-Code can be used to:
-Send funds
-Vote on proposals
-Execute other contracts
-Instantiate other contracts
-Query other contract states
-
-
-CosmWasm code for Trustless Contracts should be designed to be:
+CosmWasm code should be designed to be:
 1) Stored
 2) Instantiated 
 3) Executed
 4) Queried
 
-And additionally they can have:
+And additionally for Trustless Hub they have:
 
-5) Have an AutoMsg to execute 1-time or recurringly. This can defined in the CodeInfo or at Contract Instantiation
+5) An AutoMsg to execute 1-time or recurringly. This can defined in the CodeInfo or at Contract Instantiation
 
 1,2,3,4 are similar to develop as in other smart contract platforms. Encryption and privacy are enabled by the blockchain, and the developer can carelessly use the benefits of these.
 For 5, automatically executing code, an automated message should be enabled, and this can point to an existing function or to a completely seperate one than that can be executed on by the users of the contract.
-You can name this AutoMessage, or anything else. Please refer to the message to be executed as AutoMessage, so people investigating the code are aware of the which part of the code to be run automatically.
+You can name this AutoMsg, or anything else. Refer to the message to be executed as AutoMsg, so people viewing the contract code are aware of the which part of the contract can run automatically.
 
 
-![Example auto_msg on internal estimation contract](./auto_msg_example.png)
-Above, an example on the AutoMessage pointing to a function on the internal estimation Trustless Contract
+![Example auto_msg](./auto_msg_example.png)
+Above, an example on the AutoMessage pointing to a function on a recurring swap Trustless Contract. 
+
+#### How does this work?
+After instantiating from the TIP20 token contract, the TIP20 token contract gives allowance to this contract for the max funds to swap. Trustless Hub then recurringly calls AutoMsg. 
 
 ## Differences in contract transactions with standard CosmWasm
 
@@ -58,9 +53,8 @@ the result of the query is always encrypted and only viewable by the person that
 
 In addition, like with other CosmWasm contract instances, contracts can also query other contracts.
 
-### Public Stat
+### Public State
 Contracts can have a public state that is cheap to query. It is also easy integrate and show users a way to view what is happening on the private by default contract. The Contract State is can be queried through {RCP API URL}/compute/v1beta1/contract/{contract_address}/public-state . 
-
-As a developer you can save outputs to the public state.
+As a developer you save outputs to the public state when you make a new Response.
 
 
