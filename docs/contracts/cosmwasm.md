@@ -7,7 +7,7 @@ description: Useful information regarding CosmWasm code
 ## Getting familiar with CosmWasm
 On [Youtube](https://www.youtube.com/results?sp=mAEB&search_query=CosmWasm). there are many great tutorials on CosmWasm. 
 
-[CosmWasm](https://docs.cosmwasm.com/docs/1.0/) provides extensive documentation
+[CosmWasm](https://docs.cosmwasm.com/docs/1.0/) provides extensive documentation.
 
 
 ## CosmWasm on Trustless Hub

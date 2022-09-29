@@ -13,29 +13,38 @@ Through governance, a number of compute parameters can be adjusted. The default 
 ```golang
 
 const (
-	DefaultMaxContractPeriod time.Duration = time.Hour * 24 * 30 // 30 days
+	// AutoMsgFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
+	DefaultAutoMsgFundsCommission int64 = 2
 
-	// Commission percentage to distribute to community pool for leftover balances (rounded up)
+	// AutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
+	DefaultAutoMsgConstantFee int64 = 1000000 // 1utrst
 
-	DefaultCommission int64 = 2 // %
+	// AutoMsgFlexFeeDenom is denominator for the gas-dependent flex fee to prevent spam of auto messages, to be distributed to community pool
+	DefaultAutoMsgFlexFeeDenom int64 = 100
 
-	// MinContractDurationForIncentive to distribute reward to contract
+	// RecurringAutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
+	DefaultRecurringAutoMsgConstantFee int64 = 1000000 // 1utrst
 
-	DefaultMinContractDurationForIncentive time.Duration = time.Hour * 24 // 1 day
+	// Default max period for a contract that is self-executing
+	DefaultMaxContractDuration time.Duration = time.Hour * 24 * 366 // 366 days
+	// MinContractDuration sets the minimum duration for a self-executing contract
+	DefaultMinContractDuration time.Duration = time.Second * 45
+	// MinContractInterval sets the minimum interval self-execution
+	DefaultMinContractInterval time.Duration = time.Second * 20
+	// MinContractDurationForIncentive to distribute reward to contracts we want to incentivize
+	DefaultMinContractDurationForIncentive time.Duration = time.Hour * 24 // time.Hour * 24 // 1 day
 
 	// DefaultMaxContractIncentive max amount of utrst coins to give to a contract as incentive
-
 	DefaultMaxContractIncentive int64 = 500000000 // 500utrst
 
 	// MinContractBalanceForIncentive minimum balance required to be elligable for an incentive
-
 	DefaultMinContractBalanceForIncentive int64 = 50000000 // 50utrst
 )
 ```
 
 
-## Endblocker (-> AfterEpochEnd)
-At the end of each block, the Endblock checks if there are Trustless Contracts that are elligable for an incentive (will be Epoch based once Epoch module is in SDK).
+## Endblocker
+At the end of each block, the Endblock checks if there are Trustless Contracts that are elligable for an incentive.
 MinContractDurationForIncentive,MaxContractIncentive, MinContractBalanceForIncentive can be adjusted by governane to ensure that the contract incentives are distributed in a fair manner.
 
 ## Configuration
