@@ -1,8 +1,7 @@
 ---
-order: 2
-parent:
-  title: Encryption
-  order: 3
+order: 3
+title: Encryption
+description: Useful information regarding encryption
 ---
 
 # Encryption

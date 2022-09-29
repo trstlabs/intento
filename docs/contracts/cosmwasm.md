@@ -1,6 +1,6 @@
 ---
 order: 2
-title: CosmWasm code
+title: CosmWasm
 description: Useful information regarding CosmWasm code
 ---
 
