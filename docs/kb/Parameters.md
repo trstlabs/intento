@@ -1,11 +1,10 @@
 ---
-order: 3
-parent:
-  title: Governance
-  order: 3
+order: 5
+title: Parameters
+description: Learn how fees, governance and parameters are used
 ---
-
-### Contract Code Approval
+# Parameters
+## Contract Code Approval
 TRST is used to enable contract code on-chain. Because Trustless Contracts are highly programmable on a block-level, we minimize any attack possibilities by governance code approval. As the incentives of TRST holders is to maximize TRST value, this makes total sense and keeps the the chain secure.
 
 Because we want you to feel good about the apps that you interact with, the Hub gives you, the community, the power to manage the apps that are run. It creates a safe place where anyone can be ensured when interacting Trustless Hub contract, just like the App Store for Apps.
@@ -14,7 +13,7 @@ We want to minimize the need for trust in anyone, hence Trustless Hub does not s
 
 
 
-# Trustless Hub specific parameters
+## Trustless Hub specific parameters
 
 
 #### Contract instances — AutoMessage Fees

@@ -1,5 +1,5 @@
 ---
-order: 6
+order: 4
 title: CLI
 description: FUsing the Command-line interface to instantiate and execute contracts
 ---

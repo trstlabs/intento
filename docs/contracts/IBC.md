@@ -1,5 +1,5 @@
 ---
-order: 4
+order: 6
 title: IBC Contract Calls
 description: Examples of IBC Contract calls
 ---
@@ -26,7 +26,7 @@ Trustless Contracts extend their functionality to other chains. In the near futu
 
 ### Payroll for DAOs
 3. DAOs Distributing funds over a certain period of time
-![hr](../images/hr1.png)
+![hr](../images/dao1.png)
 
 *IBC calls to public chains are public. The recurring transactions are auditable and viewable by admins. The balances are private by default and are acessable through viewing keys*
 

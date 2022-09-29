@@ -1,8 +1,7 @@
 ---
-order: 2
-parent:
-  title: AutoMessage
-  order: 2
+order: 4
+title: Contract State
+description: Learn the basics of how AutoMessage enable contract self-execution
 ---
 
 # AutoMessage

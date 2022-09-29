@@ -2,7 +2,7 @@
 order: 1
 description: Delegating docs. 
 parent:
-  order: 8
+  order: 5
   title: Delegating 
 ---
 

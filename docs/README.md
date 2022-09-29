@@ -7,23 +7,29 @@
 
 ## Why Trustless Contracts?
 
-Smart contracts enable decentralized applications, where data is immutable and users can trust the data to be real and uncensored. Still, smart contracts are far from perfect as current smart contracts on major blockchains are fully public, data is stored indefinitely. Right now, developers cannot guarantee any kind of privacy when interacting with their contracts. Anyone can view user inputs. Users lose funds because smart contracts have no predefined end date. Stakeholders may not develop enough trust to interact with the contract as the data is public and the contract end date is unknown. Yet, so far no easy way exists to build contracts with private user inputs, deterministic outcomes and automatic time-based actions to cope with these problems. In order to truly build trustable contracts, developers need to program contracts that can be private and have automatic time-based functions.
+Smart contracts enable decentralized applications, where data is immutable and users can trust the data to be real and uncensored. Still, smart contracts are far from perfect as current smart contracts on major blockchains are fully public, data is stored indefinitely. Right now, developers cannot guarantee any kind of privacy when interacting with their contracts. Anyone can view user inputs. Users lose funds because smart contracts have no predefined end date. Stakeholders may not develop enough trust to interact with the contract as the data is public and the contract end date is unknown. 
+
+Yet, so far no easy way exists to build contracts with private user inputs, deterministic outcomes and automatic time-based actions to cope with these problems. 
+
+In order to truly build trustless applications for DAOs and end-users, developers should be able to program contracts that can be private with support for automatic time-based functions.
 
 
 Chains and CosmWasm-based apps extend their functionality by integrating with the Trustless Hub over IBC. Trustless Contracts enable existing apps to have the Trustless Contract features. Out of the box, recurring transactions, remittances and payroll are possible. When allowed, recipients can interact on Trustless Hub and transfer funds to a privacy-perserving account.
+ 
 
-Developers on other Chains and contract platforms will be able to use and integrate Trustless Contracts. DAOs can use payroll services, NFT solutions can have subscriptions, and games can do in-game battles with time-based winner appointment. 
 
 
-There are 4 pillars to Trustless Contracts:
+## 4 pillars of Trustless Contracts
 1. Privacy-by-default
-2. Automated Execution
-3. Recurring transactions with 1-click
+2. Time-based Execution
+3. Recurring transactions with one click
 4. Governance-verified Templates
 
 
 Any CosmWasm code, like smart contracts on Juno, Osmosis, Secret Network and Archway can extend their functionality through Inter-Blockchain Communication (IBC)., or be transformed into a Trustless Contract.
 
+## Use Cases
+Developers on other Chains and contract platforms will be able to use and integrate Trustless Contracts. DAOs can use payroll services, NFT solutions can have subscriptions, and games can do in-game battles with time-based winner appointment. 
 
 Use cases
 1. DeFi - Privacy-perserving and time-based trading  

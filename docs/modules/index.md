@@ -2,15 +2,15 @@
 title: Introduction
 order: 0
 parent:
-  order: 0
+  order: 2
   title: Cosmos SDK Modules
 ---
 
 # Introduction
 
-Trustless Hub uses a number of custom modules. 
+Trustless Hub uses a number of custom modules.
 
-# List of Modules
+## List of Modules
 
 Here are a number of modules that is used in the TRST chain:
 
