@@ -1,7 +1,7 @@
 ---
 order: 6
 title: CLI
-description: FUsing the Command-line interface (CLI)
+description: FUsing the Command-line interface to instantiate and execute contracts
 ---
 
 # Using the Command-line interface (CLI)

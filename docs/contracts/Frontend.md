@@ -1,7 +1,7 @@
 ---
 order: 5
 title: Frontend
-description: Frontend with TrustlessJS
+description: Integrate Trustless Contracts to a frontend with TrustlessJS
 ---
 
 # Frontend with TrustlessJS

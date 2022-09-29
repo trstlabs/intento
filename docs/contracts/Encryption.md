@@ -1,7 +1,7 @@
 ---
 order: 3
 title: Encryption
-description: Useful information regarding encryption
+description: Useful information regarding encryption of message types
 ---
 
 # Encryption
