@@ -125,6 +125,7 @@ func NewAppModuleBasic(cdc codec.BinaryCodec) AppModuleBasic {
 }
 
 func (am AppModule) RegisterServices(configurator module.Configurator) {
+	types.RegisterMsgServer(configurator.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(configurator.QueryServer(), NewQuerier(am.keeper))
 }
 

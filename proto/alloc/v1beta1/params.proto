@@ -32,9 +32,9 @@ message DistributionProportions {
     (gogoproto.moretags) = "yaml:\"item_incentives\"",
     (gogoproto.nullable) = false
   ];*/
-  string developer_rewards = 4 [
+  string contributor_rewards = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-    (gogoproto.moretags) = "yaml:\"developer_rewards\"",
+    (gogoproto.moretags) = "yaml:\"contributor_rewards\"",
     (gogoproto.nullable) = false
   ];
    // community_pool defines the proportion of the minted minted_denom that is
@@ -51,8 +51,8 @@ message Params {
   DistributionProportions distribution_proportions = 1
       [ (gogoproto.nullable) = false ];
   // address to receive developer rewards
-  repeated WeightedAddress weighted_developer_rewards_receivers = 2 [
-    (gogoproto.moretags) = "yaml:\"developer_rewards_receiver\"",
+  repeated WeightedAddress weighted_contributor_rewards_receivers = 2 [
+    (gogoproto.moretags) = "yaml:\"contributor_rewards_receiver\"",
     (gogoproto.nullable) = false
   ];
 }

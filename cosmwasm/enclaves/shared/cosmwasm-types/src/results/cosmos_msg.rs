@@ -112,7 +112,7 @@ pub enum WasmMsg {
     Execute {
         /// Contract address
         contract_addr: String,
-        /// code_hash is the hex encoded hash of the code. This is used by Secret Network to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         code_hash: String,
         /// msg is the json-encoded ExecuteMsg struct (as raw Binary)
@@ -128,7 +128,7 @@ pub enum WasmMsg {
     /// `sender` is automatically filled with the current contract's address.
     Instantiate {
         code_id: u64,
-        /// code_hash is the hex encoded hash of the code. This is used by Secret Network to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         code_hash: String,
         /// msg is the JSON-encoded InstantiateMsg struct (as raw Binary)

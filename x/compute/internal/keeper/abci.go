@@ -62,7 +62,7 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 		types.EventTypeExecute,
 		sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String())))
 
-	_, err = k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res, res.Messages, res.Events, res.Data, msg, verificationInfo)
+	_, err = k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res.Attributes, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
 		return 0, err
 	}

@@ -154,6 +154,12 @@ pub enum SignModeDef {
 pub enum HandleType {
     HANDLE_TYPE_EXECUTE = 0,
     HANDLE_TYPE_REPLY = 1,
+    HANDLE_TYPE_IBC_CHANNEL_OPEN = 2,
+    HANDLE_TYPE_IBC_CHANNEL_CONNECT = 3,
+    HANDLE_TYPE_IBC_CHANNEL_CLOSE = 4,
+    HANDLE_TYPE_IBC_PACKET_RECEIVE = 5,
+    HANDLE_TYPE_IBC_PACKET_ACK = 6,
+    HANDLE_TYPE_IBC_PACKET_TIMEOUT = 7,
 }
 
 impl HandleType {
@@ -161,10 +167,28 @@ impl HandleType {
         match value {
             0 => Ok(HandleType::HANDLE_TYPE_EXECUTE),
             1 => Ok(HandleType::HANDLE_TYPE_REPLY),
+            2 => Ok(HandleType::HANDLE_TYPE_IBC_CHANNEL_OPEN),
+            3 => Ok(HandleType::HANDLE_TYPE_IBC_CHANNEL_CONNECT),
+            4 => Ok(HandleType::HANDLE_TYPE_IBC_CHANNEL_CLOSE),
+            5 => Ok(HandleType::HANDLE_TYPE_IBC_PACKET_RECEIVE),
+            6 => Ok(HandleType::HANDLE_TYPE_IBC_PACKET_ACK),
+            7 => Ok(HandleType::HANDLE_TYPE_IBC_PACKET_TIMEOUT),
             _ => {
                 error!("unrecognized handle type: {}", value);
                 Err(EnclaveError::FailedToDeserialize)
             }
+        }
+    }
+    pub fn to_export_name(h: &HandleType) -> String {
+        match h {
+            HandleType::HANDLE_TYPE_EXECUTE => "execute".to_string(),
+            HandleType::HANDLE_TYPE_REPLY => "reply".to_string(),
+            HandleType::HANDLE_TYPE_IBC_CHANNEL_OPEN => "ibc_channel_open".to_string(),
+            HandleType::HANDLE_TYPE_IBC_CHANNEL_CONNECT => "ibc_channel_connect".to_string(),
+            HandleType::HANDLE_TYPE_IBC_CHANNEL_CLOSE => "ibc_channel_close".to_string(),
+            HandleType::HANDLE_TYPE_IBC_PACKET_RECEIVE => "ibc_packet_receive".to_string(),
+            HandleType::HANDLE_TYPE_IBC_PACKET_ACK => "ibc_packet_ack".to_string(),
+            HandleType::HANDLE_TYPE_IBC_PACKET_TIMEOUT => "ibc_packet_timeout".to_string(),
         }
     }
 }

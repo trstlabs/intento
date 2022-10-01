@@ -18,7 +18,7 @@ type grpcQuerier struct {
 }
 
 // todo: this needs proper tests and doc
-func NewQuerier(keeper Keeper) grpcQuerier {
+func NewGrpcQuerier(keeper Keeper) grpcQuerier {
 	return grpcQuerier{keeper: keeper}
 }
 
@@ -286,8 +286,9 @@ func QueryCode(ctx sdk.Context, codeID uint64, keeper Keeper) (*types.QueryCodeR
 	if codeID == 0 {
 		return nil, nil
 	}
-	res := keeper.GetCodeInfo(ctx, codeID)
-	if res == nil {
+	res, err := keeper.GetCodeInfo(ctx, codeID)
+
+	if err != nil {
 		// nil, nil leads to 404 in rest handler
 		return nil, nil
 	}
@@ -386,5 +387,9 @@ func queryContractHash(ctx sdk.Context, address sdk.AccAddress, keeper Keeper) (
 	if res == nil {
 		return nil, nil
 	}
-	return keeper.GetCodeInfo(ctx, res.CodeID).CodeHash, nil
+	info, err := keeper.GetCodeInfo(ctx, res.CodeID)
+	if err != nil {
+		return nil, nil
+	}
+	return info.CodeHash, nil
 }

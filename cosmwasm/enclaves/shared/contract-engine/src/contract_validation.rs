@@ -5,7 +5,7 @@ use enclave_ffi_types::EnclaveError;
 
 use enclave_cosmos_types::traits::CosmosAminoPubkey;
 use enclave_cosmos_types::types::{
-    ContractCode, CosmWasmMsg, CosmosPubKey, SigInfo, SignDoc, StdSignDoc,
+    ContractCode, CosmWasmMsg, CosmosPubKey, SigInfo, SignDoc, StdSignDoc,HandleType
 };
 
 use crate::io::create_callback_signature;
@@ -15,9 +15,9 @@ use enclave_cosmwasm_types::coins::Coin;
 use enclave_cosmwasm_types::types::FullEnv;
 use enclave_crypto::traits::VerifyingKey;
 use enclave_crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER};
-
+use enclave_cosmwasm_types::ibc::IbcPacketReceiveMsg;
 pub type ContractKey = [u8; CONTRACT_KEY_LENGTH];
-
+use crate::parse_msg::is_ibc_msg;
 pub const CONTRACT_KEY_LENGTH: usize = HASH_SIZE + HASH_SIZE;
 
 const HEX_ENCODED_HASH_SIZE: usize = HASH_SIZE * 2;
@@ -137,7 +137,7 @@ pub fn validate_contract_key(
 
 pub struct ValidatedMessage {
     pub validated_msg: Vec<u8>,
-    pub reply_params: Option<ReplyParams>,
+    pub reply_params: Option<Vec<ReplyParams>>,
 }
 
 pub struct ReplyParams {
@@ -145,6 +145,167 @@ pub struct ReplyParams {
     pub sub_msg_id: u64,
 }
 
+
+
+/// Validate that the message sent to the enclave (after decryption) was actually addressed to this contract.
+pub fn validate_msg(
+    msg: &[u8],
+    contract_hash: &[u8; HASH_SIZE],
+    data_for_validation: Option<Vec<u8>>,
+    handle_type: Option<HandleType>,
+) -> Result<ValidatedMessage, EnclaveError> {
+    match handle_type {
+        None => validate_basic_msg(msg, contract_hash, data_for_validation),
+        Some(h) => match is_ibc_msg(h.clone()) {
+            false => validate_basic_msg(msg, contract_hash, data_for_validation),
+            true => validate_ibc_msg(msg, contract_hash, data_for_validation, h),
+        },
+    }
+}
+
+
+pub fn validate_ibc_msg(
+    msg: &[u8],
+    contract_hash: &[u8; HASH_SIZE],
+    data_for_validation: Option<Vec<u8>>,
+    handle_type: HandleType,
+) -> Result<ValidatedMessage, EnclaveError> {
+    match handle_type {
+        HandleType::HANDLE_TYPE_IBC_PACKET_RECEIVE => {
+            let mut parsed_ibc_packet: IbcPacketReceiveMsg =
+                serde_json::from_slice(&msg.to_vec()).map_err(|err| {
+                    warn!(
+                    "IbcPacketReceive msg got an error while trying to deserialize msg input bytes into json {:?}: {}",
+                    String::from_utf8_lossy(&msg),
+                    err
+                );
+                    EnclaveError::FailedToDeserialize
+                })?;
+
+            let validated_msg = validate_basic_msg(
+                parsed_ibc_packet.packet.data.as_slice(),
+                contract_hash,
+                data_for_validation,
+            )?;
+            parsed_ibc_packet.packet.data = validated_msg.validated_msg.as_slice().into();
+
+            Ok(ValidatedMessage{
+                validated_msg: serde_json::to_vec(&parsed_ibc_packet).map_err(|err| {
+                    warn!(
+                        "got an error while trying to serialize parsed_ibc_packet msg into bytes {:?}: {}",
+                        parsed_ibc_packet, err
+                    );
+                    EnclaveError::FailedToSerialize
+                })?,
+                reply_params: validated_msg.reply_params,
+            })
+        }
+        _ => {
+            warn!("Malformed message - in IBC, only packet receive message can be encrypted");
+            Err(EnclaveError::ValidationFailure)
+        }
+    }
+}
+
+pub fn validate_basic_msg(
+    msg: &[u8],
+    contract_hash: &[u8; HASH_SIZE],
+    data_for_validation: Option<Vec<u8>>,
+) -> Result<ValidatedMessage, EnclaveError> {
+    if data_for_validation.is_none() && msg.len() < HEX_ENCODED_HASH_SIZE {
+        warn!("Malformed message - expected contract code hash to be prepended to the msg");
+        return Err(EnclaveError::ValidationFailure);
+    }
+
+    let mut received_contract_hash: [u8; HEX_ENCODED_HASH_SIZE] = [0u8; HEX_ENCODED_HASH_SIZE];
+    let mut validated_msg: Vec<u8>;
+    let mut reply_params: Option<Vec<ReplyParams>> = None;
+
+    match data_for_validation {
+        Some(c) => {
+            received_contract_hash.copy_from_slice(&c.as_slice()[0..HEX_ENCODED_HASH_SIZE]);
+            let mut partial_msg = c[HEX_ENCODED_HASH_SIZE..].to_vec();
+            while partial_msg.len() >= REPLY_ENCRYPTION_MAGIC_BYTES.len()
+                && partial_msg[0..(REPLY_ENCRYPTION_MAGIC_BYTES.len())]
+                    == *REPLY_ENCRYPTION_MAGIC_BYTES
+            {
+                if reply_params.is_none() {
+                    reply_params = Some(vec![]);
+                }
+
+                partial_msg = partial_msg[REPLY_ENCRYPTION_MAGIC_BYTES.len()..].to_vec();
+
+                let mut sub_msg_deserialized: [u8; SIZE_OF_U64] = [0u8; SIZE_OF_U64];
+                sub_msg_deserialized.copy_from_slice(&partial_msg[..SIZE_OF_U64]);
+
+                let sub_msg_id: u64 = u64::from_be_bytes(sub_msg_deserialized);
+                partial_msg = partial_msg[SIZE_OF_U64..].to_vec();
+
+                let mut reply_recipient_contract_hash: [u8; HEX_ENCODED_HASH_SIZE] =
+                    [0u8; HEX_ENCODED_HASH_SIZE];
+                reply_recipient_contract_hash
+                    .copy_from_slice(&partial_msg[0..HEX_ENCODED_HASH_SIZE]);
+
+                reply_params.as_mut().unwrap().push(ReplyParams {
+                    recipient_contract_hash: reply_recipient_contract_hash.to_vec(),
+                    sub_msg_id,
+                });
+
+                partial_msg = partial_msg[HEX_ENCODED_HASH_SIZE..].to_vec();
+            }
+
+            validated_msg = msg.to_vec();
+        }
+        None => {
+            received_contract_hash.copy_from_slice(&msg[0..HEX_ENCODED_HASH_SIZE]);
+            validated_msg = msg[HEX_ENCODED_HASH_SIZE..].to_vec();
+        }
+    }
+
+    let decoded_hash: Vec<u8> = hex::decode(&received_contract_hash[..]).map_err(|_| {
+        warn!("Got message with malformed contract hash");
+
+        EnclaveError::ValidationFailure
+    })?;
+
+    if decoded_hash != contract_hash {
+        warn!("Message contains mismatched contract hash");
+        return Err(EnclaveError::ValidationFailure);
+    }
+
+    while validated_msg.len() >= REPLY_ENCRYPTION_MAGIC_BYTES.len()
+        && validated_msg[0..(REPLY_ENCRYPTION_MAGIC_BYTES.len())] == *REPLY_ENCRYPTION_MAGIC_BYTES
+    {
+        if reply_params.is_none() {
+            reply_params = Some(vec![]);
+        }
+
+        validated_msg = validated_msg[REPLY_ENCRYPTION_MAGIC_BYTES.len()..].to_vec();
+
+        let mut sub_msg_deserialized: [u8; SIZE_OF_U64] = [0u8; SIZE_OF_U64];
+        sub_msg_deserialized.copy_from_slice(&validated_msg[..SIZE_OF_U64]);
+
+        let sub_msg_id: u64 = u64::from_be_bytes(sub_msg_deserialized);
+        validated_msg = validated_msg[SIZE_OF_U64..].to_vec();
+
+        let mut reply_recipient_contract_hash: [u8; HEX_ENCODED_HASH_SIZE] =
+            [0u8; HEX_ENCODED_HASH_SIZE];
+        reply_recipient_contract_hash.copy_from_slice(&validated_msg[0..HEX_ENCODED_HASH_SIZE]);
+
+        reply_params.as_mut().unwrap().push(ReplyParams {
+            recipient_contract_hash: reply_recipient_contract_hash.to_vec(),
+            sub_msg_id,
+        });
+
+        validated_msg = validated_msg[HEX_ENCODED_HASH_SIZE..].to_vec();
+    }
+
+    Ok(ValidatedMessage {
+        validated_msg,
+        reply_params,
+    })
+}
+/*
 /// Validate that the message sent to the enclave (after decryption) was actually addressed to this contract.
 pub fn validate_msg(
     msg: &[u8], //for reply it is different, events are reducted
@@ -208,7 +369,7 @@ pub fn validate_msg(
         reply_params: None,
     })
 }
-
+*/
 /// Verify all the parameters sent to the enclave match up, and were signed by the right account.
 pub fn verify_params(
     sig_info: &SigInfo,

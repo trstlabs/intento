@@ -340,10 +340,10 @@ func TestInstantiate(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	key := keeper.GetCodeInfo(ctx, contractID).CodeHash
-
+	contrInfo, err := keeper.GetCodeInfo(ctx, contractID)
+	require.NoError(t, err)
 	msg := types.ContractMsg{
-		CodeHash: []byte(hex.EncodeToString(key)),
+		CodeHash: []byte(hex.EncodeToString(contrInfo.CodeHash)),
 		Msg:      initMsgBz,
 	}
 
@@ -595,11 +595,11 @@ func TestExecute(t *testing.T) {
 	}
 	initMsgBz, err := json.Marshal(initMsg)
 
-	key := keeper.GetCodeInfo(ctx, contractID).CodeHash
+	codeInfo, _ := keeper.GetCodeInfo(ctx, contractID)
 	// keyStr := hex.EncodeToString(key)
 
 	msg := types.ContractMsg{
-		CodeHash: []byte(hex.EncodeToString(key)),
+		CodeHash: []byte(hex.EncodeToString(codeInfo.CodeHash)),
 		Msg:      initMsgBz,
 	}
 
@@ -651,11 +651,11 @@ func TestExecute(t *testing.T) {
 
 	initMsgBz = []byte(`{"release":{}}`)
 
-	key = keeper.GetCodeInfo(ctx, contractID).CodeHash
+	codeInfo, _ = keeper.GetCodeInfo(ctx, contractID)
 	// keyStr := hex.EncodeToString(key)
 
 	msg = types.ContractMsg{
-		CodeHash: []byte(hex.EncodeToString(key)),
+		CodeHash: []byte(hex.EncodeToString(codeInfo.CodeHash)),
 		Msg:      initMsgBz,
 	}
 
@@ -880,10 +880,10 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	hash := keeper.GetCodeInfo(ctx, contractID).CodeHash
+	codeInfo, _ := keeper.GetCodeInfo(ctx, contractID)
 
 	msg := types.ContractMsg{
-		CodeHash: []byte(hex.EncodeToString(hash)),
+		CodeHash: []byte(hex.EncodeToString(codeInfo.CodeHash)),
 		Msg:      initMsgBz,
 	}
 
@@ -916,7 +916,7 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 	ctx = ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
 	require.Equal(t, uint64(0), ctx.GasMeter().GasConsumed())
 
-	codeHash := keeper.GetContractHash(ctx, addr)
+	codeHash, _ := keeper.GetContractHash(ctx, addr)
 	codeHashStr := hex.EncodeToString(codeHash)
 
 	msg2 := types.ContractMsg{

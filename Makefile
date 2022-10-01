@@ -362,7 +362,9 @@ build-test-contract:
 	# echo "" | sudo add-apt-repository ppa:hnakamur/binaryen
 	# sudo apt update
 	# sudo apt install -y binaryen
-	$(MAKE) -C ./x/compute/internal/keeper/testdata/v1-sanity-contract
+	$(MAKE) -C ./x/compute/internal/keeper/testdata/test-contract
+	$(MAKE) -C ./x/compute/internal/keeper/testdata/ibc-test-contract
+	cp ./x/compute/internal/keeper/testdata/ibc-test-contract/ibc.wasm ./x/compute/internal/keeper/testdata/
 
 prep-go-tests: build-test-contract
 	# empty BUILD_PROFILE means debug mode which compiles faster
@@ -403,7 +405,11 @@ build-all-test-contracts: build-test-contract
 
 	cd ./cosmwasm/contracts/hackatom && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
 	wasm-opt -Os ./cosmwasm/contracts/hackatom/target/wasm32-unknown-unknown/release/hackatom.wasm -o ./x/compute/internal/keeper/testdata/contract.wasm
+
 	cat ./x/compute/internal/keeper/testdata/contract.wasm | gzip > ./x/compute/internal/keeper/testdata/contract.wasm.gzip
+
+
+
 
 build-non-test-contracts: build-test-contracts
 	cd ./cosmwasm/contracts/ibc-reflect && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 

@@ -185,11 +185,16 @@ func (w *Wasmer) Execute(
 	if err != nil {
 		return nil, gasUsed, nil, err
 	}
-
-	var result types.ContractResult
-	err = json.Unmarshal(data, &result)
+	fmt.Printf("exec data %+v \n", data)
+	var ibcRes types.ContractIBCResponse
+	var result types.ContractExecResponse
+	err = json.Unmarshal(data, &ibcRes)
 	if err != nil {
+		err = json.Unmarshal(data, &result)
+		fmt.Printf("exec res %+v \n", result)
 		return nil, gasUsed, nil, err
+	} else {
+		fmt.Printf("ibc res %+v \n", ibcRes)
 	}
 
 	if result.Err != nil {

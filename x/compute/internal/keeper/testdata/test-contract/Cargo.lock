@@ -500,6 +500,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "test-contract"
+version = "0.0.1"
+dependencies = [
+ "schemars",
+ "secp256k1",
+ "serde",
+ "serde-json-wasm 0.2.3",
+ "trustless-cosmwasm-std",
+ "trustless-cosmwasm-storage",
+]
+
+[[package]]
 name = "thiserror"
 version = "1.0.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -566,18 +578,6 @@ name = "unicode-ident"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "15c61ba63f9235225a22310255a29b806b907c9b8c964bcbd0a2c70f3f2deea7"
-
-[[package]]
-name = "v1-sanity-contract"
-version = "0.0.1"
-dependencies = [
- "schemars",
- "secp256k1",
- "serde",
- "serde-json-wasm 0.2.3",
- "trustless-cosmwasm-std",
- "trustless-cosmwasm-storage",
-]
 
 [[package]]
 name = "version_check"

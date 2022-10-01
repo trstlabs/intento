@@ -137,16 +137,19 @@ func (m *IBCCloseConfirm) ToMsg() IBCChannelCloseMsg {
 }
 
 type IBCPacketReceiveMsg struct {
-	Packet IBCPacket `json:"packet"`
+	Packet  IBCPacket `json:"packet"`
+	Relayer string    `json:"relayer"`
 }
 
 type IBCPacketAckMsg struct {
 	Acknowledgement IBCAcknowledgement `json:"acknowledgement"`
 	OriginalPacket  IBCPacket          `json:"original_packet"`
+	Relayer         string             `json:"relayer"`
 }
 
 type IBCPacketTimeoutMsg struct {
-	Packet IBCPacket `json:"packet"`
+	Packet  IBCPacket `json:"packet"`
+	Relayer string    `json:"relayer"`
 }
 
 // TODO: test what the sdk Order.String() represents and how to parse back
@@ -183,7 +186,9 @@ type IBCTimeout struct {
 }
 
 type IBCAcknowledgement struct {
-	Data []byte `json:"data"`
+	Data           []byte    `json:"data"`
+	OriginalPacket IBCPacket `json:"original_packet"`
+	Relayer        string    `json:"relayer"`
 }
 
 type IBCPacket struct {
@@ -198,7 +203,7 @@ type IBCPacket struct {
 // This is mirrors Rust's ContractResult<()>.
 // We just check if Err == "" to see if this is success (no other data on success)
 type IBCChannelOpenResult struct {
-	Ok  *struct{} `json:"ok,omitempty"`
+	Ok  *struct{} `json:"Ok,omitempty"`
 	Err string    `json:"error,omitempty"`
 }
 
@@ -210,7 +215,7 @@ type IBCChannelOpenResult struct {
 // or that cannot redispatch messages (like ibc_channel_open)
 // will use other Response types
 type IBCBasicResult struct {
-	Ok  *IBCBasicResponse `json:"ok,omitempty"`
+	Ok  *IBCBasicResponse `json:"Ok,omitempty"`
 	Err string            `json:"error,omitempty"`
 }
 
@@ -239,6 +244,16 @@ type IBCBasicResponse struct {
 type IBCReceiveResult struct {
 	Ok  *IBCReceiveResponse `json:"ok,omitempty"`
 	Err string              `json:"error,omitempty"`
+}
+
+type IBCOpenChannelResult struct {
+	Ok  *IBC3ChannelOpenResponse `json:"ok,omitempty"`
+	Err *StdError                `json:"Err,omitempty"`
+}
+
+// IBC3ChannelOpenResponse is version negotiation data for the handshake
+type IBC3ChannelOpenResponse struct {
+	Version string `json:"version"`
 }
 
 // IBCReceiveResponse defines the return value on packet response processing.

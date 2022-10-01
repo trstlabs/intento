@@ -231,7 +231,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		return nil, nil, err
 	}
 
-	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res, res.Messages, res.Events, res.Data, msg, verificationInfo)
+	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res.Attributes, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -316,7 +316,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 		sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String()),
 	))*/
 
-	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res, res.Messages, res.Events, res.Data, msg, verificationInfo)
+	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res.Attributes, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
 		return nil, err
 	}

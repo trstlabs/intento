@@ -67,7 +67,7 @@ var (
 	EncodeStakingMsg          = keeper.EncodeStakingMsg
 	EncodeWasmMsg             = keeper.EncodeWasmMsg
 	NewKeeper                 = keeper.NewKeeper
-	NewQuerier                = keeper.NewQuerier
+	NewQuerier                = keeper.NewGrpcQuerier
 	NewLegacyQuerier          = keeper.NewLegacyQuerier
 	DefaultQueryPlugins       = keeper.DefaultQueryPlugins
 	BankQuerier               = keeper.BankQuerier
@@ -78,7 +78,7 @@ var (
 	NewMultiComputeHooks      = keeper.NewMultiComputeHooks
 	ConvertToProposals        = types.ConvertToProposals
 	GetConfig                 = types.GetConfig
-
+	ContractFromPortID        = keeper.ContractFromPortID
 	// variable aliases
 	ModuleCdc            = types.ModuleCdc
 	DefaultCodespace     = types.DefaultCodespace

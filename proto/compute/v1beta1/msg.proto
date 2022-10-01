@@ -8,7 +8,16 @@ import "cosmos/base/v1beta1/coin.proto";
 
 //import "x/compute/internal/types/types.proto";
 
+// Msg defines the wasm Msg service.
+service Msg {
+  // StoreCode to submit Wasm code to the system
+  rpc StoreCode(MsgStoreCode) returns (MsgStoreCodeResponse);
+  //  Instantiate creates a new smart contract instance for the given code id.
+  rpc InstantiateContract(MsgInstantiateContract) returns (MsgInstantiateContractResponse);
+  // Execute submits the given message data to a smart contract
+  rpc ExecuteContract(MsgExecuteContract) returns (MsgExecuteContractResponse);
 
+}
 
 //StoreCode is used so we can upload code for testing, will be removed on mainnet
 message MsgStoreCode {
@@ -28,6 +37,14 @@ message MsgStoreCode {
   string title = 7;
   string description = 8;
 }
+
+
+// MsgStoreCodeResponse returns store result data.
+message MsgStoreCodeResponse {
+  // CodeID is the reference to the stored WASM code
+  uint64 code_id = 1 [ (gogoproto.customname) = "CodeID" ];
+}
+
 
 message MsgInstantiateContract {
   option (gogoproto.goproto_getters) = false;
@@ -50,6 +67,14 @@ message MsgInstantiateContract {
   bytes callback_sig = 11 [(gogoproto.customname) = "CallbackSig"];
 }
 
+// MsgInstantiateContractResponse return instantiation result data
+message MsgInstantiateContractResponse {
+  // Address is the bech32 address of the new contract instance.
+  string address = 1;
+  // Data contains base64-encoded bytes to returned from the contract
+  bytes data = 2;
+}
+
 message MsgExecuteContract {
   option (gogoproto.goproto_getters) = false;
   string sender = 1;
@@ -58,6 +83,12 @@ message MsgExecuteContract {
   string code_hash = 4;
   repeated cosmos.base.v1beta1.Coin funds = 5 [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   bytes callback_sig = 6 [(gogoproto.customname) = "CallbackSig"];
+}
+
+// MsgExecuteContractResponse returns execution result data.
+message MsgExecuteContractResponse {
+  // Data contains base64-encoded bytes to returned from the contract
+  bytes data = 1;
 }
 
 message MsgDiscardAutoMsg {

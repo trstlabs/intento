@@ -228,7 +228,7 @@ type App struct {
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
-
+	ScopedComputeKeeper  capabilitykeeper.ScopedKeeper
 	//itemKeeper    itemkeeper.Keeper
 	computeKeeper compute.Keeper
 	regKeeper     reg.Keeper
@@ -302,6 +302,7 @@ func NewTrstApp(
 	// grant capabilities for the ibc and ibc-transfer modules
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	scopedComputeKeeper := app.CapabilityKeeper.ScopeToModule(compute.ModuleName)
 
 	//TODO: add ICA support
 	//scopedICAControllerKeeper := app.capabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
@@ -383,7 +384,7 @@ func NewTrstApp(
 
 	// Create static IBC router, add ibc-tranfer module route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transfer.NewIBCModule(app.transferKeeper))
+	ibcRouter.AddRoute(compute.ModuleName, compute.NewIBCHandler(app.computeKeeper, app.IBCKeeper.ChannelKeeper)).AddRoute(ibctransfertypes.ModuleName, transfer.NewIBCModule(app.transferKeeper))
 	//todo add interchain accounts
 
 	// Setting Router will finalize all routes by sealing router
@@ -396,8 +397,6 @@ func NewTrstApp(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	// just re-use the full router - do we want to limit this more?
-	computeRouter := bApp.Router()
 	regRouter := bApp.Router()
 
 	homeDir := viper.GetString(cli.HomeFlag)
@@ -415,11 +414,14 @@ func NewTrstApp(
 		app.DistrKeeper,
 		app.MintKeeper,
 		app.StakingKeeper,
-		app.CapabilityKeeper.ScopeToModule(compute.ModuleName),
+		scopedComputeKeeper,
 		app.IBCKeeper.PortKeeper,
-		app.transferKeeper,
+		app.TransferKeeper,
 		app.IBCKeeper.ChannelKeeper,
-		computeRouter, computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(compute.ModuleName), compute.NewMultiComputeHooks(app.ClaimKeeper.Hooks()))
+		app.Router(),
+		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(),
+		computeDir, computeConfig, supportedFeatures, nil, nil, app.GetSubspace(compute.ModuleName), compute.NewMultiComputeHooks(app.ClaimKeeper.Hooks()))
 
 	// The gov proposal types can be individually enabled
 	if len(enabledProposals) != 0 {
@@ -627,6 +629,7 @@ func NewTrstApp(
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
+	app.ScopedComputeKeeper = scopedComputeKeeper
 
 	return app
 }

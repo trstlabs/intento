@@ -49,10 +49,11 @@ func TestQueryContractContractId(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	hash := keeper.GetCodeInfo(ctx, contractID).CodeHash
+	info, err := keeper.GetCodeInfo(ctx, contractID)
+	require.NoError(t, err)
 
 	msg := types.ContractMsg{
-		CodeHash: []byte(hex.EncodeToString(hash)),
+		CodeHash: []byte(hex.EncodeToString(info.CodeHash)),
 		Msg:      initMsgBz,
 	}
 
@@ -152,8 +153,10 @@ func TestQueryContractState(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	key := keeper.GetCodeInfo(ctx, contractID).CodeHash
-	keyStr := hex.EncodeToString(key)
+	info, err := keeper.GetCodeInfo(ctx, contractID)
+	require.NoError(t, err)
+
+	keyStr := hex.EncodeToString(info.CodeHash)
 
 	msg := types.ContractMsg{
 		CodeHash: []byte(keyStr),
@@ -293,8 +296,9 @@ func TestListContractByCodeOrdering(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	key := keeper.GetCodeInfo(ctx, codeID).CodeHash
-	keyStr := hex.EncodeToString(key)
+	info, err := keeper.GetCodeInfo(ctx, codeID)
+	require.NoError(t, err)
+	keyStr := hex.EncodeToString(info.CodeHash)
 
 	msg := types.ContractMsg{
 		CodeHash: []byte(keyStr),
