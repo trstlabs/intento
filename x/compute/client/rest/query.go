@@ -141,7 +141,7 @@ func queryContractPublicStateHandlerFn(cliCtx client.Context) http.HandlerFunc {
 			return
 		}
 
-		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractPrivateState, addr.String())
+		route := fmt.Sprintf("custom/%s/%s/%s", types.QuerierRoute, keeper.QueryGetContractPublicState, addr.String())
 		res, height, err := cliCtx.Query(route)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())

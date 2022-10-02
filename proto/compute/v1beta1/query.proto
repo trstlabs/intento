@@ -17,7 +17,7 @@ service Query {
     rpc ContractInfo (QueryContractInfoRequest) returns (QueryContractInfoResponse) {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}";
     }
-     rpc ContractPublicState (QueryContractPublicStateRequest) returns (QueryContractPublicStateResponse) {
+    rpc ContractPublicState (QueryContractPublicStateRequest) returns (QueryContractPublicStateResponse) {
         option (google.api.http).get = "/compute/v1beta1/contract/{address}/public-state";
     }
     rpc ContractPublicStateForAccount (QueryContractPublicStateForAccountRequest) returns (QueryContractPublicStateForAccountResponse) {
@@ -50,7 +50,6 @@ message QueryContractInfoRequest {
 }
 // QueryContractInfoResponse is the response type for the Query/ContractInfo RPC method
 message QueryContractInfoResponse {
-
     ContractInfo ContractInfo = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = ""];
 }
 
