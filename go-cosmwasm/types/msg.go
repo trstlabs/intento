@@ -18,11 +18,12 @@ type ContractResult struct {
 	InternalMsgId           []byte    `json:"internal_msg_id"`
 }
 
+/*
 // This struct helps us to distinguish between v0.10 contract response and v1 contract response
 type ContractIBCResponse struct {
-	IBCBasic         *IBCBasicResult       `json:"ok_ibc_basic,omitempty"`
-	IBCPacketReceive *IBCReceiveResult     `json:"ok_ibc_packet_receive,omitempty"`
-	IBCChannelOpen   *IBCOpenChannelResult `json:"ok_ibc_open_channel,omitempty"`
+	IBCBasic         *IBCBasicResult   `json:"ok_ibc_basic,omitempty"`
+	IBCPacketReceive *IBCReceiveResult `json:"ok_ibc_packet_receive,omitempty"`
+	IBCChannelOpen   *string           `json:"ok_ibc_open_channel"`
 }
 
 // This struct helps us to distinguish between v0.10 contract response and v1 contract response
@@ -35,7 +36,7 @@ type ContractExecResponse struct {
 	IBCPacketReceive        *IBCReceiveResult     `json:"ok_ibc_packet_receive,omitempty"`
 	IBCChannelOpen          *IBCOpenChannelResult `json:"ok_ibc_open_channel,omitempty"`
 }
-
+*/
 // Response defines the return value on a successful instantiate/execute/migrate.
 // This is the counterpart of [Response](https://github.com/CosmWasm/cosmwasm/blob/v0.14.0-beta1/packages/std/src/results/response.rs#L73-L88)
 type Response struct {

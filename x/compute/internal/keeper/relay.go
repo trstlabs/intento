@@ -46,13 +46,60 @@ func (k Keeper) ibcContractCall(ctx sdk.Context,
 	}
 
 	gas := gasForContract(ctx)
+
 	//res, gasUsed, err := k.wasmer.Execute(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo, callType)
 	//res, key, callbackSig, gasUsed, errData, err := k.wasmer.Execute(codeInfo.CodeHash, env, msgBz, autoMsgToSend, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo, contractAddress, callType)
-	res, gasUsed, _, err := k.wasmer.Execute(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-	fmt.Printf("relay res %+v", res)
-	consumeGas(ctx, gasUsed)
+	switch callType {
+	case wasmTypes.HandleTypeIbcChannelOpen:
+		res, gasUsed, _, err := k.wasmer.IBCChannelOpen(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
+		fmt.Printf("relay res %+v", res)
+		fmt.Printf("relay err %+v", err)
+		consumeGas(ctx, gasUsed)
 
-	return res, err
+		return res, err
+	case wasmTypes.HandleTypeIbcChannelConnect:
+		res, gasUsed, _, err := k.wasmer.IBCChannelConnect(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
+		fmt.Printf("relay res %+v", res)
+		fmt.Printf("relay err %+v", err)
+		consumeGas(ctx, gasUsed)
+
+		return res, err
+	case wasmTypes.HandleTypeIbcChannelClose:
+		res, gasUsed, _, err := k.wasmer.IBCChannelClose(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
+		fmt.Printf("relay res %+v", res)
+		fmt.Printf("relay err %+v", err)
+		consumeGas(ctx, gasUsed)
+
+		return res, err
+	case wasmTypes.HandleTypeIbcPacketReceive:
+		res, gasUsed, _, err := k.wasmer.IBCPacketReceive(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
+		fmt.Printf("relay res %+v", res)
+		fmt.Printf("relay err %+v", err)
+		consumeGas(ctx, gasUsed)
+
+		return res, err
+	case wasmTypes.HandleTypeIbcPacketAck:
+		res, gasUsed, _, err := k.wasmer.IBCPacketAck(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
+		fmt.Printf("relay res %+v", res)
+		fmt.Printf("relay err %+v", err)
+		consumeGas(ctx, gasUsed)
+
+		return res, err
+	case wasmTypes.HandleTypeIbcPacketTimeout:
+		res, gasUsed, _, err := k.wasmer.IBCPacketTimeout(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
+		fmt.Printf("relay res %+v", res)
+		fmt.Printf("relay err %+v", err)
+		consumeGas(ctx, gasUsed)
+
+		return res, err
+	default:
+		res, gasUsed, _, err := k.wasmer.Execute(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
+		fmt.Printf("relay res %+v", res)
+		consumeGas(ctx, gasUsed)
+
+		return res, err
+	}
+
 }
 
 func (k Keeper) parseThenHandleIBCBasicContractResponse(ctx sdk.Context,
@@ -104,6 +151,8 @@ func (k Keeper) OnOpenChannel(
 	switch resp := res.(type) {
 	case *string:
 		return *resp, nil
+	case *wasmTypes.IBC3ChannelOpenResponse:
+		return resp.Version, nil
 	default:
 		return "", sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("ibc-open-channel: cannot cast res to IBC3ChannelOpenResponse: %+v", res))
 	}

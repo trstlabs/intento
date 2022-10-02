@@ -1,3 +1,3 @@
 sudo apt remove trst -y
 make clean-files
-sudo apt install ./trustlesshub_0.7.5-8-g449e79d_amd64.deb -y
+sudo apt install ./trst_0.7.7-124-g171f8013_amd64.deb -y

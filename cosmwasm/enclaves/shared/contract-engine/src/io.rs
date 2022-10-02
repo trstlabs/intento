@@ -5,7 +5,7 @@
 use super::types::{ContractMessage, IoNonce};
 use crate::contract_validation::ReplyParams;
 use enclave_cosmwasm_types::encoding::Binary;
-//use enclave_cosmwasm_types::math::Uint128;
+use enclave_cosmwasm_types::math::Uint128;
 use enclave_cosmwasm_types::addresses::{CanonicalAddr, HumanAddr};
 use enclave_cosmwasm_types::coins::Coin;
 use enclave_cosmwasm_types::results::{
@@ -46,17 +46,14 @@ enum WasmOutput {
         internal_reply_enclave_sig: Option<Binary>,
         internal_msg_id: Option<Binary>,
     },
-    #[serde(rename = "ok_ibc_basic")]
     OkIBCBasic {
         #[serde(rename = "Ok")]
         ok: IbcBasicResponse,
     },
-    #[serde(rename = "ok_ibc_packet_receive")]
     OkIBCPacketReceive {
         #[serde(rename = "Ok")]
         ok: IbcReceiveResponse,
     },
-    #[serde(rename = "ok_ibc_open_channel")]
     OkIBCOpenChannel {
         #[serde(rename = "Ok")]
         ok: IbcChannelOpenResponse,
@@ -379,58 +376,39 @@ pub fn encrypt_output(
         WasmOutput::OkIBCPacketReceive { ok } => {
             for sub_msg in &mut ok.messages {
                 if let CosmosMsg::Wasm(wasm_msg) = &mut sub_msg.msg {
-                    encrypt_wasm_msg(
-                        wasm_msg,
-                        &sub_msg.reply_on,
-                        sub_msg.id,
-                        contract_msg.nonce,
-                        contract_msg.user_public_key,
-                        contract_addr,
-                        contract_hash,
-                        &reply_params,
-                    )?;
-
-                    // The ID can be extracted from the encrypted wasm msg
-                    // We don't encrypt it here to remain with the same type (u64)
-                    sub_msg.id = 0;
-                }
-
-                sub_msg.was_msg_encrypted = true;
-            }
-
-            // v1: The attributes that will be emitted as part of a "wasm" event.
-            for attr in ok.attributes.iter_mut().filter(|attr| attr.encrypted) {
-                attr.key = encrypt_preserialized_string(&encryption_key, &attr.key, &None, false)?;
-                attr.value = encrypt_vec(&encryption_key, attr.value.clone()).map_err(|err| {
-                    debug!(
-                        "got an error while trying to encrypt vec value {:?}: {}",
-                        &attr.value, err
-                    );
-                    EnclaveError::FailedToDeserialize
-                })?;
-            }
-
-            // v1: Extra, custom events separate from the main wasm one. These will have "wasm-"" prepended to the type.
-            for event in ok.events.iter_mut() {
-                for attr in event.attributes.iter_mut().filter(|attr| attr.encrypted) {
-                    attr.key =
-                        encrypt_preserialized_string(&encryption_key, &attr.key, &None, false)?;
-                        attr.value = encrypt_vec(&encryption_key, attr.value.clone()).map_err(|err| {
-                            debug!(
-                                "got an error while trying to encrypt vec value {:?}: {}",
-                                &attr.value, err
-                            );
-                            EnclaveError::FailedToDeserialize
-                        })?;
+                    match wasm_msg {
+                        WasmMsg::Execute {
+                            callback_sig,
+                            msg,
+                            funds,
+                            ..
+                        }
+                        | WasmMsg::Instantiate {
+                            callback_sig,
+                            msg,
+                            funds,
+                            ..
+                        } => {
+                            let msg_to_sign = ContractMessage {
+                                nonce: [0; 32],
+                                user_public_key: [0; 32],
+                                msg: msg.as_slice().to_vec(),
+                            };
+                            *callback_sig = Some(create_callback_signature(
+                                contract_addr,
+                                &msg_to_sign,
+                                &funds
+                                    .iter()
+                                    .map(|coin| Coin {
+                                        denom: coin.denom.clone(),
+                                        amount: Uint128::new(coin.amount.u128()),
+                                    })
+                                    .collect::<Vec<Coin>>()[..],
+                            ));
+                        }
                     }
+                }
             }
-
-            ok.acknowledgement = Binary::from_base64(&encrypt_serializable(
-                &encryption_key,
-                &ok.acknowledgement,
-                &reply_params,
-                false,
-            )?)?;
         }
         WasmOutput::OkIBCOpenChannel { ok: _ } => { }
         WasmOutput::OkIBCBasic { ok } =>  { 

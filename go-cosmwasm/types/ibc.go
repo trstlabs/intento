@@ -201,10 +201,12 @@ type IBCPacket struct {
 
 // IBCChannelOpenResult is the raw response from the ibc_channel_open call.
 // This is mirrors Rust's ContractResult<()>.
-// We just check if Err == "" to see if this is success (no other data on success)
+// Check if Err == "" to see if this is success
+// On Success, IBCV3ChannelOpenResponse *may* be set if the contract is ibcv3 compatible and wishes to
+// define a custom version in the handshake.
 type IBCChannelOpenResult struct {
-	Ok  *struct{} `json:"Ok,omitempty"`
-	Err string    `json:"error,omitempty"`
+	Ok  *IBC3ChannelOpenResponse `json:"ok,omitempty"`
+	Err string                   `json:"error,omitempty"`
 }
 
 // This is the return value for the majority of the ibc handlers.
@@ -243,7 +245,7 @@ type IBCBasicResponse struct {
 // will use other Response types
 type IBCReceiveResult struct {
 	Ok  *IBCReceiveResponse `json:"ok,omitempty"`
-	Err string              `json:"error,omitempty"`
+	Err string              `json:"Err,omitempty"`
 }
 
 type IBCOpenChannelResult struct {

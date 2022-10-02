@@ -185,16 +185,11 @@ func (w *Wasmer) Execute(
 	if err != nil {
 		return nil, gasUsed, nil, err
 	}
-	fmt.Printf("exec data %+v \n", data)
-	var ibcRes types.ContractIBCResponse
-	var result types.ContractExecResponse
-	err = json.Unmarshal(data, &ibcRes)
+
+	var result types.ContractResult
+	err = json.Unmarshal(data, &result)
 	if err != nil {
-		err = json.Unmarshal(data, &result)
-		fmt.Printf("exec res %+v \n", result)
 		return nil, gasUsed, nil, err
-	} else {
-		fmt.Printf("ibc res %+v \n", ibcRes)
 	}
 
 	if result.Err != nil {
@@ -215,6 +210,221 @@ func (w *Wasmer) Execute(
 
 	return result.Ok, gasUsed, nil, nil
 }
+
+// IBCChannelOpen is available on IBC-enabled contracts and is a hook to call into
+// during the handshake pahse
+func (w *Wasmer) IBCChannelOpen(
+	code CodeID,
+	env types.Env,
+	executeMsg []byte,
+	store KVStore,
+	goapi GoAPI,
+	querier Querier,
+	gasMeter GasMeter,
+	gasLimit uint64,
+	sigInfo types.VerificationInfo,
+	handleType types.HandleType,
+) (*types.IBC3ChannelOpenResponse, uint64, []byte, error) {
+	paramBin, err := json.Marshal(env)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	sigInfoBin, err := json.Marshal(sigInfo)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	var result types.IBCChannelOpenResult
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	return result.Ok, gasUsed, nil, nil
+}
+
+// IBCChannelConnect is available on IBC-enabled contracts and is a hook to call into
+// during the handshake pahse
+func (w *Wasmer) IBCChannelConnect(
+	code CodeID,
+	env types.Env,
+	executeMsg []byte,
+	store KVStore,
+	goapi GoAPI,
+	querier Querier,
+	gasMeter GasMeter,
+	gasLimit uint64,
+	sigInfo types.VerificationInfo,
+	handleType types.HandleType,
+) (*types.IBCBasicResponse, uint64, []byte, error) {
+	paramBin, err := json.Marshal(env)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	sigInfoBin, err := json.Marshal(sigInfo)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	var result types.IBCBasicResult
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	return result.Ok, gasUsed, nil, nil
+}
+
+// IBCChannelClose is available on IBC-enabled contracts and is a hook to call into
+// at the end of the channel lifetime
+func (w *Wasmer) IBCChannelClose(
+	code CodeID,
+	env types.Env,
+	executeMsg []byte,
+	store KVStore,
+	goapi GoAPI,
+	querier Querier,
+	gasMeter GasMeter,
+	gasLimit uint64,
+	sigInfo types.VerificationInfo,
+	handleType types.HandleType,
+) (*types.IBCBasicResponse, uint64, []byte, error) {
+	paramBin, err := json.Marshal(env)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	sigInfoBin, err := json.Marshal(sigInfo)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	var result types.IBCBasicResult
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	return result.Ok, gasUsed, nil, nil
+}
+
+// IBCPacketReceive is available on IBC-enabled contracts and is called when an incoming
+// packet is received on a channel belonging to this contract
+func (w *Wasmer) IBCPacketReceive(
+	code CodeID,
+	env types.Env,
+	executeMsg []byte,
+	store KVStore,
+	goapi GoAPI,
+	querier Querier,
+	gasMeter GasMeter,
+	gasLimit uint64,
+	sigInfo types.VerificationInfo,
+	handleType types.HandleType,
+) (*types.IBCReceiveResult, uint64, []byte, error) {
+	paramBin, err := json.Marshal(env)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	sigInfoBin, err := json.Marshal(sigInfo)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	var result types.IBCReceiveResult
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	return &result, gasUsed, nil, nil
+}
+
+
+// IBCPacketAck is available on IBC-enabled contracts and is called when an
+// the response for an outgoing packet (previously sent by this contract)
+// is received
+func (w *Wasmer) IBCPacketAck(
+	code CodeID,
+	env types.Env,
+	executeMsg []byte,
+	store KVStore,
+	goapi GoAPI,
+	querier Querier,
+	gasMeter GasMeter,
+	gasLimit uint64,
+	sigInfo types.VerificationInfo,
+	handleType types.HandleType,
+) (*types.IBCReceiveResult, uint64, []byte, error) {
+	paramBin, err := json.Marshal(env)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	sigInfoBin, err := json.Marshal(sigInfo)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	var result types.IBCReceiveResult
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	return &result, gasUsed, nil, nil
+}
+
+
+// IBCPacketTimeout is available on IBC-enabled contracts and is called when an
+// outgoing packet (previously sent by this contract) will provably never be executed.
+// Usually handled like ack returning an error
+func (w *Wasmer) IBCPacketTimeout(
+	code CodeID,
+	env types.Env,
+	executeMsg []byte,
+	store KVStore,
+	goapi GoAPI,
+	querier Querier,
+	gasMeter GasMeter,
+	gasLimit uint64,
+	sigInfo types.VerificationInfo,
+	handleType types.HandleType,
+) (*types.IBCBasicResponse, uint64, []byte, error) {
+	paramBin, err := json.Marshal(env)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+	sigInfoBin, err := json.Marshal(sigInfo)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	data, gasUsed, err := api.Handle(w.cache, code, paramBin, executeMsg, &gasMeter, store, &goapi, &querier, gasLimit, sigInfoBin, handleType)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	var result types.IBCBasicResponse
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		return nil, gasUsed, nil, err
+	}
+	return &result, gasUsed, nil, nil
+}
+
 
 // Query allows a client to execute a contract-specific query. If the result is not empty, it should be
 // valid json-encoded data to return to the client.
