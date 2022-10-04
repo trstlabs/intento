@@ -54,10 +54,11 @@ message ContractInfo {
     (gogoproto.jsontag)     = "interval,omitempty"
   ];
     google.protobuf.Timestamp start_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-     google.protobuf.Timestamp exec_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp exec_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
     google.protobuf.Timestamp end_time = 11 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    string ibc_port_id = 12[ (gogoproto.customname) = "IBCPortID" ];
-    bytes callback_sig = 14;
+    repeated google.protobuf.Timestamp exec_history = 12 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    string ibc_port_id = 14[ (gogoproto.customname) = "IBCPortID" ];
+    bytes callback_sig = 15;
 }
 
 

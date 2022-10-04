@@ -70,7 +70,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 
 		} else {
 			//fmt.Printf("write to cache\n")
-			writeCache()
+
 			// if the contract execution is recurring and successful, we add a new entry to the queue with current entry time + interval
 			if isRecurring {
 				fmt.Printf("self-executed recurring :%s \n", contract.Address.String())
@@ -78,15 +78,18 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 				fmt.Printf("exec Time %+v \n", contract.ContractInfo.ExecTime)
 				nextExecTime := contract.ContractInfo.ExecTime.Add(contract.ContractInfo.Interval)
 				fmt.Printf("exec Time2 %+v \n", nextExecTime)
+				contract.ContractInfo.ExecHistory = append(contract.ContractInfo.ExecHistory, time.Now())
 				if nextExecTime.Before(contract.ContractInfo.EndTime) {
 					k.InsertContractQueue(ctx, contract.Address.String(), nextExecTime)
 					contract.ContractInfo.ExecTime = nextExecTime
 					k.SetContractInfo(ctx, contract)
-
+					writeCache()
 					continue
 				}
+				k.SetContractInfo(ctx, contract)
 
 			}
+			writeCache()
 		}
 		//fmt.Printf("executed \n")
 		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.ExecTime)
