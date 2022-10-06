@@ -46,55 +46,45 @@ func (k Keeper) ibcContractCall(ctx sdk.Context,
 	}
 
 	gas := gasForContract(ctx)
-
-	//res, gasUsed, err := k.wasmer.Execute(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo, callType)
-	//res, key, callbackSig, gasUsed, errData, err := k.wasmer.Execute(codeInfo.CodeHash, env, msgBz, autoMsgToSend, prefixStore, cosmwasmAPI, querier, ctx.GasMeter(), gas, verificationInfo, contractAddress, callType)
 	switch callType {
+
 	case wasmTypes.HandleTypeIbcChannelOpen:
 		res, gasUsed, _, err := k.wasmer.IBCChannelOpen(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		fmt.Printf("relay res %+v", res)
-		fmt.Printf("relay err %+v", err)
 		consumeGas(ctx, gasUsed)
 
 		return res, err
 	case wasmTypes.HandleTypeIbcChannelConnect:
 		res, gasUsed, _, err := k.wasmer.IBCChannelConnect(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		fmt.Printf("relay res %+v", res)
-		fmt.Printf("relay err %+v", err)
 		consumeGas(ctx, gasUsed)
-
-		return res, err
+		if res.Ok != nil {
+			return res.Ok, err
+		}
+		return res.Err, err
 	case wasmTypes.HandleTypeIbcChannelClose:
 		res, gasUsed, _, err := k.wasmer.IBCChannelClose(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		fmt.Printf("relay res %+v", res)
-		fmt.Printf("relay err %+v", err)
 		consumeGas(ctx, gasUsed)
-
 		return res, err
 	case wasmTypes.HandleTypeIbcPacketReceive:
 		res, gasUsed, _, err := k.wasmer.IBCPacketReceive(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		fmt.Printf("relay res %+v", res)
-		fmt.Printf("relay err %+v", err)
 		consumeGas(ctx, gasUsed)
 
 		return res, err
 	case wasmTypes.HandleTypeIbcPacketAck:
 		res, gasUsed, _, err := k.wasmer.IBCPacketAck(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		fmt.Printf("relay res %+v", res)
-		fmt.Printf("relay err %+v", err)
 		consumeGas(ctx, gasUsed)
-
-		return res, err
+		if res.Ok != nil {
+			return res.Ok, err
+		}
+		return res.Err, err
 	case wasmTypes.HandleTypeIbcPacketTimeout:
 		res, gasUsed, _, err := k.wasmer.IBCPacketTimeout(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		fmt.Printf("relay res %+v", res)
-		fmt.Printf("relay err %+v", err)
 		consumeGas(ctx, gasUsed)
-
-		return res, err
+		if res.Ok != nil {
+			return res.Ok, err
+		}
+		return res.Err, err
 	default:
 		res, gasUsed, _, err := k.wasmer.Execute(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		fmt.Printf("relay res %+v", res)
 		consumeGas(ctx, gasUsed)
 
 		return res, err
@@ -118,9 +108,9 @@ func (k Keeper) parseThenHandleIBCBasicContractResponse(ctx sdk.Context,
 			return k.handleIBCBasicContractResponse(ctx, contractAddress, contractInfo.IBCPortID, inputMsg, resp)
 		}
 
-		return sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("null pointer IBCBasicResponse: %+v", res))
+		return sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("null pointer IBCBasicResponse: %+v \n", res))
 	default:
-		return sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("cannot cast res to IBCBasicResponse: %+v", res))
+		return sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("cannot cast res to IBCBasicResponse: %+v \n", res))
 	}
 }
 
@@ -154,7 +144,7 @@ func (k Keeper) OnOpenChannel(
 	case *wasmTypes.IBC3ChannelOpenResponse:
 		return resp.Version, nil
 	default:
-		return "", sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("ibc-open-channel: cannot cast res to IBC3ChannelOpenResponse: %+v", res))
+		return "", sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("ibc-open-channel: cannot cast res to IBC3ChannelOpenResponse: %+v \n", res))
 	}
 }
 
@@ -241,14 +231,14 @@ func (k Keeper) OnRecvPacket(
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "ibc-recv-packet")
 	}
-
 	res, err := k.ibcContractCall(ctx, contractAddress, msgBz, wasmTypes.HandleTypeIbcPacketReceive)
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
 
 	switch resp := res.(type) {
-	case *wasmTypes.IBCReceiveResponse:
+
+	case *wasmTypes.IBCReceiveResult:
 		if resp != nil {
 			contractInfo, _, _, err := k.contractInstance(ctx, contractAddress)
 			if err != nil {
@@ -263,16 +253,19 @@ func (k Keeper) OnRecvPacket(
 			if len(ogTx) < 64 {
 				ogTx = msgBz
 			}
+			if resp.Ok != nil {
+				// note submessage reply results can overwrite the `Acknowledgement` data
+				return k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, resp.Ok.Attributes, resp.Ok.Messages, resp.Ok.Events, resp.Ok.Acknowledgement, ogTx, verificationInfo)
+			}
+			return nil, fmt.Errorf("%s", resp.Err)
 
-			// note submessage reply results can overwrite the `Acknowledgement` data
-			return k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, nil, resp.Messages, resp.Events, resp.Acknowledgement, ogTx, verificationInfo)
 		}
 
 		// should never get here as it's already checked in
 		// https://github.com/trstlabs/trst/blob/bd46776c/go-cosmwasm/lib.go#L358
-		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("ibc-recv-packet: null pointer IBCReceiveResponse: %+v", res))
+		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("ibc-recv-packet: null pointer IBCReceiveResponse: %+v \n", res))
 	default:
-		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("ibc-recv-packet: cannot cast res to IBCReceiveResponse: %+v", res))
+		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("ibc-recv-packet: cannot cast res to IBCReceiveResponse: %+v \n", res))
 	}
 }
 
@@ -341,6 +334,6 @@ func (k Keeper) OnTimeoutPacket(
 func (k Keeper) handleIBCBasicContractResponse(ctx sdk.Context, addr sdk.AccAddress, ibcPortID string, inputMsg []byte, res *wasmTypes.IBCBasicResponse) error {
 	verificationInfo := types.NewVerificationInfo([]byte{}, sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED, []byte{}, []byte{}, []byte{}, nil)
 
-	_, err := k.handleContractResponse(ctx, addr, ibcPortID, nil, res.Messages, res.Events, nil, inputMsg, verificationInfo)
+	_, err := k.handleContractResponse(ctx, addr, ibcPortID, res.Attributes, res.Messages, res.Events, nil, inputMsg, verificationInfo)
 	return err
 }

@@ -122,7 +122,9 @@ func getDecryptedWasmEvents(t *testing.T, ctx sdk.Context, nonce []byte) []Contr
 }
 
 func decryptAttribute(attr cosmwasm.Attribute, nonce []byte) (cosmwasm.Attribute, error) {
-
+	if len(nonce) == 0 {
+		return attr, nil
+	}
 	var newAttr cosmwasm.Attribute
 
 	keyCipherBz, err := base64.StdEncoding.DecodeString(attr.Key)
@@ -161,6 +163,7 @@ func parseAndDecryptAttributes(attrs []abci.EventAttribute, nonce []byte) ([]cos
 		}
 
 		newAttr, error := decryptAttribute(attr, nonce)
+
 		fmt.Printf("attr.Key err %s \n", err)
 		fmt.Printf("attr.Key %s \n", newAttr.Key)
 
@@ -177,7 +180,6 @@ func parseAndDecryptAttributes(attrs []abci.EventAttribute, nonce []byte) ([]cos
 // The difference between this and getDecryptedWasmEvents is that it is aware of plaintext logs.
 func tryDecryptWasmEvents(ctx sdk.Context, nonce []byte, shouldSkipAttributes ...bool) []ContractEvent {
 	events := ctx.EventManager().Events()
-
 	var res []ContractEvent
 	for _, e := range events {
 		if strings.HasPrefix(e.Type, "wasm") {
@@ -202,9 +204,10 @@ func tryDecryptWasmEvents(ctx sdk.Context, nonce []byte, shouldSkipAttributes ..
 				}
 			}
 			res = append(res, newEvent)
-			fmt.Printf("decrypted attributes: %+v \n", res)
+
 		}
 	}
+	fmt.Printf("decrypted attributes: %+v \n", res)
 	return res
 }
 

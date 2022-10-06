@@ -1,9 +1,5 @@
 package types
 
-import (
-	abci "github.com/tendermint/tendermint/abci/types"
-)
-
 type IBCEndpoint struct {
 	PortID    string `json:"port_id"`
 	ChannelID string `json:"channel_id"`
@@ -217,8 +213,8 @@ type IBCChannelOpenResult struct {
 // or that cannot redispatch messages (like ibc_channel_open)
 // will use other Response types
 type IBCBasicResult struct {
-	Ok  *IBCBasicResponse `json:"Ok,omitempty"`
-	Err string            `json:"error,omitempty"`
+	Ok  *IBCBasicResponse `json:"ok,omitempty"`
+	Err string            `json:"Err,omitempty"`
 }
 
 // IBCBasicResponse defines the return value on a successful processing.
@@ -230,7 +226,7 @@ type IBCBasicResponse struct {
 	// "fire and forget".
 	Messages []SubMsg `json:"messages"`
 	// attributes for a log event to return over abci interface
-	Attributes []abci.EventAttribute `json:"attributes"`
+	Attributes []Attribute `json:"attributes"`
 	// custom events (separate from the main one that contains the attributes
 	// above)
 	Events []Event `json:"events"`
@@ -271,8 +267,8 @@ type IBCReceiveResponse struct {
 	// If the ReplyOn value matches the result, the runtime will invoke this
 	// contract's `reply` entry point after execution. Otherwise, this is all
 	// "fire and forget".
-	Messages   []SubMsg              `json:"messages"`
-	Attributes []abci.EventAttribute `json:"attributes"`
+	Messages   []SubMsg    `json:"messages"`
+	Attributes []Attribute `json:"attributes"`
 	// custom events (separate from the main one that contains the attributes
 	// above)
 	Events []Event `json:"events"`

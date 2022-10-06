@@ -10,7 +10,7 @@ use enclave_cosmwasm_types::addresses::{CanonicalAddr, HumanAddr};
 use enclave_cosmwasm_types::coins::Coin;
 use enclave_cosmwasm_types::results::{
     CosmosMsg, Reply, ReplyOn, Response, SubMsgResponse, SubMsgResult, WasmMsg,
-    REPLY_ENCRYPTION_MAGIC_BYTES,/*Event,Attribute,*/
+    REPLY_ENCRYPTION_MAGIC_BYTES,Event,Attribute,
 };
 use enclave_ffi_types::EnclaveError;
 use std::convert::TryInto;
@@ -29,7 +29,7 @@ use sha2::Digest;
 /// b. Authenticate the reply.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(untagged)]
-enum WasmOutput {
+pub enum WasmOutput {
     Err {
         #[serde(rename = "Err")]
         err: Value,
@@ -201,7 +201,8 @@ pub fn encrypt_output(
                     let reply = Reply {
                         id: msg_id.unwrap(),
                         result: SubMsgResult::Err(encrypted_err),
-                        was_msg_encrypted: true,
+                        was_orig_msg_encrypted: true,
+                        is_encrypted: true,
                     };
                     let reply_as_vec = serde_json::to_vec(&reply).map_err(|err| {
                         warn!(
@@ -313,7 +314,7 @@ pub fn encrypt_output(
                         &encryption_key,
                         &r[0].sub_msg_id.to_string(),
                         &reply_params,
-                        false,
+                        true,
                     )?)?;
 
                     Some(encrypted_id)
@@ -349,7 +350,8 @@ pub fn encrypt_output(
                             events: vec![],
                             data: ok.data.clone(),
                         }),
-                        was_msg_encrypted: true,
+                        was_orig_msg_encrypted: true,
+                        is_encrypted: true,
                     };
                     trace!("reply : {:?}", reply);
                     let reply_as_vec = serde_json::to_vec(&reply).map_err(|err| {
@@ -411,10 +413,10 @@ pub fn encrypt_output(
             }
         }
         WasmOutput::OkIBCOpenChannel { ok: _ } => { }
-        WasmOutput::OkIBCBasic { ok } =>  { 
+        WasmOutput::OkIBCBasic { ok:  _} =>  { 
         }
-        WasmOutput::OkIBCPacketReceive { ok } =>  { 
-        }
+       /* WasmOutput::OkIBCPacketReceive { ok } =>  { 
+        }*/
     };
 
     trace!("WasmOutput: {:?}", output);
@@ -517,7 +519,7 @@ fn encrypt_wasm_msg(
             }
             
             hash_appended_msg.extend_from_slice(msg.as_slice());
-            let mut hash_appended_auto_msg = code_hash.as_bytes().to_vec(); 
+
             let mut msg_to_pass = ContractMessage::from_base64(
                 Binary(hash_appended_msg).to_base64(),
                 nonce,
@@ -534,6 +536,7 @@ fn encrypt_wasm_msg(
 
             if auto_msg.is_some() {
                 let auto_msg_unwrap = auto_msg.clone().unwrap();
+                let mut hash_appended_auto_msg = code_hash.as_bytes().to_vec(); 
                 hash_appended_auto_msg.extend_from_slice(auto_msg_unwrap.as_slice());
                 let mut auto_msg_to_pass = ContractMessage::from_base64(
                     Binary(hash_appended_auto_msg).to_base64(),
@@ -583,4 +586,121 @@ pub struct IBCOpenChannelOutput {
     pub ok: Option<String>,
     #[serde(rename = "Err")]
     pub err: Option<Value>,
+}
+
+
+pub fn manipulate_callback_sig_for_plaintext(
+    contract_addr: &CanonicalAddr,
+    output: Vec<u8>,
+) -> Result<WasmOutput, EnclaveError> {
+    let mut raw_output: WasmOutput = serde_json::from_slice(&output).map_err(|err| {
+        warn!("got an error while trying to deserialize output bytes into json");
+        trace!("output: {:?} error: {:?}", output, err);
+        EnclaveError::FailedToDeserialize
+    })?;
+
+    match &mut raw_output {
+        WasmOutput::Ok { ok, .. } => {
+            for sub_msg in &mut ok.messages {
+                if let CosmosMsg::Wasm(wasm_msg) = &mut sub_msg.msg {
+                    match wasm_msg {
+                        WasmMsg::Execute {
+                            callback_sig,
+                            msg,
+                            funds,
+                            ..
+                        }
+                        | WasmMsg::Instantiate {
+                            callback_sig,
+                            msg,
+                            funds,
+                            ..
+                        } => {
+                            let msg_to_sign = ContractMessage {
+                                nonce: [0; 32],
+                                user_public_key: [0; 32],
+                                msg: msg.as_slice().to_vec(),
+                            };
+                            *callback_sig = Some(create_callback_signature(
+                                contract_addr,
+                                &msg_to_sign,
+                                &funds
+                                    .iter()
+                                    .map(|coin| Coin {
+                                        denom: coin.denom.clone(),
+                                        amount: Uint128::new(coin.amount.u128()),
+                                    })
+                                    .collect::<Vec<Coin>>()[..],
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+        WasmOutput::OkIBCPacketReceive { ok } => {
+            for sub_msg in &mut ok.messages {
+                if let CosmosMsg::Wasm(wasm_msg) = &mut sub_msg.msg {
+                    match wasm_msg {
+                        WasmMsg::Execute {
+                            callback_sig,
+                            msg,
+                            funds,
+                            ..
+                        }
+                        | WasmMsg::Instantiate {
+                            callback_sig,
+                            msg,
+                            funds,
+                            ..
+                        } => {
+                            let msg_to_sign = ContractMessage {
+                                nonce: [0; 32],
+                                user_public_key: [0; 32],
+                                msg: msg.as_slice().to_vec(),
+                            };
+                            *callback_sig = Some(create_callback_signature(
+                                contract_addr,
+                                &msg_to_sign,
+                                &funds
+                                    .iter()
+                                    .map(|coin| Coin {
+                                        denom: coin.denom.clone(),
+                                        amount: Uint128::new(coin.amount.u128()),
+                                    })
+                                    .collect::<Vec<Coin>>()[..],
+                            ));
+                            
+                        }
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+
+    Ok(raw_output)
+}
+
+pub fn set_attributes_to_plaintext(attributes: &mut Vec<Attribute>) {
+    for attr in attributes {
+        attr.encrypted = false;
+    }
+}
+
+pub fn set_all_logs_to_plaintext(raw_output: &mut WasmOutput) {
+    match raw_output {
+        WasmOutput::Ok { ok, .. } => {
+            set_attributes_to_plaintext(&mut ok.attributes);
+            for ev in &mut ok.events {
+                set_attributes_to_plaintext(&mut ev.attributes);
+            }
+        }
+        WasmOutput::OkIBCPacketReceive { ok } => {
+            set_attributes_to_plaintext(&mut ok.attributes);
+            for ev in &mut ok.events {
+                set_attributes_to_plaintext(&mut ev.attributes);
+            }
+        }
+        _ => {}
+    }
 }

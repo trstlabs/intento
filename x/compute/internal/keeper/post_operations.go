@@ -29,7 +29,6 @@ func (k *Keeper) handleContractResponse(
 	// This is used mainly in replies in order to decrypt their data.
 	ogSigInfo wasmTypes.VerificationInfo,
 ) ([]byte, error) {
-
 	events := types.ContractLogsToSdkEvents(attributes, contractAddr)
 
 	ctx.EventManager().EmitEvents(events)

@@ -16,13 +16,13 @@ use enclave_cosmwasm_types::types::{Env, FullEnv};
 
 use enclave_crypto::Ed25519PublicKey;
 use enclave_utils::coalesce;
-use super::parse_msg::parse_message;
+use super::parse_msg::{is_ibc_msg,parse_message};
 use super::contract_validation::{
     extract_contract_key, generate_encryption_key, validate_contract_key, validate_msg,
     verify_params, ContractKey, ReplyParams, ValidatedMessage,
 };
 use super::gas::WasmCosts;
-use super::io::{copy_into_array, create_callback_signature, encrypt_msg, encrypt_output};
+use super::io::{copy_into_array, create_callback_signature, encrypt_msg, encrypt_output, manipulate_callback_sig_for_plaintext, set_all_logs_to_plaintext};
 use super::module_cache::create_module_instance;
 use super::types::{ContractMessage, IoNonce};
 use super::wasm::{ContractInstance, ContractOperation, Engine};
@@ -191,12 +191,13 @@ impl Into<bool> for TaggedBool {
 pub struct ParsedMessage {
     pub should_validate_sig_info: bool,
     pub was_msg_encrypted: bool,
+    pub should_encrypt_output: bool,
     pub contract_msg: ContractMessage,
     pub decrypted_msg: Vec<u8>,
-    pub contract_hash_for_validation: Option<Vec<u8>>,
+    pub data_for_validation: Option<Vec<u8>>,
 }
 
-pub fn reduct_custom_events(reply: &mut Reply) {
+pub fn redact_custom_events(reply: &mut Reply) {
     reply.result = match &reply.result {
         SubMsgResult::Ok(r) => {
             let events: Vec<Event> = Default::default();
@@ -290,12 +291,15 @@ pub fn handle(
     // When the message is handle, we expect it always to be encrypted while in Reply for example it might be plaintext
     let parsed_handle_type = HandleType::try_from(handle_type)?;
 
+    trace!("Handle type is {:?}", parsed_handle_type);
+    
     let ParsedMessage {
         should_validate_sig_info,
         was_msg_encrypted,
+        should_encrypt_output,
         contract_msg, // params to be verified with reducted events. Should equal callback sig.
         decrypted_msg, //to be validated. Complete message.
-        contract_hash_for_validation,
+        data_for_validation,
     } = parse_message(msg, &parsed_sig_info, &parsed_handle_type)?;
 
     trace!(
@@ -318,7 +322,7 @@ pub fn handle(
         let x = validate_msg(
             &decrypted_msg,
             &contract_code.hash(),
-            contract_hash_for_validation,
+            data_for_validation,
             Some(parsed_handle_type.clone()),
         )?;
         validated_msg = x.validated_msg;
@@ -350,24 +354,44 @@ pub fn handle(
 
     // This wrapper is used to coalesce all errors in this block to one object
     // so we can `.map_err()` in one place for all of them
-    let output = coalesce!(EnclaveError, {
+    let mut output = coalesce!(EnclaveError, {
         let vec_ptr = engine.handle(env_ptr, msg_info_ptr, msg_ptr, parsed_handle_type)?;
 
-        let output = engine.extract_vector(vec_ptr)?;
+        let mut  output = engine.extract_vector(vec_ptr)?;
 
         debug!(
             "(2) nonce just before encrypt_output: nonce = {:?} pubkey = {:?}",
             contract_msg.nonce, contract_msg.user_public_key
         );
+        if should_encrypt_output {
+            output = encrypt_output(
+                output,
+                &contract_msg,
+                &canonical_contract_address,
+                &parsed_env.contract.code_hash,
+                reply_params,
+                &canonical_sender_address,
+            )?;
+        } else {
+            let mut raw_output =
+                manipulate_callback_sig_for_plaintext(&canonical_contract_address, output)?;
+            set_all_logs_to_plaintext(&mut raw_output);
 
-        let output = encrypt_output(
-            output,
-            &contract_msg,
-            &canonical_contract_address,
-            &parsed_env.contract.code_hash,
-            reply_params,
-            &canonical_sender_address,
-        )?;
+          /*  let finalized_output =
+                finalize_raw_output(raw_output, false, is_ibc_msg(parsed_handle_type), false)
+            trace!(
+                "Wasm output for plaintext message is: {:?}",
+                finalized_output
+            );;*/
+            trace!("WasmOutput: {:?}", raw_output);
+            output = serde_json::to_vec(&raw_output).map_err(|err| {
+                debug!(
+                    "got an error while trying to serialize output json into bytes {:?}: {}",
+                    raw_output, err
+                );
+                EnclaveError::FailedToSerialize
+            })?;
+        }
 
         Ok(output)
     })

@@ -163,7 +163,6 @@ pub fn validate_msg(
     }
 }
 
-
 pub fn validate_ibc_msg(
     msg: &[u8],
     contract_hash: &[u8; HASH_SIZE],
@@ -310,16 +309,16 @@ pub fn validate_basic_msg(
 pub fn validate_msg(
     msg: &[u8], //for reply it is different, events are reducted
     contract_hash: [u8; HASH_SIZE],
-    contract_hash_for_validation: Option<Vec<u8>>,
+    data_for_validation: Option<Vec<u8>>,
 ) -> Result<ValidatedMessage, EnclaveError> {
-    if contract_hash_for_validation.is_none() && msg.len() < HEX_ENCODED_HASH_SIZE {
+    if data_for_validation.is_none() && msg.len() < HEX_ENCODED_HASH_SIZE {
         warn!("Malformed message - expected contract code hash to be prepended to the msg: len: {:?}, should be longer than: {:?}", msg.len(), HEX_ENCODED_HASH_SIZE);
         return Err(EnclaveError::ValidationFailure);
     }
 
     let mut received_contract_hash: [u8; HEX_ENCODED_HASH_SIZE] = [0u8; HEX_ENCODED_HASH_SIZE];
     let mut validated_msg: Vec<u8>;
-    match contract_hash_for_validation {
+    match data_for_validation {
         Some(c) => {
             received_contract_hash.copy_from_slice(&c.as_slice()[0..HEX_ENCODED_HASH_SIZE]);
             validated_msg = msg.to_vec();
