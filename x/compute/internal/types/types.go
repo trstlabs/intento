@@ -14,7 +14,8 @@ import (
 	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 )
 
-const Denom = "utrst"
+var Denom = "utrst"
+
 const defaultLRUCacheSize = uint64(0)
 const defaultEnclaveLRUCacheSize = uint8(5) // can safely go up to 15
 const defaultQueryGasLimit = uint64(3000000)

@@ -123,7 +123,7 @@ message KeyPair {
 message Params {
    option (gogoproto.goproto_stringer) = false;
     int64 AutoMsgFundsCommission  = 1;
-     int64 AutoMsgFlexFeeDenom = 2;
+     int64 AutoMsgFlexFeeMul = 2;
     int64 AutoMsgConstantFee = 3;
     int64 RecurringAutoMsgConstantFee = 4;
     //  Maximum period for self-executing contract
@@ -147,8 +147,9 @@ message Params {
    google.protobuf.Duration MinContractInterval = 8 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
-        (gogoproto.jsontag)     = "min_contract_duration,omitempty"
+        (gogoproto.jsontag)     = "min_contract_interval,omitempty"
   ];
     int64 MaxContractIncentive = 9;
-    int64 MinContractBalanceForIncentive = 10;
+    int64 ContractIncentiveMul = 10;
+    int64 MinContractBalanceForIncentive = 11;
 }

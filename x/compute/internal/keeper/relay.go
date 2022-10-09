@@ -163,7 +163,6 @@ func (k Keeper) OnConnectChannel(
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "ibc-connect-channel")
 
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading Compute module: ibc-connect-channel")
-
 	msgBz, err := json.Marshal(msg)
 	if err != nil {
 		return sdkerrors.Wrap(err, "ibc-connect-channel")

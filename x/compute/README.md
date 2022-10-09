@@ -19,8 +19,8 @@ const (
 	// AutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultAutoMsgConstantFee int64 = 1000000 // 1utrst
 
-	// AutoMsgFlexFeeDenom is denominator for the gas-dependent flex fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultAutoMsgFlexFeeDenom int64 = 100
+	// AutoMsgFlexFeeMul is denominator for the gas-dependent flex fee to prevent spam of auto messages, to be distributed to community pool
+	DefaultAutoMsgFlexFeeMul int64 = 100
 
 	// RecurringAutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultRecurringAutoMsgConstantFee int64 = 1000000 // 1utrst

@@ -179,6 +179,7 @@ type TestKeepers struct {
 	GovKeeper     govkeeper.Keeper
 	BankKeeper    bankkeeper.Keeper
 	MintKeeper    mintkeeper.Keeper
+	ParamsKeeper  paramskeeper.Keeper
 }
 
 var TestConfig = TestConfigType{
@@ -337,8 +338,9 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 	// distrAcc := distKeeper.GetDistributionAccount(ctx)
 	distrAcc := authtypes.NewEmptyModuleAccount(distrtypes.ModuleName)
 
-	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2000000)))
-	err = bankKeeper.MintCoins(ctx, faucetAccountName, totalSupply)
+	testAccsSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2000000)))
+	testComputeSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000)))
+	err = bankKeeper.MintCoins(ctx, faucetAccountName, testAccsSupply.Add(testComputeSupply[0]))
 	require.NoError(t, err)
 
 	// err = bankKeeper.SendCoinsFromModuleToAccount(ctx, faucetAccountName, distrAcc.GetAddress(), totalSupply)
@@ -355,7 +357,10 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 	authKeeper.SetModuleAccount(ctx, notBondedPool)
 	authKeeper.SetModuleAccount(ctx, feeCollectorAcc)
 
-	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, totalSupply)
+	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, testAccsSupply)
+	require.NoError(t, err)
+
+	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, "compute", testComputeSupply)
 	require.NoError(t, err)
 
 	router := baseapp.NewRouter()
@@ -501,6 +506,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 		GovKeeper:     govKeeper,
 		BankKeeper:    bankKeeper,
 		MintKeeper:    mintKeeper,
+		ParamsKeeper:  paramsKeeper,
 	}
 
 	return ctx, keepers

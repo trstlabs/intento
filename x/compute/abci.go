@@ -19,12 +19,12 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 
 	logger := k.Logger(ctx)
 
-	incentiveList, contracts := k.GetContractAddressesForBlock(ctx)
-	//var rewardCoins sdk.Coins
+	contracts := k.GetContractAddressesForBlock(ctx)
+	/*//var rewardCoins sdk.Coins
 	if len(incentiveList) > 0 {
 		k.SetIncentiveCoins(ctx, incentiveList)
 
-	}
+	}*/
 	var gasUsed uint64
 	cacheCtx, writeCache := ctx.CacheContext()
 	for _, contract := range contracts {
@@ -69,8 +69,8 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			)
 
 		} else {
-			//fmt.Printf("write to cache\n")
-			writeCache()
+			fmt.Printf("write to cache\n")
+
 			// if the contract execution is recurring and successful, we add a new entry to the queue with current entry time + interval
 			if isRecurring {
 				fmt.Printf("self-executed recurring :%s \n", contract.Address.String())
@@ -82,12 +82,13 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 					k.InsertContractQueue(ctx, contract.Address.String(), nextExecTime)
 					contract.ContractInfo.ExecTime = nextExecTime
 					k.SetContractInfo(ctx, contract)
-
+					writeCache()
 					continue
 				}
 
 			}
 		}
+		writeCache()
 		//fmt.Printf("executed \n")
 		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.ExecTime)
 		_ = k.Delete(ctx, contract.Address)
@@ -101,6 +102,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 				sdk.NewAttribute(types.AttributeKeyContractAddr, contract.Address.String()),
 			),
 		)
+
 	}
 
 	return []abci.ValidatorUpdate{}

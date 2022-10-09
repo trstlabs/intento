@@ -20,8 +20,8 @@ const (
 	// AutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultAutoMsgConstantFee int64 = 1000000 // 1utrst
 
-	// AutoMsgFlexFeeDenom is denominator for the gas-dependent flex fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultAutoMsgFlexFeeDenom int64 = 100
+	// AutoMsgFlexFeeMul is a multiplier for the gas-dependent flex fee to prevent spam of auto messages, to be distributed to community pool
+	DefaultAutoMsgFlexFeeMul int64 = 100
 
 	// RecurringAutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultRecurringAutoMsgConstantFee int64 = 1000000 // 1utrst
@@ -44,9 +44,26 @@ const (
 ```
 
 
-## Endblocker
-At the end of each block, the Endblock checks if there are Trustless Contracts that are elligable for an incentive.
-MinContractDurationForIncentive,MaxContractIncentive, MinContractBalanceForIncentive can be adjusted by governane to ensure that the contract incentives are distributed in a fair manner.
+## Auto Execution Fees
+
+Auto execution messages have a fee, we direct a portion of these to validators. Governance can alter the fee.
+
+The fee consists of:
+
+Gas-dependent Flex Fee (Goes to validators)
+
+Constant Fee (Goes to community pool)
+
+Commission (Goes to community pool)
+
+Both can be changed by governance. These fees may differ between 1-time execution and recurring execution.
+
+The gas-dependent fee can be increased and decreased with the AutoMsgFlexFeeMul governance param and the Constant Fee is altered through the AutoMsgConstantFee and  RecurringAutoMsgConstantFee params.
+
+Upon instantiaiton auto execution fees are transferred to the contract and the instantiator gets the contract balance refunded automatically after execution. 
+
+At the end of each block, the Endblock checks if there are Contracts that are elligable for an incentive.
+MinContractDurationForIncentive,MaxContractIncentive, MinContractBalanceForIncentive can be adjusted by governane to ensure that the contract incentives are distributed in a fair manner. These incentives do not exceed the full cost of self-execution.
 
 ## Configuration
 
