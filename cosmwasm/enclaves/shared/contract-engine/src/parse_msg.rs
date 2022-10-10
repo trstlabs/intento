@@ -1,5 +1,4 @@
-use cosmos_proto::tx::signing::SignMode;
-use enclave_cosmos_types::types::{HandleType, SigInfo};
+use enclave_cosmos_types::types::HandleType;
 use enclave_cosmwasm_types::encoding::Binary;
 use enclave_cosmwasm_types::ibc::IbcPacketReceiveMsg;
 
@@ -14,7 +13,6 @@ use enclave_cosmwasm_types::results::{DecryptedReply, Reply, SubMsgResponse, Sub
 // Parse the message that was passed to handle (Based on the assumption that it might be a reply or IBC as well)
 pub fn parse_message(
     message: &[u8],
-    sig_info: &SigInfo,
     handle_type: &HandleType,
 ) -> Result<ParsedMessage, EnclaveError> {
     return match handle_type {
@@ -379,7 +377,7 @@ pub fn parse_message(
                 should_validate_sig_info: false,
                 was_msg_encrypted: false,
                 should_encrypt_output: false,
-                contract_msg: contract_msg,
+                contract_msg,
                 decrypted_msg,
                 data_for_validation: None,
             })

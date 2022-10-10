@@ -200,10 +200,6 @@ pub fn instantiate(
         InstantiateMsg::NoLogs {} => Ok(Response::new()),
         InstantiateMsg::CallbackToInit { code_id, code_hash } => Ok(Response::new()
             .add_message(CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None,
-                duration: None,
-                interval: None,
-                start_duration_at: None,
                 code_id,
                 msg: Binary::from(r#"{"nop":{}}"#.as_bytes().to_vec()),
                 code_hash,
@@ -249,10 +245,6 @@ pub fn instantiate(
             msg,
         } => Ok(Response::new()
             .add_message(CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None,
-                duration: None,
-                interval: None,
-                start_duration_at: None,
                 code_id,
                 code_hash,
                 msg: Binary(msg.as_bytes().into()),
@@ -499,11 +491,12 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
                 "{\"init_from_v1\":{\"counter\":".to_string() + counter.to_string().as_str() + "}}";
             resp.messages.push(SubMsg {
                 id: 1700,
-                msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
+                msg: CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
                     auto_msg: None,
                     duration: None,
                     interval: None,
                     start_duration_at: None,
+                    owner: None,
                     code_hash,
                     msg: Binary::from(msg.as_bytes().to_vec()),
                     funds: vec![],
@@ -544,11 +537,12 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
                 "{\"init_from_v1\":{\"counter\":".to_string() + counter.to_string().as_str() + "}}";
             resp.messages.push(SubMsg {
                 id: 8888,
-                msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
+                msg: CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
                     auto_msg: None,
                     duration: None,
                     interval: None,
                     start_duration_at: None,
+                    owner: None,
                     code_hash,
                     msg: Binary::from(msg.as_bytes().to_vec()),
                     funds: vec![],
@@ -600,11 +594,12 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             let msg = "{\"init_from_v1_with_error\":{}";
             resp.messages.push(SubMsg {
                 id: 2000,
-                msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
+                msg: CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
                     auto_msg: None,
                     duration: None,
                     interval: None,
                     start_duration_at: None,
+                    owner: None,
                     code_hash,
                     msg: Binary::from(msg.as_bytes().to_vec()),
                     funds: vec![],
@@ -640,11 +635,12 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             let msg = "{\"init_from_v1_with_error\":{}}";
             resp.messages.push(SubMsg {
                 id: 8890,
-                msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
+                msg: CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
                     auto_msg: None,
                     duration: None,
                     interval: None,
                     start_duration_at: None,
+                    owner: None,
                     code_hash,
                     msg: Binary::from(msg.as_bytes().to_vec()),
                     funds: vec![],
@@ -792,11 +788,12 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             code_id,
             code_hash,
         } => Ok(
-            Response::new().add_message(CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None,
+            Response::new().add_message(CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
+                 auto_msg: None,
                 duration: None,
                 interval: None,
                 start_duration_at: None,
+                owner: None,
                 msg: Binary("{\"nop\":{}}".as_bytes().to_vec()),
                 code_id,
                 code_hash,
@@ -829,11 +826,12 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             contract_id,
             msg,
         } => Ok(Response::new()
-            .add_message(CosmosMsg::Wasm(WasmMsg::Instantiate {
-                auto_msg: None,
+            .add_message(CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
+                 auto_msg: None,
                 duration: None,
                 interval: None,
                 start_duration_at: None,
+                owner: None,
                 code_id,
                 code_hash,
                 msg: Binary(msg.as_bytes().into()),
@@ -1186,11 +1184,12 @@ pub fn send_multiple_sub_messages(env: Env, _deps: DepsMut) -> StdResult<Respons
 
     resp.messages.push(SubMsg {
         id: 1601,
-        msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
+        msg: CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
             auto_msg: None,
             duration: None,
             interval: None,
             start_duration_at: None,
+            owner: None,
             code_hash: env.contract.code_hash.clone(),
             msg: Binary::from(
                 "{\"counter\":{\"counter\":150, \"expires\":100}}"
@@ -1259,11 +1258,12 @@ pub fn send_multiple_sub_messages_no_reply(env: Env, deps: DepsMut) -> StdResult
 
     resp.messages.push(SubMsg {
         id: 1612,
-        msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
+        msg: CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
             auto_msg: None,
             duration: None,
             interval: None,
             start_duration_at: None,
+            owner: None,
             code_hash: env.contract.code_hash.clone(),
             msg: Binary::from(
                 "{\"counter\":{\"counter\":150, \"expires\":100}}"
@@ -1319,11 +1319,12 @@ pub fn init_new_contract(env: Env, _deps: DepsMut) -> StdResult<Response> {
     let mut resp = Response::default();
     resp.messages.push(SubMsg {
         id: 1404,
-        msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
+        msg: CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
             auto_msg: None,
             duration: None,
             interval: None,
             start_duration_at: None,
+            owner: None,
             code_hash: env.contract.code_hash,
             msg: Binary::from(
                 "{\"counter\":{\"counter\":150, \"expires\":100}}"
@@ -1346,10 +1347,6 @@ pub fn init_new_contract_with_error(env: Env, _deps: DepsMut) -> StdResult<Respo
     resp.messages.push(SubMsg {
         id: 1405,
         msg: CosmosMsg::Wasm(WasmMsg::Instantiate {
-            auto_msg: None,
-            duration: None,
-            interval: None,
-            start_duration_at: None,
             code_hash: env.contract.code_hash,
             msg: Binary::from(
                 "{\"counter\":{\"counter\":0, \"expires\":100}}"
@@ -1996,10 +1993,6 @@ pub fn exec_callback_to_init(
 ) -> Response {
     Response::new()
         .add_message(CosmosMsg::Wasm(WasmMsg::Instantiate {
-            auto_msg: None,
-            duration: None,
-            interval: None,
-            start_duration_at: None,
             code_id,
             msg: Binary::from("{\"nop\":{}}".as_bytes().to_vec()),
             code_hash,

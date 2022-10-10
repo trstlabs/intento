@@ -64,7 +64,10 @@ message MsgInstantiateContract {
   uint64 start_duration_at = 9;
   //interval defines the interval between auto_msg calls
   string interval = 10;
+  //for contracts calling other contracts
   bytes callback_sig = 11 [(gogoproto.customname) = "CallbackSig"];
+  //for contracts instantiating on behalf of a user
+  string owner = 12;
 }
 
 // MsgInstantiateContractResponse return instantiation result data

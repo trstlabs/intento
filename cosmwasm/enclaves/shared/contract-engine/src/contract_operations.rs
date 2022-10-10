@@ -9,25 +9,27 @@ use enclave_cosmos_types::types::{ContractCode, HandleType, MsgInfo, SigInfo};
 use enclave_cosmwasm_types::addresses::{Addr, CanonicalAddr};
 use enclave_cosmwasm_types::coins::Coin;
 use enclave_cosmwasm_types::encoding::Binary;
-use enclave_cosmwasm_types::results::{ Event, Reply, SubMsgResponse, SubMsgResult};
+use enclave_cosmwasm_types::results::{Event, Reply, SubMsgResponse, SubMsgResult};
 use enclave_cosmwasm_types::types::{BlockInfo, ContractInfo, MessageInfo};
 use enclave_cosmwasm_types::types::{Env, FullEnv};
 //use enclave_cosmwasm_types::timestamp::Timestamp;
 
-use enclave_crypto::Ed25519PublicKey;
-use enclave_utils::coalesce;
-use super::parse_msg::{is_ibc_msg,parse_message};
 use super::contract_validation::{
     extract_contract_key, generate_encryption_key, validate_contract_key, validate_msg,
     verify_params, ContractKey, ReplyParams, ValidatedMessage,
 };
 use super::gas::WasmCosts;
-use super::io::{copy_into_array, create_callback_signature, encrypt_msg, encrypt_output, manipulate_callback_sig_for_plaintext, set_all_logs_to_plaintext};
+use super::io::{
+    copy_into_array, create_callback_signature, encrypt_msg, encrypt_output,
+    manipulate_callback_sig_for_plaintext, set_all_logs_to_plaintext,
+};
 use super::module_cache::create_module_instance;
+use super::parse_msg::parse_message;
 use super::types::{ContractMessage, IoNonce};
 use super::wasm::{ContractInstance, ContractOperation, Engine};
 use crate::const_callback_sig_addresses::COMMUNITY_POOL_ADDR;
-
+use enclave_crypto::Ed25519PublicKey;
+use enclave_utils::coalesce;
 
 /*
 Each contract is compiled with these functions already implemented in wasm:
@@ -292,7 +294,7 @@ pub fn handle(
     let parsed_handle_type = HandleType::try_from(handle_type)?;
 
     trace!("Handle type is {:?}", parsed_handle_type);
-    
+
     let ParsedMessage {
         should_validate_sig_info,
         was_msg_encrypted,
@@ -300,7 +302,7 @@ pub fn handle(
         contract_msg, // params to be verified with reducted events. Should equal callback sig.
         decrypted_msg, //to be validated. Complete message.
         data_for_validation,
-    } = parse_message(msg, &parsed_sig_info, &parsed_handle_type)?;
+    } = parse_message(msg, &parsed_handle_type)?;
 
     trace!(
         "handle input after decryption: {:?}",
@@ -354,10 +356,10 @@ pub fn handle(
 
     // This wrapper is used to coalesce all errors in this block to one object
     // so we can `.map_err()` in one place for all of them
-    let mut output = coalesce!(EnclaveError, {
+    let output = coalesce!(EnclaveError, {
         let vec_ptr = engine.handle(env_ptr, msg_info_ptr, msg_ptr, parsed_handle_type)?;
 
-        let mut  output = engine.extract_vector(vec_ptr)?;
+        let mut output = engine.extract_vector(vec_ptr)?;
 
         debug!(
             "(2) nonce just before encrypt_output: nonce = {:?} pubkey = {:?}",
@@ -377,7 +379,7 @@ pub fn handle(
                 manipulate_callback_sig_for_plaintext(&canonical_contract_address, output)?;
             set_all_logs_to_plaintext(&mut raw_output);
 
-          /*  let finalized_output =
+            /*  let finalized_output =
                 finalize_raw_output(raw_output, false, is_ibc_msg(parsed_handle_type), false)
             trace!(
                 "Wasm output for plaintext message is: {:?}",

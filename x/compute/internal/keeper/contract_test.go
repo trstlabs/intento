@@ -474,7 +474,7 @@ func initHelperImpl(
 
 	ctx = PrepareInitSignedTx(t, keeper, ctx, creator, creatorPrivKey, initMsgBz, codeID, sentFunds)
 	// make the label a random base64 string, because why not?
-	contractAddress, _, err := keeper.Instantiate(ctx, codeID, creator /* nil,*/, initMsgBz, nil, base64.RawURLEncoding.EncodeToString(nonce), sentFunds, nil, 0, 0, time.Now())
+	contractAddress, _, err := keeper.Instantiate(ctx, codeID, creator /* nil,*/, initMsgBz, nil, base64.RawURLEncoding.EncodeToString(nonce), sentFunds, nil, 0, 0, time.Now(), nil)
 
 	if wasmCallCount < 0 {
 		// default, just check that at least 1 call happened
@@ -1016,7 +1016,7 @@ func TestInitNotEncryptedInputError(t *testing.T) {
 	ctx = PrepareInitSignedTx(t, keeper, ctx, walletA, privKey, initMsg, codeID, nil)
 
 	// init
-	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, initMsg, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now())
+	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, initMsg, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now(), nil)
 	require.Error(t, err)
 
 	require.Contains(t, err.Error(), "failed to decrypt data")
@@ -1998,7 +1998,7 @@ func TestCodeHashInvalid(t *testing.T) {
 	enc, _ := wasmCtx.Encrypt(initMsg)
 
 	ctx = PrepareInitSignedTx(t, keeper, ctx, walletA, privWalletA, enc, codeID, sdk.NewCoins(sdk.NewInt64Coin("denom", 0)))
-	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now())
+	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now(), nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to validate transaction")
 
@@ -2012,7 +2012,7 @@ func TestCodeHashEmpty(t *testing.T) {
 	enc, _ := wasmCtx.Encrypt(initMsg)
 
 	ctx = PrepareInitSignedTx(t, keeper, ctx, walletA, privWalletA, enc, codeID, sdk.NewCoins(sdk.NewInt64Coin("denom", 0)))
-	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now())
+	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now(), nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to validate transaction")
 
@@ -2026,7 +2026,7 @@ func TestCodeHashNotHex(t *testing.T) {
 	enc, _ := wasmCtx.Encrypt(initMsg)
 
 	ctx = PrepareInitSignedTx(t, keeper, ctx, walletA, privWalletA, enc, codeID, sdk.NewCoins(sdk.NewInt64Coin("denom", 0)))
-	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now())
+	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now(), nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to validate transaction")
 
@@ -2041,7 +2041,7 @@ func TestCodeHashTooSmall(t *testing.T) {
 	enc, _ := wasmCtx.Encrypt(initMsg)
 
 	ctx = PrepareInitSignedTx(t, keeper, ctx, walletA, privWalletA, enc, codeID, sdk.NewCoins(sdk.NewInt64Coin("denom", 0)))
-	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now())
+	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now(), nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to validate transaction")
 
@@ -2056,7 +2056,7 @@ func TestCodeHashTooBig(t *testing.T) {
 	enc, _ := wasmCtx.Encrypt(initMsg)
 
 	ctx = PrepareInitSignedTx(t, keeper, ctx, walletA, privWalletA, enc, codeID, sdk.NewCoins(sdk.NewInt64Coin("denom", 0)))
-	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now())
+	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now(), nil)
 	require.Error(t, err)
 
 	initErr := extractInnerError(t, err, enc[0:32], true)
@@ -2074,7 +2074,7 @@ func TestCodeHashWrong(t *testing.T) {
 	enc, _ := wasmCtx.Encrypt(initMsg)
 
 	ctx = PrepareInitSignedTx(t, keeper, ctx, walletA, privWalletA, enc, codeID, sdk.NewCoins(sdk.NewInt64Coin("denom", 0)))
-	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now())
+	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, enc, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now(), nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to validate transaction")
 

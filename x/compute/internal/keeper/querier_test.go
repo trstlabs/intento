@@ -64,7 +64,7 @@ func TestQueryContractContractId(t *testing.T) {
 
 	ctx = PrepareInitSignedTx(t, keeper, ctx, creator, privCreator, initMsgBz, contractID, deposit)
 
-	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* nil,*/, initMsgBz, nil, label, deposit, nil, 0, 0, time.Now())
+	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* nil,*/, initMsgBz, nil, label, deposit, nil, 0, 0, time.Now(), nil)
 	require.NoError(t, err)
 
 	// this gets us full error, not redacted sdk.Error
@@ -165,7 +165,7 @@ func TestQueryContractState(t *testing.T) {
 
 	initMsgBz, err = wasmCtx.Encrypt(msg.Serialize())
 
-	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* nil,*/, initMsgBz, nil, "demo contract to query", deposit, nil, 0, 0, time.Now())
+	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* nil,*/, initMsgBz, nil, "demo contract to query", deposit, nil, 0, 0, time.Now(), nil)
 	require.NoError(t, err)
 
 	contractModel := []types.Model{
@@ -342,7 +342,7 @@ func TestListContractByCodeOrdering(t *testing.T) {
 
 		ctx = ctx.WithTxBytes(txBytes)
 		start := time.Now()
-		_, _, err = keeper.Instantiate(ctx, codeID, creator /* nil,*/, initMsgBz, nil, fmt.Sprintf("contract %d", i), topUp, nil, 0, 0, start)
+		_, _, err = keeper.Instantiate(ctx, codeID, creator /* nil,*/, initMsgBz, nil, fmt.Sprintf("contract %d", i), topUp, nil, 0, 0, start, nil)
 		require.NoError(t, err)
 	}
 

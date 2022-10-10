@@ -76,14 +76,9 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 
 	p := k.GetParams(ctx)
 
-	//We have 2 constant fees + this gas-dependent fee.
-	// gas dependent fee goes to validator
-	//flexFeeMultiplier := sdk.NewDec(100).QuoInt64(p.AutoMsgFlexFeeMul)
-	//flexFee := sdk.NewDec(int64(gasUsed)).MulTruncate(flexFeeMultiplier)
-
 	flexFeeMultiplier := sdk.NewDec(p.AutoMsgFlexFeeMul).QuoInt64(100)
 	flexFee := sdk.NewDecFromInt(sdk.NewInt(int64(gasUsed))).Mul(flexFeeMultiplier)
-	//flexFeeCoin := sdk.NewCoin(types.Denom, flexFee.TruncateInt())
+
 	//direct a commission of the utrst contract balance towards the community pool
 	contractBalance := k.bankKeeper.GetAllBalances(ctx, contract.Address)
 
@@ -101,7 +96,6 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 	if contract.Duration >= p.MinContractDurationForIncentive {
 		incentive, err := k.ContractIncentive(ctx, totalExecCost[0], contract.Address)
 		if err != nil {
-			fmt.Printf("err 0 %v\n", err)
 			return err
 		}
 		contractBalance.Add(incentive)
@@ -109,38 +103,30 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, contract.Address, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(types.Denom, flexFee.TruncateInt())))
 	if err != nil {
-		fmt.Printf("err 5 %v\n", err)
 		return err
 	}
-	//consumeGas(ctx, flexFee.TruncateInt().Uint64())
 
 	//the contract should be funded with the fee. Iif the contract is not able to pay, the contract owner pays next in line
 	err = k.distrKeeper.FundCommunityPool(ctx, feeCommunityCoins, contract.Address)
 	if err != nil {
-		fmt.Printf("err %v\n", err)
 		store := ctx.KVStore(k.storeKey)
-		// if a contract instantiated the contract, we do not deduct fees from it and the Auto Exec Msg won't be written to Cache
-		if !store.Has(types.GetContractEnclaveKey(contract.Owner)) {
-			err := k.distrKeeper.FundCommunityPool(ctx, feeCommunityCoins, contract.ContractInfo.Owner)
-			if err != nil {
-				fmt.Printf("err 1 %v\n", err)
-				return err
-			}
+		// unless a contract instantiated the contract, we deduct fees so execution can be written
+		if !store.Has(types.GetContractEnclaveKey(contract.Creator)) {
+		err := k.distrKeeper.FundCommunityPool(ctx, feeCommunityCoins, contract.ContractInfo.Owner)
+		if err != nil {
+			return err
 		}
-		fmt.Printf("err 2 %v\n", err)
+		}	
 		return err
 	}
 
-	fmt.Printf("contractBalance %v\n", contractBalance)
-	fmt.Printf("feeCommunityCoins %v\n", feeCommunityCoins)
+	//fmt.Printf("contractBalance %v\n", contractBalance)
 
 	//pay out the remaining balance to the contract owner after deducting fee, commision and gas cost
 	toOwnerCoins, negative := contractBalance.Sort().SafeSub(totalExecCost)
-	fmt.Printf("toOwnerCoins %v\n", toOwnerCoins)
 	if !negative {
 		err = k.bankKeeper.SendCoins(ctx, contract.Address, contract.ContractInfo.Owner, toOwnerCoins)
 		if err != nil {
-			fmt.Printf("err 3 %v\n", err)
 			return err
 		}
 

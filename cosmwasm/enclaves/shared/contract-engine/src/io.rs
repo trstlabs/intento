@@ -10,7 +10,7 @@ use enclave_cosmwasm_types::addresses::{CanonicalAddr, HumanAddr};
 use enclave_cosmwasm_types::coins::Coin;
 use enclave_cosmwasm_types::results::{
     CosmosMsg, Reply, ReplyOn, Response, SubMsgResponse, SubMsgResult, WasmMsg,
-    REPLY_ENCRYPTION_MAGIC_BYTES,Event,Attribute,
+    REPLY_ENCRYPTION_MAGIC_BYTES,Attribute,
 };
 use enclave_ffi_types::EnclaveError;
 use std::convert::TryInto;
@@ -20,7 +20,7 @@ use log::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_json::json;
-use enclave_cosmwasm_types::ibc::{IbcBasicResponse, IbcReceiveResponse,IbcChannelOpenResponse,IbcPacketReceiveMsg,Ibc3ChannelOpenResponse};
+use enclave_cosmwasm_types::ibc::{IbcBasicResponse, IbcReceiveResponse,IbcChannelOpenResponse};
 use sha2::Digest;
 
 /// The internal_reply_enclave_sig is being passed with the reply (Only if the reply is wasm reply)
@@ -390,6 +390,11 @@ pub fn encrypt_output(
                             msg,
                             funds,
                             ..
+                        } | WasmMsg::InstantiateAuto {
+                            callback_sig,
+                            msg,
+                            funds,
+                            ..
                         } => {
                             let msg_to_sign = ContractMessage {
                                 nonce: [0; 32],
@@ -454,6 +459,7 @@ pub fn encrypt_msg(
     Ok(callback_sig_bytes)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn encrypt_wasm_msg(
     wasm_msg: &mut WasmMsg,
     reply_on: &ReplyOn,
@@ -495,6 +501,44 @@ fn encrypt_wasm_msg(
             ));
         }
         WasmMsg::Instantiate {
+            msg,
+            code_hash,
+            callback_sig,
+            funds,
+            ..
+        } => {
+            let mut hash_appended_msg = code_hash.as_bytes().to_vec();
+            if *reply_on != ReplyOn::Never {
+                hash_appended_msg.extend_from_slice(REPLY_ENCRYPTION_MAGIC_BYTES);
+                hash_appended_msg.extend_from_slice(&msg_id.to_be_bytes());
+                hash_appended_msg.extend_from_slice(reply_recipient_contract_hash.as_bytes());
+            }
+
+            if let Some(r) = reply_params {
+                for param in r.iter() {
+                    hash_appended_msg
+                        .extend_from_slice(REPLY_ENCRYPTION_MAGIC_BYTES);
+                    hash_appended_msg.extend_from_slice(&param.sub_msg_id.to_be_bytes());
+                    hash_appended_msg.extend_from_slice(param.recipient_contract_hash.as_slice());
+                }
+            }
+            
+            hash_appended_msg.extend_from_slice(msg.as_slice());
+
+            let mut msg_to_pass = ContractMessage::from_base64(
+                Binary(hash_appended_msg).to_base64(),
+                nonce,
+                user_public_key,
+            )?;
+            msg_to_pass.encrypt_in_place()?;
+            *msg = Binary::from(msg_to_pass.to_vec().as_slice());
+            *callback_sig = Some(create_callback_signature(
+                contract_addr,
+                &msg_to_pass,
+                &funds,
+            ));
+        }
+        WasmMsg::InstantiateAuto {
             msg,
             code_hash,
             auto_msg,
@@ -615,6 +659,11 @@ pub fn manipulate_callback_sig_for_plaintext(
                             msg,
                             funds,
                             ..
+                        } | WasmMsg::InstantiateAuto {
+                            callback_sig,
+                            msg,
+                            funds,
+                            ..
                         } => {
                             let msg_to_sign = ContractMessage {
                                 nonce: [0; 32],
@@ -648,6 +697,11 @@ pub fn manipulate_callback_sig_for_plaintext(
                             ..
                         }
                         | WasmMsg::Instantiate {
+                            callback_sig,
+                            msg,
+                            funds,
+                            ..
+                        } | WasmMsg::InstantiateAuto {
                             callback_sig,
                             msg,
                             funds,

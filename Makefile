@@ -358,7 +358,7 @@ callback-sanity-test:
 	cp ./cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so .
 	SGX_MODE=SW ./cosmwasm/testing/callback-test.sh
 
-build-test-contract:
+build-test-contracts:
 	# echo "" | sudo add-apt-repository ppa:hnakamur/binaryen
 	# sudo apt update
 	# sudo apt install -y binaryen

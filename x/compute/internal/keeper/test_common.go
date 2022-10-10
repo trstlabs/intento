@@ -533,7 +533,7 @@ func TestHandler(k Keeper) sdk.Handler {
 
 func handleInstantiate(ctx sdk.Context, k Keeper, msg *wasmTypes.MsgInstantiateContract) (*sdk.Result, error) {
 	sender, _ := sdk.AccAddressFromBech32(msg.Sender)
-	contractAddr, data, err := k.Instantiate(ctx, msg.CodeID, sender /* msg.Admin, */, msg.Msg, nil, msg.ContractId, msg.Funds, msg.CallbackSig, 0, 0, time.Now())
+	contractAddr, data, err := k.Instantiate(ctx, msg.CodeID, sender /* msg.Admin, */, msg.Msg, nil, msg.ContractId, msg.Funds, msg.CallbackSig, 0, 0, time.Now(), nil)
 	if err != nil {
 		result := sdk.Result{}
 		result.Data = data

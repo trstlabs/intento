@@ -452,6 +452,27 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			CallbackSig: msg.Execute.CallbackSignature,
 		}
 		return []sdk.Msg{&sdkMsg}, nil
+	case msg.InstantiateAuto != nil:
+		coins, err := convertWasmCoinsToSdkCoins(msg.Instantiate.Funds)
+		if err != nil {
+			return nil, err
+		}
+
+		sdkMsg := types.MsgInstantiateContract{
+			Sender:          sender.String(),
+			CodeID:          msg.InstantiateAuto.CodeID,
+			ContractId:      msg.InstantiateAuto.ContractID,
+			CodeHash:        msg.InstantiateAuto.CodeHash,
+			Msg:             msg.InstantiateAuto.Msg,
+			AutoMsg:         msg.InstantiateAuto.AutoMsg,
+			Duration:        msg.InstantiateAuto.Duration,
+			Interval:        msg.InstantiateAuto.Interval,
+			StartDurationAt: msg.InstantiateAuto.StartDurationAt,
+			Funds:           coins,
+			CallbackSig:     msg.InstantiateAuto.CallbackSignature,
+			Owner:           msg.InstantiateAuto.Owner,
+		}
+		return []sdk.Msg{&sdkMsg}, nil
 	case msg.Instantiate != nil:
 		coins, err := convertWasmCoinsToSdkCoins(msg.Instantiate.Funds)
 		if err != nil {
@@ -464,12 +485,13 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			ContractId:      msg.Instantiate.ContractID,
 			CodeHash:        msg.Instantiate.CodeHash,
 			Msg:             msg.Instantiate.Msg,
-			AutoMsg:         msg.Instantiate.AutoMsg,
-			Duration:        msg.Instantiate.Duration,
-			Interval:        msg.Instantiate.Interval,
-			StartDurationAt: msg.Instantiate.StartDurationAt,
+			AutoMsg:         nil,
+			Duration:        "",
+			Interval:        "",
+			StartDurationAt: 0,
 			Funds:           coins,
 			CallbackSig:     msg.Instantiate.CallbackSignature,
+			Owner:           "",
 		}
 		return []sdk.Msg{&sdkMsg}, nil
 	default:

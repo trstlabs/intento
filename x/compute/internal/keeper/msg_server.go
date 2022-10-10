@@ -98,7 +98,9 @@ func (m msgServer) InstantiateContract(goCtx context.Context, msg *types.MsgInst
 	if err != nil {
 		return nil, err
 	}
-	contractAddr, data, err := m.keeper.Instantiate(ctx, msg.CodeID, sender, msg.Msg, msg.AutoMsg, msg.ContractId, msg.Funds, msg.CallbackSig, duration, interval, startTime)
+
+	owner, _ := sdk.AccAddressFromBech32(msg.Owner)
+	contractAddr, data, err := m.keeper.Instantiate(ctx, msg.CodeID, sender, msg.Msg, msg.AutoMsg, msg.ContractId, msg.Funds, msg.CallbackSig, duration, interval, startTime, owner)
 	if err != nil {
 		return nil, err
 	}
