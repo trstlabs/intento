@@ -67,22 +67,33 @@ func (m msgServer) StoreCode(goCtx context.Context, msg *types.MsgStoreCode) (*t
 
 func (m msgServer) InstantiateContract(goCtx context.Context, msg *types.MsgInstantiateContract) (*types.MsgInstantiateContractResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	duration, err := time.ParseDuration(msg.Duration)
-	p := m.keeper.GetParams(ctx)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+		return nil, err
 	}
+
+	p := m.keeper.GetParams(ctx)
+	var duration time.Duration = 0
+	if msg.Duration != "" {
+		duration, err = time.ParseDuration(msg.Duration)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var interval time.Duration = 0
+	if msg.Interval != "" {
+		interval, err = time.ParseDuration(msg.Interval)
+		if err != nil {
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+		}
+	}
+
 	if duration > p.MaxContractDuration {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be shorter than maximum duration")
 	}
 	if duration != 0 && duration < p.MinContractDuration {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be longer than minimum duration")
-	}
-	interval, err := time.ParseDuration(msg.Interval)
-
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
 	if interval != 0 && interval < p.MinContractInterval {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract interval must be longer than minimum interval")
@@ -94,11 +105,6 @@ func (m msgServer) InstantiateContract(goCtx context.Context, msg *types.MsgInst
 			return nil, err
 		}
 	}
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return nil, err
-	}
-
 	owner, _ := sdk.AccAddressFromBech32(msg.Owner)
 	contractAddr, data, err := m.keeper.Instantiate(ctx, msg.CodeID, sender, msg.Msg, msg.AutoMsg, msg.ContractId, msg.Funds, msg.CallbackSig, duration, interval, startTime, owner)
 	if err != nil {

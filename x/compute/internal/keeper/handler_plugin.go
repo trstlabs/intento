@@ -453,7 +453,7 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 		}
 		return []sdk.Msg{&sdkMsg}, nil
 	case msg.InstantiateAuto != nil:
-		coins, err := convertWasmCoinsToSdkCoins(msg.Instantiate.Funds)
+		coins, err := convertWasmCoinsToSdkCoins(msg.InstantiateAuto.Funds)
 		if err != nil {
 			return nil, err
 		}
