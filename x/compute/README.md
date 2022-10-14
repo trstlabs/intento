@@ -12,40 +12,44 @@ This should be a brief overview of the functionality
 Through governance, a number of compute parameters can be adjusted. The default values are the following:
 ```golang
 
+
 const (
 	// AutoMsgFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
 	DefaultAutoMsgFundsCommission int64 = 2
 
 	// AutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultAutoMsgConstantFee int64 = 1000000 // 1utrst
+	DefaultAutoMsgConstantFee int64 = 1_000_000 // 1trst
 
-	// AutoMsgFlexFeeMul is denominator for the gas-dependent flex fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultAutoMsgFlexFeeMul int64 = 100
+	// AutoMsgFlexFeeMul is the denominator for the gas-dependent flex fee to prioritize auto messages in the block, to be distributed to validators
+	DefaultAutoMsgFlexFeeMul int64 = 100 // 100/100 = 1 = gasUsed
 
 	// RecurringAutoMsgConstantFee fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultRecurringAutoMsgConstantFee int64 = 1000000 // 1utrst
+	DefaultRecurringAutoMsgConstantFee int64 = 1_000_000 // 1trst
 
 	// Default max period for a contract that is self-executing
-	DefaultMaxContractDuration time.Duration = time.Hour * 24 * 366 // 366 days
+	DefaultMaxContractDuration time.Duration = time.Hour * 24 * 366 * 10 // a little over 10 years
 	// MinContractDuration sets the minimum duration for a self-executing contract
-	DefaultMinContractDuration time.Duration = time.Second * 45
+	DefaultMinContractDuration time.Duration = time.Second * 40
 	// MinContractInterval sets the minimum interval self-execution
 	DefaultMinContractInterval time.Duration = time.Second * 20
 	// MinContractDurationForIncentive to distribute reward to contracts we want to incentivize
 	DefaultMinContractDurationForIncentive time.Duration = time.Hour * 24 // time.Hour * 24 // 1 day
 
 	// DefaultMaxContractIncentive max amount of utrst coins to give to a contract as incentive
-	DefaultMaxContractIncentive int64 = 500000000 // 500utrst
+	DefaultMaxContractIncentive int64 = 500_000_000 // 500trst
+
+	// DefaultContractIncentiveMul deternimes max amount of utrst coins to give to a contract as incentive
+	DefaultContractIncentiveMul int64 = 100 //  100/100 = 1 = full incentive
 
 	// MinContractBalanceForIncentive minimum balance required to be elligable for an incentive
-	DefaultMinContractBalanceForIncentive int64 = 50000000 // 50utrst
+	DefaultMinContractBalanceForIncentive int64 = 50_000_000 // 50trst
 )
 ```
 
 
-## Endblocker
-At the end of each block, the Endblock checks if there are Trustless Contracts that are elligable for an incentive.
-MinContractDurationForIncentive,MaxContractIncentive, MinContractBalanceForIncentive can be adjusted by governane to ensure that the contract incentives are distributed in a fair manner.
+## BeginBlocker
+At the beginning of each block, the BeginBlocker checks if there are Trustless Contracts that are elligable for an incentive.
+Parameters can be adjusted by governane to ensure that the contract incentives are distributed in a fair manner.
 
 ## Configuration
 

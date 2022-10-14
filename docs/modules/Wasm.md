@@ -6,7 +6,33 @@ description: Useful information regarding compute module
 
 # Wasm Module
 
-This is a brief overview of the functionality
+This is a brief overview of the functionality of Trustless Hub's CosmWasm engine. It is optimized to support auto execution and privacy by default in contracts. Next to the default private state, contracts have a public state. This state is easily accessable through RPC endpoints.
+The Wasm module is suppports CosmWasm v1 contracts optimized for Trustless Hub.
+
+## Auto Execution Fees
+
+Auto execution messages have a fee. Governance can update the fee.
+
+
+The fee consists of:
+
+1. Gas-dependent FlexFee (Goes to block proposer)
+
+2. Constant Fee (Goes to community pool)
+
+3. Commission (Goes to community pool)
+
+These parameters can be updated by governance. These fees may differ between 1-time execution and recurring execution.
+
+The chain directs a flexible portion of these to validators called FexFee. With this part of the fee, validators are incentivized to include auto execution in their blocks over general transactions. This ensures you that auto execution will happen at pre-defined times.
+
+The gas-dependent fee can be increased and decreased with the AutoMsgFlexFeeMul governance param and the Constant Fee is altered through the AutoMsgConstantFee and  RecurringAutoMsgConstantFee params.
+
+Upon instantiaiton auto execution fees are transferred to the contract. The instantiator gets the contract balance refunded automatically after execution in case a contract owner is set. 
+
+At the end of each block, the BeginBlock checks if there are contracts that are to be executed. These contracts can be incentivized.
+MinContractDurationForIncentive,MaxContractIncentive, MinContractBalanceForIncentive can be adjusted by governane to ensure that the contract incentives are distributed in a fair manner. These incentives can not exceed the total cost of auto execution.
+
 
 ## Parameters
 
@@ -42,28 +68,6 @@ const (
 	DefaultMinContractBalanceForIncentive int64 = 50000000 // 50utrst
 )
 ```
-
-
-## Auto Execution Fees
-
-Auto execution messages have a fee, we direct a portion of these to validators. Governance can alter the fee.
-
-The fee consists of:
-
-Gas-dependent Flex Fee (Goes to validators)
-
-Constant Fee (Goes to community pool)
-
-Commission (Goes to community pool)
-
-Both can be changed by governance. These fees may differ between 1-time execution and recurring execution.
-
-The gas-dependent fee can be increased and decreased with the AutoMsgFlexFeeMul governance param and the Constant Fee is altered through the AutoMsgConstantFee and  RecurringAutoMsgConstantFee params.
-
-Upon instantiaiton auto execution fees are transferred to the contract and the instantiator gets the contract balance refunded automatically after execution. 
-
-At the end of each block, the Endblock checks if there are Contracts that are elligable for an incentive.
-MinContractDurationForIncentive,MaxContractIncentive, MinContractBalanceForIncentive can be adjusted by governane to ensure that the contract incentives are distributed in a fair manner. These incentives do not exceed the full cost of self-execution.
 
 ## Configuration
 

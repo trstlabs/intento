@@ -23,9 +23,10 @@ And additionally for Trustless Hub they have:
 
 5) An AutoMsg to execute 1-time or recurringly. This can defined in the CodeInfo or at Contract Instantiation
 
-1,2,3,4 are similar to develop as in other smart contract platforms. Encryption and privacy are enabled by the blockchain, and the developer can carelessly use the benefits of these.
-For 5, automatically executing code, an automated message should be enabled, and this can point to an existing function or to a completely seperate one than that can be executed on by the users of the contract.
-You can name this AutoMsg, or anything else. Refer to the message to be executed as AutoMsg, so people viewing the contract code are aware of the which part of the contract can run automatically.
+Points 1,2,3,4 are similar to develop as in other smart contract platforms. Encryption and privacy are enabled by the blockchain, and the developer can use the benefits of these.
+For point 5, automatically executing code, an auto message should be defined. This can point to a user-executable function or to a function that can only be executed by the contract itself.
+
+For your conveniance the message to call the function can be named *AutoMsg*. Naming it AutoMsg allows people viewing the contract code to be aware of the which part of the contract is to be run automatically.
 
 
 ![Example auto_msg](./auto_msg_example.png)
@@ -42,8 +43,23 @@ Executing code is done by encrypting the message with the code hash and sender p
 The inputs are private and are only decrypted once the message is in the Trusted Execution Environment (TEE), where the inputs are then securely executed. The TEE, that runs through Intel SGX, and is designed in such a way that no other process or application is able to view or currupt the contents.
 
 ### Instantiating 
-Next to the standard Msg, an AutoMessage can to be sent to automatically execute code. 
-The instantiation message and the automated message are encrypted and only decrypted once the message is in in the Trusted Execution Environment 
+Instantiating contracts is similar to other CosmWasm contract platforms.
+
+Next to Instantiate, you can define InstantiateAuto to auto execute. 
+You can pass several optional fields to this function:
+- AutoMessage
+A JSON message similar to Execute. Encrypted at the frontend and plaintext in the contract
+- Duration 
+Duration of the contract in [time](https://pkg.go.dev/time) (e.g. 60s/5h/7h40s/420h)
+- Interval
+interval of recurring execution. Should be shorter than duration.
+- StartTime
+Time that auto execution should start
+- Funds 
+This is used for auto execution fees. This sends TRST to the instantiated proxy contract. This is used to deduct fees for the auto execution. Remaining balances are refunded given that *owner* is defined.
+- Owner
+An address to refund the contract balance to after auto execution ends. 
+
 
 ### Querying 
 The contract can be queried through {RCP API URL}/compute/v1beta1/contract/{contract_address}/smart/{query_data}. 

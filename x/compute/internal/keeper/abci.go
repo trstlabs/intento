@@ -72,7 +72,7 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 }
 
 // DistributeCoins distributes AutoMessage fees and handles remaining contract balance
-func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWithAddress, gasUsed uint64, isRecurring bool) error {
+func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWithAddress, gasUsed uint64, isRecurring bool, proposer sdk.ConsAddress) error {
 
 	p := k.GetParams(ctx)
 
@@ -94,17 +94,24 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 	totalExecCost := feeCommunityCoins.Add(sdk.NewCoin(types.Denom, flexFee.TruncateInt()))
 
 	if contract.Duration >= p.MinContractDurationForIncentive {
+		fmt.Printf("contr bal%s\n", contractBalance)
 		incentive, err := k.ContractIncentive(ctx, totalExecCost[0], contract.Address)
 		if err != nil {
 			return err
 		}
 		contractBalance.Add(incentive)
+		fmt.Printf("contr bal2: %s\n", contractBalance)
 	}
+	// proposer reward
+	// transfer collected fees to the distribution module account
+	flexFeeCoin := sdk.NewCoin(types.Denom, flexFee.TruncateInt())
 
-	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, contract.Address, authtypes.FeeCollectorName, sdk.NewCoins(sdk.NewCoin(types.Denom, flexFee.TruncateInt())))
+	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, contract.Address, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
 	if err != nil {
 		return err
 	}
+	proposerAddr := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
+	k.distrKeeper.AllocateTokensToValidator(ctx, proposerAddr, sdk.NewDecCoinsFromCoins(flexFeeCoin))
 
 	//the contract should be funded with the fee. Iif the contract is not able to pay, the contract owner pays next in line
 	err = k.distrKeeper.FundCommunityPool(ctx, feeCommunityCoins, contract.Address)
@@ -112,11 +119,11 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 		store := ctx.KVStore(k.storeKey)
 		// unless a contract instantiated the contract, we deduct fees so execution can be written
 		if !store.Has(types.GetContractEnclaveKey(contract.Creator)) {
-		err := k.distrKeeper.FundCommunityPool(ctx, feeCommunityCoins, contract.ContractInfo.Owner)
-		if err != nil {
-			return err
+			err := k.distrKeeper.FundCommunityPool(ctx, feeCommunityCoins, contract.ContractInfo.Owner)
+			if err != nil {
+				return err
+			}
 		}
-		}	
 		return err
 	}
 

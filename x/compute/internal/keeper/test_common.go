@@ -11,6 +11,7 @@ import (
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -103,6 +104,14 @@ const contractPath = "testdata"
 var TestContractPaths = map[string]string{
 
 	ibcContract: filepath.Join(".", contractPath, ibcContract),
+}
+
+func CreateValidator(pk crypto.PubKey, stake sdk.Int) (stakingtypes.Validator, error) {
+	valConsAddr := sdk.GetConsAddress(pk)
+	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr), pk, stakingtypes.Description{})
+	val.Tokens = stake
+	val.DelegatorShares = sdk.NewDecFromInt(val.Tokens)
+	return val, err
 }
 
 var _ wasmTypes.ICS20TransferPortSource = &MockIBCTransferKeeper{}
@@ -233,11 +242,16 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 	}
 
 	require.NoError(t, ms.LoadLatestVersion())
+	_, valConsPk0, _ := keyPubAddr()
+	valCons := sdk.ConsAddress(valConsPk0.Address())
+	val, err := CreateValidator(valConsPk0, sdk.NewInt(100))
+	//val, err := stakingkeeper.Keeper.SetValidatorByConsAddr(ctx,valConsPk0//, math.NewInt(100))
 
 	ctx := sdk.NewContext(ms, tmproto.Header{
-		Height:  1234567,
-		Time:    time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
-		ChainID: TestConfig.ChainID,
+		Height:          1234567,
+		Time:            time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC),
+		ChainID:         TestConfig.ChainID,
+		ProposerAddress: valCons,
 	}, isCheckTx, log.NewNopLogger())
 	encodingConfig := MakeEncodingConfig()
 	paramsKeeper := paramskeeper.NewKeeper(
@@ -301,6 +315,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 		bankKeeper,
 		stakingSubsp,
 	)
+	stakingKeeper.SetValidator(ctx, val)
+	stakingKeeper.SetValidatorByConsAddr(ctx, val)
 	stakingKeeper.SetParams(ctx, TestingStakeParams)
 
 	// mintSubsp, _ := paramsKeeper.GetSubspace(minttypes.ModuleName)
@@ -333,7 +349,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 	distKeeper.SetFeePool(ctx, distrtypes.InitialFeePool())
 	stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(distKeeper.Hooks()))
 
-	// set some funds ot pay out validatores, based on code from:
+	// set some funds ot pay out validators, based on code from:
 	// https://github.com/cosmos/cosmos-sdk/blob/fea231556aee4d549d7551a6190389c4328194eb/x/distribution/keeper/keeper_test.go#L50-L57
 	// distrAcc := distKeeper.GetDistributionAccount(ctx)
 	distrAcc := authtypes.NewEmptyModuleAccount(distrtypes.ModuleName)

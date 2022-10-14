@@ -36,6 +36,7 @@ type Keeper struct {
 	distrKeeper      distrkeeper.Keeper
 	portKeeper       portkeeper.Keeper
 	capabilityKeeper capabilitykeeper.ScopedKeeper
+	stakingKeeper    stakingkeeper.Keeper
 	wasmer           wasm.Wasmer
 	queryPlugins     QueryPlugins
 	messenger        Messenger
@@ -105,6 +106,7 @@ func NewKeeper(
 		distrKeeper:      distKeeper,
 		portKeeper:       portKeeper,
 		capabilityKeeper: capabilityKeeper,
+		stakingKeeper:    stakingKeeper,
 		messenger:        NewMessageHandler(msgRouter, router, customEncoders, channelKeeper, capabilityKeeper, portSource, cdc),
 		queryGasLimit:    wasmConfig.SmartQueryGasLimit,
 		paramSpace:       paramSpace,

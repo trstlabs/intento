@@ -12,8 +12,8 @@ import (
 	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
-// EndBlocker called every block, process inflation, update validator set.
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
+// BeginBlocker called every block, processes auto execution
+func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
 
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
@@ -60,24 +60,22 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 
 		isRecurring := contract.ContractInfo.ExecTime.Before(contract.ContractInfo.EndTime)
 		//deducts execution fees and distributes SDK-native coins from contract balance
-		err := k.DistributeCoins(ctx, contract, gasUsed, isRecurring)
+		err := k.DistributeCoins(ctx, contract, gasUsed, isRecurring, req.Header.ProposerAddress)
 		if err != nil {
-			//fmt.Printf("couldnt deduct fee %s\n", err)
 			logger.Info(
-				"contract payout creator",
-				"err", err.Error(),
+				"auto execution",
+				"error", err.Error(),
 			)
-
 		} else {
 			fmt.Printf("write to cache\n")
 
 			// if the contract execution is recurring and successful, we add a new entry to the queue with current entry time + interval
 			if isRecurring {
-				fmt.Printf("self-executed recurring :%s \n", contract.Address.String())
+				fmt.Printf("auto-executed recurring :%s \n", contract.Address.String())
 				k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.ExecTime)
 				fmt.Printf("exec Time %+v \n", contract.ContractInfo.ExecTime)
 				nextExecTime := contract.ContractInfo.ExecTime.Add(contract.ContractInfo.Interval)
-				fmt.Printf("exec Time2 %+v \n", nextExecTime)
+				fmt.Printf("exec Time new %+v \n", nextExecTime)
 				if nextExecTime.Before(contract.ContractInfo.EndTime) {
 					k.InsertContractQueue(ctx, contract.Address.String(), nextExecTime)
 					contract.ContractInfo.ExecTime = nextExecTime
@@ -105,5 +103,4 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 
 	}
 
-	return []abci.ValidatorUpdate{}
 }

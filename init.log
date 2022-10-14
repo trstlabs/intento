@@ -1,5 +1,6 @@
-2022-10-01 23:24:25,095 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 8 threads
+2022-10-14 14:33:39,639 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 8 threads
 DEBUG  [enclave_contract_engine::external::ecalls] inside ecall_configure_runtime: 5
 DEBUG  [enclave_contract_engine::module_cache] configuring module cache: 5
-2022-10-01 23:24:43,161 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 4 threads
-2022-10-01 23:24:43,161 WARN  [cosmwasm_sgx_vm::enclave] Cannot find the enclave file. Try pointing the TRST_ENCLAVE_DIR environment variable to the directory that has "librust_cosmwasm_query_enclave.signed.so"
+2022-10-14 14:33:57,789 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 4 threads
+Initializing claims genesis...
+error claiming tokens: address does not have claim record: invalid address [/root/trst/x/claim/keeper/claim.go:98] 
