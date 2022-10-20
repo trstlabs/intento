@@ -52,15 +52,20 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 			gasUsed = gas
 
 		}
-
 		logger.Info(
 			"executed",
 			"contract", contract.Address.String(),
 		)
 
 		isRecurring := contract.ContractInfo.ExecTime.Before(contract.ContractInfo.EndTime)
+		isLastExec := false
+		if isRecurring {
+			isLastExec = contract.ContractInfo.ExecTime.Add(contract.ContractInfo.Interval).After(contract.ContractInfo.EndTime)
+		} else {
+			isLastExec = true
+		}
 		//deducts execution fees and distributes SDK-native coins from contract balance
-		err := k.DistributeCoins(ctx, contract, gasUsed, isRecurring, req.Header.ProposerAddress)
+		fee, err := k.DistributeCoins(ctx, contract, gasUsed, isRecurring, isLastExec, req.Header.ProposerAddress)
 		if err != nil {
 			logger.Info(
 				"auto execution",
@@ -76,6 +81,8 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 				fmt.Printf("exec Time %+v \n", contract.ContractInfo.ExecTime)
 				nextExecTime := contract.ContractInfo.ExecTime.Add(contract.ContractInfo.Interval)
 				fmt.Printf("exec Time new %+v \n", nextExecTime)
+				historyEntry := types.ExecHistoryEntry{ScheduledExecTime: contract.ContractInfo.ExecTime, ActualExecTime: time.Now(), ExecFee: fee}
+				contract.ContractInfo.ExecHistory = append(contract.ContractInfo.ExecHistory, &historyEntry)
 				if nextExecTime.Before(contract.ContractInfo.EndTime) {
 					k.InsertContractQueue(ctx, contract.Address.String(), nextExecTime)
 					contract.ContractInfo.ExecTime = nextExecTime
@@ -83,11 +90,10 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 					writeCache()
 					continue
 				}
-
+				k.SetContractInfo(ctx, contract)
 			}
+			writeCache()
 		}
-		writeCache()
-		//fmt.Printf("executed \n")
 		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.ExecTime)
 		_ = k.Delete(ctx, contract.Address)
 		logger.Info(

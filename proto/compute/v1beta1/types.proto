@@ -4,6 +4,7 @@ package trst.x.compute.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/trstlabs/trst/x/compute/internal/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -54,10 +55,12 @@ message ContractInfo {
     (gogoproto.jsontag)     = "interval,omitempty"
   ];
     google.protobuf.Timestamp start_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-     google.protobuf.Timestamp exec_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp exec_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
     google.protobuf.Timestamp end_time = 11 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    string ibc_port_id = 12[ (gogoproto.customname) = "IBCPortID" ];
-    bytes callback_sig = 14;
+    repeated ExecHistoryEntry exec_history = 12;
+    string ibc_port_id = 14[ (gogoproto.customname) = "IBCPortID" ];
+    bytes callback_sig = 15;
+    
 }
 
 
@@ -66,6 +69,14 @@ message ContractInfoWithAddress {
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     ContractInfo ContractInfo = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = ""];
 }
+
+// ExecHistoryEntry provides a the history of auto contract execution
+message ExecHistoryEntry {
+    google.protobuf.Timestamp  scheduled_exec_time = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp  actual_exec_time = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    cosmos.base.v1beta1.Coin exec_fee = 3 [(gogoproto.nullable) = false];
+}
+
 
 /*
 enum ContractCodeHistoryOperationType {

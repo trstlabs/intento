@@ -206,8 +206,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 			k.InsertContractQueue(ctx, contractAddress.String(), execTime)
 		}
 	}
-
-	contractInfo := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, startTime, execTime, endTime, interval, autoMsg, callbackSig, owner)
+	contractInfo := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, startTime, execTime, endTime, endTime.Sub(startTime), interval, autoMsg, callbackSig, owner)
 	// check for IBC flag
 	report, err := k.wasmer.AnalyzeCode(codeInfo.CodeHash)
 	if err != nil {

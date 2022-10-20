@@ -72,7 +72,7 @@ func (k Keeper) SelfExecute(ctx sdk.Context, contractAddress sdk.AccAddress, msg
 }
 
 // DistributeCoins distributes AutoMessage fees and handles remaining contract balance
-func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWithAddress, gasUsed uint64, isRecurring bool, proposer sdk.ConsAddress) error {
+func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWithAddress, gasUsed uint64, isRecurring bool, isLastExec bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
 
 	p := k.GetParams(ctx)
 
@@ -87,20 +87,22 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 	if isRecurring {
 		constantFee = sdk.NewInt(p.RecurringAutoMsgConstantFee)
 	}
+	communityCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, constantFee))
+	if isLastExec {
+		percentageAutoMsgFundsCommission := sdk.NewDecWithPrec(p.AutoMsgFundsCommission, 2)
+		amountAutoMsgFundsCommissionCoin := sdk.NewCoin(types.Denom, percentageAutoMsgFundsCommission.MulInt(contractBalance.AmountOf(types.Denom)).Ceil().TruncateInt())
+		communityCoins = communityCoins.Add(amountAutoMsgFundsCommissionCoin)
+	}
 
-	percentageAutoMsgFundsCommission := sdk.NewDecWithPrec(p.AutoMsgFundsCommission, 2)
-	amountAutoMsgFundsCommissionCoin := sdk.NewCoin(types.Denom, percentageAutoMsgFundsCommission.MulInt(contractBalance.AmountOf(types.Denom)).Ceil().TruncateInt())
-	feeCommunityCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, constantFee).Add(amountAutoMsgFundsCommissionCoin))
-	totalExecCost := feeCommunityCoins.Add(sdk.NewCoin(types.Denom, flexFee.TruncateInt()))
+	totalExecCost := communityCoins.Add(sdk.NewCoin(types.Denom, flexFee.TruncateInt()))
 
 	if contract.Duration >= p.MinContractDurationForIncentive {
 		fmt.Printf("contr bal%s\n", contractBalance)
 		incentive, err := k.ContractIncentive(ctx, totalExecCost[0], contract.Address)
 		if err != nil {
-			return err
+			return sdk.Coin{}, err
 		}
-		contractBalance.Add(incentive)
-		fmt.Printf("contr bal2: %s\n", contractBalance)
+		contractBalance = contractBalance.Add(incentive)
 	}
 	// proposer reward
 	// transfer collected fees to the distribution module account
@@ -108,37 +110,38 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, contract.Address, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
 	if err != nil {
-		return err
+		return sdk.Coin{}, err
 	}
 	proposerAddr := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
 	k.distrKeeper.AllocateTokensToValidator(ctx, proposerAddr, sdk.NewDecCoinsFromCoins(flexFeeCoin))
 
 	//the contract should be funded with the fee. Iif the contract is not able to pay, the contract owner pays next in line
-	err = k.distrKeeper.FundCommunityPool(ctx, feeCommunityCoins, contract.Address)
+	err = k.distrKeeper.FundCommunityPool(ctx, communityCoins, contract.Address)
 	if err != nil {
 		store := ctx.KVStore(k.storeKey)
 		// unless a contract instantiated the contract, we deduct fees so execution can be written
 		if !store.Has(types.GetContractEnclaveKey(contract.Creator)) {
-			err := k.distrKeeper.FundCommunityPool(ctx, feeCommunityCoins, contract.ContractInfo.Owner)
+			err := k.distrKeeper.FundCommunityPool(ctx, communityCoins, contract.ContractInfo.Owner)
 			if err != nil {
-				return err
+				return sdk.Coin{}, err
 			}
 		}
-		return err
+		return sdk.Coin{}, err
 	}
 
-	//fmt.Printf("contractBalance %v\n", contractBalance)
+	if isLastExec {
+		//pay out the remaining balance to the contract owner after deducting fee, commision and gas cost
+		toOwnerCoins, negative := contractBalance.Sort().SafeSub(totalExecCost)
+		//fmt.Printf("toOwnerCoins %v\n", toOwnerCoins)
+		if !negative {
+			err = k.bankKeeper.SendCoins(ctx, contract.Address, contract.ContractInfo.Owner, toOwnerCoins)
+			if err != nil {
+				return sdk.Coin{}, err
+			}
 
-	//pay out the remaining balance to the contract owner after deducting fee, commision and gas cost
-	toOwnerCoins, negative := contractBalance.Sort().SafeSub(totalExecCost)
-	if !negative {
-		err = k.bankKeeper.SendCoins(ctx, contract.Address, contract.ContractInfo.Owner, toOwnerCoins)
-		if err != nil {
-			return err
 		}
-
 	}
-	return nil
+	return totalExecCost[0], nil
 }
 
 // ContractIncentive gives incentives to self-executing contracts
@@ -171,39 +174,3 @@ func (k Keeper) ContractIncentive(ctx sdk.Context, maxIncentive sdk.Coin, contra
 	)
 	return incentiveCoin, nil
 }
-
-/*
-// SetIncentiveCoins distributes compute module allocated coins to selected contracts
-func (k Keeper) SetIncentiveCoins(ctx sdk.Context, addressList []string) {
-	p := k.GetParams(ctx)
-
-	total := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress("compute"), types.Denom)
-	k.Logger(ctx).Info("TC reward", "total", total)
-
-	amount := total.Amount.QuoRaw(int64(len(addressList)))
-	if amount.Int64() > p.MaxContractIncentive {
-		amount = sdk.NewInt(p.MaxContractIncentive)
-	}
-
-	k.Logger(ctx).Info("TC reward", "amount", amount)
-
-	for _, addr := range addressList {
-		contrAddr, _ := sdk.AccAddressFromBech32(addr)
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, contrAddr, sdk.NewCoins(sdk.NewCoin(types.Denom, amount)))
-		if err != nil {
-			k.Logger(ctx).Info("TC reward", "send_err", err)
-			break
-		}
-
-		k.Logger(ctx).Info("allocated", "contract", addr, "coins", amount)
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeDistributedToContract,
-				sdk.NewAttribute(types.AttributeKeyAddress, addr),
-			),
-		)
-
-	}
-
-}
-*/

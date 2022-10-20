@@ -43,7 +43,7 @@ func TestContractIncentive(t *testing.T) {
 
 }
 
-func TestContractIncentiveWithLowDenom(t *testing.T) {
+func TestContractIncentiveWithLowIncentive(t *testing.T) {
 
 	ctx, keeper, _, _, walletA, _, _, _ := setupTest(t, TestContractPaths[ibcContract], sdk.NewCoins())
 
@@ -68,7 +68,89 @@ func TestContractIncentiveWithLowDenom(t *testing.T) {
 
 }
 
-func TestDistributeCoinsWithoutIncentive(t *testing.T) {
+func TestDistributeCoinsHalfIncentiveIsRecurringNotLastExec(t *testing.T) {
+
+	ctx, keeper, _, _, _, _, _, _ := setupTest(t, TestContractPaths[ibcContract], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	contrAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+
+	keeper.SetParams(ctx, types.Params{
+		AutoMsgFundsCommission:          10,
+		AutoMsgConstantFee:              1_000_000,                 // 1trst
+		AutoMsgFlexFeeMul:               100,                       // 100/100 = 1 = gasUsed
+		RecurringAutoMsgConstantFee:     1_000_000,                 // 1trst
+		MaxContractDuration:             time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinContractDuration:             time.Second * 40,
+		MinContractInterval:             time.Second * 20,
+		MinContractDurationForIncentive: time.Second * 20, // time.Hour * 24 // 1 day
+		MaxContractIncentive:            5_000_000,        // 5trst
+		ContractIncentiveMul:            50,               //  0/100 = 0 = no incentive
+		MinContractBalanceForIncentive:  50_000_000,       // 50trst
+	})
+	pub2 := secp256k1.GenPrivKey().PubKey()
+	addr2 := sdk.AccAddress(pub2.Address())
+	types.Denom = "stake"
+
+	contrInfo := types.ContractInfo{
+		CodeID: 0, Creator: addr2, Owner: addr2, ContractId: "test", Created: types.NewAbsoluteTxPosition(ctx), AutoMsg: []byte("test"), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), IBCPortID: "", CallbackSig: nil,
+	}
+	contract := types.ContractInfoWithAddress{
+		Address:      contrAddr,
+		ContractInfo: &contrInfo,
+	}
+	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
+	require.Equal(t, sdk.ZeroDec(), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+
+	_, err := keeper.DistributeCoins(ctx, contract, 800_000, true, false, ctx.BlockHeader().ProposerAddress)
+	require.Empty(t, err)
+
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3_000_000-900_000)), keeper.bankKeeper.GetBalance(ctx, contract.Address, sdk.DefaultBondDenom))
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, addr2, sdk.DefaultBondDenom))
+	// check validator current rewards
+	require.Equal(t, sdk.NewDec(800_000), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+}
+
+func TestDistributeCoinsHalfIncentiveOneTime(t *testing.T) {
+
+	ctx, keeper, _, _, _, _, _, _ := setupTest(t, TestContractPaths[ibcContract], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	contrAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+
+	keeper.SetParams(ctx, types.Params{
+		AutoMsgFundsCommission:          10,
+		AutoMsgConstantFee:              1_000_000,                 // 1trst
+		AutoMsgFlexFeeMul:               100,                       // 100/100 = 1 = gasUsed
+		RecurringAutoMsgConstantFee:     1_000_000,                 // 1trst
+		MaxContractDuration:             time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinContractDuration:             time.Second * 40,
+		MinContractInterval:             time.Second * 20,
+		MinContractDurationForIncentive: time.Second * 20, // time.Hour * 24 // 1 day
+		MaxContractIncentive:            5_000_000,        // 5trst
+		ContractIncentiveMul:            50,               //  0/100 = 0 = no incentive
+		MinContractBalanceForIncentive:  50_000_000,       // 50trst
+	})
+	pub2 := secp256k1.GenPrivKey().PubKey()
+	addr2 := sdk.AccAddress(pub2.Address())
+	types.Denom = "stake"
+
+	contrInfo := types.ContractInfo{
+		CodeID: 0, Creator: addr2, Owner: addr2, ContractId: "test", Created: types.NewAbsoluteTxPosition(ctx), AutoMsg: []byte("test"), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), IBCPortID: "", CallbackSig: nil,
+	}
+	contract := types.ContractInfoWithAddress{
+		Address:      contrAddr,
+		ContractInfo: &contrInfo,
+	}
+	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
+	require.Equal(t, sdk.ZeroDec(), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+
+	_, err := keeper.DistributeCoins(ctx, contract, 800_000, false, true, ctx.BlockHeader().ProposerAddress)
+	require.Empty(t, err)
+
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, contract.Address, sdk.DefaultBondDenom))
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt((3_000_000+1_050_000-2_100_000))), keeper.bankKeeper.GetBalance(ctx, addr2, sdk.DefaultBondDenom))
+	// check validator current rewards
+	require.Equal(t, sdk.NewDec(800_000), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+}
+
+func TestDistributeCoinsNoIncentive(t *testing.T) {
 
 	ctx, keeper, _, _, _, _, _, _ := setupTest(t, TestContractPaths[ibcContract], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
 	contrAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
@@ -100,7 +182,7 @@ func TestDistributeCoinsWithoutIncentive(t *testing.T) {
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
 	require.Equal(t, sdk.ZeroDec(), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
 
-	err := keeper.DistributeCoins(ctx, contract, 800_000, true, ctx.BlockHeader().ProposerAddress)
+	_, err := keeper.DistributeCoins(ctx, contract, 800_000, true, true, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, contract.Address, sdk.DefaultBondDenom))
@@ -109,7 +191,7 @@ func TestDistributeCoinsWithoutIncentive(t *testing.T) {
 	require.Equal(t, sdk.NewDec(800_000), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
 }
 
-func TestDistributeCoinsEmptyContractBalanceWithMaxIncentive(t *testing.T) {
+func TestDistributeCoinsEmptyContractBalanceFullIncentive(t *testing.T) {
 
 	ctx, keeper, _, _, _, _, _, _ := setupTest(t, TestContractPaths[ibcContract], sdk.NewCoins())
 
@@ -141,13 +223,56 @@ func TestDistributeCoinsEmptyContractBalanceWithMaxIncentive(t *testing.T) {
 		ContractInfo: &contrInfo,
 	}
 
-	err := keeper.DistributeCoins(ctx, contract, 731_241, true, ctx.BlockHeader().ProposerAddress)
+	_, err := keeper.DistributeCoins(ctx, contract, 731_241, true, true, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 	/*info := keeper.GetContractInfo(ctx, contract.Address)
 	fmt.Print("info", info)
 	require.Equal(t, types.ContractInfo{
 		CodeID: 0, Creator: addr2, Owner: addr2, ContractId: "test", Created: types.NewAbsoluteTxPosition(ctx), AutoMsg: []byte("test"), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), IBCPortID: "", CallbackSig: nil,
 	}, *info)*/
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, contract.Address, sdk.DefaultBondDenom))
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, addr2, sdk.DefaultBondDenom))
+
+	// check validator current rewards
+	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
+	require.Equal(t, sdk.NewDec(731_241), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+
+}
+
+func TestDistributeCoinsEmptyContractBalanceFullIncentiveNotLastExec(t *testing.T) {
+
+	ctx, keeper, _, _, _, _, _, _ := setupTest(t, TestContractPaths[ibcContract], sdk.NewCoins())
+
+	keeper.SetParams(ctx, types.Params{
+		AutoMsgFundsCommission:          2,
+		AutoMsgConstantFee:              1_000_000,                 // 1trst
+		AutoMsgFlexFeeMul:               100,                       // 100/100 = 1 = gasUsed
+		RecurringAutoMsgConstantFee:     1_000_000,                 // 1trst
+		MaxContractDuration:             time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinContractDuration:             time.Second * 40,
+		MinContractInterval:             time.Second * 20,
+		MinContractDurationForIncentive: time.Second * 20, // time.Hour * 24 // 1 day
+		MaxContractIncentive:            5_000_000,        // 5trst
+		ContractIncentiveMul:            100,              //  100/100 = 1 = full incentive
+		MinContractBalanceForIncentive:  50_000_000,       // 50trst
+	})
+
+	pub1 := secp256k1.GenPrivKey().PubKey()
+	pub2 := secp256k1.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pub1.Address())
+	addr2 := sdk.AccAddress(pub2.Address())
+	types.Denom = "stake"
+
+	contrInfo := types.ContractInfo{
+		CodeID: 0, Creator: addr2, Owner: addr2, ContractId: "test", Created: types.NewAbsoluteTxPosition(ctx), AutoMsg: []byte("test"), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), IBCPortID: "", CallbackSig: nil,
+	}
+	contract := types.ContractInfoWithAddress{
+		Address:      addr1,
+		ContractInfo: &contrInfo,
+	}
+
+	_, err := keeper.DistributeCoins(ctx, contract, 731_241, true, false, ctx.BlockHeader().ProposerAddress)
+	require.Empty(t, err)
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, contract.Address, sdk.DefaultBondDenom))
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, addr2, sdk.DefaultBondDenom))
 
@@ -189,7 +314,7 @@ func TestDistributeCoinsEmptyContractBalanceWithIncentiveAndMultipliedFlexFee(t 
 		ContractInfo: &contrInfo,
 	}
 
-	err := keeper.DistributeCoins(ctx, contract, 731_241, true, ctx.BlockHeader().ProposerAddress)
+	_, err := keeper.DistributeCoins(ctx, contract, 731_241, true, true, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 	/*info := keeper.GetContractInfo(ctx, contract.Address)
 	fmt.Print("info", info)
@@ -205,7 +330,7 @@ func TestDistributeCoinsEmptyContractBalanceWithIncentiveAndMultipliedFlexFee(t 
 
 }
 
-func TestDistributeCoinsEmptyContractBalanceWithEmptyBalanceAndNoIncentive(t *testing.T) {
+func TestDistributeCoinsEmptyContractBalanceWithMultipliedFlexFeeAndNoIncentive(t *testing.T) {
 
 	ctx, keeper, _, _, _, _, _, _ := setupTest(t, TestContractPaths[ibcContract], sdk.NewCoins())
 
@@ -237,7 +362,7 @@ func TestDistributeCoinsEmptyContractBalanceWithEmptyBalanceAndNoIncentive(t *te
 		ContractInfo: &contrInfo,
 	}
 
-	err := keeper.DistributeCoins(ctx, contract, 731_241, true, ctx.BlockHeader().ProposerAddress)
+	_, err := keeper.DistributeCoins(ctx, contract, 731_241, true, true, ctx.BlockHeader().ProposerAddress)
 	require.NotEmpty(t, err)
 
 }
