@@ -13,7 +13,7 @@ COPY scripts/install-wasm-tools.sh .
 RUN chmod +x install-wasm-tools.sh
 RUN ./install-wasm-tools.sh
 
-RUN make build-test-contract
+RUN make build-test-contracts
 
 # workaround because paths seem kind of messed up
 # RUN cp /opt/sgxsdk/lib64/libsgx_urts_sim.so /usr/lib/libsgx_urts_sim.so

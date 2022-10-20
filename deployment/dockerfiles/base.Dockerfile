@@ -97,7 +97,7 @@ RUN ln -s /usr/lib/x86_64-linux-gnu/liblz4.so /usr/local/lib/liblz4.so  && ln -s
 RUN . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${DB_BACKEND} MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_local_no_rust
 RUN . /opt/sgxsdk/environment && env && MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_cli
 
-# RUN rustup target add wasm32-unknown-unknown && apt update -y && apt install clang -y && make build-test-contract
+# RUN rustup target add wasm32-unknown-unknown && apt update -y && apt install clang -y && make build-test-contracts
 
 # ENTRYPOINT ["/bin/bash", "go-tests.sh"]
 ENTRYPOINT ["/bin/bash"]

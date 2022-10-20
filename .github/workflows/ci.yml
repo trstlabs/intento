@@ -120,7 +120,7 @@ jobs:
           SGX_MODE=SW RUSTC_WRAPPER="$HOME/sccache" make build-linux
       - name: Build Contracts
         run: |
-          make build-test-contract
+          make build-test-contracts
       - uses: actions/upload-artifact@v2
         with:
           name: trstd
