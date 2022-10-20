@@ -4,7 +4,7 @@ use wasmi::{ModuleRef, RuntimeValue};
 
 use enclave_ffi_types::EnclaveError;
 
-use super::contract::{ContractInstance};
+use super::contract::ContractInstance;
 use crate::errors::{wasmi_error_to_enclave_error, WasmEngineError};
 use enclave_cosmos_types::types::HandleType;
 
@@ -45,7 +45,7 @@ impl Engine {
             .module
             .invoke_export(
                 "instantiate",
-               &[
+                &[
                     RuntimeValue::I32(env_ptr as i32),
                     RuntimeValue::I32(msg_info_ptr as i32),
                     RuntimeValue::I32(msg_ptr as i32),
@@ -113,21 +113,63 @@ impl Engine {
         // }?;
 
         let (func_name, args) = match handle_type {
-                HandleType::HANDLE_TYPE_EXECUTE => (
-                    "execute",
-                    vec![
-                        RuntimeValue::I32(env_ptr as i32),
-                        RuntimeValue::I32(msg_info_ptr as i32),
-                        RuntimeValue::I32(msg_ptr as i32),
-                    ],
-                ),
-                HandleType::HANDLE_TYPE_REPLY => (
-                    "reply",
-                    vec![
-                        RuntimeValue::I32(env_ptr as i32),
-                        RuntimeValue::I32(msg_ptr as i32),
-                    ],
-                ),
+            HandleType::HANDLE_TYPE_EXECUTE => (
+                "execute",
+                vec![
+                    RuntimeValue::I32(env_ptr as i32),
+                    RuntimeValue::I32(msg_info_ptr as i32),
+                    RuntimeValue::I32(msg_ptr as i32),
+                ],
+            ),
+            HandleType::HANDLE_TYPE_REPLY => (
+                "reply",
+                vec![
+                    RuntimeValue::I32(env_ptr as i32),
+                    RuntimeValue::I32(msg_ptr as i32),
+                ],
+            ),
+            HandleType::HANDLE_TYPE_IBC_CHANNEL_OPEN => (
+                "ibc_channel_open",
+                vec![
+                    RuntimeValue::I32(env_ptr as i32),
+                    RuntimeValue::I32(msg_ptr as i32),
+                ],
+            ),
+            HandleType::HANDLE_TYPE_IBC_CHANNEL_CONNECT => (
+                "ibc_channel_connect",
+                vec![
+                    RuntimeValue::I32(env_ptr as i32),
+                    RuntimeValue::I32(msg_ptr as i32),
+                ],
+            ),
+            HandleType::HANDLE_TYPE_IBC_CHANNEL_CLOSE => (
+                "ibc_channel_close",
+                vec![
+                    RuntimeValue::I32(env_ptr as i32),
+                    RuntimeValue::I32(msg_ptr as i32),
+                ],
+            ),
+            HandleType::HANDLE_TYPE_IBC_PACKET_RECEIVE => (
+                "ibc_packet_receive",
+                vec![
+                    RuntimeValue::I32(env_ptr as i32),
+                    RuntimeValue::I32(msg_ptr as i32),
+                ],
+            ),
+            HandleType::HANDLE_TYPE_IBC_PACKET_ACK => (
+                "ibc_packet_ack",
+                vec![
+                    RuntimeValue::I32(env_ptr as i32),
+                    RuntimeValue::I32(msg_ptr as i32),
+                ],
+            ),
+            HandleType::HANDLE_TYPE_IBC_PACKET_TIMEOUT => (
+                "ibc_packet_timeout",
+                vec![
+                    RuntimeValue::I32(env_ptr as i32),
+                    RuntimeValue::I32(msg_ptr as i32),
+                ],
+            ),
         };
 
         info!("Invoking {}() in wasm", func_name);
@@ -152,15 +194,17 @@ impl Engine {
         info!("Invoking query() in wasm");
 
         match self
-        .module
-        .invoke_export(
-            "query", &[
-            RuntimeValue::I32(env_ptr as i32),
-            RuntimeValue::I32(msg_ptr as i32)],
-            &mut self.contract_instance
-        )
-        .map_err(wasmi_error_to_enclave_error)?
-    {
+            .module
+            .invoke_export(
+                "query",
+                &[
+                    RuntimeValue::I32(env_ptr as i32),
+                    RuntimeValue::I32(msg_ptr as i32),
+                ],
+                &mut self.contract_instance,
+            )
+            .map_err(wasmi_error_to_enclave_error)?
+        {
             Some(RuntimeValue::I32(offset)) => Ok(offset as u32),
             other => {
                 warn!("query method returned value which wasn't u32: {:?}", other);

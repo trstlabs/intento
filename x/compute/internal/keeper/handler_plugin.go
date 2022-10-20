@@ -31,14 +31,20 @@ type MessageHandlerChain struct {
 }
 
 type MessageHandler struct {
-	router   sdk.Router
-	encoders MessageEncoders
+	// router is used to route StargateMsg and any other msg except for MsgExecuteContract & MsgInstantiateContrat.
+	router MsgServiceRouter
+	// legacyRouter is used to route MsgExecuteContract & MsgInstantiateContrat.
+	// the reason is those msgs use the data field internally for reply, which is
+	// truncated if the msg erred
+	legacyRouter sdk.Router
+	encoders     MessageEncoders
 }
 
-func NewSDKMessageHandler(router sdk.Router, encoders MessageEncoders) MessageHandler {
+func NewSDKMessageHandler(router MsgServiceRouter, legacyRouter sdk.Router, encoders MessageEncoders) MessageHandler {
 	return MessageHandler{
-		router:   router,
-		encoders: encoders,
+		router:       router,
+		legacyRouter: legacyRouter,
+		encoders:     encoders,
 	}
 }
 
@@ -63,6 +69,7 @@ func NewMessageHandlerChain(first Messenger, others ...Messenger) *MessageHandle
 }
 
 func NewMessageHandler(
+	msgRouter MsgServiceRouter,
 	router sdk.Router,
 	customEncoders *MessageEncoders,
 	channelKeeper channelkeeper.Keeper,
@@ -71,7 +78,7 @@ func NewMessageHandler(
 	unpacker codectypes.AnyUnpacker) Messenger {
 	encoders := DefaultEncoders(portSource, unpacker).Merge(customEncoders)
 	return NewMessageHandlerChain(
-		NewSDKMessageHandler(router, encoders),
+		NewSDKMessageHandler(msgRouter, router, encoders),
 		NewIBCRawPacketHandler(channelKeeper, capabilityKeeper),
 	)
 }
@@ -445,6 +452,27 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			CallbackSig: msg.Execute.CallbackSignature,
 		}
 		return []sdk.Msg{&sdkMsg}, nil
+	case msg.InstantiateAuto != nil:
+		coins, err := convertWasmCoinsToSdkCoins(msg.InstantiateAuto.Funds)
+		if err != nil {
+			return nil, err
+		}
+
+		sdkMsg := types.MsgInstantiateContract{
+			Sender:          sender.String(),
+			CodeID:          msg.InstantiateAuto.CodeID,
+			ContractId:      msg.InstantiateAuto.ContractID,
+			CodeHash:        msg.InstantiateAuto.CodeHash,
+			Msg:             msg.InstantiateAuto.Msg,
+			AutoMsg:         msg.InstantiateAuto.AutoMsg,
+			Duration:        msg.InstantiateAuto.Duration,
+			Interval:        msg.InstantiateAuto.Interval,
+			StartDurationAt: msg.InstantiateAuto.StartDurationAt,
+			Funds:           coins,
+			CallbackSig:     msg.InstantiateAuto.CallbackSignature,
+			Owner:           msg.InstantiateAuto.Owner,
+		}
+		return []sdk.Msg{&sdkMsg}, nil
 	case msg.Instantiate != nil:
 		coins, err := convertWasmCoinsToSdkCoins(msg.Instantiate.Funds)
 		if err != nil {
@@ -457,12 +485,13 @@ func EncodeWasmMsg(sender sdk.AccAddress, msg *wasmTypes.WasmMsg) ([]sdk.Msg, er
 			ContractId:      msg.Instantiate.ContractID,
 			CodeHash:        msg.Instantiate.CodeHash,
 			Msg:             msg.Instantiate.Msg,
-			AutoMsg:         msg.Instantiate.AutoMsg,
-			Duration:        msg.Instantiate.Duration,
-			Interval:        msg.Instantiate.Interval,
-			StartDurationAt: msg.Instantiate.StartDurationAt,
+			AutoMsg:         nil,
+			Duration:        "",
+			Interval:        "",
+			StartDurationAt: 0,
 			Funds:           coins,
 			CallbackSig:     msg.Instantiate.CallbackSignature,
+			Owner:           "",
 		}
 		return []sdk.Msg{&sdkMsg}, nil
 	default:
@@ -513,7 +542,7 @@ func (h MessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Addre
 	var err error
 	if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
 		msgRoute := legacyMsg.Route()
-		handler := h.router.Route(ctx, msgRoute)
+		handler := h.legacyRouter.Route(ctx, msgRoute)
 		if handler == nil {
 			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msgRoute)
 		}

@@ -4,6 +4,7 @@ package trst.x.compute.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/trstlabs/trst/x/compute/internal/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -56,9 +57,10 @@ message ContractInfo {
     google.protobuf.Timestamp start_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
     google.protobuf.Timestamp exec_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
     google.protobuf.Timestamp end_time = 11 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    repeated google.protobuf.Timestamp exec_history = 12 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    repeated ExecHistoryEntry exec_history = 12;
     string ibc_port_id = 14[ (gogoproto.customname) = "IBCPortID" ];
     bytes callback_sig = 15;
+    
 }
 
 
@@ -67,6 +69,14 @@ message ContractInfoWithAddress {
     bytes address = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
     ContractInfo ContractInfo = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = ""];
 }
+
+// ExecHistoryEntry provides a the history of auto contract execution
+message ExecHistoryEntry {
+    google.protobuf.Timestamp  scheduled_exec_time = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp  actual_exec_time = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    cosmos.base.v1beta1.Coin exec_fee = 3 [(gogoproto.nullable) = false];
+}
+
 
 /*
 enum ContractCodeHistoryOperationType {
@@ -124,7 +134,7 @@ message KeyPair {
 message Params {
    option (gogoproto.goproto_stringer) = false;
     int64 AutoMsgFundsCommission  = 1;
-     int64 AutoMsgFlexFeeDenom = 2;
+     int64 AutoMsgFlexFeeMul = 2;
     int64 AutoMsgConstantFee = 3;
     int64 RecurringAutoMsgConstantFee = 4;
     //  Maximum period for self-executing contract
@@ -148,8 +158,9 @@ message Params {
    google.protobuf.Duration MinContractInterval = 8 [
         (gogoproto.nullable)    = false,
         (gogoproto.stdduration) = true,
-        (gogoproto.jsontag)     = "min_contract_duration,omitempty"
+        (gogoproto.jsontag)     = "min_contract_interval,omitempty"
   ];
     int64 MaxContractIncentive = 9;
-    int64 MinContractBalanceForIncentive = 10;
+    int64 ContractIncentiveMul = 10;
+    int64 MinContractBalanceForIncentive = 11;
 }

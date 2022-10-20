@@ -18,6 +18,25 @@ type ContractResult struct {
 	InternalMsgId           []byte    `json:"internal_msg_id"`
 }
 
+/*
+// This struct helps us to distinguish between v0.10 contract response and v1 contract response
+type ContractIBCResponse struct {
+	IBCBasic         *IBCBasicResult   `json:"ok_ibc_basic,omitempty"`
+	IBCPacketReceive *IBCReceiveResult `json:"ok_ibc_packet_receive,omitempty"`
+	IBCChannelOpen   *string           `json:"ok_ibc_open_channel"`
+}
+
+// This struct helps us to distinguish between v0.10 contract response and v1 contract response
+type ContractExecResponse struct {
+	Ok                      *Response             `json:"ok,omitempty"`
+	Err                     *StdError             `json:"Err,omitempty"`
+	InternalReplyEnclaveSig []byte                `json:"internal_reply_enclave_sig"`
+	InternalMsgId           []byte                `json:"internal_msg_id"`
+	IBCBasic                *IBCBasicResult       `json:"ok_ibc_basic,omitempty"`
+	IBCPacketReceive        *IBCReceiveResult     `json:"ok_ibc_packet_receive,omitempty"`
+	IBCChannelOpen          *IBCOpenChannelResult `json:"ok_ibc_open_channel,omitempty"`
+}
+*/
 // Response defines the return value on a successful instantiate/execute/migrate.
 // This is the counterpart of [Response](https://github.com/CosmWasm/cosmwasm/blob/v0.14.0-beta1/packages/std/src/results/response.rs#L73-L88)
 type Response struct {
@@ -244,8 +263,9 @@ type StargateMsg struct {
 }
 
 type WasmMsg struct {
-	Execute     *ExecuteMsg     `json:"execute,omitempty"`
-	Instantiate *InstantiateMsg `json:"instantiate,omitempty"`
+	Execute         *ExecuteMsg         `json:"execute,omitempty"`
+	Instantiate     *InstantiateMsg     `json:"instantiate,omitempty"`
+	InstantiateAuto *InstantiateAutoMsg `json:"instantiate_auto,omitempty"`
 }
 
 // ExecuteMsg is used to call another defined contract on this chain.
@@ -279,6 +299,23 @@ type InstantiateMsg struct {
 	// Msg is assumed to be a json-encoded message, which will be passed directly
 	// as `userMsg` when calling `Handle` on the above-defined contract
 	Msg []byte `json:"msg"`
+	/// ContractID is a mandatory human-readbale id for the contract
+	ContractID string `json:"contract_id"`
+	// Send is an optional amount of coins this contract sends to the called contract
+	Funds             Coins  `json:"funds"`
+	CallbackSignature []byte `json:"callback_sig"` // Optional
+
+}
+
+type InstantiateAutoMsg struct {
+	// CodeID is the reference to the wasm byte code as used by the Cosmos-SDK
+	CodeID uint64 `json:"code_id"`
+	// Custom addition to support binding a message to specific code to harden against offline & replay attacks
+	// This is only needed when creating a callback message
+	CodeHash string `json:"code_hash"`
+	// Msg is assumed to be a json-encoded message, which will be passed directly
+	// as `userMsg` when calling `Handle` on the above-defined contract
+	Msg []byte `json:"msg"`
 	// AutoMsg is assumed to be a json-encoded message, which will be passed directly
 	// as `autoMsg` when calling `Handle` on the above-defined contract (optional)
 	AutoMsg []byte `json:"auto_msg"`
@@ -293,4 +330,6 @@ type InstantiateMsg struct {
 	// Send is an optional amount of coins this contract sends to the called contract
 	Funds             Coins  `json:"funds"`
 	CallbackSignature []byte `json:"callback_sig"` // Optional
+	/// for contracts instantiating on behalf of an address
+	Owner string `json:"owner"` // Optional
 }

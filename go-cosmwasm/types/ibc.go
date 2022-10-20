@@ -1,9 +1,5 @@
 package types
 
-import (
-	abci "github.com/tendermint/tendermint/abci/types"
-)
-
 type IBCEndpoint struct {
 	PortID    string `json:"port_id"`
 	ChannelID string `json:"channel_id"`
@@ -137,16 +133,19 @@ func (m *IBCCloseConfirm) ToMsg() IBCChannelCloseMsg {
 }
 
 type IBCPacketReceiveMsg struct {
-	Packet IBCPacket `json:"packet"`
+	Packet  IBCPacket `json:"packet"`
+	Relayer string    `json:"relayer"`
 }
 
 type IBCPacketAckMsg struct {
 	Acknowledgement IBCAcknowledgement `json:"acknowledgement"`
 	OriginalPacket  IBCPacket          `json:"original_packet"`
+	Relayer         string             `json:"relayer"`
 }
 
 type IBCPacketTimeoutMsg struct {
-	Packet IBCPacket `json:"packet"`
+	Packet  IBCPacket `json:"packet"`
+	Relayer string    `json:"relayer"`
 }
 
 // TODO: test what the sdk Order.String() represents and how to parse back
@@ -183,7 +182,9 @@ type IBCTimeout struct {
 }
 
 type IBCAcknowledgement struct {
-	Data []byte `json:"data"`
+	Data           []byte    `json:"data"`
+	OriginalPacket IBCPacket `json:"original_packet"`
+	Relayer        string    `json:"relayer"`
 }
 
 type IBCPacket struct {
@@ -196,10 +197,12 @@ type IBCPacket struct {
 
 // IBCChannelOpenResult is the raw response from the ibc_channel_open call.
 // This is mirrors Rust's ContractResult<()>.
-// We just check if Err == "" to see if this is success (no other data on success)
+// Check if Err == "" to see if this is success
+// On Success, IBCV3ChannelOpenResponse *may* be set if the contract is ibcv3 compatible and wishes to
+// define a custom version in the handshake.
 type IBCChannelOpenResult struct {
-	Ok  *struct{} `json:"ok,omitempty"`
-	Err string    `json:"error,omitempty"`
+	Ok  *IBC3ChannelOpenResponse `json:"ok,omitempty"`
+	Err string                   `json:"error,omitempty"`
 }
 
 // This is the return value for the majority of the ibc handlers.
@@ -211,7 +214,7 @@ type IBCChannelOpenResult struct {
 // will use other Response types
 type IBCBasicResult struct {
 	Ok  *IBCBasicResponse `json:"ok,omitempty"`
-	Err string            `json:"error,omitempty"`
+	Err string            `json:"Err,omitempty"`
 }
 
 // IBCBasicResponse defines the return value on a successful processing.
@@ -223,7 +226,7 @@ type IBCBasicResponse struct {
 	// "fire and forget".
 	Messages []SubMsg `json:"messages"`
 	// attributes for a log event to return over abci interface
-	Attributes []abci.EventAttribute `json:"attributes"`
+	Attributes []Attribute `json:"attributes"`
 	// custom events (separate from the main one that contains the attributes
 	// above)
 	Events []Event `json:"events"`
@@ -238,7 +241,17 @@ type IBCBasicResponse struct {
 // will use other Response types
 type IBCReceiveResult struct {
 	Ok  *IBCReceiveResponse `json:"ok,omitempty"`
-	Err string              `json:"error,omitempty"`
+	Err string              `json:"Err,omitempty"`
+}
+
+type IBCOpenChannelResult struct {
+	Ok  *IBC3ChannelOpenResponse `json:"ok,omitempty"`
+	Err *StdError                `json:"Err,omitempty"`
+}
+
+// IBC3ChannelOpenResponse is version negotiation data for the handshake
+type IBC3ChannelOpenResponse struct {
+	Version string `json:"version"`
 }
 
 // IBCReceiveResponse defines the return value on packet response processing.
@@ -254,8 +267,8 @@ type IBCReceiveResponse struct {
 	// If the ReplyOn value matches the result, the runtime will invoke this
 	// contract's `reply` entry point after execution. Otherwise, this is all
 	// "fire and forget".
-	Messages   []SubMsg              `json:"messages"`
-	Attributes []abci.EventAttribute `json:"attributes"`
+	Messages   []SubMsg    `json:"messages"`
+	Attributes []Attribute `json:"attributes"`
 	// custom events (separate from the main one that contains the attributes
 	// above)
 	Events []Event `json:"events"`

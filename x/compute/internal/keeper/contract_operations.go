@@ -78,7 +78,7 @@ func (k Keeper) importCode(ctx sdk.Context, codeID uint64, codeInfo types.CodeIn
 }
 
 // Instantiate creates an instance of a WASM contract
-func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, msg []byte, autoMsg []byte, id string, funds sdk.Coins, callbackSig []byte, duration time.Duration, interval time.Duration, startTime time.Time) (sdk.AccAddress, []byte, error) {
+func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin */ sdk.AccAddress, msg []byte, autoMsg []byte, id string, funds sdk.Coins, callbackSig []byte, duration time.Duration, interval time.Duration, startTime time.Time, customOwner sdk.AccAddress) (sdk.AccAddress, []byte, error) {
 
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading CosmWasm module: init")
 
@@ -89,6 +89,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	signerSig := []byte{}
 	var err error
 
+	owner := creator
 	// If no callback signature - we should send the actual msg sender sign bytes and signature
 	if callbackSig == nil {
 		signBytes, signMode, modeInfoBytes, pkBytes, signerSig, err = k.GetSignerInfo(ctx, creator)
@@ -96,6 +97,8 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 			return nil, nil, err
 		}
 		fmt.Printf("Init by account \n")
+	} else if customOwner != nil {
+		owner = customOwner
 	}
 
 	verificationInfo := types.NewVerificationInfo(signBytes, signMode, modeInfoBytes, pkBytes, signerSig, callbackSig)
@@ -203,8 +206,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 			k.InsertContractQueue(ctx, contractAddress.String(), execTime)
 		}
 	}
-
-	contractInfo := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, startTime, execTime, endTime, interval, autoMsg, callbackSig)
+	contractInfo := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, startTime, execTime, endTime, endTime.Sub(startTime), interval, autoMsg, callbackSig, owner)
 	// check for IBC flag
 	report, err := k.wasmer.AnalyzeCode(codeInfo.CodeHash)
 	if err != nil {
@@ -231,7 +233,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		return nil, nil, err
 	}
 
-	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res, res.Messages, res.Events, res.Data, msg, verificationInfo)
+	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res.Attributes, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -316,7 +318,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 		sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String()),
 	))*/
 
-	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res, res.Messages, res.Events, res.Data, msg, verificationInfo)
+	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res.Attributes, res.Messages, res.Events, res.Data, msg, verificationInfo)
 	if err != nil {
 		return nil, err
 	}

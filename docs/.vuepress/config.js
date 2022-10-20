@@ -54,7 +54,11 @@ module.exports = {
           children: [
             {
               title: "Trustless Hub on Github",
-              path: "https://github.com/trstlabs/trst",
+              path: "https://github.com/trstlabs/Trustless-Hub",
+            },
+            {
+              title: "CosmWasm Docs",
+              path: "https://docs.cosmwasm.com/docs/1.0/",
             },
             {
               title: "Cosmos SDK Docs",

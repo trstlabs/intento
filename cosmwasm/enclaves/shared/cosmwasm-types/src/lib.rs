@@ -11,3 +11,4 @@ pub mod encoding;
 pub mod std_error;
 pub mod system_error;
 pub mod types;
+pub mod ibc;

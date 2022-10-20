@@ -112,7 +112,7 @@ pub enum WasmMsg {
     Execute {
         /// Contract address
         contract_addr: String,
-        /// code_hash is the hex encoded hash of the code. This is used by Secret Network to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         code_hash: String,
         /// msg is the json-encoded ExecuteMsg struct (as raw Binary)
@@ -122,13 +122,30 @@ pub enum WasmMsg {
         /// that are originating from other contracts
         callback_sig: Option<Vec<u8>>,
     },
-    /// Instantiates a new contracts from previously uploaded Wasm code.
+       /// Instantiates a new contract from previously uploaded Wasm code.
     ///
     /// This is translated to a [MsgInstantiateContract](https://github.com/CosmWasm/wasmd/blob/v0.16.0-alpha1/x/wasm/internal/types/tx.proto#L47-L61).
     /// `sender` is automatically filled with the current contract's address.
     Instantiate {
         code_id: u64,
-        /// code_hash is the hex encoded hash of the code. This is used by Secret Network to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used to harden against replaying the contract
+        /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
+        code_hash: String,
+        /// msg is the JSON-encoded InstantiateMsg struct (as raw Binary)
+        msg: Binary,
+        funds: Vec<Coin>,
+        /// Human-readable contract_id for the contract
+        contract_id: String,
+        /// callback_sig is used validate messages that are originating from other contracts or the specified governance address
+        callback_sig: Option<Vec<u8>>,
+    },
+     /// Instantiates a new automatically executing contract from previously uploaded Wasm code.
+    ///
+    /// This is translated to a [MsgInstantiateContract](https://github.com/CosmWasm/wasmd/blob/v0.16.0-alpha1/x/wasm/internal/types/tx.proto#L47-L61).
+    /// `sender` is automatically filled with the current contract's address.
+    InstantiateAuto {
+        code_id: u64,
+        /// code_hash is the hex encoded hash of the code. This is used to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         code_hash: String,
         /// msg is the JSON-encoded InstantiateMsg struct (as raw Binary)
@@ -145,6 +162,8 @@ pub enum WasmMsg {
         start_duration_at: Option<u64>,
         /// callback_sig is used validate messages that are originating from other contracts or the specified governance address
         callback_sig: Option<Vec<u8>>,
+         /// for contracts instantiating on behalf of an address
+        owner: Option<String>,
 
     },
 }

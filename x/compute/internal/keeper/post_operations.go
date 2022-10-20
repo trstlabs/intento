@@ -19,7 +19,7 @@ func (k *Keeper) handleContractResponse(
 	ctx sdk.Context,
 	contractAddr sdk.AccAddress,
 	ibcPort string,
-	resp *wasmTypes.Response,
+	attributes wasmTypes.Attributes,
 	msgs []wasmTypes.SubMsg,
 	evts wasmTypes.Events,
 	data []byte,
@@ -29,8 +29,7 @@ func (k *Keeper) handleContractResponse(
 	// This is used mainly in replies in order to decrypt their data.
 	ogSigInfo wasmTypes.VerificationInfo,
 ) ([]byte, error) {
-
-	events := types.ContractLogsToSdkEvents(resp.Attributes, contractAddr)
+	events := types.ContractLogsToSdkEvents(attributes, contractAddr)
 
 	ctx.EventManager().EmitEvents(events)
 
@@ -117,7 +116,7 @@ func (k Keeper) reply(ctx sdk.Context, contractAddress sdk.AccAddress, reply was
 			sdk.NewAttribute(types.AttributeKeyContractAddr, contractAddress.String()),
 		))*/
 
-	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res, res.Messages, res.Events, res.Data, ogTx, ogSigInfo)
+	data, err := k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, res.Attributes, res.Messages, res.Events, res.Data, ogTx, ogSigInfo)
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrReplyFailed, err.Error())
 	}

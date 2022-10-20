@@ -49,10 +49,11 @@ func TestQueryContractContractId(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	hash := keeper.GetCodeInfo(ctx, contractID).CodeHash
+	info, err := keeper.GetCodeInfo(ctx, contractID)
+	require.NoError(t, err)
 
 	msg := types.ContractMsg{
-		CodeHash: []byte(hex.EncodeToString(hash)),
+		CodeHash: []byte(hex.EncodeToString(info.CodeHash)),
 		Msg:      initMsgBz,
 	}
 
@@ -63,7 +64,7 @@ func TestQueryContractContractId(t *testing.T) {
 
 	ctx = PrepareInitSignedTx(t, keeper, ctx, creator, privCreator, initMsgBz, contractID, deposit)
 
-	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* nil,*/, initMsgBz, nil, label, deposit, nil, 0, 0, time.Now())
+	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* nil,*/, initMsgBz, nil, label, deposit, nil, 0, 0, time.Now(), nil)
 	require.NoError(t, err)
 
 	// this gets us full error, not redacted sdk.Error
@@ -152,8 +153,10 @@ func TestQueryContractState(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	key := keeper.GetCodeInfo(ctx, contractID).CodeHash
-	keyStr := hex.EncodeToString(key)
+	info, err := keeper.GetCodeInfo(ctx, contractID)
+	require.NoError(t, err)
+
+	keyStr := hex.EncodeToString(info.CodeHash)
 
 	msg := types.ContractMsg{
 		CodeHash: []byte(keyStr),
@@ -162,7 +165,7 @@ func TestQueryContractState(t *testing.T) {
 
 	initMsgBz, err = wasmCtx.Encrypt(msg.Serialize())
 
-	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* nil,*/, initMsgBz, nil, "demo contract to query", deposit, nil, 0, 0, time.Now())
+	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* nil,*/, initMsgBz, nil, "demo contract to query", deposit, nil, 0, 0, time.Now(), nil)
 	require.NoError(t, err)
 
 	contractModel := []types.Model{
@@ -293,8 +296,9 @@ func TestListContractByCodeOrdering(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	key := keeper.GetCodeInfo(ctx, codeID).CodeHash
-	keyStr := hex.EncodeToString(key)
+	info, err := keeper.GetCodeInfo(ctx, codeID)
+	require.NoError(t, err)
+	keyStr := hex.EncodeToString(info.CodeHash)
 
 	msg := types.ContractMsg{
 		CodeHash: []byte(keyStr),
@@ -338,7 +342,7 @@ func TestListContractByCodeOrdering(t *testing.T) {
 
 		ctx = ctx.WithTxBytes(txBytes)
 		start := time.Now()
-		_, _, err = keeper.Instantiate(ctx, codeID, creator /* nil,*/, initMsgBz, nil, fmt.Sprintf("contract %d", i), topUp, nil, 0, 0, start)
+		_, _, err = keeper.Instantiate(ctx, codeID, creator /* nil,*/, initMsgBz, nil, fmt.Sprintf("contract %d", i), topUp, nil, 0, 0, start, nil)
 		require.NoError(t, err)
 	}
 

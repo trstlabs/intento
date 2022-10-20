@@ -14,7 +14,8 @@ import (
 	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 )
 
-const Denom = "utrst"
+var Denom = "utrst"
+
 const defaultLRUCacheSize = uint64(0)
 const defaultEnclaveLRUCacheSize = uint8(5) // can safely go up to 15
 const defaultQueryGasLimit = uint64(3000000)
@@ -149,17 +150,18 @@ type ContractCodeHistoryEntry struct {
 */
 
 // NewContractInfo creates a new instance of a given WASM contract info
-func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, startTime time.Time, execTime time.Time, endTime time.Time, interval time.Duration, autoMsg []byte, callbackSig []byte) ContractInfo {
+func NewContractInfo(codeID uint64, creator /* , admin */ sdk.AccAddress, label string, createdAt *AbsoluteTxPosition, startTime time.Time, execTime time.Time, endTime time.Time, duration time.Duration, interval time.Duration, autoMsg []byte, callbackSig []byte, owner sdk.AccAddress) ContractInfo {
 	return ContractInfo{
 		CodeID:  codeID,
 		Creator: creator,
-		Owner:   creator,
+		Owner:   owner,
 		// Admin:   admin,
 		ContractId:  label,
 		Created:     createdAt,
 		StartTime:   startTime,
 		ExecTime:    execTime,
 		EndTime:     endTime,
+		Duration:    duration,
 		Interval:    interval,
 		AutoMsg:     autoMsg,
 		CallbackSig: callbackSig,

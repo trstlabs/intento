@@ -340,10 +340,10 @@ func TestInstantiate(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	key := keeper.GetCodeInfo(ctx, contractID).CodeHash
-
+	contrInfo, err := keeper.GetCodeInfo(ctx, contractID)
+	require.NoError(t, err)
 	msg := types.ContractMsg{
-		CodeHash: []byte(hex.EncodeToString(key)),
+		CodeHash: []byte(hex.EncodeToString(contrInfo.CodeHash)),
 		Msg:      initMsgBz,
 	}
 
@@ -371,7 +371,7 @@ func TestInstantiate(t *testing.T) {
 	ctx = ctx.WithTxBytes(txBytes)
 
 	// create with no balance is also legal
-	contractAddr, _, err := keeper.Instantiate(ctx, contractID, creator /* , nil */, initMsgBz, nil, "demo contract 1", nil, nil, 0, 0, time.Now())
+	contractAddr, _, err := keeper.Instantiate(ctx, contractID, creator /* , nil */, initMsgBz, nil, "demo contract 1", nil, nil, 0, 0, time.Now(), nil)
 	require.NoError(t, err)
 	require.Equal(t, "trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh", contractAddr.String())
 
@@ -387,7 +387,7 @@ func TestInstantiate(t *testing.T) {
 	require.Equal(t, info.ContractId, "demo contract 1")
 
 	// test that creating again with the same label will fail
-	_, _, err = keeper.Instantiate(ctx, contractID, creator /* , nil */, initMsgBz, nil, "demo contract 1", nil, nil, 0, 0, time.Now())
+	_, _, err = keeper.Instantiate(ctx, contractID, creator /* , nil */, initMsgBz, nil, "demo contract 1", nil, nil, 0, 0, time.Now(), nil)
 	require.Error(t, err)
 
 	/*
@@ -562,7 +562,7 @@ func TestInstantiateWithNonExistingCodeID(t *testing.T) {
 
 	ctx = ctx.WithTxBytes(txBytes)
 
-	addr, _, err := keeper.Instantiate(ctx, nonExistingCodeID, creator /* , nil */, initMsgBz, nil, "demo contract 2", nil, nil, 0, 0, time.Now())
+	addr, _, err := keeper.Instantiate(ctx, nonExistingCodeID, creator /* , nil */, initMsgBz, nil, "demo contract 2", nil, nil, 0, 0, time.Now(), nil)
 	require.True(t, types.ErrNotFound.Is(err), err)
 	require.Nil(t, addr)
 }
@@ -595,11 +595,11 @@ func TestExecute(t *testing.T) {
 	}
 	initMsgBz, err := json.Marshal(initMsg)
 
-	key := keeper.GetCodeInfo(ctx, contractID).CodeHash
+	codeInfo, _ := keeper.GetCodeInfo(ctx, contractID)
 	// keyStr := hex.EncodeToString(key)
 
 	msg := types.ContractMsg{
-		CodeHash: []byte(hex.EncodeToString(key)),
+		CodeHash: []byte(hex.EncodeToString(codeInfo.CodeHash)),
 		Msg:      initMsgBz,
 	}
 
@@ -610,7 +610,7 @@ func TestExecute(t *testing.T) {
 
 	ctx = PrepareInitSignedTx(t, keeper, ctx, creator, creatorPrivKey, initMsgBz, contractID, deposit)
 	// create with no balance is also legal
-	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* , nil */, initMsgBz, nil, "demo contract 1", deposit, nil, 0, 0, time.Now())
+	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* , nil */, initMsgBz, nil, "demo contract 1", deposit, nil, 0, 0, time.Now(), nil)
 
 	require.NoError(t, err)
 
@@ -651,11 +651,11 @@ func TestExecute(t *testing.T) {
 
 	initMsgBz = []byte(`{"release":{}}`)
 
-	key = keeper.GetCodeInfo(ctx, contractID).CodeHash
+	codeInfo, _ = keeper.GetCodeInfo(ctx, contractID)
 	// keyStr := hex.EncodeToString(key)
 
 	msg = types.ContractMsg{
-		CodeHash: []byte(hex.EncodeToString(key)),
+		CodeHash: []byte(hex.EncodeToString(codeInfo.CodeHash)),
 		Msg:      initMsgBz,
 	}
 
@@ -880,10 +880,10 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	hash := keeper.GetCodeInfo(ctx, contractID).CodeHash
+	codeInfo, _ := keeper.GetCodeInfo(ctx, contractID)
 
 	msg := types.ContractMsg{
-		CodeHash: []byte(hex.EncodeToString(hash)),
+		CodeHash: []byte(hex.EncodeToString(codeInfo.CodeHash)),
 		Msg:      initMsgBz,
 	}
 
@@ -908,7 +908,7 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 
 	ctx = ctx.WithTxBytes(txBytes)
 
-	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* , nil */, msgBz, nil, "demo contract 5", deposit, nil, 0, 0, time.Now())
+	addr, _, err := keeper.Instantiate(ctx, contractID, creator /* , nil */, msgBz, nil, "demo contract 5", deposit, nil, 0, 0, time.Now(), nil)
 	require.NoError(t, err)
 
 	// make sure we set a limit before calling
@@ -916,7 +916,7 @@ func TestExecuteWithCpuLoop(t *testing.T) {
 	ctx = ctx.WithGasMeter(sdk.NewGasMeter(gasLimit))
 	require.Equal(t, uint64(0), ctx.GasMeter().GasConsumed())
 
-	codeHash := keeper.GetContractHash(ctx, addr)
+	codeHash, _ := keeper.GetContractHash(ctx, addr)
 	codeHashStr := hex.EncodeToString(codeHash)
 
 	msg2 := types.ContractMsg{

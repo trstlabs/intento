@@ -31,18 +31,21 @@ func (k Keeper) GetContractAddress(ctx sdk.Context, id string) sdk.AccAddress {
 
 	return contractAddress
 }
+func (k Keeper) GetContractHash(ctx sdk.Context, contractAddress sdk.AccAddress) ([]byte, error) {
+	contractInfo := k.GetContractInfo(ctx, contractAddress)
 
-func (k Keeper) GetContractHash(ctx sdk.Context, contractAddress sdk.AccAddress) []byte {
-
-	info := k.GetContractInfo(ctx, contractAddress)
-
-	var hash []byte
-	if info != nil {
-		hash = k.GetCodeInfo(ctx, info.CodeID).CodeHash
-
+	if contractInfo == nil {
+		return nil, fmt.Errorf("failed to get contract info for the following address: %s", contractAddress.String())
 	}
-	return hash
 
+	codeId := contractInfo.CodeID
+
+	codeInfo, err := k.GetCodeInfo(ctx, codeId)
+	if err != nil {
+		return nil, err
+	}
+
+	return codeInfo.CodeHash, nil
 }
 
 //GetContractInfo
@@ -237,22 +240,24 @@ func (k Keeper) importContractState(ctx sdk.Context, contractAddress sdk.AccAddr
 	return nil
 }
 
-func (k Keeper) GetCodeInfo(ctx sdk.Context, codeID uint64) *types.CodeInfo {
+func (k Keeper) GetCodeInfo(ctx sdk.Context, codeID uint64) (types.CodeInfo, error) {
 	store := ctx.KVStore(k.storeKey)
 	var codeInfo types.CodeInfo
 	codeInfoBz := store.Get(types.GetCodeKey(codeID))
 	if codeInfoBz == nil {
-		return nil
+		return types.CodeInfo{}, fmt.Errorf("failed to get code info for code id %d", codeID)
 	}
 	k.cdc.MustUnmarshal(codeInfoBz, &codeInfo)
-	return &codeInfo
+	return codeInfo, nil
 }
 
 func (k Keeper) SetCodeInfo(ctx sdk.Context, codeID uint64, creator string, defaultDuration string, defaultInterval string) error {
 	store := ctx.KVStore(k.storeKey)
 
-	info := k.GetCodeInfo(ctx, codeID)
-
+	info, err := k.GetCodeInfo(ctx, codeID)
+	if err == nil {
+		return err
+	}
 	if creator != "" {
 		addr, err := sdk.AccAddressFromBech32(creator)
 		if err == nil {
@@ -277,7 +282,7 @@ func (k Keeper) SetCodeInfo(ctx sdk.Context, codeID uint64, creator string, defa
 
 	}
 
-	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(info))
+	store.Set(types.GetCodeKey(codeID), k.cdc.MustMarshal(&info))
 	return nil
 }
 

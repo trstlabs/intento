@@ -130,26 +130,45 @@ pub enum WasmMsg {
         msg: Binary,
         funds: Vec<Coin>,
     },
-    /// this instantiates a new contract from previously uploaded wasm code
+      /// Instantiates a new contract from previously uploaded Wasm code.
+    ///
+    /// This is translated to a [MsgInstantiateContract](https://github.com/CosmWasm/wasmd/blob/v0.16.0-alpha1/x/wasm/internal/types/tx.proto#L47-L61).
+    /// `sender` is automatically filled with the current contract's address.
     Instantiate {
         code_id: u64,
-        /// code_hash is the hex encoded hash of the code. This is used by trst to harden against replaying the contract
+        /// code_hash is the hex encoded hash of the code. This is used to harden against replaying the contract
         /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
         code_hash: String,
-        /// msg is the json-encoded Msg struct (as raw Binary)
+        /// msg is the JSON-encoded InstantiateMsg struct (as raw Binary)
         msg: Binary,
-        /// auto_msg is the json-encoded AutoMsg struct (as raw Binary)
-        auto_msg: Option<Binary>,
-        /// Public coins to send
         funds: Vec<Coin>,
-        /// mandatory human-readbale id for the contract
+        /// Human-readable contract_id for the contract
         contract_id: String,
-        /// custom duration (e.g. 5h/60d, 0 for no duration) 
+    },
+     /// Instantiates a new automatically executing contract from previously uploaded Wasm code.
+    ///
+    /// This is translated to a [MsgInstantiateContract](https://github.com/CosmWasm/wasmd/blob/v0.16.0-alpha1/x/wasm/internal/types/tx.proto#L47-L61).
+    /// `sender` is automatically filled with the current contract's address.
+    InstantiateAuto {
+        code_id: u64,
+        /// code_hash is the hex encoded hash of the code. This is used to harden against replaying the contract
+        /// It is used to bind the request to a destination contract in a stronger way than just the contract address which can be faked
+        code_hash: String,
+        /// msg is the JSON-encoded InstantiateMsg struct (as raw Binary)
+        msg: Binary,
+        auto_msg: Option<Binary>,
+        funds: Vec<Coin>,
+        /// Human-readable contract_id for the contract
+        contract_id: String,
+        /// Human-readable duration for the contract (e.g. 60s, 5h ect.)
         duration: Option<String>,
-         /// time interval (e.g. 60s/5h)
+        /// time interval (e.g. 60s/5h)
         interval: Option<String>,
-         /// start contract duration at a certain UNIX time (e.g. 60s/5h)
-         start_duration_at: Option<u64>,
+         /// start duration at a certain time (e.g. 60s/5h)
+        start_duration_at: Option<u64>,
+         /// for contracts instantiating on behalf of an address
+        owner: Option<String>,
+
     },
 }
 
@@ -176,16 +195,36 @@ pub fn wasm_instantiate(
     code_id: u64,
     code_hash: impl Into<String>,
     msg: &impl Serialize,
+    funds: Vec<Coin>,
+    contract_id: String,
+) -> StdResult<WasmMsg> {
+    let payload = to_binary(msg)?;
+    Ok(WasmMsg::Instantiate {
+        code_id,
+        code_hash: code_hash.into(),
+        msg: payload,
+        funds,
+        contract_id,
+    })
+}
+
+
+/// Shortcut helper as the construction of WasmMsg::InstantiateAuto can be quite verbose in contract code.
+pub fn wasm_instantiate_auto(
+    code_id: u64,
+    code_hash: impl Into<String>,
+    msg: &impl Serialize,
     auto_msg: &impl Serialize,
     funds: Vec<Coin>,
     contract_id: String,
     duration: String,
     interval: String,
     start_duration_at: u64,
+    owner: String
 ) -> StdResult<WasmMsg> {
     let payload = to_binary(msg)?;
     let payload_auto_msg = to_binary(auto_msg)?;
-    Ok(WasmMsg::Instantiate {
+    Ok(WasmMsg::InstantiateAuto {
         code_id,
         code_hash: code_hash.into(),
         msg: payload,
@@ -195,6 +234,7 @@ pub fn wasm_instantiate(
         duration: Some(duration),
         interval: Some(interval),
         start_duration_at: Some(start_duration_at),
+        owner: Some(owner),
     })
 }
 

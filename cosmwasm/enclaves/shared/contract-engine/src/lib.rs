@@ -6,6 +6,7 @@ extern crate sgx_types;
 
 mod contract_operations;
 mod contract_validation;
+mod parse_msg;
 mod db;
 mod errors;
 pub mod external;

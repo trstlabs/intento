@@ -1,67 +1,76 @@
 ---
 order: 2
-title: CosmWasm code
+title: CosmWasm
 description: Useful information regarding CosmWasm code
 ---
 
 ## Getting familiar with CosmWasm
 On [Youtube](https://www.youtube.com/results?sp=mAEB&search_query=CosmWasm). there are many great tutorials on CosmWasm. 
 
-[CosmWasm](https://docs.cosmwasm.com/docs/1.0/) provides extensive documentation
+[CosmWasm](https://docs.cosmwasm.com/docs/1.0/) provides extensive documentation.
 
 
-## CosmWasm on TRST
-CosmWasm is a smart contract standard within the Cosmos Ecosystem. Many chains use these, including Juno, Terra, Stargaze, Irisnet, Omniflix and Secret Network. 
+## CosmWasm on Trustless Hub
+CosmWasm is a smart contract standard within the Cosmos Ecosystem. Many chains including Juno, Osmosis, Terra, Secret Network, Stargaze and Archway use these to power safe and effient decentralized applications.  
 
-Code can be used to:
-Send funds
-Vote on proposals
-Execute other contracts
-Instantiate other contracts
-Query other contract states
-
-
-CosmWasm code fo Trustless Contracts should be designed to be:
+CosmWasm code should be designed to be:
 1) Stored
 2) Instantiated 
 3) Executed
 4) Queried
 
-And additionally:
+And additionally for Trustless Hub they have:
 
-5) Automatically executed as predefined at instantiation 
-6) Deleted as predefined at instantiation 
+5) An AutoMsg to execute 1-time or recurringly. This can defined in the CodeInfo or at Contract Instantiation
 
-1,2,3,4 are similar to develop as in other smart contract platforms. Encryption and privacy are enabled by the blockchain, and the developer can carelessly use the benefits of these.
-For 5, automatically executing code, an automated message should be enabled, and this can point to an existing function or to a completely seperate one than that can be executed on by the users of the contract.
-You can name this AutoMessage, or anything else. Please refer to the message to be handled as AutoMessage, so people investigating the code are aware of the which part of the code to be run automatically.
+Points 1,2,3,4 are similar to develop as in other smart contract platforms. Encryption and privacy are enabled by the blockchain, and the developer can use the benefits of these.
+For point 5, automatically executing code, an auto message should be defined. This can point to a user-executable function or to a function that can only be executed by the contract itself.
+
+For your conveniance the message to call the function can be named *AutoMsg*. Naming it AutoMsg allows people viewing the contract code to be aware of the which part of the contract is to be run automatically.
 
 
-![Example auto_msg on internal estimation contract](./auto_msg_example.png)
-Above, an example on the AutoMessage pointing to a function on the internal estimation Trustless Contract
+![Example auto_msg](./auto_msg_example.png)
+Above, an example on the AutoMessage pointing to a function on a recurring swap Trustless Contract. 
+
+#### How does this work?
+After instantiating from the TIP20 token contract, the TIP20 token contract gives allowance to this contract for the max funds to swap. Trustless Hub then recurringly calls AutoMsg. 
 
 ## Differences in contract transactions with standard CosmWasm
 
 ### Executing 
 Executing code is done by encrypting the message with the code hash and sender public key, so that the message can only be executed by the code it belongs to. 
 
-The inputs are private and are only decrypted once the message is in the Trusted Execution Environment (TEE), where the inputs are then securely handled. The TEE, that runs through Intel SGX, and is designed in such a way that no other process or application is able to view or currupt the contents.
+The inputs are private and are only decrypted once the message is in the Trusted Execution Environment (TEE), where the inputs are then securely executed. The TEE, that runs through Intel SGX, and is designed in such a way that no other process or application is able to view or currupt the contents.
 
 ### Instantiating 
-Next to the standard Msg, an AutoMessage can to be sent to automatically execute code. 
-The instantiation message and the automated message are encrypted and only decrypted once the message is in in the Trusted Execution Environment 
+Instantiating contracts is similar to other CosmWasm contract platforms.
+
+Next to Instantiate, you can define InstantiateAuto to auto execute. 
+You can pass several optional fields to this function:
+- AutoMessage
+A JSON message similar to Execute. Encrypted at the frontend and plaintext in the contract
+- Duration 
+Duration of the contract in [time](https://pkg.go.dev/time) (e.g. 60s/5h/7h40s/420h)
+- Interval
+interval of recurring execution. Should be shorter than duration.
+- StartTime
+Time that auto execution should start
+- Funds 
+This is used for auto execution fees. This sends TRST to the instantiated proxy contract. This is used to deduct fees for the auto execution. Remaining balances are refunded given that *owner* is defined.
+- Owner
+An address to refund the contract balance to after auto execution ends. 
+
 
 ### Querying 
 The contract can be queried through {RCP API URL}/compute/v1beta1/contract/{contract_address}/smart/{query_data}. 
 
-The query inputs are encrypted, like with executing code
+The query inputs eare encrypted, like with executing code
 the result of the query is always encrypted and only viewable by the person that performs the query by decrypting the result.
 
 In addition, like with other CosmWasm contract instances, contracts can also query other contracts.
 
-### Contract Result
-Cntract Results can be queried by anyone. It is basically a publicly viewable state of the private smart contract. The 'handleResponse' of an execution message gets saved on-chain. This is also the case for the AutoMessage. The Contract Result (last available result) is can be queried through {RCP API URL}/compute/v1beta1/contract/{contract_address}/result . 
-
-As a developer you should keep this in mind in what you send back as information for each transaction.
+### Public State
+Contracts can have a public state that is cheap to query. It is also easy integrate and show users a way to view what is happening on the private by default contract. The Contract State is can be queried through {RCP API URL}/compute/v1beta1/contract/{contract_address}/public-state . 
+As a developer you save outputs to the public state when you make a new Response.
 
 

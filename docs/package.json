@@ -1,5 +1,5 @@
 {
-  "name": "Trustless Hub-docs",
+  "name": "trustless-hub-docs",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,9 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "vuepress-theme-cosmos": "^1.0.181"
-  },
-  "devDependencies": {
-    "vuepress": "^1.8.2"
+    "vuepress-theme-cosmos": "^1.0.183"
   }
 }

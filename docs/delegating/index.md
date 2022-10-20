@@ -2,7 +2,7 @@
 order: 1
 description: Delegating docs. 
 parent:
-  order: 8
+  order: 5
   title: Delegating 
 ---
 
@@ -37,7 +37,3 @@ First, install the [daemon](https://docs.trustlesshub.com/guide/install.html).
 Then run it on mainnet. 
 
 Then delegate your tokens.
-
-## To stake or not to stake?
-Staking TRST tokens can become a great passive revenue stream, as it is contingent on inflation rewards and network growth. Learn more at [trustlesshub.com](https://trustlesshub.com).
-

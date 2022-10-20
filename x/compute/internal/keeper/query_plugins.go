@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -12,6 +14,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 	"github.com/trstlabs/trst/x/compute/internal/types"
@@ -21,6 +24,10 @@ import (
 type QueryHandler struct {
 	Ctx     sdk.Context
 	Plugins QueryPlugins
+}
+
+type GRPCQueryRouter interface {
+	Route(path string) baseapp.GRPCQueryHandler
 }
 
 var _ wasmTypes.Querier = QueryHandler{}
@@ -74,9 +81,11 @@ type QueryPlugins struct {
 	Dist    func(ctx sdk.Context, request *wasmTypes.DistQuery) ([]byte, error)
 	Mint    func(ctx sdk.Context, request *wasmTypes.MintQuery) ([]byte, error)
 	//Gov     func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error)
+	IBC      func(ctx sdk.Context, caller sdk.AccAddress, request *wasmTypes.IBCQuery) ([]byte, error)
+	Stargate func(ctx sdk.Context, request *wasmTypes.StargateQuery) ([]byte, error)
 }
 
-func DefaultQueryPlugins( /*gov govkeeper.Keeper, */ dist distrkeeper.Keeper, mint mintkeeper.Keeper, bank bankkeeper.Keeper, staking stakingkeeper.Keeper, wasm *Keeper) QueryPlugins {
+func DefaultQueryPlugins( /*gov govkeeper.Keeper, */ dist distrkeeper.Keeper, mint mintkeeper.Keeper, bank bankkeeper.Keeper, staking stakingkeeper.Keeper,  stargateQueryRouter GRPCQueryRouter, wasm *Keeper, channelKeeper types.ChannelKeeper) QueryPlugins {
 	return QueryPlugins{
 		Bank:    BankQuerier(bank),
 		Custom:  NoCustomQuerier,
@@ -85,6 +94,8 @@ func DefaultQueryPlugins( /*gov govkeeper.Keeper, */ dist distrkeeper.Keeper, mi
 		Dist:    DistQuerier(dist),
 		Mint:    MintQuerier(staking), // MintQuerier(mint),
 		//Gov:     GovQuerier(gov),
+		Stargate: StargateQuerier(stargateQueryRouter),
+		IBC:      IBCQuerier(wasm, channelKeeper),
 	}
 }
 
@@ -372,6 +383,99 @@ func StakingQuerier(keeper stakingkeeper.Keeper, distKeeper distrkeeper.Keeper) 
 	}
 }
 
+func StargateQuerier(queryRouter GRPCQueryRouter) func(ctx sdk.Context, request *wasmTypes.StargateQuery) ([]byte, error) {
+	return func(ctx sdk.Context, msg *wasmTypes.StargateQuery) ([]byte, error) {
+		if !stargateQueryAllowlist[msg.Path] {
+			return nil, wasmTypes.UnsupportedRequest{Kind: fmt.Sprintf("query path '%s' is not allowed from the contract", msg.Path)}
+		}
+
+		route := queryRouter.Route(msg.Path)
+		if route == nil {
+			return nil, wasmTypes.UnsupportedRequest{Kind: fmt.Sprintf("No route to query path '%s'", msg.Path)}
+		}
+		req := abci.RequestQuery{
+			Data: msg.Data,
+			Path: msg.Path,
+		}
+		res, err := route(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return res.Value, nil
+	}
+}
+
+func IBCQuerier(wasm *Keeper, channelKeeper types.ChannelKeeper) func(ctx sdk.Context, caller sdk.AccAddress, request *wasmTypes.IBCQuery) ([]byte, error) {
+	return func(ctx sdk.Context, caller sdk.AccAddress, request *wasmTypes.IBCQuery) ([]byte, error) {
+		if request.PortID != nil {
+			contractInfo := wasm.GetContractInfo(ctx, caller)
+			res := wasmTypes.PortIDResponse{
+				PortID: contractInfo.IBCPortID,
+			}
+			return json.Marshal(res)
+		}
+		if request.ListChannels != nil {
+			portID := request.ListChannels.PortID
+			channels := make(wasmTypes.IBCChannels, 0)
+			channelKeeper.IterateChannels(ctx, func(ch channeltypes.IdentifiedChannel) bool {
+				// it must match the port and be in open state
+				if (portID == "" || portID == ch.PortId) && ch.State == channeltypes.OPEN {
+					newChan := wasmTypes.IBCChannel{
+						Endpoint: wasmTypes.IBCEndpoint{
+							PortID:    ch.PortId,
+							ChannelID: ch.ChannelId,
+						},
+						CounterpartyEndpoint: wasmTypes.IBCEndpoint{
+							PortID:    ch.Counterparty.PortId,
+							ChannelID: ch.Counterparty.ChannelId,
+						},
+						Order:        ch.Ordering.String(),
+						Version:      ch.Version,
+						ConnectionID: ch.ConnectionHops[0],
+					}
+					channels = append(channels, newChan)
+				}
+				return false
+			})
+			res := wasmTypes.ListChannelsResponse{
+				Channels: channels,
+			}
+			return json.Marshal(res)
+		}
+		if request.Channel != nil {
+			channelID := request.Channel.ChannelID
+			portID := request.Channel.PortID
+			if portID == "" {
+				contractInfo := wasm.GetContractInfo(ctx, caller)
+				portID = contractInfo.IBCPortID
+			}
+			got, found := channelKeeper.GetChannel(ctx, portID, channelID)
+			var channel *wasmTypes.IBCChannel
+			// it must be in open state
+			if found && got.State == channeltypes.OPEN {
+				channel = &wasmTypes.IBCChannel{
+					Endpoint: wasmTypes.IBCEndpoint{
+						PortID:    portID,
+						ChannelID: channelID,
+					},
+					CounterpartyEndpoint: wasmTypes.IBCEndpoint{
+						PortID:    got.Counterparty.PortId,
+						ChannelID: got.Counterparty.ChannelId,
+					},
+					Order:        got.Ordering.String(),
+					Version:      got.Version,
+					ConnectionID: got.ConnectionHops[0],
+				}
+			}
+			res := wasmTypes.ChannelResponse{
+				Channel: channel,
+			}
+			return json.Marshal(res)
+		}
+		return nil, wasmTypes.UnsupportedRequest{Kind: "unknown IBCQuery variant"}
+	}
+}
+
 func sdkToUnbondingDelegations(bondDenom string, delegations stakingtypes.UnbondingDelegations) ([]wasmTypes.Delegation, error) {
 	result := make([]wasmTypes.Delegation, len(delegations))
 
@@ -551,4 +655,64 @@ func convertSdkCoinToWasmCoin(coin sdk.Coin) wasmTypes.Coin {
 		Denom:  coin.Denom,
 		Amount: coin.Amount.String(),
 	}
+}
+
+// stargateQueryAllowlist is a list of all safe and efficient queries
+//
+// excluded from this list (should be safe, but needs a clear use case):
+//   - /trst.registration.*
+//   - /ibc.core.*
+//   - /trst.intertx.*
+//   - /cosmos.evidence.*
+//   - /cosmos.upgrade.*
+//   - All "get all" queries - only O(1) queries should be served
+//
+// we reserve the right to add/remove queries in future chain upgrades
+//
+// used this to find all query paths:
+// find -name query.proto | sort | xargs grep -Poin 'package [a-z0-9.]+;|rpc [a-zA-Z]+\('
+var stargateQueryAllowlist = map[string]bool{
+	"/cosmos.auth.v1beta1.Query/Account": true,
+	"/cosmos.auth.v1beta1.Query/Params":  true,
+
+	"/cosmos.bank.v1beta1.Query/Balance":       true,
+	"/cosmos.bank.v1beta1.Query/DenomMetadata": true,
+	"/cosmos.bank.v1beta1.Query/SupplyOf":      true,
+	"/cosmos.bank.v1beta1.Query/Params":        true,
+
+	"/cosmos.distribution.v1beta1.Query/Params":                   true,
+	"/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress": true,
+	"/cosmos.distribution.v1beta1.Query/FoundationTax":            true,
+	"/cosmos.distribution.v1beta1.Query/ValidatorCommission":      true,
+
+	"/cosmos.feegrant.v1beta1.Query/Allowance": true,
+
+	"/cosmos.gov.v1beta1.Query/Deposit":  true,
+	"/cosmos.gov.v1beta1.Query/Params":   true,
+	"/cosmos.gov.v1beta1.Query/Proposal": true,
+	"/cosmos.gov.v1beta1.Query/Vote":     true,
+
+	"/cosmos.mint.v1beta1.Query/Params":           true,
+	"/cosmos.mint.v1beta1.Query/Inflation":        true,
+	"/cosmos.mint.v1beta1.Query/AnnualProvisions": true,
+
+	"/cosmos.params.v1beta1.Query/Params": true,
+
+	"/cosmos.slashing.v1beta1.Query/Params":      true,
+	"/cosmos.slashing.v1beta1.Query/SigningInfo": true,
+
+	"/cosmos.staking.v1beta1.Query/Validator":           true,
+	"/cosmos.staking.v1beta1.Query/Delegation":          true,
+	"/cosmos.staking.v1beta1.Query/UnbondingDelegation": true,
+	"/cosmos.staking.v1beta1.Query/Params":              true,
+
+	"/ibc.applications.transfer.v1.Query/DenomHash":  true,
+	"/ibc.applications.transfer.v1.Query/DenomTrace": true,
+	"/ibc.applications.transfer.v1.Query/Params":     true,
+
+	"/secret.compute.v1beta1.Query/ContractInfo":              true,
+	"/secret.compute.v1beta1.Query/CodeHashByContractAddress": true,
+	"/secret.compute.v1beta1.Query/CodeHashByCodeID":          true,
+	"/secret.compute.v1beta1.Query/LabelByAddress":            true,
+	"/secret.compute.v1beta1.Query/AddressByLabel":            true,
 }

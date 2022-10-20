@@ -32,18 +32,8 @@ func (k Keeper) IterateContractQueue(ctx sdk.Context, endTime time.Time, cb func
 }
 
 // GetContractAddressesForBlock returns all expiring contracts for a block
-func (k Keeper) GetContractAddressesForBlock(ctx sdk.Context) (incentiveList []string, contracts []types.ContractInfoWithAddress) {
-	params := k.GetParams(ctx)
+func (k Keeper) GetContractAddressesForBlock(ctx sdk.Context) (contracts []types.ContractInfoWithAddress) {
 	k.IterateContractQueue(ctx, ctx.BlockHeader().Time, func(contract types.ContractInfoWithAddress) bool {
-
-		if contract.ContractInfo.AutoMsg != nil {
-			//info := k.GetCodeInfo(ctx, contract.ContractInfo.CodeID)
-			if contract.Duration >= params.MinContractDurationForIncentive {
-				if k.bankKeeper.GetBalance(ctx, contract.Address, types.Denom).Amount.SubRaw(params.MinContractBalanceForIncentive).IsPositive() {
-					incentiveList = append(incentiveList, contract.Address.String())
-				}
-			}
-		}
 
 		contracts = append(contracts, contract)
 		return false

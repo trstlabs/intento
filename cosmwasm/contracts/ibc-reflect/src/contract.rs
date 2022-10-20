@@ -27,7 +27,6 @@ pub fn instantiate(
     // we store the reflect_id for creating accounts later
     let cfg = Config {
         reflect_code_id: msg.reflect_code_id,
-        reflect_code_hash: msg.reflect_code_hash,
     };
     config(deps.storage).save(&cfg)?;
 
@@ -55,7 +54,7 @@ fn parse_contract_from_event(events: Vec<Event>) -> Option<String> {
                 .into_iter()
                 .find(|a| a.key == "_contract_address")
         })
-        .map(|a| a.value.to_string())
+        .map(|a| a.value).to_string()
 }
 
 pub fn handle_init_callback(deps: DepsMut, response: SubMsgResponse) -> StdResult<Response> {
@@ -162,7 +161,6 @@ pub fn ibc_channel_connect(
         msg: b"{}".into(),
         funds: vec![],
         contract_id: format!("ibc-reflect-{}", chan_id),
-        code_hash: cfg.reflect_code_hash,
         auto_msg: None,
         duration: None,
         start_duration_at: None, 

@@ -178,8 +178,10 @@ func redactError(err error) (bool, error) {
 // DispatchSubmessages builds a sandbox to execute these messages and returns the execution result to the contract
 // that dispatched them, both on success as well as failure
 func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk.AccAddress, ibcPort string, msgs []wasmTypes.SubMsg, ogTx []byte, ogSigInfo wasmTypes.VerificationInfo) ([]byte, error) {
+
 	var rsp []byte
 	for _, msg := range msgs {
+
 		// Check replyOn validity
 		switch msg.ReplyOn {
 		case wasmTypes.ReplySuccess, wasmTypes.ReplyError, wasmTypes.ReplyAlways, wasmTypes.ReplyNever:
@@ -187,7 +189,9 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			return nil, sdkerrors.Wrap(types.ErrInvalid, "replyOn value")
 		}
 		//fmt.Printf("SubMsg for %s \n", contractAddr.String())
-		fmt.Printf("SubMsg %+v\n", msg)
+		if msg.Msg.Wasm != nil {
+		fmt.Printf("SubMsg %+v\n", msg.Msg.Wasm)
+		}
 		// first, we build a sub-context which we can use inside the submessages
 		subCtx, commit := ctx.CacheContext()
 		em := sdk.NewEventManager()
@@ -271,9 +275,10 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 		msg_id := []byte(fmt.Sprint(msg.ID))
 		// now handle the reply, we use the parent context, and abort on error
 		reply := wasmTypes.Reply{
-			ID:              msg_id,
-			Result:          result,
-			WasMsgEncrypted: msg.WasMsgEncrypted,
+			ID:                  msg_id,
+			Result:              result,
+			WasOrigMsgEncrypted: msg.WasMsgEncrypted,
+			IsEncrypted:         false,
 		}
 		// we can ignore any result returned as there is nothing to do with the data
 		// and the events are already in the ctx.EventManager()
@@ -317,6 +322,7 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			}
 			replySigInfo = ogSigInfo
 			reply.ID = dataWithInternalReplyInfo.InternalMsgId
+			reply.IsEncrypted = true
 			replySigInfo.CallbackSignature = dataWithInternalReplyInfo.InternalReplyEnclaveSig
 
 		}

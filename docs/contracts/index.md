@@ -2,25 +2,21 @@
 title: Introduction
 order: 0
 parent:
-  order: 1
+  order: 0
   title: Trustless Contracts Guide
 ---
 
 # Introduction
 
-By following this guide you will learn how to:
+This documentation provides a number of examples for Trustless Contracts and how these can be interated to other chains with IBC.
 
-* Install Trustless Hub Daemon on your local machine (optional)
-* Write Trustless Contracts with
-  * Encrypted user inputs
-  * Encrypted data handling and storage
-  * Verifyable outputs
-  * Automated function calls
-  * Auto-deletion of data
-* Store CosmWasm Code
-* Instantiate CosmWasm Code
-* Execute CosmWasm Code
-* Send tokens to a Trustless Contract using Inter-Blockchain Communication (IBC) (TBD)
-* Build a frontend to your code (TBD)
+By following this guide you will learn about:
 
-* Migrate CosmWasm code to allow to receive and distribute incentives, enable automated messages, and define an end-time to the contract(TBD)
+* Differences of Trustless Contract templates with vanilla CosmWasm
+* Encryption in Contract State and Outputs
+* Storing, Instantiating and Executing CosmWasm Code
+* Build a frontend to your code 
+* Integrate Trustless Contracts to other CosmWasm contracts using Inter-Blockchain Communication (IBC)
+
+
+*This guide is a work-in-progress*

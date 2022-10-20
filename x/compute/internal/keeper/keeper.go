@@ -36,6 +36,7 @@ type Keeper struct {
 	distrKeeper      distrkeeper.Keeper
 	portKeeper       portkeeper.Keeper
 	capabilityKeeper capabilitykeeper.ScopedKeeper
+	stakingKeeper    stakingkeeper.Keeper
 	wasmer           wasm.Wasmer
 	queryPlugins     QueryPlugins
 	messenger        Messenger
@@ -69,6 +70,8 @@ func NewKeeper(
 	portSource types.ICS20TransferPortSource,
 	channelKeeper channelkeeper.Keeper,
 	router sdk.Router,
+	msgRouter MsgServiceRouter,
+	queryRouter GRPCQueryRouter,
 	homeDir string,
 	wasmConfig *types.WasmConfig,
 	supportedFeatures string,
@@ -103,7 +106,8 @@ func NewKeeper(
 		distrKeeper:      distKeeper,
 		portKeeper:       portKeeper,
 		capabilityKeeper: capabilityKeeper,
-		messenger:        NewMessageHandler(router, customEncoders, channelKeeper, capabilityKeeper, portSource, cdc),
+		stakingKeeper:    stakingKeeper,
+		messenger:        NewMessageHandler(msgRouter, router, customEncoders, channelKeeper, capabilityKeeper, portSource, cdc),
 		queryGasLimit:    wasmConfig.SmartQueryGasLimit,
 		paramSpace:       paramSpace,
 		hooks:            ch,
@@ -111,7 +115,7 @@ func NewKeeper(
 		// authZPolicy:   DefaultAuthorizationPolicy{},
 
 	}
-	keeper.queryPlugins = DefaultQueryPlugins( /*govKeeper,*/ distKeeper, mintKeeper, bankKeeper, stakingKeeper, &keeper).Merge(customPlugins)
+	keeper.queryPlugins = DefaultQueryPlugins( /*govKeeper,*/ distKeeper, mintKeeper, bankKeeper, stakingKeeper, queryRouter, &keeper, channelKeeper).Merge(customPlugins)
 	return keeper
 }
 

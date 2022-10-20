@@ -12,19 +12,19 @@ import (
 	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
-// EndBlocker called every block, process inflation, update validator set.
-func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
+// BeginBlocker called every block, processes auto execution
+func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
 
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	logger := k.Logger(ctx)
 
-	incentiveList, contracts := k.GetContractAddressesForBlock(ctx)
-	//var rewardCoins sdk.Coins
+	contracts := k.GetContractAddressesForBlock(ctx)
+	/*//var rewardCoins sdk.Coins
 	if len(incentiveList) > 0 {
 		k.SetIncentiveCoins(ctx, incentiveList)
 
-	}
+	}*/
 	var gasUsed uint64
 	cacheCtx, writeCache := ctx.CacheContext()
 	for _, contract := range contracts {
@@ -52,33 +52,37 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 			gasUsed = gas
 
 		}
-
 		logger.Info(
 			"executed",
 			"contract", contract.Address.String(),
 		)
 
 		isRecurring := contract.ContractInfo.ExecTime.Before(contract.ContractInfo.EndTime)
-		//deducts execution fees and distributes SDK-native coins from contract balance
-		err := k.DistributeCoins(ctx, contract, gasUsed, isRecurring)
-		if err != nil {
-			//fmt.Printf("couldnt deduct fee %s\n", err)
-			logger.Info(
-				"contract payout creator",
-				"err", err.Error(),
-			)
-
+		isLastExec := false
+		if isRecurring {
+			isLastExec = contract.ContractInfo.ExecTime.Add(contract.ContractInfo.Interval).After(contract.ContractInfo.EndTime)
 		} else {
-			//fmt.Printf("write to cache\n")
+			isLastExec = true
+		}
+		//deducts execution fees and distributes SDK-native coins from contract balance
+		fee, err := k.DistributeCoins(ctx, contract, gasUsed, isRecurring, isLastExec, req.Header.ProposerAddress)
+		if err != nil {
+			logger.Info(
+				"auto execution",
+				"error", err.Error(),
+			)
+		} else {
+			fmt.Printf("write to cache\n")
 
 			// if the contract execution is recurring and successful, we add a new entry to the queue with current entry time + interval
 			if isRecurring {
-				fmt.Printf("self-executed recurring :%s \n", contract.Address.String())
+				fmt.Printf("auto-executed recurring :%s \n", contract.Address.String())
 				k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.ExecTime)
 				fmt.Printf("exec Time %+v \n", contract.ContractInfo.ExecTime)
 				nextExecTime := contract.ContractInfo.ExecTime.Add(contract.ContractInfo.Interval)
-				fmt.Printf("exec Time2 %+v \n", nextExecTime)
-				contract.ContractInfo.ExecHistory = append(contract.ContractInfo.ExecHistory, time.Now())
+				fmt.Printf("exec Time new %+v \n", nextExecTime)
+				historyEntry := types.ExecHistoryEntry{ScheduledExecTime: contract.ContractInfo.ExecTime, ActualExecTime: time.Now(), ExecFee: fee}
+				contract.ContractInfo.ExecHistory = append(contract.ContractInfo.ExecHistory, &historyEntry)
 				if nextExecTime.Before(contract.ContractInfo.EndTime) {
 					k.InsertContractQueue(ctx, contract.Address.String(), nextExecTime)
 					contract.ContractInfo.ExecTime = nextExecTime
@@ -87,11 +91,9 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 					continue
 				}
 				k.SetContractInfo(ctx, contract)
-
 			}
 			writeCache()
 		}
-		//fmt.Printf("executed \n")
 		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.ExecTime)
 		_ = k.Delete(ctx, contract.Address)
 		logger.Info(
@@ -104,7 +106,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 				sdk.NewAttribute(types.AttributeKeyContractAddr, contract.Address.String()),
 			),
 		)
+
 	}
 
-	return []abci.ValidatorUpdate{}
 }

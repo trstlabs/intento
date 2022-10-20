@@ -1,9 +1,13 @@
 package keeper
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+	"github.com/trstlabs/trst/x/compute/internal/types"
 )
 
 // bindIbcPort will reserve the port.
@@ -28,6 +32,13 @@ func (k Keeper) ensureIbcPort(ctx sdk.Context, contractAddr sdk.AccAddress) (str
 
 const portIDPrefix = "wasm."
 
+func ContractFromPortID(portID string) (sdk.AccAddress, error) {
+	if !strings.HasPrefix(portID, portIDPrefix) {
+		return nil, sdkerrors.Wrapf(types.ErrInvalid, "without prefix")
+	}
+	return sdk.AccAddressFromBech32(portID[len(portIDPrefix):])
+}
+
 func PortIDForContract(addr sdk.AccAddress) string {
 	return portIDPrefix + addr.String()
 }
@@ -36,4 +47,9 @@ func PortIDForContract(addr sdk.AccAddress) string {
 // that IBC module passes to it
 func (k Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
 	return k.capabilityKeeper.ClaimCapability(ctx, cap, name)
+}
+
+// AuthenticateCapability wraps the scopedKeeper's AuthenticateCapability function
+func (k Keeper) AuthenticateCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) bool {
+	return k.capabilityKeeper.AuthenticateCapability(ctx, cap, name)
 }

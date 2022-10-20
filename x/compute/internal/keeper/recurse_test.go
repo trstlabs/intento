@@ -143,8 +143,8 @@ func TestGasCostOnQuery(t *testing.T) {
 			// do the query
 			recurse := tc.msg
 			recurse.Contract = contractAddr
-
-			msg := buildQuery(t, recurse, hex.EncodeToString(keeper.GetContractHash(ctx, contractAddr)))
+			hash, _ := keeper.GetContractHash(ctx, contractAddr)
+			msg := buildQuery(t, recurse, hex.EncodeToString(hash))
 
 			data, qErr := queryHelper(t, keeper, ctx, contractAddr, string(msg), true, tc.gasLimit)
 			require.Empty(t, qErr)
@@ -339,7 +339,8 @@ func TestLimitRecursiveQueryGas(t *testing.T) {
 			// prepare the query
 			recurse := tc.msg
 			recurse.Contract = contractAddr
-			msg := buildQuery(t, recurse, hex.EncodeToString(keeper.GetContractHash(ctx, contractAddr)))
+			hash, _ := keeper.GetContractHash(ctx, contractAddr)
+			msg := buildQuery(t, recurse, hex.EncodeToString(hash))
 
 			// if we expect out of gas, make sure this panics
 			if tc.expectOutOfGas {

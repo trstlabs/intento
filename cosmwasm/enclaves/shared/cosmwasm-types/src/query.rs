@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::coins::Coin;
 use super::encoding::Binary;
-
+use super::math::Decimal;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -16,6 +16,34 @@ pub enum QueryRequest {
     Dist(DistQuery),
     Mint(MintQuery),
     Gov(GovQuery),
+    Ibc(IbcQuery),
+    Stargate { path: String, data: Binary },
+}
+
+/// These are queries to the various IBC modules to see the state of the contract's
+/// IBC connection. These will return errors if the contract is not "ibc enabled"
+#[non_exhaustive]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum IbcQuery {
+    /// Gets the Port ID the current contract is bound to.
+    ///
+    /// Returns a `PortIdResponse`.
+    PortId {},
+    /// Lists all channels that are bound to a given port.
+    /// If `port_id` is omitted, this list all channels bound to the contract's port.
+    ///
+    /// Returns a `ListChannelsResponse`.
+    ListChannels { port_id: Option<String> },
+    /// Lists all information for a (portID, channelID) pair.
+    /// If port_id is omitted, it will default to the contract's own channel.
+    /// (To save a PortId{} call)
+    ///
+    /// Returns a `ChannelResponse`.
+    Channel {
+        channel_id: String,
+        port_id: Option<String>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -169,6 +197,7 @@ pub enum StakingQuery {
     UnbondingDelegations { delegator: String },
 }
 
+
 /// Delegation is basic (cheap to query) data about a delegation
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Delegation {
@@ -209,6 +238,15 @@ pub struct FullDelegation {
     pub can_redelegate: Coin,
     /// How much we can currently withdraw
     pub accumulated_rewards: Coin,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Validator {
+    pub address: String,
+    pub commission: Decimal,
+    pub max_commission: Decimal,
+    /// TODO: what units are these (in terms of time)?
+    pub max_change_rate: Decimal,
 }
 
 /// Delegation is basic (cheap to query) data about a delegation
