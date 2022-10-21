@@ -22,8 +22,8 @@ trstd init "$(hostname)" --chain-id enigma-pub-testnet-3 || true
 
 PERSISTENT_PEERS=115aa0a629f5d70dd1d464bc7e42799e00f4edae@bootstrap:26656
 
-sed -i 's/persistent_peers = ""/persistent_peers = "'$PERSISTENT_PEERS'"/g' ~/.trst/config/config.toml
-sed -i 's/trust_period = "168h0m0s"/trust_period = "168h"/g' ~/.trst/config/config.toml
+sed -i 's/persistent_peers = ""/persistent_peers = "'$PERSISTENT_PEERS'"/g' ~/.trstd/config/config.toml
+sed -i 's/trust_period = "168h0m0s"/trust_period = "168h"/g' ~/.trstd/config/config.toml
 echo "Set persistent_peers: $PERSISTENT_PEERS"
 
 echo "Waiting for bootstrap to start..."
@@ -59,7 +59,7 @@ trstcli q register node-enclave-params
 
 trstd configure-secret node-master-cert.der "$SEED"
 
-cp /tmp/.trst/config/genesis.json /root/.trst/config/genesis.json
+cp /tmp/.trstd/config/genesis.json /root/.trstd/config/genesis.json
 
 trstd validate-genesis
 

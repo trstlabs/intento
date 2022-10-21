@@ -17,17 +17,17 @@ import (
 type KeeperTestSuite struct {
 	suite.Suite
 	ctx sdk.Context
-	app *app.App
+	app *app.TrstApp
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.app, suite.ctx = createTestApp(true)
 
-	suite.app.AllocKeeper.SetParams(suite.ctx, types.DefaultParams())
+	suite.app.AppKeepers.AllocKeeper.SetParams(suite.ctx, types.DefaultParams())
 
-	suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
+	suite.app.AppKeepers.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
 
-	suite.app.DistrKeeper.SetFeePool(suite.ctx, distrtypes.InitialFeePool())
+	suite.app.AppKeepers.DistrKeeper.SetFeePool(suite.ctx, distrtypes.InitialFeePool())
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -44,10 +44,10 @@ func fundModuleAccount(bankKeeper bankkeeper.Keeper, ctx sdk.Context, recipientM
 func (suite *KeeperTestSuite) TestDistribution() {
 	suite.SetupTest()
 
-	denom := suite.app.StakingKeeper.BondDenom(suite.ctx)
+	denom := suite.app.AppKeepers.StakingKeeper.BondDenom(suite.ctx)
 
-	allocKeeper := suite.app.AllocKeeper
-	params := suite.app.AllocKeeper.GetParams(suite.ctx)
+	allocKeeper := suite.app.AppKeepers.AllocKeeper
+	params := suite.app.AppKeepers.AllocKeeper.GetParams(suite.ctx)
 	contributorRewardsReceiver := sdk.AccAddress([]byte("addr1---------------"))
 	params.DistributionProportions.CommunityPool = sdk.NewDecWithPrec(25, 2)
 	params.DistributionProportions.ContributorRewards = sdk.NewDecWithPrec(5, 2)
@@ -59,28 +59,28 @@ func (suite *KeeperTestSuite) TestDistribution() {
 			Weight:  sdk.NewDec(1),
 		},
 	}
-	suite.app.AllocKeeper.SetParams(suite.ctx, params)
+	suite.app.AppKeepers.AllocKeeper.SetParams(suite.ctx, params)
 
-	feePool := suite.app.DistrKeeper.GetFeePool(suite.ctx)
-	feeCollector := suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	feePool := suite.app.AppKeepers.DistrKeeper.GetFeePool(suite.ctx)
+	feeCollector := suite.app.AppKeepers.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	suite.Equal(
 		"0",
-		suite.app.BankKeeper.GetAllBalances(suite.ctx, feeCollector).AmountOf(denom).String())
+		suite.app.AppKeepers.BankKeeper.GetAllBalances(suite.ctx, feeCollector).AmountOf(denom).String())
 	suite.Equal(
 		sdk.NewDec(0),
 		feePool.CommunityPool.AmountOf(denom))
 
 	mintCoin := sdk.NewCoin(denom, sdk.NewInt(100_000))
 	mintCoins := sdk.Coins{mintCoin}
-	feeCollectorAccount := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, authtypes.FeeCollectorName)
+	feeCollectorAccount := suite.app.AppKeepers.AccountKeeper.GetModuleAccount(suite.ctx, authtypes.FeeCollectorName)
 	suite.Require().NotNil(feeCollectorAccount)
 
-	suite.Require().NoError(fundModuleAccount(suite.app.BankKeeper, suite.ctx, feeCollectorAccount.GetName(), mintCoins))
+	suite.Require().NoError(fundModuleAccount(suite.app.AppKeepers.BankKeeper, suite.ctx, feeCollectorAccount.GetName(), mintCoins))
 
-	feeCollector = suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	feeCollector = suite.app.AppKeepers.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	suite.Equal(
 		mintCoin.Amount.String(),
-		suite.app.BankKeeper.GetAllBalances(suite.ctx, feeCollector).AmountOf(denom).String())
+		suite.app.AppKeepers.BankKeeper.GetAllBalances(suite.ctx, feeCollector).AmountOf(denom).String())
 
 	suite.Equal(
 		sdk.NewDec(0),
@@ -88,20 +88,20 @@ func (suite *KeeperTestSuite) TestDistribution() {
 
 	allocKeeper.DistributeInflation(suite.ctx)
 
-	feeCollector = suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	feeCollector = suite.app.AppKeepers.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	totalDistr := params.DistributionProportions.TrustlessContractIncentives.
 		Add(params.DistributionProportions.ContributorRewards.Add(params.DistributionProportions.CommunityPool)) // 15%
 
 	// remaining going to fee collector should be 100% - 15% = 85%
 	suite.Equal(
 		mintCoin.Amount.ToDec().Mul(sdk.NewDecWithPrec(100, 2).Sub(totalDistr)).RoundInt().String(),
-		suite.app.BankKeeper.GetAllBalances(suite.ctx, feeCollector).AmountOf(denom).String())
+		suite.app.AppKeepers.BankKeeper.GetAllBalances(suite.ctx, feeCollector).AmountOf(denom).String())
 
 	suite.Equal(
 		mintCoin.Amount.ToDec().Mul(params.DistributionProportions.ContributorRewards).TruncateInt(),
-		suite.app.BankKeeper.GetBalance(suite.ctx, contributorRewardsReceiver, denom).Amount)
+		suite.app.AppKeepers.BankKeeper.GetBalance(suite.ctx, contributorRewardsReceiver, denom).Amount)
 
-	feePool = suite.app.DistrKeeper.GetFeePool(suite.ctx)
+	feePool = suite.app.AppKeepers.DistrKeeper.GetFeePool(suite.ctx)
 	suite.Equal(
 		mintCoin.Amount.ToDec().Mul(params.DistributionProportions.CommunityPool),
 		feePool.CommunityPool.AmountOf(denom))

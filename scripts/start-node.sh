@@ -26,11 +26,11 @@ trstd gentx validator 5000000000utrst --keyring-backend="test" --chain-id $CHAIN
 trstd collect-gentxs
 
 # Set proper defaults and change ports
-sed -i 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ~/.trst/config/config.toml
-sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ~/.trst/config/config.toml
-sed -i 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ~/.trst/config/config.toml
-sed -i 's/index_all_keys = false/index_all_keys = true/g' ~/.trst/config/config.toml
-perl -i -pe 's/"stake"/ "utrst"/g' ~/.trst/config/genesis.json
+sed -i 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ~/.trstd/config/config.toml
+sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ~/.trstd/config/config.toml
+sed -i 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ~/.trstd/config/config.toml
+sed -i 's/index_all_keys = false/index_all_keys = true/g' ~/.trstd/config/config.toml
+perl -i -pe 's/"stake"/ "utrst"/g' ~/.trstd/config/genesis.json
 
 # Start the trstd
 trstd start --pruning=nothing --bootstrap

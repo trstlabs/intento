@@ -12,15 +12,15 @@ import (
 func TestGRPCParams(t *testing.T) {
 	app, ctx := createTestApp(true)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, app.MintKeeper)
+	types.RegisterQueryServer(queryHelper, app.AppKeepers.MintKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
 	params, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 
 	require.NoError(t, err)
-	require.Equal(t, params.Params, app.MintKeeper.GetParams(ctx))
+	require.Equal(t, params.Params, app.AppKeepers.MintKeeper.GetParams(ctx))
 
 	annualProvisions, err := queryClient.AnnualProvisions(gocontext.Background(), &types.QueryAnnualProvisionsRequest{})
 	require.NoError(t, err)
-	require.Equal(t, annualProvisions.AnnualProvisions, app.MintKeeper.GetMinter(ctx).AnnualProvisions)
+	require.Equal(t, annualProvisions.AnnualProvisions, app.AppKeepers.MintKeeper.GetMinter(ctx).AnnualProvisions)
 }

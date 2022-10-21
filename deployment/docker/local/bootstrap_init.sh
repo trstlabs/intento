@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-file=~/.trst/config/genesis.json
+file=~/.trstd/config/genesis.json
 if [ ! -e "$file" ]
 then
   # init the node
@@ -16,11 +16,11 @@ then
 
   trstd init banana --chain-id enigma-pub-testnet-3
 
-  cp ~/node_key.json ~/.trst/config/node_key.json
+  cp ~/node_key.json ~/.trstd/config/node_key.json
 
-  perl -i -pe 's/"stake"/"utrst"/g' ~/.trst/config/genesis.json
+  perl -i -pe 's/"stake"/"utrst"/g' ~/.trstd/config/genesis.json
 
-  perl -i -pe 's/"1814400s"/"80s"/g' ~/.trst/config/genesis.json
+  perl -i -pe 's/"1814400s"/"80s"/g' ~/.trstd/config/genesis.json
 
   trstcli keys add a
   trstcli keys add b

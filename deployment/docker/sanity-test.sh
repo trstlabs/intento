@@ -20,7 +20,7 @@ function wait_for_tx () {
 # #export SECRET_NETWORK_KEYRING_BACKEND=test
 
 # trstd init banana --chain-id trst_chain_1
-# perl -i -pe 's/"stake"/"utrst"/g' ~/.trst/config/genesis.json
+# perl -i -pe 's/"stake"/"utrst"/g' ~/.trstd/config/genesis.json
 # echo "cost member exercise evoke isolate gift cattle move bundle assume spell face balance lesson resemble orange bench surge now unhappy potato dress number acid" |
 #     trstd keys add a --recover --keyring-backend test
 # trstd add-genesis-account "$(trstd keys show -a --keyring-backend test a)" 1000000000000utrst

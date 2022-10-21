@@ -1,5 +1,6 @@
 package app
 
+/*
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -23,3 +24,4 @@ func SetConfig() {
 	config.SetBech32PrefixForConsensusNode(ConsNodeAddressPrefix, ConsNodePubKeyPrefix)
 	config.Seal()
 }
+*/

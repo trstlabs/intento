@@ -43,6 +43,7 @@ var (
 	ContractQueuePrefix = []byte{0x08}
 	PubDbPrefix         = []byte{0x09}
 	AccPubDbPrefix      = []byte{0x10}
+	TXCounterPrefix     = []byte{0x11}
 	KeyLastCodeID       = append(SequenceKeyPrefix, []byte("lastCodeId")...)
 	KeyLastInstanceID   = append(SequenceKeyPrefix, []byte("lastContractId")...)
 )

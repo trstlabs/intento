@@ -1,6 +1,6 @@
 #!/bin/bash
 
-file=~/.trst/config/genesis.json
+file=~/.trstd/config/genesis.json
 if [ ! -e "$file" ]; then
   # init the node
   rm -rf ~/.trstd/*
@@ -15,9 +15,9 @@ if [ ! -e "$file" ]; then
   trstd init banana --chain-id "$chain_id"
 
 
-  cp ~/node_key.json ~/.trst/config/node_key.json
-  perl -i -pe 's/"stake"/"utrst"/g' ~/.trst/config/genesis.json
-  perl -i -pe 's/"172800000000000"/"90000000000"/g' ~/.trst/config/genesis.json # voting period 2 days -> 90 seconds
+  cp ~/node_key.json ~/.trstd/config/node_key.json
+  perl -i -pe 's/"stake"/"utrst"/g' ~/.trstd/config/genesis.json
+  perl -i -pe 's/"172800000000000"/"90000000000"/g' ~/.trstd/config/genesis.json # voting period 2 days -> 90 seconds
 
   trstd keys add a
   trstd keys add b
@@ -41,8 +41,8 @@ if [ ! -e "$file" ]; then
 #  cp new_node_seed_exchange_keypair.sealed .sgx_secrets
   trstd validate-genesis
 
-  perl -i -pe 's/max_subscription_clients.+/max_subscription_clients = 100/' ~/.trst/config/config.toml
-  perl -i -pe 's/max_subscriptions_per_client.+/max_subscriptions_per_client = 50/' ~/.trst/config/config.toml
+  perl -i -pe 's/max_subscription_clients.+/max_subscription_clients = 100/' ~/.trstd/config/config.toml
+  perl -i -pe 's/max_subscriptions_per_client.+/max_subscriptions_per_client = 50/' ~/.trstd/config/config.toml
 fi
 
 lcp --proxyUrl http://localhost:1317 --port 1337 --proxyPartial '' &

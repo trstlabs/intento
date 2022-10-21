@@ -1,5 +1,6 @@
 package app
 
+/*
 import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,4 +35,4 @@ func MakeEncodingConfig() EncodingConfig {
 		TxConfig:          txCfg,
 		Amino:             amino,
 	}
-}
+}*/

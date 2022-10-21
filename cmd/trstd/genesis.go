@@ -25,12 +25,20 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	appParams "github.com/trstlabs/trst/app/params"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
 	compute "github.com/trstlabs/trst/x/compute"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
 	//	itemtypes "github.com/trstlabs/trst/x/item/types"
+)
+
+const (
+	HumanCoinUnit = "trst"
+	BaseCoinUnit  = "utrst"
+	TrstExponent  = 6
+
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	Bech32PrefixAccAddr = "trust"
 )
 
 type GenesisParams struct {
@@ -261,18 +269,18 @@ func MainnetGenesisParams() GenesisParams {
 			Description: "The native token of TRST",
 			DenomUnits: []*banktypes.DenomUnit{
 				{
-					Denom:    appParams.BaseCoinUnit,
+					Denom:    BaseCoinUnit,
 					Exponent: 0,
 					Aliases:  nil,
 				},
 				{
-					Denom:    appParams.HumanCoinUnit,
-					Exponent: appParams.TrstExponent,
+					Denom:    HumanCoinUnit,
+					Exponent: TrstExponent,
 					Aliases:  nil,
 				},
 			},
-			Base:    appParams.BaseCoinUnit,
-			Display: appParams.HumanCoinUnit,
+			Base:    BaseCoinUnit,
+			Display: HumanCoinUnit,
 		},
 	}
 	// alloc
@@ -294,7 +302,7 @@ func MainnetGenesisParams() GenesisParams {
 
 	// mint
 	genParams.MintParams = minttypes.DefaultParams()
-	genParams.MintParams.MintDenom = appParams.BaseCoinUnit
+	genParams.MintParams.MintDenom = BaseCoinUnit
 	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(0, 6, 0)
 	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(250_000_000_000_000)
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3)

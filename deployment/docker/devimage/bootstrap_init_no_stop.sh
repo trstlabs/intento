@@ -1,6 +1,6 @@
 #!/bin/bash
 
-file=~/.trst/config/genesis.json
+file=~/.trstd/config/genesis.json
 if [ ! -e "$file" ]
 then
   # init the node
@@ -19,12 +19,12 @@ then
   trstd init banana --chain-id "$chain_id"
 
 
-  cp ~/node_key.json ~/.trst/config/node_key.json
-  perl -i -pe 's/"stake"/"utrst"/g' ~/.trst/config/genesis.json
-  perl -i -pe 's/"172800s"/"90s"/g' ~/.trst/config/genesis.json # voting period 2 days -> 90 seconds
-  perl -i -pe 's/"1814400s"/"80s"/g' ~/.trst/config/genesis.json # unbonding period 21 days -> 80 seconds
+  cp ~/node_key.json ~/.trstd/config/node_key.json
+  perl -i -pe 's/"stake"/"utrst"/g' ~/.trstd/config/genesis.json
+  perl -i -pe 's/"172800s"/"90s"/g' ~/.trstd/config/genesis.json # voting period 2 days -> 90 seconds
+  perl -i -pe 's/"1814400s"/"80s"/g' ~/.trstd/config/genesis.json # unbonding period 21 days -> 80 seconds
 
-  perl -i -pe 's/enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.trst/config/app.toml # enable cors
+  perl -i -pe 's/enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.trstd/config/app.toml # enable cors
 
   a_mnemonic="grant rice replace explain federal release fix clever romance raise often wild taxi quarter soccer fiber love must tape steak together observe swap guitar"
   b_mnemonic="jelly shadow frog dirt dragon use armed praise universe win jungle close inmate rain oil canvas beauty pioneer chef soccer icon dizzy thunder meadow"
@@ -57,8 +57,8 @@ then
 fi
 
 # Setup CORS for LCD & gRPC-web
-perl -i -pe 's;address = "tcp://0.0.0.0:1317";address = "tcp://0.0.0.0:1316";' .trst/config/app.toml
-perl -i -pe 's/enable-unsafe-cors = false/enable-unsafe-cors = true/' .trst/config/app.toml
+perl -i -pe 's;address = "tcp://0.0.0.0:1317";address = "tcp://0.0.0.0:1316";' .trstd/config/app.toml
+perl -i -pe 's/enable-unsafe-cors = false/enable-unsafe-cors = true/' .trstd/config/app.toml
 lcp --proxyUrl http://localhost:1316 --port 1317 --proxyPartial '' &
 
 # Setup faucet

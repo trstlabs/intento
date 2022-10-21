@@ -32,8 +32,8 @@ stargate = []
 ibc3 = ["stargate"]
 
 [dependencies]
-cosmwasm-std = { git = "https://github.com/trstlabs/trst", package="trustless-cosmwasm-std", branch = "develop", features=["stargate", "ibc3"] }
-cosmwasm-storage = { git = "https://github.com/trstlabs/trst",  package="trustless-cosmwasm-storage", branch = "develop" }
+cosmwasm-std = { path = "../../../../../../cosmwasm/packages/std", package = "trustless-cosmwasm-std", features=["stargate", "ibc3"] }
+cosmwasm-storage = { path = "../../../../../../cosmwasm/packages/storage", package = "trustless-cosmwasm-storage"  }
 schemars = "0.8.1"
 serde = { version = "1.0.114", default-features = false, features = [
   "derive",

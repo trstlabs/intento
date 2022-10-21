@@ -9,7 +9,7 @@ ONE_YEAR=$(($ONE_DAY * 365))
 TWO_YEARS=$(($ONE_YEAR * 2))
 VALIDATOR_COINS=10000000$DENOM
 
-rm -rf $HOME/.trst
+rm -rf $HOME/.trstd
 mkdir $HOME/opt/trustlesshub/.sgx_secrets
 
 trstd init FRST --chain-id $CHAIN_ID
@@ -35,7 +35,7 @@ echo "Adding airdrop accounts..."
 trstd import-genesis-accounts-from-snapshot ./snapshot.json ./reserves.json 
 echo "Getting genesis time..."
 
-GENESIS_TIME=$(jq '.genesis_time' ~/.trst/config/genesis.json | tr -d '"')
+GENESIS_TIME=$(jq '.genesis_time' ~/.trstd/config/genesis.json | tr -d '"')
 echo "Genesis time is $GENESIS_TIME"
 if [[ "$OSTYPE" == "darwin"* ]]; then
     GENESIS_UNIX_TIME=$(TZ=UTC gdate "+%s" -d $GENESIS_TIME)

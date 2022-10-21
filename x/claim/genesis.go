@@ -18,11 +18,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.Params.AirdropStartTime.Equal(time.Time{}) {
 		genState.Params.AirdropStartTime = ctx.BlockTime()
 	}
-
 	err := k.SetParams(ctx, genState.Params)
 	if err != nil {
 		panic(err)
 	}
+
 	err = k.SetClaimRecords(ctx, genState.ClaimRecords)
 	if err != nil {
 		panic(err)

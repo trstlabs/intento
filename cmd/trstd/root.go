@@ -132,16 +132,16 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig app.EncodingConfig) {
 	rootCmd.AddCommand(
 		//genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		//updateTmParamsAndInit(app.ModuleBasics, app.DefaultNodeHome),
-		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
+		genutilcli.InitCmd(app.ModuleBasics(), app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
-		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
+		genutilcli.GenTxCmd(app.ModuleBasics(), encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
+		genutilcli.ValidateGenesisCmd(app.ModuleBasics()),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddGenesisWasmMsgCmd(app.DefaultNodeHome),
 		ImportGenesisAccountsFromSnapshotCmd(app.DefaultNodeHome),
 		ExportAirdropSnapshotCmd(),
-		PrepareGenesisCmd(app.DefaultNodeHome, app.ModuleBasics),
+		PrepareGenesisCmd(app.DefaultNodeHome, app.ModuleBasics()),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		// testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
@@ -191,7 +191,7 @@ func queryCommand() *cobra.Command {
 		//S20GetQueryCmd(),
 	)
 
-	app.ModuleBasics.AddQueryCommands(cmd)
+	app.ModuleBasics().AddQueryCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 	cmd.PersistentFlags().String(tmcli.OutputFlag, "text", "Output format (text|json)")
 
@@ -221,7 +221,7 @@ func txCommand() *cobra.Command {
 		//S20GetTxCmd(),
 	)
 
-	app.ModuleBasics.AddTxCommands(cmd)
+	app.ModuleBasics().AddTxCommands(cmd)
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 	cmd.PersistentFlags().String(tmcli.OutputFlag, "text", "Output format (text|json)")
 
@@ -256,14 +256,12 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 	}
 
 	bootstrap := cast.ToBool(appOpts.Get("bootstrap"))
-	queryGasLimit := viper.GetUint64("query-gas-limit")
 
 	//fmt.Printf("bootstrap: %s", cast.ToString(bootstrap))
 
 	return app.NewTrstApp(logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
-		queryGasLimit,
 		bootstrap,
 		appOpts,
 		compute.GetConfig(appOpts),
@@ -287,19 +285,18 @@ func exportAppStateAndTMValidators(
 ) (servertypes.ExportedApp, error) {
 
 	bootstrap := viper.GetBool("bootstrap")
-	queryGasLimit := viper.GetUint64("query-gas-limit")
 
 	encCfg := app.MakeEncodingConfig()
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
-	var wasmApp *app.App
+	var wasmApp *app.TrstApp
 	if height != -1 {
-		wasmApp = app.NewTrstApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts, compute.DefaultWasmConfig(), app.GetEnabledProposals())
+		wasmApp = app.NewTrstApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), bootstrap, appOpts, compute.DefaultWasmConfig(), app.GetEnabledProposals())
 
 		if err := wasmApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		wasmApp = app.NewTrstApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), queryGasLimit, bootstrap, appOpts, compute.DefaultWasmConfig(), app.GetEnabledProposals())
+		wasmApp = app.NewTrstApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), bootstrap, appOpts, compute.DefaultWasmConfig(), app.GetEnabledProposals())
 	}
 	return wasmApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

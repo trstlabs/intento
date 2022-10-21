@@ -40,7 +40,7 @@ The output of this function is an X.509 certificate signed by the enclave, which
 uploads the previously generated EPID-specific certificate on-chain to authenticate the node. All nodes verify if the signature is valid and then will try to register the node’s enclave. If the node is already registered it will get the seed on-chain. Else, the existing node will authenticate the new node through ecall_authenticate_new_node. The in-enclave function will authenticate the new node based on a received certificate. The consensus seed will be encrypted with the new node’s public key and shared on-chain if the node’s certificate is authenticated successfully.
 
 ### ConfigureCredentialsCmd 
-configures the node with the credentials file and the encrypted seed that was written on-chain. It writes to $HOME/.trst/.node/seed.json by default.
+configures the node with the credentials file and the encrypted seed that was written on-chain. It writes to $HOME/.trstd/.node/seed.json by default.
 
 # Init 
-opon node initiation, the enclave will take the seed, stored at $HOME/.trst/.node/seed.json. In the enclave, init_node is called with the certificate and the seed, it sets the consensus seed by decrypting it from the enclave keypair after verifying the certificate again. From this it also creates all of the keypairs (consensus_seed_exchange_keypair,consensus_io_exchange_keypair, consensus_state_ikm, consensus_callback_secret).
+opon node initiation, the enclave will take the seed, stored at $HOME/.trstd/.node/seed.json. In the enclave, init_node is called with the certificate and the seed, it sets the consensus seed by decrypting it from the enclave keypair after verifying the certificate again. From this it also creates all of the keypairs (consensus_seed_exchange_keypair,consensus_io_exchange_keypair, consensus_state_ikm, consensus_callback_secret).

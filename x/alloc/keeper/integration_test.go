@@ -17,17 +17,17 @@ import (
 )
 
 // returns context and an app with updated mint keeper
-func createTestApp(isCheckTx bool) (*app.App, sdk.Context) {
+func createTestApp(isCheckTx bool) (*app.TrstApp, sdk.Context) {
 	app := setup(isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.MintKeeper.SetParams(ctx, types.DefaultParams())
-	app.MintKeeper.SetMinter(ctx, types.DefaultInitialMinter())
+	app.AppKeepers.MintKeeper.SetParams(ctx, types.DefaultParams())
+	app.AppKeepers.MintKeeper.SetMinter(ctx, types.DefaultInitialMinter())
 
 	return app, ctx
 }
 
-func setup(isCheckTx bool) *app.App {
+func setup(isCheckTx bool) *app.TrstApp {
 	app, genesisState := genApp(!isCheckTx, 5)
 
 	if !isCheckTx {
@@ -50,9 +50,9 @@ func setup(isCheckTx bool) *app.App {
 	return app
 }
 
-func genApp(withGenesis bool, invCheckPeriod uint) (*app.App, app.GenesisState) {
+func genApp(withGenesis bool, invCheckPeriod uint) (*app.TrstApp, app.GenesisState) {
 	db := dbm.NewMemDB()
-	encCdc := cosmoscmd.MakeEncodingConfig(app.ModuleBasics)
+	encCdc := cosmoscmd.MakeEncodingConfig(app.ModuleBasics())
 	TrstApp := app.NewTrstApp(
 		log.NewNopLogger(),
 		db,
@@ -61,7 +61,6 @@ func genApp(withGenesis bool, invCheckPeriod uint) (*app.App, app.GenesisState) 
 		map[int64]bool{},
 		simapp.DefaultNodeHome,
 		invCheckPeriod,
-		5,
 		true,
 		simapp.EmptyAppOptions{},
 		compute.GetConfig(simapp.EmptyAppOptions{}),

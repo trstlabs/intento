@@ -1,5 +1,5 @@
 
-rm -rf ~/.trst
+rm -rf ~/.trstd
 mkdir $HOME/opt/trustlesshub/.sgx_secrets
 kill -9 $(lsof -t -i:26657 -sTCP:LISTEN)
 kill -9 $(lsof -t -i:1317 -sTCP:LISTEN)
@@ -37,7 +37,7 @@ trstd collect-gentxs
 echo "Validating genesis file..."
 trstd validate-genesis
 
-sed -i '129s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trst/config/app.toml
+sed -i '129s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trstd/config/app.toml
 
 
 trstd start --bootstrap > init.log --log_level info

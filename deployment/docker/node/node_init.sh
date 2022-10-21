@@ -10,7 +10,7 @@ set -euv
 # rm -rf ~/.secret*
 
 # rm -rf ~/.trstd
-file=/root/.trst/config/attestation_cert.der
+file=/root/.trstd/config/attestation_cert.der
 if [ ! -e "$file" ]
 then
   rm -rf ~/.trstd/* || true
@@ -29,14 +29,14 @@ then
 
   echo "Initializing chain: $CHAINID with node moniker: $(hostname)"
 
-  sed -i 's/persistent_peers = ""/persistent_peers = "'"$PERSISTENT_PEERS"'"/g' ~/.trst/config/config.toml
+  sed -i 's/persistent_peers = ""/persistent_peers = "'"$PERSISTENT_PEERS"'"/g' ~/.trstd/config/config.toml
   echo "Set persistent_peers: $PERSISTENT_PEERS"
 
   # Open RPC port to all interfaces
-  perl -i -pe 's/laddr = .+?26657"/laddr = "tcp:\/\/0.0.0.0:26657"/' ~/.trst/config/config.toml
+  perl -i -pe 's/laddr = .+?26657"/laddr = "tcp:\/\/0.0.0.0:26657"/' ~/.trstd/config/config.toml
 
   # Open P2P port to all interfaces
-  perl -i -pe 's/laddr = .+?26656"/laddr = "tcp:\/\/0.0.0.0:26656"/' ~/.trst/config/config.toml
+  perl -i -pe 's/laddr = .+?26656"/laddr = "tcp:\/\/0.0.0.0:26656"/' ~/.trstd/config/config.toml
 
   echo "Waiting for bootstrap to start..."
   sleep 10
@@ -47,7 +47,7 @@ then
 
   echo "Public key: $(trstd parse /opt/trustlesshub/.sgx_secrets/attestation_cert.der 2> /dev/null | cut -c 3- )"
 
-  cp /opt/trustlesshub/.sgx_secrets/attestation_cert.der /root/.trst/config/
+  cp /opt/trustlesshub/.sgx_secrets/attestation_cert.der /root/.trstd/config/
 
   openssl base64 -A -in attestation_cert.der -out b64_cert
   # trstd tx register auth attestation_cert.der --from a --gas-prices 0.25utrst -y
@@ -63,7 +63,7 @@ then
 
   trstd configure-secret node-master-cert.der "$SEED"
 
-  curl http://"$RPC_URL"/genesis | jq -r .result.genesis > /root/.trst/config/genesis.json
+  curl http://"$RPC_URL"/genesis | jq -r .result.genesis > /root/.trstd/config/genesis.json
 
   echo "Downloaded genesis file from $RPC_URL "
 

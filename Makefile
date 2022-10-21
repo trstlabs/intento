@@ -461,44 +461,44 @@ update-swagger-docs: statik
 
 .PHONY: update-swagger-docs statik
 
+
 ###############################################################################
-###                                Protobuf                                 ###
+###                         Swagger & Protobuf                              ###
 ###############################################################################
 
-## proto-all: proto-gen proto-lint proto-check-breaking
+.PHONY: update-swagger-openapi-docs statik statik-install proto-swagger-openapi-gen
 
-# proto-gen:
-#	@./scripts/protocgen.sh
+statik-install:
+	@echo "Installing statik..."
+	@go install github.com/rakyll/statik@v0.1.6
 
-# proto-lint:
-#	@buf check lint --error-format=json
+statik:
+	statik -src=client/docs/static/ -dest=client/docs -f -m
 
-# proto-check-breaking:
-#	@buf check breaking --against-input '.git#branch=master'
+proto-swagger-openapi-gen:
+	cp go.mod /tmp/go.mod.bak
+	cp go.sum /tmp/go.sum.bak
+	@./scripts/protoc-swagger-openapi-gen.sh
+	cp /tmp/go.mod.bak go.mod
+	cp /tmp/go.sum.bak go.sum
+
+# Example `CHAIN_VERSION=v1.4.0 make update-swagger-openapi-docs`
+update-swagger-openapi-docs: statik-install proto-swagger-openapi-gen statik
 
 protoVer=v0.2
 
-proto-all: proto-format proto-lint proto-gen
+proto-all: proto-lint proto-gen proto-swagger-openapi-gen
 
 proto-gen:
+	cp go.mod /tmp/go.mod.bak
+	cp go.sum /tmp/go.sum.bak
 	@echo "Generating Protobuf files"
 	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:$(protoVer) sh ./scripts/protocgen.sh
-
-# This one doesn't work and i can't find the right docker repo
-proto-format:
-	@echo "Formatting Protobuf files"
-	$(DOCKER) run --rm -v $(CURDIR):/workspace \
-	--workdir /workspace tendermintdev/docker-build-proto \
-	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
-
-proto-swagger-gen:
-	$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/sdk-proto-gen:$(protoVer) ./scripts/protoc-swagger-gen.sh
+	cp /tmp/go.mod.bak go.mod
+	cp /tmp/go.sum.bak go.sum
+	go mod tidy
 
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json
 
-## TODO - change branch release/v0.5.x to master after columbus-5 merged
-proto-check-breaking:
-	@$(DOCKER_BUF) breaking --against-input $(HTTPS_GIT)#branch=release/v0.43-stargate
-
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking
+.PHONY: proto-all proto-gen proto-format proto-lint proto-check-breaking

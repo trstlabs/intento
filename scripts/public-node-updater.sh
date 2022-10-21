@@ -87,7 +87,7 @@ fi
 if [ $(trstd version) = "$LATEST_VERSION" ]; then 
   echo 'Current Version is the latest version: '$LATEST_VERSION' - Updating not needed'
 else
- if [ $(awk -F \" '/^db_backend =/{print $2}' ~/.trst/config/config.toml) = 'goleveldb' ]; then
+ if [ $(awk -F \" '/^db_backend =/{print $2}' ~/.trstd/config/config.toml) = 'goleveldb' ]; then
 	echo "This is a golevelDB install"
   	sudo systemctl stop trst-node
   	wget "$GOLEVELDB_LINK"

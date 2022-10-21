@@ -9,16 +9,16 @@ set -euv
 #trstd config indent true
 #trstd config trust-node true
 #trstd config keyring-backend test
-rm -rf ~/.trst
+rm -rf ~/.trstd
 
-mkdir -p /root/.trst/.node
+mkdir -p /root/.trstd/.node
 
 trstd init "$(hostname)" --chain-id trst_chain_1 || true
 
 NODE_RPC=http://bootstrap:26657
 PERSISTENT_PEERS=''
 
-sed -i 's/persistent_peers = ""/persistent_peers = "'$PERSISTENT_PEERS'"/g' ~/.trst/config/config.toml
+sed -i 's/persistent_peers = ""/persistent_peers = "'$PERSISTENT_PEERS'"/g' ~/.trstd/config/config.toml
 echo "Set persistent_peers: $PERSISTENT_PEERS"
 
 echo "Waiting for bootstrap to start..."
@@ -45,7 +45,7 @@ trstd q registration node-enclave-params --node $NODE_RPC 2> /dev/null
 
 trstd configure-credentials node-master-cert.der "$SEED"
 
-cp /tmp/.trst/config/genesis.json /root/.trst/config/genesis.json
+cp /tmp/.trstd/config/genesis.json /root/.trstd/config/genesis.json
 
 trstd validate-genesis
 

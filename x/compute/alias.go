@@ -79,6 +79,8 @@ var (
 	ConvertToProposals        = types.ConvertToProposals
 	GetConfig                 = types.GetConfig
 	ContractFromPortID        = keeper.ContractFromPortID
+	NewCountTXDecorator       = keeper.NewCountTXDecorator
+	NewWasmSnapshotter        = keeper.NewWasmSnapshotter
 	// variable aliases
 	ModuleCdc            = types.ModuleCdc
 	DefaultCodespace     = types.DefaultCodespace

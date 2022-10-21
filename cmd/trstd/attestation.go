@@ -302,7 +302,7 @@ func ResetEnclave() *cobra.Command {
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			// remove .trst/.node/seed.json
+			// remove .trstd/.node/seed.json
 			path := filepath.Join(app2.DefaultNodeHome, reg.NodeCfgFolder, reg.NodeSeedConfig)
 			if _, err := os.Stat(path); !os.IsNotExist(err) {
 				fmt.Printf("Removing %s\n", path)

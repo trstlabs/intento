@@ -59,7 +59,7 @@ RUN mkdir -p /root/.trstd/.compute/
 RUN mkdir -p /root/.sgx_secrets/
 RUN mkdir -p /root/.trstd/.node/
 
-#COPY deployment/docker/bootstrap/config.toml /root/.trst/config/config-cli.toml
+#COPY deployment/docker/bootstrap/config.toml /root/.trstd/config/config-cli.toml
 #
 #COPY x/compute/internal/keeper/testdata/erc20.wasm /root/erc20.wasm
 #COPY deployment/docker/sanity-test.sh /root/
