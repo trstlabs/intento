@@ -107,12 +107,34 @@ pub struct Attribute {
     pub key: String,
     pub value: Vec<u8>,
     pub pub_db: bool, // true + acc_addr: None to write to public contract state.
-    pub acc_addr: Option<String>, // pubdb true and Some(trust... ) to write to public account-specific state. 
-    pub encrypted: bool, //True for an encrypted output log of the transaction
+    pub acc_addr: Option<String>, // pubdb true and Some(trust... ) to write to public account-specific state.
+    pub encrypted: bool,          //True for an encrypted output log of the transaction
 }
 
 impl Attribute {
-    /// Creates a new log.
+    
+    /// Creates a new encrypted attribute.
+    pub fn new_attribute(key: impl Into<String>, value: impl Into<String>) -> Self {
+        let key = key.into();
+
+        #[cfg(debug_assertions)]
+        if key.starts_with('_') {
+            panic!(
+                "attribute key `{}` is invalid - keys starting with an underscore are reserved",
+                key
+            );
+        }
+
+        Self {
+            key,
+            value: value.into().as_bytes().to_vec(),
+            pub_db: false,
+            acc_addr: None,
+            encrypted: true,
+        }
+    }
+
+    /// Creates a new encrypted log.
     pub fn new_log(key: impl Into<String>, value: impl Into<String>) -> Self {
         let key = key.into();
 
@@ -249,14 +271,15 @@ impl<K: Into<String>, V: Into<String>> From<(K, V)> for Attribute {
     }
 }
 
-
-impl<K: AsRef<str>, V:  AsRef<str>> PartialEq<(K, V)> for Attribute {
+impl<K: AsRef<str>, V: AsRef<str>> PartialEq<(K, V)> for Attribute {
     fn eq(&self, (k, v): &(K, V)) -> bool {
         (self.key.as_str(), self.value.clone()) == (k.as_ref(), v.as_ref().as_bytes().to_vec())
     }
 }
 
-impl<K: AsRef<str>, V: AsRef<str> + std::convert::AsRef<std::vec::Vec<u8>>> PartialEq<Attribute> for (K, V) {
+impl<K: AsRef<str>, V: AsRef<str> + std::convert::AsRef<std::vec::Vec<u8>>> PartialEq<Attribute>
+    for (K, V)
+{
     fn eq(&self, attr: &Attribute) -> bool {
         attr == self
     }
@@ -286,6 +309,12 @@ impl PartialEq<&Attribute> for Attribute {
     fn eq(&self, rhs: &&Attribute) -> bool {
         self == *rhs
     }
+}
+
+/// Creates a new attribute. `Attribute::new_attr` is an alias for this.
+#[inline]
+pub fn attr(key: impl Into<String>, value: impl Into<String>) -> Attribute {
+    Attribute::new_attribute(key, value)
 }
 
 /// Creates a new log. `Attribute::new_log` is an alias for this.

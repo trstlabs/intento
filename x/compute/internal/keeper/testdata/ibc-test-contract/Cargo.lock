@@ -55,7 +55,6 @@ checksum = "9f6b64db6932c7e49332728e3a6bd82c6b7e16016607d20923b537c3bc4c0d5f"
 [[package]]
 name = "cosmwasm-crypto"
 version = "1.0.0"
-source = "git+https://github.com/trstlabs/trst?branch=develop#b9218ec28af1181961b1a6792c44fc6e539edd6d"
 dependencies = [
  "digest",
  "ed25519-zebra",
@@ -67,7 +66,6 @@ dependencies = [
 [[package]]
 name = "cosmwasm-derive"
 version = "1.0.0"
-source = "git+https://github.com/trstlabs/trst?branch=develop#b9218ec28af1181961b1a6792c44fc6e539edd6d"
 dependencies = [
  "syn",
 ]
@@ -536,7 +534,6 @@ dependencies = [
 [[package]]
 name = "trustless-cosmwasm-std"
 version = "1.0.0"
-source = "git+https://github.com/trstlabs/trst?branch=develop#b9218ec28af1181961b1a6792c44fc6e539edd6d"
 dependencies = [
  "base64",
  "cosmwasm-crypto",
@@ -553,7 +550,6 @@ dependencies = [
 [[package]]
 name = "trustless-cosmwasm-storage"
 version = "1.0.0"
-source = "git+https://github.com/trstlabs/trst?branch=develop#b9218ec28af1181961b1a6792c44fc6e539edd6d"
 dependencies = [
  "serde",
  "trustless-cosmwasm-std",
