@@ -36,14 +36,10 @@ go.sum
 init.sh
 snapshot.json
 reserves.json
-reserves.json
 rest.log
 rest.sh
 init.sh
 redo.sh
 start.sh
 test.sh
-testcontr.sh
-testitems.sh
-testswap.sh
 docs/.vuepress/dist

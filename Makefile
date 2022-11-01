@@ -279,6 +279,22 @@ docker_base_rocksdb:
 			-t rust-go-base-image \
 			.
 
+local_trst: _local_trst-compile
+	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst-dev-1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
+	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst-dev-1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/local_trst:${DOCKER_TAG} .
+
+_local_trst-compile:
+	docker build \
+				--build-arg BUILD_VERSION=${VERSION} \
+				--build-arg FEATURES="${FEATURES},debug-print" \
+				--build-arg FEATURES_U=${FEATURES_U} \
+				--secret id=API_KEY,src=.env.local \
+				--secret id=SPID,src=.env.local \
+				--build-arg SGX_MODE=SW \
+				-f deployment/dockerfiles/base.Dockerfile \
+				-t rust-go-base-image \
+				.
+
 docker_base_goleveldb:
 	docker build \
 			--build-arg BUILD_VERSION=${VERSION} \
@@ -297,7 +313,8 @@ else
 docker_base: docker_base_goleveldb
 endif
 
-
+build-ibc-hermes:
+	docker build -f deployment/dockerfiles/ibc/hermes.Dockerfile -t hermes:v0.0.0 deployment/dockerfiles/ibc
 
 docker_bootstrap: docker_base
 	docker build --build-arg SGX_MODE=${SGX_MODE} --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/local-node.Dockerfile -t trstlabs/trst-bootstrap-${ext}:${DOCKER_TAG} .

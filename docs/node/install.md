@@ -72,13 +72,13 @@ rustup override set nightly-2020-10-25
 Install the latest version of the SGX tools by running the following script. Be sure to check if it contains the latest [Intel SGX version](https://download.01.org/intel-sgx/sgx-linux/) for security reasons.  Install:
 
 ```sh
-bash "$HOME/trst/installsgx.sh"
+bash "$HOME/trst/scripts/sgx/installsgx.sh"
 ```
 
 and try alternatively:
 ```sh
 
-bash "$HOME/trst/installsgx_alternative.sh"
+bash "$HOME/trst/scripts/sgx/installsgx_alternative.sh"
 ```
 
 
