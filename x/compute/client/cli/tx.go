@@ -73,12 +73,12 @@ func CmdStoreCode() *cobra.Command {
 		Short: "Upload a wasm binary",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			cliCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg, err := parseStoreCodeArgs(args, clientCtx, cmd.Flags())
+			msg, err := parseStoreCodeArgs(args, cliCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -86,7 +86,7 @@ func CmdStoreCode() *cobra.Command {
 				return err
 			}
 			fmt.Printf("CLI TX with duration: %s \n", msg.DefaultDuration)
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), &msg)
 		},
 	}
 
@@ -490,7 +490,7 @@ func CmdDiscardAutoMsg() *cobra.Command {
 		Short: "Cancel the auto-message for an automated contract",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			clientCtx, err := client.GetClientTxContext(cmd)
+			cliCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -501,13 +501,13 @@ func CmdDiscardAutoMsg() *cobra.Command {
 			}
 
 			msg := types.NewMsgDiscardAutoMsg(
-				clientCtx.GetFromAddress(),
+				cliCtx.GetFromAddress(),
 				contractAddr,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), msg)
 		},
 	}
 

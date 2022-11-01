@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	keep "github.com/trstlabs/trst/x/mint/keeper"
+	keeper "github.com/trstlabs/trst/x/mint/keeper"
 	"github.com/trstlabs/trst/x/mint/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -17,7 +17,7 @@ import (
 func TestNewQuerier(t *testing.T) {
 	app, ctx := createTestApp(true)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
-	querier := keep.NewQuerier(*app.AppKeepers.MintKeeper, legacyQuerierCdc.LegacyAmino)
+	querier := keeper.NewQuerier(*app.AppKeepers.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	query := abci.RequestQuery{
 		Path: "",
@@ -36,9 +36,10 @@ func TestNewQuerier(t *testing.T) {
 
 func TestQueryParams(t *testing.T) {
 	app, ctx := createTestApp(true)
-	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
-	querier := keep.NewQuerier(*app.AppKeepers.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
+	legacyAmino := app.LegacyAmino()
+	querier := keeper.NewQuerier(*app.AppKeepers.MintKeeper, legacyAmino)
+	//fmt.Printf("querier %+v \n: ", querier)
 	var params types.Params
 
 	res, sdkErr := querier(ctx, []string{types.QueryParameters}, abci.RequestQuery{})
@@ -53,7 +54,7 @@ func TestQueryParams(t *testing.T) {
 func TestQueryAnnualProvisions(t *testing.T) {
 	app, ctx := createTestApp(true)
 	legacyQuerierCdc := codec.NewAminoCodec(app.LegacyAmino())
-	querier := keep.NewQuerier(*app.AppKeepers.MintKeeper, legacyQuerierCdc.LegacyAmino)
+	querier := keeper.NewQuerier(*app.AppKeepers.MintKeeper, legacyQuerierCdc.LegacyAmino)
 
 	var annualProvisions sdk.Dec
 

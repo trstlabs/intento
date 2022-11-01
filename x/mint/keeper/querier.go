@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -41,7 +39,6 @@ func queryParams(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino)
 
 func queryAnnualProvisions(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAmino) ([]byte, error) {
 	minter := k.GetMinter(ctx)
-	fmt.Printf("queryAnnualProvisions  '%+v", minter)
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, minter.AnnualProvisions)
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error())

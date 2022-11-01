@@ -218,6 +218,7 @@ func NewTrstApp(
 		interfaceRegistry: interfaceRegistry,
 		invCheckPeriod:    invCheckPeriod,
 		bootstrap:         bootstrap,
+		legacyAmino:       legacyAmino,
 	}
 
 	app.AppKeepers.InitKeys()
@@ -548,7 +549,7 @@ var (
 	EnableSpecificProposals = ""
 )
 
-//GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
+// GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
 // produce a list of enabled proposals to pass into wasmd app.
 func GetEnabledProposals() []compute.ProposalType {
 	if EnableSpecificProposals == "" {

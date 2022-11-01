@@ -2,21 +2,16 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/rs/zerolog"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	prefix "github.com/trstlabs/trst/types"
+	util "github.com/trstlabs/trst/types"
 	"github.com/trstlabs/trst/x/compute"
 
 	//"github.com/tendermint/tendermint/libs/cli"
@@ -52,25 +47,16 @@ const cfgFileName = "config-cli.toml"
 
 var bootstrap bool
 
-func bindFlags(cmd *cobra.Command, v *viper.Viper) {
-	cmd.Flags().VisitAll(func(f *pflag.Flag) {
-		// Environment variables can't have dashes in them, so bind them to their equivalent
-		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
-		_ = v.BindEnv(f.Name, fmt.Sprintf("%s_%s", "TRUSTLESS_HUB", strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))))
-		_ = v.BindPFlag(f.Name, f)
-
-		// Apply the viper config value to the flag when the flag is not set and viper has a value
-		if !f.Changed && v.IsSet(f.Name) {
-			val := v.Get(f.Name)
-			_ = cmd.Flags().Set(f.Name, fmt.Sprintf("%v", val))
-		}
-	})
-}
-
 // NewRootCmd creates a new root command for simd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
+
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount(util.Bech32PrefixAccAddr, util.Bech32PrefixAccPub)
+	config.SetBech32PrefixForValidator(util.Bech32PrefixValAddr, util.Bech32PrefixValPub)
+	config.SetBech32PrefixForConsensusNode(util.Bech32PrefixConsAddr, util.Bech32PrefixConsPub)
+	config.Seal()
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
@@ -80,25 +66,34 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock).
-		WithHomeDir(app.DefaultNodeHome)
+		WithHomeDir(app.DefaultNodeHome).
+		WithViper("TRST")
 
 	rootCmd := &cobra.Command{
 		Use:   app.Name + "d",
-		Short: "The Trustless Hub App Daemon (server)",
+		Short: "Trustless Hub App Daemon (server)",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+			cmd.SetOut(cmd.OutOrStdout())
+			cmd.SetErr(cmd.ErrOrStderr())
 
-			trstAppTemplate, trstAppConfig := initAppConfig()
+			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+			/*initClientCtx, err = clientconfig.ReadFromClientConfig(initClientCtx)
+			if err != nil {
+				return err
+			}*/
 
-			if err := server.InterceptConfigsPreRunHandler(cmd, trstAppTemplate, trstAppConfig); err != nil {
+			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
 
-			ctx := server.GetServerContextFromCmd(cmd)
+			trstAppTemplate, trstAppConfig := initAppConfig()
 
-			bindFlags(cmd, ctx.Viper)
-
-			return initConfig(&initClientCtx, cmd)
+			return server.InterceptConfigsPreRunHandler(cmd, trstAppTemplate, trstAppConfig)
 		},
+		SilenceUsage: true,
 	}
 
 	initRootCmd(rootCmd, encodingConfig)
@@ -299,68 +294,4 @@ func exportAppStateAndTMValidators(
 		wasmApp = app.NewTrstApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), bootstrap, appOpts, compute.DefaultWasmConfig(), app.GetEnabledProposals())
 	}
 	return wasmApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
-}
-
-// writeParamsAndConfigCmd patches the write-params cmd to additionally update the app pruning config.
-func updateTmParamsAndInit(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
-	cmd := genutilcli.InitCmd(mbm, defaultNodeHome)
-	originalFunc := cmd.RunE
-
-	wrappedFunc := func(cmd *cobra.Command, args []string) error {
-		ctx := server.GetServerContextFromCmd(cmd)
-
-		// time is in NS
-		ctx.Config.Consensus.TimeoutPrecommit = 2_000_000_000
-
-		appConfigFilePath := filepath.Join(defaultNodeHome, "config/app.toml")
-		appConf, _ := serverconfig.ParseConfig(viper.GetViper())
-		appConf.MinGasPrices = "0.00025utrst"
-
-		serverconfig.WriteConfigFile(appConfigFilePath, appConf)
-
-		if err := originalFunc(cmd, args); err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	cmd.RunE = wrappedFunc
-	return cmd
-}
-
-func initConfig(ctx *client.Context, cmd *cobra.Command) error {
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(prefix.Bech32PrefixAccAddr, prefix.Bech32PrefixAccPub)
-	config.SetBech32PrefixForValidator(prefix.Bech32PrefixValAddr, prefix.Bech32PrefixValPub)
-	config.SetBech32PrefixForConsensusNode(prefix.Bech32PrefixConsAddr, prefix.Bech32PrefixConsPub)
-
-	cfgFilePath := filepath.Join(app.DefaultNodeHome, "config", cfgFileName)
-	if _, err := os.Stat(cfgFilePath); err == nil {
-		viper.SetConfigFile(cfgFilePath)
-
-		if err := viper.ReadInConfig(); err != nil {
-			return err
-		}
-	}
-
-	cfgFlags := []string{flags.FlagChainID, flags.FlagKeyringBackend}
-	for _, flag := range cfgFlags {
-		err := setFlagFromConfig(cmd, flag)
-		if err != nil {
-			return err
-		}
-	}
-
-	return client.SetCmdClientContextHandler(*ctx, cmd)
-}
-
-func setFlagFromConfig(cmd *cobra.Command, flag string) error {
-	if viper.GetString(flag) != "" && cmd.Flags().Lookup(flag) != nil {
-		err := cmd.Flags().Set(flag, viper.GetString(flag))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

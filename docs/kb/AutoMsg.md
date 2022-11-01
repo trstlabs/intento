@@ -1,14 +1,16 @@
 ---
 order: 4
-title: Auto Execution
+title: Automation
 description: Learn the basics of how AutoMessage enable contract self-execution with omly 1-click
 ---
 
-# AutoMessage
-An AutoMessage is a message that can execute at a specified time, or recurringly with intervals. The callable function can be specified by the contract. As this is a powerful feature, the 'AutoMsg' is defined at instantiation of a proxy contract. Contract interactors can view that given contract will self-execute at  pre-defined time(s).
+## Automation with AutoMessage
+
+Automation happens with an AutoMessage. This is a message that can execute at a specified time, or recurringly with intervals. The callable function can be specified by the contract. As this is a powerful feature, the 'AutoMsg' is defined at instantiation of a proxy contract. Contract interactors can view that given contract will self-execute at  pre-defined time(s).
 
 ## Process
-- An AutoMessage is encrypted at contract instantiation
+
+- AutoMessage is encrypted at contract instantiation
 - A predefined execute-time is provided when storing the code
 - This can only be sent to the same contract as instantiated by the creator
 - Then a *callback signature* is created. This is a signature with a hash containing the address of the contract and the message, so that only the chain is able to execute the message
@@ -30,15 +32,16 @@ To make the AutoMessage executable, TRST is sent at instantiation of the proxy c
 At launch, Contracts with AutoMessages are incentivized, so that fees are (near) zero. Over time, incentives graduately decline.
 
 ## Security
+
 As the AutoMessage is encrypted with the newly created contract address it can not be use my malicious nodes to expose information of other contracts.
 
 ## Proxy-contract
+
 A contract that extends the functionality of an address. Through giving this contract allowance/approval, the proxy contract acts on your behalf. TIP20 tokens can instantiate a proxy contract with approval in just one message. Trustless Hub uses proxy contracts as it is the safest way to run self execution. There are no third parties. As you or a TIP20 token instantiates the contract, your tokens remain in safe hands.
 
-## Blockspace
-In the Hub's current design, we take a free market approach and do not allocate a portion of the block directly for auto execution. 
+## Contracts always execute
 
-Should it be the case that a block space is full, the automatic execution does not get deleted but rather will take place in the following block. Should the chain halt, auto execution will execute in the following block(s). For recurring execution, the next execution time is based on the previous expected execution time + duration. This means that recurring execution always runs following the foreseen execution pattern.
+Should it be the case that a block is full, the automatic execution does not get deleted but rather will take place in the following block. Should the chain halt, auto execution will execute in the following block(s). For recurring execution, the next execution time is based on the previous expected execution time + duration. This means that recurring execution always runs following the foreseen execution pattern.
 
 When a contract wants to skip the execution if time differs significantly, custom time-out logic can be implemented easily into the CosmWasm contract code. Block height and time is available during any type of execution, including auto-execution. For our DCA and RecurrentlySend contracts our implementation is to always execute, even when actual block time differs from the foreseen execution time.
 

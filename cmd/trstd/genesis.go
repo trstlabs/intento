@@ -306,7 +306,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(0, 6, 0)
 	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(250_000_000_000_000)
 	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3)
-	genParams.MintParams.BlocksPerYear = uint64(5737588)
+	genParams.MintParams.BlocksPerYear = uint64(45082286)
 	// staking
 	genParams.StakingParams = stakingtypes.DefaultParams()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 21 //3 weeks

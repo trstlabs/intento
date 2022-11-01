@@ -38,6 +38,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 			if err == nil {
 				logger.Info(
 					"auto_msg",
+					"contract", contract.Address.String(),
 					"gas", gas,
 				)
 
@@ -52,10 +53,6 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 			gasUsed = gas
 
 		}
-		logger.Info(
-			"executed",
-			"contract", contract.Address.String(),
-		)
 
 		isRecurring := contract.ContractInfo.ExecTime.Before(contract.ContractInfo.EndTime)
 		isLastExec := false

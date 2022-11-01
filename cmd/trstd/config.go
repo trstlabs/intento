@@ -5,8 +5,8 @@ import (
 	"github.com/trstlabs/trst/x/compute"
 )
 
-// trstAppConfig trst specify app config
-type trstAppConfig struct {
+// TrstAppConfig specifies app config
+type TrstAppConfig struct {
 	serverconfig.Config
 
 	WASMConfig compute.WasmConfig `mapstructure:"wasm"`
@@ -37,7 +37,7 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.API.EnableUnsafeCORS = false
 	srvCfg.Rosetta.Enable = false
 
-	trstAppConfig := trstAppConfig{
+	trstAppConfig := TrstAppConfig{
 		Config:     *srvCfg,
 		WASMConfig: *compute.DefaultWasmConfig(),
 	}

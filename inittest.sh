@@ -1,8 +1,11 @@
 
 rm -rf ~/.trstd
 mkdir $HOME/opt/trustlesshub/.sgx_secrets
+
+CONFIG_PATH="$HOME/.trstd/config/config.toml"
+
 kill -9 $(lsof -t -i:26657 -sTCP:LISTEN)
-kill -9 $(lsof -t -i:1317 -sTCP:LISTEN)
+kill -9 $(lsof -t -i:1317 -sTCP:LxISTEN)
 
 trstd init FRST --chain-id=trst_chain_1
 
@@ -24,7 +27,7 @@ trstd add-genesis-account $(trstd keys show user2 -a --keyring-backend test) 875
 trstd add-genesis-account $(trstd keys show user3 -a --keyring-backend test) 8750000000000utrst
 trstd add-genesis-account $(trstd keys show user4 -a --keyring-backend test) 8750000000000utrst
 
-trstd gentx user1 750000000000utrst --chain-id=trst_chain_1 --keyring-backend=test  --website="trustlesshub.com" --security-contact="info@trstlabs.xyz" 
+trstd gentx user1 750000000000utrst --chain-id=trst_chain_1 --keyring-backend=test  --website="trustlesshub.com" --security-contact="info@trstlabs.xyz"
 
 
 trstd init-attestation
@@ -36,6 +39,10 @@ trstd collect-gentxs
 
 echo "Validating genesis file..."
 trstd validate-genesis
+
+sed -i '384s/timeout_prevote = "1s"/timeout_prevote = "200ms"/g'  ~/.trstd/config/config.toml
+sed -i '388s/timeout_precommit = "1s"/timeout_precommit = "200ms"/g'  ~/.trstd/config/config.toml
+sed -i '394s/timeout_commit = "5s"/timeout_commit = "200ms"/g'  ~/.trstd/config/config.toml
 
 sed -i '129s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trstd/config/app.toml
 

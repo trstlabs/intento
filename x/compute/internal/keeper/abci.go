@@ -104,15 +104,34 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 		}
 		contractBalance = contractBalance.Add(incentive)
 	}
+
+	if isLastExec {
+		//pay out the remaining balance to the contract owner after deducting fee, commision and gas cost
+		toOwnerCoins, negative := contractBalance.Sort().SafeSub(totalExecCost)
+		//fmt.Printf("toOwnerCoins %v\n", toOwnerCoins)
+		if !negative {
+			err := k.bankKeeper.SendCoins(ctx, contract.Address, contract.ContractInfo.Owner, toOwnerCoins)
+			if err != nil {
+				return sdk.Coin{}, err
+			}
+
+		}
+	}
+
 	// proposer reward
 	// transfer collected fees to the distribution module account
 	flexFeeCoin := sdk.NewCoin(types.Denom, flexFee.TruncateInt())
-
+	if flexFeeCoin.Amount.IsZero() {
+		return sdk.Coin{}, sdkerrors.Wrap(sdkerrors.ErrInsufficientFee, "flexFeeCoin was zero")
+	}
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, contract.Address, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 	proposerAddr := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
+	fmt.Printf("-allocating flexFeeCoin :%s \n", flexFeeCoin.Amount)
+	fmt.Printf("-asdfproposer :%s \n", proposer.String())
+	k.Logger(ctx).Info("allocating", "flexFeeCoin", flexFeeCoin.Amount, "proposer", proposer.String())
 	k.distrKeeper.AllocateTokensToValidator(ctx, proposerAddr, sdk.NewDecCoinsFromCoins(flexFeeCoin))
 
 	//the contract should be funded with the fee. Iif the contract is not able to pay, the contract owner pays next in line
@@ -129,18 +148,6 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 		return sdk.Coin{}, err
 	}
 
-	if isLastExec {
-		//pay out the remaining balance to the contract owner after deducting fee, commision and gas cost
-		toOwnerCoins, negative := contractBalance.Sort().SafeSub(totalExecCost)
-		//fmt.Printf("toOwnerCoins %v\n", toOwnerCoins)
-		if !negative {
-			err = k.bankKeeper.SendCoins(ctx, contract.Address, contract.ContractInfo.Owner, toOwnerCoins)
-			if err != nil {
-				return sdk.Coin{}, err
-			}
-
-		}
-	}
 	return totalExecCost[0], nil
 }
 
