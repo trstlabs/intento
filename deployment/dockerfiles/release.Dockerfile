@@ -1,10 +1,13 @@
-# Base image
-FROM rust-go-base-image AS build-env-rust-go
+ARG TRST_BIN_IMAGE=rust-go-base-image
+ARG TRST_BASE_IMAGE=trstlabs/sgx-base-trustless-hub:2004-1.1.3
+
+FROM $TRST_BIN_IMAGE AS build-env-rust-go
 
 # Final image
-FROM trstlabs/sgx-base-trustless_hub:2004-1.1.3 as build-release
+FROM $TRST_BASE_IMAGE as build-release
 
 # wasmi-sgx-test script requirements
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     #### Base utilities ####
@@ -19,9 +22,9 @@ RUN apt-get update && \
 
 RUN echo "source /etc/profile.d/bash_completion.sh" >> ~/.bashrc
 
-RUN curl -sL https://deb.nodesource.com/setup_15.x | bash - && \
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
     apt-get update && \
-    apt-get install -y nodejs npm && \
+    apt-get install -y nodejs && \
     npm i -g local-cors-proxy
 
 ARG SGX_MODE=SW
@@ -30,11 +33,12 @@ ENV SGX_MODE=${SGX_MODE}
 ARG TRST_NODE_TYPE=BOOTSTRAP
 ENV TRST_NODE_TYPE=${TRST_NODE_TYPE}
 
+ENV PKG_CONFIG_PATH=""
 ENV TRST_ENCLAVE_DIR=/usr/lib/
 
 # workaround because paths seem kind of messed up
-RUN cp /opt/sgxsdk/lib64/libsgx_urts_sim.so /usr/lib/libsgx_urts_sim.so
-RUN cp /opt/sgxsdk/lib64/libsgx_uae_service_sim.so /usr/lib/libsgx_uae_service_sim.so
+RUN ln -s /opt/sgxsdk/lib64/libsgx_urts_sim.so /usr/lib/x86_64-linux-gnu/libsgx_urts_sim.so
+RUN ln -s /opt/sgxsdk/lib64/libsgx_uae_service_sim.so /usr/lib/x86_64-linux-gnu/libsgx_uae_service_sim.so
 
 # Install ca-certificates
 WORKDIR /root
@@ -42,7 +46,7 @@ WORKDIR /root
 # Copy over binaries from the build-env
 COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
 COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /usr/lib/
+#COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /usr/lib/
 COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/trstd /usr/bin/trstd
 
 COPY deployment/docker/bootstrap/bootstrap_init.sh .
@@ -64,13 +68,11 @@ RUN mkdir -p /opt/trustlesshub/.sgx_secrets/
 RUN mkdir -p /root/.trstd/.node/
 RUN mkdir -p /root/config/
 
-
-
 ####### Node parameters
 ARG MONIKER=default
-ARG CHAINID=trst_chain_1
-ARG GENESISPATH=https://raw.githubusercontent.com/trstlabs/trst/master/secret-testnet-genesis.json
-ARG PERSISTENT_PEERS=201cff36d13c6352acfc4a373b60e83211cd3102@bootstrap.southuk.azure.com:26656
+ARG CHAINID=trstdev-1
+ARG GENESISPATH=https://raw.githubusercontent.com/trstlabs/trst/master/testnet-genesis.json
+ARG PERSISTENT_PEERS=
 
 ENV GENESISPATH="${GENESISPATH}"
 ENV CHAINID="${CHAINID}"
