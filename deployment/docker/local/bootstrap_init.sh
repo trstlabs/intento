@@ -8,13 +8,13 @@ then
   rm -rf ~/.trstd/*
   rm -rf ~/.trstcli/*
   rm -rf ~/.sgx_secrets/*
-  trstcli config chain-id enigma-pub-testnet-3
+  trstcli config chain-id trst-pub-testnet-3
   trstcli config output json
 #  trstcli config indent true
 #  trstcli config trust-node true
   trstcli config keyring-backend test
 
-  trstd init banana --chain-id enigma-pub-testnet-3
+  trstd init banana --chain-id trst-pub-testnet-3
 
   cp ~/node_key.json ~/.trstd/config/node_key.json
 
@@ -33,7 +33,7 @@ then
 #  trstd add-genesis-account "$(trstcli keys show -a d)" 1000000000000000000utrst
 
 
-  trstd gentx a 1000000utrst --keyring-backend test --chain-id enigma-pub-testnet-3
+  trstd gentx a 1000000utrst --keyring-backend test --chain-id trst-pub-testnet-3
   # These fail for some reason:
   # trstd gentx --name b --keyring-backend test --amount 1000000utrst
   # trstd gentx --name c --keyring-backend test --amount 1000000utrst

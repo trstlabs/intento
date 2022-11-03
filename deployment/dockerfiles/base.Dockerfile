@@ -1,39 +1,55 @@
-# Simple usage with a mounted data directory:
-# > docker build -t enigma .
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.trstd:/root/.trstd -v ~/.trstcli:/root/.trstcli enigma trstd init
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.trstd:/root/.trstd -v ~/.trstcli:/root/.trstcli enigma trstd start
-FROM trstlabs/rocksdb:v6.24.2 AS build-env-rust-go
+ARG TRST_BASE_IMAGE_TRSTD=trstlabs/rocksdb:v6.24.2
+ARG TRST_BASE_IMAGE_ENCLAVE=trstlabs/rocksdb:v6.24.2
+# trstlabs/rocksdb:v6.24.2
+
+FROM $TRST_BASE_IMAGE_ENCLAVE AS compile-enclave
 
 ENV PATH="/root/.cargo/bin:$PATH"
+
+# Set working directory for the build
+WORKDIR /go/src/github.com/trstlabs/Trustless-Hub/
+
+ARG BUILD_VERSION="v0.0.0"
+ARG SGX_MODE=SW
+ARG FEATURES
+ARG FEATURES_U
+
+ENV VERSION=${BUILD_VERSION}
+ENV SGX_MODE=${SGX_MODE}
+ENV FEATURES=${FEATURES}
+ENV FEATURES_U=${FEATURES_U}
+ENV MITIGATION_CVE_2020_0551=LOAD
+
+COPY rust-toolchain rust-toolchain
+RUN rustup component add rust-src
+RUN cargo install xargo --version 0.3.25
+
+# Add submodules
+COPY third_party third_party
+
+# Add source files
+COPY go-cosmwasm go-cosmwasm/
+COPY cosmwasm cosmwasm/
+
+WORKDIR /go/src/github.com/trstlabs/Trustless-Hub/go-cosmwasm
+
+RUN . /opt/sgxsdk/environment && env \
+    && MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} FEATURES_U=${FEATURES_U} SGX_MODE=${SGX_MODE} make build-rust
+
+ENTRYPOINT ["/bin/bash"]
+
+FROM $TRST_BASE_IMAGE_TRSTD AS compile-trstd
+
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/go/
 ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
-ADD https://go.dev/dl/go1.19.2.linux-amd64.tar.gz go1.19.2.linux-amd64.tar.gz
-RUN tar -C /usr/local -xzf go1.19.2.linux-amd64.tar.gz
+ADD https://go.dev/dl/go1.19.linux-amd64.tar.gz go.linux-amd64.tar.gz
+RUN tar -C /usr/local -xzf go.linux-amd64.tar.gz
 RUN go install github.com/jteeuwen/go-bindata/go-bindata@latest && go-bindata -version
 
-RUN wget -q https://github.com/WebAssembly/wabt/releases/download/1.0.20/wabt-1.0.20-ubuntu.tar.gz && \
-    tar -xf wabt-1.0.20-ubuntu.tar.gz wabt-1.0.20/bin/wat2wasm wabt-1.0.20/bin/wasm2wat && \
-    mv wabt-1.0.20/bin/wat2wasm wabt-1.0.20/bin/wasm2wat /bin && \
-    chmod +x /bin/wat2wasm /bin/wasm2wat && \
-    rm -f wabt-1.0.20-ubuntu.tar.gz
-
-
-#### Install rocksdb deps
-
-RUN apt-get update &&  \
-    apt-get install -y --no-install-recommends \
-    zlib1g-dev \
-    libbz2-dev \
-    liblz4-dev \
-    libzstd-dev
-#
-
-
-# rm -rf /tmp/rocksdb
 # Set working directory for the build
-WORKDIR /go/src/github.com/trstlabs/trst/
+WORKDIR /go/src/github.com/trstlabs/Trustless-Hub
 
 ARG BUILD_VERSION="v0.0.0"
 ARG SGX_MODE=SW
@@ -47,34 +63,6 @@ ENV SGX_MODE=${SGX_MODE}
 ENV FEATURES=${FEATURES}
 ENV FEATURES_U=${FEATURES_U}
 ENV MITIGATION_CVE_2020_0551=LOAD
-
-COPY third_party/build third_party/build
-
-# Add source files
-COPY go-cosmwasm go-cosmwasm/
-COPY cosmwasm cosmwasm/
-
-WORKDIR /go/src/github.com/trstlabs/trst/
-
-COPY deployment/docker/MakefileCopy Makefile
-
-# RUN make clean
-RUN make vendor
-
-WORKDIR /go/src/github.com/trstlabs/trst/go-cosmwasm
-
-COPY api_key.txt /go/src/github.com/trstlabs/trst/ias_keys/develop/
-COPY spid.txt /go/src/github.com/trstlabs/trst/ias_keys/develop/
-COPY api_key.txt /go/src/github.com/trstlabs/trst/ias_keys/production/
-COPY spid.txt /go/src/github.com/trstlabs/trst/ias_keys/production/
-COPY api_key.txt /go/src/github.com/trstlabs/trst/ias_keys/sw_dummy/
-COPY spid.txt /go/src/github.com/trstlabs/trst/ias_keys/sw_dummy/
-
-RUN . /opt/sgxsdk/environment && env \
-    && MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} FEATURES_U=${FEATURES_U} SGX_MODE=${SGX_MODE} make build-rust
-
-# Set working directory for the build
-WORKDIR /go/src/github.com/trstlabs/trst
 
 # Add source files
 COPY go-cosmwasm go-cosmwasm
@@ -94,10 +82,25 @@ COPY client client
 
 RUN ln -s /usr/lib/x86_64-linux-gnu/liblz4.so /usr/local/lib/liblz4.so  && ln -s /usr/lib/x86_64-linux-gnu/libzstd.so /usr/local/lib/libzstd.so
 
+RUN mkdir -p /go/src/github.com/trstlabs/Trustless-Hub/go-cosmwasm/target/release/
+
+COPY --from=compile-enclave /go/src/github.com/trstlabs/Trustless-Hub/go-cosmwasm/target/release/libgo_cosmwasm.so /go/src/github.com/trstlabs/Trustless-Hub/go-cosmwasm/target/release/libgo_cosmwasm.so
+COPY --from=compile-enclave /go/src/github.com/trstlabs/Trustless-Hub/go-cosmwasm/librust_cosmwasm_enclave.signed.so /go/src/github.com/trstlabs/Trustless-Hub/go-cosmwasm/librust_cosmwasm_enclave.signed.so
+# COPY --from=compile-enclave /go/src/github.com/trstlabs/Trustless-Hub/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /go/src/github.com/trstlabs/Trustless-Hub/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so
+
+RUN mkdir -p /go/src/github.com/trstlabs/Trustless-Hub/ias_keys/develop
+RUN mkdir -p /go/src/github.com/trstlabs/Trustless-Hub/ias_keys/sw_dummy
+RUN mkdir -p /go/src/github.com/trstlabs/Trustless-Hub/ias_keys/production
+
+RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/trstlabs/Trustless-Hub/ias_keys/develop/spid.txt
+RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/trstlabs/Trustless-Hub/ias_keys/sw_dummy/spid.txt
+RUN --mount=type=secret,id=SPID,dst=/run/secrets/spid.txt cat /run/secrets/spid.txt > /go/src/github.com/trstlabs/Trustless-Hub/ias_keys/production/spid.txt
+
+RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/trstlabs/Trustless-Hub/ias_keys/develop/api_key.txt
+RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt > /go/src/github.com/trstlabs/Trustless-Hub/ias_keys/sw_dummy/api_key.txt
+RUN --mount=type=secret,id=API_KEY,dst=/run/secrets/api_key.txt cat /run/secrets/api_key.txt >  /go/src/github.com/trstlabs/Trustless-Hub/ias_keys/production/api_key.txt
+
 RUN . /opt/sgxsdk/environment && env && CGO_LDFLAGS=${CGO_LDFLAGS} DB_BACKEND=${DB_BACKEND} MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_local_no_rust
 RUN . /opt/sgxsdk/environment && env && MITIGATION_CVE_2020_0551=LOAD VERSION=${VERSION} FEATURES=${FEATURES} SGX_MODE=${SGX_MODE} make build_cli
 
-# RUN rustup target add wasm32-unknown-unknown && apt update -y && apt install clang -y && make build-test-contracts
-
-# ENTRYPOINT ["/bin/bash", "go-tests.sh"]
 ENTRYPOINT ["/bin/bash"]

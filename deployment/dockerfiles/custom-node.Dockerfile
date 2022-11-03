@@ -1,5 +1,5 @@
 # Final image
-FROM trstlabs/sgx-base-trustless_hub:2004-1.1.3
+FROM trstlabs/sgx-base-trustlesshub:2004-1.1.3
 
 # wasmi-sgx-test script requirements
 RUN apt-get update && \

@@ -24,7 +24,7 @@ const WASM_DIR: &str = "wasm";
 const MODULES_DIR: &str = "modules";
 */
 
-#[derive(Debug, Default, Clone)]
+#[derive( Default)]
 struct Stats {
     hits_module: u32,
     misses: u32,

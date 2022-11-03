@@ -19,9 +19,9 @@ then
   # trstd config keyring-backend test
   trstd config node tcp://"$RPC_URL"
   trstd config chain-id "$CHAINID"
-#  export SECRET_NETWORK_CHAIN_ID=$CHAINID
-#  export SECRET_NETWORK_KEYRING_BACKEND=test
-  # trstd init "$(hostname)" --chain-id enigma-testnet || true
+#  export TRUSTLESS_HUB_CHAIN_ID=$CHAINID
+#  export TRUSTLESS_HUB_KEYRING_BACKEND=test
+  # trstd init "$(hostname)" --chain-id trst-testnet || true
 
   trstd init "$MONIKER" --chain-id "$CHAINID"
 

@@ -1,7 +1,7 @@
 # Simple usage with a mounted data directory:
-# > docker build -t enigma .
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.trstd:/root/.trstd -v ~/.trstcli:/root/.trstcli enigma trstd init
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.trstd:/root/.trstd -v ~/.trstcli:/root/.trstcli enigma trstd start
+# > docker build -t trstlabs .
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.trstd:/root/.trstd -v ~/.trstcli:/root/.trstcli trstlabs trstd init
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.trstd:/root/.trstd -v ~/.trstcli:/root/.trstcli trstlabs trstd start
 FROM baiduxlab/sgx-rust:2004-1.1.3 AS build-env-rust-go
 
 ENV PATH="/root/.cargo/bin:$PATH"

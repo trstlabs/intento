@@ -1,10 +1,9 @@
 ARG TRST_BIN_IMAGE=rust-go-base-image
-ARG TRST_BASE_IMAGE=trstlabs/sgx-base-trustless-hub:2004-1.1.3
 
 FROM $TRST_BIN_IMAGE AS build-env-rust-go
 
 # Final image
-FROM $TRST_BASE_IMAGE as build-release
+FROM trstlabs/rocksdb:v6.24.2
 
 # wasmi-sgx-test script requirements
 
@@ -44,10 +43,10 @@ RUN ln -s /opt/sgxsdk/lib64/libsgx_uae_service_sim.so /usr/lib/x86_64-linux-gnu/
 WORKDIR /root
 
 # Copy over binaries from the build-env
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/Trustless-Hub/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/Trustless-Hub/go-cosmwasm/librust_cosmwasm_enclave.signed.so /usr/lib/
 #COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /usr/lib/
-COPY --from=build-env-rust-go /go/src/github.com/trstlabs/trst/trstd /usr/bin/trstd
+COPY --from=build-env-rust-go /go/src/github.com/trstlabs/Trustless-Hub/trstd /usr/bin/trstd
 
 COPY deployment/docker/bootstrap/bootstrap_init.sh .
 COPY deployment/docker/node/node_init.sh .

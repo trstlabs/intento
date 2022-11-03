@@ -19,7 +19,7 @@ import (
 	app "github.com/trstlabs/trst/app"
 
 	//"github.com/trstlabs/trst/app"
-
+	clientconfig "github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	tmcfg "github.com/tendermint/tendermint/config"
@@ -80,10 +80,11 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 			if err != nil {
 				return err
 			}
-			/*initClientCtx, err = clientconfig.ReadFromClientConfig(initClientCtx)
+
+			initClientCtx, err = clientconfig.ReadFromClientConfig(initClientCtx)
 			if err != nil {
 				return err
-			}*/
+			}
 
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
@@ -156,6 +157,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig app.EncodingConfig) {
 		HealthCheck(),
 		ResetEnclave(),
 		keys.Commands(app.DefaultNodeHome),
+		clientconfig.Cmd(),
 	)
 
 	// This is needed for `newApp` and `exportAppStateAndTMValidators`
@@ -183,7 +185,6 @@ func queryCommand() *cobra.Command {
 		rpc.BlockCommand(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
-		//S20GetQueryCmd(),
 	)
 
 	app.ModuleBasics().AddQueryCommands(cmd)

@@ -11,7 +11,6 @@ BUILD_PROFILE ?= release
 DEB_BIN_DIR ?= /usr/local/bin
 DEB_LIB_DIR ?= /usr/lib
 
-DB_BACKEND ?= goleveldb
 
 SGX_MODE ?= HW
 BRANCH ?= develop
@@ -24,16 +23,6 @@ else ifeq ($(SGX_MODE), SW)
 	ext := sw
 else
 $(error SGX_MODE must be either HW or SW)
-endif
-
-ifeq ($(DB_BACKEND), rocksdb)
-	DB_BACKEND = rocksdb
-else ifeq ($(DB_BACKEND), cleveldb)
-	DB_BACKEND = cleveldb
-else ifeq ($(DB_BACKEND), goleveldb)
-	DB_BACKEND = goleveldb
-else
-$(error DB_BACKEND must be one of: rocksdb/cleveldb/goleveldb)
 endif
 
 CUR_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
@@ -234,12 +223,25 @@ clean:
 	$(MAKE) -C cosmwasm/enclaves/test clean
 
 build-rocksdb-image:
-	docker build --build-arg BUILD_VERSION=${VERSION} -f deployment/dockerfiles/db-compile.Dockerfile -t trstlabs/rocksdb:${VERSION} .
+	docker build --build-arg BUILD_VERSION=v6.24.2 -f deployment/dockerfiles/db-compile.Dockerfile -t trstlabs/rocksdb:v6.24.2 .
 
-build-localtrst:
-	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=SW --build-arg FEATURES_U="${FEATURES_U}" --build-arg FEATURES="${FEATURES},debug-print" -f deployment/dockerfiles/base.Dockerfile -t rust-go-base-image .
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/localtrst:${DOCKER_TAG} .
+build-localtrst:_localtrst-compile
+	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
+	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/localtrst:${DOCKER_TAG} .
+
+_localtrst-compile:
+
+	DOCKER_BUILDKIT=1 docker build \
+				--build-arg BUILD_VERSION=${VERSION} \
+				--build-arg FEATURES="${FEATURES},debug-print" \
+				--build-arg FEATURES_U=${FEATURES_U} \
+				--secret id=API_KEY,src=.env.local \
+				--secret id=SPID,src=.env.local \
+				--build-arg SGX_MODE=SW \
+				-f deployment/dockerfiles/base.Dockerfile \
+				-t rust-go-base-image \
+				.
+
 
 build-dev-image:
 	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=SW --build-arg FEATURES="${FEATURES},debug-print" -f deployment/dockerfiles/base.Dockerfile -t rust-go-base-image .
@@ -255,29 +257,33 @@ build-custom-dev-image:
     # delete the copies created above
 	rm go-cosmwasm/api/libgo_cosmwasm.so.x cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so.x
 
-build-testnet: docker_base
+build-testnet: _docker_base
 	@mkdir build 2>&3 || true
 	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/release.Dockerfile -t trstlabs/trst-bootstrap:v$(VERSION)-testnet .
 	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/release.Dockerfile -t trstlabs/trst-node:v$(VERSION)-testnet .
 	docker build --build-arg SGX_MODE=HW -f deployment/dockerfiles/build-deb.Dockerfile -t deb_build .
 	docker run -e VERSION=${VERSION} -v $(CUR_DIR)/build:/build deb_build
 
-build-mainnet: docker_base
+build-mainnet: _docker_base
 	@mkdir build 2>&3 || true
 	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/release.Dockerfile -t trstlabs/trst-bootstrap:v$(VERSION)-mainnet .
 	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/release.Dockerfile -t trstlabs/trst-node:v$(VERSION)-mainnet .
 	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=HW -f deployment/dockerfiles/build-deb.Dockerfile -t deb_build .
 	docker run -e VERSION=${VERSION} -v $(CUR_DIR)/build:/build deb_build
 
-docker_base_rocksdb:
+
+ _docker_base:
 	docker build \
-			--build-arg BUILD_VERSION=${VERSION} \
-			--build-arg FEATURES=${FEATURES} \
-			--build-arg FEATURES_U=${FEATURES_U} \
-			--build-arg SGX_MODE=${SGX_MODE} \
-			-f deployment/dockerfiles/base-rocksdb.Dockerfile \
-			-t rust-go-base-image \
-			.
+				--build-arg BUILD_VERSION=${VERSION} \
+				--build-arg FEATURES=${FEATURES} \
+				--build-arg FEATURES_U=${FEATURES_U} \
+				--build-arg SGX_MODE=${SGX_MODE} \
+				--secret id=API_KEY,src=api_key.txt \
+				--secret id=SPID,src=spid.txt \
+				-f deployment/dockerfiles/base.Dockerfile \
+				-t rust-go-base-image \
+				.
+
 
 local_trst: _local_trst-compile
 	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst-dev-1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
@@ -295,31 +301,15 @@ _local_trst-compile:
 				-t rust-go-base-image \
 				.
 
-docker_base_goleveldb:
-	docker build \
-			--build-arg BUILD_VERSION=${VERSION} \
-			--build-arg FEATURES=${FEATURES} \
-			--build-arg FEATURES_U=${FEATURES_U} \
-			--build-arg SGX_MODE=${SGX_MODE} \
-			-f deployment/dockerfiles/base.Dockerfile \
-			-t rust-go-base-image \
-			.
 
-docker_base:
-
-ifeq ($(DB_BACKEND),rocksdb)
-docker_base: docker_base_rocksdb
-else
-docker_base: docker_base_goleveldb
-endif
 
 build-ibc-hermes:
 	docker build -f deployment/dockerfiles/ibc/hermes.Dockerfile -t hermes:v0.0.0 deployment/dockerfiles/ibc
 
-docker_bootstrap: docker_base
+docker_bootstrap: _docker_base
 	docker build --build-arg SGX_MODE=${SGX_MODE} --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/local-node.Dockerfile -t trstlabs/trst-bootstrap-${ext}:${DOCKER_TAG} .
 
-docker_node: docker_base
+docker_node: _docker_base
 	docker build --build-arg SGX_MODE=${SGX_MODE} --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/local-node.Dockerfile -t trstlabs/trst-node-${ext}:${DOCKER_TAG} .
 
 clean-files:
@@ -337,7 +327,7 @@ clean-files:
 	-rm -rf ./x/compute/internal/keeper/*.der
 	-rm -rf ./cmd/trstd/ias_bin*
 
-docker_local_azure_hw: docker_base
+docker_local_azure_hw: _docker_base
 	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=NODE -f deployment/dockerfiles/local-node.Dockerfile -t ci-trst-sgx-node .
 	docker build --build-arg SGX_MODE=HW --build-arg TRST_NODE_TYPE=BOOTSTRAP -f deployment/dockerfiles/local-node.Dockerfile -t ci-trst-sgx-bootstrap .
 

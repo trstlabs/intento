@@ -14,8 +14,8 @@ then
   trstd config output json
   trstd config keyring-backend test
 
-  # export SECRET_NETWORK_CHAIN_ID=trst_chain_1
-  # export SECRET_NETWORK_KEYRING_BACKEND=test
+  # export TRUSTLESS_HUB_CHAIN_ID=trst_chain_1
+  # export TRUSTLESS_HUB_KEYRING_BACKEND=test
   trstd init banana --chain-id "$chain_id"
 
 

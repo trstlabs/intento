@@ -16,8 +16,8 @@ function wait_for_tx () {
 
 # rm -rf ~/.trstd
 
-# #export SECRET_NETWORK_CHAIN_ID=trst_chain_1
-# #export SECRET_NETWORK_KEYRING_BACKEND=test
+# #export TRUSTLESS_HUB_CHAIN_ID=trst_chain_1
+# #export TRUSTLESS_HUB_KEYRING_BACKEND=test
 
 # trstd init banana --chain-id trst_chain_1
 # perl -i -pe 's/"stake"/"utrst"/g' ~/.trstd/config/genesis.json

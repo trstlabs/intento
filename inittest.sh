@@ -44,7 +44,11 @@ sed -i '384s/timeout_prevote = "1s"/timeout_prevote = "200ms"/g'  ~/.trstd/confi
 sed -i '388s/timeout_precommit = "1s"/timeout_precommit = "200ms"/g'  ~/.trstd/config/config.toml
 sed -i '394s/timeout_commit = "5s"/timeout_commit = "200ms"/g'  ~/.trstd/config/config.toml
 
-sed -i '129s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trstd/config/app.toml
+sed -i '133s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trstd/config/app.toml
 
+trstd config broadcast-mode block
+trstd config keyring-backend test
+trstd config chain-id trst_chain_1
 
 trstd start --bootstrap > init.log --log_level info
+

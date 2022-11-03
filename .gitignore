@@ -43,3 +43,4 @@ redo.sh
 start.sh
 test.sh
 docs/.vuepress/dist
+*.env.local

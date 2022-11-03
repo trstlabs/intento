@@ -24,7 +24,7 @@ RUN curl -sL https://deb.nodesource.com/setup_15.x | bash - && \
     apt-get install -y nodejs npm && \
     npm i -g local-cors-proxy
 
-RUN wget -O /root/genesis.json https://github.com/trstlabs/trst/releases/download/v1.2.0/genesis.json
+RUN wget -O /root/genesis.json https://github.com/trstlabs/trst/releases/download/v1.0.0/genesis.json
 
 ARG BUILD_VERSION="v0.0.0"
 ENV VERSION=${BUILD_VERSION}

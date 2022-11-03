@@ -4,21 +4,17 @@ docs
 *.md
 **/target
 **/*.a
-**/*.so
+
 **/Enclave_t.*
 **/Enclave_u.*
-third_party/vendor
+
 *.bin
 
 .gitpod.yml
-.golangci.yml
 azure-pipelines.yml
-sn-logo.png
 README.md
 .gitignore
-
+*.env.local
 .vscode
 .github
 .git
-.idea
-**/.idea

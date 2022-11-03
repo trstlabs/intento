@@ -4,7 +4,7 @@ set -euvo pipefail
 
 # init the node
 # rm -rf ~/.secret*
-#trstcli config chain-id enigma-testnet
+#trstcli config chain-id trst-testnet
 #trstcli config output json
 #trstcli config indent true
 #trstcli config trust-node true
@@ -14,11 +14,11 @@ set -euvo pipefail
 mkdir -p /root/.trstd/.node
 trstd config keyring-backend test
 trstd config node http://bootstrap:26657
-trstd config chain-id enigma-pub-testnet-3
+trstd config chain-id trst-pub-testnet-3
 
 mkdir -p /root/.trstd/.node
 
-trstd init "$(hostname)" --chain-id enigma-pub-testnet-3 || true
+trstd init "$(hostname)" --chain-id trst-pub-testnet-3 || true
 
 PERSISTENT_PEERS=115aa0a629f5d70dd1d464bc7e42799e00f4edae@bootstrap:26656
 
