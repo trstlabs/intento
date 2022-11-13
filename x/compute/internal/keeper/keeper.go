@@ -42,14 +42,8 @@ type Keeper struct {
 	messenger        Messenger
 	// queryGasLimit is the max wasm gas that can be spent on executing a query with a contract
 	queryGasLimit uint64
-	serviceRouter MsgServiceRouter
 	paramSpace    paramtypes.Subspace
 	hooks         ComputeHooks
-}
-
-// MsgServiceRouter expected MsgServiceRouter interface
-type MsgServiceRouter interface {
-	Handler(msg sdk.Msg) baseapp.MsgServiceHandler
 }
 
 // NewKeeper creates a new contract Keeper instance
@@ -57,7 +51,7 @@ type MsgServiceRouter interface {
 
 func NewKeeper(
 	cdc codec.Codec,
-	//legacyAmino codec.LegacyAmino,
+	legacyAmino codec.LegacyAmino,
 	storeKey sdk.StoreKey,
 	accountKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
@@ -69,8 +63,8 @@ func NewKeeper(
 	portKeeper portkeeper.Keeper,
 	portSource types.ICS20TransferPortSource,
 	channelKeeper channelkeeper.Keeper,
-	router sdk.Router,
-	msgRouter MsgServiceRouter,
+	legacyMsgRouter sdk.Router,
+	msgRouter MessageRouter,
 	queryRouter GRPCQueryRouter,
 	homeDir string,
 	wasmConfig *types.WasmConfig,
@@ -97,9 +91,9 @@ func NewKeeper(
 	}
 
 	keeper := Keeper{
-		storeKey: storeKey,
-		cdc:      cdc,
-		//legacyAmino:   legacyAmino,
+		storeKey:         storeKey,
+		cdc:              cdc,
+		legacyAmino:      legacyAmino,
 		wasmer:           *wasmer,
 		accountKeeper:    accountKeeper,
 		bankKeeper:       bankKeeper,
@@ -107,7 +101,7 @@ func NewKeeper(
 		portKeeper:       portKeeper,
 		capabilityKeeper: capabilityKeeper,
 		stakingKeeper:    stakingKeeper,
-		messenger:        NewMessageHandler(msgRouter, router, customEncoders, channelKeeper, capabilityKeeper, portSource, cdc),
+		messenger:        NewMessageHandler(msgRouter, legacyMsgRouter, customEncoders, channelKeeper, capabilityKeeper, portSource, cdc),
 		queryGasLimit:    wasmConfig.SmartQueryGasLimit,
 		paramSpace:       paramSpace,
 		hooks:            ch,
@@ -121,4 +115,9 @@ func NewKeeper(
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+// MessageRouter ADR 031 request type routing
+type MessageRouter interface {
+	Handler(msg sdk.Msg) baseapp.MsgServiceHandler
 }

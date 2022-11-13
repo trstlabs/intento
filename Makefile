@@ -227,7 +227,7 @@ build-rocksdb-image:
 
 build-localtrst:_localtrst-compile
 	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/localtrst:${DOCKER_TAG} .
+	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/localtrst:${DOCKER_TAG} .
 
 _localtrst-compile:
 
@@ -243,10 +243,22 @@ _localtrst-compile:
 				.
 
 
-build-dev-image:
-	docker build --build-arg BUILD_VERSION=${VERSION} --build-arg SGX_MODE=SW --build-arg FEATURES="${FEATURES},debug-print" -f deployment/dockerfiles/base.Dockerfile -t rust-go-base-image .
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/trst-sw-dev:${DOCKER_TAG} .
+build-dev-image:_dev-trst-compile
+	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
+	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/trst-sw-dev:${DOCKER_TAG} .
+
+_dev-trst-compile:
+
+	DOCKER_BUILDKIT=1 docker build \
+				--build-arg BUILD_VERSION=${VERSION} \
+				--build-arg FEATURES="${FEATURES},debug-print" \
+				--build-arg FEATURES_U=${FEATURES_U} \
+				--secret id=API_KEY,src=.env.dev \
+				--secret id=SPID,src=.env.dev \
+				--build-arg SGX_MODE=SW \
+				-f deployment/dockerfiles/base.Dockerfile \
+				-t rust-go-base-image \
+				.
 
 build-custom-dev-image:
     # .dockerignore excludes .so files so we rename these so that the dockerfile can find them
@@ -435,10 +447,11 @@ bin-data-develop:
 
 bin-data-production:
 	cd ./cmd/trstd && go-bindata -o ias_bin_prod.go -prefix "../../ias_keys/production/" -tags "production,hw" ../../ias_keys/production/...
-
-secret-contract-optimizer:
-	docker build -f deployment/dockerfiles/secret-contract-optimizer.Dockerfile -t cosmwasm/rust-optimizer:${TAG} .
-	docker tag cosmwasm/rust-optimizer:${TAG} cosmwasm/rust-optimizer:latest
+	
+TAG := 0.12.0
+trustless-contract-optimizer:
+	docker build -f deployment/dockerfiles/trustless-contract-optimizer.Dockerfile -t trstlabs/trustless-contract-optimizer:${TAG} .
+	docker tag trstlabs/trustless-contract-optimizer:${TAG} trstlabs/trustless-contract-optimizer:latest
 
 aesm-image:
 	docker build -f deployment/dockerfiles/aesm.Dockerfile -t trstlabs/aesm .

@@ -32,7 +32,7 @@ type MessageHandlerChain struct {
 
 type MessageHandler struct {
 	// router is used to route StargateMsg and any other msg except for MsgExecuteContract & MsgInstantiateContrat.
-	router MsgServiceRouter
+	router MessageRouter
 	// legacyRouter is used to route MsgExecuteContract & MsgInstantiateContrat.
 	// the reason is those msgs use the data field internally for reply, which is
 	// truncated if the msg erred
@@ -40,7 +40,7 @@ type MessageHandler struct {
 	encoders     MessageEncoders
 }
 
-func NewSDKMessageHandler(router MsgServiceRouter, legacyRouter sdk.Router, encoders MessageEncoders) MessageHandler {
+func NewSDKMessageHandler(router MessageRouter, legacyRouter sdk.Router, encoders MessageEncoders) MessageHandler {
 	return MessageHandler{
 		router:       router,
 		legacyRouter: legacyRouter,
@@ -69,7 +69,7 @@ func NewMessageHandlerChain(first Messenger, others ...Messenger) *MessageHandle
 }
 
 func NewMessageHandler(
-	msgRouter MsgServiceRouter,
+	msgRouter MessageRouter,
 	router sdk.Router,
 	customEncoders *MessageEncoders,
 	channelKeeper channelkeeper.Keeper,

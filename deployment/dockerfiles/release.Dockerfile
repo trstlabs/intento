@@ -70,11 +70,13 @@ RUN mkdir -p /root/config/
 ####### Node parameters
 ARG MONIKER=default
 ARG CHAINID=trstdev-1
+ARG LOG_LEVEL=info
 ARG GENESISPATH=https://raw.githubusercontent.com/trstlabs/trst/master/testnet-genesis.json
-ARG PERSISTENT_PEERS=
+ARG PERSISTENT_PEERS=[]
 
 ENV GENESISPATH="${GENESISPATH}"
 ENV CHAINID="${CHAINID}"
+ENV LOG_LEVEL="${LOG_LEVEL}"
 ENV MONIKER="${MONIKER}"
 ENV PERSISTENT_PEERS="${PERSISTENT_PEERS}"
 

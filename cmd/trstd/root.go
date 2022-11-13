@@ -99,8 +99,6 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 
 	initRootCmd(rootCmd, encodingConfig)
 
-	//rosetta
-	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 	return rootCmd, encodingConfig
 }
 
@@ -159,6 +157,9 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig app.EncodingConfig) {
 		keys.Commands(app.DefaultNodeHome),
 		clientconfig.Cmd(),
 	)
+
+	//rosetta
+	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Marshaler))
 
 	// This is needed for `newApp` and `exportAppStateAndTMValidators`
 	rootCmd.PersistentFlags().BoolVar(&bootstrap, flagIsBootstrap,

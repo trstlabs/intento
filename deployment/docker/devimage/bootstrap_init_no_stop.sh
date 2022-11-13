@@ -7,7 +7,7 @@ then
   rm -rf ~/.trstd/*
   rm -rf /opt/trustlesshub/.sgx_secrets/*
 
-  chain_id=${CHAINID:-trst_chain_1}
+  chain_id=${CHAINID:-trstdev-1}
 
   mkdir -p ./.sgx_secrets
   trstd config chain-id "$chain_id"
@@ -43,9 +43,6 @@ then
 
 
   trstd gentx a 1000000utrst --chain-id "$chain_id"
-  trstd gentx b 1000000utrst --chain-id "$chain_id"
-  trstd gentx c 1000000utrst --chain-id "$chain_id"
-  trstd gentx d 1000000utrst --chain-id "$chain_id"
 
   trstd collect-gentxs
   trstd validate-genesis
@@ -67,5 +64,5 @@ setsid node faucet_server.js &
 # Setup trstcli
 cp $(which trstd) $(dirname $(which trstd))/trstcli
 
-source /opt/sgxsdk/environment && RUST_BACKTRACE=1 LOG_LEVEL=INFO trstd start --rpc.laddr tcp://0.0.0.0:26657 --bootstrap
+source /opt/sgxsdk/environment && RUST_BACKTRACE=1 LOG_LEVEL=$LOG_LEVEL trstd start --rpc.laddr tcp://0.0.0.0:26657 --bootstrap  --log_level $LOG_LEVEL
 

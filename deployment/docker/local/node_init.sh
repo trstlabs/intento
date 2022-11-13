@@ -57,7 +57,7 @@ echo "SEED: $SEED"
 
 trstcli q register node-enclave-params
 
-trstd configure-secret node-master-cert.der "$SEED"
+trstd configure-credentials node-master-cert.der "$SEED"
 
 cp /tmp/.trstd/config/genesis.json /root/.trstd/config/genesis.json
 

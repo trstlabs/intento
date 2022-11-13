@@ -101,7 +101,7 @@ func (i IBCHandler) OnChanOpenTry(
 			CounterpartyVersion: counterpartyVersion,
 		},
 	}
-
+	fmt.Print("OnChanOpenTry \n")
 	// Allow contracts to return a version (or default to counterpartyVersion if unset)
 	version, err := i.keeper.OnOpenChannel(ctx, contractAddr, msg)
 	if err != nil {
@@ -121,7 +121,6 @@ func (i IBCHandler) OnChanOpenTry(
 			return "", sdkerrors.Wrap(err, "claim capability")
 		}
 	}
-
 	return version, nil
 }
 

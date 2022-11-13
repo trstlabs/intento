@@ -16,82 +16,6 @@ import (
 
 var _ types.IBCContractKeeper = (*Keeper)(nil)
 
-func (k Keeper) ibcContractCall(ctx sdk.Context,
-	contractAddress sdk.AccAddress,
-	msgBz []byte,
-	callType wasmTypes.HandleType,
-) (interface{}, error) {
-	verificationInfo := types.NewVerificationInfo([]byte{}, sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED, []byte{}, []byte{}, []byte{}, nil)
-
-	_, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
-	if err != nil {
-		return "", err
-	}
-
-	store := ctx.KVStore(k.storeKey)
-
-	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
-	env := types.NewEnv(
-		ctx,
-		sdk.AccAddress{}, /* there's no MessageInfo for IBC contract calls */
-		sdk.NewCoins(),   /* there's no MessageInfo for IBC contract calls */
-		contractAddress,
-		contractKey,
-	)
-
-	// prepare querier
-	querier := QueryHandler{
-		Ctx:     ctx,
-		Plugins: k.queryPlugins,
-	}
-
-	gas := gasForContract(ctx)
-	switch callType {
-
-	case wasmTypes.HandleTypeIbcChannelOpen:
-		res, gasUsed, _, err := k.wasmer.IBCChannelOpen(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		consumeGas(ctx, gasUsed)
-
-		return res, err
-	case wasmTypes.HandleTypeIbcChannelConnect:
-		res, gasUsed, _, err := k.wasmer.IBCChannelConnect(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		consumeGas(ctx, gasUsed)
-		if res.Ok != nil {
-			return res.Ok, err
-		}
-		return res.Err, err
-	case wasmTypes.HandleTypeIbcChannelClose:
-		res, gasUsed, _, err := k.wasmer.IBCChannelClose(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		consumeGas(ctx, gasUsed)
-		return res, err
-	case wasmTypes.HandleTypeIbcPacketReceive:
-		res, gasUsed, _, err := k.wasmer.IBCPacketReceive(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		consumeGas(ctx, gasUsed)
-
-		return res, err
-	case wasmTypes.HandleTypeIbcPacketAck:
-		res, gasUsed, _, err := k.wasmer.IBCPacketAck(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		consumeGas(ctx, gasUsed)
-		if res.Ok != nil {
-			return res.Ok, err
-		}
-		return res.Err, err
-	case wasmTypes.HandleTypeIbcPacketTimeout:
-		res, gasUsed, _, err := k.wasmer.IBCPacketTimeout(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		consumeGas(ctx, gasUsed)
-		if res.Ok != nil {
-			return res.Ok, err
-		}
-		return res.Err, err
-	default:
-		res, gasUsed, _, err := k.wasmer.Execute(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo, callType)
-		consumeGas(ctx, gasUsed)
-
-		return res, err
-	}
-
-}
-
 func (k Keeper) parseThenHandleIBCBasicContractResponse(ctx sdk.Context,
 	contractAddress sdk.AccAddress,
 	inputMsg []byte,
@@ -125,27 +49,46 @@ func (k Keeper) OnOpenChannel(
 	msg wasmTypes.IBCChannelOpenMsg,
 ) (string, error) {
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "ibc-open-channel")
-
+	version := ""
 	ctx.GasMeter().ConsumeGas(types.InstanceCost, "Loading Compute module: ibc-open-channel")
 
 	msgBz, err := json.Marshal(msg)
 	if err != nil {
 		return "", sdkerrors.Wrap(err, "ibc-open-channel")
 	}
+	_, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	if err != nil {
+		return "", err
+	}
+	store := ctx.KVStore(k.storeKey)
 
-	res, err := k.ibcContractCall(ctx, contractAddress, msgBz, wasmTypes.HandleTypeIbcChannelOpen)
+	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
+	env := types.NewEnv(
+		ctx,
+		sdk.AccAddress{}, /* there's no MessageInfo for IBC contract calls */
+		sdk.NewCoins(),   /* there's no MessageInfo for IBC contract calls */
+		contractAddress,
+		contractKey,
+	)
+
+	// prepare querier
+	querier := QueryHandler{
+		Ctx:     ctx,
+		Plugins: k.queryPlugins,
+	}
+
+	gas := gasForContract(ctx)
+	verificationInfo := types.NewVerificationInfo([]byte{}, sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED, []byte{}, []byte{}, []byte{}, nil)
+	res, gasUsed, _, err := k.wasmer.IBCChannelOpen(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+	consumeGas(ctx, gasUsed)
 	if err != nil {
 		return "", sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
 
-	switch resp := res.(type) {
-	case *string:
-		return *resp, nil
-	case *wasmTypes.IBC3ChannelOpenResponse:
-		return resp.Version, nil
-	default:
-		return "", sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("ibc-open-channel: cannot cast res to IBC3ChannelOpenResponse: %+v \n", res))
+	if res != nil {
+		version = res.Version
 	}
+	return version, nil
 }
 
 // OnConnectChannel calls the contract to let it know the IBC channel was established.
@@ -167,8 +110,31 @@ func (k Keeper) OnConnectChannel(
 	if err != nil {
 		return sdkerrors.Wrap(err, "ibc-connect-channel")
 	}
+	_, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(k.storeKey)
 
-	res, err := k.ibcContractCall(ctx, contractAddress, msgBz, wasmTypes.HandleTypeIbcChannelConnect)
+	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
+	env := types.NewEnv(
+		ctx,
+		sdk.AccAddress{}, /* there's no MessageInfo for IBC contract calls */
+		sdk.NewCoins(),   /* there's no MessageInfo for IBC contract calls */
+		contractAddress,
+		contractKey,
+	)
+
+	// prepare querier
+	querier := QueryHandler{
+		Ctx:     ctx,
+		Plugins: k.queryPlugins,
+	}
+
+	gas := gasForContract(ctx)
+	verificationInfo := types.NewVerificationInfo([]byte{}, sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED, []byte{}, []byte{}, []byte{}, nil)
+	res, gasUsed, err := k.wasmer.IBCChannelConnect(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+	consumeGas(ctx, gasUsed)
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
@@ -198,8 +164,31 @@ func (k Keeper) OnCloseChannel(
 	if err != nil {
 		return sdkerrors.Wrap(err, "ibc-close-channel")
 	}
+	_, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(k.storeKey)
 
-	res, err := k.ibcContractCall(ctx, contractAddress, msgBz, wasmTypes.HandleTypeIbcChannelClose)
+	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
+	env := types.NewEnv(
+		ctx,
+		sdk.AccAddress{}, /* there's no MessageInfo for IBC contract calls */
+		sdk.NewCoins(),   /* there's no MessageInfo for IBC contract calls */
+		contractAddress,
+		contractKey,
+	)
+
+	// prepare querier
+	querier := QueryHandler{
+		Ctx:     ctx,
+		Plugins: k.queryPlugins,
+	}
+
+	gas := gasForContract(ctx)
+	verificationInfo := types.NewVerificationInfo([]byte{}, sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED, []byte{}, []byte{}, []byte{}, nil)
+	res, gasUsed, err := k.wasmer.IBCChannelClose(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+	consumeGas(ctx, gasUsed)
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
@@ -230,42 +219,54 @@ func (k Keeper) OnRecvPacket(
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "ibc-recv-packet")
 	}
-	res, err := k.ibcContractCall(ctx, contractAddress, msgBz, wasmTypes.HandleTypeIbcPacketReceive)
+	_, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	if err != nil {
+		return nil, err
+	}
+	store := ctx.KVStore(k.storeKey)
+
+	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
+	env := types.NewEnv(
+		ctx,
+		sdk.AccAddress{}, /* there's no MessageInfo for IBC contract calls */
+		sdk.NewCoins(),   /* there's no MessageInfo for IBC contract calls */
+		contractAddress,
+		contractKey,
+	)
+
+	// prepare querier
+	querier := QueryHandler{
+		Ctx:     ctx,
+		Plugins: k.queryPlugins,
+	}
+
+	gas := gasForContract(ctx)
+	verificationInfo := types.NewVerificationInfo([]byte{}, sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED, []byte{}, []byte{}, []byte{}, nil)
+	resp, gasUsed, err := k.wasmer.IBCPacketReceive(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+	consumeGas(ctx, gasUsed)
 	if err != nil {
 		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
-
-	switch resp := res.(type) {
-
-	case *wasmTypes.IBCReceiveResult:
-		if resp != nil {
-			contractInfo, _, _, err := k.contractInstance(ctx, contractAddress)
-			if err != nil {
-				return nil, err
-			}
-			verificationInfo := types.NewVerificationInfo([]byte{}, sdktxsigning.SignMode_SIGN_MODE_DIRECT, []byte{}, []byte{}, []byte{}, nil)
-
-			ogTx := msg.Packet.Data
-
-			// If the data contains less than 64 bytes (means plaintext)
-			// use the whole message just for compilation
-			if len(ogTx) < 64 {
-				ogTx = msgBz
-			}
-			if resp.Ok != nil {
-				// note submessage reply results can overwrite the `Acknowledgement` data
-				return k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, resp.Ok.Attributes, resp.Ok.Messages, resp.Ok.Events, resp.Ok.Acknowledgement, ogTx, verificationInfo)
-			}
-			return nil, fmt.Errorf("%s", resp.Err)
-
-		}
-
-		// should never get here as it's already checked in
-		// https://github.com/trstlabs/trst/blob/bd46776c/go-cosmwasm/lib.go#L358
-		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("ibc-recv-packet: null pointer IBCReceiveResponse: %+v \n", res))
-	default:
-		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, fmt.Sprintf("ibc-recv-packet: cannot cast res to IBCReceiveResponse: %+v \n", res))
+	if resp.Err != "" { // handle error case as before https://github.com/CosmWasm/wasmvm/commit/c300106fe5c9426a495f8e10821e00a9330c56c6
+		return nil, sdkerrors.Wrap(types.ErrExecuteFailed, resp.Err)
 	}
+	contractInfo, _, _, err := k.contractInstance(ctx, contractAddress)
+	if err != nil {
+		return nil, err
+	}
+	verificationInfo = types.NewVerificationInfo([]byte{}, sdktxsigning.SignMode_SIGN_MODE_DIRECT, []byte{}, []byte{}, []byte{}, nil)
+
+	ogTx := msg.Packet.Data
+
+	// If the data contains less than 64 bytes (means plaintext)
+	// use the whole message just for compilation
+	if len(ogTx) < 64 {
+		ogTx = msgBz
+	}
+
+	// note submessage reply results can overwrite the `Acknowledgement` data
+	return k.handleContractResponse(ctx, contractAddress, contractInfo.IBCPortID, resp.Ok.Attributes, resp.Ok.Messages, resp.Ok.Events, resp.Ok.Acknowledgement, ogTx, verificationInfo)
+
 }
 
 // OnAckPacket calls the contract to handle the "acknowledgement" data which can contain success or failure of a packet
@@ -289,11 +290,34 @@ func (k Keeper) OnAckPacket(
 		return sdkerrors.Wrap(err, "ibc-ack-packet")
 	}
 
-	res, err := k.ibcContractCall(ctx, contractAddress, msgBz, wasmTypes.HandleTypeIbcPacketAck)
+	_, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(k.storeKey)
+
+	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
+	env := types.NewEnv(
+		ctx,
+		sdk.AccAddress{}, /* there's no MessageInfo for IBC contract calls */
+		sdk.NewCoins(),   /* there's no MessageInfo for IBC contract calls */
+		contractAddress,
+		contractKey,
+	)
+
+	// prepare querier
+	querier := QueryHandler{
+		Ctx:     ctx,
+		Plugins: k.queryPlugins,
+	}
+
+	gas := gasForContract(ctx)
+	verificationInfo := types.NewVerificationInfo([]byte{}, sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED, []byte{}, []byte{}, []byte{}, nil)
+	res, gasUsed, err := k.wasmer.IBCPacketAck(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+	consumeGas(ctx, gasUsed)
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
-
 	err = k.parseThenHandleIBCBasicContractResponse(ctx, contractAddress, msgBz, res)
 	if err != nil {
 		return sdkerrors.Wrap(err, "ibc-ack-packet")
@@ -318,11 +342,34 @@ func (k Keeper) OnTimeoutPacket(
 		return sdkerrors.Wrap(err, "ibc-timeout-packet")
 	}
 
-	res, err := k.ibcContractCall(ctx, contractAddress, msgBz, wasmTypes.HandleTypeIbcPacketTimeout)
+	_, codeInfo, prefixStore, err := k.contractInstance(ctx, contractAddress)
+	if err != nil {
+		return err
+	}
+	store := ctx.KVStore(k.storeKey)
+
+	contractKey := store.Get(types.GetContractEnclaveKey(contractAddress))
+	env := types.NewEnv(
+		ctx,
+		sdk.AccAddress{}, /* there's no MessageInfo for IBC contract calls */
+		sdk.NewCoins(),   /* there's no MessageInfo for IBC contract calls */
+		contractAddress,
+		contractKey,
+	)
+
+	// prepare querier
+	querier := QueryHandler{
+		Ctx:     ctx,
+		Plugins: k.queryPlugins,
+	}
+
+	gas := gasForContract(ctx)
+	verificationInfo := types.NewVerificationInfo([]byte{}, sdktxsigning.SignMode_SIGN_MODE_UNSPECIFIED, []byte{}, []byte{}, []byte{}, nil)
+	res, gasUsed, err := k.wasmer.IBCPacketTimeout(codeInfo.CodeHash, env, msgBz, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gas, verificationInfo)
+	consumeGas(ctx, gasUsed)
 	if err != nil {
 		return sdkerrors.Wrap(types.ErrExecuteFailed, err.Error())
 	}
-
 	err = k.parseThenHandleIBCBasicContractResponse(ctx, contractAddress, msgBz, res)
 	if err != nil {
 		return sdkerrors.Wrap(err, "ibc-timeout-packet")

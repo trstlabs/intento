@@ -202,7 +202,7 @@ type IBCPacket struct {
 // define a custom version in the handshake.
 type IBCChannelOpenResult struct {
 	Ok  *IBC3ChannelOpenResponse `json:"ok,omitempty"`
-	Err string                   `json:"error,omitempty"`
+	Err string                   `json:"Err,omitempty"`
 }
 
 // This is the return value for the majority of the ibc handlers.

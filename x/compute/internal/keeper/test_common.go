@@ -478,6 +478,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 	s, _ := paramsKeeper.GetSubspace("compute")
 	keeper := NewKeeper(
 		encodingConfig.Marshaler,
+		*encodingConfig.Amino,
 		keys[wasmTypes.StoreKey],
 		authKeeper,
 		bankKeeper,

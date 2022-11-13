@@ -195,25 +195,6 @@ func (ak *TrstAppKeepers) InitSdkKeepers(
 		appCodec, ak.keys[ibchost.StoreKey], ak.GetSubspace(ibchost.ModuleName), ak.StakingKeeper, ak.UpgradeKeeper, ak.ScopedIBCKeeper,
 	)
 
-	// Register the proposal types
-	govRouter := govtypes.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*ak.ParamsKeeper)).
-		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(*ak.DistrKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(*ak.UpgradeKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(ak.IbcKeeper.ClientKeeper))
-		/*
-			govKeeper := govkeeper.NewKeeper(
-				appCodec,
-				ak.keys[govtypes.StoreKey],
-				ak.GetSubspace(govtypes.ModuleName),
-				ak.AccountKeeper,
-				ak.BankKeeper,
-				ak.StakingKeeper,
-				govRouter,
-			)
-			ak.GovKeeper = &govKeeper
-		*/
 	// Create evidence keeper with router
 	ak.EvidenceKeeper = evidencekeeper.NewKeeper(
 		appCodec, ak.keys[evidencetypes.StoreKey], ak.StakingKeeper, ak.SlashingKeeper,
@@ -288,10 +269,11 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	computeDir := filepath.Join(homePath, ".compute")
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "staking,stargate, ibc3" //"staking,stargate,ibc3"
+	supportedFeatures := "staking,stargate,ibc3" //"staking,stargate,ibc3"
 
 	computeKeeper := compute.NewKeeper(
 		appCodec,
+		*legacyAmino,
 		ak.keys[compute.StoreKey],
 		*ak.AccountKeeper,
 		ak.BankKeeper,
@@ -321,11 +303,18 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 		govRouter.AddRoute(compute.RouterKey, compute.NewWasmProposalHandler(*ak.ComputeKeeper, enabledProposals))
 	}
 
+	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*ak.ParamsKeeper)).
+		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(*ak.DistrKeeper)).
+		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(*ak.UpgradeKeeper)).
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(ak.IbcKeeper.ClientKeeper))
+
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, ak.keys[govtypes.StoreKey], ak.GetSubspace(govtypes.ModuleName), ak.AccountKeeper, ak.BankKeeper,
 		ak.StakingKeeper, govRouter,
 	)
 	ak.GovKeeper = &govKeeper
+
 	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
 		appCodec, ak.keys[icacontrollertypes.StoreKey], ak.GetSubspace(icacontrollertypes.SubModuleName),
 		ak.IbcKeeper.ChannelKeeper, ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,

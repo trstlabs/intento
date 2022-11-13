@@ -35,20 +35,23 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // AppModuleBasic defines the basic application module used by the compute module.
 type AppModuleBasic struct {
-	cdc codec.BinaryCodec
 }
 
-/*
+//nolint:staticcheck
 func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
-	RegisterCodec(cdc)
-}*/
+	types.RegisterLegacyAminoCodec(cdc)
+}
 
-func (b AppModuleBasic) RegisterLegacyAminoCodec(amino *codec.LegacyAmino) {
-	RegisterCodec(amino)
+//nolint:staticcheck
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
 }
 
 func (b AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, serveMux *runtime.ServeMux) {
-	_ = types.RegisterQueryHandlerClient(context.Background(), serveMux, types.NewQueryClient(clientCtx))
+	err := types.RegisterQueryHandlerClient(context.Background(), serveMux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // Name returns the compute module's name.
@@ -71,16 +74,6 @@ func (AppModuleBasic) ValidateGenesis(
 	}
 	return genState.Validate()
 }
-
-/*
-func (AppModuleBasic) ValidateGenesis(marshaler codec.JSONCodec, config client.TxEncodingConfig, message json.RawMessage) error {
-	var data GenesisState
-	err := marshaler.UnmarshalJSON(message, &data)
-	if err != nil {
-		return err
-	}
-	return ValidateGenesis(data)
-}*/
 
 // RegisterRESTRoutes registers the REST routes for the compute module.
 func (AppModuleBasic) RegisterRESTRoutes(ctx client.Context, rtr *mux.Router) {
@@ -112,16 +105,12 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.BinaryCodec, keeper Keeper, ak types.AccountKeeper) AppModule {
+func NewAppModule(keeper Keeper, ak types.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(cdc),
+		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
 		accountKeeper:  ak,
 	}
-}
-
-func NewAppModuleBasic(cdc codec.BinaryCodec) AppModuleBasic {
-	return AppModuleBasic{cdc: cdc}
 }
 
 func (am AppModule) RegisterServices(configurator module.Configurator) {

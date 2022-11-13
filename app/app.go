@@ -249,7 +249,7 @@ func NewTrstApp(
 		staking.NewAppModule(appCodec, *app.AppKeepers.StakingKeeper, app.AppKeepers.AccountKeeper, *app.AppKeepers.BankKeeper),
 		upgrade.NewAppModule(*app.AppKeepers.UpgradeKeeper),
 		evidence.NewAppModule(*app.AppKeepers.EvidenceKeeper),
-		compute.NewAppModule(appCodec, *app.AppKeepers.ComputeKeeper, *app.AppKeepers.AccountKeeper),
+		compute.NewAppModule(*app.AppKeepers.ComputeKeeper, *app.AppKeepers.AccountKeeper),
 		claim.NewAppModule(appCodec, *app.AppKeepers.ClaimKeeper),
 		alloc.NewAppModule(appCodec, *app.AppKeepers.AllocKeeper),
 		params.NewAppModule(*app.AppKeepers.ParamsKeeper),

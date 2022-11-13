@@ -24,30 +24,31 @@ func NewMsgServerImpl(k Keeper) types.MsgServer {
 func (m msgServer) StoreCode(goCtx context.Context, msg *types.MsgStoreCode) (*types.MsgStoreCodeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	ctx.EventManager().EmitEvent(sdk.NewEvent(
-		sdk.EventTypeMessage,
-		sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-		sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
-		sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
-	))
-
+	p := m.keeper.GetParams(ctx)
 	duration, err := time.ParseDuration(msg.DefaultDuration)
 
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
+	if duration > p.MaxContractDuration {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be shorter than maximum duration")
+	}
+	if duration != 0 && duration < p.MinContractDuration {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract duration must be longer than minimum duration")
+	}
 
 	interval, err := time.ParseDuration(msg.DefaultInterval)
-
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
+	if interval != 0 && interval < p.MinContractInterval {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "contract interval must be longer than minimum interval")
 	}
 
 	sender, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
 		return nil, err
 	}
-
 	codeID, err := m.keeper.Create(ctx, sender, msg.WASMByteCode, msg.Source, msg.Builder, duration, interval, msg.Title, msg.Description)
 	if err != nil {
 		return nil, err
@@ -56,6 +57,8 @@ func (m msgServer) StoreCode(goCtx context.Context, msg *types.MsgStoreCode) (*t
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+			sdk.NewAttribute(types.AttributeKeySigner, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyCodeID, fmt.Sprintf("%d", codeID)),
 		),
 	})
@@ -105,8 +108,8 @@ func (m msgServer) InstantiateContract(goCtx context.Context, msg *types.MsgInst
 			return nil, err
 		}
 	}
-	owner, _ := sdk.AccAddressFromBech32(msg.Owner)
-	contractAddr, data, err := m.keeper.Instantiate(ctx, msg.CodeID, sender, msg.Msg, msg.AutoMsg, msg.ContractId, msg.Funds, msg.CallbackSig, duration, interval, startTime, owner)
+
+	contractAddr, data, err := m.keeper.Instantiate(ctx, msg.CodeID, sender, msg.Msg, msg.AutoMsg, msg.ContractId, msg.Funds, msg.CallbackSig, duration, interval, startTime, nil)
 	if err != nil {
 		return nil, err
 	}

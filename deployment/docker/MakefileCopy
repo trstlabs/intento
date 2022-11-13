@@ -432,8 +432,8 @@ bin-data-develop:
 bin-data-production:
 	cd ./cmd/trstd && go-bindata -o ias_bin_prod.go -prefix "../../ias_keys/production/" -tags "production,hw" ../../ias_keys/production/...
 
-secret-contract-optimizer:
-	docker build -f deployment/dockerfiles/secret-contract-optimizer.Dockerfile -t cosmwasm/rust-optimizer:${TAG} .
+trustless-contract-optimizer:
+	docker build -f deployment/dockerfiles/trustless-contract-optimizer.Dockerfile -t cosmwasm/rust-optimizer:${TAG} .
 	docker tag cosmwasm/rust-optimizer:${TAG} cosmwasm/rust-optimizer:latest
 
 aesm-image:

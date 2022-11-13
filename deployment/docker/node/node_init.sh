@@ -61,7 +61,7 @@ then
 
   trstd q register node-enclave-params 2> /dev/null
 
-  trstd configure-secret node-master-cert.der "$SEED"
+  trstd configure-credentials node-master-cert.der "$SEED"
 
   curl http://"$RPC_URL"/genesis | jq -r .result.genesis > /root/.trstd/config/genesis.json
 

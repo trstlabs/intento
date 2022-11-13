@@ -28,16 +28,8 @@ then
   trstcli keys add d
 
   trstd add-genesis-account "$(trstcli keys show -a a)" 1000000000000000000utrst
-#  trstd add-genesis-account "$(trstcli keys show -a b)" 1000000000000000000utrst
-#  trstd add-genesis-account "$(trstcli keys show -a c)" 1000000000000000000utrst
-#  trstd add-genesis-account "$(trstcli keys show -a d)" 1000000000000000000utrst
-
-
   trstd gentx a 1000000utrst --keyring-backend test --chain-id trst-pub-testnet-3
-  # These fail for some reason:
-  # trstd gentx --name b --keyring-backend test --amount 1000000utrst
-  # trstd gentx --name c --keyring-backend test --amount 1000000utrst
-  # trstd gentx --name d --keyring-backend test --amount 1000000utrst
+
 
   trstd collect-gentxs
   trstd validate-genesis

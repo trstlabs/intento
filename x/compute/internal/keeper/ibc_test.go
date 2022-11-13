@@ -101,7 +101,6 @@ func ibcChannelOpenHelper(
 	}
 
 	res, err := keeper.OnOpenChannel(ctx, contractAddr, ibcChannelOpenMsg)
-	fmt.Printf("ibc help err %+v", err)
 	require.NotZero(t, gasMeter.GetWasmCounter(), err)
 
 	if err != nil {
@@ -436,7 +435,7 @@ func TestIBCChannelConnect(t *testing.T) {
 			ctx, events, err := ibcChannelConnectHelper(t, keeper, ctx, contractAddress, privKeyA, defaultGasForIbcTests, false, ibcChannel)
 
 			if !test.isSuccess {
-				require.Contains(t, fmt.Sprintf("%+v", err), "Intentional")
+				require.Contains(t, fmt.Sprintf("%+v\n", err), "Intentional")
 			} else {
 				require.Empty(t, err)
 				if test.hasAttributes {
@@ -583,7 +582,7 @@ func TestIBCChannelClose(t *testing.T) {
 			ctx, events, err := ibcChannelCloseHelper(t, keeper, ctx, contractAddress, privKeyA, defaultGasForIbcTests, true, ibcChannel)
 
 			if !test.isSuccess {
-				require.Contains(t, fmt.Sprintf("%+v", err), "Intentional")
+				require.Contains(t, fmt.Sprintf("%+v\n", err), "Intentional")
 			} else {
 				require.Empty(t, err)
 				if test.hasAttributes {
@@ -736,7 +735,7 @@ func TestIBCPacketReceive(t *testing.T) {
 
 				if !test.isSuccess {
 					fmt.Printf("err %v /n", err)
-					require.Contains(t, fmt.Sprintf("%+v", err), "Intentional")
+					require.Contains(t, fmt.Sprintf("%+v\n", err), "Intentional")
 				} else {
 					require.Empty(t, err)
 					//require.Equal(t, "\"out\"", string(data))
@@ -868,7 +867,7 @@ func TestIBCPacketAck(t *testing.T) {
 			ctx, events, err := ibcPacketAckHelper(t, keeper, ctx, contractAddress, privKeyA, defaultGasForIbcTests, ibcPacket, ack)
 
 			if !test.isSuccess {
-				require.Contains(t, fmt.Sprintf("%+v", err), "Intentional")
+				require.Contains(t, fmt.Sprintf("%+v\n", err), "Intentional")
 			} else {
 				require.Empty(t, err)
 				if test.hasAttributes {
@@ -991,7 +990,7 @@ func TestIBCPacketTimeout(t *testing.T) {
 			ctx, events, err := ibcPacketTimeoutHelper(t, keeper, ctx, contractAddress, privKeyA, defaultGasForIbcTests, ibcPacket)
 
 			if !test.isSuccess {
-				require.Contains(t, fmt.Sprintf("%+v", err), "Intentional")
+				require.Contains(t, fmt.Sprintf("%+v\n", err), "Intentional")
 			} else {
 				require.Empty(t, err)
 				if test.hasAttributes {

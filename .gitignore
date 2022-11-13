@@ -44,3 +44,6 @@ start.sh
 test.sh
 docs/.vuepress/dist
 *.env.local
+*.env.dev
+docker-compose.yml
+initdev.sh

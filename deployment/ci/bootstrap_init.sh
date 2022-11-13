@@ -25,11 +25,9 @@ trstd validate-genesis
 
 sed -i 's/persistent_peers = ""/persistent_peers = "'"$PERSISTENT_PEERS"'"/g' ~/.trstd/config/config.toml
 
-
-
 sed -i '104s/enable = false/enable = true/g' ~/.trstd/config/app.toml
 
 sed -i 's/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trstd/config/app.toml
 
 
-source /opt/sgxsdk/environment && RUST_BACKTRACE=1 trstd start --rpc.laddr tcp://0.0.0.0:26657 --bootstrap
+source /opt/sgxsdk/environment && RUST_BACKTRACE=1 trstd start --rpc.laddr tcp://0.0.0.0:26657 --bootstrap --log_level $LOG_LEVEL

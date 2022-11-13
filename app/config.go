@@ -44,10 +44,12 @@ import (
 	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	alloc "github.com/trstlabs/trst/x/alloc"
 	claim "github.com/trstlabs/trst/x/claim"
 	"github.com/trstlabs/trst/x/compute"
+	wasmclient "github.com/trstlabs/trst/x/compute/client"
 	icaauth "github.com/trstlabs/trst/x/mauth"
 	"github.com/trstlabs/trst/x/mint"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
@@ -72,8 +74,15 @@ var mbasics = module.NewBasicManager(
 		distr.AppModuleBasic{},
 		// governance functionality (voting)
 		gov.NewAppModuleBasic(
-			paramsclient.ProposalHandler, distrclient.ProposalHandler,
-			upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
+			append(
+				wasmclient.ProposalHandlers, //nolint:staticcheck
+				paramsclient.ProposalHandler,
+				distrclient.ProposalHandler,
+				upgradeclient.ProposalHandler,
+				upgradeclient.CancelProposalHandler,
+				ibcclientclient.UpdateClientProposalHandler,
+				ibcclientclient.UpgradeProposalHandler,
+			)...,
 		),
 		// chain parameters
 		params.AppModuleBasic{},
