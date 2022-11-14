@@ -1,4 +1,4 @@
-FROM baiduxlab/sgx-rust:2004-1.1.3 AS build-env-rust-go
+FROM baiduxlab/sgx-rust:2004-1.1.5 AS build-env-rust-go
 
 ENV PATH="/root/.cargo/bin:$PATH"
 

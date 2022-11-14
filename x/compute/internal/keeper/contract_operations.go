@@ -152,6 +152,7 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	querier := QueryHandler{
 		Ctx:     ctx,
 		Plugins: k.queryPlugins,
+		Caller:  contractAddress,
 	}
 
 	autoMsgToSend := make([]byte, 256)
@@ -298,6 +299,7 @@ func (k Keeper) Execute(ctx sdk.Context, contractAddress sdk.AccAddress, caller 
 	querier := QueryHandler{
 		Ctx:     ctx,
 		Plugins: k.queryPlugins,
+		Caller:  contractAddress,
 	}
 
 	gas := gasForContract(ctx)
@@ -437,16 +439,16 @@ func (k Keeper) Delete(ctx sdk.Context, contractAddress sdk.AccAddress) error {
 
 // QueryPrivate queries the smart contract itself.
 func (k Keeper) QueryPrivate(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool) ([]byte, error) {
-	return k.queryPrivateContractImpl(ctx, contractAddr, req, useDefaultGasLimit, false)
+	return k.queryPrivateContractImpl(ctx, contractAddr, req, useDefaultGasLimit, 1)
 }
 
 // queryPrivateRecursive queries the smart contract itself. This should only be called when running inside another query recursively.
-func (k Keeper) queryPrivateRecursive(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool) ([]byte, error) {
-	return k.queryPrivateContractImpl(ctx, contractAddr, req, useDefaultGasLimit, true)
+func (k Keeper) queryPrivateRecursive(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, queryDepth uint32, useDefaultGasLimit bool) ([]byte, error) {
+	return k.queryPrivateContractImpl(ctx, contractAddr, req, useDefaultGasLimit, queryDepth)
 }
 
 // queryPrivateContractImpl queries the contract itself. This should only be called when running inside another query recursively.
-func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool, recursive bool) ([]byte, error) {
+func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAddress, req []byte, useDefaultGasLimit bool, queryDepth uint32) ([]byte, error) {
 	defer telemetry.MeasureSince(time.Now(), "compute", "keeper", "query")
 
 	if useDefaultGasLimit {
@@ -463,6 +465,7 @@ func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAd
 	querier := QueryHandler{
 		Ctx:     ctx,
 		Plugins: k.queryPlugins,
+		Caller:  contractAddr,
 	}
 
 	store := ctx.KVStore(k.storeKey)
@@ -476,7 +479,7 @@ func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAd
 		contractAddr,
 		contractKey,
 	)
-	params.Recursive = recursive
+	params.QueryDepth = queryDepth
 	queryResult, gasUsed, qErr := k.wasmer.Query(codeInfo.CodeHash, params, req, prefixStore, cosmwasmAPI, querier, gasMeter(ctx), gasForContract(ctx))
 	consumeGas(ctx, gasUsed)
 	//fmt.Printf("Query queryResult %+v \n", queryResult)
@@ -487,13 +490,13 @@ func (k Keeper) queryPrivateContractImpl(ctx sdk.Context, contractAddr sdk.AccAd
 	return queryResult, nil
 }
 
-//QueryPublic queries the public contract state
+// QueryPublic queries the public contract state
 func (k Keeper) QueryPublic(ctx sdk.Context, contractAddress sdk.AccAddress, key string) []byte {
 	value := k.GetContractPublicStateValue(ctx, contractAddress, key)
 	return value
 }
 
-//QueryPublicForAddr queries the public contract state for a given address
+// QueryPublicForAddr queries the public contract state for a given address
 func (k Keeper) QueryPublicForAddr(ctx sdk.Context, contractAddress sdk.AccAddress, accountAddress sdk.AccAddress, key string) []byte {
 	value := k.GetContractPublicStateValueForAddr(ctx, contractAddress, accountAddress, key)
 	return value

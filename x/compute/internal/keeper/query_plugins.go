@@ -24,6 +24,7 @@ import (
 type QueryHandler struct {
 	Ctx     sdk.Context
 	Plugins QueryPlugins
+	Caller  sdk.AccAddress
 }
 
 type GRPCQueryRouter interface {
@@ -32,7 +33,7 @@ type GRPCQueryRouter interface {
 
 var _ wasmTypes.Querier = QueryHandler{}
 
-func (q QueryHandler) Query(request wasmTypes.QueryRequest, gasLimit uint64) ([]byte, error) {
+func (q QueryHandler) Query(request wasmTypes.QueryRequest, queryDepth uint32, gasLimit uint64) ([]byte, error) {
 	// set a limit for a subctx
 	sdkGas := gasLimit / types.GasMultiplier
 	subctx := q.Ctx.WithGasMeter(sdk.NewGasMeter(sdkGas))
@@ -53,7 +54,7 @@ func (q QueryHandler) Query(request wasmTypes.QueryRequest, gasLimit uint64) ([]
 		return q.Plugins.Staking(subctx, request.Staking)
 	}
 	if request.Wasm != nil {
-		return q.Plugins.Wasm(subctx, request.Wasm)
+		return q.Plugins.Wasm(subctx, request.Wasm, queryDepth)
 	}
 	if request.Dist != nil {
 		return q.Plugins.Dist(q.Ctx, request.Dist)
@@ -77,7 +78,7 @@ type QueryPlugins struct {
 	Bank    func(ctx sdk.Context, request *wasmTypes.BankQuery) ([]byte, error)
 	Custom  CustomQuerier
 	Staking func(ctx sdk.Context, request *wasmTypes.StakingQuery) ([]byte, error)
-	Wasm    func(ctx sdk.Context, request *wasmTypes.WasmQuery) ([]byte, error)
+	Wasm    func(ctx sdk.Context, request *wasmTypes.WasmQuery, queryDepth uint32) ([]byte, error)
 	Dist    func(ctx sdk.Context, request *wasmTypes.DistQuery) ([]byte, error)
 	Mint    func(ctx sdk.Context, request *wasmTypes.MintQuery) ([]byte, error)
 	//Gov     func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error)
@@ -85,7 +86,7 @@ type QueryPlugins struct {
 	Stargate func(ctx sdk.Context, request *wasmTypes.StargateQuery) ([]byte, error)
 }
 
-func DefaultQueryPlugins( /*gov govkeeper.Keeper, */ dist distrkeeper.Keeper, mint mintkeeper.Keeper, bank bankkeeper.Keeper, staking stakingkeeper.Keeper,  stargateQueryRouter GRPCQueryRouter, wasm *Keeper, channelKeeper types.ChannelKeeper) QueryPlugins {
+func DefaultQueryPlugins( /*gov govkeeper.Keeper, */ dist distrkeeper.Keeper, mint mintkeeper.Keeper, bank bankkeeper.Keeper, staking stakingkeeper.Keeper, stargateQueryRouter GRPCQueryRouter, wasm *Keeper, channelKeeper types.ChannelKeeper) QueryPlugins {
 	return QueryPlugins{
 		Bank:    BankQuerier(bank),
 		Custom:  NoCustomQuerier,
@@ -129,33 +130,33 @@ func (e QueryPlugins) Merge(o *QueryPlugins) QueryPlugins {
 }
 
 /*
-func GovQuerier(keeper govkeeper.Keeper) func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error) {
-	return func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error) {
-		if request.Proposals != nil {
-			proposals := keeper.GetProposals(ctx)
+	func GovQuerier(keeper govkeeper.Keeper) func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error) {
+		return func(ctx sdk.Context, request *wasmTypes.GovQuery) ([]byte, error) {
+			if request.Proposals != nil {
+				proposals := keeper.GetProposals(ctx)
 
-			if len(proposals) == 0 {
-				return json.Marshal(wasmTypes.ProposalsResponse{
-					Proposals: []wasmTypes.Proposal{},
-				})
-			}
-
-			var activeProps []wasmTypes.Proposal
-			for _, val := range proposals {
-				if val.Status == govtypes.StatusVotingPeriod {
-					activeProps = append(activeProps, wasmTypes.Proposal{
-						ProposalID:      val.ProposalId,
-						VotingStartTime: uint64(val.VotingStartTime.Unix()),
-						VotingEndTime:   uint64(val.VotingEndTime.Unix()),
+				if len(proposals) == 0 {
+					return json.Marshal(wasmTypes.ProposalsResponse{
+						Proposals: []wasmTypes.Proposal{},
 					})
 				}
-			}
 
-			return json.Marshal(wasmTypes.ProposalsResponse{Proposals: activeProps})
+				var activeProps []wasmTypes.Proposal
+				for _, val := range proposals {
+					if val.Status == govtypes.StatusVotingPeriod {
+						activeProps = append(activeProps, wasmTypes.Proposal{
+							ProposalID:      val.ProposalId,
+							VotingStartTime: uint64(val.VotingStartTime.Unix()),
+							VotingEndTime:   uint64(val.VotingEndTime.Unix()),
+						})
+					}
+				}
+
+				return json.Marshal(wasmTypes.ProposalsResponse{Proposals: activeProps})
+			}
+			return nil, wasmTypes.UnsupportedRequest{Kind: "unknown GovQuery variant"}
 		}
-		return nil, wasmTypes.UnsupportedRequest{Kind: "unknown GovQuery variant"}
 	}
-}
 */
 func MintQuerier(keeper stakingkeeper.Keeper) func(ctx sdk.Context, request *wasmTypes.MintQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmTypes.MintQuery) ([]byte, error) {
@@ -607,14 +608,14 @@ func getAccumulatedRewards(ctx sdk.Context, distKeeper distrkeeper.Keeper, deleg
 	return rewards, nil
 }
 
-func WasmQuerier(wasm *Keeper) func(ctx sdk.Context, request *wasmTypes.WasmQuery) ([]byte, error) {
-	return func(ctx sdk.Context, request *wasmTypes.WasmQuery) ([]byte, error) {
+func WasmQuerier(wasm *Keeper) func(ctx sdk.Context, request *wasmTypes.WasmQuery, queryDepth uint32) ([]byte, error) {
+	return func(ctx sdk.Context, request *wasmTypes.WasmQuery, queryDepth uint32) ([]byte, error) {
 		if request.Private != nil {
 			addr, err := sdk.AccAddressFromBech32(request.Private.ContractAddr)
 			if err != nil {
 				return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, request.Private.ContractAddr)
 			}
-			return wasm.queryPrivateRecursive(ctx, addr, request.Private.Msg, true)
+			return wasm.queryPrivateRecursive(ctx, addr, request.Private.Msg, queryDepth, false)
 		}
 		if request.Public != nil {
 
@@ -710,9 +711,9 @@ var stargateQueryAllowlist = map[string]bool{
 	"/ibc.applications.transfer.v1.Query/DenomTrace": true,
 	"/ibc.applications.transfer.v1.Query/Params":     true,
 
-	"/secret.compute.v1beta1.Query/ContractInfo":              true,
-	"/secret.compute.v1beta1.Query/CodeHashByContractAddress": true,
-	"/secret.compute.v1beta1.Query/CodeHashByCodeID":          true,
-	"/secret.compute.v1beta1.Query/LabelByAddress":            true,
-	"/secret.compute.v1beta1.Query/AddressByLabel":            true,
+	"/trst.x.compute.v1beta1.Query/ContractInfo":              true,
+	"/trst.x.compute.v1beta1.Query/CodeHashByContractAddress": true,
+	"/trst.x.compute.v1beta1.Query/CodeHashByCodeID":          true,
+	"/trst.x.compute.v1beta1.Query/LabelByAddress":            true,
+	"/trst.x.compute.v1beta1.Query/AddressByLabel":            true,
 }

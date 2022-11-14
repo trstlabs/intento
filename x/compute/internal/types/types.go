@@ -246,6 +246,8 @@ func NewAbsoluteTxPosition(ctx sdk.Context) *AbsoluteTxPosition {
 
 // NewEnv initializes the environment for a contract instance
 func NewEnv(ctx sdk.Context, creator sdk.AccAddress, deposit sdk.Coins, contractAddr sdk.AccAddress, contractKey []byte) wasmTypes.Env {
+	fmt.Print("newenv \n")
+	fmt.Printf("newenv time: %+v \n", ctx.BlockTime())
 	// safety checks before casting below
 	if ctx.BlockHeight() < 0 {
 		panic("Block height must never be negative")
@@ -253,10 +255,14 @@ func NewEnv(ctx sdk.Context, creator sdk.AccAddress, deposit sdk.Coins, contract
 	if ctx.BlockTime().Unix() < 0 {
 		panic("Block (unix) time must never be negative ")
 	}
+	nano := ctx.BlockTime().UnixNano()
+	if nano < 1 {
+		panic("Block (unix) time must never be empty or negative ")
+	}
 	env := wasmTypes.Env{
 		Block: wasmTypes.BlockInfo{
 			Height:  uint64(ctx.BlockHeight()),
-			Time:    uint64(ctx.BlockTime().Unix()),
+			Time:    uint64(nano),
 			ChainID: ctx.ChainID(),
 		},
 		Message: wasmTypes.MessageInfo{
@@ -266,7 +272,11 @@ func NewEnv(ctx sdk.Context, creator sdk.AccAddress, deposit sdk.Coins, contract
 		Contract: wasmTypes.ContractInfo{
 			Address: contractAddr.String(),
 		},
-		Key: wasmTypes.ContractKey(base64.StdEncoding.EncodeToString(contractKey)),
+		Key:        wasmTypes.ContractKey(base64.StdEncoding.EncodeToString(contractKey)),
+		QueryDepth: 1,
+	}
+	if txCounter, ok := TXCounter(ctx); ok {
+		env.Transaction = &wasmTypes.TransactionInfo{Index: txCounter}
 	}
 	return env
 }

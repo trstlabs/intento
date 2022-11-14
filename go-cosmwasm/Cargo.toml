@@ -51,7 +51,7 @@ tempfile = "3.1.0"
 
 [build-dependencies]
 cbindgen = { version = "0.14" }
-sgx_edl = { git = "https://github.com/apache/teaclave-sgx-sdk.git", rev = "a37ffb9449ba6d5b6e4a9d586bbab864ae732269" }
+sgx_edl = { git = "https://github.com/apache/teaclave-sgx-sdk.git", rev = "d2d339cbb005f676bb700059bd51dc689c025f6b" }
 
 [profile.release]
 opt-level = 3

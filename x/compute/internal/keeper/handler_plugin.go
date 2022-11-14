@@ -140,6 +140,7 @@ func (h IBCRawPacketHandler) DispatchMsg(ctx sdk.Context, _ sdk.AccAddress, cont
 		convertWasmIBCTimeoutHeightToCosmosHeight(msg.IBC.SendPacket.Timeout.Block),
 		msg.IBC.SendPacket.Timeout.Timestamp,
 	)
+	fmt.Printf("packet %+v\n", packet)
 	return nil, nil, h.channelKeeper.SendPacket(ctx, channelCap, packet)
 }
 

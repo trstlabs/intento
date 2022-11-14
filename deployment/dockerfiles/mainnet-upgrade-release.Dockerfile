@@ -2,7 +2,7 @@
 FROM rust-go-base-image AS build-env-rust-go
 
 # Final image
-FROM trstlabs/sgx-base-trustless_hub:2004-1.1.3 as build-release
+FROM trstlabs/sgx-base-trustless_hub:2004-1.1.5 as build-release
 
 # wasmi-sgx-test script requirements
 RUN apt-get update && \

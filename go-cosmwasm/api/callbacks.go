@@ -1,3 +1,4 @@
+//go:build !trstd
 // +build !trstd
 
 package api
@@ -121,9 +122,10 @@ type DBState struct {
 }
 
 // use this to create C.DB in two steps, so the pointer lives as long as the calling stack
-//   state := buildDBState(kv, counter)
-//   db := buildDB(&state, &gasMeter)
-//   // then pass db into some FFI function
+//
+//	state := buildDBState(kv, counter)
+//	db := buildDB(&state, &gasMeter)
+//	// then pass db into some FFI function
 func buildDBState(kv KVStore, counter uint64) DBState {
 	return DBState{
 		Store:           kv,
@@ -390,7 +392,7 @@ func buildQuerier(q *Querier) C.GoQuerier {
 }
 
 //export cQueryExternal
-func cQueryExternal(ptr *C.querier_t, gasLimit C.uint64_t, usedGas *C.uint64_t, request C.Buffer, result *C.Buffer, errOut *C.Buffer) (ret C.GoResult) {
+func cQueryExternal(ptr *C.querier_t, gasLimit C.uint64_t, usedGas *C.uint64_t, request C.Buffer, queryDepth C.uint32_t, result *C.Buffer, errOut *C.Buffer) (ret C.GoResult) {
 	defer recoverPanic(&ret)
 	if ptr == nil || usedGas == nil || result == nil {
 		// we received an invalid pointer
@@ -402,7 +404,7 @@ func cQueryExternal(ptr *C.querier_t, gasLimit C.uint64_t, usedGas *C.uint64_t, 
 	req := receiveSlice(request)
 
 	gasBefore := querier.GasConsumed()
-	res := types.RustQuery(querier, req, uint64(gasLimit))
+	res := types.RustQuery(querier, req, uint32(queryDepth), uint64(gasLimit))
 	gasAfter := querier.GasConsumed()
 	*usedGas = (C.uint64_t)(gasAfter - gasBefore)
 

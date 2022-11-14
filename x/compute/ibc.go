@@ -236,7 +236,6 @@ func (i IBCHandler) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
-	fmt.Printf("OnRecvPacket Packet: %v", packet)
 	contractAddr, err := ContractFromPortID(packet.DestinationPort)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(err, "contract port id").Error())

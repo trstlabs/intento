@@ -2,9 +2,10 @@ version: '3'
 
 services:
   aesm:
-    image: trst/aesm
+    image: fortanix/aesmd:2.13.103.1-1
     devices:
-      - /dev/sgx
+      - /dev/sgx/enclave
+      - /dev/sgx/provision
     volumes:
       - /tmp/aesmd:/var/run/aesmd
     stdin_open: true
@@ -14,25 +15,51 @@ services:
       - https_proxy
 
   base:
-    image: rust-go-base-image
+    image: tests-base-image
     depends_on:
       - aesm
     devices:
-      - /dev/sgx
+      - /dev/sgx/enclave
+      - /dev/sgx/provision
     volumes:
       - /tmp/aesmd:/var/run/aesmd
       - /tmp/trstd:/root/.trstd
-
+      - /tmp/secretcli:/root/.secretcli
     stdin_open: true
     tty: true
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "4g"
+
+  bench:
+    image: tests-base-image
+    depends_on:
+      - aesm
+    devices:
+      - /dev/sgx/enclave
+      - /dev/sgx/provision
+    volumes:
+      - /tmp/aesmd:/var/run/aesmd
+      - /tmp/trstd:/root/.trstd
+    stdin_open: true
+    entrypoint: ["/bin/bash", "go-tests-bench.sh"]
+    tty: true
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "4g"
 
   bootstrap:
-    image: ci-trst-sgx-bootstrap
+    image: ci-node-image:latest
     container_name: bootstrap
     depends_on:
       - aesm
     devices:
-      - /dev/sgx
+      - /dev/sgx/enclave
+      - /dev/sgx/provision
     volumes:
       - /tmp/aesmd:/var/run/aesmd
       - /tmp/trstd:/root/.trstd
@@ -42,16 +69,18 @@ services:
     environment:
       - http_proxy
       - https_proxy
+      - TRST_LOCAL_NODE_TYPE=BOOTSTRAP
     expose:
       - 26656
       - 26657
 
   node:
-    image: ci-trst-sgx-node
+    image: ci-node-image:latest
     depends_on:
       - bootstrap
     devices:
-      - /dev/sgx
+      - /dev/sgx/enclave
+      - /dev/sgx/provision
     volumes:
       - /tmp/aesmd:/var/run/aesmd
       - /tmp/trstd:/tmp/.trstd
@@ -61,17 +90,18 @@ services:
     environment:
       - http_proxy
       - https_proxy
+      - TRST_LOCAL_NODE_TYPE=node
 
   enclave-test:
     image: rust-enclave-test
     depends_on:
       - aesm
     devices:
-      - /dev/sgx
+      - /dev/sgx/enclave
+      - /dev/sgx/provision
     volumes:
       - /tmp/aesmd:/var/run/aesmd
       - /tmp/trstd:/tmp/.trstd
-
     stdin_open: true
     tty: true
     environment:

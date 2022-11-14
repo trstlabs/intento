@@ -60,7 +60,6 @@ SGX_COMMON_CFLAGS += -fstack-protector
 CUSTOM_LIBRARY_PATH := ./lib
 CUSTOM_EDL_PATH := ../../../third_party/vendor/sgx_edl/edl
 CUSTOM_COMMON_PATH := ../../../third_party/vendor/sgx_edl/common
-
 ######## EDL Settings ########
 
 Enclave_EDL_Products := Enclave_t.c Enclave_t.h
@@ -96,7 +95,7 @@ Rust_Crate_Source := $(shell find . ../shared -type f | grep -vP '(\.so|\.o|\.a)
 Rust_Target_Path := $(CURDIR)/../xargo
 
 ifeq ($(SGX_MODE), SW)
-	Rust_Flags := "-Z force-unstable-if-unmarked -C target-feature=+aes,+ssse3"
+	Rust_Flags := "-Z force-unstable-if-unmarked"
 else
 	Rust_Flags := "-Z force-unstable-if-unmarked -C target-cpu=skylake"
 endif
@@ -125,7 +124,7 @@ librust_cosmwasm_enclave.so: $(CUSTOM_LIBRARY_PATH)/libenclave.a Enclave_t.o
 	$(CXX) Enclave_t.o -o $@ $(RustEnclave_Link_Flags)
 
 $(CUSTOM_LIBRARY_PATH)/libenclave.a: $(CUSTOM_LIBRARY_PATH) $(Rust_Crate_Source)
-	RUST_TARGET_PATH=$(Rust_Target_Path) RUSTFLAGS=$(Rust_Flags) xargo build --features "$(FEATURES)" --target x86_64-unknown-linux-sgx -Z unstable-options --profile $(BUILD_PROFILE) --locked
+	RUST_TARGET_PATH=$(Rust_Target_Path) RUSTFLAGS=$(Rust_Flags) xargo build --features "$(FEATURES)" --target x86_64-unknown-linux-sgx -Z unstable-options --profile $(BUILD_PROFILE)
 	cp ../target/x86_64-unknown-linux-sgx/$(BUILD_PROFILE)/libtrst_enclave.a $(CUSTOM_LIBRARY_PATH)/libenclave.a
 
 $(CUSTOM_LIBRARY_PATH):

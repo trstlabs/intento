@@ -35,7 +35,7 @@ use super::seed_exchange::decrypt_seed;
 /// Function to handle the initialization of the bootstrap node. Generates the master private/public
 /// key (seed + pk_io/sk_io). This happens once at the initialization of a chain. Returns the master
 /// public key (pk_io), which is saved on-chain, and used to propagate the seed to registering nodes
-/// 
+///
 /// # Safety
 ///  Something should go here
 ///
@@ -113,7 +113,7 @@ pub unsafe extern "C" fn ecall_init_bootstrap(
 ///
 /// This function happens off-chain, so if we panic for some reason it _can_ be acceptable,
 ///  though probably not recommended
-/// 
+///
 /// # Safety
 ///  Something should go here
 ///
@@ -149,7 +149,7 @@ pub unsafe extern "C" fn ecall_init_node(
     let encrypted_seed_slice = slice::from_raw_parts(encrypted_seed, encrypted_seed_len as usize);
 
     let mut encrypted_seed = [0u8; ENCRYPTED_SEED_SIZE];
-    encrypted_seed.copy_from_slice(&encrypted_seed_slice);
+    encrypted_seed.copy_from_slice(encrypted_seed_slice);
 
     // public keys in certificates don't have 0x04, so we'll copy it here
     let mut target_public_key: [u8; PUBLIC_KEY_SIZE] = [0u8; PUBLIC_KEY_SIZE];
@@ -288,7 +288,7 @@ pub fn attest_from_key(
     api_key: &[u8],
 ) -> SgxResult<()> {
     let (_, cert) = match create_attestation_certificate(
-        &kp,
+        kp,
         sgx_quote_sign_type_t::SGX_UNLINKABLE_SIGNATURE,
         spid,
         api_key,

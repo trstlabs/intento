@@ -1,23 +1,54 @@
 use serde::{Deserialize, Serialize};
-
+use log::warn;
 use super::addresses::Addr;
 use super::coins::Coin;
 use super::timestamp::Timestamp;
+use enclave_ffi_types::EnclaveError;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Env {
     pub block: BlockInfo,
     pub contract: ContractInfo,
+    pub transaction: Option<TransactionInfo>,
 }
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct FullEnv {
     pub block: BlockInfo,
     pub message: MessageInfo,
     pub contract: ContractInfo,
+    pub transaction: Option<TransactionInfo>,
     pub contract_key: Option<String>,
 }
 
+impl FullEnv {
+    pub fn get_wasm_ptrs(&self) -> Result<(Vec<u8>, Vec<u8>), EnclaveError> {
+        let env = Env {
+            block: self.block.clone(),
+            contract: self.contract.clone(),
+            transaction: self.transaction.clone(),
+        };
+        let env_bytes = serde_json::to_vec(&env).map_err(|err| {
+            warn!(
+                "got an error while trying to serialize full_env into env bytes {:?}: {}",
+                env, err
+            );
+            EnclaveError::FailedToSerialize
+        })?;
+        let msg_info = MessageInfo {
+            sender: self.message.sender.clone(),
+            funds: self.message.funds.clone(),
+        };
+        let msg_bytes = serde_json::to_vec(&msg_info).map_err(|err| {
+            warn!(
+                "got an error while trying to serialize full_env into msg_info bytes {:?}: {}",
+                msg_info, err
+            );
+            EnclaveError::FailedToSerialize
+        })?;
+
+        Ok((env_bytes, msg_bytes))
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct BlockInfo {
@@ -100,4 +131,15 @@ pub struct MessageInfo {
 pub struct ContractInfo {
     pub address: Addr,
     pub code_hash: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct TransactionInfo {
+    /// The position of this transaction in the block. The first
+    /// transaction has index 0.
+    ///
+    /// This allows you to get a unique transaction indentifier in this chain
+    /// using the pair (`env.block.height`, `env.transaction.index`).
+    ///
+    pub index: u32,
 }

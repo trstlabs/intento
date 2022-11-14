@@ -3,11 +3,13 @@ mod db;
 mod error;
 mod gas_meter;
 mod iterator;
+mod logger;
 mod memory;
 mod querier;
 
 pub use api::GoApi;
 pub use db::{db_t, DB};
+use logger::get_log_level;
 pub use memory::{free_rust, Buffer};
 pub use querier::GoQuerier;
 
@@ -19,9 +21,9 @@ use crate::error::{clear_error, handle_c_error, handle_c_error_default, set_erro
 
 use cosmwasm_sgx_vm::untrusted_init_bootstrap;
 use cosmwasm_sgx_vm::{
-    call_handle_raw, call_init_raw, call_query_raw, features_from_csv, Checksum, CosmCache, Extern,
-    create_attestation_report_u,create_callback_sig_raw, untrusted_get_encrypted_seed, untrusted_health_check,
-    untrusted_init_node, untrusted_key_gen
+    call_handle_raw, call_init_raw, call_query_raw, create_attestation_report_u,
+    create_callback_sig_raw, features_from_csv, untrusted_get_encrypted_seed,
+    untrusted_health_check, untrusted_init_node, untrusted_key_gen, Checksum, CosmCache, Extern,
 };
 
 use ctor::ctor;
@@ -29,7 +31,8 @@ use log::*;
 
 #[ctor]
 fn init_logger() {
-    simple_logger::init_with_level(log::Level::Info).unwrap();
+    let default_log_level = log::Level::Info;
+    simple_logger::init_with_level(get_log_level(default_log_level)).unwrap();
 }
 
 #[repr(C)]
@@ -447,7 +450,17 @@ pub extern "C" fn handle(
     let r = match to_cache(cache) {
         Some(c) => catch_unwind(AssertUnwindSafe(move || {
             do_handle(
-                c, code_id, params, msg, db, api, querier, gas_limit, gas_used, sig_info, handle_type
+                c,
+                code_id,
+                params,
+                msg,
+                db,
+                api,
+                querier,
+                gas_limit,
+                gas_used,
+                sig_info,
+                handle_type,
             )
         }))
         .unwrap_or_else(|_| Err(Error::panic())),
@@ -469,7 +482,7 @@ fn do_handle(
     gas_limit: u64,
     gas_used: Option<&mut u64>,
     sig_info: Buffer,
-    handle_type: u8
+    handle_type: u8,
 ) -> Result<Vec<u8>, Error> {
     let gas_used = gas_used.ok_or_else(|| Error::empty_arg(GAS_USED_ARG))?;
     let code_id: Checksum = unsafe { code_id.read() }
@@ -562,9 +575,7 @@ pub extern "C" fn analyze_code(
     error_msg: Option<&mut Buffer>,
 ) -> AnalysisReport {
     let r = match to_cache(cache) {
-        Some(c) => catch_unwind(AssertUnwindSafe(move || {
-            do_analyze_code(c, checksum)
-        }))
+        Some(c) => catch_unwind(AssertUnwindSafe(move || do_analyze_code(c, checksum)))
             .unwrap_or_else(|_| Err(Error::panic())),
         None => Err(Error::empty_arg(CACHE_ARG)),
     };
@@ -580,7 +591,7 @@ fn do_analyze_code(
         .ok_or_else(|| Error::empty_arg(CODE_ID_ARG))?
         .try_into()?;
     let report = cache.analyze(&checksum)?;
-    let mut features_vec : Vec<u8> = vec!();
+    let mut features_vec: Vec<u8> = vec![];
     for feature in &report.required_features {
         if features_vec.len() > 0 {
             features_vec.append(&mut (",".as_bytes().to_vec()))
@@ -589,7 +600,7 @@ fn do_analyze_code(
         features_vec.append(&mut feature.as_bytes().to_vec())
     }
 
-    Ok(AnalysisReport{
+    Ok(AnalysisReport {
         has_ibc_entry_points: report.has_ibc_entry_points,
         required_features: Buffer::from_vec(features_vec),
     })

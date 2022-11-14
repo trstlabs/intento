@@ -47,3 +47,4 @@ docs/.vuepress/dist
 *.env.dev
 docker-compose.yml
 initdev.sh
+init.log

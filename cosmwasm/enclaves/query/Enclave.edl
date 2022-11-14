@@ -18,16 +18,16 @@ enclave {
     include "enclave-ffi-types.h"
 
     trusted {
-        EnclaveBuffer ecall_allocate_qe(
+        EnclaveBuffer ecall_allocate(
             [in, count=length] const uint8_t* buffer,
             uintptr_t length
         );
 
-        public sgx_status_t ecall_configure_runtime_qe(
+        public sgx_status_t ecall_configure_runtime(
             RuntimeConfiguration runtime_configuration
         );
 
-        public QueryResult ecall_query_qe(
+        public QueryResult ecall_query(
             Ctx context,
             uint64_t gas_limit,
             [out] uint64_t* used_gas,
@@ -41,21 +41,21 @@ enclave {
     };
 
     untrusted {
-        UserSpaceBuffer ocall_allocate_qe(
+        UserSpaceBuffer ocall_allocate(
             [in, count=length] const uint8_t* buffer,
             uintptr_t length
         );
 
-        OcallReturn ocall_read_db_qe(
+        OcallReturn ocall_read_db(
             Ctx context,
             [out] UntrustedVmError* vm_error,
             [out] uint64_t* gas_used,
             [out] EnclaveBuffer* value,
             [in, count=key_len] const uint8_t* key,
             uintptr_t key_len
-        ) allow (ecall_allocate_qe);
+        ) allow (ecall_allocate);
 
-        OcallReturn ocall_query_chain_qe(
+        OcallReturn ocall_query_chain(
             Ctx context,
             [out] UntrustedVmError* vm_error,
             [out] uint64_t* gas_used,
@@ -63,6 +63,6 @@ enclave {
             [out] EnclaveBuffer* value,
             [in, count=query_len] const uint8_t* query,
             uintptr_t query_len
-        ) allow (ecall_allocate_qe, ecall_query_qe);
+        ) allow (ecall_allocate, ecall_query);
     };
 };

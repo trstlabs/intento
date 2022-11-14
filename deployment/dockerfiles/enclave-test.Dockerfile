@@ -1,4 +1,4 @@
-FROM baiduxlab/sgx-rust:2004-1.1.3
+FROM baiduxlab/sgx-rust:2004-1.1.5
 
 ENV PATH="/root/.cargo/bin:$PATH"
 ARG SGX_MODE=SW

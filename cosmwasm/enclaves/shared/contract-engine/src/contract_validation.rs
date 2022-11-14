@@ -5,17 +5,17 @@ use enclave_ffi_types::EnclaveError;
 
 use enclave_cosmos_types::traits::CosmosAminoPubkey;
 use enclave_cosmos_types::types::{
-    ContractCode, CosmWasmMsg, CosmosPubKey, SigInfo, SignDoc, StdSignDoc,HandleType
+    ContractCode, CosmWasmMsg, CosmosPubKey, HandleType, SigInfo, SignDoc, StdSignDoc,
 };
 
 use crate::io::create_callback_signature;
 use crate::types::ContractMessage;
 use enclave_cosmwasm_types::addresses::{Addr, CanonicalAddr};
 use enclave_cosmwasm_types::coins::Coin;
+use enclave_cosmwasm_types::ibc::IbcPacketReceiveMsg;
 use enclave_cosmwasm_types::types::FullEnv;
 use enclave_crypto::traits::VerifyingKey;
 use enclave_crypto::{sha_256, AESKey, Hmac, Kdf, HASH_SIZE, KEY_MANAGER};
-use enclave_cosmwasm_types::ibc::IbcPacketReceiveMsg;
 pub type ContractKey = [u8; CONTRACT_KEY_LENGTH];
 use crate::parse_msg::is_ibc_msg;
 pub const CONTRACT_KEY_LENGTH: usize = HASH_SIZE + HASH_SIZE;
@@ -144,8 +144,6 @@ pub struct ReplyParams {
     pub recipient_contract_hash: Vec<u8>,
     pub sub_msg_id: u64,
 }
-
-
 
 /// Validate that the message sent to the enclave (after decryption) was actually addressed to this contract.
 pub fn validate_msg(
@@ -405,6 +403,7 @@ pub fn verify_params(
         .verify_bytes(
             sig_info.sign_bytes.as_slice(),
             sig_info.signature.as_slice(),
+            sig_info.sign_mode,
         )
         .map_err(|err| {
             warn!("Signature verification failed: {:?}", err);
@@ -470,6 +469,55 @@ fn get_signer_and_messages(
                     warn!("failure to parse StdSignDoc: {:?}", err);
                     EnclaveError::FailedTxVerification
                 })?;
+            let messages: Result<Vec<CosmWasmMsg>, _> = sign_doc
+                .msgs
+                .iter()
+                .map(|x| x.clone().into_cosmwasm_msg())
+                .collect();
+            Ok((public_key, messages?))
+        }
+        SIGN_MODE_EIP_191 => {
+            use protobuf::well_known_types::Any as AnyProto;
+            use protobuf::Message;
+
+            let any_pub_key =
+                AnyProto::parse_from_bytes(&sign_info.public_key.0).map_err(|err| {
+                    warn!("failed to parse public key as Any: {:?}", err);
+                    EnclaveError::FailedTxVerification
+                })?;
+            let public_key = CosmosPubKey::from_proto(&any_pub_key).map_err(|err| {
+                warn!("failure to parse pubkey: {:?}", err);
+                EnclaveError::FailedTxVerification
+            })?;
+
+            let sign_bytes_as_string = String::from_utf8_lossy(&sign_info.sign_bytes.0).to_string();
+
+            trace!(
+                "SIGN_MODE_EIP_191 sign_bytes_as_string: {:?}",
+                sign_bytes_as_string
+            );
+
+            // Always starts with '\x19Ethereum Signed Message:\n\d+{'
+            // So we need to find the first occurance of '{' and go from there until the end
+            let start_index = match sign_bytes_as_string.find('{') {
+                Some(start_index) => start_index,
+                None => {
+                    warn!(
+                        "SIGN_MODE_EIP_191 failed to find first occurance of '{{' in '{}'",
+                        sign_bytes_as_string
+                    );
+                    return Err(EnclaveError::FailedTxVerification);
+                }
+            };
+            let sign_doc_str = &sign_bytes_as_string[start_index..];
+
+            let sign_doc: StdSignDoc = serde_json::from_str(sign_doc_str).map_err(|err| {
+                warn!(
+                    "failed to parse SIGN_MODE_EIP_191 StdSignDoc as JSON from '{}': {:?}",
+                    sign_doc_str, err
+                );
+                EnclaveError::FailedTxVerification
+            })?;
             let messages: Result<Vec<CosmWasmMsg>, _> = sign_doc
                 .msgs
                 .iter()

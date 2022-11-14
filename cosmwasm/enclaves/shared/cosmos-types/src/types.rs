@@ -1,6 +1,7 @@
 use log::*;
 
 use enclave_ffi_types::EnclaveError;
+use proto::tx::signing::SignMode;
 use protobuf::Message;
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +14,6 @@ use enclave_crypto::{
 use cosmos_proto as proto;
 
 use enclave_cosmwasm_types::{
-    //todo change to HumanAddr to Addr
     addresses::{CanonicalAddr, HumanAddr},
     coins::Coin,
     encoding::Binary,
@@ -23,7 +23,7 @@ use enclave_cosmwasm_types::{
 use crate::traits::CosmosAminoPubkey;
 
 pub fn calc_contract_hash(contract_bytes: &[u8]) -> [u8; HASH_SIZE] {
-    sha_256(&contract_bytes)
+    sha_256(contract_bytes)
 }
 
 pub struct ContractCode<'code> {
@@ -121,10 +121,15 @@ impl CosmosAminoPubkey for CosmosPubKey {
 }
 
 impl VerifyingKey for CosmosPubKey {
-    fn verify_bytes(&self, bytes: &[u8], sig: &[u8]) -> Result<(), CryptoError> {
+    fn verify_bytes(
+        &self,
+        bytes: &[u8],
+        sig: &[u8],
+        sign_mode: SignMode,
+    ) -> Result<(), CryptoError> {
         match self {
-            CosmosPubKey::Secp256k1(pubkey) => pubkey.verify_bytes(bytes, sig),
-            CosmosPubKey::Multisig(pubkey) => pubkey.verify_bytes(bytes, sig),
+            CosmosPubKey::Secp256k1(pubkey) => pubkey.verify_bytes(bytes, sig, sign_mode),
+            CosmosPubKey::Multisig(pubkey) => pubkey.verify_bytes(bytes, sig, sign_mode),
         }
     }
 }
@@ -147,6 +152,7 @@ pub enum SignModeDef {
     SIGN_MODE_DIRECT = 1,
     SIGN_MODE_TEXTUAL = 2,
     SIGN_MODE_LEGACY_AMINO_JSON = 127,
+    SIGN_MODE_EIP_191 = 191,
 }
 
 #[allow(non_camel_case_types)]
@@ -179,16 +185,17 @@ impl HandleType {
             }
         }
     }
-    pub fn to_export_name(h: &HandleType) -> String {
+
+    pub fn get_export_name(h: &HandleType) -> &'static str {
         match h {
-            HandleType::HANDLE_TYPE_EXECUTE => "execute".to_string(),
-            HandleType::HANDLE_TYPE_REPLY => "reply".to_string(),
-            HandleType::HANDLE_TYPE_IBC_CHANNEL_OPEN => "ibc_channel_open".to_string(),
-            HandleType::HANDLE_TYPE_IBC_CHANNEL_CONNECT => "ibc_channel_connect".to_string(),
-            HandleType::HANDLE_TYPE_IBC_CHANNEL_CLOSE => "ibc_channel_close".to_string(),
-            HandleType::HANDLE_TYPE_IBC_PACKET_RECEIVE => "ibc_packet_receive".to_string(),
-            HandleType::HANDLE_TYPE_IBC_PACKET_ACK => "ibc_packet_ack".to_string(),
-            HandleType::HANDLE_TYPE_IBC_PACKET_TIMEOUT => "ibc_packet_timeout".to_string(),
+            HandleType::HANDLE_TYPE_EXECUTE => "execute",
+            HandleType::HANDLE_TYPE_REPLY => "reply",
+            HandleType::HANDLE_TYPE_IBC_CHANNEL_OPEN => "ibc_channel_open",
+            HandleType::HANDLE_TYPE_IBC_CHANNEL_CONNECT => "ibc_channel_connect",
+            HandleType::HANDLE_TYPE_IBC_CHANNEL_CLOSE => "ibc_channel_close",
+            HandleType::HANDLE_TYPE_IBC_PACKET_RECEIVE => "ibc_packet_receive",
+            HandleType::HANDLE_TYPE_IBC_PACKET_ACK => "ibc_packet_ack",
+            HandleType::HANDLE_TYPE_IBC_PACKET_TIMEOUT => "ibc_packet_timeout",
         }
     }
 }
@@ -250,7 +257,9 @@ impl SignDoc {
 pub struct TxBody {
     pub messages: Vec<CosmWasmMsg>,
     // Leaving this here for discoverability. We can use this, but don't verify it today.
+    #[allow(dead_code)]
     memo: (),
+    #[allow(dead_code)]
     timeout_height: (),
 }
 
@@ -475,15 +484,11 @@ impl CosmWasmMsg {
             warn!("failed to turn human addr to canonical addr when try_parse_execute CosmWasmMsg: {:?}", err);
             EnclaveError::FailedToDeserialize
         })?;
-     
 
-        if raw_msg.contract.is_empty()  {
-              warn!(
-                  "Contract address was empty: {}",
-                  raw_msg.contract.len(),
-              );
+        if raw_msg.contract.is_empty() {
+            warn!("Contract address was empty: {}", raw_msg.contract.len(),);
         };
-       
+
         let funds = Self::parse_funds(raw_msg.funds)?;
 
         let callback_sig = Some(raw_msg.callback_sig);
@@ -533,12 +538,13 @@ impl CosmWasmMsg {
 pub struct AuthInfo {
     pub signer_infos: Vec<SignerInfo>,
     // Leaving this here for discoverability. We can use this, but don't verify it today.
+    #[allow(dead_code)]
     fee: (),
 }
 
 impl AuthInfo {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, EnclaveError> {
-        let raw_auth_info = proto::tx::tx::AuthInfo::parse_from_bytes(&bytes).map_err(|err| {
+        let raw_auth_info = proto::tx::tx::AuthInfo::parse_from_bytes(bytes).map_err(|err| {
             warn!("Could not parse AuthInfo from protobuf bytes: {:?}", err);
             EnclaveError::FailedToDeserialize
         })?;

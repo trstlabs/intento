@@ -12,11 +12,11 @@ use enclave_ffi_types::{
     InitResult, QueryResult, RuntimeConfiguration,
 };
 
-use enclave_utils::{oom_handler, recursion_depth, validate_const_ptr, validate_mut_ptr};
+use enclave_utils::{oom_handler, validate_const_ptr, validate_mut_ptr};
 
 use crate::external::results::{
-    result_callback_sig_success_to_callbackresult, result_handle_success_to_handleresult,
-    result_init_success_to_initresult, result_query_success_to_queryresult,
+    result_callback_sig_success_to_callbackresult, result_handle_success_to_handleresult, result_init_success_to_initresult,
+    result_query_success_to_queryresult,
 };
 
 lazy_static! {
@@ -25,19 +25,19 @@ lazy_static! {
 
 /// # Safety
 /// Always use protection
-#[cfg(not(feature = "query-only"))]
+// #[cfg(not(feature = "query-only"))]
 #[no_mangle]
 pub unsafe extern "C" fn ecall_allocate(buffer: *const u8, length: usize) -> EnclaveBuffer {
     ecall_allocate_impl(buffer, length)
 }
 
-/// # Safety
-/// Always use protection
-#[cfg(feature = "query-only")]
-#[no_mangle]
-pub unsafe extern "C" fn ecall_allocate_qe(buffer: *const u8, length: usize) -> EnclaveBuffer {
-    ecall_allocate_impl(buffer, length)
-}
+// /// # Safety
+// /// Always use protection
+// #[cfg(feature = "query-only")]
+// #[no_mangle]
+// pub unsafe extern "C" fn ecall_allocate_qe(buffer: *const u8, length: usize) -> EnclaveBuffer {
+//     ecall_allocate_impl(buffer, length)
+// }
 
 /// Allocate a buffer in the enclave and return a pointer to it. This is useful for ocalls that
 /// want to return a response of unknown length to the enclave. Instead of pre-allocating it on the
@@ -89,19 +89,19 @@ pub struct BufferRecoveryError;
 
 /// # Safety
 /// Always use protection
-#[cfg(not(feature = "query-only"))]
+// #[cfg(not(feature = "query-only"))]
 #[no_mangle]
 pub unsafe extern "C" fn ecall_configure_runtime(config: RuntimeConfiguration) -> sgx_status_t {
     ecall_configure_runtime_impl(config)
 }
 
-/// # Safety
-/// Always use protection
-#[cfg(feature = "query-only")]
-#[no_mangle]
-pub unsafe extern "C" fn ecall_configure_runtime_qe(config: RuntimeConfiguration) -> sgx_status_t {
-    ecall_configure_runtime_impl(config)
-}
+// /// # Safety
+// /// Always use protection
+// #[cfg(feature = "query-only")]
+// #[no_mangle]
+// pub unsafe extern "C" fn ecall_configure_runtime_qe(config: RuntimeConfiguration) -> sgx_status_t {
+//     ecall_configure_runtime_impl(config)
+// }
 
 /// This function sets up any components of the contract runtime
 /// that should be set up once when the node starts.
@@ -114,7 +114,7 @@ fn ecall_configure_runtime_impl(config: RuntimeConfiguration) -> sgx_status_t {
         "inside ecall_configure_runtime: {}",
         config.module_cache_size
     );
-    crate::module_cache::configure_module_cache(config.module_cache_size as usize);
+    crate::wasm3::module_cache::configure_module_cache(config.module_cache_size as usize);
     sgx_status_t::SGX_SUCCESS
 }
 
@@ -163,15 +163,19 @@ pub unsafe extern "C" fn ecall_init(
     sig_info: *const u8,
     sig_info_len: usize,
 ) -> InitResult {
-    let _recursion_guard = match recursion_depth::guard() {
-        Ok(rg) => rg,
-        Err(err) => {
-            //err may be redundant
-            error!("recursion limit exceeded, can not perform init!");
-            return InitResult::Failure { err };
-        }
-    };
-
+    // let _recursion_guard = match recursion_depth::guard() {
+    //     Ok(rg) => rg,
+    //     Err(err) => {
+    //         // https://github.com/scrtlabs/SecretNetwork/pull/517#discussion_r481924571
+    //         // I believe that this error condition is currently unreachable.
+    //         // I think we can safely remove it completely right now, and have
+    //         // recursion_depth::increment() simply increment the counter with no further checks,
+    //         // but i wanted to stay on the safe side here, in case something changes in the
+    //         // future, and we can easily spot that we forgot to add a limit somewhere.
+    //         error!("recursion limit exceeded, can not perform init!");
+    //         return InitResult::Failure { err };
+    //     }
+    // };
     if let Err(err) = oom_handler::register_oom_handler() {
         error!("Could not register OOM handler!");
         return InitResult::Failure { err };
@@ -247,14 +251,19 @@ pub unsafe extern "C" fn ecall_handle(
     sig_info_len: usize,
     handle_type: u8,
 ) -> HandleResult {
-    let _recursion_guard = match recursion_depth::guard() {
-        Ok(rg) => rg,
-        Err(err) => {
-            //err may be redundant
-            error!("recursion limit exceeded, can not perform handle!");
-            return HandleResult::Failure { err };
-        }
-    };
+    // let _recursion_guard = match recursion_depth::guard() {
+    //     Ok(rg) => rg,
+    //     Err(err) => {
+    //         // https://github.com/scrtlabs/SecretNetwork/pull/517#discussion_r481924571
+    //         // I believe that this error condition is currently unreachable.
+    //         // I think we can safely remove it completely right now, and have
+    //         // recursion_depth::increment() simply increment the counter with no further checks,
+    //         // but i wanted to stay on the safe side here, in case something changes in the
+    //         // future, and we can easily spot that we forgot to add a limit somewhere.
+    //         error!("recursion limit exceeded, can not perform handle!");
+    //         return HandleResult::Failure { err };
+    //     }
+    // };
     if let Err(err) = oom_handler::register_oom_handler() {
         error!("Could not register OOM handler!");
         return HandleResult::Failure { err };
@@ -357,7 +366,7 @@ pub unsafe extern "C" fn ecall_create_callback_sig(
 
 /// # Safety
 /// Always use protection
-#[cfg(not(feature = "query-only"))]
+// #[cfg(not(feature = "query-only"))]
 #[no_mangle]
 pub unsafe extern "C" fn ecall_query(
     context: Ctx,
@@ -383,33 +392,33 @@ pub unsafe extern "C" fn ecall_query(
     )
 }
 
-/// # Safety
-/// Always use protection
-#[cfg(feature = "query-only")]
-#[no_mangle]
-pub unsafe extern "C" fn ecall_query_qe(
-    context: Ctx,
-    gas_limit: u64,
-    used_gas: *mut u64,
-    contract: *const u8,
-    contract_len: usize,
-    env: *const u8,
-    env_len: usize,
-    msg: *const u8,
-    msg_len: usize,
-) -> QueryResult {
-    ecall_query_impl(
-        context,
-        gas_limit,
-        used_gas,
-        contract,
-        contract_len,
-        env,
-        env_len,
-        msg,
-        msg_len,
-    )
-}
+// /// # Safety
+// /// Always use protection
+// #[cfg(feature = "query-only")]
+// #[no_mangle]
+// pub unsafe extern "C" fn ecall_query_qe(
+//     context: Ctx,
+//     gas_limit: u64,
+//     used_gas: *mut u64,
+//     contract: *const u8,
+//     contract_len: usize,
+//     env: *const u8,
+//     env_len: usize,
+//     msg: *const u8,
+//     msg_len: usize,
+// ) -> QueryResult {
+//     ecall_query_impl(
+//         context,
+//         gas_limit,
+//         used_gas,
+//         contract,
+//         contract_len,
+//         env,
+//         env_len,
+//         msg,
+//         msg_len,
+//     )
+// }
 
 /// # Safety
 /// Always use protection
@@ -425,19 +434,19 @@ unsafe fn ecall_query_impl(
     msg: *const u8,
     msg_len: usize,
 ) -> QueryResult {
-    let _recursion_guard = match recursion_depth::guard() {
-        Ok(rg) => rg,
-        Err(err) => {
-            // https://github.com/scrtlabs/SecretNetwork/pull/517#discussion_r481924571
-            // I believe that this error condition is currently unreachable.
-            // I think we can safely remove it completely right now, and have
-            // recursion_depth::increment() simply increment the counter with no further checks,
-            // but i wanted to stay on the safe side here, in case something changes in the
-            // future, and we can easily spot that we forgot to add a limit somewhere.
-            error!("recursion limit exceeded, can not perform query!");
-            return QueryResult::Failure { err };
-        }
-    };
+    // let _recursion_guard = match recursion_depth::guard() {
+    //     Ok(rg) => rg,
+    //     Err(err) => {
+    //         // https://github.com/scrtlabs/SecretNetwork/pull/517#discussion_r481924571
+    //         // I believe that this error condition is currently unreachable.
+    //         // I think we can safely remove it completely right now, and have
+    //         // recursion_depth::increment() simply increment the counter with no further checks,
+    //         // but i wanted to stay on the safe side here, in case something changes in the
+    //         // future, and we can easily spot that we forgot to add a limit somewhere.
+    //         error!("recursion limit exceeded, can not perform query!");
+    //         return QueryResult::Failure { err };
+    //     }
+    // };
     if let Err(err) = oom_handler::register_oom_handler() {
         error!("Could not register OOM handler!");
         return QueryResult::Failure { err };

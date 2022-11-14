@@ -29,7 +29,7 @@ use crate::errors::VmResult;
 /*
 use crate::features::required_features_from_wasmer_instance;
 use crate::imports::{
-    do_addr_canonicalize, do_addr_humanize, do_query_chain, do_read, do_remove, do_write,
+    do_canonicalize_address, do_humanize_address, do_query_chain, do_read, do_remove, do_write,
 };
 #[cfg(feature = "iterator")]
 use crate::imports::{do_next, do_scan};
@@ -717,7 +717,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::Balance {
-                            address: rich_addr.to_string(),
+                            address: rich_addr.clone(),
                             denom: "silver".to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,
@@ -739,7 +739,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::AllBalances {
-                            address: rich_addr.to_string(),
+                            address: rich_addr.clone(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,
                     )
@@ -773,7 +773,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::Balance {
-                            address: rich_addr.to_string(),
+                            address: rich_addr.clone(),
                             denom: "silver".to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,
@@ -802,7 +802,7 @@ mod test {
                 let response = querier
                     .query::<Empty>(
                         &QueryRequest::Bank(BankQuery::Balance {
-                            address: rich_addr.to_string(),
+                            address: rich_addr.clone(),
                             denom: "silver".to_string(),
                         }),
                         DEFAULT_QUERY_GAS_LIMIT,

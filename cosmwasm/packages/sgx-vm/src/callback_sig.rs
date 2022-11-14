@@ -33,7 +33,7 @@ pub fn create_callback_sig_raw(
    // Bind the token to a local variable to ensure its
         // destructor runs in the end of the function
         let enclave_access_token = ENCLAVE_DOORBELL
-        .get_access(false) // This can never be recursive
+        .get_access(1) // This can never be recursive
         .ok_or(sgx_status_t::SGX_ERROR_BUSY)?;
     let enclave = (*enclave_access_token)?;
     let eid = enclave.geteid();
@@ -51,18 +51,6 @@ pub fn create_callback_sig_raw(
 
         )
     };
-
-  /*  if status != sgx_status_t::SGX_SUCCESS {
-        return Err(status);
-    }
-   /* if retval != CallbackSigResult::Success {
-        return Ok(Err(retval));
-    }*/
-    if callback_sig.is_empty() {
-        error!("Got empty callback sig from encryption");
-        return Err(sgx_status_t::SGX_ERROR_UNEXPECTED);
-    }
-    Ok(Ok(callback_sig))*/
 
     match status {
         sgx_status_t::SGX_SUCCESS => {
