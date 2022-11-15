@@ -2,7 +2,7 @@
 title: Introduction
 order: 0
 parent:
-  order: 3
+  order: 4
   title: Node Operator Guide
 ---
 

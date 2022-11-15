@@ -51,11 +51,7 @@ module.exports = {
       nav: [
         {
           title: "Resources",
-          children: [
-            {
-              title: "Trustless Hub on Github",
-              path: "https://github.com/trstlabs/Trustless-Hub",
-            },
+          children: [ 
             {
               title: "CosmWasm Docs",
               path: "https://docs.cosmwasm.com/docs/1.0/",
@@ -64,6 +60,14 @@ module.exports = {
               title: "Cosmos SDK Docs",
               path: "https://docs.cosmos.network",
             },
+            {
+              title: "Trustless Hub Github",
+              path: "https://github.com/trstlabs",
+            },
+           /* {
+              title: "DeFi Contract Bundle ",
+              path: "https://github.com/trstlabs/dex-contracts",
+            },*/
           ],
         },
       ],

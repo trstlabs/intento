@@ -2,7 +2,7 @@
 order: 0
 parent:
   title: Knowledge Base
-  order: 1
+  order: 2
 ---
 
 # Introduction

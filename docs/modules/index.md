@@ -2,7 +2,7 @@
 title: Introduction
 order: 0
 parent:
-  order: 2
+  order: 3
   title: Cosmos SDK Modules
 ---
 
