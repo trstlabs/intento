@@ -12,7 +12,7 @@ test = []
 # We always compile to the "sgx" target, so this will always be false.
 # when compiling to the "sgx" target, we pull this from the target root with an "extern crate" directive
 [target.'cfg(not(target_env = "sgx"))'.dependencies]
-sgx_tstd = { package="sgx_tstd", git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="d2d339cbb005f676bb700059bd51dc689c025f6b", features = [
+sgx_tstd = { package="sgx_tstd", git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="5bf3100b741851af240a50673e49f89f243e122e", features = [
   "backtrace"
 ] }
 

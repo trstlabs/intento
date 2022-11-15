@@ -59,12 +59,12 @@ Once Rust is installed, install the nightly toolchain:
 rustup toolchain install nightly
 
 ```sh
-rustup install nightly-2022-02-23
-rustup default nightly-2022-02-23
+rustup install nightly-2022-03-12
+rustup default nightly-2022-03-12
 rustup component add rust-src
 cargo +1.49.0-nightly run
 
-rustup override set nightly-2022-02-23
+rustup override set nightly-2022-03-12
 ```
 
 ## SGX tools
@@ -87,7 +87,7 @@ bash "$HOME/trst/scripts/sgx/installsgx_alternative.sh"
 - Once Rust is installed, install the `nightly` toolchain:
 
 ```bash
-rustup toolchain install nightly-2022-02-23
+rustup toolchain install nightly-2022-03-12
 ```
 Then install the SGX tools:
 ```bash

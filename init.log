@@ -1,6 +1,133 @@
-2022-11-13 09:37:06,206 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 8 threads
-DEBUG  [enclave_contract_engine::external::ecalls] inside ecall_configure_runtime: 5
-DEBUG  [enclave_contract_engine::module_cache] configuring module cache: 5
-2022-11-13 09:37:24,458 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 4 threads
+2022-11-15 12:17:17,642 INFO  [cosmwasm_sgx_vm::enclave] Setting up enclave doorbell for up to 8 threads
 Initializing claims genesis...
-error claiming tokens: address does not have claim record: invalid address [/root/trst/x/claim/keeper/claim.go:98] 
+Init by account 
+Init by account 
+Init by account 
+Init by account 
+Init by account 
+Init by account 
+SubMsg &{Execute:0xc0001c5810 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1sndgzq62wp23mv20ndr4sxg6k8xcsudst76fh5 
+SubMsg &{Execute:0xc0001c5880 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1sndgzq62wp23mv20ndr4sxg6k8xcsudst76fh5 
+SubMsg &{Execute:0xc0001c58f0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1sndgzq62wp23mv20ndr4sxg6k8xcsudst76fh5 
+SubMsg &{Execute:0xc0001c5960 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1sndgzq62wp23mv20ndr4sxg6k8xcsudst76fh5 
+SubMsg &{Execute:0xc0001c59d0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1sndgzq62wp23mv20ndr4sxg6k8xcsudst76fh5 
+SubMsg &{Execute:0xc0001c5a40 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1sndgzq62wp23mv20ndr4sxg6k8xcsudst76fh5 
+SubMsg &{Execute:0xc0001c5b20 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1sndgzq62wp23mv20ndr4sxg6k8xcsudst76fh5 
+SubMsg &{Execute:0xc0001c5c00 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1sndgzq62wp23mv20ndr4sxg6k8xcsudst76fh5 
+Execute by account 
+SubMsg &{Execute:<nil> Instantiate:0xc004ecd6c0 InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1qxxlalvsdjd07p07y3rc5fu6ll8k4tme3pqv38 
+SubMsg &{Execute:0xc004ecd7a0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1xqeym28j9xgv0p93pwwt6qcxf9tdvf9zyszued 
+SubMsg &{Execute:0xc004ecd810 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1xqeym28j9xgv0p93pwwt6qcxf9tdvf9zyszued 
+SubMsg &{Execute:0xc004ecd880 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1xqeym28j9xgv0p93pwwt6qcxf9tdvf9zyszued 
+SubMsg &{Execute:0xc004ecd8f0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1xqeym28j9xgv0p93pwwt6qcxf9tdvf9zyszued 
+SubMsg &{Execute:<nil> Instantiate:0xc004ecd960 InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1xqeym28j9xgv0p93pwwt6qcxf9tdvf9zyszued 
+SubMsg &{Execute:0xc004ecddc0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1l0dj9xalgeszlhzexjqd7zryvz0af7uaw0m6ul 
+SubMsg &{Execute:0xc004ecdf10 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1xqeym28j9xgv0p93pwwt6qcxf9tdvf9zyszued 
+SubMsg &{Execute:0xc004ecd9d0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1xqeym28j9xgv0p93pwwt6qcxf9tdvf9zyszued 
+Execute by account 
+Execute by account 
+Execute by account 
+SubMsg &{Execute:0xc000bc2150 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1xqeym28j9xgv0p93pwwt6qcxf9tdvf9zyszued 
+SubMsg &{Execute:0xc000bc2230 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1xqeym28j9xgv0p93pwwt6qcxf9tdvf9zyszued 
+SubMsg &{Execute:0xc000bc2310 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1xqeym28j9xgv0p93pwwt6qcxf9tdvf9zyszued 
+Execute by account 
+SubMsg &{Execute:<nil> Instantiate:0xc000c41490 InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1qxxlalvsdjd07p07y3rc5fu6ll8k4tme3pqv38 
+SubMsg &{Execute:0xc000c415e0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust12dnl585uxzddjw9hw4ca694f054shgpg2guanv 
+SubMsg &{Execute:0xc000c41650 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust12dnl585uxzddjw9hw4ca694f054shgpg2guanv 
+SubMsg &{Execute:0xc000c416c0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust12dnl585uxzddjw9hw4ca694f054shgpg2guanv 
+SubMsg &{Execute:0xc000c417a0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust12dnl585uxzddjw9hw4ca694f054shgpg2guanv 
+SubMsg &{Execute:<nil> Instantiate:0xc000c41810 InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust12dnl585uxzddjw9hw4ca694f054shgpg2guanv 
+SubMsg &{Execute:0xc000c41c70 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1jq0nw9dshnfugdkdxcj994h7j7f0e8e9t2n8dc 
+SubMsg &{Execute:0xc000c41e30 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust12dnl585uxzddjw9hw4ca694f054shgpg2guanv 
+SubMsg &{Execute:0xc000c41880 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust12dnl585uxzddjw9hw4ca694f054shgpg2guanv 
+Execute by account 
+Execute by account 
+Execute by account 
+SubMsg &{Execute:0xc00431f810 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust12dnl585uxzddjw9hw4ca694f054shgpg2guanv 
+SubMsg &{Execute:0xc00431f880 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust12dnl585uxzddjw9hw4ca694f054shgpg2guanv 
+SubMsg &{Execute:0xc00431f8f0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust12dnl585uxzddjw9hw4ca694f054shgpg2guanv 
+Execute by account 
+SubMsg &{Execute:<nil> Instantiate:0xc004c60460 InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1qxxlalvsdjd07p07y3rc5fu6ll8k4tme3pqv38 
+SubMsg &{Execute:0xc0054e0af0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mljg7dvzknqh3gc62emagf7hwxxg8efe5qhxhy 
+SubMsg &{Execute:0xc0054e0b60 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mljg7dvzknqh3gc62emagf7hwxxg8efe5qhxhy 
+SubMsg &{Execute:0xc0054e0c40 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mljg7dvzknqh3gc62emagf7hwxxg8efe5qhxhy 
+SubMsg &{Execute:0xc0054e0cb0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mljg7dvzknqh3gc62emagf7hwxxg8efe5qhxhy 
+SubMsg &{Execute:<nil> Instantiate:0xc0054e0d20 InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mljg7dvzknqh3gc62emagf7hwxxg8efe5qhxhy 
+SubMsg &{Execute:0xc0054e1180 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mdu2g8jukx9svsxt3fqsk38tk4ffphunsu7a69 
+SubMsg &{Execute:0xc0054e12d0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mljg7dvzknqh3gc62emagf7hwxxg8efe5qhxhy 
+SubMsg &{Execute:0xc0054e0d90 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mljg7dvzknqh3gc62emagf7hwxxg8efe5qhxhy 
+Execute by account 
+Execute by account 
+Execute by account 
+SubMsg &{Execute:0xc0058f5260 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mljg7dvzknqh3gc62emagf7hwxxg8efe5qhxhy 
+SubMsg &{Execute:0xc0058f52d0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mljg7dvzknqh3gc62emagf7hwxxg8efe5qhxhy 
+SubMsg &{Execute:0xc0058f5340 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1mljg7dvzknqh3gc62emagf7hwxxg8efe5qhxhy 
+Execute by account 
+SubMsg &{Execute:<nil> Instantiate:0xc005a62d20 InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1qxxlalvsdjd07p07y3rc5fu6ll8k4tme3pqv38 
+SubMsg &{Execute:0xc00597fe30 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1jxsx6gf3a7z3dugmve0xspe9exd555kmfc6k8l 
+SubMsg &{Execute:0xc00597fea0 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1jxsx6gf3a7z3dugmve0xspe9exd555kmfc6k8l 
+SubMsg &{Execute:<nil> Instantiate:0xc00597ff10 InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1jxsx6gf3a7z3dugmve0xspe9exd555kmfc6k8l 
+SubMsg &{Execute:0xc005cc0230 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust18akrlhag28urz5m488l8p0nqhvq0zwqw0va3fk 
+SubMsg &{Execute:0xc005cc0380 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1jxsx6gf3a7z3dugmve0xspe9exd555kmfc6k8l 
+SubMsg &{Execute:0xc00597ff80 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1jxsx6gf3a7z3dugmve0xspe9exd555kmfc6k8l 
+Execute by account 
+Execute by account 
+SubMsg &{Execute:0xc005791b20 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1jxsx6gf3a7z3dugmve0xspe9exd555kmfc6k8l 
+SubMsg &{Execute:0xc005791b90 Instantiate:<nil> InstantiateAuto:<nil>}
+Dispatch msg with no limit gas for trust1jxsx6gf3a7z3dugmve0xspe9exd555kmfc6k8l 
+Execute by account 
+Execute by account 
+Execute by account 
+Execute by account 

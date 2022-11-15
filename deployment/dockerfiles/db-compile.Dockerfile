@@ -1,4 +1,4 @@
-FROM baiduxlab/sgx-rust:2004-1.1.5
+FROM baiduxlab/sgx-rust:2004-1.1.4
 
 ### Install rocksdb
 
@@ -17,7 +17,7 @@ RUN git clone https://github.com/facebook/rocksdb.git
 
 WORKDIR rocksdb
 
-ARG BUILD_VERSION="v6.24.2"
+ARG BUILD_VERSION="v6.24.3"
 
 RUN git checkout ${BUILD_VERSION}
 

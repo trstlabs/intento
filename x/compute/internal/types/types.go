@@ -246,8 +246,6 @@ func NewAbsoluteTxPosition(ctx sdk.Context) *AbsoluteTxPosition {
 
 // NewEnv initializes the environment for a contract instance
 func NewEnv(ctx sdk.Context, creator sdk.AccAddress, deposit sdk.Coins, contractAddr sdk.AccAddress, contractKey []byte) wasmTypes.Env {
-	fmt.Print("newenv \n")
-	fmt.Printf("newenv time: %+v \n", ctx.BlockTime())
 	// safety checks before casting below
 	if ctx.BlockHeight() < 0 {
 		panic("Block height must never be negative")

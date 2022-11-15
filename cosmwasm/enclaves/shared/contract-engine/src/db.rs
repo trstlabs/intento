@@ -51,7 +51,7 @@ pub fn write_multiple_keys(
     }
 }
 
-#[cfg(not(feature = "query-only"))]
+// #[cfg(not(feature = "query-only"))]
 #[allow(dead_code)]
 pub fn write_encrypted_key(
     key: &[u8],
@@ -111,6 +111,11 @@ pub fn read_encrypted_key(
     trace!(
         "Reading from scrambled field name: {:?}",
         scrambled_field_name
+    );
+    
+    trace!(
+        "key: {:?}",
+        key
     );
 
     // Call read_db (this bubbles up to Tendermint via ocalls and FFI to Go code)

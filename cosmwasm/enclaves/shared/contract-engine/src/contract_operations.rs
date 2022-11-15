@@ -1,6 +1,6 @@
+use enclave_ffi_types::{Ctx, EnclaveError};
 use log::*;
 use serde::{Deserialize, Serialize};
-use enclave_ffi_types::{Ctx, EnclaveError};
 
 use crate::external::results::{CallbackSigSuccess, HandleSuccess, InitSuccess, QuerySuccess};
 
@@ -129,8 +129,6 @@ pub fn init(
         contract_msg.user_public_key,
     )?;
 
-    
-
     let auto_msg = ContractMessage::from_slice(auto_msg)?;
 
     let funds = [];
@@ -146,9 +144,11 @@ pub fn init(
         let result = engine.init(&full_env, validated_msg);
         *used_gas = engine.gas_used();
         let output = result?;
-        // TODO: copy cosmwasm's structures to enclave
-        // TODO: ref: https://github.com/CosmWasm/cosmwasm/blob/b971c037a773bf6a5f5d08a88485113d9b9e8e7b/packages/std/src/init_handle.rs#L129
-        // TODO: ref: https://github.com/CosmWasm/cosmwasm/blob/b971c037a773bf6a5f5d08a88485113d9b9e8e7b/packages/std/src/query.rs#L13
+
+        engine
+            .flush_cache()
+            .map_err(|_| EnclaveError::FailedFunctionCall)?;
+
         let output = encrypt_output(
             output,
             &contract_msg,
@@ -173,70 +173,6 @@ pub fn init(
         contract_key,
         callback_sig,
     })
-}
-
-pub struct TaggedBool {
-    b: bool,
-}
-
-impl From<bool> for TaggedBool {
-    fn from(b: bool) -> Self {
-        TaggedBool { b }
-    }
-}
-
-impl Into<bool> for TaggedBool {
-    fn into(self) -> bool {
-        self.b
-    }
-}
-
-pub struct ParsedMessage {
-    pub should_validate_sig_info: bool,
-    pub was_msg_encrypted: bool,
-    pub should_encrypt_output: bool,
-    pub contract_msg: ContractMessage,
-    pub decrypted_msg: Vec<u8>,
-    pub data_for_validation: Option<Vec<u8>>,
-}
-
-pub fn redact_custom_events(reply: &mut Reply) {
-    reply.result = match &reply.result {
-        SubMsgResult::Ok(r) => {
-            let events: Vec<Event> = Default::default();
-            /*  let filtered_types = vec![
-              //  "execute".to_string(),
-              //  "instantiate".to_string(),
-                "wasm".to_string(),
-            ];
-            let filtered_attributes = vec!["contract_address".to_string(), "code_id".to_string()];
-            for ev in r.events.iter() {
-                if filtered_types.contains(&ev.ty) {
-                    let mut new_ev = Event {
-                        ty: ev.ty.clone(),
-                        attributes: vec![],
-                    };
-
-                    for attr in &ev.attributes {
-                        if !filtered_attributes.contains(&attr.key) {
-                            new_ev.attributes.push(attr.clone());
-                        }
-                    }
-
-                    if new_ev.attributes.len() > 0 {
-                        events.push(new_ev);
-                    }
-
-                }
-            }*/
-
-            SubMsgResult::Ok(SubMsgResponse {
-                events,
-                data: r.data.clone(),
-            })
-        }
-        SubMsgResult::Err(_) => reply.result.clone(),
-    };
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -342,7 +278,7 @@ pub fn handle(
     let mut engine = start_engine(
         context,
         gas_limit,
-       &contract_code,
+        &contract_code,
         &contract_key,
         ContractOperation::Handle,
         query_depth,
@@ -350,14 +286,16 @@ pub fn handle(
         contract_msg.user_public_key,
     )?;
 
-    
-
     // This wrapper is used to coalesce all errors in this block to one object
     // so we can `.map_err()` in one place for all of them
     let output = coalesce!(EnclaveError, {
         let result = engine.handle(&full_env, validated_msg, &parsed_handle_type);
         *used_gas = engine.gas_used();
         let mut output = result?;
+
+        engine
+        .flush_cache()
+        .map_err(|_| EnclaveError::FailedFunctionCall)?;
 
         debug!(
             "(2) nonce just before encrypt_output: nonce = {:?} pubkey = {:?}",
@@ -464,8 +402,6 @@ pub fn query(
         contract_msg.nonce,
         contract_msg.user_public_key,
     )?;
-
-    
 
     // This wrapper is used to coalesce all errors in this block to one object
     // so we can `.map_err()` in one place for all of them
@@ -601,4 +537,52 @@ fn extract_query_depth(env: &[u8]) -> Result<u32, EnclaveError> {
             trace!("base env: {:?}", env);
             env.query_depth
         })
+}
+
+pub struct ParsedMessage {
+    pub should_validate_sig_info: bool,
+    pub was_msg_encrypted: bool,
+    pub should_encrypt_output: bool,
+    pub contract_msg: ContractMessage,
+    pub decrypted_msg: Vec<u8>,
+    pub data_for_validation: Option<Vec<u8>>,
+}
+
+pub fn redact_custom_events(reply: &mut Reply) {
+    reply.result = match &reply.result {
+        SubMsgResult::Ok(r) => {
+            let events: Vec<Event> = Default::default();
+            /*  let filtered_types = vec![
+              //  "execute".to_string(),
+              //  "instantiate".to_string(),
+                "wasm".to_string(),
+            ];
+            let filtered_attributes = vec!["contract_address".to_string(), "code_id".to_string()];
+            for ev in r.events.iter() {
+                if filtered_types.contains(&ev.ty) {
+                    let mut new_ev = Event {
+                        ty: ev.ty.clone(),
+                        attributes: vec![],
+                    };
+
+                    for attr in &ev.attributes {
+                        if !filtered_attributes.contains(&attr.key) {
+                            new_ev.attributes.push(attr.clone());
+                        }
+                    }
+
+                    if new_ev.attributes.len() > 0 {
+                        events.push(new_ev);
+                    }
+
+                }
+            }*/
+
+            SubMsgResult::Ok(SubMsgResponse {
+                events,
+                data: r.data.clone(),
+            })
+        }
+        SubMsgResult::Err(_) => reply.result.clone(),
+    };
 }

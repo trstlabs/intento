@@ -1,3 +1,4 @@
+//go:build !trstd
 // +build !trstd
 
 package api

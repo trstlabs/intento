@@ -63,8 +63,8 @@ lazy_static = "1.4"
 enclave-ffi-types = { path = "../../enclaves/ffi-types", features = [
     "build_headers"
 ] }
-sgx_types = { git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="d2d339cbb005f676bb700059bd51dc689c025f6b",  package="sgx_types" }
-sgx_urts = { git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="d2d339cbb005f676bb700059bd51dc689c025f6b",  package="sgx_urts" }
+sgx_types = { git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="5bf3100b741851af240a50673e49f89f243e122e",  package="sgx_types" }
+sgx_urts = { git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="5bf3100b741851af240a50673e49f89f243e122e",  package="sgx_urts" }
 
 log = "0.4.8"
 base64 = "0.12.0"

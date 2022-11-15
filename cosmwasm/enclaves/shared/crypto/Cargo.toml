@@ -12,11 +12,11 @@ test = []
 # We always compile to the "sgx" target, so this will always be false.
 # when compiling to the "sgx" target, we pull this from the target root with an "extern crate" directive
 [target.'cfg(not(target_env = "sgx"))'.dependencies]
-sgx_tstd = { git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="d2d339cbb005f676bb700059bd51dc689c025f6b",  package="sgx_tstd",features = [
+sgx_tstd = { git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="5bf3100b741851af240a50673e49f89f243e122e",  package="sgx_tstd",features = [
   "backtrace"
 ] }
-sgx_types = { git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="d2d339cbb005f676bb700059bd51dc689c025f6b",  package="sgx_types" }
-sgx_trts = { git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="d2d339cbb005f676bb700059bd51dc689c025f6b",  package="sgx_trts" }
+sgx_types = { git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="5bf3100b741851af240a50673e49f89f243e122e",  package="sgx_types" }
+sgx_trts = { git="https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git",  rev="5bf3100b741851af240a50673e49f89f243e122e",  package="sgx_trts" }
 [dependencies]
 enclave-ffi-types = { path = "../../ffi-types" }
 log = "0.4.8"

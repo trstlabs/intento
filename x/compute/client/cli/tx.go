@@ -85,7 +85,7 @@ func CmdStoreCode() *cobra.Command {
 			if err = msg.ValidateBasic(); err != nil {
 				return err
 			}
-			fmt.Printf("CLI TX with duration: %s \n", msg.DefaultDuration)
+
 			return tx.GenerateOrBroadcastTxCLI(cliCtx, cmd.Flags(), &msg)
 		},
 	}

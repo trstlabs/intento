@@ -24,7 +24,7 @@ RUN curl -sL https://deb.nodesource.com/setup_15.x | bash - && \
     apt-get install -y nodejs npm && \
     npm i -g local-cors-proxy
 
-RUN wget -O /root/genesis.json https://github.com/trstlabs/trst/releases/download/v1.0.0/genesis.json
+# RUN wget -O /root/genesis.json https://github.com/trstlabs/Trustless-Hub/releases/download/v1.0.0/genesis.json
 
 ARG BUILD_VERSION="v0.0.0"
 ENV VERSION=${BUILD_VERSION}
@@ -40,8 +40,8 @@ RUN cp /opt/sgxsdk/lib64/libsgx_uae_service_sim.so /usr/lib/libsgx_uae_service_s
 WORKDIR /root
 
 RUN STORAGE_PATH=`echo ${VERSION} | sed -e 's/\.//g' | head -c 2` \
-    && wget -O /usr/lib/librust_cosmwasm_enclave.signed.so https://engfilestorage.blob.core.windows.net/v$STORAGE_PATH/librust_cosmwasm_enclave.signed.so \
-    &&  wget -O /usr/lib/librust_cosmwasm_query_enclave.signed.so https://engfilestorage.blob.core.windows.net/v$STORAGE_PATH/librust_cosmwasm_query_enclave.signed.so
+    && wget -O /usr/lib/librust_cosmwasm_enclave.signed.so https://engfilestorage.blob.core.windows.net/v$STORAGE_PATH/librust_cosmwasm_enclave.signed.so
+#    &&  wget -O /usr/lib/librust_cosmwasm_query_enclave.signed.so https://engfilestorage.blob.core.windows.net/v$STORAGE_PATH/librust_cosmwasm_query_enclave.signed.so
 
 # Copy over binaries from the build-env
 

@@ -992,12 +992,12 @@ source = "git+https://github.com/apache/teaclave-sgx-sdk.git?rev=d2d339cbb005f67
 [[package]]
 name = "sgx_types"
 version = "1.1.5"
-source = "git+https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git?rev=d2d339cbb005f676bb700059bd51dc689c025f6b#d2d339cbb005f676bb700059bd51dc689c025f6b"
+source = "git+https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git?rev=5bf3100b741851af240a50673e49f89f243e122e#5bf3100b741851af240a50673e49f89f243e122e"
 
 [[package]]
 name = "sgx_urts"
 version = "1.1.5"
-source = "git+https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git?rev=d2d339cbb005f676bb700059bd51dc689c025f6b#d2d339cbb005f676bb700059bd51dc689c025f6b"
+source = "git+https://github.com/scrtlabs/incubator-teaclave-sgx-sdk.git?rev=5bf3100b741851af240a50673e49f89f243e122e#5bf3100b741851af240a50673e49f89f243e122e"
 dependencies = [
  "libc",
  "sgx_types",

@@ -169,7 +169,7 @@ deb-no-compile:
 	chmod +x /tmp/trst/deb/$(DEB_BIN_DIR)/trstd /tmp/trst/deb/$(DEB_BIN_DIR)/trstcli
 
 	mkdir -p /tmp/trst/deb/$(DEB_LIB_DIR)
-	cp -f ./go-cosmwasm/api/libgo_cosmwasm.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so ./go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /tmp/trst/deb/$(DEB_LIB_DIR)/
+	cp -f ./go-cosmwasm/api/libgo_cosmwasm.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so /tmp/trst/deb/$(DEB_LIB_DIR)/
 	chmod +x /tmp/trst/deb/$(DEB_LIB_DIR)/lib*.so
 
 	mkdir -p /tmp/trst/deb/DEBIAN
@@ -224,7 +224,7 @@ clean:
 	$(MAKE) -C cosmwasm/enclaves/test clean
 
 build-rocksdb-image:
-	docker build --build-arg BUILD_VERSION=v6.24.2 -f deployment/dockerfiles/db-compile.Dockerfile -t trstlabs/rocksdb:v6.24.2 .
+	docker build --build-arg BUILD_VERSION=v6.24.3 -f deployment/dockerfiles/db-compile.Dockerfile -t trstlabs/rocksdb:v6.24.3 .
 
 build-localtrst:_localtrst-compile
 	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .

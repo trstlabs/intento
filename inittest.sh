@@ -49,6 +49,7 @@ sed -i '133s/enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.trstd/
 trstd config broadcast-mode block
 trstd config keyring-backend test
 trstd config chain-id trst_chain_1
+trstd config output json
 
 trstd start --bootstrap > init.log --log_level info
 

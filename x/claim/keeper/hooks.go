@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
@@ -11,36 +9,25 @@ import (
 )
 
 func (k Keeper) AfterAutoSwap(ctx sdk.Context, recipient sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionAutoSwap)
-	if err != nil {
-		fmt.Printf("error claiming tokens: %v \n", err)
-		//panic(err.Error())
-	}
+	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionAutoSwap)
+
 }
 
 func (k Keeper) AfterRecurringSend(ctx sdk.Context, recipient sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionRecurringSend)
-	if err != nil {
-		fmt.Printf("error claiming tokens: %v \n", err)
+	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionRecurringSend)
+	/*if err != nil {
+		fmt.Printf("claim: %v \n", err)
 		//panic(err.Error())
-	}
+	}*/
 }
 
 func (k Keeper) AfterGovernanceVoted(ctx sdk.Context, recipient sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionGovernanceVote)
-	if err != nil {
-		fmt.Printf("error claiming tokens: %v \n", err)
-		//panic(err.Error())
-	}
+	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionGovernanceVote)
 }
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
+	k.ClaimInitialCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
 
-	err := k.ClaimInitialCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
-	if err != nil {
-		fmt.Printf("error claiming tokens: %v \n", err)
-		//panic(err.Error())
-	}
 }
 
 // ________________________________________________________________________________________

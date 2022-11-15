@@ -1,9 +1,14 @@
-ARG TRST_BASE_IMAGE_TRSTD=trstlabs/rocksdb:v6.24.2
-ARG TRST_BASE_IMAGE_ENCLAVE=trstlabs/rocksdb:v6.24.2
-# trstlabs/rocksdb:v6.24.2
+ARG TRST_BASE_IMAGE_TRSTD=trstlabs/rocksdb:v6.24.3
+ARG TRST_BASE_IMAGE_ENCLAVE=trstlabs/rocksdb:v6.24.3
+# trstlabs/rocksdb:v6.24.3
 
 FROM $TRST_BASE_IMAGE_ENCLAVE AS compile-enclave
 
+RUN apt-get update &&  \
+    apt-get install -y --no-install-recommends \
+    clang-10 && \
+    rm -rf /var/lib/apt/lists/*
+    
 ENV PATH="/root/.cargo/bin:$PATH"
 
 # Set working directory for the build
