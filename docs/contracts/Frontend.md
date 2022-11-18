@@ -1,19 +1,17 @@
 ---
 order: 5
-title: Frontend
-description: Integrate Trustless Contracts to a frontend with TrustlessJS
+title: Front-end
+description: Integrate Trustless Contracts to your front-end with TrustlessJS
 ---
 
-# Frontend with TrustlessJS
+# Front-end with TrustlessJS
 
-With TrustlessJS you can easily integrate support for Trustless Contracts to your SuperApp.
-It is a Typescript wrapper around all of the major interactions with Trustless Contracts and other chain operations.
-
-
+With TrustlessJS you can easily integrate support for Trustless Hub to your SuperApp !
+It is a Typescript wrapper around all of the major interactions with Trustless Contracts and many other chain operations.
 
 ## NPM
 
-The NPM package is available [here](https://www.npmjs.com/package/trustlessjs) and you can check it out on [Github](https://github.com/danieljdd/TrustlessJS) 
+The NPM package is available [here](https://www.npmjs.com/package/trustlessjs) and you can check it out on [Github](https://github.com/trstlabs/TrustlessJS) 
 
 ```bash
     npm i trustlessjs
@@ -25,7 +23,7 @@ The NPM package is available [here](https://www.npmjs.com/package/trustlessjs) a
 ``` javascript
  import { TrustlessChainClient } from 'trustlessjs';
 
- // To create a readonly trustlesscontracts.js client, pass in a gRPC endpoint. 
+ // To create a readonly trustlessjs client, pass in a gRPC endpoint. 
 //To expose the endpoint, the node should NGINX with the right headers. Preflight should include x-grpc-web and content-type, as well as the allow-orgin from header to be [*] or point to the app url.
 const trustlessjs = await TrustlessChainClient.create({
   grpcWebUrl: "{grpcendpoint}.{node}.com",
@@ -52,10 +50,10 @@ const myAddress = wallet.address;
 
 // To create a signer trustlesscontracts.js client, also pass in a wallet
 const trustlessjs = await TrustlessChainClient.create({
-  grpcWebUrl: "https://grpc.someTrustlessHubnode.com/",
+  grpcWebUrl: "https://grpc.trustlesshub.xyz/",
   wallet: wallet,
   walletAddress: myAddress,
-  chainId: "pulsar-2",
+  chainId: "trst-dev-1",
 });
 
 const bob = "trust1dgqnta7fwjj6x9kusyz7n8vpl73l7wsm0gaamk";
@@ -87,8 +85,8 @@ while (
   await sleep(100);
 }
 
-const CHAIN_ID = "trst_chain_1";
-const CHAIN_GRPC = "https://cli.trustlesshub.com/";
+const CHAIN_ID = "trst-dev-1";
+const CHAIN_GRPC = "https://grpc.trustlesshub.xyz/";
 
 await window.keplr.enable(CHAIN_ID);
 
@@ -107,7 +105,11 @@ const trustlessjs = await TrustlessChainClient.create({
 // Keplr to use the same encryption seed across sessions for the account.
 // The benefit of this is that `trustlessjs.query.getTx()` will be able to decrypt
 // the response across sessions.
+
 ```
+
+TrustlessJS will decrypt encrypted outputs for transactions and queries locally given that enigmaUtils is defined. This can be injected by Keplr. 
+
 
 ### Executing Contracts
 
@@ -155,7 +157,6 @@ trustlessjs.tx.compute.executeContract({
 ```
 
 
-
 ``` javascript
 const tx = await this.trustlessjs.tx.compute.executeContract({
         sender: this.props.user.address,
@@ -197,8 +198,9 @@ trustlessjs.tx.compute.executeContract({
         );
 ```
 
+## Advanced execution
 
-More advanced execution can be integrated too. Here we instantiate a DCA strateg by sending a message to a TIP20 token. With 1-click authorization is given to the newly instantates contract through a reply to the TIP20 contract after instantiation. It is a complex operation on the backend, but simple on the frontend and to the end user.
+More advanced execution can be integrated too. Here we instantiate a DCA strategy by sending a message to a TIP20 token. With 1-click authorization is given to the newly instantates contract through a reply to the TIP20 contract after instantiation. It is a complex operation on the backend, but simple on the frontend and to the end user.
 
 ``` javascript
 result = await this.props.trustlessjs.tx.compute.executeContract({
@@ -229,6 +231,49 @@ result = await this.props.trustlessjs.tx.compute.executeContract({
 
 ```
 
+### Instantiating Contracts`
+
+Instantiate a contract from a code id. Set a 
+
+```ts
+const tx = await trustlessjs.tx.compute.instantiateContract(
+  {
+    sender: myAddress,
+    codeId: codeId,
+    codeHash: codeHash, // optional but significantly faster
+    msg: {
+      name: "Private TRST",
+      admin: myAddress,
+      symbol: "pTRST",
+      decimals: 6,
+      initial_balances: [{ address: myAddress, amount: "1" }],
+      prng_seed: "eW8=",
+      config: {
+        public_total_supply: true,
+        enable_deposit: true,
+        enable_redeem: true,
+        enable_mint: false,
+        enable_burn: false,
+      },
+      supported_denoms: ["utrst"],
+    },
+    contractId: "pTRST",
+    autoMsg: {}, // optional
+    funds: [], // optional
+    duration: "0s"  // optional
+    interval: "0s"  // optional
+    startDurationAt: "0s"  // optional
+  },
+  {
+    gasLimit: 100_000,
+  },
+);
+
+const contractAddress = tx.arrayLog.find(
+  (log) => log.type === "message" && log.key === "contract_address",
+).value;
+```
+
 
 ### Querying
 
@@ -243,6 +288,4 @@ trustlessjs.query.compute.queryContractPrivateState({address: token, query: {
       },
     }});
 ```
-
-TrustlessJS will try to decrypt the encrypted outputs locallt given that enigmaUtils is defined. 
 

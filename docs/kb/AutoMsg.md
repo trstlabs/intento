@@ -16,6 +16,8 @@ Automation happens with an AutoMessage. This is a message that can execute at a 
 - Then a *callback signature* is created. This is a signature with a hash containing the address of the contract and the message, so that only the chain is able to execute the message
 - When the contract is set to execute according to the predefined execution schedule, the AutoMessage is retrieved along with the callback signature. 
 
+
+
 ## Fees
 
 Auto execution messages have a fee, we direct a portion of these to validators. Governance can alter the fee.
@@ -41,7 +43,7 @@ A contract that extends the functionality of an address. Through giving this con
 
 ## Contracts always execute
 
-Should it be the case that a block is full, the automatic execution does not get deleted but rather will take place in the following block. Should the chain halt, auto execution will execute in the following block(s). For recurring execution, the next execution time is based on the previous expected execution time + duration. This means that recurring execution always runs following the foreseen execution pattern.
+Should it be the case that a block is full, the automatic execution does not get deleted but rather will take place in the following block. Should the chain halt, AutoExecution will execute in the following block(s). For recurring execution, the next execution time is based on the previous expected execution time + duration. This means that recurring execution always runs following the foreseen execution pattern.
 
 When a contract wants to skip the execution if time differs significantly, custom time-out logic can be implemented easily into the CosmWasm contract code. Block height and time is available during any type of execution, including auto-execution. For our DCA and RecurrentlySend contracts our implementation is to always execute, even when actual block time differs from the foreseen execution time.
 
