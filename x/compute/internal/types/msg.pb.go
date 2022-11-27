@@ -30,7 +30,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-//StoreCode is used so we can upload code for testing, will be removed on mainnet
+// StoreCode is used so we can upload code for testing, will be removed on mainnet
 type MsgStoreCode struct {
 	Sender string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
 	// WASMByteCode can be raw or gzip compressed

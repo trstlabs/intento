@@ -30,7 +30,7 @@ service Query {
         option (google.api.http).get = "/compute/v1beta1/code/{code_id}/contracts";
     }
     rpc ContractPrivateState (QueryContractPrivateStateRequest) returns (QueryContractPrivateStateResponse) {
-        option (google.api.http).get = "/compute/v1beta1/contract/{address}/private-state";
+        option (google.api.http).get = "/compute/v1beta1/contract/{contract_address}/private-state";
     }
     rpc Code (QueryCodeRequest) returns (QueryCodeResponse) {
         option (google.api.http).get = "/compute/v1beta1/code/{code_id}";
@@ -50,9 +50,10 @@ message QueryContractInfoRequest {
 }
 // QueryContractInfoResponse is the response type for the Query/ContractInfo RPC method
 message QueryContractInfoResponse {
+    // contract_address is the bech32 human readable address of the contract
+    string contract_address = 1;
     ContractInfo ContractInfo = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = ""];
 }
-
 
 // QueryContractPublicStateRequest is the request type for the Query/ContractPublicState RPC method
 message QueryContractPublicStateRequest {
@@ -99,7 +100,7 @@ message QueryContractsByCodeResponse {
 
 message QueryContractPrivateStateRequest {
     // address is the address of the contract
-    string address = 1;
+    string contract_address = 1;
     bytes query_data = 2;
 }
 

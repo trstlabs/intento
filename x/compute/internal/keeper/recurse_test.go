@@ -42,11 +42,11 @@ type recurseResponse struct {
 var totalWasmQueryCounter int
 
 func initRecurseContract(t *testing.T) (contract sdk.AccAddress, creator sdk.AccAddress, ctx sdk.Context, keeper Keeper) {
-	var realWasmQuerier func(ctx sdk.Context, request *wasmTypes.WasmQuery) ([]byte, error)
+	var realWasmQuerier func(ctx sdk.Context, request *wasmTypes.WasmQuery, queryDepth uint32) ([]byte, error)
 	countingQuerier := &QueryPlugins{
-		Wasm: func(ctx sdk.Context, request *wasmTypes.WasmQuery) ([]byte, error) {
+		Wasm: func(ctx sdk.Context, request *wasmTypes.WasmQuery, queryDepth uint32) ([]byte, error) {
 			totalWasmQueryCounter++
-			return realWasmQuerier(ctx, request)
+			return realWasmQuerier(ctx, request, queryDepth)
 		},
 	}
 
@@ -169,7 +169,7 @@ func TestGasCostOnQuery(t *testing.T) {
 	}
 }
 
-//QueryMethodContractStateSmart undefined
+// QueryMethodContractStateSmart undefined
 func TestGasOnExternalQuery(t *testing.T) {
 	const (
 		// todo: tune gas numbers

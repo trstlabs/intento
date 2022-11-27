@@ -114,7 +114,7 @@ func (q grpcQuerier) ContractsByCode(c context.Context, req *types.QueryContract
 }
 
 func (q grpcQuerier) ContractPrivateState(c context.Context, req *types.QueryContractPrivateStateRequest) (*types.QueryContractPrivateStateResponse, error) {
-	addr, err := sdk.AccAddressFromBech32(req.Address)
+	addr, err := sdk.AccAddressFromBech32(req.ContractAddress)
 	if err != nil {
 		return nil, err
 	}

@@ -1054,8 +1054,8 @@ func (m *MsgItemResell) GetNote() string {
 
 // ActiveParams defines the params for activeness of items on governance proposals.
 type Params struct {
-	//  Maximum period for trst holders to buy an item. Initial value: 2
-	//  months.
+	// Maximum period for trst holders to buy an item. Initial value: 2
+	// months.
 	MaxActivePeriod           time.Duration `protobuf:"bytes,1,opt,name=MaxActivePeriod,proto3,stdduration" json:"max_active_period,omitempty"`
 	MaxEstimatorCreatorRatio  int64         `protobuf:"varint,2,opt,name=MaxEstimatorCreatorRatio,proto3" json:"MaxEstimatorCreatorRatio,omitempty"`
 	EstimationRatioForNewItem int64         `protobuf:"varint,3,opt,name=EstimationRatioForNewItem,proto3" json:"EstimationRatioForNewItem,omitempty"`
