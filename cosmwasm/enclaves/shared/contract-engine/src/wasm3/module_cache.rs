@@ -107,7 +107,7 @@ pub fn analyze_module(
         trace!("export {:?}", export)
     }
 
-    use walrus::Export;
+    //use walrus::Export;
     let exports = module.exports.iter();
   
    

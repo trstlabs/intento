@@ -24,10 +24,7 @@ func DefaultGenesis() *GenesisState {
 				ContributorRewards: sdk.MustNewDecFromStr("0.05"), // 25%
 				CommunityPool:      sdk.MustNewDecFromStr("0.30"), // 5%
 			},
-			WeightedContributorRewardsReceivers: []WeightedAddress{{
-				Address: "trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh",
-				Weight:  sdk.MustNewDecFromStr("1"),
-			}},
+			WeightedContributorRewardsReceivers: []WeightedAddress{},
 		},
 	}
 }

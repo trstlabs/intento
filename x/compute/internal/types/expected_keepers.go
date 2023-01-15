@@ -26,6 +26,11 @@ type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
+// PortKeeper defines the expected IBC port keeper
+type PortKeeper interface {
+	BindPort(ctx sdk.Context, portID string) *capabilitytypes.Capability
+}
+
 // ICS20TransferPortSource is a subset of the ibc transfer keeper.
 type ICS20TransferPortSource interface {
 	GetPort(ctx sdk.Context) string

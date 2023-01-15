@@ -190,7 +190,7 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 		}
 		//fmt.Printf("SubMsg for %s \n", contractAddr.String())
 		if msg.Msg.Wasm != nil {
-		fmt.Printf("SubMsg %+v\n", msg.Msg.Wasm)
+			fmt.Printf("SubMsg %+v\n", msg.Msg.Wasm)
 		}
 		// first, we build a sub-context which we can use inside the submessages
 		subCtx, commit := ctx.CacheContext()
@@ -301,11 +301,12 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 		if isReplyEncrypted(msg, reply) {
 			var dataWithInternalReplyInfo wasmTypes.DataWithInternalReplyInfo
 			fmt.Printf("Reply res %v \n", reply.Result)
+			fmt.Printf("Reply res string %s\n", string(reply.Result.Ok.Data))
 			fmt.Printf("Reply data %v \n", data[0])
 			if reply.Result.Ok != nil {
 				err = json.Unmarshal(reply.Result.Ok.Data, &dataWithInternalReplyInfo)
 				if err != nil {
-					return nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into json : %w", err)
+					return nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into json1 : %w", err)
 				}
 
 				reply.Result.Ok.Data = dataWithInternalReplyInfo.Data
@@ -313,7 +314,7 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 			} else {
 				err = json.Unmarshal(data[0], &dataWithInternalReplyInfo)
 				if err != nil {
-					return nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into json : %w", err)
+					return nil, fmt.Errorf("cannot serialize DataWithInternalReplyInfo into json2 : %w", err)
 				}
 			}
 

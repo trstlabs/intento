@@ -185,29 +185,10 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 	// persist instance
 	createdAt := types.NewAbsoluteTxPosition(ctx)
 
-	var endTime time.Time
-	var execTime time.Time
 	//if default duration, this duration is executed. Instantiators can have a custom duration and interval (validated in handler).
-	if codeInfo.DefaultDuration != 0 {
-		endTime = startTime.Add(codeInfo.DefaultDuration)
-		if duration != 0 {
-			endTime = startTime.Add(duration)
-		}
-		if codeInfo.DefaultInterval == 0 {
-			k.InsertContractQueue(ctx, contractAddress.String(), endTime)
-			execTime = endTime
-		} else {
-			endTime = startTime.Add(codeInfo.DefaultDuration)
-			execTime = startTime.Add(codeInfo.DefaultInterval)
-			if interval != 0 {
-				execTime = startTime.Add(interval)
-			} else {
-				interval = codeInfo.DefaultInterval
-			}
-			k.InsertContractQueue(ctx, contractAddress.String(), execTime)
-		}
-	}
+	endTime, execTime, interval := k.getTimeInfo(ctx, codeInfo, startTime, duration, contractAddress, interval)
 	contractInfo := types.NewContractInfo(codeID, creator /* admin, */, id, createdAt, startTime, execTime, endTime, endTime.Sub(startTime), interval, autoMsg, callbackSig, owner)
+
 	// check for IBC flag
 	report, err := k.wasmer.AnalyzeCode(codeInfo.CodeHash)
 	if err != nil {
@@ -244,6 +225,56 @@ func (k Keeper) Instantiate(ctx sdk.Context, codeID uint64, creator /* , admin *
 		k.SetAirdropAction(ctx, res.Attributes)
 	}
 	return contractAddress, data, nil
+}
+
+func (k Keeper) getTimeInfo(ctx sdk.Context, codeInfo types.CodeInfo, startTime time.Time, duration time.Duration, contractAddress sdk.AccAddress, interval time.Duration) (time.Time, time.Time, time.Duration) {
+	endTime, execTime, interval := calculateEndAndExecTimes(codeInfo, startTime, duration, interval)
+	k.InsertContractQueue(ctx, contractAddress.String(), execTime)
+
+	return endTime, execTime, interval
+}
+
+func calculateEndAndExecTimes(codeInfo types.CodeInfo, startTime time.Time, duration time.Duration, interval time.Duration) (time.Time, time.Time, time.Duration) {
+	var endTime time.Time
+	var execTime time.Time
+
+	if codeInfo.DefaultDuration != 0 {
+		endTime = calculateEndTime(codeInfo, startTime, duration)
+		if codeInfo.DefaultInterval == 0 {
+			execTime = endTime
+		} else {
+			execTime = calculateExecTime(codeInfo, startTime, interval)
+			interval = calculateInterval(codeInfo, interval)
+		}
+	}
+	return endTime, execTime, interval
+}
+
+func calculateEndTime(codeInfo types.CodeInfo, startTime time.Time, duration time.Duration) time.Time {
+	if duration != 0 {
+		return startTime.Add(duration)
+	} else {
+		return startTime.Add(codeInfo.DefaultDuration)
+	}
+}
+
+func calculateExecTime(codeInfo types.CodeInfo, startTime time.Time, interval time.Duration) time.Time {
+	if startTime.After(time.Now().Add(time.Minute)) {
+		return startTime
+	}
+	if interval != 0 {
+		return startTime.Add(interval)
+	} else {
+		return startTime.Add(codeInfo.DefaultInterval)
+	}
+}
+
+func calculateInterval(codeInfo types.CodeInfo, interval time.Duration) time.Duration {
+	if interval != 0 {
+		return interval
+	} else {
+		return codeInfo.DefaultInterval
+	}
 }
 
 // Execute executes the contract instance

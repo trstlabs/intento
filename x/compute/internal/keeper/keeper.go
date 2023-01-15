@@ -18,7 +18,6 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
-	portkeeper "github.com/cosmos/ibc-go/v3/modules/core/05-port/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 	wasm "github.com/trstlabs/trst/go-cosmwasm"
 	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
@@ -34,7 +33,7 @@ type Keeper struct {
 	accountKeeper    authkeeper.AccountKeeper
 	bankKeeper       bankkeeper.Keeper
 	distrKeeper      distrkeeper.Keeper
-	portKeeper       portkeeper.Keeper
+	portKeeper       types.PortKeeper
 	capabilityKeeper capabilitykeeper.ScopedKeeper
 	stakingKeeper    stakingkeeper.Keeper
 	wasmer           wasm.Wasmer
@@ -60,7 +59,7 @@ func NewKeeper(
 	mintKeeper mintkeeper.Keeper,
 	stakingKeeper stakingkeeper.Keeper,
 	capabilityKeeper capabilitykeeper.ScopedKeeper,
-	portKeeper portkeeper.Keeper,
+	portKeeper types.PortKeeper,
 	portSource types.ICS20TransferPortSource,
 	channelKeeper channelkeeper.Keeper,
 	legacyMsgRouter sdk.Router,

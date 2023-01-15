@@ -256,7 +256,6 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 		ak.BankKeeper,
 		ak.StakingKeeper,
 		ak.DistrKeeper,
-		//app.computeKeeper,
 		ak.GetSubspace(alloctypes.ModuleName),
 	)
 	// Just re-use the full router - do we want to limit this more?
@@ -265,6 +264,39 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	// Replace with bootstrap flag when we figure out how to test properly and everything works
 	regKeeper := reg.NewKeeper(appCodec, ak.keys[reg.StoreKey], regRouter, reg.EnclaveApi{}, homePath, bootstrap)
 	ak.RegKeeper = &regKeeper
+
+	icaHostKeeper := icahostkeeper.NewKeeper(
+		appCodec, ak.keys[icahosttypes.StoreKey], ak.GetSubspace(icahosttypes.SubModuleName),
+		ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,
+		ak.AccountKeeper, ak.ScopedICAHostKeeper, app.MsgServiceRouter(),
+	)
+	ak.ICAHostKeeper = &icaHostKeeper
+
+	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
+		appCodec, ak.keys[icacontrollertypes.StoreKey], ak.GetSubspace(icacontrollertypes.SubModuleName),
+		ak.IbcKeeper.ChannelKeeper, ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,
+		ak.ScopedICAControllerKeeper, app.MsgServiceRouter(),
+	)
+	ak.ICAControllerKeeper = &icaControllerKeeper
+
+	icaAuthKeeper := icaauthkeeper.NewKeeper(appCodec, ak.keys[icaauthtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedICAAuthKeeper)
+	ak.ICAAuthKeeper = &icaAuthKeeper
+
+	icaAuthIBCModule := icaauth.NewIBCModule(*ak.ICAAuthKeeper)
+
+	// Create Transfer Keepers
+	transferKeeper := ibctransferkeeper.NewKeeper(
+		appCodec, ak.keys[ibctransfertypes.StoreKey], ak.GetSubspace(ibctransfertypes.ModuleName),
+		ak.IbcKeeper.ChannelKeeper, ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,
+		ak.AccountKeeper, ak.BankKeeper, ak.ScopedTransferKeeper,
+	)
+	ak.TransferKeeper = &transferKeeper
+
+	// Create static IBC router, add ibc-tranfer module route, then set and seal it
+	ibcRouter := porttypes.NewRouter()
+
+	icaControllerIBCModule := icacontroller.NewIBCModule(*ak.ICAControllerKeeper, icaAuthIBCModule)
+	icaHostIBCModule := icahost.NewIBCModule(*ak.ICAHostKeeper)
 
 	computeDir := filepath.Join(homePath, ".compute")
 	// The last arguments can contain custom message handlers, and custom query handlers,
@@ -277,12 +309,11 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 		ak.keys[compute.StoreKey],
 		*ak.AccountKeeper,
 		ak.BankKeeper,
-		/**ak.GovKeeper,*/
 		*ak.DistrKeeper,
 		mintKeeper,
 		*ak.StakingKeeper,
 		ak.ScopedComputeKeeper,
-		ak.IbcKeeper.PortKeeper,
+		&ak.IbcKeeper.PortKeeper,
 		ak.TransferKeeper,
 		ak.IbcKeeper.ChannelKeeper,
 		app.Router(),
@@ -315,39 +346,6 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	)
 	ak.GovKeeper = &govKeeper
 
-	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
-		appCodec, ak.keys[icacontrollertypes.StoreKey], ak.GetSubspace(icacontrollertypes.SubModuleName),
-		ak.IbcKeeper.ChannelKeeper, ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,
-		ak.ScopedICAControllerKeeper, app.MsgServiceRouter(),
-	)
-	ak.ICAControllerKeeper = &icaControllerKeeper
-
-	icaHostKeeper := icahostkeeper.NewKeeper(
-		appCodec, ak.keys[icahosttypes.StoreKey], ak.GetSubspace(icahosttypes.SubModuleName),
-		ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,
-		ak.AccountKeeper, ak.ScopedICAHostKeeper, app.MsgServiceRouter(),
-	)
-	ak.ICAHostKeeper = &icaHostKeeper
-
-	icaAuthKeeper := icaauthkeeper.NewKeeper(appCodec, ak.keys[icaauthtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedICAAuthKeeper)
-	ak.ICAAuthKeeper = &icaAuthKeeper
-
-	icaAuthIBCModule := icaauth.NewIBCModule(*ak.ICAAuthKeeper)
-
-	// Create Transfer Keepers
-	transferKeeper := ibctransferkeeper.NewKeeper(
-		appCodec, ak.keys[ibctransfertypes.StoreKey], ak.GetSubspace(ibctransfertypes.ModuleName),
-		ak.IbcKeeper.ChannelKeeper, ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,
-		ak.AccountKeeper, ak.BankKeeper, ak.ScopedTransferKeeper,
-	)
-	ak.TransferKeeper = &transferKeeper
-
-	// Create static IBC router, add ibc-tranfer module route, then set and seal it
-	ibcRouter := porttypes.NewRouter()
-
-	icaControllerIBCModule := icacontroller.NewIBCModule(*ak.ICAControllerKeeper, icaAuthIBCModule)
-	icaHostIBCModule := icahost.NewIBCModule(*ak.ICAHostKeeper)
-
 	ibcRouter.AddRoute(compute.ModuleName, compute.NewIBCHandler(ak.ComputeKeeper, ak.IbcKeeper.ChannelKeeper)).
 		AddRoute(ibctransfertypes.ModuleName, transfer.NewIBCModule(*ak.TransferKeeper)).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
@@ -357,6 +355,7 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	// Setting Router will finalize all routes by sealing router
 	// No more routes can be added
 	ak.IbcKeeper.SetRouter(ibcRouter)
+
 }
 
 func (ak *TrstAppKeepers) InitKeys() {
@@ -381,6 +380,8 @@ func (ak *TrstAppKeepers) InitKeys() {
 		icahosttypes.StoreKey,
 		claimtypes.StoreKey,
 		alloctypes.StoreKey,
+		icaauthtypes.StoreKey,
+		icacontrollertypes.StoreKey,
 	)
 
 	ak.tKeys = sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -399,9 +400,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
-	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
-
+	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(compute.ModuleName)

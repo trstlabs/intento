@@ -3,7 +3,7 @@ use std::convert::{TryFrom, TryInto};
 use log::*;
 
 use bech32::{FromBase32, ToBase32};
-use enclave_cosmwasm_types::types::{FullEnv, Env};
+use enclave_cosmwasm_types::types::FullEnv;
 use rand_chacha::ChaChaRng;
 use rand_core::SeedableRng;
 use wasm3::{Instance, Memory, Trap};
@@ -400,11 +400,10 @@ impl Engine {
             debug!("handle written msg");
             let env_ptr = write_to_memory(instance, &env_bytes)?;
             debug!("handle written env");
-            let result;
 
             let export_name = HandleType::get_export_name(handle_type);
 
-            if handle_type == &HandleType::HANDLE_TYPE_EXECUTE {
+            let result = if handle_type == &HandleType::HANDLE_TYPE_EXECUTE {
                 let msg_info_ptr = write_to_memory(instance, &msg_info_bytes)?;
                 let (handle, args) = (
                     instance
@@ -412,7 +411,7 @@ impl Engine {
                         .to_enclave_result()?,
                     (env_ptr, msg_info_ptr, msg_ptr),
                 );
-                result = handle.call_with_context(context, args)
+                handle.call_with_context(context, args)
             } else {
                 let (handle, args) = (
                     instance
@@ -420,8 +419,8 @@ impl Engine {
                         .to_enclave_result()?,
                     (env_ptr, msg_ptr),
                 );
-                result = handle.call_with_context(context, args)
-            }
+                handle.call_with_context(context, args)
+            };
 
             debug!("found handle");
 

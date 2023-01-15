@@ -7,24 +7,24 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
+	icagenesistypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
 	compute "github.com/trstlabs/trst/x/compute"
@@ -61,6 +61,8 @@ type GenesisParams struct {
 	ClaimParams    claimtypes.Params
 	MintParams     minttypes.Params
 	ComputeParams  compute.Params
+	IcaParams      icatypes.Params
+
 	//	ItemParams     itemtypes.Params
 }
 
@@ -125,6 +127,7 @@ Example:
 			}
 
 			genDoc.AppState = appStateJSON
+			//fmt.Printf("%v \n", string(appStateJSON))
 			err = genutil.ExportGenesisFile(genDoc, genFile)
 			return err
 		},
@@ -245,6 +248,15 @@ func PrepareGenesis(
 	}
 	appState[alloctypes.ModuleName] = allocGenStateBz
 
+	// alloc module genesis
+	icaGenState := icagenesistypes.DefaultGenesis()
+	icaGenState.HostGenesisState.Params = genesisParams.IcaParams
+	icaGenStateBz, err := cdc.MarshalJSON(icaGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal ica genesis state: %w", err)
+	}
+	appState[icagenesistypes.ModuleName] = icaGenStateBz
+
 	// item module genesis
 	/*
 		itemGenState := itemtypes.GetGenesisStateFromAppState(cdc, appState)
@@ -293,12 +305,7 @@ func MainnetGenesisParams() GenesisParams {
 		ContributorRewards: sdk.MustNewDecFromStr("0.05"), // 25%
 
 	}
-	genParams.AllocParams.WeightedContributorRewardsReceivers = []alloctypes.WeightedAddress{
-		{
-			Address: "trust1sns5l9cvkgf4fy770nmg98e7uzet5xhhmv8njv",
-			Weight:  sdk.NewDecWithPrec(100, 2),
-		},
-	}
+	//genParams.AllocParams.WeightedContributorRewardsReceivers = []alloctypes.WeightedAddress{}
 
 	// mint
 	genParams.MintParams = minttypes.DefaultParams()
@@ -354,11 +361,11 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ComputeParams.MinContractDuration = time.Second * 30
 	genParams.ComputeParams.MinContractInterval = time.Second * 60
 	genParams.ComputeParams.AutoMsgFundsCommission = 2
-	genParams.ComputeParams.AutoMsgConstantFee = 1000000
-	genParams.ComputeParams.RecurringAutoMsgConstantFee = 1000000
+	genParams.ComputeParams.AutoMsgConstantFee = 10_000
+	genParams.ComputeParams.RecurringAutoMsgConstantFee = 10_000
 	genParams.ComputeParams.MinContractDurationForIncentive = time.Hour * 24 * 4
-	genParams.ComputeParams.MinContractBalanceForIncentive = 50000000
-	genParams.ComputeParams.MaxContractIncentive = 500000000
+	genParams.ComputeParams.MinContractBalanceForIncentive = 50_000_000
+	genParams.ComputeParams.MaxContractIncentive = 500_000_000
 
 	//claim
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime.Add(time.Hour * 24 * 365) // 1 year (will be changed through gov)
@@ -366,6 +373,8 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 120                             // 120 days = ~4 months
 	genParams.ClaimParams.ClaimDenom = genParams.NativeCoinMetadatas[0].Base
 	genParams.ClaimParams.DurationVestingPeriods = []time.Duration{time.Hour * 24 * 7, time.Hour * 24 * 7 * 6, time.Hour * 24 * 3, time.Hour * 24 * 7 * 4}
+
+	//consensus
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
 	genParams.ConsensusParams.Block.MaxBytes = 5 * 1024 * 1024
 	genParams.ConsensusParams.Block.MaxGas = 6_000_000
@@ -374,6 +383,9 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ConsensusParams.Version.AppVersion = 1
 	genParams.DistributedAccounts = []banktypes.Balance{}
 
+	//interchain accounts host
+	genParams.IcaParams.AllowMessages = []string{"*"} // allow all msgs
+	genParams.IcaParams.HostEnabled = true
 	return genParams
 }
 
@@ -381,7 +393,6 @@ func TestnetGenesisParams() GenesisParams {
 
 	genParams := MainnetGenesisParams()
 
-	// genParams.GenesisTime = time.Now()
 	genParams.GenesisTime = time.Now()
 	genParams.MintParams.StartTime = time.Now()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 3 // 3 days

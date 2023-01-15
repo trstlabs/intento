@@ -1,7 +1,7 @@
 use enclave_cosmos_types::types::HandleType;
 use enclave_cosmwasm_types::encoding::Binary;
 use enclave_cosmwasm_types::ibc::IbcPacketReceiveMsg;
-
+use enclave_cosmwasm_types::results::REPLY_ENCRYPTION_MAGIC_BYTES;
 use enclave_crypto::HASH_SIZE;
 use enclave_ffi_types::EnclaveError;
 use log::*;
@@ -135,8 +135,8 @@ pub fn parse_message(
                 "reply input before decryption: {:?}",
                 base64::encode(&message)
             );
-            let mut parsed_encrypted_reply: Reply = serde_json::from_slice(
-                &orig_contract_msg.msg.as_slice().to_vec(),
+            let parsed_encrypted_reply: Reply = serde_json::from_slice(
+                orig_contract_msg.msg.as_slice(),
             )
             .map_err(|err| {
                 warn!(
@@ -147,47 +147,41 @@ pub fn parse_message(
                 EnclaveError::FailedToDeserialize
             })?;
 
-            match parsed_encrypted_reply.result.clone() {
+            match parsed_reply.result.clone() {
                 SubMsgResult::Ok(response) => {
                     let decrypted_msg_data = match response.data {
                         Some(data) => {
-                            trace!(
-                                "reply data before decryption: {:?}",
-                                &data.as_slice().to_vec()
-                            );
-                            /*let tmp_contract_msg_data = ContractMessage {
+                            let contr_msg_data = ContractMessage {
                                 nonce: orig_contract_msg.nonce,
                                 user_public_key: orig_contract_msg.user_public_key,
                                 msg: data.as_slice().to_vec(),
-                            };*/
-                            let data_msg = ContractMessage::from_slice(data.as_slice())?;
-                            let decrypted_msg = data_msg.decrypt()?;
-                            trace!(
-                                "data_msg input afer decryption: {:?}",
-                                String::from_utf8_lossy(&decrypted_msg)
-                            );
-                            trace!(
-                                "data_msg binary afer decryption: {:?}",
-                                Binary(decrypted_msg.clone())
-                            );
-                            /*  trace!(
-                                "reply data after decryption: {:?}",
-                                Binary(
-                                    tmp_contract_msg_data.decrypt()?[HEX_ENCODED_HASH_SIZE..].to_vec(),
-                                )
-                            );*/
-                            Some(Binary(decrypted_msg))
+                            };
+
+                            let base64_data =
+                                contr_msg_data.decrypt()?[HEX_ENCODED_HASH_SIZE..].to_vec();
+
+                            Some(Binary::from_base64(
+                                String::from_utf8(base64_data.clone())
+                                    .map_err(|err| {
+                                        warn!(
+                                            "Failed to parse result data as string {:?}: {}",
+                                            base64_data, err
+                                        );
+                                        EnclaveError::FailedToDeserialize
+                                    })?
+                                    .as_str(),
+                            )?)
                         }
                         None => None,
                     };
 
-                    let tmp_contract_msg_id = ContractMessage {
+                    let contr_msg_id = ContractMessage {
                         nonce: orig_contract_msg.nonce,
                         user_public_key: orig_contract_msg.user_public_key,
-                        msg: parsed_encrypted_reply.id.as_slice().to_vec(),
+                        msg: parsed_reply.id.as_slice().to_vec(),
                     };
 
-                    let tmp_decrypted_msg_id = tmp_contract_msg_id.decrypt()?;
+                    let mut tmp_decrypted_msg_id = contr_msg_id.decrypt()?;
 
                     // Now we need to create synthetic ContractMessage to fit the API in "handle"
                     let result = SubMsgResult::Ok(SubMsgResponse {
@@ -195,13 +189,29 @@ pub fn parse_message(
                         data: decrypted_msg_data,
                     });
 
+                    let mut data_for_validation: Vec<u8> =
+                        tmp_decrypted_msg_id[..HEX_ENCODED_HASH_SIZE].to_vec();
+                    tmp_decrypted_msg_id = tmp_decrypted_msg_id[HEX_ENCODED_HASH_SIZE..].to_vec();
+                    while tmp_decrypted_msg_id.len() >= REPLY_ENCRYPTION_MAGIC_BYTES.len()
+                        && tmp_decrypted_msg_id[0..(REPLY_ENCRYPTION_MAGIC_BYTES.len())]
+                            == *REPLY_ENCRYPTION_MAGIC_BYTES
+                    {
+                        data_for_validation.extend_from_slice(
+                            &tmp_decrypted_msg_id[0..(REPLY_ENCRYPTION_MAGIC_BYTES.len()
+                                + 8
+                                + HEX_ENCODED_HASH_SIZE)],
+                        );
+
+                        tmp_decrypted_msg_id = tmp_decrypted_msg_id
+                            [(REPLY_ENCRYPTION_MAGIC_BYTES.len() + 8 + HEX_ENCODED_HASH_SIZE)..]
+                            .to_vec();
+                    }
+
                     let msg_id =
-                        String::from_utf8(tmp_decrypted_msg_id[HEX_ENCODED_HASH_SIZE..].to_vec())
-                            .map_err(|err| {
+                        String::from_utf8(tmp_decrypted_msg_id.clone()).map_err(|err| {
                             warn!(
                                 "Failed to parse message id as string {:?}: {}",
-                                tmp_decrypted_msg_id[HEX_ENCODED_HASH_SIZE..].to_vec(),
-                                err
+                                tmp_decrypted_msg_id, err
                             );
                             EnclaveError::FailedToDeserialize
                         })?;
@@ -227,35 +237,30 @@ pub fn parse_message(
                             );
                             EnclaveError::FailedToSerialize
                         })?;
-                    info!("reply {:?}", &parsed_encrypted_reply);
-                    redact_custom_events(&mut parsed_encrypted_reply);
-                    info!("redact_custom_events {:?}", &parsed_encrypted_reply);
-                    //  let msg_for_sig = parse_data(&parsed_encrypted_reply);
-                    // info!("msg_for_sig {}", msg_for_sig.clone());
-                    let serialized_encrypted_reply : Vec<u8> = serde_json::to_vec(&parsed_encrypted_reply).map_err(|err| {
+
+                    redact_custom_events(&mut parsed_reply);
+                    let serialized_encrypted_reply : Vec<u8> = serde_json::to_vec(&parsed_reply).map_err(|err| {
                     warn!(
                         "got an error while trying to serialize encrypted reply into bytes {:?}: {}",
-                        parsed_encrypted_reply, err
+                        parsed_reply, err
                     );
                     EnclaveError::FailedToSerialize
                 })?;
-
+                    info!("redact_custom_events {:?}", &parsed_encrypted_reply);
                     let reply_contract_msg = ContractMessage {
                         nonce: orig_contract_msg.nonce,
                         user_public_key: orig_contract_msg.user_public_key,
                         msg: serialized_encrypted_reply,
                     };
 
-                    return Ok(ParsedMessage {
+                    Ok(ParsedMessage {
                         should_validate_sig_info: true,
                         was_msg_encrypted: true,
                         should_encrypt_output: true,
                         contract_msg: reply_contract_msg,
                         decrypted_msg: decrypted_reply_as_vec,
-                        data_for_validation: Some(
-                            tmp_decrypted_msg_id[..HEX_ENCODED_HASH_SIZE].to_vec(),
-                        ),
-                    });
+                        data_for_validation: Some(data_for_validation),
+                    })
                 }
                 SubMsgResult::Err(response) => {
                     let contract_msg = ContractMessage {
@@ -272,13 +277,13 @@ pub fn parse_message(
 
                     let decrypted_error = contract_msg.decrypt()?;
 
-                    let tmp_contract_msg_id = ContractMessage {
+                    let contr_msg_id = ContractMessage {
                         nonce: orig_contract_msg.nonce,
                         user_public_key: orig_contract_msg.user_public_key,
-                        msg: parsed_encrypted_reply.id.as_slice().to_vec(),
+                        msg: parsed_reply.id.as_slice().to_vec(),
                     };
 
-                    let tmp_decrypted_msg_id = tmp_contract_msg_id.decrypt()?;
+                    let mut tmp_decrypted_msg_id = contr_msg_id.decrypt()?;
 
                     // Now we need to create synthetic ContractMessage to fit the API in "handle"
                     let result = SubMsgResult::Err(
@@ -293,13 +298,29 @@ pub fn parse_message(
                             })?,
                     );
 
+                    let mut data_for_validation: Vec<u8> =
+                        tmp_decrypted_msg_id[..HEX_ENCODED_HASH_SIZE].to_vec();
+                    tmp_decrypted_msg_id = tmp_decrypted_msg_id[HEX_ENCODED_HASH_SIZE..].to_vec();
+                    while tmp_decrypted_msg_id.len() >= REPLY_ENCRYPTION_MAGIC_BYTES.len()
+                        && tmp_decrypted_msg_id[0..(REPLY_ENCRYPTION_MAGIC_BYTES.len())]
+                            == *REPLY_ENCRYPTION_MAGIC_BYTES
+                    {
+                        data_for_validation.extend_from_slice(
+                            &tmp_decrypted_msg_id[0..(REPLY_ENCRYPTION_MAGIC_BYTES.len()
+                                + 8
+                                + HEX_ENCODED_HASH_SIZE)],
+                        );
+
+                        tmp_decrypted_msg_id = tmp_decrypted_msg_id
+                            [(REPLY_ENCRYPTION_MAGIC_BYTES.len() + 8 + HEX_ENCODED_HASH_SIZE)..]
+                            .to_vec();
+                    }
+
                     let msg_id =
-                        String::from_utf8(tmp_decrypted_msg_id[HEX_ENCODED_HASH_SIZE..].to_vec())
-                            .map_err(|err| {
+                        String::from_utf8(tmp_decrypted_msg_id.clone()).map_err(|err| {
                             warn!(
                                 "Failed to parse message id as string {:?}: {}",
-                                tmp_decrypted_msg_id[HEX_ENCODED_HASH_SIZE..].to_vec(),
-                                err
+                                tmp_decrypted_msg_id, err
                             );
                             EnclaveError::FailedToDeserialize
                         })?;
@@ -326,10 +347,10 @@ pub fn parse_message(
                             EnclaveError::FailedToSerialize
                         })?;
 
-                    let serialized_encrypted_reply : Vec<u8> = serde_json::to_vec(&parsed_encrypted_reply).map_err(|err| {
+                    let serialized_encrypted_reply : Vec<u8> = serde_json::to_vec(&parsed_reply).map_err(|err| {
                     warn!(
                         "got an error while trying to serialize encrypted reply into bytes {:?}: {}",
-                        parsed_encrypted_reply, err
+                        parsed_reply, err
                     );
                     EnclaveError::FailedToSerialize
                 })?;
@@ -340,16 +361,14 @@ pub fn parse_message(
                         msg: serialized_encrypted_reply,
                     };
 
-                    return Ok(ParsedMessage {
+                    Ok(ParsedMessage {
                         should_validate_sig_info: true,
                         was_msg_encrypted: true,
                         should_encrypt_output: true,
                         contract_msg: reply_contract_msg,
                         decrypted_msg: decrypted_reply_as_vec,
-                        data_for_validation: Some(
-                            tmp_decrypted_msg_id[..HEX_ENCODED_HASH_SIZE].to_vec(),
-                        ),
-                    });
+                        data_for_validation: Some(data_for_validation),
+                    })
                 }
             }
         }
@@ -361,7 +380,7 @@ pub fn parse_message(
         | HandleType::HANDLE_TYPE_IBC_PACKET_TIMEOUT => {
             trace!(
                 "parsing {} msg (Should always be plaintext): {:?}",
-                HandleType::get_export_name(&handle_type),
+                HandleType::get_export_name(handle_type),
                 base64::encode(&message)
             );
 
@@ -385,10 +404,10 @@ pub fn parse_message(
         HandleType::HANDLE_TYPE_IBC_PACKET_RECEIVE => {
             // TODO: Maybe mark whether the message was encrypted or not.
             let mut parsed_encrypted_ibc_packet: IbcPacketReceiveMsg =
-                    serde_json::from_slice(&message.to_vec()).map_err(|err| {
+                    serde_json::from_slice(message).map_err(|err| {
                         warn!(
                 "Got an error while trying to deserialize input bytes msg into IbcPacketReceiveMsg message {:?}: {}",
-                String::from_utf8_lossy(&message),
+                String::from_utf8_lossy(message),
                 err
             );
                         EnclaveError::FailedToDeserialize

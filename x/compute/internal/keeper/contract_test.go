@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -86,6 +87,19 @@ func setupTest(t *testing.T, wasmPath string, additionalCoinsInWallets sdk.Coins
 	info, _ := keeper.GetCodeInfo(ctx, codeID)
 	codeHash := hex.EncodeToString(info.CodeHash)
 
+	keeper.SetParams(ctx, types.Params{
+		AutoMsgFundsCommission:          2,
+		AutoMsgConstantFee:              1_000_000,                 // 1trst
+		AutoMsgFlexFeeMul:               100,                       // 100/100 = 1 = gasUsed
+		RecurringAutoMsgConstantFee:     1_000_000,                 // 1trst
+		MaxContractDuration:             time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinContractDuration:             time.Second * 40,
+		MinContractInterval:             time.Second * 20,
+		MinContractDurationForIncentive: time.Second * 20, // time.Hour * 24 // 1 day
+		MaxContractIncentive:            5_000_000,        // 5trst
+		ContractIncentiveMul:            100,              //  100/100 = 1 = full incentive
+		MinContractBalanceForIncentive:  50_000_000,       // 50trst
+	})
 	return ctx, keeper, codeID, codeHash, walletA, privKeyA, walletB, privKeyB
 }
 
@@ -211,7 +225,6 @@ func tryDecryptWasmEvents(ctx sdk.Context, nonce []byte, shouldSkipAttributes ..
 	return res
 }
 
-/*
 // getDecryptedData decrypts the output of the first function to be called
 // Only returns the data, logs and messages from the first function call
 func getDecryptedData(t *testing.T, data []byte, nonce []byte) []byte {
@@ -226,7 +239,7 @@ func getDecryptedData(t *testing.T, data []byte, nonce []byte) []byte {
 	require.NoError(t, err)
 
 	return dataPlaintext
-}*/
+}
 
 var contractErrorRegex = regexp.MustCompile(`.*encrypted: (.+): (?:instantiate|execute|query|reply to) contract failed`)
 
@@ -258,7 +271,7 @@ func extractInnerError(t *testing.T, err error, nonce []byte, isEncrypted bool) 
 	return innerErr
 }
 
-const defaultGasForTests uint64 = 100_000
+const defaultGasForTests uint64 = 120_000
 
 // wrap the default gas meter with a counter of wasm calls
 // in order to verify that every wasm call consumes gas
@@ -430,9 +443,9 @@ func execHelperImpl(
 	// TODO check if we can extract the messages from ctx
 
 	// Data is the output of only the first call
-	//data := getDecryptedData(t, execResult.Data, nonce)
+	data := getDecryptedData(t, execResult.Data, nonce)
 
-	return nonce, ctx, execResult.Data, wasmEvents, gasUsed, cosmwasm.StdError{}
+	return nonce, ctx, data, wasmEvents, gasUsed, cosmwasm.StdError{}
 }
 
 func initHelper(
@@ -750,8 +763,7 @@ func TestUnicodeData(t *testing.T) {
 	_, _, data, _, _, err := execHelper(t, keeper, ctx, contractAddress, walletA, privKeyA, `{"unicode_data":{}}`, true, defaultGasForTests, 0)
 
 	require.Empty(t, err)
-	//require.Equal(t, "🍆🥑🍄", string(data))
-	require.NotEmpty(t, data)
+	require.Equal(t, "🍆🥑🍄", string(data))
 
 }
 
@@ -1125,11 +1137,11 @@ func TestExecCallbackToInit(t *testing.T) {
 	fmt.Printf("execEvents %+v \n", execEvents)
 	fmt.Printf("contractAddress %v \n", secondContractAddress.String())
 
-	_, _, _, _, _, err := execHelper(t, keeper, ctx, secondContractAddress, walletA, privKeyA, `{"unicode_data":{}}`, true, defaultGasForTests, 0)
+	_, _, data, _, _, err := execHelper(t, keeper, ctx, secondContractAddress, walletA, privKeyA, `{"unicode_data":{}}`, true, defaultGasForTests, 0)
 
 	require.Empty(t, err)
-	// require.Empty(t, execEvents)
-	//require.Equal(t, "🍆🥑🍄", string(data))
+
+	require.Equal(t, "🍆🥑🍄", string(data))
 
 }
 
@@ -1162,11 +1174,11 @@ func TestInitCallbackToInit(t *testing.T) {
 	//secondContractAddressBech32 := string(initEvents[1][0].Value)
 	secondContractAddress, _ := sdk.AccAddressFromBech32(secondContractAddressBech32)
 
-	_, _, _, _, _, err := execHelper(t, keeper, ctx, secondContractAddress, walletA, privKeyA, `{"unicode_data":{}}`, true, defaultGasForTests, 0)
+	_, _, data, _, _, err := execHelper(t, keeper, ctx, secondContractAddress, walletA, privKeyA, `{"unicode_data":{}}`, true, defaultGasForTests, 0)
 
 	require.Empty(t, err)
 	// require.Empty(t, execEvents)
-	//require.Equal(t, "🍆🥑🍄", string(data))
+	require.Equal(t, "🍆🥑🍄", string(data))
 
 }
 
@@ -3196,13 +3208,14 @@ func TestV1ReplyOnMultipleSubmessages(t *testing.T) {
 
 	_, _, contractAddress, _, _ := initHelper(t, keeper, ctx, codeID, walletA, privKeyA, `{"counter":{"counter":10, "expires":100}}`, true, defaultGasForTests)
 
-	_, _, _, ev, _, err := execHelper(t, keeper, ctx, contractAddress, walletA, privKeyA, `{"multiple_sub_messages":{}}`, true, math.MaxUint64, 0)
+	_, _, data, ev, _, err := execHelper(t, keeper, ctx, contractAddress, walletA, privKeyA, `{"multiple_sub_messages":{}}`, true, math.MaxUint64, 0)
 
 	require.Empty(t, err)
-	//require.NotEmpty(t, data)
-	fmt.Printf("ev %v\n", ev)
+	fmt.Printf("data %v\n", data)
+	require.Equal(t, uint32(102), binary.BigEndian.Uint32(data))
+
 	require.Contains(t, ev[4], cosmwasm.Attribute{Key: "resp", Value: []byte("102"), Encrypted: false, PubDb: false, AccAddr: ""})
-	//require.Equal(t, uint32(102), binary.BigEndian.Uint32(data))
+
 }
 
 func TestV1MultipleSubmessagesNoReply(t *testing.T) {

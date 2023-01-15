@@ -789,7 +789,7 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             code_hash,
         } => Ok(
             Response::new().add_message(CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
-                 auto_msg: None,
+                auto_msg: None,
                 duration: None,
                 interval: None,
                 start_duration_at: None,
@@ -827,7 +827,7 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
             msg,
         } => Ok(Response::new()
             .add_message(CosmosMsg::Wasm(WasmMsg::InstantiateAuto {
-                 auto_msg: None,
+                auto_msg: None,
                 duration: None,
                 interval: None,
                 start_duration_at: None,
@@ -1289,13 +1289,14 @@ pub fn send_multiple_sub_messages_no_reply(env: Env, deps: DepsMut) -> StdResult
         gas_limit: Some(10000000_u64),
         reply_on: ReplyOn::Never,
     });
-    Ok(resp.add_log("resp", format!("{}", count_read(deps.storage).load()?)))
-    /*resp.data = Some(
+    resp.data = Some(
         (count_read(deps.storage).load()? as u32)
             .to_be_bytes()
             .into(),
     );
-    Ok(resp)*/
+    Ok(resp.add_log("resp", format!("{}", count_read(deps.storage).load()?)))
+
+    //Ok(resp)
 }
 
 pub fn recursive_reply_fail(env: Env, _deps: DepsMut) -> StdResult<Response> {
@@ -1441,15 +1442,14 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
             e
         ))),
         (1304, SubMsgResult::Ok(_)) => {
-            /* let mut resp = Response::default();
+            let mut resp = Response::default();
             resp.data = Some(
-                 (count_read(deps.storage).load()? as u32)
-                     .to_be_bytes()
-                     .into(),
-             );
+                (count_read(deps.storage).load()? as u32)
+                    .to_be_bytes()
+                    .into(),
+            );
 
-             Ok(resp)*/
-            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
+            Ok(resp.add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
         (1305, SubMsgResult::Ok(_)) => {
             Err(StdError::generic_err(format!("recursive reply failed")))
@@ -1458,15 +1458,14 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
             let new_count = 10;
             count(deps.storage).save(&new_count)?;
 
-            /*   let mut resp = Response::default();
+            let mut resp = Response::default();
             resp.data = Some(
-                 (count_read(deps.storage).load()? as u32)
-                     .to_be_bytes()
-                     .into(),
-             );
+                (count_read(deps.storage).load()? as u32)
+                    .to_be_bytes()
+                    .into(),
+            );
 
-             Ok(resp)*/
-            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
+            Ok(resp.add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
 
         (1404, SubMsgResult::Err(e)) => Err(StdError::generic_err(format!(
@@ -1516,7 +1515,7 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
             let new_count = 1337;
             count(deps.storage).save(&new_count)?;
 
-            /*
+         
             let mut resp = Response::default();
             resp.data = Some(
                 (count_read(deps.storage).load()? as u32)
@@ -1524,8 +1523,8 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
                     .into(),
             );
 
-            Ok(resp)*/
-            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
+ 
+            Ok(resp.add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
 
         (1500, SubMsgResult::Ok(iter)) => match iter.data {
@@ -1553,15 +1552,15 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
             ))),
         },
         (1500, SubMsgResult::Err(_)) => {
-            /*  let mut resp = Response::default();
+           let mut resp = Response::default();
             resp.data = Some(
                 (count_read(deps.storage).load()? as u32)
                     .to_be_bytes()
                     .into(),
             );
 
-            Ok(resp)*/
-            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
+            
+            Ok(resp.add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
 
         (1601, SubMsgResult::Err(e)) => Err(StdError::generic_err(format!(
@@ -1574,7 +1573,7 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
                     let new_count = 101;
                     count(deps.storage).save(&new_count)?;
 
-                    /*
+                 
                      let mut resp = Response::default();
                     resp.data = Some(
                           (count_read(deps.storage).load()? as u32)
@@ -1582,8 +1581,8 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
                               .into(),
                       );
 
-                      Ok(resp)*/
-                    Ok(Response::new()
+                   
+                    Ok(resp
                         .add_log("resp", format!("{}", count_read(deps.storage).load()?)))
                 }
                 None => Err(StdError::generic_err(format!(
@@ -1592,18 +1591,17 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
             }
         }
         (1602, SubMsgResult::Err(_)) => {
-            //let mut resp = Response::default();
+            let mut resp = Response::default();
             let new_count = 102;
             count(deps.storage).save(&new_count)?;
 
-            /*resp.data = Some(
+            resp.data = Some(
                 (count_read(deps.storage).load()? as u32)
                     .to_be_bytes()
                     .into(),
             );
 
-            Ok(resp)*/
-            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
+            Ok(resp.add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
         (1602, SubMsgResult::Ok(_)) => Err(StdError::generic_err("got wrong bank answer")),
         (1700, SubMsgResult::Ok(s)) => {
@@ -1626,11 +1624,10 @@ pub fn reply(deps: DepsMut, env: Env, reply: Reply) -> StdResult<Response> {
                 )));
             }
 
-            /* let mut resp = Response::default();
+           let mut resp = Response::default();
             resp.data = Some(Binary(s.events[0].attributes[0].value.to_vec()));
 
-            Ok(resp)*/
-            Ok(Response::new().add_log("resp", format!("{}", count_read(deps.storage).load()?)))
+            Ok(resp.add_log("resp", format!("{}", count_read(deps.storage).load()?)))
         }
         (1700, SubMsgResult::Err(_)) => Err(StdError::generic_err("Failed to init v010 contract")),
         (1800, SubMsgResult::Ok(s)) => match s.data {

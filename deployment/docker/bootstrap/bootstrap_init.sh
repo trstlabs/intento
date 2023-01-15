@@ -14,6 +14,7 @@ if [ ! -e "$file" ]; then
 
   trstd init banana --chain-id "$chain_id"
 
+  trstd prepare-genesis testnet "$chain_id"
 
   cp ~/node_key.json ~/.trstd/config/node_key.json
   perl -i -pe 's/"stake"/"utrst"/g' ~/.trstd/config/genesis.json

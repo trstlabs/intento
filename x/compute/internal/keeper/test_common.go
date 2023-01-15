@@ -487,7 +487,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 		stakingKeeper,
 		// serviceRouter,
 		scopedWasmKeeper,
-		ibcKeeper.PortKeeper,
+		&ibcKeeper.PortKeeper,
 		MockIBCTransferKeeper{},
 		ibcKeeper.ChannelKeeper,
 		router,

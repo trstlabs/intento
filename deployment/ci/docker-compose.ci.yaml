@@ -69,7 +69,7 @@ services:
     environment:
       - http_proxy
       - https_proxy
-      - TRST_LOCAL_NODE_TYPE=BOOTSTRAP
+      - TRST_NODE_TYPE=BOOTSTRAP
     expose:
       - 26656
       - 26657
@@ -90,7 +90,7 @@ services:
     environment:
       - http_proxy
       - https_proxy
-      - TRST_LOCAL_NODE_TYPE=node
+      - TRST_NODE_TYPE=node
 
   enclave-test:
     image: rust-enclave-test

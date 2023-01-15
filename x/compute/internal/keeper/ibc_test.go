@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -1037,20 +1036,4 @@ func TestIBCPacketTimeout(t *testing.T) {
 			}
 		})
 	}
-}
-
-// getDecryptedData decrypts the output of the first function to be called
-// Only returns the data, logs and messages from the first function call
-func getDecryptedData(t *testing.T, data []byte, nonce []byte) []byte {
-	if len(data) == 0 {
-		return data
-	}
-
-	dataPlaintextBase64, err := wasmCtx.Decrypt(data, nonce)
-	require.NoError(t, err)
-
-	dataPlaintext, err := base64.StdEncoding.DecodeString(string(dataPlaintextBase64))
-	require.NoError(t, err)
-
-	return dataPlaintext
 }

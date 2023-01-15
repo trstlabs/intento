@@ -183,7 +183,7 @@ impl TryFrom<&str> for Uint128 {
         }
     }
 }
-
+/* 
 impl Into<String> for Uint128 {
     fn into(self) -> String {
         self.0.to_string()
@@ -194,7 +194,7 @@ impl Into<u128> for Uint128 {
     fn into(self) -> u128 {
         self.0
     }
-}
+} */
 
 impl fmt::Display for Uint128 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

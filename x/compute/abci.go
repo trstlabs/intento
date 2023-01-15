@@ -64,10 +64,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 		//deducts execution fees and distributes SDK-native coins from contract balance
 		fee, err := k.DistributeCoins(ctx, contract, gasUsed, isRecurring, isLastExec, req.Header.ProposerAddress)
 		if err != nil {
-			logger.Info(
-				"auto execution",
-				"error", err.Error(),
-			)
+			logger.Info("auto execution", "error", err.Error())
 		} else {
 			fmt.Printf("write to cache\n")
 
@@ -80,6 +77,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 				fmt.Printf("exec Time new %+v \n", nextExecTime)
 				historyEntry := types.ExecHistoryEntry{ScheduledExecTime: contract.ContractInfo.ExecTime, ActualExecTime: time.Now(), ExecFee: fee}
 				contract.ContractInfo.ExecHistory = append(contract.ContractInfo.ExecHistory, &historyEntry)
+
 				if nextExecTime.Before(contract.ContractInfo.EndTime) {
 					k.InsertContractQueue(ctx, contract.Address.String(), nextExecTime)
 					contract.ContractInfo.ExecTime = nextExecTime
@@ -87,12 +85,15 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 					writeCache()
 					continue
 				}
+
 				k.SetContractInfo(ctx, contract)
 			}
+
 			writeCache()
 		}
+
 		k.RemoveFromContractQueue(ctx, contract.Address.String(), contract.ContractInfo.ExecTime)
-		_ = k.Delete(ctx, contract.Address)
+		//_ = k.Delete(ctx, contract.Address)
 		logger.Info(
 			"expired",
 			"contract", contract.Address.String(),

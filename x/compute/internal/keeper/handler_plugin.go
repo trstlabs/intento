@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	ibcclienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
@@ -13,7 +14,6 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/legacy/legacytx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -140,7 +140,7 @@ func (h IBCRawPacketHandler) DispatchMsg(ctx sdk.Context, _ sdk.AccAddress, cont
 		convertWasmIBCTimeoutHeightToCosmosHeight(msg.IBC.SendPacket.Timeout.Block),
 		msg.IBC.SendPacket.Timeout.Timestamp,
 	)
-	fmt.Printf("packet %+v\n", packet)
+
 	return nil, nil, h.channelKeeper.SendPacket(ctx, channelCap, packet)
 }
 
@@ -259,14 +259,14 @@ func EncodeIBCMsg(portSource types.ICS20TransferPortSource) func(ctx sdk.Context
 				Signer:    sender.String(),
 			}}, nil
 		case msg.Transfer != nil:
-			//amount, err := convertWasmCoinToSdkCoin(msg.Transfer.Amount)
-			//if err != nil {
-			//	return nil, sdkerrors.Wrap(err, "amount")
-			//}
+			amount, err := convertWasmCoinToSdkCoin(msg.Transfer.Amount)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "amount")
+			}
 			msg := &ibctransfertypes.MsgTransfer{
 				SourcePort:       portSource.GetPort(ctx),
 				SourceChannel:    msg.Transfer.ChannelID,
-				Token:            msg.Transfer.Amount,
+				Token:            amount,
 				Sender:           sender.String(),
 				Receiver:         msg.Transfer.ToAddress,
 				TimeoutHeight:    convertWasmIBCTimeoutHeightToCosmosHeight(msg.Transfer.Timeout.Block),
@@ -511,82 +511,68 @@ func (h MessageHandler) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddress
 		data   [][]byte
 	)
 	for _, sdkMsg := range sdkMsgs {
-		sdkEvents, sdkData, err := h.handleSdkMessage(ctx, contractAddr, sdkMsg)
-
+		res, err := h.handleSdkMessage(ctx, contractAddr, sdkMsg)
 		if err != nil {
-			data = append(data, sdkData)
+			if res != nil {
+				data = append(data, res.Data)
+			}
 			return nil, data, err
 		}
 		// append data
-		data = append(data, sdkData)
+		data = append(data, res.Data)
+
+		// append events
+		sdkEvents := make([]sdk.Event, len(res.Events))
+		for i := range res.Events {
+			sdkEvents[i] = sdk.Event(res.Events[i])
+		}
 		events = append(events, sdkEvents...)
 	}
 
 	return events, data, nil
-
-	//return nil, nil, sdkerrors.Wrap(types.ErrInvalidMsg, "Unknown variant of CosmosMsgVersion")
 }
 
-func (h MessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg sdk.Msg) (sdk.Events, []byte, error) {
+func (h MessageHandler) handleSdkMessage(ctx sdk.Context, contractAddr sdk.Address, msg sdk.Msg) (*sdk.Result, error) {
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	// make sure this account can send it
+	// make sure the contract account is also the "signer" on the message
 	for _, acct := range msg.GetSigners() {
 		if !acct.Equals(contractAddr) {
-			return nil, nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
+			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "contract doesn't have permission")
 		}
 	}
-
-	var res *sdk.Result
-	var err error
-	if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
-		msgRoute := legacyMsg.Route()
-		handler := h.legacyRouter.Route(ctx, msgRoute)
-		if handler == nil {
-			return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized message route: %s", msgRoute)
-		}
-
-		res, err = handler(ctx, msg)
-		if err != nil {
-			var errData []byte
-			errData = nil
-			if res != nil {
-				errData = make([]byte, len(res.Data))
-				copy(errData, res.Data)
+	_, isMsgInitContract := msg.(*types.MsgInstantiateContract)
+	_, isMsgExecContract := msg.(*types.MsgExecuteContract)
+	if isMsgInitContract || isMsgExecContract {
+		// legacyMsgRouter logic (CosmWasm v0.10)
+		if legacyMsg, ok := msg.(legacytx.LegacyMsg); ok {
+			msgRoute := legacyMsg.Route()
+			handler := h.legacyRouter.Route(ctx, msgRoute)
+			if handler == nil {
+				return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 			}
 
-			return nil, errData, err
+			return handler(ctx, msg)
 		}
-	} else {
-		return nil, nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized legacy message route: %s", sdk.MsgTypeURL(msg))
 
-		// todo: grpc routing
-		//handler := k.serviceRouter.Handler(msg)
-		//if handler == nil {
-		//	return nil, nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, sdk.MsgTypeURL(msg))
-		//}
-		//res, err := handler(ctx, msg)
-		//if err != nil {
-		//	return nil, nil, err
-		//}
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized legacy message route: %s", sdk.MsgTypeURL(msg))
 	}
 
-	var events []sdk.Event
-	data := make([]byte, len(res.Data))
-	copy(data, res.Data)
-	//
-	// convert Tendermint.Events to sdk.Event
-	sdkEvents := make(sdk.Events, len(res.Events))
-	for i := range res.Events {
-		sdkEvents[i] = sdk.Event(res.Events[i])
+	// find the handler and execute it
+	if handler := h.router.Handler(msg); handler != nil {
+		// ADR 031 request type routing
+		msgResult, err := handler(ctx, msg)
+		return msgResult, err
+
 	}
 
-	// append message action attribute
-	events = append(events, sdkEvents...)
-
-	return events, data, nil
+	// Assuming that the app developer has migrated all their Msgs to
+	// proto messages and has registered all `Msg services`, then this
+	// path should never be called, because all those Msgs should be
+	// registered within the `msgServiceRouter` already.
+	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "can't route message %+v", msg)
 }
 
 // convertWasmIBCTimeoutHeightToCosmosHeight converts a wasm type ibc timeout height to ibc module type height

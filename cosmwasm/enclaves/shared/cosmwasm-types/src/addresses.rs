@@ -165,7 +165,7 @@ pub struct CanonicalAddr(pub Binary);
 
 impl CanonicalAddr {
     pub fn as_slice(&self) -> &[u8] {
-        &self.0.as_slice()
+        self.0.as_slice()
     }
     pub fn len(&self) -> usize {
         self.0.len()

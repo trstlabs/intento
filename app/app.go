@@ -296,8 +296,6 @@ func NewTrstApp(
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName,
 		govtypes.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
 		stakingtypes.ModuleName,
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
@@ -307,6 +305,8 @@ func NewTrstApp(
 		minttypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
+		authz.ModuleName,
+		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		ibchost.ModuleName,
@@ -332,9 +332,6 @@ func NewTrstApp(
 		govtypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
-
-		icatypes.ModuleName,
-		icaauthtypes.ModuleName,
 		authz.ModuleName,
 		minttypes.ModuleName,
 		compute.ModuleName,
@@ -342,11 +339,13 @@ func NewTrstApp(
 		claimtypes.ModuleName,
 		alloctypes.ModuleName,
 		crisistypes.ModuleName,
+		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		feegrant.ModuleName,
 		ibchost.ModuleName,
-		genutiltypes.ModuleName,
+		icatypes.ModuleName,
+		icaauthtypes.ModuleName,
 	)
 
 	// register all module routes and module queriers

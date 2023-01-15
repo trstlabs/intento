@@ -193,7 +193,7 @@ func (s *VoteOption) UnmarshalJSON(b []byte) error {
 type TransferMsg struct {
 	ChannelID string     `json:"channel_id"`
 	ToAddress string     `json:"to_address"`
-	Amount    types.Coin `json:"amount"`
+	Amount    Coin       `json:"amount"`
 	Timeout   IBCTimeout `json:"timeout"`
 }
 

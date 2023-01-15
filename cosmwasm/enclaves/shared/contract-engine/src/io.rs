@@ -283,29 +283,12 @@ pub fn encrypt_output(
 
             if let Some(data) = &mut ok.data {
                 trace!("reply data: {:?}", data);
-              /*    *data = Binary::from_base64(&encrypt_serializable(
+                *data = Binary::from_base64(&encrypt_serializable(
                     &encryption_key,
                     data,
                     &reply_params,
-                )?)?;*/
-                let mut data_msg = ContractMessage {
-                    nonce: contract_msg.nonce,
-                    user_public_key: contract_msg.user_public_key,
-                    msg: data.as_slice().to_vec(),
-                };
-                    /*    *data = Binary::from_base64(&encrypt_preserialized_string(
-                    &encryption_key,
-                    &data.to_base64(),
-                    &reply_params,
-                )?)?;*/
-             /*  *data = Binary(encrypt_vec(
-                    &encryption_key,
-                    data.clone().as_slice().to_vec(),
-                   // &reply_params,
-                )?);*/
-                data_msg.encrypt_in_place()?;
-                 *data =Binary(data_msg.to_vec());
-                trace!("reply data encrypted: {:?}", data);
+                    false,
+                )?)?;
             }
 
             let msg_id = match reply_params {
@@ -497,7 +480,7 @@ fn encrypt_wasm_msg(
             *callback_sig = Some(create_callback_signature(
                 contract_addr,
                 &msg_to_pass,
-                &funds,
+                funds,
             ));
         }
         WasmMsg::Instantiate {
@@ -535,7 +518,7 @@ fn encrypt_wasm_msg(
             *callback_sig = Some(create_callback_signature(
                 contract_addr,
                 &msg_to_pass,
-                &funds,
+                funds,
             ));
         }
         WasmMsg::InstantiateAuto {
@@ -574,7 +557,7 @@ fn encrypt_wasm_msg(
             *callback_sig = Some(create_callback_signature(
                 contract_addr,
                 &msg_to_pass,
-                &funds,
+                funds,
             ));
 
 

@@ -14,11 +14,11 @@ set -euvo pipefail
 mkdir -p /root/.trstd/.node
 trstd config keyring-backend test
 trstd config node http://bootstrap:26657
-trstd config chain-id trst-pub-testnet-3
+trstd config chain-id trst-pub-testnet-1
 
 mkdir -p /root/.trstd/.node
 
-trstd init "$(hostname)" --chain-id trst-pub-testnet-3 || true
+trstd init "$(hostname)" --chain-id trst-pub-testnet-1 || true
 
 PERSISTENT_PEERS=115aa0a629f5d70dd1d464bc7e42799e00f4edae@bootstrap:26656
 

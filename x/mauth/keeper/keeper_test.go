@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -43,7 +44,7 @@ func init() {
 func SetupICATestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
 	// encCdc := icaapp.MakeEncodingConfig()
-	app := icaapp.NewTrstApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, icaapp.DefaultNodeHome, 5, false, simapp.EmptyAppOptions{}, compute.DefaultWasmConfig(), icaapp.GetEnabledProposals())
+	app := icaapp.NewTrstApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, icaapp.DefaultNodeHome, 5, true, simapp.EmptyAppOptions{}, compute.DefaultWasmConfig(), icaapp.GetEnabledProposals())
 	// TODO: figure out if it's ok that w MakeEncodingConfig inside of our Genesis.go. It would be a different instance than the one used in app
 	return app, icaapp.NewDefaultGenesisState(app.AppCodec())
 }
@@ -59,7 +60,7 @@ type KeeperTestSuite struct {
 	chainB *ibctesting.TestChain
 }
 
-func (suite *KeeperTestSuite) GetICAApp(chain *ibctesting.TestChain) *icaapp.TrstApp {
+func GetICAApp(chain *ibctesting.TestChain) *icaapp.TrstApp {
 	app, ok := chain.App.(*icaapp.TrstApp)
 	if !ok {
 		panic("not ica app")
@@ -76,8 +77,8 @@ func TestKeeperTestSuite(t *testing.T) {
 // SetupTest creates a coordinator with 2 test chains.
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
-	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(0))
-	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2))
 }
 
 func NewICAPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
@@ -90,4 +91,48 @@ func NewICAPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path.EndpointB.ChannelConfig.Version = TestVersion
 
 	return path
+}
+
+// SetupICAPath invokes the InterchainAccounts entrypoint and subsequent channel handshake handlers
+func SetupICAPath(path *ibctesting.Path, owner string) error {
+	if err := RegisterInterchainAccount(path.EndpointA, owner); err != nil {
+		return err
+	}
+	fmt.Printf("%v", path.EndpointB)
+	if err := path.EndpointB.ChanOpenTry(); err != nil {
+		return err
+	}
+
+	if err := path.EndpointA.ChanOpenAck(); err != nil {
+		return err
+	}
+
+	if err := path.EndpointB.ChanOpenConfirm(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// RegisterInterchainAccount is a helper function for starting the channel handshake
+func RegisterInterchainAccount(endpoint *ibctesting.Endpoint, owner string) error {
+	portID, err := icatypes.NewControllerPortID(owner)
+	if err != nil {
+		return err
+	}
+
+	channelSequence := endpoint.Chain.App.GetIBCKeeper().ChannelKeeper.GetNextChannelSequence(endpoint.Chain.GetContext())
+
+	if err := GetICAApp(endpoint.Chain).AppKeepers.ICAControllerKeeper.RegisterInterchainAccount(endpoint.Chain.GetContext(), endpoint.ConnectionID, owner); err != nil {
+		return err
+	}
+
+	// commit state changes for proof verification
+	endpoint.Chain.NextBlock()
+
+	// update port/channel ids
+	endpoint.ChannelID = channeltypes.FormatChannelIdentifier(channelSequence)
+	endpoint.ChannelConfig.PortID = portID
+
+	return nil
 }

@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	ibcante "github.com/cosmos/ibc-go/v3/modules/core/ante"
 	"github.com/cosmos/ibc-go/v3/modules/core/keeper"
-
 	"github.com/trstlabs/trst/x/compute"
 )
 
@@ -52,6 +52,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigGasConsumeDecorator(options.HandlerOptions.AccountKeeper, sigGasConsumer),
 		ante.NewSigVerificationDecorator(options.HandlerOptions.AccountKeeper, options.HandlerOptions.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.HandlerOptions.AccountKeeper),
+		ibcante.NewAnteDecorator(options.IBCKeeper),
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

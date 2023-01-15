@@ -13,7 +13,7 @@ use enclave_cosmwasm_types::encoding::Binary;
 use enclave_cosmwasm_types::results::{Event, Reply, SubMsgResponse, SubMsgResult};
 //use enclave_cosmwasm_types::timestamp::Timestamp;
 //use enclave_cosmwasm_types::types::{BlockInfo, ContractInfo, MessageInfo};
-use enclave_cosmwasm_types::types::{Env, FullEnv};
+use enclave_cosmwasm_types::types::{ FullEnv};
 
 use super::contract_validation::{
     extract_contract_key, generate_encryption_key, validate_contract_key, validate_msg,
@@ -60,7 +60,7 @@ pub fn init(
     let mut full_env: FullEnv = serde_json::from_slice(env).map_err(|err| {
         warn!(
             "got an error while trying to deserialize env input bytes into json {:?}: {}",
-            String::from_utf8_lossy(&env),
+            String::from_utf8_lossy(env),
             err
         );
         EnclaveError::FailedToDeserialize
@@ -95,7 +95,7 @@ pub fn init(
     let parsed_sig_info: SigInfo = serde_json::from_slice(sig_info).map_err(|err| {
         warn!(
             "init got an error while trying to deserialize env input bytes into json {:?}: {}",
-            String::from_utf8_lossy(&sig_info),
+            String::from_utf8_lossy(sig_info),
             err
         );
         EnclaveError::FailedToDeserialize
@@ -197,7 +197,7 @@ pub fn handle(
     })?;
     full_env.contract.code_hash = hex::encode(contract_code.hash());
 
-    let canonical_contract_address = CanonicalAddr::from_addr(&&full_env.contract.address).map_err(|err| {
+    let canonical_contract_address = CanonicalAddr::from_addr(&full_env.contract.address).map_err(|err| {
         warn!(
             "got an error while trying to deserialize full_env.contract.address from bech32 string to bytes {:?}: {}",
             full_env.contract.address, err
@@ -220,7 +220,7 @@ pub fn handle(
     let parsed_sig_info: SigInfo = serde_json::from_slice(sig_info).map_err(|err| {
         warn!(
             "handle got an error while trying to deserialize sig info input bytes into json {:?}: {}",
-            String::from_utf8_lossy(&sig_info),
+            String::from_utf8_lossy(sig_info),
             err
         );
         EnclaveError::FailedToDeserialize
@@ -414,7 +414,7 @@ pub fn query(
             output,
             &contract_msg,
             &CanonicalAddr(Binary(Vec::new())), // Not used for queries (can't init a new contract from a query)
-            &"".to_string(), // Not used for queries (can't call a sub-message from a query),
+            "", // Not used for queries (can't call a sub-message from a query),
             None,            // Not used for queries (Query response is not replied to the caller),
             &CanonicalAddr(Binary(Vec::new())), // Not used for queries (used only for replies)
         )?;
@@ -460,7 +460,7 @@ pub fn create_callback_sig(
     let parsed_msg_info: MsgInfo = serde_json::from_slice(msg_info).map_err(|err| {
         warn!(
             "got an error while trying to deserialize msg input bytes into json {:?}: {}",
-            String::from_utf8_lossy(&msg_info),
+            String::from_utf8_lossy(msg_info),
             err
         );
         EnclaveError::FailedToDeserialize
