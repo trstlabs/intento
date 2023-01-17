@@ -23,8 +23,8 @@ require (
 	github.com/tendermint/tendermint v0.34.22
 	github.com/tendermint/tm-db v0.6.7
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
-	google.golang.org/genproto v0.0.0-20221114212237-e4508ebdbee1
-	google.golang.org/grpc v1.50.1
+	google.golang.org/genproto v0.0.0-20221207170731-23e4bf6bdc37
+	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
 )
 
@@ -33,7 +33,10 @@ require github.com/cosmos/gorocksdb v1.2.0 // indirect
 require (
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/dgraph-io/badger/v2 v2.2007.3 // indirect
+	github.com/ghodss/yaml v1.0.0 // indirect
+	github.com/golang/glog v1.0.0 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
@@ -121,10 +124,10 @@ require (
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/net v0.2.0 // indirect
-	golang.org/x/sys v0.2.0 // indirect
-	golang.org/x/term v0.2.0 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/net v0.3.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/term v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1 // indirect

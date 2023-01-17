@@ -51,10 +51,10 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 	allockeeper "github.com/trstlabs/trst/x/alloc/keeper"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
+	icaauth "github.com/trstlabs/trst/x/auto-ibc-tx"
+	icaauthkeeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
+	icaauthtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
 	"github.com/trstlabs/trst/x/compute"
-	icaauth "github.com/trstlabs/trst/x/mauth"
-	icaauthkeeper "github.com/trstlabs/trst/x/mauth/keeper"
-	icaauthtypes "github.com/trstlabs/trst/x/mauth/types"
 	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
 	reg "github.com/trstlabs/trst/x/registration"
@@ -279,7 +279,7 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	)
 	ak.ICAControllerKeeper = &icaControllerKeeper
 
-	icaAuthKeeper := icaauthkeeper.NewKeeper(appCodec, ak.keys[icaauthtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedICAAuthKeeper)
+	icaAuthKeeper := icaauthkeeper.NewKeeper(appCodec, ak.keys[icaauthtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedICAAuthKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(icaauthtypes.ModuleName))
 	ak.ICAAuthKeeper = &icaAuthKeeper
 
 	icaAuthIBCModule := icaauth.NewIBCModule(*ak.ICAAuthKeeper)
@@ -408,6 +408,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(reg.ModuleName)
 	paramsKeeper.Subspace(claimtypes.ModuleName)
 	paramsKeeper.Subspace(alloctypes.ModuleName)
+	paramsKeeper.Subspace(icaauthtypes.ModuleName)
 
 	return paramsKeeper
 }

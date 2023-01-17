@@ -26,6 +26,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
+	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
 	compute "github.com/trstlabs/trst/x/compute"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
@@ -56,13 +57,13 @@ type GenesisParams struct {
 
 	CrisisConstantFee sdk.Coin
 
-	SlashingParams slashingtypes.Params
-	AllocParams    alloctypes.Params
-	ClaimParams    claimtypes.Params
-	MintParams     minttypes.Params
-	ComputeParams  compute.Params
-	IcaParams      icatypes.Params
-
+	SlashingParams  slashingtypes.Params
+	AllocParams     alloctypes.Params
+	ClaimParams     claimtypes.Params
+	MintParams      minttypes.Params
+	ComputeParams   compute.Params
+	IcaParams       icatypes.Params
+	AutoIbcTxParams autoibctxtypes.Params
 	//	ItemParams     itemtypes.Params
 }
 
@@ -248,7 +249,25 @@ func PrepareGenesis(
 	}
 	appState[alloctypes.ModuleName] = allocGenStateBz
 
-	// alloc module genesis
+	// autoIbcTx module genesis
+	autoTxGenState := autoibctxtypes.DefaultGenesis()
+	autoTxGenState.Params = genesisParams.AutoIbcTxParams
+	autoTxGenStateBz, err := cdc.MarshalJSON(autoTxGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal autoIbcTx genesis state: %w", err)
+	}
+	appState[autoibctxtypes.ModuleName] = autoTxGenStateBz
+
+	// compute module genesis
+	computeGenState := compute.DefaultGenesis()
+	computeGenState.Params = genesisParams.ComputeParams
+	computeGenStateBz, err := cdc.MarshalJSON(computeGenState)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to marshal autoIbcTx genesis state: %w", err)
+	}
+	appState[compute.ModuleName] = computeGenStateBz
+
+	// ica module genesis
 	icaGenState := icagenesistypes.DefaultGenesis()
 	icaGenState.HostGenesisState.Params = genesisParams.IcaParams
 	icaGenStateBz, err := cdc.MarshalJSON(icaGenState)
@@ -356,6 +375,7 @@ func MainnetGenesisParams() GenesisParams {
 		genParams.ItemParams.EstimationRatioForNewItem = 0
 		genParams.ItemParams.CreateItemFee = 0
 	*/
+
 	//compute
 	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 366
 	genParams.ComputeParams.MinContractDuration = time.Second * 30
@@ -366,6 +386,14 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ComputeParams.MinContractDurationForIncentive = time.Hour * 24 * 4
 	genParams.ComputeParams.MinContractBalanceForIncentive = 50_000_000
 	genParams.ComputeParams.MaxContractIncentive = 500_000_000
+
+	//AutoIBCTx
+	genParams.AutoIbcTxParams.MaxAutoTxDuration = time.Hour * 24 * 366
+	genParams.AutoIbcTxParams.MinAutoTxDuration = time.Second * 30
+	genParams.AutoIbcTxParams.MinAutoTxInterval = time.Second * 60
+	genParams.AutoIbcTxParams.AutoTxFundsCommission = 2
+	genParams.AutoIbcTxParams.AutoTxConstantFee = 10_000
+	genParams.AutoIbcTxParams.RecurringAutoTxConstantFee = 10_000
 
 	//claim
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime.Add(time.Hour * 24 * 365) // 1 year (will be changed through gov)

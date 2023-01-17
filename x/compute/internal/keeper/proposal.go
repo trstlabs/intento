@@ -59,10 +59,7 @@ func handleStoreCodeProposal(k Keeper, ctx sdk.Context, p types.StoreCodeProposa
 	if err != nil {
 		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
-	fmt.Printf("p %s \n", p.ContractTitle)
-	fmt.Printf("p %s \n", p.ContractDescription)
-	fmt.Printf("p %s \n", duration)
-	fmt.Printf("p %s \n", creatorAddr)
+
 	_, err = k.Create(ctx, creatorAddr, p.WASMByteCode, "", "", duration, interval, p.ContractTitle, p.ContractDescription)
 	if err != nil {
 		return sdkerrors.Wrap(err, "err creating code")

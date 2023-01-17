@@ -105,7 +105,7 @@ message MsgUpdateContract {
   string owner = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   string contract_address = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
   string new_owner = 4 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-  string interval = 6 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+  string interval = 6;
   string end_time = 7;
   uint64 start_duration_at = 8;
 }

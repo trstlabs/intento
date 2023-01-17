@@ -8,8 +8,6 @@ import (
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-
-		// this line is used by starport scaffolding # genesis/types/default
 		Params: DefaultParams(),
 	}
 }
@@ -22,7 +20,7 @@ func (s Sequence) ValidateBasic() error {
 }
 
 func (s GenesisState) ValidateBasic() error {
-	//fmt.Print("VALIDATING BASIC")
+
 	if err := s.Params.Validate(); err != nil {
 		return sdkerrors.Wrap(err, "params")
 	}

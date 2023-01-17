@@ -134,7 +134,7 @@ message KeyPair {
 message Params {
    option (gogoproto.goproto_stringer) = false;
     int64 AutoMsgFundsCommission  = 1;
-     int64 AutoMsgFlexFeeMul = 2;
+    int64 AutoMsgFlexFeeMul = 2;
     int64 AutoMsgConstantFee = 3;
     int64 RecurringAutoMsgConstantFee = 4;
     //  Maximum period for self-executing contract

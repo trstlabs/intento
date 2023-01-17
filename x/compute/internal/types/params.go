@@ -24,10 +24,13 @@ const (
 
 	// Default max period for a contract that is self-executing
 	DefaultMaxContractDuration time.Duration = time.Hour * 24 * 366 * 10 // a little over 10 years
+
 	// MinContractDuration sets the minimum duration for a self-executing contract
 	DefaultMinContractDuration time.Duration = time.Second * 40
+
 	// MinContractInterval sets the minimum interval self-execution
 	DefaultMinContractInterval time.Duration = time.Second * 20
+
 	// MinContractDurationForIncentive to distribute reward to contracts we want to incentivize
 	DefaultMinContractDurationForIncentive time.Duration = time.Hour * 24 // time.Hour * 24 // 1 day
 

@@ -78,9 +78,9 @@ func NewKeeper(
 		panic(err)
 	}
 
-	addr := accountKeeper.GetModuleAddress(types.ModuleName)
+	moduleAccAddr := accountKeeper.GetModuleAddress(types.ModuleName)
 	// ensure module account is set
-	if addr == nil {
+	if moduleAccAddr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 

@@ -244,7 +244,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 	require.NoError(t, ms.LoadLatestVersion())
 	_, valConsPk0, _ := keyPubAddr()
 	valCons := sdk.ConsAddress(valConsPk0.Address())
-	val, err := CreateValidator(valConsPk0, sdk.NewInt(100))
+	val, _ := CreateValidator(valConsPk0, sdk.NewInt(100))
 	//val, err := stakingkeeper.Keeper.SetValidatorByConsAddr(ctx,valConsPk0//, math.NewInt(100))
 
 	ctx := sdk.NewContext(ms, tmproto.Header{

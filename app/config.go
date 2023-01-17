@@ -30,10 +30,10 @@ import (
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/client"
 	alloc "github.com/trstlabs/trst/x/alloc"
+	icaauth "github.com/trstlabs/trst/x/auto-ibc-tx"
 	claim "github.com/trstlabs/trst/x/claim"
 	"github.com/trstlabs/trst/x/compute"
 	wasmclient "github.com/trstlabs/trst/x/compute/client"
-	icaauth "github.com/trstlabs/trst/x/mauth"
 	"github.com/trstlabs/trst/x/mint"
 	"github.com/trstlabs/trst/x/registration"
 )

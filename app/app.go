@@ -10,8 +10,8 @@ import (
 
 	"github.com/trstlabs/trst/app/keepers"
 	alloc "github.com/trstlabs/trst/x/alloc"
+	autoibctx "github.com/trstlabs/trst/x/auto-ibc-tx"
 	"github.com/trstlabs/trst/x/claim"
-	icaauth "github.com/trstlabs/trst/x/mauth"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,7 +33,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v3/modules/core"
 	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
-	icaauthtypes "github.com/trstlabs/trst/x/mauth/types"
+	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
 
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -112,6 +112,7 @@ var (
 		compute.ModuleName:             {authtypes.Minter},
 		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		alloctypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		autoibctxtypes.ModuleName:      {authtypes.Minter},
 	}
 
 	// Module accounts that are allowed to receive tokens
@@ -231,7 +232,7 @@ func NewTrstApp(
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	icaModule := ica.NewAppModule(app.AppKeepers.ICAControllerKeeper, app.AppKeepers.ICAHostKeeper)
-	icaAuthModule := icaauth.NewAppModule(appCodec, *app.AppKeepers.ICAAuthKeeper)
+	autoIbcTxModule := autoibctx.NewAppModule(appCodec, *app.AppKeepers.ICAAuthKeeper)
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
@@ -258,7 +259,7 @@ func NewTrstApp(
 		ibc.NewAppModule(app.AppKeepers.IbcKeeper),
 		transfer.NewAppModule(*app.AppKeepers.TransferKeeper),
 		icaModule,
-		icaAuthModule,
+		autoIbcTxModule,
 	)
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -284,7 +285,7 @@ func NewTrstApp(
 		authz.ModuleName,
 		paramstypes.ModuleName,
 		icatypes.ModuleName,
-		icaauthtypes.ModuleName,
+		autoibctxtypes.ModuleName,
 		compute.ModuleName,
 		reg.ModuleName,
 		claimtypes.ModuleName,
@@ -314,7 +315,7 @@ func NewTrstApp(
 		compute.ModuleName,
 		reg.ModuleName,
 		icatypes.ModuleName,
-		icaauthtypes.ModuleName,
+		autoibctxtypes.ModuleName,
 		claimtypes.ModuleName,
 		alloctypes.ModuleName,
 	)
@@ -345,7 +346,7 @@ func NewTrstApp(
 		feegrant.ModuleName,
 		ibchost.ModuleName,
 		icatypes.ModuleName,
-		icaauthtypes.ModuleName,
+		autoibctxtypes.ModuleName,
 	)
 
 	// register all module routes and module queriers

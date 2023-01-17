@@ -663,7 +663,7 @@ func convertSdkCoinToWasmCoin(coin sdk.Coin) wasmTypes.Coin {
 // excluded from this list (should be safe, but needs a clear use case):
 //   - /trst.registration.*
 //   - /ibc.core.*
-//   - /trst.intertx.*
+//   - /trst.auto-ibc-tx.*
 //   - /cosmos.evidence.*
 //   - /cosmos.upgrade.*
 //   - All "get all" queries - only O(1) queries should be served

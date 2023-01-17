@@ -34131,7 +34131,7 @@ paths:
             format: byte
       tags:
         - gRPC Gateway API
-  /mauth/v1beta1/address-to-ica:
+  /auto-ibc-tx/v1beta1/address-to-ica:
     get:
       summary: QueryInterchainAccountFromAddress returns the interchain account for
         given owner address on a given connection pair
@@ -63337,7 +63337,7 @@ components:
         in
 
         the connection handshake.
-    secret.compute.v1beta1.AbsoluteTxPosition:
+    trst.compute.v1beta1.AbsoluteTxPosition:
       type: object
       properties:
         block_height:
@@ -63350,7 +63350,7 @@ components:
           title: TxIndex is a monotonic counter within the block (actual transaction
             index, or gas consumed)
       title: AbsoluteTxPosition can be used to sort contracts
-    secret.compute.v1beta1.CodeInfoResponse:
+    trst.compute.v1beta1.CodeInfoResponse:
       type: object
       properties:
         code_id:
@@ -63365,7 +63365,7 @@ components:
           type: string
         builder:
           type: string
-    secret.compute.v1beta1.ContractInfo:
+    trst.compute.v1beta1.ContractInfo:
       type: object
       properties:
         code_id:
@@ -63394,7 +63394,7 @@ components:
         ibc_port_id:
           type: string
       title: ContractInfo stores a WASM contract instance
-    secret.compute.v1beta1.ContractInfoWithAddress:
+    trst.compute.v1beta1.ContractInfoWithAddress:
       type: object
       properties:
         contract_address:
@@ -63431,12 +63431,12 @@ components:
           title: ContractInfo stores a WASM contract instance
       title: ContractInfoWithAddress adds the contract address to the ContractInfo
         representation
-    secret.compute.v1beta1.QueryCodeHashResponse:
+    trst.compute.v1beta1.QueryCodeHashResponse:
       type: object
       properties:
         code_hash:
           type: string
-    secret.compute.v1beta1.QueryCodeResponse:
+    trst.compute.v1beta1.QueryCodeResponse:
       type: object
       properties:
         code_info:
@@ -63457,7 +63457,7 @@ components:
         wasm:
           type: string
           format: byte
-    secret.compute.v1beta1.QueryCodesResponse:
+    trst.compute.v1beta1.QueryCodesResponse:
       type: object
       properties:
         code_infos:
@@ -63477,13 +63477,13 @@ components:
                 type: string
               builder:
                 type: string
-    secret.compute.v1beta1.QueryContractAddressResponse:
+    trst.compute.v1beta1.QueryContractAddressResponse:
       type: object
       properties:
         contract_address:
           type: string
           title: address is the bech32 human readable address of the contract
-    secret.compute.v1beta1.QueryContractInfoResponse:
+    trst.compute.v1beta1.QueryContractInfoResponse:
       type: object
       properties:
         contract_address:
@@ -63520,12 +63520,12 @@ components:
           title: ContractInfo stores a WASM contract instance
       title: QueryContractInfoResponse is the response type for the Query/ContractInfo
         RPC method
-    secret.compute.v1beta1.QueryContractLabelResponse:
+    trst.compute.v1beta1.QueryContractLabelResponse:
       type: object
       properties:
         label:
           type: string
-    secret.compute.v1beta1.QueryContractsByCodeIdResponse:
+    trst.compute.v1beta1.QueryContractsByCodeIdResponse:
       type: object
       properties:
         contract_infos:
@@ -63568,26 +63568,26 @@ components:
                 title: ContractInfo stores a WASM contract instance
             title: ContractInfoWithAddress adds the contract address to the ContractInfo
               representation
-    secret.compute.v1beta1.QuerySecretContractResponse:
+    trst.compute.v1beta1.QuerySecretContractResponse:
       type: object
       properties:
         data:
           type: string
           format: byte
-    secret.intertx.v1beta1.QueryInterchainAccountFromAddressResponse:
+    trst.autoibctx.v1beta1.QueryInterchainAccountFromAddressResponse:
       type: object
       properties:
         interchain_account_address:
           type: string
       title: QueryInterchainAccountFromAddressResponse the response type for the
         Query/InterchainAccountAddress RPC
-    secret.registration.v1beta1.Key:
+    trst.registration.v1beta1.Key:
       type: object
       properties:
         key:
           type: string
           format: byte
-    secret.registration.v1beta1.QueryEncryptedSeedResponse:
+    trst.registration.v1beta1.QueryEncryptedSeedResponse:
       type: object
       properties:
         encrypted_seed:

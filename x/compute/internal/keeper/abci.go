@@ -126,11 +126,17 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 	}
 	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, contract.Address, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
 	if err != nil {
-		return sdk.Coin{}, err
+		store := ctx.KVStore(k.storeKey)
+		// unless a contract created the contract, fees are deducted from the owner
+		if !store.Has(types.GetContractEnclaveKey(contract.Creator)) {
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, contract.Owner, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
+			if err != nil {
+				return sdk.Coin{}, err
+			}
+		}
 	}
 	proposerAddr := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
-	fmt.Printf("-allocating flexFeeCoin :%s \n", flexFeeCoin.Amount)
-	fmt.Printf("-asdfproposer :%s \n", proposer.String())
+
 	k.Logger(ctx).Info("allocating", "flexFeeCoin", flexFeeCoin.Amount, "proposer", proposer.String())
 	k.distrKeeper.AllocateTokensToValidator(ctx, proposerAddr, sdk.NewDecCoinsFromCoins(flexFeeCoin))
 
@@ -138,7 +144,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 	err = k.distrKeeper.FundCommunityPool(ctx, communityCoins, contract.Address)
 	if err != nil {
 		store := ctx.KVStore(k.storeKey)
-		// unless a contract instantiated the contract, we deduct fees so execution can be written
+		// unless a contract created the contract, fees are deducted from the owner
 		if !store.Has(types.GetContractEnclaveKey(contract.Creator)) {
 			err := k.distrKeeper.FundCommunityPool(ctx, communityCoins, contract.ContractInfo.Owner)
 			if err != nil {

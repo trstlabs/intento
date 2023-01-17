@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package trst.x.autoibctx.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "auto-ibc-tx/v1beta1/types.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "github.com/trstlabs/trst/x/auto-ibc-tx/types";
+
+option (gogoproto.goproto_getters_all)  = false;
+option (gogoproto.equal_all)            = false;
+
+// Query defines the gRPC querier service.
+service Query {
+  // QueryInterchainAccountFromAddress returns the interchain account for given owner address on a given connection pair
+  rpc InterchainAccountFromAddress(QueryInterchainAccountFromAddressRequest) returns (QueryInterchainAccountFromAddressResponse) {
+    option (google.api.http).get = "/auto-ibc-tx/v1beta1/address-to-ica";
+  };
+  // AutoTxsForOwner returns the auto-executing interchain account messages for given owner
+  rpc AutoTxsForOwner(QueryAutoTxsForOwnerRequest) returns (QueryAutoTxsForOwnerResponse) {
+    option (google.api.http).get = "/auto-ibc-tx/v1beta1/auto-txs";
+  };
+}
+
+// QueryInterchainAccountFromAddressRequest is the request type for the Query/InterchainAccountAddress RPC
+message QueryInterchainAccountFromAddressRequest {
+  string owner                      = 1;
+  string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+}
+
+// QueryInterchainAccountFromAddressResponse the response type for the Query/InterchainAccountAddress RPC
+message QueryInterchainAccountFromAddressResponse {
+  string interchain_account_address = 1 [(gogoproto.moretags) = "yaml:\"interchain_account_address\""];
+}
+
+// QueryAutoTxsForOwnerRequest is the request type for the Query/AutoTxsForOwnerRequest RPC
+message QueryAutoTxsForOwnerRequest {
+  string owner                      = 1;
+  // Pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryAutoTxsForOwnerResponse the response type for the Query/AutoTxsForOwnerRequest RPC
+message QueryAutoTxsForOwnerResponse {
+  repeated AutoTxInfo auto_tx_infos = 1 [(gogoproto.nullable) = false];
+  // Pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

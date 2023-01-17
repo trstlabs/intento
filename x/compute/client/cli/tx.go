@@ -34,11 +34,11 @@ const (
 	flagProposalType           = "type"
 	flagIoMasterKey            = "enclave-key"
 	flagCodeHash               = "code-hash"
-	flagDuration               = "duration"
-	flagInterval               = "interval"
 	flagTitle                  = "contract-title"
 	flagDescription            = "contract-description"
 	flagAutoMsg                = "auto_msg"
+	flagDuration               = "duration"
+	flagInterval               = "interval"
 	flagStartAt                = "start_at"
 
 	// flagAdmin                  = "admin"
