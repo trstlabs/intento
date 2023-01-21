@@ -11,4 +11,5 @@ var (
 	ErrDuplicate              = sdkerrors.Register(ModuleName, 14, "duplicate")
 	ErrInvalid                = sdkerrors.Register(ModuleName, 1, "custom error message")
 	ErrEmpty                  = sdkerrors.Register(ModuleName, 11, "empty")
+	ErrAutoTxContinue         = sdkerrors.Register(ModuleName, 7, "max retries reached or not tx not acknowledged after execution on host chain (yet)")
 )

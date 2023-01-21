@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	ModuleName = "icamsgauth"
+	ModuleName = "autoibctx"
 
 	StoreKey = ModuleName
 
@@ -25,6 +25,7 @@ var (
 	AutoTxQueuePrefix    = []byte{0x03}
 	SequenceKeyPrefix    = []byte{0x04}
 	AutoTxsByOwnerPrefix = []byte{0x05}
+	TmpAutoTxIDLatestTX  = []byte{0x06}
 	KeyLastTxID          = append(SequenceKeyPrefix, []byte("lastTxId")...)
 	KeyLastTxAddrID      = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
 
@@ -46,20 +47,20 @@ func GetAutoTxsByOwnerPrefix(addr sdk.AccAddress) []byte {
 
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 
-// SplitAutoTxQueueKey split the listed key and returns the id and endTime
-func SplitAutoTxQueueKey(key []byte) (autoTxID uint64, endTime time.Time) {
+// SplitAutoTxQueueKey split the listed key and returns the id and execTime
+func SplitAutoTxQueueKey(key []byte) (autoTxID uint64, execTime time.Time) {
 	return splitKeyWithTime(key)
 }
 
-// AutoTxByTimeKey gets the listed item queue key by endTime
-func AutoTxByTimeKey(endTime time.Time) []byte {
-	return append(AutoTxQueuePrefix, sdk.FormatTimeBytes(endTime)...)
+// AutoTxByTimeKey gets the listed item queue key by execTime
+func AutoTxByTimeKey(execTime time.Time) []byte {
+	return append(AutoTxQueuePrefix, sdk.FormatTimeBytes(execTime)...)
 }
 
 // from the key we get the autoTx and end time
-func splitKeyWithTime(key []byte) (autoTxID uint64, endTime time.Time) {
+func splitKeyWithTime(key []byte) (autoTxID uint64, execTime time.Time) {
 
-	endTime, _ = sdk.ParseTimeBytes(key[1 : 1+lenTime])
+	execTime, _ = sdk.ParseTimeBytes(key[1 : 1+lenTime])
 
 	//returns an id from bytes
 	autoTxID = binary.BigEndian.Uint64(key[1+lenTime:])
@@ -68,8 +69,8 @@ func splitKeyWithTime(key []byte) (autoTxID uint64, endTime time.Time) {
 }
 
 // AutoTxQueueKey returns the key with prefix for an autoTx in the Listed Item Queue
-func AutoTxQueueKey(autoTxID uint64, endTime time.Time) []byte {
-	return append(AutoTxByTimeKey(endTime), GetBytesForUint(autoTxID)...)
+func AutoTxQueueKey(autoTxID uint64, execTime time.Time) []byte {
+	return append(AutoTxByTimeKey(execTime), GetBytesForUint(autoTxID)...)
 }
 
 // GetBytesForUint returns the byte representation of the itemID
@@ -86,8 +87,8 @@ func GetIDFromBytes(bz []byte) (id uint64) {
 	return binary.BigEndian.Uint64(bz)
 }
 
-// GetAutoTxByOwnerSecondaryIndexKey returns the key for the second index: `<prefix><ownerAddress length><ownerAddress><autoTxID>`
-func GetAutoTxByOwnerSecondaryIndexKey(bz []byte, autoTxID uint64) []byte {
+// GetAutoTxByOwnerIndexKey returns the id: `<prefix><ownerAddress length><ownerAddress><autoTxID>`
+func GetAutoTxByOwnerIndexKey(bz []byte, autoTxID uint64) []byte {
 	prefixBytes := GetAutoTxsByOwnerPrefix(bz)
 	lenPrefixBytes := len(prefixBytes)
 	r := make([]byte, lenPrefixBytes+8)

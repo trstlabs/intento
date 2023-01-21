@@ -2,7 +2,7 @@
 [global]
 # Specify the verbosity for the relayer logging output. Default: 'info'
 # Valid options are 'error', 'warn', 'info', 'debug', 'trace'.
-log_level = 'info'
+log_level = 'trace'
 
 [mode]
 [mode.clients]

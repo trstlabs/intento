@@ -14,7 +14,6 @@ ENV PATH="${PATH}:/hermes-installation"
 
 # configure hermes
 COPY --chown=hermes-user ["./hermes-config.toml", "/home/hermes-user/.hermes/config.toml"]
-COPY --chown=hermes-user ["./hermes-alternative-config.toml", "/home/hermes-user/.hermes/alternative-config.toml"]
 
 # add keys on both chains
 COPY ["./d.mnemonic", "/home/hermes-user/d.mnemonic"]

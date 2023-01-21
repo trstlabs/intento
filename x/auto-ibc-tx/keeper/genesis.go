@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
@@ -20,7 +18,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState, msgHandler s
 	// NOTE: since the AutoIbcTx module is a module account, the auth module should
 	// take care of importing the amount into the account except for the
 	// genesis block
-	fmt.Print("auto-ibc-tx InitGenesis... \n")
+	//fmt.Print("auto-ibc-tx InitGenesis... \n")
 	if k.GetAutoIbcTxModuleBalance(ctx).IsZero() {
 		err := k.InitializeAutoIbcTxModule(ctx, sdk.NewCoin(types.Denom, sdk.ZeroInt()))
 		if err != nil {
@@ -51,7 +49,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState, msgHandler s
 		return sdkerrors.Wrapf(types.ErrInvalid, "seq %s must be greater %d ", string(types.KeyLastTxID), maxTxID)
 	}
 
-	fmt.Print("setting params...\n")
+	//fmt.Print("setting params...\n")
 	k.SetParams(ctx, types.DefaultParams())
 
 	return nil

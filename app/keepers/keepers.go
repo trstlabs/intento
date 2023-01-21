@@ -52,8 +52,8 @@ import (
 	allockeeper "github.com/trstlabs/trst/x/alloc/keeper"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	icaauth "github.com/trstlabs/trst/x/auto-ibc-tx"
-	icaauthkeeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
-	icaauthtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	autotxkeeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
+	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
 	"github.com/trstlabs/trst/x/compute"
 	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
@@ -87,7 +87,7 @@ type TrstAppKeepers struct {
 	AllocKeeper         *allockeeper.Keeper
 	ICAControllerKeeper *icacontrollerkeeper.Keeper
 	ICAHostKeeper       *icahostkeeper.Keeper
-	ICAAuthKeeper       *icaauthkeeper.Keeper
+	AutoIBCTXKeeper     *autotxkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -95,7 +95,7 @@ type TrstAppKeepers struct {
 
 	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
-	ScopedICAAuthKeeper       capabilitykeeper.ScopedKeeper
+	ScopedAutoIBCTXKeeper     capabilitykeeper.ScopedKeeper
 
 	ScopedComputeKeeper capabilitykeeper.ScopedKeeper
 
@@ -207,7 +207,7 @@ func (ak *TrstAppKeepers) CreateScopedKeepers() {
 	ak.ScopedTransferKeeper = ak.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	ak.ScopedICAControllerKeeper = ak.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	ak.ScopedICAHostKeeper = ak.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	ak.ScopedICAAuthKeeper = ak.CapabilityKeeper.ScopeToModule(icaauthtypes.ModuleName)
+	ak.ScopedAutoIBCTXKeeper = ak.CapabilityKeeper.ScopeToModule(autoibctxtypes.ModuleName)
 	ak.ScopedComputeKeeper = ak.CapabilityKeeper.ScopeToModule(compute.ModuleName)
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
@@ -279,10 +279,10 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	)
 	ak.ICAControllerKeeper = &icaControllerKeeper
 
-	icaAuthKeeper := icaauthkeeper.NewKeeper(appCodec, ak.keys[icaauthtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedICAAuthKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(icaauthtypes.ModuleName))
-	ak.ICAAuthKeeper = &icaAuthKeeper
+	autoIbcTxKeeper := autotxkeeper.NewKeeper(appCodec, ak.keys[autoibctxtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedAutoIBCTXKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(autoibctxtypes.ModuleName))
+	ak.AutoIBCTXKeeper = &autoIbcTxKeeper
 
-	icaAuthIBCModule := icaauth.NewIBCModule(*ak.ICAAuthKeeper)
+	autoIbcTxIBCModule := icaauth.NewIBCModule(*ak.AutoIBCTXKeeper)
 
 	// Create Transfer Keepers
 	transferKeeper := ibctransferkeeper.NewKeeper(
@@ -295,7 +295,7 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	// Create static IBC router, add ibc-tranfer module route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 
-	icaControllerIBCModule := icacontroller.NewIBCModule(*ak.ICAControllerKeeper, icaAuthIBCModule)
+	icaControllerIBCModule := icacontroller.NewIBCModule(*ak.ICAControllerKeeper, autoIbcTxIBCModule)
 	icaHostIBCModule := icahost.NewIBCModule(*ak.ICAHostKeeper)
 
 	computeDir := filepath.Join(homePath, ".compute")
@@ -350,7 +350,7 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 		AddRoute(ibctransfertypes.ModuleName, transfer.NewIBCModule(*ak.TransferKeeper)).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(icaauthtypes.ModuleName, icaControllerIBCModule)
+		AddRoute(autoibctxtypes.ModuleName, icaControllerIBCModule)
 
 	// Setting Router will finalize all routes by sealing router
 	// No more routes can be added
@@ -380,7 +380,7 @@ func (ak *TrstAppKeepers) InitKeys() {
 		icahosttypes.StoreKey,
 		claimtypes.StoreKey,
 		alloctypes.StoreKey,
-		icaauthtypes.StoreKey,
+		autoibctxtypes.StoreKey,
 		icacontrollertypes.StoreKey,
 	)
 
@@ -408,7 +408,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(reg.ModuleName)
 	paramsKeeper.Subspace(claimtypes.ModuleName)
 	paramsKeeper.Subspace(alloctypes.ModuleName)
-	paramsKeeper.Subspace(icaauthtypes.ModuleName)
+	paramsKeeper.Subspace(autoibctxtypes.ModuleName)
 
 	return paramsKeeper
 }

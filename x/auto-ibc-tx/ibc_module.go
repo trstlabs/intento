@@ -1,10 +1,13 @@
 package autoibctx
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
@@ -126,6 +129,8 @@ func (im IBCModule) OnAcknowledgementPacket(
 		// TODO: handle for sdk 0.46.x
 		return nil
 	default:
+
+		//check message responses
 		for _, msgData := range txMsgData.Data {
 			response, err := handleMsgData(ctx, msgData)
 			if err != nil {
@@ -134,6 +139,14 @@ func (im IBCModule) OnAcknowledgementPacket(
 
 			im.keeper.Logger(ctx).Info("message response in ICS-27 packet response", "response", response)
 		}
+
+		//set result in auto-tx history
+		err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort)
+		if err != nil {
+			im.keeper.Logger(ctx).Error("error message acknowledgement", "err", err)
+			return err
+		}
+
 		return nil
 	}
 }
@@ -160,6 +173,8 @@ func (im IBCModule) NegotiateAppVersion(
 }
 
 func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, error) {
+	fmt.Printf("handling data for typeurl: %v and data: %v\n ", msgData.MsgType, msgData.Data)
+
 	switch msgData.MsgType {
 	case sdk.MsgTypeURL(&banktypes.MsgSend{}):
 		msgResponse := &banktypes.MsgSendResponse{}
@@ -168,7 +183,13 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, error) {
 		}
 
 		return msgResponse.String(), nil
+	case sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}):
+		msgResponse := &stakingtypes.MsgDelegateResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal delegate response message: %s", err.Error())
+		}
 
+		return msgResponse.String(), nil
 	// TODO: handle other messages
 
 	default:

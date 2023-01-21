@@ -145,20 +145,19 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID st
 	}
 	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
 	autoTx := types.AutoTxInfo{
-		TxID:                   txID,
-		Address:                autoTxAddress,
-		Owner:                  owner,
-		Data:                   data,
-		Interval:               interval,
-		Duration:               duration,
-		StartTime:              startAt,
-		ExecTime:               execTime,
-		EndTime:                endTime,
-		ChannelCapabilityIndex: 0,
-		PortID:                 portID,
+		TxID:      txID,
+		Address:   autoTxAddress,
+		Owner:     owner,
+		Data:      data,
+		Interval:  interval,
+		Duration:  duration,
+		StartTime: startAt,
+		ExecTime:  execTime,
+		EndTime:   endTime,
+		PortID:    portID,
 	}
 
-	k.SetAutoTxInfo(ctx, txID, &autoTx)
-	k.addToAutoTxOwnerSecondaryIndex(ctx, owner /* startAt, */, txID)
+	k.SetAutoTxInfo(ctx, &autoTx)
+	k.addToAutoTxOwnerIndex(ctx, owner /* startAt, */, txID)
 	return autoTx, nil
 }

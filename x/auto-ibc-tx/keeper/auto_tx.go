@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
@@ -24,58 +24,67 @@ func (k Keeper) GetAutoTxInfo(ctx sdk.Context, autoTxID uint64) types.AutoTxInfo
 	k.cdc.MustUnmarshal(autoTxBz, &autoTx)
 	return autoTx
 }
-func (k Keeper) SetAutoTxInfo(ctx sdk.Context, autoTxID uint64, autoTx *types.AutoTxInfo) {
+func (k Keeper) SetAutoTxInfo(ctx sdk.Context, autoTx *types.AutoTxInfo) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetAutoTxKey(autoTxID), k.cdc.MustMarshal(autoTx))
+	store.Set(types.GetAutoTxKey(autoTx.TxID), k.cdc.MustMarshal(autoTx))
 }
 
 func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
+
 	packetData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
 		Data: autoTxInfo.Data,
 	}
 
-	_, err := k.icaControllerKeeper.SendTx(ctx, &capabilitytypes.Capability{Index: autoTxInfo.ChannelCapabilityIndex}, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, ^uint64(0))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, portID string, data []byte, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) error {
-
-	channelID, found := k.icaControllerKeeper.GetActiveChannelID(ctx, connectionId, portID)
+	channelID, found := k.icaControllerKeeper.GetActiveChannelID(ctx, autoTxInfo.ConnectionID, autoTxInfo.PortID)
 	if !found {
-		return sdkerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s", portID)
+		return sdkerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s", autoTxInfo.PortID)
 	}
 
-	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
+	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(autoTxInfo.PortID, channelID))
 	if !found {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
+
+	//todo add sequence to autotx history for bookkeeping
+	timeoutTimestamp := time.Now().Add(time.Hour).UnixNano()
+	_, err := k.icaControllerKeeper.SendTx(ctx, chanCap, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
+	if err != nil {
+		return err
+	}
+
+	k.setTmpAutoTxIDLatestTX(ctx, autoTxInfo.TxID, autoTxInfo.PortID)
+	return nil
+}
+
+func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, portID string, data []byte, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, retries uint64, dependsOn []uint64) error {
 
 	txID := k.autoIncrementID(ctx, types.KeyLastTxID)
 	autoTxAddress, err := k.createFeeAccount(ctx, txID, owner, feeFunds)
 	if err != nil {
 		return err
 	}
+
 	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
+
 	autoTx := types.AutoTxInfo{
-		TxID:                   txID,
-		Address:                autoTxAddress,
-		Owner:                  owner,
-		Data:                   data,
-		Interval:               interval,
-		Duration:               duration,
-		StartTime:              startAt,
-		ExecTime:               execTime,
-		EndTime:                endTime,
-		ChannelCapabilityIndex: chanCap.Index,
-		PortID:                 portID,
+		TxID:           txID,
+		Address:        autoTxAddress,
+		Owner:          owner,
+		Data:           data,
+		Interval:       interval,
+		Duration:       duration,
+		StartTime:      startAt,
+		ExecTime:       execTime,
+		EndTime:        endTime,
+		PortID:         portID,
+		ConnectionID:   connectionId,
+		MaxRetries:     retries,
+		DependsOnTxIds: dependsOn,
 	}
 
-	k.SetAutoTxInfo(ctx, txID, &autoTx)
-	k.addToAutoTxOwnerSecondaryIndex(ctx, owner /*  startAt, */, txID)
+	k.SetAutoTxInfo(ctx, &autoTx)
+	k.addToAutoTxOwnerIndex(ctx, owner, txID)
 	return nil
 }
 
@@ -208,14 +217,11 @@ func (k Keeper) IterateAutoTxInfos(ctx sdk.Context, cb func(uint64, types.AutoTx
 	}
 }
 
-// addToAutoTxOwnerSecondaryIndex adds element to the index for autoTxs-by-creator queries
-func (k Keeper) addToAutoTxOwnerSecondaryIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, autoTxID uint64) error {
+// addToAutoTxOwnerIndex adds element to the index for autoTxs-by-creator queries
+func (k Keeper) addToAutoTxOwnerIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, autoTxID uint64) error {
 	store := ctx.KVStore(k.storeKey)
-	/* timeBytes, err := startTime.MarshalBinary()
-	if err != nil {
-		return sdkerrors.Wrapf(types.ErrInvalid, "time bytes %s", string(timeBytes))
-	} */
-	store.Set(types.GetAutoTxByOwnerSecondaryIndexKey(ownerAddress, autoTxID), []byte{})
+
+	store.Set(types.GetAutoTxByOwnerIndexKey(ownerAddress, autoTxID), []byte{})
 	return nil
 }
 
@@ -228,4 +234,94 @@ func (k Keeper) IterateAutoTxsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb 
 			return
 		}
 	}
+}
+
+/*
+
+// GetLatestAutoTxByICAPort returns the id for a port
+func (k Keeper) GetLatestAutoTxByICAPort(ctx sdk.Context, port string) (uint64, error) {
+	owner := port[14:]
+	ownerAddress, err := sdk.AccAddressFromBech32(owner)
+	if err != nil {
+		return 0, err
+	}
+	var id []byte
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetAutoTxsByOwnerPrefix(ownerAddress))
+	for iter := prefixStore.ReverseIterator(nil, nil); iter.Valid(); {
+		id = iter.Key()
+		fmt.Printf("GetLatestAutoTxByICAPort: %v", id)
+		//iter.Key(), nil
+		break
+
+	}
+	fmt.Printf("GetLatestAutoTxByICAPort uint: %v", binary.BigEndian.Uint64(id))
+	return binary.BigEndian.Uint64(id), nil
+} */
+
+// SetAutoTxResult sets the result of the last executed TxID set at SendAutoTx. As Interchain accounts IBC channels are ORDERED, this should work perfectly..
+func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string) error {
+	id := k.getTmpAutoTxIDLatestTX(ctx, port)
+	if id == 0 {
+		return nil
+	}
+
+	k.Logger(ctx).Debug("set_result", "auto_tx_id", id)
+
+	txInfo := k.GetAutoTxInfo(ctx, id)
+	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].ExecutedOnHost = true
+	k.SetAutoTxInfo(ctx, &txInfo)
+
+	return nil
+}
+
+/*
+// checks if dependent transactions have executed on the host chain
+func (k Keeper) checkDependencies(ctx sdk.Context, autoTx types.AutoTxInfo) bool {
+	if autoTx.DependsOnTxIds == nil {
+		return false
+	}
+	//get autotx and if last execute was successfull
+	for _, autoTxId := range autoTx.DependsOnTxIds {
+		autoTxInfo := k.GetAutoTxInfo(ctx, autoTxId)
+		if !autoTxInfo.AutoTxHistory[len(autoTxInfo.AutoTxHistory)-1].ExecutedOnHost {
+			return false
+		}
+	}
+	return true
+} */
+
+// checks if dependent transactions have executed on the host chain
+func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx types.AutoTxInfo) bool {
+	//check if dependent tx executions succeeded
+	for _, autoTxId := range autoTx.DependsOnTxIds {
+		autoTxInfo := k.GetAutoTxInfo(ctx, autoTxId)
+		if len(autoTxInfo.AutoTxHistory) == 0 {
+			return true
+		}
+		if !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].ExecutedOnHost {
+			// we could reinsert into the queue if desired
+			// if autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Retries <= autoTx.MaxRetries {
+			// 	k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
+			// }
+			return false
+		}
+	}
+	//check if execution on host didn't turn into an acknoledgement and try this tx again given that retries does not exceed maximum
+	//by inseting it again into the queue it is scheduled for the next block
+	if !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].ExecutedOnHost && autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Retries <= autoTx.MaxRetries {
+		k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
+	}
+	return true
+}
+
+// getTmpAutoTxIDLatestTX for a certain port. As ICA txes are ordered we can temporarely store data
+func (k Keeper) getTmpAutoTxIDLatestTX(ctx sdk.Context, portID string) uint64 {
+	store := ctx.KVStore(k.storeKey)
+	autoTxIDBz := store.Get(append(types.TmpAutoTxIDLatestTX, []byte(portID)...))
+
+	return types.GetIDFromBytes(autoTxIDBz)
+}
+func (k Keeper) setTmpAutoTxIDLatestTX(ctx sdk.Context, autoTxID uint64, portID string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(append(types.TmpAutoTxIDLatestTX, []byte(portID)...), types.GetBytesForUint(autoTxID))
 }

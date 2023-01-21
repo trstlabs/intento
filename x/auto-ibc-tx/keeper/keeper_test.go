@@ -83,12 +83,12 @@ func GetICAKeeper(chain *ibctesting.TestChain) autoibctxkeeper.Keeper {
 		panic("not ica app")
 	}
 
-	return *app.AppKeepers.ICAAuthKeeper
+	return *app.AppKeepers.AutoIBCTXKeeper
 }
 
 func GetICAKeeper2(app *icaapp.TrstApp) autoibctxkeeper.Keeper {
 
-	return *app.AppKeepers.ICAAuthKeeper
+	return *app.AppKeepers.AutoIBCTXKeeper
 }
 
 // TestKeeperTestSuite runs all the tests within this package.

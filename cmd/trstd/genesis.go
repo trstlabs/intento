@@ -76,9 +76,9 @@ Examples include:
 	- Setting module initial params
 	- Setting denom metadata
 Example:
-	starsd prepare-genesis mainnet stargaze-1
+	trstd prepare-genesis mainnet trustlesshub-1
 	- Check input genesis:
-		file is at ~/.starsd/config/genesis.json
+		file is at ~/.trstd/config/genesis.json
 `,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -377,25 +377,30 @@ func MainnetGenesisParams() GenesisParams {
 	*/
 
 	//compute
+	genParams.ComputeParams = compute.DefaultParams()
 	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 366
 	genParams.ComputeParams.MinContractDuration = time.Second * 30
 	genParams.ComputeParams.MinContractInterval = time.Second * 60
 	genParams.ComputeParams.AutoMsgFundsCommission = 2
-	genParams.ComputeParams.AutoMsgConstantFee = 10_000
+	genParams.ComputeParams.AutoMsgConstantFee = 5_000
+	genParams.ComputeParams.AutoMsgFlexFeeMul = 100
 	genParams.ComputeParams.RecurringAutoMsgConstantFee = 10_000
 	genParams.ComputeParams.MinContractDurationForIncentive = time.Hour * 24 * 4
 	genParams.ComputeParams.MinContractBalanceForIncentive = 50_000_000
 	genParams.ComputeParams.MaxContractIncentive = 500_000_000
 
 	//AutoIBCTx
+	genParams.AutoIbcTxParams = autoibctxtypes.DefaultParams()
 	genParams.AutoIbcTxParams.MaxAutoTxDuration = time.Hour * 24 * 366
 	genParams.AutoIbcTxParams.MinAutoTxDuration = time.Second * 30
 	genParams.AutoIbcTxParams.MinAutoTxInterval = time.Second * 60
 	genParams.AutoIbcTxParams.AutoTxFundsCommission = 2
-	genParams.AutoIbcTxParams.AutoTxConstantFee = 10_000
+	genParams.AutoIbcTxParams.AutoTxConstantFee = 5_000
+	genParams.AutoIbcTxParams.AutoTxFlexFeeMul = 100
 	genParams.AutoIbcTxParams.RecurringAutoTxConstantFee = 10_000
 
 	//claim
+	genParams.ClaimParams = claimtypes.DefaultGenesis().Params
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime.Add(time.Hour * 24 * 365) // 1 year (will be changed through gov)
 	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 60                           // 60 days = ~2 months
 	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 120                             // 120 days = ~4 months

@@ -11,7 +11,7 @@ import (
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
 
-func TestDistributeCoins(t *testing.T) {
+func TestDistributeCoinsNotRecurring(t *testing.T) {
 
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
 
@@ -39,7 +39,7 @@ func TestDistributeCoins(t *testing.T) {
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
 	require.Equal(t, sdk.ZeroDec(), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
 
-	_, err := keeper.DistributeCoins(ctx, autoTxInfo, uint64(time.Minute.Milliseconds()), true, true, ctx.BlockHeader().ProposerAddress)
+	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), false, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, autoTxInfo.Address, sdk.DefaultBondDenom))
@@ -48,7 +48,7 @@ func TestDistributeCoins(t *testing.T) {
 	require.Equal(t, sdk.NewDec(time.Minute.Milliseconds()), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
 }
 
-func TestDistributeCoinsEmptyAutoTxAddressBalance(t *testing.T) {
+func TestDistributeCoinsFeesFromUser(t *testing.T) {
 
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
 
@@ -71,7 +71,7 @@ func TestDistributeCoinsEmptyAutoTxAddressBalance(t *testing.T) {
 		TxID: 0, Owner: addr2, Address: addr1, Data: []byte("fake_ica_msg"), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
 	}
 
-	_, err := keeper.DistributeCoins(ctx, autoTxInfo, uint64(time.Minute.Milliseconds()), true, true, ctx.BlockHeader().ProposerAddress)
+	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), true, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, autoTxInfo.Address, sdk.DefaultBondDenom))
@@ -108,14 +108,14 @@ func TestDistributeCoinsEmptyAutoTxBalanceNotLastExec(t *testing.T) {
 		TxID: 0, Owner: addr2, Address: autoTxAddr, Data: []byte("fake_ica_msg"), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
 	}
 
-	_, err := keeper.DistributeCoins(ctx, autoTxInfo, uint64(time.Minute.Milliseconds()), true, false, ctx.BlockHeader().ProposerAddress)
+	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), true, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_940_000)), keeper.bankKeeper.GetBalance(ctx, autoTxInfo.Address, sdk.DefaultBondDenom))
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, addr2, sdk.DefaultBondDenom))
 
 	// check validator current rewards
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
-	require.Equal(t, sdk.NewDec(60_000), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+	require.Equal(t, sdk.NewDec(time.Minute.Milliseconds()), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
 
 }
 
@@ -143,7 +143,7 @@ func TestDistributeCoinsEmptyAutoTxBalanceAndMultipliedFlexFee(t *testing.T) {
 		TxID: 0, Owner: addr2, Address: autoTxAddr, Data: []byte("fake_ica_msg"), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
 	}
 
-	_, err := keeper.DistributeCoins(ctx, autoTxInfo, uint64(time.Minute.Milliseconds()), true, true, ctx.BlockHeader().ProposerAddress)
+	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), false, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 	fmt.Printf("%v\n", keeper.bankKeeper.GetBalance(ctx, autoTxInfo.Address, sdk.DefaultBondDenom))
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, autoTxInfo.Address, sdk.DefaultBondDenom))
@@ -179,7 +179,7 @@ func TestDistributeCoinsEmptyAutoTxBalanceAndDiscountedFlexFee(t *testing.T) {
 		TxID: 0, Owner: addr2, Address: autoTxAddr, Data: []byte("fake_ica_msg"), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
 	}
 
-	_, err := keeper.DistributeCoins(ctx, autoTxInfo, uint64(time.Minute.Milliseconds()), true, true, ctx.BlockHeader().ProposerAddress)
+	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), false, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 	fmt.Printf("%v\n", keeper.bankKeeper.GetBalance(ctx, autoTxInfo.Address, sdk.DefaultBondDenom))
 	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, autoTxInfo.Address, sdk.DefaultBondDenom))
@@ -188,5 +188,40 @@ func TestDistributeCoinsEmptyAutoTxBalanceAndDiscountedFlexFee(t *testing.T) {
 	// check validator current rewards
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
 	require.Equal(t, sdk.NewDec(time.Minute.Milliseconds()*25/100), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+
+}
+
+func TestDistributeCoinsLargeFee(t *testing.T) {
+
+	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
+
+	keeper.SetParams(ctx, types.Params{
+		AutoTxFundsCommission:      2,
+		AutoTxConstantFee:          1_000_000,                 // 1trst
+		AutoTxFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
+		RecurringAutoTxConstantFee: 1_000_000,                 // 1trst
+		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinAutoTxDuration:          time.Second * 40,
+		MinAutoTxInterval:          time.Second * 20,
+	})
+
+	pub1 := secp256k1.GenPrivKey().PubKey()
+	addr1 := sdk.AccAddress(pub1.Address())
+	addr2, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000)))
+	types.Denom = "stake"
+
+	autoTxInfo := types.AutoTxInfo{
+		TxID: 0, Owner: addr2, Address: addr1, Data: []byte("fake_ica_msg"), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+	}
+
+	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Hour.Milliseconds()*24*30), true, ctx.BlockHeader().ProposerAddress)
+	require.Empty(t, err)
+
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, autoTxInfo.Address, sdk.DefaultBondDenom))
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(407000000)), keeper.bankKeeper.GetBalance(ctx, addr2, sdk.DefaultBondDenom))
+
+	// check validator current rewards
+	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
+	require.Equal(t, sdk.NewDec(time.Hour.Milliseconds()*24*30), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
 
 }

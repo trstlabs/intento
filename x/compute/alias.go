@@ -99,6 +99,7 @@ var (
 	ContractKeyPrefix    = types.ContractKeyPrefix
 	ContractStorePrefix  = types.ContractStorePrefix
 	DefaultGenesis       = types.DefaultGenesis
+	DefaultParams        = types.DefaultParams
 )
 
 type (

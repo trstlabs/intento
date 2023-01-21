@@ -231,9 +231,6 @@ func NewTrstApp(
 	// we prefer to be more strict in what arguments the modules expect.
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
-	icaModule := ica.NewAppModule(app.AppKeepers.ICAControllerKeeper, app.AppKeepers.ICAHostKeeper)
-	autoIbcTxModule := autoibctx.NewAppModule(appCodec, *app.AppKeepers.ICAAuthKeeper)
-
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.mm = module.NewManager(
@@ -258,8 +255,8 @@ func NewTrstApp(
 		reg.NewAppModule(*app.AppKeepers.RegKeeper),
 		ibc.NewAppModule(app.AppKeepers.IbcKeeper),
 		transfer.NewAppModule(*app.AppKeepers.TransferKeeper),
-		icaModule,
-		autoIbcTxModule,
+		ica.NewAppModule(app.AppKeepers.ICAControllerKeeper, app.AppKeepers.ICAHostKeeper),
+		autoibctx.NewAppModule(appCodec, *app.AppKeepers.AutoIBCTXKeeper),
 	)
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -274,6 +271,7 @@ func NewTrstApp(
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
+		autoibctxtypes.ModuleName,
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		feegrant.ModuleName,
@@ -285,7 +283,6 @@ func NewTrstApp(
 		authz.ModuleName,
 		paramstypes.ModuleName,
 		icatypes.ModuleName,
-		autoibctxtypes.ModuleName,
 		compute.ModuleName,
 		reg.ModuleName,
 		claimtypes.ModuleName,

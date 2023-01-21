@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,10 +18,8 @@ func (k Keeper) IterateAutoTxQueue(ctx sdk.Context, execTime time.Time, cb func(
 	for ; iterator.Valid(); iterator.Next() {
 
 		autoTxID, _ := types.SplitAutoTxQueueKey(iterator.Key())
-
+		fmt.Printf("autoTx id is:  %v \n", autoTxID)
 		autoTx := k.GetAutoTxInfo(ctx, autoTxID)
-
-		//fmt.Printf("info creator is:  %s \n", autoTx.AutoTxInfo.Creator)
 
 		if cb(autoTx) {
 			break
@@ -54,7 +53,8 @@ func (k Keeper) InsertAutoTxQueue(ctx sdk.Context, autoTxID uint64, execTime tim
 }
 
 // RemoveFromAutoTxQueue removes a autoTx from the Inactive Item Queue
-func (k Keeper) RemoveFromAutoTxQueue(ctx sdk.Context, autoTxID uint64, execTime time.Time) {
+func (k Keeper) RemoveFromAutoTxQueue(ctx sdk.Context, autoTx types.AutoTxInfo) {
+
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.AutoTxQueueKey(autoTxID, execTime))
+	store.Delete(types.AutoTxQueueKey(autoTx.TxID, autoTx.ExecTime))
 }

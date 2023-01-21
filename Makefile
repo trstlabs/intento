@@ -458,6 +458,58 @@ aesm-image:
 	docker build -f deployment/dockerfiles/aesm.Dockerfile -t trstlabs/aesm .
 
 ###############################################################################
+###                     Local Hermes+TransferPort+ICA+AutoIBCT              ###
+###############################################################################
+
+build-hermes:
+	docker build -f deployment/ibc/hermes/hermes.Dockerfile -t hermes:v0.0.0 deployment/ibc/hermes
+
+run-localibc: build-hermes
+	docker compose -f deployment/ibc/hermes/docker-compose.yml up
+
+kill-localibc:
+	docker compose -f deployment/ibc/hermes/docker-compose.yml stop 
+	docker compose -f deployment/ibc/hermes/docker-compose.yml rm -f
+
+###############################################################################
+###                 		    Local Go-Relayer			                ###
+###############################################################################
+
+run-localchains: 
+	@echo "Initializing both blockchains..."
+	docker compose -f deployment/ibc/relayer/docker-compose.yml up
+
+kill-localchains:
+	@echo "Killing both blockchains..."
+	docker compose -f deployment/ibc/relayer/docker-compose.yml stop 
+	docker compose -f deployment/ibc/relayer/docker-compose.yml rm -f
+
+init-golang-rly: run-localchains
+	@echo "Initializing relayer..."
+	./deployment/ibc/relayer/interchain-acc-config/rly-init.sh
+
+init-rly: kill-dev
+	@echo "Initializing relayer..."
+	./deployment/ibc/relayer/interchain-acc-config/rly-init.sh
+
+restart-rly: @echo "Restarting relayer..."
+	rly tx connection trstdev1-trstdev2 --override
+	rly start trstdev1-trstdev2 -p events -b 100 --debug
+
+kill-dev:
+	@echo "Killing trstd and removing previous data"
+	-@rm -rf ./data
+	-@killall trstd 2>/dev/null
+
+start-chains-rly: 
+	@echo "Starting up test network"
+	./deployment/ibc/start.sh
+
+start-golang-rly:
+	./deployment/ibc/relayer/interchain-acc-config/rly-start.sh
+
+
+###############################################################################
 ###                                Swagger                                  ###
 ###############################################################################
 

@@ -168,7 +168,11 @@ jobs:
         run: |
           cp libgo_cosmwasm.so ./go-cosmwasm/api/libgo_cosmwasm.so
           cp librust_cosmwasm_enclave.signed.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so
-      - name: Test x/registration
+      - name: Test x/auto-ibc-tx
+        run: |
+          source "$HOME/.sgxsdk/sgxsdk/environment"
+          go test -v ./x/auto-ibc-tx/...
+     - name: Test x/registration
         run: |
           source "$HOME/.sgxsdk/sgxsdk/environment"
           go test -v ./x/registration/internal/...

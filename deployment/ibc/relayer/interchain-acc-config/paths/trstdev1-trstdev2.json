@@ -1,0 +1,12 @@
+{
+    "src": {
+        "chain-id": "trstdev-1"
+    },
+    "dst": {
+        "chain-id": "trstdev-2"
+    },
+    "src-channel-filter": {
+        "rule": null,
+        "channel-list": []
+    }
+}

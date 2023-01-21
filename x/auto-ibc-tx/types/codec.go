@@ -13,6 +13,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(MsgRegisterAccount{}, "auto-ibc-tx/MsgRegisterAccount", nil)
 	cdc.RegisterConcrete(MsgSubmitTx{}, "auto-ibc-tx/MsgSendTx", nil)
 	cdc.RegisterConcrete(MsgSubmitAutoTx{}, "auto-ibc-tx/MsgSendAutoTx", nil)
+	cdc.RegisterConcrete(MsgRegisterAccountAndSubmitAutoTx{}, "auto-ibc-tx/MsgRegisterAccountAndSubmitAutoTx", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -22,6 +23,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgRegisterAccount{},
 		&MsgSubmitTx{},
 		&MsgSubmitAutoTx{},
+		&MsgRegisterAccountAndSubmitAutoTx{},
 	)
 }
 

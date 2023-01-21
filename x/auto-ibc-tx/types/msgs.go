@@ -14,9 +14,11 @@ var (
 	_ sdk.Msg = &MsgRegisterAccount{}
 	_ sdk.Msg = &MsgSubmitTx{}
 	_ sdk.Msg = &MsgSubmitAutoTx{}
+	_ sdk.Msg = &MsgRegisterAccountAndSubmitAutoTx{}
 
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitTx{}
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitAutoTx{}
+	_ codectypes.UnpackInterfacesMessage = MsgRegisterAccountAndSubmitAutoTx{}
 )
 
 // NewMsgRegisterAccount creates a new MsgRegisterAccount instance
@@ -117,19 +119,21 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 }
 
 // NewMsgSend creates a new MsgSend instance
-func NewMsgSubmitAutoTx(owner string, sdkMsg sdk.Msg, connectionID string, duration string, interval string, start_at uint64) (*MsgSubmitAutoTx, error) {
+func NewMsgSubmitAutoTx(owner string, sdkMsg sdk.Msg, connectionID string, duration string, interval string, startAt uint64, dependsOn []uint64, retries uint64) (*MsgSubmitAutoTx, error) {
 	any, err := PackTxMsgAny(sdkMsg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &MsgSubmitAutoTx{
-		Owner:        owner,
-		ConnectionId: connectionID,
-		Msg:          any,
-		Duration:     duration,
-		Interval:     interval,
-		StartAt:      start_at,
+		Owner:          owner,
+		ConnectionId:   connectionID,
+		Msg:            any,
+		Duration:       duration,
+		Interval:       interval,
+		StartAt:        startAt,
+		DependsOnTxIds: dependsOn,
+		Retries:        retries,
 	}, nil
 }
 
@@ -161,6 +165,64 @@ func (msg MsgSubmitAutoTx) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgSubmitAutoTx) ValidateBasic() error {
+	if len(msg.Msg.GetValue()) == 0 {
+		return fmt.Errorf("can't execute an empty msg")
+	}
+
+	if msg.ConnectionId == "" {
+		return fmt.Errorf("can't execute an empty ConnectionId")
+	}
+
+	return nil
+}
+
+// NewMsgSend creates a new MsgSend instance
+func NewMsgRegisterAccountAndSubmitAutoTx(owner string, sdkMsg sdk.Msg, connectionID string, duration string, interval string, startAt uint64, dependsOn []uint64, retries uint64) (*MsgRegisterAccountAndSubmitAutoTx, error) {
+	any, err := PackTxMsgAny(sdkMsg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &MsgRegisterAccountAndSubmitAutoTx{
+		Owner:          owner,
+		ConnectionId:   connectionID,
+		Msg:            any,
+		Duration:       duration,
+		Interval:       interval,
+		StartAt:        startAt,
+		DependsOnTxIds: dependsOn,
+		Retries:        retries,
+	}, nil
+}
+
+// UnpackInterfaces implements codectypes.UnpackInterfacesMessage
+func (msg MsgRegisterAccountAndSubmitAutoTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var sdkMsg sdk.Msg
+
+	return unpacker.UnpackAny(msg.Msg, &sdkMsg)
+}
+
+// GetTxMsg fetches the cached any message
+func (msg *MsgRegisterAccountAndSubmitAutoTx) GetTxMsg() sdk.Msg {
+	sdkMsg, ok := msg.Msg.GetCachedValue().(sdk.Msg)
+	if !ok {
+		return nil
+	}
+
+	return sdkMsg
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgRegisterAccountAndSubmitAutoTx) GetSigners() []sdk.AccAddress {
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{owner}
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgRegisterAccountAndSubmitAutoTx) ValidateBasic() error {
 	if len(msg.Msg.GetValue()) == 0 {
 		return fmt.Errorf("can't execute an empty msg")
 	}

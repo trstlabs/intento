@@ -451,7 +451,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 
 	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibchost.ModuleName)
 	scopedIBCControllerKeeper := capabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
-	scopedICAAuthKeeper := capabilityKeeper.ScopeToModule(autoibctxtypes.ModuleName)
+	scopedAutoIBCTXKeeper := capabilityKeeper.ScopeToModule(autoibctxtypes.ModuleName)
 
 	ibchostSubSp, _ := paramsKeeper.GetSubspace(ibchost.ModuleName)
 	ibcKeeper := ibckeeper.NewKeeper(
@@ -474,21 +474,21 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 	queryRouter.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	msgRouter := baseapp.NewMsgServiceRouter()
 	msgRouter.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
-	//icaAuthKeeper := icaauthkeeper.NewKeeper(appCodec, ak.keys[icaauthtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedICAAuthKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(icaauthtypes.ModuleName))
+	//AutoIBCTXKeeper := AutoIBCTXKeeper.NewKeeper(appCodec, ak.keys[icaauthtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedAutoIBCTXKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(icaauthtypes.ModuleName))
 	autoIbcTxSubsp, _ := paramsKeeper.GetSubspace(autoibctxtypes.ModuleName)
 
 	keeper := NewKeeper(
 		encodingConfig.Marshaler,
 		keys[autoibctxtypes.StoreKey],
 		icacontrollerKeeper,
-		scopedICAAuthKeeper,
+		scopedAutoIBCTXKeeper,
 		bankKeeper,
 		distKeeper,
 		stakingKeeper,
 		accountKeeper,
 		autoIbcTxSubsp,
 	)
-	//keeper.SetParams(ctx, autoibctxtypes.DefaultParams())
+	keeper.SetParams(ctx, autoibctxtypes.DefaultParams())
 
 	am := module.NewManager( // minimal module set that we use for message/ query tests
 		bank.NewAppModule(encodingConfig.Marshaler, bankKeeper, authKeeper),

@@ -77,7 +77,7 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 
 			res, err := msgSrv.RegisterAccount(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
-			// resp, err := GetICAApp(suite.chainA).AppKeepers.ICAAuthKeeper.InterchainAccountFromAddress(sdk.WrapSDKContext(suite.chainA.GetContext()), &types.QueryInterchainAccountFromAddressRequest{Owner: owner, ConnectionId: path.EndpointA.ConnectionID})
+			// resp, err := GetICAApp(suite.chainA).AppKeepers.AutoIBCTXKeeper.InterchainAccountFromAddress(sdk.WrapSDKContext(suite.chainA.GetContext()), &types.QueryInterchainAccountFromAddressRequest{Owner: owner, ConnectionId: path.EndpointA.ConnectionID})
 			// fmt.Printf("%v", resp)
 
 			if tc.expPass {
