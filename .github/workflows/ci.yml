@@ -172,7 +172,7 @@ jobs:
         run: |
           source "$HOME/.sgxsdk/sgxsdk/environment"
           go test -v ./x/auto-ibc-tx/...
-     - name: Test x/registration
+      - name: Test x/registration
         run: |
           source "$HOME/.sgxsdk/sgxsdk/environment"
           go test -v ./x/registration/internal/...

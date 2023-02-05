@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strconv"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -32,6 +33,35 @@ func (k Keeper) InterchainAccountFromAddress(goCtx context.Context, req *types.Q
 	return types.NewQueryInterchainAccountResponse(ica), nil
 }
 
+// AutoTx implements the Query/AutoTxgRPC method
+func (k Keeper) AutoTx(c context.Context, req *types.QueryAutoTxRequest) (*types.QueryAutoTxResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	txID, err := strconv.ParseUint(req.Id, 10, 64)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	autoTxInfo, err := k.TryGetAutoTxInfo(ctx, txID)
+	if err != nil {
+		return nil, err
+	}
+	msg, err := icatypes.DeserializeCosmosTx(k.cdc, autoTxInfo.Data)
+	if err != nil {
+		return nil, err
+	}
+	autoTxInfo.Data = []byte(msg[0].String())
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryAutoTxResponse{
+		AutoTxInfo: autoTxInfo,
+	}, nil
+}
+
 // AutoTxs implements the Query/AutoTxs gRPC method
 func (k Keeper) AutoTxs(c context.Context, req *types.QueryAutoTxsRequest) (*types.QueryAutoTxsResponse, error) {
 	if req == nil {
@@ -41,6 +71,8 @@ func (k Keeper) AutoTxs(c context.Context, req *types.QueryAutoTxsRequest) (*typ
 	autoTxs := make([]types.AutoTxInfo, 0)
 
 	k.IterateAutoTxInfos(ctx, func(id uint64, info types.AutoTxInfo) bool {
+		msg, _ := icatypes.DeserializeCosmosTx(k.cdc, info.Data)
+		info.Data = []byte(msg[0].String())
 		autoTxs = append(autoTxs, info)
 		return false
 	})
@@ -67,6 +99,11 @@ func (k Keeper) AutoTxsForOwner(c context.Context, req *types.QueryAutoTxsForOwn
 		if accumulate {
 			autoTxID := types.GetIDFromBytes(key /* [types.TimeTimeLen:] */)
 			autoTxInfo := k.GetAutoTxInfo(ctx, autoTxID)
+			msg, err := icatypes.DeserializeCosmosTx(k.cdc, autoTxInfo.Data)
+			if err != nil {
+				return false, err
+			}
+			autoTxInfo.Data = []byte(msg[0].String())
 			autoTxs = append(autoTxs, autoTxInfo)
 
 		}

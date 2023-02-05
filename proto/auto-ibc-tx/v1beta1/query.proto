@@ -19,6 +19,10 @@ service Query {
   rpc InterchainAccountFromAddress(QueryInterchainAccountFromAddressRequest) returns (QueryInterchainAccountFromAddressResponse) {
     option (google.api.http).get = "/auto-ibc-tx/v1beta1/address-to-ica";
   };
+  // AutoTx returns the auto-executing interchain account tx
+  rpc AutoTx(QueryAutoTxRequest) returns (QueryAutoTxResponse) {
+    option (google.api.http).get = "/auto-ibc-tx/v1beta1/auto-tx/{id}";
+  };
   // AutoTxs returns the all auto-executing interchain account messages
   rpc AutoTxs(QueryAutoTxsRequest) returns (QueryAutoTxsResponse) {
     option (google.api.http).get = "/auto-ibc-tx/v1beta1/auto-txs";
@@ -40,6 +44,17 @@ message QueryInterchainAccountFromAddressResponse {
   string interchain_account_address = 1 [(gogoproto.moretags) = "yaml:\"interchain_account_address\""];
 }
 
+
+
+// QueryAutoTxRequest is the request type for the Query/AutoTxRequest RPC
+message QueryAutoTxRequest {
+   string id                      = 1;
+}
+
+// QueryAutoTxResponse the response type for the Query/AutoTxRequest RPC
+message QueryAutoTxResponse {
+  AutoTxInfo auto_tx_info = 1 [(gogoproto.nullable) = false];
+}
 
 
 // QueryAutoTxsRequest is the request type for the Query/AutoTxsRequest RPC

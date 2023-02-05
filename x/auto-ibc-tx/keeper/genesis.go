@@ -59,7 +59,6 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) *types.GenesisState {
 	//var genState types.GenesisState
 	genState := *types.DefaultGenesis()
 
-	//genState.Params = keeper.GetParams(ctx)
 	genState.Params = keeper.GetParams(ctx)
 
 	keeper.IterateAutoTxInfos(ctx, func(txID uint64, info types.AutoTxInfo) bool {

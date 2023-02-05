@@ -26,6 +26,20 @@ func (k Keeper) GetAutoTxInfo(ctx sdk.Context, autoTxID uint64) types.AutoTxInfo
 	k.cdc.MustUnmarshal(autoTxBz, &autoTx)
 	return autoTx
 }
+
+// TryGetAutoTxInfo
+func (k Keeper) TryGetAutoTxInfo(ctx sdk.Context, autoTxID uint64) (types.AutoTxInfo, error) {
+	store := ctx.KVStore(k.storeKey)
+	var autoTx types.AutoTxInfo
+	autoTxBz := store.Get(types.GetAutoTxKey(autoTxID))
+
+	err := k.cdc.Unmarshal(autoTxBz, &autoTx)
+	if err != nil {
+		return types.AutoTxInfo{}, err
+	}
+	return autoTx, nil
+}
+
 func (k Keeper) SetAutoTxInfo(ctx sdk.Context, autoTx *types.AutoTxInfo) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.GetAutoTxKey(autoTx.TxID), k.cdc.MustMarshal(autoTx))

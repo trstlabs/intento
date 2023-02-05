@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
@@ -54,10 +55,12 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 
 	// create 10 auto-txs
 	for i := 0; i < 10; i++ {
-		autoTx, err := CreateFakeAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, []byte("fake_ica_msg"), ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+		autoTx, err := CreateFakeAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
+		msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
+		require.NoError(t, err)
+		autoTx.Data = []byte(msg[0].String())
 		allExpecedAutoTxs = append(allExpecedAutoTxs, autoTx)
-
 	}
 
 	specs := map[string]struct {
@@ -134,10 +137,12 @@ func TestQueryAutoTxsList(t *testing.T) {
 
 	// create 10 auto-txs
 	for i := 0; i < 10; i++ {
-		autoTx, err := CreateFakeAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, []byte("fake_ica_msg"), ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+		autoTx, err := CreateFakeAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
+		msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
+		require.NoError(t, err)
+		autoTx.Data = []byte(msg[0].String())
 		allExpecedAutoTxs = append(allExpecedAutoTxs, autoTx)
-
 	}
 
 	got, err := keepers.AutoIbcTxKeeper.AutoTxs(sdk.WrapSDKContext(ctx), &types.QueryAutoTxsRequest{})
@@ -162,19 +167,21 @@ func NewICA(t *testing.T) (*ibctesting.Coordinator, *ibctesting.Path) {
 	return coordinator, path
 }
 
-func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID string, data []byte, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) (types.AutoTxInfo, error) {
+func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) (types.AutoTxInfo, error) {
 
 	txID := k.autoIncrementID(ctx, types.KeyLastTxID)
 	autoTxAddress, err := k.createFeeAccount(ctx, txID, owner, feeFunds)
 	if err != nil {
 		return types.AutoTxInfo{}, err
 	}
+	fakeMsg := banktypes.NewMsgSend(owner, autoTxAddress, feeFunds)
+	fakeData, _ := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{fakeMsg})
 	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
 	autoTx := types.AutoTxInfo{
 		TxID:       txID,
 		FeeAddress: autoTxAddress.String(),
 		Owner:      owner.String(),
-		Data:       data,
+		Data:       fakeData,
 		Interval:   interval,
 		Duration:   duration,
 		StartTime:  startAt,
