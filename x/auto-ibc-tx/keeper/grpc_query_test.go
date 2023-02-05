@@ -121,6 +121,32 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 	}
 }
 
+func TestQueryAutoTxsList(t *testing.T) {
+	ctx, keepers := CreateTestInput(t, false)
+
+	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
+	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
+
+	creator, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, deposit)
+	var allExpecedAutoTxs []types.AutoTxInfo
+	portID, err := icatypes.NewControllerPortID(creator.String())
+	require.NoError(t, err)
+
+	// create 10 auto-txs
+	for i := 0; i < 10; i++ {
+		autoTx, err := CreateFakeAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, []byte("fake_ica_msg"), ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+		require.NoError(t, err)
+		allExpecedAutoTxs = append(allExpecedAutoTxs, autoTx)
+
+	}
+
+	got, err := keepers.AutoIbcTxKeeper.AutoTxs(sdk.WrapSDKContext(ctx), &types.QueryAutoTxsRequest{})
+	require.NoError(t, err)
+	require.NotNil(t, got)
+	assert.Equal(t, allExpecedAutoTxs, got.AutoTxInfos)
+
+}
+
 func NewICA(t *testing.T) (*ibctesting.Coordinator, *ibctesting.Path) {
 	coordinator := ibctesting.NewCoordinator(t, 2)
 	chainA := coordinator.GetChain(ibctesting.GetChainID(1))
@@ -145,16 +171,16 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID st
 	}
 	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
 	autoTx := types.AutoTxInfo{
-		TxID:      txID,
-		Address:   autoTxAddress,
-		Owner:     owner,
-		Data:      data,
-		Interval:  interval,
-		Duration:  duration,
-		StartTime: startAt,
-		ExecTime:  execTime,
-		EndTime:   endTime,
-		PortID:    portID,
+		TxID:       txID,
+		FeeAddress: autoTxAddress.String(),
+		Owner:      owner.String(),
+		Data:       data,
+		Interval:   interval,
+		Duration:   duration,
+		StartTime:  startAt,
+		ExecTime:   execTime,
+		EndTime:    endTime,
+		PortID:     portID,
 	}
 
 	k.SetAutoTxInfo(ctx, &autoTx)

@@ -36,7 +36,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 			continue
 		}
 
-		logger.Debug("auto_tx", "owner", autoTx.Owner.String())
+		logger.Debug("auto_tx", "owner", autoTx.Owner)
 
 		isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
 
@@ -64,7 +64,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeAutoTx,
-				sdk.NewAttribute(types.AttributeKeyAutoTxOwner, autoTx.Owner.String()),
+				sdk.NewAttribute(types.AttributeKeyAutoTxOwner, autoTx.Owner),
 			),
 		)
 

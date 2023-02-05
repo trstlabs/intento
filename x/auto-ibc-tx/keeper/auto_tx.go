@@ -74,8 +74,8 @@ func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, portID strin
 
 	autoTx := types.AutoTxInfo{
 		TxID:           txID,
-		Address:        autoTxAddress,
-		Owner:          owner,
+		FeeAddress:     autoTxAddress.String(),
+		Owner:          owner.String(),
 		Data:           data,
 		Interval:       interval,
 		Duration:       duration,
@@ -280,11 +280,15 @@ func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, se
 	txInfo := k.GetAutoTxInfo(ctx, id)
 	fmt.Printf("Reward Type: %v\n", rewardType)
 
+	owner, err := sdk.AccAddressFromBech32(txInfo.Owner)
+	if err != nil {
+		return err
+	}
 	//airdrop reward hooks
 	if rewardType == 3 {
-		k.hooks.AfterAutoTxAuthz(ctx, txInfo.Owner)
+		k.hooks.AfterAutoTxAuthz(ctx, owner)
 	} else if rewardType == 1 {
-		k.hooks.AfterAutoTxWasm(ctx, txInfo.Owner)
+		k.hooks.AfterAutoTxWasm(ctx, owner)
 	}
 
 	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].ExecutedOnHost = true

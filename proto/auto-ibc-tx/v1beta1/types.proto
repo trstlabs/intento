@@ -6,7 +6,6 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/trstlabs/trst/x/auto-ibc-tx/types";
@@ -17,8 +16,8 @@ option (gogoproto.equal_all) = true;
 // AutoTxInfo stores the info for the auto executing interchain accounts transaction
 message AutoTxInfo {
     uint64 tx_id = 1 [(gogoproto.customname) = "TxID"];
-    bytes address = 2 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
-    bytes owner = 3 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    string owner = 2;
+    string fee_address = 3;
     bytes data = 4;
      google.protobuf.Duration duration = 5[
     (gogoproto.nullable)    = false,

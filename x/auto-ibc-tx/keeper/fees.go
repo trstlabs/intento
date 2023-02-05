@@ -21,8 +21,16 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	fmt.Printf(" flexFeeMul: %v \n", flexFeeMultiplier)
 	flexFeeMulDec := sdk.NewDecFromInt(flexFee).Mul(flexFeeMultiplier)
 
+	feeAddr, err := sdk.AccAddressFromBech32(autoTxInfo.FeeAddress)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+	owner, err := sdk.AccAddressFromBech32(autoTxInfo.Owner)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
 	//direct a commission of the utrst autoTxInfo balance towards the community pool
-	autoTxInfoBalance := k.bankKeeper.GetAllBalances(ctx, autoTxInfo.Address)
+	autoTxInfoBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
 
 	//depending on if self-execution is recurring the constant fee may differ (gov param)
 	constantFee := sdk.NewInt(p.AutoTxConstantFee)
@@ -44,7 +52,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 		toOwnerCoins, negative := autoTxInfoBalance.Sort().SafeSub(totalAutoTxFees)
 		//fmt.Printf("toOwnerCoins %v\n", toOwnerCoins)
 		if !negative {
-			err := k.bankKeeper.SendCoins(ctx, autoTxInfo.Address, autoTxInfo.Owner, toOwnerCoins)
+			err := k.bankKeeper.SendCoins(ctx, feeAddr, owner, toOwnerCoins)
 			if err != nil {
 				return sdk.Coin{}, err
 			}
@@ -68,19 +76,19 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	k.distrKeeper.AllocateTokensToValidator(ctx, proposerAddr, sdk.NewDecCoinsFromCoins(flexFeeCoin))
 
 	//the autoTxInfo should be funded with the fee. Iif the autoTxInfo is not able to pay, the autoTxInfo owner pays next in line
-	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, autoTxInfo.Address, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, feeAddr, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
 	if err != nil {
-		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, autoTxInfo.Owner, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
+		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, owner, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
 		if err != nil {
 			return sdk.Coin{}, err
 		}
-		err = k.distrKeeper.FundCommunityPool(ctx, communityCoins, autoTxInfo.Owner)
+		err = k.distrKeeper.FundCommunityPool(ctx, communityCoins, owner)
 		if err != nil {
 			return sdk.Coin{}, err
 		}
 
 	} else {
-		err = k.distrKeeper.FundCommunityPool(ctx, communityCoins, autoTxInfo.Address)
+		err = k.distrKeeper.FundCommunityPool(ctx, communityCoins, feeAddr)
 		return sdk.Coin{}, err
 	}
 

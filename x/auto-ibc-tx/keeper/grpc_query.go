@@ -32,6 +32,24 @@ func (k Keeper) InterchainAccountFromAddress(goCtx context.Context, req *types.Q
 	return types.NewQueryInterchainAccountResponse(ica), nil
 }
 
+// AutoTxs implements the Query/AutoTxs gRPC method
+func (k Keeper) AutoTxs(c context.Context, req *types.QueryAutoTxsRequest) (*types.QueryAutoTxsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	autoTxs := make([]types.AutoTxInfo, 0)
+
+	k.IterateAutoTxInfos(ctx, func(id uint64, info types.AutoTxInfo) bool {
+		autoTxs = append(autoTxs, info)
+		return false
+	})
+
+	return &types.QueryAutoTxsResponse{
+		AutoTxInfos: autoTxs,
+	}, nil
+}
+
 // AutoTxsForOwner implements the Query/AutoTxsForOwner gRPC method
 func (k Keeper) AutoTxsForOwner(c context.Context, req *types.QueryAutoTxsForOwnerRequest) (*types.QueryAutoTxsForOwnerResponse, error) {
 	if req == nil {

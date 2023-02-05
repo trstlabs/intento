@@ -7,6 +7,7 @@ import "auto-ibc-tx/v1beta1/types.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
+
 option go_package = "github.com/trstlabs/trst/x/auto-ibc-tx/types";
 
 option (gogoproto.goproto_getters_all)  = false;
@@ -18,9 +19,13 @@ service Query {
   rpc InterchainAccountFromAddress(QueryInterchainAccountFromAddressRequest) returns (QueryInterchainAccountFromAddressResponse) {
     option (google.api.http).get = "/auto-ibc-tx/v1beta1/address-to-ica";
   };
+  // AutoTxs returns the all auto-executing interchain account messages
+  rpc AutoTxs(QueryAutoTxsRequest) returns (QueryAutoTxsResponse) {
+    option (google.api.http).get = "/auto-ibc-tx/v1beta1/auto-txs";
+  };
   // AutoTxsForOwner returns the auto-executing interchain account messages for given owner
   rpc AutoTxsForOwner(QueryAutoTxsForOwnerRequest) returns (QueryAutoTxsForOwnerResponse) {
-    option (google.api.http).get = "/auto-ibc-tx/v1beta1/auto-txs";
+    option (google.api.http).get = "/auto-ibc-tx/v1beta1/auto-txs-for-owner/{owner}";
   };
 }
 
@@ -33,6 +38,18 @@ message QueryInterchainAccountFromAddressRequest {
 // QueryInterchainAccountFromAddressResponse the response type for the Query/InterchainAccountAddress RPC
 message QueryInterchainAccountFromAddressResponse {
   string interchain_account_address = 1 [(gogoproto.moretags) = "yaml:\"interchain_account_address\""];
+}
+
+
+
+// QueryAutoTxsRequest is the request type for the Query/AutoTxsRequest RPC
+message QueryAutoTxsRequest {}
+
+// QueryAutoTxsResponse the response type for the Query/AutoTxsRequest RPC
+message QueryAutoTxsResponse {
+  repeated AutoTxInfo auto_tx_infos = 1 [(gogoproto.nullable) = false];
+  // Pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryAutoTxsForOwnerRequest is the request type for the Query/AutoTxsForOwnerRequest RPC

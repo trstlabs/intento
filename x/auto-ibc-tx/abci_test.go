@@ -166,7 +166,7 @@ func createTestAutoTx(ctx sdk.Context, keepers keeper.TestKeepers) types.AutoTxI
 	endTime := ctx.BlockHeader().Time.Add(time.Hour * 2)
 	autoTx := types.AutoTxInfo{
 		TxID:       123,
-		Owner:      autoTxOwnerAddr,
+		Owner:      autoTxOwnerAddr.String(),
 		ExecTime:   execTime,
 		EndTime:    endTime,
 		Interval:   time.Hour,
@@ -203,7 +203,7 @@ func createTestAutoTxs(ctx sdk.Context, count int, keepers keeper.TestKeepers) [
 		autoTxOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 		autoTxs[i] = types.AutoTxInfo{
 			TxID:      uint64(i),
-			Owner:     autoTxOwnerAddr,
+			Owner:     autoTxOwnerAddr.String(),
 			ExecTime:  execTime,
 			EndTime:   endTime,
 			Interval:  time.Hour,
