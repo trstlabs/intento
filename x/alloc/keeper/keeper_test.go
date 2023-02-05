@@ -51,8 +51,9 @@ func (suite *KeeperTestSuite) TestDistribution() {
 	contributorRewardsReceiver := sdk.AccAddress([]byte("addr1---------------"))
 	params.DistributionProportions.CommunityPool = sdk.NewDecWithPrec(25, 2)
 	params.DistributionProportions.ContributorRewards = sdk.NewDecWithPrec(5, 2)
-	params.DistributionProportions.Staking = sdk.NewDecWithPrec(60, 2)
+	params.DistributionProportions.Staking = sdk.NewDecWithPrec(50, 2)
 	params.DistributionProportions.TrustlessContractIncentives = sdk.NewDecWithPrec(10, 2)
+	params.DistributionProportions.RelayerIncentives = sdk.NewDecWithPrec(10, 2)
 	params.WeightedContributorRewardsReceivers = []types.WeightedAddress{
 		{
 			Address: contributorRewardsReceiver.String(),
@@ -90,9 +91,14 @@ func (suite *KeeperTestSuite) TestDistribution() {
 
 	feeCollector = suite.app.AppKeepers.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 	totalDistr := params.DistributionProportions.TrustlessContractIncentives.
-		Add(params.DistributionProportions.ContributorRewards.Add(params.DistributionProportions.CommunityPool)) // 15%
+		Add(params.DistributionProportions.ContributorRewards.Add(params.DistributionProportions.CommunityPool)).Add(params.DistributionProportions.RelayerIncentives) // 40%
 
-	// remaining going to fee collector should be 100% - 15% = 85%
+	autoIbcTxModule := suite.app.AppKeepers.AccountKeeper.GetModuleAddress("autoibctx")
+	suite.Equal(
+		mintCoin.Amount.ToDec().Mul(params.DistributionProportions.RelayerIncentives).RoundInt().String(),
+		suite.app.AppKeepers.BankKeeper.GetAllBalances(suite.ctx, autoIbcTxModule).AmountOf(denom).String())
+
+	// remaining going to fee collector for staking rewards should be 100% - 40% = 60%
 	suite.Equal(
 		mintCoin.Amount.ToDec().Mul(sdk.NewDecWithPrec(100, 2).Sub(totalDistr)).RoundInt().String(),
 		suite.app.AppKeepers.BankKeeper.GetAllBalances(suite.ctx, feeCollector).AmountOf(denom).String())

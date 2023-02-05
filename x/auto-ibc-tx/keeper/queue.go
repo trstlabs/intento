@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +17,7 @@ func (k Keeper) IterateAutoTxQueue(ctx sdk.Context, execTime time.Time, cb func(
 	for ; iterator.Valid(); iterator.Next() {
 
 		autoTxID, _ := types.SplitAutoTxQueueKey(iterator.Key())
-		fmt.Printf("autoTx id is:  %v \n", autoTxID)
+		//fmt.Printf("autoTx id is:  %v \n", autoTxID)
 		autoTx := k.GetAutoTxInfo(ctx, autoTxID)
 
 		if cb(autoTx) {

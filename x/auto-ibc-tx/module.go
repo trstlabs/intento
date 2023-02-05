@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/client/cli"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
+	"github.com/trstlabs/trst/x/auto-ibc-tx/msg_registry"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
 
@@ -49,6 +50,8 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // RegisterInterfaces registers the module's interface types
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
+	//register custom chain message types so that these can be casted as Any in autotxs
+	msg_registry.RegisterInterfaces(reg)
 }
 
 // DefaultGenesis returns the capability module's default genesis state.

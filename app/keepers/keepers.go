@@ -279,7 +279,7 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	)
 	ak.ICAControllerKeeper = &icaControllerKeeper
 
-	autoIbcTxKeeper := autotxkeeper.NewKeeper(appCodec, ak.keys[autoibctxtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedAutoIBCTXKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(autoibctxtypes.ModuleName))
+	autoIbcTxKeeper := autotxkeeper.NewKeeper(appCodec, ak.keys[autoibctxtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedAutoIBCTXKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(autoibctxtypes.ModuleName), autotxkeeper.NewMultiAutoIbcTxHooks(ak.ClaimKeeper.Hooks()))
 	ak.AutoIBCTXKeeper = &autoIbcTxKeeper
 
 	autoIbcTxIBCModule := icaauth.NewIBCModule(*ak.AutoIBCTXKeeper)

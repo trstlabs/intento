@@ -8,17 +8,12 @@ import (
 	"github.com/trstlabs/trst/x/claim/types"
 )
 
-func (k Keeper) AfterAutoSwap(ctx sdk.Context, recipient sdk.AccAddress) {
-	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionAutoSwap)
-
+func (k Keeper) AfterAutoTxAuthz(ctx sdk.Context, recipient sdk.AccAddress) {
+	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionAutoTxAuthz)
 }
 
-func (k Keeper) AfterRecurringSend(ctx sdk.Context, recipient sdk.AccAddress) {
-	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionRecurringSend)
-	/*if err != nil {
-		fmt.Printf("claim: %v \n", err)
-		//panic(err.Error())
-	}*/
+func (k Keeper) AfterAutoTxWasm(ctx sdk.Context, recipient sdk.AccAddress) {
+	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionAutoTxWasm)
 }
 
 func (k Keeper) AfterGovernanceVoted(ctx sdk.Context, recipient sdk.AccAddress) {
@@ -27,8 +22,16 @@ func (k Keeper) AfterGovernanceVoted(ctx sdk.Context, recipient sdk.AccAddress) 
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	k.ClaimInitialCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
+}
+
+/* func (k Keeper) AfterAutoSwap(ctx sdk.Context, recipient sdk.AccAddress) {
+	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionAutoSwap)
 
 }
+
+func (k Keeper) AfterRecurringSend(ctx sdk.Context, recipient sdk.AccAddress) {
+	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionRecurringSend)
+} */
 
 // ________________________________________________________________________________________
 
@@ -82,18 +85,29 @@ func (h Hooks) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, 
 }
 func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) {}
 
-// Compute hooks
+// AutoIBCTX hooks
+func (h Hooks) AfterAutoTxAuthz(ctx sdk.Context, recipientAddr sdk.AccAddress) {
+	h.k.AfterAutoTxAuthz(ctx, recipientAddr)
+}
+func (h Hooks) AfterAutoTxWasm(ctx sdk.Context, recipientAddr sdk.AccAddress) {
+	h.k.AfterAutoTxWasm(ctx, recipientAddr)
+}
+
 func (h Hooks) AfterAutoSwap(ctx sdk.Context, recipientAddr sdk.AccAddress) {
-	h.k.AfterAutoSwap(ctx, recipientAddr)
+	//h.k.AfterAutoSwap(ctx, recipientAddr)
 }
 func (h Hooks) AfterRecurringSend(ctx sdk.Context, recipientAddr sdk.AccAddress) {
-	h.k.AfterRecurringSend(ctx, recipientAddr)
+	// h.k.AfterRecurringSend(ctx, recipientAddr)
 }
 
 // ________________________________________________________________________________________
 
 // for future reference
 /*
+
+// Compute hooks
+
+
 func (k Keeper) AfterItemTokenized(ctx sdk.Context, creator sdk.AccAddress) {
     _, err := k.ClaimInitialCoinsForAction(ctx, creator, types.ActionItemTokenized)
     if err != nil {

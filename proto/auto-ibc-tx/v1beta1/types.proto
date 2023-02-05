@@ -77,5 +77,20 @@ message Params {
         (gogoproto.stdduration) = true,
         (gogoproto.jsontag)     = "min_auto_tx_interval,omitempty"
   ];
-
+  //relayer rewards in utrst for each message type 0=SDK,1=Wasm, 2=Osmo. Rewards are in utrst and topped up in the module account by alloc module.
+  repeated int64 relayer_rewards = 9;
 }
+
+/*
+//list of relayers to be incentivized for package acknoledgement. 
+message AutoTxIncenviveList {
+  repeated RelayerInfo 
+}
+
+//info of the relayer that receives an incentive for block-based rewards
+message RelayerInfo {
+    bytes relayer = 1 [(gogoproto.casttype) = "github.com/cosmos/cosmos-sdk/types.AccAddress"];
+    //array of 3 for each autotx type (registered sdk message, osmosis, wasm message) with the values being the count of acknoledged messages for a given block
+    repeated int64 incentive_list =2;
+
+*/

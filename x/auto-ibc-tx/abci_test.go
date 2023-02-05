@@ -44,7 +44,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	// information for the next execution
 	ctx3 := createNextExecutionContext(ctx2, autoTx.ExecTime)
-	canExecute := k.AllowedToExecute(ctx, autoTx)
+	canExecute := k.AllowedToExecute(ctx, &autoTx)
 	require.True(t, canExecute)
 
 	queue = k.GetAutoTxsForBlock(ctx3)
@@ -136,7 +136,7 @@ func TestBeginBlockerWithRetry(t *testing.T) {
 	require.Equal(t, ctx3.BlockHeader().Time, queue[0].ExecTime)
 
 	//We have no ExecutedOnHost from ibc_module.go so AllowedToExecute will reinsert the tx and update retry count
-	canExecute := k.AllowedToExecute(ctx, autoTx)
+	canExecute := k.AllowedToExecute(ctx, &autoTx)
 	require.True(t, canExecute)
 	updateAutoTxHistory(&autoTx, types.ErrAutoTxContinue)
 	k.SetAutoTxInfo(ctx, &autoTx)

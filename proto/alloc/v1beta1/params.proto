@@ -27,16 +27,24 @@ message DistributionProportions {
     (gogoproto.moretags) = "yaml:\"trustless_contract_incentives\"",
     (gogoproto.nullable) = false
   ];
- /*  string item_incentives = 3 [
+  string relayer_incentives = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"relayer_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  /*
+   string item_incentives = 3 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"item_incentives\"",
     (gogoproto.nullable) = false
-  ];*/
+  ];
+  */
   string contributor_rewards = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.moretags) = "yaml:\"contributor_rewards\"",
     (gogoproto.nullable) = false
   ];
+
    // community_pool defines the proportion of the minted minted_denom that is
   // to be allocated to the community pool.
   string community_pool = 5 [

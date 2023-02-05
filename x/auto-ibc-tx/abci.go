@@ -16,57 +16,60 @@ import (
 
 // BeginBlocker called every block, processes auto execution
 func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
-
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
+
+	available := k.GetRelayerRewardsAvailability(ctx)
+	if !available {
+		k.SetRelayerRewardsAvailability(ctx, true)
+	}
+
 	logger := k.Logger(ctx)
 
 	autoTxs := k.GetAutoTxsForBlock(ctx)
 	logger.Debug("auto_ibc-txs", "txs", len(autoTxs))
 
 	for _, autoTx := range autoTxs {
-		//check if MaxRetries is reached, retries and check dependent txs
-		if !k.AllowedToExecute(ctx, autoTx) {
+		// check dependent txs
+		if !k.AllowedToExecute(ctx, &autoTx) {
 			updateAutoTxHistory(&autoTx, types.ErrAutoTxContinue)
 			k.SetAutoTxInfo(ctx, &autoTx)
 			continue
 		}
 
-		if err := k.SendAutoTx(ctx, autoTx); err != nil {
-			logger.Error("auto_tx", "err", err)
-			updateAutoTxHistory(&autoTx, err)
+		logger.Debug("auto_tx", "owner", autoTx.Owner.String())
+
+		isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
+
+		flexFee := calculateFlexFee(autoTx, isRecurring)
+		if fee, err := k.DistributeCoins(ctx, autoTx, flexFee, isRecurring, req.Header.ProposerAddress); err != nil {
+			logger.Error("auto_tx", "distribution err", err.Error())
+			addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, fee, err)
+
 		} else {
-			logger.Debug("auto_tx", "owner", autoTx.Owner.String())
-
-			isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
-			flexFee := calculateFlexFee(autoTx, isRecurring)
-			if fee, err := k.DistributeCoins(ctx, autoTx, flexFee, isRecurring, req.Header.ProposerAddress); err != nil {
-
-				logger.Error("auto_tx", "distribution err", err.Error())
-				addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, fee, err)
-
-			} else {
-				addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, fee)
-
-				if isRecurring {
-					fmt.Printf("auto-executed recurring: %v \n", autoTx.TxID)
-					k.RemoveFromAutoTxQueue(ctx, autoTx)
-					// adding next execTime and a new entry into the queue based on interval
-					autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
-					k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
-				} else {
-					k.RemoveFromAutoTxQueue(ctx, autoTx)
-				}
+			if err := k.SendAutoTx(ctx, autoTx); err != nil {
+				logger.Error("auto_tx", "err", err)
+				addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, sdk.Coin{}, err)
 			}
-
-			ctx.EventManager().EmitEvent(
-				sdk.NewEvent(
-					types.EventTypeAutoTx,
-					sdk.NewAttribute(types.AttributeKeyAutoTxOwner, autoTx.Owner.String()),
-				),
-			)
-
-			k.SetAutoTxInfo(ctx, &autoTx)
+			addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, fee)
+			willRecur := autoTx.ExecTime.Before(autoTx.EndTime) && autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime)
+			k.RemoveFromAutoTxQueue(ctx, autoTx)
+			if willRecur {
+				fmt.Printf("auto-tx will recur: %v \n", autoTx.TxID)
+				// adding next execTime and a new entry into the queue based on interval
+				autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
+				k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
+			}
 		}
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeAutoTx,
+				sdk.NewAttribute(types.AttributeKeyAutoTxOwner, autoTx.Owner.String()),
+			),
+		)
+
+		k.SetAutoTxInfo(ctx, &autoTx)
+
 	}
 }
 

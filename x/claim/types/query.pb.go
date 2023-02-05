@@ -334,7 +334,7 @@ func (m *QueryClaimableForActionRequest) GetAction() Action {
 	if m != nil {
 		return m.Action
 	}
-	return ActionAutoSwap
+	return ActionAutoTxAuthz
 }
 
 type QueryClaimableForActionResponse struct {

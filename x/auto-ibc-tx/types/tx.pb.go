@@ -274,7 +274,7 @@ func (m *MsgSubmitAutoTxResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSubmitAutoTxResponse proto.InternalMessageInfo
 
-// MsgRegisterAccountAndSubmitAutoTx creates an intterchain account, submits and schedules an arbitrary transaction msg to be executed by this interchain account
+// MsgRegisterAccountAndSubmitAutoTx creates an interchain account, submits and schedules an arbitrary transaction msg to be executed by this interchain account
 type MsgRegisterAccountAndSubmitAutoTx struct {
 	Owner        string     `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	ConnectionId string     `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`

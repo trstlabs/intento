@@ -52,37 +52,36 @@ Message flow for interchain acccounts
 ```bash
 
 # register account for address after channel is open
-trstd tx autoibctx register --connection-id connection-0 --keyring-backend test -y --from b --fees 600utrst
+ trstd tx autoibctx register --connection-id connection-0 --keyring-backend test -y --from b --fees 600utrst
 
-# (optional) query to check the channel, make sure channel is STATE_OPEN 
-trstd query ibc channel channels
-
-# wait for the interchain account to initialize ~30s-1min and query the ICA address
+# wait for the interchain account to initialize and query the ICA address
 trstd q autoibctx interchainaccounts trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx connection-0
 
 # send balance to ICA on host chain to provide an initial balance to execute transactions (replace node and to_address here)
-trstd  tx bank send trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx trust1mf0jj2t0v4q7qrzyu2xcdyjtelzlcn6zzsygkfltxd60y3gd4eeqnsunfg 10000utrst --node tcp://localhost:36657 --keyring-backend test -y --from b --fees 600utrst --chain-id trstdev-2
+trstd  tx bank send trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn 10000utrst --node tcp://localhost:36657 --keyring-backend test -y --from b --fees 600utrst --chain-id trstdev-2
 
 # replace delegator_address to ICA address and submit tx
 trstd tx autoibctx submit-tx  '{
     "@type": "/cosmos.staking.v1beta1.MsgDelegate",
     "amount": {
-        "amount": "69",
+        "amount": "70",
         "denom": "utrst"
     },
-    "delegator_address": "trust1mf0jj2t0v4q7qrzyu2xcdyjtelzlcn6zzsygkfltxd60y3gd4eeqnsunfg",
+    "delegator_address": "trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn",
     "validator_address": "trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy"
 }' --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
  
-# check balance (should be 1000-69=9931)
-trstd q bank balances trust1mf0jj2t0v4q7qrzyu2xcdyjtelzlcn6zzsygkfltxd60y3gd4eeqnsunfg --node tcp://localhost:36657
+# check balance (should be 1000-70=9931)
+trstd q bank balances trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn --node tcp://localhost:36657
 
 # (optional) check staking delegations
 trstd q staking delegations-to trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy --node tcp://localhost:36657
 
 # (optional) you can query the events related to the packet for packet and message info. The command takes a channel id and packet sequence
-trstd q interchain-accounts host packet-events channel-1 1 --node tcp://localhost:36657 
+trstd q interchain-accounts host packet-events channel-0 1 --node tcp://localhost:36657 
 
+# (debug) query to check the channel, make sure channel is STATE_OPEN 
+trstd query ibc channel channels
 ```
 
 ### AutoTXs with Interchain Accounts
@@ -95,28 +94,28 @@ Message flow is similar to interchain acccounts, but with submit-auto-tx instead
 trstd tx autoibctx submit-auto-tx  '{
     "@type": "/cosmos.staking.v1beta1.MsgDelegate",
     "amount": {
-        "amount": "69",
+        "amount": "70",
         "denom": "utrst"
     },
-    "delegator_address": "trust1mf0jj2t0v4q7qrzyu2xcdyjtelzlcn6zzsygkfltxd60y3gd4eeqnsunfg",
+    "delegator_address": "trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn",
     "validator_address": "trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy"
-}' --duration 40s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
+}' --duration 60s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
 
 trstd tx autoibctx submit-auto-tx  '{
     "@type":"/cosmos.bank.v1beta1.MsgSend",
     "amount": [{
-        "amount": "69",
+        "amount": "70",
         "denom": "utrst"
     }],
-    "from_address": "trust1mf0jj2t0v4q7qrzyu2xcdyjtelzlcn6zzsygkfltxd60y3gd4eeqnsunfg",
+    "from_address": "trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn",
     "to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
-}' --duration 160s --interval 40s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0 --retries 2
+}' --duration 16h --interval 60s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0 --retries 2
 
 # query the autotxs to see if it worked. After a time-based execution the auto-tx history should update
-trstd  q autoibctx list-auto-txs-by-owner trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx
+trstd q autoibctx list-auto-txs-by-owner trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx
 
 # to get more info you can query the events related to the packet for packet and message info
-trstd q interchain-accounts host packet-events channel-1 1 --node tcp://localhost:36657 
+trstd q interchain-accounts host packet-events channel-0 1 --node tcp://localhost:36657 
 
 ```
 
@@ -127,39 +126,39 @@ Message flow is similar to interchain acccounts but with authZ. It is required t
 ```bash
 
 
-trstd tx authz grant trust1mf0jj2t0v4q7qrzyu2xcdyjtelzlcn6zzsygkfltxd60y3gd4eeqnsunfg generic --msg-type /cosmos.staking.v1beta1.MsgDelegate --keyring-backend test -y --from b --fees 600utrst  --node tcp://localhost:36657  --chain-id trstdev-2
+trstd tx authz grant trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn generic --msg-type /cosmos.staking.v1beta1.MsgDelegate --keyring-backend test -y --from b --fees 600utrst  --node tcp://localhost:36657  --chain-id trstdev-2
 
 trstd tx autoibctx submit-auto-tx  '{
     "@type":"/cosmos.authz.v1beta1.MsgExec",
     "msgs": [{
     "@type": "/cosmos.staking.v1beta1.MsgDelegate",
     "amount": {
-        "amount": "69",
+        "amount": "70",
         "denom": "utrst"
     },
     "delegator_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx",
     "validator_address": "trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy"
 }],
-    "grantee": "trust1mf0jj2t0v4q7qrzyu2xcdyjtelzlcn6zzsygkfltxd60y3gd4eeqnsunfg"
-}' --duration 4h --interval 40s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
+    "grantee": "trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn"
+}' --duration 4h --interval 60s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
 
 
 
-trstd tx authz grant trust1mf0jj2t0v4q7qrzyu2xcdyjtelzlcn6zzsygkfltxd60y3gd4eeqnsunfg generic --msg-type /cosmos.staking.v1beta1.MsgUndelegate --keyring-backend test -y --from b --fees 600utrst  --node tcp://localhost:36657  --chain-id trstdev-2
+trstd tx authz grant trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn generic --msg-type /cosmos.staking.v1beta1.MsgUndelegate --keyring-backend test -y --from b --fees 600utrst  --node tcp://localhost:36657  --chain-id trstdev-2
 
 trstd tx autoibctx submit-auto-tx  '{
     "@type":"/cosmos.authz.v1beta1.MsgExec",
     "msgs": [{
    "@type": "/cosmos.staking.v1beta1.MsgUndelegate",
     "amount": {
-        "amount": "69",
+        "amount": "70",
         "denom": "utrst"
     },
     "delegator_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx",
     "validator_address": "trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy"
 }],
-    "grantee": "trust1mf0jj2t0v4q7qrzyu2xcdyjtelzlcn6zzsygkfltxd60y3gd4eeqnsunfg"
-}' --duration 4h --interval 40s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
+    "grantee": "trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn"
+}' --duration 4h --interval 60s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
 
 ```
 
@@ -185,3 +184,14 @@ trstd tx autoibctx submit-auto-tx  '{
 
 # docker exec hermes-relayer-1 hermes tx packet-recv --dst-chain trstdev-2 --src-chain trstdev-1 --src-port icacontroller-trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx --src-channel channel-0
 ```
+
+
+# AutoIbcTx Behavior
+
+If host chain is offline then AutoTxs will resume afterwards. 
+
+If packet times out when there are no relayers, channel will be closed and AutoTx will stop.
+
+We check validate basic in SubmitAutoTx. This is because if message returns an error at basic validation on the host chain, the package won't be included. If a next package arrives before timeout, the package sequence will mismatch. The ICA channel will timeout. A new Interchain account address must be generated to resume using ICA.
+
+If a message retuns an error after basic validation then there won't be an acknoledgement. EecutedOnHost will be false for that given execution entry. The ICA remains active and AutoTx resumes.

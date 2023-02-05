@@ -300,9 +300,7 @@ func (d MessageDispatcher) DispatchSubmessages(ctx sdk.Context, contractAddr sdk
 
 		if isReplyEncrypted(msg, reply) {
 			var dataWithInternalReplyInfo wasmTypes.DataWithInternalReplyInfo
-			fmt.Printf("Reply res %v \n", reply.Result)
-			fmt.Printf("Reply res string %s\n", string(reply.Result.Ok.Data))
-			fmt.Printf("Reply data %v \n", data[0])
+
 			if reply.Result.Ok != nil {
 				err = json.Unmarshal(reply.Result.Ok.Data, &dataWithInternalReplyInfo)
 				if err != nil {

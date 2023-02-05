@@ -995,46 +995,6 @@ func TestCallbackExecuteParamError(t *testing.T) {
 
 }
 
-/*
-	func TestQueryInputStructureError(t *testing.T) {
-		ctx, keeper, codeID, _, walletA, privKeyA, walletB, _ := setupTest(t, "./testdata/erc20.wasm", sdk.NewCoins())
-
-		// init
-		initMsg := fmt.Sprintf(`{"decimals":10,"initial_balances":[{"address":"%s","amount":"108"},{"address":"%s","amount":"53"}],"name":"ReuvenPersonalRustCoin","symbol":"RPRC"}`, walletA.String(), walletB.String())
-
-		_, _, contractAddress, _, err := initHelper(t, keeper, ctx, codeID, walletA, privKeyA, initMsg, true, false, defaultGasForTests)
-		require.Empty(t, err)
-		// require.Empty(t, initEvents)
-
-		_, qErr := queryHelper(t, keeper, ctx, contractAddress, `{"balance":{"invalidkey":"invalidval"}}`, true, false, defaultGasForTests)
-
-		require.NotNil(t, qErr.ParseErr)
-		require.Contains(t, qErr.ParseErr.Msg, "missing field `address`")
-	}
-*/
-func TestInitNotEncryptedInputError(t *testing.T) {
-
-	ctx, keeper, codeID, _, walletA, privKey, _, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins())
-
-	//ctx = sdk.NewContext(
-	//	ctx.MultiStore(),
-	//	ctx.BlockHeader(),
-	//	ctx.IsCheckTx(),
-	//	log.NewNopLogger(),
-	//).WithGasMeter(sdk.NewGasMeter(defaultGas))
-
-	initMsg := []byte(`{"nop":{}`)
-
-	ctx = PrepareInitSignedTx(t, keeper, ctx, walletA, privKey, initMsg, codeID, nil)
-
-	// init
-	_, _, err := keeper.Instantiate(ctx, codeID, walletA /* nil, */, initMsg, nil, "some label", sdk.NewCoins(sdk.NewInt64Coin("denom", 0)), nil, 0, 0, time.Now(), nil)
-	require.Error(t, err)
-
-	require.Contains(t, err.Error(), "failed to decrypt data")
-
-}
-
 func TestExecuteNotEncryptedInputError(t *testing.T) {
 
 	ctx, keeper, codeID, _, walletA, privKeyA, _, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins())
@@ -1229,7 +1189,7 @@ func TestExecCallbackBadParam(t *testing.T) {
 	_, _, data, _, _, execErr := execHelper(t, keeper, ctx, contractAddress, walletA, privKeyA, fmt.Sprintf(`{"callback_contract_bad_param":{"contract_addr":"%s"}}`, contractAddress), true, defaultGasForTests, 0)
 
 	require.NotNil(t, execErr.GenericErr)
-	require.Contains(t, execErr.GenericErr.Msg, "v1_sanity_contract::msg::ExecuteMsg")
+	require.Contains(t, execErr.GenericErr.Msg, "test_contract::msg::ExecuteMsg")
 	require.Contains(t, execErr.GenericErr.Msg, "unknown variant `callback_contract_bad_param`")
 
 	// require.Empty(t, execEvents)
@@ -1237,7 +1197,6 @@ func TestExecCallbackBadParam(t *testing.T) {
 
 }
 
-/*
 func TestInitCallbackBadParam(t *testing.T) {
 
 	ctx, keeper, codeID, _, walletA, privKeyA, _, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins())
@@ -1252,11 +1211,11 @@ func TestInitCallbackBadParam(t *testing.T) {
 	// require.Empty(t, initEvents)
 
 	require.NotNil(t, initErr.GenericErr)
-	require.Contains(t, initErr.GenericErr.Msg, "v1_sanity_contract::msg::InstantiateMsg")
+	require.Contains(t, initErr.GenericErr.Msg, "test_contract::msg::InstantiateMsg")
 	require.Contains(t, initErr.GenericErr.Msg, "unknown variant `callback_contract_bad_param`")
 
 }
-*/
+
 func TestState(t *testing.T) {
 
 	ctx, keeper, codeID, _, walletA, privKeyA, _, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins())
@@ -1503,7 +1462,7 @@ func TestExternalQueryBadSenderABI(t *testing.T) {
 	_, _, _, _, _, err = execHelper(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"send_external_query_bad_abi":{"to":"%s","code_hash":"%s"}}`, addr.String(), codeHash), true, defaultGasForTests, 0)
 
 	require.NotNil(t, err.GenericErr)
-	require.Contains(t, err.GenericErr.Msg, "v1_sanity_contract::msg::QueryMsg")
+	require.Contains(t, err.GenericErr.Msg, "test_contract::msg::QueryMsg")
 	require.Contains(t, err.GenericErr.Msg, "Invalid type")
 
 }
@@ -2295,65 +2254,64 @@ func TestCodeHashInitCallQuery(t *testing.T) {
 }
 
 func TestCodeHashExecCallInit(t *testing.T) {
-	t.Run("TestCodeHashExecCallInit", func(t *testing.T) {
-		ctx, keeper, codeID, codeHash, walletA, privKeyA, _, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins())
+	ctx, keeper, codeID, codeHash, walletA, privKeyA, _, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins())
 
-		_, _, addr, _, err := initHelper(t, keeper, ctx, codeID, walletA, privKeyA, `{"nop":{}}`, true, defaultGasForTests)
+	_, _, addr, _, err := initHelper(t, keeper, ctx, codeID, walletA, privKeyA, `{"nop":{}}`, true, defaultGasForTests)
+	require.Empty(t, err)
+
+	t.Run("GoodCodeHash", func(t *testing.T) {
+		_, _, _, events, _, err := execHelperImpl(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"call_to_init":{"code_id":%d,"code_hash":"%s","msg":"%s","contract_id":"1"}}`, codeID, codeHash, `{\"nop\":{}}`), true, defaultGasForTests, 0, 2)
+
 		require.Empty(t, err)
 
-		t.Run("GoodCodeHash", func(t *testing.T) {
-			_, _, _, events, _, err := execHelperImpl(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"call_to_init":{"code_id":%d,"code_hash":"%s","msg":"%s","contract_id":"1"}}`, codeID, codeHash, `{\"nop\":{}}`), true, defaultGasForTests, 0, 2)
-
-			require.Empty(t, err)
-
-			require.ElementsMatch(t, ContractEvent{
-				{Key: "contract_address", Value: []byte(addr.String()), AccAddr: "", Encrypted: false, PubDb: false},
-				{Key: "a", Value: []byte("a"), AccAddr: "", Encrypted: false, PubDb: false},
-			}, events[0])
-			require.ElementsMatch(t, ContractEvent{
-				{Key: "contract_address", Value: events[1][0].Value},
-				{Key: "init", Value: []byte("🌈"), AccAddr: "", Encrypted: false, PubDb: false},
-			}, events[1])
-		})
-		t.Run("EmptyCodeHash", func(t *testing.T) {
-			_, _, _, _, _, err := execHelperImpl(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"call_to_init":{"code_id":%d,"code_hash":"","msg":"%s","contract_id":"2"}}`, codeID, `{\"nop\":{}}`), false, defaultGasForTests, 0, 2)
-
-			require.NotEmpty(t, err)
-			require.Contains(t,
-				err.Error(),
-				"failed to validate transaction",
-			)
-		})
-		t.Run("TooBigCodeHash", func(t *testing.T) {
-			_, _, _, _, _, err := execHelperImpl(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"call_to_init":{"code_id":%d,"code_hash":"%sa","msg":"%s","contract_id":"3"}}`, codeID, codeHash, `{\"nop\":{}}`), true, defaultGasForTests, 0, 2)
-
-			require.NotEmpty(t, err)
-
-			require.Contains(t,
-				err.Error(),
-				"v1_sanity_contract::msg::InstantiateMsg: Expected to parse either a `true`, `false`, or a `null`.",
-			)
-
-		})
-		t.Run("TooSmallCodeHash", func(t *testing.T) {
-			_, _, _, _, _, err := execHelperImpl(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"call_to_init":{"code_id":%d,"code_hash":"%s","msg":"%s","contract_id":"4"}}`, codeID, codeHash[0:63], `{\"nop\":{}}`), false, defaultGasForTests, 0, 2)
-
-			require.NotEmpty(t, err)
-			require.Contains(t,
-				err.Error(),
-				"failed to validate transaction",
-			)
-		})
-		t.Run("IncorrectCodeHash", func(t *testing.T) {
-			_, _, _, _, _, err := execHelperImpl(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"call_to_init":{"code_id":%d,"code_hash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","msg":"%s","contract_id":"5"}}`, codeID, `{\"nop\":{}}`), false, defaultGasForTests, 0, 2)
-
-			require.NotEmpty(t, err)
-			require.Contains(t,
-				err.Error(),
-				"failed to validate transaction",
-			)
-		})
+		require.ElementsMatch(t, ContractEvent{
+			{Key: "a", Value: []byte("a"), AccAddr: "", Encrypted: false, PubDb: false},
+			{Key: "contract_address", Value: []byte(addr.String()), AccAddr: "", Encrypted: false, PubDb: false},
+		}, events[0])
+		require.ElementsMatch(t, ContractEvent{
+			{Key: "init", Value: []byte("🌈"), AccAddr: "", Encrypted: false, PubDb: false},
+			{Key: "contract_address", Value: events[1][0].Value},
+		}, events[1])
 	})
+	t.Run("EmptyCodeHash", func(t *testing.T) {
+		_, _, _, _, _, err := execHelperImpl(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"call_to_init":{"code_id":%d,"code_hash":"","msg":"%s","contract_id":"2"}}`, codeID, `{\"nop\":{}}`), false, defaultGasForTests, 0, 2)
+
+		require.NotEmpty(t, err)
+		require.Contains(t,
+			err.Error(),
+			"failed to validate transaction",
+		)
+	})
+	t.Run("TooBigCodeHash", func(t *testing.T) {
+		_, _, _, _, _, err := execHelperImpl(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"call_to_init":{"code_id":%d,"code_hash":"%sa","msg":"%s","contract_id":"3"}}`, codeID, codeHash, `{\"nop\":{}}`), true, defaultGasForTests, 0, 2)
+
+		require.NotEmpty(t, err)
+
+		require.Contains(t,
+			err.Error(),
+			"test_contract::msg::InstantiateMsg: Expected to parse either a `true`, `false`, or a `null`.",
+		)
+
+	})
+	t.Run("TooSmallCodeHash", func(t *testing.T) {
+		_, _, _, _, _, err := execHelperImpl(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"call_to_init":{"code_id":%d,"code_hash":"%s","msg":"%s","contract_id":"4"}}`, codeID, codeHash[0:63], `{\"nop\":{}}`), false, defaultGasForTests, 0, 2)
+
+		require.NotEmpty(t, err)
+		require.Contains(t,
+			err.Error(),
+			"failed to validate transaction",
+		)
+	})
+	t.Run("IncorrectCodeHash", func(t *testing.T) {
+		_, _, _, _, _, err := execHelperImpl(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"call_to_init":{"code_id":%d,"code_hash":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","msg":"%s","contract_id":"5"}}`, codeID, `{\"nop\":{}}`), false, defaultGasForTests, 0, 2)
+
+		require.NotEmpty(t, err)
+		require.Contains(t,
+			err.Error(),
+			"failed to validate transaction",
+		)
+	})
+
 }
 
 func TestContractIdCollisionWhenMultipleCallbacksToInitFromSameContract(t *testing.T) {
@@ -2410,7 +2368,7 @@ func TestCodeHashExecCallExec(t *testing.T) {
 
 			require.Contains(t,
 				err.Error(),
-				"v1_sanity_contract::msg::ExecuteMsg: Expected to parse either a `true`, `false`, or a `null`.",
+				"test_contract::msg::ExecuteMsg: Expected to parse either a `true`, `false`, or a `null`.",
 			)
 
 		})
@@ -2743,7 +2701,7 @@ func TestSecp256k1Verify(t *testing.T) {
 
 func TestBenchmarkSecp256k1VerifyAPI(t *testing.T) {
 	t.SkipNow()
-	// Assaf: I wrote the benchmark like this because the init functions take testing.T
+	// utrst: I wrote the benchmark like this because the init functions take testing.T
 	// and not testing.B and I just wanted to quickly get a feel for the perf improvements
 
 	ctx, keeper, codeID, _, walletA, privKeyA, _, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins())
@@ -2760,7 +2718,7 @@ func TestBenchmarkSecp256k1VerifyAPI(t *testing.T) {
 
 func TestBenchmarkSecp256k1VerifyCrate(t *testing.T) {
 	t.SkipNow()
-	// Assaf: I wrote the benchmark like this because the init functions take testing.T
+	// utrst: I wrote the benchmark like this because the init functions take testing.T
 	// and not testing.B and I just wanted to quickly get a feel for the perf improvements
 
 	ctx, keeper, codeID, _, walletA, privKeyA, _, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins())
@@ -3097,7 +3055,7 @@ func TestEd25519Sign(t *testing.T) {
 
 func TestBenchmarkEd25519BatchVerifyAPI(t *testing.T) {
 	t.SkipNow()
-	// Assaf: I wrote the benchmark like this because the init functions take testing.T
+	// utrst: I wrote the benchmark like this because the init functions take testing.T
 	// and not testing.B and I just wanted to quickly get a feel for the performance improvements
 
 	ctx, keeper, codeID, _, walletA, privKeyA, _, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins())
@@ -3259,50 +3217,50 @@ func TestBankMsgSend(t *testing.T) {
 					description:    "regular",
 					input:          `[{"amount":"2","denom":"denom"}]`,
 					isSuccuss:      true,
-					balancesBefore: "5000assaf,200000denom 5000assaf,5000denom",
-					balancesAfter:  "4998assaf,199998denom 5000assaf,5002denom",
+					balancesBefore: "5000utrst,200000denom 5000utrst,5000denom",
+					balancesAfter:  "4998utrst,199998denom 5000utrst,5002denom",
 				},
 				{
 					description:    "multi-coin",
-					input:          `[{"amount":"1","denom":"assaf"},{"amount":"1","denom":"denom"}]`,
+					input:          `[{"amount":"1","denom":"utrst"},{"amount":"1","denom":"denom"}]`,
 					isSuccuss:      true,
-					balancesBefore: "5000assaf,200000denom 5000assaf,5000denom",
-					balancesAfter:  "4998assaf,199998denom 5001assaf,5001denom",
+					balancesBefore: "5000utrst,200000denom 5000utrst,5000denom",
+					balancesAfter:  "4998utrst,199998denom 5001utrst,5001denom",
 				},
 				/*	{
 							description:    "zero",
 							input:          `[{"amount":"0","denom":"denom"}]`,
 							isSuccuss:      false,
 							errorMsg:       "encrypted: submessages: 0denom: invalid coins",
-							balancesBefore: "5000assaf,200000denom 5000assaf,5000denom",
-							balancesAfter:  "4998assaf,199998denom 5000assaf,5000denom",
+							balancesBefore: "5000utrst,200000denom 5000utrst,5000denom",
+							balancesAfter:  "4998utrst,199998denom 5000utrst,5000denom",
 						},
 						{
 							description:    "insufficient funds",
 							input:          `[{"amount":"3","denom":"denom"}]`,
 							isSuccuss:      false,
-							balancesBefore: "5000assaf,200000denom 5000assaf,5000denom",
-							balancesAfter:  "4998assaf,199998denom 5000assaf,5000denom",
+							balancesBefore: "5000utrst,200000denom 5000utrst,5000denom",
+							balancesAfter:  "4998utrst,199998denom 5000utrst,5000denom",
 							errorMsg:       "encrypted: submessages: 2denom is smaller than 3denom: insufficient funds",
 						},
 					{
 							description:    "non-existing denom",
 							input:          `[{"amount":"1","denom":"blabla"}]`,
 							isSuccuss:      false,
-							balancesBefore: "5000assaf,200000denom 5000assaf,5000denom",
-							balancesAfter:  "4998assaf,199998denom 5000assaf,5000denom",
+							balancesBefore: "5000utrst,200000denom 5000utrst,5000denom",
+							balancesAfter:  "4998utrst,199998denom 5000utrst,5000denom",
 							errorMsg:       "encrypted: submessages: 0blabla is smaller than 1blabla: insufficient funds",
 						},*/
 				{
 					description:    "none",
 					input:          `[]`,
 					isSuccuss:      true,
-					balancesBefore: "5000assaf,200000denom 5000assaf,5000denom",
-					balancesAfter:  "4998assaf,199998denom 5000assaf,5000denom",
+					balancesBefore: "5000utrst,200000denom 5000utrst,5000denom",
+					balancesAfter:  "4998utrst,199998denom 5000utrst,5000denom",
 				},
 			} {
 				t.Run(test.description, func(t *testing.T) {
-					ctx, keeper, codeID, _, walletA, privKeyA, walletB, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins(sdk.NewInt64Coin("assaf", 5000)))
+					ctx, keeper, codeID, _, walletA, privKeyA, walletB, _ := setupTest(t, testContract.WasmFilePath, sdk.NewCoins(sdk.NewInt64Coin("utrst", 5000)))
 
 					walletACoinsBefore := keeper.bankKeeper.GetAllBalances(ctx, walletA)
 					walletBCoinsBefore := keeper.bankKeeper.GetAllBalances(ctx, walletB)
@@ -3313,9 +3271,9 @@ func TestBankMsgSend(t *testing.T) {
 					var contractAddress sdk.AccAddress
 
 					if callType == "init" {
-						_, _, _, _, _ = initHelperImpl(t, keeper, ctx, codeID, walletA, privKeyA, fmt.Sprintf(`{"bank_msg_send":{"to":"%s","amount":%s}}`, walletB.String(), test.input), false, defaultGasForTests, -1, sdk.NewCoins(sdk.NewInt64Coin("denom", 2), sdk.NewInt64Coin("assaf", 2)))
+						_, _, _, _, _ = initHelperImpl(t, keeper, ctx, codeID, walletA, privKeyA, fmt.Sprintf(`{"bank_msg_send":{"to":"%s","amount":%s}}`, walletB.String(), test.input), false, defaultGasForTests, -1, sdk.NewCoins(sdk.NewInt64Coin("denom", 2), sdk.NewInt64Coin("utrst", 2)))
 					} else {
-						_, _, contractAddress, _, _ = initHelperImpl(t, keeper, ctx, codeID, walletA, privKeyA, `{"nop":{}}`, false, defaultGasForTests, -1, sdk.NewCoins(sdk.NewInt64Coin("denom", 2), sdk.NewInt64Coin("assaf", 2)))
+						_, _, contractAddress, _, _ = initHelperImpl(t, keeper, ctx, codeID, walletA, privKeyA, `{"nop":{}}`, false, defaultGasForTests, -1, sdk.NewCoins(sdk.NewInt64Coin("denom", 2), sdk.NewInt64Coin("utrst", 2)))
 
 						_, _, _, _, _, err = execHelper(t, keeper, ctx, contractAddress, walletA, privKeyA, fmt.Sprintf(`{"bank_msg_send":{"to":"%s","amount":%s}}`, walletB.String(), test.input), false, math.MaxUint64, 0)
 					}

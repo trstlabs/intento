@@ -22,8 +22,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState, msgHandler s
 	if k.GetAutoIbcTxModuleBalance(ctx).IsZero() {
 		err := k.InitializeAutoIbcTxModule(ctx, sdk.NewCoin(types.Denom, sdk.ZeroInt()))
 		if err != nil {
-			//commented out for tests
-			panic(err)
+			return err
 		}
 	}
 	var maxTxID uint64

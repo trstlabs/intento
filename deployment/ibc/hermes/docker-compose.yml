@@ -14,7 +14,7 @@ services:
       - "5000:5000"
     environment:
       CHAINID: "trstdev-1"
-      LOG_LEVEL: "debug"
+      LOG_LEVEL: "error"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:26657"]
       interval: 40s

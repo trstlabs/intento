@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -46,14 +48,17 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	//todo add sequence to autotx history for bookkeeping
 	timeoutTimestamp := time.Now().Add(time.Hour).UnixNano()
-	_, err := k.icaControllerKeeper.SendTx(ctx, chanCap, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
+	//to make sure timeout does not happen soon
+	if autoTxInfo.Interval > time.Minute*2 {
+		timeoutTimestamp = timeoutTimestamp + autoTxInfo.Interval.Nanoseconds() - time.Minute.Nanoseconds()
+	}
+	sequence, err := k.icaControllerKeeper.SendTx(ctx, chanCap, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
 	if err != nil {
 		return err
 	}
 
-	k.setTmpAutoTxIDLatestTX(ctx, autoTxInfo.TxID, autoTxInfo.PortID)
+	k.setTmpAutoTxID(ctx, autoTxInfo.TxID, autoTxInfo.PortID, sequence)
 	return nil
 }
 
@@ -85,6 +90,11 @@ func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, portID strin
 
 	k.SetAutoTxInfo(ctx, &autoTx)
 	k.addToAutoTxOwnerIndex(ctx, owner, txID)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAutoTx,
+			sdk.NewAttribute(types.AttributeKeyAutoTxID, strconv.FormatUint(txID, 10)),
+		))
 	return nil
 }
 
@@ -259,39 +269,32 @@ func (k Keeper) GetLatestAutoTxByICAPort(ctx sdk.Context, port string) (uint64, 
 } */
 
 // SetAutoTxResult sets the result of the last executed TxID set at SendAutoTx. As Interchain accounts IBC channels are ORDERED, this should work perfectly..
-func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string) error {
-	id := k.getTmpAutoTxIDLatestTX(ctx, port)
-	if id == 0 {
+func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, seq uint64) error {
+	id := k.getTmpAutoTxID(ctx, port, seq)
+	if id <= 0 {
 		return nil
 	}
 
-	k.Logger(ctx).Debug("set_result", "auto_tx_id", id)
+	k.Logger(ctx).Debug("auto_tx_result", "id", id)
 
 	txInfo := k.GetAutoTxInfo(ctx, id)
+	fmt.Printf("Reward Type: %v\n", rewardType)
+
+	//airdrop reward hooks
+	if rewardType == 3 {
+		k.hooks.AfterAutoTxAuthz(ctx, txInfo.Owner)
+	} else if rewardType == 1 {
+		k.hooks.AfterAutoTxWasm(ctx, txInfo.Owner)
+	}
+
 	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].ExecutedOnHost = true
 	k.SetAutoTxInfo(ctx, &txInfo)
 
 	return nil
 }
 
-/*
 // checks if dependent transactions have executed on the host chain
-func (k Keeper) checkDependencies(ctx sdk.Context, autoTx types.AutoTxInfo) bool {
-	if autoTx.DependsOnTxIds == nil {
-		return false
-	}
-	//get autotx and if last execute was successfull
-	for _, autoTxId := range autoTx.DependsOnTxIds {
-		autoTxInfo := k.GetAutoTxInfo(ctx, autoTxId)
-		if !autoTxInfo.AutoTxHistory[len(autoTxInfo.AutoTxHistory)-1].ExecutedOnHost {
-			return false
-		}
-	}
-	return true
-} */
-
-// checks if dependent transactions have executed on the host chain
-func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx types.AutoTxInfo) bool {
+func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx *types.AutoTxInfo) bool {
 	//check if dependent tx executions succeeded
 	for _, autoTxId := range autoTx.DependsOnTxIds {
 		autoTxInfo := k.GetAutoTxInfo(ctx, autoTxId)
@@ -299,29 +302,24 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx types.AutoTxInfo) bool 
 			return true
 		}
 		if !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].ExecutedOnHost {
-			// we could reinsert into the queue if desired
+			// we could reinsert the entry into the queue if desired
 			// if autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Retries <= autoTx.MaxRetries {
 			// 	k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
 			// }
 			return false
 		}
 	}
-	//check if execution on host didn't turn into an acknoledgement and try this tx again given that retries does not exceed maximum
-	//by inseting it again into the queue it is scheduled for the next block
-	if !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].ExecutedOnHost && autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Retries <= autoTx.MaxRetries {
-		k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
-	}
 	return true
 }
 
-// getTmpAutoTxIDLatestTX for a certain port. As ICA txes are ordered we can temporarely store data
-func (k Keeper) getTmpAutoTxIDLatestTX(ctx sdk.Context, portID string) uint64 {
+// getTmpAutoTxID for a certain port and sequence
+func (k Keeper) getTmpAutoTxID(ctx sdk.Context, portID string, seq uint64) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	autoTxIDBz := store.Get(append(types.TmpAutoTxIDLatestTX, []byte(portID)...))
+	autoTxIDBz := store.Get(append((append(types.TmpAutoTxIDLatestTX, []byte(portID)...)), types.GetBytesForUint(seq)...))
 
 	return types.GetIDFromBytes(autoTxIDBz)
 }
-func (k Keeper) setTmpAutoTxIDLatestTX(ctx sdk.Context, autoTxID uint64, portID string) {
+func (k Keeper) setTmpAutoTxID(ctx sdk.Context, autoTxID uint64, portID string, seq uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(append(types.TmpAutoTxIDLatestTX, []byte(portID)...), types.GetBytesForUint(autoTxID))
+	store.Set(append((append(types.TmpAutoTxIDLatestTX, []byte(portID)...)), types.GetBytesForUint(seq)...), types.GetBytesForUint(autoTxID))
 }

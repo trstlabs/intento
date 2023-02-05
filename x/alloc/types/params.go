@@ -34,8 +34,9 @@ func NewParams(
 func DefaultParams() Params {
 	return Params{
 		DistributionProportions: DistributionProportions{
-			Staking:                     sdk.MustNewDecFromStr("0.60"),
+			Staking:                     sdk.MustNewDecFromStr("0.50"),
 			TrustlessContractIncentives: sdk.MustNewDecFromStr("0.10"),
+			RelayerIncentives:           sdk.MustNewDecFromStr("0.10"),
 			ContributorRewards:          sdk.MustNewDecFromStr("0.05"),
 			CommunityPool:               sdk.MustNewDecFromStr("0.25"),
 		},

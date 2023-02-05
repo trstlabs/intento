@@ -17,6 +17,8 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
+	claimkeeper "github.com/trstlabs/trst/x/claim/keeper"
+	claimtypes "github.com/trstlabs/trst/x/claim/types"
 
 	//icacontroller "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/keeper"
@@ -112,7 +114,7 @@ func setupTest(t *testing.T, additionalCoinsInWallets sdk.Coins) (sdk.Context, K
 		AutoTxFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
 		RecurringAutoTxConstantFee: 1_000_000,                 // 1trst
 		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinAutoTxDuration:          time.Second * 40,
+		MinAutoTxDuration:          time.Second * 60,
 		MinAutoTxInterval:          time.Second * 20,
 	})
 	return ctx, keeper, walletA, privKeyA, walletB, privKeyB
@@ -470,6 +472,15 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingConfig.Marshaler, keys[authtypes.StoreKey], accSubsp, authtypes.ProtoBaseAccount, maccPerms)
 
+	claimKeeper := claimkeeper.NewKeeper(
+		encodingConfig.Marshaler,
+		keys[claimtypes.StoreKey],
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		distKeeper,
+	)
+
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	queryRouter.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	msgRouter := baseapp.NewMsgServiceRouter()
@@ -487,6 +498,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		stakingKeeper,
 		accountKeeper,
 		autoIbcTxSubsp,
+		NewMultiAutoIbcTxHooks(claimKeeper.Hooks()),
 	)
 	keeper.SetParams(ctx, autoibctxtypes.DefaultParams())
 

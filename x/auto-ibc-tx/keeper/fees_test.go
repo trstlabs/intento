@@ -23,7 +23,7 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 		AutoTxFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
 		RecurringAutoTxConstantFee: 1_000_000,                 // 1trst
 		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinAutoTxDuration:          time.Second * 40,
+		MinAutoTxDuration:          time.Second * 60,
 		MinAutoTxInterval:          time.Second * 20,
 	})
 	fmt.Printf("%v", ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter()))
@@ -58,7 +58,7 @@ func TestDistributeCoinsFeesFromUser(t *testing.T) {
 		AutoTxFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
 		RecurringAutoTxConstantFee: 1_000_000,                 // 1trst
 		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinAutoTxDuration:          time.Second * 40,
+		MinAutoTxDuration:          time.Second * 60,
 		MinAutoTxInterval:          time.Second * 20,
 	})
 
@@ -94,8 +94,8 @@ func TestDistributeCoinsEmptyAutoTxBalanceNotLastExec(t *testing.T) {
 		AutoTxFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
 		RecurringAutoTxConstantFee: 1_000_000,                 // 1trst
 		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinAutoTxDuration:          time.Second * 40,
-		MinAutoTxInterval:          time.Second * 20,
+		MinAutoTxDuration:          time.Second * 60,
+		MinAutoTxInterval:          time.Second * 60,
 	})
 
 	//pub1 := secp256k1.GenPrivKey().PubKey()
@@ -129,7 +129,7 @@ func TestDistributeCoinsEmptyAutoTxBalanceAndMultipliedFlexFee(t *testing.T) {
 		AutoTxFlexFeeMul:           250,                       // 250/100 = 2.5x
 		RecurringAutoTxConstantFee: 1_000_000,                 // 1trst
 		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinAutoTxDuration:          time.Second * 40,
+		MinAutoTxDuration:          time.Second * 60,
 		MinAutoTxInterval:          time.Second * 20,
 	})
 
@@ -165,7 +165,7 @@ func TestDistributeCoinsEmptyAutoTxBalanceAndDiscountedFlexFee(t *testing.T) {
 		AutoTxFlexFeeMul:           25,                        // 250/100 = 0.25x
 		RecurringAutoTxConstantFee: 1_000_000,                 // 1trst
 		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinAutoTxDuration:          time.Second * 40,
+		MinAutoTxDuration:          time.Second * 60,
 		MinAutoTxInterval:          time.Second * 20,
 	})
 
@@ -201,7 +201,7 @@ func TestDistributeCoinsLargeFee(t *testing.T) {
 		AutoTxFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
 		RecurringAutoTxConstantFee: 1_000_000,                 // 1trst
 		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinAutoTxDuration:          time.Second * 40,
+		MinAutoTxDuration:          time.Second * 60,
 		MinAutoTxInterval:          time.Second * 20,
 	})
 

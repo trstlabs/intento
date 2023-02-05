@@ -484,13 +484,13 @@ kill-localchains:
 	docker compose -f deployment/ibc/relayer/docker-compose.yml stop 
 	docker compose -f deployment/ibc/relayer/docker-compose.yml rm -f
 
-init-golang-rly: run-localchains
+init-golang-rly:
 	@echo "Initializing relayer..."
 	./deployment/ibc/relayer/interchain-acc-config/rly-init.sh
 
-init-rly: kill-dev
+create-rly: kill-dev
 	@echo "Initializing relayer..."
-	./deployment/ibc/relayer/interchain-acc-config/rly-init.sh
+	./deployment/ibc/relayer/init.sh
 
 restart-rly: @echo "Restarting relayer..."
 	rly tx connection trstdev1-trstdev2 --override

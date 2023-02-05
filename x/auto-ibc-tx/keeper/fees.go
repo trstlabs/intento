@@ -12,7 +12,7 @@ import (
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
 
-// DistributeCoins distributes AutoTx fees and handles remaining autoTx fee balance
+// DistributeCoins distributes AutoTx fees and handles remaining autoTx fee balance after last execution
 func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, flexFee sdk.Int, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
 
 	p := k.GetParams(ctx)

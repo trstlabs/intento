@@ -5,9 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
@@ -129,25 +127,31 @@ func (im IBCModule) OnAcknowledgementPacket(
 		// TODO: handle for sdk 0.46.x
 		return nil
 	default:
-
+		rewardType := -1
 		//check message responses
 		for _, msgData := range txMsgData.Data {
-			response, err := handleMsgData(ctx, msgData)
+			response, reward, err := handleMsgData(ctx, msgData)
 			if err != nil {
+				fmt.Printf("handleMsgData err: %v\n", err)
 				return err
 			}
-
+			if reward >= 0 {
+				im.keeper.HandleRelayerReward(ctx, relayer, reward)
+				//rewardType is also used for airdrop reward
+				rewardType = reward
+			}
 			im.keeper.Logger(ctx).Info("message response in ICS-27 packet response", "response", response)
-		}
 
+		}
 		//set result in auto-tx history
-		err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort)
+		err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, rewardType, packet.Sequence)
 		if err != nil {
 			im.keeper.Logger(ctx).Error("error message acknowledgement", "err", err)
 			return err
 		}
 
 		return nil
+
 	}
 }
 
@@ -157,6 +161,7 @@ func (im IBCModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
+	fmt.Println("TIMED OUT, FAILED ATTEMPT")
 	return nil
 }
 
@@ -172,6 +177,7 @@ func (im IBCModule) NegotiateAppVersion(
 	return "", nil
 }
 
+/*
 func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, error) {
 	fmt.Printf("handling data for typeurl: %v and data: %v\n ", msgData.MsgType, msgData.Data)
 
@@ -181,15 +187,51 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, error) {
 		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
 			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal send response message: %s", err.Error())
 		}
-
 		return msgResponse.String(), nil
 	case sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}):
 		msgResponse := &stakingtypes.MsgDelegateResponse{}
 		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
 			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal delegate response message: %s", err.Error())
 		}
-
 		return msgResponse.String(), nil
+	case sdk.MsgTypeURL(&msg_registry.MsgExecuteContract{}):
+		msgResponse := &msg_registry.MsgExecuteContractResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal msg execute response message: %s", err.Error())
+		}
+		return msgResponse.String(), nil
+	case sdk.MsgTypeURL(&msg_registry.MsgInstantiateContract{}):
+		msgResponse := &msg_registry.MsgInstantiateContractResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal msg execute response message: %s", err.Error())
+		}
+		return msgResponse.String(), nil
+	case sdk.MsgTypeURL(&msg_registry.MsgSwapExactAmountIn{}):
+		msgResponse := &msg_registry.MsgSwapExactAmountInResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal MsgSwapExactAmountIn response message: %s", err.Error())
+		}
+		return msgResponse.String(), nil
+	case sdk.MsgTypeURL(&msg_registry.MsgSwapExactAmountOut{}):
+		msgResponse := &msg_registry.MsgSwapExactAmountOutResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal MsgSwapExactAmountOut response message: %s", err.Error())
+		}
+		return msgResponse.String(), nil
+	case sdk.MsgTypeURL(&msg_registry.MsgJoinPool{}):
+		msgResponse := &msg_registry.MsgJoinPoolResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal MsgExitPool response message: %s", err.Error())
+		}
+		return msgResponse.String(), nil
+	case sdk.MsgTypeURL(&msg_registry.MsgExitPool{}):
+		msgResponse := &msg_registry.MsgExitPoolResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal MsgExitPool response message: %s", err.Error())
+		}
+		return msgResponse.String(), nil
+
+
 	// TODO: handle other messages
 
 	default:
@@ -197,3 +239,4 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, error) {
 		return "", nil
 	}
 }
+*/

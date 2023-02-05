@@ -108,7 +108,7 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 	s.Contains(err.Error(), "address does not have claim record")
 
 	// claim
-	s.app.AppKeepers.ClaimKeeper.AfterAutoSwap(s.ctx, addr1)
+	s.app.AppKeepers.ClaimKeeper.AfterAutoTxAuthz(s.ctx, addr1)
 
 	record, err := s.app.AppKeepers.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Require().NoError(err)
@@ -145,7 +145,7 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 	s.Require().Equal([]bool{true, false, false, false}, record.Status[0].VestingPeriodCompleted)
 
 	// claim 2
-	s.app.AppKeepers.ClaimKeeper.AfterRecurringSend(s.ctx, addr1)
+	s.app.AppKeepers.ClaimKeeper.AfterAutoTxWasm(s.ctx, addr1)
 
 	record, err = s.app.AppKeepers.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Require().NoError(err)
@@ -183,8 +183,8 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 	s.Require().Equal([]bool{true, false, false, false}, record.Status[1].VestingPeriodCompleted)
 
 	// claim second address
-	s.app.AppKeepers.ClaimKeeper.AfterAutoSwap(s.ctx, addr2)
-	s.app.AppKeepers.ClaimKeeper.AfterRecurringSend(s.ctx, addr2)
+	s.app.AppKeepers.ClaimKeeper.AfterAutoTxAuthz(s.ctx, addr2)
+	s.app.AppKeepers.ClaimKeeper.AfterAutoTxWasm(s.ctx, addr2)
 	record, err = s.app.AppKeepers.ClaimKeeper.GetClaimRecord(s.ctx, addr2)
 	s.Require().NoError(err)
 	s.Require().True(record.Status[0].ActionCompleted)
@@ -297,7 +297,7 @@ func (s *KeeperTestSuite) TestHookBeforeAirdropStart() {
 
 	s.app.AppKeepers.ClaimKeeper.AfterDelegationModified(s.ctx.WithBlockTime(airdropStartTime), addr1, sdk.ValAddress(addr1))
 	balances = s.app.AppKeepers.BankKeeper.GetAllBalances(s.ctx, addr1)
-	fmt.Printf("%v \n", balances)
+	//fmt.Printf("%v \n", balances)
 	// Now, it is the time for air drop, so claim module should send the balances to the user after delegate.
 	s.Equal(claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(int64(len(types.Action_value)))).Quo(sdk.NewInt(5)), balances.AmountOf(sdk.DefaultBondDenom))
 }

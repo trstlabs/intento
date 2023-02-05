@@ -21,26 +21,23 @@ const (
 	// Default max period for a AutoTx that is self-executing
 	DefaultMaxAutoTxDuration time.Duration = time.Hour * 24 * 366 * 10 // a little over 10 years
 	// MinAutoTxDuration sets the minimum duration for a self-executing AutoTx
-	DefaultMinAutoTxDuration time.Duration = time.Second * 40
+	DefaultMinAutoTxDuration time.Duration = time.Second * 60
 	// MinAutoTxInterval sets the minimum interval self-execution
-	DefaultMinAutoTxInterval time.Duration = time.Second * 20
+	DefaultMinAutoTxInterval time.Duration = time.Second * 60
+	// DefaultRelayerReward for a given autotx type
+	DefaultRelayerReward int64 = 10_000
 )
 
 // Parameter store key
 var (
-	KeyAutoTxFundsCommission = []byte("AutoTxFundsCommission")
-
-	KeyAutoTxFlexFeeMul = []byte("AutoTxFlexFeeMul")
-
-	KeyAutoTxConstantFee = []byte("AutoTxConstantFee")
-
+	KeyAutoTxFundsCommission      = []byte("AutoTxFundsCommission")
+	KeyAutoTxFlexFeeMul           = []byte("AutoTxFlexFeeMul")
+	KeyAutoTxConstantFee          = []byte("AutoTxConstantFee")
 	KeyRecurringAutoTxConstantFee = []byte("RecurringAutoTxConstantFee")
-
-	KeyMaxAutoTxDuration = []byte("MaxAutoTxDuration")
-
-	KeyMinAutoTxDuration = []byte("MinAutoTxDuration")
-
-	KeyMinAutoTxInterval = []byte("MinAutoTxInterval")
+	KeyMaxAutoTxDuration          = []byte("MaxAutoTxDuration")
+	KeyMinAutoTxDuration          = []byte("MinAutoTxDuration")
+	KeyMinAutoTxInterval          = []byte("MinAutoTxInterval")
+	KeyRelayerRewards             = []byte("RelayerRewards")
 )
 
 // ParamSetPairs - Implements params.ParamSet
@@ -54,19 +51,20 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxAutoTxDuration, &p.MaxAutoTxDuration, validateAutoTxDuration),
 		paramtypes.NewParamSetPair(KeyMinAutoTxDuration, &p.MinAutoTxDuration, validateAutoTxDuration),
 		paramtypes.NewParamSetPair(KeyMinAutoTxInterval, &p.MinAutoTxInterval, validateAutoTxInterval),
+		paramtypes.NewParamSetPair(KeyRelayerRewards, &p.RelayerRewards, validateRelayerRewards),
 	}
 }
 
 // NewParams creates a new Params object
-func NewParams(autoTxFundsCommission int64, AutoTxConstantFee int64, AutoTxFlexFeeMul int64, RecurringAutoTxConstantFee int64, maxAutoTxDuration time.Duration, minAutoTxDuration time.Duration, minAutoTxInterval time.Duration) Params {
+func NewParams(autoTxFundsCommission int64, AutoTxConstantFee int64, AutoTxFlexFeeMul int64, RecurringAutoTxConstantFee int64, maxAutoTxDuration time.Duration, minAutoTxDuration time.Duration, minAutoTxInterval time.Duration, relayerRewards []int64) Params {
 	//fmt.Printf("default auto-ibc-tx params. %v \n", autoTxFundsCommission)
-	return Params{AutoTxFundsCommission: autoTxFundsCommission, AutoTxConstantFee: AutoTxConstantFee, AutoTxFlexFeeMul: AutoTxFlexFeeMul, RecurringAutoTxConstantFee: RecurringAutoTxConstantFee, MaxAutoTxDuration: maxAutoTxDuration, MinAutoTxDuration: minAutoTxDuration, MinAutoTxInterval: minAutoTxInterval}
+	return Params{AutoTxFundsCommission: autoTxFundsCommission, AutoTxConstantFee: AutoTxConstantFee, AutoTxFlexFeeMul: AutoTxFlexFeeMul, RecurringAutoTxConstantFee: RecurringAutoTxConstantFee, MaxAutoTxDuration: maxAutoTxDuration, MinAutoTxDuration: minAutoTxDuration, MinAutoTxInterval: minAutoTxInterval, RelayerRewards: relayerRewards}
 }
 
 // DefaultParams default parameters for auto-ibc-tx
 func DefaultParams() Params {
 	//fmt.Print("default auto-ibc-tx params..")
-	return NewParams(DefaultAutoTxFundsCommission, DefaultAutoTxConstantFee, DefaultAutoTxFlexFeeMul, DefaultRecurringAutoTxConstantFee, DefaultMaxAutoTxDuration, DefaultMinAutoTxDuration, DefaultMinAutoTxInterval)
+	return NewParams(DefaultAutoTxFundsCommission, DefaultAutoTxConstantFee, DefaultAutoTxFlexFeeMul, DefaultRecurringAutoTxConstantFee, DefaultMaxAutoTxDuration, DefaultMinAutoTxDuration, DefaultMinAutoTxInterval, []int64{DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward})
 }
 
 // Validate validates all params
@@ -90,6 +88,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateRecurringAutoTxConstantFee(p.RecurringAutoTxConstantFee); err != nil {
+		return err
+	}
+	if err := validateRelayerRewards(p.RelayerRewards); err != nil {
 		return err
 	}
 
@@ -175,6 +176,25 @@ func validateRecurringAutoTxConstantFee(i interface{}) error {
 	}
 	if v < 0 {
 		return fmt.Errorf("RecurringAutoTxConstantFee rate must be 0 or higher:%d", v)
+	}
+
+	return nil
+}
+
+func validateRelayerRewards(i interface{}) error {
+	list, ok := i.([]int64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+	for i, v := range list {
+		// 10_000_000 = 10TRST we do not want to go this high
+		if v > 10_000_000 {
+			return fmt.Errorf("RelayerReward for message must be lower: %T", i)
+		}
+
+		if i > 3 {
+			return fmt.Errorf("only 4 types of incentives supported for now: %d", v)
+		}
 	}
 
 	return nil

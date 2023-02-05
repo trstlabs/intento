@@ -97,7 +97,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, contract types.ContractInfoWith
 	totalExecCost := communityCoins.Add(sdk.NewCoin(types.Denom, flexFee.TruncateInt()))
 
 	if contract.Duration >= p.MinContractDurationForIncentive {
-		fmt.Printf("contr bal%s\n", contractBalance)
+		//fmt.Printf("contr bal%s\n", contractBalance)
 		incentive, err := k.ContractIncentive(ctx, totalExecCost[0], contract.Address)
 		if err != nil {
 			return sdk.Coin{}, err

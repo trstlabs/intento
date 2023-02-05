@@ -20,16 +20,22 @@ const (
 
 // nolint
 var (
-	AutoTxKeyPrefix      = []byte{0x01}
-	AutoTxStorePrefix    = []byte{0x02}
-	AutoTxQueuePrefix    = []byte{0x03}
-	SequenceKeyPrefix    = []byte{0x04}
-	AutoTxsByOwnerPrefix = []byte{0x05}
-	TmpAutoTxIDLatestTX  = []byte{0x06}
-	KeyLastTxID          = append(SequenceKeyPrefix, []byte("lastTxId")...)
-	KeyLastTxAddrID      = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
+	AutoTxKeyPrefix               = []byte{0x01}
+	AutoTxStorePrefix             = []byte{0x02}
+	AutoTxQueuePrefix             = []byte{0x03}
+	SequenceKeyPrefix             = []byte{0x04}
+	AutoTxsByOwnerPrefix          = []byte{0x05}
+	TmpAutoTxIDLatestTX           = []byte{0x06}
+	KeyRelayerRewardsAvailability = []byte{0x07}
+	KeyLastTxID                   = append(SequenceKeyPrefix, []byte("lastTxId")...)
+	KeyLastTxAddrID               = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
+)
 
-/* 	TimeTimeLen          = 24 */
+var (
+	KeyAutoTxIncentiveForSDKTx   = 0
+	KeyAutoTxIncentiveForWasmTx  = 1
+	KeyAutoTxIncentiveForOsmoTx  = 2
+	KeyAutoTxIncentiveForAuthzTx = 3
 )
 
 // GetAutoTxKey returns the key for the auto interchain tx

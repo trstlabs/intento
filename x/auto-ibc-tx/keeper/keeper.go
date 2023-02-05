@@ -32,9 +32,10 @@ type Keeper struct {
 	stakingKeeper       stakingkeeper.Keeper
 	accountKeeper       authkeeper.AccountKeeper
 	paramSpace          paramtypes.Subspace
+	hooks               AutoIbcTxHooks
 }
 
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, iaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, paramSpace paramtypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, iaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, paramSpace paramtypes.Subspace, ah AutoIbcTxHooks) Keeper {
 	moduleAccAddr := accountKeeper.GetModuleAddress(types.ModuleName)
 	// ensure module account is set
 	if moduleAccAddr == nil {
@@ -56,6 +57,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, iaKeeper icacontrollerkee
 		distrKeeper:         distrKeeper,
 		stakingKeeper:       stakingKeeper,
 		accountKeeper:       accountKeeper,
+		hooks:               ah,
 	}
 }
 

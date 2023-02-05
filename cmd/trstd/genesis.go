@@ -317,12 +317,12 @@ func MainnetGenesisParams() GenesisParams {
 	// alloc
 	genParams.AllocParams = alloctypes.DefaultParams()
 	genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
-		Staking:                     sdk.MustNewDecFromStr("0.60"), // 25%
-		CommunityPool:               sdk.MustNewDecFromStr("0.25"), // 5%
-		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.10"), // 45%
-		//ItemIncentives:              sdk.MustNewDecFromStr("0.05"), // 45%
-		ContributorRewards: sdk.MustNewDecFromStr("0.05"), // 25%
-
+		Staking:                     sdk.MustNewDecFromStr("0.55"),
+		CommunityPool:               sdk.MustNewDecFromStr("0.35"),
+		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.00"),
+		RelayerIncentives:           sdk.MustNewDecFromStr("0.10"),
+		//ItemIncentives:              sdk.MustNewDecFromStr("0.05"),
+		ContributorRewards: sdk.MustNewDecFromStr("0.00"),
 	}
 	//genParams.AllocParams.WeightedContributorRewardsReceivers = []alloctypes.WeightedAddress{}
 
@@ -330,9 +330,10 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams = minttypes.DefaultParams()
 	genParams.MintParams.MintDenom = BaseCoinUnit
 	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(0, 6, 0)
-	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(250_000_000_000_000)
-	genParams.MintParams.ReductionFactor = sdk.NewDec(2).QuoInt64(3)
-	genParams.MintParams.BlocksPerYear = uint64(45082286)
+	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(150_000_000_000_000)
+	genParams.MintParams.ReductionFactor = sdk.NewDec(3).QuoInt64(4)
+	//31,536,000 seconds a year/5seconds=6307200 blocks
+	genParams.MintParams.BlocksPerYear = uint64(6307200)
 	// staking
 	genParams.StakingParams = stakingtypes.DefaultParams()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 21 //3 weeks
@@ -392,12 +393,13 @@ func MainnetGenesisParams() GenesisParams {
 	//AutoIBCTx
 	genParams.AutoIbcTxParams = autoibctxtypes.DefaultParams()
 	genParams.AutoIbcTxParams.MaxAutoTxDuration = time.Hour * 24 * 366
-	genParams.AutoIbcTxParams.MinAutoTxDuration = time.Second * 30
+	genParams.AutoIbcTxParams.MinAutoTxDuration = time.Second * 60
 	genParams.AutoIbcTxParams.MinAutoTxInterval = time.Second * 60
 	genParams.AutoIbcTxParams.AutoTxFundsCommission = 2
 	genParams.AutoIbcTxParams.AutoTxConstantFee = 5_000
 	genParams.AutoIbcTxParams.AutoTxFlexFeeMul = 100
 	genParams.AutoIbcTxParams.RecurringAutoTxConstantFee = 10_000
+	genParams.AutoIbcTxParams.RelayerRewards = []int64{10_000, 15_000, 18_000, 22_000}
 
 	//claim
 	genParams.ClaimParams = claimtypes.DefaultGenesis().Params
