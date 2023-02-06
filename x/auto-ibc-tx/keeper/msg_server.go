@@ -80,11 +80,11 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 		return nil, err
 	}
 
-	// check if the msg contains valid inputs
-	err = msg.GetTxMsg().ValidateBasic()
-	if err != nil {
-		return nil, err
-	}
+	// // check if the msg contains valid inputs
+	// err = msg.GetTxMsg().ValidateBasic()
+	// if err != nil {
+	// 	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
+	// }
 
 	data, err := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{msg.GetTxMsg()})
 	if err != nil {
@@ -171,11 +171,11 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 		return nil, err
 	}
 
-	// check if the msg contains valid inputs
-	err = msg.GetTxMsg().ValidateBasic()
-	if err != nil {
-		return nil, err
-	}
+	// // check if the msg contains valid inputs
+	// err = msg.GetTxMsg().ValidateBasic()
+	// if err != nil {
+	// 	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
+	// }
 
 	var duration time.Duration = 0
 	if msg.Duration != "" {

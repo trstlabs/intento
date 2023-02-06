@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"google.golang.org/grpc/codes"
@@ -52,10 +53,7 @@ func (k Keeper) AutoTx(c context.Context, req *types.QueryAutoTxRequest) (*types
 	if err != nil {
 		return nil, err
 	}
-	autoTxInfo.Data = []byte(msg[0].String())
-	if err != nil {
-		return nil, err
-	}
+	makeReadableMsgData(&autoTxInfo, msg)
 
 	return &types.QueryAutoTxResponse{
 		AutoTxInfo: autoTxInfo,
@@ -72,7 +70,7 @@ func (k Keeper) AutoTxs(c context.Context, req *types.QueryAutoTxsRequest) (*typ
 
 	k.IterateAutoTxInfos(ctx, func(id uint64, info types.AutoTxInfo) bool {
 		msg, _ := icatypes.DeserializeCosmosTx(k.cdc, info.Data)
-		info.Data = []byte(msg[0].String())
+		makeReadableMsgData(&info, msg)
 		autoTxs = append(autoTxs, info)
 		return false
 	})
@@ -103,7 +101,8 @@ func (k Keeper) AutoTxsForOwner(c context.Context, req *types.QueryAutoTxsForOwn
 			if err != nil {
 				return false, err
 			}
-			autoTxInfo.Data = []byte(msg[0].String())
+			makeReadableMsgData(&autoTxInfo, msg)
+			autoTxInfo.Data = []byte(sdk.MsgTypeURL(msg[0]) + "'value': {" + msg[0].String() + "}")
 			autoTxs = append(autoTxs, autoTxInfo)
 
 		}
@@ -117,4 +116,9 @@ func (k Keeper) AutoTxsForOwner(c context.Context, req *types.QueryAutoTxsForOwn
 		AutoTxInfos: autoTxs,
 		Pagination:  pageRes,
 	}, nil
+}
+
+func makeReadableMsgData(info *types.AutoTxInfo, msg []sdk.Msg) {
+	info.Data = []byte(sdk.MsgTypeURL(msg[0]) + "," + msg[0].String())
+	fmt.Printf(string(info.Data))
 }

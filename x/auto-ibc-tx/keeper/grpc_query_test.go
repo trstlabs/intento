@@ -59,7 +59,7 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 		require.NoError(t, err)
 		msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
 		require.NoError(t, err)
-		autoTx.Data = []byte(msg[0].String())
+		makeReadableMsgData(&autoTx, msg)
 		allExpecedAutoTxs = append(allExpecedAutoTxs, autoTx)
 	}
 
@@ -141,7 +141,7 @@ func TestQueryAutoTxsList(t *testing.T) {
 		require.NoError(t, err)
 		msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
 		require.NoError(t, err)
-		autoTx.Data = []byte(msg[0].String())
+		makeReadableMsgData(&autoTx, msg)
 		allExpecedAutoTxs = append(allExpecedAutoTxs, autoTx)
 	}
 

@@ -44,8 +44,6 @@ message QueryInterchainAccountFromAddressResponse {
   string interchain_account_address = 1 [(gogoproto.moretags) = "yaml:\"interchain_account_address\""];
 }
 
-
-
 // QueryAutoTxRequest is the request type for the Query/AutoTxRequest RPC
 message QueryAutoTxRequest {
    string id                      = 1;
@@ -56,9 +54,11 @@ message QueryAutoTxResponse {
   AutoTxInfo auto_tx_info = 1 [(gogoproto.nullable) = false];
 }
 
-
 // QueryAutoTxsRequest is the request type for the Query/AutoTxsRequest RPC
-message QueryAutoTxsRequest {}
+message QueryAutoTxsRequest {
+  // Pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 // QueryAutoTxsResponse the response type for the Query/AutoTxsRequest RPC
 message QueryAutoTxsResponse {

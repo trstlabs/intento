@@ -18,7 +18,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	p := k.GetParams(ctx)
 	fmt.Printf(" flexFee: %v \n", flexFee)
 	flexFeeMultiplier := sdk.NewDec(p.AutoTxFlexFeeMul).QuoInt64(100)
-	fmt.Printf(" flexFeeMul: %v \n", flexFeeMultiplier)
+	//fmt.Printf(" flexFeeMul: %v \n", flexFeeMultiplier)
 	flexFeeMulDec := sdk.NewDecFromInt(flexFee).Mul(flexFeeMultiplier)
 
 	feeAddr, err := sdk.AccAddressFromBech32(autoTxInfo.FeeAddress)
