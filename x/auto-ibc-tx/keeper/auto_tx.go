@@ -84,6 +84,13 @@ func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, portID strin
 		return err
 	}
 
+	if !feeFunds.Empty() {
+		err = k.bankKeeper.SendCoins(ctx, owner, autoTxAddress, feeFunds)
+		if err != nil {
+			return err
+		}
+	}
+
 	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
 
 	autoTx := types.AutoTxInfo{

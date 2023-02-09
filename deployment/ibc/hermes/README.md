@@ -58,7 +58,7 @@ Message flow for interchain acccounts
 trstd q autoibctx interchainaccounts trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx connection-0
 
 # send balance to ICA on host chain to provide an initial balance to execute transactions (replace node and to_address here)
-trstd  tx bank send trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn 10000utrst --node tcp://localhost:36657 --keyring-backend test -y --from b --fees 600utrst --chain-id trstdev-2
+trstd  tx bank send trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp 10000utrst --node tcp://localhost:36657 --keyring-backend test -y --from b --fees 600utrst --chain-id trstdev-2
 
 # replace delegator_address to ICA address and submit tx
 trstd tx autoibctx submit-tx  '{
@@ -67,12 +67,12 @@ trstd tx autoibctx submit-tx  '{
         "amount": "70",
         "denom": "utrst"
     },
-    "delegator_address": "trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn",
+    "delegator_address": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
     "validator_address": "trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy"
 }' --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
  
 # check balance (should be 1000-70=9931)
-trstd q bank balances trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn --node tcp://localhost:36657
+trstd q bank balances trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp --node tcp://localhost:36657
 
 # (optional) check staking delegations
 trstd q staking delegations-to trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy --node tcp://localhost:36657
@@ -97,7 +97,7 @@ trstd tx autoibctx submit-auto-tx  '{
         "amount": "70",
         "denom": "utrst"
     },
-    "delegator_address": "trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn",
+    "delegator_address": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
     "validator_address": "trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy"
 }' --duration 60s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
 
@@ -107,7 +107,7 @@ trstd tx autoibctx submit-auto-tx  '{
         "amount": "70",
         "denom": "utrst"
     }],
-    "from_address": "trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn",
+    "from_address": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
     "to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 }' --duration 16h --interval 60s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0 --retries 2
 
@@ -126,7 +126,7 @@ Message flow is similar to interchain acccounts but with authZ. It is required t
 ```bash
 
 
-trstd tx authz grant trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn generic --msg-type /cosmos.staking.v1beta1.MsgDelegate --keyring-backend test -y --from b --fees 600utrst  --node tcp://localhost:36657  --chain-id trstdev-2
+trstd tx authz grant trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp generic --msg-type /cosmos.staking.v1beta1.MsgDelegate --keyring-backend test -y --from b --fees 600utrst  --node tcp://localhost:36657  --chain-id trstdev-2
 
 trstd tx autoibctx submit-auto-tx  '{
     "@type":"/cosmos.authz.v1beta1.MsgExec",
@@ -139,12 +139,12 @@ trstd tx autoibctx submit-auto-tx  '{
     "delegator_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx",
     "validator_address": "trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy"
 }],
-    "grantee": "trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn"
+    "grantee": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp"
 }' --duration 4h --interval 60s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
 
 
 
-trstd tx authz grant trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn generic --msg-type /cosmos.staking.v1beta1.MsgUndelegate --keyring-backend test -y --from b --fees 600utrst  --node tcp://localhost:36657  --chain-id trstdev-2
+trstd tx authz grant trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp generic --msg-type /cosmos.staking.v1beta1.MsgUndelegate --keyring-backend test -y --from b --fees 600utrst  --node tcp://localhost:36657  --chain-id trstdev-2
 
 trstd tx autoibctx submit-auto-tx  '{
     "@type":"/cosmos.authz.v1beta1.MsgExec",
@@ -157,7 +157,7 @@ trstd tx autoibctx submit-auto-tx  '{
     "delegator_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx",
     "validator_address": "trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy"
 }],
-    "grantee": "trust1fd6merat8tvrtme4gp953djvvczqrj4chkepggyqpe99rmm8tpzs4ch2xn"
+    "grantee": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp"
 }' --duration 4h --interval 60s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0
 
 ```

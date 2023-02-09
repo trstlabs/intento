@@ -228,7 +228,7 @@ build-rocksdb-image:
 
 build-localtrst:_localtrst-compile
 	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/localtrst:${DOCKER_TAG} .
+	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/localtrst:${DOCKER_TAG} .
 
 _localtrst-compile:
 
@@ -505,9 +505,23 @@ start-chains-rly:
 	@echo "Starting up test network"
 	./deployment/ibc/start.sh
 
+start-chains-juno-rly: 
+	@echo "Starting up test network"
+	./deployment/ibc/start-localchains-juno.sh
+
 start-golang-rly:
 	./deployment/ibc/relayer/interchain-acc-config/rly-start.sh
 
+run-localchains-juno: build-hermes
+	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml up
+
+kill-localchains-juno:
+	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml stop 
+	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml rm -f
+
+create-rly-juno:
+	@echo "Initializing relayer..."
+	./deployment/ibc/relayer/init-juno.sh
 
 ###############################################################################
 ###                                Swagger                                  ###

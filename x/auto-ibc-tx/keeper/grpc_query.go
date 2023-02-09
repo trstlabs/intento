@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"google.golang.org/grpc/codes"
@@ -102,7 +101,6 @@ func (k Keeper) AutoTxsForOwner(c context.Context, req *types.QueryAutoTxsForOwn
 				return false, err
 			}
 			makeReadableMsgData(&autoTxInfo, msg)
-			autoTxInfo.Data = []byte(sdk.MsgTypeURL(msg[0]) + "'value': {" + msg[0].String() + "}")
 			autoTxs = append(autoTxs, autoTxInfo)
 
 		}
@@ -120,5 +118,5 @@ func (k Keeper) AutoTxsForOwner(c context.Context, req *types.QueryAutoTxsForOwn
 
 func makeReadableMsgData(info *types.AutoTxInfo, msg []sdk.Msg) {
 	info.Data = []byte(sdk.MsgTypeURL(msg[0]) + "," + msg[0].String())
-	fmt.Printf(string(info.Data))
+	//fmt.Printf(string(info.Data))
 }

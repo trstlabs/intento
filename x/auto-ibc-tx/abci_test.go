@@ -39,7 +39,7 @@ func TestBeginBlocker(t *testing.T) {
 	k.InsertAutoTxQueue(ctx2, autoTx.TxID, autoTx.ExecTime)
 	k.SetAutoTxInfo(ctx2, &autoTx)
 
-	// from acknoledgement we check result and set ExecutedOnHost
+	// in OnAcknowledgementPacket we check result and set ExecutedOnHost
 	autoTx.AutoTxHistory[0].ExecutedOnHost = true
 
 	// information for the next execution
@@ -47,6 +47,7 @@ func TestBeginBlocker(t *testing.T) {
 	canExecute := k.AllowedToExecute(ctx, &autoTx)
 	require.True(t, canExecute)
 
+	//queue in BeginBocker
 	queue = k.GetAutoTxsForBlock(ctx3)
 
 	// test that autoTx history was updated
