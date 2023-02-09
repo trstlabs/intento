@@ -175,6 +175,9 @@ jobs:
       - name: Test x/auto-ibc-tx
         run: |
           source "$HOME/.sgxsdk/sgxsdk/environment"
+          cp librust_cosmwasm_enclave.signed.so ./x/auto-ibc-tx/keeper
+          mkdir -p ias_keys/develop
+          mkdir -p /opt/trustlesshub/.sgx_secrets/
           go test -v ./x/auto-ibc-tx/...
       - name: Test x/alloc
         run: |
