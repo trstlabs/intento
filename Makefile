@@ -227,12 +227,12 @@ build-rocksdb-image:
 	docker build --build-arg BUILD_VERSION=v6.24.3 -f deployment/dockerfiles/db-compile.Dockerfile -t trstlabs/rocksdb:v6.24.3 .
 
 build-localtrst:_localtrst-compile
-	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/localtrst:${DOCKER_TAG} .
+	 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
+	 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/localtrst:${DOCKER_TAG} .
 
 _localtrst-compile:
 
-	DOCKER_BUILDKIT=1 docker build \
+	 docker build \
 				--build-arg BUILD_VERSION=${VERSION} \
 				--build-arg FEATURES="${FEATURES},debug-print" \
 				--build-arg FEATURES_U=${FEATURES_U} \
@@ -245,12 +245,12 @@ _localtrst-compile:
 
 
 build-dev-image:_dev-trst-compile
-	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/trst-sw-dev:${DOCKER_TAG} .
+	 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
+	 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/trst-sw-dev:${DOCKER_TAG} .
 
 _dev-trst-compile:
 
-	DOCKER_BUILDKIT=1 docker build \
+	 docker build \
 				--build-arg BUILD_VERSION=${VERSION} \
 				--build-arg FEATURES="${FEATURES},debug-print" \
 				--build-arg FEATURES_U=${FEATURES_U} \
