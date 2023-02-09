@@ -54,7 +54,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.Equal(t, 1, len(queue[0].AutoTxHistory))
 	require.Equal(t, ctx2.BlockHeader().Time, queue[0].AutoTxHistory[0].ScheduledExecTime)
 	require.Equal(t, ctx2.BlockHeader().Time, queue[0].AutoTxHistory[0].ActualExecTime)
-	require.Equal(t, uint64(0), queue[0].AutoTxHistory[0].Retries)
+	//require.Equal(t, uint64(0), queue[0].AutoTxHistory[0].Retries)
 	require.Equal(t, ctx3.BlockHeader().Time, queue[0].ExecTime)
 }
 
@@ -146,7 +146,7 @@ func TestBeginBlockerWithRetry(t *testing.T) {
 	ctx4 := createNextExecutionContext(ctx2, autoTx.ExecTime.Add(time.Second))
 	queue = k.GetAutoTxsForBlock(ctx4)
 	require.NotEmpty(t, queue)
-	require.Equal(t, uint64(1), queue[0].AutoTxHistory[0].Retries)
+	//require.Equal(t, uint64(1), queue[0].AutoTxHistory[0].Retries)
 
 	// // test that autoTx history was updated
 
@@ -174,7 +174,7 @@ func createTestAutoTx(ctx sdk.Context, keepers keeper.TestKeepers) types.AutoTxI
 		EndTime:    endTime,
 		Interval:   time.Hour,
 		StartTime:  startTime,
-		MaxRetries: 2,
+		//MaxRetries: 2,
 	}
 	return autoTx
 }

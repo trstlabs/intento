@@ -107,5 +107,5 @@ func TestMsgSubmitTxGetSigners(t *testing.T) {
 	msg, err := types.NewMsgSubmitTx(TestOwnerAddress, TestMessage, ibctesting.FirstConnectionID)
 	require.NoError(t, err)
 
-	require.Equal(t, TestOwnerAddress, msg.GetSigners())
+	require.Equal(t, TestOwnerAddress, msg.GetSigners()[0].String())
 }

@@ -146,7 +146,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 		//set result in auto-tx history
 		err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, rewardType, packet.Sequence)
 		if err != nil {
-			im.keeper.Logger(ctx).Error("error message acknowledgement", "err", err)
+			im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
 			return err
 		}
 
@@ -162,6 +162,12 @@ func (im IBCModule) OnTimeoutPacket(
 	relayer sdk.AccAddress,
 ) error {
 	fmt.Println("TIMED OUT, FAILED ATTEMPT")
+	//set result in auto-tx history
+	err := im.keeper.SetAutoTxOnTimeout(ctx, packet.SourcePort, packet.Sequence)
+	if err != nil {
+		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
+		return err
+	}
 	return nil
 }
 

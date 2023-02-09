@@ -87,7 +87,7 @@ func addAutoTxHistory(autoTx *types.AutoTxInfo, actualExecTime time.Time, execFe
 }
 
 func updateAutoTxHistory(autoTx *types.AutoTxInfo, err error) {
-	autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Retries = autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Retries + 1
+	//autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Retries = autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Retries + 1
 	autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Error = err.Error()
 }
 

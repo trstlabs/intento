@@ -38,7 +38,7 @@ message AutoTxInfo {
     //optional array of dependent txs that should be executed before execution is allowed
     repeated uint64 depends_on_tx_ids = 15;
     //if execution of depended tx has not happend yet
-    uint64 max_retries = 16;
+    //uint64 max_retries = 16;
 }
 
 // AutoTxHistoryEntry provides a the history of AutoTx interchain tx call
@@ -47,8 +47,9 @@ message AutoTxHistoryEntry {
     google.protobuf.Timestamp  actual_exec_time = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
     cosmos.base.v1beta1.Coin exec_fee = 3 [(gogoproto.nullable) = false];
     bool executed_on_host = 4;
-    string error = 5;
-    uint64 retries = 6;
+    bool timed_out = 5;
+    string error = 6;
+   //uint64 retries = 6;
 }
 
 // Params defines the params for activeness of AutoTxs on governance proposals.

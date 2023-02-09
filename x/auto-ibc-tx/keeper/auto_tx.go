@@ -94,18 +94,18 @@ func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, portID strin
 	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
 
 	autoTx := types.AutoTxInfo{
-		TxID:           txID,
-		FeeAddress:     autoTxAddress.String(),
-		Owner:          owner.String(),
-		Data:           data,
-		Interval:       interval,
-		Duration:       duration,
-		StartTime:      startAt,
-		ExecTime:       execTime,
-		EndTime:        endTime,
-		PortID:         portID,
-		ConnectionID:   connectionId,
-		MaxRetries:     retries,
+		TxID:         txID,
+		FeeAddress:   autoTxAddress.String(),
+		Owner:        owner.String(),
+		Data:         data,
+		Interval:     interval,
+		Duration:     duration,
+		StartTime:    startAt,
+		ExecTime:     execTime,
+		EndTime:      endTime,
+		PortID:       portID,
+		ConnectionID: connectionId,
+		//MaxRetries:     retries,
 		DependsOnTxIds: dependsOn,
 	}
 
@@ -289,7 +289,7 @@ func (k Keeper) GetLatestAutoTxByICAPort(ctx sdk.Context, port string) (uint64, 
 	return binary.BigEndian.Uint64(id), nil
 } */
 
-// SetAutoTxResult sets the result of the last executed TxID set at SendAutoTx. As Interchain accounts IBC channels are ORDERED, this should work perfectly..
+// SetAutoTxResult sets the result of the last executed TxID set at SendAutoTx.
 func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, seq uint64) error {
 	id := k.getTmpAutoTxID(ctx, port, seq)
 	if id <= 0 {
@@ -313,6 +313,40 @@ func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, se
 	}
 
 	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].ExecutedOnHost = true
+	k.SetAutoTxInfo(ctx, &txInfo)
+
+	return nil
+}
+
+// SetAutoTxOnTimeout sets the AutoTx timeout result to the AutoTx
+func (k Keeper) SetAutoTxOnTimeout(ctx sdk.Context, sourcePort string, seq uint64) error {
+	id := k.getTmpAutoTxID(ctx, sourcePort, seq)
+	if id <= 0 {
+		return nil
+	}
+
+	k.Logger(ctx).Debug("auto_tx_timeout", "id", id)
+
+	txInfo := k.GetAutoTxInfo(ctx, id)
+
+	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].TimedOut = true
+	k.SetAutoTxInfo(ctx, &txInfo)
+
+	return nil
+}
+
+// SetAutoTxOnTimeout sets the AutoTx timeout result to the AutoTx
+func (k Keeper) SetAutoTxError(ctx sdk.Context, sourcePort string, seq uint64, err string) error {
+	id := k.getTmpAutoTxID(ctx, sourcePort, seq)
+	if id <= 0 {
+		return nil
+	}
+
+	k.Logger(ctx).Debug("auto_tx_error", "id", id)
+
+	txInfo := k.GetAutoTxInfo(ctx, id)
+
+	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].Error = err
 	k.SetAutoTxInfo(ctx, &txInfo)
 
 	return nil
