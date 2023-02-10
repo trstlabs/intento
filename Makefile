@@ -385,6 +385,7 @@ build-test-contracts:
 	$(MAKE) -C ./x/compute/internal/keeper/testdata/test-contract
 	$(MAKE) -C ./x/compute/internal/keeper/testdata/ibc-test-contract
 	cp ./x/compute/internal/keeper/testdata/ibc-test-contract/ibc.wasm ./x/compute/internal/keeper/testdata/
+	cat ./x/compute/internal/keeper/testdata/test-contract/contract.wasm | gzip > ./x/compute/internal/keeper/testdata/test-contract/contract.wasm.gzip
 
 prep-go-tests: build-test-contract
 	# empty BUILD_PROFILE means debug mode which compiles faster
@@ -414,21 +415,12 @@ go-tests-hw: build-test-contract
 enclave-tests:
 	$(MAKE) -C cosmwasm/enclaves/test run
 
-build-all-test-contracts: build-test-contract
-	# echo "" | sudo add-apt-repository ppa:hnakamur/binaryen
-	# sudo apt update
-	# sudo apt install -y binaryen
-
+build-all-test-contracts: build-test-contracts
+	cd ./cosmwasm/contracts/hackatom && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown
+	wasm-opt -Os ./cosmwasm/contracts/hackatom/target/wasm32-unknown-unknown/release/hackatom.wasm -o ./x/compute/internal/keeper/testdata/hackatom.wasm
 
 	cd ./cosmwasm/contracts/staking && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
 	wasm-opt -Os ./cosmwasm/contracts/staking/target/wasm32-unknown-unknown/release/staking.wasm -o ./x/compute/internal/keeper/testdata/staking.wasm
-
-	cd ./cosmwasm/contracts/hackatom && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
-	wasm-opt -Os ./cosmwasm/contracts/hackatom/target/wasm32-unknown-unknown/release/hackatom.wasm -o ./x/compute/internal/keeper/testdata/contract.wasm
-
-	cat ./x/compute/internal/keeper/testdata/contract.wasm | gzip > ./x/compute/internal/keeper/testdata/contract.wasm.gzip
-
-
 
 
 build-non-test-contracts: build-test-contracts

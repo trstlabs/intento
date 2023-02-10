@@ -44,7 +44,16 @@ func TestEncoding(t *testing.T) {
 				Bank: &wasmTypes.BankMsg{
 					Send: &wasmTypes.SendMsg{
 						ToAddress: addr2.String(),
-						Amount:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(12345))).Add(sdk.NewCoin("usdt", sdk.NewInt(54321))),
+						Amount: []wasmTypes.Coin{
+							{
+								Denom:  "uatom",
+								Amount: "12345",
+							},
+							{
+								Denom:  "usdt",
+								Amount: "54321",
+							},
+						},
 					},
 				},
 			},
@@ -82,9 +91,13 @@ func TestEncoding(t *testing.T) {
 			input: wasmTypes.CosmosMsg{
 				Bank: &wasmTypes.BankMsg{
 					Send: &wasmTypes.SendMsg{
-
 						ToAddress: invalidAddr,
-						Amount:    sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(12345))).Add(sdk.NewCoin("usdt", sdk.NewInt(12345))),
+						Amount: []wasmTypes.Coin{
+							{
+								Denom:  "uatom",
+								Amount: "12345",
+							},
+						},
 					},
 				},
 			},

@@ -117,8 +117,8 @@ type BankMsg struct {
 // SendMsg contains instructions for a Cosmos-SDK/SendMsg
 // It has a fixed interface here and should be converted into the proper SDK format before dispatching
 type SendMsg struct {
-	ToAddress string      `json:"to_address"`
-	Amount    types.Coins `json:"amount"`
+	ToAddress string `json:"to_address"`
+	Amount    Coins  `json:"amount"`
 }
 
 // BurnMsg will burn the given coins from the contract's account.

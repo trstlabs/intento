@@ -292,14 +292,14 @@ func EncodeBankMsg(sender sdk.AccAddress, msg *wasmTypes.BankMsg) ([]sdk.Msg, er
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, msg.Send.ToAddress)
 	}
 
-	//toSend, err := convertWasmCoinsToSdkCoins(msg.Send.Amount)
-	//if err != nil {
-	//	return nil, err
-	//}
+	toSend, err := convertWasmCoinsToSdkCoins(msg.Send.Amount)
+	if err != nil {
+		return nil, err
+	}
 	sdkMsg := banktypes.MsgSend{
 		FromAddress: sender.String(),
 		ToAddress:   msg.Send.ToAddress,
-		Amount:      msg.Send.Amount,
+		Amount:      toSend,
 	}
 	return []sdk.Msg{&sdkMsg}, nil
 }
