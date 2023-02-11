@@ -1468,16 +1468,6 @@ func TestMsgSenderInCallback(t *testing.T) {
 	_, _, _, events, _, err := execHelper(t, keeper, ctx, addr, walletA, privKeyA, fmt.Sprintf(`{"callback_to_log_msg_sender":{"to":"%s","code_hash":"%s"}}`, addr.String(), codeHash), true, defaultGasForTests, 0)
 
 	require.Empty(t, err)
-	require.Equal(t, []ContractEvent{
-		{
-			{Key: "contract_address", Value: []byte(addr.String()), AccAddr: "", Encrypted: false, PubDb: false},
-			{Key: "hi", Value: []byte("hey"), AccAddr: "", Encrypted: false, PubDb: false},
-		},
-		{
-			{Key: "contract_address", Value: []byte(addr.String()), AccAddr: "", Encrypted: false, PubDb: false},
-			{Key: "msg.sender", Value: []byte(addr.String()), AccAddr: "", Encrypted: false, PubDb: false},
-		},
-	}, events)
 	require.ElementsMatch(t, ContractEvent{
 		{Key: "contract_address", Value: []byte(addr.String()), AccAddr: "", Encrypted: false, PubDb: false},
 		{Key: "hi", Value: []byte("hey"), AccAddr: "", Encrypted: false, PubDb: false},

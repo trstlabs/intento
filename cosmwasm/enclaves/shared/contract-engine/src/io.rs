@@ -92,8 +92,8 @@ where
 }
 
 // use this to encrypt a vec value
-fn encrypt_vec(key: &AESKey, val: &Vec<u8>) -> Result<Vec<u8>, EnclaveError> {
-    let encrypted_data = key.encrypt_siv(&val, None).map_err(|err| {
+fn encrypt_vec(key: &AESKey, val: &[u8]) -> Result<Vec<u8>, EnclaveError> {
+    let encrypted_data = key.encrypt_siv(val, None).map_err(|err| {
         debug!(
             "got an error while trying to encrypt binary output error {:?}: {}",
             err, err
