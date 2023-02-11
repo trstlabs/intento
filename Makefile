@@ -12,7 +12,7 @@ DEB_BIN_DIR ?= /usr/local/bin
 DEB_LIB_DIR ?= /usr/lib
 
 
-SGX_MODE ?= HW
+SGX_MODE ?= SW
 BRANCH ?= develop
 
 DOCKER_TAG ?= latest
@@ -387,20 +387,20 @@ build-test-contracts:
 	cp ./x/compute/internal/keeper/testdata/ibc-test-contract/ibc.wasm ./x/compute/internal/keeper/testdata/
 	cat ./x/compute/internal/keeper/testdata/test-contract/contract.wasm | gzip > ./x/compute/internal/keeper/testdata/test-contract/contract.wasm.gzip
 
-prep-go-tests: build-test-contract
+prep-go-tests: build-test-contracts  bin-data-sw
 	# empty BUILD_PROFILE means debug mode which compiles faster
 	SGX_MODE=SW $(MAKE) build-linux
 	cp ./cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so ./x/compute/internal/keeper
 
-go-tests: build-test-contract
+go-tests: build-test-contracts bin-data-sw
 	# empty BUILD_PROFILE means debug mode which compiles faster
 	SGX_MODE=SW $(MAKE) build-linux
 	cp ./cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so ./x/compute/internal/keeper
 	rm -rf ./x/compute/internal/keeper/trustlesshub/.sgx_secrets
 	mkdir -p ./x/compute/internal/keeper/trustlesshub/.sgx_secrets
-	GOMAXPROCS=8 SGX_MODE=SW TRST_SGX_STORAGE='./' go test -failfast -timeout 1200s -v ./x/compute/internal/... $(GO_TEST_ARGS)
+	GOMAXPROCS=8 SGX_MODE=SW TRST_SGX_STORAGE='./' go test -failfast -timeout 60m -v ./x/compute/internal/... -tags test
 
-go-tests-hw: build-test-contract
+go-tests-hw: build-test-contracts bin-data
 	# empty BUILD_PROFILE means debug mode which compiles faster
 	SGX_MODE=HW $(MAKE) build-linux
 	cp ./cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so ./x/compute/internal/keeper

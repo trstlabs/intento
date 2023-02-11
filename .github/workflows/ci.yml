@@ -210,8 +210,9 @@ jobs:
           cp librust_cosmwasm_enclave.signed.so ./x/compute/internal/keeper
           mkdir -p ias_keys/develop
           mkdir -p /opt/trustlesshub/.sgx_secrets/
-          LOG_LEVEL=ERROR go test -v ./x/compute/client/...
-          LOG_LEVEL=ERROR go test -p 1 -timeout 40m -v ./x/compute/internal/keeper/...
+          echo "not_a_key" > ias_keys/develop/spid.txt
+          echo "not_a_key" > ias_keys/develop/api_key.txt
+          LOG_LEVEL=ERROR go test -p 1 -timeout 80m -v -tags "test" ./x/compute/internal/...
   Clippy:
     runs-on: ubuntu-20.04
     steps:

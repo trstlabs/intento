@@ -92,7 +92,7 @@ where
 }
 
 // use this to encrypt a vec value
-fn encrypt_vec(key: &AESKey, val: Vec<u8>) -> Result<Vec<u8>, EnclaveError> {
+fn encrypt_vec(key: &AESKey, val: &Vec<u8>) -> Result<Vec<u8>, EnclaveError> {
     let encrypted_data = key.encrypt_siv(&val, None).map_err(|err| {
         debug!(
             "got an error while trying to encrypt binary output error {:?}: {}",
@@ -257,7 +257,7 @@ pub fn encrypt_output(
             // v1: The logs that will be emitted as part of a "wasm" event.
             for log in ok.attributes.iter_mut().filter(|log| log.encrypted) {
                 log.key = encrypt_preserialized_string(&encryption_key, &log.key, &None, false)?;
-                log.value = encrypt_vec(&encryption_key, log.value.clone()).map_err(|err| {
+                log.value = encrypt_vec(&encryption_key, &log.value).map_err(|err| {
                     debug!(
                         "got an error while trying to encrypt vec value {:?}: {}",
                         &log.value, err
@@ -271,7 +271,7 @@ pub fn encrypt_output(
                 for log in event.attributes.iter_mut().filter(|log| log.encrypted) {
                     log.key =
                         encrypt_preserialized_string(&encryption_key, &log.key, &None, false)?;
-                    log.value = encrypt_vec(&encryption_key, log.value.clone()).map_err(|err| {
+                    log.value = encrypt_vec(&encryption_key, &log.value).map_err(|err| {
                         debug!(
                             "got an error while trying to encrypt vec value {:?}: {}",
                             &log.value, err

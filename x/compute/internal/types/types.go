@@ -94,12 +94,12 @@ func contractSDKEventAttributes(customAttributes []wasmTypes.Attribute, contract
 		if l.PubDb {
 			continue
 		}
-		// ensure key and value are non-empty (and trim what is there)
+		// ensure key and value are non-empty
 		key := strings.TrimSpace(l.Key)
 		if len(key) == 0 {
 			return nil, sdkerrors.Wrap(ErrInvalidEvent, fmt.Sprintf("Empty attribute key. Value: %s", l.Value))
 		}
-		value := strings.TrimSpace(string(l.Value))
+		value := /* strings.TrimSpace( */ string(l.Value)
 		// TODO: check if this is legal in the SDK - if it is, we can remove this check
 		if len(value) == 0 {
 			return nil, sdkerrors.Wrap(ErrInvalidEvent, fmt.Sprintf("Empty attribute value. Key: %s", key))
