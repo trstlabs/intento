@@ -15,10 +15,10 @@ import (
 )
 
 func TestUncompress(t *testing.T) {
-	wasmRaw, err := os.ReadFile("./testdata/test-contract/contract.wasm")
+	wasmRaw, err := os.ReadFile("./testdata/contract.wasm")
 	require.NoError(t, err)
 
-	wasmGzipped, err := os.ReadFile("./testdata/test-contract/contract.wasm.gz")
+	wasmGzipped, err := os.ReadFile("./testdata/contract.wasm.gz")
 	require.NoError(t, err)
 
 	specs := map[string]struct {

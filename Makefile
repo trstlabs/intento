@@ -385,8 +385,7 @@ build-test-contracts:
 	$(MAKE) -C ./x/compute/internal/keeper/testdata/test-contract
 	$(MAKE) -C ./x/compute/internal/keeper/testdata/ibc-test-contract
 	cp ./x/compute/internal/keeper/testdata/ibc-test-contract/ibc.wasm ./x/compute/internal/keeper/testdata/
-	cat ./x/compute/internal/keeper/testdata/test-contract/contract.wasm | gzip > ./x/compute/internal/keeper/testdata/test-contract/contract.wasm.gzip
-	cat ./x/compute/internal/keeper/testdata/test-contract/contract.wasm | gzip -9 > ./x/compute/internal/keeper/testdata/test-contract/contract.wasm.gz
+	cat ./x/compute/internal/keeper/testdata/contract.wasm | gzip -9 > ./x/compute/internal/keeper/testdata/contract.wasm.gz
 
 prep-go-tests: build-test-contracts  bin-data-sw
 	# empty BUILD_PROFILE means debug mode which compiles faster
