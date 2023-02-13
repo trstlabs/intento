@@ -169,7 +169,7 @@ deb-no-compile:
 	chmod +x /tmp/trst/deb/$(DEB_BIN_DIR)/trstd /tmp/trst/deb/$(DEB_BIN_DIR)/trstcli
 
 	mkdir -p /tmp/trst/deb/$(DEB_LIB_DIR)
-	cp -f ./go-cosmwasm/api/libgo_cosmwasm.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so ./go-cosmwasm/librust_cosmwasm_query_enclave.signed.so /tmp/trst/deb/$(DEB_LIB_DIR)/
+	cp -f ./go-cosmwasm/api/libgo_cosmwasm.so ./go-cosmwasm/librust_cosmwasm_enclave.signed.so /tmp/trst/deb/$(DEB_LIB_DIR)/
 	chmod +x /tmp/trst/deb/$(DEB_LIB_DIR)/lib*.so
 
 	mkdir -p /tmp/trst/deb/DEBIAN
@@ -227,12 +227,11 @@ build-rocksdb-image:
 	docker build --build-arg BUILD_VERSION=v6.24.3 -f deployment/dockerfiles/db-compile.Dockerfile -t trstlabs/rocksdb:v6.24.3 .
 
 build-localtrst:_localtrst-compile
-	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/localtrst:${DOCKER_TAG} .
+	 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
+	 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/localtrst:${DOCKER_TAG} .
 
 _localtrst-compile:
-
-	DOCKER_BUILDKIT=1 docker build \
+	 docker build \
 				--build-arg BUILD_VERSION=${VERSION} \
 				--build-arg FEATURES="${FEATURES},debug-print" \
 				--build-arg FEATURES_U=${FEATURES_U} \
@@ -245,12 +244,12 @@ _localtrst-compile:
 
 
 build-dev-image:_dev-trst-compile
-	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	DOCKER_BUILDKIT=1 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/trst-sw-dev:${DOCKER_TAG} .
+	 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
+	 docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst_chain_1 -f deployment/dockerfiles/dev-image.Dockerfile -t trstlabs/trst-sw-dev:${DOCKER_TAG} .
 
 _dev-trst-compile:
 
-	DOCKER_BUILDKIT=1 docker build \
+	 docker build \
 				--build-arg BUILD_VERSION=${VERSION} \
 				--build-arg FEATURES="${FEATURES},debug-print" \
 				--build-arg FEATURES_U=${FEATURES_U} \
@@ -385,21 +384,23 @@ build-test-contracts:
 	$(MAKE) -C ./x/compute/internal/keeper/testdata/test-contract
 	$(MAKE) -C ./x/compute/internal/keeper/testdata/ibc-test-contract
 	cp ./x/compute/internal/keeper/testdata/ibc-test-contract/ibc.wasm ./x/compute/internal/keeper/testdata/
+	cat ./x/compute/internal/keeper/testdata/test-contract/contract.wasm | gzip > ./x/compute/internal/keeper/testdata/test-contract/contract.wasm.gzip
+	cat ./x/compute/internal/keeper/testdata/test-contract/contract.wasm | gzip -9 > ./x/compute/internal/keeper/testdata/test-contract/contract.wasm.gz
 
-prep-go-tests: build-test-contract
+prep-go-tests: build-test-contracts  bin-data-sw
 	# empty BUILD_PROFILE means debug mode which compiles faster
 	SGX_MODE=SW $(MAKE) build-linux
 	cp ./cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so ./x/compute/internal/keeper
 
-go-tests: build-test-contract
+go-tests: build-test-contracts bin-data-sw
 	# empty BUILD_PROFILE means debug mode which compiles faster
 	SGX_MODE=SW $(MAKE) build-linux
 	cp ./cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so ./x/compute/internal/keeper
 	rm -rf ./x/compute/internal/keeper/trustlesshub/.sgx_secrets
 	mkdir -p ./x/compute/internal/keeper/trustlesshub/.sgx_secrets
-	GOMAXPROCS=8 SGX_MODE=SW TRST_SGX_STORAGE='./' go test -failfast -timeout 1200s -v ./x/compute/internal/... $(GO_TEST_ARGS)
+	GOMAXPROCS=8 SGX_MODE=SW TRST_SGX_STORAGE='./' go test -failfast -timeout 60m -v ./x/compute/internal/... -tags test
 
-go-tests-hw: build-test-contract
+go-tests-hw: build-test-contracts bin-data
 	# empty BUILD_PROFILE means debug mode which compiles faster
 	SGX_MODE=HW $(MAKE) build-linux
 	cp ./cosmwasm/enclaves/execute/librust_cosmwasm_enclave.signed.so ./x/compute/internal/keeper
@@ -414,21 +415,12 @@ go-tests-hw: build-test-contract
 enclave-tests:
 	$(MAKE) -C cosmwasm/enclaves/test run
 
-build-all-test-contracts: build-test-contract
-	# echo "" | sudo add-apt-repository ppa:hnakamur/binaryen
-	# sudo apt update
-	# sudo apt install -y binaryen
-
+build-all-test-contracts: build-test-contracts
+	cd ./cosmwasm/contracts/hackatom && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown
+	wasm-opt -Os ./cosmwasm/contracts/hackatom/target/wasm32-unknown-unknown/release/hackatom.wasm -o ./x/compute/internal/keeper/testdata/hackatom.wasm
 
 	cd ./cosmwasm/contracts/staking && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
 	wasm-opt -Os ./cosmwasm/contracts/staking/target/wasm32-unknown-unknown/release/staking.wasm -o ./x/compute/internal/keeper/testdata/staking.wasm
-
-	cd ./cosmwasm/contracts/hackatom && RUSTFLAGS='-C link-arg=-s' cargo build --release --target wasm32-unknown-unknown 
-	wasm-opt -Os ./cosmwasm/contracts/hackatom/target/wasm32-unknown-unknown/release/hackatom.wasm -o ./x/compute/internal/keeper/testdata/contract.wasm
-
-	cat ./x/compute/internal/keeper/testdata/contract.wasm | gzip > ./x/compute/internal/keeper/testdata/contract.wasm.gzip
-
-
 
 
 build-non-test-contracts: build-test-contracts
@@ -456,6 +448,72 @@ trustless-contract-optimizer:
 
 aesm-image:
 	docker build -f deployment/dockerfiles/aesm.Dockerfile -t trstlabs/aesm .
+
+###############################################################################
+###                     Local Hermes+TransferPort+ICA+AutoIBCT              ###
+###############################################################################
+
+build-hermes:
+	docker build -f deployment/ibc/hermes/hermes.Dockerfile -t hermes:v0.0.0 deployment/ibc/hermes
+
+run-localibc: build-hermes
+	docker compose -f deployment/ibc/hermes/docker-compose.yml up
+
+kill-localibc:
+	docker compose -f deployment/ibc/hermes/docker-compose.yml stop 
+	docker compose -f deployment/ibc/hermes/docker-compose.yml rm -f
+
+###############################################################################
+###                 		    Local Go-Relayer			                ###
+###############################################################################
+
+run-localchains: 
+	@echo "Initializing both blockchains..."
+	docker compose -f deployment/ibc/relayer/docker-compose.yml up
+
+kill-localchains:
+	@echo "Killing both blockchains..."
+	docker compose -f deployment/ibc/relayer/docker-compose.yml stop 
+	docker compose -f deployment/ibc/relayer/docker-compose.yml rm -f
+
+init-golang-rly:
+	@echo "Initializing relayer..."
+	./deployment/ibc/relayer/interchain-acc-config/rly-init.sh
+
+create-rly: kill-dev
+	@echo "Initializing relayer..."
+	./deployment/ibc/relayer/init.sh
+
+restart-rly: @echo "Restarting relayer..."
+	rly tx connection trstdev1-trstdev2 --override
+	rly start trstdev1-trstdev2 -p events -b 100 --debug
+
+kill-dev:
+	@echo "Killing trstd and removing previous data"
+	-@rm -rf ./data
+	-@killall trstd 2>/dev/null
+
+start-chains-rly: 
+	@echo "Starting up local test relayer..."
+	./deployment/ibc/start.sh
+
+start-chains-juno-rly: 
+	@echo "Starting up local test relayers..."
+	./deployment/ibc/start-localchains-juno.sh
+
+start-golang-rly:
+	./deployment/ibc/relayer/interchain-acc-config/rly-start.sh
+
+run-localchains-juno: build-hermes
+	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml up
+
+kill-localchains-juno:
+	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml stop 
+	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml rm -f
+
+create-rly-juno:
+	@echo "Initializing relayer..."
+	./deployment/ibc/relayer/init-juno.sh
 
 ###############################################################################
 ###                                Swagger                                  ###
