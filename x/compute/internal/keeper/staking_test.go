@@ -3,7 +3,8 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
+
 	"testing"
 	"time"
 
@@ -112,7 +113,7 @@ func TestInitializeStaking(t *testing.T) {
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 100000), sdk.NewInt64Coin("stake", 500000))
 	creator, creatorPrivKey := CreateFakeFundedAccount(ctx, accKeeper, keeper.bankKeeper, deposit)
 	// upload staking derivates code
-	stakingCode, err := ioutil.ReadFile("./testdata/staking.wasm")
+	stakingCode, err := os.ReadFile("./testdata/staking.wasm")
 	require.NoError(t, err)
 	stakingID, err := keeper.Create(ctx, creator, stakingCode, "", "", 0, 0, "title", "descr")
 	require.NoError(t, err)
@@ -206,7 +207,7 @@ func initializeStaking(t *testing.T) initInfo {
 	creator, creatorPrivKey := CreateFakeFundedAccount(ctx, accKeeper, keeper.bankKeeper, deposit)
 
 	// upload staking derivates code
-	stakingCode, err := ioutil.ReadFile("./testdata/staking.wasm")
+	stakingCode, err := os.ReadFile("./testdata/staking.wasm")
 	require.NoError(t, err)
 	stakingID, err := keeper.Create(ctx, creator, stakingCode, "", "", 0, 0, "title", "descr")
 	require.NoError(t, err)
