@@ -18,7 +18,7 @@ func TestUncompress(t *testing.T) {
 	wasmRaw, err := os.ReadFile("./testdata/test-contract/contract.wasm")
 	require.NoError(t, err)
 
-	wasmGzipped, err := os.ReadFile("./testdata//test-contract/contract.wasm.gzip")
+	wasmGzipped, err := os.ReadFile("./testdata//test-contract/contract.wasm.gz")
 	require.NoError(t, err)
 
 	specs := map[string]struct {

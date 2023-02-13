@@ -386,6 +386,7 @@ build-test-contracts:
 	$(MAKE) -C ./x/compute/internal/keeper/testdata/ibc-test-contract
 	cp ./x/compute/internal/keeper/testdata/ibc-test-contract/ibc.wasm ./x/compute/internal/keeper/testdata/
 	cat ./x/compute/internal/keeper/testdata/test-contract/contract.wasm | gzip > ./x/compute/internal/keeper/testdata/test-contract/contract.wasm.gzip
+	cat ./x/compute/internal/keeper/testdata/test-contract/contract.wasm | gzip -9 > ./x/compute/internal/keeper/testdata/test-contract/contract.wasm.gz
 
 prep-go-tests: build-test-contracts  bin-data-sw
 	# empty BUILD_PROFILE means debug mode which compiles faster
@@ -494,11 +495,11 @@ kill-dev:
 	-@killall trstd 2>/dev/null
 
 start-chains-rly: 
-	@echo "Starting up test network"
+	@echo "Starting up local test relayer..."
 	./deployment/ibc/start.sh
 
 start-chains-juno-rly: 
-	@echo "Starting up test network"
+	@echo "Starting up local test relayers..."
 	./deployment/ibc/start-localchains-juno.sh
 
 start-golang-rly:
