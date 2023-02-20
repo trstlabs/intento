@@ -22,6 +22,14 @@ func NewGrpcQuerier(keeper Keeper) grpcQuerier {
 	return grpcQuerier{keeper: keeper}
 }
 
+// Params returns params of the mint module.
+func (q grpcQuerier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	params := q.keeper.GetParams(ctx)
+
+	return &types.QueryParamsResponse{Params: params}, nil
+}
+
 func (q grpcQuerier) ContractInfo(c context.Context, req *types.QueryContractInfoRequest) (*types.QueryContractInfoResponse, error) {
 	addr, err := sdk.AccAddressFromBech32(req.Address)
 	if err != nil {

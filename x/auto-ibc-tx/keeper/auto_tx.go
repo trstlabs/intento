@@ -6,9 +6,12 @@ import (
 	"strconv"
 	"time"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
@@ -46,10 +49,19 @@ func (k Keeper) SetAutoTxInfo(ctx sdk.Context, autoTx *types.AutoTxInfo) {
 }
 
 func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
+	txMsgs := autoTxInfo.GetTxMsgs()
 
+	//check if autoTx is local
+	if autoTxInfo.PortID == "" {
+		return handleLocalAutoTx(k, ctx, txMsgs, autoTxInfo)
+	}
+	data, err := icatypes.SerializeCosmosTx(k.cdc, txMsgs)
+	if err != nil {
+		return err
+	}
 	packetData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
-		Data: autoTxInfo.Data,
+		Data: data,
 	}
 
 	channelID, found := k.icaControllerKeeper.GetActiveChannelID(ctx, autoTxInfo.ConnectionID, autoTxInfo.PortID)
@@ -63,10 +75,11 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
 	}
 
 	timeoutTimestamp := time.Now().Add(time.Hour).UnixNano()
-	//to make sure timeout does not happen soon
+	//to ensure timeout does not result in channel closing
 	if autoTxInfo.Interval > time.Minute*2 {
-		timeoutTimestamp = timeoutTimestamp + autoTxInfo.Interval.Nanoseconds() - time.Minute.Nanoseconds()
+		timeoutTimestamp = autoTxInfo.Interval.Nanoseconds()
 	}
+
 	sequence, err := k.icaControllerKeeper.SendTx(ctx, chanCap, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
 	if err != nil {
 		return err
@@ -76,7 +89,49 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
 	return nil
 }
 
-func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, portID string, data []byte, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, retries uint64, dependsOn []uint64) error {
+func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo types.AutoTxInfo) error {
+	for _, msg := range txMsgs {
+		handler := k.msgRouter.Handler(sdk.Msg(msg))
+		res, err := handler(ctx, msg)
+		if err != nil {
+			return err
+		}
+		
+		//autocompound
+		if sdk.MsgTypeURL(msg) == "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" {
+			validator := ""
+			amount := sdk.NewCoin(types.Denom, sdk.ZeroInt())
+			for _, ev := range res.Events {
+				if ev.Type == distrtypes.EventTypeWithdrawRewards {
+					for _, attr := range ev.Attributes {
+						fmt.Printf("event %v\n", string(attr.Key))
+						if string(attr.Key) == distrtypes.AttributeKeyValidator {
+							validator = string(attr.Value)
+						}
+						if string(attr.Key) == sdk.AttributeKeyAmount {
+							amount, err = sdk.ParseCoinNormalized(string(attr.Value))
+							if err != nil {
+								return err
+							}
+						}
+					}
+
+					msgDelegate := stakingtypes.MsgDelegate{DelegatorAddress: autoTxInfo.Owner, ValidatorAddress: validator, Amount: amount}
+					handler := k.msgRouter.Handler(&msgDelegate)
+					_, err = handler(ctx, &msgDelegate)
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+		}
+
+	}
+	return nil
+}
+
+func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, label string, portID string, msgs []*sdktypes.Any, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins /*  retries uint64,  */, dependsOn []uint64) error {
 
 	txID := k.autoIncrementID(ctx, types.KeyLastTxID)
 	autoTxAddress, err := k.createFeeAccount(ctx, txID, owner, feeFunds)
@@ -95,9 +150,10 @@ func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, portID strin
 
 	autoTx := types.AutoTxInfo{
 		TxID:         txID,
-		FeeAddress:   autoTxAddress.String(),
 		Owner:        owner.String(),
-		Data:         data,
+		Label:        label,
+		FeeAddress:   autoTxAddress.String(),
+		Msgs:         msgs,
 		Interval:     interval,
 		Duration:     duration,
 		StartTime:    startAt,
@@ -312,7 +368,7 @@ func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, se
 		k.hooks.AfterAutoTxWasm(ctx, owner)
 	}
 
-	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].ExecutedOnHost = true
+	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].Executed = true
 	k.SetAutoTxInfo(ctx, &txInfo)
 
 	return nil
@@ -360,7 +416,7 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx *types.AutoTxInfo) bool
 		if len(autoTxInfo.AutoTxHistory) == 0 {
 			return true
 		}
-		if !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].ExecutedOnHost {
+		if !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Executed {
 			// we could reinsert the entry into the queue if desired
 			// if autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Retries <= autoTx.MaxRetries {
 			// 	k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)

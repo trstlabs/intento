@@ -501,7 +501,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool, supportedFeatures string, enc
 		s,
 		NewMultiComputeHooks(),
 	)
-	// keeper.setParams(ctx, wasmTypes.DefaultParams())
+	keeper.SetParams(ctx, wasmTypes.DefaultParams())
 	// add wasm handler so we can loop-back (contracts calling contracts)
 	router.AddRoute(sdk.NewRoute(wasmTypes.RouterKey, TestHandler(keeper)))
 

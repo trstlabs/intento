@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -21,10 +22,8 @@ import (
 )
 
 type Keeper struct {
-	cdc codec.Codec
-
-	storeKey sdk.StoreKey
-
+	cdc                 codec.Codec
+	storeKey            sdk.StoreKey
 	scopedKeeper        capabilitykeeper.ScopedKeeper
 	icaControllerKeeper icacontrollerkeeper.Keeper
 	bankKeeper          bankkeeper.Keeper
@@ -33,9 +32,10 @@ type Keeper struct {
 	accountKeeper       authkeeper.AccountKeeper
 	paramSpace          paramtypes.Subspace
 	hooks               AutoIbcTxHooks
+	msgRouter           MessageRouter
 }
 
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, iaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, paramSpace paramtypes.Subspace, ah AutoIbcTxHooks) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, iaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, paramSpace paramtypes.Subspace, ah AutoIbcTxHooks, msgRouter MessageRouter) Keeper {
 	moduleAccAddr := accountKeeper.GetModuleAddress(types.ModuleName)
 	// ensure module account is set
 	if moduleAccAddr == nil {
@@ -58,6 +58,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, iaKeeper icacontrollerkee
 		stakingKeeper:       stakingKeeper,
 		accountKeeper:       accountKeeper,
 		hooks:               ah,
+		msgRouter:           msgRouter,
 	}
 }
 
@@ -77,4 +78,9 @@ func (k Keeper) RegisterInterchainAccount(ctx sdk.Context, connectionId, owner s
 // Logger returns the application logger, scoped to the associated module
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s-%s", host.ModuleName, types.ModuleName))
+}
+
+// MessageRouter ADR 031 request type routing
+type MessageRouter interface {
+	Handler(msg sdk.Msg) baseapp.MsgServiceHandler
 }

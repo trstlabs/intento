@@ -57,9 +57,9 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		autoTx, err := CreateFakeAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
-		msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
-		require.NoError(t, err)
-		makeReadableMsgData(&autoTx, msg)
+		// msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
+		// require.NoError(t, err)
+		// makeReadableMsgData(&autoTx, msg)
 		allExpecedAutoTxs = append(allExpecedAutoTxs, autoTx)
 	}
 
@@ -139,9 +139,9 @@ func TestQueryAutoTxsList(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		autoTx, err := CreateFakeAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
-		msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
-		require.NoError(t, err)
-		makeReadableMsgData(&autoTx, msg)
+		// msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
+		// require.NoError(t, err)
+		// makeReadableMsgData(&autoTx, msg)
 		allExpecedAutoTxs = append(allExpecedAutoTxs, autoTx)
 	}
 
@@ -150,6 +150,13 @@ func TestQueryAutoTxsList(t *testing.T) {
 	require.NotNil(t, got)
 	assert.Equal(t, allExpecedAutoTxs, got.AutoTxInfos)
 
+}
+
+func TestQueryParams(t *testing.T) {
+	ctx, keepers := CreateTestInput(t, false)
+	resp, err := keepers.AutoIbcTxKeeper.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})
+	require.NoError(t, err)
+	require.Equal(t, resp.Params, types.DefaultParams())
 }
 
 func NewICA(t *testing.T) (*ibctesting.Coordinator, *ibctesting.Path) {
@@ -175,19 +182,25 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 		return types.AutoTxInfo{}, err
 	}
 	fakeMsg := banktypes.NewMsgSend(owner, autoTxAddress, feeFunds)
-	fakeData, _ := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{fakeMsg})
+	anys, err := types.PackTxMsgAnys([]sdk.Msg{fakeMsg})
+	if err != nil {
+		return types.AutoTxInfo{}, err
+	}
+
+	// fakeData, _ := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{fakeMsg})
 	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
 	autoTx := types.AutoTxInfo{
 		TxID:       txID,
 		FeeAddress: autoTxAddress.String(),
 		Owner:      owner.String(),
-		Data:       fakeData,
-		Interval:   interval,
-		Duration:   duration,
-		StartTime:  startAt,
-		ExecTime:   execTime,
-		EndTime:    endTime,
-		PortID:     portID,
+		// Data:       fakeData,
+		Msgs:      anys,
+		Interval:  interval,
+		Duration:  duration,
+		StartTime: startAt,
+		ExecTime:  execTime,
+		EndTime:   endTime,
+		PortID:    portID,
 	}
 
 	k.SetAutoTxInfo(ctx, &autoTx)

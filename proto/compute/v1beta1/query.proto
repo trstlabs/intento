@@ -41,6 +41,11 @@ service Query {
     rpc CodeHash(QueryCodeHashRequest) returns (QueryCodeHashResponse) {
 		option (google.api.http).get = "/compute/v1beta1/code-hash/{code_id}";
 	}
+    // Params returns the total set of compute parameters.
+    rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/compute/v1beta1/params";
+    }
+
 }
 
 // QueryContractInfoRequest is the request type for the Query/ContractInfo RPC method
@@ -185,4 +190,13 @@ message DecryptedAnswer {
     repeated cosmos.base.abci.v1beta1.StringEvent output_logs = 5 [(gogoproto.nullable) = false];
     bytes output_error = 6 [(gogoproto.casttype) = "encoding/json.RawMessage"];
     string plaintext_error = 7;
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
 }

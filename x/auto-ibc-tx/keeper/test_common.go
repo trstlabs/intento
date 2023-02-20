@@ -138,6 +138,7 @@ func CreateValidator(pk crypto.PubKey, stake sdk.Int) (stakingtypes.Validator, e
 	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr), pk, stakingtypes.Description{})
 	val.Tokens = stake
 	val.DelegatorShares = sdk.NewDecFromInt(val.Tokens)
+	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	return val, err
 }
 
@@ -264,8 +265,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 	require.NoError(t, ms.LoadLatestVersion())
 	_, valConsPk0, _ := keyPubAddr()
 	valCons := sdk.ConsAddress(valConsPk0.Address())
-	val, _ := CreateValidator(valConsPk0, sdk.NewInt(100))
-	//val, err := stakingkeeper.Keeper.SetValidatorByConsAddr(ctx,valConsPk0//, math.NewInt(100))
+	val, _ := CreateValidator(valConsPk0, sdk.NewInt(100_000))
 
 	ctx := sdk.NewContext(ms, tmproto.Header{
 		Height:          1234567,
@@ -273,6 +273,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		ChainID:         TestConfig.ChainID,
 		ProposerAddress: valCons,
 	}, isCheckTx, log.NewNopLogger())
+
 	encodingConfig := MakeEncodingConfig()
 	paramsKeeper := paramskeeper.NewKeeper(
 		encodingConfig.Marshaler,
@@ -296,7 +297,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 	maccPerms := map[string][]string{
 		faucetAccountName:              {authtypes.Burner, authtypes.Minter},
 		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
+		distrtypes.ModuleName:          {authtypes.Minter},
 		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
@@ -337,10 +338,13 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		bankKeeper,
 		stakingSubsp,
 	)
-	stakingKeeper.SetValidator(ctx, val)
-	stakingKeeper.SetValidatorByConsAddr(ctx, val)
 	stakingKeeper.SetParams(ctx, TestingStakeParams)
+	val = stakingkeeper.TestingUpdateValidator(stakingKeeper, ctx, val, true)
+	// stakingKeeper.SetValidator(ctx, val)
+	// stakingKeeper.SetValidatorByConsAddr(ctx, val)
 
+	stakingKeeper.AfterValidatorCreated(ctx, val.GetOperator())
+	//val, _ = val.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
 	// mintSubsp, _ := paramsKeeper.GetSubspace(minttypes.ModuleName)
 
 	// mintKeeper := mintkeeper.NewKeeper(encodingConfig.Marshaler,
@@ -365,7 +369,15 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		authtypes.FeeCollectorName,
 		nil,
 	)
-
+	// set some baseline - this seems to be needed
+	distKeeper.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 2, distrtypes.ValidatorHistoricalRewards{
+		CumulativeRewardRatio: sdk.DecCoins{},
+		ReferenceCount:        2,
+	})
+	distKeeper.SetValidatorCurrentRewards(ctx, val.GetOperator(), distrtypes.ValidatorCurrentRewards{
+		Rewards: sdk.DecCoins{},
+		Period:  3,
+	})
 	// set genesis items required for distribution
 	distKeeper.SetParams(ctx, distrtypes.DefaultParams())
 	distKeeper.SetFeePool(ctx, distrtypes.InitialFeePool())
@@ -379,6 +391,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 	testAccsSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(2000000)))
 	testAutoIbcTxSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000)))
 	err = bankKeeper.MintCoins(ctx, faucetAccountName, testAccsSupply.Add(testAutoIbcTxSupply[0]))
+	require.NoError(t, err)
+	err = bankKeeper.MintCoins(ctx, (distrtypes.ModuleName), testAccsSupply.Add(testAutoIbcTxSupply[0]))
 	require.NoError(t, err)
 
 	// err = bankKeeper.SendCoinsFromModuleToAccount(ctx, faucetAccountName, distrAcc.GetAddress(), totalSupply)
@@ -499,6 +513,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		accountKeeper,
 		autoIbcTxSubsp,
 		NewMultiAutoIbcTxHooks(claimKeeper.Hooks()),
+		msgRouter,
 	)
 	keeper.SetParams(ctx, autoibctxtypes.DefaultParams())
 

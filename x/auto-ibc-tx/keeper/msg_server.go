@@ -80,11 +80,6 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 		return nil, err
 	}
 
-	data, err := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{msg.GetTxMsg()})
-	if err != nil {
-		return nil, err
-	}
-
 	var duration time.Duration = 0
 	if msg.Duration != "" {
 		duration, err = time.ParseDuration(msg.Duration)
@@ -134,11 +129,11 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 	if len(msg.DependsOnTxIds) >= 10 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must depend on less than 10 autoTxIDs")
 	}
-	if msg.Retries > 5 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx can retry for a maximum of 5 times")
-	}
+	// if msg.Retries > 5 {
+	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx can retry for a maximum of 5 times")
+	// }
 
-	err = k.CreateAutoTx(ctx, msgOwner, portID, data, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, msg.Retries, msg.DependsOnTxIds)
+	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds /*  msg.Retries, */, msg.DependsOnTxIds)
 	if err != nil {
 		return nil, err
 	}
@@ -160,10 +155,10 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 		return nil, err
 	}
 
-	data, err := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{msg.GetTxMsg()})
-	if err != nil {
-		return nil, err
-	}
+	// data, err := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{msg.GetTxMsg()})
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	var duration time.Duration = 0
 	if msg.Duration != "" {
@@ -216,11 +211,11 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must depend on less than 10 autoTxIDs")
 
 	}
-	if msg.Retries > 5 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx can retry for a maximum of 5 times")
-	}
+	// if msg.Retries > 5 {
+	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx can retry for a maximum of 5 times")
+	// }
 
-	err = k.CreateAutoTx(ctx, msgOwner, portID, data, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, msg.Retries, msg.DependsOnTxIds)
+	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, msg.DependsOnTxIds)
 	if err != nil {
 		return nil, err
 	}

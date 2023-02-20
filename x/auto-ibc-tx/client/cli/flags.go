@@ -9,6 +9,7 @@ const (
 	FlagConnectionID = "connection-id"
 	// The connection end identifier on the host chain
 	//FlagCounterpartyConnectionID = "counterparty-connection-id"
+	flagLabel     = "label"
 	flagDuration  = "duration"
 	flagInterval  = "interval"
 	flagStartAt   = "start_at"

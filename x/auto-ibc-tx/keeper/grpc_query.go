@@ -33,6 +33,14 @@ func (k Keeper) InterchainAccountFromAddress(goCtx context.Context, req *types.Q
 	return types.NewQueryInterchainAccountResponse(ica), nil
 }
 
+// Params returns params of the mint module.
+func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	params := k.GetParams(ctx)
+
+	return &types.QueryParamsResponse{Params: params}, nil
+}
+
 // AutoTx implements the Query/AutoTxgRPC method
 func (k Keeper) AutoTx(c context.Context, req *types.QueryAutoTxRequest) (*types.QueryAutoTxResponse, error) {
 	if req == nil {
@@ -48,11 +56,9 @@ func (k Keeper) AutoTx(c context.Context, req *types.QueryAutoTxRequest) (*types
 	if err != nil {
 		return nil, err
 	}
-	msg, err := icatypes.DeserializeCosmosTx(k.cdc, autoTxInfo.Data)
-	if err != nil {
-		return nil, err
-	}
-	makeReadableMsgData(&autoTxInfo, msg)
+	// for msg := range autoTxInfo.Msgs{
+	// 	makeReadableMsgData(&autoTxInfo, msg)
+	// }
 
 	return &types.QueryAutoTxResponse{
 		AutoTxInfo: autoTxInfo,
@@ -68,8 +74,8 @@ func (k Keeper) AutoTxs(c context.Context, req *types.QueryAutoTxsRequest) (*typ
 	autoTxs := make([]types.AutoTxInfo, 0)
 
 	k.IterateAutoTxInfos(ctx, func(id uint64, info types.AutoTxInfo) bool {
-		msg, _ := icatypes.DeserializeCosmosTx(k.cdc, info.Data)
-		makeReadableMsgData(&info, msg)
+		// msg, _ := icatypes.DeserializeCosmosTx(k.cdc, info.Data)
+		// makeReadableMsgData(&info, msg)
 		autoTxs = append(autoTxs, info)
 		return false
 	})
@@ -96,11 +102,11 @@ func (k Keeper) AutoTxsForOwner(c context.Context, req *types.QueryAutoTxsForOwn
 		if accumulate {
 			autoTxID := types.GetIDFromBytes(key /* [types.TimeTimeLen:] */)
 			autoTxInfo := k.GetAutoTxInfo(ctx, autoTxID)
-			msg, err := icatypes.DeserializeCosmosTx(k.cdc, autoTxInfo.Data)
-			if err != nil {
-				return false, err
-			}
-			makeReadableMsgData(&autoTxInfo, msg)
+			// msg, err := icatypes.DeserializeCosmosTx(k.cdc, autoTxInfo.Data)
+			// if err != nil {
+			// 	return false, err
+			// }
+			// makeReadableMsgData(&autoTxInfo, msg)
 			autoTxs = append(autoTxs, autoTxInfo)
 
 		}
@@ -116,7 +122,7 @@ func (k Keeper) AutoTxsForOwner(c context.Context, req *types.QueryAutoTxsForOwn
 	}, nil
 }
 
-func makeReadableMsgData(info *types.AutoTxInfo, msg []sdk.Msg) {
-	info.Data = []byte(sdk.MsgTypeURL(msg[0]) + "," + msg[0].String())
-	//fmt.Printf(string(info.Data))
-}
+// func makeReadableMsgData(info *types.AutoTxInfo, msg []sdk.Msg) {
+// 	info.Data = []byte(sdk.MsgTypeURL(msg[0]) + "," + msg[0].String())
+// 	//fmt.Printf(string(info.Data))
+// }

@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/trstlabs/trst/x/auto-ibc-tx/types";
 option (gogoproto.goproto_getters_all) = false;
@@ -51,7 +52,8 @@ message MsgSubmitTxResponse {}
 message MsgSubmitAutoTx {
   string owner                      = 1;
   string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
-  google.protobuf.Any msg           = 4;
+  string label                      = 3;
+  repeated google.protobuf.Any msgs           = 4  [(cosmos_proto.accepts_interface) = "sdk.Msg"];
   // duration defines the time that the code should run for
   string duration = 5;
   // start_at when set as a unix time after block inclusion, creates a custom start time for execution
@@ -67,7 +69,7 @@ message MsgSubmitAutoTx {
   //optional array of dependent txs that should be executed before execution is allowed
   repeated uint64 depends_on_tx_ids = 9;
   //if execution of depended tx has not happend yet
-  uint64 retries = 10;
+  //uint64 retries = 10;
 }
 
 // MsgSubmitTxResponse defines the MsgSubmitTx response type
@@ -77,7 +79,8 @@ message MsgSubmitAutoTxResponse {}
 message MsgRegisterAccountAndSubmitAutoTx {
   string owner                      = 1;
   string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
-  google.protobuf.Any msg           = 4;
+  string label                      = 3;
+  repeated google.protobuf.Any msgs           = 4  [(cosmos_proto.accepts_interface) = "sdk.Msg"];
   // duration defines the time that the code should run for
   string duration = 5;
   // start_at when set as a unix time after block inclusion, creates a custom start time for execution
@@ -92,8 +95,6 @@ message MsgRegisterAccountAndSubmitAutoTx {
   ];
   //optional array of dependent txs that should be executed before execution is allowed
   repeated uint64 depends_on_tx_ids = 9;
-  //if execution of depended tx has not happend yet
-  uint64 retries = 10;
 }
 
 // MsgRegisterAccountAndSubmitAutoTxResponse defines the MsgSubmitTx response type
