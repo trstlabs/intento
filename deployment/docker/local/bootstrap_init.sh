@@ -14,7 +14,7 @@ then
     #  trstcli config trust-node true
     trstcli config keyring-backend test
     
-    trstd init banana --chain-id trst-pub-testnet-1
+    trstd init FRST --chain-id trst-pub-testnet-1
     trstd prepare-genesis testnet "$chain_id"
     cp ~/node_key.json ~/.trstd/config/node_key.json
     

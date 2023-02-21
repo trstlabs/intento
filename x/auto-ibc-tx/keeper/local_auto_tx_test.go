@@ -51,7 +51,20 @@ func TestSendLocalTxAutoCompound(t *testing.T) {
 
 	val := keeper.stakingKeeper.GetAllValidators(ctx)[0]
 	require.NotEmpty(t, val)
+	val.Tokens = sdk.NewInt(5000)
+	val.DelegatorShares = sdk.NewDecFromInt(val.Tokens)
+	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
+	keeper.stakingKeeper.SetValidator(ctx, val)
 
+	//setting baseline
+	keeper.distrKeeper.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 2, distrtypes.ValidatorHistoricalRewards{
+		CumulativeRewardRatio: sdk.DecCoins{},
+		ReferenceCount:        2,
+	})
+	keeper.distrKeeper.SetValidatorCurrentRewards(ctx, val.GetOperator(), distrtypes.ValidatorCurrentRewards{
+		Rewards: sdk.DecCoins{},
+		Period:  3,
+	})
 	count := keeper.distrKeeper.GetValidatorHistoricalReferenceCount(ctx)
 	require.Equal(t, uint64(2), count)
 	rewards := keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator())

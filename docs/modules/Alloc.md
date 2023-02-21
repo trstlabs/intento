@@ -1,5 +1,5 @@
 ---
-order: 2
+order: 4
 title: Allocation
 description: Useful information regarding allocation module
 ---

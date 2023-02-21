@@ -16,7 +16,7 @@ then
     
     # export TRUSTLESS_HUB_CHAIN_ID=trst_chain_1
     # export TRUSTLESS_HUB_KEYRING_BACKEND=test
-    trstd init banana --chain-id "$chain_id"
+    trstd init FRST --chain-id "$chain_id"
     
     trstd prepare-genesis testnet "$chain_id"
     

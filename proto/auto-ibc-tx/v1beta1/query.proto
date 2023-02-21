@@ -34,8 +34,7 @@ service Query {
   // Params returns the total set of AutoIbcTx parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/auto-ibc-tx/v1beta1/params";
-  }
-
+  };
 }
 
 // QueryInterchainAccountFromAddressRequest is the request type for the Query/InterchainAccountAddress RPC

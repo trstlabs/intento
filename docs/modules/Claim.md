@@ -6,8 +6,8 @@ description: Useful information regarding allocation module
 # Claim module
 
 Recipients perform 4 actions
-1. Perform RecurringSwap (DCA) strategy
-2. Perform AutoSwap (DCA) strategy
+1. Perform automation of category 1
+2. Perform automaton of category 2
 3. Governance vote
 4. Stake TRST
 
@@ -16,7 +16,8 @@ After each action, 20% of total elligable claims are unlocked. The remainder is 
 Users must stake more than 67% of TRST received to submit a new claim for claimable tokens.
 
 
-## Params
+## Governance Parameters
+
 ```golang
 
 var (

@@ -1,12 +1,12 @@
 ---
 order: 4
-title: Automation
-description: Learn the basics of how AutoMessage enable contract self-execution with omly 1-click
+title: Contract Automation
+description: How AutoMessage enable contract self-execution and enables 1-click user experiences for time-based actions
 ---
 
-## Automation with AutoMessage
+## Contract Automation with AutoMessage
 
-Automation happens with an AutoMessage. This is a message that can execute at a specified time, or recurringly with intervals. The callable function can be specified by the contract. As this is a powerful feature, the 'AutoMsg' is defined at instantiation of a proxy contract. Contract interactors can view that given contract will self-execute at  pre-defined time(s).
+Automation in self-executing contracts are performed using what we call AutoMessages. An AutoMessage is a message that executes at a specified time, or recurringly with intervals. The callable function is specified in the contract. As this is a powerful feature, the 'AutoMsg' must be defined at instantiation of a contract. Contract interactors can view that given contract will self-execute at pre-defined time(s).
 
 ## Process
 
@@ -15,8 +15,6 @@ Automation happens with an AutoMessage. This is a message that can execute at a 
 - This can only be sent to the same contract as instantiated by the creator
 - Then a *callback signature* is created. This is a signature with a hash containing the address of the contract and the message, so that only the chain is able to execute the message
 - When the contract is set to execute according to the predefined execution schedule, the AutoMessage is retrieved along with the callback signature. 
-
-
 
 ## Fees
 

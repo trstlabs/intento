@@ -1,77 +1,62 @@
 ---
-order: 4
-title: AutoIbcTx
+order: 1
+title: AutoTx
 description: Automation with the interchain accounts module
 ---
 
-# AutoIbcTx Module
+# AutoTx Module
 
-This module contains a custom Interchain Accounts authentication module
-With MsgSubmitAutoTx time-based interchain account message calls are scheduled.
+This module is used to automate processes across chains. With 'MsgSubmitAutoTx', time-based interchain account message calls are scheduled.
 
-This is useful for Cosmos and smart contract developers needing to automate message calls without using hard-to integrate off-chain bots
+This is useful for Cosmos and smart contract developers wanting to automate message calls without using hard-to-integrate and unreliable off-chain bots.
 
-Examples include payroll (MsgSend on any chain), dollar-cost averaging (MsgSwapExactAmountIn on Osmosis), managing contract workflows (MsgExecuteContract on CosmWasm chains)
+Usecases include payroll, dollar-cost averaging, managing contract workflows. Respective messages for these actions are: MsgSend on any Cosmos SDK chain; MsgSwapExactAmountIn on Osmosis and MsgExecuteContract on CosmWasm chains.
 
-## Automate user assets
+Local messages to this chain can also be scheduled. This can be used to Autocompound tokens to any validator, stream local TRST tokens or even stream IBC Transfers.
 
-The trustless nature of on-chain automation and trustless bridging through IBC allows for a great deal of reliability. What it also brings to the table is asserting whom the message caller will be. By knowing the message caller, it is possible to create a grant and authorize the message caller to use a user's assets.  This allows for payroll services without pre-funding a contract & transfers of assets based on time. This is only available with on-chain automation.
+## Automating user assets
 
-## Fees
+The trustless nature of on-chain automation and trustless bridging through IBC have way better trust assumptions compared to bots. What it also brings to the table is asserting whom the message caller will be. By knowing the message caller it is possible to authorize the message caller to automate user assets. This is done by creating an grant in the Authz module of host chain. This allows for payroll services without pre-funding a contract & transfers of assets based on time. This is only available using on-chain automation.
 
-To encourage valuable transactions and timely execution, fees are implemented. These are designed to prevent spam, network congestion and reward validators for providing computational resources.
+### Fixed Fee
 
-1. FixedFee to the community pool.  
-2. FlexFee to the proposing validator
+The Fixed Fee is applied per message basis. An AutoTx can have multple messages to be executed, with a maximum of 9. This number can be increased when desired.
 
+### FlexFee Fee
 
-Governance can decide on how these fees are set. The FixedFee goes to the community pool to create network growth. Funds can be allocated towards ecosystem development, relayer participation, new tooling and educational content.
+The FlexFee is timedependent fee calculated for each AutoTx period on a minute basis. 
 
-When funds are sent along MsgSubmitAutoTx, fees are deducted from a unique AutoTx address. If unspecified, fees are deducted from the sender account. When funds are unavailable, execution will not take place.
+### Fund deduction
+
+When funds are sent along MsgSubmitAutoTx, fees are deducted from the sender account. When specified, fees are deducted from a fund address. When funds are unavailable, execution will not take place. Funds left on a fund address are automatically returned to the owner after the last execution. A small commision of 2-5% is taken to the community pool.
 
 ## Relayer Rewards
 
-Relayers are vital to well-functioning of this module for ensuring timely, reliable execution. To incentivize relayers, rewards are minted in the mint module, allocated from the alloc module and sent to the AutoTx module. Here, relayers are incentivized. Relayer rewards are specified to different types of messages. AuthZ messages that perform authorized actions on behalf of a user such as recurring transactions and DCA strategies and WASM smart contract calls for developers automating their dApps. 
+Relayers are vital to well-functioning of this module for ensuring timely, reliable execution. To incentivize relayers, rewards are minted in the mint module, allocated from the alloc module and sent to the AutoTx module. For acknoledging a succesfull IBC packet containing AutoTx messages, relayers are incentivized. Relayer rewards are specified based on the category of message. The category are as follows: SDK message, WASM message and Osmosis message. AuthZ messages can perform authorized actions on behalf of a user such as recurring transactions and reward claims. On Osmosis users can perform DCA strategies and withdrawal automatically after an unbonding period ends.  WASM smart contract calls are for developers automating their dApps and users that want to automate their smart contract tasks.
 
 ## Parameters
 
-A number of automation-related parameters can be adjusted. Parameters can be adjusted by governance to ensure that the fees are fair. The default values are the following:
+A number of automation-related parameters can be adjusted. Parameters can be adjusted by governance to ensure that fees and rewards are fair. The default values are the following:
 
 ```golang
-
-// AutoTxFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
-
-DefaultAutoTxFundsCommission int64 = 2
-
-// AutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
-
-DefaultAutoTxConstantFee int64 = 1_000_000  // 1trst
-
-// AutoTxFlexFeeMul is the denominator for the gas-dependent flex fee to prioritize auto messages in the block, to be distributed to validators
-
-DefaultAutoTxFlexFeeMul int64 = 100  // 100/100 = 1 = gasUsed
-
-// RecurringAutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
-
-DefaultRecurringAutoTxConstantFee int64 = 1_000_000  // 1trst
-
-// Default max period for a AutoTx that is self-executing
-
-DefaultMaxAutoTxDuration time.Duration = time.Hour * 24 * 366 * 10  // a little over 10 years
-
-// MinAutoTxDuration sets the minimum duration for a self-executing AutoTx
-
-DefaultMinAutoTxDuration time.Duration = time.Second * 60
-
-// MinAutoTxInterval sets the minimum interval self-execution
-
-DefaultMinAutoTxInterval time.Duration = time.Second * 60
-
-// DefaultRelayerReward for a given autotx type (0=SDK message, 1=WASM message, 2=Osmosis message).
-
-DefaultRelayerRewards []int64 = []int64{10_000, 15_000, 18_000}
-
-```
+const (
+ // AutoTxFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
+ DefaultAutoTxFundsCommission int64 = 2 //2%
+ // AutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
+ DefaultAutoTxConstantFee int64 = 5_000 // 0.005trst
+ // AutoTxFlexFeeMul is the denominator for the gas-dependent flex fee to prioritize auto messages in the block, to be distributed to validators
+ DefaultAutoTxFlexFeeMul int64 = 3 // 3% of minutes for a given period as utrst (1_000m = 20utrst)
+ // RecurringAutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
+ DefaultRecurringAutoTxConstantFee int64 = 5_000 // 0.005trst
+ // Default max period for a AutoTx that is self-executing
+ DefaultMaxAutoTxDuration time.Duration = time.Hour * 24 * 366 * 2 // a little over 2 years
+ // MinAutoTxDuration sets the minimum duration for a self-executing AutoTx
+ DefaultMinAutoTxDuration time.Duration = time.Second * 60
+ // MinAutoTxInterval sets the minimum interval self-execution
+ DefaultMinAutoTxInterval time.Duration = time.Second * 60
+ // DefaultRelayerReward for a given autotx type
+ DefaultRelayerReward int64 = 10_000 //0.01trst
+)
 
 ## BeginBlocker
 

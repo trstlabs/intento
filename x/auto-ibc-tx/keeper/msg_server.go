@@ -129,6 +129,9 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 	if len(msg.DependsOnTxIds) >= 10 {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must depend on less than 10 autoTxIDs")
 	}
+	if len(msg.Msgs) >= 10 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must have less than 10 messages")
+	}
 	// if msg.Retries > 5 {
 	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx can retry for a maximum of 5 times")
 	// }
@@ -207,9 +210,10 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 
 	}
 	if len(msg.DependsOnTxIds) >= 10 {
-
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must depend on less than 10 autoTxIDs")
-
+	}
+	if len(msg.Msgs) >= 10 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must have less than 10 messages")
 	}
 	// if msg.Retries > 5 {
 	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx can retry for a maximum of 5 times")

@@ -16,7 +16,7 @@ services:
       CHAINID: "trstdev-1"
       LOG_LEVEL: "error"
   localtrst-2:
-    image: "trstlabs/localtrst:latest"
+    image: "ghcr.io/trstlabs/localtrst:latest"
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:

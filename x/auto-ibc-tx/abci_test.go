@@ -28,7 +28,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	// BeginBlocker
 	isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
-	flexFee := calculateFlexFee(autoTx, isRecurring)
+	flexFee := calculateTimeBasedFlexFee(autoTx, isRecurring)
 	fee, err := k.DistributeCoins(ctx2, autoTx, flexFee, isRecurring, ctx2.BlockHeader().ProposerAddress)
 	require.NoError(t, err)
 
@@ -79,7 +79,7 @@ func TestBeginBlockerStressTest(t *testing.T) {
 	// BeginBlocker
 	for _, autoTx := range queue {
 		isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
-		flexFee := calculateFlexFee(autoTx, isRecurring)
+		flexFee := calculateTimeBasedFlexFee(autoTx, isRecurring)
 		fee, err := k.DistributeCoins(ctx2, autoTx, flexFee, isRecurring, ctx2.BlockHeader().ProposerAddress)
 		require.NoError(t, err)
 
@@ -118,7 +118,7 @@ func TestBeginBlockerWithRetry(t *testing.T) {
 
 	// BeginBlocker
 	isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
-	flexFee := calculateFlexFee(autoTx, isRecurring)
+	flexFee := calculateTimeBasedFlexFee(autoTx, isRecurring)
 	fee, err := k.DistributeCoins(ctx2, autoTx, flexFee, isRecurring, ctx2.BlockHeader().ProposerAddress)
 	require.NoError(t, err)
 

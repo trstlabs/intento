@@ -1,5 +1,5 @@
 ---
-order: 2
+order: 4
 title: Contract State
 description: Learn how to integrate a contract state and query it
 ---

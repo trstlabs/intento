@@ -8,7 +8,7 @@ trstd config indent true
 trstd config trust-node true
 trstd config keyring-backend test
 
-trstd init banana --chain-id trst_chain_1
+trstd init FRST --chain-id trst_chain_1
 
 cp ~/node_key.json ~/.trstd/config/node_key.json
 

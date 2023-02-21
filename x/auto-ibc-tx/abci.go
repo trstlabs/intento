@@ -40,7 +40,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 
 		isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
 
-		flexFee := calculateFlexFee(autoTx, isRecurring)
+		flexFee := calculateTimeBasedFlexFee(autoTx, isRecurring)
 		if fee, err := k.DistributeCoins(ctx, autoTx, flexFee, isRecurring, req.Header.ProposerAddress); err != nil {
 			logger.Error("auto_tx", "distribution err", err.Error())
 			addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, fee, err)
@@ -91,11 +91,13 @@ func updateAutoTxHistory(autoTx *types.AutoTxInfo, err error) {
 	autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Error = err.Error()
 }
 
-func calculateFlexFee(autoTx types.AutoTxInfo, isRecurring bool) sdk.Int {
+func calculateTimeBasedFlexFee(autoTx types.AutoTxInfo, isRecurring bool) sdk.Int {
 	if len(autoTx.AutoTxHistory) != 0 {
 		prevEntry := autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].ActualExecTime
-		return sdk.NewInt((autoTx.ExecTime.Sub(prevEntry)).Milliseconds())
+		period := (autoTx.ExecTime.Sub(prevEntry))
+		return sdk.NewInt(int64(period.Minutes()))
 	}
-	return sdk.NewInt((autoTx.ExecTime.Sub(autoTx.StartTime)).Milliseconds())
-
+	//return sdk.NewInt(int64((autoTx.ExecTime.Sub(autoTx.StartTime)).Minutes()))
+	period := autoTx.ExecTime.Sub(autoTx.StartTime)
+	return sdk.NewInt(int64(period.Minutes()))
 }

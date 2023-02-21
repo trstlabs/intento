@@ -12,7 +12,7 @@ if [ ! -e "$file" ]; then
   trstd config chain-id "$chain_id"
   trstd config keyring-backend test
 
-  trstd init banana --chain-id "$chain_id"
+  trstd init FRST --chain-id "$chain_id"
 
   trstd prepare-genesis testnet "$chain_id"
 

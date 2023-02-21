@@ -32,10 +32,11 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	//direct a commission of the utrst autoTxInfo balance towards the community pool
 	autoTxInfoBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
 
+	//constant fee can be charged per message
 	//depending on if self-execution is recurring the constant fee may differ (gov param)
-	constantFee := sdk.NewInt(p.AutoTxConstantFee)
+	constantFee := sdk.NewInt(p.AutoTxConstantFee * int64(len(autoTxInfo.Msgs)))
 	if isRecurring {
-		constantFee = sdk.NewInt(p.RecurringAutoTxConstantFee)
+		constantFee = sdk.NewInt(p.RecurringAutoTxConstantFee * int64(len(autoTxInfo.Msgs)))
 	}
 	communityCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, constantFee))
 

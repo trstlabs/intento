@@ -178,6 +178,9 @@ func (msg MsgSubmitAutoTx) ValidateBasic() error {
 	if len(msg.Msgs[0].GetValue()) == 0 {
 		return fmt.Errorf("can't execute an empty msg")
 	}
+	if len(msg.Msgs[0].GetValue()) >= 10 {
+		return fmt.Errorf("can't execute more than 9 messages")
+	}
 
 	if msg.ConnectionId == "" {
 		return fmt.Errorf("can't execute an empty ConnectionId")
@@ -251,6 +254,9 @@ func (msg MsgRegisterAccountAndSubmitAutoTx) GetSigners() []sdk.AccAddress {
 func (msg MsgRegisterAccountAndSubmitAutoTx) ValidateBasic() error {
 	if len(msg.Msgs[0].GetValue()) == 0 {
 		return fmt.Errorf("can't execute an empty msg")
+	}
+	if len(msg.Msgs[0].GetValue()) >= 10 {
+		return fmt.Errorf("can't execute more than 9 messages")
 	}
 
 	if msg.ConnectionId == "" {

@@ -331,9 +331,10 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams.MintDenom = BaseCoinUnit
 	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(0, 6, 0)
 	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(150_000_000_000_000)
+
 	genParams.MintParams.ReductionFactor = sdk.NewDec(3).QuoInt64(4)
-	//31,536,000 seconds a year/5seconds=6307200 blocks
-	genParams.MintParams.BlocksPerYear = uint64(6307200)
+	//31,536,000 seconds a year/5.5seconds=5733818 blocks
+	genParams.MintParams.BlocksPerYear = uint64(5733818)
 	// staking
 	genParams.StakingParams = stakingtypes.DefaultParams()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 21 //3 weeks
@@ -379,7 +380,7 @@ func MainnetGenesisParams() GenesisParams {
 
 	//compute
 	genParams.ComputeParams = compute.DefaultParams()
-	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 366
+	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 366 * 2
 	genParams.ComputeParams.MinContractDuration = time.Second * 30
 	genParams.ComputeParams.MinContractInterval = time.Second * 60
 	genParams.ComputeParams.AutoMsgFundsCommission = 2
@@ -392,13 +393,13 @@ func MainnetGenesisParams() GenesisParams {
 
 	//AutoIBCTx
 	genParams.AutoIbcTxParams = autoibctxtypes.DefaultParams()
-	genParams.AutoIbcTxParams.MaxAutoTxDuration = time.Hour * 24 * 366
+	genParams.AutoIbcTxParams.MaxAutoTxDuration = time.Hour * 24 * 366 * 2
 	genParams.AutoIbcTxParams.MinAutoTxDuration = time.Second * 60
 	genParams.AutoIbcTxParams.MinAutoTxInterval = time.Second * 60
 	genParams.AutoIbcTxParams.AutoTxFundsCommission = 2
-	genParams.AutoIbcTxParams.AutoTxConstantFee = 5_000
-	genParams.AutoIbcTxParams.AutoTxFlexFeeMul = 100
-	genParams.AutoIbcTxParams.RecurringAutoTxConstantFee = 10_000
+	genParams.AutoIbcTxParams.AutoTxConstantFee = 7_000
+	genParams.AutoIbcTxParams.AutoTxFlexFeeMul = 3
+	genParams.AutoIbcTxParams.RecurringAutoTxConstantFee = 5_000
 	genParams.AutoIbcTxParams.RelayerRewards = []int64{10_000, 15_000, 18_000, 22_000}
 
 	//claim

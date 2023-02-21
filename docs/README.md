@@ -2,20 +2,17 @@
 
 # Trustless Hub
 
-[Trustless Hub](https://github.com/trstlabs/trst) is a smart contract blockchain with built-in automatic execution. You can build and deploy Self-Executing Smart Contracts to a large decentralized worldwide community. Trustless Hub is built on the [Cosmos SDK](https://docs.cosmos.network), and CosmWasm - Wasm-compiled Rust smart contracts, used by most Cosmos SDK Chains. CosmWasm Smart contracts are safer and more effient compared to other smart contracts.
+Trustless Hub is an application-specific blockchain built for automatic execution.
 
-Trustless Hub enables new services using encrypted inputs, time-based execution, 1-click recurring execution and verifiable data.
+Trustless Hub allows developers and end-users to automate arbitrary Cosmos messages. Building and interacting with complex automation solutions is also possible. You can build and deploy Self-Executing Smart Contracts to a large decentralized worldwide community.
 
-Use-cases include recurring swaps for DeFi, 1-click recurring transactions for payment and in-game battles with time-based winner appointment for gaming. As Trustless Hub's smart contract open up many new usecases on-chain, why we call these Trustless Contracts.
+Trustless Hub is built on the [Cosmos SDK](https://docs.cosmos.network), and CosmWasm - Wasm-compiled Rust smart contracts, used by many Cosmos SDK Chains. CosmWasm Smart contracts are safer and more effient compared to other smart contracts.
 
-## 4 pillars of Trustless Contracts
+Trustless Hub enables new services using time-based execution and verifiable data to create seamless user experiences.
 
-1. Front-running resistance
-2. Time-based Execution
-3. Recurring transactions with one click
-4. Verified Contract Templates
+Use-cases include ecurring transactions for paying in installments, remittances and payroll. Protocols can automate their workflows in a reliable and easy to integate manner. Devlopers can build dApps that use recurring swaps and automatic reward claiming. In-game battles are made more fun with time-based winner appointment. 
 
-Any CosmWasm code, like smart contracts on Juno, Osmosis, Secret Network and Archway can extend their functionality through Inter-Blockchain Communication (IBC)., or be transformed into a Trustless Contract.
+Any protocol with access to Inter-Blockchain communication, like smart contracts on Juno, Osmosis, Secret Network and Archway can extend their functionality through Trustless Hub.
 
 ## Use Cases
 
@@ -23,9 +20,9 @@ Any CosmWasm code, like smart contracts on Juno, Osmosis, Secret Network and Arc
  2. Payments
  3. Gaming
 
-Developers on other Chains and contract platforms will be able to use and integrate Trustless Hub's Rust-based Smart Contracts. DAOs can use payroll services, NFT creators can build in time-based minting and subscriptions. Games can do in-game battles with time-based battles and automatic winner appointment.
+Developers on other Chains and contract platforms will be able to use and integrate Trustless Hub's on-chain automation. DAOs can use payroll services, NFT creators can build in time-based minting and subscriptions. Games can do in-game battles with time-based battles and automatic winner appointment.
 
-In the Use Case section we'll dive more into each of these
+In the Use Case section we'll dive more into each of these!
 
 ## TRST Token
 

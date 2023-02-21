@@ -2,7 +2,7 @@
 title: Introduction
 order: 0
 parent:
-  order: 1
+  order: 4
   title: Trustless Contracts Guide
 ---
 

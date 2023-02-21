@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   localtrst-1:
-    image: "trstlabs/localtrst:latest"
+    image: "ghcr.io/trstlabs/localtrst:latest"
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:
@@ -22,7 +22,7 @@ services:
       retries: 3
       start_period: 30s
   localtrst-2:
-    image: "trstlabs/localtrst:latest"
+    image: "ghcr.io/trstlabs/localtrst:latest"
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:

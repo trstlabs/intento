@@ -11,21 +11,21 @@ import (
 
 const (
 	// AutoTxFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
-	DefaultAutoTxFundsCommission int64 = 2
+	DefaultAutoTxFundsCommission int64 = 2 //2%
 	// AutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultAutoTxConstantFee int64 = 1_000_000 // 1trst
+	DefaultAutoTxConstantFee int64 = 5_000 // 0.005trst
 	// AutoTxFlexFeeMul is the denominator for the gas-dependent flex fee to prioritize auto messages in the block, to be distributed to validators
-	DefaultAutoTxFlexFeeMul int64 = 100 // 100/100 = 1 = gasUsed
+	DefaultAutoTxFlexFeeMul int64 = 3 // 3% of minutes for a given period as utrst (1_000m = 20utrst)
 	// RecurringAutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultRecurringAutoTxConstantFee int64 = 1_000_000 // 1trst
+	DefaultRecurringAutoTxConstantFee int64 = 5_000 // 0.005trst
 	// Default max period for a AutoTx that is self-executing
-	DefaultMaxAutoTxDuration time.Duration = time.Hour * 24 * 366 * 10 // a little over 10 years
+	DefaultMaxAutoTxDuration time.Duration = time.Hour * 24 * 366 * 2 // a little over 2 years
 	// MinAutoTxDuration sets the minimum duration for a self-executing AutoTx
 	DefaultMinAutoTxDuration time.Duration = time.Second * 60
 	// MinAutoTxInterval sets the minimum interval self-execution
 	DefaultMinAutoTxInterval time.Duration = time.Second * 60
 	// DefaultRelayerReward for a given autotx type
-	DefaultRelayerReward int64 = 10_000
+	DefaultRelayerReward int64 = 10_000 //0.01trst
 )
 
 // Parameter store key
