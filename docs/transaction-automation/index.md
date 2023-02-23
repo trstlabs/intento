@@ -11,7 +11,7 @@ This knowledge base contains information that cover different aspects of automat
 
 Transaction automation is using AutoTx module, it is a relatively simple time-based automation module as opposed to our advanced contract automation that can handle arbitrary messages
 
-## Advantages of our approach:
+## Advantages of our approach
 
 + Easy to integrate into dApps
 + Automation of user funds using AuthZ

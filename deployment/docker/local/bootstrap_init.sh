@@ -15,7 +15,7 @@ then
     trstcli config keyring-backend test
     
     trstd init FRST --chain-id trst-pub-testnet-1
-    trstd prepare-genesis testnet "$chain_id"
+    trstd prepare-genesis testnet trst-pub-testnet-1
     cp ~/node_key.json ~/.trstd/config/node_key.json
     
     perl -i -pe 's/"stake"/"utrst"/g' ~/.trstd/config/genesis.json

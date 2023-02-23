@@ -33,5 +33,3 @@ The Keyring gives back a success response, which is sufficient for the TIP20 tok
 On success, TIP20 contract gives back an encrypted response with the balance.
 
 ![lkeyring](../images/keyring.png)
-
-*This contract is be implemented, feel free to apply for a grant to build this out*

@@ -9,6 +9,7 @@ description: Learn how to integrate a contract state and query it
 Contracts are private-by-default. State is encrypted. There is a public state avaliable too. 
 
 Let's see how the public state works.
+
 ## CosmWasm Response object
 At the end of a CosmWasm function, developers can define what to be added to the contract's public state in the Response object.
 

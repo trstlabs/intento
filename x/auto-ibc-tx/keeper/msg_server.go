@@ -110,27 +110,20 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 	}
 
 	p := k.GetParams(ctx)
-	if interval != 0 && interval < p.MinAutoTxInterval && interval > duration {
+	if interval != 0 && (interval < p.MinAutoTxInterval || interval > duration) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinAutoTxInterval, duration)
-
 	}
 	if duration != 0 {
 		if duration > p.MaxAutoTxDuration {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be shorter than maximum duration: %s", duration, p.MaxAutoTxDuration)
-		}
-		if duration < p.MinAutoTxDuration {
+		} else if duration < p.MinAutoTxDuration {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be longer than minimum duration: %s", duration, p.MinAutoTxDuration)
-		}
-		if startTime.After(ctx.BlockHeader().Time.Add(duration)) {
+		} else if startTime.After(ctx.BlockHeader().Time.Add(duration)) {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx start time: %s must be before AutoTx end time : %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
-
 	}
-	if len(msg.DependsOnTxIds) >= 10 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must depend on less than 10 autoTxIDs")
-	}
-	if len(msg.Msgs) >= 10 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must have less than 10 messages")
+	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must depend on less than 10 autoTxIDs and have less than 10 messages")
 	}
 	// if msg.Retries > 5 {
 	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx can retry for a maximum of 5 times")
@@ -193,27 +186,20 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 	}
 
 	p := k.GetParams(ctx)
-	if interval != 0 && interval < p.MinAutoTxInterval && interval > duration {
+	if interval != 0 && (interval < p.MinAutoTxInterval || interval > duration) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinAutoTxInterval, duration)
-
 	}
 	if duration != 0 {
 		if duration > p.MaxAutoTxDuration {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be shorter than maximum duration: %s", duration, p.MaxAutoTxDuration)
-		}
-		if duration < p.MinAutoTxDuration {
+		} else if duration < p.MinAutoTxDuration {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be longer than minimum duration: %s", duration, p.MinAutoTxDuration)
-		}
-		if startTime.After(ctx.BlockHeader().Time.Add(duration)) {
+		} else if startTime.After(ctx.BlockHeader().Time.Add(duration)) {
 			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx start time: %s must be before AutoTx end time : %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
-
 	}
-	if len(msg.DependsOnTxIds) >= 10 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must depend on less than 10 autoTxIDs")
-	}
-	if len(msg.Msgs) >= 10 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must have less than 10 messages")
+	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx must depend on less than 10 autoTxIDs and have less than 10 messages")
 	}
 	// if msg.Retries > 5 {
 	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx can retry for a maximum of 5 times")

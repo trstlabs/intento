@@ -178,13 +178,13 @@ func (msg MsgSubmitAutoTx) ValidateBasic() error {
 	if len(msg.Msgs[0].GetValue()) == 0 {
 		return fmt.Errorf("can't execute an empty msg")
 	}
-	if len(msg.Msgs[0].GetValue()) >= 10 {
+	if len(msg.Msgs) >= 10 {
 		return fmt.Errorf("can't execute more than 9 messages")
 	}
 
-	if msg.ConnectionId == "" {
+	/* if msg.ConnectionId == "" {
 		return fmt.Errorf("can't execute an empty ConnectionId")
-	}
+	} */
 	for _, message := range msg.GetTxMsgs() {
 		// check if the msg contains valid inputs
 		err := message.ValidateBasic()
@@ -255,13 +255,13 @@ func (msg MsgRegisterAccountAndSubmitAutoTx) ValidateBasic() error {
 	if len(msg.Msgs[0].GetValue()) == 0 {
 		return fmt.Errorf("can't execute an empty msg")
 	}
-	if len(msg.Msgs[0].GetValue()) >= 10 {
+	if len(msg.Msgs) >= 10 {
 		return fmt.Errorf("can't execute more than 9 messages")
 	}
 
-	if msg.ConnectionId == "" {
+	/* if msg.ConnectionId == "" {
 		return fmt.Errorf("can't execute an empty ConnectionId")
-	}
+	} */
 	for _, message := range msg.GetTxMsgs() {
 		// check if the msg contains valid inputs
 		err := message.ValidateBasic()
