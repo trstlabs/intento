@@ -34,7 +34,7 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: []*sdktypes.Any{}, Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
 	}
 
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
@@ -69,7 +69,7 @@ func TestDistributeCoinsFeesFromUser(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: addr2.String(), FeeAddress: addr1.String(), Msgs: []*sdktypes.Any{}, Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+		TxID: 0, Owner: addr2.String(), FeeAddress: addr1.String(), Msgs: NewMsg(), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
 	}
 
 	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), true, ctx.BlockHeader().ProposerAddress)
@@ -106,7 +106,7 @@ func TestDistributeCoinsEmptyAutoTxBalanceNotLastExec(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: []*sdktypes.Any{}, Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
 	}
 
 	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), true, ctx.BlockHeader().ProposerAddress)
@@ -141,7 +141,7 @@ func TestDistributeCoinsEmptyAutoTxBalanceAndMultipliedFlexFee(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: []*sdktypes.Any{}, Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
 	}
 
 	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), false, ctx.BlockHeader().ProposerAddress)
@@ -177,7 +177,7 @@ func TestDistributeCoinsEmptyAutoTxBalanceAndDiscountedFlexFee(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: []*sdktypes.Any{}, Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
 	}
 
 	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), false, ctx.BlockHeader().ProposerAddress)
@@ -212,7 +212,7 @@ func TestDistributeCoinsLargeFee(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: addr2.String(), FeeAddress: addr1.String(), Msgs: []*sdktypes.Any{}, Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+		TxID: 0, Owner: addr2.String(), FeeAddress: addr1.String(), Msgs: NewMsg(), Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
 	}
 
 	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Hour.Milliseconds()*24*30), true, ctx.BlockHeader().ProposerAddress)
@@ -225,4 +225,9 @@ func TestDistributeCoinsLargeFee(t *testing.T) {
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
 	require.Equal(t, sdk.NewDec(time.Hour.Milliseconds()*24*30), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
 
+}
+
+func NewMsg() []*sdktypes.Any {
+	msg, _ := sdktypes.NewAnyWithValue(&types.MsgSubmitTx{})
+	return []*sdktypes.Any{msg}
 }

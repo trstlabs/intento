@@ -54,7 +54,7 @@ module.exports = {
           children: [ 
             {
               title: "CosmWasm Docs",
-              path: "https://docs.cosmwasm.com/docs/1.0/",
+              path: "https://docs.cosmwasm.com/docs/",
             },
             {
               title: "Cosmos SDK Docs",

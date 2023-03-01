@@ -96,7 +96,7 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 		if err != nil {
 			return err
 		}
-		
+
 		//autocompound
 		if sdk.MsgTypeURL(msg) == "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" {
 			validator := ""
@@ -139,13 +139,6 @@ func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, label string
 		return err
 	}
 
-	if !feeFunds.Empty() {
-		err = k.bankKeeper.SendCoins(ctx, owner, autoTxAddress, feeFunds)
-		if err != nil {
-			return err
-		}
-	}
-
 	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
 
 	autoTx := types.AutoTxInfo{
@@ -183,7 +176,7 @@ func (k Keeper) createFeeAccount(ctx sdk.Context, txID uint64, owner sdk.AccAddr
 	}
 
 	// deposit initial autoTx funds
-	if !feeFunds.IsZero() {
+	if !feeFunds.IsZero() && !feeFunds[0].Amount.IsZero() {
 		if k.bankKeeper.BlockedAddr(owner) {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "blocked address can not be used")
 		}

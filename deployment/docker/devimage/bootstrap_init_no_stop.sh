@@ -37,10 +37,10 @@ then
     echo $c_mnemonic | trstd keys add c --recover
     echo $d_mnemonic | trstd keys add d --recover
     
-    trstd add-genesis-account "$(trstd keys show -a a)" 1000000000000000000utrst
-    trstd add-genesis-account "$(trstd keys show -a b)" 1000000000000000000utrst
-    trstd add-genesis-account "$(trstd keys show -a c)" 1000000000000000000utrst
-    trstd add-genesis-account "$(trstd keys show -a d)" 1000000000000000000utrst
+    trstd add-genesis-account "$(trstd keys show -a a)" 100000000000000utrst
+    trstd add-genesis-account "$(trstd keys show -a b)" 100000000000000utrst
+    trstd add-genesis-account "$(trstd keys show -a c)" 100000000000000utrst
+    trstd add-genesis-account "$(trstd keys show -a d)" 100000000000000utrst
     
     
     trstd gentx a 1000000utrst --chain-id "$chain_id"

@@ -31,6 +31,9 @@ var (
 	KeyLastTxAddrID               = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
 )
 
+// ics 20 hook
+var SenderPrefix = "ibc-auto-tx-hook-intermediary"
+
 var (
 	KeyAutoTxIncentiveForSDKTx   = 0
 	KeyAutoTxIncentiveForWasmTx  = 1

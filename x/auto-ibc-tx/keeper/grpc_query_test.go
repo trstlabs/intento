@@ -27,7 +27,7 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
 	//coordinator, path := NewICA(t)
 	creator, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, deposit)
-	var allExpecedAutoTxs []types.AutoTxInfo
+	var expectedAutoTxs []types.AutoTxInfo
 	portID, err := icatypes.NewControllerPortID(creator.String())
 	require.NoError(t, err)
 	//anyAddr, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, deposit)
@@ -60,7 +60,7 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 		// msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
 		// require.NoError(t, err)
 		// makeReadableMsgData(&autoTx, msg)
-		allExpecedAutoTxs = append(allExpecedAutoTxs, autoTx)
+		expectedAutoTxs = append(expectedAutoTxs, autoTx)
 	}
 
 	specs := map[string]struct {
@@ -72,7 +72,7 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 			srcQuery: &types.QueryAutoTxsForOwnerRequest{
 				Owner: creator.String(),
 			},
-			expAutoTxInfos: allExpecedAutoTxs,
+			expAutoTxInfos: expectedAutoTxs,
 			expErr:         nil,
 		},
 		"with pagination offset": {
@@ -82,7 +82,7 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 					Offset: 1,
 				},
 			},
-			expAutoTxInfos: allExpecedAutoTxs[1:],
+			expAutoTxInfos: expectedAutoTxs[1:],
 			expErr:         nil,
 		},
 		"with pagination limit": {
@@ -92,19 +92,19 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 					Limit: 1,
 				},
 			},
-			expAutoTxInfos: allExpecedAutoTxs[0:1],
+			expAutoTxInfos: expectedAutoTxs[0:1],
 			expErr:         nil,
 		},
 		"nil creator": {
 			srcQuery: &types.QueryAutoTxsForOwnerRequest{
 				Pagination: &query.PageRequest{},
 			},
-			expAutoTxInfos: allExpecedAutoTxs,
+			expAutoTxInfos: expectedAutoTxs,
 			expErr:         errors.New("empty address string is not allowed"),
 		},
 		"nil req": {
 			srcQuery:       nil,
-			expAutoTxInfos: allExpecedAutoTxs,
+			expAutoTxInfos: expectedAutoTxs,
 			expErr:         status.Error(codes.InvalidArgument, "empty request"),
 		},
 	}
@@ -119,7 +119,17 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.NotNil(t, got)
-			assert.Equal(t, spec.expAutoTxInfos, got.AutoTxInfos)
+			for i, expectedAutoTx := range spec.expAutoTxInfos {
+				assert.Equal(t, expectedAutoTx.GetTxMsgs(), got.AutoTxInfos[i].GetTxMsgs())
+				assert.Equal(t, expectedAutoTx.AutoTxHistory, got.AutoTxInfos[i].AutoTxHistory)
+				assert.Equal(t, expectedAutoTx.PortID, got.AutoTxInfos[i].PortID)
+				assert.Equal(t, expectedAutoTx.Owner, got.AutoTxInfos[i].Owner)
+				assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[i].ConnectionID)
+				assert.Equal(t, expectedAutoTx.Duration, got.AutoTxInfos[i].Duration)
+				assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[i].Interval)
+				assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[i].EndTime)
+				assert.Equal(t, expectedAutoTx.DependsOnTxIds, got.AutoTxInfos[i].DependsOnTxIds)
+			}
 		})
 	}
 }
@@ -131,7 +141,7 @@ func TestQueryAutoTxsList(t *testing.T) {
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
 
 	creator, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, deposit)
-	var allExpecedAutoTxs []types.AutoTxInfo
+	var expectedAutoTxs []types.AutoTxInfo
 	portID, err := icatypes.NewControllerPortID(creator.String())
 	require.NoError(t, err)
 
@@ -142,14 +152,26 @@ func TestQueryAutoTxsList(t *testing.T) {
 		// msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
 		// require.NoError(t, err)
 		// makeReadableMsgData(&autoTx, msg)
-		allExpecedAutoTxs = append(allExpecedAutoTxs, autoTx)
+		//autoTx.Msgs = nil
+		//autoTx.GetTxMsgs()
+		expectedAutoTxs = append(expectedAutoTxs, autoTx)
 	}
 
 	got, err := keepers.AutoIbcTxKeeper.AutoTxs(sdk.WrapSDKContext(ctx), &types.QueryAutoTxsRequest{})
+
 	require.NoError(t, err)
 	require.NotNil(t, got)
-	assert.Equal(t, allExpecedAutoTxs, got.AutoTxInfos)
-
+	for i, expectedAutoTx := range expectedAutoTxs {
+		assert.Equal(t, expectedAutoTx.GetTxMsgs(), got.AutoTxInfos[i].GetTxMsgs())
+		assert.Equal(t, expectedAutoTx.AutoTxHistory, got.AutoTxInfos[i].AutoTxHistory)
+		assert.Equal(t, expectedAutoTx.PortID, got.AutoTxInfos[i].PortID)
+		assert.Equal(t, expectedAutoTx.Owner, got.AutoTxInfos[i].Owner)
+		assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[i].ConnectionID)
+		assert.Equal(t, expectedAutoTx.Duration, got.AutoTxInfos[i].Duration)
+		assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[i].Interval)
+		assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[i].EndTime)
+		assert.Equal(t, expectedAutoTx.DependsOnTxIds, got.AutoTxInfos[i].DependsOnTxIds)
+	}
 }
 
 func TestQueryParams(t *testing.T) {
@@ -182,6 +204,7 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 		return types.AutoTxInfo{}, err
 	}
 	fakeMsg := banktypes.NewMsgSend(owner, autoTxAddress, feeFunds)
+
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{fakeMsg})
 	if err != nil {
 		return types.AutoTxInfo{}, err
@@ -205,5 +228,7 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 
 	k.SetAutoTxInfo(ctx, &autoTx)
 	k.addToAutoTxOwnerIndex(ctx, owner /* startAt, */, txID)
+	autoTxBz := k.cdc.MustMarshal(&autoTx)
+	k.cdc.MustUnmarshal(autoTxBz, &autoTx)
 	return autoTx, nil
 }

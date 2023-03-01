@@ -27,7 +27,7 @@ then
     trstcli keys add c
     trstcli keys add d
     
-    trstd add-genesis-account "$(trstcli keys show -a a)" 1000000000000000000utrst
+    trstd add-genesis-account "$(trstcli keys show -a a)" 100000000000000utrst
     trstd gentx a 1000000utrst --keyring-backend test --chain-id trst-pub-testnet-1
     
     

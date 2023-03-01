@@ -24,7 +24,7 @@ a_mnemonic="grant rice replace explain federal release fix clever romance raise 
 
 echo $a_mnemonic | trstcli keys add a --recover
 
-trstcli add-genesis-account "$(trstcli keys show -a a)" 1000000000000000000utrst
+trstcli add-genesis-account "$(trstcli keys show -a a)" 100000000000000utrst
 
 # be on the source network (trstdev-1)
 trstcli config node http://localhost:26657

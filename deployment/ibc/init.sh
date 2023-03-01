@@ -82,10 +82,10 @@ echo $b_mnemonic | trstd keys add b --recover
 echo $c_mnemonic | trstd keys add c --recover
 echo $d_mnemonic | trstd keys add d --recover
 
-trstd add-genesis-account "$(trstd keys show -a a)" 1000000000000000000utrst
-trstd add-genesis-account "$(trstd keys show -a b)" 1000000000000000000utrst
-trstd add-genesis-account "$(trstd keys show -a c)" 1000000000000000000utrst
-trstd add-genesis-account "$(trstd keys show -a d)" 1000000000000000000utrst
+trstd add-genesis-account "$(trstd keys show -a a)" 100000000000000utrst
+trstd add-genesis-account "$(trstd keys show -a b)" 100000000000000utrst
+trstd add-genesis-account "$(trstd keys show -a c)" 100000000000000utrst
+trstd add-genesis-account "$(trstd keys show -a d)" 100000000000000utrst
 
 echo "Creating and collecting gentx..."
 $BINARY gentx val1 7000000000utrst --home $CHAIN_DIR/$CHAINID_1 --chain-id $CHAINID_1 --keyring-backend test

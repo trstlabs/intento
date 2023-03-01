@@ -46,8 +46,8 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 		communityCoins = communityCoins.Add(amountAutoTxFundsCommissionCoin)
 	}
 
-	totalAutoTxFees := communityCoins.Add(sdk.NewCoin(types.Denom, flexFeeMulDec.TruncateInt()))
-	fmt.Printf(" totalAutoTxFees: %v \n", totalAutoTxFees)
+	totalAutoTxFees := communityCoins.Add(sdk.NewCoin(types.Denom, flexFeeMulDec.Ceil().TruncateInt()))
+	//fmt.Printf("totalAutoTxFees: %v \n", totalAutoTxFees)
 	if !isRecurring {
 		//pay out the remaining balance to the autoTxInfo owner after deducting fee, commision and gas cost
 		toOwnerCoins, negative := autoTxInfoBalance.Sort().SafeSub(totalAutoTxFees)
@@ -63,7 +63,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 
 	// proposer reward
 	// transfer collected fees to the distribution module account
-	flexFeeCoin := sdk.NewCoin(types.Denom, flexFeeMulDec.TruncateInt())
+	flexFeeCoin := sdk.NewCoin(types.Denom, flexFeeMulDec.Ceil().TruncateInt())
 	if flexFeeCoin.Amount.IsZero() {
 		return sdk.Coin{}, sdkerrors.Wrap(sdkerrors.ErrInsufficientFee, "flexFeeCoin was zero")
 	}

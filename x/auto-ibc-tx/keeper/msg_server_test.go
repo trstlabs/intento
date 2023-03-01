@@ -89,9 +89,8 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 			}
 		})
 	}
-}
+} /*
 
-/*
 func (suite *KeeperTestSuite) TestSubmitTx() {
 	var (
 		path                      *ibctesting.Path

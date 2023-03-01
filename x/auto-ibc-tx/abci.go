@@ -24,7 +24,6 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	}
 
 	logger := k.Logger(ctx)
-
 	autoTxs := k.GetAutoTxsForBlock(ctx)
 	logger.Debug("auto_ibc-txs", "txs", len(autoTxs))
 
@@ -44,7 +43,6 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 		if fee, err := k.DistributeCoins(ctx, autoTx, flexFee, isRecurring, req.Header.ProposerAddress); err != nil {
 			logger.Error("auto_tx", "distribution err", err.Error())
 			addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, fee, err)
-
 		} else {
 			if err := k.SendAutoTx(ctx, autoTx); err != nil {
 				logger.Error("auto_tx", "err", err)
@@ -52,7 +50,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 			}
 			addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, fee)
 			willRecur := autoTx.ExecTime.Before(autoTx.EndTime) && autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime)
-			k.RemoveFromAutoTxQueue(ctx, autoTx)
+
 			if willRecur {
 				fmt.Printf("auto-tx will recur: %v \n", autoTx.TxID)
 				// adding next execTime and a new entry into the queue based on interval
@@ -60,7 +58,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 				k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
 			}
 		}
-
+		k.RemoveFromAutoTxQueue(ctx, autoTx)
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeAutoTx,

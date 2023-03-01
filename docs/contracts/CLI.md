@@ -56,7 +56,7 @@ auto_msg='{"auto_msg":{}}'
 auto_msg_to_pass="$(base64 --wrap=0 <<<"$auto_msg")"
 ```
 
-Then, with only one message the recurring swap is instantiated from the token contract. As it is instantiated from the TIP20 token contract, the token contract is the owner. This perserves privacy and makes it possible to give allowance right away through the [CosmWasm reply](https://docs.cosmwasm.com/docs/1.0/smart-contracts/message/submessage/) function in the TIP20 token.
+Then, with only one message the recurring swap is instantiated from the token contract. As it is instantiated from the TIP20 token contract, the token contract is the owner. This perserves privacy and makes it possible to give allowance right away through the [CosmWasm reply](https://docs.cosmwasm.com/docs/smart-contracts/message/submessage/) function in the TIP20 token.
 
 
 ```bash

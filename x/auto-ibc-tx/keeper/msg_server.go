@@ -75,9 +75,16 @@ func (k msgServer) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*typ
 func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoTx) (*types.MsgSubmitAutoTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	portID, err := icatypes.NewControllerPortID(msg.Owner)
+	msgOwner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
-		return nil, err
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
+	portID := ""
+	if msg.ConnectionId != "" {
+		portID, err = icatypes.NewControllerPortID(msg.Owner)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var duration time.Duration = 0
@@ -102,11 +109,6 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	msgOwner, err := sdk.AccAddressFromBech32(msg.Owner)
-	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
 	}
 
 	p := k.GetParams(ctx)

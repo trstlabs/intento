@@ -25,8 +25,8 @@ if [ ! -e "$file" ]; then
   trstd keys add c
   trstd keys add d
 
-  trstd add-genesis-account "$(trstd keys show -a a)" 1000000000000000000utrst
-#  trstd add-genesis-account "$(trstd keys show -a b)" 1000000000000000000utrst
+  trstd add-genesis-account "$(trstd keys show -a a)" 100000000000000utrst
+#  trstd add-genesis-account "$(trstd keys show -a b)" 100000000000000utrst
 
 
 
