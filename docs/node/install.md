@@ -10,9 +10,8 @@ description: Steps to install a Trustless Hub Daemon on your local computer or d
     - [Go and Rust](#go-and-rust)
     - [SGX tools](#sgx-tools)
     - [Using `sgx-detect`](Using-`sgx-detect`)
-
   - [Install Trustless Hub daemon](#install-trst-daemon)
-    - [Install the debian package](#Install-the-debian-package)
+  - [Install the debian package](#Install-the-debian-package)
   - [Uninstall](#uninstall-trst)
   - [Uninstall SGX](#uninstall-sgx)
 
@@ -49,9 +48,8 @@ Trustless Hub is written in the Go and Rust programming language. To use Trustle
 
 - Install [Go](https://golang.org/doc/install) (**version 1.16** or higher)
 - Ensure the Go environment variables are [set properly](https://golang.org/doc/gopath_code#GOPATH) on your system
-
-
 - Install [Rustup](https://www.rust-lang.org/tools/install) (**version 1.16** or higher)
+
 First, make sure you have Rust installed: https://www.rust-lang.org/tools/install
 
 Once Rust is installed, install the nightly toolchain:
@@ -76,20 +74,22 @@ bash "$HOME/trst/scripts/sgx/installsgx.sh"
 ```
 
 and try alternatively:
-```sh
 
+```sh
 bash "$HOME/trst/scripts/sgx/installsgx_alternative.sh"
 ```
 
 
-## Using `sgx-detect`:
+## Using `sgx-detect`
 
 - Once Rust is installed, install the `nightly` toolchain:
 
 ```bash
 rustup toolchain install nightly-2022-03-12
 ```
+
 Then install the SGX tools:
+
 ```bash
 sudo apt install -y libssl-dev protobuf-compiler
 cargo +nightly install fortanix-sgx-tools sgxs-tools
@@ -152,6 +152,7 @@ make clean
 ## Uninstall SGX
 
 To uninstall all SGX related tools, run:
+
 ```sh
 bash "$HOME/trst/unnstallsgx.sh"
 ```

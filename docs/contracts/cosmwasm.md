@@ -10,6 +10,15 @@ On [Youtube](https://www.youtube.com/results?sp=mAEB&search_query=CosmWasm). the
 
 [CosmWasm](https://docs.cosmwasm.com/docs/) provides extensive documentation.
 
+## What is WebAssembly and CosmWasm?
+
+WebAssembly is a type of computer language that can be used to run computer programs in your web browser. It's like a magic box that can turn a computer program written in one language into another language that your computer can understand.
+
+CosmWasm is a special type of WebAssembly that is designed specifically for building decentralized applications, or dApps.
+
+CosmWasm is a tool that helps developers build dApps more easily by providing a set of tools and libraries that can be used to write smart contracts, which are the programs that run on a blockchain. 
+
+In short, WebAssembly is a magic box that helps run computer programs in your web browser, and CosmWasm is a set of tools that helps developers build decentralized applications using WebAssembly.
 
 ## CosmWasm on Trustless Hub
 

@@ -14,7 +14,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	wasmTypes "github.com/trstlabs/trst/go-cosmwasm/types"
 	"github.com/trstlabs/trst/x/compute/internal/types"

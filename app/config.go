@@ -25,12 +25,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
-	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v3/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v3/modules/core/02-client/client"
+	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
+	ibcfee "github.com/cosmos/ibc-go/v4/modules/apps/29-fee"
+	"github.com/cosmos/ibc-go/v4/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v4/modules/core"
+	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
 	alloc "github.com/trstlabs/trst/x/alloc"
-	icaauth "github.com/trstlabs/trst/x/auto-ibc-tx"
+	autoibctx "github.com/trstlabs/trst/x/auto-ibc-tx"
 	claim "github.com/trstlabs/trst/x/claim"
 	"github.com/trstlabs/trst/x/compute"
 	wasmclient "github.com/trstlabs/trst/x/compute/client"
@@ -77,6 +78,7 @@ var mbasics = module.NewBasicManager(
 		vesting.AppModuleBasic{},
 		feegrantmodule.AppModuleBasic{},
 		ica.AppModuleBasic{},
+		ibcfee.AppModuleBasic{},
 	},
 		// our stuff
 		customModuleBasics()...,
@@ -87,7 +89,7 @@ func customModuleBasics() []module.AppModuleBasic {
 	return []module.AppModuleBasic{
 		compute.AppModuleBasic{},
 		registration.AppModuleBasic{},
-		icaauth.AppModuleBasic{},
+		autoibctx.AppModuleBasic{},
 		claim.AppModuleBasic{},
 		alloc.AppModuleBasic{},
 		mint.AppModuleBasic{},

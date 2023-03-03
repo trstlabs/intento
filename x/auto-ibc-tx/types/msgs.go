@@ -22,10 +22,11 @@ var (
 )
 
 // NewMsgRegisterAccount creates a new MsgRegisterAccount instance
-func NewMsgRegisterAccount(owner, connectionID string) *MsgRegisterAccount {
+func NewMsgRegisterAccount(owner, connectionID string, version string) *MsgRegisterAccount {
 	return &MsgRegisterAccount{
 		Owner:        owner,
 		ConnectionId: connectionID,
+		Version:      version,
 	}
 }
 
@@ -121,7 +122,7 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgSend creates a new MsgSend instance
+// NewMsgSubmitAutoTx creates a new NewMsgSubmitAutoTx instance
 func NewMsgSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, dependsOn []uint64 /*  retries uint64 */) (*MsgSubmitAutoTx, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
@@ -199,7 +200,7 @@ func (msg MsgSubmitAutoTx) ValidateBasic() error {
 }
 
 // NewMsgSend creates a new MsgSend instance
-func NewMsgRegisterAccountAndSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, dependsOn []uint64 /*  retries uint64 */) (*MsgRegisterAccountAndSubmitAutoTx, error) {
+func NewMsgRegisterAccountAndSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, dependsOn []uint64 /*  retries uint64 */, version string) (*MsgRegisterAccountAndSubmitAutoTx, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -214,6 +215,7 @@ func NewMsgRegisterAccountAndSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg
 		Interval:       interval,
 		StartAt:        startAt,
 		DependsOnTxIds: dependsOn,
+		Version:        version,
 		//Retries:        retries,
 	}, nil
 }

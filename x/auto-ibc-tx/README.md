@@ -6,7 +6,7 @@ With 'MsgSubmitAutoTx', time-based interchain account message calls are schedule
 
 This is useful for Cosmos and smart contract developers wanting to automate message calls without using hard-to-integrate and unreliable off-chain bots.
 
-Usecases include payroll, dollar-cost averaging, managing contract workflows. Respective messages for these actions are: MsgSend on any Cosmos SDK chain; MsgSwapExactAmountIn on Osmosis and MsgExecuteContract on CosmWasm chains.
+Use cases include payroll, dollar-cost averaging, managing contract workflows. Respective messages for these actions are: MsgSend on any Cosmos SDK chain; MsgSwapExactAmountIn on Osmosis and MsgExecuteContract on CosmWasm chains.
 
 Local messages to this chain can also be scheduled. This can be used to Autocompound tokens to any validator, stream local TRST tokens or even stream IBC Transfers.
 
@@ -29,11 +29,11 @@ The Fixed Fee is applied per message basis. An AutoTx can have multple messages 
 
 ### FlexFee Fee
 
-The FlexFee is timedependent fee calculated for each AutoTx period on a minute basis. 
+The FlexFee is timedependent fee calculated for each AutoTx period on a minute basis.
 
-### Fund deduction
+### Refunds
 
-When funds are sent along MsgSubmitAutoTx, fees are deducted from the sender account. When specified, fees are deducted from a fund address. When funds are unavailable, execution will not take place. Funds left on a fund address are automatically returned to the owner after the last execution. A small commision of 2-5% is taken to the community pool.
+When funds are sent along MsgSubmitAutoTx, fees are deducted from the sender account. When specified, fees are deducted from a fund address. When funds are unavailable, execution will not take place. Funds left on a fund address are automatically returned to the owner after the last execution. A small community pool commision is applied.
 
 ## Relayer Rewards
 
@@ -68,3 +68,82 @@ const (
 ## BeginBlocker
 
 At the beginning of each block, the BeginBlocker checks if there are AutoTxs that are set for automation. The BeginBlocker is used as it can best proxy the execute time set at MsgSubmitAutoTx
+
+## ICS20 Transfer Middleware
+
+This module contains ICS20 transfer middleware. A MsgRegisterAccountAndSubmitAutoTx or a MsgSubmitAutoTx can be derrived from the memo field. This is useful for contract callers on other chains. This way DAOs and other entities can create autotxs using an ICS20-standard transaction. This middleware is based on the wasm_hooks implementation on [Osmosis](https://github.com/osmosis-labs/osmosis/tree/main/x/ibc-hooks).
+
+This is useful for a variety of use cases.
+
+The mechanism enabling this is a `memo` field on every ICS20 transfer packet as of [IBC v3.4.0](https://medium.com/the-interchain-foundation/moving-beyond-simple-token-transfers-d42b2b1dc29b).
+ics_middleware.go is IBC middleware that parses an ICS20 transfer, and if the `memo` field is of a particular form, creates a trigger by parsing and handling a SubmitAutoTx message. 
+
+We now detail the field s format for `auto_tx`.
+
+* Sender: We cannot trust the sender of an IBC packet, the counterparty chain has full ability to lie about it.
+We cannot risk this sender being confused for a particular user or module address. 
+
+* Owner: This field is directly obtained from the ICS-20 packet metadata and should equal the ICS20 transfer recipient. If unspecified, a placeholder is made from the ICS20 sender and channel.
+* Msg: This field should be directly obtained from the ICS-20 packet metadata.
+* Funds: This field is set to the amount of funds being sent over in the ICS 20 packet. One detail is that the denom in the packet is the counterparty chains representation of the denom, so we have to translate it to Trustless Hub's representation.
+
+So our constructed message for MsgSubmitAutoTx will contain the following:
+
+```go
+msg := MsgSubmitAutoTx{
+ // If let unspecified, owner is the actor that submitted the ICS20 message and a placeholder only
+ Owner: packet.data.memo["auto_tx"]["owner"] OR "trust1-hash-of-channel-and-sender",
+ // Array of Msg json encoded, then transformed into a proto.message
+ Msgs: packet.data.memo["auto_tx"]["msgs"],
+ // Funds coins that are transferred to the owner
+ FeeFunds: sdk.NewCoin{Denom: ibc.ConvertSenderDenomToLocalDenom(packet.data.Denom), Amount: packet.data.Amount}
+```
+
+### ICS20 packet structure
+
+So given the details above, we propogate the implied ICS20 packet data structure.
+ICS20 is JSON native, so we use JSON for the memo format.
+
+```json
+{
+    //... other ibc fields that we don't care about
+    "data":{
+     "denom": "denom on counterparty chain (e.g. uatom)",
+        "amount": "1000",
+        "sender": "...", // ignored
+        "receiver": "trust1address",
+         "memo": {
+           "auto_tx": {
+            "owner": "trust1address ", //optional
+              "msgs": [{
+                "@type":"/cosmos.somemodule.v1beta1.sometype",
+                //message values in JSON format
+            }],
+            "duration":"111h",
+            "interval":"11h",
+            "start_at":"11h",
+            "label":"my_label",
+            "connection_id":"connection-0", //optional, omit or leave blank in case local TRST message.
+            "register_ica": "false"//optional, set to true to register interchain account
+        },
+        //"version":""//optional, will attempt to register account when filled (this will never override any existing ICA address)
+    }
+}
+}
+```
+
+An ICS20 packet is formatted correctly for submitting an auto_tx if the following all hold:
+
+* `memo` is not blank
+* `memo` is valid JSON
+* `memo` has at least one key, with value `"auto_tx"`
+* `memo["auto_tx"]` has exactly the entries mentioned above
+* `memo["auto_tx"]["msgs"]` is an array with valid JSON SDK message objects with a key "@type" and sdk message values
+* `receiver == memo["auto_tx"]["owner"]`. Optional, owner should equal receiver and is the address that receives remaining fee balance after execution ends. 
+* `memo["auto_tx"]["connection_id"]`is a valid connectionID on TRST -> Destination chain, or blank/empty for local TRST execution of the message.
+* `memo["auto_tx"]["register_ica"]` can be added, and true to register an ICA. 
+
+Fees are paid with a newly generated and AutoTx specific fee account.
+
+If an ICS20 packet does not contain a memo containing "auto_tx", a regular MsgTransfer takes place.
+If an ICS20 packet is directed towards autoTx, and is formated incorrectly, then it returns an error.

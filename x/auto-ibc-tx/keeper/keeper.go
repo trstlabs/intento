@@ -11,8 +11,8 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/keeper"
-	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/keeper"
+	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 
@@ -68,8 +68,8 @@ func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capabilit
 }
 
 // RegisterInterchainAccount registers account
-func (k Keeper) RegisterInterchainAccount(ctx sdk.Context, connectionId, owner string) error {
-	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, connectionId, owner); err != nil {
+func (k Keeper) RegisterInterchainAccount(ctx sdk.Context, connectionId, owner, version string) error {
+	if err := k.icaControllerKeeper.RegisterInterchainAccount(ctx, connectionId, owner, version); err != nil {
 		return err
 	}
 	return nil

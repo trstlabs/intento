@@ -17,7 +17,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	channelkeeper "github.com/cosmos/ibc-go/v3/modules/core/04-channel/keeper"
+	channelkeeper "github.com/cosmos/ibc-go/v4/modules/core/04-channel/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 	wasm "github.com/trstlabs/trst/go-cosmwasm"
 	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"

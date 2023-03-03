@@ -13,9 +13,9 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
@@ -169,7 +169,7 @@ func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, label string
 }
 
 func (k Keeper) createFeeAccount(ctx sdk.Context, txID uint64, owner sdk.AccAddress, feeFunds sdk.Coins) (sdk.AccAddress, error) {
-	autoTxAddress := k.generateAutoTxInfoAddress(ctx, txID)
+	autoTxAddress := k.generateAutoTxFeeAddress(ctx, txID)
 	existingAcct := k.accountKeeper.GetAccount(ctx, autoTxAddress)
 	if existingAcct != nil {
 		return nil, sdkerrors.Wrap(types.ErrAccountExists, existingAcct.GetAddress().String())
@@ -193,7 +193,7 @@ func (k Keeper) createFeeAccount(ctx sdk.Context, txID uint64, owner sdk.AccAddr
 }
 
 // generates a autoTx address from txID + instanceID
-func (k Keeper) generateAutoTxInfoAddress(ctx sdk.Context, txID uint64) sdk.AccAddress {
+func (k Keeper) generateAutoTxFeeAddress(ctx sdk.Context, txID uint64) sdk.AccAddress {
 	instanceID := k.autoIncrementID(ctx, types.KeyLastTxAddrID)
 	return autoTxAddress(txID, instanceID)
 }

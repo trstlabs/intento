@@ -10,7 +10,7 @@ This module is used to automate processes across chains. With 'MsgSubmitAutoTx',
 
 This is useful for Cosmos and smart contract developers wanting to automate message calls without using hard-to-integrate and unreliable off-chain bots.
 
-Usecases include payroll, dollar-cost averaging, managing contract workflows. Respective messages for these actions are: MsgSend on any Cosmos SDK chain; MsgSwapExactAmountIn on Osmosis and MsgExecuteContract on CosmWasm chains.
+Use cases include payroll, dollar-cost averaging, managing contract workflows. Respective messages for these actions are: MsgSend on any Cosmos SDK chain; MsgSwapExactAmountIn on Osmosis and MsgExecuteContract on CosmWasm chains.
 
 Local messages to this chain can also be scheduled. This can be used to Autocompound tokens to any validator, stream local TRST tokens or even stream IBC Transfers.
 

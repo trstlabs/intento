@@ -37,7 +37,7 @@ message AutoTxInfo {
     google.protobuf.Timestamp end_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
     repeated AutoTxHistoryEntry auto_tx_history = 11;
     string port_id = 12 [(gogoproto.customname) = "PortID"];
-    string connection_id = 14 [(gogoproto.customname) = "ConnectionID"];
+    string connection_id = 14 [(gogoproto.customname) = "connection_id"];
     //optional array of dependent txs that should be executed before execution is allowed
     repeated uint64 depends_on_tx_ids = 15;
     //if execution of depended tx has not happend yet

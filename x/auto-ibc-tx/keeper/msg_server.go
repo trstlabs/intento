@@ -6,9 +6,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
 
@@ -26,7 +26,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 // RegisterAccount implements the Msg/RegisterAccount interface
 func (k msgServer) RegisterAccount(goCtx context.Context, msg *types.MsgRegisterAccount) (*types.MsgRegisterAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := k.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.Owner)
+	err := k.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.Owner, msg.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "AutoTx can retry for a maximum of 5 times")
 	// }
 
-	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds /*  msg.Retries, */, msg.DependsOnTxIds)
+	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, msg.DependsOnTxIds)
 	if err != nil {
 		return nil, err
 	}
@@ -139,11 +139,11 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 	return &types.MsgSubmitAutoTxResponse{}, nil
 }
 
-// SubmitAutoTx implements the Msg/SubmitAutoTx interface
+// RegisterAccountAndSubmitAutoTx implements the Msg/RegisterAccountAndSubmitAutoTx interface
 func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *types.MsgRegisterAccountAndSubmitAutoTx) (*types.MsgRegisterAccountAndSubmitAutoTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := k.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.Owner)
+	err := k.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.Owner, msg.Version)
 	if err != nil {
 		return nil, err
 	}

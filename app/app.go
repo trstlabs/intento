@@ -8,11 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/trstlabs/trst/app/keepers"
-	alloc "github.com/trstlabs/trst/x/alloc"
-	autoibctx "github.com/trstlabs/trst/x/auto-ibc-tx"
-	"github.com/trstlabs/trst/x/claim"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -26,14 +21,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	ica "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
-	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v3/modules/core"
-	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
+	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	ibcfee "github.com/cosmos/ibc-go/v4/modules/apps/29-fee"
+	ibcfeetypes "github.com/cosmos/ibc-go/v4/modules/apps/29-fee/types"
+	"github.com/cosmos/ibc-go/v4/modules/apps/transfer"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v4/modules/core"
+	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+	"github.com/trstlabs/trst/app/keepers"
+	alloc "github.com/trstlabs/trst/x/alloc"
+	autoibctx "github.com/trstlabs/trst/x/auto-ibc-tx"
 	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/trst/x/claim"
 
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -113,6 +114,7 @@ var (
 		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		alloctypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		autoibctxtypes.ModuleName:      {authtypes.Minter},
+		ibcfeetypes.ModuleName:         nil,
 	}
 
 	// Module accounts that are allowed to receive tokens
@@ -201,6 +203,7 @@ func NewTrstApp(
 	enabledProposals []compute.ProposalType,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *TrstApp {
+	fmt.Println("NewTrstApp")
 	encodingConfig := MakeEncodingConfig()
 	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -224,7 +227,7 @@ func NewTrstApp(
 
 	app.AppKeepers.InitKeys()
 	app.AppKeepers.InitSdkKeepers(appCodec, legacyAmino, bApp, maccPerms, app.BlockedAddrs(), invCheckPeriod, skipUpgradeHeights, homePath)
-	app.AppKeepers.InitCustomKeepers(appCodec, legacyAmino, bApp, bootstrap, homePath, computeConfig, enabledProposals)
+	app.AppKeepers.InitCustomKeepers(appCodec, legacyAmino, bApp, bootstrap, homePath, computeConfig, enabledProposals, interfaceRegistry)
 	app.setupUpgradeStoreLoaders()
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -257,6 +260,7 @@ func NewTrstApp(
 		transfer.NewAppModule(*app.AppKeepers.TransferKeeper),
 		ica.NewAppModule(app.AppKeepers.ICAControllerKeeper, app.AppKeepers.ICAHostKeeper),
 		autoibctx.NewAppModule(appCodec, *app.AppKeepers.AutoIBCTXKeeper),
+		ibcfee.NewAppModule(app.AppKeepers.IBCFeeKeeper),
 	)
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -286,6 +290,7 @@ func NewTrstApp(
 		compute.ModuleName,
 		reg.ModuleName,
 		claimtypes.ModuleName,
+		ibcfeetypes.ModuleName,
 	)
 
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
@@ -315,6 +320,7 @@ func NewTrstApp(
 		autoibctxtypes.ModuleName,
 		claimtypes.ModuleName,
 		alloctypes.ModuleName,
+		ibcfeetypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -344,6 +350,7 @@ func NewTrstApp(
 		ibchost.ModuleName,
 		icatypes.ModuleName,
 		autoibctxtypes.ModuleName,
+		ibcfeetypes.ModuleName,
 	)
 
 	// register all module routes and module queriers

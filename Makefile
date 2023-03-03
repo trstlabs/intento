@@ -452,9 +452,11 @@ aesm-image:
 ###                     Local Hermes+TransferPort+ICA+AutoIBCT              ###
 ###############################################################################
 
+
 build-hermes:
 	docker build -f deployment/ibc/hermes/hermes.Dockerfile -t hermes:v0.0.0 deployment/ibc/hermes
 
+# builds a local IBC connection and channel with hermes and docker
 run-localibc: build-hermes
 	docker compose -f deployment/ibc/hermes/docker-compose.yml up
 
@@ -466,6 +468,8 @@ kill-localibc:
 ###                 		    Local Go-Relayer			                ###
 ###############################################################################
 
+
+# runs 2 local chains
 run-localchains: 
 	@echo "Initializing both blockchains..."
 	docker compose -f deployment/ibc/relayer/docker-compose.yml up
@@ -479,9 +483,15 @@ init-golang-rly:
 	@echo "Initializing relayer..."
 	./deployment/ibc/relayer/interchain-acc-config/rly-init.sh
 
+# creates a relayer for 2 local chains and adds them to rly config
 create-rly: kill-dev
 	@echo "Initializing relayer..."
 	./deployment/ibc/relayer/init.sh
+
+# adds juno to the rly config
+create-rly-juno:
+	@echo "Initializing relayer..."
+	./deployment/ibc/relayer/init-juno.sh
 
 restart-rly: @echo "Restarting relayer..."
 	rly tx connection trstdev1-trstdev2 --override
@@ -492,10 +502,12 @@ kill-dev:
 	-@rm -rf ./data
 	-@killall trstd 2>/dev/null
 
+# starts Cosmosrelayer given the localchains are running
 start-chains-rly: 
 	@echo "Starting up local test relayer..."
 	./deployment/ibc/start.sh
 
+# starts Cosmosrelayer given the localchains and a localjuno chain are running
 start-chains-juno-rly: 
 	@echo "Starting up local test relayers..."
 	./deployment/ibc/start-localchains-juno.sh
@@ -509,10 +521,6 @@ run-localchains-juno: build-hermes
 kill-localchains-juno:
 	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml stop 
 	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml rm -f
-
-create-rly-juno:
-	@echo "Initializing relayer..."
-	./deployment/ibc/relayer/init-juno.sh
 
 ###############################################################################
 ###                                Swagger                                  ###

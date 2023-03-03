@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -35,32 +36,34 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	icacontroller "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/types"
-	icahost "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host"
-	icahostkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/keeper"
-	icahosttypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/host/types"
-	"github.com/cosmos/ibc-go/v3/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v3/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	ibcclient "github.com/cosmos/ibc-go/v3/modules/core/02-client"
-	ibcclienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
-	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
-	ibchost "github.com/cosmos/ibc-go/v3/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+	icacontroller "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/types"
+	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
+	ibcfee "github.com/cosmos/ibc-go/v4/modules/apps/29-fee"
+	ibcfeekeeper "github.com/cosmos/ibc-go/v4/modules/apps/29-fee/keeper"
+	ibcfeetypes "github.com/cosmos/ibc-go/v4/modules/apps/29-fee/types"
+	"github.com/cosmos/ibc-go/v4/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v4/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	ibcclient "github.com/cosmos/ibc-go/v4/modules/core/02-client"
+	ibcclienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
+	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
+	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
+	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 	allockeeper "github.com/trstlabs/trst/x/alloc/keeper"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
-	icaauth "github.com/trstlabs/trst/x/auto-ibc-tx"
+	autoibctx "github.com/trstlabs/trst/x/auto-ibc-tx"
 	autotxkeeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
 	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	claimkeeper "github.com/trstlabs/trst/x/claim/keeper"
+	claimtypes "github.com/trstlabs/trst/x/claim/types"
 	"github.com/trstlabs/trst/x/compute"
 	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
 	reg "github.com/trstlabs/trst/x/registration"
-
-	claimkeeper "github.com/trstlabs/trst/x/claim/keeper"
-	claimtypes "github.com/trstlabs/trst/x/claim/types"
 )
 
 type TrstAppKeepers struct {
@@ -87,8 +90,10 @@ type TrstAppKeepers struct {
 	AllocKeeper         *allockeeper.Keeper
 	ICAControllerKeeper *icacontrollerkeeper.Keeper
 	ICAHostKeeper       *icahostkeeper.Keeper
+	IBCFeeKeeper        ibcfeekeeper.Keeper
 	AutoIBCTXKeeper     *autotxkeeper.Keeper
 
+	TransferStack *autoibctx.IBCMiddleware
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
@@ -222,6 +227,7 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	homePath string,
 	computeConfig *compute.WasmConfig,
 	enabledProposals []compute.ProposalType,
+	interfaceRegistry types.InterfaceRegistry,
 ) {
 
 	mintKeeper := mintkeeper.NewKeeper(
@@ -265,6 +271,13 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	regKeeper := reg.NewKeeper(appCodec, ak.keys[reg.StoreKey], regRouter, reg.EnclaveApi{}, homePath, bootstrap)
 	ak.RegKeeper = &regKeeper
 
+	ak.IBCFeeKeeper = ibcfeekeeper.NewKeeper(
+		appCodec, ak.keys[ibcfeetypes.StoreKey], ak.GetSubspace(ibcfeetypes.ModuleName),
+		ak.IbcKeeper.ChannelKeeper, // may be replaced with IBC middleware
+		ak.IbcKeeper.ChannelKeeper,
+		&ak.IbcKeeper.PortKeeper, ak.AccountKeeper, ak.BankKeeper,
+	)
+
 	icaHostKeeper := icahostkeeper.NewKeeper(
 		appCodec, ak.keys[icahosttypes.StoreKey], ak.GetSubspace(icahosttypes.SubModuleName),
 		ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,
@@ -274,7 +287,7 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 
 	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
 		appCodec, ak.keys[icacontrollertypes.StoreKey], ak.GetSubspace(icacontrollertypes.SubModuleName),
-		ak.IbcKeeper.ChannelKeeper, ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,
+		ak.IBCFeeKeeper, ak.IbcKeeper.ChannelKeeper, &ak.IbcKeeper.PortKeeper,
 		ak.ScopedICAControllerKeeper, app.MsgServiceRouter(),
 	)
 	ak.ICAControllerKeeper = &icaControllerKeeper
@@ -282,7 +295,7 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	autoIbcTxKeeper := autotxkeeper.NewKeeper(appCodec, ak.keys[autoibctxtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedAutoIBCTXKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(autoibctxtypes.ModuleName), autotxkeeper.NewMultiAutoIbcTxHooks(ak.ClaimKeeper.Hooks()), app.MsgServiceRouter())
 	ak.AutoIBCTXKeeper = &autoIbcTxKeeper
 
-	autoIbcTxIBCModule := icaauth.NewIBCModule(*ak.AutoIBCTXKeeper)
+	autoIbcTxIBCModule := autoibctx.NewIBCModule(*ak.AutoIBCTXKeeper)
 
 	// Create Transfer Keepers
 	transferKeeper := ibctransferkeeper.NewKeeper(
@@ -292,11 +305,16 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	)
 	ak.TransferKeeper = &transferKeeper
 
+	hooksTransferModule := autoibctx.NewIBCMiddleware(transfer.NewIBCModule(transferKeeper), autoIbcTxKeeper, interfaceRegistry)
+	ak.TransferStack = &hooksTransferModule
+
 	// Create static IBC router, add ibc-tranfer module route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 
-	icaControllerIBCModule := icacontroller.NewIBCModule(*ak.ICAControllerKeeper, autoIbcTxIBCModule)
+	icaControllerIBCModule := icacontroller.NewIBCMiddleware(autoIbcTxIBCModule, *ak.ICAControllerKeeper)
+	icaControllerStack := ibcfee.NewIBCMiddleware(icaControllerIBCModule, ak.IBCFeeKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(*ak.ICAHostKeeper)
+	icaHostStack := ibcfee.NewIBCMiddleware(icaHostIBCModule, ak.IBCFeeKeeper)
 
 	computeDir := filepath.Join(homePath, ".compute")
 	// The last arguments can contain custom message handlers, and custom query handlers,
@@ -347,10 +365,10 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	ak.GovKeeper = &govKeeper
 
 	ibcRouter.AddRoute(compute.ModuleName, compute.NewIBCHandler(ak.ComputeKeeper, ak.IbcKeeper.ChannelKeeper)).
-		AddRoute(ibctransfertypes.ModuleName, transfer.NewIBCModule(*ak.TransferKeeper)).
-		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(autoibctxtypes.ModuleName, icaControllerIBCModule)
+		AddRoute(autoibctxtypes.ModuleName, icaControllerStack).
+		AddRoute(ibctransfertypes.ModuleName, ak.TransferStack).
+		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
+		AddRoute(icahosttypes.SubModuleName, icaHostStack)
 
 	// Setting Router will finalize all routes by sealing router
 	// No more routes can be added
@@ -382,6 +400,7 @@ func (ak *TrstAppKeepers) InitKeys() {
 		alloctypes.StoreKey,
 		autoibctxtypes.StoreKey,
 		icacontrollertypes.StoreKey,
+		ibcfeetypes.StoreKey,
 	)
 
 	ak.tKeys = sdk.NewTransientStoreKeys(paramstypes.TStoreKey)

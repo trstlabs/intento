@@ -22,27 +22,27 @@ from localhost:
 ```bash
 a_mnemonic="grant rice replace explain federal release fix clever romance raise often wild taxi quarter soccer fiber love must tape steak together observe swap guitar"
 
-echo $a_mnemonic | trstcli keys add a --recover
+echo $a_mnemonic | trstd keys add a --recover
 
-trstcli add-genesis-account "$(trstcli keys show -a a)" 100000000000000utrst
+trstd add-genesis-account "$(trstd keys show -a a)" 100000000000000utrst
 
 # be on the source network (trstdev-1)
-trstcli config node http://localhost:26657
+trstd config node http://localhost:26657
 
 # check the initial balance of a
-trstcli q bank balances trust1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6j2pk2jx
+trstd q bank balances trust1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6j2pk2jx
 
 # transfer to the destination network
-trstcli tx ibc-transfer transfer transfer channel-0 trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx 2utrst --from a
+trstd tx ibc-transfer transfer transfer channel-0 trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx 2utrst --from a
 
 # check a's balance after transfer
-trstcli q bank balances trust1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6j2pk2jx
+trstd q bank balances trust1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6j2pk2jx
 
 # switch to the destination network (trstdev-2)
-trstcli config node http://localhost:36657
+trstd config node http://localhost:36657
 
 # check that you have an ibc-denom
-trstcli q bank balances trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx # should have 1 ibc denom
+trstd q bank balances trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx # should have 1 ibc denom
 ```
 
 ### Interchain Accounts
@@ -121,7 +121,7 @@ trstd q interchain-accounts host packet-events channel-0 1 --node tcp://localhos
 
 ### Trustless Automation of user-based tasks AutoTXs with Interchain Accounts and AuthZ
 
-Message flow is similar to interchain acccounts but with authZ. It is required to create a grant on the host chain. In the messages below, the grantee is the interchain account address.
+Message flow is similar to interchain acccounts but using AuthZ. It is required to create a grant on the host chain. In the messages below, the grantee is the interchain account address.
 
 ```bash
 
@@ -186,12 +186,12 @@ trstd tx autoibctx submit-auto-tx  '{
 ```
 
 
-# AutoIbcTx Behavior
+### AutoTx IBC Behavior
 
 If host chain is offline then AutoTxs will resume afterwards. 
 
-If packet times out when there are no relayers, channel will be closed and AutoTx will stop.
+If packet times out when there are no relayers, channel will be closed and `AutoTx` will stop execution.
 
-We check validate basic in SubmitAutoTx. This is because if message returns an error at basic validation on the host chain, the package won't be included. If a next package arrives before timeout, the package sequence will mismatch. The ICA channel will timeout. A new Interchain account address must be generated to resume using ICA.
+We check if the message is valid using `ValidateBasic()` in `SubmitAutoTx`. This is because if message returns an error at basic validation on the host chain, the packet won't be included. If a next packet arrives before timeout, the packet sequence will mismatch. The ICA channel will timeout. A new Interchain account address must be generated to resume using ICA. By checking for validity we prevent these issues from arising.
 
-If a message retuns an error after basic validation then there won't be an acknoledgement. EecutedOnHost will be false for that given execution entry. The ICA remains active and AutoTx resumes.
+If a message retuns an error after basic validation, there won't be an acknoledgement. `Executed` will be `false` for that given execution entry. The ICA remains active and AutoTx resumes.

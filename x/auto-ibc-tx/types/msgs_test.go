@@ -7,8 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	ibctesting "github.com/cosmos/ibc-go/v3/testing"
+	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
 
@@ -39,9 +39,9 @@ func TestMsgRegisterAccountValidateBasic(t *testing.T) {
 		msg     *types.MsgRegisterAccount
 		expPass bool
 	}{
-		{"success", types.NewMsgRegisterAccount(TestOwnerAddress, ibctesting.FirstConnectionID), true},
-		{"owner address is empty", types.NewMsgRegisterAccount("", ibctesting.FirstConnectionID), false},
-		{"owner address is invalid", types.NewMsgRegisterAccount("invalid_address", ibctesting.FirstConnectionID), false},
+		{"success", types.NewMsgRegisterAccount(TestOwnerAddress, ibctesting.FirstConnectionID, TestVersion), true},
+		{"owner address is empty", types.NewMsgRegisterAccount("", ibctesting.FirstConnectionID, TestVersion), false},
+		{"owner address is invalid", types.NewMsgRegisterAccount("invalid_address", ibctesting.FirstConnectionID, TestVersion), false},
 	}
 
 	for i, tc := range testCases {
@@ -59,7 +59,7 @@ func TestMsgRegisterAccountGetSigners(t *testing.T) {
 	expSigner, err := sdk.AccAddressFromBech32(TestOwnerAddress)
 	require.NoError(t, err)
 
-	msg := types.NewMsgRegisterAccount(TestOwnerAddress, ibctesting.FirstConnectionID)
+	msg := types.NewMsgRegisterAccount(TestOwnerAddress, ibctesting.FirstConnectionID, TestVersion)
 
 	require.Equal(t, []sdk.AccAddress{expSigner}, msg.GetSigners())
 }

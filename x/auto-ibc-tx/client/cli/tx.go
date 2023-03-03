@@ -49,6 +49,7 @@ func getRegisterAccountCmd() *cobra.Command {
 			msg := types.NewMsgRegisterAccount(
 				clientCtx.GetFromAddress().String(),
 				viper.GetString(FlagConnectionID),
+				viper.GetString(FlagVersion),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -59,6 +60,7 @@ func getRegisterAccountCmd() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().AddFlagSet(fsVersion)
 	cmd.Flags().AddFlagSet(fsConnectionPair)
 	_ = cmd.MarkFlagRequired(FlagConnectionID)
 
@@ -213,7 +215,7 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 				}
 				txIds = append(txIds, txId)
 			}
-			msg, err := types.NewMsgRegisterAccountAndSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(FlagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), txIds /* viper.GetUint64(flagRetries) */)
+			msg, err := types.NewMsgRegisterAccountAndSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(FlagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), txIds /* viper.GetUint64(flagRetries) */, viper.GetString(FlagVersion))
 			if err != nil {
 				return err
 			}
@@ -225,7 +227,7 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
+	cmd.Flags().AddFlagSet(fsVersion)
 	cmd.Flags().AddFlagSet(fsConnectionPair)
 	cmd.Flags().String(flagLabel, "", "A custom label for the AutoTx e.g. AutoTransfer, UpdateContractParams, optional")
 	cmd.Flags().String(flagDuration, "", "A custom duration for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")

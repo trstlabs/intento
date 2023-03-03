@@ -1,5 +1,5 @@
 ---
-order: 3
+order: 4
 title: Keyring
 description: The Keyring contract manages viewing keys for privacy-perserving contracts
 ---

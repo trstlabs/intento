@@ -33,6 +33,7 @@ service Msg {
 message MsgRegisterAccount {
   string owner                      = 1;
   string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string version                    = 3;
 }
 
 // MsgRegisterAccountResponse is the response type for Msg/RegisterAccount
@@ -95,6 +96,7 @@ message MsgRegisterAccountAndSubmitAutoTx {
   ];
   //optional array of dependent txs that should be executed before execution is allowed
   repeated uint64 depends_on_tx_ids = 9;
+  string version                    = 10;
 }
 
 // MsgRegisterAccountAndSubmitAutoTxResponse defines the MsgSubmitTx response type

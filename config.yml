@@ -16,7 +16,6 @@ validator:
   staked: "100000000utrst"
 
 genesis:
-  chain_id: "trst_chain_1"
     app_state: 
       staking: 
         params: 

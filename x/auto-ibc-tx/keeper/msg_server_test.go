@@ -2,10 +2,12 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	//banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v3/testing"
+	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
@@ -27,7 +29,7 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 		{
 			"port is already bound",
 			func() {
-				GetICAApp(suite.chainA).GetIBCKeeper().PortKeeper.BindPort(suite.chainA.GetContext(), TestPortID)
+				GetICAApp(suite.chainA.TestChain).GetIBCKeeper().PortKeeper.BindPort(suite.chainA.GetContext(), TestPortID)
 			},
 			false,
 		},
@@ -51,9 +53,9 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 					[]string{path.EndpointA.ConnectionID},
 					path.EndpointA.ChannelConfig.Version,
 				)
-				GetICAApp(suite.chainA).AppKeepers.IbcKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, ibctesting.FirstChannelID, channel)
+				GetICAApp(suite.chainA.TestChain).AppKeepers.IbcKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, ibctesting.FirstChannelID, channel)
 
-				GetICAApp(suite.chainA).AppKeepers.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), ibctesting.FirstConnectionID, portID, ibctesting.FirstChannelID)
+				GetICAApp(suite.chainA.TestChain).AppKeepers.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), ibctesting.FirstConnectionID, portID, ibctesting.FirstChannelID)
 			},
 			false,
 		},
@@ -73,7 +75,7 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 			tc.malleate() // malleate mutates test data
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAKeeper(suite.chainA))
-			msg := types.NewMsgRegisterAccount(owner, path.EndpointA.ConnectionID)
+			msg := types.NewMsgRegisterAccount(owner, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version)
 
 			res, err := msgSrv.RegisterAccount(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
@@ -89,7 +91,7 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 			}
 		})
 	}
-} /*
+}
 
 func (suite *KeeperTestSuite) TestSubmitTx() {
 	var (
@@ -112,30 +114,30 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 				connectionId = path.EndpointA.ConnectionID
 			}, true,
 		},
-		// {
-		// 	"failure - owner address is empty", func() {
-		// 		registerInterchainAccount = true
-		// 		owner = ""
-		// 		connectionId = path.EndpointA.ConnectionID
-		// 		counterpartyConnectionId = path.EndpointB.ConnectionID
-		// 	}, false,
-		// },
-		// {
-		// 	"failure - active channel does not exist for connection ID", func() {
-		// 		registerInterchainAccount = true
-		// 		owner = TestOwnerAddress
-		// 		connectionId = "connection-100"
-		// 		counterpartyConnectionId = path.EndpointB.ConnectionID
-		// 	}, false,
-		// },
-		// {
-		// 	"failure - active channel does not exist for port ID", func() {
-		// 		registerInterchainAccount = true
-		// 		owner = "cosmos153lf4zntqt33a4v0sm5cytrxyqn78q7kz8j8x5"
-		// 		connectionId = path.EndpointA.ConnectionID
-		// 		counterpartyConnectionId = path.EndpointB.ConnectionID
-		// 	}, false,
-		// },
+		{
+			"failure - owner address is empty", func() {
+				registerInterchainAccount = true
+				owner = ""
+				connectionId = path.EndpointA.ConnectionID
+
+			}, false,
+		},
+		{
+			"failure - active channel does not exist for connection ID", func() {
+				registerInterchainAccount = true
+				owner = TestOwnerAddress
+				connectionId = "connection-100"
+
+			}, false,
+		},
+		{
+			"failure - active channel does not exist for port ID", func() {
+				registerInterchainAccount = true
+				owner = "cosmos153lf4zntqt33a4v0sm5cytrxyqn78q7kz8j8x5"
+				connectionId = path.EndpointA.ConnectionID
+
+			}, false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -144,8 +146,8 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			icaAppA := GetICAApp(suite.chainA)
-			icaAppB := GetICAApp(suite.chainB)
+			icaAppA := GetICAApp(suite.chainA.TestChain)
+			icaAppB := GetICAApp(suite.chainB.TestChain)
 
 			path = NewICAPath(suite.chainA, suite.chainB)
 			suite.coordinator.SetupConnections(path)
@@ -160,7 +162,7 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 				suite.Require().NoError(err)
 
 				// Get the address of the interchain account stored in state during handshake step
-				interchainAccountAddr, found := GetICAApp(suite.chainA).AppKeepers.ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
+				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).AppKeepers.ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
 				suite.Require().True(found)
 
 				icaAddr, err := sdk.AccAddressFromBech32(interchainAccountAddr)
@@ -197,4 +199,3 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 		})
 	}
 }
-*/

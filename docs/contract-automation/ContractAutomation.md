@@ -1,5 +1,5 @@
 ---
-order: 4
+order: 3
 title: Contract Automation
 description: How AutoMessage enable contract self-execution and enables 1-click user experiences for time-based actions
 ---

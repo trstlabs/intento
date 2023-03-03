@@ -139,6 +139,7 @@ func TestCreateAutoTxWithNoCoinsWorks(t *testing.T) {
 	require.Equal(t, dependsOn, autoTx.DependsOnTxIds)
 }
 
+/*
 func TestCreateAutoTxOverIBCWithTransferMsg(t *testing.T) {
 
-}
+} */
