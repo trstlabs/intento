@@ -9,7 +9,8 @@ description: How to use the CLI and hermes to transact using IBC
 
 Two local Trustless Hub chains can communicate with each other via a Hermes relayer
 
-Tip: You can always switch between chains using `trstd config node RPC_ENDPOINT`.
+:::tip You can always switch between chains using `trstd config node RPC_ENDPOINT`.
+:::
 
 ## Build
 
@@ -126,7 +127,7 @@ trstd tx autoibctx submit-auto-tx  '{
     "to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 }' --duration 16h --interval 60s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0 --retries 2
 
-# query the autotxs to see if it worked. After a time-based execution the auto-tx history should update
+# query the AutoTXs to see if it worked. After a time-based execution the auto-tx history should update
 trstd q autoibctx list-auto-txs-by-owner trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx
 
 # to get more info you can query the events related to the packet for packet and message info
@@ -180,10 +181,10 @@ trstd tx autoibctx submit-auto-tx  '{
 
 ### Design
 
-If host chain is offline then AutoTxs will resume afterwards. 
+If host chain is offline then AutoTXs will resume afterwards. 
 
-If packet times out when there are no relayers, channel will be closed and `AutoTx` will stop execution.
+If packet times out when there are no relayers, channel will be closed and `AutoTX` will stop execution.
 
 We check if the message is valid using `ValidateBasic()` in `SubmitAutoTx`. This is because if message returns an error at basic validation on the host chain, the packet won't be included. If a next packet arrives before timeout, the packet sequence will mismatch. The ICA channel will timeout. A new Interchain account address must be generated to resume using ICA. By checking for validity we prevent these issues from arising.
 
-If a message retuns an error after basic validation, there won't be an acknoledgement. `Executed` will be `false` for that given execution entry. The ICA remains active and AutoTx resumes.
+If a message retuns an error after basic validation, there won't be an acknoledgement. `Executed` will be `false` for that given execution entry. The ICA remains active and AutoTX resumes.

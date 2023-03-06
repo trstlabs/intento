@@ -9,17 +9,17 @@ parent:
 
 This knowledge base contains information that cover different aspects of automation of transactions on Trustless Hub.
 
-In this module we use `Trustless Triggers` and `AutoTx` interchangeably. An AutoTx is what we call a Trustless Trigger and these are the same thing.
+In this module we use `Trustless Triggers` and `AutoTX` interchangeably. An AutoTX is what we call a Trustless Trigger and these are the same thing.
 
-The AutoTx module is responsible for creating and executing automatic interchain transactions between different chains within the Cosmos ecosystem.
+The AutoTX module is responsible for creating and executing automatic interchain transactions between different chains within the Cosmos ecosystem.
 
-Transaction automation using AutoTx module is a relatively simple time-based automation module as opposed to our advanced contract automation that can handle arbitrary messages. 
+Transaction automation using AutoTX module is a relatively simple time-based automation module as opposed to our advanced contract automation that can handle arbitrary messages. 
 
 ## Advantages of our approach
 
 + Easy to integrate into dApps
 + Automation of user funds using AuthZ
-+ Schedule multiple messages into one AutoTx that execute after eachother
++ Schedule multiple messages into one AutoTX that execute after eachother
 + You can depend execution on other transactions
 + No need to integrate with bots
 + Fee funds are  refunded after execution finishes

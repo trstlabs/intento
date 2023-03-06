@@ -4,8 +4,6 @@ import (
 
 	//"log"
 
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,7 +14,7 @@ import (
 func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, flexFee sdk.Int, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
 
 	p := k.GetParams(ctx)
-	fmt.Printf(" flexFee: %v \n", flexFee)
+	// fmt.Printf(" flexFee: %v \n", flexFee)
 	flexFeeMultiplier := sdk.NewDec(p.AutoTxFlexFeeMul).QuoInt64(100)
 	//fmt.Printf(" flexFeeMul: %v \n", flexFeeMultiplier)
 	flexFeeMulDec := sdk.NewDecFromInt(flexFee).Mul(flexFeeMultiplier)

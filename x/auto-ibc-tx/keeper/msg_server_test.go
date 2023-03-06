@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"strings"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -196,6 +199,152 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestSubmitAutoTx() {
+	var (
+		path                      *ibctesting.Path
+		registerInterchainAccount bool
+		owner                     string
+		connectionId              string
+		icaMsg                    sdk.Msg
+		parseIcaAddress           bool
+	)
+
+	testCases := []struct {
+		name     string
+		malleate func()
+		expPass  bool
+	}{
+		{
+			"success - IBC autoTx", func() {
+				registerInterchainAccount = true
+				owner = TestOwnerAddress
+				connectionId = path.EndpointA.ConnectionID
+			}, true,
+		},
+		{
+			"success - local autoTx", func() {
+				registerInterchainAccount = true
+				owner = TestOwnerAddress
+				connectionId = ""
+			}, true,
+		},
+		{
+			"success - parse ICA address", func() {
+				registerInterchainAccount = true
+				owner = TestOwnerAddress
+				connectionId = path.EndpointA.ConnectionID
+				parseIcaAddress = true
+			}, true,
+		},
+		{
+			"failure - owner address is empty", func() {
+				registerInterchainAccount = true
+				owner = ""
+				connectionId = path.EndpointA.ConnectionID
+				parseIcaAddress = false
+			}, false,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+
+			icaAppA := GetICAApp(suite.chainA.TestChain)
+			icaAppB := GetICAApp(suite.chainB.TestChain)
+
+			path = NewICAPath(suite.chainA, suite.chainB)
+			suite.coordinator.SetupConnections(path)
+
+			tc.malleate() // malleate mutates test data
+
+			if registerInterchainAccount {
+				err := SetupICAPath(path, TestOwnerAddress)
+				suite.Require().NoError(err)
+
+				portID, err := icatypes.NewControllerPortID(TestOwnerAddress)
+				suite.Require().NoError(err)
+
+				// Get the address of the interchain account stored in state during handshake step
+				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).AppKeepers.ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
+				suite.Require().True(found)
+
+				icaAddr, err := sdk.AccAddressFromBech32(interchainAccountAddr)
+				suite.Require().NoError(err)
+
+				// Check if account is created
+				interchainAccount := icaAppB.AppKeepers.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
+				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
+				if parseIcaAddress {
+					interchainAccountAddr = "ICA_ADDR"
+				}
+				// Create bank transfer message to execute on the host
+				icaMsg = &banktypes.MsgSend{
+					FromAddress: interchainAccountAddr,
+					ToAddress:   suite.chainB.SenderAccount.GetAddress().String(),
+					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+				}
+			}
+
+			GetICAApp(suite.chainA.TestChain).AppKeepers.AutoIBCTXKeeper.SetParams(suite.chainA.GetContext(), types.Params{
+				AutoTxFundsCommission:      2,
+				AutoTxConstantFee:          1_000_000,
+				AutoTxFlexFeeMul:           100,
+				RecurringAutoTxConstantFee: 1_000_000,
+				MaxAutoTxDuration:          time.Hour * 24 * 366 * 10,
+				MinAutoTxDuration:          time.Second * 60,
+				MinAutoTxInterval:          time.Second * 20,
+			})
+
+			msg, err := types.NewMsgSubmitAutoTx(owner, "label", []sdk.Msg{icaMsg}, connectionId, "200s", "100s", 0, []uint64{})
+			suite.Require().NoError(err)
+			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
+			msgSrv := keeper.NewMsgServerImpl(GetICAKeeper2(icaAppA))
+			res, err := msgSrv.SubmitAutoTx(wrappedCtx, msg)
+
+			if parseIcaAddress {
+				icaApp := GetICAApp(suite.chainA.TestChain)
+				err := icaMsg.ValidateBasic()
+				suite.Require().Contains(err.Error(), "bech32")
+				err = msg.ValidateBasic()
+				suite.Require().NoError(err)
+				suite.chainA.NextBlock()
+				UnwrappedCtx := sdk.UnwrapSDKContext(wrappedCtx)
+				autoTx := icaApp.AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(UnwrappedCtx, 1)
+				suite.Require().NotEqual(autoTx, types.AutoTxInfo{})
+
+				err = icaApp.AppKeepers.AutoIBCTXKeeper.SendAutoTx(UnwrappedCtx, autoTx)
+				suite.Require().NoError(err)
+				icaAddrToParse := "ICA_ADDR"
+				autoTx = icaApp.AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(UnwrappedCtx, 1)
+				//txMsgs := autoTx.GetTxMsgs()
+
+				var txMsg sdk.Msg
+				err = icaApp.AppCodec().UnpackAny(autoTx.Msgs[0], &txMsg)
+				suite.Require().NoError(err)
+				msgJSON, err := icaApp.AppCodec().MarshalInterfaceJSON(txMsg)
+				suite.Require().NoError(err)
+
+				msgJSONString := string(msgJSON)
+				index := strings.Index(msgJSONString, icaAddrToParse)
+				suite.Require().Equal(-1, index)
+
+			}
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+			} else {
+				suite.Require().Error(err)
+				suite.Require().Nil(res)
+			}
+
 		})
 	}
 }

@@ -6,7 +6,7 @@ description: How to integrate automation into your interchain dApp
 
 ## TrustlessJS
 
-We've built a JS framework called [TrustlessJS](https://npmjs.com/package/trustlessjs) to send autotx transactions. An implementation for this is [TriggerPørtal](https://triggerportal.netlify.app). It contains a message registry that you can use to encode and decode protobuf messages that Trustless Hub supports, including CosmWasm and Osmosis messages.
+We've built a JS framework called [TrustlessJS](https://npmjs.com/package/trustlessjs) to send AutoTx transactions. An implementation for this is [TriggerPørtal](https://triggerportal.netlify.app). It contains a message registry that you can use to encode and decode protobuf messages that Trustless Hub supports, including CosmWasm and Osmosis messages.
 
 An example of submitting an MsgSubmitAutoTx in typescript. A label is optional but recommended to keep track an overview of triggers.
 Sta
@@ -23,19 +23,19 @@ import {
 
 type ExecuteSubmitAutoTxArgs = {
   owner: string
-  autoTxData: AutoTxData
+  AutoTxData: AutoTxData
   client: TrustlessChainClient
 }
 
 export const executeSubmitAutoTx = async ({
   client,
-  autoTxData,
+  AutoTxData,
   owner,
 }: ExecuteSubmitAutoTxArgs): Promise<any> => {
 
 let msgs = []
 
-  for (let msg of autoTxData.msgs) {
+  for (let msg of AutoTxData.msgs) {
     const masterRegistry = new Registry(msgRegistry);
 
     let value = JSON.parse(msg)["value"]
@@ -51,10 +51,10 @@ let msgs = []
   }
 
     await client.tx.auto_tx.submit_auto_tx({
-      connectionId: autoTxData.connectionId, 
+      connectionId: AutoTxData.connectionId, 
       owner,
       msgs,
-      label: autoTxData.label ? autoTxData.label : "",
+      label: AutoTxData.label ? AutoTxData.label : "",
       duration,
       interval,
       startAt,
@@ -79,10 +79,10 @@ export const getExpectedAutoTxFee = async (client: TrustlessChainClient, duratio
         const periodSeconds = intervalSeconds && intervalSeconds < durationSeconds ? intervalSeconds : durationSeconds;
         const periodMinutes = Math.trunc(periodSeconds / 60)
         const flexFeeForPeriod = (Number(params.AutoTxFlexFeeMul) / 100) * periodMinutes
-        const autoTxFee = recurrences * flexFeeForPeriod + recurrences * Number(params.AutoTxConstantFee) * lenMsgs
-        const autoTxFeeDenom = convertMicroDenomToDenom(autoTxFee, 6)
+        const AutoTxFee = recurrences * flexFeeForPeriod + recurrences * Number(params.AutoTxConstantFee) * lenMsgs
+        const AutoTxFeeDenom = convertMicroDenomToDenom(AutoTxFee, 6)
 
-        return autoTxFeeDenom
+        return AutoTxFeeDenom
     } catch (e) { console.error('err(getExpectedAutoTxFee):', e) }
 }
 
@@ -100,7 +100,7 @@ The function returns a Promise that resolves to the expected transaction fee in 
 
 The JavaScript function getExpectedAutoTxFee calculates the expected transaction fee for a trustless chain transaction based on the duration of the transaction, the length of the messages to be sent, and the recurrence interval (optional). The formula for calculating the fee is:
 
-autoTxFee = recurrences * flexFeeForPeriod + recurrences * constantFee * lenMsgs
+AutoTxFee = recurrences * flexFeeForPeriod + recurrences * constantFee * lenMsgs
 
 where:
 

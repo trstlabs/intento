@@ -1,10 +1,10 @@
 ---
 order: 1
-title: AutoTx
+title: AutoTX
 description: Automation with the interchain accounts module
 ---
 
-# AutoTx Module
+# AutoTX Module
 
 This module is used to automate processes across chains. With 'MsgSubmitAutoTx', time-based interchain account message calls are scheduled.
 
@@ -20,11 +20,11 @@ The trustless nature of on-chain automation and trustless bridging through IBC h
 
 ### Fixed Fee
 
-The Fixed Fee is applied per message basis. An AutoTx can have multple messages to be executed, with a maximum of 9. This number can be increased when desired.
+The Fixed Fee is applied per message basis. An AutoTX can have multple messages to be executed, with a maximum of 9. This number can be increased when desired.
 
 ### FlexFee Fee
 
-The FlexFee is timedependent fee calculated for each AutoTx period on a minute basis. 
+The FlexFee is timedependent fee calculated for each AutoTX period on a minute basis. 
 
 ### Fund deduction
 
@@ -32,7 +32,7 @@ When funds are sent along MsgSubmitAutoTx, fees are deducted from the sender acc
 
 ## Relayer Rewards
 
-Relayers are vital to well-functioning of this module for ensuring timely, reliable execution. To incentivize relayers, rewards are minted in the mint module, allocated from the alloc module and sent to the AutoTx module. For acknoledging a succesfull IBC packet containing AutoTx messages, relayers are incentivized. Relayer rewards are specified based on the category of message. The category are as follows: SDK message, WASM message and Osmosis message. AuthZ messages can perform authorized actions on behalf of a user such as recurring transactions and reward claims. On Osmosis users can perform DCA strategies and withdrawal automatically after an unbonding period ends.  WASM smart contract calls are for developers automating their dApps and users that want to automate their smart contract tasks.
+Relayers are vital to well-functioning of this module for ensuring timely, reliable execution. To incentivize relayers, rewards are minted in the mint module, allocated from the alloc module and sent to the AutoTX module. For acknoledging a succesfull IBC packet containing AutoTX messages, relayers are incentivized. Relayer rewards are specified based on the category of message. The category are as follows: SDK message, WASM message and Osmosis message. AuthZ messages can perform authorized actions on behalf of a user such as recurring transactions and reward claims. On Osmosis users can perform DCA strategies and withdrawal automatically after an unbonding period ends.  WASM smart contract calls are for developers automating their dApps and users that want to automate their smart contract tasks.
 
 ## Parameters
 
@@ -40,24 +40,24 @@ A number of automation-related parameters can be adjusted. Parameters can be adj
 
 ```golang
 const (
- // AutoTxFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
+ // AutoTXFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
  DefaultAutoTxFundsCommission int64 = 2 //2%
- // AutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
+ // AutoTXConstantFee fee to prevent spam of auto messages, to be distributed to community pool
  DefaultAutoTxConstantFee int64 = 5_000 // 0.005trst
- // AutoTxFlexFeeMul is the denominator for the gas-dependent flex fee to prioritize auto messages in the block, to be distributed to validators
+ // AutoTXFlexFeeMul is the denominator for the gas-dependent flex fee to prioritize auto messages in the block, to be distributed to validators
  DefaultAutoTxFlexFeeMul int64 = 3 // 3% of minutes for a given period as utrst (1_000m = 20utrst)
  // RecurringAutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
  DefaultRecurringAutoTxConstantFee int64 = 5_000 // 0.005trst
- // Default max period for a AutoTx that is self-executing
- DefaultMaxAutoTxDuration time.Duration = time.Hour * 24 * 366 * 2 // a little over 2 years
- // MinAutoTxDuration sets the minimum duration for a self-executing AutoTx
- DefaultMinAutoTxDuration time.Duration = time.Second * 60
- // MinAutoTxInterval sets the minimum interval self-execution
- DefaultMinAutoTxInterval time.Duration = time.Second * 60
- // DefaultRelayerReward for a given autotx type
+ // Default max period for a AutoTX that is self-executing
+ DefaultMaxAutoTXDuration time.Duration = time.Hour * 24 * 366 * 2 // a little over 2 years
+ // MinAutoTXDuration sets the minimum duration for a self-executing AutoTX
+ DefaultMinAutoTXDuration time.Duration = time.Second * 60
+ // MinAutoTXInterval sets the minimum interval self-execution
+ DefaultMinAutoTXInterval time.Duration = time.Second * 60
+ // DefaultRelayerReward for a given AutoTX type
  DefaultRelayerReward int64 = 10_000 //0.01trst
 )
 
 ## BeginBlocker
 
-At the beginning of each block, the BeginBlocker checks if there are AutoTxs that are set for automation. The BeginBlocker is used as it can best proxy the execute time set at MsgSubmitAutoTx. 
+At the beginning of each block, the BeginBlocker checks if there are AutoTXs that are set for automation. The BeginBlocker is used as it can best proxy the execute time set at MsgSubmitAutoTx. 

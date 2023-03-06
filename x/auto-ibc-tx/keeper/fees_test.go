@@ -27,7 +27,7 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 		MinAutoTxDuration:          time.Second * 60,
 		MinAutoTxInterval:          time.Second * 20,
 	})
-	fmt.Printf("%v", ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter()))
+	// fmt.Printf("%v", ctx.WithBlockGasMeter(sdk.NewInfiniteGasMeter()))
 
 	pub2 := secp256k1.GenPrivKey().PubKey()
 	addr2 := sdk.AccAddress(pub2.Address())

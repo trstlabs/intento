@@ -1,7 +1,7 @@
 ---
 order: 2
 title: Interchain Automation
-description: How AutoTx enables automation of assets on any IBC-enabled chain
+description: How AutoTX enables automation of assets on any IBC-enabled chain
 ---
 
 ## Interchain Automation
@@ -15,17 +15,17 @@ Interchain Accounts are a key component of Trustless Triggers. They allow for th
 To use Interchain Automation with Interchain Accounts, the user must first register an interchain account. This involves creating a port ID and connection ID, which allows the user to connect their account to other chains over IBC.
 
 
-A Trigger is what we call an Automated Transaction or 'AutoTx'. An AutoTx is an object containing messages that execute at a specified time, or recurringly with intervals.
-AutoTx entries are scheduled at the beginning of a new block.
+A Trigger is what we call an Automated Transaction or 'AutoTX'. An AutoTX is an object containing messages that execute at a specified time, or recurringly with intervals.
+AutoTX entries are scheduled at the beginning of a new block.
 
-AutoTxs can execute Cosmos SDK blockchain transactions on Cosmos Chains such as:
+AutoTXs can execute Cosmos SDK blockchain transactions on Cosmos Chains such as:
 
 - `MsgSend` for token transfers
 - `MsgWithdrawDelegatorReward` for reward claiming
 - `MsgExecuteContact` to execute a contract
 - `MsgInstantiate` to instantiate a contract
 
-AutoTxs can also execute transactions on other chains using an IBC protocol called Interchain Accounts. 
+AutoTXs can also execute transactions on other chains using an IBC protocol called Interchain Accounts. 
 
 Using the Authz module on the host chain - the chain you want to execute at - you can grant the Interchain Account on Trustless Hub access permission to execute a specific message.
 
@@ -47,23 +47,23 @@ Submitting a MsgSubmitAutoTx takes the following input:
 
 Comments on the optionallity of the fields
 
-- When `Interval` is not provided, the end of the duration will be the time the AutoTx executes.
+- When `Interval` is not provided, the end of the duration will be the time the AutoTX executes.
 - When `FeeFunds` are not provided, fees will be deducted from the Owner account.
-- When `DependsOnTxIDs` is provided, AutoTx will see if their last execution was succesfull before execution can take place, else it will fail.
+- When `DependsOnTxIDs` is provided, AutoTX will see if their last execution was succesfull before execution can take place, else it will fail.
 - When `ConnectionID` is not provided, it is assumed that `Msgs` are local Trustless Hub chain messages.
 
 ## Automation Process
 
 1. Register an interchain account with `MsgRegisterInterchainAccount` or `MsgRegisterInterchainAccountAndSubmitAutoTx`.
-2. Submit an AutoTx using `MsgSubmitAutoTx` - if fee funds are sent along with it, a new fee address is generated
+2. Submit an AutoTX using `MsgSubmitAutoTx` - if fee funds are sent along with it, a new fee address is generated
 3. Chain checks if parameters are ok
-4. `AutoTx` is inserted in a queue
-5. In each block,scheduled AutoTxs are retreived given the current block time
-6. Fees are calculated and deducted. AutoTx data is updated with information on the exact fees and execution time.
+4. `AutoTX` is inserted in a queue
+5. In each block,scheduled AutoTXs are retreived given the current block time
+6. Fees are calculated and deducted. AutoTX data is updated with information on the exact fees and execution time.
 7. Transaction is sent to the host chain
-8. If AutoTx is recurring, a new entry is inserted into the queue
-9. Packet gets acknowledged by a relayer and the AutoTx entry is updated stating execution was succesfull. If packet times out, execution fails. 
-10. Funds sent to an AutoTx-specific FeeFund account are returned to the AutoTx owner
+8. If AutoTX is recurring, a new entry is inserted into the queue
+9. Packet gets acknowledged by a relayer and the AutoTX entry is updated stating execution was succesfull. If packet times out, execution fails. 
+10. Funds sent to an AutoTX-specific FeeFund account are returned to the AutoTX owner
 
 To make packet relays succesfully, Trustless Hub allocates token incentives to relayers to acknowledge packets.
 

@@ -25,8 +25,8 @@ func TestSendLocalTx(t *testing.T) {
 	types.Denom = "stake"
 
 	localMsg := &banktypes.MsgSend{
-		FromAddress: addr1.String(),
-		ToAddress:   addr2.String(),
+		FromAddress: addr2.String(),
+		ToAddress:   addr1.String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
 	}
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{localMsg})

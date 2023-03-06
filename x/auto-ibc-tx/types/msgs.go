@@ -183,13 +183,10 @@ func (msg MsgSubmitAutoTx) ValidateBasic() error {
 		return fmt.Errorf("can't execute more than 9 messages")
 	}
 
-	/* if msg.ConnectionId == "" {
-		return fmt.Errorf("can't execute an empty ConnectionId")
-	} */
 	for _, message := range msg.GetTxMsgs() {
-		// check if the msg contains valid inputs
+		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
-		if err != nil && !(strings.Contains(err.Error(), "Bech32")) {
+		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
 			fmt.Println(msg.String())
 			//k.Logger(ctx).Info("ValidateBasic failed", "msg", msg.String())
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
@@ -261,13 +258,10 @@ func (msg MsgRegisterAccountAndSubmitAutoTx) ValidateBasic() error {
 		return fmt.Errorf("can't execute more than 9 messages")
 	}
 
-	/* if msg.ConnectionId == "" {
-		return fmt.Errorf("can't execute an empty ConnectionId")
-	} */
 	for _, message := range msg.GetTxMsgs() {
-		// check if the msg contains valid inputs
+		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
-		if err != nil && !(strings.Contains(err.Error(), "Bech32")) {
+		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
 			fmt.Println(msg.String())
 			//k.Logger(ctx).Info("ValidateBasic failed", "msg", msg.String())
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())

@@ -203,7 +203,6 @@ func NewTrstApp(
 	enabledProposals []compute.ProposalType,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *TrstApp {
-	fmt.Println("NewTrstApp")
 	encodingConfig := MakeEncodingConfig()
 	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry

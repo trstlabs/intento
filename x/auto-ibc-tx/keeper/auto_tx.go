@@ -4,9 +4,11 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -49,11 +51,16 @@ func (k Keeper) SetAutoTxInfo(ctx sdk.Context, autoTx *types.AutoTxInfo) {
 }
 
 func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
-	txMsgs := autoTxInfo.GetTxMsgs()
 
 	//check if autoTx is local
-	if autoTxInfo.PortID == "" {
+	if autoTxInfo.ConnectionID == "" {
+		txMsgs := autoTxInfo.GetTxMsgs()
 		return handleLocalAutoTx(k, ctx, txMsgs, autoTxInfo)
+	}
+	//if message contains ICA_ADDR, the ICA address is retreived and parsed
+	txMsgs, err := k.replaceTextInMsg(ctx, autoTxInfo)
+	if err != nil {
+		return err
 	}
 	data, err := icatypes.SerializeCosmosTx(k.cdc, txMsgs)
 	if err != nil {
@@ -91,7 +98,12 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
 
 func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo types.AutoTxInfo) error {
 	for _, msg := range txMsgs {
-		handler := k.msgRouter.Handler(sdk.Msg(msg))
+		handler := k.msgRouter.Handler(msg)
+		for _, acct := range msg.GetSigners() {
+			if acct.String() != autoTxInfo.Owner {
+				return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "owner doesn't have permission to send this message")
+			}
+		}
 		res, err := handler(ctx, msg)
 		if err != nil {
 			return err
@@ -131,7 +143,7 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 	return nil
 }
 
-func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, label string, portID string, msgs []*sdktypes.Any, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins /*  retries uint64,  */, dependsOn []uint64) error {
+func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, label string, portID string, msgs []*cdctypes.Any, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins /*  retries uint64,  */, dependsOn []uint64) error {
 
 	txID := k.autoIncrementID(ctx, types.KeyLastTxID)
 	autoTxAddress, err := k.createFeeAccount(ctx, txID, owner, feeFunds)
@@ -430,4 +442,55 @@ func (k Keeper) getTmpAutoTxID(ctx sdk.Context, portID string, seq uint64) uint6
 func (k Keeper) setTmpAutoTxID(ctx sdk.Context, autoTxID uint64, portID string, seq uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(append((append(types.TmpAutoTxIDLatestTX, []byte(portID)...)), types.GetBytesForUint(seq)...), types.GetBytesForUint(autoTxID))
+}
+
+func (k Keeper) replaceTextInMsg(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (sdkMsgs []sdk.Msg, err error) {
+	var txMsgs []sdk.Msg
+	for _, message := range autoTxInfo.Msgs {
+		var txMsg sdk.Msg
+		err := k.cdc.UnpackAny(message, &txMsg)
+		if err != nil {
+			return nil, err
+		}
+		txMsgs = append(txMsgs, txMsg)
+	}
+	for _, msg := range txMsgs {
+
+		// Marshal the message into a JSON string
+		msgJSON, err := k.cdc.MarshalInterfaceJSON(msg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal %s message containing ICA_ADDR placeholder", msg)
+		}
+		msgJSONString := string(msgJSON)
+		icaAddrToParse := "ICA_ADDR"
+		index := strings.Index(msgJSONString, icaAddrToParse)
+		if index == -1 {
+			return txMsgs, nil
+		}
+
+		ica, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, autoTxInfo.ConnectionID, autoTxInfo.PortID)
+		if !found {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrKeyNotFound, "ICA address not found")
+		}
+
+		// Replace the text "ICA_ADDR" in the JSON string
+		msgJSONString = strings.ReplaceAll(msgJSONString, icaAddrToParse, ica)
+		// Unmarshal the modified JSON string back into a message
+		var updatedMsg sdk.Msg
+		err = k.cdc.UnmarshalInterfaceJSON([]byte(msgJSONString), &updatedMsg)
+		if err != nil {
+			return nil, err
+		}
+		sdkMsgs = append(sdkMsgs, updatedMsg)
+
+	}
+
+	anys, err := types.PackTxMsgAnys(sdkMsgs)
+	if err != nil {
+		return nil, err
+	}
+	autoTxInfo.Msgs = anys
+	k.SetAutoTxInfo(ctx, &autoTxInfo)
+
+	return sdkMsgs, nil
 }

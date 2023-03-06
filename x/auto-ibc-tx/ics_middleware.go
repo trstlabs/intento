@@ -32,7 +32,6 @@ type IBCMiddleware struct {
 
 // IBCMiddleware creates a new IBCMiddleware given the associated keeper and underlying application
 func NewIBCMiddleware(app porttypes.IBCModule, k keeper.Keeper, registry codectypes.InterfaceRegistry) IBCMiddleware {
-	fmt.Printf("NewIBCMiddleware")
 	return IBCMiddleware{
 		app:      app,
 		keeper:   k,
@@ -199,11 +198,10 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 	isAutoTxRouted, ownerAddr, msgsBytes, label, connectionID, duration, interval, startAt, registerICA, err := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
 
 	if !isAutoTxRouted {
-		fmt.Println("not autoTx")
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
 	if err != nil {
-		fmt.Println(err.Error())
+
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
 	if msgsBytes == nil /* || ownerAddr == nil  */ { // This should never happen
@@ -223,8 +221,6 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		// Calculate the receiver / contract caller based on the packet's channel and sender
 		channel := packet.GetDestChannel()
 		sender := data.GetSender()
-		fmt.Printf("data sender %s\n", sender)
-		fmt.Printf("data receiver %s\n", data.Receiver)
 		senderLocalAddr := derivePlaceholderSender(channel, sender)
 		if err != nil {
 			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err)))
@@ -274,7 +270,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		}
 		response, err := registerAndSubmitTx(im.keeper, ctx, &msg)
 		if err != nil {
-			fmt.Println(err.Error())
+			// fmt.Println(err.Error())
 			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrIcs20Error, err.Error()))
 		}
 		bz, err := json.Marshal(response)
@@ -312,7 +308,6 @@ func registerAndSubmitTx(k keeper.Keeper, ctx sdk.Context, autoTxMsg *types.MsgR
 	if err := autoTxMsg.ValidateBasic(); err != nil {
 		return nil, fmt.Errorf(types.ErrBadAutoTxMsg, err.Error())
 	}
-	fmt.Println("registerAndSubmitTx ")
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
 	return ics20MsgServer.RegisterAccountAndSubmitAutoTx(sdk.WrapSDKContext(ctx), autoTxMsg)
 }

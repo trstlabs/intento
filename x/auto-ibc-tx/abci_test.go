@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	keeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
@@ -13,7 +14,9 @@ import (
 
 func TestBeginBlocker(t *testing.T) {
 	ctx, keepers := createTestContext(t)
-	autoTx := createTestAutoTx(ctx, keepers)
+	autoTx, sentAddr := createTestAutoTx(ctx, keepers)
+	err := autoTx.ValidateBasic()
+	require.NoError(t, err)
 	k := keepers.AutoIbcTxKeeper
 
 	k.SetAutoTxInfo(ctx, &autoTx)
@@ -39,6 +42,8 @@ func TestBeginBlocker(t *testing.T) {
 	k.InsertAutoTxQueue(ctx2, autoTx.TxID, autoTx.ExecTime)
 	k.SetAutoTxInfo(ctx2, &autoTx)
 
+	err = k.SendAutoTx(ctx2, autoTx)
+	require.NoError(t, err)
 	// in OnAcknowledgementPacket we check result and set Executed
 	autoTx.AutoTxHistory[0].Executed = true
 
@@ -54,13 +59,13 @@ func TestBeginBlocker(t *testing.T) {
 	require.Equal(t, 1, len(queue[0].AutoTxHistory))
 	require.Equal(t, ctx2.BlockHeader().Time, queue[0].AutoTxHistory[0].ScheduledExecTime)
 	require.Equal(t, ctx2.BlockHeader().Time, queue[0].AutoTxHistory[0].ActualExecTime)
-	//require.Equal(t, uint64(0), queue[0].AutoTxHistory[0].Retries)
+	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx, sentAddr)[0].Amount, sdk.NewInt(100))
 	require.Equal(t, ctx3.BlockHeader().Time, queue[0].ExecTime)
 }
 
 func TestBeginBlockerStressTest(t *testing.T) {
 	ctx, keepers := createTestContext(t)
-	//autoTx := createTestAutoTx(ctx, keepers)
+	//autoTx,_ := createTestAutoTx(ctx, keepers)
 	k := keepers.AutoIbcTxKeeper
 
 	autoTxs := createTestAutoTxs(ctx, 100, keepers)
@@ -103,7 +108,7 @@ func TestBeginBlockerStressTest(t *testing.T) {
 
 func TestBeginBlockerWithRetry(t *testing.T) {
 	ctx, keepers := createTestContext(t)
-	autoTx := createTestAutoTx(ctx, keepers)
+	autoTx, _ := createTestAutoTx(ctx, keepers)
 	k := keepers.AutoIbcTxKeeper
 
 	k.SetAutoTxInfo(ctx, &autoTx)
@@ -152,6 +157,36 @@ func TestBeginBlockerWithRetry(t *testing.T) {
 
 }
 
+func TestOwnerMustBeSignerForLocalAutoTx(t *testing.T) {
+	ctx, keepers := createTestContext(t)
+
+	autoTxOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
+	feeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
+	toSendAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
+
+	localMsg := &banktypes.MsgSend{
+		FromAddress: toSendAcc.String(),
+		ToAddress:   autoTxOwnerAddr.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+	}
+	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
+
+	autoTx := types.AutoTxInfo{
+		TxID:       123,
+		Owner:      autoTxOwnerAddr.String(),
+		FeeAddress: feeAddr.String(),
+		Msgs:       anys,
+	}
+
+	err := autoTx.ValidateBasic()
+	require.NoError(t, err)
+	k := keepers.AutoIbcTxKeeper
+
+	err = k.SendAutoTx(ctx, autoTx)
+	require.Contains(t, err.Error(), "owner doesn't have permission to send this message: unauthorized")
+
+}
+
 func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers) {
 	ctx, keepers := keeper.CreateTestInput(t, false)
 
@@ -160,12 +195,20 @@ func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers) {
 	return ctx, keepers
 }
 
-func createTestAutoTx(ctx sdk.Context, keepers keeper.TestKeepers) types.AutoTxInfo {
+func createTestAutoTx(ctx sdk.Context, keepers keeper.TestKeepers) (types.AutoTxInfo, sdk.AccAddress) {
 	autoTxOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	feeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
+	toSendAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
 	startTime := ctx.BlockHeader().Time
 	execTime := ctx.BlockHeader().Time.Add(time.Hour)
 	endTime := ctx.BlockHeader().Time.Add(time.Hour * 2)
+	localMsg := &banktypes.MsgSend{
+		FromAddress: autoTxOwnerAddr.String(),
+		ToAddress:   toSendAcc.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+	}
+	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
+
 	autoTx := types.AutoTxInfo{
 		TxID:       123,
 		Owner:      autoTxOwnerAddr.String(),
@@ -174,9 +217,10 @@ func createTestAutoTx(ctx sdk.Context, keepers keeper.TestKeepers) types.AutoTxI
 		EndTime:    endTime,
 		Interval:   time.Hour,
 		StartTime:  startTime,
+		Msgs:       anys,
 		//MaxRetries: 2,
 	}
-	return autoTx
+	return autoTx, toSendAcc
 }
 
 func createNextExecutionContext(ctx sdk.Context, nextExecTime time.Time) sdk.Context {
