@@ -47,15 +47,16 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 			if err := k.SendAutoTx(ctx, autoTx); err != nil {
 				logger.Error("auto_tx", "err", err)
 				addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, sdk.Coin{}, err)
-			}
-			addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, fee)
-			willRecur := autoTx.ExecTime.Before(autoTx.EndTime) && autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime)
+			} else {
+				addAutoTxHistory(&autoTx, ctx.BlockHeader().Time, fee)
 
-			if willRecur {
-				fmt.Printf("auto-tx will recur: %v \n", autoTx.TxID)
-				// adding next execTime and a new entry into the queue based on interval
-				autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
-				k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
+				willRecur := autoTx.ExecTime.Before(autoTx.EndTime) && autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime)
+				if willRecur {
+					fmt.Printf("auto-tx will recur: %v \n", autoTx.TxID)
+					// adding next execTime and a new entry into the queue based on interval
+					autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
+					k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
+				}
 			}
 		}
 		k.RemoveFromAutoTxQueue(ctx, autoTx)
