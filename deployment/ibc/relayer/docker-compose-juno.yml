@@ -31,7 +31,7 @@ services:
       CHAINID: "trstdev-2"
       LOG_LEVEL: "error"  
   localjuno:
-    image: "ghcr.io/cosmoscontracts/juno:latest"
+    image: "ghcr.io/cosmoscontracts/juno:13.0.0"
     # ports are only here in case interaction
     # between localhost and container is desired
     ports:

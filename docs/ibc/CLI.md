@@ -68,10 +68,10 @@ Message flow for using interchain accounts to directly controll an interchain ac
 trstd q autoibctx interchainaccounts trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx connection-0
 
 # Register an interchain account on behalf of WALLET_1 where chain test-2 is the interchain accounts host
-icad tx autoibctx register --from $WALLET_1 --connection-id connection-0 --chain-id test-1 --home ./data/test-1 --node tcp://localhost:16657 --keyring-backend test -y
+icad tx autoibctx register --from $WALLET_1 --connection-id connection-0 --keyring-backend test -y
 
 # Query the address of the interchain account
-export ICA_ADDR=$(icad query autoibctx interchainaccounts connection-0 $WALLET_1 --home ./data/test-1 --node tcp://localhost:16657 -o json | jq -r '.interchain_account_address') && echo $ICA_ADDR //trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp
+export ICA_ADDR=$(trstd query autoibctx interchainaccounts connection-0 $WALLET_1 -o json | jq -r '.interchain_account_address') && echo $ICA_ADDR //trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp
 
 # send balance to ICA on host chain to provide an initial balance to execute transactions (replace node and to_address here)
 trstd  tx bank send trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx $ICA_ADDR 10000utrst --node tcp://localhost:36657 --keyring-backend test -y --from b --fees 600utrst --chain-id trstdev-2

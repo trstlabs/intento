@@ -503,12 +503,12 @@ kill-dev:
 	-@killall trstd 2>/dev/null
 
 # starts Cosmosrelayer given the localchains are running
-start-chains-rly: 
+start-rly: 
 	@echo "Starting up local test relayer..."
 	./deployment/ibc/start.sh
 
 # starts Cosmosrelayer given the localchains and a localjuno chain are running
-start-chains-juno-rly: 
+start-juno-rly: 
 	@echo "Starting up local test relayers..."
 	./deployment/ibc/start-localchains-juno.sh
 

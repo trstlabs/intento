@@ -1,5 +1,5 @@
 ---
-order: 4
+order: 7
 title: Frontend Integration
 description: How to integrate automation into your interchain dApp
 ---

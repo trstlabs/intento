@@ -1,7 +1,7 @@
 ---
-order: 3
-title: Querying AutoTXs
-description: How to retreive TrustlessTrigger data
+order: 6
+title: Querying
+description: How to retreive Trustless Trigger data
 ---
 
 ## Ways to Query
