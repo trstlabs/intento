@@ -22,24 +22,20 @@ message AutoTxInfo {
     string label = 3;
     string fee_address = 4;
     repeated google.protobuf.Any msgs           = 5  [(cosmos_proto.accepts_interface) = "sdk.Msg"];
-     google.protobuf.Duration duration = 6[
-    (gogoproto.nullable)    = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag)     = "duration,omitempty"
-  ];
-    google.protobuf.Duration interval = 7 [
+    google.protobuf.Duration interval = 6 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "interval,omitempty"
   ];
-    google.protobuf.Timestamp start_time = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    google.protobuf.Timestamp exec_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    google.protobuf.Timestamp end_time = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    repeated AutoTxHistoryEntry auto_tx_history = 11;
-    string port_id = 12 [(gogoproto.customname) = "PortID"];
-    string connection_id = 14 [(gogoproto.customname) = "connection_id"];
+    google.protobuf.Timestamp start_time = 7 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp exec_time = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp end_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    repeated AutoTxHistoryEntry auto_tx_history = 10;
+    string port_id = 11 [(gogoproto.customname) = "PortID"];
+    string connection_id = 12 [(gogoproto.customname) = "ConnectionID"];
     //optional array of dependent txs that should be executed before execution is allowed
-    repeated uint64 depends_on_tx_ids = 15;
+    repeated uint64 depends_on_tx_ids = 14;
+    repeated google.protobuf.Timestamp update_history = 15 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];;
     //if execution of depended tx has not happend yet
     //uint64 max_retries = 16;
 }

@@ -33,7 +33,7 @@ func TestSendLocalTx(t *testing.T) {
 	require.NoError(t, err)
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: anys, Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "", ConnectionID: "",
+		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: anys, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "", ConnectionID: "",
 	}
 
 	err = keeper.SendAutoTx(ctx, autoTxInfo)
@@ -112,7 +112,7 @@ func createLocalAutoTxInfo(addr2 sdk.AccAddress, val stakingtypes.Validator, aut
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: anys, Duration: time.Minute, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "", ConnectionID: "",
+		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: anys, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "", ConnectionID: "",
 	}
 	return autoTxInfo
 }

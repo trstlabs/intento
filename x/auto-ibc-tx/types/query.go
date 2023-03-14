@@ -31,3 +31,17 @@ func NewQueryAutoTxsForOwnerResponse(autoTxInfos []AutoTxInfo) *QueryAutoTxsForO
 		AutoTxInfos: autoTxInfos,
 	}
 }
+
+// NewQueryAutoTxsForOwnerRequest creates and returns a new QueryAutoTxsForOwnerFromAddressRequest
+func NewQueryAutoTxsRequest(pagination *query.PageRequest) *QueryAutoTxsRequest {
+	return &QueryAutoTxsRequest{
+		Pagination: pagination,
+	}
+}
+
+// NewQueryAutoTxsForOwnerResponse creates and returns a new QueryAutoTxsForOwnerFromAddressResponse
+func NewQueryAutoTxsResponse(autoTxInfos []AutoTxInfo) *QueryAutoTxsResponse {
+	return &QueryAutoTxsResponse{
+		AutoTxInfos: autoTxInfos,
+	}
+}

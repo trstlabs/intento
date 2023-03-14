@@ -81,10 +81,10 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	timeoutTimestamp := time.Now().Add(time.Hour).UnixNano()
+	timeoutTimestamp := ctx.BlockTime().Add(time.Minute).UnixNano()
 	//to ensure timeout does not result in channel closing
 	if autoTxInfo.Interval > time.Minute*2 {
-		timeoutTimestamp = autoTxInfo.Interval.Nanoseconds()
+		timeoutTimestamp = ctx.BlockTime().Add(autoTxInfo.Interval).UnixNano()
 	}
 
 	sequence, err := k.icaControllerKeeper.SendTx(ctx, chanCap, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
@@ -160,7 +160,6 @@ func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, label string
 		FeeAddress:   autoTxAddress.String(),
 		Msgs:         msgs,
 		Interval:     interval,
-		Duration:     duration,
 		StartTime:    startAt,
 		ExecTime:     execTime,
 		EndTime:      endTime,
@@ -253,7 +252,7 @@ func calculateEndAndExecTimes(startTime time.Time, duration time.Duration, inter
 }
 
 func calculateExecTime(duration, interval time.Duration, startTime time.Time) time.Time {
-	if startTime.After(time.Now().Add(time.Minute)) {
+	if startTime.After(time.Now().Add(time.Second * 30)) {
 		return startTime
 	}
 	if interval != 0 {

@@ -79,7 +79,7 @@ func addAutoTxHistory(autoTx *types.AutoTxInfo, actualExecTime time.Time, execFe
 		ExecFee:           execFee,
 	}
 	if len(err) > 0 {
-		historyEntry.Error = err[0].Error()
+		historyEntry.Error = fmt.Sprintf(types.ErrAutoTxStopped, err[0].Error())
 	}
 	autoTx.AutoTxHistory = append(autoTx.AutoTxHistory, &historyEntry)
 
@@ -98,5 +98,8 @@ func calculateTimeBasedFlexFee(autoTx types.AutoTxInfo, isRecurring bool) sdk.In
 	}
 	//return sdk.NewInt(int64((autoTx.ExecTime.Sub(autoTx.StartTime)).Minutes()))
 	period := autoTx.ExecTime.Sub(autoTx.StartTime)
+	if period == 0 {
+		return sdk.OneInt()
+	}
 	return sdk.NewInt(int64(period.Minutes()))
 }

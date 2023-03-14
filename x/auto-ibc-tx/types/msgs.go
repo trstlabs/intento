@@ -15,10 +15,12 @@ var (
 	_ sdk.Msg = &MsgSubmitTx{}
 	_ sdk.Msg = &MsgSubmitAutoTx{}
 	_ sdk.Msg = &MsgRegisterAccountAndSubmitAutoTx{}
+	_ sdk.Msg = &MsgUpdateAutoTx{}
 
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitTx{}
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitAutoTx{}
 	_ codectypes.UnpackInterfacesMessage = MsgRegisterAccountAndSubmitAutoTx{}
+	_ codectypes.UnpackInterfacesMessage = MsgUpdateAutoTx{}
 )
 
 // NewMsgRegisterAccount creates a new MsgRegisterAccount instance
@@ -123,7 +125,7 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 }
 
 // NewMsgSubmitAutoTx creates a new NewMsgSubmitAutoTx instance
-func NewMsgSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, dependsOn []uint64 /*  retries uint64 */) (*MsgSubmitAutoTx, error) {
+func NewMsgSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, dependsOn []uint64 /*  retries uint64 */) (*MsgSubmitAutoTx, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -137,6 +139,7 @@ func NewMsgSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID str
 		Duration:       duration,
 		Interval:       interval,
 		StartAt:        startAt,
+		FeeFunds:       feeFunds,
 		DependsOnTxIds: dependsOn,
 		//Retries:        retries,
 	}, nil
@@ -187,8 +190,6 @@ func (msg MsgSubmitAutoTx) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			fmt.Println(msg.String())
-			//k.Logger(ctx).Info("ValidateBasic failed", "msg", msg.String())
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
 		}
 	}
@@ -197,7 +198,7 @@ func (msg MsgSubmitAutoTx) ValidateBasic() error {
 }
 
 // NewMsgSend creates a new MsgSend instance
-func NewMsgRegisterAccountAndSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, dependsOn []uint64 /*  retries uint64 */, version string) (*MsgRegisterAccountAndSubmitAutoTx, error) {
+func NewMsgRegisterAccountAndSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, dependsOn []uint64 /*  retries uint64 */, version string) (*MsgRegisterAccountAndSubmitAutoTx, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -211,6 +212,7 @@ func NewMsgRegisterAccountAndSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg
 		Duration:       duration,
 		Interval:       interval,
 		StartAt:        startAt,
+		FeeFunds:       feeFunds,
 		DependsOnTxIds: dependsOn,
 		Version:        version,
 		//Retries:        retries,
@@ -262,8 +264,77 @@ func (msg MsgRegisterAccountAndSubmitAutoTx) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			fmt.Println(msg.String())
-			//k.Logger(ctx).Info("ValidateBasic failed", "msg", msg.String())
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
+		}
+	}
+
+	return nil
+}
+
+// NewMsgUpdateAutoTx creates a new NewMsgUpdateAutoTx instance
+func NewMsgUpdateAutoTx(owner string, txID uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, dependsOn []uint64 /*  retries uint64 */) (*MsgUpdateAutoTx, error) {
+	anys, err := PackTxMsgAnys(sdkMsgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &MsgUpdateAutoTx{
+		Owner:          owner,
+		TxId:           txID,
+		Label:          label,
+		ConnectionId:   connectionID,
+		Msgs:           anys,
+		EndTime:        endTime,
+		StartAt:        startAt,
+		Interval:       interval,
+		DependsOnTxIds: dependsOn,
+		FeeFunds:       feeFunds,
+		//Retries:        retries,
+	}, nil
+}
+
+// UnpackInterfaces implements codectypes.UnpackInterfacesMessage
+func (msg MsgUpdateAutoTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	var sdkMsgs []sdk.Msg
+	for _, message := range msg.Msgs {
+		unpacker.UnpackAny(message, &sdkMsgs)
+	}
+	return nil
+}
+
+// GetTxMsgs fetches cached any messages
+func (msg *MsgUpdateAutoTx) GetTxMsgs() []sdk.Msg {
+	var sdkMsgs []sdk.Msg
+	for _, message := range msg.Msgs {
+		sdkMsg, ok := message.GetCachedValue().(sdk.Msg)
+		if !ok {
+			return nil
+		}
+		sdkMsgs = append(sdkMsgs, sdkMsg)
+	}
+
+	return sdkMsgs
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgUpdateAutoTx) GetSigners() []sdk.AccAddress {
+	owner, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{owner}
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgUpdateAutoTx) ValidateBasic() error {
+	if len(msg.Msgs) >= 10 {
+		return fmt.Errorf("can't execute more than 9 messages")
+	}
+
+	for _, message := range msg.GetTxMsgs() {
+		// check if the msgs contain valid inputs
+		err := message.ValidateBasic()
+		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
 		}
 	}

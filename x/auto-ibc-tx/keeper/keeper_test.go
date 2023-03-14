@@ -216,7 +216,6 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAutoTxWorks() {
 	suite.Require().Equal(autoTx.Owner, addr.String())
 	suite.Require().Equal(autoTx.Label, "my_trigger")
 	suite.Require().Equal(autoTx.PortID, "")
-	suite.Require().Equal(autoTx.Duration, time.Second*500)
 	suite.Require().Equal(autoTx.Interval, time.Second*60)
 
 	var txMsgAny codectypes.Any
@@ -261,7 +260,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 	suite.Require().Equal(autoTx.Label, "my_trigger")
 	suite.Require().Equal(autoTx.PortID, "icacontroller-"+addr.String())
 	suite.Require().Equal(autoTx.ConnectionID, path.EndpointA.ConnectionID)
-	suite.Require().Equal(autoTx.Duration, time.Second*500)
+
 	suite.Require().Equal(autoTx.Interval, time.Second*60)
 
 	_, found := suite.chainA.GetTrstApp().AppKeepers.ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ConnectionID, autoTx.PortID)
@@ -307,7 +306,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithRegistrationAndMultipp
 	suite.Require().Equal(autoTx.Label, "my_trigger")
 	suite.Require().Equal(autoTx.PortID, "icacontroller-"+addr.String())
 	suite.Require().Equal(autoTx.ConnectionID, path.EndpointA.ConnectionID)
-	suite.Require().Equal(autoTx.Duration, time.Second*500)
+
 	suite.Require().Equal(autoTx.Interval, time.Second*60)
 	/*
 		// Update both clients

@@ -17,6 +17,8 @@ const (
 	flagStartAt   = "start_at"
 	flagDependsOn = "depends_on"
 	flagRetries   = "retries"
+	flagFeeFunds  = "fee_funds"
+	flagEndTime   = "end_at"
 )
 
 // common flagsets to add to various functions

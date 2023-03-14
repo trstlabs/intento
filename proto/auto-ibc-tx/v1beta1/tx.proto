@@ -27,6 +27,9 @@ service Msg {
   rpc RegisterAccountAndSubmitAutoTx(MsgRegisterAccountAndSubmitAutoTx) returns (MsgRegisterAccountAndSubmitAutoTxResponse) {
     option (google.api.http).post = "/auto-ibc-tx/v1beta1/register-account-submit-auto-tx";
   };
+  rpc UpdateAutoTx(MsgUpdateAutoTx) returns (MsgUpdateAutoTxResponse) {
+    option (google.api.http).post = "/auto-ibc-tx/v1beta1/update-auto-tx";
+  };
 }
 
 // MsgRegisterAccount registers an interchain account for the given owner over the specified connection pair
@@ -39,7 +42,7 @@ message MsgRegisterAccount {
 // MsgRegisterAccountResponse is the response type for Msg/RegisterAccount
 message MsgRegisterAccountResponse {}
 
-// MsgSubmitTx creates and submits an arbitrary transaction msg to be executed using an interchain account
+// MsgSubmitTx creates and submits an arbitrary transaction msg to be executed locally or using an interchain account
 message MsgSubmitTx {
   string owner                      = 1;
   string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
@@ -49,7 +52,7 @@ message MsgSubmitTx {
 // MsgSubmitTxResponse defines the MsgSubmitTx response type
 message MsgSubmitTxResponse {}
 
-// MsgSubmitAutoTx creates, submits and schedules an arbitrary transaction msg to be executed using an interchain account
+// MsgSubmitAutoTx creates, submits and schedules an arbitrary transaction msg to be executed locally or using an interchain account
 message MsgSubmitAutoTx {
   string owner                      = 1;
   string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
@@ -101,3 +104,31 @@ message MsgRegisterAccountAndSubmitAutoTx {
 
 // MsgRegisterAccountAndSubmitAutoTxResponse defines the MsgSubmitTx response type
 message MsgRegisterAccountAndSubmitAutoTxResponse {}
+
+
+
+// MsgUpdateAutoTx creates, updates and schedules an arbitrary transaction msg to be executed locally or using an interchain account
+message MsgUpdateAutoTx {
+  string owner                      = 1;
+  uint64 tx_id = 2;
+  string connection_id              = 3 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string label                      = 4;
+  repeated google.protobuf.Any msgs           = 5 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
+  // duration defines the time that the code should run for
+  uint64 end_time = 6;
+  // start_at when set as a unix time after block inclusion, creates a custom start time for execution
+  uint64 start_at = 7;
+  //interval defines the interval between auto_msg calls
+  string interval = 8;
+  //optional fees to be used for auto tx execution limiting the amount of fees incurred
+  repeated cosmos.base.v1beta1.Coin fee_funds = 9 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"fee_funds\""
+  ];
+  //optional array of dependent txs that should be executed before execution is allowed
+  repeated uint64 depends_on_tx_ids = 10;
+}
+
+// MsgUpdateTxResponse defines the MsgUpdateTx response type
+message MsgUpdateAutoTxResponse {}

@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
@@ -125,7 +127,6 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 				assert.Equal(t, expectedAutoTx.PortID, got.AutoTxInfos[i].PortID)
 				assert.Equal(t, expectedAutoTx.Owner, got.AutoTxInfos[i].Owner)
 				assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[i].ConnectionID)
-				assert.Equal(t, expectedAutoTx.Duration, got.AutoTxInfos[i].Duration)
 				assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[i].Interval)
 				assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[i].EndTime)
 				assert.Equal(t, expectedAutoTx.DependsOnTxIds, got.AutoTxInfos[i].DependsOnTxIds)
@@ -149,11 +150,7 @@ func TestQueryAutoTxsList(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		autoTx, err := CreateFakeAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
-		// msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
-		// require.NoError(t, err)
-		// makeReadableMsgData(&autoTx, msg)
-		//autoTx.Msgs = nil
-		//autoTx.GetTxMsgs()
+
 		expectedAutoTxs = append(expectedAutoTxs, autoTx)
 	}
 
@@ -162,16 +159,55 @@ func TestQueryAutoTxsList(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	for i, expectedAutoTx := range expectedAutoTxs {
+
 		assert.Equal(t, expectedAutoTx.GetTxMsgs(), got.AutoTxInfos[i].GetTxMsgs())
 		assert.Equal(t, expectedAutoTx.AutoTxHistory, got.AutoTxInfos[i].AutoTxHistory)
 		assert.Equal(t, expectedAutoTx.PortID, got.AutoTxInfos[i].PortID)
 		assert.Equal(t, expectedAutoTx.Owner, got.AutoTxInfos[i].Owner)
 		assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[i].ConnectionID)
-		assert.Equal(t, expectedAutoTx.Duration, got.AutoTxInfos[i].Duration)
 		assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[i].Interval)
 		assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[i].EndTime)
 		assert.Equal(t, expectedAutoTx.DependsOnTxIds, got.AutoTxInfos[i].DependsOnTxIds)
+		assert.Equal(t, expectedAutoTx.UpdateHistory, got.AutoTxInfos[i].UpdateHistory)
 	}
+}
+
+func TestQueryAutoTxsListWithAuthZMsg(t *testing.T) {
+	ctx, keepers := CreateTestInput(t, false)
+
+	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
+	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
+
+	creator, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, deposit)
+
+	portID, err := icatypes.NewControllerPortID(creator.String())
+	require.NoError(t, err)
+
+	expectedAutoTx, err := CreateFakeAuthZAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+	require.NoError(t, err)
+	fmt.Printf("%v\n", len(expectedAutoTx.Msgs))
+	got, err := keepers.AutoIbcTxKeeper.AutoTxs(sdk.WrapSDKContext(ctx), &types.QueryAutoTxsRequest{})
+
+	require.NoError(t, err)
+	require.NotNil(t, got)
+
+	var txMsg sdk.Msg
+	keepers.AutoIbcTxKeeper.cdc.UnpackAny(expectedAutoTx.Msgs[0], &txMsg)
+
+	var gotMsg sdk.Msg
+	keepers.AutoIbcTxKeeper.cdc.UnpackAny(got.AutoTxInfos[0].Msgs[0], &gotMsg)
+
+	assert.Equal(t, expectedAutoTx.Msgs, got.AutoTxInfos[0].Msgs)
+	//	assert.Equal(t, txMsg, gotMsg)
+	assert.Equal(t, expectedAutoTx.AutoTxHistory, got.AutoTxInfos[0].AutoTxHistory)
+	assert.Equal(t, expectedAutoTx.PortID, got.AutoTxInfos[0].PortID)
+	assert.Equal(t, expectedAutoTx.Owner, got.AutoTxInfos[0].Owner)
+	assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[0].ConnectionID)
+	assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[0].Interval)
+	assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[0].EndTime)
+	assert.Equal(t, expectedAutoTx.DependsOnTxIds, got.AutoTxInfos[0].DependsOnTxIds)
+	assert.Equal(t, expectedAutoTx.UpdateHistory, got.AutoTxInfos[0].UpdateHistory)
+
 }
 
 func TestQueryParams(t *testing.T) {
@@ -217,9 +253,9 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 		FeeAddress: autoTxAddress.String(),
 		Owner:      owner.String(),
 		// Data:       fakeData,
-		Msgs:      anys,
-		Interval:  interval,
-		Duration:  duration,
+		Msgs:     anys,
+		Interval: interval,
+
 		StartTime: startAt,
 		ExecTime:  execTime,
 		EndTime:   endTime,
@@ -227,8 +263,53 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 	}
 
 	k.SetAutoTxInfo(ctx, &autoTx)
-	k.addToAutoTxOwnerIndex(ctx, owner /* startAt, */, txID)
+	k.addToAutoTxOwnerIndex(ctx, owner, txID)
+
+	var newAutoTx types.AutoTxInfo
 	autoTxBz := k.cdc.MustMarshal(&autoTx)
-	k.cdc.MustUnmarshal(autoTxBz, &autoTx)
-	return autoTx, nil
+	k.cdc.MustUnmarshal(autoTxBz, &newAutoTx)
+	return newAutoTx, nil
+}
+
+func CreateFakeAuthZAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) (types.AutoTxInfo, error) {
+
+	txID := k.autoIncrementID(ctx, types.KeyLastTxID)
+	autoTxAddress, err := k.createFeeAccount(ctx, txID, owner, feeFunds)
+	if err != nil {
+		return types.AutoTxInfo{}, err
+	}
+	fakeMsg := banktypes.NewMsgSend(owner, autoTxAddress, feeFunds)
+	anys, err := types.PackTxMsgAnys([]sdk.Msg{fakeMsg})
+	if err != nil {
+		return types.AutoTxInfo{}, err
+	}
+	fakeAuthZMsg := authztypes.MsgExec{Grantee: "ICA_ADDR", Msgs: anys}
+
+	//fakeAuthZMsg := feegranttypes.Se{Grantee: "ICA_ADDR", Msgs: anys}
+	anys, err = types.PackTxMsgAnys([]sdk.Msg{&fakeAuthZMsg})
+	if err != nil {
+		return types.AutoTxInfo{}, err
+	}
+
+	// fakeData, _ := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{fakeMsg})
+	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
+	autoTx := types.AutoTxInfo{
+		TxID:       txID,
+		FeeAddress: autoTxAddress.String(),
+		Owner:      owner.String(),
+		// Data:       fakeData,
+		Msgs:          anys,
+		Interval:      interval,
+		UpdateHistory: nil,
+		StartTime:     startAt,
+		ExecTime:      execTime,
+		EndTime:       endTime,
+		PortID:        portID,
+	}
+	k.SetAutoTxInfo(ctx, &autoTx)
+	k.addToAutoTxOwnerIndex(ctx, owner, txID)
+	autoTxBz := k.cdc.MustMarshal(&autoTx)
+	var newAutoTx types.AutoTxInfo
+	k.cdc.MustUnmarshal(autoTxBz, &newAutoTx)
+	return newAutoTx, nil
 }

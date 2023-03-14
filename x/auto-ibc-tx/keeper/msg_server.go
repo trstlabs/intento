@@ -61,7 +61,7 @@ func (k msgServer) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*typ
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
 	}
-	timeoutTimestamp := time.Now().Add(time.Minute).UnixNano()
+	timeoutTimestamp := ctx.BlockTime().Add(time.Minute).UnixNano()
 	sequence, err := k.icaControllerKeeper.SendTx(ctx, chanCap, msg.ConnectionId, portID, packetData, uint64(timeoutTimestamp))
 	if err != nil {
 		return nil, err
@@ -117,11 +117,11 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 	}
 	if duration != 0 {
 		if duration > p.MaxAutoTxDuration {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be shorter than maximum duration: %s", duration, p.MaxAutoTxDuration)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be shorter than governance-param maximum duration: %s", duration, p.MaxAutoTxDuration)
 		} else if duration < p.MinAutoTxDuration {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be longer than minimum duration: %s", duration, p.MinAutoTxDuration)
-		} else if startTime.After(ctx.BlockHeader().Time.Add(duration)) {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx start time: %s must be before AutoTx end time : %s", startTime, ctx.BlockHeader().Time.Add(duration))
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be longer than governance-param minimum duration: %s", duration, p.MinAutoTxDuration)
+		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxAutoTxDuration)) {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx start time: %s must be before current time and governance-param max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
 	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
@@ -193,11 +193,11 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 	}
 	if duration != 0 {
 		if duration > p.MaxAutoTxDuration {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be shorter than maximum duration: %s", duration, p.MaxAutoTxDuration)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be shorter than governance-param maximum duration: %s", duration, p.MaxAutoTxDuration)
 		} else if duration < p.MinAutoTxDuration {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be longer than minimum duration: %s", duration, p.MinAutoTxDuration)
-		} else if startTime.After(ctx.BlockHeader().Time.Add(duration)) {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx start time: %s must be before AutoTx end time : %s", startTime, ctx.BlockHeader().Time.Add(duration))
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx duration: %s must be longer than governance-param minimum duration: %s", duration, p.MinAutoTxDuration)
+		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxAutoTxDuration)) {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx start time: %s must be before current time and governance-param max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
 	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
@@ -213,4 +213,100 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 	}
 
 	return &types.MsgRegisterAccountAndSubmitAutoTxResponse{}, nil
+}
+
+// UpdateAutoTx implements the Msg/UpdateAutoTx interface
+func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoTx) (*types.MsgUpdateAutoTxResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	autoTx, err := k.TryGetAutoTxInfo(ctx, msg.TxId)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, err.Error())
+	}
+	if autoTx.Owner != msg.Owner {
+		return nil, sdkerrors.ErrInvalidAddress
+	}
+
+	if msg.ConnectionId != "" {
+		autoTx.PortID, err = icatypes.NewControllerPortID(msg.Owner)
+		if err != nil {
+			return nil, err
+		}
+		autoTx.ConnectionID = msg.ConnectionId
+	}
+	newExecTime := autoTx.ExecTime
+	if msg.EndTime != 0 {
+		endTime := time.Unix(int64(msg.EndTime), 0)
+		if err != nil {
+			return nil, err
+		}
+		if endTime.Before(time.Now().Add(time.Minute * 2)) {
+			return nil, types.ErrInvalidTime
+		}
+		autoTx.EndTime = endTime
+
+		if autoTx.Interval != 0 && msg.Interval != "" {
+			newExecTime = endTime
+		}
+	}
+	p := k.GetParams(ctx)
+
+	//var interval time.Duration = 0
+	if msg.Interval != "" {
+		interval, err := time.ParseDuration(msg.Interval)
+		if err != nil {
+			return nil, sdkerrors.Wrap(types.ErrUpdateAutoTx, err.Error())
+		}
+
+		if interval != 0 && interval < p.MinAutoTxInterval || interval > autoTx.EndTime.Sub(autoTx.StartTime) {
+			return nil, sdkerrors.Wrapf(types.ErrUpdateAutoTx, "AutoTx interval: %s  must be longer than minimum interval:  %s, and execution should happen before end time", interval, p.MinAutoTxInterval)
+		}
+		autoTx.Interval = interval
+		//newExecTime := interval
+	}
+
+	if msg.StartAt != 0 {
+		startTime := time.Unix(int64(msg.StartAt), 0)
+		if err != nil {
+			return nil, err
+		}
+		if startTime.After(autoTx.EndTime) {
+			return nil, sdkerrors.Wrapf(types.ErrUpdateAutoTx, "AutoTx start time: %s must be before AutoTx end time", startTime)
+		}
+		// if startTime.After(autoTx.ExecTime) {
+		// 	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "AutoTx start time: %s must be before next AutoTx exec time", startTime)
+		// }
+		if len(autoTx.AutoTxHistory) != 0 {
+			return nil, sdkerrors.Wrapf(types.ErrUpdateAutoTx, "AutoTx start time: %s must occur before first execution", startTime)
+		}
+		autoTx.StartTime = startTime
+		newExecTime = startTime
+	}
+	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
+		return nil, sdkerrors.Wrap(types.ErrUpdateAutoTx, "AutoTx must depend on less than 10 autoTxIDs and have less than 10 messages")
+	}
+
+	if msg.Label != "" {
+		autoTx.Label = msg.Label
+	}
+
+	if len(msg.DependsOnTxIds) != 0 {
+		autoTx.DependsOnTxIds = msg.DependsOnTxIds
+	}
+
+	if len(msg.Msgs) != 0 {
+		autoTx.Msgs = msg.Msgs
+	}
+
+	if newExecTime != autoTx.ExecTime {
+		autoTx.ExecTime = newExecTime
+		k.RemoveFromAutoTxQueue(ctx, autoTx)
+		k.InsertAutoTxQueue(ctx, autoTx.TxID, newExecTime)
+	}
+
+	autoTx.UpdateHistory = append(autoTx.UpdateHistory, ctx.BlockTime())
+
+	k.SetAutoTxInfo(ctx, &autoTx)
+
+	return &types.MsgUpdateAutoTxResponse{}, nil
 }

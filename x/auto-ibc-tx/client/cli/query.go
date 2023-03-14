@@ -22,6 +22,7 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(getInterchainAccountCmd())
 	cmd.AddCommand(getAutoTxsForOwnerCmd())
+	cmd.AddCommand(getAutoTxsCmd())
 
 	return cmd
 }
@@ -77,6 +78,36 @@ func getAutoTxsForOwnerCmd() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "list auto-txs by owner")
+
+	return cmd
+}
+
+func getAutoTxsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:  "list-auto-txs",
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AutoTxs(cmd.Context(), types.NewQueryAutoTxsRequest(pageReq))
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "auto-txs")
 
 	return cmd
 }
