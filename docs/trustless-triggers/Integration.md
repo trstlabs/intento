@@ -6,7 +6,7 @@ description: How to integrate automation into your interchain dApp
 
 ## TrustlessJS
 
-We've built a JS framework called [TrustlessJS](https://npmjs.com/package/trustlessjs) to send AutoTx transactions. An implementation for this is [TriggerPørtal](https://triggerportal.netlify.app). It contains a message registry that you can use to encode and decode protobuf messages that Trustless Hub supports, including CosmWasm and Osmosis messages.
+We've built a JS framework called [TrustlessJS](https://npmjs.com/package/trustlessjs) to send AutoTx transactions. An implementation for this is [TriggerPørtal](https://triggerportal.zone). It contains a message registry that you can use to encode and decode protobuf messages that Trustless Hub supports, including CosmWasm and Osmosis messages.
 
 An example of submitting an MsgSubmitAutoTx in typescript. A label is optional but recommended to keep track an overview of triggers.
 Sta

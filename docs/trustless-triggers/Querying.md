@@ -6,7 +6,7 @@ description: How to retreive Trustless Trigger data
 
 ## Ways to Query
 
-Retreiving `AutoTX` info can be through the [TriggerPørtal](triggerportal.netlify.app) interface, a TrustlessJS front-end integration or locally through a light client Command-Line Interface.
+Retreiving `AutoTX` info can be through the [TriggerPørtal](triggerportal.zone) interface, a TrustlessJS front-end integration or locally through a light client Command-Line Interface.
 
 A list of RPC endpoints are to-be added. Here's one for now: [openrpc.trustlesshub.com](openrpc.trustlesshub.com)
 

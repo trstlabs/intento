@@ -43,5 +43,5 @@ You can also stake your TRST by delegating your TRST to validators. You can vote
 Many projects already showcase the Tendermint BFT consensus engine and the Cosmos SDK. Explore the [Cosmos Network Ecosystem](https://cosmos.network/ecosystem/apps) to discover a wide variety of apps, blockchains, wallets, and explorers that are built in the Cosmos ecosystem.
 
 ## Applications
-* [TriggerPørtal](triggerportal.netlify.app) - Trigger automations and schedule payment accross the interchain
-* [Interact Wallet](https://interact.trustlesshub.com) - Wallet interface to send tokens, stake and interact with contracts
+* [TriggerPørtal](https://triggerportal.zone) - Schedule payments and trigger automations and across IBC-enabled blockchains
+* [Interact Wallet](https://interact.trustlesshub.com) - Wallet interface to send tokens, stake and interact with Trustless Contracts
