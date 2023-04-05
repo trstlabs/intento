@@ -107,14 +107,14 @@ message MsgRegisterAccountAndSubmitAutoTxResponse {}
 
 
 
-// MsgUpdateAutoTx creates, updates and schedules an arbitrary transaction msg to be executed locally or using an interchain account
+// MsgUpdateAutoTx updates an arbitrary transaction msg to be executed locally or using an interchain account
 message MsgUpdateAutoTx {
   string owner                      = 1;
   uint64 tx_id = 2;
   string connection_id              = 3 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   string label                      = 4;
   repeated google.protobuf.Any msgs           = 5 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
-  // duration defines the time that the code should run for
+  // end_time when set defines the time that the code should run for
   uint64 end_time = 6;
   // start_at when set as a unix time after block inclusion, creates a custom start time for execution
   uint64 start_at = 7;

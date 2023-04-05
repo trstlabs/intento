@@ -36,8 +36,9 @@ func TestSendLocalTx(t *testing.T) {
 		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: anys, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "", ConnectionID: "",
 	}
 
-	err = keeper.SendAutoTx(ctx, autoTxInfo)
+	err, executedLocally := keeper.SendAutoTx(ctx, autoTxInfo)
 	require.NoError(t, err)
+	require.True(t, executedLocally)
 
 }
 
@@ -97,8 +98,9 @@ func TestSendLocalTxAutoCompound(t *testing.T) {
 	})
 
 	autoTxInfo := createLocalAutoTxInfo(delAddr, val, autoTxAddr)
-	err = keeper.SendAutoTx(ctx, autoTxInfo)
+	err, executedLocally := keeper.SendAutoTx(ctx, autoTxInfo)
 	require.NoError(t, err)
+	require.True(t, executedLocally)
 
 	delegations := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
 	require.Greater(t, delegations[0].Shares.TruncateInt64(), sdk.NewDec(77).TruncateInt64())

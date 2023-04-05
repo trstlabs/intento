@@ -50,21 +50,22 @@ func (k Keeper) SetAutoTxInfo(ctx sdk.Context, autoTx *types.AutoTxInfo) {
 	store.Set(types.GetAutoTxKey(autoTx.TxID), k.cdc.MustMarshal(autoTx))
 }
 
-func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
+func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (error, bool) {
 
 	//check if autoTx is local
 	if autoTxInfo.ConnectionID == "" {
 		txMsgs := autoTxInfo.GetTxMsgs()
-		return handleLocalAutoTx(k, ctx, txMsgs, autoTxInfo)
+		err := handleLocalAutoTx(k, ctx, txMsgs, autoTxInfo)
+		return err, err == nil
 	}
 	//if message contains ICA_ADDR, the ICA address is retreived and parsed
 	txMsgs, err := k.replaceTextInMsg(ctx, autoTxInfo)
 	if err != nil {
-		return err
+		return err, false
 	}
 	data, err := icatypes.SerializeCosmosTx(k.cdc, txMsgs)
 	if err != nil {
-		return err
+		return err, false
 	}
 	packetData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
@@ -73,12 +74,12 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
 
 	channelID, found := k.icaControllerKeeper.GetActiveChannelID(ctx, autoTxInfo.ConnectionID, autoTxInfo.PortID)
 	if !found {
-		return sdkerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s", autoTxInfo.PortID)
+		return sdkerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s", autoTxInfo.PortID), false
 	}
 
 	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(autoTxInfo.PortID, channelID))
 	if !found {
-		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
+		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability"), false
 	}
 
 	timeoutTimestamp := ctx.BlockTime().Add(time.Minute).UnixNano()
@@ -89,11 +90,11 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) error {
 
 	sequence, err := k.icaControllerKeeper.SendTx(ctx, chanCap, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
 	if err != nil {
-		return err
+		return err, false
 	}
 
 	k.setTmpAutoTxID(ctx, autoTxInfo.TxID, autoTxInfo.PortID, sequence)
-	return nil
+	return nil, false
 }
 
 func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo types.AutoTxInfo) error {
@@ -138,7 +139,6 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 			}
 
 		}
-
 	}
 	return nil
 }
@@ -151,7 +151,7 @@ func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, label string
 		return err
 	}
 
-	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
+	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, txID, interval)
 
 	autoTx := types.AutoTxInfo{
 		TxID:         txID,
@@ -236,16 +236,15 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash(addr))
 }
 
-func (k Keeper) calculateAndInsertQueue(ctx sdk.Context, startTime time.Time, duration time.Duration, autoTxID uint64, interval time.Duration) (time.Time, time.Time, time.Duration) {
+func (k Keeper) calculateTimeAndInsertQueue(ctx sdk.Context, startTime time.Time, duration time.Duration, autoTxID uint64, interval time.Duration) (time.Time, time.Time) {
 	endTime, execTime := calculateEndAndExecTimes(startTime, duration, interval)
 	k.InsertAutoTxQueue(ctx, autoTxID, execTime)
 
-	return endTime, execTime, interval
+	return endTime, execTime
 }
 
 func calculateEndAndExecTimes(startTime time.Time, duration time.Duration, interval time.Duration) (time.Time, time.Time) {
 	endTime := startTime.Add(duration)
-
 	execTime := calculateExecTime(duration, interval, startTime)
 
 	return endTime, execTime
@@ -413,22 +412,34 @@ func (k Keeper) SetAutoTxError(ctx sdk.Context, sourcePort string, seq uint64, e
 }
 
 // checks if dependent transactions have executed on the host chain
+// insert the next entry when execution has not happend yet
 func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx *types.AutoTxInfo) bool {
+	allowedToExecute := false
+	//if not executed, we will not execute this entry
+	if len(autoTx.AutoTxHistory) == 0 || autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Executed && !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].TimedOut {
+		allowedToExecute = true
+	}
 	//check if dependent tx executions succeeded
 	for _, autoTxId := range autoTx.DependsOnTxIds {
-		autoTxInfo := k.GetAutoTxInfo(ctx, autoTxId)
-		if len(autoTxInfo.AutoTxHistory) == 0 {
-			return true
-		}
-		if !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Executed {
-			// we could reinsert the entry into the queue if desired
-			// if autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Retries <= autoTx.MaxRetries {
-			// 	k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
-			// }
-			return false
+		dependentTx := k.GetAutoTxInfo(ctx, autoTxId)
+		if len(dependentTx.AutoTxHistory) != 0 && !dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Executed && !dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].TimedOut {
+			allowedToExecute = false
 		}
 	}
-	return true
+
+	//if not allowed to execute, remove entry and insert the next entry given a recurring tx and no error
+	if !allowedToExecute {
+		k.RemoveFromAutoTxQueue(ctx, *autoTx)
+		willRecur := autoTx.ExecTime.Before(autoTx.EndTime) && autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime)
+		if willRecur {
+			fmt.Printf("auto-tx will recur, txID: %v \n", autoTx.TxID)
+			// adding next execTime and a new entry into the queue based on interval
+			autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
+			k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
+		}
+	}
+
+	return allowedToExecute
 }
 
 // getTmpAutoTxID for a certain port and sequence

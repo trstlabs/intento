@@ -4,6 +4,8 @@ import (
 
 	//"log"
 
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -16,7 +18,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	p := k.GetParams(ctx)
 	// fmt.Printf(" flexFee: %v \n", flexFee)
 	flexFeeMultiplier := sdk.NewDec(p.AutoTxFlexFeeMul).QuoInt64(100)
-	//fmt.Printf(" flexFeeMul: %v \n", flexFeeMultiplier)
+
 	flexFeeMulDec := sdk.NewDecFromInt(flexFee).Mul(flexFeeMultiplier)
 
 	feeAddr, err := sdk.AccAddressFromBech32(autoTxInfo.FeeAddress)
@@ -32,20 +34,20 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 
 	//constant fee can be charged per message
 	//depending on if self-execution is recurring the constant fee may differ (gov param)
-	constantFee := sdk.NewInt(p.AutoTxConstantFee * int64(len(autoTxInfo.Msgs)))
+	fixedFee := sdk.NewInt(p.AutoTxConstantFee * int64(len(autoTxInfo.Msgs)))
 	if isRecurring {
-		constantFee = sdk.NewInt(p.RecurringAutoTxConstantFee * int64(len(autoTxInfo.Msgs)))
+		fixedFee = sdk.NewInt(p.RecurringAutoTxConstantFee * int64(len(autoTxInfo.Msgs)))
 	}
-	communityCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, constantFee))
+	fixedFeeCommunityCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, fixedFee))
 
 	if !isRecurring && !autoTxInfoBalance.Empty() {
 		percentageAutoTxFundsCommission := sdk.NewDecWithPrec(p.AutoTxFundsCommission, 2)
 		amountAutoTxFundsCommissionCoin := sdk.NewCoin(types.Denom, percentageAutoTxFundsCommission.MulInt(autoTxInfoBalance.AmountOf(types.Denom)).Ceil().TruncateInt())
-		communityCoins = communityCoins.Add(amountAutoTxFundsCommissionCoin)
+		fixedFeeCommunityCoins = fixedFeeCommunityCoins.Add(amountAutoTxFundsCommissionCoin)
 	}
 
-	totalAutoTxFees := communityCoins.Add(sdk.NewCoin(types.Denom, flexFeeMulDec.Ceil().TruncateInt()))
-	//fmt.Printf("totalAutoTxFees: %v \n", totalAutoTxFees)
+	totalAutoTxFees := fixedFeeCommunityCoins.Add(sdk.NewCoin(types.Denom, flexFeeMulDec.Ceil().TruncateInt()))
+	// fmt.Printf("totalAutoTxFees: %v \n", totalAutoTxFees)
 	if !isRecurring {
 		//pay out the remaining balance to the autoTxInfo owner after deducting fee, commision and gas cost
 		toOwnerCoins, negative := autoTxInfoBalance.Sort().SafeSub(totalAutoTxFees)
@@ -67,8 +69,8 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	}
 
 	proposerAddr := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
-	//fmt.Printf("allocating flexFeeCoin :%s \n", flexFeeCoin.Amount)
-	//fmt.Printf("proposer :%s \n", proposer.String())
+	fmt.Printf("allocating flexFeeCoin :%s \n", flexFeeCoin.Amount)
+	fmt.Printf("proposer :%s \n", proposer.String())
 
 	k.Logger(ctx).Debug("auto_tx_flex_fee", "flexFeeCoin", flexFeeCoin.Amount, "to_proposer", proposer.String())
 
@@ -81,14 +83,16 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 		if err != nil {
 			return sdk.Coin{}, err
 		}
-		err = k.distrKeeper.FundCommunityPool(ctx, communityCoins, owner)
+
+		err = k.distrKeeper.FundCommunityPool(ctx, fixedFeeCommunityCoins, owner)
 		if err != nil {
 			return sdk.Coin{}, err
 		}
-
 	} else {
-		err = k.distrKeeper.FundCommunityPool(ctx, communityCoins, feeAddr)
-		return sdk.Coin{}, err
+		err = k.distrKeeper.FundCommunityPool(ctx, fixedFeeCommunityCoins, feeAddr)
+		if err != nil {
+			return sdk.Coin{}, err
+		}
 	}
 
 	return totalAutoTxFees[0], nil
@@ -106,19 +110,19 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	autoTxInfoBalance := k.bankKeeper.GetAllBalances(ctx, autoTxInfo.Address)
 
 	//depending on if self-execution is recurring the constant fee may differ (gov param)
-	constantFee := sdk.NewInt(p.AutoTxConstantFee)
+	fixedFee := sdk.NewInt(p.AutoTxConstantFee)
 	if isRecurring {
-		constantFee = sdk.NewInt(p.RecurringAutoTxConstantFee)
+		fixedFee = sdk.NewInt(p.RecurringAutoTxConstantFee)
 	}
-	communityCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, constantFee))
+	fixedFeeCommunityCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, fixedFee))
 
 	if !isRecurring && !autoTxInfoBalance.Empty() {
 		percentageAutoTxFundsCommission := sdk.NewDecWithPrec(p.AutoTxFundsCommission, 2)
 		amountAutoTxFundsCommissionCoin := sdk.NewCoin(types.Denom, percentageAutoTxFundsCommission.MulInt(autoTxInfoBalance.AmountOf(types.Denom)).Ceil().TruncateInt())
-		communityCoins = communityCoins.Add(amountAutoTxFundsCommissionCoin)
+		fixedFeeCommunityCoins = fixedFeeCommunityCoins.Add(amountAutoTxFundsCommissionCoin)
 	}
 
-	totalAutoTxFees := communityCoins.Add(sdk.NewCoin(types.Denom, flexFeeMul.TruncateInt()))
+	totalAutoTxFees := fixedFeeCommunityCoins.Add(sdk.NewCoin(types.Denom, flexFeeMul.TruncateInt()))
 
 	if !isRecurring {
 		//pay out the remaining balance to the autoTxInfo owner after deducting fee, commision and gas cost
@@ -151,13 +155,13 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 		if err != nil {
 			return sdk.Coin{}, err
 		}
-		err = k.distrKeeper.FundCommunityPool(ctx, communityCoins, autoTxInfo.Owner)
+		err = k.distrKeeper.FundCommunityPool(ctx, fixedFeeCommunityCoins, autoTxInfo.Owner)
 		if err != nil {
 			return sdk.Coin{}, err
 		}
 
 	} else {
-		err = k.distrKeeper.FundCommunityPool(ctx, communityCoins, autoTxInfo.Address)
+		err = k.distrKeeper.FundCommunityPool(ctx, fixedFeeCommunityCoins, autoTxInfo.Address)
 		return sdk.Coin{}, err
 	}
 

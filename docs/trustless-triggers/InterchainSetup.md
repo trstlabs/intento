@@ -18,7 +18,7 @@ With ICS20 transfer middleware, you send a transfer token memo on a chain, and T
 
 ![ics20](../images/ics20/ics20msgflow.png)
 
-By specifying AutoTX details in the memo, TRST will submit an AutoTX using the inputs provided. A MsgRegisterAccountAndSubmitAutoTx or a MsgSubmitAutoTx can be derrived from the memo field in the ICS20 transfer message. This is useful for users, entities and contract callers on other chains. This way DAOs and other entities can create AutoTXs using an ICS20-standard transaction.
+By specifying AutoTX details in the memo, TRST will submit an AutoTX using the inputs provided. A MsgRegisterAccountAndSubmitAutoTx or a MsgSubmitAutoTx can be derrived from the memo field in the ICS20 transfer message. This is useful for users, DOAs and contract callers on other chains. This way accounts on other chains can create AutoTXs using an ICS20-standard transaction.
 
 Our custom middleware is loosely based on the wasmhooks implementation on [Osmosis](https://github.com/osmosis-labs/osmosis/tree/main/x/ibc-hooks).
 
@@ -100,7 +100,7 @@ Using ICS20 to set up a `Trustless Trigger` is for advanced users that are famil
 
 Our ICS20 middleware is developped to allow DAOs to perform time-based actions. These can be executed locally on Trustless Hub, a destination chain which can also be the source chain.
 
-There are several caveats to using ICS20 to set up a trigger. When automating on a destination chain for the first time, not one but two transactions is required to activate the trigger. One transaction is to set the trigger and create an Interchain Account at Trustless Hub and another is to set permissions/send funds to the Interchain Account on the destination chain.
+There are several caveats to using ICS20 to set up a trigger. When automating on a destination chain for the first time, not one but two transactions is required to activate the trigger. One transaction is to set the trigger and create an Interchain Account at Trustless Hub and another is to set permissions/send funds to the Interchain Account on the destination chain. 
 
 To demonstrate how DAOs can integrate with Trustless Triggers we explain the process using an example.
 

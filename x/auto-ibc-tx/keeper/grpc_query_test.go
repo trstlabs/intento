@@ -247,7 +247,7 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 	}
 
 	// fakeData, _ := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{fakeMsg})
-	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
+	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, txID, interval)
 	autoTx := types.AutoTxInfo{
 		TxID:       txID,
 		FeeAddress: autoTxAddress.String(),
@@ -292,7 +292,7 @@ func CreateFakeAuthZAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, port
 	}
 
 	// fakeData, _ := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{fakeMsg})
-	endTime, execTime, interval := k.calculateAndInsertQueue(ctx, startAt, duration, txID, interval)
+	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, txID, interval)
 	autoTx := types.AutoTxInfo{
 		TxID:       txID,
 		FeeAddress: autoTxAddress.String(),

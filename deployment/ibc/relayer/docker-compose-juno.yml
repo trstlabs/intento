@@ -48,5 +48,6 @@ services:
         "./setup_and_run.sh",
         "juno14fgn7zcxpkcsgeat89ukvxm7h2lg4h6tmduyul",
         "juno16g2rahf5846rxzp3fwlswy08fz8ccuwk03k57y",
-        "juno1ykql5ktedxkpjszj5trzu8f5dxajvgv9tupqpe"
+        "juno1ykql5ktedxkpjszj5trzu8f5dxajvgv9tupqpe",
+        juno1he7t2wxzpmfuxfrw7qjg52vu4qljq3l59pfwn3
       ]

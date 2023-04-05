@@ -29,7 +29,6 @@ func (k Keeper) IterateAutoTxQueue(ctx sdk.Context, execTime time.Time, cb func(
 // GetAutoTxsForBlock returns all expiring autoTxs for a block
 func (k Keeper) GetAutoTxsForBlock(ctx sdk.Context) (autoTxs []types.AutoTxInfo) {
 	k.IterateAutoTxQueue(ctx, ctx.BlockHeader().Time, func(autoTx types.AutoTxInfo) bool {
-
 		autoTxs = append(autoTxs, autoTx)
 		return false
 	})

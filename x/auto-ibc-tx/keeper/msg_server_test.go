@@ -324,7 +324,7 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 				autoTx := icaApp.AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(unwrappedCtx, 1)
 				suite.Require().NotEqual(autoTx, types.AutoTxInfo{})
 
-				err = icaApp.AppKeepers.AutoIBCTXKeeper.SendAutoTx(unwrappedCtx, autoTx)
+				err, _ = icaApp.AppKeepers.AutoIBCTXKeeper.SendAutoTx(unwrappedCtx, autoTx)
 				suite.Require().NoError(err)
 				icaAddrToParse := "ICA_ADDR"
 				autoTx = icaApp.AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(unwrappedCtx, 1)
