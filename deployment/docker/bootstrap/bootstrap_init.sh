@@ -6,7 +6,7 @@ if [ ! -e "$file" ]; then
   rm -rf ~/.trstd/*
   rm -rf /opt/trustlesshub/.sgx_secrets/*
 
-  chain_id=${CHAINID:-supernova-1}
+  chain_id=${CHAINID:trst-testnet-1}
 
   mkdir -p ./.sgx_secrets
   trstd config chain-id "$chain_id"
@@ -49,4 +49,4 @@ fi
 lcp --proxyUrl http://localhost:1317 --port 1337 --proxyPartial '' &
 
 # sleep infinity
-source /opt/sgxsdk/environment && RUST_BACKTRACE=1 trstd start --rpc.laddr tcp://0.0.0.0:26657 --bootstrap
+source /opt/sgxsdk/environment && RUST_BACKTRACE=1 trstd start --rpc.laddr tcp://0.0.0.0:26657 --bootstrap > init.log

@@ -135,6 +135,8 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig app.EncodingConfig) {
 		AddGenesisWasmMsgCmd(app.DefaultNodeHome),
 		ImportGenesisAccountsFromSnapshotCmd(app.DefaultNodeHome),
 		ExportAirdropSnapshotCmd(),
+		ExportTestnetSnapshotCmd(),
+		ImportTestnetSnapshotCmd(app.DefaultNodeHome),
 		PrepareGenesisCmd(app.DefaultNodeHome, app.ModuleBasics()),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		// testnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),

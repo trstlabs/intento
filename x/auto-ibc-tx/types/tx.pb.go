@@ -368,14 +368,14 @@ func (m *MsgRegisterAccountAndSubmitAutoTxResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterAccountAndSubmitAutoTxResponse proto.InternalMessageInfo
 
-// MsgUpdateAutoTx creates, updates and schedules an arbitrary transaction msg to be executed locally or using an interchain account
+// MsgUpdateAutoTx updates an arbitrary transaction msg to be executed locally or using an interchain account
 type MsgUpdateAutoTx struct {
 	Owner        string       `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	TxId         uint64       `protobuf:"varint,2,opt,name=tx_id,json=txId,proto3" json:"tx_id,omitempty"`
 	ConnectionId string       `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
 	Label        string       `protobuf:"bytes,4,opt,name=label,proto3" json:"label,omitempty"`
 	Msgs         []*types.Any `protobuf:"bytes,5,rep,name=msgs,proto3" json:"msgs,omitempty"`
-	// duration defines the time that the code should run for
+	// end_time when set defines the time that the code should run for
 	EndTime uint64 `protobuf:"varint,6,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
 	// start_at when set as a unix time after block inclusion, creates a custom start time for execution
 	StartAt uint64 `protobuf:"varint,7,opt,name=start_at,json=startAt,proto3" json:"start_at,omitempty"`

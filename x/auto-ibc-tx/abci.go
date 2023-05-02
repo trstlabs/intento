@@ -30,8 +30,9 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	timeOfBlock := ctx.BlockHeader().Time
 	for _, autoTx := range autoTxs {
 		// check dependent txs
-		if !k.AllowedToExecute(ctx, &autoTx) {
-			addAutoTxHistory(&autoTx, timeOfBlock, sdk.Coin{}, false, types.ErrAutoTxContinue)
+		if !k.AllowedToExecute(ctx, autoTx) {
+			addAutoTxHistory(&autoTx, timeOfBlock, sdk.Coin{}, false, types.ErrAutoTxConditions)
+			autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
 			k.SetAutoTxInfo(ctx, &autoTx)
 			continue
 		}
@@ -77,7 +78,7 @@ func addAutoTxHistory(autoTx *types.AutoTxInfo, actualExecTime time.Time, execFe
 		ExecFee:           execFee,
 	}
 	if len(err) == 1 && err[0] != nil {
-		historyEntry.Error = fmt.Sprintf(types.ErrAutoTxStopped, err[0].Error())
+		historyEntry.Error = err[0].Error()
 	}
 	if executedLocally {
 		historyEntry.Executed = true

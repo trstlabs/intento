@@ -27,6 +27,7 @@ var (
 	AutoTxsByOwnerPrefix          = []byte{0x05}
 	TmpAutoTxIDLatestTX           = []byte{0x06}
 	KeyRelayerRewardsAvailability = []byte{0x07}
+	AutoTxIbcUsageKeyPrefix       = []byte{0x08}
 	KeyLastTxID                   = append(SequenceKeyPrefix, []byte("lastTxId")...)
 	KeyLastTxAddrID               = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
 )
@@ -46,7 +47,7 @@ func GetAutoTxKey(autoTxID uint64) []byte {
 	return append(AutoTxKeyPrefix, GetBytesForUint(autoTxID)...)
 }
 
-// GetAutoTxsByOwnerPrefix returns the autoTxs by creator prefix for the WASM autoTx instance
+// GetAutoTxsByOwnerPrefix returns the autoTxs by creator prefix
 func GetAutoTxsByOwnerPrefix(addr sdk.AccAddress) []byte {
 	bz := address.MustLengthPrefix(addr)
 	return append(AutoTxsByOwnerPrefix, bz...)

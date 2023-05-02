@@ -3,7 +3,7 @@
   "value": {
     "key": "testkey",
     "chain-id": "trstdev-1",
-    "rpc-addr": "http://localhost:26657",
+    "rpc-addr": "http://localtrst:26657",
     "grpc-addr": "",
     "account-prefix": "trust",
     "keyring-backend": "test",

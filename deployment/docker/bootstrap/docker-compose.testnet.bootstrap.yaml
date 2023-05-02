@@ -18,7 +18,6 @@ services:
     volumes:
       - /tmp/aesmd:/var/run/aesmd
       - /tmp/.trstd:/tmp/.trstd
-      - /tmp/.trstcli:/root/.trstcli
       - /tmp/.sgx_secrets:/opt/trustlesshub/.sgx_secrets
     environment:
       - SGX_MODE=HW

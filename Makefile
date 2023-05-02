@@ -297,24 +297,6 @@ build-mainnet: _docker_base
 				.
 
 
-local_trst: _local_trst-compile
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst-dev-1 -f deployment/dockerfiles/release.Dockerfile -t build-release .
-	docker build --build-arg SGX_MODE=SW --build-arg TRST_NODE_TYPE=BOOTSTRAP --build-arg CHAIN_ID=trst-dev-1 -f deployment/dockerfiles/dev-image.Dockerfile -t ghcr.io/trstlabs/local_trst:${DOCKER_TAG} .
-
-_local_trst-compile:
-	docker build \
-				--build-arg BUILD_VERSION=${VERSION} \
-				--build-arg FEATURES="${FEATURES},debug-print" \
-				--build-arg FEATURES_U=${FEATURES_U} \
-				--secret id=API_KEY,src=.env.local \
-				--secret id=SPID,src=.env.local \
-				--build-arg SGX_MODE=SW \
-				-f deployment/dockerfiles/base.Dockerfile \
-				-t rust-go-base-image \
-				.
-
-
-
 build-ibc-hermes:
 	docker build -f deployment/dockerfiles/ibc/hermes.Dockerfile -t hermes:v0.0.0 deployment/dockerfiles/ibc
 
@@ -495,24 +477,30 @@ create-rly-juno:
 
 restart-rly: @echo "Restarting relayer..."
 	rly tx connection trstdev1-trstdev2 --override
-	rly start trstdev1-trstdev2 -p events -b 100 --debug
+	rly start trstdev1-trstdev2 -p events -b 100 --debug > rly.log
 
 kill-dev:
 	@echo "Killing trstd and removing previous data"
 	-@rm -rf ./data
 	-@killall trstd 2>/dev/null
 
-# starts Cosmosrelayer given the localchains are running
-start-rly: 
+# starts Cosmos relayer given the localchains are running
+run-rly: 
 	@echo "Starting up local test relayer..."
 	./deployment/ibc/start.sh
 
-# starts Cosmosrelayer given the localchains and a localjuno chain are running
-start-juno-rly: 
+# starts a Cosmos relayer, localtrst 1&2 and localjuno
+run-rly-juno: 
 	@echo "Starting up local test relayers..."
-	./deployment/ibc/start-localchains-juno.sh
+	docker compose -f deployment/ibc/docker-compose-rly.yml up
 
-start-golang-rly:
+# stops  a Cosmos relayer, localtrst 1&2 and localjuno
+kill-rly-juno: 
+	@echo "Starting up local test relayers..."
+	docker compose -f deployment/ibc/docker-compose-rly.yml stop 
+	docker compose -f deployment/ibc/docker-compose-rly.yml rm -f
+
+run-go-rly:
 	./deployment/ibc/relayer/interchain-acc-config/rly-start.sh
 
 run-localchains-juno: build-hermes

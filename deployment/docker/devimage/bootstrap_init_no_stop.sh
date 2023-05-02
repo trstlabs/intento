@@ -56,14 +56,14 @@ fi
 
 # Setup CORS for LCD & gRPC-web
 perl -i -pe 's;address = "tcp://0.0.0.0:1317";address = "tcp://0.0.0.0:1316";' .trstd/config/app.toml
-# perl -i -pe 's/enable-unsafe-cors = false/enable-unsafe-cors = true/' .trstd/config/app.toml
+#perl -i -pe 's/enable-unsafe-cors = false/enable-unsafe-cors = true/' .trstd/config/app.toml
 lcp --proxyUrl http://localhost:1316 --port 1317 --proxyPartial '' &
 
 # Setup faucet
-setsid node faucet_server.js &
+#setsid node faucet_server.js &
 
 # Setup trstcli
 cp $(which trstd) $(dirname $(which trstd))/trstcli
 
-source /opt/sgxsdk/environment && RUST_BACKTRACE=1 LOG_LEVEL=$LOG_LEVEL trstd start --rpc.laddr tcp://0.0.0.0:26657 --bootstrap  --log_level $LOG_LEVEL
+source /opt/sgxsdk/environment && RUST_BACKTRACE=1 LOG_LEVEL=$LOG_LEVEL trstd start --rpc.laddr tcp://0.0.0.0:26657 --bootstrap  --log_level $LOG_LEVEL > init.log
 

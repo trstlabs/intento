@@ -11,7 +11,7 @@ var (
 	ErrDuplicate              = sdkerrors.Register(ModuleName, 14, "duplicate")
 	ErrInvalid                = sdkerrors.Register(ModuleName, 1, "custom error message")
 	ErrEmpty                  = sdkerrors.Register(ModuleName, 11, "empty")
-	ErrAutoTxContinue         = sdkerrors.Register(ModuleName, 7, "conditions to execute auto_tx not met")
+	ErrAutoTxConditions       = sdkerrors.Register(ModuleName, 7, "conditions to execute auto_tx not met")
 
 	//ics20 hooks
 	ErrMsgValidation = sdkerrors.Register("ics20-hooks", 20, "error in ics20 hook message validation")
@@ -26,5 +26,4 @@ var (
 
 	ErrBadMetadataFormatMsg = "auto_tx metadata not properly formatted for: '%v'. %s"
 	ErrBadAutoTxMsg         = "cannot create autoTx: %v"
-	ErrAutoTxStopped        = "auto_tx stopped because of an error: %s"
 )

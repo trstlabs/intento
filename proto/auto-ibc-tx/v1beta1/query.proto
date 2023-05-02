@@ -4,6 +4,7 @@ package trst.x.autoibctx.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "auto-ibc-tx/v1beta1/types.proto";
+import "auto-ibc-tx/v1beta1/usage.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
@@ -34,6 +35,10 @@ service Query {
   // Params returns the total set of AutoIbcTx parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/auto-ibc-tx/v1beta1/params";
+  };
+   // AutoTxIbcTxUsage returns statistics on usage of IBC transactions
+   rpc AutoTxIbcTxUsage(QueryAutoTxIbcUsageRequest) returns (QueryAutoTxIbcUsageResponse) {
+    option (google.api.http).get = "/auto-ibc-tx/v1beta1/auto-tx-ibc-usage";
   };
 }
 
@@ -92,4 +97,17 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryAutoIbcUsageRequest is the request type for the Query/QueryAutoIbcUsageRequest RPC
+message QueryAutoTxIbcUsageRequest {
+  // Pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAutoIbcUsageResponse the response type for the Query/QueryAutoIbcUsageResponse RPC
+message QueryAutoTxIbcUsageResponse {
+  repeated AutoTxIbcUsage auto_tx_ibc_usage = 1 [(gogoproto.nullable) = false];
+  // Pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

@@ -6,4 +6,4 @@ rly keys restore localjuno testkey "crop staff genuine enjoy dial pact sorry ble
 
 rly paths add trstdev-1 testing trstdev1-localjuno --file $HOME/trst/deployment/ibc/relayer/interchain-acc-config/paths/trstdev1-localjuno.json
 rly tx connection trstdev1-localjuno --override
-rly start trstdev1-localjuno -p events -b 100 --debug
+rly start trstdev1-localjuno -p events -b 100 --debug > rly.log

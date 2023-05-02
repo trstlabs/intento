@@ -85,7 +85,7 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (error,
 	timeoutTimestamp := ctx.BlockTime().Add(time.Minute).UnixNano()
 	//to ensure timeout does not result in channel closing
 	if autoTxInfo.Interval > time.Minute*2 {
-		timeoutTimestamp = ctx.BlockTime().Add(autoTxInfo.Interval).UnixNano()
+		timeoutTimestamp = ctx.BlockTime().Add(autoTxInfo.Interval + time.Minute).UnixNano()
 	}
 
 	sequence, err := k.icaControllerKeeper.SendTx(ctx, chanCap, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
@@ -359,7 +359,7 @@ func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, se
 
 	txInfo := k.GetAutoTxInfo(ctx, id)
 	fmt.Printf("Reward Type: %v\n", rewardType)
-
+	k.UpdateAutoTxIbcUsage(ctx, txInfo)
 	owner, err := sdk.AccAddressFromBech32(txInfo.Owner)
 	if err != nil {
 		return err
@@ -413,29 +413,32 @@ func (k Keeper) SetAutoTxError(ctx sdk.Context, sourcePort string, seq uint64, e
 
 // checks if dependent transactions have executed on the host chain
 // insert the next entry when execution has not happend yet
-func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx *types.AutoTxInfo) bool {
+func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx types.AutoTxInfo) bool {
 	allowedToExecute := false
 	//if not executed, we will not execute this entry
-	if len(autoTx.AutoTxHistory) == 0 || autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Executed && !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].TimedOut {
+	if len(autoTx.AutoTxHistory) == 0 ||
+		autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Executed && !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].TimedOut ||
+		autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Error == types.ErrAutoTxConditions.Error() {
 		allowedToExecute = true
 	}
 	//check if dependent tx executions succeeded
 	for _, autoTxId := range autoTx.DependsOnTxIds {
 		dependentTx := k.GetAutoTxInfo(ctx, autoTxId)
-		if len(dependentTx.AutoTxHistory) != 0 && !dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Executed && !dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].TimedOut {
+		if len(dependentTx.AutoTxHistory) != 0 &&
+			!dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Executed &&
+			!dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].TimedOut {
 			allowedToExecute = false
 		}
 	}
 
 	//if not allowed to execute, remove entry and insert the next entry given a recurring tx and no error
 	if !allowedToExecute {
-		k.RemoveFromAutoTxQueue(ctx, *autoTx)
+		k.RemoveFromAutoTxQueue(ctx, autoTx)
 		willRecur := autoTx.ExecTime.Before(autoTx.EndTime) && autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime)
 		if willRecur {
 			fmt.Printf("auto-tx will recur, txID: %v \n", autoTx.TxID)
 			// adding next execTime and a new entry into the queue based on interval
-			autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
-			k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
+			k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime.Add(autoTx.Interval))
 		}
 	}
 

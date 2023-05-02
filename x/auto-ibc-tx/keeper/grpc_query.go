@@ -72,16 +72,24 @@ func (k Keeper) AutoTxs(c context.Context, req *types.QueryAutoTxsRequest) (*typ
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	autoTxs := make([]types.AutoTxInfo, 0)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.AutoTxKeyPrefix)
+	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
+		if accumulate {
+			var c types.AutoTxInfo
+			k.cdc.MustUnmarshal(value, &c)
+			autoTxs = append(autoTxs, c)
 
-	k.IterateAutoTxInfos(ctx, func(id uint64, info types.AutoTxInfo) bool {
-		// msg, _ := icatypes.DeserializeCosmosTx(k.cdc, info.Data)
-		// makeReadableMsgData(&info, msg)
-		autoTxs = append(autoTxs, info)
-		return false
+		}
+		return true, nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryAutoTxsResponse{
 		AutoTxInfos: autoTxs,
+		Pagination:  pageRes,
 	}, nil
 }
 
@@ -119,6 +127,34 @@ func (k Keeper) AutoTxsForOwner(c context.Context, req *types.QueryAutoTxsForOwn
 	return &types.QueryAutoTxsForOwnerResponse{
 		AutoTxInfos: autoTxs,
 		Pagination:  pageRes,
+	}, nil
+}
+
+// AutoTxsForOwner implements the Query/AutoTxsForOwner gRPC method
+func (k Keeper) AutoTxIbcTxUsage(c context.Context, req *types.QueryAutoTxIbcUsageRequest) (*types.QueryAutoTxIbcUsageResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	autoTxIbcUsage := make([]types.AutoTxIbcUsage, 0)
+
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.AutoTxIbcUsageKeyPrefix)
+	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
+		if accumulate {
+			var c types.AutoTxIbcUsage
+			k.cdc.MustUnmarshal(value, &c)
+			autoTxIbcUsage = append(autoTxIbcUsage, c)
+
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryAutoTxIbcUsageResponse{
+		AutoTxIbcUsage: autoTxIbcUsage,
+		Pagination:     pageRes,
 	}, nil
 }
 
