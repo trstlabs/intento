@@ -161,6 +161,14 @@ module.exports = {
           ],
         },
       ],
+      plugins: [
+        [
+          'sitemap',
+          {
+            hostname: 'https://docs.trustlesshub.com'
+          }
+        ]
+      ]
     },
   },
 };
