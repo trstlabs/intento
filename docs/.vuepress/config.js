@@ -1,7 +1,14 @@
 module.exports = {
   theme: "cosmos",
   title: "Trustless Hub",
-
+  plugins: [
+    [
+      'sitemap',
+      {
+        hostname: 'https://docs.trustlesshub.com'
+      }
+    ]
+  ],
   head: [
     [
       "script",
@@ -72,8 +79,6 @@ module.exports = {
         },
       ],
     },
-  
-
     custom: true,
     footer: {
       question: {
@@ -161,14 +166,6 @@ module.exports = {
           ],
         },
       ],
-      plugins: [
-        [
-          'sitemap',
-          {
-            hostname: 'https://docs.trustlesshub.com'
-          }
-        ]
-      ]
     },
   },
 };
