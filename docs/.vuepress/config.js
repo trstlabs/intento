@@ -7,14 +7,14 @@ module.exports = {
       "script",
       {
         async: true,
-        src: "https://www.googletagmanager.com/gtag/js?id=G-2GH9Q08C2Z",
+        src: "https://www.googletagmanager.com/gtag/js?id=G-NG42ZHDDXJ",
       },
     ],
     [
       "script",
       {},
       [
-        "window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', 'G-2GH9Q08C2Z');",
+        "window.dataLayer = window.dataLayer || [];\nfunction gtag(){dataLayer.push(arguments);}\ngtag('js', new Date());\ngtag('config', 'G-NG42ZHDDXJ');",
       ],
     ],
   ],
@@ -40,9 +40,9 @@ module.exports = {
     },
 
     algolia: {
-      id: "BH4D9OD16A",
-      key: "d6908a9436133e03e9b0131bad808775",
-      index: "docs-startport",
+      id: "GB7BY4DOAY",
+      key: "ed0f0d3998090c9dc5023ccffd9bb4dd",
+      index: "trustlesshub",
     },
  
     sidebar: {
@@ -86,19 +86,19 @@ module.exports = {
         url: "https://www.trustlesshub.com/",
       },
       services: [
-        {
+       /*  {
           service: "medium",
-          url: "https://danieldijkstra.medium.com/",
-        },
+          url: "https://trstlabs.medium.com/",
+        }, */
         {
           service: "twitter",
           url: "https://twitter.com/trustlesshub",
         },
       
-        {
+       /*  {
           service: "reddit",
           url: "https://reddit.com/r/trustlesshub",
-        },
+        }, */
         {
           service: "discord",
           url: "https://discord.gg/vcExX9T",
@@ -152,7 +152,7 @@ module.exports = {
             {
               title: "Contributing to the docs",
               url:
-                "https://github.com/trstlabs/trst/blob/master/docs/DOCS_README.md",
+                "https://github.com/trstlabs/trst/blob/master/docs/README.md",
             },
             {
               title: "Source code on GitHub",
