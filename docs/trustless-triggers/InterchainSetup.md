@@ -24,7 +24,7 @@ ICS20 is an interchain standard that enables the transfer of fungible tokens bet
 
 With ICS20 transfer middleware, you send a transfer with a memo on a chain, and Trustless Hub will convert this ICS20 message to an AutoTx submission. Using an ICS20-standard transaction, accounts on other chains can create triggers. A MsgRegisterAccountAndSubmitAutoTx or a MsgSubmitAutoTx can be derrived from the memo field in the ICS20 transfer message.
 
-![ics20](../images/ics20/ics20msgflow.png)
+![ics20](../images/ics20/ics20flow.png)
 
 Our custom middleware is loosely based on the wasmhooks implementation on [Osmosis](https://github.com/osmosis-labs/osmosis/tree/main/x/ibc-hooks).
 
