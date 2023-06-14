@@ -38,7 +38,7 @@ services:
       CHAINID: "trstdev-2"
       LOG_LEVEL: "info"
     healthcheck:
-      test: ["CMD", "curl", "-f", "localhost:36657"]
+      test: ["CMD", "curl", "-f", "localhost:26657"]
       interval: 40s
       timeout: 20s
       retries: 3
@@ -65,11 +65,11 @@ services:
         juno1he7t2wxzpmfuxfrw7qjg52vu4qljq3l59pfwn3
       ]
     healthcheck:
-      test: ["CMD", "curl", "-f", "localhost:46657"]
-      interval: 120s
-      timeout: 40s
+      test: ["CMD", "curl", "-f", "localhost:26657"]
+      interval: 60s
+      timeout: 30s
       retries: 3
-      start_period: 40s
+      start_period: 60s
   relayer:
     image: ghcr.io/cosmos/relayer:v2.3.0
     ports:
@@ -81,7 +81,7 @@ services:
     depends_on:
       localtrst:
         condition: service_healthy
-      # localtrst-2:
-      #   condition: service_healthy
+      localtrst-2:
+        condition: service_healthy
       # localjuno:
       #   condition: service_healthy

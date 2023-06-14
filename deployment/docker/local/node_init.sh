@@ -4,11 +4,11 @@ set -euvo pipefail
 
 # init the node
 # rm -rf ~/.secret*
-#trstcli config chain-id trst-testnet
-#trstcli config output json
-#trstcli config indent true
-#trstcli config trust-node true
-#trstcli config keyring-backend test
+#trstd config chain-id trst-testnet
+#trstd config output json
+#trstd config indent true
+#trstd config trust-node true
+#trstd config keyring-backend test
 # rm -rf ~/.trstd
 
 mkdir -p /root/.trstd/.node
@@ -29,11 +29,11 @@ echo "Set persistent_peers: $PERSISTENT_PEERS"
 echo "Waiting for bootstrap to start..."
 sleep 20
 
-trstcli q block 1
+trstd q block 1
 
 cp /tmp/.trstd/keyring-test /root/.trstd/ -r
 
-# MASTER_KEY="$(trstcli q register node-enclave-params 2> /dev/null | cut -c 3- )"
+# MASTER_KEY="$(trstd q register node-enclave-params 2> /dev/null | cut -c 3- )"
 
 #echo "Master key: $MASTER_KEY"
 
@@ -45,17 +45,17 @@ echo "Public key: $PUBLIC_KEY"
 
 trstd parse /opt/trustlesshub/.sgx_secrets/attestation_cert.der
 cat /opt/trustlesshub/.sgx_secrets/attestation_cert.der
-tx_hash="$(trstcli tx register auth /opt/trustlesshub/.sgx_secrets/attestation_cert.der -y --from a --gas-prices 0.25utrst | jq -r '.txhash')"
+tx_hash="$(trstd tx register auth /opt/trustlesshub/.sgx_secrets/attestation_cert.der -y --from a --gas-prices 0.25utrst | jq -r '.txhash')"
 
-#trstcli q tx "$tx_hash"
+#trstd q tx "$tx_hash"
 sleep 15
-trstcli q tx "$tx_hash"
+trstd q tx "$tx_hash"
 
-SEED="$(trstcli q register seed "$PUBLIC_KEY" | cut -c 3-)"
+SEED="$(trstd q register seed "$PUBLIC_KEY" | cut -c 3-)"
 echo "SEED: $SEED"
 #exit
 
-trstcli q register node-enclave-params
+trstd q register node-enclave-params
 
 trstd configure-credentials node-master-cert.der "$SEED"
 
