@@ -28,7 +28,8 @@ import (
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
-	compute "github.com/trstlabs/trst/x/compute"
+
+	// compute "github.com/trstlabs/trst/x/compute"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
 	//	itemtypes "github.com/trstlabs/trst/x/item/types"
 )
@@ -57,11 +58,11 @@ type GenesisParams struct {
 
 	CrisisConstantFee sdk.Coin
 
-	SlashingParams  slashingtypes.Params
-	AllocParams     alloctypes.Params
-	ClaimParams     claimtypes.Params
-	MintParams      minttypes.Params
-	ComputeParams   compute.Params
+	SlashingParams slashingtypes.Params
+	AllocParams    alloctypes.Params
+	ClaimParams    claimtypes.Params
+	MintParams     minttypes.Params
+	// ComputeParams   compute.Params
 	IcaParams       icatypes.Params
 	AutoIbcTxParams autoibctxtypes.Params
 	//	ItemParams     itemtypes.Params
@@ -259,13 +260,13 @@ func PrepareGenesis(
 	appState[autoibctxtypes.ModuleName] = autoTxGenStateBz
 
 	// compute module genesis
-	computeGenState := compute.DefaultGenesis()
-	computeGenState.Params = genesisParams.ComputeParams
-	computeGenStateBz, err := cdc.MarshalJSON(computeGenState)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal autoIbcTx genesis state: %w", err)
-	}
-	appState[compute.ModuleName] = computeGenStateBz
+	// computeGenState := compute.DefaultGenesis()
+	// computeGenState.Params = genesisParams.ComputeParams
+	// computeGenStateBz, err := cdc.MarshalJSON(computeGenState)
+	// if err != nil {
+	// 	return nil, nil, fmt.Errorf("failed to marshal autoIbcTx genesis state: %w", err)
+	// }
+	// appState[compute.ModuleName] = computeGenStateBz
 
 	// ica module genesis
 	icaGenState := icagenesistypes.DefaultGenesis()
@@ -317,8 +318,8 @@ func MainnetGenesisParams() GenesisParams {
 	// alloc
 	genParams.AllocParams = alloctypes.DefaultParams()
 	genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
-		Staking:                     sdk.MustNewDecFromStr("0.55"),
-		CommunityPool:               sdk.MustNewDecFromStr("0.35"),
+		Staking:                     sdk.MustNewDecFromStr("0.45"),
+		CommunityPool:               sdk.MustNewDecFromStr("0.45"),
 		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.00"),
 		RelayerIncentives:           sdk.MustNewDecFromStr("0.10"),
 		//ItemIncentives:              sdk.MustNewDecFromStr("0.05"),
@@ -379,17 +380,17 @@ func MainnetGenesisParams() GenesisParams {
 	*/
 
 	//compute
-	genParams.ComputeParams = compute.DefaultParams()
-	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 366 * 2
-	genParams.ComputeParams.MinContractDuration = time.Second * 30
-	genParams.ComputeParams.MinContractInterval = time.Second * 60
-	genParams.ComputeParams.AutoMsgFundsCommission = 2
-	genParams.ComputeParams.AutoMsgConstantFee = 5_000
-	genParams.ComputeParams.AutoMsgFlexFeeMul = 100
-	genParams.ComputeParams.RecurringAutoMsgConstantFee = 10_000
-	genParams.ComputeParams.MinContractDurationForIncentive = time.Hour * 24 * 4
-	genParams.ComputeParams.MinContractBalanceForIncentive = 50_000_000
-	genParams.ComputeParams.MaxContractIncentive = 500_000_000
+	// genParams.ComputeParams = compute.DefaultParams()
+	// genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 366 * 2
+	// genParams.ComputeParams.MinContractDuration = time.Second * 30
+	// genParams.ComputeParams.MinContractInterval = time.Second * 60
+	// genParams.ComputeParams.AutoMsgFundsCommission = 2
+	// genParams.ComputeParams.AutoMsgConstantFee = 5_000
+	// genParams.ComputeParams.AutoMsgFlexFeeMul = 100
+	// genParams.ComputeParams.RecurringAutoMsgConstantFee = 10_000
+	// genParams.ComputeParams.MinContractDurationForIncentive = time.Hour * 24 * 4
+	// genParams.ComputeParams.MinContractBalanceForIncentive = 50_000_000
+	// genParams.ComputeParams.MaxContractIncentive = 500_000_000
 
 	//AutoIBCTx
 	genParams.AutoIbcTxParams = autoibctxtypes.DefaultParams()
@@ -448,12 +449,12 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.ClaimParams.DurationVestingPeriods = []time.Duration{time.Minute, time.Minute * 2, time.Minute * 5, time.Minute}
 
 	//compute
-	genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 60
-	genParams.ComputeParams.MinContractDuration = time.Second * 10
-	genParams.ComputeParams.MinContractInterval = time.Second * 20
-	genParams.ComputeParams.MinContractDurationForIncentive = time.Second
-	genParams.ComputeParams.MinContractBalanceForIncentive = 50000
-	genParams.ComputeParams.MaxContractIncentive = 500000
+	// genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 60
+	// genParams.ComputeParams.MinContractDuration = time.Second * 10
+	// genParams.ComputeParams.MinContractInterval = time.Second * 20
+	// genParams.ComputeParams.MinContractDurationForIncentive = time.Second
+	// genParams.ComputeParams.MinContractBalanceForIncentive = 50000
+	// genParams.ComputeParams.MaxContractIncentive = 500000
 
 	//item
 	/*

@@ -14,7 +14,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 	"github.com/trstlabs/trst/app"
-	"github.com/trstlabs/trst/x/compute"
+	// "github.com/trstlabs/trst/x/compute"
 )
 
 type TestChain struct {
@@ -22,7 +22,7 @@ type TestChain struct {
 }
 
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	TrstApp := app.NewTrstApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, true, simapp.EmptyAppOptions{}, compute.DefaultWasmConfig(), app.GetEnabledProposals())
+	TrstApp := app.NewTrstApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, true, simapp.EmptyAppOptions{} /* , compute.DefaultWasmConfig(), app.GetEnabledProposals() */)
 	//TrstApp.AppKeepers.AutoIBCTXKeeper.SetParams(sdk.NewContext(), autoibctxtypes.DefaultParams())
 	//encCdc := app.MakeEncodingConfig()
 	return TrstApp, app.NewDefaultGenesisState(TrstApp.AppCodec())

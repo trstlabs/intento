@@ -12,7 +12,8 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	dbm "github.com/tendermint/tm-db"
 	app "github.com/trstlabs/trst/app"
-	"github.com/trstlabs/trst/x/compute"
+
+	// "github.com/trstlabs/trst/x/compute"
 	"github.com/trstlabs/trst/x/mint/types"
 )
 
@@ -63,8 +64,8 @@ func genApp(withGenesis bool, invCheckPeriod uint) (*app.TrstApp, app.GenesisSta
 		invCheckPeriod,
 		true,
 		simapp.EmptyAppOptions{},
-		compute.GetConfig(simapp.EmptyAppOptions{}),
-		app.GetEnabledProposals(),
+		// compute.GetConfig(simapp.EmptyAppOptions{}),
+		// app.GetEnabledProposals(),
 	)
 
 	if withGenesis {

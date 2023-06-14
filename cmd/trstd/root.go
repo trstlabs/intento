@@ -12,7 +12,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 	util "github.com/trstlabs/trst/types"
-	"github.com/trstlabs/trst/x/compute"
+
+	// "github.com/trstlabs/trst/x/compute"
 
 	//"github.com/tendermint/tendermint/libs/cli"
 	"github.com/cosmos/cosmos-sdk/snapshots"
@@ -150,12 +151,12 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig app.EncodingConfig) {
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		InitAttestationCmd(),
-		InitBootstrapCmd(),
-		ParseCert(),
-		ConfigureCredentialsCmd(),
-		HealthCheck(),
-		ResetEnclave(),
+		// InitAttestationCmd(),
+		// InitBootstrapCmd(),
+		// ParseCert(),
+		// ConfigureCredentialsCmd(),
+		// HealthCheck(),
+		// ResetEnclave(),
 		keys.Commands(app.DefaultNodeHome),
 		clientconfig.Cmd(),
 	)
@@ -263,8 +264,8 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		bootstrap,
 		appOpts,
-		compute.GetConfig(appOpts),
-		app.GetEnabledProposals(),
+		// compute.GetConfig(appOpts),
+		// app.GetEnabledProposals(),
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -289,13 +290,13 @@ func exportAppStateAndTMValidators(
 	encCfg.Marshaler = codec.NewProtoCodec(encCfg.InterfaceRegistry)
 	var wasmApp *app.TrstApp
 	if height != -1 {
-		wasmApp = app.NewTrstApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), bootstrap, appOpts, compute.DefaultWasmConfig(), app.GetEnabledProposals())
+		wasmApp = app.NewTrstApp(logger, db, traceStore, false, map[int64]bool{}, "", uint(1), bootstrap, appOpts /* , compute.DefaultWasmConfig(), app.GetEnabledProposals() */)
 
 		if err := wasmApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		wasmApp = app.NewTrstApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), bootstrap, appOpts, compute.DefaultWasmConfig(), app.GetEnabledProposals())
+		wasmApp = app.NewTrstApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), bootstrap, appOpts /* , compute.DefaultWasmConfig(), app.GetEnabledProposals() */)
 	}
 	return wasmApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

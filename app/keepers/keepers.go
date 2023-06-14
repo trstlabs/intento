@@ -1,7 +1,7 @@
 package keepers
 
 import (
-	"path/filepath"
+	// "path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -60,30 +60,31 @@ import (
 	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
 	claimkeeper "github.com/trstlabs/trst/x/claim/keeper"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
-	"github.com/trstlabs/trst/x/compute"
+
+	// "github.com/trstlabs/trst/x/compute"
 	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
-	reg "github.com/trstlabs/trst/x/registration"
+	// registration "github.com/trstlabs/trst/x/registration"
 )
 
 type TrstAppKeepers struct {
 	// keepers
-	AccountKeeper       *authkeeper.AccountKeeper
-	AuthzKeeper         *authzkeeper.Keeper
-	BankKeeper          *bankkeeper.BaseKeeper
-	CapabilityKeeper    *capabilitykeeper.Keeper
-	StakingKeeper       *stakingkeeper.Keeper
-	SlashingKeeper      *slashingkeeper.Keeper
-	MintKeeper          *mintkeeper.Keeper
-	DistrKeeper         *distrkeeper.Keeper
-	GovKeeper           *govkeeper.Keeper
-	CrisisKeeper        *crisiskeeper.Keeper
-	UpgradeKeeper       *upgradekeeper.Keeper
-	ParamsKeeper        *paramskeeper.Keeper
-	EvidenceKeeper      *evidencekeeper.Keeper
-	FeegrantKeeper      *feegrantkeeper.Keeper
-	ComputeKeeper       *compute.Keeper
-	RegKeeper           *reg.Keeper
+	AccountKeeper    *authkeeper.AccountKeeper
+	AuthzKeeper      *authzkeeper.Keeper
+	BankKeeper       *bankkeeper.BaseKeeper
+	CapabilityKeeper *capabilitykeeper.Keeper
+	StakingKeeper    *stakingkeeper.Keeper
+	SlashingKeeper   *slashingkeeper.Keeper
+	MintKeeper       *mintkeeper.Keeper
+	DistrKeeper      *distrkeeper.Keeper
+	GovKeeper        *govkeeper.Keeper
+	CrisisKeeper     *crisiskeeper.Keeper
+	UpgradeKeeper    *upgradekeeper.Keeper
+	ParamsKeeper     *paramskeeper.Keeper
+	EvidenceKeeper   *evidencekeeper.Keeper
+	FeegrantKeeper   *feegrantkeeper.Keeper
+	// ComputeKeeper       *compute.Keeper
+	// RegKeeper           *registration.Keeper
 	IbcKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	TransferKeeper      *ibctransferkeeper.Keeper
 	ClaimKeeper         *claimkeeper.Keeper
@@ -213,7 +214,7 @@ func (ak *TrstAppKeepers) CreateScopedKeepers() {
 	ak.ScopedICAControllerKeeper = ak.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	ak.ScopedICAHostKeeper = ak.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	ak.ScopedAutoIBCTXKeeper = ak.CapabilityKeeper.ScopeToModule(autoibctxtypes.ModuleName)
-	ak.ScopedComputeKeeper = ak.CapabilityKeeper.ScopeToModule(compute.ModuleName)
+	// ak.ScopedComputeKeeper = ak.CapabilityKeeper.ScopeToModule(compute.ModuleName)
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
 	ak.CapabilityKeeper.Seal()
@@ -225,8 +226,8 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	app *baseapp.BaseApp,
 	bootstrap bool,
 	homePath string,
-	computeConfig *compute.WasmConfig,
-	enabledProposals []compute.ProposalType,
+	// computeConfig *compute.WasmConfig,
+	// enabledProposals []compute.ProposalType,
 	interfaceRegistry types.InterfaceRegistry,
 ) {
 
@@ -264,12 +265,12 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 		ak.DistrKeeper,
 		ak.GetSubspace(alloctypes.ModuleName),
 	)
-	// Just re-use the full router - do we want to limit this more?
-	regRouter := app.Router()
+	/* 	// Just re-use the full router - do we want to limit this more?
+	   	registrationRouter := app.Router()
 
-	// Replace with bootstrap flag when we figure out how to test properly and everything works
-	regKeeper := reg.NewKeeper(appCodec, ak.keys[reg.StoreKey], regRouter, reg.EnclaveApi{}, homePath, bootstrap)
-	ak.RegKeeper = &regKeeper
+	   	// Replace with bootstrap flag when we figure out how to test properly and everything works
+	   	registrationKeeper := registration.NewKeeper(appCodec, ak.keys[registration.StoreKey], registrationRouter, registration.EnclaveApi{}, homePath, bootstrap)
+	   	ak.RegKeeper = &registrationKeeper */
 
 	ak.IBCFeeKeeper = ibcfeekeeper.NewKeeper(
 		appCodec, ak.keys[ibcfeetypes.StoreKey], ak.GetSubspace(ibcfeetypes.ModuleName),
@@ -316,41 +317,41 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	icaHostIBCModule := icahost.NewIBCModule(*ak.ICAHostKeeper)
 	icaHostStack := ibcfee.NewIBCMiddleware(icaHostIBCModule, ak.IBCFeeKeeper)
 
-	computeDir := filepath.Join(homePath, ".compute")
+	// computeDir := filepath.Join(homePath, ".compute")
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
-	supportedFeatures := "staking,stargate,ibc3" //"staking,stargate,ibc3"
+	// supportedFeatures := "staking,stargate,ibc3" //"staking,stargate,ibc3"
 
-	computeKeeper := compute.NewKeeper(
-		appCodec,
-		*legacyAmino,
-		ak.keys[compute.StoreKey],
-		*ak.AccountKeeper,
-		ak.BankKeeper,
-		*ak.DistrKeeper,
-		mintKeeper,
-		*ak.StakingKeeper,
-		ak.ScopedComputeKeeper,
-		&ak.IbcKeeper.PortKeeper,
-		ak.TransferKeeper,
-		ak.IbcKeeper.ChannelKeeper,
-		app.Router(),
-		app.MsgServiceRouter(),
-		app.GRPCQueryRouter(),
-		computeDir,
-		computeConfig,
-		supportedFeatures,
-		nil,
-		nil, ak.GetSubspace(compute.ModuleName), compute.NewMultiComputeHooks(ak.ClaimKeeper.Hooks()),
-	)
-	ak.ComputeKeeper = &computeKeeper
+	// computeKeeper := compute.NewKeeper(
+	// 	appCodec,
+	// 	*legacyAmino,
+	// 	ak.keys[compute.StoreKey],
+	// 	*ak.AccountKeeper,
+	// 	ak.BankKeeper,
+	// 	*ak.DistrKeeper,
+	// 	mintKeeper,
+	// 	*ak.StakingKeeper,
+	// 	ak.ScopedComputeKeeper,
+	// 	&ak.IbcKeeper.PortKeeper,
+	// 	ak.TransferKeeper,
+	// 	ak.IbcKeeper.ChannelKeeper,
+	// 	app.Router(),
+	// 	app.MsgServiceRouter(),
+	// 	app.GRPCQueryRouter(),
+	// 	computeDir,
+	// 	computeConfig,
+	// 	supportedFeatures,
+	// 	nil,
+	// 	nil, ak.GetSubspace(compute.ModuleName), compute.NewMultiComputeHooks(ak.ClaimKeeper.Hooks()),
+	// )
+	// ak.ComputeKeeper = &computeKeeper
 
-	// register the proposal types
+	// registrationister the proposal types
 	govRouter := govtypes.NewRouter()
 	// The gov proposal types can be individually enabled
-	if len(enabledProposals) != 0 {
+	/* if len(enabledProposals) != 0 {
 		govRouter.AddRoute(compute.RouterKey, compute.NewWasmProposalHandler(*ak.ComputeKeeper, enabledProposals))
-	}
+	} */
 
 	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(*ak.ParamsKeeper)).
@@ -364,11 +365,11 @@ func (ak *TrstAppKeepers) InitCustomKeepers(
 	)
 	ak.GovKeeper = &govKeeper
 
-	ibcRouter.AddRoute(compute.ModuleName, compute.NewIBCHandler(ak.ComputeKeeper, ak.IbcKeeper.ChannelKeeper)).
-		AddRoute(autoibctxtypes.ModuleName, icaControllerStack).
+	ibcRouter.AddRoute(autoibctxtypes.ModuleName, icaControllerStack).
 		AddRoute(ibctransfertypes.ModuleName, ak.TransferStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostStack)
+		/*AddRoute( compute.ModuleName, compute.NewIBCHandler(ak.ComputeKeeper, ak.IbcKeeper.ChannelKeeper)). */
 
 	// Setting Router will finalize all routes by sealing router
 	// No more routes can be added
@@ -391,8 +392,8 @@ func (ak *TrstAppKeepers) InitKeys() {
 		evidencetypes.StoreKey,
 		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
-		compute.StoreKey,
-		reg.StoreKey,
+		// compute.StoreKey,
+		// registration.StoreKey,
 		feegrant.StoreKey,
 		authzkeeper.StoreKey,
 		icahosttypes.StoreKey,
@@ -423,8 +424,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(compute.ModuleName)
-	paramsKeeper.Subspace(reg.ModuleName)
+	// paramsKeeper.Subspace(compute.ModuleName)
+	// paramsKeeper.Subspace(registration.ModuleName)
 	paramsKeeper.Subspace(claimtypes.ModuleName)
 	paramsKeeper.Subspace(alloctypes.ModuleName)
 	paramsKeeper.Subspace(autoibctxtypes.ModuleName)

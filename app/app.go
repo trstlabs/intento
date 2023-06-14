@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
+
+	// "strings"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -71,10 +72,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/spf13/cast"
-	"github.com/trstlabs/trst/x/compute"
+
+	// "github.com/trstlabs/trst/x/compute"
 	"github.com/trstlabs/trst/x/mint"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
-	reg "github.com/trstlabs/trst/x/registration"
+
+	// registration "github.com/trstlabs/trst/x/registration"
 
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -110,11 +113,11 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:            nil,
-		compute.ModuleName:             {authtypes.Minter},
-		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		alloctypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		autoibctxtypes.ModuleName:      {authtypes.Minter},
-		ibcfeetypes.ModuleName:         nil,
+		// compute.ModuleName:             {authtypes.Minter},
+		claimtypes.ModuleName:     {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		alloctypes.ModuleName:     {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		autoibctxtypes.ModuleName: {authtypes.Minter},
+		ibcfeetypes.ModuleName:    nil,
 	}
 
 	// Module accounts that are allowed to receive tokens
@@ -184,9 +187,9 @@ func (app *TrstApp) RegisterTendermintService(clientCtx client.Context) {
 
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/compute expects WasmConfig
-type WasmWrapper struct {
-	Wasm compute.WasmConfig `mapstructure:"wasm"`
-}
+// type WasmWrapper struct {
+// 	Wasm compute.WasmConfig `mapstructure:"wasm"`
+// }
 
 // NewTrstApp is a constructor function for enigmaChainApp
 func NewTrstApp(
@@ -199,8 +202,8 @@ func NewTrstApp(
 	invCheckPeriod uint,
 	bootstrap bool,
 	appOpts servertypes.AppOptions,
-	computeConfig *compute.WasmConfig,
-	enabledProposals []compute.ProposalType,
+	// computeConfig *compute.WasmConfig,
+	// enabledProposals []compute.ProposalType,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *TrstApp {
 	encodingConfig := MakeEncodingConfig()
@@ -226,7 +229,7 @@ func NewTrstApp(
 
 	app.AppKeepers.InitKeys()
 	app.AppKeepers.InitSdkKeepers(appCodec, legacyAmino, bApp, maccPerms, app.BlockedAddrs(), invCheckPeriod, skipUpgradeHeights, homePath)
-	app.AppKeepers.InitCustomKeepers(appCodec, legacyAmino, bApp, bootstrap, homePath, computeConfig, enabledProposals, interfaceRegistry)
+	app.AppKeepers.InitCustomKeepers(appCodec, legacyAmino, bApp, bootstrap, homePath /* computeConfig, enabledProposals,  */, interfaceRegistry)
 	app.setupUpgradeStoreLoaders()
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -249,12 +252,12 @@ func NewTrstApp(
 		staking.NewAppModule(appCodec, *app.AppKeepers.StakingKeeper, app.AppKeepers.AccountKeeper, *app.AppKeepers.BankKeeper),
 		upgrade.NewAppModule(*app.AppKeepers.UpgradeKeeper),
 		evidence.NewAppModule(*app.AppKeepers.EvidenceKeeper),
-		compute.NewAppModule(*app.AppKeepers.ComputeKeeper, *app.AppKeepers.AccountKeeper),
+		//compute.NewAppModule(*app.AppKeepers.ComputeKeeper, *app.AppKeepers.AccountKeeper),
 		claim.NewAppModule(appCodec, *app.AppKeepers.ClaimKeeper),
 		alloc.NewAppModule(appCodec, *app.AppKeepers.AllocKeeper),
 		params.NewAppModule(*app.AppKeepers.ParamsKeeper),
 		authzmodule.NewAppModule(appCodec, *app.AppKeepers.AuthzKeeper, app.AppKeepers.AccountKeeper, *app.AppKeepers.BankKeeper, app.interfaceRegistry),
-		reg.NewAppModule(*app.AppKeepers.RegKeeper),
+		//registration.NewAppModule(*app.AppKeepers.RegKeeper),
 		ibc.NewAppModule(app.AppKeepers.IbcKeeper),
 		transfer.NewAppModule(*app.AppKeepers.TransferKeeper),
 		ica.NewAppModule(app.AppKeepers.ICAControllerKeeper, app.AppKeepers.ICAHostKeeper),
@@ -286,8 +289,8 @@ func NewTrstApp(
 		authz.ModuleName,
 		paramstypes.ModuleName,
 		icatypes.ModuleName,
-		compute.ModuleName,
-		reg.ModuleName,
+		// compute.ModuleName,
+		// registration.ModuleName,
 		claimtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 	)
@@ -313,8 +316,8 @@ func NewTrstApp(
 		upgradetypes.ModuleName,
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
-		compute.ModuleName,
-		reg.ModuleName,
+		// compute.ModuleName,
+		// registration.ModuleName,
 		icatypes.ModuleName,
 		autoibctxtypes.ModuleName,
 		claimtypes.ModuleName,
@@ -337,8 +340,8 @@ func NewTrstApp(
 		upgradetypes.ModuleName,
 		authz.ModuleName,
 		minttypes.ModuleName,
-		compute.ModuleName,
-		reg.ModuleName,
+		// compute.ModuleName,
+		// registration.ModuleName,
 		claimtypes.ModuleName,
 		alloctypes.ModuleName,
 		crisistypes.ModuleName,
@@ -375,9 +378,9 @@ func NewTrstApp(
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-		IBCKeeper:         app.AppKeepers.IbcKeeper,
-		WasmConfig:        computeConfig,
-		TXCounterStoreKey: app.AppKeepers.GetKey(compute.StoreKey),
+		IBCKeeper: app.AppKeepers.IbcKeeper,
+		// WasmConfig:        computeConfig,
+		// TXCounterStoreKey: app.AppKeepers.GetKey(compute.StoreKey),
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to create AnteHandler: %s", err))
@@ -390,14 +393,14 @@ func NewTrstApp(
 	app.BaseApp.SetBeginBlocker(app.BeginBlocker)
 	app.BaseApp.SetEndBlocker(app.EndBlocker)
 
-	if manager := app.BaseApp.SnapshotManager(); manager != nil {
+	/* if manager := app.BaseApp.SnapshotManager(); manager != nil {
 		err := manager.RegisterExtensions(
 			compute.NewWasmSnapshotter(app.BaseApp.CommitMultiStore(), app.AppKeepers.ComputeKeeper),
 		)
 		if err != nil {
 			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
 		}
-	}
+	} */
 
 	// This seals the app
 	if loadLatest {
@@ -554,17 +557,17 @@ var (
 
 // GetEnabledProposals parses the ProposalsEnabled / EnableSpecificProposals values to
 // produce a list of enabled proposals to pass into wasmd app.
-func GetEnabledProposals() []compute.ProposalType {
-	if EnableSpecificProposals == "" {
-		if ProposalsEnabled == "true" {
-			return compute.EnableAllProposals
-		}
-		return compute.DisableAllProposals
-	}
-	chunks := strings.Split(EnableSpecificProposals, ",")
-	proposals, err := compute.ConvertToProposals(chunks)
-	if err != nil {
-		panic(err)
-	}
-	return proposals
-}
+// func GetEnabledProposals() []compute.ProposalType {
+// 	if EnableSpecificProposals == "" {
+// 		if ProposalsEnabled == "true" {
+// 			return compute.EnableAllProposals
+// 		}
+// 		return compute.DisableAllProposals
+// 	}
+// 	chunks := strings.Split(EnableSpecificProposals, ",")
+// 	proposals, err := compute.ConvertToProposals(chunks)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return proposals
+// }
