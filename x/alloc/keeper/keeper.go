@@ -68,12 +68,14 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 		return err
 	}
 	k.Logger(ctx).Debug("funded contract module", "amount", contractIncentiveCoins.String(), "from", blockInflationAddr)
+
 	relayerIncentiveCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.RelayerIncentives))
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "autoibctx", relayerIncentiveCoins)
 	if err != nil {
 		return err
 	}
 	k.Logger(ctx).Debug("funded autoibctx module", "amount", relayerIncentiveCoins.String(), "from", blockInflationAddr)
+
 	/*itemIncentiveCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.ItemIncentives))
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "item_incentives", itemIncentiveCoins)
 	if err != nil {
@@ -83,13 +85,13 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 	//staking incentives stay in the fee collector account and are to be moved to on next begin blocker
 	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.Staking))
 
-	rewardCoin := k.GetProportions(ctx, blockInflation, proportions.ContributorRewards)
-	rewardCoins := sdk.NewCoins(rewardCoin)
+	contributorCoin := k.GetProportions(ctx, blockInflation, proportions.ContributorRewards)
+	contributorCoins := sdk.NewCoins(contributorCoin)
 
 	for _, w := range params.WeightedContributorRewardsReceivers {
-		rewardPortionCoins := sdk.NewCoins(k.GetProportions(ctx, rewardCoin, w.Weight))
+		contributorPortionCoins := sdk.NewCoins(k.GetProportions(ctx, contributorCoin, w.Weight))
 		if w.Address == "" {
-			err := k.distrKeeper.FundCommunityPool(ctx, rewardPortionCoins, blockInflationAddr)
+			err := k.distrKeeper.FundCommunityPool(ctx, contributorPortionCoins, blockInflationAddr)
 			if err != nil {
 				return err
 			}
@@ -98,16 +100,16 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 			if err != nil {
 				return err
 			}
-			err = k.bankKeeper.SendCoins(ctx, blockInflationAddr, contributorRewardsAddr, rewardPortionCoins)
+			err = k.bankKeeper.SendCoins(ctx, blockInflationAddr, contributorRewardsAddr, contributorPortionCoins)
 			if err != nil {
 				return err
 			}
-			k.Logger(ctx).Debug("sent coins to contributor", "amount", rewardPortionCoins.String(), "from", blockInflationAddr)
+			k.Logger(ctx).Debug("sent coins to contributor", "amount", contributorPortionCoins.String(), "from", blockInflationAddr)
 		}
 	}
 
 	// subtract from original provision to ensure no coins left over after the allocations
-	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins). /*.Sub(itemIncentiveCoins)*/ Sub(contractIncentiveCoins).Sub(relayerIncentiveCoins).Sub(rewardCoins)
+	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins). /*.Sub(itemIncentiveCoins)*/ Sub(contractIncentiveCoins).Sub(relayerIncentiveCoins).Sub(contributorCoins)
 
 	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, blockInflationAddr)
 	if err != nil {

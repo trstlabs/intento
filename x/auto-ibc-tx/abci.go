@@ -94,7 +94,7 @@ func calculateTimeBasedFlexFee(autoTx types.AutoTxInfo, isRecurring bool) sdk.In
 	}
 	//return sdk.NewInt(int64((autoTx.ExecTime.Sub(autoTx.StartTime)).Minutes()))
 	period := autoTx.ExecTime.Sub(autoTx.StartTime)
-	if period == 0 {
+	if period.Seconds() <= 60 {
 		//base fee so we do not have a zero fee
 		return sdk.NewInt(1_000)
 	}

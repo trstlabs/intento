@@ -195,7 +195,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 	}
 
 	// Validate the memo
-	isAutoTxRouted, ownerAddr, msgsBytes, label, connectionID, duration, interval, startAt, registerICA, err := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
+	isAutoTxRouted, ownerAddr, msgsBytes, label, connectionID, duration, interval, startAt, endTime, registerICA, err := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
 
 	if !isAutoTxRouted {
 		return im.app.OnRecvPacket(ctx, packet, relayer)
@@ -216,27 +216,14 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		}
 		txMsgsAny = append(txMsgsAny, &txMsgAny)
 	}
-	if ownerAddr.Empty() {
 
-		// Calculate the receiver / contract caller based on the packet's channel and sender
-		channel := packet.GetDestChannel()
-		sender := data.GetSender()
-		senderLocalAddr := derivePlaceholderSender(channel, sender)
-		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err)))
-		}
-
-		// The funds sent on this packet need to be transferred to an intermediary account for the sender.
-		// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
-		// and execute the underlying OnRecvPacket() call. Hereafter we send the funds from the intermediary account to the AutoTx FeeFunds address
-
-		data.Receiver = senderLocalAddr.String()
-		bz, err := json.Marshal(data)
-		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrMarshaling, err.Error()))
-		}
-		packet.Data = bz
-		ownerAddr = senderLocalAddr
+	// Calculate the receiver / contract caller based on the packet's channel and sender
+	// The funds sent on this packet need to be transferred to an intermediary account for the sender.
+	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
+	// and execute the underlying OnRecvPacket() call. Hereafter we send the funds from the intermediary account to the AutoTx FeeFunds address
+	ownerAddr, errAck := makeOwnerForChannelSender(ownerAddr, &packet, data)
+	if errAck != nil {
+		return errAck
 	}
 	// Execute the receive of funds
 	ack := im.app.OnRecvPacket(ctx, packet, relayer)
@@ -279,6 +266,32 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		}
 
 		return channeltypes.NewResultAcknowledgement(bz)
+	} else if endTime != 0 {
+
+		parsedOwnerAddr, errAck := makeOwnerForChannelSender(ownerAddr, &packet, data)
+		if errAck != nil {
+			return errAck
+		}
+		msg := types.MsgUpdateAutoTx{
+			Owner:        parsedOwnerAddr.String(),
+			Msgs:         txMsgsAny,
+			FeeFunds:     funds,
+			Label:        label,
+			ConnectionId: connectionID,
+			EndTime:      endTime,
+			Interval:     interval,
+			StartAt:      startAt,
+		}
+		response, err := updateAutoTx(im.keeper, ctx, &msg)
+		if err != nil {
+			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrIcs20Error, err.Error()))
+		}
+		bz, err := json.Marshal(response)
+		if err != nil {
+			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrBadResponse, err.Error()))
+		}
+
+		return channeltypes.NewResultAcknowledgement(bz)
 	} else {
 		msg := types.MsgSubmitAutoTx{
 			Owner:        ownerAddr.String(),
@@ -290,7 +303,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 			Interval:     interval,
 			StartAt:      startAt,
 		}
-		response, err := submitTx(im.keeper, ctx, &msg)
+		response, err := submitAutoTx(im.keeper, ctx, &msg)
 		if err != nil {
 			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrIcs20Error, err.Error()))
 		}
@@ -304,20 +317,49 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 
 }
 
-func registerAndSubmitTx(k keeper.Keeper, ctx sdk.Context, autoTxMsg *types.MsgRegisterAccountAndSubmitAutoTx) (*types.MsgRegisterAccountAndSubmitAutoTxResponse, error) {
-	if err := autoTxMsg.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf(types.ErrBadAutoTxMsg, err.Error())
+func makeOwnerForChannelSender(ownerAddr sdk.AccAddress, packet *channeltypes.Packet, data transfertypes.FungibleTokenPacketData) (sdk.AccAddress, ibcexported.Acknowledgement) {
+	if ownerAddr.Empty() {
+
+		channel := packet.GetDestChannel()
+		sender := data.GetSender()
+		senderLocalAddr := derivePlaceholderSender(channel, sender)
+		// if err != nil {
+		// 	return nil, channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err)))
+		// }
+
+		data.Receiver = senderLocalAddr.String()
+		bz, err := json.Marshal(data)
+		if err != nil {
+			return nil, channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrMarshaling, err.Error()))
+		}
+		packet.Data = bz
+		ownerAddr = senderLocalAddr
 	}
-	ics20MsgServer := keeper.NewMsgServerImpl(k)
-	return ics20MsgServer.RegisterAccountAndSubmitAutoTx(sdk.WrapSDKContext(ctx), autoTxMsg)
+	return ownerAddr, nil
 }
 
-func submitTx(k keeper.Keeper, ctx sdk.Context, autoTxMsg *types.MsgSubmitAutoTx) (*types.MsgSubmitAutoTxResponse, error) {
-	if err := autoTxMsg.ValidateBasic(); err != nil {
+func registerAndSubmitTx(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgRegisterAccountAndSubmitAutoTx) (*types.MsgRegisterAccountAndSubmitAutoTxResponse, error) {
+	if err := ics20ParsedMsg.ValidateBasic(); err != nil {
 		return nil, fmt.Errorf(types.ErrBadAutoTxMsg, err.Error())
 	}
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
-	return ics20MsgServer.SubmitAutoTx(sdk.WrapSDKContext(ctx), autoTxMsg)
+	return ics20MsgServer.RegisterAccountAndSubmitAutoTx(sdk.WrapSDKContext(ctx), ics20ParsedMsg)
+}
+
+func submitAutoTx(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgSubmitAutoTx) (*types.MsgSubmitAutoTxResponse, error) {
+	if err := ics20ParsedMsg.ValidateBasic(); err != nil {
+		return nil, fmt.Errorf(types.ErrBadAutoTxMsg, err.Error())
+	}
+	ics20MsgServer := keeper.NewMsgServerImpl(k)
+	return ics20MsgServer.SubmitAutoTx(sdk.WrapSDKContext(ctx), ics20ParsedMsg)
+}
+
+func updateAutoTx(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgUpdateAutoTx) (*types.MsgUpdateAutoTxResponse, error) {
+	if err := ics20ParsedMsg.ValidateBasic(); err != nil {
+		return nil, fmt.Errorf(types.ErrBadAutoTxMsg, err.Error())
+	}
+	ics20MsgServer := keeper.NewMsgServerImpl(k)
+	return ics20MsgServer.UpdateAutoTx(sdk.WrapSDKContext(ctx), ics20ParsedMsg)
 }
 
 func isIcs20Packet(packet channeltypes.Packet) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {
@@ -354,10 +396,10 @@ func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]inter
 	return true, jsonObject
 }
 
-func ValidateAndParseMemo(memo string, receiver string) (isAutoTxRouted bool, ownerAddr sdk.AccAddress, msgsBytes [][]byte, label, connectionID, duration, interval string, startAt uint64 /* version string, */, registerICA bool, err error) {
+func ValidateAndParseMemo(memo string, receiver string) (isAutoTxRouted bool, ownerAddr sdk.AccAddress, msgsBytes [][]byte, label, connectionID, duration, interval string, startAt uint64 /* version string, */, endTime uint64, registerICA bool, err error) {
 	isAutoTxRouted, metadata := jsonStringHasKey(memo, "auto_tx")
 	if !isAutoTxRouted {
-		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false, nil
+		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false, nil
 	}
 
 	ics20Raw := metadata["auto_tx"]
@@ -365,7 +407,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isAutoTxRouted bool, ow
 	// Make sure the ics20 key is a map. If it isn't, ignore this packet
 	autoTx, ok := ics20Raw.(map[string]interface{})
 	if !ok {
-		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, "auto_tx metadata is not a valid JSON map object")
 	}
 
@@ -373,19 +415,19 @@ func ValidateAndParseMemo(memo string, receiver string) (isAutoTxRouted bool, ow
 	owner, ok := autoTx["owner"].(string)
 	if !ok {
 		// The tokens will follow regular MsgTransfer pattern
-		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["owner"]`)
 	}
 
-	// The owner and the receiver should be the same for the packet to be valid
+	// Owner is optional and the owner and the receiver should be the same for the packet to be valid
 	if ok && owner != "" {
 		if owner != receiver {
-			return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+			return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 				fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["owner"] should be the same as the receiver of the packet`)
 		}
 		ownerAddr, err = sdk.AccAddressFromBech32(owner)
 		if err != nil {
-			return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+			return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 				fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["owner"] is not a valid bech32 address`)
 		}
 
@@ -393,14 +435,14 @@ func ValidateAndParseMemo(memo string, receiver string) (isAutoTxRouted bool, ow
 
 	// Ensure the message key is provided
 	if autoTx["msgs"] == nil {
-		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["msgs"]`)
 	}
 
 	// Make sure the msg key is an array of maps. If it isn't, return an error
 	msgs, ok := autoTx["msgs"].([]interface{})
 	if !ok {
-		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["msgs"] is not an array`)
 	}
 
@@ -408,7 +450,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isAutoTxRouted bool, ow
 	label, ok = autoTx["label"].(string)
 	if !ok {
 		// The tokens will be returned
-		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["label"]`)
 	}
 
@@ -417,32 +459,45 @@ func ValidateAndParseMemo(memo string, receiver string) (isAutoTxRouted bool, ow
 	if !ok {
 		connectionID = ""
 	}
+
+	// optional for updating trigger end time
+	endTimeString, ok := autoTx["end_time"].(string)
+	if ok {
+		endTime, err = strconv.ParseUint(endTimeString, 10, 64)
+		if err != nil {
+			return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
+				fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["end_time"]`)
+		}
+	}
+
 	// Get the duration
 	duration, ok = autoTx["duration"].(string)
-	if !ok {
+	// A sumbitAutoTx should have a duration key, an updateAutoTx should have an endTime key
+	if !ok && endTime == 0 {
 		// The tokens will be returned
-		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["duration"]`)
 	}
 	// Get the interval
 	interval, ok = autoTx["interval"].(string)
 	if !ok {
 		// The tokens will be returned
-		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["interval"]`)
 	}
 	// Get the label
 	startAtString, ok := autoTx["start_at"].(string)
 	if !ok {
 		// The tokens will be returned
-		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["start_at"]`)
 	}
 	startAt, err = strconv.ParseUint(startAtString, 10, 64)
 	if err != nil {
-		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+		return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `auto_tx["start_at"]`)
 	}
+
 	/* // Get the version
 	version, ok = autoTx["version"].(string)
 	if !ok {
@@ -460,13 +515,13 @@ func ValidateAndParseMemo(memo string, receiver string) (isAutoTxRouted bool, ow
 		if err != nil {
 			// The tokens will be returned
 
-			return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, false,
+			return isAutoTxRouted, sdk.AccAddress{}, nil, "", "", "", "", 0, 0, false,
 				fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, err.Error())
 		}
 		msgsBytes = append(msgsBytes, msgBytes)
 	}
 
-	return isAutoTxRouted, ownerAddr, msgsBytes, label, connectionID, duration, interval, startAt, registerICA /* version */, nil
+	return isAutoTxRouted, ownerAddr, msgsBytes, label, connectionID, duration, interval, startAt, endTime, registerICA /* version */, nil
 }
 
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the

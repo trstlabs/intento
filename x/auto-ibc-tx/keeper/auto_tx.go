@@ -98,6 +98,9 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (error,
 }
 
 func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo types.AutoTxInfo) error {
+	// CacheContext returns a new context with the multi-store branched into a cached storage object
+	// writeCache is called only if all msgs succeed, performing state transitions atomically
+	cacheCtx, writeCache := ctx.CacheContext()
 	for _, msg := range txMsgs {
 		handler := k.msgRouter.Handler(msg)
 		for _, acct := range msg.GetSigners() {
@@ -105,7 +108,7 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 				return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "owner doesn't have permission to send this message")
 			}
 		}
-		res, err := handler(ctx, msg)
+		res, err := handler(cacheCtx, msg)
 		if err != nil {
 			return err
 		}
@@ -131,7 +134,7 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 
 					msgDelegate := stakingtypes.MsgDelegate{DelegatorAddress: autoTxInfo.Owner, ValidatorAddress: validator, Amount: amount}
 					handler := k.msgRouter.Handler(&msgDelegate)
-					_, err = handler(ctx, &msgDelegate)
+					_, err = handler(cacheCtx, &msgDelegate)
 					if err != nil {
 						return err
 					}
@@ -139,7 +142,9 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 			}
 
 		}
+
 	}
+	writeCache()
 	return nil
 }
 

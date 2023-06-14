@@ -20,7 +20,10 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	flexFeeMultiplier := sdk.NewDec(p.AutoTxFlexFeeMul).QuoInt64(100)
 
 	flexFeeMulDec := sdk.NewDecFromInt(flexFee).Mul(flexFeeMultiplier)
-
+	//round it to one int if it is smaller than one
+	if flexFeeMulDec.TruncateInt().IsZero() {
+		flexFeeMulDec = flexFeeMulDec.Ceil()
+	}
 	feeAddr, err := sdk.AccAddressFromBech32(autoTxInfo.FeeAddress)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -38,6 +41,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	if isRecurring {
 		fixedFee = sdk.NewInt(p.RecurringAutoTxConstantFee * int64(len(autoTxInfo.Msgs)))
 	}
+
 	fixedFeeCommunityCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, fixedFee))
 
 	if !isRecurring && !autoTxInfoBalance.Empty() {

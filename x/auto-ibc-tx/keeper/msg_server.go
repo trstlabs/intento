@@ -235,7 +235,7 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 		autoTx.ConnectionID = msg.ConnectionId
 	}
 	newExecTime := autoTx.ExecTime
-	if msg.EndTime != 0 {
+	if msg.EndTime > 0 {
 		endTime := time.Unix(int64(msg.EndTime), 0)
 		if err != nil {
 			return nil, err
@@ -265,7 +265,7 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 		//newExecTime := interval
 	}
 
-	if msg.StartAt != 0 {
+	if msg.StartAt > 0 {
 		startTime := time.Unix(int64(msg.StartAt), 0)
 		if err != nil {
 			return nil, err
@@ -299,8 +299,8 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 	}
 
 	if newExecTime != autoTx.ExecTime {
-		autoTx.ExecTime = newExecTime
 		k.RemoveFromAutoTxQueue(ctx, autoTx)
+		autoTx.ExecTime = newExecTime
 		k.InsertAutoTxQueue(ctx, autoTx.TxID, newExecTime)
 	}
 

@@ -81,7 +81,7 @@ func (k Keeper) UpdateAutoTxIbcUsage(ctx sdk.Context, autoTx types.AutoTxInfo) {
 			case sdk.MsgTypeURL(&banktypes.MsgSend{}):
 				{
 					msgValue := &banktypes.MsgSend{}
-					if err := proto.Unmarshal(msg.Value, msgValue); err != nil {
+					if err := proto.Unmarshal(msgInMsgExec.Value, msgValue); err != nil {
 						return
 					}
 					coin = msgValue.Amount[0]
@@ -93,7 +93,7 @@ func (k Keeper) UpdateAutoTxIbcUsage(ctx sdk.Context, autoTx types.AutoTxInfo) {
 			case sdk.MsgTypeURL(&msgregistry.MsgExecuteContract{}):
 				{
 					msgValue := &msgregistry.MsgExecuteContract{}
-					if err := proto.Unmarshal(msg.Value, msgValue); err != nil {
+					if err := proto.Unmarshal(msgInMsgExec.Value, msgValue); err != nil {
 						return
 					}
 					coin = msgValue.Funds[0]
@@ -105,7 +105,7 @@ func (k Keeper) UpdateAutoTxIbcUsage(ctx sdk.Context, autoTx types.AutoTxInfo) {
 			case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountIn{}):
 				{
 					msgValue := &msgregistry.MsgSwapExactAmountIn{}
-					if err := proto.Unmarshal(msg.Value, msgValue); err != nil {
+					if err := proto.Unmarshal(msgInMsgExec.Value, msgValue); err != nil {
 						return
 					}
 					coin = msgValue.TokenIn
@@ -117,7 +117,7 @@ func (k Keeper) UpdateAutoTxIbcUsage(ctx sdk.Context, autoTx types.AutoTxInfo) {
 			case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountOut{}):
 				{
 					msgValue := &msgregistry.MsgSwapExactAmountOut{}
-					if err := proto.Unmarshal(msg.Value, msgValue); err != nil {
+					if err := proto.Unmarshal(msgInMsgExec.Value, msgValue); err != nil {
 						return
 					}
 					coin = msgValue.TokenOut

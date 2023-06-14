@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	proto "github.com/gogo/protobuf/proto"
 	msgregistry "github.com/trstlabs/trst/x/auto-ibc-tx/msg_registry"
@@ -17,6 +18,7 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, int, error) {
 	fmt.Printf("handling data for typeurl: %v and data: %v\n ", msgData.MsgType, msgData.Data)
 
 	switch msgData.MsgType {
+
 	//authz
 	case sdk.MsgTypeURL(&authztypes.MsgExec{}):
 		msgResponse := &authztypes.MsgExecResponse{}
@@ -24,7 +26,8 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, int, error) {
 			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal authz exec response message: %s", err.Error())
 		}
 		return msgResponse.String(), types.KeyAutoTxIncentiveForAuthzTx, nil
-		//sdk
+
+	//sdk
 	case sdk.MsgTypeURL(&banktypes.MsgSend{}):
 		msgResponse := &banktypes.MsgSendResponse{}
 		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
@@ -43,13 +46,20 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, int, error) {
 			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal undelegate response message: %s", err.Error())
 		}
 		return msgResponse.String(), types.KeyAutoTxIncentiveForSDKTx, nil
+	case sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}):
+		msgResponse := &distrtypes.MsgWithdrawDelegatorRewardResponse{}
+		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal undelegate response message: %s", err.Error())
+		}
+		return msgResponse.String(), types.KeyAutoTxIncentiveForSDKTx, nil
+
+		//wasm
 	case sdk.MsgTypeURL(&msgregistry.MsgExecuteContract{}):
 		msgResponse := &msgregistry.MsgExecuteContractResponse{}
 		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
 			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal msg execute response message: %s", err.Error())
 		}
 		return msgResponse.String(), types.KeyAutoTxIncentiveForWasmTx, nil
-		//wasm
 	case sdk.MsgTypeURL(&msgregistry.MsgInstantiateContract{}):
 		msgResponse := &msgregistry.MsgInstantiateContractResponse{}
 		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
@@ -62,6 +72,7 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, int, error) {
 			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal MsgSwapExactAmountIn response message: %s", err.Error())
 		}
 		return msgResponse.String(), types.KeyAutoTxIncentiveForOsmoTx, nil
+		//osmo
 	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountOut{}):
 		msgResponse := &msgregistry.MsgSwapExactAmountOutResponse{}
 		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
