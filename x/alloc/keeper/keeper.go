@@ -62,15 +62,15 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 	params := k.GetParams(ctx)
 	proportions := params.DistributionProportions
 
-	contractIncentiveCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.TrustlessContractIncentives))
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "compute", contractIncentiveCoins)
-	if err != nil {
-		return err
-	}
-	k.Logger(ctx).Debug("funded contract module", "amount", contractIncentiveCoins.String(), "from", blockInflationAddr)
+	// contractIncentiveCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.TrustlessContractIncentives))
+	// err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "compute", contractIncentiveCoins)
+	// if err != nil {
+	// 	return err
+	// }
+	// k.Logger(ctx).Debug("funded contract module", "amount", contractIncentiveCoins.String(), "from", blockInflationAddr)
 
 	relayerIncentiveCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.RelayerIncentives))
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "autoibctx", relayerIncentiveCoins)
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "autoibctx", relayerIncentiveCoins)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 	}
 
 	// subtract from original provision to ensure no coins left over after the allocations
-	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins). /*.Sub(itemIncentiveCoins)*/ Sub(contractIncentiveCoins).Sub(relayerIncentiveCoins).Sub(contributorCoins)
+	communityPoolCoins := sdk.NewCoins(blockInflation).Sub(stakingIncentivesCoins). /*.Sub(itemIncentiveCoins) Sub(contractIncentiveCoins).*/ Sub(relayerIncentiveCoins).Sub(contributorCoins)
 
 	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, blockInflationAddr)
 	if err != nil {
