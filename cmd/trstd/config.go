@@ -2,14 +2,14 @@ package main
 
 import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
-	"github.com/trstlabs/trst/x/compute"
+	// "github.com/trstlabs/trst/x/compute"
 )
 
 // TrstAppConfig specifies app config
 type TrstAppConfig struct {
 	serverconfig.Config
 
-	WASMConfig compute.WasmConfig `mapstructure:"wasm"`
+	// WASMConfig compute.WasmConfig `mapstructure:"wasm"`
 }
 
 // initAppConfig helps to override default appConfig template and configs.
@@ -38,11 +38,11 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.Rosetta.Enable = false
 
 	trstAppConfig := TrstAppConfig{
-		Config:     *srvCfg,
-		WASMConfig: *compute.DefaultWasmConfig(),
+		Config: *srvCfg,
+		// WASMConfig: *compute.DefaultWasmConfig(),
 	}
 
-	trstAppTemplate := serverconfig.DefaultConfigTemplate + compute.DefaultConfigTemplate
+	trstAppTemplate := serverconfig.DefaultConfigTemplate /*  + compute.DefaultConfigTemplate */
 
 	return trstAppTemplate, trstAppConfig
 }

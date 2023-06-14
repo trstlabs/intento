@@ -2,30 +2,36 @@
 
 ![Welcome to Trustless Hub](docs/images/web.png)
 
-**Trustless Hub (TRST)**  is an automation-first smart contract hub built using the Cosmos SDK and Tendermint BFT consensus. The main token, TRST, is used to keep the Hub secure, pay for automatic execution, general transactions and can be used as collateral in voting for proposals. 
+**Trustless Hub** contains custom Cosmos SDK modules for us to develop, test and launch an automation-first blockchain hub built using the Cosmos SDK and Tendermint BFT consensus. 
 
-Trustless Hub is built on the Cosmos SDK with IBC for secure cross-chain communication. Trustless Hub enables new services using private inputs, time-based messages, 1-click recurring execution and verifiable outcomes.
+The main token, TRST, is used to keep the Hub secure, pay for automatic execution, general transactions, and can be used as collateral in voting for proposals.
 
-Use-cases include recurring swaps for DeFi, automatic reward claiming, instant settement of results, 1-click recurring transactions for payment and in-game battles for gaming.
+Trustless Hub is built on the Cosmos SDK with IBC for secure cross-chain communication. Trustless Hub enables new trustless services, empowering users by building non-custodial on-chain and permissionless solutions. It allows every individual, including minorities and people in oppressive regimes, to use blockchain services in a seamless manner.
 
-Features include
+Use-cases of Trustless Hub include intent-centric triggers for blockchain calls, recurring swaps for DeFi, automatic reward claiming, instant settlement of results, and one-click recurring transactions for payments. It opens up possibilities for innovative and user-centric applications.
 
- 1. Encrypted inputs
- 2. Private, encrypted state a public state
- 3. Time-based messages 
- 4. Encrypted or verifiable outputs
- 5. Front-running resistance
+Key Features:
 
-Trustless Hub aims to be the most innovative smart contract platform across all blockchain ecosystems. Trustless Hub enables smart contracts 2.0, called Trustless Contracts. Developers will be able to use and integrate Trustless Contracts for new privacy-first services and use-cases that are currently not possible. Use-cases include NFTs, pricing and billing, yet this can be related to anything. 
+1. Intent-centric triggers for blockchain calls
+2. Non-custodial and permissionless solutions
+3. Time-based blockchain calls and recurring execution
+4. Automation over IBC for trustless account automation on other blockchains
+5. Integration with AuthZ for secure and permissioned automation
 
-There are 4 pillars to Trustless Contracts:
-Private inputs
-Secure execution (using Intel SGX Secure enclaves)
-Verifiable or encrypted outcomes
-Automatic contract results
+## Use Cases
 
-Any CosmWasm code, like smart contracts on Terra and Secret Contracts on the Secret Network can easily be upgraded to Trustless Contract code, with minor changes.
+* Scheduling of Payment (This includes Streaming of transfers, Payroll, Subscriptions, Payment in Installments)
+* Auto Compounding of assets
+* Automating on other blockchains over Interchain Accounts and AuthZ
+  * CosmWasm smart contract calls on CosmWasm enabled blockchains
+  * EVM smart contract calls on IBC-connected EVM chains such as Evmos 
+  * EVM smart contract calls over Axelar using a MsgTransfer with EVM parsed payload specified in the memo field
+  * DeFi swaps on e.g. Osmosis, in the intent, the swapped amount can be combined with a MsgSend to send the funds to a (new) recipient on any chain.
+  * ...
+* Scheduling of Governance Proposals
 
+
+Trustless Hub aims to be the most innovative blockchain platform across all ecosystems. By enabling intent-centric automation and building trustless solutions, Trustless Hub empowers users to create new decentralized applications and services that were previously not possible. It revolutionizes the way transactions are executed, bringing greater control and accessibility to users.
 
 ## What is TRST?
 
@@ -33,30 +39,20 @@ TRST is the native token of Trustless Hub and is used to pay for gas fees. It is
 Transactions
 
 * Storing, instantiating and executing Trustless Contracts.
-* Automatic contract execution fees
+* Intent-centric automation fees
 * Securing the hub
 
 You can stake your TRST by delegating your TRST to validators. Trough governance, you can vote on important proposals such as upgrades and parameter changes. 
 
+## Why Trustless Services?
 
-## Why Trustless Contracts?
+Trustless services are crucial for building applications that prioritize user privacy, security, and autonomy. Traditional smart contract platforms lack the ability to offer private inputs, deterministic outcomes, and automatic time-based actions. This limits developers' capabilities in creating truly trustless and user-centric applications.
 
-Smart contracts enable decentralized applications, where data is immutable and users can trust the data to be real and uncensored. Still, smart contracts are far from perfect as current smart contracts on major blockchains are fully public, data is stored indefinitely. Right now, developers cannot guarantee any kind of privacy when interacting with their contracts. Anyone can view user inputs. Users lose funds because smart contracts have no predefined end date. Stakeholders may not develop enough trust to interact with the contract as the data is public and the contract end date is unknown.
+Trustless Hub addresses these limitations by providing intent-centric automation and building non-custodial, on-chain, and permissionless solutions. It empowers developers to program trustless services with automatic time-based functions, ensuring privacy, verifiability, and efficiency.
 
-Yet, so far no easy way exists to build contracts with private user inputs, deterministic outcomes and automatic time-based actions to cope with these problems.
+By integrating with Trustless Hub over IBC, other chains and applications based on the Cosmos SDK can extend their functionality and benefit from automation and trustless account automation. This opens up new possibilities for recurring transactions, remittances, payroll systems, and more, while preserving privacy and ensuring trustlessness.
 
-In order to truly build trustless applications for DAOs and end-users, developers should be able to program contracts that have automatic time-based functions.
-
-Chains and CosmWasm-based apps extend their functionality by integrating with Trustless Hub over IBC. Trustless Contracts enable existing apps to have automatic execution and front-running resistance. Out of the box, recurring transactions, remittances and payroll are possible. With allowance, recipients can interact and transfer funds to a privacy-perserving balance.
-
-## Get started
-
-``` bash
-make deb
-./init.sh
-```
-
-`make deb` makes a package (linux only, with SGX enabled) with dependencies. `./init.sh` initializes and starts the node in development.
+Trustless Hub also offers integration with AuthZ, enabling secure and permissioned automation. Developers can leverage AuthZ to define access control policies for automated actions, ensuring that only authorized parties can execute specific functions.
 
 ## Configure
 
@@ -64,8 +60,13 @@ The node can be configured with `config.yml`. To learn more see the [reference](
 
 ## Learn more
 
-- [Trustless Hub website](https://trustlesshub.com/)
-- [Trustless Hub wallet](https://interact.trustlesshub.com/)
-- [Cosmos SDK documentation](https://docs.cosmos.network)
-- [Cosmos SDK Tutorials](https://tutorials.cosmos.network)
+[Trustless Hub documentation](https://docs.trustlesshub.com)
 
+Other useful links
+
+[Trustless Hub website](https://trustlesshub.com/)
+[TRST Labs website](https://info.trstlabs.xyz/)
+[TriggerPortal - one stop automation tool for the interchain](https://info.trstlabs.xyz/)
+[Trustless Hub wallet interface](https://interact.trustlesshub.com/)
+[Cosmos SDK documentation](https://docs.cosmos.network)
+[Cosmos SDK Tutorials](https://tutorials.cosmos.network)

@@ -33,10 +33,11 @@ import (
 	alloc "github.com/trstlabs/trst/x/alloc"
 	autoibctx "github.com/trstlabs/trst/x/auto-ibc-tx"
 	claim "github.com/trstlabs/trst/x/claim"
-	"github.com/trstlabs/trst/x/compute"
-	wasmclient "github.com/trstlabs/trst/x/compute/client"
+
+	// "github.com/trstlabs/trst/x/compute"
+	// wasmclient "github.com/trstlabs/trst/x/compute/client"
 	"github.com/trstlabs/trst/x/mint"
-	"github.com/trstlabs/trst/x/registration"
+	// "github.com/trstlabs/trst/x/registration"
 )
 
 var mbasics = module.NewBasicManager(
@@ -57,15 +58,15 @@ var mbasics = module.NewBasicManager(
 		distr.AppModuleBasic{},
 		// governance functionality (voting)
 		gov.NewAppModuleBasic(
-			append(
-				wasmclient.ProposalHandlers, //nolint:staticcheck
-				paramsclient.ProposalHandler,
+			// append(
+				// wasmclient.ProposalHandlers, //nolint:staticcheck
+				paramsclient.ProposalHandler, //nolint:staticcheck
 				distrclient.ProposalHandler,
 				upgradeclient.ProposalHandler,
 				upgradeclient.CancelProposalHandler,
 				ibcclientclient.UpdateClientProposalHandler,
 				ibcclientclient.UpgradeProposalHandler,
-			)...,
+			// )...,
 		),
 		// chain parameters
 		params.AppModuleBasic{},
@@ -87,8 +88,8 @@ var mbasics = module.NewBasicManager(
 
 func customModuleBasics() []module.AppModuleBasic {
 	return []module.AppModuleBasic{
-		compute.AppModuleBasic{},
-		registration.AppModuleBasic{},
+		// compute.AppModuleBasic{},
+		// registration.AppModuleBasic{},
 		autoibctx.AppModuleBasic{},
 		claim.AppModuleBasic{},
 		alloc.AppModuleBasic{},

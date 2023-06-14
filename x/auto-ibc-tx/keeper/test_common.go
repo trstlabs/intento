@@ -65,7 +65,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -97,7 +96,7 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 
 	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
-	"github.com/trstlabs/trst/x/registration"
+	// "github.com/trstlabs/trst/x/registration"
 )
 
 func setupTest(t *testing.T, additionalCoinsInWallets sdk.Coins) (sdk.Context, Keeper, sdk.AccAddress, crypto.PrivKey, sdk.AccAddress, crypto.PrivKey) {
@@ -167,7 +166,7 @@ var ModuleBasics = module.NewBasicManager(
 	upgrade.AppModuleBasic{},
 	evidence.AppModuleBasic{},
 	// transfer.AppModuleBasic{},
-	registration.AppModuleBasic{},
+	// registration.AppModuleBasic{},
 	//auto-ibc-tx.AppModuleBasic{},
 	ica.AppModuleBasic{},
 	ibc.AppModuleBasic{},
@@ -716,10 +715,10 @@ func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {
 }
 
 type protoTxProvider interface {
-	GetProtoTx() *tx.Tx
+	GetProtoTx() *sdktx.Tx
 }
 
-func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) { // nolint
+func txBuilderToProtoTx(txBuilder client.TxBuilder) (*sdktx.Tx, error) { // nolint
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)

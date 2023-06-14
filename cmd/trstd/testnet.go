@@ -70,7 +70,7 @@ type SupportedConnectionToken struct {
 	MaxTokenAmountForAutoTx int64
 }
 
-var supportedList = []SupportedConnectionToken{SupportedConnectionToken{ConnectionID: "connection-0", IbcDenom: "ibc/BE4E6F930E604F5E410DCA660E8F4DB6F2BDE1F8E4730CAE2C4B15982EFB42B8", Allocation: 40_000_000_000_000, MaxTokenAmountForAutoTx: 5_000_000_000}, SupportedConnectionToken{ConnectionID: "connection-1", IbcDenom: "ibc/8E2FEFCBD754FA3C97411F0126B9EC76191BAA1B3959CB73CECF396A4037BBF0", Allocation: 40_000_000_000_000, MaxTokenAmountForAutoTx: 5_000_000_000}}
+var supportedList = []SupportedConnectionToken{{ConnectionID: "connection-0", IbcDenom: "ibc/BE4E6F930E604F5E410DCA660E8F4DB6F2BDE1F8E4730CAE2C4B15982EFB42B8", Allocation: 40_000_000_000_000, MaxTokenAmountForAutoTx: 5_000_000_000}, {ConnectionID: "connection-1", IbcDenom: "ibc/8E2FEFCBD754FA3C97411F0126B9EC76191BAA1B3959CB73CECF396A4037BBF0", Allocation: 40_000_000_000_000, MaxTokenAmountForAutoTx: 5_000_000_000}}
 
 func ExportTestnetSnapshotCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -163,11 +163,10 @@ trstd export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/tran
 					tx := &usage.Txs[j]
 					coinAmount, err := strconv.ParseInt(tx.Coin.Amount, 10, 64)
 					if err != nil {
-						fmt.Printf("Err12")
 						return err
 					}
 					if coinAmount > MaxTrstPerSupportedConnection {
-						tx.Coin.Amount = string(MaxTrstPerSupportedConnection) //append(tx.Coin[:k], tx.Coin[k+1:]...)
+						tx.Coin.Amount = fmt.Sprint(MaxTrstPerSupportedConnection) //append(tx.Coin[:k], tx.Coin[k+1:]...)
 					}
 
 					// If the usage has no more entries, remove it from autoTxUsageByUser
@@ -222,7 +221,7 @@ trstd export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/tran
 			if trstTotalClaimable != sdk.NewInt(totalAirdropAmount) {
 				fmt.Printf("total airdrop amount: %v\n", totalAirdropAmount)
 				fmt.Printf("total airdrop tokens: %v\n", trstTotalClaimable)
-				return fmt.Errorf("total claimable is different from set total, total written: %v\n", trstTotalClaimable.Int64())
+				return fmt.Errorf("total claimable is different from set total %v", trstTotalClaimable.Int64())
 			}
 
 			snapshotJSON, err := json.MarshalIndent(snapshot, "", "    ")
@@ -293,7 +292,7 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 			// get genesis params
 			genesisParams := MainnetGenesisParams()
 
-			fmt.Printf("total snapshot accounts: %s\n", len(snapshot.Accounts))
+			fmt.Printf("total snapshot accounts: %v\n", len(snapshot.Accounts))
 
 			fmt.Printf("snapshot total supply: %s\n", snapshot.TotalTrstAirdropAmount)
 
@@ -321,11 +320,6 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 				// initial liquid amounts
 				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, sdk.NewInt(696969)))
 
-				liquidBalances = append(liquidBalances, banktypes.Balance{
-					Address: address.String(),
-					Coins:   liquidCoins,
-				})
-
 				// Add the new account to the set of genesis accounts
 				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
 				if err := baseAccount.Validate(); err != nil {
@@ -339,6 +333,12 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 					claimableAmount = sdk.ZeroInt()
 					liquidCoins = sdk.NewCoins(sdk.NewCoin("utrst", acc.TrstTotalClaimable))
 				}
+
+				liquidBalances = append(liquidBalances, banktypes.Balance{
+					Address: address.String(),
+					Coins:   liquidCoins,
+				})
+
 				status := claimtypes.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
 					Address:                address.String(),
@@ -353,8 +353,8 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 			for _, balance := range liquidBalances {
 				totalAirdrop = totalAirdrop.Add(balance.Coins...)
 			}
-			fmt.Printf("Total liquid coins %s \n", totalAirdrop.AmountOf("utrst"))
 
+			fmt.Printf("Total liquid coins %s \n", totalAirdrop.AmountOf("utrst"))
 			fmt.Printf("Total airdrop coins %s \n", claimModuleAccountBalance.Add(totalAirdrop.AmountOf("utrst")))
 
 			var total sdk.Coins
@@ -389,7 +389,7 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 
 			byteIBCTransfer, err := appState[ibctransfertypes.ModuleName].MarshalJSON()
 			if err != nil {
-				return fmt.Errorf("Error marshal ibc transfer: %w", err)
+				return fmt.Errorf("error marshal ibc transfer: %w", err)
 			}
 
 			// claim module genesis
@@ -406,7 +406,7 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 			var ibcGenState ibctransfertypes.GenesisState
 			err = ibctransfertypes.ModuleCdc.UnmarshalJSON(byteIBCTransfer, &ibcGenState)
 			if err != nil {
-				return fmt.Errorf("Error unmarshal ibc transfer: %w", err)
+				return fmt.Errorf("error unmarshal ibc transfer: %w", err)
 			}
 			ibcGenState.Params = ibctransfertypes.NewParams(false, false)
 			ibcGenStateBz, err := clientCtx.Codec.MarshalJSON(&ibcGenState)

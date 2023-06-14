@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	ibcante "github.com/cosmos/ibc-go/v4/modules/core/ante"
 	"github.com/cosmos/ibc-go/v4/modules/core/keeper"
-	"github.com/trstlabs/trst/x/compute"
+	// "github.com/trstlabs/trst/x/compute"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
@@ -15,7 +15,7 @@ type HandlerOptions struct {
 	ante.HandlerOptions
 
 	IBCKeeper         *keeper.Keeper
-	WasmConfig        *compute.WasmConfig
+	// WasmConfig        *compute.WasmConfig
 	TXCounterStoreKey sdk.StoreKey
 }
 
@@ -38,7 +38,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	anteDecorators := []sdk.AnteDecorator{
-		compute.NewCountTXDecorator(options.TXCounterStoreKey),
+		// compute.NewCountTXDecorator(options.TXCounterStoreKey),
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		ante.NewRejectExtensionOptionsDecorator(),
 		ante.NewMempoolFeeDecorator(),
