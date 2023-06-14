@@ -52,8 +52,8 @@ func (suite *KeeperTestSuite) TestDistribution() {
 	params.DistributionProportions.CommunityPool = sdk.NewDecWithPrec(25, 2)
 	params.DistributionProportions.ContributorRewards = sdk.NewDecWithPrec(5, 2)
 	params.DistributionProportions.Staking = sdk.NewDecWithPrec(50, 2)
-	params.DistributionProportions.TrustlessContractIncentives = sdk.NewDecWithPrec(10, 2)
-	params.DistributionProportions.RelayerIncentives = sdk.NewDecWithPrec(10, 2)
+	// params.DistributionProportions.TrustlessContractIncentives = sdk.NewDecWithPrec(10, 2)
+	params.DistributionProportions.RelayerIncentives = sdk.NewDecWithPrec(20, 2)
 	params.WeightedContributorRewardsReceivers = []types.WeightedAddress{
 		{
 			Address: contributorRewardsReceiver.String(),
@@ -90,9 +90,9 @@ func (suite *KeeperTestSuite) TestDistribution() {
 	allocKeeper.DistributeInflation(suite.ctx)
 
 	feeCollector = suite.app.AppKeepers.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-	totalDistr := params.DistributionProportions.TrustlessContractIncentives.
-		Add(params.DistributionProportions.ContributorRewards.Add(params.DistributionProportions.CommunityPool)).Add(params.DistributionProportions.RelayerIncentives) // 40%
-
+	/* 	totalDistr := params.DistributionProportions.TrustlessContractIncentives.
+	Add(params.DistributionProportions.ContributorRewards.Add(params.DistributionProportions.CommunityPool)).Add(params.DistributionProportions.RelayerIncentives) // 40% */
+	totalDistr := params.DistributionProportions.ContributorRewards.Add(params.DistributionProportions.CommunityPool).Add(params.DistributionProportions.RelayerIncentives) // 40%
 	autoIbcTxModule := suite.app.AppKeepers.AccountKeeper.GetModuleAddress("autoibctx")
 	suite.Equal(
 		mintCoin.Amount.ToDec().Mul(params.DistributionProportions.RelayerIncentives).RoundInt().String(),
