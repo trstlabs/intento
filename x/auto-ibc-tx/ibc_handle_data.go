@@ -15,86 +15,68 @@ import (
 )
 
 func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, int, error) {
-	fmt.Printf("handling data for typeurl: %v and data: %v\n ", msgData.MsgType, msgData.Data)
+	fmt.Printf("handling data for typeurl: %v and data: %v\n", msgData.MsgType, msgData.Data)
+
+	var msgResponse proto.Message
+	var rewardType int
 
 	switch msgData.MsgType {
 
-	//authz
+	// authz
 	case sdk.MsgTypeURL(&authztypes.MsgExec{}):
-		msgResponse := &authztypes.MsgExecResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal authz exec response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForAuthzTx, nil
+		msgResponse = &authztypes.MsgExecResponse{}
+		rewardType = types.KeyAutoTxIncentiveForAuthzTx
 
-	//sdk
+	// sdk
 	case sdk.MsgTypeURL(&banktypes.MsgSend{}):
-		msgResponse := &banktypes.MsgSendResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal send response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForSDKTx, nil
+		msgResponse = &banktypes.MsgSendResponse{}
+		rewardType = types.KeyAutoTxIncentiveForSDKTx
+
 	case sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}):
-		msgResponse := &stakingtypes.MsgDelegateResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal delegate response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForSDKTx, nil
+		msgResponse = &stakingtypes.MsgDelegateResponse{}
+		rewardType = types.KeyAutoTxIncentiveForSDKTx
+
 	case sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}):
-		msgResponse := &stakingtypes.MsgUndelegateResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal undelegate response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForSDKTx, nil
+		msgResponse = &stakingtypes.MsgUndelegateResponse{}
+		rewardType = types.KeyAutoTxIncentiveForSDKTx
+
 	case sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}):
-		msgResponse := &distrtypes.MsgWithdrawDelegatorRewardResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal undelegate response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForSDKTx, nil
+		msgResponse = &distrtypes.MsgWithdrawDelegatorRewardResponse{}
+		rewardType = types.KeyAutoTxIncentiveForSDKTx
 
-		//wasm
+	// wasm
 	case sdk.MsgTypeURL(&msgregistry.MsgExecuteContract{}):
-		msgResponse := &msgregistry.MsgExecuteContractResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal msg execute response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForWasmTx, nil
+		msgResponse = &msgregistry.MsgExecuteContractResponse{}
+		rewardType = types.KeyAutoTxIncentiveForWasmTx
+
 	case sdk.MsgTypeURL(&msgregistry.MsgInstantiateContract{}):
-		msgResponse := &msgregistry.MsgInstantiateContractResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal msg MsgInstantiateContract response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForWasmTx, nil
+		msgResponse = &msgregistry.MsgInstantiateContractResponse{}
+		rewardType = types.KeyAutoTxIncentiveForWasmTx
+
+	// osmo
 	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountIn{}):
-		msgResponse := &msgregistry.MsgSwapExactAmountInResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal MsgSwapExactAmountIn response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForOsmoTx, nil
-		//osmo
+		msgResponse = &msgregistry.MsgSwapExactAmountInResponse{}
+		rewardType = types.KeyAutoTxIncentiveForOsmoTx
+
 	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountOut{}):
-		msgResponse := &msgregistry.MsgSwapExactAmountOutResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal MsgSwapExactAmountOut response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForOsmoTx, nil
+		msgResponse = &msgregistry.MsgSwapExactAmountOutResponse{}
+		rewardType = types.KeyAutoTxIncentiveForOsmoTx
+
 	case sdk.MsgTypeURL(&msgregistry.MsgJoinPool{}):
-		msgResponse := &msgregistry.MsgJoinPoolResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal MsgJoinPool response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForOsmoTx, nil
+		msgResponse = &msgregistry.MsgJoinPoolResponse{}
+		rewardType = types.KeyAutoTxIncentiveForOsmoTx
+
 	case sdk.MsgTypeURL(&msgregistry.MsgExitPool{}):
-		msgResponse := &msgregistry.MsgExitPoolResponse{}
-		if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-			return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal MsgExitPool response message: %s", err.Error())
-		}
-		return msgResponse.String(), types.KeyAutoTxIncentiveForOsmoTx, nil
+		msgResponse = &msgregistry.MsgExitPoolResponse{}
+		rewardType = types.KeyAutoTxIncentiveForOsmoTx
 
-	// TODO: handle other messages
 	default:
-
 		return "", -1, nil
 	}
+
+	if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
+		return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal response message: %s", err.Error())
+	}
+
+	return msgResponse.String(), rewardType, nil
 }
