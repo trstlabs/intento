@@ -331,28 +331,6 @@ func (k Keeper) IterateAutoTxsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb 
 	}
 }
 
-/*
-
-// GetLatestAutoTxByICAPort returns the id for a port
-func (k Keeper) GetLatestAutoTxByICAPort(ctx sdk.Context, port string) (uint64, error) {
-	owner := port[14:]
-	ownerAddress, err := sdk.AccAddressFromBech32(owner)
-	if err != nil {
-		return 0, err
-	}
-	var id []byte
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetAutoTxsByOwnerPrefix(ownerAddress))
-	for iter := prefixStore.ReverseIterator(nil, nil); iter.Valid(); {
-		id = iter.Key()
-		fmt.Printf("GetLatestAutoTxByICAPort: %v", id)
-		//iter.Key(), nil
-		break
-
-	}
-	fmt.Printf("GetLatestAutoTxByICAPort uint: %v", binary.BigEndian.Uint64(id))
-	return binary.BigEndian.Uint64(id), nil
-} */
-
 // SetAutoTxResult sets the result of the last executed TxID set at SendAutoTx.
 func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, seq uint64) error {
 	id := k.getTmpAutoTxID(ctx, port, seq)
@@ -363,7 +341,7 @@ func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, se
 	k.Logger(ctx).Debug("auto_tx_result", "id", id)
 
 	txInfo := k.GetAutoTxInfo(ctx, id)
-	fmt.Printf("Reward Type: %v\n", rewardType)
+	// fmt.Printf("Reward Type: %v\n", rewardType)
 	k.UpdateAutoTxIbcUsage(ctx, txInfo)
 	owner, err := sdk.AccAddressFromBech32(txInfo.Owner)
 	if err != nil {
@@ -416,7 +394,7 @@ func (k Keeper) SetAutoTxError(ctx sdk.Context, sourcePort string, seq uint64, e
 	return nil
 }
 
-// checks if dependent transactions have executed on the host chain
+// AllowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
 // insert the next entry when execution has not happend yet
 func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx types.AutoTxInfo) bool {
 	allowedToExecute := false
@@ -450,7 +428,7 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx types.AutoTxInfo) bool 
 	return allowedToExecute
 }
 
-// getTmpAutoTxID for a certain port and sequence
+// getTmpAutoTxID getds tmp AutoTxId for a certain port and sequence. This is used to set results and timeouts.
 func (k Keeper) getTmpAutoTxID(ctx sdk.Context, portID string, seq uint64) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	autoTxIDBz := store.Get(append((append(types.TmpAutoTxIDLatestTX, []byte(portID)...)), types.GetBytesForUint(seq)...))

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
@@ -18,10 +16,10 @@ func (k Keeper) HandleRelayerReward(ctx sdk.Context, relayer sdk.AccAddress, rew
 	}
 	p := k.GetParams(ctx)
 
-	fmt.Printf("p.RelayerRewards %v\n", p.RelayerRewards)
+	// fmt.Printf("p.RelayerRewards %v\n", p.RelayerRewards)
 	incentiveCoin := sdk.NewCoin(types.Denom, sdk.NewInt(p.RelayerRewards[rewardType]))
 
-	fmt.Printf("relayer %v\n", relayer.String())
+	// fmt.Printf("relayer %v\n", relayer.String())
 	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, relayer, sdk.NewCoins(incentiveCoin))
 	if err != nil {
 		//set incentives unavailable
@@ -39,7 +37,7 @@ func (k Keeper) SetRelayerRewardsAvailability(ctx sdk.Context, rewardsAvailable 
 	store.Set([]byte(types.KeyRelayerRewardsAvailability), value)
 }
 
-// GetRelayerRewardsAvailability returns the rewards availability bool
+// GetRelayerRewardsAvailability returns the rewards availability
 func (k Keeper) GetRelayerRewardsAvailability(ctx sdk.Context) bool {
 	store := ctx.KVStore(k.storeKey)
 	value := store.Get([]byte(types.KeyRelayerRewardsAvailability))
@@ -65,18 +63,19 @@ func (k Keeper) SetAutoTxIbcUsage(ctx sdk.Context, autoTxUsage *types.AutoTxIbcU
 }
 
 func (k Keeper) UpdateAutoTxIbcUsage(ctx sdk.Context, autoTx types.AutoTxInfo) {
-
 	for _, msg := range autoTx.Msgs {
 		if msg.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
 			return
 		}
+
 		msgExec := &authztypes.MsgExec{}
 		if err := proto.Unmarshal(msg.Value, msgExec); err != nil {
 			return
 		}
 
 		for _, msgInMsgExec := range msgExec.Msgs {
-			coin := sdk.Coin{}
+			var coin sdk.Coin
+
 			switch msgInMsgExec.TypeUrl {
 			case sdk.MsgTypeURL(&banktypes.MsgSend{}):
 				{
@@ -85,11 +84,8 @@ func (k Keeper) UpdateAutoTxIbcUsage(ctx sdk.Context, autoTx types.AutoTxInfo) {
 						return
 					}
 					coin = msgValue.Amount[0]
-					k.appendToAutoTxIbcUsage(ctx, autoTx.Owner, &types.AutoIbcTxAck{
-						Coin:         coin,
-						ConnectionId: autoTx.ConnectionID,
-					})
 				}
+
 			case sdk.MsgTypeURL(&msgregistry.MsgExecuteContract{}):
 				{
 					msgValue := &msgregistry.MsgExecuteContract{}
@@ -97,11 +93,8 @@ func (k Keeper) UpdateAutoTxIbcUsage(ctx sdk.Context, autoTx types.AutoTxInfo) {
 						return
 					}
 					coin = msgValue.Funds[0]
-					k.appendToAutoTxIbcUsage(ctx, autoTx.Owner, &types.AutoIbcTxAck{
-						Coin:         coin,
-						ConnectionId: autoTx.ConnectionID,
-					})
 				}
+
 			case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountIn{}):
 				{
 					msgValue := &msgregistry.MsgSwapExactAmountIn{}
@@ -109,11 +102,8 @@ func (k Keeper) UpdateAutoTxIbcUsage(ctx sdk.Context, autoTx types.AutoTxInfo) {
 						return
 					}
 					coin = msgValue.TokenIn
-					k.appendToAutoTxIbcUsage(ctx, autoTx.Owner, &types.AutoIbcTxAck{
-						Coin:         coin,
-						ConnectionId: autoTx.ConnectionID,
-					})
 				}
+
 			case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountOut{}):
 				{
 					msgValue := &msgregistry.MsgSwapExactAmountOut{}
@@ -122,18 +112,19 @@ func (k Keeper) UpdateAutoTxIbcUsage(ctx sdk.Context, autoTx types.AutoTxInfo) {
 					}
 					coin = msgValue.TokenOut
 				}
-				k.appendToAutoTxIbcUsage(ctx, autoTx.Owner, &types.AutoIbcTxAck{
-					Coin:         coin,
-					ConnectionId: autoTx.ConnectionID,
-				})
+
 			default:
 				return
 			}
 
+			k.appendToAutoTxIbcUsage(ctx, autoTx.Owner, &types.AutoIbcTxAck{
+				Coin:         coin,
+				ConnectionId: autoTx.ConnectionID,
+			})
 		}
 	}
-
 }
+
 func (k Keeper) appendToAutoTxIbcUsage(ctx sdk.Context, owner string, autoTxAck *types.AutoIbcTxAck) {
 	autoIbcUsage, err := k.TryGetAutoTxIbcUsage(ctx, owner)
 	if err != nil {

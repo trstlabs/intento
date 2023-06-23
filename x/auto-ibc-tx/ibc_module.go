@@ -126,24 +126,30 @@ func (im IBCModule) OnAcknowledgementPacket(
 	}
 
 	switch len(txMsgData.Data) {
+
 	case 0:
 		// TODO: handle for sdk 0.46.x
 		return nil
 	default:
+		//rewardType is used for Relayer Reward and Airdrop Reward
 		rewardType := -1
-		//check message responses
-		for _, msgData := range txMsgData.Data {
-			response, reward, err := handleMsgData(ctx, msgData)
+
+		//handle message data
+		for index, msgData := range txMsgData.Data {
+			response, rewardClass, err := handleMsgData(ctx, msgData)
 			if err != nil {
 				fmt.Printf("handleMsgData err: %v\n", err)
 				return err
 			}
-			if reward >= 0 {
-				im.keeper.HandleRelayerReward(ctx, relayer, reward)
-				//rewardType is also used for airdrop reward
-				rewardType = reward
-			}
+
 			im.keeper.Logger(ctx).Info("message response in ICS-27 packet response", "response", response)
+			if index == 0 {
+				rewardType = rewardClass
+			}
+		}
+
+		if rewardType >= 0 {
+			im.keeper.HandleRelayerReward(ctx, relayer, rewardType)
 
 		}
 		//set result in auto-tx history
