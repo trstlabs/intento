@@ -2,47 +2,49 @@ package keeper
 
 import (
 	"encoding/binary"
-
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/std"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
+	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	appparams "github.com/trstlabs/trst/app/params"
+
+	//app "github.com/trstlabs/trst/app"
 	claimkeeper "github.com/trstlabs/trst/x/claim/keeper"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
 
-	//icacontroller "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v4/modules/core"
-	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+	//icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v7/modules/core"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
 	///auto-ibc-tx "github.com/trstlabs/trst/x/auto-ibc-tx"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -66,7 +68,7 @@ import (
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	distrclient "github.com/cosmos/cosmos-sdk/x/distribution/client"
+
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -80,7 +82,6 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 
 	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
 	minttypes "github.com/trstlabs/trst/x/mint/types"
@@ -109,12 +110,13 @@ func setupTest(t *testing.T, additionalCoinsInWallets sdk.Coins) (sdk.Context, K
 
 	keeper.SetParams(ctx, autoibctxtypes.Params{
 		AutoTxFundsCommission:      2,
-		AutoTxConstantFee:          1_000_000,                 // 1trst
-		AutoTxFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
-		RecurringAutoTxConstantFee: 1_000_000,                 // 1trst
-		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
+		AutoTxConstantFee:          1_000_000,
+		AutoTxFlexFeeMul:           100,
+		RecurringAutoTxConstantFee: 1_000_000,
+		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10,
 		MinAutoTxDuration:          time.Second * 60,
 		MinAutoTxInterval:          time.Second * 20,
+		RelayerRewards:             []int64{10_000, 10_000, 10_000, 10_000},
 	})
 	return ctx, keeper, walletA, privKeyA, walletB, privKeyB
 }
@@ -158,7 +160,7 @@ var ModuleBasics = module.NewBasicManager(
 	mint.AppModuleBasic{},
 	distribution.AppModuleBasic{},
 	gov.NewAppModuleBasic(
-		paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler,
+		[]govclient.ProposalHandler{paramsclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler},
 	),
 	params.AppModuleBasic{},
 	crisis.AppModuleBasic{},
@@ -172,37 +174,37 @@ var ModuleBasics = module.NewBasicManager(
 	ibc.AppModuleBasic{},
 )
 
-func MakeTestCodec() codec.Codec {
-	return MakeEncodingConfig().Marshaler
-}
+/*
+	func MakeTestCodec() codec.Codec {
+		return MakeEncodingConfig().Codec
+	}
 
 func MakeEncodingConfig() simappparams.EncodingConfig {
-	amino := codec.NewLegacyAmino()
-	interfaceRegistry := types.NewInterfaceRegistry()
-	marshaler := codec.NewProtoCodec(interfaceRegistry)
-	txCfg := authtx.NewTxConfig(marshaler, authtx.DefaultSignModes)
 
-	std.RegisterInterfaces(interfaceRegistry)
-	std.RegisterLegacyAminoCodec(amino)
+		interfaceRegistry := types.NewInterfaceRegistry()
+		marshaler := codec.NewProtoCodec(interfaceRegistry)
+		txCfg := authtx.NewTxConfig(marshaler, authtx.DefaultSignModes)
 
-	ModuleBasics.RegisterInterfaces(interfaceRegistry)
-	ModuleBasics.RegisterLegacyAminoCodec(amino)
-	autoibctxtypes.RegisterInterfaces(interfaceRegistry)
-	autoibctxtypes.RegisterCodec(amino)
-	return simappparams.EncodingConfig{
-		InterfaceRegistry: interfaceRegistry,
-		Marshaler:         marshaler,
-		TxConfig:          txCfg,
-		Amino:             amino,
+		std.RegisterInterfaces(interfaceRegistry)
+
+		ModuleBasics.RegisterInterfaces(interfaceRegistry)
+
+		autoibctxtypes.RegisterInterfaces(interfaceRegistry)
+
+		return simappparams.EncodingConfig{
+			InterfaceRegistry: interfaceRegistry,
+			Codec:             MakeTestCodec(),
+			TxConfig:          txCfg,
+		}
 	}
-}
-
+*/
 var TestingStakeParams = stakingtypes.Params{
 	UnbondingTime:     100,
 	MaxValidators:     10,
 	MaxEntries:        10,
 	HistoricalEntries: 10,
 	BondDenom:         sdk.DefaultBondDenom,
+	MinCommissionRate: sdk.NewDec(0),
 }
 
 type TestKeepers struct {
@@ -229,14 +231,14 @@ type TestConfigType struct {
 
 // encoders can be nil to accept the defaults, or set it to override some of the message handlers (like default)
 func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
-	tempDir, err := os.MkdirTemp("", "wasm")
+	tempDir, err := os.MkdirTemp("", "test")
 	require.NoError(t, err)
 	t.Cleanup(func() { os.RemoveAll(tempDir) })
 
 	keys := sdk.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey,
+		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey, feegrant.StoreKey, authzkeeper.StoreKey,
 		autoibctxtypes.StoreKey, icacontrollertypes.StoreKey,
@@ -246,17 +248,17 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 
 	ms := store.NewCommitMultiStore(db)
 	for _, v := range keys {
-		ms.MountStoreWithDB(v, sdk.StoreTypeIAVL, db)
+		ms.MountStoreWithDB(v, storetypes.StoreTypeIAVL, db)
 	}
 
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
 	for _, v := range tkeys {
-		ms.MountStoreWithDB(v, sdk.StoreTypeTransient, db)
+		ms.MountStoreWithDB(v, storetypes.StoreTypeTransient, db)
 	}
 
 	memKeys := sdk.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 	for _, v := range memKeys {
-		ms.MountStoreWithDB(v, sdk.StoreTypeMemory, db)
+		ms.MountStoreWithDB(v, storetypes.StoreTypeMemory, db)
 	}
 
 	require.NoError(t, ms.LoadLatestVersion())
@@ -273,11 +275,13 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 
 	encodingConfig := MakeEncodingConfig()
 	paramsKeeper := paramskeeper.NewKeeper(
-		encodingConfig.Marshaler,
+		encodingConfig.Codec,
 		encodingConfig.Amino,
 		keys[paramstypes.StoreKey],
 		tkeys[paramstypes.TStoreKey],
 	)
+
+	//TrstApp := app.NewTrstApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, app.EmptyAppOptions{})
 
 	paramsKeeper.Subspace(authtypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)
@@ -286,7 +290,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(autoibctxtypes.ModuleName)
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 
@@ -301,50 +305,49 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		govtypes.ModuleName:            {authtypes.Burner},
 		autoibctxtypes.ModuleName:      {authtypes.Minter},
 	}
-	authSubsp, _ := paramsKeeper.GetSubspace(authtypes.ModuleName)
+
 	authKeeper := authkeeper.NewAccountKeeper(
-		encodingConfig.Marshaler,
+		encodingConfig.Codec,
 		keys[authtypes.StoreKey], // target store
-		authSubsp,
-		authtypes.ProtoBaseAccount, // prototype
+		authtypes.ProtoBaseAccount,
 		maccPerms,
-	)
+		sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	blockedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		allowReceivingFunds := acc != distrtypes.ModuleName
 		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = allowReceivingFunds
 	}
 
-	bankSubsp, _ := paramsKeeper.GetSubspace(banktypes.ModuleName)
 	bankKeeper := bankkeeper.NewBaseKeeper(
-		encodingConfig.Marshaler,
+		encodingConfig.Codec,
 		keys[banktypes.StoreKey],
 		authKeeper,
-		bankSubsp,
 		blockedAddrs,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	// bankParams = bankParams.SetSendEnabledParam(sdk.DefaultBondDenom, true)
+	bankParams := banktypes.DefaultParams()
+	bankParams.DefaultSendEnabled = true
 	bankKeeper.SetParams(ctx, banktypes.DefaultParams())
 
-	stakingSubsp, _ := paramsKeeper.GetSubspace(stakingtypes.ModuleName)
 	stakingKeeper := stakingkeeper.NewKeeper(
-		encodingConfig.Marshaler,
+		encodingConfig.Codec,
 		keys[stakingtypes.StoreKey],
 		authKeeper,
 		bankKeeper,
-		stakingSubsp,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	stakingKeeper.SetParams(ctx, TestingStakeParams)
+	err = stakingKeeper.SetParams(ctx, TestingStakeParams)
+	require.NoError(t, err)
 	val = stakingkeeper.TestingUpdateValidator(stakingKeeper, ctx, val, true)
 	stakingKeeper.SetValidator(ctx, val)
 	stakingKeeper.SetValidatorByConsAddr(ctx, val)
 
-	stakingKeeper.AfterValidatorCreated(ctx, val.GetOperator())
+	stakingKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
 	//val, _ = val.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
 	// mintSubsp, _ := paramsKeeper.GetSubspace(minttypes.ModuleName)
 
-	// mintKeeper := mintkeeper.NewKeeper(encodingConfig.Marshaler,
+	// mintKeeper := mintkeeper.NewKeeper(encodingConfig.Codec,
 	//	keyBank,
 	//	mintSubsp,
 	//	stakingKeeper,
@@ -355,17 +358,9 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 	//
 	// bankkeeper.SetSupply(ctx, banktypes.NewSupply(sdk.NewCoins((sdk.NewInt64Coin("stake", 1)))))
 
-	distSubsp, _ := paramsKeeper.GetSubspace(distrtypes.ModuleName)
 	distKeeper := distrkeeper.NewKeeper(
-		encodingConfig.Marshaler,
-		keys[distrtypes.StoreKey],
-		distSubsp,
-		authKeeper,
-		bankKeeper,
-		stakingKeeper,
-		authtypes.FeeCollectorName,
-		nil,
-	)
+		encodingConfig.Codec,
+		keys[distrtypes.StoreKey], authKeeper, bankKeeper, stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	// // set some baseline - this seems to be needed
 	// distKeeper.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 2, distrtypes.ValidatorHistoricalRewards{
 	// 	CumulativeRewardRatio: sdk.DecCoins{},
@@ -412,7 +407,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, autoibctxtypes.ModuleName, testAutoIbcTxSupply)
 	require.NoError(t, err)
 
-	router := baseapp.NewRouter()
+	/* router := baseapp.NewRouter()
 	bh := bank.NewHandler(bankKeeper)
 	router.AddRoute(sdk.NewRoute(banktypes.RouterKey, bh))
 	sh := staking.NewHandler(stakingKeeper)
@@ -425,66 +420,64 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(paramsKeeper)).
 		AddRoute(distrtypes.RouterKey, distribution.NewCommunityPoolSpendProposalHandler(distKeeper))
 	// AddRoute(wasmTypes.RouterKey, NewWasmProposalHandler(keeper, wasmTypes.EnableAllProposals))
-
-	govKeeper := govkeeper.NewKeeper(
-		encodingConfig.Marshaler, keys[govtypes.StoreKey], paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable()), authKeeper, bankKeeper, stakingKeeper, govRouter,
-	)
+	*/
 
 	// bank := bankKeeper.
 	// bk := bank.Keeper(bankKeeper)
 
 	mintSubsp, _ := paramsKeeper.GetSubspace(minttypes.ModuleName)
-	mintKeeper := mintkeeper.NewKeeper(encodingConfig.Marshaler, keys[minttypes.StoreKey], mintSubsp, authKeeper, bankKeeper, authtypes.FeeCollectorName)
+	mintKeeper := mintkeeper.NewKeeper(encodingConfig.Codec, keys[minttypes.StoreKey], mintSubsp, authKeeper, bankKeeper, authtypes.FeeCollectorName)
 	mintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
 
 	// keeper := NewKeeper(cdc, keyContract, accountKeeper, &bk, &govKeeper, &distKeeper, &mintKeeper, &stakingKeeper, router, tempDir, wasmConfig, supportedFeatures, encoders, queriers)
 	//// add wasm handler so we can loop-back (contracts calling contracts)
 	// router.AddRoute(wasmTypes.RouterKey, TestHandler(keeper))
 
-	govKeeper.SetProposalID(ctx, govtypes.DefaultStartingProposalID)
-	govKeeper.SetDepositParams(ctx, govtypes.DefaultDepositParams())
-	govKeeper.SetVotingParams(ctx, govtypes.DefaultVotingParams())
-	govKeeper.SetTallyParams(ctx, govtypes.DefaultTallyParams())
-	gh := gov.NewHandler(govKeeper)
-	router.AddRoute(sdk.NewRoute(govtypes.RouterKey, gh))
+	// govKeeper.SetProposalID(ctx, govtypes.DefaultStartingProposalID)
+	// govKeeper.SetDepositParams(ctx, govtypes.DefaultDepositParams())
+	// govKeeper.SetVotingParams(ctx, govtypes.DefaultVotingParams())
+	// govKeeper.SetTallyParams(ctx, govtypes.DefaultTallyParams())
+	// gh := gov.NewHandler(govKeeper)
+	// router.AddRoute(sdk.NewRoute(govtypes.RouterKey, gh))
 
 	upgradeKeeper := upgradekeeper.NewKeeper(
 		map[int64]bool{},
 		keys[upgradetypes.StoreKey],
-		encodingConfig.Marshaler,
+		encodingConfig.Codec,
 		tempDir,
-		nil,
-	)
+		&baseapp.BaseApp{},
+		authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	capabilityKeeper := capabilitykeeper.NewKeeper(
-		encodingConfig.Marshaler,
+		encodingConfig.Codec,
 		keys[capabilitytypes.StoreKey],
 		memKeys[capabilitytypes.MemStoreKey],
 	)
 
-	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibchost.ModuleName)
+	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedIBCControllerKeeper := capabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedAutoIBCTXKeeper := capabilityKeeper.ScopeToModule(autoibctxtypes.ModuleName)
 
-	ibchostSubSp, _ := paramsKeeper.GetSubspace(ibchost.ModuleName)
+	ibchostSubSp, _ := paramsKeeper.GetSubspace(ibcexported.ModuleName)
 	ibcKeeper := ibckeeper.NewKeeper(
-		encodingConfig.Marshaler,
-		keys[ibchost.StoreKey],
+		encodingConfig.Codec,
+		keys[ibcexported.StoreKey],
 		ibchostSubSp,
 		stakingKeeper,
 		upgradeKeeper,
 		scopedIBCKeeper,
 	)
 	ibcControllerSubSp, _ := paramsKeeper.GetSubspace(icacontrollertypes.SubModuleName)
-	icacontrollerKeeper := icacontrollerkeeper.NewKeeper(encodingConfig.Marshaler, keys[icacontrollertypes.StoreKey], ibcControllerSubSp, ibcKeeper.ChannelKeeper, ibcKeeper.ChannelKeeper, &ibcKeeper.PortKeeper, scopedIBCControllerKeeper, baseapp.NewMsgServiceRouter())
+	icacontrollerKeeper := icacontrollerkeeper.NewKeeper(encodingConfig.Codec, keys[icacontrollertypes.StoreKey], ibcControllerSubSp, ibcKeeper.ChannelKeeper, ibcKeeper.ChannelKeeper, &ibcKeeper.PortKeeper, scopedIBCControllerKeeper, baseapp.NewMsgServiceRouter())
 
 	// add keepers
-	accSubsp, _ := paramsKeeper.GetSubspace(authtypes.ModuleName)
-	accountKeeper := authkeeper.NewAccountKeeper(
-		encodingConfig.Marshaler, keys[authtypes.StoreKey], accSubsp, authtypes.ProtoBaseAccount, maccPerms)
+
+	accountKeeper := authkeeper.NewAccountKeeper(encodingConfig.Codec, keys[authtypes.StoreKey], authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	govConfig := govtypes.DefaultConfig()
 
 	claimKeeper := claimkeeper.NewKeeper(
-		encodingConfig.Marshaler,
+		encodingConfig.Codec,
 		keys[claimtypes.StoreKey],
 		accountKeeper,
 		bankKeeper,
@@ -494,42 +487,45 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	queryRouter.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
-	msgRouter := baseapp.NewMsgServiceRouter()
-	msgRouter.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
+	msgServiceRouter := baseapp.NewMsgServiceRouter()
+	msgServiceRouter.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	//AutoIBCTXKeeper := AutoIBCTXKeeper.NewKeeper(appCodec, ak.keys[icaauthtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedAutoIBCTXKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(icaauthtypes.ModuleName))
 	autoIbcTxSubsp, _ := paramsKeeper.GetSubspace(autoibctxtypes.ModuleName)
-
+	govKeeper := govkeeper.NewKeeper(
+		encodingConfig.Codec, keys[govtypes.StoreKey], accountKeeper, bankKeeper,
+		stakingKeeper, msgServiceRouter, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 	keeper := NewKeeper(
-		encodingConfig.Marshaler,
+		encodingConfig.Codec,
 		keys[autoibctxtypes.StoreKey],
 		icacontrollerKeeper,
 		scopedAutoIBCTXKeeper,
 		bankKeeper,
 		distKeeper,
-		stakingKeeper,
+		*stakingKeeper,
 		accountKeeper,
 		autoIbcTxSubsp,
 		NewMultiAutoIbcTxHooks(claimKeeper.Hooks()),
-		msgRouter,
+		msgServiceRouter,
 	)
 	keeper.SetParams(ctx, autoibctxtypes.DefaultParams())
 
 	am := module.NewManager( // minimal module set that we use for message/ query tests
-		bank.NewAppModule(encodingConfig.Marshaler, bankKeeper, authKeeper),
-		staking.NewAppModule(encodingConfig.Marshaler, stakingKeeper, authKeeper, bankKeeper),
-		distribution.NewAppModule(encodingConfig.Marshaler, distKeeper, authKeeper, bankKeeper, stakingKeeper),
-		gov.NewAppModule(encodingConfig.Marshaler, govKeeper, authKeeper, bankKeeper),
+		bank.NewAppModule(encodingConfig.Codec, bankKeeper, authKeeper, GetSubspace(banktypes.ModuleName, paramsKeeper)),
+		staking.NewAppModule(encodingConfig.Codec, stakingKeeper, authKeeper, bankKeeper, GetSubspace(stakingtypes.ModuleName, paramsKeeper)),
+		distribution.NewAppModule(encodingConfig.Codec, distKeeper, authKeeper, bankKeeper, stakingKeeper, GetSubspace(distrtypes.ModuleName, paramsKeeper)),
+		gov.NewAppModule(encodingConfig.Codec, govKeeper, authKeeper, bankKeeper, GetSubspace(govtypes.ModuleName, paramsKeeper)),
 	)
-	am.RegisterServices(module.NewConfigurator(encodingConfig.Marshaler, msgRouter, queryRouter))
-	autoibctxtypes.RegisterMsgServer(msgRouter, NewMsgServerImpl(keeper))
-	autoibctxtypes.RegisterQueryServer(queryRouter, autoibctxtypes.QueryServer(keeper))
+	am.RegisterServices(module.NewConfigurator(encodingConfig.Codec, msgServiceRouter, queryRouter))
+	// autoibctxtypes.RegisterMsgServer(msgServiceRouter, NewMsgServerImpl(keeper))
+	// autoibctxtypes.RegisterQueryServer(queryRouter, autoibctxtypes.QueryServer(keeper))
 
 	keepers := TestKeepers{
 		AccountKeeper:             authKeeper,
-		StakingKeeper:             stakingKeeper,
+		StakingKeeper:             *stakingKeeper,
 		DistKeeper:                distKeeper,
 		AutoIbcTxKeeper:           keeper,
-		GovKeeper:                 govKeeper,
+		GovKeeper:                 *govKeeper,
 		BankKeeper:                bankKeeper,
 		MintKeeper:                mintKeeper,
 		ParamsKeeper:              paramsKeeper,
@@ -725,4 +721,19 @@ func txBuilderToProtoTx(txBuilder client.TxBuilder) (*sdktx.Tx, error) { // noli
 	}
 
 	return protoProvider.GetProtoTx(), nil
+}
+
+// MakeEncodingConfig creates an EncodingConfig for testing
+func MakeEncodingConfig() appparams.EncodingConfig {
+	encodingConfig := appparams.MakeEncodingConfig()
+	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
+	return encodingConfig
+}
+
+func GetSubspace(moduleName string, paramsKeeper paramskeeper.Keeper) paramstypes.Subspace {
+	subspace, _ := paramsKeeper.GetSubspace(moduleName)
+	return subspace
 }

@@ -1,434 +1,520 @@
-package main
+package cmd
+
+// DONTCOVER
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"net"
 	"os"
-	"strconv"
-	"time"
+	"path/filepath"
+
+	tmconfig "github.com/cometbft/cometbft/config"
+	tmos "github.com/cometbft/cometbft/libs/os"
+	tmrand "github.com/cometbft/cometbft/libs/rand"
+	"github.com/cometbft/cometbft/types"
+	tmtime "github.com/cometbft/cometbft/types/time"
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
+	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	"github.com/spf13/cobra"
-	claimtypes "github.com/trstlabs/trst/x/claim/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// change these before using fn
-const (
-	MinNumCosmosTxs = 100 //min num cosmos txs for given address to counter bots
-	//additonal rules may be added
-	MaxTrstPerSupportedConnection = 100_000_000_000_000 //utrst
+var (
+	flagNodeDirPrefix     = "node-dir-prefix"
+	flagNumValidators     = "v"
+	flagOutputDir         = "output-dir"
+	flagNodeDaemonHome    = "node-daemon-home"
+	flagStartingIPAddress = "starting-ip-address"
+	flagEnableLogging     = "enable-logging"
+	flagGRPCAddress       = "grpc.address"
+	flagRPCAddress        = "rpc.address"
+	flagAPIAddress        = "api.address"
+	flagPrintMnemonic     = "print-mnemonic"
 )
 
-type TestnetSnapshot struct {
-	TotalTrstAirdropAmount sdk.Int                           `json:"total_trst_amount"`
-	NumAccounts            uint64                            `json:"num_accounts"`
-	Accounts               map[string]TestnetSnapshotAccount `json:"accounts"`
-}
-type TestnetSnapshotAccount struct {
-	TrstAddress                string  `json:"trst_address"`
-	TestnetParticpationPercent sdk.Dec `json:"testnet_participation_percent"`
-	TrstTotalClaimable         sdk.Int `json:"trst_total_claimable"`
-}
-
-type Transaction struct {
-	Time          time.Time `json:"time"`
-	Chain         string    `json:"chain"`
-	Address       string    `json:"address"`
-	DiscordID     string    `json:"discord_id"`
-	Amount        string    `json:"amount"`
-	TxHash        string    `json:"tx_hash"`
-	FaucetBalance string    `json:"faucet_balance"`
-	NumCosmosTxs  int64     `json:"num_cosmos_txs"`
+type initArgs struct {
+	algo              string
+	chainID           string
+	keyringBackend    string
+	minGasPrices      string
+	nodeDaemonHome    string
+	nodeDirPrefix     string
+	numValidators     int
+	outputDir         string
+	startingIPAddress string
 }
 
-type AutoTxIbcUsage struct {
-	Address string         `json:"address"`
-	Txs     []AutoIbcTxAck `json:"auto_txs"`
+type startArgs struct {
+	algo          string
+	apiAddress    string
+	chainID       string
+	enableLogging bool
+	grpcAddress   string
+	minGasPrices  string
+	numValidators int
+	outputDir     string
+	printMnemonic bool
+	rpcAddress    string
 }
 
-type AutoIbcTxAck struct {
-	Coin struct {
-		Amount string `json:"amount"`
-		Denom  string `json:"denom"`
-	} `json:"coin"`
-	ConnectionID string `json:"connection_id"`
+func addTestnetFlagsToCmd(cmd *cobra.Command) {
+	cmd.Flags().Int(flagNumValidators, 4, "Number of validators to initialize the testnet with")
+	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
+	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
+	// cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 }
 
-type SupportedConnectionToken struct {
-	ConnectionID            string
-	IbcDenom                string
-	Allocation              int64
-	MaxTokenAmountForAutoTx int64
+// NewTestnetCmd creates a root testnet command with subcommands to run an in-process testnet or initialize
+// validator configuration files for running a multi-validator testnet in a separate process
+func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
+	testnetCmd := &cobra.Command{
+		Use:                        "testnet",
+		Short:                      "subcommands for starting or configuring local testnets",
+		DisableFlagParsing:         true,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
+	}
+
+	testnetCmd.AddCommand(testnetStartCmd())
+	testnetCmd.AddCommand(testnetInitFilesCmd(mbm, genBalIterator))
+
+	return testnetCmd
 }
 
-var supportedList = []SupportedConnectionToken{{ConnectionID: "connection-0", IbcDenom: "ibc/BE4E6F930E604F5E410DCA660E8F4DB6F2BDE1F8E4730CAE2C4B15982EFB42B8", Allocation: 40_000_000_000_000, MaxTokenAmountForAutoTx: 5_000_000_000}, {ConnectionID: "connection-1", IbcDenom: "ibc/8E2FEFCBD754FA3C97411F0126B9EC76191BAA1B3959CB73CECF396A4037BBF0", Allocation: 40_000_000_000_000, MaxTokenAmountForAutoTx: 5_000_000_000}}
-
-func ExportTestnetSnapshotCmd() *cobra.Command {
+// testnetInitFilesCmd returns a cmd to initialize all files for tendermint testnet and application
+func testnetInitFilesCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "export-testnet-snapshot [usage-file] [faucet-file] [output-file]",
-		Short: "Export a testnet snapshot from provided exports",
-		Long: `Export a  testnet snapshot from provided usage file and faucet details
+		Use:   "init-files",
+		Short: "Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)",
+		Long: `init-files will setup "v" number of directories and populate each with
+necessary files (private validator, genesis, config, etc.) for running "v" validator nodes.
+Booting up a network with these validator folders is intended to be used with Docker Compose,
+or a similar setup where each node has a manually configurable IP address.
+Note, strict routability for addresses is turned off in the config file.
 Example:
-trstd export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/transactions.json ./testnet-snapshot.json
-`,
-		Args: cobra.ExactArgs(3),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
+	trstd testnet init-files --v 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2
+	`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
 
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
-			config.SetRoot(clientCtx.HomeDir)
+			args := initArgs{}
+			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
+			args.keyringBackend, _ = cmd.Flags().GetString(flags.FlagKeyringBackend)
+			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
+			args.minGasPrices, _ = cmd.Flags().GetString(server.FlagMinGasPrices)
+			args.nodeDirPrefix, _ = cmd.Flags().GetString(flagNodeDirPrefix)
+			args.nodeDaemonHome, _ = cmd.Flags().GetString(flagNodeDaemonHome)
+			args.startingIPAddress, _ = cmd.Flags().GetString(flagStartingIPAddress)
+			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
+			// args.algo, _ = cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
-			usageFile := args[0]
-			faucetFile := args[1]
-			snapshotOutput := args[2]
-
-			faucetFileBytes, err := ioutil.ReadFile(faucetFile)
-			if err != nil {
-				return err
-			}
-
-			var faucetTransactions []Transaction
-			err = json.Unmarshal(faucetFileBytes, &faucetTransactions)
-			if err != nil {
-				return err
-			}
-
-			autoTxUsage := make([]AutoTxIbcUsage, 0)
-			err = json.Unmarshal([]byte(usageFile), &autoTxUsage)
-			if err != nil {
-				return err
-			}
-
-			// make a new []AutoTxIbcUsage{} called autoTxUsageByUser and put in only
-			// the address that matches a unique discordID from faucetTransactions based
-			// on the highest amount of NumCosmosTxs
-
-			var autoTxUsageByUser []AutoTxIbcUsage
-			uniqueDiscordIDs := make(map[string]bool)
-
-			// iterate through faucetTransactions and get the unique Discord IDs
-			// and the faucet transaction with the highest NumCosmosTxs for each ID
-			for _, tx := range faucetTransactions {
-				if _, ok := uniqueDiscordIDs[tx.DiscordID]; !ok {
-					// if this DiscordID is not in uniqueDiscordIDs, add it
-					uniqueDiscordIDs[tx.DiscordID] = true
-
-					// find the faucet transaction with the highest NumCosmosTxs for this DiscordID
-					highestNumCosmosTxs := int64(0)
-					var highestNumCosmosTxsTx Transaction
-					for _, tx2 := range faucetTransactions {
-						if tx2.DiscordID == tx.DiscordID && tx2.NumCosmosTxs > highestNumCosmosTxs {
-							highestNumCosmosTxs = tx2.NumCosmosTxs
-							highestNumCosmosTxsTx = tx2
-						}
-					}
-
-					// create a new AutoTxIbcUsage with the address and Txs from the highest NumCosmosTxs faucet transaction
-					var autoTxIbcUsage AutoTxIbcUsage
-					autoTxIbcUsage.Address = highestNumCosmosTxsTx.Address
-					autoTxIbcUsage.Txs = []AutoIbcTxAck{}
-					autoTxUsageByUser = append(autoTxUsageByUser, autoTxIbcUsage)
-				}
-			}
-
-			//2. get total amount of IbcDenom for each Tx in Txs
-
-			totalIbcDenomAmount := make(map[string]int64)
-			for _, usage := range autoTxUsageByUser {
-				for _, tx := range usage.Txs {
-					for _, supported := range supportedList {
-						if tx.Coin.Denom == supported.IbcDenom && tx.ConnectionID == supported.ConnectionID {
-							totalIbcDenomAmount[tx.Coin.Denom] += sdk.MustNewDecFromStr(tx.Coin.Amount).RoundInt64()
-							break
-						}
-					}
-				}
-			}
-
-			// 3. remove entries from autoTxUsageByUser where the coin amount is higher than MaxTrstPerSupportedConnection
-			for i := 0; i < len(autoTxUsageByUser); i++ {
-				usage := &autoTxUsageByUser[i]
-				for j := 0; j < len(usage.Txs); j++ {
-					tx := &usage.Txs[j]
-					coinAmount, err := strconv.ParseInt(tx.Coin.Amount, 10, 64)
-					if err != nil {
-						return err
-					}
-					if coinAmount > MaxTrstPerSupportedConnection {
-						tx.Coin.Amount = fmt.Sprint(MaxTrstPerSupportedConnection) //append(tx.Coin[:k], tx.Coin[k+1:]...)
-					}
-
-					// If the usage has no more entries, remove it from autoTxUsageByUser
-					if len(usage.Txs) == 0 {
-						autoTxUsageByUser = append(autoTxUsageByUser[:i], autoTxUsageByUser[i+1:]...)
-						i--
-						break
-					}
-				}
-			}
-
-			// 4. For each entry in `supportedList`, calculate `ParticipationPercentage` and `TrstTotalClaimable` for each `autoTxUsageByUser` address based on the total amount of supported tokens. Then, create a `TestnetSnapshotAccount` for each combination of `supported.ConnectionID` and `usage.Address`, and add it to the `snapshot.Accounts` map.
-			// Finally, update the `snapshot.TotalTrstAirdropAmount` variable for each supported token.
-			//
-			// To do this, we first initialize `snapshot` and `trstTotalClaimable`, and loop over the `supportedList` to calculate the total IBC amount for all supported tokens. Then, we loop over the `autoTxUsageByUser` slice and calculate the `participationPercentage` and `trstTotalClaimable` for each `autoTxUsageByUser` address based on the total IBC amount.
-			// We also update the `TestnetSnapshotAccount` for each address with the calculated values.
-			// Finally, we add the updated `TestnetSnapshotAccount` to the `snapshot.Accounts` map, and update the `snapshot.TotalTrstAirdropAmount` variable for each supported token.
-			var snapshot TestnetSnapshot
-			snapshot.TotalTrstAirdropAmount = sdk.ZeroInt()
-			snapshot.Accounts = make(map[string]TestnetSnapshotAccount)
-
-			var trstTotalClaimable sdk.Int
-			totalAirdropAmount := int64(0)
-			for _, supported := range supportedList {
-				totalAirdropAmount += supported.Allocation //
-			}
-
-			for _, usage := range autoTxUsageByUser {
-				var account TestnetSnapshotAccount
-				account.TrstAddress = usage.Address
-				for _, tx := range usage.Txs {
-					for _, supported := range supportedList {
-						if tx.Coin.Denom == supported.IbcDenom && tx.ConnectionID == supported.ConnectionID {
-							coinAmount, _ := strconv.ParseInt(tx.Coin.Amount, 10, 64)
-							if coinAmount > supported.MaxTokenAmountForAutoTx {
-								coinAmount = supported.MaxTokenAmountForAutoTx
-							}
-							//for example if tx.Coin.Amount is 5, out of 50 (totalIbcDenomAmount) is 10% and supported.Allocation is 100, trstAmount should be 10
-							trstAmount := sdk.NewInt(coinAmount).Quo(sdk.NewInt(totalIbcDenomAmount[supported.IbcDenom])).Mul(sdk.NewInt(supported.Allocation))
-							trstTotalClaimable = trstTotalClaimable.Add(trstAmount.Quo(sdk.NewInt(10)))
-							participationPercentage := sdk.NewDecFromInt(trstAmount).QuoInt(sdk.NewInt(totalAirdropAmount))
-
-							account.TestnetParticpationPercent = account.TestnetParticpationPercent.Add(participationPercentage)
-							account.TrstTotalClaimable = account.TrstTotalClaimable.Add(trstAmount)
-							snapshot.TotalTrstAirdropAmount = snapshot.TotalTrstAirdropAmount.Add(trstAmount)
-						}
-					}
-				}
-				snapshot.Accounts[usage.Address] = account
-			}
-
-			if trstTotalClaimable != sdk.NewInt(totalAirdropAmount) {
-				fmt.Printf("total airdrop amount: %v\n", totalAirdropAmount)
-				fmt.Printf("total airdrop tokens: %v\n", trstTotalClaimable)
-				return fmt.Errorf("total claimable is different from set total %v", trstTotalClaimable.Int64())
-			}
-
-			snapshotJSON, err := json.MarshalIndent(snapshot, "", "    ")
-			if err != nil {
-				return fmt.Errorf("failed to marshal snapshot: %w", err)
-			}
-
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
-			return err
+			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, args)
 		},
 	}
 
-	flags.AddQueryFlagsToCmd(cmd)
+	addTestnetFlagsToCmd(cmd)
+	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix the directory name for each node with (node results in node0, node1, ...)")
+	cmd.Flags().String(flagNodeDaemonHome, "trstd", "Home directory of the node's daemon configuration")
+	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
+	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 
 	return cmd
 }
 
-func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
+// testnetStartCmd returns a cmd to start multi validator in-process testnet
+func testnetStartCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "import-testnet-snapshot [input-snapshot-file]",
-		Short: "Import testnet accounts from the testnet snapshot.json",
-		Long: `Import testnet accounts from the testnet claimable snapshot.json
-		TRST is illiquid, a small amount TRST of of the airdropped coins is liquid in accounts.
-		The illiqud TRST is placed in the claims module, to be claimed after performing several actions.
-		Example:
-		trstd import-testnet-snapshot ~/trst/snapshot.json
-		- Check input genesis:
-			file is at ~/.trstd/config/genesis.json
-`,
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Use:   "start",
+		Short: "Launch an in-process multi-validator testnet",
+		Long: `testnet will launch an in-process multi-validator testnet,
+and generate "v" directories, populated with necessary validator configuration files
+(private validator, genesis, config, etc.).
+Example:
+	trstd testnet --v 4 --output-dir ./.testnets
+	`,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			args := startArgs{}
+			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
+			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
+			args.minGasPrices, _ = cmd.Flags().GetString(server.FlagMinGasPrices)
+			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
+			// args.algo, _ = cmd.Flags().GetString(flags.FlagKeyAlgorithm)
+			args.enableLogging, _ = cmd.Flags().GetBool(flagEnableLogging)
+			args.rpcAddress, _ = cmd.Flags().GetString(flagRPCAddress)
+			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
+			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
+			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
 
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			serverCtx := server.GetServerContextFromCmd(cmd)
-
-			config := serverCtx.Config
-
-			config.SetRoot(clientCtx.HomeDir)
-
-			genFile := config.GenesisFile()
-			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
-			if err != nil {
-				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
-			}
-
-			authGenState := authtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
-
-			accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
-			if err != nil {
-				return fmt.Errorf("failed to get accounts from any: %w", err)
-			}
-
-			// Read snapshot file
-			snapshotInput := args[0]
-			snapshotJSON, err := os.Open(snapshotInput)
-			if err != nil {
-				return err
-			}
-			defer snapshotJSON.Close()
-			byteValue, _ := ioutil.ReadAll(snapshotJSON)
-			snapshot := TestnetSnapshot{}
-
-			json.Unmarshal(byteValue, &snapshot)
-			if err != nil {
-				return err
-			}
-
-			// get genesis params
-			genesisParams := MainnetGenesisParams()
-
-			fmt.Printf("total snapshot accounts: %v\n", len(snapshot.Accounts))
-
-			fmt.Printf("snapshot total supply: %s\n", snapshot.TotalTrstAirdropAmount)
-
-			// donating the remainder to the rainforrest foundation https://rainforestfoundation.org/
-			if !genesisParams.AirdropSupply.Sub(snapshot.TotalTrstAirdropAmount).IsNil() {
-				return fmt.Errorf("snapshot supply does not match genesis")
-			}
-
-			bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
-			liquidBalances := bankGenState.Balances
-
-			claimRecords := []claimtypes.ClaimRecord{}
-			claimModuleAccountBalance := sdk.NewInt(0)
-
-			// for each account in the snapshot
-			for _, acc := range snapshot.Accounts {
-				// read address from snapshot
-				//we cannot have duplicate accounts
-
-				address, err := sdk.AccAddressFromBech32(acc.TrstAddress)
-				if err != nil {
-					return fmt.Errorf("trst acc from snapshot invalid: %s", err)
-				}
-
-				// initial liquid amounts
-				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, sdk.NewInt(696969)))
-
-				// Add the new account to the set of genesis accounts
-				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
-				if err := baseAccount.Validate(); err != nil {
-					return fmt.Errorf("failed to validate new genesis account: %w", err)
-				}
-				accs = append(accs, baseAccount)
-
-				// claimable balances
-				claimableAmount := acc.TrstTotalClaimable.Sub(sdk.NewInt(696969))
-				if acc.TrstTotalClaimable.Sub(sdk.NewInt(696969)).IsNegative() {
-					claimableAmount = sdk.ZeroInt()
-					liquidCoins = sdk.NewCoins(sdk.NewCoin("utrst", acc.TrstTotalClaimable))
-				}
-
-				liquidBalances = append(liquidBalances, banktypes.Balance{
-					Address: address.String(),
-					Coins:   liquidCoins,
-				})
-
-				status := claimtypes.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
-				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
-					Address:                address.String(),
-					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, claimableAmount)),
-					Status:                 []claimtypes.Status{status, status, status, status},
-				})
-
-				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)
-
-			}
-			var totalAirdrop sdk.Coins
-			for _, balance := range liquidBalances {
-				totalAirdrop = totalAirdrop.Add(balance.Coins...)
-			}
-
-			fmt.Printf("Total liquid coins %s \n", totalAirdrop.AmountOf("utrst"))
-			fmt.Printf("Total airdrop coins %s \n", claimModuleAccountBalance.Add(totalAirdrop.AmountOf("utrst")))
-
-			var total sdk.Coins
-			for _, balance := range liquidBalances {
-				total = total.Add(balance.Coins...)
-			}
-			fmt.Printf("Total non-airdrop %s \n", total.Sub(totalAirdrop).AmountOf("utrst"))
-
-			fmt.Printf("Total balances %s \n", claimModuleAccountBalance.Add(totalAirdrop.AmountOf("utrst")).Add(total.Sub(totalAirdrop).AmountOf("utrst")))
-
-			// auth module genesis
-			accs = authtypes.SanitizeGenesisAccounts(accs)
-			genAccs, err := authtypes.PackAccounts(accs)
-			if err != nil {
-				return fmt.Errorf("failed to convert accounts into any's: %w", err)
-			}
-			authGenState.Accounts = genAccs
-			authGenStateBz, err := clientCtx.Codec.MarshalJSON(&authGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal auth genesis state: %w", err)
-			}
-			appState[authtypes.ModuleName] = authGenStateBz
-
-			// bank module genesis
-			bankGenState.Balances = banktypes.SanitizeGenesisBalances(liquidBalances)
-			//bankGenState.Supply = supply
-			bankGenStateBz, err := clientCtx.Codec.MarshalJSON(bankGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal bank genesis state: %w", err)
-			}
-			appState[banktypes.ModuleName] = bankGenStateBz
-
-			byteIBCTransfer, err := appState[ibctransfertypes.ModuleName].MarshalJSON()
-			if err != nil {
-				return fmt.Errorf("error marshal ibc transfer: %w", err)
-			}
-
-			// claim module genesis
-			claimGenState := claimtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
-			claimGenState.ModuleAccountBalance = sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, claimModuleAccountBalance)
-
-			claimGenState.ClaimRecords = claimRecords
-			claimGenStateBz, err := clientCtx.Codec.MarshalJSON(claimGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal claim genesis state: %w", err)
-			}
-			appState[claimtypes.ModuleName] = claimGenStateBz
-
-			var ibcGenState ibctransfertypes.GenesisState
-			err = ibctransfertypes.ModuleCdc.UnmarshalJSON(byteIBCTransfer, &ibcGenState)
-			if err != nil {
-				return fmt.Errorf("error unmarshal ibc transfer: %w", err)
-			}
-			ibcGenState.Params = ibctransfertypes.NewParams(false, false)
-			ibcGenStateBz, err := clientCtx.Codec.MarshalJSON(&ibcGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal ibc genesis state: %w", err)
-			}
-			appState[ibctransfertypes.ModuleName] = ibcGenStateBz
-
-			appStateJSON, err := json.Marshal(appState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal application genesis state: %w", err)
-			}
-			genDoc.AppState = appStateJSON
-
-			err = genutil.ExportGenesisFile(genDoc, genFile)
-			return err
-
+			return startTestnet(cmd, args)
 		},
 	}
 
-	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
-	flags.AddQueryFlagsToCmd(cmd)
-
+	addTestnetFlagsToCmd(cmd)
+	cmd.Flags().Bool(flagEnableLogging, false, "Enable INFO logging of tendermint validator nodes")
+	cmd.Flags().String(flagRPCAddress, "tcp://0.0.0.0:26657", "the RPC address to listen on")
+	cmd.Flags().String(flagAPIAddress, "tcp://0.0.0.0:1317", "the address to listen on for REST API")
+	cmd.Flags().String(flagGRPCAddress, "0.0.0.0:9090", "the gRPC server address to listen on")
+	cmd.Flags().Bool(flagPrintMnemonic, true, "print mnemonic of first validator to stdout for manual testing")
 	return cmd
+}
+
+const nodeDirPerm = 0o755
+
+// initTestnetFiles initializes testnet files for a testnet to be run in a separate process
+func initTestnetFiles(
+	clientCtx client.Context,
+	cmd *cobra.Command,
+	nodeConfig *tmconfig.Config,
+	mbm module.BasicManager,
+	genBalIterator banktypes.GenesisBalancesIterator,
+	args initArgs,
+) error {
+	if args.chainID == "" {
+		args.chainID = "chain-" + tmrand.Str(6)
+	}
+	nodeIDs := make([]string, args.numValidators)
+	valPubKeys := make([]cryptotypes.PubKey, args.numValidators)
+
+	simappConfig := srvconfig.DefaultConfig()
+	simappConfig.MinGasPrices = args.minGasPrices
+	simappConfig.API.Enable = true
+	simappConfig.Telemetry.Enabled = true
+	simappConfig.Telemetry.PrometheusRetentionTime = 60
+	simappConfig.Telemetry.EnableHostnameLabel = false
+	simappConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", args.chainID}}
+
+	var (
+		genAccounts []authtypes.GenesisAccount
+		genBalances []banktypes.Balance
+		genFiles    []string
+	)
+
+	inBuf := bufio.NewReader(cmd.InOrStdin())
+	// generate private keys, node IDs, and initial transactions
+	for i := 0; i < args.numValidators; i++ {
+		nodeDirName := fmt.Sprintf("%s%d", args.nodeDirPrefix, i)
+		nodeDir := filepath.Join(args.outputDir, nodeDirName, args.nodeDaemonHome)
+		gentxsDir := filepath.Join(args.outputDir, "gentxs")
+
+		nodeConfig.SetRoot(nodeDir)
+		nodeConfig.Moniker = nodeDirName
+		nodeConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
+
+		if err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm); err != nil {
+			_ = os.RemoveAll(args.outputDir)
+			return err
+		}
+
+		ip, err := getIP(i, args.startingIPAddress)
+		if err != nil {
+			_ = os.RemoveAll(args.outputDir)
+			return err
+		}
+
+		nodeIDs[i], valPubKeys[i], err = genutil.InitializeNodeValidatorFiles(nodeConfig)
+		if err != nil {
+			_ = os.RemoveAll(args.outputDir)
+			return err
+		}
+
+		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
+		genFiles = append(genFiles, nodeConfig.GenesisFile())
+
+		kb, err := keyring.New(sdk.KeyringServiceName(), args.keyringBackend, nodeDir, inBuf, clientCtx.Codec)
+		if err != nil {
+			return err
+		}
+
+		keyringAlgos, _ := kb.SupportedAlgorithms()
+		algo, err := keyring.NewSigningAlgoFromString(args.algo, keyringAlgos)
+		if err != nil {
+			return err
+		}
+
+		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, "", true, algo)
+		if err != nil {
+			_ = os.RemoveAll(args.outputDir)
+			return err
+		}
+
+		info := map[string]string{"secret": secret}
+
+		cliPrint, err := json.Marshal(info)
+		if err != nil {
+			return err
+		}
+
+		// save private key seed words
+		if err := writeFile(fmt.Sprintf("%v.json", "key_seed"), nodeDir, cliPrint); err != nil {
+			return err
+		}
+
+		accTokens := sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction)
+		accStakingTokens := sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction)
+		coins := sdk.Coins{
+			sdk.NewCoin("testtoken", accTokens),
+			sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
+		}
+
+		genBalances = append(genBalances, banktypes.Balance{Address: addr.String(), Coins: coins.Sort()})
+		genAccounts = append(genAccounts, authtypes.NewBaseAccount(addr, nil, 0, 0))
+
+		valTokens := sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction)
+		createValMsg, err := stakingtypes.NewMsgCreateValidator(
+			sdk.ValAddress(addr),
+			valPubKeys[i],
+			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
+			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
+			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
+			sdk.OneInt(),
+		)
+		if err != nil {
+			return err
+		}
+
+		txBuilder := clientCtx.TxConfig.NewTxBuilder()
+		if err := txBuilder.SetMsgs(createValMsg); err != nil {
+			return err
+		}
+
+		txBuilder.SetMemo(memo)
+
+		txFactory := tx.Factory{}
+		txFactory = txFactory.
+			WithChainID(args.chainID).
+			WithMemo(memo).
+			WithKeybase(kb).
+			WithTxConfig(clientCtx.TxConfig)
+
+		if err := tx.Sign(txFactory, nodeDirName, txBuilder, true); err != nil {
+			return err
+		}
+
+		txBz, err := clientCtx.TxConfig.TxJSONEncoder()(txBuilder.GetTx())
+		if err != nil {
+			return err
+		}
+
+		if err := writeFile(fmt.Sprintf("%v.json", nodeDirName), gentxsDir, txBz); err != nil {
+			return err
+		}
+
+		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), simappConfig)
+	}
+
+	if err := initGenFiles(clientCtx, mbm, args.chainID, genAccounts, genBalances, genFiles, args.numValidators); err != nil {
+		return err
+	}
+
+	err := collectGenFiles(
+		clientCtx, nodeConfig, args.chainID, nodeIDs, valPubKeys, args.numValidators,
+		args.outputDir, args.nodeDirPrefix, args.nodeDaemonHome, genBalIterator,
+	)
+	if err != nil {
+		return err
+	}
+
+	cmd.PrintErrf("Successfully initialized %d node directories\n", args.numValidators)
+	return nil
+}
+
+func initGenFiles(
+	clientCtx client.Context, mbm module.BasicManager, chainID string,
+	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
+	genFiles []string, numValidators int,
+) error {
+	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
+
+	// set the accounts in the genesis state
+	var authGenState authtypes.GenesisState
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[authtypes.ModuleName], &authGenState)
+
+	accounts, err := authtypes.PackAccounts(genAccounts)
+	if err != nil {
+		return err
+	}
+
+	authGenState.Accounts = accounts
+	appGenState[authtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&authGenState)
+
+	// set the balances in the genesis state
+	var bankGenState banktypes.GenesisState
+	clientCtx.Codec.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
+
+	bankGenState.Balances = banktypes.SanitizeGenesisBalances(genBalances)
+	for _, bal := range bankGenState.Balances {
+		bankGenState.Supply = bankGenState.Supply.Add(bal.Coins...)
+	}
+	appGenState[banktypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&bankGenState)
+
+	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	genDoc := types.GenesisDoc{
+		ChainID:    chainID,
+		AppState:   appGenStateJSON,
+		Validators: nil,
+	}
+
+	// generate empty genesis files for each validator and save
+	for i := 0; i < numValidators; i++ {
+		if err := genDoc.SaveAs(genFiles[i]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func collectGenFiles(
+	clientCtx client.Context, nodeConfig *tmconfig.Config, chainID string,
+	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
+	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
+) error {
+	var appState json.RawMessage
+	genTime := tmtime.Now()
+
+	for i := 0; i < numValidators; i++ {
+		nodeDirName := fmt.Sprintf("%s%d", nodeDirPrefix, i)
+		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
+		gentxsDir := filepath.Join(outputDir, "gentxs")
+		nodeConfig.Moniker = nodeDirName
+
+		nodeConfig.SetRoot(nodeDir)
+
+		nodeID, valPubKey := nodeIDs[i], valPubKeys[i]
+		initCfg := genutiltypes.NewInitConfig(chainID, gentxsDir, nodeID, valPubKey)
+
+		genDoc, err := types.GenesisDocFromFile(nodeConfig.GenesisFile())
+		if err != nil {
+			return err
+		}
+
+		nodeAppState, err := genutil.GenAppStateFromConfig(clientCtx.Codec, clientCtx.TxConfig, nodeConfig, initCfg, *genDoc, genBalIterator, genutiltypes.DefaultMessageValidator)
+		if err != nil {
+			return err
+		}
+
+		if appState == nil {
+			// set the canonical application state (they should not differ)
+			appState = nodeAppState
+		}
+
+		genFile := nodeConfig.GenesisFile()
+
+		// overwrite each validator's genesis file to have a canonical genesis time
+		if err := genutil.ExportGenesisFileWithTime(genFile, chainID, nil, appState, genTime); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func getIP(i int, startingIPAddr string) (ip string, err error) {
+	if len(startingIPAddr) == 0 {
+		ip, err = server.ExternalIP()
+		if err != nil {
+			return "", err
+		}
+		return ip, nil
+	}
+	return calculateIP(startingIPAddr, i)
+}
+
+func calculateIP(ip string, i int) (string, error) {
+	ipv4 := net.ParseIP(ip).To4()
+	if ipv4 == nil {
+		return "", fmt.Errorf("%v: non ipv4 address", ip)
+	}
+
+	for j := 0; j < i; j++ {
+		ipv4[3]++
+	}
+
+	return ipv4.String(), nil
+}
+
+func writeFile(name string, dir string, contents []byte) error {
+	writePath := filepath.Join(dir) //nolint:gocritic
+	file := filepath.Join(writePath, name)
+
+	err := tmos.EnsureDir(writePath, 0o755)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(file, contents, 0o644) // nolint: gosec
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// startTestnet starts an in-process testnet
+func startTestnet(cmd *cobra.Command, args startArgs) error {
+	networkConfig, _ := network.DefaultConfigWithAppConfig(network.MinimumAppConfig())
+
+	// Default networkConfig.ChainID is random, and we should only override it if chainID provided
+	// is non-empty
+	if args.chainID != "" {
+		networkConfig.ChainID = args.chainID
+	}
+	networkConfig.SigningAlgo = args.algo
+	networkConfig.MinGasPrices = args.minGasPrices
+	networkConfig.NumValidators = args.numValidators
+	networkConfig.EnableTMLogging = args.enableLogging
+	networkConfig.RPCAddress = args.rpcAddress
+	networkConfig.APIAddress = args.apiAddress
+	networkConfig.GRPCAddress = args.grpcAddress
+	networkConfig.PrintMnemonic = args.printMnemonic
+	networkLogger := network.NewCLILogger(cmd)
+
+	baseDir := fmt.Sprintf("%s/%s", args.outputDir, networkConfig.ChainID)
+	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
+		return fmt.Errorf(
+			"testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
+			networkConfig.ChainID, baseDir)
+	}
+
+	testnet, err := network.New(networkLogger, baseDir, networkConfig)
+	if err != nil {
+		return err
+	}
+
+	if _, err := testnet.WaitForHeight(1); err != nil {
+		return err
+	}
+	cmd.Println("press the Enter Key to terminate")
+	if _, err := fmt.Scanln(); err != nil { // wait for Enter Key
+		return err
+	}
+	testnet.Cleanup()
+
+	return nil
 }

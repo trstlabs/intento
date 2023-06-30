@@ -184,7 +184,7 @@ func (k Keeper) GetTotalClaimableAmountForAction(
 	claimablePercent := sdk.OneDec().Sub(decayPercent)
 	claimableCoins := sdk.Coins{}
 	for _, coin := range InitialClaimablePerAction {
-		claimableCoins = claimableCoins.Add(sdk.NewCoin(coin.Denom, coin.Amount.ToDec().Mul(claimablePercent).RoundInt()))
+		claimableCoins = claimableCoins.Add(sdk.NewCoin(coin.Denom, sdk.NewDecFromInt(coin.Amount).Mul(claimablePercent).RoundInt()))
 	}
 
 	return claimableCoins, nil

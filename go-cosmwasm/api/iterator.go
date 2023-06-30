@@ -1,7 +1,7 @@
 package api
 
 import (
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
 	"sync"
 )
 

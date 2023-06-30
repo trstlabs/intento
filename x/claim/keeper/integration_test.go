@@ -3,14 +3,12 @@ package keeper_test
 import (
 	"encoding/json"
 
-	"github.com/tendermint/spm/cosmoscmd"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-	dbm "github.com/tendermint/tm-db"
 	app "github.com/trstlabs/trst/app"
 
 	// "github.com/trstlabs/trst/x/compute"
@@ -22,8 +20,8 @@ func createTestApp(isCheckTx bool) (*app.TrstApp, sdk.Context) {
 	app := setup(isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.AppKeepers.MintKeeper.SetParams(ctx, types.DefaultParams())
-	app.AppKeepers.MintKeeper.SetMinter(ctx, types.DefaultInitialMinter())
+	app.MintKeeper.SetParams(ctx, types.DefaultParams())
+	app.MintKeeper.SetMinter(ctx, types.DefaultInitialMinter())
 
 	return app, ctx
 }
@@ -42,7 +40,7 @@ func setup(isCheckTx bool) *app.TrstApp {
 		app.InitChain(
 			abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: simapp.DefaultConsensusParams,
+				ConsensusParams: &tmproto.ConsensusParams{},
 				AppStateBytes:   stateBytes,
 			},
 		)
@@ -53,24 +51,22 @@ func setup(isCheckTx bool) *app.TrstApp {
 
 func genApp(withGenesis bool, invCheckPeriod uint) (*app.TrstApp, app.GenesisState) {
 	db := dbm.NewMemDB()
-	encCdc := cosmoscmd.MakeEncodingConfig(app.ModuleBasics())
+
 	TrstApp := app.NewTrstApp(
 		log.NewNopLogger(),
 		db,
 		nil,
 		true,
-		map[int64]bool{},
-		simapp.DefaultNodeHome,
-		invCheckPeriod,
-		true,
-		simapp.EmptyAppOptions{},
+
+		app.EmptyAppOptions{},
 		// compute.GetConfig(simapp.EmptyAppOptions{}),
 		// app.GetEnabledProposals(),
 	)
 
-	if withGenesis {
-		return TrstApp, app.NewDefaultGenesisState(encCdc.Marshaler)
-	}
+	// if withGenesis {
+	// 	encCdc := app.MakeEncodingConfig()
+	// 	return TrstApp, app.NewDefaultGenesisState(encCdc.Codec)
+	// }
 
 	return TrstApp, app.GenesisState{}
 }

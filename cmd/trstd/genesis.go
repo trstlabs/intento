@@ -1,12 +1,11 @@
-package main
+package cmd
 
 import (
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/spf13/cobra"
-
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -18,13 +17,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
-	icagenesistypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	"github.com/spf13/cobra"
 	alloctypes "github.com/trstlabs/trst/x/alloc/types"
 	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
@@ -47,14 +45,14 @@ type GenesisParams struct {
 	AirdropSupply            sdk.Int
 	StrategicReserveAccounts []banktypes.Balance
 	DistributedAccounts      []banktypes.Balance
-	ConsensusParams          *tmproto.ConsensusParams
+	ConsensusParams          *tmtypes.ConsensusParams
 
 	GenesisTime         time.Time
 	NativeCoinMetadatas []banktypes.Metadata
 
 	StakingParams      stakingtypes.Params
 	DistributionParams distributiontypes.Params
-	GovParams          govtypes.Params
+	GovParams          govtypesv1.Params
 
 	CrisisConstantFee sdk.Coin
 
@@ -129,6 +127,7 @@ Example:
 			}
 
 			genDoc.AppState = appStateJSON
+
 			//fmt.Printf("%v \n", string(appStateJSON))
 			err = genutil.ExportGenesisFile(genDoc, genFile)
 			return err
@@ -203,11 +202,8 @@ func PrepareGenesis(
 	}
 	appState[distributiontypes.ModuleName] = distributionGenStateBz
 
-	// gov module genesis
-	govGenState := govtypes.DefaultGenesisState()
-	govGenState.DepositParams = genesisParams.GovParams.DepositParams
-	govGenState.TallyParams = genesisParams.GovParams.TallyParams
-	govGenState.VotingParams = genesisParams.GovParams.VotingParams
+	// // gov module genesis
+	govGenState := govtypesv1.DefaultGenesisState()
 	govGenStateBz, err := cdc.MarshalJSON(govGenState)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to marshal gov genesis state: %w", err)
@@ -269,13 +265,13 @@ func PrepareGenesis(
 	// appState[compute.ModuleName] = computeGenStateBz
 
 	// ica module genesis
-	icaGenState := icagenesistypes.DefaultGenesis()
-	icaGenState.HostGenesisState.Params = genesisParams.IcaParams
-	icaGenStateBz, err := cdc.MarshalJSON(icaGenState)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to marshal ica genesis state: %w", err)
-	}
-	appState[icagenesistypes.ModuleName] = icaGenStateBz
+	// icaGenState := icagenesistypes.DefaultGenesis()
+	// icaGenState.HostGenesisState.Params = genesisParams.IcaParams
+	// icaGenStateBz, err := cdc.MarshalJSON(icaGenState)
+	// if err != nil {
+	// 	return nil, nil, fmt.Errorf("failed to marshal ica genesis state: %w", err)
+	// }
+	// appState[icagenesistypes.ModuleName] = icaGenStateBz
 
 	// item module genesis
 	/*
@@ -350,14 +346,16 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.DistributionParams.CommunityTax = sdk.MustNewDecFromStr("0.05")
 	genParams.DistributionParams.WithdrawAddrEnabled = true
 	// gov
-	genParams.GovParams = govtypes.DefaultParams()
-	genParams.GovParams.DepositParams.MaxDepositPeriod = time.Hour * 24 * 14 // 2 weeks
-	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
+	genParams.GovParams = govtypesv1.DefaultParams()
+	maxDepositPeriod := time.Hour * 24 * 14 // 2 weeks
+	genParams.GovParams.MaxDepositPeriod = &maxDepositPeriod
+	genParams.GovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
 		sdk.NewInt(1_000_000_000),
 	))
-	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.2") // 20%
-	genParams.GovParams.VotingParams.VotingPeriod = time.Hour * 24 * 3    // 3 days
+	genParams.GovParams.Quorum = "0.200000000000000000" // 20%
+	votingPeriod := time.Hour * 24 * 3                  // 3 days
+	genParams.GovParams.VotingPeriod = &votingPeriod
 	// crisis
 	genParams.CrisisConstantFee = sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
@@ -417,7 +415,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ConsensusParams.Block.MaxGas = 6_000_000
 	genParams.ConsensusParams.Evidence.MaxAgeDuration = genParams.StakingParams.UnbondingTime
 	genParams.ConsensusParams.Evidence.MaxAgeNumBlocks = int64(genParams.StakingParams.UnbondingTime.Seconds()) / 3
-	genParams.ConsensusParams.Version.AppVersion = 1
+	genParams.ConsensusParams.Version.App = 1
 	genParams.DistributedAccounts = []banktypes.Balance{}
 
 	//interchain accounts host
@@ -435,12 +433,13 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 3 // 3 days
 
 	//gov
-	genParams.GovParams.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
+	genParams.GovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
 		sdk.NewInt(1_000_000), // 1 TRST
 	))
-	genParams.GovParams.TallyParams.Quorum = sdk.MustNewDecFromStr("0.1") // 10%
-	genParams.GovParams.VotingParams.VotingPeriod = time.Minute           //time.Hour * 24 * 1    // 1 day
+	genParams.GovParams.Quorum = "0.100000000000000000" // 10%
+	votingPeriod := time.Minute
+	genParams.GovParams.VotingPeriod = &votingPeriod
 
 	//claim
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime

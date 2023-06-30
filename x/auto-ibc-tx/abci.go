@@ -6,9 +6,9 @@ import (
 
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"

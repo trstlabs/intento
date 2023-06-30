@@ -8,20 +8,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	trstibctesting "github.com/trstlabs/trst/x/auto-ibc-tx/keeper/tests"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 
 	//"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 
-	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/stretchr/testify/suite"
 	icaapp "github.com/trstlabs/trst/app"
-	autoibctxkeeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
+	autoIbcTxKeeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
+	trstibctesting "github.com/trstlabs/trst/x/auto-ibc-tx/keeper/tests"
 )
 
 var (
@@ -62,18 +61,18 @@ func GetICAApp(chain *ibctesting.TestChain) *icaapp.TrstApp {
 	return app
 }
 
-func GetICAKeeper(chain *trstibctesting.TestChain) autoibctxkeeper.Keeper {
+func GetICAKeeper(chain *trstibctesting.TestChain) autoIbcTxKeeper.Keeper {
 	app, ok := chain.App.(*icaapp.TrstApp)
 	if !ok {
 		panic("not ica app")
 	}
 
-	return *app.AppKeepers.AutoIBCTXKeeper
+	return app.AutoIbcTxKeeper
 }
 
-func GetICAKeeper2(app *icaapp.TrstApp) autoibctxkeeper.Keeper {
+func GetICAKeeper2(app *icaapp.TrstApp) autoIbcTxKeeper.Keeper {
 
-	return *app.AppKeepers.AutoIBCTXKeeper
+	return app.AutoIbcTxKeeper
 }
 
 // TestKeeperTestSuite runs all the tests within this package.
@@ -93,8 +92,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func NewICAPath(chainA, chainB *trstibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
-	path.EndpointA.ChannelConfig.PortID = icatypes.PortID
-	path.EndpointB.ChannelConfig.PortID = icatypes.PortID
+	path.EndpointA.ChannelConfig.PortID = icatypes.HostPortID
+	path.EndpointB.ChannelConfig.PortID = icatypes.HostPortID
 	path.EndpointA.ChannelConfig.Order = channeltypes.ORDERED
 	path.EndpointB.ChannelConfig.Order = channeltypes.ORDERED
 	path.EndpointA.ChannelConfig.Version = TestVersion
@@ -143,7 +142,7 @@ func RegisterInterchainAccount(endpoint *ibctesting.Endpoint, owner string) erro
 
 	channelSequence := endpoint.Chain.App.GetIBCKeeper().ChannelKeeper.GetNextChannelSequence(endpoint.Chain.GetContext())
 
-	if err := GetICAApp(endpoint.Chain).AppKeepers.ICAControllerKeeper.RegisterInterchainAccount(endpoint.Chain.GetContext(), endpoint.ConnectionID, owner, TestVersion); err != nil {
+	if err := GetICAApp(endpoint.Chain).ICAControllerKeeper.RegisterInterchainAccount(endpoint.Chain.GetContext(), endpoint.ConnectionID, owner, TestVersion); err != nil {
 		return err
 	}
 
@@ -176,14 +175,14 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWorks() {
 	trace = transfertypes.ParseDenomTrace(sdk.DefaultBondDenom)
 
 	// send coin from chainA to chainB
-	transferMsg := transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(trace.IBCDenom(), amount), suite.chainA.SenderAccount.GetAddress().String(), receiver, clienttypes.NewHeight(1, 110), 0)
+	transferMsg := transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(trace.IBCDenom(), amount), suite.chainA.SenderAccount.GetAddress().String(), receiver, clienttypes.NewHeight(1, 110), 0, "")
 	_, err := suite.chainA.SendMsgs(transferMsg)
 	suite.Require().NoError(err) // message committed
 
-	data := transfertypes.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.String(), suite.chainA.SenderAccount.GetAddress().String(), receiver)
+	data := transfertypes.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.String(), suite.chainA.SenderAccount.GetAddress().String(), receiver, "")
 	packet := channeltypes.NewPacket(data.GetBytes(), seq, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, clienttypes.NewHeight(1, 100), 0)
 
-	ack := suite.chainB.GetTrstApp().AppKeepers.TransferStack.OnRecvPacket(suite.chainB.GetContext(), packet, suite.chainA.SenderAccount.GetAddress())
+	ack := suite.chainB.GetTrstApp().TransferStack.OnRecvPacket(suite.chainB.GetContext(), packet, suite.chainA.SenderAccount.GetAddress())
 
 	suite.Require().True(ack.Success())
 
@@ -202,16 +201,16 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAutoTxWorks() {
 		"from_address": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
 		"to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
-	suite.chainA.GetTrstApp().AppKeepers.AutoIBCTXKeeper.SetParams(suite.chainA.GetContext(), types.DefaultParams())
+
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
-	ackStr := string(ackBytes)
-	fmt.Println(ackStr)
+	// ackStr := string(ackBytes)
+	// fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	autoTx := suite.chainA.GetTrstApp().AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
+	autoTx := suite.chainA.GetTrstApp().AutoIbcTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
 
 	suite.Require().Equal(autoTx.Owner, addr.String())
 	suite.Require().Equal(autoTx.Label, "my_trigger")
@@ -239,7 +238,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 		"from_address": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
 		"to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
-	suite.chainA.GetTrstApp().AppKeepers.AutoIBCTXKeeper.SetParams(suite.chainA.GetContext(), types.DefaultParams())
+
 	path := NewICAPath(suite.chainA, suite.chainB)
 	suite.coordinator.SetupConnections(path)
 	err := SetupICAPath(path, addr.String())
@@ -247,14 +246,14 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 
 	//chainB sends packet to chainA. connectionID to execute on chainB is on chainAs config
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "connection_id":"%s", "msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
-	ackStr := string(ackBytes)
-	fmt.Println(ackStr)
+	// ackStr := string(ackBytes)
+	// fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	autoTx := suite.chainA.GetTrstApp().AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
+	autoTx := suite.chainA.GetTrstApp().AutoIbcTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
 
 	suite.Require().Equal(autoTx.Owner, addr.String())
 	suite.Require().Equal(autoTx.Label, "my_trigger")
@@ -263,7 +262,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 
 	suite.Require().Equal(autoTx.Interval, time.Second*60)
 
-	_, found := suite.chainA.GetTrstApp().AppKeepers.ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ConnectionID, autoTx.PortID)
+	_, found := suite.chainA.GetTrstApp().ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ConnectionID, autoTx.PortID)
 	suite.Require().True(found)
 
 	var txMsgAny codectypes.Any
@@ -287,20 +286,20 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithRegistrationAndMultipp
 		"from_address": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
 		"to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
-	suite.chainA.GetTrstApp().AppKeepers.AutoIBCTXKeeper.SetParams(suite.chainA.GetContext(), types.DefaultParams())
+
 	path := NewICAPath(suite.chainA, suite.chainB)
 	suite.coordinator.SetupConnections(path)
 
 	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "connection_id":"%s", "msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0", "register_ica": "true"} }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
-	ackStr := string(ackBytes)
-	fmt.Println(ackStr)
+	// ackStr := string(ackBytes)
+	// fmt.Println(ackStr)
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	autoTx := suite.chainA.GetTrstApp().AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
+	autoTx := suite.chainA.GetTrstApp().AutoIbcTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
 
 	suite.Require().Equal(autoTx.Owner, addr.String())
 	suite.Require().Equal(autoTx.Label, "my_trigger")
@@ -318,7 +317,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithRegistrationAndMultipp
 		suite.chainA.NextBlock()
 		suite.chainB.NextBlock() */
 
-	// _, found := suite.chainA.GetTrstApp().AppKeepers.ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ConnectionID, autoTx.PortID)
+	// _, found := suite.chainA.GetTrstApp().ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ConnectionID, autoTx.PortID)
 	// suite.Require().True(found)
 
 	var txMsgAny codectypes.Any
@@ -343,8 +342,8 @@ func (suite *KeeperTestSuite) receivePacketWithSequence(receiver, memo string, p
 		path.EndpointB.ChannelID)
 	packet := suite.makeMockPacket(receiver, memo, prevSequence, path)
 
-	err := suite.chainB.GetTrstApp().AppKeepers.IbcKeeper.ChannelKeeper.SendPacket(
-		suite.chainB.GetContext(), channelCap, packet)
+	_, err := suite.chainB.GetTrstApp().IBCKeeper.ChannelKeeper.SendPacket(
+		suite.chainB.GetContext(), channelCap, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, clienttypes.ZeroHeight(), uint64(suite.chainB.GetContext().BlockTime().Add(time.Minute).UnixNano()), packet.Data)
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 
 	// Update both clients
@@ -382,7 +381,7 @@ func (suite *KeeperTestSuite) makeMockPacket(receiver, memo string, prevSequence
 		path.EndpointB.ChannelID,
 		path.EndpointA.ChannelConfig.PortID,
 		path.EndpointA.ChannelID,
-		clienttypes.NewHeight(0, 100),
-		0,
+		clienttypes.ZeroHeight(),
+		uint64(suite.chainB.GetContext().BlockTime().Add(time.Minute).UnixNano()),
 	)
 }

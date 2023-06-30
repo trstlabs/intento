@@ -1,6 +1,6 @@
 //go:build ignore
 
-package main
+package cmd
 
 import (
 	"encoding/base64"

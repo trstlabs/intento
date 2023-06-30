@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
 

@@ -7,7 +7,7 @@ import (
 )
 
 //nolint:staticcheck
-func RegisterCodec(cdc *codec.LegacyAmino) {
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgClaimClaimable{}, "claim/ClaimClaimable", nil)
 }
 

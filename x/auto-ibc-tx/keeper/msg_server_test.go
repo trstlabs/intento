@@ -8,9 +8,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	//banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
@@ -56,9 +56,9 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 					[]string{path.EndpointA.ConnectionID},
 					path.EndpointA.ChannelConfig.Version,
 				)
-				GetICAApp(suite.chainA.TestChain).AppKeepers.IbcKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, ibctesting.FirstChannelID, channel)
+				GetICAApp(suite.chainA.TestChain).IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, ibctesting.FirstChannelID, channel)
 
-				GetICAApp(suite.chainA.TestChain).AppKeepers.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), ibctesting.FirstConnectionID, portID, ibctesting.FirstChannelID)
+				GetICAApp(suite.chainA.TestChain).ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), ibctesting.FirstConnectionID, portID, ibctesting.FirstChannelID)
 			},
 			false,
 		},
@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 
 			res, err := msgSrv.RegisterAccount(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 
-			// resp, err := GetICAApp(suite.chainA).AppKeepers.AutoIBCTXKeeper.InterchainAccountFromAddress(sdk.WrapSDKContext(suite.chainA.GetContext()), &types.QueryInterchainAccountFromAddressRequest{Owner: owner, ConnectionId: path.EndpointA.ConnectionID})
+			// resp, err := GetICAApp(suite.chainA).AutoIbcTxKeeper.InterchainAccountFromAddress(sdk.WrapSDKContext(suite.chainA.GetContext()), &types.QueryInterchainAccountFromAddressRequest{Owner: owner, ConnectionId: path.EndpointA.ConnectionID})
 			// fmt.Printf("%v", resp)
 
 			if tc.expPass {
@@ -165,14 +165,14 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 				suite.Require().NoError(err)
 
 				// Get the address of the interchain account stored in state during handshake step
-				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).AppKeepers.ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
+				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
 				suite.Require().True(found)
 
 				icaAddr, err := sdk.AccAddressFromBech32(interchainAccountAddr)
 				suite.Require().NoError(err)
 
 				// Check if account is created
-				interchainAccount := icaAppB.AppKeepers.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
+				interchainAccount := icaAppB.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
 				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
 
 				// Create bank transfer message to execute on the host
@@ -277,14 +277,14 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 				suite.Require().NoError(err)
 
 				// Get the address of the interchain account stored in state during handshake step
-				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).AppKeepers.ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
+				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
 				suite.Require().True(found)
 
 				icaAddr, err := sdk.AccAddressFromBech32(interchainAccountAddr)
 				suite.Require().NoError(err)
 
 				// Check if account is created
-				interchainAccount := icaAppB.AppKeepers.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
+				interchainAccount := icaAppB.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
 				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
 				if parseIcaAddress {
 					interchainAccountAddr = "ICA_ADDR"
@@ -297,7 +297,7 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 				}
 			}
 
-			GetICAApp(suite.chainA.TestChain).AppKeepers.AutoIBCTXKeeper.SetParams(suite.chainA.GetContext(), types.Params{
+			GetICAApp(suite.chainA.TestChain).AutoIbcTxKeeper.SetParams(suite.chainA.GetContext(), types.Params{
 				AutoTxFundsCommission:      2,
 				AutoTxConstantFee:          1_000_000,
 				AutoTxFlexFeeMul:           100,
@@ -305,6 +305,7 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 				MaxAutoTxDuration:          time.Hour * 24 * 366 * 10,
 				MinAutoTxDuration:          time.Second * 60,
 				MinAutoTxInterval:          time.Second * 20,
+				RelayerRewards:             []int64{10_000, 10_000, 10_000, 10_000},
 			})
 
 			msg, err := types.NewMsgSubmitAutoTx(owner, "label", []sdk.Msg{icaMsg}, connectionId, "200s", "100s", 0, sdk.Coins{}, []uint64{})
@@ -321,22 +322,23 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 				suite.Require().NoError(err)
 				suite.chainA.NextBlock()
 				unwrappedCtx := sdk.UnwrapSDKContext(wrappedCtx)
-				autoTx := icaApp.AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(unwrappedCtx, 1)
+				autoTx := icaApp.AutoIbcTxKeeper.GetAutoTxInfo(unwrappedCtx, 1)
 				suite.Require().NotEqual(autoTx, types.AutoTxInfo{})
 
-				err, _ = icaApp.AppKeepers.AutoIBCTXKeeper.SendAutoTx(unwrappedCtx, autoTx)
+				err, _ = icaApp.AutoIbcTxKeeper.SendAutoTx(unwrappedCtx, autoTx)
 				suite.Require().NoError(err)
-				icaAddrToParse := "ICA_ADDR"
-				autoTx = icaApp.AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(unwrappedCtx, 1)
+
+				autoTxOut := icaApp.AutoIbcTxKeeper.GetAutoTxInfo(unwrappedCtx, 1)
 				//txMsgs := autoTx.GetTxMsgs()
 
 				var txMsg sdk.Msg
-				err = icaApp.AppCodec().UnpackAny(autoTx.Msgs[0], &txMsg)
+				err = icaApp.AppCodec().UnpackAny(autoTxOut.Msgs[0], &txMsg)
 				suite.Require().NoError(err)
 				msgJSON, err := icaApp.AppCodec().MarshalInterfaceJSON(txMsg)
 				suite.Require().NoError(err)
 
 				msgJSONString := string(msgJSON)
+				icaAddrToParse := "ICA_ADDR"
 				index := strings.Index(msgJSONString, icaAddrToParse)
 				suite.Require().Equal(-1, index)
 
@@ -431,14 +433,14 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 				suite.Require().NoError(err)
 
 				// Get the address of the interchain account stored in state during handshake step
-				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).AppKeepers.ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
+				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
 				suite.Require().True(found)
 
 				icaAddr, err := sdk.AccAddressFromBech32(interchainAccountAddr)
 				suite.Require().NoError(err)
 
 				// Check if account is created
-				interchainAccount := icaAppB.AppKeepers.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
+				interchainAccount := icaAppB.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
 				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
 
 				// Create bank transfer message to execute on the host
@@ -449,7 +451,7 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 				}
 			}
 
-			icaAppA.AppKeepers.AutoIBCTXKeeper.SetParams(suite.chainA.GetContext(), types.Params{
+			icaAppA.AutoIbcTxKeeper.SetParams(suite.chainA.GetContext(), types.Params{
 				AutoTxFundsCommission:      2,
 				AutoTxConstantFee:          1_000_000,
 				AutoTxFlexFeeMul:           100,
@@ -457,6 +459,7 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 				MaxAutoTxDuration:          time.Hour * 24 * 366 * 10,
 				MinAutoTxDuration:          time.Second * 60,
 				MinAutoTxInterval:          time.Second * 20,
+				RelayerRewards:             []int64{10_000, 10_000, 10_000, 10_000},
 			})
 
 			msg, err := types.NewMsgSubmitAutoTx(owner, "label", []sdk.Msg{icaMsg}, connectionId, "200s", "100s", uint64(time.Now().Unix()), sdk.Coins{}, []uint64{})
@@ -467,11 +470,11 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 			suite.Require().NoError(err)
 
 			if withExecHistory {
-				autoTx := icaAppA.AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				autoTx := icaAppA.AutoIbcTxKeeper.GetAutoTxInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
 				suite.Require().NotNil(autoTx)
 				fakeEntry := types.AutoTxHistoryEntry{ScheduledExecTime: autoTx.ExecTime}
 				autoTx.AutoTxHistory = []*types.AutoTxHistoryEntry{&fakeEntry}
-				icaAppA.AppKeepers.AutoIBCTXKeeper.SetAutoTxInfo(sdk.UnwrapSDKContext(wrappedCtx), &autoTx)
+				icaAppA.AutoIbcTxKeeper.SetAutoTxInfo(sdk.UnwrapSDKContext(wrappedCtx), &autoTx)
 				suite.chainA.NextBlock()
 			}
 			updateMsg, err := types.NewMsgUpdateAutoTx(owner, 1, "new_label", []sdk.Msg{icaMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, []uint64{})
@@ -491,7 +494,7 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 				suite.chainA.NextBlock()
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-				autoTx := icaAppA.AppKeepers.AutoIBCTXKeeper.GetAutoTxInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				autoTx := icaAppA.AutoIbcTxKeeper.GetAutoTxInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
 				suite.Require().Equal(autoTx.Label, updateMsg.Label)
 				suite.Require().Equal(autoTx.StartTime.Unix(), int64(updateMsg.StartAt))
 				suite.Require().Equal(autoTx.EndTime.Unix(), int64(updateMsg.EndTime))

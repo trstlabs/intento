@@ -1,6 +1,6 @@
 use enclave_cosmwasm_types::addresses::CanonicalAddr;
 
-// https://github.com/tendermint/tendermint/blob/v0.33.3/crypto/crypto.go#L22
+// https://github.com/cometbft/cometbft/blob/v0.33.3/crypto/crypto.go#L22
 pub trait CosmosAminoPubkey: PartialEq {
     /// derive the canonical address for this public key
     fn get_address(&self) -> CanonicalAddr;

@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -111,7 +112,7 @@ trstd export-airdrop-snapshot ~/genesisfiles/genesis.cosmoshub-4.json ~/genesisf
 // compare balance with max cap
 func getMin(balance sdk.Dec) sdk.Dec {
 	if balance.GTE(sdk.NewDec(MaxCap)) {
-		atomSqrt, err := sdk.NewInt(MaxCap).ToDec().ApproxSqrt()
+		atomSqrt, err := sdk.NewDecFromInt(math.NewInt(MaxCap)).ApproxSqrt()
 		if err != nil {
 			panic(fmt.Sprintf("failed to root atom balance: %s", err))
 		}
@@ -129,7 +130,7 @@ func getDenominator(snapshotAccs map[string]SnapshotAccount) sdk.Int {
 	denominator := sdk.ZeroInt()
 	for _, acc := range snapshotAccs {
 		//add so we ensure suffiient balance
-		allTokens := acc.TokenBalance.ToDec()
+		allTokens := sdk.NewDecFromInt(acc.TokenBalance)
 		denominator = denominator.Add(getMin(allTokens).RoundInt())
 	}
 	return denominator
@@ -235,14 +236,14 @@ func exportSnapShotFromGenesisFile(clientCtx client.Context, genesisFile string,
 	totalBalance := sdk.ZeroInt()
 	totalTokenBalance := sdk.NewInt(0)
 	for address, acc := range snapshotAccs {
-		allTokens := acc.TokenBalance.ToDec()
+		allTokens := sdk.NewDecFromInt(acc.TokenBalance)
 
 		allTokenSqrt := getMin(allTokens).RoundInt()
 
 		if denominator.IsZero() {
-			acc.TokenOwnershipPercent = sdk.NewInt(0).ToDec()
+			acc.TokenOwnershipPercent = sdk.NewDecFromInt(sdk.NewInt(0))
 		} else {
-			acc.TokenOwnershipPercent = allTokenSqrt.ToDec().QuoInt(denominator)
+			acc.TokenOwnershipPercent = sdk.NewDecFromInt(allTokenSqrt).QuoInt(denominator)
 		}
 
 		if allTokens.IsZero() {
@@ -252,7 +253,7 @@ func exportSnapShotFromGenesisFile(clientCtx client.Context, genesisFile string,
 			continue
 		}
 
-		stakedTokens := acc.TokenStakedBalance.ToDec()
+		stakedTokens := sdk.NewDecFromInt(acc.TokenStakedBalance)
 		stakedPercent := stakedTokens.Quo(allTokens)
 
 		acc.TokenStakedPercent = stakedPercent
@@ -385,14 +386,14 @@ func exportSecretSnapShotFromGenesisFile(clientCtx client.Context, genesisFile s
 	totalBalance := sdk.ZeroInt()
 	totalTokenBalance := sdk.NewInt(0)
 	for address, acc := range snapshotAccs {
-		allTokens := acc.TokenBalance.ToDec()
+		allTokens := sdk.NewDecFromInt(acc.TokenBalance)
 
 		allTokenSqrt := getMin(allTokens).RoundInt()
 
 		if denominator.IsZero() {
-			acc.TokenOwnershipPercent = sdk.NewInt(0).ToDec()
+			acc.TokenOwnershipPercent = sdk.NewDecFromInt(sdk.NewInt(0))
 		} else {
-			acc.TokenOwnershipPercent = allTokenSqrt.ToDec().QuoInt(denominator)
+			acc.TokenOwnershipPercent = sdk.NewDecFromInt(allTokenSqrt).QuoInt(denominator)
 		}
 
 		if allTokens.IsZero() {
@@ -402,7 +403,7 @@ func exportSecretSnapShotFromGenesisFile(clientCtx client.Context, genesisFile s
 			continue
 		}
 
-		stakedTokens := acc.TokenStakedBalance.ToDec()
+		stakedTokens := sdk.NewDecFromInt(acc.TokenStakedBalance)
 		stakedPercent := stakedTokens.Quo(allTokens)
 
 		acc.TokenStakedPercent = stakedPercent

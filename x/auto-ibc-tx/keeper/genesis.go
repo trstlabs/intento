@@ -14,7 +14,9 @@ import (
 //
 // CONTRACT: all types of accounts must have been already initialized/created
 // InitGenesis initializes the trst module state
-func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState, msgHandler sdk.Handler) error {
+func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
+
+	k.SetParams(ctx, types.DefaultParams())
 	// NOTE: since the AutoIbcTx module is a module account, the auth module should
 	// take care of importing the amount into the account except for the
 	// genesis block
@@ -47,9 +49,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState, msgHandler s
 	if k.peekAutoIncrementID(ctx, types.KeyLastTxID) <= maxTxID {
 		return sdkerrors.Wrapf(types.ErrInvalid, "seq %s must be greater %d ", string(types.KeyLastTxID), maxTxID)
 	}
-
-	//fmt.Print("setting params...\n")
-	k.SetParams(ctx, types.DefaultParams())
 
 	return nil
 }

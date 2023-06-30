@@ -7,7 +7,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	proto "github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 var (
@@ -93,7 +93,7 @@ func (msg MsgSubmitTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 }
 
 // GetTxMsg fetches the cached any message
-func (msg *MsgSubmitTx) GetTxMsg() sdk.Msg {
+func (msg *MsgSubmitTx) GetTxMsg() proto.Message {
 	sdkMsg, ok := msg.Msg.GetCachedValue().(sdk.Msg)
 	if !ok {
 		return nil

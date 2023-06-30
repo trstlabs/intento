@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	keeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )

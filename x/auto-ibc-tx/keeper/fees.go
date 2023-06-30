@@ -42,15 +42,15 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 		fixedFee = sdk.NewInt(p.RecurringAutoTxConstantFee * int64(len(autoTxInfo.Msgs)))
 	}
 
-	fixedFeeCommunityCoins := sdk.NewCoins(sdk.NewCoin(types.Denom, fixedFee))
+	fixedFeeCommunityCoin := sdk.NewCoin(types.Denom, fixedFee)
 
 	if !isRecurring && !autoTxInfoBalance.Empty() {
 		percentageAutoTxFundsCommission := sdk.NewDecWithPrec(p.AutoTxFundsCommission, 2)
 		amountAutoTxFundsCommissionCoin := sdk.NewCoin(types.Denom, percentageAutoTxFundsCommission.MulInt(autoTxInfoBalance.AmountOf(types.Denom)).Ceil().TruncateInt())
-		fixedFeeCommunityCoins = fixedFeeCommunityCoins.Add(amountAutoTxFundsCommissionCoin)
+		fixedFeeCommunityCoin = fixedFeeCommunityCoin.Add(amountAutoTxFundsCommissionCoin)
 	}
-
-	totalAutoTxFees := fixedFeeCommunityCoins.Add(sdk.NewCoin(types.Denom, flexFeeMulDec.Ceil().TruncateInt()))
+	fixedFeeCommunityCoins := sdk.NewCoins(fixedFeeCommunityCoin)
+	totalAutoTxFees := fixedFeeCommunityCoin.Add(sdk.NewCoin(types.Denom, flexFeeMulDec.Ceil().TruncateInt()))
 	// fmt.Printf("totalAutoTxFees: %v \n", totalAutoTxFees)
 	if !isRecurring {
 		//pay out the remaining balance to the autoTxInfo owner after deducting fee, commision and gas cost
@@ -99,7 +99,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 		}
 	}
 
-	return totalAutoTxFees[0], nil
+	return totalAutoTxFees, nil
 }
 
 /*
