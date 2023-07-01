@@ -49,8 +49,8 @@ func getRegisterAccountCmd() *cobra.Command {
 
 			msg := types.NewMsgRegisterAccount(
 				clientCtx.GetFromAddress().String(),
-				viper.GetString(FlagConnectionID),
-				viper.GetString(FlagVersion),
+				viper.GetString(flagConnectionID),
+				viper.GetString(flagVersion),
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -63,7 +63,7 @@ func getRegisterAccountCmd() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsVersion)
 	cmd.Flags().AddFlagSet(fsConnectionPair)
-	_ = cmd.MarkFlagRequired(FlagConnectionID)
+	_ = cmd.MarkFlagRequired(flagConnectionID)
 
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -96,7 +96,7 @@ func getSubmitTxCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitTx(clientCtx.GetFromAddress().String(), txMsg, viper.GetString(FlagConnectionID))
+			msg, err := types.NewMsgSubmitTx(clientCtx.GetFromAddress().String(), txMsg, viper.GetString(flagConnectionID))
 			if err != nil {
 				return err
 			}
@@ -111,7 +111,7 @@ func getSubmitTxCmd() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsConnectionPair)
 
-	_ = cmd.MarkFlagRequired(FlagConnectionID)
+	_ = cmd.MarkFlagRequired(flagConnectionID)
 
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -121,7 +121,7 @@ func getSubmitTxCmd() *cobra.Command {
 func getSubmitAutoTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "submit-auto-tx [path/to/sdk_msg.json]",
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -131,18 +131,22 @@ func getSubmitAutoTxCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var txMsgs []sdk.Msg
-			if err := cdc.UnmarshalInterfaceJSON([]byte(args[0]), &txMsgs); err != nil {
+			for _, arg := range args {
+				var txMsg sdk.Msg
+				if err := cdc.UnmarshalInterfaceJSON([]byte(arg), &txMsg); err != nil {
+					// check for file path if JSON input is not provided
+					msgContents, err := os.ReadFile(arg)
+					if err != nil {
+						return errors.Wrap(err, "neither JSON input nor path to .json file for sdk msg were provided")
+					}
 
-				// check for file path if JSON input is not provided
-				contents, err := os.ReadFile(args[0])
-				if err != nil {
-					return errors.Wrap(err, "neither JSON input nor path to .json file for sdk msg were provided")
-				}
-
-				if err := cdc.UnmarshalInterfaceJSON(contents, &txMsgs); err != nil {
-					return errors.Wrap(err, "error unmarshalling sdk msg file")
+					if err := cdc.UnmarshalInterfaceJSON(msgContents, &txMsg); err != nil {
+						return errors.Wrap(err, "error unmarshalling sdk msg file")
+					}
+					txMsgs = append(txMsgs, txMsg)
 				}
 			}
+
 			var txIds []uint64
 			dependsOnString := viper.GetStringSlice(flagDependsOn)
 			for _, id := range dependsOnString {
@@ -161,7 +165,7 @@ func getSubmitAutoTxCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(FlagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /*  viper.GetUint64(flagRetries) */)
+			msg, err := types.NewMsgSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /*  viper.GetUint64(flagRetries) */)
 			if err != nil {
 				return err
 			}
@@ -180,11 +184,10 @@ func getSubmitAutoTxCmd() *cobra.Command {
 	cmd.Flags().String(flagInterval, "", "A custom interval for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
 	cmd.Flags().String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
 	cmd.Flags().Uint64(flagStartAt, 0, "A custom start time for the AutoTx self-execution, in UNIX time")
-
 	cmd.Flags().StringArray(flagDependsOn, []string{}, "array of auto-tx-ids this auto-tx depends on e.g. 5, 6")
 	// cmd.Flags().Uint64(flagRetries, 0, "Maximum amount of retries to make the tx succeed, optional")
 
-	//_ = cmd.MarkFlagRequired(FlagConnectionID)
+	//_ = cmd.MarkFlagRequired(flagConnectionID)
 	_ = cmd.MarkFlagRequired(flagDuration)
 
 	flags.AddTxFlagsToCmd(cmd)
@@ -195,7 +198,7 @@ func getSubmitAutoTxCmd() *cobra.Command {
 func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "register-ica-and-submit-auto-tx [path/to/sdk_msg.json]",
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -205,16 +208,19 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 			cdc := codec.NewProtoCodec(clientCtx.InterfaceRegistry)
 
 			var txMsgs []sdk.Msg
-			if err := cdc.UnmarshalInterfaceJSON([]byte(args[0]), &txMsgs); err != nil {
+			for _, arg := range args {
+				var txMsg sdk.Msg
+				if err := cdc.UnmarshalInterfaceJSON([]byte(arg), &txMsg); err != nil {
+					// check for file path if JSON input is not provided
+					msgContents, err := os.ReadFile(arg)
+					if err != nil {
+						return errors.Wrap(err, "neither JSON input nor path to .json file for sdk msg were provided")
+					}
 
-				// check for file path if JSON input is not provided
-				contents, err := os.ReadFile(args[0])
-				if err != nil {
-					return errors.Wrap(err, "neither JSON input nor path to .json file for sdk msg were provided")
-				}
-
-				if err := cdc.UnmarshalInterfaceJSON(contents, &txMsgs); err != nil {
-					return errors.Wrap(err, "error unmarshalling sdk msg file")
+					if err := cdc.UnmarshalInterfaceJSON(msgContents, &txMsg); err != nil {
+						return errors.Wrap(err, "error unmarshalling sdk msg file")
+					}
+					txMsgs = append(txMsgs, txMsg)
 				}
 			}
 			var txIds []uint64
@@ -234,7 +240,7 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 					return err
 				}
 			}
-			msg, err := types.NewMsgRegisterAccountAndSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(FlagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /* viper.GetUint64(flagRetries) */, viper.GetString(FlagVersion))
+			msg, err := types.NewMsgRegisterAccountAndSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /* viper.GetUint64(flagRetries) */, viper.GetString(flagVersion))
 			if err != nil {
 				return err
 			}
@@ -257,7 +263,7 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 	cmd.Flags().StringArray(flagDependsOn, []string{}, "array of auto-tx-ids this auto-tx depends on e.g. 5, 6")
 	// cmd.Flags().Uint64(flagRetries, 0, "Maximum amount of retries to make the tx succeed, optional")
 
-	//_ = cmd.MarkFlagRequired(FlagConnectionID)
+	//_ = cmd.MarkFlagRequired(flagConnectionID)
 	_ = cmd.MarkFlagRequired(flagDuration)
 
 	flags.AddTxFlagsToCmd(cmd)
@@ -283,16 +289,22 @@ func getUpdateAutoTxCmd() *cobra.Command {
 			}
 
 			var txMsgs []sdk.Msg
-			if err := cdc.UnmarshalInterfaceJSON([]byte(args[1]), &txMsgs); err != nil {
-
-				// check for file path if JSON input is not provided
-				contents, err := os.ReadFile(args[1])
-				if err != nil {
-					return errors.Wrap(err, "neither JSON input nor path to .json file for sdk msg were provided")
+			for _, arg := range args {
+				if arg == args[0] {
+					continue
 				}
+				var txMsg sdk.Msg
+				if err := cdc.UnmarshalInterfaceJSON([]byte(arg), &txMsg); err != nil {
+					// check for file path if JSON input is not provided
+					msgContents, err := os.ReadFile(arg)
+					if err != nil {
+						return errors.Wrap(err, "neither JSON input nor path to .json file for sdk msg were provided")
+					}
 
-				if err := cdc.UnmarshalInterfaceJSON(contents, &txMsgs); err != nil {
-					return errors.Wrap(err, "error unmarshalling sdk msg file")
+					if err := cdc.UnmarshalInterfaceJSON(msgContents, &txMsg); err != nil {
+						return errors.Wrap(err, "error unmarshalling sdk msg file")
+					}
+					txMsgs = append(txMsgs, txMsg)
 				}
 			}
 			var txIds []uint64
@@ -312,7 +324,7 @@ func getUpdateAutoTxCmd() *cobra.Command {
 					return err
 				}
 			}
-			msg, err := types.NewMsgUpdateAutoTx(clientCtx.GetFromAddress().String(), txID, viper.GetString(flagLabel), txMsgs, viper.GetString(FlagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /* viper.GetUint64(flagRetries) */ /* , viper.GetString(FlagVersion) */)
+			msg, err := types.NewMsgUpdateAutoTx(clientCtx.GetFromAddress().String(), txID, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /* viper.GetUint64(flagRetries) */ /* , viper.GetString(flagVersion) */)
 			if err != nil {
 				return err
 			}
@@ -335,7 +347,7 @@ func getUpdateAutoTxCmd() *cobra.Command {
 	cmd.Flags().StringArray(flagDependsOn, []string{}, "array of auto-tx-ids this auto-tx depends on e.g. 5, 6")
 	// cmd.Flags().Uint64(flagRetries, 0, "Maximum amount of retries to make the tx succeed, optional")
 
-	//_ = cmd.MarkFlagRequired(FlagConnectionID)
+	//_ = cmd.MarkFlagRequired(flagConnectionID)
 	_ = cmd.MarkFlagRequired(flagDuration)
 
 	flags.AddTxFlagsToCmd(cmd)

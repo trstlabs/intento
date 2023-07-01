@@ -19,7 +19,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/stretchr/testify/suite"
 	icaapp "github.com/trstlabs/trst/app"
-	autoIbcTxKeeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
+	keeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
 	trstibctesting "github.com/trstlabs/trst/x/auto-ibc-tx/keeper/tests"
 )
 
@@ -61,7 +61,7 @@ func GetICAApp(chain *ibctesting.TestChain) *icaapp.TrstApp {
 	return app
 }
 
-func GetICAKeeper(chain *trstibctesting.TestChain) autoIbcTxKeeper.Keeper {
+func GetICAKeeper(chain *trstibctesting.TestChain) keeper.Keeper {
 	app, ok := chain.App.(*icaapp.TrstApp)
 	if !ok {
 		panic("not ica app")
@@ -70,7 +70,7 @@ func GetICAKeeper(chain *trstibctesting.TestChain) autoIbcTxKeeper.Keeper {
 	return app.AutoIbcTxKeeper
 }
 
-func GetICAKeeper2(app *icaapp.TrstApp) autoIbcTxKeeper.Keeper {
+func GetICAKeeper2(app *icaapp.TrstApp) keeper.Keeper {
 
 	return app.AutoIbcTxKeeper
 }

@@ -6,11 +6,9 @@ import (
 
 const (
 	// The connection end identifier on the controller chain
-	FlagConnectionID = "connection-id"
+	flagConnectionID = "connection-id"
 	// The controller chain channel version
-	FlagVersion = "version"
-	// The connection end identifier on the host chain
-	//FlagCounterpartyConnectionID = "counterparty-connection-id"
+	flagVersion   = "version"
 	flagLabel     = "label"
 	flagDuration  = "duration"
 	flagInterval  = "interval"
@@ -28,7 +26,7 @@ var (
 )
 
 func init() {
-	fsConnectionPair.String(FlagConnectionID, "", "Connection ID")
-	fsVersion.String(FlagVersion, "", "Version")
+	fsConnectionPair.String(flagConnectionID, "", "Connection ID")
+	fsVersion.String(flagVersion, "", "Version")
 	//fsConnectionPair.String(FlagCounterpartyConnectionID, "", "Counterparty Connection ID")
 }

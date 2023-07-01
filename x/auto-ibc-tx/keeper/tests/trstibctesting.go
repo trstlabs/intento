@@ -17,10 +17,11 @@ type TestChain struct {
 }
 
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
+	encCdc := app.MakeEncodingConfig()
 	TrstApp := *app.NewTrstApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, app.EmptyAppOptions{} /* , compute.DefaultWasmConfig(), app.GetEnabledProposals() */)
 	TrstApp.AutoIbcTxKeeper.SetParams(TrstApp.GetBaseApp().NewContext(true, tmproto.Header{Height: TrstApp.LastBlockHeight()}), autoibctxtypes.DefaultParams())
 	//encCdc := app.MakeEncodingConfig()
-	return &TrstApp, app.NewDefaultGenesisState(TrstApp.AppCodec())
+	return &TrstApp, app.NewDefaultGenesisState(encCdc.Codec)
 }
 
 // GetTrstApp returns the current chain's app as an TrstApp

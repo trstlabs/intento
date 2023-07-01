@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/api v0.3.1
+	cosmossdk.io/errors v1.0.0-beta.7
 	cosmossdk.io/log v1.1.0
 	cosmossdk.io/tools/rosetta v0.2.1
 	github.com/cometbft/cometbft v0.37.2
@@ -29,7 +30,6 @@ require (
 )
 
 require (
-	cosmossdk.io/errors v1.0.0-beta.7 // indirect
 	github.com/btcsuite/btcd v0.22.0-beta // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/google/s2a-go v0.1.3 // indirect
