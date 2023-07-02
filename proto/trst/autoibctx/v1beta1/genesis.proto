@@ -1,0 +1,21 @@
+syntax = "proto3";
+package trst.autoibctx.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "trst/autoibctx/v1beta1/types.proto";
+//import "trst/autoibctx/v1beta1/tx.proto";
+option go_package = "github.com/trstlabs/trst/x/auto-ibc-tx/types";
+
+// GenesisState - genesis state of x/auto-ibc-tx
+message GenesisState {
+    Params params = 1 [(gogoproto.nullable) = false];
+    repeated string interchain_account_addresses = 2 [(gogoproto.jsontag) = "interchain_account_addresses,omitempty"];
+    repeated AutoTxInfo auto_tx_infos = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "auto_tx_infos,omitempty"];
+    repeated Sequence sequences = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "sequences,omitempty"];
+}
+
+// Sequence id and value of a counter
+message Sequence {
+    bytes id_key = 1 [(gogoproto.customname) = "IDKey"];
+    uint64 value = 2;
+}
