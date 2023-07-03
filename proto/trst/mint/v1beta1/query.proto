@@ -15,11 +15,11 @@ service Query {
   }
 
   // AnnualProvisions current minting annual provision value.
-  rpc AnnualProvisions(QueryAnnualProvisionsRequest) returns (QueryAnnualProvisionsResponse) {
+  rpc AnnualProvisions(QueryAnnualProvisionsRequest)
+      returns (QueryAnnualProvisionsResponse) {
     option (google.api.http).get = "/mint/v1beta1/annual_provisions";
   }
 }
-
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryParamsRequest {}
@@ -27,7 +27,7 @@ message QueryParamsRequest {}
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params defines the parameters of the module.
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryAnnualProvisionsRequest is the request type for the
@@ -38,6 +38,8 @@ message QueryAnnualProvisionsRequest {}
 // Query/AnnualProvisions RPC method.
 message QueryAnnualProvisionsResponse {
   // annual_provisions is the current minting annual provisions value.
-  bytes annual_provisions = 1
-      [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  bytes annual_provisions = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

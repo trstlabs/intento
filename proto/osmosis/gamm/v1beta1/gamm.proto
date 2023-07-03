@@ -208,4 +208,3 @@ message MsgExitSwapExternAmountOutResponse {
     (gogoproto.nullable) = false
   ];
 }
-

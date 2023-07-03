@@ -52,7 +52,6 @@ message MsgInstantiateContract2 {
   bool fix_msg = 8;
 }
 
-
 // MsgInstantiateContractResponse return instantiation result data
 message MsgInstantiateContractResponse {
   // Address is the bech32 address of the new contract instance.

@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	msgregistry "github.com/trstlabs/trst/x/auto-ibc-tx/msg_registry"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )

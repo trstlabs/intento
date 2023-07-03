@@ -9,8 +9,8 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -125,15 +125,15 @@ func (m *ClaimRecord) GetStatus() []Status {
 	return nil
 }
 
-//Status contains for an action if it is completed and claimed
+// Status contains for an action if it is completed and claimed
 type Status struct {
 	// true if action is completed
 	ActionCompleted bool `protobuf:"varint,1,opt,name=action_completed,json=actionCompleted,proto3" json:"action_completed,omitempty" yaml:"action_completed"`
 	// true if action is completed
-	//index refers to the 4 vesting periods for the given action
+	// index refers to the 4 vesting periods for the given action
 	VestingPeriodCompleted []bool `protobuf:"varint,2,rep,packed,name=vesting_period_completed,json=vestingPeriodCompleted,proto3" json:"vesting_period_completed,omitempty" yaml:"vesting_period_completed"`
 	// true if action is completed
-	//index refers to the 4 vesting periods for the given action
+	// index refers to the 4 vesting periods for the given action
 	VestingPeriodClaimed []bool `protobuf:"varint,3,rep,packed,name=vesting_period_claimed,json=vestingPeriodClaimed,proto3" json:"vesting_period_claimed,omitempty" yaml:"vesting_period_claimed"`
 }
 

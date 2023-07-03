@@ -10,8 +10,8 @@ import (
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -32,7 +32,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgRegisterAccount registers an interchain account for the given owner over the specified connection pair
+// MsgRegisterAccount registers an interchain account for the given owner over
+// the specified connection pair
 type MsgRegisterAccount struct {
 	Owner        string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	ConnectionId string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
@@ -109,7 +110,8 @@ func (m *MsgRegisterAccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterAccountResponse proto.InternalMessageInfo
 
-// MsgSubmitTx creates and submits an arbitrary transaction msg to be executed locally or using an interchain account
+// MsgSubmitTx creates and submits an arbitrary transaction msg to be executed
+// locally or using an interchain account
 type MsgSubmitTx struct {
 	Owner        string     `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	ConnectionId string     `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
@@ -186,7 +188,8 @@ func (m *MsgSubmitTxResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSubmitTxResponse proto.InternalMessageInfo
 
-// MsgSubmitAutoTx creates, submits and schedules an arbitrary transaction msg to be executed locally or using an interchain account
+// MsgSubmitAutoTx creates, submits and schedules an arbitrary transaction msg
+// to be executed locally or using an interchain account
 type MsgSubmitAutoTx struct {
 	Owner        string       `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	ConnectionId string       `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
@@ -194,13 +197,16 @@ type MsgSubmitAutoTx struct {
 	Msgs         []*types.Any `protobuf:"bytes,4,rep,name=msgs,proto3" json:"msgs,omitempty"`
 	// duration defines the time that the code should run for
 	Duration string `protobuf:"bytes,5,opt,name=duration,proto3" json:"duration,omitempty"`
-	// start_at when set as a unix time after block inclusion, creates a custom start time for execution
+	// start_at when set as a unix time after block inclusion, creates a custom
+	// start time for execution
 	StartAt uint64 `protobuf:"varint,6,opt,name=start_at,json=startAt,proto3" json:"start_at,omitempty"`
-	//interval defines the interval between auto_msg calls
+	// interval defines the interval between auto_msg calls
 	Interval string `protobuf:"bytes,7,opt,name=interval,proto3" json:"interval,omitempty"`
-	//optional fees to be used for auto tx execution limiting the amount of fees incurred
+	// optional fees to be used for auto tx execution limiting the amount of fees
+	// incurred
 	FeeFunds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,8,rep,name=fee_funds,json=feeFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fee_funds" yaml:"fee_funds"`
-	//optional array of dependent txs that should be executed before execution is allowed
+	// optional array of dependent txs that should be executed before execution is
+	// allowed
 	DependsOnTxIds []uint64 `protobuf:"varint,9,rep,packed,name=depends_on_tx_ids,json=dependsOnTxIds,proto3" json:"depends_on_tx_ids,omitempty"`
 }
 
@@ -274,7 +280,9 @@ func (m *MsgSubmitAutoTxResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSubmitAutoTxResponse proto.InternalMessageInfo
 
-// MsgRegisterAccountAndSubmitAutoTx creates an interchain account, submits and schedules an arbitrary transaction msg to be executed by this interchain account
+// MsgRegisterAccountAndSubmitAutoTx creates an interchain account, submits and
+// schedules an arbitrary transaction msg to be executed by this interchain
+// account
 type MsgRegisterAccountAndSubmitAutoTx struct {
 	Owner        string       `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	ConnectionId string       `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
@@ -282,13 +290,16 @@ type MsgRegisterAccountAndSubmitAutoTx struct {
 	Msgs         []*types.Any `protobuf:"bytes,4,rep,name=msgs,proto3" json:"msgs,omitempty"`
 	// duration defines the time that the code should run for
 	Duration string `protobuf:"bytes,5,opt,name=duration,proto3" json:"duration,omitempty"`
-	// start_at when set as a unix time after block inclusion, creates a custom start time for execution
+	// start_at when set as a unix time after block inclusion, creates a custom
+	// start time for execution
 	StartAt uint64 `protobuf:"varint,6,opt,name=start_at,json=startAt,proto3" json:"start_at,omitempty"`
-	//interval defines the interval between auto_msg calls
+	// interval defines the interval between auto_msg calls
 	Interval string `protobuf:"bytes,7,opt,name=interval,proto3" json:"interval,omitempty"`
-	//optional fees to be used for auto tx execution limiting the amount of fees incurred
+	// optional fees to be used for auto tx execution limiting the amount of fees
+	// incurred
 	FeeFunds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,8,rep,name=fee_funds,json=feeFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fee_funds" yaml:"fee_funds"`
-	//optional array of dependent txs that should be executed before execution is allowed
+	// optional array of dependent txs that should be executed before execution is
+	// allowed
 	DependsOnTxIds []uint64 `protobuf:"varint,9,rep,packed,name=depends_on_tx_ids,json=dependsOnTxIds,proto3" json:"depends_on_tx_ids,omitempty"`
 	Version        string   `protobuf:"bytes,10,opt,name=version,proto3" json:"version,omitempty"`
 }
@@ -326,7 +337,8 @@ func (m *MsgRegisterAccountAndSubmitAutoTx) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterAccountAndSubmitAutoTx proto.InternalMessageInfo
 
-// MsgRegisterAccountAndSubmitAutoTxResponse defines the MsgSubmitTx response type
+// MsgRegisterAccountAndSubmitAutoTxResponse defines the MsgSubmitTx response
+// type
 type MsgRegisterAccountAndSubmitAutoTxResponse struct {
 }
 
@@ -367,7 +379,8 @@ func (m *MsgRegisterAccountAndSubmitAutoTxResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterAccountAndSubmitAutoTxResponse proto.InternalMessageInfo
 
-// MsgUpdateAutoTx updates an arbitrary transaction msg to be executed locally or using an interchain account
+// MsgUpdateAutoTx updates an arbitrary transaction msg to be executed locally
+// or using an interchain account
 type MsgUpdateAutoTx struct {
 	Owner        string       `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	TxId         uint64       `protobuf:"varint,2,opt,name=tx_id,json=txId,proto3" json:"tx_id,omitempty"`
@@ -376,13 +389,16 @@ type MsgUpdateAutoTx struct {
 	Msgs         []*types.Any `protobuf:"bytes,5,rep,name=msgs,proto3" json:"msgs,omitempty"`
 	// end_time when set defines the time that the code should run for
 	EndTime uint64 `protobuf:"varint,6,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	// start_at when set as a unix time after block inclusion, creates a custom start time for execution
+	// start_at when set as a unix time after block inclusion, creates a custom
+	// start time for execution
 	StartAt uint64 `protobuf:"varint,7,opt,name=start_at,json=startAt,proto3" json:"start_at,omitempty"`
-	//interval defines the interval between auto_msg calls
+	// interval defines the interval between auto_msg calls
 	Interval string `protobuf:"bytes,8,opt,name=interval,proto3" json:"interval,omitempty"`
-	//optional fees to be used for auto tx execution limiting the amount of fees incurred
+	// optional fees to be used for auto tx execution limiting the amount of fees
+	// incurred
 	FeeFunds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,9,rep,name=fee_funds,json=feeFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fee_funds" yaml:"fee_funds"`
-	//optional array of dependent txs that should be executed before execution is allowed
+	// optional array of dependent txs that should be executed before execution is
+	// allowed
 	DependsOnTxIds []uint64 `protobuf:"varint,10,rep,packed,name=depends_on_tx_ids,json=dependsOnTxIds,proto3" json:"depends_on_tx_ids,omitempty"`
 }
 

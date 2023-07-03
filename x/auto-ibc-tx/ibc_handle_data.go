@@ -9,7 +9,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	msgregistry "github.com/trstlabs/trst/x/auto-ibc-tx/msg_registry"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )

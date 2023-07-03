@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	proto "github.com/cosmos/gogoproto/proto"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	proto "github.com/gogo/protobuf/proto"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
 )
 

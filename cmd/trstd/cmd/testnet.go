@@ -110,7 +110,7 @@ Booting up a network with these validator folders is intended to be used with Do
 or a similar setup where each node has a manually configurable IP address.
 Note, strict routability for addresses is turned off in the config file.
 Example:
-	trstd testnet init-files --v 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2 --keyring-backend test
+	trstd testnet init-files --v 4 --output-dir ./.testnets --keyring-backend test --chain-id test --starting-ip-address 192.168.10.2 
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)

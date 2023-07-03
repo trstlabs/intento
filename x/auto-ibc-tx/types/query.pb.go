@@ -8,8 +8,8 @@ import (
 	fmt "fmt"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -30,7 +30,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryInterchainAccountFromAddressRequest is the request type for the Query/InterchainAccountAddress RPC
+// QueryInterchainAccountFromAddressRequest is the request type for the
+// Query/InterchainAccountAddress RPC
 type QueryInterchainAccountFromAddressRequest struct {
 	Owner        string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	ConnectionId string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
@@ -71,7 +72,8 @@ func (m *QueryInterchainAccountFromAddressRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryInterchainAccountFromAddressRequest proto.InternalMessageInfo
 
-// QueryInterchainAccountFromAddressResponse the response type for the Query/InterchainAccountAddress RPC
+// QueryInterchainAccountFromAddressResponse the response type for the
+// Query/InterchainAccountAddress RPC
 type QueryInterchainAccountFromAddressResponse struct {
 	InterchainAccountAddress string `protobuf:"bytes,1,opt,name=interchain_account_address,json=interchainAccountAddress,proto3" json:"interchain_account_address,omitempty" yaml:"interchain_account_address"`
 }
@@ -268,7 +270,8 @@ func (m *QueryAutoTxsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAutoTxsResponse proto.InternalMessageInfo
 
-// QueryAutoTxsForOwnerRequest is the request type for the Query/AutoTxsForOwnerRequest RPC
+// QueryAutoTxsForOwnerRequest is the request type for the
+// Query/AutoTxsForOwnerRequest RPC
 type QueryAutoTxsForOwnerRequest struct {
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	// Pagination defines an optional pagination for the request.
@@ -308,7 +311,8 @@ func (m *QueryAutoTxsForOwnerRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAutoTxsForOwnerRequest proto.InternalMessageInfo
 
-// QueryAutoTxsForOwnerResponse the response type for the Query/AutoTxsForOwnerRequest RPC
+// QueryAutoTxsForOwnerResponse the response type for the
+// Query/AutoTxsForOwnerRequest RPC
 type QueryAutoTxsForOwnerResponse struct {
 	AutoTxInfos []AutoTxInfo `protobuf:"bytes,1,rep,name=auto_tx_infos,json=autoTxInfos,proto3" json:"auto_tx_infos"`
 	// Pagination defines the pagination in the response.
@@ -424,7 +428,8 @@ func (m *QueryParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
 
-// QueryAutoIbcUsageRequest is the request type for the Query/QueryAutoIbcUsageRequest RPC
+// QueryAutoIbcUsageRequest is the request type for the
+// Query/QueryAutoIbcUsageRequest RPC
 type QueryAutoTxIbcUsageRequest struct {
 	// Pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -463,7 +468,8 @@ func (m *QueryAutoTxIbcUsageRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAutoTxIbcUsageRequest proto.InternalMessageInfo
 
-// QueryAutoIbcUsageResponse the response type for the Query/QueryAutoIbcUsageResponse RPC
+// QueryAutoIbcUsageResponse the response type for the
+// Query/QueryAutoIbcUsageResponse RPC
 type QueryAutoTxIbcUsageResponse struct {
 	AutoTxIbcUsage []AutoTxIbcUsage `protobuf:"bytes,1,rep,name=auto_tx_ibc_usage,json=autoTxIbcUsage,proto3" json:"auto_tx_ibc_usage"`
 	// Pagination defines the pagination in the response.
@@ -591,13 +597,15 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// QueryInterchainAccountFromAddress returns the interchain account for given owner address on a given connection pair
+	// QueryInterchainAccountFromAddress returns the interchain account for given
+	// owner address on a given connection pair
 	InterchainAccountFromAddress(ctx context.Context, in *QueryInterchainAccountFromAddressRequest, opts ...grpc.CallOption) (*QueryInterchainAccountFromAddressResponse, error)
 	// AutoTx returns the auto-executing interchain account tx
 	AutoTx(ctx context.Context, in *QueryAutoTxRequest, opts ...grpc.CallOption) (*QueryAutoTxResponse, error)
 	// AutoTxs returns the all auto-executing interchain account messages
 	AutoTxs(ctx context.Context, in *QueryAutoTxsRequest, opts ...grpc.CallOption) (*QueryAutoTxsResponse, error)
-	// AutoTxsForOwner returns the auto-executing interchain account messages for given owner
+	// AutoTxsForOwner returns the auto-executing interchain account messages for
+	// given owner
 	AutoTxsForOwner(ctx context.Context, in *QueryAutoTxsForOwnerRequest, opts ...grpc.CallOption) (*QueryAutoTxsForOwnerResponse, error)
 	// Params returns the total set of AutoIbcTx parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
@@ -669,13 +677,15 @@ func (c *queryClient) AutoTxIbcTxUsage(ctx context.Context, in *QueryAutoTxIbcUs
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// QueryInterchainAccountFromAddress returns the interchain account for given owner address on a given connection pair
+	// QueryInterchainAccountFromAddress returns the interchain account for given
+	// owner address on a given connection pair
 	InterchainAccountFromAddress(context.Context, *QueryInterchainAccountFromAddressRequest) (*QueryInterchainAccountFromAddressResponse, error)
 	// AutoTx returns the auto-executing interchain account tx
 	AutoTx(context.Context, *QueryAutoTxRequest) (*QueryAutoTxResponse, error)
 	// AutoTxs returns the all auto-executing interchain account messages
 	AutoTxs(context.Context, *QueryAutoTxsRequest) (*QueryAutoTxsResponse, error)
-	// AutoTxsForOwner returns the auto-executing interchain account messages for given owner
+	// AutoTxsForOwner returns the auto-executing interchain account messages for
+	// given owner
 	AutoTxsForOwner(context.Context, *QueryAutoTxsForOwnerRequest) (*QueryAutoTxsForOwnerResponse, error)
 	// Params returns the total set of AutoIbcTx parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)

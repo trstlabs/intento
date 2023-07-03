@@ -9,11 +9,11 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/trstlabs/trst/x/auto-ibc-tx/types";
 
 message AutoTxIbcUsage {
-      string address = 1;
-      repeated AutoIbcTxAck txs = 2;
+  string address = 1;
+  repeated AutoIbcTxAck txs = 2;
 }
-  
+
 message AutoIbcTxAck {
-      cosmos.base.v1beta1.Coin coin = 1 [(gogoproto.nullable) = false];
-      string connection_id = 2;
+  cosmos.base.v1beta1.Coin coin = 1 [ (gogoproto.nullable) = false ];
+  string connection_id = 2;
 }

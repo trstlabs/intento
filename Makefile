@@ -18,7 +18,7 @@ SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 TM_VERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::') # grab everything after the space in "github.com/cometbft/cometbft v0.34.7"
 DOCKER := $(shell which docker)
 BUILDDIR ?= $(CURDIR)/build
-TEST_DOCKER_REPO=trstlabs/contrib-trsttest
+
 DOCKER_TAG ?= auto_tx_only
 
 GO_SYSTEM_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1-2)
@@ -381,30 +381,32 @@ update-swagger-docs: statik
 
 .PHONY: update-swagger-docs statik
 
-
 ###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.13.0
-protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
-
-proto-all: proto-format proto-lint proto-gen
+protoVer=0.11.0
+containerProtoImage=ghcr.io/cosmos/proto-builder:$(protoVer)
+containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
+containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@$(protoImage) sh ./scripts/protocgen.sh
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+		sh ./scripts/protocgen.sh; fi
+
+proto-format:
+	@echo "Formatting Protobuf files"
+	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace tendermintdev/docker-build-proto \
+		find ./proto -name "*.proto" -exec clang-format -i {} \;  
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
-	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
-
-proto-format:
-	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
+	@$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+		sh ./scripts/protoc-swagger-gen.sh; 
 
 proto-lint:
-	@$(protoImage) buf lint --error-format=json
+	@$(DOCKER_BUF) lint --error-format=json
 
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main

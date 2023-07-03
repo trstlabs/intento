@@ -13,15 +13,13 @@ option go_package = "github.com/trstlabs/trst/x/claim/types";
 service Query {
   rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest)
       returns (QueryModuleAccountBalanceResponse) {
-    option (google.api.http).get =
-        "/trst/claim/v1beta1/module_account_balance";
+    option (google.api.http).get = "/trst/claim/v1beta1/module_account_balance";
   }
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/trst/claim/v1beta1/params";
   }
   rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
-    option (google.api.http).get =
-        "/trst/claim/v1beta1/claim_record/{address}";
+    option (google.api.http).get = "/trst/claim/v1beta1/claim_record/{address}";
   }
   rpc ClaimableForAction(QueryClaimableForActionRequest)
       returns (QueryClaimableForActionResponse) {
