@@ -43,24 +43,26 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 
 		flexFee := calculateTimeBasedFlexFee(autoTx, isRecurring)
 		fee, err := k.DistributeCoins(ctx, autoTx, flexFee, isRecurring, req.Header.ProposerAddress)
+
+		k.RemoveFromAutoTxQueue(ctx, autoTx)
 		if err != nil {
 			logger.Error("auto_tx", "distribution err", err.Error())
 			addAutoTxHistory(&autoTx, timeOfBlock, fee, false, err)
 		} else {
 			err, executedLocally := k.SendAutoTx(ctx, autoTx)
 			addAutoTxHistory(&autoTx, timeOfBlock, fee, executedLocally, err)
+
+			// setting new ExecTime and adding a new entry into the queue based on interval
+			willRecur := isRecurring && (autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime) || autoTx.ExecTime.Add(autoTx.Interval) == autoTx.EndTime)
+			if willRecur {
+				fmt.Printf("auto-tx will recur: %v \n", autoTx.TxID)
+				autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
+				k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
+			}
+
+			k.SetAutoTxInfo(ctx, &autoTx)
 		}
 
-		k.RemoveFromAutoTxQueue(ctx, autoTx)
-		// updagting ExecTime and adding a new entry into the queue based on interval
-		willRecur := isRecurring && (autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime) || autoTx.ExecTime.Add(autoTx.Interval) == autoTx.EndTime)
-		if willRecur {
-			fmt.Printf("auto-tx will recur: %v \n", autoTx.TxID)
-			autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
-			k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
-		}
-
-		k.SetAutoTxInfo(ctx, &autoTx)
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeAutoTx,
