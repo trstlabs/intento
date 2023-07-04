@@ -2,12 +2,12 @@ package app
 
 import (
 	"github.com/cosmos/cosmos-sdk/std"
-	"github.com/trstlabs/trst/app/params"
+	appparams "github.com/trstlabs/trst/app/params"
 )
 
 // MakeEncodingConfig creates an EncodingConfig for testing
-func MakeEncodingConfig() params.EncodingConfig {
-	encodingConfig := params.MakeEncodingConfig()
+func MakeEncodingConfig() appparams.EncodingConfig {
+	encodingConfig := appparams.MakeEncodingConfig()
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)

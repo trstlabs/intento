@@ -56,6 +56,7 @@ func genApp(withGenesis bool, invCheckPeriod uint) (*app.TrstApp, app.GenesisSta
 		db,
 		nil,
 		true,
+		encCdc,
 		app.EmptyAppOptions{},
 	)
 

@@ -3,15 +3,12 @@ package keeper_test
 import (
 	"encoding/json"
 
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	app "github.com/trstlabs/trst/app"
-
-	// "github.com/trstlabs/trst/x/compute"
+	"github.com/trstlabs/trst/app"
 	"github.com/trstlabs/trst/x/mint/types"
 )
 
@@ -51,13 +48,13 @@ func setup(isCheckTx bool) *app.TrstApp {
 
 func genApp(withGenesis bool, invCheckPeriod uint) (*app.TrstApp, app.GenesisState) {
 	db := dbm.NewMemDB()
-
+	encCdc := app.MakeEncodingConfig()
 	TrstApp := app.NewTrstApp(
 		log.NewNopLogger(),
 		db,
 		nil,
 		true,
-
+		encCdc,
 		app.EmptyAppOptions{},
 		// compute.GetConfig(simapp.EmptyAppOptions{}),
 		// app.GetEnabledProposals(),

@@ -21,8 +21,6 @@ import (
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	appparams "github.com/trstlabs/trst/app/params"
-
-	//app "github.com/trstlabs/trst/app"
 	claimkeeper "github.com/trstlabs/trst/x/claim/keeper"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
 
@@ -50,12 +48,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
-	sdksigning "github.com/cosmos/cosmos-sdk/types/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -535,141 +530,6 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 	}
 
 	return ctx, keepers
-}
-
-/*
-// TestHandler returns a wasm handler for tests (to avoid circular imports)
-func TestHandler(k Keeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
-
-		switch msg := msg.(type) {
-		case *autoibctxtypes,:
-			return handleInstantiate(ctx, k, msg)
-
-		case *wasmTypes.MsgExecuteContract:
-			return handleExecute(ctx, k, msg)
-
-		default:
-			errMsg := fmt.Sprintf("unrecognized wasm message type: %T", msg)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
-		}
-	}
-}
-
-func PrepareInitSignedTx(t *testing.T, keeper Keeper, ctx sdk.Context, creator sdk.AccAddress, privKey crypto.PrivKey, encMsg []byte, codeID uint64, funds sdk.Coins) sdk.Context {
-	creatorAcc, err := ante.GetSignerAcc(ctx, keeper.accountKeeper, creator)
-	require.NoError(t, err)
-
-	initMsg := wasmTypes.MsgInstantiateContract{
-		Sender:     creator.String(),
-		CodeID:     codeID,
-		ContractId: "demo contract 1",
-		Msg:        encMsg,
-		Funds:      funds,
-	}
-	tx := NewTestTx(&initMsg, creatorAcc, privKey)
-
-	txBytes, err := tx.Marshal()
-	require.NoError(t, err)
-
-	return ctx.WithTxBytes(txBytes)
-}
-
-func PrepareExecSignedTx(t *testing.T, keeper Keeper, ctx sdk.Context, sender sdk.AccAddress, privKey crypto.PrivKey, encMsg []byte, contract sdk.AccAddress, funds sdk.Coins) sdk.Context {
-	creatorAcc, err := ante.GetSignerAcc(ctx, keeper.accountKeeper, sender)
-	require.NoError(t, err)
-
-	executeMsg := wasmTypes.MsgExecuteContract{
-		Sender:   sender.String(),
-		Contract: contract.String(),
-		Msg:      encMsg,
-		Funds:    funds,
-	}
-	tx := NewTestTx(&executeMsg, creatorAcc, privKey)
-
-	txBytes, err := tx.Marshal()
-	require.NoError(t, err)
-
-	return ctx.WithTxBytes(txBytes)
-} */
-
-func NewTestTx(msg sdk.Msg, creatorAcc authtypes.AccountI, privKey crypto.PrivKey) *sdktx.Tx {
-	return NewTestTxMultiple([]sdk.Msg{msg}, []authtypes.AccountI{creatorAcc}, []crypto.PrivKey{privKey})
-}
-
-func NewTestTxMultiple(msgs []sdk.Msg, creatorAccs []authtypes.AccountI, privKeys []crypto.PrivKey) *sdktx.Tx {
-	if len(msgs) != len(creatorAccs) || len(msgs) != len(privKeys) {
-		panic("length of `msgs` `creatorAccs` and `privKeys` must be the same")
-	}
-
-	// There's no need to pass values to `NewTxConfig` because they get ignored by `NewTxBuilder` anyways,
-	// and we just need the builder, which can not be created any other way, apparently.
-	txConfig := authtx.NewTxConfig(nil, authtx.DefaultSignModes)
-	signModeHandler := txConfig.SignModeHandler()
-	builder := txConfig.NewTxBuilder()
-	builder.SetFeeAmount(nil)
-	builder.SetGasLimit(0)
-	builder.SetTimeoutHeight(0)
-
-	err := builder.SetMsgs(msgs...)
-	if err != nil {
-		panic(err)
-	}
-
-	// This code is based on `cosmos-sdk/client/tx/tx.go::Sign()`
-	var sigs []sdksigning.SignatureV2
-	for _, creatorAcc := range creatorAccs {
-		sig := sdksigning.SignatureV2{
-			PubKey: creatorAcc.GetPubKey(),
-			Data: &sdksigning.SingleSignatureData{
-				SignMode:  sdksigning.SignMode_SIGN_MODE_DIRECT,
-				Signature: nil,
-			},
-			Sequence: creatorAcc.GetSequence(),
-		}
-		sigs = append(sigs, sig)
-	}
-	err = builder.SetSignatures(sigs...)
-	if err != nil {
-		panic(err)
-	}
-
-	sigs = []sdksigning.SignatureV2{}
-	for i, creatorAcc := range creatorAccs {
-		privKey := privKeys[i]
-		signerData := authsigning.SignerData{
-			ChainID:       TestConfig.ChainID,
-			AccountNumber: creatorAcc.GetAccountNumber(),
-			Sequence:      creatorAcc.GetSequence(),
-		}
-		bytesToSign, err := signModeHandler.GetSignBytes(sdksigning.SignMode_SIGN_MODE_DIRECT, signerData, builder.GetTx())
-
-		signBytes, err := privKey.Sign(bytesToSign)
-		if err != nil {
-			panic(err)
-		}
-		sig := sdksigning.SignatureV2{
-			PubKey: creatorAcc.GetPubKey(),
-			Data: &sdksigning.SingleSignatureData{
-				SignMode:  sdksigning.SignMode_SIGN_MODE_DIRECT,
-				Signature: signBytes,
-			},
-			Sequence: creatorAcc.GetSequence(),
-		}
-		sigs = append(sigs, sig)
-	}
-
-	err = builder.SetSignatures(sigs...)
-	if err != nil {
-		panic(err)
-	}
-
-	tx, ok := builder.(protoTxProvider)
-	if !ok {
-		panic("failed to unwrap tx builder to protobuf tx")
-	}
-	return tx.GetProtoTx()
 }
 
 func CreateFakeFundedAccount(ctx sdk.Context, am authkeeper.AccountKeeper, bk bankkeeper.Keeper, coins sdk.Coins) (sdk.AccAddress, crypto.PrivKey) {

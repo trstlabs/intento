@@ -114,7 +114,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
-
+	appparams "github.com/trstlabs/trst/app/params"
 	autoibctx "github.com/trstlabs/trst/x/auto-ibc-tx"
 	autoibctxkeeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
 	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
@@ -264,10 +264,10 @@ func NewTrstApp(
 	db dbm.DB,
 	traceStore io.Writer,
 	loadLatest bool,
+	encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *TrstApp {
-	encodingConfig := MakeEncodingConfig()
 
 	appCodec := encodingConfig.Codec
 	legacyAmino := encodingConfig.Amino

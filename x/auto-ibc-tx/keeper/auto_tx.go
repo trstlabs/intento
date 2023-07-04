@@ -108,7 +108,7 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 			for _, ev := range res.Events {
 				if ev.Type == distrtypes.EventTypeWithdrawRewards {
 					for _, attr := range ev.Attributes {
-						fmt.Printf("event %v\n", string(attr.Key))
+						// fmt.Printf("event %v\n", string(attr.Key))
 						if string(attr.Key) == distrtypes.AttributeKeyValidator {
 							validator = string(attr.Value)
 						}
@@ -407,7 +407,7 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx types.AutoTxInfo) bool 
 		k.RemoveFromAutoTxQueue(ctx, autoTx)
 		willRecur := autoTx.ExecTime.Before(autoTx.EndTime) && autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime)
 		if willRecur {
-			fmt.Printf("auto-tx will recur, txID: %v \n", autoTx.TxID)
+			// fmt.Printf("auto-tx will recur, txID: %v \n", autoTx.TxID)
 			// adding next execTime and a new entry into the queue based on interval
 			k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime.Add(autoTx.Interval))
 		}
