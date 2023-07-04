@@ -61,8 +61,8 @@ func getRegisterAccountCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsVersion)
-	cmd.Flags().AddFlagSet(fsConnectionPair)
+	cmd.Flags().String(flagVersion, "", "IBC Version")
+	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain")
 	_ = cmd.MarkFlagRequired(flagConnectionID)
 
 	flags.AddTxFlagsToCmd(cmd)
@@ -109,7 +109,7 @@ func getSubmitTxCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsConnectionPair)
+	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain, optional")
 
 	_ = cmd.MarkFlagRequired(flagConnectionID)
 
@@ -178,13 +178,13 @@ func getSubmitAutoTxCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsConnectionPair)
 	cmd.Flags().String(flagLabel, "", "A custom label for the AutoTx e.g. AutoTransfer, UpdateContractParams, optional")
 	cmd.Flags().String(flagDuration, "", "A custom duration for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
 	cmd.Flags().String(flagInterval, "", "A custom interval for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
 	cmd.Flags().String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
-	cmd.Flags().Uint64(flagStartAt, 0, "A custom start time for the AutoTx self-execution, in UNIX time")
+	cmd.Flags().Uint64(flagStartAt, 0, "A custom start time in UNIX time, optional")
 	cmd.Flags().StringArray(flagDependsOn, []string{}, "array of auto-tx-ids this auto-tx depends on e.g. 5, 6")
+	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain, optional")
 	// cmd.Flags().Uint64(flagRetries, 0, "Maximum amount of retries to make the tx succeed, optional")
 
 	//_ = cmd.MarkFlagRequired(flagConnectionID)
@@ -252,13 +252,14 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	cmd.Flags().AddFlagSet(fsVersion)
-	cmd.Flags().AddFlagSet(fsConnectionPair)
+
 	cmd.Flags().String(flagLabel, "", "A custom label for the AutoTx e.g. AutoTransfer, UpdateContractParams, optional")
 	cmd.Flags().String(flagDuration, "", "A custom duration for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
 	cmd.Flags().String(flagInterval, "", "A custom interval for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
-	cmd.Flags().String(flagStartAt, "0", "A custom start time for the AutoTx self-execution, in UNIX time")
+	cmd.Flags().String(flagStartAt, "0", "A custom start time in UNIX time, optional")
 	cmd.Flags().String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
+	cmd.Flags().String(flagVersion, "", "IBC Version, optional")
+	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain, optional")
 
 	cmd.Flags().StringArray(flagDependsOn, []string{}, "array of auto-tx-ids this auto-tx depends on e.g. 5, 6")
 	// cmd.Flags().Uint64(flagRetries, 0, "Maximum amount of retries to make the tx succeed, optional")
@@ -336,15 +337,14 @@ func getUpdateAutoTxCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-	//cmd.Flags().AddFlagSet(fsVersion)
-	cmd.Flags().AddFlagSet(fsConnectionPair)
-	cmd.Flags().String(flagLabel, "", "A custom label for the AutoTx e.g. AutoTransfer, UpdateContractParams, optional")
-	cmd.Flags().String(flagEndTime, "", "A custom end time for the AutoTx self-execution, in UNIX time")
-	cmd.Flags().String(flagInterval, "", "A custom interval for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
-	cmd.Flags().String(flagStartAt, "0", "A custom start time for the AutoTx self-execution, in UNIX time")
-	cmd.Flags().String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
 
+	cmd.Flags().String(flagLabel, "", "A custom label for the AutoTx e.g. AutoTransfer, UpdateContractParams, optional")
+	cmd.Flags().String(flagEndTime, "", "A custom end time in UNIX time")
+	cmd.Flags().String(flagInterval, "", "A custom interval for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
+	cmd.Flags().String(flagStartAt, "0", "A custom start time in UNIX time, optional")
+	cmd.Flags().String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
 	cmd.Flags().StringArray(flagDependsOn, []string{}, "array of auto-tx-ids this auto-tx depends on e.g. 5, 6")
+	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain, optional")
 	// cmd.Flags().Uint64(flagRetries, 0, "Maximum amount of retries to make the tx succeed, optional")
 
 	//_ = cmd.MarkFlagRequired(flagConnectionID)
