@@ -1,6 +1,7 @@
 package autoibctx
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
@@ -73,8 +74,57 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, int, error) {
 	}
 
 	if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-		return "", -1, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal response message: %s", err.Error())
+		return "", -1, errorsmod.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal response message: %s", err.Error())
 	}
 
 	return msgResponse.String(), rewardType, nil
+}
+
+func getMsgRewardType(ctx sdk.Context, typeUrl string) int {
+	var rewardType int
+
+	switch typeUrl {
+
+	// authz
+	case sdk.MsgTypeURL(&authztypes.MsgExec{}):
+		rewardType = types.KeyAutoTxIncentiveForAuthzTx
+
+	// sdk
+	case sdk.MsgTypeURL(&banktypes.MsgSend{}):
+		rewardType = types.KeyAutoTxIncentiveForSDKTx
+
+	case sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}):
+		rewardType = types.KeyAutoTxIncentiveForSDKTx
+
+	case sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}):
+		rewardType = types.KeyAutoTxIncentiveForSDKTx
+
+	case sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}):
+		rewardType = types.KeyAutoTxIncentiveForSDKTx
+
+	// wasm
+	case sdk.MsgTypeURL(&msgregistry.MsgExecuteContract{}):
+		rewardType = types.KeyAutoTxIncentiveForWasmTx
+
+	case sdk.MsgTypeURL(&msgregistry.MsgInstantiateContract{}):
+		rewardType = types.KeyAutoTxIncentiveForWasmTx
+
+	// osmo
+	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountIn{}):
+		rewardType = types.KeyAutoTxIncentiveForOsmoTx
+
+	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountOut{}):
+		rewardType = types.KeyAutoTxIncentiveForOsmoTx
+
+	case sdk.MsgTypeURL(&msgregistry.MsgJoinPool{}):
+		rewardType = types.KeyAutoTxIncentiveForOsmoTx
+
+	case sdk.MsgTypeURL(&msgregistry.MsgExitPool{}):
+		rewardType = types.KeyAutoTxIncentiveForOsmoTx
+
+	default:
+		return -1
+	}
+
+	return rewardType
 }
