@@ -133,7 +133,7 @@ func (im IBCMiddleware) OnRecvPacket(
 ) ibcexported.Acknowledgement {
 
 	ack := onRecvPacketOverride(im, ctx, packet, relayer)
-	fmt.Printf("ack %v\n", ack.Acknowledgement())
+	// fmt.Printf("ack %v\n", ack.Acknowledgement())
 	//ack := im.app.OnRecvPacket(ctx, packet, relayer)
 
 	return ack

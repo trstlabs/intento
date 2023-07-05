@@ -1,8 +1,6 @@
 package autoibctx
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
@@ -15,7 +13,7 @@ import (
 )
 
 func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, int, error) {
-	fmt.Printf("handling data for typeurl: %v and data: %v\n", msgData.MsgType, msgData.Data)
+	//fmt.Printf("handling data for typeurl: %v and data: %v\n", msgData.MsgType, msgData.Data)
 
 	var msgResponse proto.Message
 	var rewardType int

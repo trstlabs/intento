@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -16,34 +17,43 @@ import (
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
 
-func TestSendLocalTx(t *testing.T) {
+func newFakeMsgWithdrawDelegatorReward(delegator sdk.AccAddress, validator stakingtypes.Validator) *distrtypes.MsgWithdrawDelegatorReward {
+	msgWithdrawDelegatorReward := &distrtypes.MsgWithdrawDelegatorReward{
+		DelegatorAddress: delegator.String(),
+		ValidatorAddress: validator.GetOperator().String(),
+	}
+	return msgWithdrawDelegatorReward
+}
 
+func newFakeMsgSend(fromAddr sdk.AccAddress, toAddr sdk.AccAddress) *banktypes.MsgSend {
+	msgSend := &banktypes.MsgSend{
+		FromAddress: fromAddr.String(),
+		ToAddress:   toAddr.String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+	}
+	return msgSend
+}
+
+func TestSendLocalTx(t *testing.T) {
 	ctx, keepers, addr1, _, addr2, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
 
 	autoTxAddr, _ := CreateFakeFundedAccount(ctx, keepers.accountKeeper, keepers.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 
 	types.Denom = "stake"
 
-	localMsg := &banktypes.MsgSend{
-		FromAddress: addr2.String(),
-		ToAddress:   addr1.String(),
-		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
-	}
+	localMsg := newFakeMsgSend(addr1, addr2)
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 	require.NoError(t, err)
 
-	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: anys, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "", ConnectionID: "",
-	}
+	autoTxInfo := createLocalAutoTxInfo(addr1, autoTxAddr)
+	autoTxInfo.Msgs = anys
 
 	err, executedLocally := keepers.SendAutoTx(ctx, autoTxInfo)
 	require.NoError(t, err)
 	require.True(t, executedLocally)
-
 }
 
 func TestSendLocalTxAutoCompound(t *testing.T) {
-
 	ctx, keepers, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
 
 	autoTxAddr, _ := CreateFakeFundedAccount(ctx, keepers.accountKeeper, keepers.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
@@ -52,12 +62,13 @@ func TestSendLocalTxAutoCompound(t *testing.T) {
 
 	val := keepers.stakingKeeper.GetAllValidators(ctx)[0]
 	require.NotEmpty(t, val)
+
 	val.Tokens = sdk.NewInt(5000)
 	val.DelegatorShares = sdk.NewDecFromInt(val.Tokens)
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	keepers.stakingKeeper.SetValidator(ctx, val)
 
-	//setting baseline
+	// Set baseline
 	keepers.distrKeeper.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 2, distrtypes.ValidatorHistoricalRewards{
 		CumulativeRewardRatio: sdk.DecCoins{},
 		ReferenceCount:        2,
@@ -78,7 +89,7 @@ func TestSendLocalTxAutoCompound(t *testing.T) {
 	decCoins := sdk.NewDecCoins(sdk.NewDecCoin("stake", sdk.NewInt(6666)))
 	keepers.distrKeeper.AllocateTokensToValidator(ctx, val, decCoins)
 	keepers.distrKeeper.SetValidatorCurrentRewards(ctx, val.GetOperator(), distrtypes.NewValidatorCurrentRewards(decCoins, 3))
-	/* endingPeriod := */ keepers.distrKeeper.IncrementValidatorPeriod(ctx, val)
+	keepers.distrKeeper.IncrementValidatorPeriod(ctx, val)
 	ctx = nextStakingBlocks(ctx, keepers.stakingKeeper, 1)
 
 	keepers.distrKeeper.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 3, distrtypes.ValidatorHistoricalRewards{
@@ -97,30 +108,35 @@ func TestSendLocalTxAutoCompound(t *testing.T) {
 		Period:  4,
 	})
 
-	autoTxInfo := createLocalAutoTxInfo(delAddr, val, autoTxAddr)
+	autoTxInfo := createLocalAutoTxInfo(delAddr, autoTxAddr)
+	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
+	autoTxInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
+
 	err, executedLocally := keepers.SendAutoTx(ctx, autoTxInfo)
 	require.NoError(t, err)
 	require.True(t, executedLocally)
 
 	delegations := keepers.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
 	require.Greater(t, delegations[0].Shares.TruncateInt64(), sdk.NewDec(77).TruncateInt64())
-
 }
 
-func createLocalAutoTxInfo(addr2 sdk.AccAddress, val stakingtypes.Validator, autoTxAddr sdk.AccAddress) types.AutoTxInfo {
-	localMsg := &distrtypes.MsgWithdrawDelegatorReward{
-		DelegatorAddress: addr2.String(),
-		ValidatorAddress: val.GetOperator().String(),
-	}
-	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
+func createLocalAutoTxInfo(ownerAddr sdk.AccAddress, autoTxAddr sdk.AccAddress) types.AutoTxInfo {
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: addr2.String(), FeeAddress: autoTxAddr.String(), Msgs: anys, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "", ConnectionID: "",
+		TxID:         0,
+		Owner:        ownerAddr.String(),
+		FeeAddress:   autoTxAddr.String(),
+		Msgs:         []*cdctypes.Any{},
+		Interval:     time.Second * 20,
+		StartTime:    time.Now().Add(time.Hour * -1),
+		EndTime:      time.Now().Add(time.Second * 20),
+		PortID:       "",
+		ConnectionID: "",
 	}
 	return autoTxInfo
 }
 
-// this will commit the current set, update the block height and set historic info
-// basically, letting blocks pass
+// This will commit the current set, update the block height, and set historic info
+// Basically, it lets blocks pass
 func nextStakingBlocks(ctx sdk.Context, stakingKeeper stakingkeeper.Keeper, count int) sdk.Context {
 	// for i := 0; i < count; i++ {
 	staking.EndBlocker(ctx, &stakingKeeper)
@@ -128,5 +144,4 @@ func nextStakingBlocks(ctx sdk.Context, stakingKeeper stakingkeeper.Keeper, coun
 	staking.BeginBlocker(ctx, &stakingKeeper)
 	return ctx
 	// }
-
 }

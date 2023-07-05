@@ -4,8 +4,6 @@ import (
 
 	//"log"
 
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -73,8 +71,8 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	}
 
 	proposerAddr := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
-	fmt.Printf("allocating flexFeeCoin :%s \n", flexFeeCoin.Amount)
-	fmt.Printf("proposer :%s \n", proposer.String())
+	//fmt.Printf("allocating flexFeeCoin :%s \n", flexFeeCoin.Amount)
+	//fmt.Printf("proposer :%s \n", proposer.String())
 
 	k.Logger(ctx).Debug("auto_tx_flex_fee", "flexFeeCoin", flexFeeCoin.Amount, "to_proposer", proposer.String())
 

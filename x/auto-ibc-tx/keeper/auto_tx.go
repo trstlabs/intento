@@ -56,6 +56,7 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (error,
 		err := handleLocalAutoTx(k, ctx, txMsgs, autoTxInfo)
 		return err, err == nil
 	}
+
 	//if message contains ICA_ADDR, the ICA address is retreived and parsed
 	txMsgs, err := k.parseAndSetMsgs(ctx, autoTxInfo)
 	if err != nil {
@@ -230,21 +231,21 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 }
 
 func (k Keeper) calculateTimeAndInsertQueue(ctx sdk.Context, startTime time.Time, duration time.Duration, autoTxID uint64, interval time.Duration) (time.Time, time.Time) {
-	endTime, execTime := calculateEndAndExecTimes(startTime, duration, interval)
+	endTime, execTime := calculateEndAndExecTimes(ctx, startTime, duration, interval)
 	k.InsertAutoTxQueue(ctx, autoTxID, execTime)
 
 	return endTime, execTime
 }
 
-func calculateEndAndExecTimes(startTime time.Time, duration time.Duration, interval time.Duration) (time.Time, time.Time) {
+func calculateEndAndExecTimes(ctx sdk.Context, startTime time.Time, duration time.Duration, interval time.Duration) (time.Time, time.Time) {
 	endTime := startTime.Add(duration)
-	execTime := calculateExecTime(duration, interval, startTime)
+	execTime := calculateExecTime(ctx, duration, interval, startTime)
 
 	return endTime, execTime
 }
 
-func calculateExecTime(duration, interval time.Duration, startTime time.Time) time.Time {
-	if startTime.After(time.Now().Add(time.Second * 30)) {
+func calculateExecTime(ctx sdk.Context, duration, interval time.Duration, startTime time.Time) time.Time {
+	if startTime.After(ctx.BlockTime()) {
 		return startTime
 	}
 	if interval != 0 {
@@ -423,13 +424,22 @@ func (k Keeper) getTmpAutoTxID(ctx sdk.Context, portID string, seq uint64) uint6
 
 	return types.GetIDFromBytes(autoTxIDBz)
 }
+
 func (k Keeper) setTmpAutoTxID(ctx sdk.Context, autoTxID uint64, portID string, seq uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(append((append(types.TmpAutoTxIDLatestTX, []byte(portID)...)), types.GetBytesForUint(seq)...), types.GetBytesForUint(autoTxID))
 }
 
 func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (protoMsgs []proto.Message, err error) {
+	if len(autoTxInfo.AutoTxHistory) != 0 {
+		for _, msg := range autoTxInfo.Msgs {
+			protoMsgs = append(protoMsgs, msg)
+		}
+		return protoMsgs, nil
+	}
+
 	var txMsgs []sdk.Msg
+	var parsedIcaAddr bool
 
 	for _, msg := range autoTxInfo.Msgs {
 		var txMsg sdk.Msg
@@ -442,10 +452,13 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (p
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal %s message", msg)
 		}
+
 		msgJSONString := string(msgJSON)
 		icaAddrToParse := "ICA_ADDR"
 		index := strings.Index(msgJSONString, icaAddrToParse)
 		if index == -1 {
+			protoMsgs = append(protoMsgs, msg)
+			txMsgs = append(txMsgs, txMsg)
 			continue
 		}
 
@@ -456,22 +469,27 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (p
 
 		// Replace the text "ICA_ADDR" in the JSON string
 		msgJSONString = strings.ReplaceAll(msgJSONString, icaAddrToParse, ica)
-		// Unmarshal the modified JSON string back into a message
+		// Unmarshal the modified JSON string back into a proto message
 		var updatedMsg sdk.Msg
 		err = k.cdc.UnmarshalInterfaceJSON([]byte(msgJSONString), &updatedMsg)
 		if err != nil {
 			return nil, err
 		}
-		protoMsgs = append(protoMsgs, updatedMsg)
+
+		protoMsgs = append(protoMsgs, msg)
 		txMsgs = append(txMsgs, updatedMsg)
+		parsedIcaAddr = true
+
 	}
 
-	anys, err := types.PackTxMsgAnys(txMsgs)
-	if err != nil {
-		return nil, err
+	if parsedIcaAddr {
+		anys, err := types.PackTxMsgAnys(txMsgs)
+		if err != nil {
+			return nil, err
+		}
+		autoTxInfo.Msgs = anys
+		k.SetAutoTxInfo(ctx, &autoTxInfo)
 	}
-	autoTxInfo.Msgs = anys
-	k.SetAutoTxInfo(ctx, &autoTxInfo)
 
 	return protoMsgs, nil
 }

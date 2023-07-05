@@ -166,7 +166,7 @@ func (im IBCModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
-	fmt.Println("TIMED OUT, FAILED ATTEMPT")
+	// fmt.Println("TIMED OUT, FAILED ATTEMPT")
 	//set result in auto-tx history
 	err := im.keeper.SetAutoTxOnTimeout(ctx, packet.SourcePort, packet.Sequence)
 	if err != nil {
