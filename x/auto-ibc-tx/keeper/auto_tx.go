@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +15,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 
 	"github.com/cometbft/cometbft/crypto"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
@@ -71,18 +73,27 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (error,
 		Data: data,
 	}
 
-	timeoutTimestamp := ctx.BlockTime().Add(time.Minute).UnixNano()
+	relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
 	//to ensure timeout does not result in channel closing
 	if autoTxInfo.Interval > time.Minute*2 {
-		timeoutTimestamp = ctx.BlockTime().Add(autoTxInfo.Interval + time.Minute).UnixNano()
+		relativeTimeoutTimestamp = uint64((autoTxInfo.Interval + time.Minute).Nanoseconds())
 	}
 
-	sequence, err := k.icaControllerKeeper.SendTx(ctx, nil, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
+	icaMsg := icacontrollertypes.NewMsgSendTx(autoTxInfo.Owner, autoTxInfo.ConnectionID, relativeTimeoutTimestamp, packetData)
+
+	// sequence, err := k.icaControllerKeeper.SendTx(ctx, nil, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
+	// if err != nil {
+	// 	return err, false
+	// }
+	icaHandler := k.msgRouter.Handler(icaMsg)
+	res, err := icaHandler(ctx, icaMsg)
 	if err != nil {
 		return err, false
 	}
 
-	k.setTmpAutoTxID(ctx, autoTxInfo.TxID, autoTxInfo.PortID, sequence)
+	sendTxResponse := icacontrollertypes.MsgSendTxResponse{}
+	k.cdc.UnpackAny(res.MsgResponses[0], sendTxResponse)
+	k.setTmpAutoTxID(ctx, autoTxInfo.TxID, autoTxInfo.PortID, sendTxResponse.Sequence)
 	return nil, false
 }
 
@@ -94,9 +105,10 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 		handler := k.msgRouter.Handler(msg)
 		for _, acct := range msg.GetSigners() {
 			if acct.String() != autoTxInfo.Owner {
-				return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "owner doesn't have permission to send this message")
+				return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "owner doesn't have permission to send this message")
 			}
 		}
+
 		res, err := handler(cacheCtx, msg)
 		if err != nil {
 			return err
@@ -177,13 +189,13 @@ func (k Keeper) createFeeAccount(ctx sdk.Context, txID uint64, owner sdk.AccAddr
 	autoTxAddress := k.generateAutoTxFeeAddress(ctx, txID)
 	existingAcct := k.accountKeeper.GetAccount(ctx, autoTxAddress)
 	if existingAcct != nil {
-		return nil, sdkerrors.Wrap(types.ErrAccountExists, existingAcct.GetAddress().String())
+		return nil, errorsmod.Wrap(types.ErrAccountExists, existingAcct.GetAddress().String())
 	}
 
 	// deposit initial autoTx funds
 	if !feeFunds.IsZero() && !feeFunds[0].Amount.IsZero() {
 		if k.bankKeeper.BlockedAddr(owner) {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "blocked address can not be used")
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "blocked address can not be used")
 		}
 		sdkerr := k.bankKeeper.SendCoins(ctx, owner, autoTxAddress, feeFunds)
 		if sdkerr != nil {
@@ -269,7 +281,7 @@ func (k Keeper) peekAutoIncrementID(ctx sdk.Context, lastIDKey []byte) uint64 {
 func (k Keeper) importAutoIncrementID(ctx sdk.Context, lastIDKey []byte, val uint64) error {
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(lastIDKey) {
-		return sdkerrors.Wrapf(types.ErrDuplicate, "autoincrement id: %s", string(lastIDKey))
+		return errorsmod.Wrapf(types.ErrDuplicate, "autoincrement id: %s", string(lastIDKey))
 	}
 	bz := sdk.Uint64ToBigEndian(val)
 	store.Set(lastIDKey, bz)
@@ -281,7 +293,7 @@ func (k Keeper) importAutoTxInfo(ctx sdk.Context, autoTxId uint64, autoTxInfo ty
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetAutoTxKey(autoTxId)
 	if store.Has(key) {
-		return sdkerrors.Wrapf(types.ErrDuplicate, "duplicate code: %d", autoTxId)
+		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate code: %d", autoTxId)
 	}
 	// 0x01 | autoTxId (uint64) -> autoTxInfo
 	store.Set(key, k.cdc.MustMarshal(&autoTxInfo))
@@ -356,7 +368,7 @@ func (k Keeper) SetAutoTxOnTimeout(ctx sdk.Context, sourcePort string, seq uint6
 		return nil
 	}
 
-	k.Logger(ctx).Debug("auto_tx_timeout", "id", id)
+	k.Logger(ctx).Debug("auto_tx packet timed out", "auto_tx_id", id)
 
 	txInfo := k.GetAutoTxInfo(ctx, id)
 
@@ -464,7 +476,7 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (p
 
 		ica, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, autoTxInfo.ConnectionID, autoTxInfo.PortID)
 		if !found {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrKeyNotFound, "ICA address not found")
+			return nil, errorsmod.Wrapf(sdkerrors.ErrKeyNotFound, "ICA address not found")
 		}
 
 		// Replace the text "ICA_ADDR" in the JSON string
