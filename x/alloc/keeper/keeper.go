@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -120,6 +121,6 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 
 // GetProportions gets the balance of the `MintedDenom` from minted coins
 // and returns coins according to the `AllocationRatio`
-func (k Keeper) GetProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
+func (k Keeper) GetProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdkmath.LegacyDec) sdk.Coin {
 	return sdk.NewCoin(mintedCoin.Denom, sdk.NewDecFromInt(mintedCoin.Amount).Mul(ratio).TruncateInt())
 }

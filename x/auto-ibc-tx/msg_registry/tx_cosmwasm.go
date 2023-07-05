@@ -1,6 +1,7 @@
 package msg_registry
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -20,14 +21,14 @@ func (msg MsgExecuteContract) GetSigners() []sdk.AccAddress {
 
 func (msg MsgExecuteContract) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdkerrors.Wrap(err, "sender")
+		return errorsmod.Wrap(err, "sender")
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Contract); err != nil {
-		return sdkerrors.Wrap(err, "contract")
+		return errorsmod.Wrap(err, "contract")
 	}
 
 	if !msg.Funds.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "sentFunds")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "sentFunds")
 	}
 
 	return nil
@@ -35,15 +36,15 @@ func (msg MsgExecuteContract) ValidateBasic() error {
 
 func (msg MsgInstantiateContract) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdkerrors.Wrap(err, "sender")
+		return errorsmod.Wrap(err, "sender")
 	}
 
 	if msg.CodeID == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "code id is required")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "code id is required")
 	}
 
 	// if err := ValidateLabel(msg.Label); err != nil {
-	// 	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "label is required")
+	// 	return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "label is required")
 	// }
 
 	if !msg.Funds.IsValid() {
@@ -52,11 +53,11 @@ func (msg MsgInstantiateContract) ValidateBasic() error {
 
 	if len(msg.Admin) != 0 {
 		if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
-			return sdkerrors.Wrap(err, "admin")
+			return errorsmod.Wrap(err, "admin")
 		}
 	}
 	// if err := msg.Msg.ValidateBasic(); err != nil {
-	// 	return sdkerrors.Wrap(err, "payload msg")
+	// 	return errorsmod.Wrap(err, "payload msg")
 	// }
 	return nil
 }
@@ -71,15 +72,15 @@ func (msg MsgInstantiateContract) GetSigners() []sdk.AccAddress {
 
 func (msg MsgInstantiateContract2) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
-		return sdkerrors.Wrap(err, "sender")
+		return errorsmod.Wrap(err, "sender")
 	}
 
 	if msg.CodeID == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "code id is required")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "code id is required")
 	}
 
 	// if err := ValidateLabel(msg.Label); err != nil {
-	// 	return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "label is required")
+	// 	return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "label is required")
 	// }
 
 	if !msg.Funds.IsValid() {
@@ -88,11 +89,11 @@ func (msg MsgInstantiateContract2) ValidateBasic() error {
 
 	if len(msg.Admin) != 0 {
 		if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
-			return sdkerrors.Wrap(err, "admin")
+			return errorsmod.Wrap(err, "admin")
 		}
 	}
 	// if err := msg.Msg.ValidateBasic(); err != nil {
-	// 	return sdkerrors.Wrap(err, "payload msg")
+	// 	return errorsmod.Wrap(err, "payload msg")
 	// }
 	return nil
 }

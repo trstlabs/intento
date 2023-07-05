@@ -6,6 +6,7 @@ import (
 
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -88,7 +89,7 @@ func addAutoTxHistory(autoTx *types.AutoTxInfo, actualExecTime time.Time, execFe
 	autoTx.AutoTxHistory = append(autoTx.AutoTxHistory, &historyEntry)
 }
 
-func calculateTimeBasedFlexFee(autoTx types.AutoTxInfo, isRecurring bool) sdk.Int {
+func calculateTimeBasedFlexFee(autoTx types.AutoTxInfo, isRecurring bool) sdkmath.Int {
 	if len(autoTx.AutoTxHistory) != 0 {
 		prevEntry := autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].ActualExecTime
 		period := (autoTx.ExecTime.Sub(prevEntry))

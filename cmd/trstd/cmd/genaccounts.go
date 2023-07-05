@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -18,12 +17,6 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/spf13/cobra"
 	claimtypes "github.com/trstlabs/trst/x/claim/types"
-)
-
-const (
-	flagVestingStart = "vesting-start-time"
-	flagVestingEnd   = "vesting-end-time"
-	flagVestingAmt   = "vesting-amount"
 )
 
 func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command {
@@ -71,11 +64,10 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				return err
 			}
 			defer snapshotJSON.Close()
-			byteValue, _ := ioutil.ReadAll(snapshotJSON)
-			snapshot := Snapshot{}
 
-			json.Unmarshal(byteValue, &snapshot)
-			if err != nil {
+			var snapshot Snapshot
+			decoder := json.NewDecoder(snapshotJSON)
+			if err := decoder.Decode(&snapshot); err != nil {
 				return err
 			}
 
@@ -86,10 +78,10 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				return err
 			}
 			defer trstJSON.Close()
-			byteValue2, _ := ioutil.ReadAll(trstJSON)
+
 			var trstAmts map[string]int64
-			json.Unmarshal(byteValue2, &trstAmts)
-			if err != nil {
+			decoder2 := json.NewDecoder(trstJSON)
+			if err := decoder2.Decode(&trstAmts); err != nil {
 				return err
 			}
 
@@ -123,7 +115,7 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 			// figure out normalizationFactor to normalize snapshot balances to desired airdrop supply
 			normalizationFactor := sdk.NewDecFromInt(genesisParams.AirdropSupply).QuoInt(snapshot.TotalTrstAirdropAmount)
 
-			fmt.Printf("total snapshot accounts: %s\n", len(snapshot.Accounts))
+			fmt.Printf("total snapshot accounts: %v\n", len(snapshot.Accounts))
 			fmt.Printf("normalization factor: %s\n", normalizationFactor)
 			fmt.Printf("snapshot total supply: %s\n", snapshot.TotalTrstAirdropAmount)
 
@@ -262,7 +254,7 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 
 			byteIBCTransfer, err := appState[ibctransfertypes.ModuleName].MarshalJSON()
 			if err != nil {
-				return fmt.Errorf("Error marshal ibc transfer: %w", err)
+				return fmt.Errorf("error marshal ibc transfer: %w", err)
 			}
 
 			// claim module genesis
@@ -279,7 +271,7 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 			var ibcGenState ibctransfertypes.GenesisState
 			err = ibctransfertypes.ModuleCdc.UnmarshalJSON(byteIBCTransfer, &ibcGenState)
 			if err != nil {
-				return fmt.Errorf("Error unmarshal ibc transfer: %w", err)
+				return fmt.Errorf("error unmarshal ibc transfer: %w", err)
 			}
 			ibcGenState.Params = ibctransfertypes.NewParams(false, false)
 			ibcGenStateBz, err := clientCtx.Codec.MarshalJSON(&ibcGenState)

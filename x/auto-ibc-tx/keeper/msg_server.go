@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
@@ -66,7 +67,7 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 
 	msgOwner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	portID := ""
 	if msg.ConnectionId != "" {
@@ -88,7 +89,7 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 	if msg.Interval != "" {
 		interval, err = time.ParseDuration(msg.Interval)
 		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}
 	}
 
@@ -99,28 +100,28 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 			return nil, err
 		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
 	}
 
 	p := k.GetParams(ctx)
 	if interval != 0 && (interval < p.MinAutoTxInterval || interval > duration) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinAutoTxInterval, duration)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinAutoTxInterval, duration)
 	}
 	if duration != 0 {
 		if duration > p.MaxAutoTxDuration {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxAutoTxDuration)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxAutoTxDuration)
 		} else if duration < p.MinAutoTxDuration {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinAutoTxDuration)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinAutoTxDuration)
 		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxAutoTxDuration)) {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
 	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoTxIDs and have less than 10 messages")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoTxIDs and have less than 10 messages")
 	}
 	// if msg.Retries > 5 {
-	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "can retry for a maximum of 5 times")
+	// 	return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can retry for a maximum of 5 times")
 	// }
 
 	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, msg.DependsOnTxIds)
@@ -157,7 +158,7 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 	if msg.Interval != "" {
 		interval, err = time.ParseDuration(msg.Interval)
 		if err != nil {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}
 	}
 
@@ -168,33 +169,33 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 			return nil, err
 		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
 	}
 
 	msgOwner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	p := k.GetParams(ctx)
 	if interval != 0 && (interval < p.MinAutoTxInterval || interval > duration) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinAutoTxInterval, duration)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinAutoTxInterval, duration)
 	}
 	if duration != 0 {
 		if duration > p.MaxAutoTxDuration {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxAutoTxDuration)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxAutoTxDuration)
 		} else if duration < p.MinAutoTxDuration {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinAutoTxDuration)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinAutoTxDuration)
 		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxAutoTxDuration)) {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before current time and maximum duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before current time and maximum duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
 	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoTxIDs and have less than 10 messages")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoTxIDs and have less than 10 messages")
 	}
 	// if msg.Retries > 5 {
-	// 	return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "can retry for a maximum of 5 times")
+	// 	return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can retry for a maximum of 5 times")
 	// }
 
 	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, msg.DependsOnTxIds)
@@ -211,7 +212,7 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 
 	autoTx, err := k.TryGetAutoTxInfo(ctx, msg.TxId)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	if autoTx.Owner != msg.Owner {
 		return nil, sdkerrors.ErrInvalidAddress
@@ -245,11 +246,11 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 	if msg.Interval != "" {
 		interval, err := time.ParseDuration(msg.Interval)
 		if err != nil {
-			return nil, sdkerrors.Wrap(types.ErrUpdateAutoTx, err.Error())
+			return nil, errorsmod.Wrap(types.ErrUpdateAutoTx, err.Error())
 		}
 
 		if interval != 0 && interval < p.MinAutoTxInterval || interval > autoTx.EndTime.Sub(autoTx.StartTime) {
-			return nil, sdkerrors.Wrapf(types.ErrUpdateAutoTx, "interval: %s  must be longer than minimum interval:  %s, and execution should happen before end time", interval, p.MinAutoTxInterval)
+			return nil, errorsmod.Wrapf(types.ErrUpdateAutoTx, "interval: %s  must be longer than minimum interval:  %s, and execution should happen before end time", interval, p.MinAutoTxInterval)
 		}
 		autoTx.Interval = interval
 		//newExecTime := interval
@@ -261,22 +262,22 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 			return nil, err
 		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
 		if startTime.After(autoTx.EndTime) {
-			return nil, sdkerrors.Wrapf(types.ErrUpdateAutoTx, "start time: %s must be before end time", startTime)
+			return nil, errorsmod.Wrapf(types.ErrUpdateAutoTx, "start time: %s must be before end time", startTime)
 		}
 		// if startTime.After(autoTx.ExecTime) {
-		// 	return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before next AutoTx exec time", startTime)
+		// 	return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before next AutoTx exec time", startTime)
 		// }
 		if len(autoTx.AutoTxHistory) != 0 {
-			return nil, sdkerrors.Wrapf(types.ErrUpdateAutoTx, "start time: %s must occur before first execution", startTime)
+			return nil, errorsmod.Wrapf(types.ErrUpdateAutoTx, "start time: %s must occur before first execution", startTime)
 		}
 		autoTx.StartTime = startTime
 		newExecTime = startTime
 	}
 	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
-		return nil, sdkerrors.Wrap(types.ErrUpdateAutoTx, "must depend on less than 10 autoTxIDs and have less than 10 messages")
+		return nil, errorsmod.Wrap(types.ErrUpdateAutoTx, "must depend on less than 10 autoTxIDs and have less than 10 messages")
 	}
 
 	if msg.Label != "" {

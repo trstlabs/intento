@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
@@ -18,7 +19,7 @@ import (
 func (suite *KeeperTestSuite) TestOnRecvTransferPacketWorks() {
 	var (
 		trace    transfertypes.DenomTrace
-		amount   sdk.Int
+		amount   sdkmath.Int
 		receiver string
 	)
 

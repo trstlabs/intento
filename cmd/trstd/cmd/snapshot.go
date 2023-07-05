@@ -3,11 +3,11 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -29,14 +29,14 @@ const (
 )
 
 type TestnetSnapshot struct {
-	TotalTrstAirdropAmount sdk.Int                           `json:"total_trst_amount"`
+	TotalTrstAirdropAmount sdkmath.Int                       `json:"total_trst_amount"`
 	NumAccounts            uint64                            `json:"num_accounts"`
 	Accounts               map[string]TestnetSnapshotAccount `json:"accounts"`
 }
 type TestnetSnapshotAccount struct {
-	TrstAddress                string  `json:"trst_address"`
-	TestnetParticpationPercent sdk.Dec `json:"testnet_participation_percent"`
-	TrstTotalClaimable         sdk.Int `json:"trst_total_claimable"`
+	TrstAddress                string            `json:"trst_address"`
+	TestnetParticpationPercent sdkmath.LegacyDec `json:"testnet_participation_percent"`
+	TrstTotalClaimable         sdkmath.Int       `json:"trst_total_claimable"`
 }
 
 type Transaction struct {
@@ -93,7 +93,7 @@ trstd export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/tran
 			faucetFile := args[1]
 			snapshotOutput := args[2]
 
-			faucetFileBytes, err := ioutil.ReadFile(faucetFile)
+			faucetFileBytes, err := os.ReadFile(faucetFile)
 			if err != nil {
 				return err
 			}
@@ -188,7 +188,7 @@ trstd export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/tran
 			snapshot.TotalTrstAirdropAmount = sdk.ZeroInt()
 			snapshot.Accounts = make(map[string]TestnetSnapshotAccount)
 
-			var trstTotalClaimable sdk.Int
+			var trstTotalClaimable sdkmath.Int
 			totalAirdropAmount := int64(0)
 			for _, supported := range supportedList {
 				totalAirdropAmount += supported.Allocation //
@@ -229,7 +229,7 @@ trstd export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/tran
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = os.WriteFile(snapshotOutput, snapshotJSON, 0644)
 			return err
 		},
 	}
@@ -281,11 +281,10 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 				return err
 			}
 			defer snapshotJSON.Close()
-			byteValue, _ := ioutil.ReadAll(snapshotJSON)
-			snapshot := TestnetSnapshot{}
 
-			json.Unmarshal(byteValue, &snapshot)
-			if err != nil {
+			var snapshot TestnetSnapshot
+			decoder := json.NewDecoder(snapshotJSON)
+			if err := decoder.Decode(&snapshot); err != nil {
 				return err
 			}
 

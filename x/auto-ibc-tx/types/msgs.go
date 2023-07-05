@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -35,10 +36,10 @@ func NewMsgRegisterAccount(owner, connectionID string, version string) *MsgRegis
 // ValidateBasic implements sdk.Msg
 func (msg MsgRegisterAccount) ValidateBasic() error {
 	if strings.TrimSpace(msg.Owner) == "" {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse address: %s", msg.Owner)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse address: %s", msg.Owner)
 	}
 	return nil
 }
@@ -190,7 +191,7 @@ func (msg MsgSubmitAutoTx) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
 		}
 	}
 
@@ -264,7 +265,7 @@ func (msg MsgRegisterAccountAndSubmitAutoTx) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
 		}
 	}
 
@@ -335,7 +336,7 @@ func (msg MsgUpdateAutoTx) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
 		}
 	}
 

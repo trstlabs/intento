@@ -3,7 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"cosmossdk.io/math"
@@ -99,7 +99,7 @@ trstd export-airdrop-snapshot ~/genesisfiles/genesis.cosmoshub-4.json ~/genesisf
 				return fmt.Errorf("failed to marshal snapshot: %w", err)
 			}
 
-			err = ioutil.WriteFile(snapshotOutput, snapshotJSON, 0644)
+			err = os.WriteFile(snapshotOutput, snapshotJSON, 0644)
 			return err
 		},
 	}
@@ -110,7 +110,7 @@ trstd export-airdrop-snapshot ~/genesisfiles/genesis.cosmoshub-4.json ~/genesisf
 }
 
 // compare balance with max cap
-func getMin(balance sdk.Dec) sdk.Dec {
+func getMin(balance math.LegacyDec) math.LegacyDec {
 	if balance.GTE(sdk.NewDec(MaxCap)) {
 		atomSqrt, err := sdk.NewDecFromInt(math.NewInt(MaxCap)).ApproxSqrt()
 		if err != nil {
@@ -126,7 +126,7 @@ func getMin(balance sdk.Dec) sdk.Dec {
 	}
 }
 
-func getDenominator(snapshotAccs map[string]SnapshotAccount) sdk.Int {
+func getDenominator(snapshotAccs map[string]SnapshotAccount) math.Int {
 	denominator := sdk.ZeroInt()
 	for _, acc := range snapshotAccs {
 		//add so we ensure suffiient balance
@@ -559,9 +559,9 @@ type GenesisFile struct {
 }
 
 type Snapshot struct {
-	TotalTokenAmount       sdk.Int `json:"total_atom_amount"`
-	TotalTrstAirdropAmount sdk.Int `json:"total_trst_amount"`
-	NumberAccounts         uint64  `json:"num_accounts"`
+	TotalTokenAmount       math.Int `json:"total_atom_amount"`
+	TotalTrstAirdropAmount math.Int `json:"total_trst_amount"`
+	NumberAccounts         uint64   `json:"num_accounts"`
 
 	Accounts map[string]SnapshotAccount `json:"accounts"`
 }
@@ -570,15 +570,15 @@ type Snapshot struct {
 type SnapshotAccount struct {
 	TokenAddress string `json:"atom_address"` // Token Balance = TokenStakedBalance + TokenUnstakedBalance
 
-	TokenBalance          sdk.Int `json:"atom_balance"`
-	TokenOwnershipPercent sdk.Dec `json:"atom_ownership_percent"`
+	TokenBalance          math.Int       `json:"atom_balance"`
+	TokenOwnershipPercent math.LegacyDec `json:"atom_ownership_percent"`
 
-	TokenStakedBalance   sdk.Int `json:"atom_staked_balance"`
-	TokenUnstakedBalance sdk.Int `json:"atom_unstaked_balance"` // TokenStakedPercent = TokenStakedBalance / TokenBalance
-	TokenStakedPercent   sdk.Dec `json:"atom_staked_percent"`
+	TokenStakedBalance   math.Int       `json:"atom_staked_balance"`
+	TokenUnstakedBalance math.Int       `json:"atom_unstaked_balance"` // TokenStakedPercent = TokenStakedBalance / TokenBalance
+	TokenStakedPercent   math.LegacyDec `json:"atom_staked_percent"`
 
-	TrstBalance sdk.Int `json:"trst_balance"`
-	Denominator sdk.Int `json:"denominator"`
+	TrstBalance math.Int `json:"trst_balance"`
+	Denominator math.Int `json:"denominator"`
 }
 
 type Account struct {

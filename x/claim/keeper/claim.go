@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -95,7 +96,7 @@ func (k Keeper) GetClaimRecord(ctx sdk.Context, addr sdk.AccAddress) (types.Clai
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimRecordsStorePrefix))
 	if !prefixStore.Has(addr) {
-		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claim record")
+		return types.ClaimRecord{}, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claim record")
 	}
 	bz := prefixStore.Get(addr)
 
@@ -105,7 +106,7 @@ func (k Keeper) GetClaimRecord(ctx sdk.Context, addr sdk.AccAddress) (types.Clai
 		return types.ClaimRecord{}, err
 	}
 	if len(claimRecord.Status) == 0 {
-		return types.ClaimRecord{}, sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claim record")
+		return types.ClaimRecord{}, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claim record")
 	}
 	return claimRecord, nil
 }
@@ -225,7 +226,7 @@ func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress,
 	}
 
 	if claimRecord.Status[action].ActionCompleted {
-		return nil //sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address already claimed tokens for this action")
+		return nil //errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "address already claimed tokens for this action")
 	}
 	claimableCoin, err := k.GetTotalClaimableAmountForAction(ctx, addr, action)
 	if err != nil {
@@ -323,7 +324,7 @@ func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) erro
 		toClaimPeriods = toClaimPeriods + toClaimPeriodsForAction
 	}
 	if toClaimPeriods == 0 || claimableCoin.Amount == sdk.ZeroInt() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claimable tokens right now")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "address does not have claimable tokens right now")
 	}
 
 	//get delegations and calculate min bonded ratio for claim
@@ -337,7 +338,7 @@ func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) erro
 	minBonded := sdk.NewDecWithPrec(67, 2).MulInt(claimedCoin.Amount)
 	//fmt.Printf("minBonded amount: %v\n", minBonded)
 	if totalDelegations.Sub(minBonded).IsNegative() {
-		return sdkerrors.Wrap(sdkerrors.ErrInsufficientFunds, "address does not have enough tokens staked")
+		return errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, "address does not have enough tokens staked")
 	}
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, sdk.NewCoins(claimableCoin))
 	if err != nil {

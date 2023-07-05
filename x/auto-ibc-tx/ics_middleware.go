@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 
@@ -14,7 +15,6 @@ import (
 
 	//"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/types/address"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
@@ -211,7 +211,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
 	if msgsBytes == nil /* || ownerAddr == nil  */ { // This should never happen
-		return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrMsgValidation, err.Error()))
+		return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrMsgValidation, err.Error()))
 	}
 	var txMsgsAny []*codectypes.Any
 	for _, msgBytes := range msgsBytes {
@@ -241,7 +241,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 	if !ok {
 		// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
 		// but returning here for completeness
-		return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrInvalidPacket, "Amount is not an int"))
+		return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrInvalidPacket, "Amount is not an int"))
 	}
 
 	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
@@ -264,11 +264,11 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		response, err := registerAndSubmitTx(im.keeper, ctx, &msg)
 		if err != nil {
 			// fmt.Println(err.Error())
-			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrIcs20Error, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
 		}
 		bz, err := json.Marshal(response)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrBadResponse, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, err.Error()))
 		}
 
 		return channeltypes.NewResultAcknowledgement(bz)
@@ -290,11 +290,11 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		}
 		response, err := updateAutoTx(im.keeper, ctx, &msg)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrIcs20Error, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
 		}
 		bz, err := json.Marshal(response)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrBadResponse, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, err.Error()))
 		}
 
 		return channeltypes.NewResultAcknowledgement(bz)
@@ -311,11 +311,11 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		}
 		response, err := submitAutoTx(im.keeper, ctx, &msg)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrIcs20Error, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
 		}
 		bz, err := json.Marshal(response)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrBadResponse, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, err.Error()))
 		}
 
 		return channeltypes.NewResultAcknowledgement(bz)
@@ -330,13 +330,13 @@ func makeOwnerForChannelSender(ownerAddr sdk.AccAddress, packet *channeltypes.Pa
 		sender := data.GetSender()
 		senderLocalAddr := derivePlaceholderSender(channel, sender)
 		// if err != nil {
-		// 	return nil, channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err)))
+		// 	return nil, channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadSender, fmt.Sprintf("cannot convert sender address %s/%s to bech32: %s", channel, sender, err)))
 		// }
 
 		data.Receiver = senderLocalAddr.String()
 		bz, err := json.Marshal(data)
 		if err != nil {
-			return nil, channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf(types.ErrMarshaling, err.Error()))
+			return nil, channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrMarshaling, err.Error()))
 		}
 		packet.Data = bz
 		ownerAddr = senderLocalAddr

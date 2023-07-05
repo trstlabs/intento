@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -42,7 +43,7 @@ const (
 )
 
 type GenesisParams struct {
-	AirdropSupply            sdk.Int
+	AirdropSupply            sdkmath.Int
 	StrategicReserveAccounts []banktypes.Balance
 	DistributedAccounts      []banktypes.Balance
 	ConsensusParams          *tmtypes.ConsensusParams
@@ -117,7 +118,7 @@ Example:
 			genDoc.GenesisTime = genesisParams.GenesisTime
 			genDoc.ChainID = chainID
 			genDoc.ConsensusParams = genesisParams.ConsensusParams
-		
+
 			// validate genesis state
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, appState); err != nil {
 				return fmt.Errorf("error validating genesis file: %s", err.Error())
@@ -238,7 +239,7 @@ func PrepareGenesis(
 	allocGenState.Params = genesisParams.AllocParams
 	allocGenStateBz, err := cdc.MarshalJSON(allocGenState)
 	if err != nil {
-		return nil,  fmt.Errorf("failed to marshal alloc genesis state: %w", err)
+		return nil, fmt.Errorf("failed to marshal alloc genesis state: %w", err)
 	}
 	appState[alloctypes.ModuleName] = allocGenStateBz
 
@@ -337,8 +338,7 @@ func MainnetGenesisParams() GenesisParams {
 	// genParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 	// distr
 	genParams.DistributionParams = distributiontypes.DefaultParams()
-	genParams.DistributionParams.BaseProposerReward = sdk.MustNewDecFromStr("0.01")
-	genParams.DistributionParams.BonusProposerReward = sdk.MustNewDecFromStr("0.04")
+
 	genParams.DistributionParams.CommunityTax = sdk.MustNewDecFromStr("0.05")
 	genParams.DistributionParams.WithdrawAddrEnabled = true
 	// gov

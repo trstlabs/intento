@@ -1,8 +1,8 @@
 package keeper
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 
 	// authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
@@ -31,7 +31,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
 	for i, autoTxInfo := range gs.AutoTxInfos {
 		err := k.importAutoTxInfo(ctx, autoTxInfo.TxID, autoTxInfo)
 		if err != nil {
-			return sdkerrors.Wrapf(err, "autoTxInfo %d with id: %d", i, autoTxInfo.TxID)
+			return errorsmod.Wrapf(err, "autoTxInfo %d with id: %d", i, autoTxInfo.TxID)
 		}
 		if autoTxInfo.TxID > maxTxID {
 			maxTxID = autoTxInfo.TxID
@@ -41,13 +41,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
 	for i, seq := range gs.Sequences {
 		err := k.importAutoIncrementID(ctx, seq.IDKey, seq.Value)
 		if err != nil {
-			return sdkerrors.Wrapf(err, "sequence number %d", i)
+			return errorsmod.Wrapf(err, "sequence number %d", i)
 		}
 	}
 
 	// sanity check seq values
 	if k.peekAutoIncrementID(ctx, types.KeyLastTxID) <= maxTxID {
-		return sdkerrors.Wrapf(types.ErrInvalid, "seq %s must be greater %d ", string(types.KeyLastTxID), maxTxID)
+		return errorsmod.Wrapf(types.ErrInvalid, "seq %s must be greater %d ", string(types.KeyLastTxID), maxTxID)
 	}
 
 	return nil

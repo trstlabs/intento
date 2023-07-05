@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 // DefaultGenesis returns the default Capability genesis state
@@ -13,7 +13,7 @@ func DefaultGenesis() *GenesisState {
 
 func (s Sequence) ValidateBasic() error {
 	if len(s.IDKey) == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "id key")
+		return errorsmod.Wrap(ErrEmpty, "id key")
 	}
 	return nil
 }
@@ -21,18 +21,18 @@ func (s Sequence) ValidateBasic() error {
 func (s GenesisState) ValidateBasic() error {
 	//fmt.Print("VALIDATING BASIC")
 	if err := s.Params.Validate(); err != nil {
-		return sdkerrors.Wrap(err, "params")
+		return errorsmod.Wrap(err, "params")
 	}
 
 	for i := range s.AutoTxInfos {
 		if err := s.AutoTxInfos[i].ValidateBasic(); err != nil {
-			return sdkerrors.Wrapf(err, "auto_tx: %d", i)
+			return errorsmod.Wrapf(err, "auto_tx: %d", i)
 		}
 
 	}
 	for i := range s.Sequences {
 		if err := s.Sequences[i].ValidateBasic(); err != nil {
-			return sdkerrors.Wrapf(err, "sequence: %d", i)
+			return errorsmod.Wrapf(err, "sequence: %d", i)
 		}
 	}
 	return nil
@@ -40,7 +40,7 @@ func (s GenesisState) ValidateBasic() error {
 
 func (a AutoTxInfo) ValidateBasic() error {
 	if a.TxID == 0 {
-		return sdkerrors.Wrap(ErrEmpty, "code id")
+		return errorsmod.Wrap(ErrEmpty, "code id")
 	}
 
 	return nil

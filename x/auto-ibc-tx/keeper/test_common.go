@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -129,7 +131,7 @@ var TestContractPaths = map[string]string{
 	ibcContract: filepath.Join(".", contractPath, ibcContract),
 }
 
-func CreateValidator(pk crypto.PubKey, stake sdk.Int) (stakingtypes.Validator, error) {
+func CreateValidator(pk crypto.PubKey, stake sdkmath.Int) (stakingtypes.Validator, error) {
 	valConsAddr := sdk.GetConsAddress(pk)
 	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr), pk, stakingtypes.Description{})
 
@@ -577,7 +579,7 @@ type protoTxProvider interface {
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*sdktx.Tx, error) { // nolint
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
 	}
 
 	return protoProvider.GetProtoTx(), nil

@@ -3,7 +3,8 @@ package keeper
 import (
 
 	//"log"
-
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -11,7 +12,7 @@ import (
 )
 
 // DistributeCoins distributes AutoTx fees and handles remaining autoTx fee balance after last execution
-func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, flexFee sdk.Int, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
+func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, flexFee sdkmath.Int, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
 
 	p := k.GetParams(ctx)
 	// fmt.Printf(" flexFee: %v \n", flexFee)
@@ -67,7 +68,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	// transfer collected fees to the distribution module account
 	flexFeeCoin := sdk.NewCoin(types.Denom, flexFeeMulDec.Ceil().TruncateInt())
 	if flexFeeCoin.Amount.IsZero() {
-		return sdk.Coin{}, sdkerrors.Wrap(sdkerrors.ErrInsufficientFee, "flexFeeCoin was zero")
+		return sdk.Coin{}, errorsmod.Wrap(sdkerrors.ErrInsufficientFee, "flexFeeCoin was zero")
 	}
 
 	proposerAddr := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
@@ -142,7 +143,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.AutoTxInfo, fl
 	// transfer collected fees to the distribution module account
 	flexFeeCoin := sdk.NewCoin(types.Denom, flexFeeMul.TruncateInt())
 	if flexFeeCoin.Amount.IsZero() {
-		return sdk.Coin{}, sdkerrors.Wrap(sdkerrors.ErrInsufficientFee, "flexFeeCoin was zero")
+		return sdk.Coin{}, errorsmod.Wrap(sdkerrors.ErrInsufficientFee, "flexFeeCoin was zero")
 	}
 
 	proposerAddr := k.stakingKeeper.ValidatorByConsAddr(ctx, proposer)
