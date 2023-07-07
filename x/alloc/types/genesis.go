@@ -18,11 +18,10 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params: Params{
 			DistributionProportions: DistributionProportions{
-				Staking:                     sdk.MustNewDecFromStr("0.60"), // 25%
-				TrustlessContractIncentives: sdk.MustNewDecFromStr("0.10"), // 45%
-				//	ItemIncentives:              sdk.MustNewDecFromStr("0.05"), // 45%
-				ContributorRewards: sdk.MustNewDecFromStr("0.05"), // 25%
-				CommunityPool:      sdk.MustNewDecFromStr("0.30"), // 5%
+				Staking:            sdk.MustNewDecFromStr("0.60"),
+				RelayerIncentives:  sdk.MustNewDecFromStr("0.10"),
+				ContributorRewards: sdk.MustNewDecFromStr("0.05"),
+				CommunityPool:      sdk.MustNewDecFromStr("0.30"),
 			},
 			WeightedContributorRewardsReceivers: []WeightedAddress{},
 		},
