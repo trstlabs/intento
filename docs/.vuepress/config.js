@@ -1,6 +1,7 @@
 module.exports = {
   theme: "cosmos",
   title: "Trustless Hub",
+  patterns: ['**/*.md', '**/*.vue', '!contracts/**','!contract-automation/**', '!**/Registration.md', '!**/Wasm.md', '!**/join-testnet.md', ],
   plugins: [
     [
       'sitemap',
@@ -60,17 +61,22 @@ module.exports = {
           title: "Resources",
           children: [ 
             {
-              title: "CosmWasm Docs",
-              path: "https://docs.cosmwasm.com/docs/",
+              title: "TriggerPørtal",
+              path: "https://triggerportal.xyz",
+            },
+            {
+              title: "TRST Labs Github",
+              path: "https://github.com/trstlabs",
+            },
+            {
+              title: "TRST Labs Linktree",
+              path: "https://trstlabs.xyz",
             },
             {
               title: "Cosmos SDK Docs",
               path: "https://docs.cosmos.network",
             },
-            {
-              title: "Trustless Hub Github",
-              path: "https://github.com/trstlabs",
-            },
+
            /* {
               title: "DeFi Contract Bundle ",
               path: "https://github.com/trstlabs/dex-contracts",

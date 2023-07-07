@@ -14,7 +14,6 @@ Interchain Accounts are a key component of Trustless Triggers. They allow for th
 
 To use Interchain Automation with Interchain Accounts, the user must first register an interchain account. This involves creating a port ID and connection ID, which allows the user to connect their account to other chains over IBC.
 
-
 A Trigger is what we call an Automated Transaction or 'AutoTX'. An AutoTX is an object containing messages that execute at a specified time, or recurringly with intervals.
 AutoTX entries are scheduled at the beginning of a new block.
 
@@ -25,7 +24,7 @@ AutoTXs can execute Cosmos SDK blockchain transactions on Cosmos Chains such as:
 - `MsgExecuteContact` to execute a contract
 - `MsgInstantiate` to instantiate a contract
 
-AutoTXs can also execute transactions on other chains using an IBC protocol called Interchain Accounts. 
+AutoTXs can also execute transactions on other chains using an IBC protocol called Interchain Accounts.
 
 Using the Authz module on the host chain - the chain you want to execute at - you can grant the Interchain Account on Trustless Hub access permission to execute a specific message.
 
@@ -33,17 +32,17 @@ Using the Authz module on the host chain - the chain you want to execute at - yo
 
 Submitting a MsgSubmitAutoTx takes the following input:
 
-| Field Name        | Data Type                      | Description                                                                                       | optional |
-| ----------------- | ------------------------------ | ------------------------------------------------------------------------------------------------- | -|
-| `owner`           | `string`                       | The owner of the transaction                                                                      |  |
-| `connection_id`   | `string`                       | The ID of the connection to use for the transaction (in YAML format)                               |✔️|
-| `label`           | `string`                       | A label for the transaction                                                                       |✔️|
-| `msgs`            | `repeated google.protobuf.Any` | A list of arbitrary messages to include in the transaction                                        ||
-| `duration`        | `string`                       | The amount of time that the transaction code should run for                                       ||
-| `start_at`        | `uint64`                       | A Unix timestamp representing the custom start time for execution (if set after block inclusion) |✔️|
-| `interval`        | `string`                       | The interval between automatic message calls                                                     |✔️|
-| `fee_funds`       | `repeated cosmos.base.v1beta1.Coin` | Optional funds to be used for transaction fees, limiting the amount of fees incurred | ✔️|
-| `depends_on_tx_ids` | `repeated uint64`           | Optional array of transaction IDs that must be executed before the current transaction is allowed to execute | ✔️|
+| Field Name          | Data Type                           | Description                                                                                                  | optional |
+| ------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------- |
+| `owner`             | `string`                            | The owner of the AutoTx                                                                                      |          |
+| `connection_id`     | `string`                            | The ID of the connection to use for the transaction (in YAML format)                                         | ✔️       |
+| `label`             | `string`                            | A label for the transaction                                                                                  | ✔️       |
+| `msgs`              | `repeated google.protobuf.Any`      | A list of arbitrary messages to include in the transaction                                                   |          |
+| `duration`          | `string`                            | The amount of time that the transaction code should run for                                                  |          |
+| `start_at`          | `uint64`                            | A Unix timestamp representing the custom start time for execution (if set after block inclusion)             | ✔️       |
+| `interval`          | `string`                            | The interval between automatic message calls                                                                 | ✔️       |
+| `fee_funds`         | `repeated cosmos.base.v1beta1.Coin` | Optional funds to be used for transaction fees, limiting the amount of fees incurred                         | ✔️       |
+| `depends_on_tx_ids` | `repeated uint64`                   | Optional array of transaction IDs that must be executed before the current transaction is allowed to execute | ✔️       |
 
 Comments on the optionallity of the fields
 
@@ -62,17 +61,14 @@ Comments on the optionallity of the fields
 6. Fees are calculated and deducted. AutoTX data is updated with information on the exact fees and execution time.
 7. Transaction is sent to the host chain
 8. If AutoTX is recurring, a new entry is inserted into the queue
-9. Packet gets acknowledged by a relayer and the AutoTX entry is updated stating execution was succesfull. If packet times out, execution fails. 
+9. Packet gets acknowledged by a relayer and the AutoTX entry is updated stating execution was succesfull. If packet times out, execution fails.
 10. Funds sent to an AutoTX-specific FeeFund account are returned to the AutoTX owner
 
 To make packet relays succesfully, Trustless Hub allocates token incentives to relayers to acknowledge packets.
 
-*In-depth information on how the module works can be found in the module section of our documetation.*
-
-
+_In-depth information on how the module works can be found in the module section of our documetation._
 
 Overall, Trustless Triggers provide a powerful tool for automating transactions and authorized actions on IBC-compatible chains. By utilizing Interchain Accounts and Interchain Automation, developers can create highly customizable and effective solutions for end-users.
-
 
 ## Limitations
 
@@ -80,7 +76,7 @@ Trustless Triggers are a powerful tool for automating transactions and actions o
 
 For complex and custom logic, Trustless Contracts should be used. While Trustless Triggers can execute transactions based on custom logic, they are not as flexible or powerful as Trustless Contracts. Trustless Contracts are specifically designed for creating protocols with built-in automation and can execute transactions on other chains based on custom logic.
 
-Ordered IBC channels are a necessary requirement for Interchain Automation with Interchain Accounts. This means that Trustless Triggers can only be executed when the previous execution did not time out. Channels close when a chain is available but a packet times out. 
+Ordered IBC channels are a necessary requirement for Interchain Automation with Interchain Accounts. This means that Trustless Triggers can only be executed when the previous execution did not time out. Channels close when a chain is available but a packet times out.
 
 Furthermore, IBC Packets may time out, which can lead to failed transactions. This can happen due to network congestion or other reasons, and can lead to a loss of funds or other negative consequences. To reduce the risk of this happening, Trustless Triggers have a timeout equal to the interval, so that the impact is minimal.
 

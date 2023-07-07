@@ -12,9 +12,9 @@ It allocates inflation through the following default params:
 ```golang
 	Params{
 		DistributionProportions: DistributionProportions{
-			Staking:                     sdk.MustNewDecFromStr("0.55"),
-			TrustlessContractIncentives: sdk.MustNewDecFromStr("0.25"),
-			ContributorRewards:            sdk.MustNewDecFromStr("0.05"),
+			Staking:                     sdk.MustNewDecFromStr("0.60"),
+			RelayerIncentives: 			 sdk.MustNewDecFromStr("0.10"),
+			ContributorRewards:          sdk.MustNewDecFromStr("0.05"),
 			CommunityPool:               sdk.MustNewDecFromStr("0.15"),
 		},
 		WeightedContributorRewardsReceivers: []WeightedAddress{},

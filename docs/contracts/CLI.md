@@ -4,10 +4,11 @@ title: CLI
 description: Using the CLI to instantiate an AutoExecution contracts
 ---
 
-# Recurring Swap contract using the Command-line interface (CLI)
+# Using the Command-line interface (CLI)
 
-Perform a front-running resistant recurring swap using the CLI!
 With this example we hope to give you a good understanding of how an AutoExecution contract works from the CLI. 
+Let's take the example of performing a front-running resistant recurring swap using the CLI!
+
 
 Several contracts are at play in this example
 1. TIP20 token contract of input token 
