@@ -4,9 +4,9 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 type AutoIbcTxHooks interface {
 
-	// AfterExitPool is called after ExitPool, ExitSwapShareAmountIn, and ExitSwapExternAmountOut
+	// AfterAutoTxAuthz is called after an action on behalf using authz
 	AfterAutoTxAuthz(ctx sdk.Context, sender sdk.AccAddress)
-	// AfterAutoSwap is called after SwapExactAmountIn and SwapExactAmountOut
+	// AfterAutoTxWasm is called after a MsgExecuteContract or MsgInstantiateContract
 	AfterAutoTxWasm(ctx sdk.Context, sender sdk.AccAddress)
 }
 
