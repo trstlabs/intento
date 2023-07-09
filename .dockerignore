@@ -1,5 +1,3 @@
-Dockerfile*
-docker-compose*
 docs
 *.md
 **/target
@@ -18,3 +16,6 @@ README.md
 .vscode
 .github
 .git
+dockernet
+deps
+genesis

@@ -48,3 +48,13 @@ docs/.vuepress/dist
 initdev.sh
 init.log
 /data
+
+# dockernet
+state/*
+scripts/state
+scripts/logs
+dockernet/state
+dockernet/logs
+dockernet/upgrades/binaries
+dockernet/upgrades/cosmovisor
+dockernet/temp.sh

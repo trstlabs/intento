@@ -17,9 +17,13 @@ LEDGER_ENABLED ?= false
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
 TM_VERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::') # grab everything after the space in "github.com/cometbft/cometbft v0.34.7"
 DOCKER := $(shell which docker)
+
+DOCKERNET_HOME=./dockernet
+DOCKERNET_COMPOSE_FILE=$(DOCKERNET_HOME)/docker-compose.yml
+build=t
 BUILDDIR ?= $(CURDIR)/build
 
-DOCKER_TAG ?= auto_tx_only
+DOCKER_TAG ?= latest
 
 GO_SYSTEM_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1-2)
 REQUIRE_GO_VERSION = 1.20
@@ -231,7 +235,7 @@ docker-build:
 		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_DISTROLESS) \
 		--build-arg GIT_VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
-		-f deployment/dockerfiles/no-sgx.Dockerfile .
+		-f Dockerfile .
 
 
 
@@ -410,3 +414,45 @@ proto-lint:
 
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
+
+
+
+###############################################################################
+###                                DockerNet                                ###
+###############################################################################
+
+build-dockernet:
+	@bash $(DOCKERNET_HOME)/build.sh -${build} ${BUILDDIR}
+
+start-dockernet: 
+	@bash $(DOCKERNET_HOME)/start_network.sh
+
+start-dockernet-all: stop-dockernet build-dockernet
+	@ALL_HOST_CHAINS=true bash $(DOCKERNET_HOME)/start_network.sh
+
+clean-dockernet:
+	@docker-compose -f $(DOCKERNET_COMPOSE_FILE) stop
+	@docker-compose -f $(DOCKERNET_COMPOSE_FILE) down
+	rm -rf $(DOCKERNET_HOME)/state
+	docker image prune -a
+
+stop-dockernet:
+	@bash $(DOCKERNET_HOME)/pkill.sh
+	docker-compose -f $(DOCKERNET_COMPOSE_FILE) down
+
+upgrade-build-old-binary:
+	@DOCKERNET_HOME=$(DOCKERNET_HOME) BUILDDIR=$(BUILDDIR) bash $(DOCKERNET_HOME)/upgrades/build_old_binary.sh
+
+submit-upgrade-immediately:
+	UPGRADE_HEIGHT=100 bash $(DOCKERNET_HOME)/upgrades/submit_upgrade.sh
+
+submit-upgrade-after-tests:
+	UPGRADE_HEIGHT=400 bash $(DOCKERNET_HOME)/upgrades/submit_upgrade.sh
+
+start-upgrade-integration-tests:
+	PART=1 bash $(DOCKERNET_HOME)/tests/run_tests_upgrade.sh
+
+finish-upgrade-integration-tests:
+	PART=2 bash $(DOCKERNET_HOME)/tests/run_tests_upgrade.sh
+
+upgrade-integration-tests-part-1: start-dockernet-all start-upgrade-integration-tests submit-upgrade-after-tests

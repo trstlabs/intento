@@ -187,6 +187,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
 		config.Cmd(),
+		AddGenesisAccountCmd(app.DefaultNodeHome),
 		ImportGenesisAccountsFromSnapshotCmd(app.DefaultNodeHome),
 		ExportAirdropSnapshotCmd(),
 		ExportTestnetSnapshotCmd(),
