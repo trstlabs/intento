@@ -1,0 +1,9 @@
+[submodule "deps/gaia"]
+	path = deps/gaia
+	url = https://github.com/cosmos/gaia.git
+[submodule "deps/hermes"]
+	path = deps/hermes
+	url = https://github.com/informalsystems/hermes.git
+[submodule "deps/relayer"]
+	path = deps/relayer
+	url = https://github.com/cosmos/relayer.git
