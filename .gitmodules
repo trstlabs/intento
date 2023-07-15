@@ -7,3 +7,13 @@
 [submodule "deps/relayer"]
 	path = deps/relayer
 	url = https://github.com/cosmos/relayer.git
+# bats
+[submodule "dockernet/tests/bats/bats-core"]
+	path = dockernet/tests/bats/bats-core
+	url = https://github.com/bats-core/bats-core.git
+[submodule "dockernet/tests/bats/bats-assert"]
+	path = dockernet/tests/bats/bats-assert
+	url = https://github.com/bats-core/bats-assert.git
+[submodule "dockernet/tests/bats/bats-support"]
+	path = dockernet/tests/bats/bats-support
+	url = https://github.com/bats-core/bats-support.git
