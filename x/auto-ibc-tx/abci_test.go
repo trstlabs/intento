@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
@@ -14,7 +15,7 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
-	ctx, keepers := createTestContext(t)
+	ctx, keepers, _ := createTestContext(t)
 	autoTx, sentAddr := createTestAutoTx(ctx, keepers)
 	err := autoTx.ValidateBasic()
 	require.NoError(t, err)
@@ -62,7 +63,7 @@ func TestBeginBlocker(t *testing.T) {
 }
 
 func TestBeginBlockerStressTest(t *testing.T) {
-	ctx, keepers := createTestContext(t)
+	ctx, keepers, _ := createTestContext(t)
 	//autoTx,_ := createTestAutoTx(ctx, keepers)
 	k := keepers.AutoIbcTxKeeper
 
@@ -106,7 +107,7 @@ func TestBeginBlockerStressTest(t *testing.T) {
 }
 
 func TestBeginBlockerWithRetry(t *testing.T) {
-	ctx, keepers := createTestContext(t)
+	ctx, keepers, _ := createTestContext(t)
 	autoTx, _ := createTestAutoTx(ctx, keepers)
 	k := keepers.AutoIbcTxKeeper
 
@@ -158,7 +159,7 @@ func TestBeginBlockerWithRetry(t *testing.T) {
 }
 
 func TestOwnerMustBeSignerForLocalAutoTx(t *testing.T) {
-	ctx, keepers := createTestContext(t)
+	ctx, keepers, cdc := createTestContext(t)
 
 	autoTxOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	feeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
@@ -177,10 +178,10 @@ func TestOwnerMustBeSignerForLocalAutoTx(t *testing.T) {
 		FeeAddress: feeAddr.String(),
 		Msgs:       anys,
 	}
-
-	err := autoTx.GetTxMsgs()[0].ValidateBasic()
-	require.NoError(t, err)
 	k := keepers.AutoIbcTxKeeper
+
+	err := autoTx.GetTxMsgs(cdc)[0].ValidateBasic()
+	require.NoError(t, err)
 
 	feeBeforeFeeParams := calculateTimeBasedFlexFee(autoTx, true)
 	fmt.Print(feeBeforeFeeParams)
@@ -195,8 +196,8 @@ func TestOwnerMustBeSignerForLocalAutoTx(t *testing.T) {
 	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx, feeAddr)[0].Amount, sdk.NewInt(3_000_000_000_000).Sub(fee.Amount))
 }
 
-func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers) {
-	ctx, keepers := keeper.CreateTestInput(t, false)
+func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers, codec.Codec) {
+	ctx, keepers, cdc := keeper.CreateTestInput(t, false)
 
 	types.Denom = "stake"
 	keepers.AutoIbcTxKeeper.SetParams(ctx, types.Params{
@@ -208,7 +209,7 @@ func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers) {
 		MinAutoTxDuration:          time.Second * 60,
 		MinAutoTxInterval:          time.Second * 20,
 	})
-	return ctx, keepers
+	return ctx, keepers, cdc
 }
 
 func createTestAutoTx(ctx sdk.Context, keepers keeper.TestKeepers) (types.AutoTxInfo, sdk.AccAddress) {

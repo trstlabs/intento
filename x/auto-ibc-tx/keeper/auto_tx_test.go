@@ -11,7 +11,7 @@ import (
 
 func TestCreateAutoTx(t *testing.T) {
 	// Create a mock context and keeper
-	ctx, keepers := CreateTestInput(t, false)
+	ctx, keepers, _ := CreateTestInput(t, false)
 	types.Denom = sdk.DefaultBondDenom
 	// Create a mock owner and fee funds
 	owner, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
@@ -54,7 +54,7 @@ func TestCreateAutoTx(t *testing.T) {
 
 func TestCreateAutoTxWithZeroFundsWorks(t *testing.T) {
 	// Create a mock context and keeper
-	ctx, keepers := CreateTestInput(t, false)
+	ctx, keepers, _ := CreateTestInput(t, false)
 	types.Denom = sdk.DefaultBondDenom
 	// Create a mock owner and fee funds
 	owner := sdk.AccAddress("owner")

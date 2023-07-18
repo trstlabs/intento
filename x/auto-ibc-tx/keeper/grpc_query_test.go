@@ -23,45 +23,22 @@ import (
 )
 
 func TestQueryAutoTxsByOwnerList(t *testing.T) {
-	ctx, keepers := CreateTestInput(t, false)
+	ctx, keepers, _ := CreateTestInput(t, false)
+	autoTxKeeper := keepers.AutoIbcTxKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
-	//coordinator, path := NewICA(t)
+
 	creator, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, deposit)
 	var expectedAutoTxs []types.AutoTxInfo
 	portID, err := icatypes.NewControllerPortID(creator.String())
 	require.NoError(t, err)
-	//anyAddr, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, deposit)
-
-	/*
-
-		require.NoError(t, err)
-
-		coordinator.SetupConnections(path)
-
-		keepers.AutoIbcTxKeeper.RegisterInterchainAccount(ctx, ibctesting.FirstConnectionID, creator.String())
-		require.NoError(t, err)
-
-		channel := channeltypes.NewChannel(
-			channeltypes.OPEN,
-			channeltypes.ORDERED,
-			channeltypes.NewCounterparty(path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID),
-			[]string{path.EndpointA.ConnectionID},
-			path.EndpointA.ChannelConfig.Version,
-		)
-
-		keepers.IbcKeeper.ChannelKeeper.SetChannel(ctx, portID, ibctesting.FirstChannelID, channel)
-
-		keepers.ICAControllerKeeper.SetActiveChannelID(ctx, ibctesting.FirstConnectionID, portID, ibctesting.FirstChannelID)*/
 
 	// create 10 auto-txs
 	for i := 0; i < 10; i++ {
-		autoTx, err := CreateFakeAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+		autoTx, err := CreateFakeAutoTx(autoTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
-		// msg, err := icatypes.DeserializeCosmosTx(keepers.AutoIbcTxKeeper.cdc, autoTx.Data)
-		// require.NoError(t, err)
-		// makeReadableMsgData(&autoTx, msg)
+
 		expectedAutoTxs = append(expectedAutoTxs, autoTx)
 	}
 
@@ -113,7 +90,7 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			got, err := keepers.AutoIbcTxKeeper.AutoTxsForOwner(sdk.WrapSDKContext(ctx), spec.srcQuery)
+			got, err := autoTxKeeper.AutoTxsForOwner(sdk.WrapSDKContext(ctx), spec.srcQuery)
 
 			if spec.expErr != nil {
 				require.Equal(t, spec.expErr, err)
@@ -122,7 +99,7 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			for i, expectedAutoTx := range spec.expAutoTxInfos {
-				assert.Equal(t, expectedAutoTx.GetTxMsgs(), got.AutoTxInfos[i].GetTxMsgs())
+				assert.Equal(t, expectedAutoTx.GetTxMsgs(autoTxKeeper.cdc), got.AutoTxInfos[i].GetTxMsgs(autoTxKeeper.cdc))
 				assert.Equal(t, expectedAutoTx.AutoTxHistory, got.AutoTxInfos[i].AutoTxHistory)
 				assert.Equal(t, expectedAutoTx.PortID, got.AutoTxInfos[i].PortID)
 				assert.Equal(t, expectedAutoTx.Owner, got.AutoTxInfos[i].Owner)
@@ -136,8 +113,8 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 }
 
 func TestQueryAutoTxsList(t *testing.T) {
-	ctx, keepers := CreateTestInput(t, false)
-
+	ctx, keepers, _ := CreateTestInput(t, false)
+	autoTxKeeper := keepers.AutoIbcTxKeeper
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
 
@@ -148,19 +125,19 @@ func TestQueryAutoTxsList(t *testing.T) {
 
 	// create 10 auto-txs
 	for i := 0; i < 10; i++ {
-		autoTx, err := CreateFakeAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+		autoTx, err := CreateFakeAutoTx(autoTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
 
 		expectedAutoTxs = append(expectedAutoTxs, autoTx)
 	}
 
-	got, err := keepers.AutoIbcTxKeeper.AutoTxs(sdk.WrapSDKContext(ctx), &types.QueryAutoTxsRequest{})
+	got, err := autoTxKeeper.AutoTxs(sdk.WrapSDKContext(ctx), &types.QueryAutoTxsRequest{})
 
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	for i, expectedAutoTx := range expectedAutoTxs {
 
-		assert.Equal(t, expectedAutoTx.GetTxMsgs(), got.AutoTxInfos[i].GetTxMsgs())
+		assert.Equal(t, expectedAutoTx.GetTxMsgs(autoTxKeeper.cdc), got.AutoTxInfos[i].GetTxMsgs(autoTxKeeper.cdc))
 		assert.Equal(t, expectedAutoTx.AutoTxHistory, got.AutoTxInfos[i].AutoTxHistory)
 		assert.Equal(t, expectedAutoTx.PortID, got.AutoTxInfos[i].PortID)
 		assert.Equal(t, expectedAutoTx.Owner, got.AutoTxInfos[i].Owner)
@@ -173,7 +150,8 @@ func TestQueryAutoTxsList(t *testing.T) {
 }
 
 func TestQueryAutoTxsListWithAuthZMsg(t *testing.T) {
-	ctx, keepers := CreateTestInput(t, false)
+	ctx, keepers, _ := CreateTestInput(t, false)
+	autoTxKeeper := keepers.AutoIbcTxKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
@@ -183,19 +161,19 @@ func TestQueryAutoTxsListWithAuthZMsg(t *testing.T) {
 	portID, err := icatypes.NewControllerPortID(creator.String())
 	require.NoError(t, err)
 
-	expectedAutoTx, err := CreateFakeAuthZAutoTx(keepers.AutoIbcTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+	expectedAutoTx, err := CreateFakeAuthZAutoTx(autoTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 	require.NoError(t, err)
 	fmt.Printf("%v\n", len(expectedAutoTx.Msgs))
-	got, err := keepers.AutoIbcTxKeeper.AutoTxs(sdk.WrapSDKContext(ctx), &types.QueryAutoTxsRequest{})
+	got, err := autoTxKeeper.AutoTxs(sdk.WrapSDKContext(ctx), &types.QueryAutoTxsRequest{})
 
 	require.NoError(t, err)
 	require.NotNil(t, got)
 
 	var txMsg sdk.Msg
-	keepers.AutoIbcTxKeeper.cdc.UnpackAny(expectedAutoTx.Msgs[0], &txMsg)
+	autoTxKeeper.cdc.UnpackAny(expectedAutoTx.Msgs[0], &txMsg)
 
 	var gotMsg sdk.Msg
-	keepers.AutoIbcTxKeeper.cdc.UnpackAny(got.AutoTxInfos[0].Msgs[0], &gotMsg)
+	autoTxKeeper.cdc.UnpackAny(got.AutoTxInfos[0].Msgs[0], &gotMsg)
 
 	assert.Equal(t, expectedAutoTx.Msgs, got.AutoTxInfos[0].Msgs)
 	//	assert.Equal(t, txMsg, gotMsg)
@@ -211,8 +189,10 @@ func TestQueryAutoTxsListWithAuthZMsg(t *testing.T) {
 }
 
 func TestQueryParams(t *testing.T) {
-	ctx, keepers := CreateTestInput(t, false)
-	resp, err := keepers.AutoIbcTxKeeper.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})
+	ctx, keepers, _ := CreateTestInput(t, false)
+	autoTxKeeper := keepers.AutoIbcTxKeeper
+
+	resp, err := autoTxKeeper.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})
 	require.NoError(t, err)
 	require.Equal(t, resp.Params, types.DefaultParams())
 }
