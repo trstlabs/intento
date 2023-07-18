@@ -15,7 +15,8 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
+	//icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 
 	"github.com/cometbft/cometbft/crypto"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
@@ -54,12 +55,12 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (error,
 
 	//check if autoTx is local
 	if autoTxInfo.ConnectionID == "" {
-		txMsgs := autoTxInfo.GetTxMsgs()
+		txMsgs := autoTxInfo.GetTxMsgs(k.cdc)
 		err := handleLocalAutoTx(k, ctx, txMsgs, autoTxInfo)
 		return err, err == nil
 	}
 
-	//if message contains ICA_ADDR, the ICA address is retreived and parsed
+	//if message contains ICA_ADDR, the ICA address is retrieved and parsed
 	txMsgs, err := k.parseAndSetMsgs(ctx, autoTxInfo)
 	if err != nil {
 		return err, false
@@ -73,27 +74,43 @@ func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (error,
 		Data: data,
 	}
 
-	relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
+	// TODO replace legacy SendTx method by implementing the msg handler
+	/*
+		relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
+		//to ensure timeout does not result in channel closing
+		if autoTxInfo.Interval > time.Minute*2 {
+			relativeTimeoutTimestamp = uint64((autoTxInfo.Interval + time.Minute).Nanoseconds())
+		}
+
+		icaMsg := icacontrollertypes.NewMsgSendTx(autoTxInfo.Owner, autoTxInfo.ConnectionID, relativeTimeoutTimestamp, packetData)
+
+		icaHandler := k.msgRouter.Handler(icaMsg)
+		res, err := icaHandler(ctx, icaMsg)
+		if err != nil {
+			return err, false
+		}
+
+		firstMsgResponse := res.MsgResponses[0]
+		sendTxResponse, ok := firstMsgResponse.GetCachedValue().(*icacontrollertypes.MsgSendTxResponse)
+		if !ok {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "failed to covert %T message response to %T", firstMsgResponse.GetCachedValue(), &icacontrollertypes.MsgSendTxResponse{}), false
+		}
+
+		k.Logger(ctx).Debug("auto_tx", "ibc_sequence", sendTxResponse.Sequence)
+		k.setTmpAutoTxID(ctx, autoTxInfo.TxID, autoTxInfo.PortID, sendTxResponse.Sequence)*/
+
+	timeoutTimestamp := ctx.BlockTime().Add(time.Minute).UnixNano()
 	//to ensure timeout does not result in channel closing
 	if autoTxInfo.Interval > time.Minute*2 {
-		relativeTimeoutTimestamp = uint64((autoTxInfo.Interval + time.Minute).Nanoseconds())
+		timeoutTimestamp = ctx.BlockTime().Add(autoTxInfo.Interval + time.Minute).UnixNano()
 	}
 
-	icaMsg := icacontrollertypes.NewMsgSendTx(autoTxInfo.Owner, autoTxInfo.ConnectionID, relativeTimeoutTimestamp, packetData)
-
-	// sequence, err := k.icaControllerKeeper.SendTx(ctx, nil, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
-	// if err != nil {
-	// 	return err, false
-	// }
-	icaHandler := k.msgRouter.Handler(icaMsg)
-	res, err := icaHandler(ctx, icaMsg)
+	sequence, err := k.icaControllerKeeper.SendTx(ctx, nil, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
 	if err != nil {
 		return err, false
 	}
 
-	sendTxResponse := icacontrollertypes.MsgSendTxResponse{}
-	k.cdc.UnpackAny(res.MsgResponses[0], sendTxResponse)
-	k.setTmpAutoTxID(ctx, autoTxInfo.TxID, autoTxInfo.PortID, sendTxResponse.Sequence)
+	k.setTmpAutoTxID(ctx, autoTxInfo.TxID, autoTxInfo.PortID, sequence)
 	return nil, false
 }
 
@@ -339,10 +356,10 @@ func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, se
 		return nil
 	}
 
-	k.Logger(ctx).Debug("auto_tx_result", "id", id)
+	k.Logger(ctx).Debug("auto_tx", "executed", "on host")
 
 	txInfo := k.GetAutoTxInfo(ctx, id)
-	// fmt.Printf("Reward Type: %v\n", rewardType)
+
 	k.UpdateAutoTxIbcUsage(ctx, txInfo)
 	owner, err := sdk.AccAddressFromBech32(txInfo.Owner)
 	if err != nil {
@@ -379,20 +396,20 @@ func (k Keeper) SetAutoTxOnTimeout(ctx sdk.Context, sourcePort string, seq uint6
 }
 
 // SetAutoTxOnTimeout sets the AutoTx timeout result to the AutoTx
-func (k Keeper) SetAutoTxError(ctx sdk.Context, sourcePort string, seq uint64, err string) error {
+func (k Keeper) SetAutoTxError(ctx sdk.Context, sourcePort string, seq uint64, err string) {
 	id := k.getTmpAutoTxID(ctx, sourcePort, seq)
 	if id <= 0 {
-		return nil
+		return
 	}
 
-	k.Logger(ctx).Debug("auto_tx_error", "id", id)
+	k.Logger(ctx).Debug("auto_tx", "id", id, "error", err)
 
 	txInfo := k.GetAutoTxInfo(ctx, id)
 
 	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].Error = err
 	k.SetAutoTxInfo(ctx, &txInfo)
 
-	return nil
+	return
 }
 
 // AllowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
@@ -443,8 +460,10 @@ func (k Keeper) setTmpAutoTxID(ctx sdk.Context, autoTxID uint64, portID string, 
 }
 
 func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (protoMsgs []proto.Message, err error) {
+
 	if len(autoTxInfo.AutoTxHistory) != 0 {
-		for _, msg := range autoTxInfo.Msgs {
+		txMsgs := autoTxInfo.GetTxMsgs(k.cdc)
+		for _, msg := range txMsgs {
 			protoMsgs = append(protoMsgs, msg)
 		}
 		return protoMsgs, nil
@@ -466,10 +485,10 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (p
 		}
 
 		msgJSONString := string(msgJSON)
-		icaAddrToParse := "ICA_ADDR"
-		index := strings.Index(msgJSONString, icaAddrToParse)
+
+		index := strings.Index(msgJSONString, types.ParseICAValue)
 		if index == -1 {
-			protoMsgs = append(protoMsgs, msg)
+			protoMsgs = append(protoMsgs, txMsg)
 			txMsgs = append(txMsgs, txMsg)
 			continue
 		}
@@ -480,15 +499,15 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (p
 		}
 
 		// Replace the text "ICA_ADDR" in the JSON string
-		msgJSONString = strings.ReplaceAll(msgJSONString, icaAddrToParse, ica)
+		msgJSONString = strings.ReplaceAll(msgJSONString, types.ParseICAValue, ica)
 		// Unmarshal the modified JSON string back into a proto message
 		var updatedMsg sdk.Msg
 		err = k.cdc.UnmarshalInterfaceJSON([]byte(msgJSONString), &updatedMsg)
 		if err != nil {
 			return nil, err
 		}
+		protoMsgs = append(protoMsgs, updatedMsg)
 
-		protoMsgs = append(protoMsgs, msg)
 		txMsgs = append(txMsgs, updatedMsg)
 		parsedIcaAddr = true
 
