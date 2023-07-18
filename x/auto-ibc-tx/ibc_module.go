@@ -1,8 +1,6 @@
 package autoibctx
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -113,79 +111,85 @@ func (im IBCModule) OnAcknowledgementPacket(
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
+
 	var ack channeltypes.Acknowledgement
 	if err := channeltypes.SubModuleCdc.UnmarshalJSON(acknowledgement, &ack); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-27 packet acknowledgement: %v", err)
 	}
-
-	txMsgData := &sdk.TxMsgData{}
-	if err := proto.Unmarshal(ack.GetResult(), txMsgData); err != nil {
+	if !ack.Success() {
+		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, "error handling packet on host chain: see host chain events for details")
+	}
+	var txMsgData sdk.TxMsgData
+	if err := proto.Unmarshal(ack.GetResult(), &txMsgData); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-27 tx message data: %v", err)
 	}
 
-	//rewardType is used for Relayer Reward and Airdrop Reward
 	//handle message data
-	//set result in auto-tx history
 	switch len(txMsgData.Data) {
 	case 0:
-		return im.handleMsgResponses(ctx, txMsgData.GetMsgResponses(), relayer, packet)
+		// for SDK 0.46 and above
+		im.handleMsgResponses(ctx, txMsgData.GetMsgResponses(), relayer, packet)
 
+		//we process errors internally and return nil so acknoledgement is succesfull and ordered channel stays active.
+		return nil
 	default:
 		return im.handleDeprecatedMsgResponses(ctx, txMsgData, relayer, packet)
 	}
 }
 
-func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResp []*cdctypes.Any, relayer sdk.AccAddress, packet channeltypes.Packet) error {
-
-	rewardType := -1
+func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResp []*cdctypes.Any, relayer sdk.AccAddress, packet channeltypes.Packet) {
+	if len(msgResp) == 0 {
+		err := errorsmod.Wrapf(sdkerrors.ErrInvalidType, "no messages in ICS-27 message response: %v", msgResp)
+		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
+		return
+	}
+	//msgClass is used for Relayer Reward and Airdrop Reward
+	msgClass := -1
 
 	for index, anyResp := range msgResp {
-		im.keeper.Logger(ctx).Info("msg response in ICS-27 packet", "response", anyResp.GoString(), "typeURL", anyResp.GetTypeUrl())
+		im.keeper.Logger(ctx).Debug("msg response in ICS-27 packet", "response", anyResp.GoString(), "typeURL", anyResp.GetTypeUrl())
+
 		rewardClass := getMsgRewardType(ctx, anyResp.GetTypeUrl())
-		if index == 0 {
-			rewardType = rewardClass
+		if index == 0 && rewardClass > 0 {
+			msgClass = rewardClass
+			im.keeper.HandleRelayerReward(ctx, relayer, msgClass)
+		}
+
+		//set result in AutoTx history
+		err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, msgClass, packet.Sequence)
+		if err != nil {
+			im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
+			return
 		}
 	}
 
-	if rewardType >= 0 {
-		im.keeper.HandleRelayerReward(ctx, relayer, rewardType)
-
-	}
-
-	err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, rewardType, packet.Sequence)
-	if err != nil {
-		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
-		return err
-	}
-
-	return nil
+	return
 }
 
-func (im IBCModule) handleDeprecatedMsgResponses(ctx sdk.Context, txMsgData *sdk.TxMsgData, relayer sdk.AccAddress, packet channeltypes.Packet) error {
-	rewardType := -1
+func (im IBCModule) handleDeprecatedMsgResponses(ctx sdk.Context, txMsgData sdk.TxMsgData, relayer sdk.AccAddress, packet channeltypes.Packet) error {
+	msgClass := -1
 
 	for index, msgData := range txMsgData.Data {
 		response, rewardClass, err := handleMsgData(ctx, msgData)
 		if err != nil {
-			fmt.Printf("handleMsgData err: %v\n", err)
+			im.keeper.Logger(ctx).Debug("message response error in ICS-27 packet response", "error", err)
 			return err
 		}
 
 		im.keeper.Logger(ctx).Debug("message response in ICS-27 packet response", "response", response)
-		if index == 0 {
-			rewardType = rewardClass
+		if index == 0 && rewardClass > 0 {
+			msgClass = rewardClass
+			im.keeper.HandleRelayerReward(ctx, relayer, rewardClass)
 		}
-	}
+		if index == len(txMsgData.Data)-1 {
+			// set result in AutoTx history
+			err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, msgClass, packet.Sequence)
+			if err != nil {
+				im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
+				return err
+			}
 
-	if rewardType >= 0 {
-		im.keeper.HandleRelayerReward(ctx, relayer, rewardType)
-
-	}
-
-	err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, rewardType, packet.Sequence)
-	if err != nil {
-		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
-		return err
+		}
 	}
 
 	return nil

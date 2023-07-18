@@ -17,10 +17,10 @@ import (
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -43,6 +43,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -87,10 +89,6 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/trstlabs/trst/x/mint"
-	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
-	minttypes "github.com/trstlabs/trst/x/mint/types"
-
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
@@ -108,6 +106,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclient "github.com/cosmos/ibc-go/v7/modules/core/02-client"
+	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
@@ -119,6 +118,9 @@ import (
 	autoibctxkeeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
 	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
 	"github.com/trstlabs/trst/x/claim"
+	"github.com/trstlabs/trst/x/mint"
+	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
+	minttypes "github.com/trstlabs/trst/x/mint/types"
 
 	"github.com/trstlabs/trst/x/alloc"
 	allockeeper "github.com/trstlabs/trst/x/alloc/keeper"
@@ -144,10 +146,13 @@ var (
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		claim.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
 		alloc.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			[]govclient.ProposalHandler{paramsclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler},
+			[]govclient.ProposalHandler{paramsclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler,
+				ibcclientclient.UpdateClientProposalHandler,
+				ibcclientclient.UpgradeProposalHandler},
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -239,6 +244,7 @@ type TrstApp struct {
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
+	AuthzKeeper           authzkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	TransferStack         *autoibctx.IBCMiddleware
 	// make scoped keepers public for test purposes
@@ -291,6 +297,7 @@ func NewTrstApp(
 		slashingtypes.StoreKey,
 		govtypes.StoreKey,
 		feegrant.StoreKey,
+		authzkeeper.StoreKey,
 		paramstypes.StoreKey,
 		ibcexported.StoreKey,
 		upgradetypes.StoreKey,
@@ -393,6 +400,8 @@ func NewTrstApp(
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 
+	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper)
+
 	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
 
 	// get skipUpgradeHeights from the app options
@@ -452,7 +461,7 @@ func NewTrstApp(
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 	)
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
-	//transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
+	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
 	app.IBCFeeKeeper = ibcfeekeeper.NewKeeper(
 		appCodec, keys[ibcfeetypes.StoreKey],
@@ -476,13 +485,12 @@ func NewTrstApp(
 	)
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
 
-	app.AutoIbcTxKeeper = autoibctxkeeper.NewKeeper(appCodec, keys[autoibctxtypes.StoreKey], app.ICAControllerKeeper, app.ScopedAutoIbcTxKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.AccountKeeper, app.GetSubspace(autoibctxtypes.ModuleName), autoibctxkeeper.NewMultiAutoIbcTxHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter())
+	app.AutoIbcTxKeeper = autoibctxkeeper.NewKeeper(appCodec, keys[autoibctxtypes.StoreKey], app.ICAControllerKeeper, scopedAutoIbcTxKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.AccountKeeper, app.GetSubspace(autoibctxtypes.ModuleName), autoibctxkeeper.NewMultiAutoIbcTxHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter())
 	autoIbcTxModule := autoibctx.NewAppModule(appCodec, app.AutoIbcTxKeeper)
 	autoIbcTxIBCModule := autoibctx.NewIBCModule(app.AutoIbcTxKeeper)
 
-	hooksTransferModule := autoibctx.NewIBCMiddleware(transfer.NewIBCModule(app.TransferKeeper), app.AutoIbcTxKeeper, interfaceRegistry)
-	app.TransferStack = &hooksTransferModule
-
+	autoTxIcs20HooksTransferModule := autoibctx.NewIBCMiddleware(transferIBCModule, app.AutoIbcTxKeeper, interfaceRegistry)
+	app.TransferStack = &autoTxIcs20HooksTransferModule
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(autoIbcTxIBCModule, app.ICAControllerKeeper)
 	icaControllerStack := ibcfee.NewIBCMiddleware(icaControllerIBCModule, app.IBCFeeKeeper)
 
@@ -525,6 +533,7 @@ func NewTrstApp(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper /*  app.GetSubspace(minttypes.ModuleName) */),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
@@ -550,14 +559,14 @@ func NewTrstApp(
 		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName,
 		alloctypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibcexported.ModuleName, ibctransfertypes.ModuleName, authtypes.ModuleName,
-		banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, feegrant.ModuleName,
+		banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, authz.ModuleName, feegrant.ModuleName,
 		paramstypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, autoibctxtypes.ModuleName, ibcfeetypes.ModuleName, claimtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, ibcexported.ModuleName, ibctransfertypes.ModuleName,
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
-		minttypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, feegrant.ModuleName, paramstypes.ModuleName,
+		minttypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName,
 		upgradetypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, autoibctxtypes.ModuleName, ibcfeetypes.ModuleName, minttypes.ModuleName,
 		alloctypes.ModuleName, claimtypes.ModuleName,
 	)
@@ -572,7 +581,7 @@ func NewTrstApp(
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, claimtypes.ModuleName,
 		alloctypes.ModuleName, crisistypes.ModuleName,
 		ibcexported.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
-		icatypes.ModuleName, autoibctxtypes.ModuleName, feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
+		icatypes.ModuleName, autoibctxtypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 	)
 

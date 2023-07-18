@@ -12,15 +12,9 @@
 	},
 
 	// Set *default* container specific settings.json values on container create.
-	"settings": {},
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"workspaceFolder": "/home/vscode/trst",
-	"extensions": [
-		"bungcip.better-toml",
-		"rust-lang.rust-analyzer",
-		"golang.Go"
-	],
 
 	"customizations": {
 		"vscode": {
@@ -29,19 +23,16 @@
 				"go.toolsManagement.checkForUpdates": "local",
 				"go.useLanguageServer": true,
 				"go.gopath": "/go",
-				"lldb.executable": "/usr/bin/lldb",
 				// VS Code don't watch files under ./target
 				"files.watcherExclude": {
 					"**/target/**": true
-				},
-				"rust-analyzer.checkOnSave.command": "clippy"
+				}
 			},
 
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"vadimcn.vscode-lldb",
 				"mutantdino.resourcemonitor",
-				"rust-lang.rust-analyzer",
 				"tamasfe.even-better-toml",
 				"serayuzgur.crates",
 				"golang.Go"

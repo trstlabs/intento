@@ -1,0 +1,260 @@
+version: "3"
+services:
+  trst1:
+    image: trustlesshub:trst
+    volumes:
+      - ./state/trst1:/home/trst/.trst
+    ports:
+      - "26657:26657"
+      - "1317:1317"
+      - "9090:9090"
+
+  trst2:
+    image: trustlesshub:trst
+    volumes:
+      - ./state/trst2:/home/trst/.trst
+
+  trst3:
+    image: trustlesshub:trst
+    volumes:
+      - ./state/trst3:/home/trst/.trst
+
+  gaia1:
+    image: trustlesshub:gaia
+    volumes:
+      - ./state/gaia1:/home/gaia/.gaia
+    ports:
+      - "26557:26657"
+      - "1307:1317"
+      - "9080:9090"
+
+  gaia2:
+    image: trustlesshub:gaia
+    volumes:
+      - ./state/gaia2:/home/gaia/.gaia
+
+  gaia3:
+    image: trustlesshub:gaia
+    volumes:
+      - ./state/gaia3:/home/gaia/.gaia
+
+  gaia4:
+    image: trustlesshub:gaia
+    volumes:
+      - ./state/gaia4:/home/gaia/.gaia
+
+  gaia5:
+    image: trustlesshub:gaia
+    volumes:
+      - ./state/gaia5:/home/gaia/.gaia
+
+  juno1:
+    image: trustlesshub:juno
+    volumes:
+      - ./state/juno1:/home/juno/.juno
+    ports:
+      - "26457:26657"
+      - "1297:1317"
+      - "9070:9090"
+
+  juno2:
+    image: trustlesshub:juno
+    volumes:
+      - ./state/juno2:/home/juno/.juno
+
+  juno3:
+    image: trustlesshub:juno
+    volumes:
+      - ./state/juno3:/home/juno/.juno
+
+  juno4:
+    image: trustlesshub:juno
+    volumes:
+      - ./state/juno4:/home/juno/.juno
+
+  juno5:
+    image: trustlesshub:juno
+    volumes:
+      - ./state/juno5:/home/juno/.juno
+
+  osmo1:
+    image: trustlesshub:osmo
+    volumes:
+      - ./state/osmo1:/home/osmosis/.osmosisd
+    ports:
+      - "26357:26657"
+      - "1287:1317"
+      - "9060:9090"
+
+  osmo2:
+    image: trustlesshub:osmo
+    volumes:
+      - ./state/osmo2:/home/osmosis/.osmosisd
+
+  osmo3:
+    image: trustlesshub:osmo
+    volumes:
+      - ./state/osmo3:/home/osmosis/.osmosisd
+
+  osmo4:
+    image: trustlesshub:osmo
+    volumes:
+      - ./state/osmo4:/home/osmosis/.osmosisd
+
+  osmo5:
+    image: trustlesshub:osmo
+    volumes:
+      - ./state/osmo5:/home/osmosis/.osmosisd
+
+  stars1:
+    image: trustlesshub:stars
+    volumes:
+      - ./state/stars1:/home/stars/.starsd
+    ports:
+      - "26257:26657"
+      - "1277:1317"
+      - "9050:9090"
+
+  stars2:
+    image: trustlesshub:stars
+    volumes:
+      - ./state/stars2:/home/stars/.starsd
+
+  stars3:
+    image: trustlesshub:stars
+    volumes:
+      - ./state/stars3:/home/stars/.starsd
+
+  stars4:
+    image: trustlesshub:stars
+    volumes:
+      - ./state/stars4:/home/stars/.starsd
+
+  stars5:
+    image: trustlesshub:stars
+    volumes:
+      - ./state/stars5:/home/stars/.starsd
+
+  # For the host chain, we must override the command to prevent an old binary from
+  # being run when testing upgrades
+  host1:
+    image: trustlesshub:trst
+    command: trstd start
+    volumes:
+      - ./state/host1:/home/trst/.trst
+    ports:
+      - "26157:26657"
+      - "1267:1317"
+      - "9040:9090"
+
+  host2:
+    image: trustlesshub:trst
+    command: trstd start
+    volumes:
+      - ./state/host2:/home/trst/.trst
+
+  host3:
+    image: trustlesshub:trst
+    command: trstd start
+    volumes:
+      - ./state/host3:/home/trst/.trst
+
+  host4:
+    image: trustlesshub:trst
+    command: trstd start
+    volumes:
+      - ./state/host4:/home/trst/.trst
+
+  host5:
+    image: trustlesshub:trst
+    command: trstd start
+    volumes:
+      - ./state/host5:/home/trst/.trst
+
+  evmos1:
+    image: trustlesshub:evmos
+    volumes:
+      - ./state/evmos1:/home/evmos/.evmosd
+    ports:
+      - "26057:26657"
+      - "1257:1317"
+      - "9030:9090"
+
+  evmos2:
+    image: trustlesshub:evmos
+    volumes:
+      - ./state/evmos2:/home/evmos/.evmosd
+
+  evmos3:
+    image: trustlesshub:evmos
+    volumes:
+      - ./state/evmos3:/home/evmos/.evmosd
+
+  evmos4:
+    image: trustlesshub:evmos
+    volumes:
+      - ./state/evmos4:/home/evmos/.evmosd
+
+  evmos5:
+    image: trustlesshub:evmos
+    volumes:
+      - ./state/evmos5:/home/evmos/.evmosd
+
+  # Fill in new host zone being tested here
+
+  hermes:
+    image: trustlesshub:hermes
+    volumes:
+      - ~/.hermes:/home/hermes/.hermes
+      - ./state/hermes/config.toml:/home/hermes/.hermes/config.toml
+    restart: always
+
+  relayer-gaia:
+    image: trustlesshub:relayer
+    volumes:
+      - ./state/relayer-gaia:/home/relayer/.relayer
+      
+    restart: always
+    command: [ "bash", "start.sh", "trst-gaia" ]
+
+  relayer-juno:
+    image: trustlesshub:relayer
+    volumes:
+      - ./state/relayer-juno:/home/relayer/.relayer
+    restart: always
+    command: [ "bash", "start.sh", "trst-juno" ]
+
+  relayer-osmo:
+    image: trustlesshub:relayer
+    volumes:
+      - ./state/relayer-osmo:/home/relayer/.relayer
+    restart: always
+    command: [ "bash", "start.sh", "trst-osmo" ]
+
+  relayer-stars:
+    image: trustlesshub:relayer
+    volumes:
+      - ./state/relayer-stars:/home/relayer/.relayer
+    restart: always
+    command: [ "bash", "start.sh", "trst-stars" ]
+
+  relayer-host:
+    image: trustlesshub:relayer
+    volumes:
+      - ./state/relayer-host:/home/relayer/.relayer
+    restart: always
+    command: [ "bash", "start.sh", "trst-host" ]
+
+  relayer-evmos:
+    image: trustlesshub:relayer
+    volumes:
+      - ./state/relayer-evmos:/home/relayer/.relayer
+    restart: always
+    command: [ "bash", "start.sh", "trst-evmos" ]
+
+  relayer-juno-osmo:
+    image: trustlesshub:relayer
+    volumes:
+      - ./state/relayer-juno-osmo:/home/relayer/.relayer
+    restart: always
+    command: [ "bash", "start.sh", "juno-osmo" ]

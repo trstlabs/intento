@@ -2,9 +2,9 @@ name: Compile TRST
 
 on:
   push:
-    branches: ["master"]
+    branches: ["main"]
   pull_request:
-    branches: ["master"]
+    branches: ["main"]
 
 # This workflow makes x86_64 binaries for mac, windows, and linux.
 jobs:

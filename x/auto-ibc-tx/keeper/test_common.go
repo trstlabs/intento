@@ -10,6 +10,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -99,7 +100,7 @@ import (
 
 func setupTest(t *testing.T, additionalCoinsInWallets sdk.Coins) (sdk.Context, Keeper, sdk.AccAddress, crypto.PrivKey, sdk.AccAddress, crypto.PrivKey) {
 
-	ctx, keepers := CreateTestInput(t, false)
+	ctx, keepers, _ := CreateTestInput(t, false)
 	accKeeper, keeper := keepers.AccountKeeper, keepers.AutoIbcTxKeeper
 
 	walletA, privKeyA := CreateFakeFundedAccount(ctx, accKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 200000)).Add(additionalCoinsInWallets...))
@@ -227,7 +228,7 @@ type TestConfigType struct {
 }
 
 // encoders can be nil to accept the defaults, or set it to override some of the message handlers (like default)
-func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
+func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, codec.Codec) {
 	tempDir, err := os.MkdirTemp("", "test")
 	require.NoError(t, err)
 	t.Cleanup(func() { os.RemoveAll(tempDir) })
@@ -492,7 +493,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		encodingConfig.Codec, keys[govtypes.StoreKey], accountKeeper, bankKeeper,
 		stakingKeeper, msgServiceRouter, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	keeper := NewKeeper(
+	autoIbcTxKeeper := NewKeeper(
 		encodingConfig.Codec,
 		keys[autoibctxtypes.StoreKey],
 		icacontrollerKeeper,
@@ -505,7 +506,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		NewMultiAutoIbcTxHooks(claimKeeper.Hooks()),
 		msgServiceRouter,
 	)
-	keeper.SetParams(ctx, autoibctxtypes.DefaultParams())
+	autoIbcTxKeeper.SetParams(ctx, autoibctxtypes.DefaultParams())
 
 	am := module.NewManager( // minimal module set that we use for message/ query tests
 		bank.NewAppModule(encodingConfig.Codec, bankKeeper, authKeeper, GetSubspace(banktypes.ModuleName, paramsKeeper)),
@@ -521,7 +522,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		AccountKeeper:             authKeeper,
 		StakingKeeper:             *stakingKeeper,
 		DistKeeper:                distKeeper,
-		AutoIbcTxKeeper:           keeper,
+		AutoIbcTxKeeper:           autoIbcTxKeeper,
 		GovKeeper:                 *govKeeper,
 		BankKeeper:                bankKeeper,
 		MintKeeper:                mintKeeper,
@@ -531,7 +532,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers) {
 		ICAControllerKeeper:       &icacontrollerKeeper,
 	}
 
-	return ctx, keepers
+	return ctx, keepers, encodingConfig.Codec
 }
 
 func CreateFakeFundedAccount(ctx sdk.Context, am authkeeper.AccountKeeper, bk bankkeeper.Keeper, coins sdk.Coins) (sdk.AccAddress, crypto.PrivKey) {

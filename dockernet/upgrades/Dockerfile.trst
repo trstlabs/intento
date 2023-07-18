@@ -1,0 +1,28 @@
+# syntax = docker/dockerfile:1
+FROM alpine:3.15
+
+ARG upgrade_name
+ENV UPGRADE_NAME=$upgrade_name
+
+ENV DAEMON_NAME=trstd
+ENV DAEMON_HOME=/home/trst/.trst
+ENV DAEMON_RESTART_AFTER_UPGRADE=true
+ENV COSMOVISOR_HOME=/home/trst/cosmovisor
+
+RUN apk add --update vim bash \
+    && addgroup -g 1000 trst \
+    && adduser -S -h /home/trst -D trst -u 1000 -G trst
+
+COPY --from=trustlesshub:cosmovisor /opt/cosmos-sdk/cosmovisor/cosmovisor /usr/local/bin/cosmovisor
+COPY --from=trustlesshub:cosmovisor --chown=trst:trst /opt/build/trstd1 ${COSMOVISOR_HOME}/genesis/bin/trstd
+COPY --from=trustlesshub:trst --chown=trst:trst /usr/local/bin/trstd ${COSMOVISOR_HOME}/upgrades/${UPGRADE_NAME}/bin/trstd
+COPY --from=trustlesshub:trst --chown=trst:trst /usr/local/bin/trstd /usr/local/bin/trstd
+
+USER trst
+WORKDIR /home/trst
+
+EXPOSE 26657 26656 1317 9090
+
+RUN echo "mv ${COSMOVISOR_HOME} ${DAEMON_HOME}/cosmovisor && cosmovisor run start" > start.sh
+
+CMD ["bash", "start.sh" ]

@@ -1,29 +1,42 @@
-ARG IMG_TAG=latest
+# syntax = docker/dockerfile:1
 
-# Compile the trstd binary
-FROM golang:1.20-alpine AS trstd-builder
-WORKDIR /src/app/
-COPY go.mod go.sum* ./
-RUN go mod download
+ARG GO_VERSION="1.20"
+ARG RUNNER_IMAGE="alpine:3.16"
+
+FROM golang:${GO_VERSION}-alpine as builder
+
+WORKDIR /opt
+RUN apk add --no-cache make git gcc musl-dev openssl-dev linux-headers
+
+COPY go.mod .
+COPY go.sum .
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/root/go/pkg/mod \
+    go mod download
+
+# Copy the remaining files
 COPY . .
-RUN rm -rf /src/app/go-cosmwasm
-RUN rm -rf /src/app/x/registration
-RUN rm -rf /src/app/x/compute
-RUN rm -rf /src/app/x/item
-RUN rm -rf /src/app/cmd/trstd/attestation.go
-RUN rm -rf /src/app/cmd/trstd/genwasm.go
 
-ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python3
-RUN apk add --no-cache $PACKAGES
-RUN CGO_ENABLED=0 make install
+RUN LINK_STATICALLY=true make build
 
 # Add to a distroless container
-FROM cgr.dev/chainguard/static:$IMG_TAG
-ARG IMG_TAG
-COPY --from=trstd-builder /go/bin/trstd /usr/local/bin/
-COPY --from=trstd-builder --chown=0:0 /src/app/ /src/app/
+FROM ${RUNNER_IMAGE}
 
-EXPOSE 26656 26657 1317 9090
-USER 0
+COPY --from=builder /opt/build/trstd /usr/local/bin/trstd
+RUN apk add bash vim sudo dasel \
+    && addgroup -g 1000 trst \
+    && adduser -S -h /home/trst -D trst -u 1000 -G trst 
 
-ENTRYPOINT ["trstd", "start"]
+RUN mkdir -p /etc/sudoers.d \
+    && echo '%wheel ALL=(ALL) ALL' > /etc/sudoers.d/wheel \
+    && echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers \
+    && adduser trst wheel 
+
+USER 1000
+ENV HOME /home/trst
+WORKDIR $HOME
+
+EXPOSE 26657 26656 1317 9090
+
+CMD ["trstd", "start"]
