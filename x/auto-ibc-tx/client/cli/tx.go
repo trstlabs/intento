@@ -5,13 +5,13 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/pkg/errors"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
@@ -47,10 +47,19 @@ func getRegisterAccountCmd() *cobra.Command {
 				return err
 			}
 
+			// TestVersion defines a reusable interchainaccounts version string for testing purposes
+			version := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
+				Version:                icatypes.Version,
+				ControllerConnectionId: viper.GetString(flagConnectionID),
+				HostConnectionId:       viper.GetString(flagCounterpartyConnectionID),
+				Encoding:               icatypes.EncodingProtobuf,
+				TxType:                 icatypes.TxTypeSDKMultiMsg,
+			}))
+
 			msg := types.NewMsgRegisterAccount(
 				clientCtx.GetFromAddress().String(),
 				viper.GetString(flagConnectionID),
-				viper.GetString(flagVersion),
+				version,
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -61,7 +70,7 @@ func getRegisterAccountCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagVersion, "", "IBC Version")
+	cmd.Flags().String(flagCounterpartyConnectionID, "", "Counterparty Connection ID, from host chain")
 	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain")
 	_ = cmd.MarkFlagRequired(flagConnectionID)
 
@@ -92,7 +101,7 @@ func getSubmitTxCmd() *cobra.Command {
 				}
 
 				if err := cdc.UnmarshalInterfaceJSON(contents, &txMsg); err != nil {
-					return errors.Wrap(err, "error unmarshalling sdk msg file")
+					return errors.Wrap(err, "error unmarshalling sdk msg")
 				}
 			}
 
@@ -134,14 +143,24 @@ func getSubmitAutoTxCmd() *cobra.Command {
 			for _, arg := range args {
 				var txMsg sdk.Msg
 				if err := cdc.UnmarshalInterfaceJSON([]byte(arg), &txMsg); err != nil {
-					// check for file path if JSON input is not provided
-					msgContents, err := os.ReadFile(arg)
-					if err != nil {
-						return errors.Wrap(err, "neither JSON input nor path to .json file for sdk msg were provided")
+					// Check for file path if JSON input is not provided
+					var msgContents []byte
+
+					// Check if arg is a valid file path
+					if _, err := os.Stat(arg); err == nil {
+						// arg is a file path, read the file contents
+						msgContents, err = os.ReadFile(arg)
+						if err != nil {
+							return errors.Wrap(err, "failed to read file")
+						}
+					} else {
+						// arg is not a valid file path, assume it is a JSON string
+						msgContents = []byte(arg)
 					}
 
+					// Parse the JSON content
 					if err := cdc.UnmarshalInterfaceJSON(msgContents, &txMsg); err != nil {
-						return errors.Wrap(err, "error unmarshalling sdk msg file")
+						return errors.Wrap(err, "error unmarshalling sdk msg")
 					}
 					txMsgs = append(txMsgs, txMsg)
 				}
@@ -211,18 +230,29 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 			for _, arg := range args {
 				var txMsg sdk.Msg
 				if err := cdc.UnmarshalInterfaceJSON([]byte(arg), &txMsg); err != nil {
-					// check for file path if JSON input is not provided
-					msgContents, err := os.ReadFile(arg)
-					if err != nil {
-						return errors.Wrap(err, "neither JSON input nor path to .json file for sdk msg were provided")
+					// Check for file path if JSON input is not provided
+					var msgContents []byte
+
+					// Check if arg is a valid file path
+					if _, err := os.Stat(arg); err == nil {
+						// arg is a file path, read the file contents
+						msgContents, err = os.ReadFile(arg)
+						if err != nil {
+							return errors.Wrap(err, "failed to read file")
+						}
+					} else {
+						// arg is not a valid file path, assume it is a JSON string
+						msgContents = []byte(arg)
 					}
 
+					// Parse the JSON content
 					if err := cdc.UnmarshalInterfaceJSON(msgContents, &txMsg); err != nil {
-						return errors.Wrap(err, "error unmarshalling sdk msg file")
+						return errors.Wrap(err, "error unmarshalling sdk msg")
 					}
 					txMsgs = append(txMsgs, txMsg)
 				}
 			}
+
 			var txIds []uint64
 			dependsOnString := viper.GetStringSlice(flagDependsOn)
 			for _, id := range dependsOnString {
@@ -240,7 +270,16 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 					return err
 				}
 			}
-			msg, err := types.NewMsgRegisterAccountAndSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /* viper.GetUint64(flagRetries) */, viper.GetString(flagVersion))
+			// TestVersion defines a reusable interchainaccounts version string for testing purposes
+			version := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
+				Version:                icatypes.Version,
+				ControllerConnectionId: viper.GetString(flagConnectionID),
+				HostConnectionId:       viper.GetString(flagCounterpartyConnectionID),
+				Encoding:               icatypes.EncodingProtobuf,
+				TxType:                 icatypes.TxTypeSDKMultiMsg,
+			}))
+
+			msg, err := types.NewMsgRegisterAccountAndSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /* viper.GetUint64(flagRetries) */, version)
 			if err != nil {
 				return err
 			}
@@ -258,7 +297,7 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 	cmd.Flags().String(flagInterval, "", "A custom interval for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
 	cmd.Flags().String(flagStartAt, "0", "A custom start time in UNIX time, optional")
 	cmd.Flags().String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
-	cmd.Flags().String(flagVersion, "", "IBC Version, optional")
+	cmd.Flags().String(flagCounterpartyConnectionID, "", "Counterparty Connection ID, from host chain, optional")
 	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain, optional")
 
 	cmd.Flags().StringArray(flagDependsOn, []string{}, "array of auto-tx-ids this auto-tx depends on e.g. 5, 6")
@@ -296,14 +335,24 @@ func getUpdateAutoTxCmd() *cobra.Command {
 				}
 				var txMsg sdk.Msg
 				if err := cdc.UnmarshalInterfaceJSON([]byte(arg), &txMsg); err != nil {
-					// check for file path if JSON input is not provided
-					msgContents, err := os.ReadFile(arg)
-					if err != nil {
-						return errors.Wrap(err, "neither JSON input nor path to .json file for sdk msg were provided")
+					// Check for file path if JSON input is not provided
+					var msgContents []byte
+
+					// Check if arg is a valid file path
+					if _, err := os.Stat(arg); err == nil {
+						// arg is a file path, read the file contents
+						msgContents, err = os.ReadFile(arg)
+						if err != nil {
+							return errors.Wrap(err, "failed to read file")
+						}
+					} else {
+						// arg is not a valid file path, assume it is a JSON string
+						msgContents = []byte(arg)
 					}
 
+					// Parse the JSON content
 					if err := cdc.UnmarshalInterfaceJSON(msgContents, &txMsg); err != nil {
-						return errors.Wrap(err, "error unmarshalling sdk msg file")
+						return errors.Wrap(err, "error unmarshalling sdk msg")
 					}
 					txMsgs = append(txMsgs, txMsg)
 				}
