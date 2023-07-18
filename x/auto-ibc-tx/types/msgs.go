@@ -180,9 +180,12 @@ func (msg MsgSubmitAutoTx) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgSubmitAutoTx) ValidateBasic() error {
-	if len(msg.Msgs[0].GetValue()) == 0 {
-		return fmt.Errorf("can't execute an empty msg")
+	if len(msg.Msgs) == 0 {
+		return fmt.Errorf("msg.Msgs is empty, at least one message is required")
 	}
+	// if len(msg.Msgs[0].GetValue()) == 0 {
+	// 	return fmt.Errorf("can't execute an empty msg")
+	// }
 	if len(msg.Msgs) >= 10 {
 		return fmt.Errorf("can't execute more than 9 messages")
 	}
@@ -254,9 +257,12 @@ func (msg MsgRegisterAccountAndSubmitAutoTx) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgRegisterAccountAndSubmitAutoTx) ValidateBasic() error {
-	if len(msg.Msgs[0].GetValue()) == 0 {
-		return fmt.Errorf("can't execute an empty msg")
+	if len(msg.Msgs) == 0 {
+		return fmt.Errorf("msg.Msgs is empty, at least one message is required")
 	}
+	// if len(msg.Msgs[0].GetValue()) == 0 {
+	// 	return fmt.Errorf("can't execute an empty msg")
+	// }
 	if len(msg.Msgs) >= 10 {
 		return fmt.Errorf("can't execute more than 9 messages")
 	}
