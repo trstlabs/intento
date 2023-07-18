@@ -26,7 +26,7 @@ for chain in ${HOST_CHAINS[@]}; do
     chmod -R 777 $STATE/relayer-${chain_name}/config
     printf "TRST <> $chain - Creating client, connection, and transfer channel..." | tee -a $relayer_logs
 
-    $relayer_exec rly transact link trst-${chain_name} >>$relayer_logs 2>&1
+    $relayer_exec rly tx link trst-${chain_name} >>$relayer_logs 2>&1
     echo "Done"
 
     $DOCKER_COMPOSE up -d relayer-${chain_name}

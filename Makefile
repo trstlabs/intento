@@ -433,12 +433,16 @@ start-dockernet-all: stop-dockernet build-dockernet
 clean-dockernet:
 	@docker-compose -f $(DOCKERNET_COMPOSE_FILE) stop
 	@docker-compose -f $(DOCKERNET_COMPOSE_FILE) down
+	@bash $(DOCKERNET_HOME)/pkill.sh
 	rm -rf $(DOCKERNET_HOME)/state
 	docker image prune -a
 
 stop-dockernet:
-	@bash $(DOCKERNET_HOME)/pkill.sh
-	docker-compose -f $(DOCKERNET_COMPOSE_FILE) down
+	@docker-compose -f $(DOCKERNET_COMPOSE_FILE) stop
+	@docker-compose -f $(DOCKERNET_COMPOSE_FILE) down -v
+
+test-integration-dockernet:
+	bash $(DOCKERNET_HOME)/tests/run_all_tests.sh
 
 upgrade-build-old-binary:
 	@DOCKERNET_HOME=$(DOCKERNET_HOME) BUILDDIR=$(BUILDDIR) bash $(DOCKERNET_HOME)/upgrades/build_old_binary.sh

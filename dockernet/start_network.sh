@@ -53,17 +53,13 @@ fi
 
 # Initialize the state for each chain
 for chain in TRST ${HOST_CHAINS[@]}; do
+    echo "Initializing $chain..."
     bash $SRC/init_chain.sh $chain
 done
 
 
-# Start the chain and create the transfer channels
+echo "Start the chain..."
 bash $SRC/start_chain.sh 
+
+echo "Start relayers and the transfer channels..."
 bash $SRC/start_relayers.sh 
-
-# # Register all host zones 
-# for i in ${!HOST_CHAINS[@]}; do
-#     bash $SRC/register_host.sh ${HOST_CHAINS[$i]} $i 
-# done
-
-$SRC/create_logs.sh &

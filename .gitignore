@@ -48,7 +48,7 @@ docs/.vuepress/dist
 initdev.sh
 init.log
 /data
-
+.testnets
 # dockernet
 state/*
 scripts/state

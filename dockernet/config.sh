@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -eu
-DOCKERNET_HOME=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DOCKERNET_HOME=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 STATE=$DOCKERNET_HOME/state
 LOGS=$DOCKERNET_HOME/logs
@@ -16,11 +16,11 @@ TX_LOGS=$DOCKERNET_HOME/logs/tx.log
 KEYS_LOGS=$DOCKERNET_HOME/logs/keys.log
 
 # List of hosts enabled
-HOST_CHAINS=() 
+HOST_CHAINS=()
 
 # If no host zones are specified above:
 #  `start-docker` defaults to just GAIA if HOST_CHAINS is empty
-#  `start-docker-all` always runs all hosts
+#  `start-docker-all` runs 3 hosts
 # Available host zones:
 #  - GAIA
 #  - JUNO
@@ -28,10 +28,10 @@ HOST_CHAINS=()
 #  - STARS
 #  - EVMOS
 #  - HOST (our chain enabled as a host zone)
-if [[ "${ALL_HOST_CHAINS:-false}" == "true" ]]; then 
+if [[ "${ALL_HOST_CHAINS:-false}" == "true" ]]; then
   HOST_CHAINS=(GAIA EVMOS HOST)
-elif [[ "${#HOST_CHAINS[@]}" == "0" ]]; then 
-  HOST_CHAINS=(GAIA)
+elif [[ "${#HOST_CHAINS[@]}" == "0" ]]; then
+  HOST_CHAINS=(HOST)
 fi
 
 # DENOMS
@@ -49,17 +49,17 @@ STSTARS_DENOM="stustars"
 STWALK_DENOM="stuwalk"
 STEVMOS_DENOM="staevmos"
 
-IBC_TRST_DENOM='ibc/BE4E6F930E604F5E410DCA660E8F4DB6F2BDE1F8E4730CAE2C4B15982EFB42B8'  
+IBC_TRST_DENOM='ibc/BE4E6F930E604F5E410DCA660E8F4DB6F2BDE1F8E4730CAE2C4B15982EFB42B8'
 
 IBC_GAIA_CHANNEL_0_DENOM='ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2'
 IBC_GAIA_CHANNEL_1_DENOM='ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9'
 IBC_GAIA_CHANNEL_2_DENOM='ibc/9117A26BA81E29FA4F78F57DC2BD90CD3D26848101BA880445F119B22A1E254E'
 IBC_GAIA_CHANNEL_3_DENOM='ibc/A4DB47A9D3CF9A068D454513891B526702455D3EF08FB9EB558C561F9DC2B701'
 
-IBC_JUNO_CHANNEL_0_DENOM='ibc/04F5F501207C3626A2C14BFEF654D51C2E0B8F7CA578AB8ED272A66FE4E48097' 
-IBC_JUNO_CHANNEL_1_DENOM='ibc/EFF323CC632EC4F747C61BCE238A758EFDB7699C3226565F7C20DA06509D59A5' 
+IBC_JUNO_CHANNEL_0_DENOM='ibc/04F5F501207C3626A2C14BFEF654D51C2E0B8F7CA578AB8ED272A66FE4E48097'
+IBC_JUNO_CHANNEL_1_DENOM='ibc/EFF323CC632EC4F747C61BCE238A758EFDB7699C3226565F7C20DA06509D59A5'
 IBC_JUNO_CHANNEL_2_DENOM='ibc/4CD525F166D32B0132C095F353F4C6F033B0FF5C49141470D1EFDA1D63303D04'
-IBC_JUNO_CHANNEL_3_DENOM='ibc/C814F0B662234E24248AE3B2FE2C1B54BBAF12934B757F6E7BC5AEC119963895' 
+IBC_JUNO_CHANNEL_3_DENOM='ibc/C814F0B662234E24248AE3B2FE2C1B54BBAF12934B757F6E7BC5AEC119963895'
 
 IBC_OSMO_CHANNEL_0_DENOM='ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518'
 IBC_OSMO_CHANNEL_1_DENOM='ibc/0471F1C4E7AFD3F07702BEF6DC365268D64570F7C1FDC98EA6098DD6DE59817B'
@@ -108,9 +108,9 @@ MAX_DEPOSIT_PERIOD="30s"
 VOTING_PERIOD="30s"
 INITIAL_ANNUAL_PROVISIONS="10000000000000.000000000000000000"
 
-# Tokens are denominated in the macro-unit 
+# Tokens are denominated in the macro-unit
 # (e.g. 5000000TRST implies 5000000000000utrst)
-VAL_TOKENS=5000000
+GENESIS_TOKENS=5000000
 STAKE_TOKENS=5000
 ADMIN_TOKENS=1000
 
@@ -121,19 +121,22 @@ VAL_MNEMONIC_3="tenant neck ask season exist hill churn rice convince shock modi
 VAL_MNEMONIC_4="tail forward era width glory magnet knock shiver cup broken turkey upgrade cigar story agent lake transfer misery sustain fragile parrot also air document"
 VAL_MNEMONIC_5="crime lumber parrot enforce chimney turtle wing iron scissors jealous indicate peace empty game host protect juice submit motor cause second picture nuclear area"
 VAL_MNEMONICS=(
-    "$VAL_MNEMONIC_1"
-    "$VAL_MNEMONIC_2"
-    "$VAL_MNEMONIC_3"
-    "$VAL_MNEMONIC_4"
-    "$VAL_MNEMONIC_5"
+  "$VAL_MNEMONIC_1"
+  "$VAL_MNEMONIC_2"
+  "$VAL_MNEMONIC_3"
+  "$VAL_MNEMONIC_4"
+  "$VAL_MNEMONIC_5"
 )
-USR_MNEMONIC="tonight bonus finish chaos orchard plastic view nurse salad regret pause awake link bacon process core talent whale million hope luggage sauce card weasel"
 
-# TRST 
+USER_MNEMONIC="tonight bonus finish chaos orchard plastic view nurse salad regret pause awake link bacon process core talent whale million hope luggage sauce card weasel"
+
+# TRST
 TRST_CHAIN_ID=TRST
 TRST_NODE_PREFIX=trst
-TRST_NUM_NODES=3
+TRST_NUM_NODES=2
 TRST_VAL_PREFIX=val
+TRST_USER_ACCT=usr1
+TRST_USER_ADDRESS=trust1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t
 TRST_ADDRESS_PREFIX=trust
 TRST_DENOM=$TRST_DENOM
 TRST_RPC_PORT=26657
@@ -142,7 +145,7 @@ TRST_ADMIN_ADDRESS=trust1u20df3trc2c2zdhm8qvh2hdjx9ewh00sxv8dyg
 TRST_ADMIN_MNEMONIC="tone cause tribe this switch near host damage idle fragile antique tail soda alien depth write wool they rapid unfold body scan pledge soft"
 
 # Binaries are contigent on whether we're doing an upgrade or not
-if [[ "${UPGRADE_NAME:-}" == "" ]]; then 
+if [[ "${UPGRADE_NAME:-}" == "" ]]; then
   TRST_BINARY="$DOCKERNET_HOME/../build/trstd"
 else
   if [[ "${NEW_BINARY:-false}" == "false" ]]; then
@@ -153,39 +156,42 @@ else
 fi
 TRST_MAIN_CMD="$TRST_BINARY --home $DOCKERNET_HOME/state/${TRST_NODE_PREFIX}1"
 
-# GAIA 
+# GAIA
 GAIA_CHAIN_ID=GAIA
 GAIA_NODE_PREFIX=gaia
 GAIA_NUM_NODES=1
 GAIA_BINARY="$DOCKERNET_HOME/../build/gaiad"
 GAIA_VAL_PREFIX=gval
-GAIA_USR_ACCT=gusr1
+GAIA_USER_ACCT=gusr1
+GAIA_USER_ADDRESS='cosmos1wdplq6qjh2xruc7qqagma9ya665q6qhcwju3ng'
 GAIA_ADDRESS_PREFIX=cosmos
 GAIA_DENOM=$ATOM_DENOM
 GAIA_RPC_PORT=26557
 GAIA_MAIN_CMD="$GAIA_BINARY --home $DOCKERNET_HOME/state/${GAIA_NODE_PREFIX}1"
 GAIA_RECEIVER_ADDRESS='cosmos1g6qdx6kdhpf000afvvpte7hp0vnpzapuyxp8uf'
 
-# JUNO 
+# JUNO
 JUNO_CHAIN_ID=JUNO
 JUNO_NODE_PREFIX=juno
 JUNO_NUM_NODES=1
 JUNO_BINARY="$DOCKERNET_HOME/../build/junod"
 JUNO_VAL_PREFIX=jval
-JUNO_USR_ACCT=jusr1
+JUNO_USER_ACCT=jusr1
+JUNO_USER_ADDRESS='TODO'
 JUNO_ADDRESS_PREFIX=juno
 JUNO_DENOM=$JUNO_DENOM
 JUNO_RPC_PORT=26457
 JUNO_MAIN_CMD="$JUNO_BINARY --home $DOCKERNET_HOME/state/${JUNO_NODE_PREFIX}1"
 JUNO_RECEIVER_ADDRESS='juno1sy0q0jpaw4t3hnf6k5wdd4384g0syzlp7rrtsg'
 
-# OSMO 
+# OSMO
 OSMO_CHAIN_ID=OSMO
 OSMO_NODE_PREFIX=osmo
 OSMO_NUM_NODES=1
 OSMO_BINARY="$DOCKERNET_HOME/../build/osmosisd"
 OSMO_VAL_PREFIX=oval
-OSMO_USR_ACCT=ousr1
+OSMO_USER_ACCT=ousr1
+OSMO_USER_ADDRESS='TODO'
 OSMO_ADDRESS_PREFIX=osmo
 OSMO_DENOM=$OSMO_DENOM
 OSMO_RPC_PORT=26357
@@ -198,7 +204,8 @@ STARS_NODE_PREFIX=stars
 STARS_NUM_NODES=1
 STARS_BINARY="$DOCKERNET_HOME/../build/starsd"
 STARS_VAL_PREFIX=sgval
-STARS_USR_ACCT=sgusr1
+STARS_USER_ACCT=sgusr1
+STARS_USER_ADDRESS='TODO'
 STARS_ADDRESS_PREFIX=stars
 STARS_DENOM=$STARS_DENOM
 STARS_RPC_PORT=26257
@@ -212,11 +219,12 @@ HOST_NUM_NODES=1
 HOST_BINARY="$DOCKERNET_HOME/../build/trstd"
 HOST_VAL_PREFIX=hval
 HOST_ADDRESS_PREFIX=trust
-HOST_USR_ACCT=husr1
+HOST_USER_ACCT=husr1
+HOST_USER_ADDRESS='trust1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t'
 HOST_DENOM=$WALK_DENOM
 HOST_RPC_PORT=26157
 HOST_MAIN_CMD="$HOST_BINARY --home $DOCKERNET_HOME/state/${HOST_NODE_PREFIX}1"
-HOST_RECEIVER_ADDRESS='stride1trm75t8g83f26u4y8jfds7pms9l587a7q227k9'
+HOST_RECEIVER_ADDRESS='trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx'
 
 # EVMOS
 EVMOS_CHAIN_ID=evmos_9001-2
@@ -225,7 +233,8 @@ EVMOS_NUM_NODES=1
 EVMOS_BINARY="$DOCKERNET_HOME/../build/evmosd"
 EVMOS_VAL_PREFIX=eval
 EVMOS_ADDRESS_PREFIX=evmos
-EVMOS_USR_ACCT=eusr1
+EVMOS_USER_ACCT=eusr1
+EVMOS_USER_ADDRESS='TODO'
 EVMOS_DENOM=$EVMOS_DENOM
 EVMOS_RPC_PORT=26057
 EVMOS_MAIN_CMD="$EVMOS_BINARY --home $DOCKERNET_HOME/state/${EVMOS_NODE_PREFIX}1"
@@ -248,11 +257,11 @@ RELAYER_STARS_ACCT=rly5
 RELAYER_HOST_ACCT=rly6
 RELAYER_EVMOS_ACCT=rly7
 RELAYER_ACCTS=(
-  $RELAYER_GAIA_ACCT 
-  $RELAYER_JUNO_ACCT 
-  $RELAYER_OSMO_ACCT 
-  $RELAYER_STARS_ACCT 
-  $RELAYER_HOST_ACCT 
+  $RELAYER_GAIA_ACCT
+  $RELAYER_JUNO_ACCT
+  $RELAYER_OSMO_ACCT
+  $RELAYER_STARS_ACCT
+  $RELAYER_HOST_ACCT
   $RELAYER_EVMOS_ACCT
 )
 
@@ -271,28 +280,28 @@ RELAYER_MNEMONICS=(
   "$RELAYER_EVMOS_MNEMONIC"
 )
 
-TRST_ADDRESS() { 
-  # After an upgrade, the keys query can sometimes print migration info, 
+TRST_ADDRESS() {
+  # After an upgrade, the keys query can sometimes print migration info,
   # so we need to filter by valid addresses using the prefix
-  $TRST_MAIN_CMD keys show ${TRST_USR_ACCT} --keyring-backend test -a | grep $TRST_ADDRESS_PREFIX
+  $TRST_MAIN_CMD keys show ${TRST_USER_ACCT} --keyring-backend test -a | grep $TRST_ADDRESS_PREFIX
 }
-GAIA_ADDRESS() { 
-  $GAIA_MAIN_CMD keys show ${GAIA_USR_ACCT} --keyring-backend test -a 
+GAIA_ADDRESS() {
+  $GAIA_MAIN_CMD keys show ${GAIA_USER_ACCT} --keyring-backend test -a
 }
-JUNO_ADDRESS() { 
-  $JUNO_MAIN_CMD keys show ${JUNO_USR_ACCT} --keyring-backend test -a 
+JUNO_ADDRESS() {
+  $JUNO_MAIN_CMD keys show ${JUNO_USER_ACCT} --keyring-backend test -a
 }
-OSMO_ADDRESS() { 
-  $OSMO_MAIN_CMD keys show ${OSMO_USR_ACCT} --keyring-backend test -a 
+OSMO_ADDRESS() {
+  $OSMO_MAIN_CMD keys show ${OSMO_USER_ACCT} --keyring-backend test -a
 }
-STARS_ADDRESS() { 
-  $STARS_MAIN_CMD keys show ${STARS_USR_ACCT} --keyring-backend test -a 
+STARS_ADDRESS() {
+  $STARS_MAIN_CMD keys show ${STARS_USER_ACCT} --keyring-backend test -a
 }
-HOST_ADDRESS() { 
-  $HOST_MAIN_CMD keys show ${HOST_USR_ACCT} --keyring-backend test -a 
+HOST_ADDRESS() {
+  $HOST_MAIN_CMD keys show ${HOST_USER_ACCT} --keyring-backend test -a
 }
-EVMOS_ADDRESS() { 
-  $EVMOS_MAIN_CMD keys show ${EVMOS_USR_ACCT} --keyring-backend test -a 
+EVMOS_ADDRESS() {
+  $EVMOS_MAIN_CMD keys show ${EVMOS_USER_ACCT} --keyring-backend test -a
 }
 
 CSLEEP() {
@@ -310,49 +319,29 @@ GET_VAR_VALUE() {
 WAIT_FOR_BLOCK() {
   num_blocks="${2:-1}"
   for i in $(seq $num_blocks); do
-    ( tail -f -n0 $1 & ) | grep -q "executed block.*height="
-  done
-}
-
-WAIT_FOR_STRING() {
-  ( tail -f -n0 $1 & ) | grep -q "$2"
-}
-
-WAIT_FOR_BALANCE_CHANGE() {
-  chain=$1
-  address=$2
-  denom=$3
-
-  max_blocks=30
-
-  main_cmd=$(GET_VAR_VALUE ${chain}_MAIN_CMD)
-  initial_balance=$($main_cmd q bank balances $address --denom $denom | grep amount)
-  for i in $(seq $max_blocks); do
-    new_balance=$($main_cmd q bank balances $address --denom $denom | grep amount)
-
-    if [[ "$new_balance" != "$initial_balance" ]]; then
-      break
-    fi
-
-    WAIT_FOR_BLOCK $TRST_LOGS 1
+    (tail -f -n0 $1 &) | grep -q "executed block.*height="
   done
 }
 
 WAIT_FOR_AUTO_TX() {
   address=$1
 
-  max_blocks=30
+  max_blocks=10
 
-  initial_autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address)
+  initial_autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | jq -r .auto_tx_infos)
+  initial_autotxs=$(echo "$initial_autotxs" | awk '{print $2}')
+
+  echo "INIT TXS $initial_autotxs"
+  echo "INIT LEN ${initial_autotxs[@]}"
   ${#distro[@]}
   for i in $(seq $max_blocks); do
-    new_autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address)
-
-   if [[ "${new_autotxs[@]}" != "${initial_autotxs[@]}" ]]; then
+    new_autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | jq -r .auto_tx_infos)
+    echo "NEW LEN ${new_autotxs[@]}"
+    if [[ "${new_autotxs[@]}" != "${initial_autotxs[@]}" ]]; then
       break
     fi
 
-    WAIT_FOR_BLOCK $TRST_LOGS 1
+    WAIT_FOR_BLOCK $TRST_LOGS 10
   done
 }
 
@@ -366,7 +355,7 @@ GET_VAL_ADDR() {
 
 GET_ICA_ADDR() {
   connection_id="$1"
-  user_address="$2" 
+  user_address="$2"
 
   # $TRST_MAIN_CMD q stakeibc show-host-zone $chain_id | grep ${ica_type}_account -A 1 | grep address | awk '{print $2}'
   $TRST_MAIN_CMD query auto-ibc-tx interchainaccounts $connection_id $user_address json | grep interchain_account_address | awk '{print $2}'

@@ -212,7 +212,7 @@ services:
   relayer-gaia:
     image: trustlesshub:relayer
     volumes:
-      - ./state/relayer-gaia.config.yaml:/home/relayer/.relayer.config.yaml
+      - ./state/relayer-gaia:/home/relayer/.relayer
       
     restart: always
     command: [ "bash", "start.sh", "trst-gaia" ]

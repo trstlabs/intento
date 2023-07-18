@@ -75,7 +75,7 @@ while getopts sgojhir{n} flag; do
 {CHAIN}_BINARY="$DOCKERNET_HOME/../build/{new-host-zone}d"
 {CHAIN}_VAL_PREFIX={n}val
 {CHAIN}_ADDRESS_PREFIX=stars
-{CHAIN}_USR_ACCT={n}usr1
+{CHAIN}_USER_ACCT={n}usr1
 {CHAIN}_DENOM=${CHAIN}_DENOM
 {CHAIN}_RPC_PORT={the one included in the docker-compose above}
 {CHAIN}_MAIN_CMD="${CHAIN}_CMD --home $DOCKERNET_HOME/state/${${CHAIN}_NODE_PREFIX}1"
