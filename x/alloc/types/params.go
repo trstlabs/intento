@@ -67,15 +67,10 @@ func validateDistributionProportions(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.TrustlessContractIncentives.IsNegative() {
+	if v.RelayerIncentives.IsNegative() {
 		return errors.New("contract incentives distribution ratio should not be negative")
 	}
 
-	/*
-			if v.ItemIncentives.IsNegative() {
-			return errors.New("item incentives distribution ratio should not be negative")
-		}
-	*/
 	if v.Staking.IsNegative() {
 		return errors.New("staking distribution ratio should not be negative")
 	}
@@ -88,7 +83,7 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("community pool distribution ratio should not be negative")
 	}
 
-	totalProportions := v.TrustlessContractIncentives.Add(v.ContributorRewards) //.Add(v.ItemIncentives)
+	totalProportions := v.RelayerIncentives.Add(v.ContributorRewards)
 
 	// at least 60% is allocated to incentives
 
