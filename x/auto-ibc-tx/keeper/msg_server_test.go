@@ -98,7 +98,7 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 		registerInterchainAccount bool
 		owner                     string
 		connectionId              string
-		icaMsg                    sdk.Msg
+		sdkMsg                    sdk.Msg
 	)
 
 	testCases := []struct {
@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
 
 				// Create bank transfer message to execute on the host
-				icaMsg = &banktypes.MsgSend{
+				sdkMsg = &banktypes.MsgSend{
 					FromAddress: interchainAccountAddr,
 					ToAddress:   suite.chainB.SenderAccount.GetAddress().String(),
 					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
@@ -180,7 +180,7 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 			}
 
 			msgSrv := keeper.NewMsgServerImpl(GetAutoTxKeeperFromApp(icaAppA))
-			msg, err := types.NewMsgSubmitTx(owner, icaMsg, connectionId)
+			msg, err := types.NewMsgSubmitTx(owner, sdkMsg, connectionId)
 			suite.Require().NoError(err)
 
 			res, err := msgSrv.SubmitTx(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 		registerInterchainAccount bool
 		owner                     string
 		connectionId              string
-		icaMsg                    sdk.Msg
+		sdkMsg                    sdk.Msg
 		parseIcaAddress           bool
 		startAtBeforeBlockHeight  bool
 	)
@@ -222,11 +222,11 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 		{
 			"success - local autoTx", func() {
 				registerInterchainAccount = false
-				owner = TestOwnerAddress
+				owner = suite.chainA.SenderAccount.GetAddress().String()
 				connectionId = ""
-				icaMsg = &banktypes.MsgSend{
-					FromAddress: owner,
-					ToAddress:   suite.chainB.SenderAccount.GetAddress().String(),
+				sdkMsg = &banktypes.MsgSend{
+					FromAddress: suite.chainA.SenderAccount.GetAddress().String(),
+					ToAddress:   owner,
 					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
 				}
 			}, true,
@@ -289,10 +289,10 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 				interchainAccount := icaAppB.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
 				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
 				if parseIcaAddress {
-					interchainAccountAddr = "ICA_ADDR"
+					interchainAccountAddr = types.ParseICAValue
 				}
 				// Create bank transfer message to execute on the host
-				icaMsg = &banktypes.MsgSend{
+				sdkMsg = &banktypes.MsgSend{
 					FromAddress: interchainAccountAddr,
 					ToAddress:   suite.chainB.SenderAccount.GetAddress().String(),
 					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
@@ -307,7 +307,7 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 				startAt = uint64(suite.chainA.GetContext().BlockTime().Unix() - 60*60)
 			}
 
-			msg, err := types.NewMsgSubmitAutoTx(owner, label, []sdk.Msg{icaMsg}, connectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, []uint64{})
+			msg, err := types.NewMsgSubmitAutoTx(owner, label, []sdk.Msg{sdkMsg}, connectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, []uint64{})
 			suite.Require().NoError(err)
 			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
 
@@ -324,7 +324,7 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 			suite.Require().NotNil(res)
 
 			if parseIcaAddress {
-				err := icaMsg.ValidateBasic()
+				err := sdkMsg.ValidateBasic()
 				suite.Require().Contains(err.Error(), "bech32")
 				err = msg.ValidateBasic()
 				suite.Require().NoError(err)
@@ -355,8 +355,7 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 				msgJSON, err := icaAppA.AppCodec().MarshalInterfaceJSON(txMsg)
 				suite.Require().NoError(err)
 				msgJSONString := string(msgJSON)
-				icaAddrToParse := "ICA_ADDR"
-				index := strings.Index(msgJSONString, icaAddrToParse)
+				index := strings.Index(msgJSONString, types.ParseICAValue)
 				suite.Require().Equal(-1, index)
 
 			}
@@ -371,7 +370,7 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 		registerInterchainAccount bool
 		owner                     string
 		connectionId              string
-		icaMsg                    sdk.Msg
+		sdkMsg                    sdk.Msg
 		newEndTime                uint64
 		newStartAt                uint64
 		newInterval               string
@@ -453,14 +452,14 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
 
 				// Create bank transfer message to execute on the host
-				icaMsg = &banktypes.MsgSend{
+				sdkMsg = &banktypes.MsgSend{
 					FromAddress: interchainAccountAddr,
 					ToAddress:   suite.chainB.SenderAccount.GetAddress().String(),
 					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAutoTx(owner, "label", []sdk.Msg{icaMsg}, connectionId, "200s", "100s", uint64(suite.chainA.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, []uint64{})
+			msg, err := types.NewMsgSubmitAutoTx(owner, "label", []sdk.Msg{sdkMsg}, connectionId, "200s", "100s", uint64(suite.chainA.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, []uint64{})
 			suite.Require().NoError(err)
 			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
 			msgSrv := keeper.NewMsgServerImpl(GetAutoTxKeeperFromApp(icaAppA))
@@ -475,7 +474,7 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 				icaAppA.AutoIbcTxKeeper.SetAutoTxInfo(sdk.UnwrapSDKContext(wrappedCtx), &autoTx)
 				suite.chainA.NextBlock()
 			}
-			updateMsg, err := types.NewMsgUpdateAutoTx(owner, 1, "new_label", []sdk.Msg{icaMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, []uint64{})
+			updateMsg, err := types.NewMsgUpdateAutoTx(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, []uint64{})
 			suite.Require().NoError(err)
 			suite.chainA.Coordinator.IncrementTime()
 			suite.Require().NotEqual(suite.chainA.GetContext(), wrappedCtx)
