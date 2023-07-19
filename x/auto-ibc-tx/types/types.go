@@ -13,7 +13,7 @@ func (autoTxInfo AutoTxInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sd
 
 	for _, message := range autoTxInfo.Msgs {
 		var sdkMsg sdk.Msg
-		err := unpacker.UnpackAny(message, sdkMsg)
+		err := unpacker.UnpackAny(message, &sdkMsg)
 		if err != nil {
 			return nil
 		}
