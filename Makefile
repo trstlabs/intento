@@ -182,7 +182,7 @@ endif
 
 
 ###############################################################################
-###                           Tests & Simulation                            ###
+###                      		     Tests		                            ###
 ###############################################################################
 
 mocks: $(MOCKS_DIR)
@@ -190,36 +190,16 @@ mocks: $(MOCKS_DIR)
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
-# include sims.mk
 
-# PACKAGES_UNIT=$(shell go list ./... | grep -v -e '/tests/e2e')
-# PACKAGES_E2E=$(shell cd tests/e2e && go list ./... | grep '/e2e')
-# TEST_PACKAGES=./...
-# TEST_TARGETS := test-unit test-unit-cover test-race test-e2e
+test-unit:
+	@go test -mod=readonly ./x/alloc... ./x/mint... ./x/claim... ./x/auto-ibc-tx... ./app/...
 
-# test-unit: ARGS=-timeout=5m -tags='norace'
-# test-unit: TEST_PACKAGES=$(PACKAGES_UNIT)
-# test-unit-cover: ARGS=-timeout=5m -tags='norace' -coverprofile=coverage.txt -covermode=atomic
-# test-unit-cover: TEST_PACKAGES=$(PACKAGES_UNIT)
-# test-race: ARGS=-timeout=5m -race
-# test-race: TEST_PACKAGES=$(PACKAGES_UNIT)
-# test-e2e: ARGS=-timeout=25m -v
-# test-e2e: TEST_PACKAGES=$(PACKAGES_E2E)
-# $(TEST_TARGETS): run-tests
+test-unit-path:
+	@go test -mod=readonly ./x/$(path)/...
 
-# run-tests:
-# ifneq (,$(shell which tparse 2>/dev/null))
-# 	@echo "--> Running tests"
-# 	@go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) | tparse
-# else
-# 	@echo "--> Running tests"
-# 	@go test -mod=readonly $(ARGS) $(TEST_PACKAGES)
-# endif
+test-cover:
+	@go test -mod=readonly -race -coverprofile=coverage.out -covermode=atomic ./x/$(path)/...
 
-# .PHONY: run-tests $(TEST_TARGETS)
-
-# docker-build-debug:
-# 	@docker build -t trstlabs/trstd-e2e -f e2e.Dockerfile .
 
 ###############################################################################
 ###                                Docker                                  ###
