@@ -26,6 +26,7 @@ MICRO_DENOM_UNITS="${!MICRO_DENOM_UNITS_VAR_NAME:-000000}"
 GENESIS_TOKENS=${GENESIS_TOKENS}${MICRO_DENOM_UNITS}
 STAKE_TOKENS=${STAKE_TOKENS}${MICRO_DENOM_UNITS}
 ADMIN_TOKENS=${ADMIN_TOKENS}${MICRO_DENOM_UNITS}
+FAUCET_TOKENS=${FAUCET_TOKENS}${MICRO_DENOM_UNITS}
 
 set_trst_genesis() {
     genesis_config=$1
@@ -33,9 +34,9 @@ set_trst_genesis() {
     # update params
     jq '.app_state.claim.claim_records[0].address = "trust1nf6v2paty9m22l3ecm7dpakq2c92ueyue2d5yv"' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].initial_claimable_amount = [{"amount":"10000","denom":"utrst"}]' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    # jq '.app_state.claim.claim_records[0].status.action_completed = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    # jq '.app_state.claim.claim_records[0].status.vesting_period_completed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    # jq '.app_state.claim.claim_records[0].status.vesting_period_claimed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].status[0].action_completed = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].status[0].vesting_period_completed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].status[0].vesting_period_claimed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
    
     jq '.app_state.claim.params.duration_vesting_periods = ["40s","50s","60s","70s"]' $genesis_config > json.tmp && mv json.tmp $genesis_config
 
@@ -168,6 +169,10 @@ if [ "$CHAIN" == "TRST" ]; then
     TRST_ADMIN_ADDRESS=$($MAIN_CMD keys show $TRST_ADMIN_ACCT --keyring-backend test -a)
     $MAIN_CMD add-genesis-account ${TRST_ADMIN_ADDRESS} ${ADMIN_TOKENS}${DENOM}
 
+    # echo "$TRST_TEST_FAUCET_MNEMONIC" | $MAIN_CMD keys add $TRST_TEST_FAUCET_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
+    # TRST_TEST_FAUCET_ADDRESS=$($MAIN_CMD keys show $TRST_TEST_FAUCET_ACCT --keyring-backend test -a)
+    # $MAIN_CMD add-genesis-account ${TRST_TEST_FAUCET_ADDRESS} ${FAUCET_TOKENS}${DENOM}
+
     # Add a user account
     USER_ACCT_VAR=${CHAIN}_USER_ACCT
     USER_ACCT=${!USER_ACCT_VAR}
@@ -214,7 +219,7 @@ sed -i -E "s|persistent_peers = .*|persistent_peers = \"\"|g" $MAIN_CONFIG
 if [ "$CHAIN" == "TRST" ]; then 
     set_trst_genesis $MAIN_GENESIS
 else
-    sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
+    # sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     set_host_genesis $MAIN_GENESIS
 fi
 

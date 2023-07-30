@@ -118,6 +118,76 @@ setup_file() {
   assert_equal "$hval_token_balance_diff" "$TRANSFER_AMOUNT"
 }
 
+
+
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] AutoIbcTx MsgSend using ICA" {
+  # get initial balances on host account
+  receiver_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
+
+  # get token balance user on TRST
+  user_trst_balance_start=$($TRST_MAIN_CMD q bank balances $(TRST_ADDRESS) --denom $TRST_DENOM | GETBAL)
+
+  # build MsgRegisterAccount and retrieve trigger ICA account
+  $TRST_MAIN_CMD tx autoibctx register --connection-id connection-$CONNECTION_ID --counterparty-connection-id connection-0 --from $TRST_USER -y
+
+  sleep 20
+  ICA_ADDRESS=$($TRST_MAIN_CMD q autoibctx interchainaccounts $(TRST_ADDRESS) connection-$CONNECTION_ID)
+  ICA_ADDRESS=$(echo "$ICA_ADDRESS" | awk '{print $2}')
+  echo "ICA ADDR: $ICA_ADDRESS"
+
+  fund_ica=$($HOST_MAIN_CMD tx bank send $HOST_USER_ADDRESS $ICA_ADDRESS $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
+  echo "FUND RESP" "$fund_ica"
+
+  WAIT_FOR_BLOCK $TRST_LOGS 2
+
+  ica_token_balance_start=$($HOST_MAIN_CMD q bank balances $ICA_ADDRESS --denom $HOST_DENOM | GETBAL)
+
+  # Define the file path
+  msg_send_file="msg_send.json"
+
+  # build MsgSend with MSGSEND_AMOUNT
+  cat <<EOF >"./$msg_send_file"
+{
+   "@type":"/cosmos.bank.v1beta1.MsgSend",
+      "amount": [{
+         "amount": "$MSGSEND_AMOUNT",
+         "denom": "$HOST_DENOM"
+        }],
+      "from_address": "$ICA_ADDRESS",
+      "to_address": "$HOST_RECEIVER_ADDRESS"
+}
+EOF
+
+  # build MsgSubmitAutoTx with MsgSend, 60sec non-recurring
+  msg_submit_auto_tx=$($TRST_MAIN_CMD tx autoibctx submit-auto-tx "$msg_send_file" --label "test" --duration "60s" --connection-id connection-$CONNECTION_ID --from $TRST_USER -y)
+  echo "$msg_submit_auto_tx"
+
+  # WAIT_FOR_AUTO_TX wait for 30blocks
+  WAIT_FOR_BLOCK $TRST_LOGS 10
+  # Query the autoibctx to get the initial_autotxs output
+  autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $(TRST_ADDRESS))
+  
+  # Count the occurrences of 'duration:' using grep
+  occurrences=$(echo "$autotxs" | grep -c 'fee_address:')
+  echo "Number of occurrences: $occurrences"
+  
+  WAIT_FOR_BLOCK $TRST_LOGS 40 #10 blocks of 6 seconds to trigger AutoTx, 10 blocks to execute on host and call back
+
+  # calculate difference between token balance user before and after, should equal MSGSEND_AMOUNT
+  ica_token_balance_end=$($HOST_MAIN_CMD q bank balances $ICA_ADDRESS --denom $HOST_DENOM | GETBAL)
+  ica_diff=$(($ica_token_balance_end - $ica_token_balance_start))
+  printf "Balance end: %s\n" "$ica_token_balance_end"
+  assert_equal "$ica_diff" -$MSGSEND_AMOUNT
+
+  # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
+  receiver_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
+  receiver_diff=$(( $receiver_token_balance_end - $receiver_token_balance_start))
+  printf "Balance end: %s\n" "$receiver_token_balance_end"
+  assert_equal "$receiver_diff" $MSGSEND_AMOUNT
+}
+
+
+
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] AutoIbcTx MsgSend using AuthZ" {
   # get initial balances on host account
   user_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
@@ -135,28 +205,14 @@ setup_file() {
   ICA_ADDRESS=$(echo "$ICA_ADDRESS" | awk '{print $2}')
   echo "ICA ADDR: $ICA_ADDRESS"
 
-  grant_ica=$($HOST_MAIN_CMD tx authz grant $ICA_ADDRESS generic --msg-type "/cosmos.bank.v1beta1.MsgSend" --from $HOST_USER -y)
-  echo "$grant_ica"
+ $HOST_MAIN_CMD tx authz grant $ICA_ADDRESS generic --msg-type "/cosmos.bank.v1beta1.MsgSend" --from $HOST_USER -y
 
   WAIT_FOR_BLOCK $TRST_LOGS 2
 
-  grant=$($HOST_MAIN_CMD q authz grants-by-grantee $ICA_ADDRESS)
-  echo "GRANT" "$grant"
+ $HOST_MAIN_CMD q authz grants-by-grantee $ICA_ADDRESS
 
 
-  fund_ica=$($HOST_MAIN_CMD tx bank send $HOST_USER_ADDRESS $ICA_ADDRESS 120000$HOST_DENOM --from $HOST_USER -y)
-  echo "FUND RESP" "$fund_ica"
-
-  # build MsgSend with MSGSEND_AMOUNT
-  msg_send='{
-      "@type":"/cosmos.bank.v1beta1.MsgSend",
-        "amount": [{
-         "amount": "'$MSGSEND_AMOUNT'",
-         "denom": "'$HOST_DENOM'"
-        }],
-      "from_address": "'$ICA_ADDRESS'",
-      "to_address": "'$HOST_RECEIVER_ADDRESS'"
-  }'
+  $HOST_MAIN_CMD tx bank send $HOST_USER_ADDRESS $ICA_ADDRESS $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y
 
   # Define the file path
   msg_exec_file="msg_exec.json"
@@ -198,11 +254,11 @@ EOF
   WAIT_FOR_BLOCK $TRST_LOGS 40 #10 blocks of 6 seconds to trigger AutoTx, 10 blocks to execute on host and call back
 
   # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
-  # user_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
-  # user_diff=$(($user_token_balance_start - $user_token_balance_end))
-  # printf "Balance start: %s\n" "$user_token_balance_start"
-  # printf "Balance end: %s\n" "$user_token_balance_end"
-  # assert_equal "$user_diff" $MSGSEND_AMOUNT
+  user_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
+  user_diff=$(($user_token_balance_start - $user_token_balance_end))
+  printf "Balance start: %s\n" "$user_token_balance_start"
+  printf "Balance end: %s\n" "$user_token_balance_end"
+  assert_equal "$user_diff" 200000
 
   # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
   receiver_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
