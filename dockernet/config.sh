@@ -29,9 +29,9 @@ HOST_CHAINS=()
 #  - EVMOS
 #  - HOST (our chain enabled as a host zone)
 if [[ "${ALL_HOST_CHAINS:-false}" == "true" ]]; then
-  HOST_CHAINS=(GAIA EVMOS HOST)
+  HOST_CHAINS=(GAIA OSMO HOST)
 elif [[ "${#HOST_CHAINS[@]}" == "0" ]]; then
-  HOST_CHAINS=(HOST)
+  HOST_CHAINS=(GAIA)
 fi
 
 # DENOMS
@@ -40,14 +40,9 @@ ATOM_DENOM="uatom"
 JUNO_DENOM="ujuno"
 OSMO_DENOM="uosmo"
 STARS_DENOM="ustars"
-WALK_DENOM="uwalk"
+COSM_DENOM="ucosm"
 EVMOS_DENOM="aevmos"
-STATOM_DENOM="stuatom"
-STJUNO_DENOM="stujuno"
-STOSMO_DENOM="stuosmo"
-STSTARS_DENOM="stustars"
-STWALK_DENOM="stuwalk"
-STEVMOS_DENOM="staevmos"
+
 
 IBC_TRST_DENOM='ibc/BE4E6F930E604F5E410DCA660E8F4DB6F2BDE1F8E4730CAE2C4B15982EFB42B8'
 
@@ -110,9 +105,10 @@ INITIAL_ANNUAL_PROVISIONS="10000000000000.000000000000000000"
 
 # Tokens are denominated in the macro-unit
 # (e.g. 5000000TRST implies 5000000000000utrst)
-GENESIS_TOKENS=5000000
-STAKE_TOKENS=5000
+GENESIS_TOKENS=400000000
+STAKE_TOKENS=300000000
 ADMIN_TOKENS=1000
+FAUCET_TOKENS=1000000
 
 # CHAIN MNEMONICS
 VAL_MNEMONIC_1="close soup mirror crew erode defy knock trigger gather eyebrow tent farm gym gloom base lemon sleep weekend rich forget diagram hurt prize fly"
@@ -143,6 +139,9 @@ TRST_RPC_PORT=26657
 TRST_ADMIN_ACCT=admin
 TRST_ADMIN_ADDRESS=trust1u20df3trc2c2zdhm8qvh2hdjx9ewh00sxv8dyg
 TRST_ADMIN_MNEMONIC="tone cause tribe this switch near host damage idle fragile antique tail soda alien depth write wool they rapid unfold body scan pledge soft"
+TRST_TEST_FAUCET_ACCT=faucet
+TRST_TEST_FAUCET_ADDRESS=trust1m3s8jnlnche0rdrqk9qyawu0clrdu54ugmj4kw
+TRST_TEST_FAUCET_MNEMONIC="word twist toast cloth movie predict advance crumble escape whale sail such angry muffin balcony keen move employ cook valve hurt glimpse breeze brick"
 
 # Binaries are contigent on whether we're doing an upgrade or not
 if [[ "${UPGRADE_NAME:-}" == "" ]]; then
@@ -221,7 +220,7 @@ HOST_VAL_PREFIX=hval
 HOST_ADDRESS_PREFIX=trust
 HOST_USER_ACCT=husr1
 HOST_USER_ADDRESS='trust1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t'
-HOST_DENOM=$WALK_DENOM
+HOST_DENOM=$COSM_DENOM
 HOST_RPC_PORT=26157
 HOST_MAIN_CMD="$HOST_BINARY --home $DOCKERNET_HOME/state/${HOST_NODE_PREFIX}1"
 HOST_RECEIVER_ADDRESS='trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx'

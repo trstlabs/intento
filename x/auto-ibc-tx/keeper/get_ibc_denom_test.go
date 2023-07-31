@@ -10,12 +10,11 @@ package keeper_test
 
 func (s *KeeperTestSuite) TestIBCDenom() {
 	chainId := "HOST"
-	denom := "uwalk"
+	denom := "ucosm"
 	for i := 0; i < 4; i++ {
 		sourcePrefix := transfertypes.GetDenomPrefix("transfer", fmt.Sprintf("channel-%d", i))
 		prefixedDenom := sourcePrefix + denom
 
 		fmt.Printf("IBC_%s_CHANNEL_%d_DENOM='%s'\n", chainId, i, transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom())
 	}
-}
- */
+} */
