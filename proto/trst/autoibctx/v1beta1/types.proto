@@ -43,7 +43,6 @@ message AutoTxInfo {
   repeated uint64 depends_on_tx_ids = 14;
   repeated google.protobuf.Timestamp update_history = 15
       [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  ;
   // if execution of depended tx has not happend yet
   // uint64 max_retries = 16;
 }
