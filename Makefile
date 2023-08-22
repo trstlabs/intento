@@ -110,9 +110,7 @@ all: install lint run-tests test-e2e vulncheck
 
 BUILD_TARGETS := build install
 
-build:
-	mkdir -p $(BUILDDIR)/
-	go build -mod=readonly $(BUILD_FLAGS) -trimpath -o $(BUILDDIR) ./...;
+build: BUILD_ARGS=-o $(BUILDDIR)/
 
 $(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
 	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./cmd/trstd
@@ -409,7 +407,7 @@ build-dockernet:
 start-dockernet: 
 	@bash $(DOCKERNET_HOME)/start_network.sh
 
-start-dockernet-all: stop-dockernet build-dockernet
+start-dockernet-all:
 	@ALL_HOST_CHAINS=true bash $(DOCKERNET_HOME)/start_network.sh
 
 clean-dockernet:

@@ -17,3 +17,6 @@
 [submodule "dockernet/tests/bats/bats-support"]
 	path = dockernet/tests/bats/bats-support
 	url = https://github.com/bats-core/bats-support.git
+[submodule "deps/osmosis"]
+	path = deps/osmosis
+	url = https://github.com/osmosis-labs/osmosis.git
