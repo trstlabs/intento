@@ -29,7 +29,7 @@ HOST_CHAINS=()
 #  - EVMOS
 #  - HOST (our chain enabled as a host zone)
 if [[ "${ALL_HOST_CHAINS:-false}" == "true" ]]; then
-  HOST_CHAINS=(GAIA OSMO HOST)
+  HOST_CHAINS=(GAIA OSMO)
 elif [[ "${#HOST_CHAINS[@]}" == "0" ]]; then
   HOST_CHAINS=(GAIA)
 fi
@@ -89,15 +89,8 @@ IBC_OSMO_DENOM=$IBC_OSMO_CHANNEL_2_DENOM
 IBC_STARS_DENOM=$IBC_STARS_CHANNEL_3_DENOM
 
 # CHAIN PARAMS
-BLOCK_TIME='1s'
-TRST_HOUR_EPOCH_DURATION="90s"
-TRST_DAY_EPOCH_DURATION="100s"
-TRST_EPOCH_EPOCH_DURATION="40s"
-TRST_MINT_EPOCH_DURATION="20s"
-HOST_DAY_EPOCH_DURATION="60s"
-HOST_HOUR_EPOCH_DURATION="60s"
-HOST_WEEK_EPOCH_DURATION="60s"
-HOST_MINT_EPOCH_DURATION="60s"
+
+BLOCK_TIME="4s"
 UNBONDING_TIME="120s"
 MAX_DEPOSIT_PERIOD="30s"
 VOTING_PERIOD="30s"
@@ -105,10 +98,15 @@ INITIAL_ANNUAL_PROVISIONS="10000000000000.000000000000000000"
 
 # Tokens are denominated in the macro-unit
 # (e.g. 5000000TRST implies 5000000000000utrst)
-GENESIS_TOKENS=400000000
-STAKE_TOKENS=300000000
-ADMIN_TOKENS=1000
+GENESIS_TOKENS=40000000
+STAKE_TOKENS=30000000
+ADMIN_TOKENS=10000
 FAUCET_TOKENS=1000000
+
+# faucet
+TEST_FAUCET_ACCT=faucet
+TEST_FAUCET_MNEMONIC="word twist toast cloth movie predict advance crumble escape whale sail such angry muffin balcony keen move employ cook valve hurt glimpse breeze brick"
+
 
 # CHAIN MNEMONICS
 VAL_MNEMONIC_1="close soup mirror crew erode defy knock trigger gather eyebrow tent farm gym gloom base lemon sleep weekend rich forget diagram hurt prize fly"
@@ -129,7 +127,7 @@ USER_MNEMONIC="tonight bonus finish chaos orchard plastic view nurse salad regre
 # TRST
 TRST_CHAIN_ID=TRST
 TRST_NODE_PREFIX=trst
-TRST_NUM_NODES=2
+TRST_NUM_NODES=3
 TRST_VAL_PREFIX=val
 TRST_USER_ACCT=usr1
 TRST_USER_ADDRESS=trust1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t
@@ -139,9 +137,6 @@ TRST_RPC_PORT=26657
 TRST_ADMIN_ACCT=admin
 TRST_ADMIN_ADDRESS=trust1u20df3trc2c2zdhm8qvh2hdjx9ewh00sxv8dyg
 TRST_ADMIN_MNEMONIC="tone cause tribe this switch near host damage idle fragile antique tail soda alien depth write wool they rapid unfold body scan pledge soft"
-TRST_TEST_FAUCET_ACCT=faucet
-TRST_TEST_FAUCET_ADDRESS=trust1m3s8jnlnche0rdrqk9qyawu0clrdu54ugmj4kw
-TRST_TEST_FAUCET_MNEMONIC="word twist toast cloth movie predict advance crumble escape whale sail such angry muffin balcony keen move employ cook valve hurt glimpse breeze brick"
 
 # Binaries are contigent on whether we're doing an upgrade or not
 if [[ "${UPGRADE_NAME:-}" == "" ]]; then
@@ -190,7 +185,7 @@ OSMO_NUM_NODES=1
 OSMO_BINARY="$DOCKERNET_HOME/../build/osmosisd"
 OSMO_VAL_PREFIX=oval
 OSMO_USER_ACCT=ousr1
-OSMO_USER_ADDRESS='TODO'
+OSMO_USER_ADDRESS='osmo1wdplq6qjh2xruc7qqagma9ya665q6qhcxf0p96'
 OSMO_ADDRESS_PREFIX=osmo
 OSMO_DENOM=$OSMO_DENOM
 OSMO_RPC_PORT=26357

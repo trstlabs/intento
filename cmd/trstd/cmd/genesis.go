@@ -327,8 +327,8 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(150_000_000_000_000)
 
 	genParams.MintParams.ReductionFactor = sdk.NewDec(3).QuoInt64(4)
-	//31,536,000 seconds a year/5.5seconds=5733818 blocks
-	genParams.MintParams.BlocksPerYear = uint64(5733818)
+	//31,536,000 seconds a year
+	genParams.MintParams.BlocksPerYear = uint64(31540000 / 2) //assuming 2s average block times, param to be updated periodically
 	// staking
 	genParams.StakingParams = stakingtypes.DefaultParams()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 21 //3 weeks
@@ -437,12 +437,18 @@ func TestnetGenesisParams() GenesisParams {
 	votingPeriod := time.Minute
 	genParams.GovParams.VotingPeriod = &votingPeriod
 
+	//autotx
+	genParams.AutoIbcTxParams.MinAutoTxDuration = time.Second * 40
+	genParams.AutoIbcTxParams.MinAutoTxInterval = time.Second * 40
+
 	//claim
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime
 	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 5 // 5 days
 	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 5    // 5 days
 	genParams.ClaimParams.DurationVestingPeriods = []time.Duration{time.Minute, time.Minute * 2, time.Minute * 5, time.Minute}
 
+	//31,536,000 seconds a year and estimated 4s block times
+	genParams.MintParams.BlocksPerYear = uint64(31540000 / 4)
 	//compute
 	// genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 60
 	// genParams.ComputeParams.MinContractDuration = time.Second * 10
