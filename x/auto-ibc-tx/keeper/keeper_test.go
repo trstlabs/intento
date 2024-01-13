@@ -151,11 +151,11 @@ func RegisterInterchainAccount(endpoint *ibctesting.Endpoint, owner string) erro
 	return nil
 }
 
-func (suite *KeeperTestSuite) receivePacket(receiver, memo string) []byte {
-	return suite.receivePacketWithSequence(receiver, memo, 0)
+func (suite *KeeperTestSuite) receiveTransferPacket(receiver, memo string) []byte {
+	return suite.receiveTransferPacketWithSequence(receiver, memo, 0)
 }
 
-func (suite *KeeperTestSuite) receivePacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
+func (suite *KeeperTestSuite) receiveTransferPacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
 	// fmt.Println(memo)
 	path := NewTransferPath(suite.chainA, suite.chainB)
 
@@ -170,19 +170,25 @@ func (suite *KeeperTestSuite) receivePacketWithSequence(receiver, memo string, p
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 
 	// Update both clients
-	err = path.EndpointB.UpdateClient()
+	// recv in chain a
+	// get the ack from the chain a's response
+	// manually send the acknowledgement to chain b
+	ack := receivePacket(path, suite, packet)
+	return ack
+}
+
+func receivePacket(path *ibctesting.Path, suite *KeeperTestSuite, packet channeltypes.Packet) []byte {
+	err := path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 	err = path.EndpointA.UpdateClient()
 	suite.Require().NoError(err)
 
-	// recv in chain a
 	res, err := path.EndpointA.RecvPacketWithResult(packet)
 	suite.Require().NoError(err)
-	// get the ack from the chain a's response
+
 	ack, err := ibctesting.ParseAckFromEvents(res.GetEvents())
 	suite.Require().NoError(err)
 
-	// manually send the acknowledgement to chain b
 	err = path.EndpointA.AcknowledgePacket(packet, ack)
 	suite.Require().NoError(err)
 	return ack

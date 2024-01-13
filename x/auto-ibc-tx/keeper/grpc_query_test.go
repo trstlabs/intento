@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
@@ -106,7 +105,7 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 				assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[i].ConnectionID)
 				assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[i].Interval)
 				assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[i].EndTime)
-				assert.Equal(t, expectedAutoTx.DependsOnTxIds, got.AutoTxInfos[i].DependsOnTxIds)
+				assert.Equal(t, expectedAutoTx.Configuration, got.AutoTxInfos[i].Configuration)
 			}
 		})
 	}
@@ -144,7 +143,7 @@ func TestQueryAutoTxsList(t *testing.T) {
 		assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[i].ConnectionID)
 		assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[i].Interval)
 		assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[i].EndTime)
-		assert.Equal(t, expectedAutoTx.DependsOnTxIds, got.AutoTxInfos[i].DependsOnTxIds)
+		assert.Equal(t, expectedAutoTx.Configuration, got.AutoTxInfos[i].Configuration)
 		assert.Equal(t, expectedAutoTx.UpdateHistory, got.AutoTxInfos[i].UpdateHistory)
 	}
 }
@@ -163,7 +162,6 @@ func TestQueryAutoTxsListWithAuthZMsg(t *testing.T) {
 
 	expectedAutoTx, err := CreateFakeAuthZAutoTx(autoTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 	require.NoError(t, err)
-	fmt.Printf("%v\n", len(expectedAutoTx.Msgs))
 	got, err := autoTxKeeper.AutoTxs(sdk.WrapSDKContext(ctx), &types.QueryAutoTxsRequest{})
 
 	require.NoError(t, err)
@@ -183,7 +181,7 @@ func TestQueryAutoTxsListWithAuthZMsg(t *testing.T) {
 	assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[0].ConnectionID)
 	assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[0].Interval)
 	assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[0].EndTime)
-	assert.Equal(t, expectedAutoTx.DependsOnTxIds, got.AutoTxInfos[0].DependsOnTxIds)
+	assert.Equal(t, expectedAutoTx.Configuration, got.AutoTxInfos[0].Configuration)
 	assert.Equal(t, expectedAutoTx.UpdateHistory, got.AutoTxInfos[0].UpdateHistory)
 
 }
@@ -236,10 +234,11 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 		Msgs:     anys,
 		Interval: interval,
 
-		StartTime: startAt,
-		ExecTime:  execTime,
-		EndTime:   endTime,
-		PortID:    portID,
+		StartTime:     startAt,
+		ExecTime:      execTime,
+		EndTime:       endTime,
+		PortID:        portID,
+		Configuration: &types.ExecutionConfiguration{SaveMsgResponses: true},
 	}
 
 	k.SetAutoTxInfo(ctx, &autoTx)

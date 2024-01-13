@@ -1,8 +1,6 @@
 package autoibctx
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -15,12 +13,11 @@ import (
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
 
-func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, int, error) {
-	fmt.Printf("handling data for typeurl: %v and data: %v\n", msgData.MsgType, msgData.Data)
+func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (proto.Message, int, error) {
+	// fmt.Printf("handling data for typeurl: %v and data: %v\n", msgData.MsgType, msgData.Data)
 
 	var msgResponse proto.Message
 	var rewardType int
-
 	switch msgData.MsgType {
 
 	// authz
@@ -72,14 +69,14 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (string, int, error) {
 		rewardType = types.KeyAutoTxIncentiveForOsmoTx
 
 	default:
-		return "", -1, nil
+		return nil, -1, nil
 	}
 
 	if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-		return "", -1, errorsmod.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal response message: %s", err.Error())
+		return nil, -1, errorsmod.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal response message: %s", err.Error())
 	}
 
-	return msgResponse.String(), rewardType, nil
+	return msgResponse, rewardType, nil
 }
 
 func getMsgRewardType(ctx sdk.Context, typeUrl string) int {

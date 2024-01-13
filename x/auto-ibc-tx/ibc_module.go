@@ -144,8 +144,7 @@ func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResp []*cdctypes.Any,
 		return
 	}
 	//msgClass is used for Relayer Reward and Airdrop Reward
-	msgClass := -1
-
+	var msgClass int // Initialize msgClass outside the loop
 	for index, anyResp := range msgResp {
 		im.keeper.Logger(ctx).Debug("msg response in ICS-27 packet", "response", anyResp.GoString(), "typeURL", anyResp.GetTypeUrl())
 
@@ -154,20 +153,21 @@ func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResp []*cdctypes.Any,
 			msgClass = rewardClass
 			im.keeper.HandleRelayerReward(ctx, relayer, msgClass)
 		}
+	}
 
-		//set result in AutoTx history
-		err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, msgClass, packet.Sequence)
-		if err != nil {
-			im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
-			return
-		}
+	// set result in AutoTx history
+	err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, msgClass, packet.Sequence, msgResp)
+	if err != nil {
+		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
+		return
 	}
 
 	return
 }
 
 func (im IBCModule) handleDeprecatedMsgResponses(ctx sdk.Context, txMsgData sdk.TxMsgData, relayer sdk.AccAddress, packet channeltypes.Packet) error {
-	msgClass := -1
+	//msgClass is used for Relayer Reward and Airdrop Reward
+	var msgClass int // Initialize msgClass outside the loop
 
 	for index, msgData := range txMsgData.Data {
 		response, rewardClass, err := handleMsgData(ctx, msgData)
@@ -176,20 +176,19 @@ func (im IBCModule) handleDeprecatedMsgResponses(ctx sdk.Context, txMsgData sdk.
 			return err
 		}
 
-		im.keeper.Logger(ctx).Debug("message response in ICS-27 packet response", "response", response)
+		im.keeper.Logger(ctx).Debug("message response in ICS-27 packet response", "response", response.String())
 		if index == 0 && rewardClass > 0 {
 			msgClass = rewardClass
 			im.keeper.HandleRelayerReward(ctx, relayer, rewardClass)
 		}
-		if index == len(txMsgData.Data)-1 {
-			// set result in AutoTx history
-			err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, msgClass, packet.Sequence)
-			if err != nil {
-				im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
-				return err
-			}
 
-		}
+	}
+
+	// set result in AutoTx history
+	err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, msgClass, packet.Sequence, nil)
+	if err != nil {
+		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
+		return err
 	}
 
 	return nil

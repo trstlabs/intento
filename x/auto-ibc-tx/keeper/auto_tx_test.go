@@ -31,10 +31,10 @@ func TestCreateAutoTx(t *testing.T) {
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
-	dependsOn := []uint64{1, 2, 3}
+	configuration := types.ExecutionConfiguration{SaveMsgResponses: false}
 
 	// Call the CreateAutoTx function
-	err = keepers.AutoIbcTxKeeper.CreateAutoTx(ctx, owner, label, portID, msgs, connectionID, duration, interval, startTime, feeFunds, dependsOn)
+	err = keepers.AutoIbcTxKeeper.CreateAutoTx(ctx, owner, label, portID, msgs, connectionID, duration, interval, startTime, feeFunds, configuration)
 	require.NoError(t, err)
 
 	// Verify that the auto transaction was created correctly
@@ -49,10 +49,10 @@ func TestCreateAutoTx(t *testing.T) {
 	require.Equal(t, startTime, autoTx.StartTime)
 	require.Equal(t, portID, autoTx.PortID)
 	require.Equal(t, connectionID, autoTx.ConnectionID)
-	require.Equal(t, dependsOn, autoTx.DependsOnTxIds)
+	require.Equal(t, configuration, *autoTx.Configuration)
 }
 
-func TestCreateAutoTxWithZeroFundsWorks(t *testing.T) {
+func TestCreateAutoTxWithZeroFeeFundsWorks(t *testing.T) {
 	// Create a mock context and keeper
 	ctx, keepers, _ := CreateTestInput(t, false)
 	types.Denom = sdk.DefaultBondDenom
@@ -74,10 +74,10 @@ func TestCreateAutoTxWithZeroFundsWorks(t *testing.T) {
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
-	dependsOn := []uint64{1, 2, 3}
+	configuration := types.ExecutionConfiguration{SaveMsgResponses: false}
 
 	// Call the CreateAutoTx function
-	err = keepers.AutoIbcTxKeeper.CreateAutoTx(ctx, owner, label, portID, msgs, connectionID, duration, interval, startTime, feeFunds, dependsOn)
+	err = keepers.AutoIbcTxKeeper.CreateAutoTx(ctx, owner, label, portID, msgs, connectionID, duration, interval, startTime, feeFunds, configuration)
 	require.NoError(t, err)
 
 	// Verify that the auto transaction was created correctly
@@ -92,5 +92,5 @@ func TestCreateAutoTxWithZeroFundsWorks(t *testing.T) {
 	require.Equal(t, startTime, autoTx.StartTime)
 	require.Equal(t, portID, autoTx.PortID)
 	require.Equal(t, connectionID, autoTx.ConnectionID)
-	require.Equal(t, dependsOn, autoTx.DependsOnTxIds)
+	require.Equal(t, configuration, *autoTx.Configuration)
 }

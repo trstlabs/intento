@@ -123,7 +123,7 @@ ICS20 is JSON native, so we use JSON for the memo format.
             "interval":"11h",
             "start_at":"11h",
             "label":"my_label",
-            "connection_id":"connection-0", //optional, omit or leave blank in case local TRST message.
+            "cid":"connection-0", //optional, omit or leave blank in case local TRST message.
             "register_ica": "false"//optional, set to true to register interchain account
         },
         //"version":""//optional, will attempt to register account when filled (this will never override any existing ICA address)

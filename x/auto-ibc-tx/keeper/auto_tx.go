@@ -8,6 +8,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cometbft/cometbft/crypto"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,10 +16,8 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
-
-	//icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-
-	"github.com/cometbft/cometbft/crypto"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
@@ -51,86 +50,68 @@ func (k Keeper) SetAutoTxInfo(ctx sdk.Context, autoTx *types.AutoTxInfo) {
 	store.Set(types.GetAutoTxKey(autoTx.TxID), k.cdc.MustMarshal(autoTx))
 }
 
-func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (error, bool) {
+func (k Keeper) SendAutoTx(ctx sdk.Context, autoTxInfo *types.AutoTxInfo) (error, bool, []*cdctypes.Any) {
 
 	//check if autoTx is local
 	if autoTxInfo.ConnectionID == "" {
 		txMsgs := autoTxInfo.GetTxMsgs(k.cdc)
-		err := handleLocalAutoTx(k, ctx, txMsgs, autoTxInfo)
-		return err, err == nil
+		err, msgResponses := handleLocalAutoTx(k, ctx, txMsgs, *autoTxInfo)
+		return err, err == nil, msgResponses
 	}
 
 	//if message contains ICA_ADDR, the ICA address is retrieved and parsed
 	txMsgs, err := k.parseAndSetMsgs(ctx, autoTxInfo)
 	if err != nil {
-		return err, false
+		return err, false, nil
 	}
 	data, err := icatypes.SerializeCosmosTx(k.cdc, txMsgs)
 	if err != nil {
-		return err, false
+		return err, false, nil
 	}
 	packetData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
 	}
 
-	// TODO replace legacy SendTx method by implementing the msg handler
-	/*
-		relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
-		//to ensure timeout does not result in channel closing
-		if autoTxInfo.Interval > time.Minute*2 {
-			relativeTimeoutTimestamp = uint64((autoTxInfo.Interval + time.Minute).Nanoseconds())
-		}
+	relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
+	//idea: we can add logic to ensure timeout does not result in channel closing before next execution
+	// if autoTxInfo.Interval > time.Minute*2 {
+	// 	relativeTimeoutTimestamp = uint64((autoTxInfo.Interval - time.Minute).Nanoseconds())
+	// }
 
-		icaMsg := icacontrollertypes.NewMsgSendTx(autoTxInfo.Owner, autoTxInfo.ConnectionID, relativeTimeoutTimestamp, packetData)
+	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.icaControllerKeeper)
+	icaMsg := icacontrollertypes.NewMsgSendTx(autoTxInfo.Owner, autoTxInfo.ConnectionID, relativeTimeoutTimestamp, packetData)
 
-		icaHandler := k.msgRouter.Handler(icaMsg)
-		res, err := icaHandler(ctx, icaMsg)
-		if err != nil {
-			return err, false
-		}
-
-		firstMsgResponse := res.MsgResponses[0]
-		sendTxResponse, ok := firstMsgResponse.GetCachedValue().(*icacontrollertypes.MsgSendTxResponse)
-		if !ok {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "failed to covert %T message response to %T", firstMsgResponse.GetCachedValue(), &icacontrollertypes.MsgSendTxResponse{}), false
-		}
-
-		k.Logger(ctx).Debug("auto_tx", "ibc_sequence", sendTxResponse.Sequence)
-		k.setTmpAutoTxID(ctx, autoTxInfo.TxID, autoTxInfo.PortID, sendTxResponse.Sequence)*/
-
-	timeoutTimestamp := ctx.BlockTime().Add(time.Minute).UnixNano()
-	//to ensure timeout does not result in channel closing
-	if autoTxInfo.Interval > time.Minute*2 {
-		timeoutTimestamp = ctx.BlockTime().Add(autoTxInfo.Interval + time.Minute).UnixNano()
-	}
-
-	sequence, err := k.icaControllerKeeper.SendTx(ctx, nil, autoTxInfo.ConnectionID, autoTxInfo.PortID, packetData, uint64(timeoutTimestamp))
+	res, err := msgServer.SendTx(ctx, icaMsg)
 	if err != nil {
-		return err, false
+		return err, false, nil
 	}
 
-	k.setTmpAutoTxID(ctx, autoTxInfo.TxID, autoTxInfo.PortID, sequence)
-	return nil, false
+	k.Logger(ctx).Debug("auto_tx", "ibc_sequence", res.Sequence)
+	k.setTmpAutoTxID(ctx, autoTxInfo.TxID, autoTxInfo.PortID, res.Sequence)
+	return nil, false, nil
 }
 
-func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo types.AutoTxInfo) error {
+func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo types.AutoTxInfo) (error, []*cdctypes.Any) {
 	// CacheContext returns a new context with the multi-store branched into a cached storage object
 	// writeCache is called only if all msgs succeed, performing state transitions atomically
+	var msgResponses []*cdctypes.Any
+
 	cacheCtx, writeCache := ctx.CacheContext()
 	for _, msg := range txMsgs {
 		handler := k.msgRouter.Handler(msg)
 		for _, acct := range msg.GetSigners() {
 			if acct.String() != autoTxInfo.Owner {
-				return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "owner doesn't have permission to send this message")
+				return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "owner doesn't have permission to send this message"), nil
 			}
 		}
 
 		res, err := handler(cacheCtx, msg)
 		if err != nil {
-			return err
+			return err, nil
 		}
 
+		msgResponses = append(msgResponses, res.MsgResponses...)
 		//autocompound
 		if sdk.MsgTypeURL(msg) == "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" {
 			validator := ""
@@ -138,14 +119,13 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 			for _, ev := range res.Events {
 				if ev.Type == distrtypes.EventTypeWithdrawRewards {
 					for _, attr := range ev.Attributes {
-						// fmt.Printf("event %v\n", string(attr.Key))
 						if string(attr.Key) == distrtypes.AttributeKeyValidator {
 							validator = string(attr.Value)
 						}
 						if string(attr.Key) == sdk.AttributeKeyAmount {
 							amount, err = sdk.ParseCoinNormalized(string(attr.Value))
 							if err != nil {
-								return err
+								return err, nil
 							}
 						}
 					}
@@ -154,7 +134,7 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 					handler := k.msgRouter.Handler(&msgDelegate)
 					_, err = handler(cacheCtx, &msgDelegate)
 					if err != nil {
-						return err
+						return err, nil
 					}
 				}
 			}
@@ -163,10 +143,13 @@ func handleLocalAutoTx(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTxInfo t
 
 	}
 	writeCache()
-	return nil
+	if !autoTxInfo.Configuration.SaveMsgResponses {
+		msgResponses = nil
+	}
+	return nil, msgResponses
 }
 
-func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, label string, portID string, msgs []*cdctypes.Any, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins /*  retries uint64,  */, dependsOn []uint64) error {
+func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, label string, portID string, msgs []*cdctypes.Any, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins /*  retries uint64,  */, configuration types.ExecutionConfiguration) error {
 
 	txID := k.autoIncrementID(ctx, types.KeyLastTxID)
 	autoTxAddress, err := k.createFeeAccount(ctx, txID, owner, feeFunds)
@@ -177,19 +160,18 @@ func (k Keeper) CreateAutoTx(ctx sdk.Context, owner sdk.AccAddress, label string
 	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, txID, interval)
 
 	autoTx := types.AutoTxInfo{
-		TxID:         txID,
-		Owner:        owner.String(),
-		Label:        label,
-		FeeAddress:   autoTxAddress.String(),
-		Msgs:         msgs,
-		Interval:     interval,
-		StartTime:    startAt,
-		ExecTime:     execTime,
-		EndTime:      endTime,
-		PortID:       portID,
-		ConnectionID: connectionId,
-		//MaxRetries:     retries,
-		DependsOnTxIds: dependsOn,
+		TxID:          txID,
+		Owner:         owner.String(),
+		Label:         label,
+		FeeAddress:    autoTxAddress.String(),
+		Msgs:          msgs,
+		Interval:      interval,
+		StartTime:     startAt,
+		ExecTime:      execTime,
+		EndTime:       endTime,
+		PortID:        portID,
+		ConnectionID:  connectionId,
+		Configuration: &configuration,
 	}
 
 	k.SetAutoTxInfo(ctx, &autoTx)
@@ -343,14 +325,14 @@ func (k Keeper) IterateAutoTxsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb 
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetAutoTxsByOwnerPrefix(owner))
 	for iter := prefixStore.Iterator(nil, nil); iter.Valid(); iter.Next() {
 		key := iter.Key()
-		if cb(key /* [types.TimeTimeLen:] */) {
+		if cb(key) {
 			return
 		}
 	}
 }
 
 // SetAutoTxResult sets the result of the last executed TxID set at SendAutoTx.
-func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, seq uint64) error {
+func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, seq uint64, msgResp []*cdctypes.Any) error {
 	id := k.getTmpAutoTxID(ctx, port, seq)
 	if id <= 0 {
 		return nil
@@ -358,10 +340,10 @@ func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, se
 
 	k.Logger(ctx).Debug("auto_tx", "executed", "on host")
 
-	txInfo := k.GetAutoTxInfo(ctx, id)
-
-	k.UpdateAutoTxIbcUsage(ctx, txInfo)
-	owner, err := sdk.AccAddressFromBech32(txInfo.Owner)
+	autoTxInfo := k.GetAutoTxInfo(ctx, id)
+	fmt.Println(autoTxInfo.TxID)
+	k.UpdateAutoTxIbcUsage(ctx, autoTxInfo)
+	owner, err := sdk.AccAddressFromBech32(autoTxInfo.Owner)
 	if err != nil {
 		return err
 	}
@@ -372,8 +354,13 @@ func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, se
 		k.hooks.AfterAutoTxWasm(ctx, owner)
 	}
 
-	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].Executed = true
-	k.SetAutoTxInfo(ctx, &txInfo)
+	autoTxInfo.AutoTxHistory[len(autoTxInfo.AutoTxHistory)-1].Executed = true
+
+	if autoTxInfo.Configuration.SaveMsgResponses {
+		autoTxInfo.AutoTxHistory[len(autoTxInfo.AutoTxHistory)-1].MsgResponses = msgResp
+	}
+
+	k.SetAutoTxInfo(ctx, &autoTxInfo)
 
 	return nil
 }
@@ -406,7 +393,7 @@ func (k Keeper) SetAutoTxError(ctx sdk.Context, sourcePort string, seq uint64, e
 
 	txInfo := k.GetAutoTxInfo(ctx, id)
 
-	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].Error = err
+	txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].Errors = append(txInfo.AutoTxHistory[len(txInfo.AutoTxHistory)-1].Errors, err)
 	k.SetAutoTxInfo(ctx, &txInfo)
 
 	return
@@ -415,33 +402,65 @@ func (k Keeper) SetAutoTxError(ctx sdk.Context, sourcePort string, seq uint64, e
 // AllowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
 // insert the next entry when execution has not happend yet
 func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx types.AutoTxInfo) bool {
-	allowedToExecute := false
-	//if not executed, we will not execute this entry
-	if len(autoTx.AutoTxHistory) == 0 ||
-		autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Executed && !autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].TimedOut ||
-		autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].Error == types.ErrAutoTxConditions.Error() {
-		allowedToExecute = true
-	}
-	//check if dependent tx executions succeeded
-	for _, autoTxId := range autoTx.DependsOnTxIds {
-		dependentTx := k.GetAutoTxInfo(ctx, autoTxId)
-		if len(dependentTx.AutoTxHistory) != 0 &&
-			!dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Executed &&
-			!dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].TimedOut {
-			allowedToExecute = false
-		}
-	}
+	allowedToExecute := true
+	// shouldRecur := autoTx.ExecTime.Before(autoTx.EndTime) && autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime)
+	// conditions := autoTx.Conditions
 
-	//if not allowed to execute, remove entry and insert the next entry given a recurring tx and no error
-	if !allowedToExecute {
-		k.RemoveFromAutoTxQueue(ctx, autoTx)
-		willRecur := autoTx.ExecTime.Before(autoTx.EndTime) && autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime)
-		if willRecur {
-			// fmt.Printf("auto-tx will recur, txID: %v \n", autoTx.TxID)
-			// adding next execTime and a new entry into the queue based on interval
-			k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime.Add(autoTx.Interval))
-		}
-	}
+	// //check if dependent tx executions succeeded
+	// for _, autoTxId := range conditions.StopOnSuccessOf {
+	// 	dependentTx := k.GetAutoTxInfo(ctx, uint64(autoTxId))
+	// 	if len(dependentTx.AutoTxHistory) != 0 {
+	// 		success := dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Executed && dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Errors != nil
+	// 		if !success {
+	// 			allowedToExecute = false
+	// 			shouldRecur = false
+	// 		}
+	// 	}
+	// }
+
+	// //check if dependent tx executions failed
+	// for _, autoTxId := range conditions.StopOnFailureOf {
+	// 	dependentTx := k.GetAutoTxInfo(ctx, uint64(autoTxId))
+	// 	if len(dependentTx.AutoTxHistory) != 0 {
+	// 		success := dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Executed && dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Errors != nil
+	// 		if success {
+	// 			allowedToExecute = false
+	// 			shouldRecur = false
+	// 		}
+	// 	}
+	// }
+
+	// //check if dependent tx executions succeeded
+	// for _, autoTxId := range conditions.skipOnFailureOf {
+	// 	dependentTx := k.GetAutoTxInfo(ctx, uint64(autoTxId))
+	// 	if len(dependentTx.AutoTxHistory) != 0 {
+	// 		success := dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Executed && dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Errors != nil
+	// 		if !success {
+	// 			allowedToExecute = false
+	// 		}
+	// 	}
+	// }
+
+	// //check if dependent tx executions failed
+	// for _, autoTxId := range conditions.skipOnSuccessOf {
+	// 	dependentTx := k.GetAutoTxInfo(ctx, uint64(autoTxId))
+	// 	if len(dependentTx.AutoTxHistory) != 0 {
+	// 		success := dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Executed && dependentTx.AutoTxHistory[len(dependentTx.AutoTxHistory)-1].Errors != nil
+	// 		if success {
+	// 			allowedToExecute = false
+	// 		}
+	// 	}
+	// }
+
+	// //if not allowed to execute, remove entry
+	// if !allowedToExecute {
+	// 	k.RemoveFromAutoTxQueue(ctx, autoTx)
+	// 	//insert the next entry given a recurring tx
+	// 	if shouldRecur {
+	// 		// adding next execTime and a new entry into the queue based on interval
+	// 		k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime.Add(autoTx.Interval))
+	// 	}
+	// }
 
 	return allowedToExecute
 }
@@ -459,7 +478,7 @@ func (k Keeper) setTmpAutoTxID(ctx sdk.Context, autoTxID uint64, portID string, 
 	store.Set(append((append(types.TmpAutoTxIDLatestTX, []byte(portID)...)), types.GetBytesForUint(seq)...), types.GetBytesForUint(autoTxID))
 }
 
-func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (protoMsgs []proto.Message, err error) {
+func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTxInfo *types.AutoTxInfo) (protoMsgs []proto.Message, err error) {
 
 	if len(autoTxInfo.AutoTxHistory) != 0 {
 		txMsgs := autoTxInfo.GetTxMsgs(k.cdc)
@@ -519,7 +538,6 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTxInfo types.AutoTxInfo) (p
 			return nil, err
 		}
 		autoTxInfo.Msgs = anys
-		k.SetAutoTxInfo(ctx, &autoTxInfo)
 	}
 
 	return protoMsgs, nil

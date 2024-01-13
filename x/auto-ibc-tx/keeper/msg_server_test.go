@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
@@ -200,7 +199,7 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 	var (
 		path                      *ibctesting.Path
 		registerInterchainAccount bool
-		owner                     string
+		noOwner                   bool
 		connectionId              string
 		sdkMsg                    sdk.Msg
 		parseIcaAddress           bool
@@ -215,18 +214,16 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 		{
 			"success - IBC autoTx", func() {
 				registerInterchainAccount = true
-				owner = TestOwnerAddress
 				connectionId = path.EndpointA.ConnectionID
 			}, true,
 		},
 		{
 			"success - local autoTx", func() {
 				registerInterchainAccount = false
-				owner = suite.chainA.SenderAccount.GetAddress().String()
 				connectionId = ""
 				sdkMsg = &banktypes.MsgSend{
 					FromAddress: suite.chainA.SenderAccount.GetAddress().String(),
-					ToAddress:   owner,
+					ToAddress:   TestOwnerAddress,
 					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
 				}
 			}, true,
@@ -234,25 +231,24 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 		{
 			"success - parse ICA address", func() {
 				registerInterchainAccount = true
-				owner = TestOwnerAddress
 				connectionId = path.EndpointA.ConnectionID
 				parseIcaAddress = true
 			}, true,
 		},
 		{
-			"failure - owner address is empty", func() {
+			"failure - start_at before block_height", func() {
 				registerInterchainAccount = true
-				owner = ""
+				noOwner = false
 				connectionId = path.EndpointA.ConnectionID
-				parseIcaAddress = false
+				startAtBeforeBlockHeight = true
 			}, false,
 		},
 		{
-			"failure - start_at before block_height", func() {
-				registerInterchainAccount = true
-				owner = TestOwnerAddress
+			"failure - owner address is empty", func() {
+				registerInterchainAccount = false
+				noOwner = true
 				connectionId = path.EndpointA.ConnectionID
-				startAtBeforeBlockHeight = true
+				parseIcaAddress = false
 			}, false,
 		},
 	}
@@ -262,6 +258,7 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
+			var owner string
 
 			icaAppA := GetICAApp(suite.chainA.TestChain)
 			icaAppB := GetICAApp(suite.chainB.TestChain)
@@ -271,11 +268,16 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 
 			tc.malleate() // malleate mutates test data
 
+			if noOwner {
+				owner = ""
+			} else {
+				owner = suite.chainA.SenderAccount.GetAddress().String()
+			}
 			if registerInterchainAccount {
-				err := SetupICAPath(path, TestOwnerAddress)
+				err := SetupICAPath(path, owner)
 				suite.Require().NoError(err)
 
-				portID, err := icatypes.NewControllerPortID(TestOwnerAddress)
+				portID, err := icatypes.NewControllerPortID(owner)
 				suite.Require().NoError(err)
 
 				// Get the address of the interchain account stored in state during handshake step
@@ -300,14 +302,15 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 			}
 
 			label := "label"
-			durationTimeText := "200s"
-			intervalTimeText := "100s"
+			duration := time.Second * 200
+			durationTimeText := duration.String()
+			interval := time.Second * 100
+			intervalTimeText := interval.String()
 			startAt := uint64(0)
 			if startAtBeforeBlockHeight {
 				startAt = uint64(suite.chainA.GetContext().BlockTime().Unix() - 60*60)
 			}
-
-			msg, err := types.NewMsgSubmitAutoTx(owner, label, []sdk.Msg{sdkMsg}, connectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, []uint64{})
+			msg, err := types.NewMsgSubmitAutoTx(owner, label, []sdk.Msg{sdkMsg}, connectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, &types.ExecutionConfiguration{SaveMsgResponses: false})
 			suite.Require().NoError(err)
 			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
 
@@ -329,13 +332,14 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 				err = msg.ValidateBasic()
 				suite.Require().NoError(err)
 			}
+			autoTxKeeper := icaAppA.AutoIbcTxKeeper
+			autoTx := autoTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
 
-			autoTx := icaAppA.AutoIbcTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
-			err, _ = icaAppA.AutoIbcTxKeeper.SendAutoTx(suite.chainA.GetContext(), autoTx)
-			suite.Require().NoError(err)
+			suite.chainA.CurrentHeader.Time = suite.chainA.CurrentHeader.Time.Add(interval)
+			FakeBeginBlocker(suite.chainA.GetContext(), autoTxKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
 			suite.chainA.NextBlock()
 
-			autoTx = icaAppA.AutoIbcTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
+			autoTx = autoTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
 
 			suite.Require().NotEqual(autoTx, types.AutoTxInfo{})
 			suite.Require().Equal(autoTx.Owner, owner)
@@ -352,10 +356,7 @@ func (suite *KeeperTestSuite) TestSubmitAutoTx() {
 				var txMsg sdk.Msg
 				err = icaAppA.AppCodec().UnpackAny(autoTx.Msgs[0], &txMsg)
 				suite.Require().NoError(err)
-				msgJSON, err := icaAppA.AppCodec().MarshalInterfaceJSON(txMsg)
-				suite.Require().NoError(err)
-				msgJSONString := string(msgJSON)
-				index := strings.Index(msgJSONString, types.ParseICAValue)
+				index := strings.Index(txMsg.String(), types.ParseICAValue)
 				suite.Require().Equal(-1, index)
 
 			}
@@ -431,6 +432,7 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 			path = NewICAPath(suite.chainA, suite.chainB)
 			suite.coordinator.SetupConnections(path)
 
+			//sendTo, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 			tc.malleate() // malleate mutates test data
 
 			if registerInterchainAccount {
@@ -459,7 +461,7 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAutoTx(owner, "label", []sdk.Msg{sdkMsg}, connectionId, "200s", "100s", uint64(suite.chainA.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, []uint64{})
+			msg, err := types.NewMsgSubmitAutoTx(owner, "label", []sdk.Msg{sdkMsg}, connectionId, "200s", "100s", uint64(suite.chainA.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, &types.ExecutionConfiguration{SaveMsgResponses: false})
 			suite.Require().NoError(err)
 			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
 			msgSrv := keeper.NewMsgServerImpl(GetAutoTxKeeperFromApp(icaAppA))
@@ -474,7 +476,7 @@ func (suite *KeeperTestSuite) TestUpdateAutoTx() {
 				icaAppA.AutoIbcTxKeeper.SetAutoTxInfo(sdk.UnwrapSDKContext(wrappedCtx), &autoTx)
 				suite.chainA.NextBlock()
 			}
-			updateMsg, err := types.NewMsgUpdateAutoTx(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, []uint64{})
+			updateMsg, err := types.NewMsgUpdateAutoTx(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, &types.ExecutionConfiguration{SaveMsgResponses: false})
 			suite.Require().NoError(err)
 			suite.chainA.Coordinator.IncrementTime()
 			suite.Require().NotEqual(suite.chainA.GetContext(), wrappedCtx)

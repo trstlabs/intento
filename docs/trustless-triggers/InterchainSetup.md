@@ -1,7 +1,7 @@
 ---
 order: 5
 title: Interchain Setup
-description: How to setup automation from a different source chain
+description: How to setup automation from a different source chain with IBC
 ---
 
 ## Setting up Automation
@@ -20,9 +20,9 @@ With automation over Trustless Hub, this can be simplified to one proposal. In a
 
 ## ICS20 Middleware
 
-ICS20 is an interchain standard that enables the transfer of fungible tokens between independent blockchains within the Cosmos ecosystem. It is a protocol that defines a standard interface for token transfers across different blockchains that implement the Inter-Blockchain Communication (IBC) protocol.
+ICS20 is the interchain standard that enables the transfer of fungible tokens between independent blockchains within the Cosmos ecosystem. It is a protocol that defines a standard interface for token transfers across different blockchains that implement the Inter-Blockchain Communication (IBC) protocol.
 
-With ICS20 transfer middleware, you send a transfer with a memo on a chain, and Trustless Hub will convert this ICS20 message to an AutoTx submission. Using an ICS20-standard transaction, accounts on other chains can create triggers. A MsgRegisterAccountAndSubmitAutoTx or a MsgSubmitAutoTx can be derrived from the memo field in the ICS20 transfer message.
+With ICS20 transfer middleware, you send a transfer with a memo on a chain, and Trustless Hub will convert this ICS20 message to an AutoTx trigger submission. Using an ICS20-standard transaction, accounts on other chains can create triggers. A MsgRegisterAccountAndSubmitAutoTx or a MsgSubmitAutoTx can be derrived from the memo field in the ICS20 transfer message.
 
 ![ics20](../images/ics20/ics20flow.png)
 
@@ -61,25 +61,30 @@ ICS20 is JSON native, so we use JSON for the memo format.
 {
     //... other ibc fields that we don't care about
     "data":{
-       "denom": "denom on counterparty chain (e.g. uatom)",
-        "amount": "1000",
+       "denom": "TRST denom on counterparty chain (e.g. ibc/abc...)",
+        "amount": "1000",//for execution fees
         "sender": "...", 
         "receiver": "A TRST addr prefixed with trust1",
          "memo": {
            "auto_tx": {
-            "owner": "trust1address", //optional
+            "owner": "trust1address", //owner is optional
               "msgs": [{
                 "@type":"/cosmos.somemodule.v1beta1.sometype",
                 //message values in JSON format
             }],
             "duration":"111h",
-            "interval":"11h",
             "start_at":"11h",
             "label":"my_label",
-            "connection_id":"connection-0", //optional, omit or leave blank in case local TRST message.
-            "register_ica": "false"//optional, set to true to register interchain account
+            "interval":"11h",//optional
+            "cid":"connection-0", //connection ID is optional, omit or leave blank in case local TRST message.
+            "cp_cid":"connection-0", //counterparty connection ID is optional and is only needed to register ICA.
+            "register_ica": "false",//optional, set to true to register interchain account
+            //////configuration,optional
+            "save_responses":"true",//save message responses of Cosmos SDK v0.46+ chain output, defaults to false
+            "update_disabled":"true",//optional, disables the owner's ability to update the config, defaults to false
+            "stop_on_success":"true",//optional, defaults to false
+            "stop_on_fail":"true",//optional, defaults to false
         },
-        //"version":""//optional, will attempt to register account when filled (this will never override any existing ICA address)
     }
 }
 }
@@ -92,7 +97,7 @@ An ICS20 packet is formatted correctly for submitting an auto_tx if the followin
 * `memo` has at least one key, `"auto_tx"`
 * `memo["auto_tx"]["msgs"]` is an array with valid JSON SDK message objects with a key "@type" and sdk message values
 * `receiver == memo["auto_tx"]["owner"]`. Optional, an owner can be specifed and is the address that receives remaining fee balance after execution ends.
-* `memo["auto_tx"]["connection_id"]`is a valid connectionID on TRST -> Destination chain, or blank/empty for local TRST execution of the message.
+* `memo["auto_tx"]["cid"]`is a valid connection ID on TRST -> Destination chain, omit it for local TRST execution of the message.
 * `memo["auto_tx"]["register_ica"]` can be added, and true to register an ICA.
 
 Fees are paid with a newly generated and AutoTX specific fee account.
@@ -194,7 +199,7 @@ Below is how the proposal action message could look like for a CosmWasm-based DA
             //label is optional 
             "label":"my_label",
             //connection_id is optional, omit or leave blank in case local Trustless Hub message.
-            "connection_id":"connection-0", 
+            "cid":"connection-0", 
             //register_ica is optional, set to true to register interchain account
             "register_ica": "true"
           },
@@ -292,7 +297,7 @@ For the DAO example, a similar proposal to the above can be sent. This does not 
         "receiver": "destination_chain_ica_address",
         "timeout_height": "0",
         "timeout_timestamp": "0",
-        "connection_id":"connection-0123", 
+        "cid":"connection-0123", 
       }
     }
   }

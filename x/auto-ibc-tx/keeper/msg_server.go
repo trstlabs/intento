@@ -117,14 +117,12 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
-	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoTxIDs and have less than 10 messages")
-	}
-	// if msg.Retries > 5 {
-	// 	return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can retry for a maximum of 5 times")
-	// }
+	/* 	configuration := msg.Configuration
+	   	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
+	   		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoTxIDs and have less than 10 messages")
+	   	} */
 
-	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, msg.DependsOnTxIds)
+	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, *msg.Configuration)
 	if err != nil {
 		return nil, err
 	}
@@ -191,14 +189,12 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before current time and maximum duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
-	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
+	/* configuration := msg.Configuration
+	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoTxIDs and have less than 10 messages")
-	}
-	// if msg.Retries > 5 {
-	// 	return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can retry for a maximum of 5 times")
-	// }
+	} */
 
-	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, msg.DependsOnTxIds)
+	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, *msg.Configuration)
 	if err != nil {
 		return nil, err
 	}
@@ -216,6 +212,10 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 	}
 	if autoTx.Owner != msg.Owner {
 		return nil, sdkerrors.ErrInvalidAddress
+	}
+
+	if autoTx.Configuration.UpdatingDisabled {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "updating disabled")
 	}
 
 	if msg.ConnectionId != "" {
@@ -242,7 +242,6 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 	}
 	p := k.GetParams(ctx)
 
-	//var interval time.Duration = 0
 	if msg.Interval != "" {
 		interval, err := time.ParseDuration(msg.Interval)
 		if err != nil {
@@ -253,7 +252,6 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 			return nil, errorsmod.Wrapf(types.ErrUpdateAutoTx, "interval: %s  must be longer than minimum interval:  %s, and execution should happen before end time", interval, p.MinAutoTxInterval)
 		}
 		autoTx.Interval = interval
-		//newExecTime := interval
 	}
 
 	if msg.StartAt > 0 {
@@ -267,25 +265,23 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 		if startTime.After(autoTx.EndTime) {
 			return nil, errorsmod.Wrapf(types.ErrUpdateAutoTx, "start time: %s must be before end time", startTime)
 		}
-		// if startTime.After(autoTx.ExecTime) {
-		// 	return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before next AutoTx exec time", startTime)
-		// }
+
 		if len(autoTx.AutoTxHistory) != 0 {
 			return nil, errorsmod.Wrapf(types.ErrUpdateAutoTx, "start time: %s must occur before first execution", startTime)
 		}
 		autoTx.StartTime = startTime
 		newExecTime = startTime
 	}
-	if len(msg.DependsOnTxIds) >= 10 || len(msg.Msgs) >= 10 {
-		return nil, errorsmod.Wrap(types.ErrUpdateAutoTx, "must depend on less than 10 autoTxIDs and have less than 10 messages")
-	}
+	/* 	configuration := msg.Configuration
+	   	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
+	   		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoTxIDs and have less than 10 messages")
+	   	} */
 
 	if msg.Label != "" {
 		autoTx.Label = msg.Label
 	}
-
-	if len(msg.DependsOnTxIds) != 0 {
-		autoTx.DependsOnTxIds = msg.DependsOnTxIds
+	if msg.Configuration != nil {
+		autoTx.Configuration = msg.Configuration
 	}
 
 	if len(msg.Msgs) != 0 {

@@ -126,22 +126,22 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 }
 
 // NewMsgSubmitAutoTx creates a new NewMsgSubmitAutoTx instance
-func NewMsgSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, dependsOn []uint64 /*  retries uint64 */) (*MsgSubmitAutoTx, error) {
+func NewMsgSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration) (*MsgSubmitAutoTx, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
 	}
 
 	return &MsgSubmitAutoTx{
-		Owner:          owner,
-		Label:          label,
-		ConnectionId:   connectionID,
-		Msgs:           anys,
-		Duration:       duration,
-		Interval:       interval,
-		StartAt:        startAt,
-		FeeFunds:       feeFunds,
-		DependsOnTxIds: dependsOn,
+		Owner:         owner,
+		Label:         label,
+		ConnectionId:  connectionID,
+		Msgs:          anys,
+		Duration:      duration,
+		Interval:      interval,
+		StartAt:       startAt,
+		FeeFunds:      feeFunds,
+		Configuration: configuration,
 		//Retries:        retries,
 	}, nil
 }
@@ -202,23 +202,23 @@ func (msg MsgSubmitAutoTx) ValidateBasic() error {
 }
 
 // NewMsgSend creates a new MsgSend instance
-func NewMsgRegisterAccountAndSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, dependsOn []uint64 /*  retries uint64 */, version string) (*MsgRegisterAccountAndSubmitAutoTx, error) {
+func NewMsgRegisterAccountAndSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration, version string) (*MsgRegisterAccountAndSubmitAutoTx, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
 	}
 
 	return &MsgRegisterAccountAndSubmitAutoTx{
-		Owner:          owner,
-		Label:          label,
-		ConnectionId:   connectionID,
-		Msgs:           anys,
-		Duration:       duration,
-		Interval:       interval,
-		StartAt:        startAt,
-		FeeFunds:       feeFunds,
-		DependsOnTxIds: dependsOn,
-		Version:        version,
+		Owner:         owner,
+		Label:         label,
+		ConnectionId:  connectionID,
+		Msgs:          anys,
+		Duration:      duration,
+		Interval:      interval,
+		StartAt:       startAt,
+		FeeFunds:      feeFunds,
+		Configuration: configuration,
+		Version:       version,
 		//Retries:        retries,
 	}, nil
 }
@@ -279,23 +279,23 @@ func (msg MsgRegisterAccountAndSubmitAutoTx) ValidateBasic() error {
 }
 
 // NewMsgUpdateAutoTx creates a new NewMsgUpdateAutoTx instance
-func NewMsgUpdateAutoTx(owner string, txID uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, dependsOn []uint64 /*  retries uint64 */) (*MsgUpdateAutoTx, error) {
+func NewMsgUpdateAutoTx(owner string, txID uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration) (*MsgUpdateAutoTx, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
 	}
 
 	return &MsgUpdateAutoTx{
-		Owner:          owner,
-		TxId:           txID,
-		Label:          label,
-		ConnectionId:   connectionID,
-		Msgs:           anys,
-		EndTime:        endTime,
-		StartAt:        startAt,
-		Interval:       interval,
-		DependsOnTxIds: dependsOn,
-		FeeFunds:       feeFunds,
+		Owner:         owner,
+		TxId:          txID,
+		Label:         label,
+		ConnectionId:  connectionID,
+		Msgs:          anys,
+		EndTime:       endTime,
+		StartAt:       startAt,
+		Interval:      interval,
+		Configuration: configuration,
+		FeeFunds:      feeFunds,
 		//Retries:        retries,
 	}, nil
 }

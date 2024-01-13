@@ -1,4 +1,4 @@
-package autoibctx
+package keeper_test
 
 import (
 	//"fmt"
@@ -7,7 +7,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	abci "github.com/cometbft/cometbft/abci/types"
+
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +16,7 @@ import (
 )
 
 // BeginBlocker called every block, processes auto execution
-func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) {
+func FakeBeginBlocker(ctx sdk.Context, k keeper.Keeper, fakeProposer sdk.ConsAddress) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	available := k.GetRelayerRewardsAvailability(ctx)
@@ -36,34 +36,35 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 			k.SetAutoTxInfo(ctx, &autoTx)
 			continue
 		}
-
-		logger.Debug("auto_tx execution", "id", autoTx.TxID)
+		fmt.Println("FAKE BEGIN BLOCKER")
+		logger.Debug("autotx execution", "id", autoTx.TxID)
 
 		isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
 
-		flexFee := calculateTimeBasedFlexFee(autoTx)
-		fee, err := k.DistributeCoins(ctx, autoTx, flexFee, isRecurring, req.Header.ProposerAddress)
+		flexFee := calculateTimeBasedFlexFee(autoTx, isRecurring)
+		fee, err := k.DistributeCoins(ctx, autoTx, flexFee, isRecurring, fakeProposer)
 
 		k.RemoveFromAutoTxQueue(ctx, autoTx)
 		if err != nil {
-			logger.Error("auto_tx", "distribution err", err.Error())
+			fmt.Println("auto_tx", "distribution err", err.Error())
 			addAutoTxHistory(&autoTx, timeOfBlock, fee, false, nil, err)
 		} else {
 			err, executedLocally, msgResponses := k.SendAutoTx(ctx, &autoTx)
 			addAutoTxHistory(&autoTx, timeOfBlock, fee, executedLocally, msgResponses, err)
-
+			if err != nil {
+				fmt.Printf("execution error: %v \n", err.Error())
+			}
 			// setting new ExecTime and adding a new entry into the queue based on interval
-			shouldRecur := isRecurring && (autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime) || autoTx.ExecTime.Add(autoTx.Interval) == autoTx.EndTime)
-			allowedToRecur := (!autoTx.Configuration.StopOnSuccess && !autoTx.Configuration.StopOnFailure) || autoTx.Configuration.StopOnSuccess && err != nil || autoTx.Configuration.StopOnFailure && err == nil
-
-			if shouldRecur && allowedToRecur {
-				//fmt.Printf("auto-tx will recur: %v \n", autoTx.TxID)
+			willRecur := isRecurring && (autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime) || autoTx.ExecTime.Add(autoTx.Interval) == autoTx.EndTime)
+			if willRecur {
+				fmt.Printf("auto-tx will recur: %v \n", autoTx.TxID)
 				autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
 				k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
 			}
 
 			k.SetAutoTxInfo(ctx, &autoTx)
 		}
+
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeAutoTx,
@@ -90,17 +91,17 @@ func addAutoTxHistory(autoTx *types.AutoTxInfo, actualExecTime time.Time, execFe
 	autoTx.AutoTxHistory = append(autoTx.AutoTxHistory, &historyEntry)
 }
 
-func calculateTimeBasedFlexFee(autoTx types.AutoTxInfo) sdkmath.Int {
+func calculateTimeBasedFlexFee(autoTx types.AutoTxInfo, isRecurring bool) sdkmath.Int {
 	if len(autoTx.AutoTxHistory) != 0 {
 		prevEntry := autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].ActualExecTime
 		period := (autoTx.ExecTime.Sub(prevEntry))
-		return sdk.NewInt(int64(period.Milliseconds()))
+		return sdk.NewInt(int64(period.Minutes()))
 	}
-
+	//return sdk.NewInt(int64((autoTx.ExecTime.Sub(autoTx.StartTime)).Minutes()))
 	period := autoTx.ExecTime.Sub(autoTx.StartTime)
 	if period.Seconds() <= 60 {
 		//base fee so we do not have a zero fee
 		return sdk.NewInt(1_000)
 	}
-	return sdk.NewInt(int64(period.Milliseconds()))
+	return sdk.NewInt(int64(period.Minutes()))
 }

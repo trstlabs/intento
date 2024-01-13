@@ -3,11 +3,13 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
@@ -62,7 +64,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAutoTxWorks() {
 		"to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
 
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
 	// ackStr := string(ackBytes)
 	// fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -105,7 +107,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 	suite.Require().NoError(err)
 
 	//chainB sends packet to chainA. connectionID to execute on chainB is on chainAs config
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "connection_id":"%s", "msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "cid":"%s", "msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
 	// ackStr := string(ackBytes)
 	// fmt.Println(ackStr)
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -133,7 +135,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 	suite.True(autoTx.Msgs[0].Equal(txMsgAny))
 }
 
-func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithRegistrationAndMultippleAutoTxsWorks() {
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingWorks() {
 	suite.SetupTest() // reset
 
 	addr := suite.chainA.SenderAccount.GetAddress()
@@ -143,35 +145,42 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithRegistrationAndMultipp
 			"amount": "70",
 			"denom": "stake"
 		}],
-		"from_address": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
+		"from_address": "ICA_ADDR",
 		"to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
 
 	path := NewICAPath(suite.chainA, suite.chainB)
 	suite.coordinator.SetupConnections(path)
+	err := SetupICAPath(path, addr.String())
+	suite.Require().NoError(err)
 
-	ackBytes := suite.receivePacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "connection_id":"%s", "msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0", "register_ica": "true"} }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
-	// ackStr := string(ackBytes)
-	// fmt.Println(ackStr)
-
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my trigger", "cid":"%s", "msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0" } }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
-	err := json.Unmarshal(ackBytes, &ack)
+	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	autoTx := suite.chainA.GetTrstApp().AutoIbcTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
+	autoTxKeeper := suite.chainA.GetTrstApp().AutoIbcTxKeeper
+	autoTx := autoTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
 
+	// _, found := suite.chainA.GetTrstApp().ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ConnectionID, autoTx.PortID)
+	// suite.Require().True(found)
+
+	unpacker := suite.chainA.Codec
+	unpackedMsgs := autoTx.GetTxMsgs(unpacker)
+	suite.Require().True(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
+
+	suite.chainA.CurrentHeader.Time = suite.chainA.CurrentHeader.Time.Add(time.Minute)
+	FakeBeginBlocker(suite.chainA.GetContext(), autoTxKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
+	suite.chainA.NextBlock()
+
+	autoTx = autoTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
 	suite.Require().Equal(autoTx.Owner, addr.String())
-	suite.Require().Equal(autoTx.Label, "my_trigger")
+	suite.Require().Equal(autoTx.Label, "my trigger")
 	suite.Require().Equal(autoTx.PortID, "icacontroller-"+addr.String())
 	suite.Require().Equal(autoTx.ConnectionID, path.EndpointA.ConnectionID)
 
+	unpackedMsgs = autoTx.GetTxMsgs(unpacker)
+	suite.Require().False(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
 	suite.Require().Equal(autoTx.Interval, time.Second*60)
-
-	var txMsgAny codectypes.Any
-	cdc := codec.NewProtoCodec(suite.chainA.GetTrstApp().InterfaceRegistry())
-
-	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
-	suite.Require().NoError(err)
-	suite.True(autoTx.Msgs[0].Equal(txMsgAny))
 }

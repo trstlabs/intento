@@ -166,14 +166,10 @@ func getSubmitAutoTxCmd() *cobra.Command {
 				}
 			}
 
-			var txIds []uint64
-			dependsOnString := viper.GetStringSlice(flagDependsOn)
-			for _, id := range dependsOnString {
-				txId, err := strconv.ParseUint(id, 10, 64)
-				if err != nil {
-					return errors.Wrap(err, "invalid id, must be a number")
-				}
-				txIds = append(txIds, txId)
+			// Get execution configuration
+			configuration, err := getExecutionConfiguration(cmd)
+			if err != nil {
+				return err
 			}
 			funds := sdk.Coins{}
 			amount := viper.GetString(flagFeeFunds)
@@ -184,7 +180,7 @@ func getSubmitAutoTxCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /*  viper.GetUint64(flagRetries) */)
+			msg, err := types.NewMsgSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration)
 			if err != nil {
 				return err
 			}
@@ -197,16 +193,7 @@ func getSubmitAutoTxCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagLabel, "", "A custom label for the AutoTx e.g. AutoTransfer, UpdateContractParams, optional")
-	cmd.Flags().String(flagDuration, "", "A custom duration for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
-	cmd.Flags().String(flagInterval, "", "A custom interval for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
-	cmd.Flags().String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
-	cmd.Flags().Uint64(flagStartAt, 0, "A custom start time in UNIX time, optional")
-	cmd.Flags().StringArray(flagDependsOn, []string{}, "array of auto-tx-ids this auto-tx depends on e.g. 5, 6")
-	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain, optional")
-	// cmd.Flags().Uint64(flagRetries, 0, "Maximum amount of retries to make the tx succeed, optional")
-
-	//_ = cmd.MarkFlagRequired(flagConnectionID)
+	cmd.Flags().AddFlagSet(fsAutoTx)
 	_ = cmd.MarkFlagRequired(flagDuration)
 
 	flags.AddTxFlagsToCmd(cmd)
@@ -253,14 +240,10 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 				}
 			}
 
-			var txIds []uint64
-			dependsOnString := viper.GetStringSlice(flagDependsOn)
-			for _, id := range dependsOnString {
-				txId, err := strconv.ParseUint(id, 10, 64)
-				if err != nil {
-					return errors.Wrap(err, "invalid id, must be a number")
-				}
-				txIds = append(txIds, txId)
+			// Get execution configuration
+			configuration, err := getExecutionConfiguration(cmd)
+			if err != nil {
+				return err
 			}
 			funds := sdk.Coins{}
 			amount := viper.GetString(flagFeeFunds)
@@ -279,7 +262,7 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 				TxType:                 icatypes.TxTypeSDKMultiMsg,
 			}))
 
-			msg, err := types.NewMsgRegisterAccountAndSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /* viper.GetUint64(flagRetries) */, version)
+			msg, err := types.NewMsgRegisterAccountAndSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration, version)
 			if err != nil {
 				return err
 			}
@@ -292,18 +275,8 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagLabel, "", "A custom label for the AutoTx e.g. AutoTransfer, UpdateContractParams, optional")
-	cmd.Flags().String(flagDuration, "", "A custom duration for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
-	cmd.Flags().String(flagInterval, "", "A custom interval for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
-	cmd.Flags().String(flagStartAt, "0", "A custom start time in UNIX time, optional")
-	cmd.Flags().String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
+	cmd.Flags().AddFlagSet(fsAutoTx)
 	cmd.Flags().String(flagCounterpartyConnectionID, "", "Counterparty Connection ID, from host chain, optional")
-	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain, optional")
-
-	cmd.Flags().StringArray(flagDependsOn, []string{}, "array of auto-tx-ids this auto-tx depends on e.g. 5, 6")
-	// cmd.Flags().Uint64(flagRetries, 0, "Maximum amount of retries to make the tx succeed, optional")
-
-	//_ = cmd.MarkFlagRequired(flagConnectionID)
 	_ = cmd.MarkFlagRequired(flagDuration)
 
 	flags.AddTxFlagsToCmd(cmd)
@@ -357,14 +330,10 @@ func getUpdateAutoTxCmd() *cobra.Command {
 					txMsgs = append(txMsgs, txMsg)
 				}
 			}
-			var txIds []uint64
-			dependsOnString := viper.GetStringSlice(flagDependsOn)
-			for _, id := range dependsOnString {
-				txId, err := strconv.ParseUint(id, 10, 64)
-				if err != nil {
-					return errors.Wrap(err, "invalid id, must be a number")
-				}
-				txIds = append(txIds, txId)
+			// Get execution configuration
+			configuration, err := getExecutionConfiguration(cmd)
+			if err != nil {
+				return err
 			}
 			funds := sdk.Coins{}
 			amount := viper.GetString(flagFeeFunds)
@@ -374,7 +343,7 @@ func getUpdateAutoTxCmd() *cobra.Command {
 					return err
 				}
 			}
-			msg, err := types.NewMsgUpdateAutoTx(clientCtx.GetFromAddress().String(), txID, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, txIds /* viper.GetUint64(flagRetries) */ /* , viper.GetString(flagVersion) */)
+			msg, err := types.NewMsgUpdateAutoTx(clientCtx.GetFromAddress().String(), txID, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration /* viper.GetUint64(flagRetries) */ /* , viper.GetString(flagVersion) */)
 			if err != nil {
 				return err
 			}
@@ -387,19 +356,74 @@ func getUpdateAutoTxCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(flagLabel, "", "A custom label for the AutoTx e.g. AutoTransfer, UpdateContractParams, optional")
-	cmd.Flags().String(flagEndTime, "", "A custom end time in UNIX time")
-	cmd.Flags().String(flagInterval, "", "A custom interval for the AutoTx e.g. 2h, 6000s, 72h3m0.5s, optional")
-	cmd.Flags().String(flagStartAt, "0", "A custom start time in UNIX time, optional")
-	cmd.Flags().String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
-	cmd.Flags().StringArray(flagDependsOn, []string{}, "array of auto-tx-ids this auto-tx depends on e.g. 5, 6")
-	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain, optional")
-	// cmd.Flags().Uint64(flagRetries, 0, "Maximum amount of retries to make the tx succeed, optional")
-
-	//_ = cmd.MarkFlagRequired(flagConnectionID)
+	cmd.Flags().AddFlagSet(fsAutoTx)
 	_ = cmd.MarkFlagRequired(flagDuration)
 
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func getExecutionConfiguration(cmd *cobra.Command) (*types.ExecutionConfiguration, error) {
+	updatingDisabled, err := cmd.Flags().GetBool(flagUpdatingDisabled)
+	if err != nil {
+		return nil, err
+	}
+
+	saveMsgResponses, err := cmd.Flags().GetBool(flagSaveMsgResponses)
+	if err != nil {
+		return nil, err
+	}
+
+	stopOnSuccess, err := cmd.Flags().GetBool(flagStopOnSuccess)
+	if err != nil {
+		return nil, err
+	}
+	stopOnFailure, err := cmd.Flags().GetBool(flagStopOnFailure)
+	if err != nil {
+		return nil, err
+	}
+	/* 	skipOnFailureOf, err := parseIntSlice(flagSkipOnFailureOf)
+	   	if err != nil {
+	   		return nil, err
+	   	}
+
+	   	skipOnSuccessOf, err := parseIntSlice(flagSkipOnSuccessOf)
+	   	if err != nil {
+	   		return nil, err
+	   	}
+
+	   	stopOnSuccessOf, err := parseIntSlice(flagStopOnSuccessOf)
+	   	if err != nil {
+	   		return nil, err
+	   	}
+
+	   	stopOnFailureOf, err := parseIntSlice(flagStopOnFailureOf)
+	   	if err != nil {
+	   		return nil, err
+	   	} */
+
+	configuration := &types.ExecutionConfiguration{
+		UpdatingDisabled: updatingDisabled,
+		SaveMsgResponses: saveMsgResponses,
+		StopOnSuccess:    stopOnSuccess,
+		StopOnFailure:    stopOnFailure,
+	}
+
+	return configuration, nil
+}
+
+func parseIntSlice(flagName string) ([]int64, error) {
+	stringSlice := viper.GetStringSlice(flagName)
+	var result []int64
+
+	for _, id := range stringSlice {
+		txId, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			return nil, errors.Wrap(err, "invalid id, must be a number")
+		}
+		result = append(result, txId)
+	}
+
+	return result, nil
 }

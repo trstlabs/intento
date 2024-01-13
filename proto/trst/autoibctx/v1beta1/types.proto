@@ -15,49 +15,68 @@ option go_package = "github.com/trstlabs/trst/x/auto-ibc-tx/types";
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = true;
 
-// AutoTxInfo stores the info for the auto executing interchain accounts
-// transaction
+// AutoTxInfo stores the info for the auto executing interchain accounts transaction
 message AutoTxInfo {
-  uint64 tx_id = 1 [ (gogoproto.customname) = "TxID" ];
-  string owner = 2;
-  string label = 3;
-  string fee_address = 4;
-  repeated google.protobuf.Any msgs = 5
-      [ (cosmos_proto.accepts_interface) = "sdk.Msg" ];
-  google.protobuf.Duration interval = 6 [
-    (gogoproto.nullable) = false,
+    uint64 tx_id = 1 [(gogoproto.customname) = "TxID"];
+    string owner = 2;
+    string label = 3;
+    string fee_address = 4;
+    repeated google.protobuf.Any msgs           = 5  [(cosmos_proto.accepts_interface) = "sdk.Msg"];
+    google.protobuf.Duration interval = 6 [
+    (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "interval,omitempty"
+    (gogoproto.jsontag)     = "interval,omitempty"
   ];
-  google.protobuf.Timestamp start_time = 7
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  google.protobuf.Timestamp exec_time = 8
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  google.protobuf.Timestamp end_time = 9
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  repeated AutoTxHistoryEntry auto_tx_history = 10;
-  string port_id = 11 [ (gogoproto.customname) = "PortID" ];
-  string connection_id = 12 [ (gogoproto.customname) = "ConnectionID" ];
-  // optional array of dependent txs that should be executed before execution is
-  // allowed
-  repeated uint64 depends_on_tx_ids = 14;
-  repeated google.protobuf.Timestamp update_history = 15
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  // if execution of depended tx has not happend yet
-  // uint64 max_retries = 16;
+    google.protobuf.Timestamp start_time = 7 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp exec_time = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp end_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    repeated AutoTxHistoryEntry auto_tx_history = 10;
+    string port_id = 11 [(gogoproto.customname) = "PortID"];
+    string connection_id = 12 [(gogoproto.customname) = "ConnectionID"];
+    repeated google.protobuf.Timestamp update_history = 13 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    ExecutionConfiguration configuration = 14;
+    //ExecutionConditions conditions = 15;
+}
+
+// ExecutionConfiguration provides the execution-related configuration of the AutoTx
+message ExecutionConfiguration {
+       // if true, the AutoTx outputs are saved and can be used in condition-based logic
+      bool save_msg_responses = 1;
+      // if true, the AutoTx is not updatable
+      bool updating_disabled = 2;           
+      // If true, will execute until we get a successful AutoTx, if false/unset will always execute
+      bool stop_on_success = 3;
+      // If true, will execute until successful AutoTx, if false/unset will always execute
+      bool stop_on_failure = 4;
+  }
+
+// ExecutionConditions provides execution conditions for the AutoTx
+message ExecutionConditions {
+      //optional array of dependent AutoTxs that when executing succesfully, stops further execution
+      repeated int64 stop_on_success_of = 5;
+      //optional array of dependent AutoTxs that when not executing succesfully, stops further execution
+      repeated int64 stop_on_failure_of = 6;      
+      //optional array of dependent AutoTxs that should be executed succesfully in their latest call before upcomming execution is allowed
+      repeated int64 skip_on_failure_of = 7;
+      //optional array of dependent autotxs that should fail their latest call before upcomming execution is allowed
+      repeated int64 skip_on_success_of = 8;
+      //Comparison comparison = 1; // Comparison runs before execution of AutoTx and outputs true or false
+      //UseResponseValue response = 2; // Replace value with value from message or response from another AutoTxs latest output
 }
 
 // AutoTxHistoryEntry provides a the history of AutoTx interchain tx call
 message AutoTxHistoryEntry {
-  google.protobuf.Timestamp scheduled_exec_time = 1
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  google.protobuf.Timestamp actual_exec_time = 2
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  cosmos.base.v1beta1.Coin exec_fee = 3 [ (gogoproto.nullable) = false ];
-  bool executed = 4;
-  bool timed_out = 5;
-  string error = 6;
-  // uint64 retries = 6;
+    google.protobuf.Timestamp  scheduled_exec_time = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp  actual_exec_time = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    cosmos.base.v1beta1.Coin exec_fee = 3 [(gogoproto.nullable) = false];
+    // whether all messages are executed, independent of succesfull result
+    bool executed = 4;
+    //timed out from execution over IBC
+    bool timed_out = 5;
+    // errors from execution, if executed and no error the execution was succesfull
+    repeated string errors = 6;
+    //will be empty when save_msg_responses is false
+    repeated google.protobuf.Any msg_responses           =7;
 }
 
 // Params defines the params for activeness of AutoTxs on governance proposals.
@@ -69,23 +88,22 @@ message Params {
   int64 RecurringAutoTxConstantFee = 4;
   //  Maximum period for self-executing AutoTx
   google.protobuf.Duration MaxAutoTxDuration = 5 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "max_auto_tx_duration,omitempty"
+        (gogoproto.nullable)    = false,
+        (gogoproto.stdduration) = true,
+        (gogoproto.jsontag)     = "max_auto_tx_duration,omitempty"
   ];
   //  Minimum period for self-executing AutoTx
   google.protobuf.Duration MinAutoTxDuration = 6 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "min_auto_tx_duration,omitempty"
+        (gogoproto.nullable)    = false,
+        (gogoproto.stdduration) = true,
+        (gogoproto.jsontag)     = "min_auto_tx_duration,omitempty"
   ];
   //  Minimum period for self-executing AutoTx
   google.protobuf.Duration MinAutoTxInterval = 8 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdduration) = true,
-    (gogoproto.jsontag) = "min_auto_tx_interval,omitempty"
+        (gogoproto.nullable)    = false,
+        (gogoproto.stdduration) = true,
+        (gogoproto.jsontag)     = "min_auto_tx_interval,omitempty"
   ];
-  // relayer rewards in utrst for each message type 0=SDK,1=Wasm, 2=Osmo.
-  // Rewards are in utrst and topped up in the module account by alloc module.
+  //relayer rewards in utrst for each message type 0=SDK,1=Wasm, 2=Osmo. Rewards are in utrst and topped up in the module account by alloc module.
   repeated int64 relayer_rewards = 9;
 }

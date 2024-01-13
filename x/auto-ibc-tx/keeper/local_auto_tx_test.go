@@ -45,21 +45,38 @@ func TestSendLocalTx(t *testing.T) {
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 	require.NoError(t, err)
 
-	autoTxInfo := createLocalAutoTxInfo(addr1, autoTxAddr)
+	autoTxInfo := createBaseAutoTxInfo(addr1, autoTxAddr)
 	autoTxInfo.Msgs = anys
 
-	err, executedLocally := keepers.SendAutoTx(ctx, autoTxInfo)
+	err, executedLocally, msgResponses := keepers.SendAutoTx(ctx, &autoTxInfo)
 	require.NoError(t, err)
+	require.NotNil(t, msgResponses)
 	require.True(t, executedLocally)
 }
 
 func TestSendLocalTxAutoCompound(t *testing.T) {
-	ctx, keepers, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
 
-	autoTxAddr, _ := CreateFakeFundedAccount(ctx, keepers.accountKeeper, keepers.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	autoTxAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 
 	types.Denom = "stake"
 
+	// Set baseline
+	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+
+	autoTxInfo := createBaseAutoTxInfo(delAddr, autoTxAddr)
+	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
+	autoTxInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
+
+	err, executedLocally, _ := keeper.SendAutoTx(ctx, &autoTxInfo)
+	require.NoError(t, err)
+	require.True(t, executedLocally)
+
+	delegations := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
+	require.Greater(t, delegations[0].Shares.TruncateInt64(), sdk.NewDec(77).TruncateInt64())
+}
+
+func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.AccAddress) (stakingtypes.Validator, sdk.Context) {
 	val := keepers.stakingKeeper.GetAllValidators(ctx)[0]
 	require.NotEmpty(t, val)
 
@@ -68,7 +85,6 @@ func TestSendLocalTxAutoCompound(t *testing.T) {
 	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	keepers.stakingKeeper.SetValidator(ctx, val)
 
-	// Set baseline
 	keepers.distrKeeper.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 2, distrtypes.ValidatorHistoricalRewards{
 		CumulativeRewardRatio: sdk.DecCoins{},
 		ReferenceCount:        2,
@@ -107,30 +123,21 @@ func TestSendLocalTxAutoCompound(t *testing.T) {
 		Rewards: decCoins,
 		Period:  4,
 	})
-
-	autoTxInfo := createLocalAutoTxInfo(delAddr, autoTxAddr)
-	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
-	autoTxInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
-
-	err, executedLocally := keepers.SendAutoTx(ctx, autoTxInfo)
-	require.NoError(t, err)
-	require.True(t, executedLocally)
-
-	delegations := keepers.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
-	require.Greater(t, delegations[0].Shares.TruncateInt64(), sdk.NewDec(77).TruncateInt64())
+	return val, ctx
 }
 
-func createLocalAutoTxInfo(ownerAddr sdk.AccAddress, autoTxAddr sdk.AccAddress) types.AutoTxInfo {
+func createBaseAutoTxInfo(ownerAddr sdk.AccAddress, autoTxAddr sdk.AccAddress) types.AutoTxInfo {
 	autoTxInfo := types.AutoTxInfo{
-		TxID:         0,
-		Owner:        ownerAddr.String(),
-		FeeAddress:   autoTxAddr.String(),
-		Msgs:         []*cdctypes.Any{},
-		Interval:     time.Second * 20,
-		StartTime:    time.Now().Add(time.Hour * -1),
-		EndTime:      time.Now().Add(time.Second * 20),
-		PortID:       "",
-		ConnectionID: "",
+		TxID:          1,
+		Owner:         ownerAddr.String(),
+		FeeAddress:    autoTxAddr.String(),
+		Msgs:          []*cdctypes.Any{},
+		Interval:      time.Second * 20,
+		StartTime:     time.Now().Add(time.Hour * -1),
+		EndTime:       time.Now().Add(time.Second * 20),
+		PortID:        "",
+		ConnectionID:  "",
+		Configuration: &types.ExecutionConfiguration{SaveMsgResponses: true},
 	}
 	return autoTxInfo
 }
