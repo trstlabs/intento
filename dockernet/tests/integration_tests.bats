@@ -42,6 +42,7 @@ setup_file() {
 
   TRANSFER_AMOUNT=5000000
   MSGSEND_AMOUNT=100000
+  MSGSEND_AMOUNT_TOTAL=17280000000 #100000*120*24*60
   ICS20HOOK_AMOUNT=50000
 
   REDEEM_AMOUNT=10000
@@ -158,19 +159,14 @@ EOF
   msg_submit_auto_tx=$($TRST_MAIN_CMD tx autoibctx submit-auto-tx "$msg_send_file" --label "MsgSend using ICA" --duration "60s" --connection-id connection-$CONNECTION_ID --from $TRST_USER -y)
   echo "$msg_submit_auto_tx"
 
-  WAIT_FOR_BLOCK $TRST_LOGS 8
-
-  # Query the autoibctx to get the initial_autotxs output
-  autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $(TRST_ADDRESS))
-  auto_txs_total=$(echo "$autotxs" | grep -c 'fee_address:')
-  echo "Number of occurrences: $auto_txs_total"
-
-  WAIT_FOR_BLOCK $TRST_LOGS 40 #10 blocks of 6 seconds to trigger AutoTx, 10 blocks to execute on host and call back
+  GET_AUTO_TX_ID $(TRST_ADDRESS) 8
+  
+  WAIT_FOR_EXECUTED_TX_BY_ID $(TRST_ADDRESS) 50
 
   # calculate difference between token balance user before and after, should equal MSGSEND_AMOUNT
   ica_token_balance_end=$($HOST_MAIN_CMD q bank balances $ICA_ADDRESS --denom $HOST_DENOM | GETBAL)
-  ica_diff=$(($ica_token_balance_end - $ica_token_balance_start))
-  assert_equal "$ica_diff" -$MSGSEND_AMOUNT
+  ica_diff=$(($ica_token_balance_start-$ica_token_balance_end))
+  assert_equal "$ica_diff" $MSGSEND_AMOUNT
 
   # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
   receiver_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
@@ -223,20 +219,16 @@ EOF
   msg_submit_auto_tx=$($TRST_MAIN_CMD tx autoibctx submit-auto-tx "$msg_exec_file" --label "MsgSend using AuthZ" --duration "60s" --connection-id connection-$CONNECTION_ID --from $TRST_USER -y)
   echo "$msg_submit_auto_tx"
 
-  WAIT_FOR_BLOCK $TRST_LOGS 8
-  # Query the autoibctx to get the initial_autotxs output
-  autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $(TRST_ADDRESS))
-  auto_txs_total=$(echo "$autotxs" | grep -c 'fee_address:')
-  echo "Number of txs: $auto_txs_total"
-
-  WAIT_FOR_BLOCK $TRST_LOGS 50 #10 blocks of 6 seconds to trigger AutoTx, 10 blocks to execute on host and call back
+  GET_AUTO_TX_ID $(TRST_ADDRESS) 8
+  
+  WAIT_FOR_EXECUTED_TX_BY_ID $(TRST_ADDRESS) 50
 
   # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
   user_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
   user_diff=$(($user_token_balance_start - $user_token_balance_end))
   printf "Balance start: %s\n" "$user_token_balance_start"
   printf "Balance end: %s\n" "$user_token_balance_end"
-  assert_equal "$user_diff" 205000 #MsgSend to ICA and MsgSend using ICA + tx fees for MsgGrant,MsgSend
+  assert_equal "$user_diff" 205000 #MsgSend to ICA and MsgSend using AuthZ + host tx fees for MsgGrant,MsgSend
 
   # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
   receiver_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
@@ -246,43 +238,36 @@ EOF
 }
 
 # test auto-tx MsgSend from ICS20 message with Trigger Address ICA Account with MsgSubmitAutoTx ICA_ADDR parsing
-@test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc transfer and create trigger" {
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc ics20 transfer, create trigger and auto-parse address" {
 
   # get initial balances
   user_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
   receiver_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
-  
-  autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs)
-  auto_txs_total_before=$(echo "$autotxs" | grep -c 'fee_address:')
 
   # do IBC transfer
-  memo='{"auto_tx": {"msgs": [{"@type": "/cosmos.bank.v1beta1.MsgSend","amount": [{"amount": "'$MSGSEND_AMOUNT'","denom": "'$HOST_DENOM'"}],"from_address":"ICA_ADDR","to_address": "'$HOST_RECEIVER_ADDRESS'"}],"duration":"60s","label":"MsgSend using ICS20 hook","cid":"connection-'$CONNECTION_ID'","start_at":"0", "owner": "'$(TRST_ADDRESS)'" }}'
+  memo='{"auto_tx": {"msgs": [{"@type": "/cosmos.bank.v1beta1.MsgSend","amount": [{"amount": "'$MSGSEND_AMOUNT'","denom": "'$HOST_DENOM'"}],"from_address":"ICA_ADDR","to_address": "'$HOST_RECEIVER_ADDRESS'"}],"duration":"2880h","interval":"60s","label":"MsgSend using ICS20 hook","cid":"connection-'$CONNECTION_ID'","start_at":"0", "owner": "'$(TRST_ADDRESS)'" }}'
   $HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL $(TRST_ADDRESS) ${ICS20HOOK_AMOUNT}${IBC_TRST_DENOM} --memo "$memo" --from $HOST_USER -y
 
-  WAIT_FOR_BLOCK $TRST_LOGS 8
-  # Query the autoibctx to get the initial_autotxs output
-  autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs)
-  auto_txs_total_after=$(echo "$autotxs" | grep -c 'fee_address:')
-  assert_not_equal $auto_txs_total_before $auto_txs_total_after
+  GET_AUTO_TX_ID $(TRST_ADDRESS) 8
 
   ICA_ADDRESS=$($TRST_MAIN_CMD q autoibctx interchainaccounts $(TRST_ADDRESS) connection-$CONNECTION_ID)
   ICA_ADDRESS=$(echo "$ICA_ADDRESS" | awk '{print $2}')
-  $HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ICA_ADDRESS $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y
+  $HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ICA_ADDRESS $MSGSEND_AMOUNT_TOTAL$HOST_DENOM --from $HOST_USER -y
   
-  WAIT_FOR_BLOCK $TRST_LOGS 50 #10 blocks of 6 seconds to trigger AutoTx, 10 blocks to execute on host and call back
+  WAIT_FOR_EXECUTED_TX_BY_ID $(TRST_ADDRESS) 50
 
   # calculate difference between token balance of host user before and after, should equal 2xMSGSEND_AMOUNT
   user_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
   user_diff=$(($user_token_balance_start - $user_token_balance_end))
   printf "Balance start: %s\n" "$user_token_balance_start"
   printf "Balance end: %s\n" "$user_token_balance_end"
-  assert_equal "$user_diff" 105000 #MsgSend(10000) and MsgSend amount from trigger(10000)+2x tx fee(2500)
+  assert_equal "$user_diff" 17280005000 #MSGSEND_AMOUNT_TOTAL for all executions(10000)+2x host tx fee(2500)
 
   # calculate difference between token balance receiver before and after, should equal 1xMSGSEND_AMOUNT
   receiver_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
   receiver_diff=$(($receiver_token_balance_end - $receiver_token_balance_start))
   printf "Balance end: %s\n" "$receiver_token_balance_end"
-  assert_equal "$receiver_diff" 100000
+  assert_equal "$receiver_diff" 100000 #one MsgSend received
 
 }
 

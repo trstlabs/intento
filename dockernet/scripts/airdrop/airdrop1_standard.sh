@@ -1,12 +1,10 @@
-#!/bin/bash
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-source ${SCRIPT_DIR}/../../config.sh
+# #!/bin/bash
+# SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# source ${SCRIPT_DIR}/../../config.sh
 
-### AIRDROP TESTING FLOW Pt 1 (STANDARD)
+# ### AIRDROP TESTING FLOW Pt 1 (STANDARD)
 
-# # This script tests airdrop claiming directly on Stride
-# # This covers the case where the host zone has a coin type of 118 
-# # and autopilot is disabled for the claim
+# # This script tests airdrop claiming on Trustless Hub
 
 # # To run:
 # #   1. Start the network with `make start-dockernet build=tgr`
@@ -27,7 +25,7 @@ source ${SCRIPT_DIR}/../../config.sh
 # ## AIRDROP SETUP
 # echo "Funding accounts..."
 # # Transfer uatom from gaia to stride, so that we can liquid stake later
-# $GAIA_MAIN_CMD tx ibc-transfer transfer transfer channel-0 trust1nf6v2paty9m22l3ecm7dpakq2c92ueyue2d5yv 1000000uatom --from ${GAIA_VAL_PREFIX}1 -y | TRIM_TX
+# $GAIA_MAIN_CMD tx bank send trust1nf6v2paty9m22l3ecm7dpakq2c92ueyue2d5yv 1000000uatom --from ${GAIA_VAL_PREFIX}1 -y | TRIM_TX
 # sleep 5
 # # Fund the distributor account
 # # $TRST_MAIN_CMD tx bank send val1 trust1z835j3j65nqr6ng257q0xkkc9gta72gfl340ws 600000utrst --from val1 -y | TRIM_TX

@@ -230,6 +230,7 @@ sed -i -E "s|seeds = .*|seeds = \"\"|g" $MAIN_CONFIG
 
 # update chain-specific settings
 if [ "$CHAIN" == "TRST" ]; then 
+   # sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"500ms\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"1s\"|g" $MAIN_CONFIG
     set_trst_genesis $MAIN_GENESIS

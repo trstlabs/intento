@@ -20,7 +20,7 @@ DOCKER := $(shell which docker)
 
 DOCKERNET_HOME=./dockernet
 DOCKERNET_COMPOSE_FILE=$(DOCKERNET_HOME)/docker-compose.yml
-build=t
+DOCKER_IMAGE_BUILD=t
 BUILDDIR ?= $(CURDIR)/build
 
 DOCKER_TAG ?= latest
@@ -402,7 +402,7 @@ proto-check-breaking:
 ###############################################################################
 
 build-dockernet:
-	@bash $(DOCKERNET_HOME)/build.sh -${build} ${BUILDDIR}
+	@bash $(DOCKERNET_HOME)/build.sh -${DOCKER_IMAGE_BUILD} ${BUILDDIR}
 
 start-dockernet: 
 	@bash $(DOCKERNET_HOME)/start_network.sh

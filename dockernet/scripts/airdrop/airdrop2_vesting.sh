@@ -2,9 +2,9 @@
 # SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 # source ${SCRIPT_DIR}/../../config.sh
 
-# ### AIRDROP TESTING FLOW Pt 4 (RESETS)
+# ### AIRDROP TESTING FLOW Pt 2 (Vesting)
 
-# # This script tests that the the airdrop resets properly
+# # This script tests that the the airdrop vests properly
 
 # # To run:
 # #   1. Update the following in `x/claim/types/params.go`

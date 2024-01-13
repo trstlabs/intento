@@ -317,27 +317,73 @@ WAIT_FOR_BLOCK() {
   done
 }
 
-WAIT_FOR_AUTO_TX() {
+FOUND_TX_ID=""
+
+GET_AUTO_TX_ID() {
   address=$1
+  max_blocks=${2:-10} # Default to 10 if not specified
 
-  max_blocks=10
+  # Fetch initial transaction IDs
+  initial_autotxs=($($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | grep 'tx_id:' | awk '{print $2}'))
+  echo "Initial AutoTxs: ${initial_autotxs[*]}"
 
-  initial_autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | jq -r .auto_tx_infos)
-  initial_autotxs=$(echo "$initial_autotxs" | awk '{print $2}')
-
-  echo "INIT TXS $initial_autotxs"
-  echo "INIT LEN ${initial_autotxs[@]}"
-  ${#distro[@]}
   for i in $(seq $max_blocks); do
-    new_autotxs=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | jq -r .auto_tx_infos)
-    echo "NEW LEN ${new_autotxs[@]}"
-    if [[ "${new_autotxs[@]}" != "${initial_autotxs[@]}" ]]; then
-      break
-    fi
+    # Fetch new transaction IDs
+    new_autotxs=($($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | grep 'tx_id:' | awk '{print $2}'))
 
-    WAIT_FOR_BLOCK $TRST_LOGS 10
+    # Find new transaction ID by comparing initial and new lists
+    for tx_id in "${new_autotxs[@]}"; do
+      if [[ ! " ${initial_autotxs[*]} " =~ " ${tx_id} " ]]; then
+        echo "New AutoTx detected with ID: $tx_id"
+       #  return $((10#$tx_id)) # Return the transaction ID as an integer
+       FOUND_TX_ID=$tx_id
+       return 0
+      fi
+    done
+
+    # Wait for the next block
+    WAIT_FOR_BLOCK $TRST_LOGS 1
+
+    # Optional: Handle case where no new transactions are found after max_blocks
+    if [[ $i -eq $max_blocks ]]; then
+      echo "No new AutoTxs found after $max_blocks blocks."
+      return -1 # Indicate no new transaction was found
+    fi
   done
 }
+
+WAIT_FOR_EXECUTED_TX_BY_ID() {
+  address=$1
+  max_blocks=${2:-10} # Default to 10 if not specified
+
+  for i in $(seq $max_blocks); do
+    # Fetch transaction info for the specified tx_id
+    tx_info=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | awk -v txid="$tx_id" '
+      /auto_tx_history/{capture=1;next} 
+      capture && /tx_id: /{capture=0} 
+      capture && /tx_id: "'"$txid"'"/{found=1;next} 
+      found{print; if (/auto_tx_history/ || /tx_id: /) exit}')
+    
+    # Check if executed is true for the specified tx_id
+    executed=$(echo "$tx_info" | grep 'executed' | awk '{print $2}')
+    if [[ "$executed" == "true" ]]; then
+      echo "AutoTx ID info $tx_info."
+      echo "AutoTx ID $FOUND_TX_ID executed."
+      return 0
+    fi
+
+    # Wait for the next blocks
+    WAIT_FOR_BLOCK $TRST_LOGS 1
+
+    # Handle case where the transaction is not executed after max_blocks
+    if [[ $i -eq $max_blocks ]]; then
+      echo "AutoTx ID $FOUND_TX_ID not executed after $max_blocks blocks."
+      return -1
+    fi
+  done
+}
+
+
 
 GET_VAL_ADDR() {
   chain=$1

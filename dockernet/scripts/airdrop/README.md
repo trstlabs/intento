@@ -1,11 +1,11 @@
-# Airdrop Integration Tests
+# Claims Integration Tests
 
-Each airdrop testing script (1 through 4) tests different aspects of the airdrop
+Each airdrop testing script tests different aspects of the claims module
 
 ## Overview
 
-* **Part 1: Standard**: Tests basic airdrop claims and actions
-* **Part 2: Vesting**: Tests that the airdrop vests properly
+* **Part 1: Standard**: Tests basic claims and actions
+* **Part 2: Vesting**: Tests that claims vests properly
 
 ### Instructions
 
