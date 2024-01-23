@@ -167,10 +167,7 @@ func getSubmitAutoTxCmd() *cobra.Command {
 			}
 
 			// Get execution configuration
-			configuration, err := getExecutionConfiguration(cmd)
-			if err != nil {
-				return err
-			}
+			configuration := getExecutionConfiguration(cmd)
 			funds := sdk.Coins{}
 			amount := viper.GetString(flagFeeFunds)
 			if amount != "" {
@@ -194,8 +191,7 @@ func getSubmitAutoTxCmd() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(fsAutoTx)
-	_ = cmd.MarkFlagRequired(flagDuration)
-
+	cmd.Flags().String(flagDuration, "", "A custom duration for the AutoTx e.g. 2h, 6000s, 72h3m0.5s")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -241,10 +237,7 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 			}
 
 			// Get execution configuration
-			configuration, err := getExecutionConfiguration(cmd)
-			if err != nil {
-				return err
-			}
+			configuration := getExecutionConfiguration(cmd)
 			funds := sdk.Coins{}
 			amount := viper.GetString(flagFeeFunds)
 			if amount != "" {
@@ -276,9 +269,8 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(fsAutoTx)
+	cmd.Flags().String(flagDuration, "", "A custom duration for the AutoTx e.g. 2h, 6000s, 72h3m0.5s")
 	cmd.Flags().String(flagCounterpartyConnectionID, "", "Counterparty Connection ID, from host chain, optional")
-	_ = cmd.MarkFlagRequired(flagDuration)
-
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -286,7 +278,7 @@ func getRegisterAccountAndSubmitAutoTxCmd() *cobra.Command {
 
 func getUpdateAutoTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "update-auto-tx [AutoTxID] [path/to/sdk_msg.json, optional]",
+		Use:  "update-auto-tx [id] [path/to/sdk_msg.json, optional] ",
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -331,10 +323,7 @@ func getUpdateAutoTxCmd() *cobra.Command {
 				}
 			}
 			// Get execution configuration
-			configuration, err := getExecutionConfiguration(cmd)
-			if err != nil {
-				return err
-			}
+			configuration := getExecutionConfiguration(cmd)
 			funds := sdk.Coins{}
 			amount := viper.GetString(flagFeeFunds)
 			if amount != "" {
@@ -357,60 +346,28 @@ func getUpdateAutoTxCmd() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(fsAutoTx)
-	_ = cmd.MarkFlagRequired(flagDuration)
-
+	cmd.Flags().String(flagEndTime, "", "A custom end-time in UNIX time, optional")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-func getExecutionConfiguration(cmd *cobra.Command) (*types.ExecutionConfiguration, error) {
-	updatingDisabled, err := cmd.Flags().GetBool(flagUpdatingDisabled)
-	if err != nil {
-		return nil, err
-	}
-
-	saveMsgResponses, err := cmd.Flags().GetBool(flagSaveMsgResponses)
-	if err != nil {
-		return nil, err
-	}
-
-	stopOnSuccess, err := cmd.Flags().GetBool(flagStopOnSuccess)
-	if err != nil {
-		return nil, err
-	}
-	stopOnFailure, err := cmd.Flags().GetBool(flagStopOnFailure)
-	if err != nil {
-		return nil, err
-	}
-	/* 	skipOnFailureOf, err := parseIntSlice(flagSkipOnFailureOf)
-	   	if err != nil {
-	   		return nil, err
-	   	}
-
-	   	skipOnSuccessOf, err := parseIntSlice(flagSkipOnSuccessOf)
-	   	if err != nil {
-	   		return nil, err
-	   	}
-
-	   	stopOnSuccessOf, err := parseIntSlice(flagStopOnSuccessOf)
-	   	if err != nil {
-	   		return nil, err
-	   	}
-
-	   	stopOnFailureOf, err := parseIntSlice(flagStopOnFailureOf)
-	   	if err != nil {
-	   		return nil, err
-	   	} */
+func getExecutionConfiguration(cmd *cobra.Command) *types.ExecutionConfiguration {
+	updatingDisabled := viper.GetBool(flagUpdatingDisabled)
+	saveMsgResponses := viper.GetBool(flagSaveMsgResponses)
+	fallbackToOwnerBalance := viper.GetBool(flagFallbackToOwnerBalance)
+	stopOnSuccess := viper.GetBool(flagStopOnSuccess)
+	stopOnFailure := viper.GetBool(flagStopOnFailure)
 
 	configuration := &types.ExecutionConfiguration{
-		UpdatingDisabled: updatingDisabled,
-		SaveMsgResponses: saveMsgResponses,
-		StopOnSuccess:    stopOnSuccess,
-		StopOnFailure:    stopOnFailure,
+		UpdatingDisabled:       updatingDisabled,
+		SaveMsgResponses:       saveMsgResponses,
+		StopOnSuccess:          stopOnSuccess,
+		StopOnFailure:          stopOnFailure,
+		FallbackToOwnerBalance: fallbackToOwnerBalance,
 	}
 
-	return configuration, nil
+	return configuration
 }
 
 func parseIntSlice(flagName string) ([]int64, error) {

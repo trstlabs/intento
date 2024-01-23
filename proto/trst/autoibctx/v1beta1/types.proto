@@ -48,6 +48,8 @@ message ExecutionConfiguration {
       bool stop_on_success = 3;
       // If true, will execute until successful AutoTx, if false/unset will always execute
       bool stop_on_failure = 4;
+      // If true, owner account balance is used when trigger account funds run out
+      bool fallback_to_owner_balance = 5;
   }
 
 // ExecutionConditions provides execution conditions for the AutoTx
