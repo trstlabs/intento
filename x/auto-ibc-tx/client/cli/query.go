@@ -20,9 +20,7 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(getInterchainAccountCmd())
-	cmd.AddCommand(getAutoTxsForOwnerCmd())
-	cmd.AddCommand(getAutoTxsCmd())
+	cmd.AddCommand(getInterchainAccountCmd(), getAutoTxCmd(), getAutoTxsForOwnerCmd(), getAutoTxsCmd())
 
 	return cmd
 }
@@ -78,6 +76,31 @@ func getAutoTxsForOwnerCmd() *cobra.Command {
 
 	flags.AddQueryFlagsToCmd(cmd)
 	flags.AddPaginationFlagsToCmd(cmd, "list auto-txs by owner")
+
+	return cmd
+}
+
+func getAutoTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:  "auto-tx [id]",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.AutoTx(cmd.Context(), types.NewQueryAutoTxRequest(args[0]))
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
