@@ -26,7 +26,7 @@ func (k Keeper) InterchainAccountFromAddress(goCtx context.Context, req *types.Q
 
 	ica, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, req.ConnectionId, portID)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "no account found for connectionId: %s and portID: %s",
+		return nil, status.Errorf(codes.NotFound, "no account found for connectionID: %s and portID: %s",
 			req.ConnectionId, portID)
 	}
 

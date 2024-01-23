@@ -108,8 +108,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 
 	//chainB sends packet to chainA. connectionID to execute on chainB is on chainAs config
 	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "cid":"%s", "msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
-	// ackStr := string(ackBytes)
-	// fmt.Println(ackStr)
+
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
@@ -154,7 +153,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 	err := SetupICAPath(path, addr.String())
 	suite.Require().NoError(err)
 
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my trigger", "cid":"%s", "msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0" } }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my trigger", "cid":"%s", "msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
@@ -162,9 +161,8 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 
 	autoTxKeeper := suite.chainA.GetTrstApp().AutoIbcTxKeeper
 	autoTx := autoTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
-
-	// _, found := suite.chainA.GetTrstApp().ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ConnectionID, autoTx.PortID)
-	// suite.Require().True(found)
+	feeAddr, _ := sdk.AccAddressFromBech32(autoTx.FeeAddress)
+	types.Denom = suite.chainA.GetTrstApp().BankKeeper.GetAllBalances(suite.chainA.GetContext(), feeAddr)[0].Denom
 
 	unpacker := suite.chainA.Codec
 	unpackedMsgs := autoTx.GetTxMsgs(unpacker)
@@ -172,9 +170,10 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 
 	suite.chainA.CurrentHeader.Time = suite.chainA.CurrentHeader.Time.Add(time.Minute)
 	FakeBeginBlocker(suite.chainA.GetContext(), autoTxKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
-	suite.chainA.NextBlock()
 
 	autoTx = autoTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
+	suite.Require().NotNil(autoTx.AutoTxHistory)
+	suite.Require().Empty(autoTx.AutoTxHistory[0].Errors)
 	suite.Require().Equal(autoTx.Owner, addr.String())
 	suite.Require().Equal(autoTx.Label, "my trigger")
 	suite.Require().Equal(autoTx.PortID, "icacontroller-"+addr.String())

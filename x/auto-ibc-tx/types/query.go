@@ -39,6 +39,11 @@ func NewQueryAutoTxsRequest(pagination *query.PageRequest) *QueryAutoTxsRequest 
 	}
 }
 
+// NewQueryAutoTxsForOwnerRequest creates and returns a new QueryAutoTxsForOwnerFromAddressRequest
+func NewQueryAutoTxRequest(id string) *QueryAutoTxRequest {
+	return &QueryAutoTxRequest{Id: id}
+}
+
 // NewQueryAutoTxsForOwnerResponse creates and returns a new QueryAutoTxsForOwnerFromAddressResponse
 func NewQueryAutoTxsResponse(autoTxInfos []AutoTxInfo) *QueryAutoTxsResponse {
 	return &QueryAutoTxsResponse{

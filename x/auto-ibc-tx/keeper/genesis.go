@@ -47,7 +47,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
 
 	// sanity check seq values
 	if k.peekAutoIncrementID(ctx, types.KeyLastTxID) <= maxTxID {
-		return errorsmod.Wrapf(types.ErrInvalid, "seq %s must be greater %d ", string(types.KeyLastTxID), maxTxID)
+		return errorsmod.Wrapf(types.ErrInvalidGenesis, "seq %s must be greater %d ", string(types.KeyLastTxID), maxTxID)
 	}
 
 	return nil

@@ -332,7 +332,7 @@ func (k Keeper) IterateAutoTxsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb 
 }
 
 // SetAutoTxResult sets the result of the last executed TxID set at SendAutoTx.
-func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, seq uint64, msgResp []*cdctypes.Any) error {
+func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, seq uint64, msgResponses []*cdctypes.Any) error {
 	id := k.getTmpAutoTxID(ctx, port, seq)
 	if id <= 0 {
 		return nil
@@ -357,7 +357,7 @@ func (k Keeper) SetAutoTxResult(ctx sdk.Context, port string, rewardType int, se
 	autoTxInfo.AutoTxHistory[len(autoTxInfo.AutoTxHistory)-1].Executed = true
 
 	if autoTxInfo.Configuration.SaveMsgResponses {
-		autoTxInfo.AutoTxHistory[len(autoTxInfo.AutoTxHistory)-1].MsgResponses = msgResp
+		autoTxInfo.AutoTxHistory[len(autoTxInfo.AutoTxHistory)-1].MsgResponses = msgResponses
 	}
 
 	k.SetAutoTxInfo(ctx, &autoTxInfo)

@@ -215,7 +215,7 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 	}
 
 	if autoTx.Configuration.UpdatingDisabled {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "updating disabled")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "updating is disabled")
 	}
 
 	if msg.ConnectionId != "" {

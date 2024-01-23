@@ -5,6 +5,7 @@ import (
 	"time"
 
 	//"github.com/cosmos/cosmos-sdk/simapp"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
@@ -195,9 +196,10 @@ func receivePacket(path *ibctesting.Path, suite *KeeperTestSuite, packet channel
 }
 
 func (suite *KeeperTestSuite) makeMockPacket(receiver, memo string, prevSequence uint64, path *ibctesting.Path) channeltypes.Packet {
+
 	packetData := transfertypes.FungibleTokenPacketData{
 		Denom:    sdk.DefaultBondDenom,
-		Amount:   "1",
+		Amount:   "1000000",
 		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
 		Receiver: receiver,
 		Memo:     memo,

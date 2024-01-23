@@ -137,15 +137,15 @@ func (im IBCModule) OnAcknowledgementPacket(
 	}
 }
 
-func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResp []*cdctypes.Any, relayer sdk.AccAddress, packet channeltypes.Packet) {
-	if len(msgResp) == 0 {
-		err := errorsmod.Wrapf(sdkerrors.ErrInvalidType, "no messages in ICS-27 message response: %v", msgResp)
+func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, packet channeltypes.Packet) {
+	if len(msgResponses) == 0 {
+		err := errorsmod.Wrapf(sdkerrors.ErrInvalidType, "no messages in ICS-27 message response: %v", msgResponses)
 		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
 		return
 	}
 	//msgClass is used for Relayer Reward and Airdrop Reward
 	var msgClass int // Initialize msgClass outside the loop
-	for index, anyResp := range msgResp {
+	for index, anyResp := range msgResponses {
 		im.keeper.Logger(ctx).Debug("msg response in ICS-27 packet", "response", anyResp.GoString(), "typeURL", anyResp.GetTypeUrl())
 
 		rewardClass := getMsgRewardType(ctx, anyResp.GetTypeUrl())
@@ -156,7 +156,7 @@ func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResp []*cdctypes.Any,
 	}
 
 	// set result in AutoTx history
-	err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, msgClass, packet.Sequence, msgResp)
+	err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, msgClass, packet.Sequence, msgResponses)
 	if err != nil {
 		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
 		return
