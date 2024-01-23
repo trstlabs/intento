@@ -9,7 +9,7 @@ chains:
     value:
       key: rly1
       chain-id: TRST
-      rpc-addr: http://trst1:26657
+      rpc-addr: http://trst2:26657
       account-prefix: trust
       keyring-backend: test
       gas-adjustment: 1.3
