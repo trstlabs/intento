@@ -108,6 +108,39 @@ func TestBeginBlockerStopOnFailure(t *testing.T) {
 
 }
 
+func TestErrorDistributionIsSaved(t *testing.T) {
+	ctx, keepers, _ := createTestContext(t)
+	configuration := types.ExecutionConfiguration{StopOnFailure: true}
+	autoTx, emptyBalanceAcc := createTestSendAutoTx(ctx, configuration, keepers)
+
+	err := autoTx.ValidateBasic()
+	require.NoError(t, err)
+	k := keepers.AutoIbcTxKeeper
+
+	k.SetAutoTxInfo(ctx, &autoTx)
+	k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
+
+	ctx2 := createNextExecutionContext(ctx, autoTx.ExecTime)
+	// test that autoTx was added to the queue
+	queue := k.GetAutoTxsForBlock(ctx2)
+	require.Equal(t, 1, len(queue))
+	require.Equal(t, uint64(123), queue[0].TxID)
+	sendTokens(ctx, keepers, autoTx.Owner, emptyBalanceAcc, sdk.NewInt64Coin("stake", 3_000_000_000_000))
+	err = sendTokens(ctx, keepers, autoTx.FeeAddress, emptyBalanceAcc, sdk.NewInt64Coin("stake", 3_000_000_000_000))
+	require.NoError(t, err)
+	fakeAutoTxExec(k, ctx2, autoTx)
+
+	autoTx = k.GetAutoTxInfo(ctx2, autoTx.TxID)
+	ctx3 := createNextExecutionContext(ctx2, autoTx.ExecTime.Add(time.Hour))
+	autoTx = k.GetAutoTxInfo(ctx3, autoTx.TxID)
+
+	fmt.Printf("%v", autoTx.AutoTxHistory)
+	require.True(t, autoTx.ExecTime.Before(ctx3.BlockTime()))
+	require.NotNil(t, autoTx.AutoTxHistory[0].Errors)
+	require.Contains(t, autoTx.AutoTxHistory[0].Errors[0], "distribution")
+
+}
+
 func fakeAutoTxExec(k keeper.Keeper, ctx sdk.Context, autoTx types.AutoTxInfo) {
 	autoTx = k.GetAutoTxInfo(ctx, autoTx.TxID)
 	if !k.AllowedToExecute(ctx, autoTx) {
@@ -122,11 +155,16 @@ func fakeAutoTxExec(k keeper.Keeper, ctx sdk.Context, autoTx types.AutoTxInfo) {
 
 	k.RemoveFromAutoTxQueue(ctx, autoTx)
 	if err != nil {
-		addAutoTxHistory(&autoTx, ctx.BlockTime(), fee, false, nil, err)
+		errorString := fmt.Sprintf(types.ErrAutoTxDistribution, err.Error())
+		addAutoTxHistory(&autoTx, ctx.BlockTime(), fee, false, nil, errorString)
 	} else {
 		err, executedLocally, msgResponses := k.SendAutoTx(ctx, &autoTx)
-		addAutoTxHistory(&autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses, err)
-		fmt.Printf("err: %v \n", err)
+		if err != nil {
+			addAutoTxHistory(&autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrAutoTxMsgHandling, err.Error()))
+		} else {
+			addAutoTxHistory(&autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses)
+		}
+
 		shouldRecur := isRecurring && (autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime) || autoTx.ExecTime.Add(autoTx.Interval) == autoTx.EndTime)
 		allowedToRecur := (!autoTx.Configuration.StopOnSuccess && !autoTx.Configuration.StopOnFailure) || autoTx.Configuration.StopOnSuccess && err != nil || autoTx.Configuration.StopOnFailure && err == nil
 		fmt.Printf("%v %v\n", shouldRecur, allowedToRecur)
@@ -136,8 +174,8 @@ func fakeAutoTxExec(k keeper.Keeper, ctx sdk.Context, autoTx types.AutoTxInfo) {
 			k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
 		}
 
-		k.SetAutoTxInfo(ctx, &autoTx)
 	}
+	k.SetAutoTxInfo(ctx, &autoTx)
 
 }
 
@@ -228,14 +266,14 @@ func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers, codec.Cod
 
 func createTestSendAutoTx(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.AutoTxInfo, sdk.AccAddress) {
 	autoTxOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
-	feeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
-	toSendAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
+	fundedFeeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
+	emptyBalanceAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
 	startTime := ctx.BlockHeader().Time
 	execTime := ctx.BlockHeader().Time.Add(time.Hour)
 	endTime := ctx.BlockHeader().Time.Add(time.Hour * 2)
 	localMsg := &banktypes.MsgSend{
 		FromAddress: autoTxOwnerAddr.String(),
-		ToAddress:   toSendAcc.String(),
+		ToAddress:   emptyBalanceAcc.String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
@@ -243,7 +281,7 @@ func createTestSendAutoTx(ctx sdk.Context, configuration types.ExecutionConfigur
 	autoTx := types.AutoTxInfo{
 		TxID:          123,
 		Owner:         autoTxOwnerAddr.String(),
-		FeeAddress:    feeAddr.String(),
+		FeeAddress:    fundedFeeAddr.String(),
 		ExecTime:      execTime,
 		EndTime:       endTime,
 		Interval:      time.Hour,
@@ -251,7 +289,14 @@ func createTestSendAutoTx(ctx sdk.Context, configuration types.ExecutionConfigur
 		Msgs:          anys,
 		Configuration: &configuration,
 	}
-	return autoTx, toSendAcc
+	return autoTx, emptyBalanceAcc
+}
+
+func sendTokens(ctx sdk.Context, keepers keeper.TestKeepers, from string, toAddr sdk.AccAddress, amount sdk.Coin) error {
+	fromAddr, _ := sdk.AccAddressFromBech32(from)
+	err := keepers.BankKeeper.SendCoins(ctx, fromAddr, toAddr, sdk.NewCoins(amount))
+
+	return err
 }
 
 func createBadAutoTx(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.AutoTxInfo, sdk.AccAddress) {
