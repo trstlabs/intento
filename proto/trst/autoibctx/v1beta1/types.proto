@@ -55,7 +55,7 @@ message ExecutionConfiguration {
       // If true, owner account balance is used when trigger account funds run out
       bool fallback_to_owner_balance = 5;
       // If true, allows the AutoTx to continue execution after an ibc channel times out (recommended)
-      bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];;
+      bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];
   }
 
 // ExecutionConditions provides execution conditions for the AutoTx
