@@ -30,12 +30,16 @@ message AutoTxInfo {
     google.protobuf.Timestamp start_time = 7 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
     google.protobuf.Timestamp exec_time = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
     google.protobuf.Timestamp end_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    repeated AutoTxHistoryEntry auto_tx_history = 10;
-    string port_id = 11 [(gogoproto.customname) = "PortID"];
-    string connection_id = 12 [(gogoproto.customname) = "ConnectionID"];
-    repeated google.protobuf.Timestamp update_history = 13 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
-    ExecutionConfiguration configuration = 14;
-    //ExecutionConditions conditions = 15;
+    repeated google.protobuf.Timestamp update_history = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    ICAConfig ica_config = 11 [(gogoproto.customname) = "ICAConfig"];
+    ExecutionConfiguration configuration = 12;
+    //ExecutionConditions conditions = 14;
+}
+
+message ICAConfig {
+      string port_id = 1 [(gogoproto.customname) = "PortID"];
+      string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
+      string host_connection_id = 3 [(gogoproto.customname) = "HostConnectionID"];
 }
 
 // ExecutionConfiguration provides the execution-related configuration of the AutoTx
@@ -50,6 +54,8 @@ message ExecutionConfiguration {
       bool stop_on_failure = 4;
       // If true, owner account balance is used when trigger account funds run out
       bool fallback_to_owner_balance = 5;
+      // If true, allows the AutoTx to continue execution after an ibc channel times out (recommended)
+      bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];;
   }
 
 // ExecutionConditions provides execution conditions for the AutoTx
@@ -64,6 +70,11 @@ message ExecutionConditions {
       repeated int64 skip_on_success_of = 8;
       //Comparison comparison = 1; // Comparison runs before execution of AutoTx and outputs true or false
       //UseResponseValue response = 2; // Replace value with value from message or response from another AutoTxs latest output
+}
+
+// AutoTxHistory execution history
+message AutoTxHistory {
+      repeated AutoTxHistoryEntry history = 1 [ (gogoproto.nullable) = false ];
 }
 
 // AutoTxHistoryEntry provides a the history of AutoTx interchain tx call

@@ -65,6 +65,27 @@ func (k Keeper) AutoTx(c context.Context, req *types.QueryAutoTxRequest) (*types
 	}, nil
 }
 
+// AutoTxHistory implements the Query/AutoTxHistory method
+func (k Keeper) AutoTxHistory(c context.Context, req *types.QueryAutoTxHistoryRequest) (*types.QueryAutoTxHistoryResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	txID, err := strconv.ParseUint(req.Id, 10, 64)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	autoTxHistory, err := k.TryGetAutoTxHistory(ctx, txID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryAutoTxHistoryResponse{
+		History: autoTxHistory.History,
+	}, nil
+}
+
 // AutoTxs implements the Query/AutoTxs gRPC method
 func (k Keeper) AutoTxs(c context.Context, req *types.QueryAutoTxsRequest) (*types.QueryAutoTxsResponse, error) {
 	if req == nil {

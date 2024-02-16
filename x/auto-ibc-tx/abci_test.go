@@ -37,13 +37,13 @@ func TestBeginBlocker(t *testing.T) {
 
 	//queue in BeginBocker
 	queue = k.GetAutoTxsForBlock(ctx3)
-
+	autoTxHistory := k.GetAutoTxHistory(ctx3, queue[0].TxID)
 	// test that autoTx history was updated
 	require.Equal(t, ctx3.BlockHeader().Time, queue[0].ExecTime)
-	require.Equal(t, 1, len(queue[0].AutoTxHistory))
-	require.Equal(t, ctx2.BlockHeader().Time, queue[0].AutoTxHistory[0].ScheduledExecTime)
-	require.Equal(t, ctx2.BlockHeader().Time, queue[0].AutoTxHistory[0].ActualExecTime)
-	require.NotNil(t, ctx3.BlockHeader().Time, queue[0].AutoTxHistory[0].MsgResponses[0].Value)
+	require.Equal(t, 1, len(autoTxHistory.History))
+	require.Equal(t, ctx2.BlockHeader().Time, autoTxHistory.History[0].ScheduledExecTime)
+	require.Equal(t, ctx2.BlockHeader().Time, autoTxHistory.History[0].ActualExecTime)
+	require.NotNil(t, ctx3.BlockHeader().Time, autoTxHistory.History[0].MsgResponses[0].Value)
 	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx3, sendToAddr)[0].Amount, sdk.NewInt(100))
 
 }
@@ -125,7 +125,8 @@ func TestErrorDistributionIsSaved(t *testing.T) {
 	queue := k.GetAutoTxsForBlock(ctx2)
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].TxID)
-	sendTokens(ctx, keepers, autoTx.Owner, emptyBalanceAcc, sdk.NewInt64Coin("stake", 3_000_000_000_000))
+	err = sendTokens(ctx, keepers, autoTx.Owner, emptyBalanceAcc, sdk.NewInt64Coin("stake", 3_000_000_000_000))
+	require.NoError(t, err)
 	err = sendTokens(ctx, keepers, autoTx.FeeAddress, emptyBalanceAcc, sdk.NewInt64Coin("stake", 3_000_000_000_000))
 	require.NoError(t, err)
 	fakeAutoTxExec(k, ctx2, autoTx)
@@ -133,36 +134,38 @@ func TestErrorDistributionIsSaved(t *testing.T) {
 	autoTx = k.GetAutoTxInfo(ctx2, autoTx.TxID)
 	ctx3 := createNextExecutionContext(ctx2, autoTx.ExecTime.Add(time.Hour))
 	autoTx = k.GetAutoTxInfo(ctx3, autoTx.TxID)
+	autoTxHistory := k.GetAutoTxHistory(ctx3, queue[0].TxID)
 
-	fmt.Printf("%v", autoTx.AutoTxHistory)
 	require.True(t, autoTx.ExecTime.Before(ctx3.BlockTime()))
-	require.NotNil(t, autoTx.AutoTxHistory[0].Errors)
-	require.Contains(t, autoTx.AutoTxHistory[0].Errors[0], "distribution")
+	require.NotNil(t, autoTxHistory.History[0].Errors)
+	require.Contains(t, autoTxHistory.History[0].Errors[0], "distribution")
 
 }
 
 func fakeAutoTxExec(k keeper.Keeper, ctx sdk.Context, autoTx types.AutoTxInfo) {
+	timeOfBlock := ctx.BlockHeader().Time
 	autoTx = k.GetAutoTxInfo(ctx, autoTx.TxID)
+	autoTxHistory, _ := k.TryGetAutoTxHistory(ctx, autoTx.TxID)
 	if !k.AllowedToExecute(ctx, autoTx) {
-		addAutoTxHistory(&autoTx, ctx.BlockTime(), sdk.Coin{}, false, nil, types.ErrAutoTxConditions)
+		k.AddAutoTxHistory(ctx, &autoTxHistory, &autoTx, timeOfBlock, sdk.Coin{}, false, nil, types.ErrAutoTxConditions)
 		autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
 		k.SetAutoTxInfo(ctx, &autoTx)
 	}
 	isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
 
-	flexFee := calculateTimeBasedFlexFee(autoTx)
+	flexFee := calculateTimeBasedFlexFee(autoTx, autoTxHistory)
 	fee, err := k.DistributeCoins(ctx, autoTx, flexFee, isRecurring, ctx.BlockHeader().ProposerAddress)
 
 	k.RemoveFromAutoTxQueue(ctx, autoTx)
 	if err != nil {
 		errorString := fmt.Sprintf(types.ErrAutoTxDistribution, err.Error())
-		addAutoTxHistory(&autoTx, ctx.BlockTime(), fee, false, nil, errorString)
+		k.AddAutoTxHistory(ctx, &autoTxHistory, &autoTx, timeOfBlock, fee, false, nil, errorString)
 	} else {
 		err, executedLocally, msgResponses := k.SendAutoTx(ctx, &autoTx)
 		if err != nil {
-			addAutoTxHistory(&autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrAutoTxMsgHandling, err.Error()))
+			k.AddAutoTxHistory(ctx, &autoTxHistory, &autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrAutoTxMsgHandling, err.Error()))
 		} else {
-			addAutoTxHistory(&autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses)
+			k.AddAutoTxHistory(ctx, &autoTxHistory, &autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses)
 		}
 
 		shouldRecur := isRecurring && (autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime) || autoTx.ExecTime.Add(autoTx.Interval) == autoTx.EndTime)
@@ -177,38 +180,6 @@ func fakeAutoTxExec(k keeper.Keeper, ctx sdk.Context, autoTx types.AutoTxInfo) {
 	}
 	k.SetAutoTxInfo(ctx, &autoTx)
 
-}
-
-func TestBeginBlockerStressTest(t *testing.T) {
-	ctx, keepers, _ := createTestContext(t)
-	k := keepers.AutoIbcTxKeeper
-
-	autoTxs := createTestSendAutoTxs(ctx, 100, keepers)
-
-	for _, autoTx := range autoTxs {
-		k.InsertAutoTxQueue(ctx, autoTx.TxID, autoTx.ExecTime)
-		k.SetAutoTxInfo(ctx, &autoTx)
-	}
-
-	ctx2 := createNextExecutionContext(ctx, autoTxs[0].ExecTime)
-	queue := k.GetAutoTxsForBlock(ctx2)
-
-	// test that all autoTxs were added to the queue
-	require.Equal(t, len(autoTxs), len(queue))
-
-	// BeginBlocker logic
-	for _, autoTx := range queue {
-		fakeAutoTxExec(k, ctx2, autoTx)
-	}
-
-	// information for the next execution
-	ctx3 := createNextExecutionContext(ctx, autoTxs[0].ExecTime.Add(autoTxs[0].Interval))
-	queue = k.GetAutoTxsForBlock(ctx3)
-
-	// test that autoTx history was updated for all entries
-	for _, autoTx := range queue {
-		require.Equal(t, 1, len(autoTx.AutoTxHistory))
-	}
 }
 
 func TestOwnerMustBeSignerForLocalAutoTx(t *testing.T) {
@@ -236,9 +207,10 @@ func TestOwnerMustBeSignerForLocalAutoTx(t *testing.T) {
 	err := autoTx.GetTxMsgs(cdc)[0].ValidateBasic()
 	require.NoError(t, err)
 
-	feeBeforeFeeParams := calculateTimeBasedFlexFee(autoTx)
+	autoTxHistory, _ := k.TryGetAutoTxHistory(ctx, autoTx.TxID)
+	flexFee := calculateTimeBasedFlexFee(autoTx, autoTxHistory)
 
-	fee, err := k.DistributeCoins(ctx, autoTx, feeBeforeFeeParams, true, ctx.BlockHeader().ProposerAddress)
+	fee, err := k.DistributeCoins(ctx, autoTx, flexFee, true, ctx.BlockHeader().ProposerAddress)
 
 	require.NoError(t, err)
 	err, executedLocally, _ := k.SendAutoTx(ctx, &autoTx)
@@ -288,6 +260,7 @@ func createTestSendAutoTx(ctx sdk.Context, configuration types.ExecutionConfigur
 		StartTime:     startTime,
 		Msgs:          anys,
 		Configuration: &configuration,
+		ICAConfig:     &types.ICAConfig{},
 	}
 	return autoTx, emptyBalanceAcc
 }

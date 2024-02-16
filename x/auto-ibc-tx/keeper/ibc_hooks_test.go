@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAutoTxWorks() {
 
 	suite.Require().Equal(autoTx.Owner, addr.String())
 	suite.Require().Equal(autoTx.Label, "my_trigger")
-	suite.Require().Equal(autoTx.PortID, "")
+	suite.Require().Equal(autoTx.ICAConfig.PortID, "")
 	suite.Require().Equal(autoTx.Interval, time.Second*60)
 
 	var txMsgAny codectypes.Any
@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 	suite.Require().NoError(err)
 
 	//chainB sends packet to chainA. connectionID to execute on chainB is on chainAs config
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "cid":"%s", "msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "cid":"%s", "host_cid":"%s","msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
@@ -118,12 +118,12 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 
 	suite.Require().Equal(autoTx.Owner, addr.String())
 	suite.Require().Equal(autoTx.Label, "my_trigger")
-	suite.Require().Equal(autoTx.PortID, "icacontroller-"+addr.String())
-	suite.Require().Equal(autoTx.ConnectionID, path.EndpointA.ConnectionID)
+	suite.Require().Equal(autoTx.ICAConfig.PortID, "icacontroller-"+addr.String())
+	suite.Require().Equal(autoTx.ICAConfig.ConnectionID, path.EndpointA.ConnectionID)
 
 	suite.Require().Equal(autoTx.Interval, time.Second*60)
 
-	_, found := suite.chainA.GetTrstApp().ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ConnectionID, autoTx.PortID)
+	_, found := suite.chainA.GetTrstApp().ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ICAConfig.ConnectionID, autoTx.ICAConfig.PortID)
 	suite.Require().True(found)
 
 	var txMsgAny codectypes.Any
@@ -153,7 +153,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 	err := SetupICAPath(path, addr.String())
 	suite.Require().NoError(err)
 
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my trigger", "cid":"%s", "msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, msg, msg))
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my trigger", "cid":"%s","host_cid":"%s","msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
@@ -172,12 +172,13 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 	FakeBeginBlocker(suite.chainA.GetContext(), autoTxKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
 
 	autoTx = autoTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
-	suite.Require().NotNil(autoTx.AutoTxHistory)
-	suite.Require().Empty(autoTx.AutoTxHistory[0].Errors)
+	autoTxHistory, _ := autoTxKeeper.TryGetAutoTxHistory(suite.chainA.GetContext(), autoTx.TxID)
+	suite.Require().NotNil(autoTxHistory.History)
+	suite.Require().Empty(autoTxHistory.History[0].Errors)
 	suite.Require().Equal(autoTx.Owner, addr.String())
 	suite.Require().Equal(autoTx.Label, "my trigger")
-	suite.Require().Equal(autoTx.PortID, "icacontroller-"+addr.String())
-	suite.Require().Equal(autoTx.ConnectionID, path.EndpointA.ConnectionID)
+	suite.Require().Equal(autoTx.ICAConfig.PortID, "icacontroller-"+addr.String())
+	suite.Require().Equal(autoTx.ICAConfig.ConnectionID, path.EndpointA.ConnectionID)
 
 	unpackedMsgs = autoTx.GetTxMsgs(unpacker)
 	suite.Require().False(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))

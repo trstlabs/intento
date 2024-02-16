@@ -99,16 +99,31 @@ func TestQueryAutoTxsByOwnerList(t *testing.T) {
 			require.NotNil(t, got)
 			for i, expectedAutoTx := range spec.expAutoTxInfos {
 				assert.Equal(t, expectedAutoTx.GetTxMsgs(autoTxKeeper.cdc), got.AutoTxInfos[i].GetTxMsgs(autoTxKeeper.cdc))
-				assert.Equal(t, expectedAutoTx.AutoTxHistory, got.AutoTxInfos[i].AutoTxHistory)
-				assert.Equal(t, expectedAutoTx.PortID, got.AutoTxInfos[i].PortID)
+				assert.Equal(t, expectedAutoTx.ICAConfig.PortID, got.AutoTxInfos[i].ICAConfig.PortID)
 				assert.Equal(t, expectedAutoTx.Owner, got.AutoTxInfos[i].Owner)
-				assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[i].ConnectionID)
+				assert.Equal(t, expectedAutoTx.ICAConfig.ConnectionID, got.AutoTxInfos[i].ICAConfig.ConnectionID)
 				assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[i].Interval)
 				assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[i].EndTime)
 				assert.Equal(t, expectedAutoTx.Configuration, got.AutoTxInfos[i].Configuration)
 			}
 		})
 	}
+}
+
+func TestQueryAutoTxHistory(t *testing.T) {
+	ctx, keepers, _ := CreateTestInput(t, false)
+	autoTxKeeper := keepers.AutoIbcTxKeeper
+
+	autoTxHistory, err := CreateFakeAutoTxHistory(autoTxKeeper, ctx, ctx.BlockTime())
+	require.NoError(t, err)
+
+	ID := "1"
+	got, err := autoTxKeeper.AutoTxHistory(sdk.WrapSDKContext(ctx), &types.QueryAutoTxHistoryRequest{Id: ID})
+	require.NoError(t, err)
+	require.NotNil(t, got)
+	require.Equal(t, got.History[0].ScheduledExecTime, autoTxHistory.History[0].ScheduledExecTime)
+	require.Equal(t, got.History[0].ActualExecTime, autoTxHistory.History[0].ActualExecTime)
+
 }
 
 func TestQueryAutoTxsList(t *testing.T) {
@@ -137,10 +152,9 @@ func TestQueryAutoTxsList(t *testing.T) {
 	for i, expectedAutoTx := range expectedAutoTxs {
 
 		assert.Equal(t, expectedAutoTx.GetTxMsgs(autoTxKeeper.cdc), got.AutoTxInfos[i].GetTxMsgs(autoTxKeeper.cdc))
-		assert.Equal(t, expectedAutoTx.AutoTxHistory, got.AutoTxInfos[i].AutoTxHistory)
-		assert.Equal(t, expectedAutoTx.PortID, got.AutoTxInfos[i].PortID)
+		assert.Equal(t, expectedAutoTx.ICAConfig.PortID, got.AutoTxInfos[i].ICAConfig.PortID)
 		assert.Equal(t, expectedAutoTx.Owner, got.AutoTxInfos[i].Owner)
-		assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[i].ConnectionID)
+		assert.Equal(t, expectedAutoTx.ICAConfig.ConnectionID, got.AutoTxInfos[i].ICAConfig.ConnectionID)
 		assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[i].Interval)
 		assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[i].EndTime)
 		assert.Equal(t, expectedAutoTx.Configuration, got.AutoTxInfos[i].Configuration)
@@ -175,10 +189,9 @@ func TestQueryAutoTxsListWithAuthZMsg(t *testing.T) {
 
 	assert.Equal(t, expectedAutoTx.Msgs, got.AutoTxInfos[0].Msgs)
 	//	assert.Equal(t, txMsg, gotMsg)
-	assert.Equal(t, expectedAutoTx.AutoTxHistory, got.AutoTxInfos[0].AutoTxHistory)
-	assert.Equal(t, expectedAutoTx.PortID, got.AutoTxInfos[0].PortID)
+	assert.Equal(t, expectedAutoTx.ICAConfig.PortID, got.AutoTxInfos[0].ICAConfig.PortID)
 	assert.Equal(t, expectedAutoTx.Owner, got.AutoTxInfos[0].Owner)
-	assert.Equal(t, expectedAutoTx.ConnectionID, got.AutoTxInfos[0].ConnectionID)
+	assert.Equal(t, expectedAutoTx.ICAConfig.ConnectionID, got.AutoTxInfos[0].ICAConfig.ConnectionID)
 	assert.Equal(t, expectedAutoTx.Interval, got.AutoTxInfos[0].Interval)
 	assert.Equal(t, expectedAutoTx.EndTime, got.AutoTxInfos[0].EndTime)
 	assert.Equal(t, expectedAutoTx.Configuration, got.AutoTxInfos[0].Configuration)
@@ -237,7 +250,7 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 		StartTime:     startAt,
 		ExecTime:      execTime,
 		EndTime:       endTime,
-		PortID:        portID,
+		ICAConfig:     &types.ICAConfig{PortID: portID},
 		Configuration: &types.ExecutionConfiguration{SaveMsgResponses: true},
 	}
 
@@ -248,6 +261,24 @@ func CreateFakeAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 	autoTxBz := k.cdc.MustMarshal(&autoTx)
 	k.cdc.MustUnmarshal(autoTxBz, &newAutoTx)
 	return newAutoTx, nil
+}
+
+func CreateFakeAutoTxHistory(k Keeper, ctx sdk.Context, startAt time.Time) (types.AutoTxHistory, error) {
+
+	entry := types.AutoTxHistoryEntry{
+		ScheduledExecTime: startAt.Add(time.Minute),
+		ActualExecTime:    startAt.Add(time.Minute).Add(time.Microsecond),
+		Errors:            []string{"text"},
+		Executed:          true,
+	}
+
+	autoTxHistory := types.AutoTxHistory{
+		History: []types.AutoTxHistoryEntry{entry},
+	}
+
+	k.SetAutoTxHistory(ctx, 1, &autoTxHistory)
+
+	return autoTxHistory, nil
 }
 
 func CreateFakeAuthZAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) (types.AutoTxInfo, error) {
@@ -283,7 +314,7 @@ func CreateFakeAuthZAutoTx(k Keeper, ctx sdk.Context, owner sdk.AccAddress, port
 		StartTime:     startAt,
 		ExecTime:      execTime,
 		EndTime:       endTime,
-		PortID:        portID,
+		ICAConfig:     &types.ICAConfig{PortID: portID},
 	}
 	k.SetAutoTxInfo(ctx, &autoTx)
 	k.addToAutoTxOwnerIndex(ctx, owner, txID)

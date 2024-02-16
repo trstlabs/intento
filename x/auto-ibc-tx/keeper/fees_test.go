@@ -22,7 +22,7 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 		AutoTxFundsCommission:      10,
 		AutoTxConstantFee:          1_000_000,                 // 1trst
 		AutoTxFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
-		RecurringAutoTxConstantFee: 1_000_000,                 // 1trst
+		RecurringAutoTxConstantFee: 1_000_000,                 // x1trst
 		MaxAutoTxDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
 		MinAutoTxDuration:          time.Second * 60,
 		MinAutoTxInterval:          time.Second * 20,
@@ -33,7 +33,7 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
@@ -68,7 +68,7 @@ func TestDistributeCoinsOwnerFeeFallback(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0", Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
+		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"}, Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
 	}
 
 	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), true, ctx.BlockHeader().ProposerAddress)
@@ -104,7 +104,7 @@ func TestDistributeCoinsEmptyAutoTxBalanceNotLastExec(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
 	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), true, ctx.BlockHeader().ProposerAddress)
@@ -138,7 +138,7 @@ func TestDistributeCoinsEmptyAutoTxBalanceAndMultipliedFlexFee(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
 	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), false, ctx.BlockHeader().ProposerAddress)
@@ -173,7 +173,7 @@ func TestDistributeCoinsEmptyAutoTxBalanceAndDiscountedFlexFee(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0",
+		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
 	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Minute.Milliseconds()), false, ctx.BlockHeader().ProposerAddress)
@@ -208,7 +208,7 @@ func TestDistributeCoinsLargeFee(t *testing.T) {
 	types.Denom = "stake"
 
 	autoTxInfo := types.AutoTxInfo{
-		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), PortID: "ibccontoller-test", ConnectionID: "connection-0", Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
+		TxID: 0, Owner: ownerAddr.String(), FeeAddress: autoTxAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"}, Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
 	}
 
 	_, err := keeper.DistributeCoins(ctx, autoTxInfo, sdk.NewInt(time.Hour.Milliseconds()*24*30), true, ctx.BlockHeader().ProposerAddress)

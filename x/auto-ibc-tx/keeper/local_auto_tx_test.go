@@ -135,8 +135,7 @@ func createBaseAutoTxInfo(ownerAddr sdk.AccAddress, autoTxAddr sdk.AccAddress) t
 		Interval:      time.Second * 20,
 		StartTime:     time.Now().Add(time.Hour * -1),
 		EndTime:       time.Now().Add(time.Second * 20),
-		PortID:        "",
-		ConnectionID:  "",
+		ICAConfig:     &types.ICAConfig{},
 		Configuration: &types.ExecutionConfiguration{SaveMsgResponses: true},
 	}
 	return autoTxInfo

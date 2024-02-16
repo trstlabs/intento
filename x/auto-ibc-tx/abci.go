@@ -2,12 +2,10 @@ package autoibctx
 
 import (
 	"fmt"
-
 	"time"
 
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
@@ -28,9 +26,10 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 
 	timeOfBlock := ctx.BlockHeader().Time
 	for _, autoTx := range autoTxs {
+		autoTxHistory, _ := k.TryGetAutoTxHistory(ctx, autoTx.TxID)
 		// check dependent txs
 		if !k.AllowedToExecute(ctx, autoTx) {
-			addAutoTxHistory(&autoTx, timeOfBlock, sdk.Coin{}, false, nil, types.ErrAutoTxConditions)
+			k.AddAutoTxHistory(ctx, &autoTxHistory, &autoTx, timeOfBlock, sdk.Coin{}, false, nil, types.ErrAutoTxConditions)
 			autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
 			k.SetAutoTxInfo(ctx, &autoTx)
 			continue
@@ -40,19 +39,19 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 
 		isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
 
-		flexFee := calculateTimeBasedFlexFee(autoTx)
+		flexFee := calculateTimeBasedFlexFee(autoTx, autoTxHistory)
 		fee, err := k.DistributeCoins(ctx, autoTx, flexFee, isRecurring, req.Header.ProposerAddress)
 
 		k.RemoveFromAutoTxQueue(ctx, autoTx)
 		if err != nil {
 			errorString := fmt.Sprintf(types.ErrAutoTxDistribution, err.Error())
-			addAutoTxHistory(&autoTx, timeOfBlock, fee, false, nil, errorString)
+			k.AddAutoTxHistory(ctx, &autoTxHistory, &autoTx, timeOfBlock, fee, false, nil, errorString)
 		} else {
 			err, executedLocally, msgResponses := k.SendAutoTx(ctx, &autoTx)
 			if err != nil {
-				addAutoTxHistory(&autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrAutoTxMsgHandling, err.Error()))
+				k.AddAutoTxHistory(ctx, &autoTxHistory, &autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrAutoTxMsgHandling, err.Error()))
 			} else {
-				addAutoTxHistory(&autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses)
+				k.AddAutoTxHistory(ctx, &autoTxHistory, &autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses)
 			}
 
 			// setting new ExecTime and adding a new entry into the queue based on interval
@@ -76,29 +75,10 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	}
 }
 
-func addAutoTxHistory(autoTx *types.AutoTxInfo, actualExecTime time.Time, execFee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, err ...string) {
-	historyEntry := types.AutoTxHistoryEntry{
-		ScheduledExecTime: autoTx.ExecTime,
-		ActualExecTime:    actualExecTime,
-		ExecFee:           execFee,
-	}
-
-	if executedLocally {
-		historyEntry.Executed = true
-		historyEntry.MsgResponses = msgResponses
-	}
-
-	if len(err) == 1 && err[0] != "" {
-		historyEntry.Errors = append(historyEntry.Errors, err[0])
-		historyEntry.Executed = false
-	}
-	autoTx.AutoTxHistory = append(autoTx.AutoTxHistory, &historyEntry)
-}
-
 // we may reimplement this as a configuration-based gas fee
-func calculateTimeBasedFlexFee(autoTx types.AutoTxInfo) sdkmath.Int {
-	if len(autoTx.AutoTxHistory) != 0 {
-		prevEntry := autoTx.AutoTxHistory[len(autoTx.AutoTxHistory)-1].ActualExecTime
+func calculateTimeBasedFlexFee(autoTx types.AutoTxInfo, AutoTxHistory types.AutoTxHistory) sdkmath.Int {
+	if len(AutoTxHistory.History) != 0 {
+		prevEntry := AutoTxHistory.History[len(AutoTxHistory.History)-1].ActualExecTime
 		period := (autoTx.ExecTime.Sub(prevEntry))
 		return sdk.NewInt(int64(period.Milliseconds()))
 	}

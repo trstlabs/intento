@@ -119,7 +119,7 @@ func (k Keeper) UpdateAutoTxIbcUsage(ctx sdk.Context, autoTx types.AutoTxInfo) {
 
 			k.appendToAutoTxIbcUsage(ctx, autoTx.Owner, &types.AutoIbcTxAck{
 				Coin:         coin,
-				ConnectionId: autoTx.ConnectionID,
+				ConnectionId: autoTx.ICAConfig.ConnectionID,
 			})
 		}
 	}

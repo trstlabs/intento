@@ -21,7 +21,7 @@ const (
 // nolint
 var (
 	AutoTxKeyPrefix               = []byte{0x01}
-	AutoTxStorePrefix             = []byte{0x02}
+	AutoTxHistoryPrefix           = []byte{0x02}
 	AutoTxQueuePrefix             = []byte{0x03}
 	SequenceKeyPrefix             = []byte{0x04}
 	AutoTxsByOwnerPrefix          = []byte{0x05}
@@ -45,6 +45,11 @@ var (
 // GetAutoTxKey returns the key for the auto interchain tx
 func GetAutoTxKey(autoTxID uint64) []byte {
 	return append(AutoTxKeyPrefix, GetBytesForUint(autoTxID)...)
+}
+
+// GetAutoTxHistoryKey returns the key for the auto interchain tx
+func GetAutoTxHistoryKey(autoTxID uint64) []byte {
+	return append(AutoTxHistoryPrefix, GetBytesForUint(autoTxID)...)
 }
 
 // GetAutoTxsByOwnerPrefix returns the autoTxs by creator prefix

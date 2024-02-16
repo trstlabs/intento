@@ -28,13 +28,15 @@ func TestCreateAutoTx(t *testing.T) {
 
 	// Create a mock connection ID, duration, interval, start time, and dependencies
 	connectionID := "test-connection-id"
+	version := "test-version"
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
 	configuration := types.ExecutionConfiguration{SaveMsgResponses: false}
 
 	// Call the CreateAutoTx function
-	err = keepers.AutoIbcTxKeeper.CreateAutoTx(ctx, owner, label, portID, msgs, connectionID, duration, interval, startTime, feeFunds, configuration)
+	// Call the CreateAutoTx function
+	err = keepers.AutoIbcTxKeeper.CreateAutoTx(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, portID, connectionID, version)
 	require.NoError(t, err)
 
 	// Verify that the auto transaction was created correctly
@@ -47,8 +49,8 @@ func TestCreateAutoTx(t *testing.T) {
 	require.Equal(t, feeFunds, keepers.BankKeeper.GetAllBalances(ctx, addr))
 	require.Equal(t, interval, autoTx.Interval)
 	require.Equal(t, startTime, autoTx.StartTime)
-	require.Equal(t, portID, autoTx.PortID)
-	require.Equal(t, connectionID, autoTx.ConnectionID)
+	require.Equal(t, portID, autoTx.ICAConfig.PortID)
+	require.Equal(t, connectionID, autoTx.ICAConfig.ConnectionID)
 	require.Equal(t, configuration, *autoTx.Configuration)
 }
 
@@ -71,13 +73,14 @@ func TestCreateAutoTxWithZeroFeeFundsWorks(t *testing.T) {
 
 	// Create a mock connection ID, duration, interval, start time, and dependencies
 	connectionID := "test-connection-id"
+	version := "test-version"
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
 	configuration := types.ExecutionConfiguration{SaveMsgResponses: false}
 
 	// Call the CreateAutoTx function
-	err = keepers.AutoIbcTxKeeper.CreateAutoTx(ctx, owner, label, portID, msgs, connectionID, duration, interval, startTime, feeFunds, configuration)
+	err = keepers.AutoIbcTxKeeper.CreateAutoTx(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, portID, connectionID, version)
 	require.NoError(t, err)
 
 	// Verify that the auto transaction was created correctly
@@ -90,7 +93,7 @@ func TestCreateAutoTxWithZeroFeeFundsWorks(t *testing.T) {
 	require.Equal(t, sdk.Coins{}, keepers.BankKeeper.GetAllBalances(ctx, addr))
 	require.Equal(t, interval, autoTx.Interval)
 	require.Equal(t, startTime, autoTx.StartTime)
-	require.Equal(t, portID, autoTx.PortID)
-	require.Equal(t, connectionID, autoTx.ConnectionID)
+	require.Equal(t, portID, autoTx.ICAConfig.PortID)
+	require.Equal(t, connectionID, autoTx.ICAConfig.ConnectionID)
 	require.Equal(t, configuration, *autoTx.Configuration)
 }

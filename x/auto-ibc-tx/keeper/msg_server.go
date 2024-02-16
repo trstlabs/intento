@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
 )
@@ -37,11 +39,6 @@ func (k msgServer) RegisterAccount(goCtx context.Context, msg *types.MsgRegister
 func (k msgServer) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*types.MsgSubmitTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	portID, err := icatypes.NewControllerPortID(msg.Owner)
-	if err != nil {
-		return nil, err
-	}
-
 	data, err := icatypes.SerializeCosmosTx(k.cdc, []proto.Message{msg.GetTxMsg()})
 	if err != nil {
 		return nil, err
@@ -51,13 +48,18 @@ func (k msgServer) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*typ
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
 	}
-	timeoutTimestamp := ctx.BlockTime().Add(time.Minute).UnixNano()
-	sequence, err := k.icaControllerKeeper.SendTx(ctx, nil, msg.ConnectionId, portID, packetData, uint64(timeoutTimestamp))
+
+	relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
+	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.icaControllerKeeper)
+	icaMsg := icacontrollertypes.NewMsgSendTx(msg.Owner, msg.ConnectionId, relativeTimeoutTimestamp, packetData)
+
+	_, err = msgServer.SendTx(ctx, icaMsg)
 	if err != nil {
 		return nil, err
 	}
-	//store 0 as autoTx id as a regular submit is not autoTx
-	k.setTmpAutoTxID(ctx, 0, portID, sequence)
+
+	// //store 0 as autoTx id as a regular submit is not autoTx
+	// k.setTmpAutoTxID(ctx, 0, portID, "", sequence)
 	return &types.MsgSubmitTxResponse{}, nil
 }
 
@@ -122,7 +124,7 @@ func (k msgServer) SubmitAutoTx(goCtx context.Context, msg *types.MsgSubmitAutoT
 	   		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoTxIDs and have less than 10 messages")
 	   	} */
 
-	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, *msg.Configuration)
+	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, portID, msg.ConnectionId, msg.HostConnectionId)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +196,7 @@ func (k msgServer) RegisterAccountAndSubmitAutoTx(goCtx context.Context, msg *ty
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoTxIDs and have less than 10 messages")
 	} */
 
-	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, portID, msg.Msgs, msg.ConnectionId, duration, interval, startTime, msg.FeeFunds, *msg.Configuration)
+	err = k.CreateAutoTx(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, portID, msg.ConnectionId, msg.HostConnectionId)
 	if err != nil {
 		return nil, err
 	}
@@ -219,11 +221,11 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 	}
 
 	if msg.ConnectionId != "" {
-		autoTx.PortID, err = icatypes.NewControllerPortID(msg.Owner)
+		autoTx.ICAConfig.PortID, err = icatypes.NewControllerPortID(msg.Owner)
 		if err != nil {
 			return nil, err
 		}
-		autoTx.ConnectionID = msg.ConnectionId
+		autoTx.ICAConfig.ConnectionID = msg.ConnectionId
 	}
 	newExecTime := autoTx.ExecTime
 	if msg.EndTime > 0 {
@@ -265,8 +267,8 @@ func (k msgServer) UpdateAutoTx(goCtx context.Context, msg *types.MsgUpdateAutoT
 		if startTime.After(autoTx.EndTime) {
 			return nil, errorsmod.Wrapf(types.ErrUpdateAutoTx, "start time: %s must be before end time", startTime)
 		}
-
-		if len(autoTx.AutoTxHistory) != 0 {
+		autoTxHistory := k.GetAutoTxHistory(ctx, autoTx.TxID)
+		if len(autoTxHistory.History) != 0 {
 			return nil, errorsmod.Wrapf(types.ErrUpdateAutoTx, "start time: %s must occur before first execution", startTime)
 		}
 		autoTx.StartTime = startTime

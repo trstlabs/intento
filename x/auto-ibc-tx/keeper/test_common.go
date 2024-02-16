@@ -30,6 +30,7 @@ import (
 	//icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
@@ -291,6 +292,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(autoibctxtypes.ModuleName)
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 
 	// this is also used to initialize module accounts (so nil is meaningful here)
 	maccPerms := map[string][]string{
@@ -302,6 +304,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		autoibctxtypes.ModuleName:      {authtypes.Minter},
+		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 	}
 
 	authKeeper := authkeeper.NewAccountKeeper(
@@ -455,6 +458,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedIBCControllerKeeper := capabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedAutoIBCTXKeeper := capabilityKeeper.ScopeToModule(autoibctxtypes.ModuleName)
+	scopedTransferKeeper := capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 
 	ibchostSubSp, _ := paramsKeeper.GetSubspace(ibcexported.ModuleName)
 	ibcKeeper := ibckeeper.NewKeeper(
@@ -471,6 +475,12 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	// add keepers
 
 	accountKeeper := authkeeper.NewAccountKeeper(encodingConfig.Codec, keys[authtypes.StoreKey], authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	ibctransferSubSp, _ := paramsKeeper.GetSubspace(ibctransfertypes.ModuleName)
+	ibctransferKeeper := ibctransferkeeper.NewKeeper(
+		encodingConfig.Codec, keys[ibctransfertypes.StoreKey], ibctransferSubSp,
+		ibcKeeper.ChannelKeeper, ibcKeeper.ChannelKeeper, &ibcKeeper.PortKeeper,
+		accountKeeper, bankKeeper, scopedTransferKeeper)
 
 	govConfig := govtypes.DefaultConfig()
 
@@ -501,6 +511,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		bankKeeper,
 		distKeeper,
 		*stakingKeeper,
+		ibctransferKeeper,
 		accountKeeper,
 		autoIbcTxSubsp,
 		NewMultiAutoIbcTxHooks(claimKeeper.Hooks()),

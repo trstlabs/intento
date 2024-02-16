@@ -126,23 +126,23 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 }
 
 // NewMsgSubmitAutoTx creates a new NewMsgSubmitAutoTx instance
-func NewMsgSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration) (*MsgSubmitAutoTx, error) {
+func NewMsgSubmitAutoTx(owner, label string, sdkMsgs []sdk.Msg, connectionID string, hostConnectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration) (*MsgSubmitAutoTx, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
 	}
 
 	return &MsgSubmitAutoTx{
-		Owner:         owner,
-		Label:         label,
-		ConnectionId:  connectionID,
-		Msgs:          anys,
-		Duration:      duration,
-		Interval:      interval,
-		StartAt:       startAt,
-		FeeFunds:      feeFunds,
-		Configuration: configuration,
-		//Retries:        retries,
+		Owner:            owner,
+		Label:            label,
+		Msgs:             anys,
+		Duration:         duration,
+		Interval:         interval,
+		StartAt:          startAt,
+		FeeFunds:         feeFunds,
+		Configuration:    configuration,
+		ConnectionId:     connectionID,
+		HostConnectionId: hostConnectionID,
 	}, nil
 }
 

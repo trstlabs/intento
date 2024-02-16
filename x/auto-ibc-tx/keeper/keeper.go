@@ -18,6 +18,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
 )
 
 type Keeper struct {
@@ -28,13 +29,14 @@ type Keeper struct {
 	bankKeeper          bankkeeper.Keeper
 	distrKeeper         distrkeeper.Keeper
 	stakingKeeper       stakingkeeper.Keeper
+	transferKeeper      ibctransferkeeper.Keeper
 	accountKeeper       authkeeper.AccountKeeper
 	paramSpace          paramtypes.Subspace
 	hooks               AutoIbcTxHooks
 	msgRouter           MessageRouter
 }
 
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, iaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, paramSpace paramtypes.Subspace, ah AutoIbcTxHooks, msgRouter MessageRouter) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, paramSpace paramtypes.Subspace, ah AutoIbcTxHooks, msgRouter MessageRouter) Keeper {
 	moduleAccAddr := accountKeeper.GetModuleAddress(types.ModuleName)
 	// ensure module account is set
 	if moduleAccAddr == nil {
@@ -50,21 +52,17 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, iaKeeper icacontro
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		scopedKeeper:        scopedKeeper,
-		icaControllerKeeper: iaKeeper,
+		icaControllerKeeper: icaKeeper,
 		paramSpace:          paramSpace,
 		bankKeeper:          bankKeeper,
 		distrKeeper:         distrKeeper,
 		stakingKeeper:       stakingKeeper,
+		transferKeeper:      transferKeeper,
 		accountKeeper:       accountKeeper,
 		hooks:               ah,
 		msgRouter:           msgRouter,
 	}
 }
-
-// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback
-// func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
-// 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
-// }
 
 // RegisterInterchainAccount registers account
 func (k Keeper) RegisterInterchainAccount(ctx sdk.Context, connectionId, owner, version string) error {

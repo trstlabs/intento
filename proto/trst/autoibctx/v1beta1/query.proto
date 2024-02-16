@@ -25,6 +25,10 @@ service Query {
   rpc AutoTx(QueryAutoTxRequest) returns (QueryAutoTxResponse) {
     option (google.api.http).get = "/auto-ibc-tx/v1beta1/auto-tx/{id}";
   };
+  // AutoTxHistory returns the auto tx history
+  rpc AutoTxHistory(QueryAutoTxHistoryRequest) returns (QueryAutoTxHistoryResponse) {
+  option (google.api.http).get = "/auto-ibc-tx/v1beta1/auto-tx-history/{id}";
+  };
   // AutoTxs returns the all auto-executing interchain account messages
   rpc AutoTxs(QueryAutoTxsRequest) returns (QueryAutoTxsResponse) {
     option (google.api.http).get = "/auto-ibc-tx/v1beta1/auto-txs";
@@ -69,13 +73,29 @@ message QueryAutoTxResponse {
   AutoTxInfo auto_tx_info = 1 [ (gogoproto.nullable) = false ];
 }
 
+// QueryAutoTxHistoryRequest is the request type for the Query/QueryAutoTxHistoryRequest RPC
+message QueryAutoTxHistoryRequest { 
+  // id of the auto-tx
+  string id = 1; 
+  // Pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryAutoTxHistoryResponse the response type for the Query/QueryAutoTxHistoryResponse RPC
+message QueryAutoTxHistoryResponse {
+  repeated AutoTxHistoryEntry history = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+
 // QueryAutoTxsRequest is the request type for the Query/AutoTxsRequest RPC
 message QueryAutoTxsRequest {
   // Pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryAutoTxsResponse the response type for the Query/AutoTxsRequest RPC
+// QueryAutoTxsResponse the response type for the Query/AutoTxsRequest RPCπ
 message QueryAutoTxsResponse {
   repeated AutoTxInfo auto_tx_infos = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.

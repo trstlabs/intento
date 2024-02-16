@@ -177,7 +177,7 @@ func getSubmitAutoTxCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration)
+			msg, err := types.NewMsgSubmitAutoTx(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagCounterpartyConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration)
 			if err != nil {
 				return err
 			}
@@ -356,31 +356,33 @@ func getExecutionConfiguration(cmd *cobra.Command) *types.ExecutionConfiguration
 	updatingDisabled := viper.GetBool(flagUpdatingDisabled)
 	saveMsgResponses := viper.GetBool(flagSaveMsgResponses)
 	fallbackToOwnerBalance := viper.GetBool(flagFallbackToOwnerBalance)
+	reregisterICAAfterTimeout := viper.GetBool(flagReregisterICAAfterTimeout)
 	stopOnSuccess := viper.GetBool(flagStopOnSuccess)
 	stopOnFailure := viper.GetBool(flagStopOnFailure)
 
 	configuration := &types.ExecutionConfiguration{
-		UpdatingDisabled:       updatingDisabled,
-		SaveMsgResponses:       saveMsgResponses,
-		StopOnSuccess:          stopOnSuccess,
-		StopOnFailure:          stopOnFailure,
-		FallbackToOwnerBalance: fallbackToOwnerBalance,
+		UpdatingDisabled:          updatingDisabled,
+		SaveMsgResponses:          saveMsgResponses,
+		StopOnSuccess:             stopOnSuccess,
+		StopOnFailure:             stopOnFailure,
+		FallbackToOwnerBalance:    fallbackToOwnerBalance,
+		ReregisterICAAfterTimeout: reregisterICAAfterTimeout,
 	}
 
 	return configuration
 }
 
-func parseIntSlice(flagName string) ([]int64, error) {
-	stringSlice := viper.GetStringSlice(flagName)
-	var result []int64
+// func parseIntSlice(flagName string) ([]int64, error) {
+// 	stringSlice := viper.GetStringSlice(flagName)
+// 	var result []int64
 
-	for _, id := range stringSlice {
-		txId, err := strconv.ParseInt(id, 10, 64)
-		if err != nil {
-			return nil, errors.Wrap(err, "invalid id, must be a number")
-		}
-		result = append(result, txId)
-	}
+// 	for _, id := range stringSlice {
+// 		txId, err := strconv.ParseInt(id, 10, 64)
+// 		if err != nil {
+// 			return nil, errors.Wrap(err, "invalid id, must be a number")
+// 		}
+// 		result = append(result, txId)
+// 	}
 
-	return result, nil
-}
+// 	return result, nil
+// }
