@@ -485,7 +485,7 @@ func NewTrstApp(
 	)
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
 
-	app.AutoIbcTxKeeper = autoibctxkeeper.NewKeeper(appCodec, keys[autoibctxtypes.StoreKey], app.ICAControllerKeeper, scopedAutoIbcTxKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.AccountKeeper, app.GetSubspace(autoibctxtypes.ModuleName), autoibctxkeeper.NewMultiAutoIbcTxHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter())
+	app.AutoIbcTxKeeper = autoibctxkeeper.NewKeeper(appCodec, keys[autoibctxtypes.StoreKey], app.ICAControllerKeeper, scopedAutoIbcTxKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.GetSubspace(autoibctxtypes.ModuleName), autoibctxkeeper.NewMultiAutoIbcTxHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter())
 	autoIbcTxModule := autoibctx.NewAppModule(appCodec, app.AutoIbcTxKeeper)
 	autoIbcTxIBCModule := autoibctx.NewIBCModule(app.AutoIbcTxKeeper)
 

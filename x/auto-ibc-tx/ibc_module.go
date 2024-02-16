@@ -117,7 +117,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 		return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot unmarshal ICS-27 packet acknowledgement: %v", err)
 	}
 	if !ack.Success() {
-		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, "error handling packet on host chain: see host chain events for details")
+		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, "error handling packet on host chain: see host chain events for details")
 	}
 	var txMsgData sdk.TxMsgData
 	if err := proto.Unmarshal(ack.GetResult(), &txMsgData); err != nil {
@@ -140,7 +140,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, packet channeltypes.Packet) {
 	if len(msgResponses) == 0 {
 		err := errorsmod.Wrapf(sdkerrors.ErrInvalidType, "no messages in ICS-27 message response: %v", msgResponses)
-		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
+		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 		return
 	}
 	//msgClass is used for Relayer Reward and Airdrop Reward
@@ -156,9 +156,9 @@ func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResponses []*cdctypes
 	}
 
 	// set result in AutoTx history
-	err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, msgClass, packet.Sequence, msgResponses)
+	err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, packet.SourceChannel, msgClass, packet.Sequence, msgResponses)
 	if err != nil {
-		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
+		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 		return
 	}
 
@@ -185,9 +185,9 @@ func (im IBCModule) handleDeprecatedMsgResponses(ctx sdk.Context, txMsgData sdk.
 	}
 
 	// set result in AutoTx history
-	err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, msgClass, packet.Sequence, nil)
+	err := im.keeper.SetAutoTxResult(ctx, packet.SourcePort, packet.SourceChannel, msgClass, packet.Sequence, nil)
 	if err != nil {
-		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
+		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 		return err
 	}
 
@@ -202,10 +202,9 @@ func (im IBCModule) OnTimeoutPacket(
 ) error {
 	// fmt.Println("TIMED OUT, FAILED ATTEMPT")
 	//set result in auto-tx history
-
-	err := im.keeper.SetAutoTxOnTimeout(ctx, packet.SourcePort, packet.Sequence)
+	err := im.keeper.SetAutoTxOnTimeout(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence)
 	if err != nil {
-		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.Sequence, err.Error())
+		im.keeper.SetAutoTxError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 		return err
 	}
 	return nil

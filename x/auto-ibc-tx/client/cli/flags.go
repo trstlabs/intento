@@ -8,7 +8,7 @@ const (
 	// The connection end identifier on the controller chain
 	flagConnectionID = "connection-id"
 	// The controller chain channel version
-	flagCounterpartyConnectionID = "counterparty-connection-id"
+	flagCounterpartyConnectionID = "host-connection-id"
 	flagLabel                    = "label"
 	flagDuration                 = "duration"
 	flagInterval                 = "interval"
@@ -17,21 +17,22 @@ const (
 	flagEndTime                  = "end-at"
 
 	//Execution conditions
-	flagUpdatingDisabled       = "updating-disabled"
-	flagSaveMsgResponses       = "save-msg-responses"
-	flagFallbackToOwnerBalance = "fallback-to-owner-balance"
-	flagStopOnSuccess          = "stop-on-success"
-	flagStopOnFailure          = "stop-on-failure"
-	flagStopOnSuccessOf        = "stop-on-success-of"
-	flagStopOnFailureOf        = "stop-on-failure-of"
-	flagSkipOnSuccessOf        = "skip-on-success-of"
-	flagSkipOnFailureOf        = "skip-on-failure-of"
+	flagUpdatingDisabled          = "updating-disabled"
+	flagSaveMsgResponses          = "save-msg-responses"
+	flagFallbackToOwnerBalance    = "fallback-to-owner-balance"
+	flagStopOnSuccess             = "stop-on-success"
+	flagStopOnFailure             = "stop-on-failure"
+	flagStopOnSuccessOf           = "stop-on-success-of"
+	flagStopOnFailureOf           = "stop-on-failure-of"
+	flagSkipOnSuccessOf           = "skip-on-success-of"
+	flagSkipOnFailureOf           = "skip-on-failure-of"
+	flagReregisterICAAfterTimeout = "reregister_ica_after_timeout"
 )
 
 // common flagsets to add to various functions
 var (
-	fsAutoTx  = flag.NewFlagSet("", flag.ContinueOnError)
-	fsVersion = flag.NewFlagSet("", flag.ContinueOnError)
+	fsAutoTx = flag.NewFlagSet("", flag.ContinueOnError)
+	// fsVersion = flag.NewFlagSet("", flag.ContinueOnError)
 )
 
 func init() {
@@ -45,6 +46,7 @@ func init() {
 	fsAutoTx.Bool(flagStopOnSuccess, false, "stop execution after success'")
 	fsAutoTx.Bool(flagStopOnFailure, false, "stop execution after failure'")
 	fsAutoTx.Bool(flagFallbackToOwnerBalance, false, "fallback to owner balance'")
+	fsAutoTx.Bool(flagReregisterICAAfterTimeout, true, " If true, allows the AutoTx to continue execution after an ibc channel times out (recommended)'")
 	// fsAutoTx.StringArray(flagSkipOnSuccessOf, []string{}, "array of ids that should fail, e.g. '5, 623'")
 	// fsAutoTx.StringArray(flagSkipOnFailureOf, []string{}, "array of ids that should execute successfully, e.g. '5, 623'")
 	// fsAutoTx.StringArray(flagStopOnSuccessOf, []string{}, "array of ids that should execute successfully, will otherwise stop execution'")
