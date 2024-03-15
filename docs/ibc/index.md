@@ -15,6 +15,6 @@ By following this guide you will learn how to set up an Inter-Blockchain Communi
 Before starting, you should have the following:
 
 - Basic knowledge of the Cosmos SDK and blockchain development
-- A Trustless Hub node and a separate blockchain network running on the Cosmos SDK, which may be local Trustless Hub chain
+- A Intento node and a separate blockchain network running on the Cosmos SDK, which may be local Intento chain
 - Access to the command line interface (CLI) for both networks
 - A text editor for editing configuration files

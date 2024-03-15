@@ -1,9 +1,0 @@
-{
-    "@type":"/cosmos.bank.v1beta1.MsgSend",
-    "amount": [{
-        "amount": "70",
-        "denom": "utrst"
-    }],
-    "from_address": "trust16rpg3wwxsrggxv34hj2ca5xa2gxy4jgs3teh0n",
-    "to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
-}

@@ -1,7 +1,7 @@
 ---
 order: 6
 title: TIP20
-description: Learn how TIP20 - Trustless Hub's token standard works
+description: Learn how TIP20 - Intento's token standard works
 ---
 
 # TIP20
@@ -9,7 +9,7 @@ description: Learn how TIP20 - Trustless Hub's token standard works
 ## Token standard with maximum programmability
 *CosmWasm token standard which can instantiate with allowance, has privacy, can be backed 1-1 by a chain-native asset*
 
-This is a privacy-first token implementation on Trustless Hub, TIP20. It can be backed by
+This is a privacy-first token implementation on Intento, TIP20. It can be backed by
 an IBC-native coin like TRST, ATOM, OSMO, JUNO ect. and has a fixed 1-to-1 exchange ratio
 with it.
 

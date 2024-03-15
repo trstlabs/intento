@@ -6,7 +6,7 @@ description: Integrate Trustless Contracts to your front-end with TrustlessJS
 
 # Front-end with TrustlessJS
 
-With TrustlessJS you can easily integrate support for Trustless Hub to your SuperApp !
+With TrustlessJS you can easily integrate support for Intento to your SuperApp !
 It is a Typescript wrapper around all of the major interactions with Trustless Contracts and many other chain operations.
 
 ## NPM

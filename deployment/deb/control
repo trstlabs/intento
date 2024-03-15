@@ -1,9 +1,0 @@
-Package: trst
-Priority: optional
-Architecture: amd64
-Homepage: https://github.com/trstlabs/trst
-Maintainer: https://github.com/trstlabs
-Provides: trst
-Conflicts: trst
-Replaces: trst
-Description: The trst node package for running a node on Trustless Hub

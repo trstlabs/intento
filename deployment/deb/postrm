@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-# This `DEBIAN/postrm` script is run post-uninstallation
-
-set -e
-
-systemctl stop trst-node                    || true
-systemctl disable trst-node                 || true
-rm -f /etc/systemd/system/trst-node.service || true
-systemctl daemon-reload                       || true

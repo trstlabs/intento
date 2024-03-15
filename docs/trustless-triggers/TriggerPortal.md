@@ -33,15 +33,15 @@ With TriggerPørtal you can send any kind of transaction. You can send on a recu
 
 You have multiple options to transfer tokens, depending on where your recipients want to receive tokens and where you want to store your balance.
 
-- Transfer tokens locally on Trustless Hub
-- Transfer tokens from Trustless Hub to a destination chain
+- Transfer tokens locally on Intento
+- Transfer tokens from Intento to a destination chain
 - Automate sending tokens on a destination chain using advanced automation
 
 For now we focus on 1 and 2, and you can learn about advanced automation [here](#advanced-automation).
 
 2. Sending Tokens locally
 
-Transfer tokens to TriggerPørtal and send tokens locally on Trustless Hub.
+Transfer tokens to TriggerPørtal and send tokens locally on Intento.
 
 To make sure you have a sent tokens that are supported by TriggerPortal, import tokens over IBC in the Transfer tab of the menu.
 ![tp1](../images/triggerportal/send/tp1.png)
@@ -53,7 +53,7 @@ Next, we can head over to the send page. We select a token to send.
 ![tp4](../images/triggerportal/send/tp4.png)
 
 We can select a chain to send the token to. These will then be transferred over IBC to any connected chain.
-Alternatively, you can send the tokens locally over Trustless Hub by leaving it blank.
+Alternatively, you can send the tokens locally over Intento by leaving it blank.
 
 ![tp6](../images/triggerportal/send/tp6.png)
 
@@ -79,7 +79,7 @@ Advanced Automation is for power users that know what Cosmos SDK messages and Au
 
 Cosmos SDK messages contain `values` and a `typeUrl`. Message `values` are what you send, the `typeUrl` specifies what module and what version to send it to, along with the proper function.
 
-**AuthZ permissions** are permissions you can grant to execute actions on your behalf. This can possibly be dangerous when given to a third party. When submitting triggers using AuthZ on Trustless Hub, you assume the Trustless Hub chain and it's validator set are secure.
+**AuthZ permissions** are permissions you can grant to execute actions on your behalf. This can possibly be dangerous when given to a third party. When submitting triggers using AuthZ on Intento, you assume the Intento chain and it's validator set are secure.
 
 :::warning As you can make errors, using this can possibly be dangerous. Humans make errors, you risk losing your funds. Double check what you are doing before performing any action.
 :::

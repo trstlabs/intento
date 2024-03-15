@@ -8,12 +8,12 @@ parent:
 
 # TRST Labs
 
-[Trustless Hub](https://github.com/trstlabs/trst) is a set of Cosmos SDK modules developed and maintained by TRST Labs to enable permissionless automation of decentralized applications.  Our `AutoTx` module, which is Cosmos SDK-native, has been under development since early 2023 and serves as a foundation for time-based automation across supported chains. The module abstracts transaction complexities, enhances user liquidity, and offers advanced features like chain-agnostic and interdependent intent triggers. By simplifying asset control and enabling permissionless automation of local Cosmos messages and actions on connected IBC chains through Interchain Accounts and AuthZ grants, our module drives value for the Cosmos Ecosystem. Additionally, it extends automation to EVM chains via bridges like Axelar and Gravity Bridge, eliminating the need for escrow and vault-based protocols. This innovative solution captures value within the wider crypto ecosystem through a novel fee mechanism and on-chain automation mechanism.
+[Intento](https://github.com/trstlabs/trst) is a set of Cosmos SDK modules developed and maintained by TRST Labs to enable permissionless automation of decentralized applications.  Our `AutoTx` module, which is Cosmos SDK-native, has been under development since early 2023 and serves as a foundation for time-based automation across supported chains. The module abstracts transaction complexities, enhances user liquidity, and offers advanced features like chain-agnostic and interdependent intent triggers. By simplifying asset control and enabling permissionless automation of local Cosmos messages and actions on connected IBC chains through Interchain Accounts and AuthZ grants, our module drives value for the Cosmos Ecosystem. Additionally, it extends automation to EVM chains via bridges like Axelar and Gravity Bridge, eliminating the need for escrow and vault-based protocols. This innovative solution captures value within the wider crypto ecosystem through a novel fee mechanism and on-chain automation mechanism.
 
 
 ## Cosmos Ecosystem
 
-The Cosmos ecosystem is a decentralized network designed to connect various blockchains as part of the 'Internet of blockchains' vision. Buidling a vast, interconnected system of blockchains, each specifically designed to serve a particular use case. Trustless Hub is proud to be part of this decentralized community building decentralized infrastructure for a better tomorrow. Trustless Hub may take a place in the Cosmos ecosystem as a chain that automates CrossChain Apps for any connected chain.
+The Cosmos ecosystem is a decentralized network designed to connect various blockchains as part of the 'Internet of blockchains' vision. Buidling a vast, interconnected system of blockchains, each specifically designed to serve a particular use case. Intento is proud to be part of this decentralized community building decentralized infrastructure for a better tomorrow. Intento may take a place in the Cosmos ecosystem as a chain that automates CrossChain Apps for any connected chain.
 
 Blockchains built using the Cosmos stack include: Cosmos Hub, Osmosis, Juno, Secret Network, Evmos, Kava, Injective, Kujira, Noble, Umee & many more
 
@@ -28,7 +28,7 @@ IBC is an interoperability protocol for communicating all kinds of data between 
 It is different than other bridges as enables direct chain to chain communication. Hence, it is often referred to as a trustless bridging solution.
 The IBC application layer can be used to build a wide range of cross-chain applications, including but not limited to token transfers, passing messages between accounts on two chains, NFT transfers and oracle data feeds.
 
-With Trustless Hub you can automate smart contracts easily over IBC. What's more is that you can automate over IBC+Axelar on EVM-chains.
+With Intento you can automate smart contracts easily over IBC. What's more is that you can automate over IBC+Axelar on EVM-chains.
 These then too benefit from strong automation. EVM Developers can build automation for end users without the need for locking tokens in vault and escrow smart contracts.
 
 

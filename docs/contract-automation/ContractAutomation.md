@@ -28,7 +28,7 @@ The fee consists of:
 
 3. Commission (Goes to community pool)
 
-To make the AutoMessage executable, TRST is sent at instantiation of the proxy contract. You don't have to worry about sending too much, as remaining tokens are refunded automatically. The community pool may take a commission. The remainder will be refunded to the account that is set as the owner. If you are instantiating directly from your account, Trustless Hub can also charge the fee directly from your available TRST balance.
+To make the AutoMessage executable, TRST is sent at instantiation of the proxy contract. You don't have to worry about sending too much, as remaining tokens are refunded automatically. The community pool may take a commission. The remainder will be refunded to the account that is set as the owner. If you are instantiating directly from your account, Intento can also charge the fee directly from your available TRST balance.
 At launch, Contracts with AutoMessages are incentivized, so that fees are (near) zero. Over time, incentives graduately decline.
 
 ## Security
@@ -37,7 +37,7 @@ As the AutoMessage is encrypted with the newly created contract address it can n
 
 ## Proxy-contract
 
-A contract that extends the functionality of an address. Through giving this contract allowance/approval, the proxy contract acts on your behalf. TIP20 tokens can instantiate a proxy contract with approval in just one message. Trustless Hub uses proxy contracts as it is the safest way to run self execution. There are no third parties. As you or a TIP20 token instantiates the contract, your tokens remain in safe hands.
+A contract that extends the functionality of an address. Through giving this contract allowance/approval, the proxy contract acts on your behalf. TIP20 tokens can instantiate a proxy contract with approval in just one message. Intento uses proxy contracts as it is the safest way to run self execution. There are no third parties. As you or a TIP20 token instantiates the contract, your tokens remain in safe hands.
 
 ## Contracts always execute
 

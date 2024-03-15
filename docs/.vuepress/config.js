@@ -1,6 +1,6 @@
 module.exports = {
   theme: "cosmos",
-  title: "Trustless Hub",
+  title: "Intento",
   patterns: ['**/*.md', '**/*.vue', '!contracts/**','!contract-automation/**', '!**/Registration.md', '!**/Wasm.md', '!**/join-testnet.md', ],
   plugins: [
     [
@@ -89,11 +89,11 @@ module.exports = {
     footer: {
       question: {
         text:
-          "Chat with Trustless Hub and Cosmos SDK developers in <a href='https://discord.gg/7fwqwc3afK' target='_blank'>Discord</a>.",
+          "Chat with Intento and Cosmos SDK developers in <a href='https://discord.gg/7fwqwc3afK' target='_blank'>Discord</a>.",
       },
      
       textLink: {
-        text: "Trustless Hub",
+        text: "Intento",
         url: "https://www.trustlesshub.com/",
       },
       services: [

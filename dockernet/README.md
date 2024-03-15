@@ -1,6 +1,6 @@
 # Dockernet
 
-`/dockernet` contains infrastructure that is used for testing and development of Trustless Hub. The scripts here support docker-image based testing, some of which are heavily inspired by those used by Stride, Osmosis and Quicksilver although there have been deviations from the original implementations.
+`/dockernet` contains infrastructure that is used for testing and development of Intento. The scripts here support docker-image based testing, some of which are heavily inspired by those used by Stride, Osmosis and Quicksilver although there have been deviations from the original implementations.
 
 ## Adding a new host zone
 

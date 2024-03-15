@@ -6,7 +6,7 @@ description: How to setup automation from a different source chain with IBC
 
 ## Setting up Automation
 
-In the previous step we showed how the trigger process looks like by submitting an AutoTX on Trustless Hub. You can do this with the [TriggerPørtal](triggerportal.zone) interface, a TrustlessJS front-end integration or locally through the CLI. 
+In the previous step we showed how the trigger process looks like by submitting an AutoTX on Intento. You can do this with the [TriggerPørtal](triggerportal.zone) interface, a TrustlessJS front-end integration or locally through the CLI. 
 
 In addition, you can also submit an AutoTX from another chain using the [ICS20 standard](https://github.com/cosmos/ibc-go/blob/main/docs/apps/transfer/messages.md). 
 
@@ -14,15 +14,15 @@ In addition, you can also submit an AutoTX from another chain using the [ICS20 s
 
 ## Automation for DAOs
 
-Setting up a trigger on a different source chain than Trustless Hub can be particularly useful for DAOs. Using this middleware, DAOs can now automate tasks not only on the source chain but also on different destination chains. DAOs can automate periodic token swaps, payroll, payment in installments amongst other scheduled actions. These can be performed in one proposal, which normally require periodically voting on individual proposals. This requires manual action from the proposer and DAO participants. 
+Setting up a trigger on a different source chain than Intento can be particularly useful for DAOs. Using this middleware, DAOs can now automate tasks not only on the source chain but also on different destination chains. DAOs can automate periodic token swaps, payroll, payment in installments amongst other scheduled actions. These can be performed in one proposal, which normally require periodically voting on individual proposals. This requires manual action from the proposer and DAO participants. 
 
-With automation over Trustless Hub, this can be simplified to one proposal. In addition, DAO participants do not need to worry about immediate changes in the liquidity position of the DAO, as the DAO does not need to move funds to a smart contract upon the vote.
+With automation over Intento, this can be simplified to one proposal. In addition, DAO participants do not need to worry about immediate changes in the liquidity position of the DAO, as the DAO does not need to move funds to a smart contract upon the vote.
 
 ## ICS20 Middleware
 
 ICS20 is the interchain standard that enables the transfer of fungible tokens between independent blockchains within the Cosmos ecosystem. It is a protocol that defines a standard interface for token transfers across different blockchains that implement the Inter-Blockchain Communication (IBC) protocol.
 
-With ICS20 transfer middleware, you send a transfer with a memo on a chain, and Trustless Hub will convert this ICS20 message to an AutoTx trigger submission. Using an ICS20-standard transaction, accounts on other chains can create triggers. A MsgRegisterAccountAndSubmitAutoTx or a MsgSubmitAutoTx can be derrived from the memo field in the ICS20 transfer message.
+With ICS20 transfer middleware, you send a transfer with a memo on a chain, and Intento will convert this ICS20 message to an AutoTx trigger submission. Using an ICS20-standard transaction, accounts on other chains can create triggers. A MsgRegisterAccountAndSubmitAutoTx or a MsgSubmitAutoTx can be derrived from the memo field in the ICS20 transfer message.
 
 ![ics20](../images/ics20/ics20flow.png)
 
@@ -36,7 +36,7 @@ These are the fields for `auto_tx` that are derived from the ICS20 message:
 
 * Owner: This field is directly obtained from the ICS20 packet metadata and equals the ICS20 recipient. If unspecified, a placeholder is made from the ICS20 sender and channel.
 * Msg: This field should be directly obtained from the ICS20 packet metadata.
-* FeeFunds: This field is set to the amount of funds being sent over in the ICS20 packet. One detail here is that the denom in the packet is the source chains representation of the denom, this will be translated into TRST on Trustless Hub.
+* FeeFunds: This field is set to the amount of funds being sent over in the ICS20 packet. One detail here is that the denom in the packet is the source chains representation of the denom, this will be translated into TRST on Intento.
 
 The constructed message for MsgSubmitAutoTx will contain the following:
 
@@ -111,9 +111,9 @@ If an ICS20 packet is directed towards AutoTX, and is formated incorrectly, then
 
 Using ICS20 to set up a `Trustless Trigger` is for advanced users that are familiar with terms such as ICS20 transfers and Authz permissions.
 
-Our ICS20 middleware is developped to allow DAOs to perform time-based actions. These can be executed locally on Trustless Hub, a destination chain which can also be the source chain.
+Our ICS20 middleware is developped to allow DAOs to perform time-based actions. These can be executed locally on Intento, a destination chain which can also be the source chain.
 
-There are several caveats to using ICS20 to set up a trigger. When automating on a destination chain for the first time, not one but two transactions is required to activate the trigger. One transaction is to set the trigger and create an Interchain Account at Trustless Hub and another is to set permissions/send funds to the Interchain Account on the destination chain. 
+There are several caveats to using ICS20 to set up a trigger. When automating on a destination chain for the first time, not one but two transactions is required to activate the trigger. One transaction is to set the trigger and create an Interchain Account at Intento and another is to set permissions/send funds to the Interchain Account on the destination chain. 
 
 To demonstrate how DAOs can integrate with Trustless Triggers we explain the process using an example.
 
@@ -127,7 +127,7 @@ Then it can automatically send these tokens to `Service provider ABC`.
 This is a neat use case for Trustless Triggers as it requires movement from assets between chains and accounts. The tokens to send can remain in control of the DAO. 
 As Trustess Triggers are on-chain, the process can be done completely without trusted third parties.
 
-The DAO can appoint an owner that can manage the trigger or use a placeholder account on Trustless Hub to remain in full control.
+The DAO can appoint an owner that can manage the trigger or use a placeholder account on Intento to remain in full control.
 
 For this invoice example we have the following proposal name and description:
 
@@ -147,7 +147,7 @@ This will swap TOKEN1 for TOKEN2 on a recurring basis so that:
 - the selling pressure on TOKEN2 is gradual
 - we maintain a positive cash flow
 
-This Trigger on Trustless Hub allows us to automate asset workflows. It allows our DAO to maintain positive cashflow and have better liquidity.
+This Trigger on Intento allows us to automate asset workflows. It allows our DAO to maintain positive cashflow and have better liquidity.
 ```
 
 Having adequate liquidity is crucial to ensure smooth operations and financial stability. It enables you to fulfill your financial obligations to suppliers, lenders, and other stakeholders, which strengthens your credibility and reputation in the marketplace. With sufficient liquidity, you can easily pay for bills and expenses, invest in growth opportunities, and effectively manage your DAO's resources. Thus, prioritizing and managing liquidity effectively can help you achieve long-term success and sustainable growth.
@@ -172,7 +172,7 @@ Below is how the proposal action message could look like for a CosmWasm-based DA
         "token": {"denom":"ibc/....", "amount":"10"}, 
         // sender - a bech32 address on source chain
         "sender": "juno1validbech32address",
-        // the recipient address on Trustless Hub
+        // the recipient address on Intento
         // is replaced with a newly generated address when auto_tx["owner"] in memo is blank
         "receiver": "trust1address",
         // Timeout height relative to the current block height.
@@ -198,7 +198,7 @@ Below is how the proposal action message could look like for a CosmWasm-based DA
             "start_at":"1677841601",
             //label is optional 
             "label":"my_label",
-            //connection_id is optional, omit or leave blank in case local Trustless Hub message.
+            //connection_id is optional, omit or leave blank in case local Intento message.
             "cid":"connection-0", 
             //register_ica is optional, set to true to register interchain account
             "register_ica": "true"
@@ -212,7 +212,7 @@ Below is how the proposal action message could look like for a CosmWasm-based DA
 
 Here it is important that the `timeout_timestamp` or `timeout_height` takes into account the proposal's end time. Alternatively both of the timeout values can be set to `0`.
 
-Further it is important that the field `register_ica` is set to `"true"` the first time you create an AutoTX. This will register an Interchain Account from Trustless Hub on the destination chain.
+Further it is important that the field `register_ica` is set to `"true"` the first time you create an AutoTX. This will register an Interchain Account from Intento on the destination chain.
 
 A message in the `auto_tx["msgs"]` array can be like the following MsgSend:
 
@@ -250,10 +250,10 @@ For the DAO service provider example, we can have a [SwapAndSendTo](https://gith
 }
 ```
 
-:::tip write `ICA_ADDR` as a `grantee` or any other field in the message and Trustless Hub will parse the to-be defined Interchain Account address. This is transformed when the first execution happens.
+:::tip write `ICA_ADDR` as a `grantee` or any other field in the message and Intento will parse the to-be defined Interchain Account address. This is transformed when the first execution happens.
 :::
 
-Alternatively, we can perform [MsgSwapExactAmountOut](https://github.com/osmosis-labs/osmosis/blob/main/proto/osmosis/gamm/v1beta1/tx.proto#:~:text=message-,MsgSwapExactAmountOut,-%7B) to `Osmosis`  given that there are funds on the DAO's TrustlessHub-Osmosis Interchain Account on Osmosis. To send funds for execution, the DAO can make a proposal for `MsgTransfer` that funds the Trustless Hub Interchain Account. The DAO then controls a trigger on Trustless Hub that controls the swap.  
+Alternatively, we can perform [MsgSwapExactAmountOut](https://github.com/osmosis-labs/osmosis/blob/main/proto/osmosis/gamm/v1beta1/tx.proto#:~:text=message-,MsgSwapExactAmountOut,-%7B) to `Osmosis`  given that there are funds on the DAO's TrustlessHub-Osmosis Interchain Account on Osmosis. To send funds for execution, the DAO can make a proposal for `MsgTransfer` that funds the Intento Interchain Account. The DAO then controls a trigger on Intento that controls the swap.  
 
 ### 2. Setting Up Permissions and Funds
 
@@ -264,16 +264,16 @@ Alternatively, we can perform [MsgSwapExactAmountOut](https://github.com/osmosis
 
 The ICA_ADDR should also have some [funds to execute](#paying-for-fees) and have the proper [permissions](#setting-permissions) set up
 
-:::tip write ICA_ADDR as a `sender` or any other field in an AutoTX and Trustless Hub will parse the to-be defined Interchain Account address.
+:::tip write ICA_ADDR as a `sender` or any other field in an AutoTX and Intento will parse the to-be defined Interchain Account address.
 :::
 
 #### Sending funds
 
-Trigger fees, or 'AutoTx fees on Trustless Hub are paid from the funds sent in the ICS20 message.
+Trigger fees, or 'AutoTx fees on Intento are paid from the funds sent in the ICS20 message.
 
-**Execution on Trustless Hub**
+**Execution on Intento**
 
-If you want to execute messages locally on Trustless Hub, set `auto_tx["connection_id"]` to `""`. The funds sent with the ICS20 transfer will be used to pay for AutoTx fees. For local transactions there is no additional fee charged.
+If you want to execute messages locally on Intento, set `auto_tx["connection_id"]` to `""`. The funds sent with the ICS20 transfer will be used to pay for AutoTx fees. For local transactions there is no additional fee charged.
 
 **With execution over IBC**
 
@@ -314,13 +314,13 @@ Alternatively, you can create a FeeGrant for the `destination_chain_ica_address`
 
 Initiating a trigger for the first time locally on Juno can be done as follows:
 
- 1. Proposal 1 Message 1: IC20 token tranfser: Submit AutoTX on Trustless Hub.  In the `auto_tx` memo, `msgs` should contain AuthZ's MsgExec with `MsgExecuteContract`.
+ 1. Proposal 1 Message 1: IC20 token tranfser: Submit AutoTX on Intento.  In the `auto_tx` memo, `msgs` should contain AuthZ's MsgExec with `MsgExecuteContract`.
  2. Proposal 2 Message 1: Allow the DAO's JUNO tokens to be used for fees by `destination_chain_ica_address` with a FeeGrant.  
   Proposal 2 Message 2: AuthZ grant to ICA to execute `MsgExecuteContract`.
 
  For a DAO swapping tokens on a recurring basis on Osmosis for the first time, 2 proposals should be made.
 
- 1. Proposal 1 Message 1: IC20 token tranfser: Submit AutoTX on Trustless Hub. In the `auto_tx` memo, `msgs` should contain AuthZ's MsgExec with `MsgSwapExactAmountOut`
+ 1. Proposal 1 Message 1: IC20 token tranfser: Submit AutoTX on Intento. In the `auto_tx` memo, `msgs` should contain AuthZ's MsgExec with `MsgSwapExactAmountOut`
  2. Proposal 2 Message 1: Send OSMO tokens to using `MsgTransfer` to `destination_chain_ica_address`.  
   Proposal 2 Message 2: AuthZ grant to ICA to execute `MsgSwapExactAmountOut`.
 

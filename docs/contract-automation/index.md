@@ -11,7 +11,7 @@ This Knowledge base contains information that cover different aspects of Trustle
 
 If you are wondering how self-executing contracts work, the Knowledge base will be the place to be.
 
-If you're new to Trustless Hub watch [this explainer video](https://www.youtube.com/watch?v=dNQuvKha9uU&feature=emb_title) (2:16 minutes)
+If you're new to Intento watch [this explainer video](https://www.youtube.com/watch?v=dNQuvKha9uU&feature=emb_title) (2:16 minutes)
 
 
 CosmWasm is a WebAssembly-based smart contract platform designed for building decentralized applications (dApps) on blockchain networks. It provides a set of tools and libraries that simplify the process of writing smart contracts and enables developers to build dApps more easily.

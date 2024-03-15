@@ -6,8 +6,8 @@ description: Useful information regarding compute module
 
 # Wasm Module
 
-This is a brief overview of the functionality of Trustless Hub's CosmWasm engine. It is optimized to support AutoExecution and privacy by default in contracts. Next to the default private state, contracts have a public state. This state is easily accessable through RPC endpoints.
-The Wasm module is suppports CosmWasm v1 contracts optimized for Trustless Hub.
+This is a brief overview of the functionality of Intento's CosmWasm engine. It is optimized to support AutoExecution and privacy by default in contracts. Next to the default private state, contracts have a public state. This state is easily accessable through RPC endpoints.
+The Wasm module is suppports CosmWasm v1 contracts optimized for Intento.
 
 ## Auto Execution Fees
 

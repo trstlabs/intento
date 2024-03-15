@@ -1,7 +1,7 @@
 ---
 order: 3
 title: IBC Relayers
-description: Steps to install a Trustless Hub Daemon on your local computer or dedicated server.
+description: Steps to install a Intento Daemon on your local computer or dedicated server.
 ---
 
 ## IBC Relayers Documentation

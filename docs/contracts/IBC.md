@@ -33,7 +33,7 @@ Osmosis actions that will be suported by TIP20-ics20-osmosis:
 
 #### Transparency and auditability
 
-IBC calls to public chains are public. The ExecuteSwap message type from the TIP20 token contract to the TIP20-ics20-osmosis contract can be guessed based on gas and network usage. As the callback from TIP20-ics20-osmosis to the swapped TIP20 token is on Trustless Hub, the receiver address can remain unknown to the public. The token received, the balance and transaction history is only viewable through a viewing key unless the owner explicitly sets its TIP20 account to public. Also, TIP20 token admins may publicize transactions that exceed a certain amount to be in line with privacy regulations.
+IBC calls to public chains are public. The ExecuteSwap message type from the TIP20 token contract to the TIP20-ics20-osmosis contract can be guessed based on gas and network usage. As the callback from TIP20-ics20-osmosis to the swapped TIP20 token is on Intento, the receiver address can remain unknown to the public. The token received, the balance and transaction history is only viewable through a viewing key unless the owner explicitly sets its TIP20 account to public. Also, TIP20 token admins may publicize transactions that exceed a certain amount to be in line with privacy regulations.
 
 ### Payroll for DAOs
 
@@ -57,4 +57,4 @@ IBC calls to public chains are public. The recurring transactions are auditable 
 1. Remove tedious tasks: Auto-claim rewards, resolve prediction markets, liquidate assets
 2. NFT buying - buy or mint NFTs recurringly
 3. Lottery - Make a fully on-chain lottery with tokens transferred over IBC
-4. In-game battling with time-based winner appointment for NFTs on other chains. Give allowance for a game contract on Trustless Hub to use your NFT in an in-game battle
+4. In-game battling with time-based winner appointment for NFTs on other chains. Give allowance for a game contract on Intento to use your NFT in an in-game battle

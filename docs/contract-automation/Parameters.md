@@ -7,13 +7,13 @@ description: Learn how fees, governance and parameters are used
 ## Contract Code Approval
 TRST is used to enable contract code on-chain. Because Trustless Contracts are highly programmable on a block-level, we minimize any attack possibilities by governance code approval. As the incentives of TRST holders is to maximize TRST value, this makes total sense and keeps the the chain secure.
 
-Because we want you to feel good about the apps that you interact with, the Hub gives you, the community, the power to manage the apps that are run. It creates a safe place where anyone can be ensured when interacting Trustless Hub contract, just like the App Store for Apps.
+Because we want you to feel good about the apps that you interact with, the Hub gives you, the community, the power to manage the apps that are run. It creates a safe place where anyone can be ensured when interacting Intento contract, just like the App Store for Apps.
 
-We want to minimize the need for trust in anyone, hence Trustless Hub does not support contract upgradability. The contract code and the contract engine is non-upgradable. This is important for us. Migratable contract code creates opportunities for contract runners to rug-pull. When money is at stake, criminals may find a way. To ensure safety of the code runner and the code users we built the virtual machine in a way that central points of failure are removed. In our design apps can still migrate, and this will require users to move their funds. 
+We want to minimize the need for trust in anyone, hence Intento does not support contract upgradability. The contract code and the contract engine is non-upgradable. This is important for us. Migratable contract code creates opportunities for contract runners to rug-pull. When money is at stake, criminals may find a way. To ensure safety of the code runner and the code users we built the virtual machine in a way that central points of failure are removed. In our design apps can still migrate, and this will require users to move their funds. 
 
 
 
-## Trustless Hub specific parameters
+## Intento specific parameters
 
 
 #### Contract Instances — AutoMessage Fees

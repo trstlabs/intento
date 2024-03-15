@@ -206,7 +206,7 @@ STARS_RPC_PORT=26257
 STARS_MAIN_CMD="$STARS_BINARY --home $DOCKERNET_HOME/state/${STARS_NODE_PREFIX}1"
 STARS_RECEIVER_ADDRESS='stars15dywcmy6gzsc8wfefkrx0c9czlwvwrjenqthyq'
 
-# HOST (Trustless Hub running as a host zone)
+# HOST (Intento running as a host zone)
 HOST_CHAIN_ID=HOST
 HOST_NODE_PREFIX=host
 HOST_NUM_NODES=1

@@ -7,7 +7,7 @@ description: How to use the CLI and hermes to transact using IBC
 
 ## IBC setup
 
-Two local Trustless Hub chains can communicate with each other via a Hermes relayer
+Two local Intento chains can communicate with each other via a Hermes relayer
 
 :::tip You can always switch between chains using `trstd config node RPC_ENDPOINT`.
 :::

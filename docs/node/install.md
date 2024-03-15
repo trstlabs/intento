@@ -1,7 +1,7 @@
 ---
 order: 2
 title: Running a Validator
-description: Steps to install a Trustless Hub Daemon on your local computer or dedicated server.
+description: Steps to install a Intento Daemon on your local computer or dedicated server.
 ---
 
 # Running a Validator

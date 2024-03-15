@@ -85,7 +85,7 @@ We cannot risk this sender being confused for a particular user or module addres
 
 * Owner: This field is directly obtained from the ICS-20 packet metadata and should equal the ICS20 transfer recipient. If unspecified, a placeholder is made from the ICS20 sender and channel.
 * Msg: This field should be directly obtained from the ICS-20 packet metadata.
-* Funds: This field is set to the amount of funds being sent over in the ICS 20 packet. One detail is that the denom in the packet is the counterparty chains representation of the denom, so we have to translate it to Trustless Hub's representation.
+* Funds: This field is set to the amount of funds being sent over in the ICS 20 packet. One detail is that the denom in the packet is the counterparty chains representation of the denom, so we have to translate it to Intento's representation.
 
 So our constructed message for MsgSubmitAutoTx will contain the following:
 

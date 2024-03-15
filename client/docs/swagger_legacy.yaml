@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   version: "3.0"
-  title: Deprecated API for Trustless Hub
+  title: Deprecated API for Intento
   description: A deprecated REST API for state queries, transaction generation and broadcasting.
 tags:
   - name: Deprecated API

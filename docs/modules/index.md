@@ -8,7 +8,7 @@ parent:
 
 # Introduction
 
-Trustless Hub uses a number of custom modules.
+Intento uses a number of custom modules.
 
 ## List of Modules
 

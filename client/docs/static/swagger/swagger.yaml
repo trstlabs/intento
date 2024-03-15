@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  title: Trustless Hub
+  title: Intento
   description: A REST interface for queries and transactions
   version: v1.5.0
 paths:

@@ -1,7 +1,7 @@
 ---
 order: 1
 title: Running a Local TRST Client
-description: Steps to configure and interact with a Trustless Hub Daemon on your local computer or dedicated server.
+description: Steps to configure and interact with a Intento Daemon on your local computer or dedicated server.
 ---
 
 # TRST Client

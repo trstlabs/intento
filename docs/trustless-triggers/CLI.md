@@ -31,10 +31,10 @@ trstd tx autoibctx submit-auto-tx  '{
 }' --duration 16h --interval 60s --keyring-backend test -y --from b --fees 600utrst
 ```
 
-:::warning the Cosmos message type should be a registered type on Trustless Hub
+:::warning the Cosmos message type should be a registered type on Intento
 :::
 
-This "type url" is based of the proto package name, in this example it is `cosmos.bank.v1beta1` and the name of the message is `MsgSend`. TRST Labs has registerd types of CosmWasm types and the Osmosis types. Any message should be registered before it can be encoded correctly on Trustless Hub.
+This "type url" is based of the proto package name, in this example it is `cosmos.bank.v1beta1` and the name of the message is `MsgSend`. TRST Labs has registerd types of CosmWasm types and the Osmosis types. Any message should be registered before it can be encoded correctly on Intento.
 
 `--duration` and `--interval` flags must contain either `s`,`m`or `h`, which stand for seconds, minutes and hours. It can be a combination of all of these. Like so: `48h30m30s`.
 `--start_at` can be specified to create a custom start time for the first execution. It is in nanoseconds since UNIX epoch such as `1678199141`.
@@ -50,7 +50,7 @@ Message flow is similar to the above. A connection_id should be specified. You c
 
 A connection is the direct link between two chains, while a channel is a specific path within that connection that enables communication between two specific modules on different chains. Using a connection, multiple channels can be created. Both connections and channels are usually different for on source chain and on the destination chain. 
 
-Channels have ports such as `icacontroller-trust1...` or `transfer`. By using a connection, Trustless Hub creates an IBC port ID for your address and the destination chain.
+Channels have ports such as `icacontroller-trust1...` or `transfer`. By using a connection, Intento creates an IBC port ID for your address and the destination chain.
 
 This source port is denoted as `icacontroller-trust1...`. For an Interchain Account host, the destination port is `host`.
 A connection is needed to create the channels and ports.
@@ -76,7 +76,7 @@ trstd tx autoibctx submit-auto-tx  '{
 }' --duration 16h --interval 60s --keyring-backend test -y --from b --fees 600utrst --connection-id connection-0 --retries 2
 ```
 
-:::tip use ICA_ADDR as a `from_address` or any other field in an AutoTX and Trustless Hub will parse the to-be defined Interchain Account Address.
+:::tip use ICA_ADDR as a `from_address` or any other field in an AutoTX and Intento will parse the to-be defined Interchain Account Address.
 :::
 
 ```bash
@@ -97,13 +97,13 @@ export ICA_ADDR=$(trstd q autoibctx interchainaccounts $WALLET_1 connection-0 -o
 
 Message flow is similar to interchain acccounts. For using AuthZ, it is required to create a grant on the host chain. In the messages below, the grantee is the interchain account address.
 
-For this we use another local Trustless Hub chain. On a host chain you can create a grant with a command like the following:
+For this we use another local Intento chain. On a host chain you can create a grant with a command like the following:
 
 ```bash
 trstd tx authz grant $ICA_ADDR generic --msg-type /cosmos.staking.v1beta1.MsgDelegate --keyring-backend test -y --from b --fees 600utrst  --node tcp://localhost:36657  --chain-id trstdev-2
 ```
 
-Hereafter, on Trustless Hub you can execute the message with the ICA as the grantee and the Msgs array in the MsgExec should include the `--msg-type` from before.
+Hereafter, on Intento you can execute the message with the ICA as the grantee and the Msgs array in the MsgExec should include the `--msg-type` from before.
 
 ```bash
 trstd tx autoibctx submit-auto-tx  '{

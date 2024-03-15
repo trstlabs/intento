@@ -8,7 +8,7 @@ description: How AutoTX enables automation of assets on any IBC-enabled chain
 
 Trustless Triggers are time-based transactions on IBC-compatible chains that utilize the Interchain Accounts standard. They are automated by setting an interval, duration, end time, and optional start time in a MsgSubmitAutoTx.
 
-This automation is great for automating user actions, such as sending tokens on a recurring basis or auto-compounding TRST tokens. Developers can use this feature to automate their protocols and build solutions for end-users to automate their funds using a newly generated account on the host chain, which is controlled by Trustless Hub and the user.
+This automation is great for automating user actions, such as sending tokens on a recurring basis or auto-compounding TRST tokens. Developers can use this feature to automate their protocols and build solutions for end-users to automate their funds using a newly generated account on the host chain, which is controlled by Intento and the user.
 
 Interchain Accounts are a key component of Trustless Triggers. They allow for the creation and management of accounts across different IBC-connected chains. This means that Trustless Triggers can execute transactions on other chains based on custom logic, making them extremely versatile and useful for a wide range of applications.
 
@@ -26,7 +26,7 @@ AutoTXs can execute Cosmos SDK blockchain transactions on Cosmos Chains such as:
 
 AutoTXs can also execute transactions on other chains using an IBC protocol called Interchain Accounts.
 
-Using the Authz module on the host chain - the chain you want to execute at - you can grant the Interchain Account on Trustless Hub access permission to execute a specific message.
+Using the Authz module on the host chain - the chain you want to execute at - you can grant the Interchain Account on Intento access permission to execute a specific message.
 
 ## MsgSubmitAutoTx
 
@@ -49,7 +49,7 @@ Comments on the optionallity of the fields
 - When `Interval` is not provided, the end of the duration will be the time the AutoTX executes.
 - When `FeeFunds` are not provided, fees will be deducted from the Owner account.
 - When `DependsOnTxIDs` is provided, AutoTX will see if their last execution was succesfull before execution can take place, else it will fail.
-- When `ConnectionID` is not provided, it is assumed that `Msgs` are local Trustless Hub chain messages.
+- When `ConnectionID` is not provided, it is assumed that `Msgs` are local Intento chain messages.
 
 ## Automation Process
 
@@ -64,7 +64,7 @@ Comments on the optionallity of the fields
 9. Packet gets acknowledged by a relayer and the AutoTX entry is updated stating execution was succesfull. If packet times out, execution fails.
 10. Funds sent to an AutoTX-specific FeeFund account are returned to the AutoTX owner
 
-To make packet relays succesfully, Trustless Hub allocates token incentives to relayers to acknowledge packets.
+To make packet relays succesfully, Intento allocates token incentives to relayers to acknowledge packets.
 
 _In-depth information on how the module works can be found in the module section of our documetation._
 

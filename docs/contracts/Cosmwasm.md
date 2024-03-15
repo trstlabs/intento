@@ -20,7 +20,7 @@ CosmWasm is a tool that helps developers build dApps more easily by providing a 
 
 In short, WebAssembly is a magic box that helps run computer programs in your web browser, and CosmWasm is a set of tools that helps developers build decentralized applications using WebAssembly.
 
-## CosmWasm on Trustless Hub
+## CosmWasm on Intento
 
 CosmWasm is a smart contract standard within the Cosmos Ecosystem. Many chains including Juno, Osmosis, Terra, Secret Network, Stargaze and Archway use these to power safe and effient decentralized applications.  
 
@@ -30,7 +30,7 @@ CosmWasm code should be designed to be:
 3) Executed
 4) Queried
 
-And additionally for Trustless Hub they have:
+And additionally for Intento they have:
 
 5) An AutoMsg to execute 1-time or recurringly. This can defined in the CodeInfo or at Contract Instantiation
 
@@ -45,7 +45,7 @@ Above, an example on the AutoMessage pointing to a function on a recurring swap 
 
 #### How does this work?
 
-After instantiating from the TIP20 token contract, the TIP20 token contract gives allowance to this contract for the max funds to swap. Trustless Hub then recurringly calls AutoMsg. 
+After instantiating from the TIP20 token contract, the TIP20 token contract gives allowance to this contract for the max funds to swap. Intento then recurringly calls AutoMsg. 
 
 ## Differences in contract transactions with standard CosmWasm
 

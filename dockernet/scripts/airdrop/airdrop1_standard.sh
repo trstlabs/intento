@@ -4,7 +4,7 @@
 
 # ### AIRDROP TESTING FLOW Pt 1 (STANDARD)
 
-# # This script tests airdrop claiming on Trustless Hub
+# # This script tests airdrop claiming on Intento
 
 # # To run:
 # #   1. Start the network with `make start-dockernet build=tgr`

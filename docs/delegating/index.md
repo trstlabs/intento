@@ -11,7 +11,7 @@ parent:
 
 **Documentation for delegating TRST.**
 
-Delegating TRST works in the same way like other Cosmos-based blockchains. Delegate your 'stake' to valitors using a wallet, like the [Keplr wallet](https://faq.keplr.app/), or alternatively you can use the Trustless Hub daemon. This process is similar accross Cosmos-based blockchains.
+Delegating TRST works in the same way like other Cosmos-based blockchains. Delegate your 'stake' to valitors using a wallet, like the [Keplr wallet](https://faq.keplr.app/), or alternatively you can use the Intento daemon. This process is similar accross Cosmos-based blockchains.
 
 
 
@@ -21,7 +21,7 @@ In simple terms, TRST can be used to earn through staking or through transacting
 
 By staking TRST, token holders delegate their TRST to validators and earn inflation rewards. 
 
-## Using Trustless Hub Interact
+## Using Intento Interact
 
 Go to [Interact.Trustlesshub.com](https://interact.trustlesshub.com/).
 Log in through Keplr (preferred way), alternatively you can create a new address here, or log in with a Ledger device.

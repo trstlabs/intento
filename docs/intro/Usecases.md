@@ -6,7 +6,7 @@ description: Use cases of Smart Contract Automation
 
 ## Use Cases
 
-Protocols, Developers and end-users will be able to use and integrate Trustless Hub's Intent-Centric Automation. DAOs can use payroll services, NFT solutions can have subscriptions, and games can do in-game battles with time-based winner appointment.
+Protocols, Developers and end-users will be able to use and integrate Intento's Intent-Centric Automation. DAOs can use payroll services, NFT solutions can have subscriptions, and games can do in-game battles with time-based winner appointment.
 
 ### Example Use Cases For Protocols
 
@@ -28,7 +28,7 @@ In sum, the intent-centric automation module aims to enhance user liquidity and 
 
 #### DeFi
 
-On Trustless Hub, contracts can automatically trade dependent on price changes. Users are in control of balances transaction history.
+On Intento, contracts can automatically trade dependent on price changes. Users are in control of balances transaction history.
 
 | Time-Based Automation Use Cases for DeFi | Explanation                                                                                                                                                              |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -43,7 +43,7 @@ On Trustless Hub, contracts can automatically trade dependent on price changes. 
 Pay family-members, employees and contractors each day/week/month, without exposing privacy-sensitive data. Recipients can be paid in desired currency and can continuously earn yield
 
 With recurring payments on current smart contracts recipients have to claim tokens manually.
-By integrating with Trustless Hub end-users receive tokens automatically.
+By integrating with Intento end-users receive tokens automatically.
 
 | Time-Based Automation Use Cases for Payment | Explanation                                                                                                                                                                                                                                                   |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

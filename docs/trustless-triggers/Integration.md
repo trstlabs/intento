@@ -6,7 +6,7 @@ description: How to integrate automation into your interchain dApp
 
 ## TrustlessJS
 
-We've built a JS framework called [TrustlessJS](https://npmjs.com/package/trustlessjs) to send AutoTx transactions. An implementation for this is [TriggerPørtal](https://triggerportal.zone). It contains a message registry that you can use to encode and decode protobuf messages that Trustless Hub supports, including CosmWasm and Osmosis messages.
+We've built a JS framework called [TrustlessJS](https://npmjs.com/package/trustlessjs) to send AutoTx transactions. An implementation for this is [TriggerPørtal](https://triggerportal.zone). It contains a message registry that you can use to encode and decode protobuf messages that Intento supports, including CosmWasm and Osmosis messages.
 
 An example of submitting an MsgSubmitAutoTx in typescript. A label is optional but recommended to keep track an overview of triggers.
 Sta
@@ -96,7 +96,7 @@ async function getAutoTxParams(client: TrustlessChainClient) {
     } catch (e) { console.error('err(getAutoTxParams):', e) }
 }
 ```
-The function returns a Promise that resolves to the expected transaction fee in Trustless Hub chain's native denomination, TRST.
+The function returns a Promise that resolves to the expected transaction fee in Intento chain's native denomination, TRST.
 
 The JavaScript function getExpectedAutoTxFee calculates the expected transaction fee for a trustless chain transaction based on the duration of the transaction, the length of the messages to be sent, and the recurrence interval (optional). The formula for calculating the fee is:
 
@@ -112,8 +112,8 @@ flexFeeForPeriod is the flex fee for each recurrence, calculated as:
 
 flexFeeForPeriod = (Number(params.AutoTxFlexFeeMul) / 100) * periodMinutes
 
-where params.AutoTxFlexFeeMul is a parameter retrieved from the Trustless Hub client and periodMinutes is the duration of each recurrence in minutes.
+where params.AutoTxFlexFeeMul is a parameter retrieved from the Intento client and periodMinutes is the duration of each recurrence in minutes.
 
-constantFee is a constant fee for each message sent in the transaction. It is also retrieved from Trustless Hub client.
+constantFee is a constant fee for each message sent in the transaction. It is also retrieved from Intento client.
 
 lenMsgs is the length of the messages to be sent in the transaction.
