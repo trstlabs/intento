@@ -32,7 +32,7 @@ set_trst_genesis() {
     genesis_config=$1
 
     # update params
-    jq '.app_state.claim.claim_records[0].address = "trust1nf6v2paty9m22l3ecm7dpakq2c92ueyue2d5yv"' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].address = "into1nf6v2paty9m22l3ecm7dpakq2c92ueyue2d5yv"' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].initial_claimable_amount = [{"amount":"10000","denom":"uinto"}]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].status[0].action_completed = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].status[0].vesting_period_completed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config

@@ -92,7 +92,7 @@ So our constructed message for MsgSubmitAutoTx will contain the following:
 ```go
 msg := MsgSubmitAutoTx{
  // If let unspecified, owner is the actor that submitted the ICS20 message and a placeholder only
- Owner: packet.data.memo["auto_tx"]["owner"] OR "trust1-hash-of-channel-and-sender",
+ Owner: packet.data.memo["auto_tx"]["owner"] OR "into1-hash-of-channel-and-sender",
  // Array of Msg json encoded, then transformed into a proto.message
  Msgs: packet.data.memo["auto_tx"]["msgs"],
  // Funds coins that are transferred to the owner
@@ -111,10 +111,10 @@ ICS20 is JSON native, so we use JSON for the memo format.
      "denom": "denom on counterparty chain (e.g. uatom)",
         "amount": "1000",
         "sender": "...", // ignored
-        "receiver": "trust1address",
+        "receiver": "into1address",
          "memo": {
            "auto_tx": {
-            "owner": "trust1address ", //optional
+            "owner": "into1address ", //optional
               "msgs": [{
                 "@type":"/cosmos.somemodule.v1beta1.sometype",
                 //message values in JSON format

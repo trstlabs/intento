@@ -130,12 +130,12 @@ INTO_NODE_PREFIX=intento
 INTO_NUM_NODES=3
 INTO_VAL_PREFIX=val
 INTO_USER_ACCT=usr1
-INTO_USER_ADDRESS=trust1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t
+INTO_USER_ADDRESS=into1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t
 INTO_ADDRESS_PREFIX=trust
 INTO_DENOM=$INTO_DENOM
 INTO_RPC_PORT=26657
 INTO_ADMIN_ACCT=admin
-INTO_ADMIN_ADDRESS=trust1u20df3trc2c2zdhm8qvh2hdjx9ewh00sxv8dyg
+INTO_ADMIN_ADDRESS=into1u20df3trc2c2zdhm8qvh2hdjx9ewh00sxv8dyg
 INTO_ADMIN_MNEMONIC="tone cause tribe this switch near host damage idle fragile antique tail soda alien depth write wool they rapid unfold body scan pledge soft"
 
 # Binaries are contigent on whether we're doing an upgrade or not
@@ -214,11 +214,11 @@ HOST_BINARY="$DOCKERNET_HOME/../build/intentod"
 HOST_VAL_PREFIX=hval
 HOST_ADDRESS_PREFIX=trust
 HOST_USER_ACCT=husr1
-HOST_USER_ADDRESS='trust1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t'
+HOST_USER_ADDRESS='into1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t'
 HOST_DENOM=$COSM_DENOM
 HOST_RPC_PORT=26157
 HOST_MAIN_CMD="$HOST_BINARY --home $DOCKERNET_HOME/state/${HOST_NODE_PREFIX}1"
-HOST_RECEIVER_ADDRESS='trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx'
+HOST_RECEIVER_ADDRESS='into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx'
 
 # EVMOS
 EVMOS_CHAIN_ID=evmos_9001-2

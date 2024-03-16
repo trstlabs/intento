@@ -60,8 +60,8 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAutoTxWorks() {
 			"amount": "70",
 			"denom": "stake"
 		}],
-		"from_address": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
-		"to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
+		"from_address": "into12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
+		"to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
 
 	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"auto_tx": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
@@ -97,8 +97,8 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 			"amount": "70",
 			"denom": "stake"
 		}],
-		"from_address": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
-		"to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
+		"from_address": "into12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
+		"to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
 
 	path := NewICAPath(suite.chainA, suite.chainB)
@@ -145,7 +145,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 			"denom": "stake"
 		}],
 		"from_address": "ICA_ADDR",
-		"to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
+		"to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
 
 	path := NewICAPath(suite.chainA, suite.chainB)

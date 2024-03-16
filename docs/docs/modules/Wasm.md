@@ -106,7 +106,7 @@ was sent:
     },
     {
       "key": "signer",
-      "value": "trust1vx8knpllrj7n963p9ttd80w47kpacrhuts497x"
+      "value": "into1vx8knpllrj7n963p9ttd80w47kpacrhuts497x"
     },
     {
       "key": "code_id",
@@ -114,7 +114,7 @@ was sent:
     },
     {
       "key": "contract_address",
-      "value": "trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh"
+      "value": "into18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh"
     }
   ]
 }
@@ -131,7 +131,7 @@ Here is an example from the escrow contract successfully releasing funds to the 
   "Attr": [
     {
       "key": "contract_address",
-      "value": "trust18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh"
+      "value": "into18vd8fpwxzck93qlwghaj6arh4p7c5n894lxvdh"
     },
     {
       "key": "action",
@@ -139,7 +139,7 @@ Here is an example from the escrow contract successfully releasing funds to the 
     },
     {
       "key": "destination",
-      "value": "trust14k7v7ms4jxkk2etmg9gljxjm4ru3qjdugfsflq"
+      "value": "into14k7v7ms4jxkk2etmg9gljxjm4ru3qjdugfsflq"
     }
   ]
 }

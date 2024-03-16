@@ -23,7 +23,7 @@
 # ## AIRDROP SETUP
 # echo "Funding accounts..."
 # # Transfer uatom from gaia to stride, so that we can liquid stake later
-# $GAIA_MAIN_CMD tx ibc-transfer transfer transfer channel-0 trust1nf6v2paty9m22l3ecm7dpakq2c92ueyue2d5yv 1000000uatom --from ${GAIA_VAL_PREFIX}1 -y | TRIM_TX
+# $GAIA_MAIN_CMD tx ibc-transfer transfer transfer channel-0 into1nf6v2paty9m22l3ecm7dpakq2c92ueyue2d5yv 1000000uatom --from ${GAIA_VAL_PREFIX}1 -y | TRIM_TX
 # sleep 15
 # # Fund the distributor account
 # $INTO_MAIN_CMD tx bank send val1 stride12lw3587g97lgrwr2fjtr8gg5q6sku33e5yq9wl 100uinto --from val1 -y | TRIM_TX

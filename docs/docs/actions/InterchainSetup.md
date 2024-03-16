@@ -43,7 +43,7 @@ The constructed message for MsgSubmitAutoTx will contain the following:
 ```go
 msg := MsgSubmitAutoTx{
  // If let unspecified, owner is the actor that submitted the ICS20 message and a placeholder only
- Owner: "trust1-hash-of-channel-and-sender" OR packet.data.memo["auto_tx"]["owner"],
+ Owner: "into1-hash-of-channel-and-sender" OR packet.data.memo["auto_tx"]["owner"],
  // Array of Msg json encoded, then transformed into a proto.message
  Msgs: packet.data.memo["auto_tx"]["msgs"],
  // Funds coins that are transferred to the owner
@@ -64,10 +64,10 @@ ICS20 is JSON native, so we use JSON for the memo format.
        "denom": "INTO denom on counterparty chain (e.g. ibc/abc...)",
         "amount": "1000",//for execution fees
         "sender": "...", 
-        "receiver": "A INTO addr prefixed with trust1",
+        "receiver": "A INTO addr prefixed with into1",
          "memo": {
            "auto_tx": {
-            "owner": "trust1address", //owner is optional
+            "owner": "into1address", //owner is optional
               "msgs": [{
                 "@type":"/cosmos.somemodule.v1beta1.sometype",
                 //message values in JSON format
@@ -174,7 +174,7 @@ Below is how the proposal action message could look like for a CosmWasm-based DA
         "sender": "juno1validbech32address",
         // the recipient address on Intento
         // is replaced with a newly generated address when auto_tx["owner"] in memo is blank
-        "receiver": "trust1address",
+        "receiver": "into1address",
         // Timeout height relative to the current block height.
         // The timeout is disabled when set to 0.
         "timeout_height": "0",
@@ -184,7 +184,7 @@ Below is how the proposal action message could look like for a CosmWasm-based DA
         "memo": {
            "auto_tx": {
             //owner is optional and should equal recipient
-            "owner": "trust1address", 
+            "owner": "into1address", 
               "msgs": [{
                 "@type":"/someprefix.somemodule.someversion.sometype",
                 //add message values 

@@ -483,7 +483,7 @@ func ConvertBech32(address string) (string, error) {
 		panic(err)
 	}
 
-	bech32Addr, err := bech32.ConvertAndEncode("trust", bz)
+	bech32Addr, err := bech32.ConvertAndEncode("into", bz)
 	if err != nil {
 		panic(err)
 	}

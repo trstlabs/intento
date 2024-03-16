@@ -26,8 +26,8 @@ intentod tx autoibctx submit-auto-tx  '{
         "amount": "70",
         "denom": "uinto"
     }],
-    "from_address": "trust12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
-    "to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
+    "from_address": "into12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
+    "to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 }' --duration 16h --interval 60s --keyring-backend test -y --from b --fees 600uinto
 ```
 
@@ -50,9 +50,9 @@ Message flow is similar to the above. A connection_id should be specified. You c
 
 A connection is the direct link between two chains, while a channel is a specific path within that connection that enables communication between two specific modules on different chains. Using a connection, multiple channels can be created. Both connections and channels are usually different for on source chain and on the destination chain. 
 
-Channels have ports such as `icacontroller-trust1...` or `transfer`. By using a connection, Intento creates an IBC port ID for your address and the destination chain.
+Channels have ports such as `icacontroller-into1...` or `transfer`. By using a connection, Intento creates an IBC port ID for your address and the destination chain.
 
-This source port is denoted as `icacontroller-trust1...`. For an Interchain Account host, the destination port is `host`.
+This source port is denoted as `icacontroller-into1...`. For an Interchain Account host, the destination port is `host`.
 A connection is needed to create the channels and ports.
 
 ### Register and Submit AutoTx
@@ -72,7 +72,7 @@ intentod tx autoibctx submit-auto-tx  '{
         "denom": "uinto"
     }],
     "from_address": "ICA_ADDR",
-    "to_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
+    "to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 }' --duration 16h --interval 60s --keyring-backend test -y --from b --fees 600uinto --connection-id connection-0 --retries 2
 ```
 
@@ -114,7 +114,7 @@ intentod tx autoibctx submit-auto-tx  '{
         "amount": "70",
         "denom": "uinto"
     },
-    "delegator_address": "trust1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx",
+    "delegator_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx",
     "validator_address": "trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy"
 }],
     "grantee": "ICA_ADDR"
