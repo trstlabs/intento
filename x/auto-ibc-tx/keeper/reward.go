@@ -6,8 +6,8 @@ import (
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	proto "github.com/cosmos/gogoproto/proto"
-	msgregistry "github.com/trstlabs/trst/x/auto-ibc-tx/msg_registry"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	msgregistry "github.com/trstlabs/intento/x/auto-ibc-tx/msg_registry"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 func (k Keeper) HandleRelayerReward(ctx sdk.Context, relayer sdk.AccAddress, rewardType int) {

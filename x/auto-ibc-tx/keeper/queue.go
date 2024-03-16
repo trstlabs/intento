@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 // IterateAutoTxsQueue iterates over the items in the inactive autoTx queue

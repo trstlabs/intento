@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/trstlabs/trst/x/alloc/types"
+	"github.com/trstlabs/intento/x/alloc/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

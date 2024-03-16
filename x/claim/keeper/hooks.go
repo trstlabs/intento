@@ -5,7 +5,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/trstlabs/trst/x/claim/types"
+	"github.com/trstlabs/intento/x/claim/types"
 )
 
 func (k Keeper) AfterAutoTxAuthz(ctx sdk.Context, recipient sdk.AccAddress) {

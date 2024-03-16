@@ -18,13 +18,13 @@ for chain in ${HOST_CHAINS[@]}; do
     chmod -R 777 $STATE/relayer-${chain_name}
     cp ${DOCKERNET_HOME}/config/relayer_config.yaml $relayer_config/config.yaml
 
-    printf "TRST <> $chain - Adding relayer keys..."
-    $relayer_exec rly keys restore trst $RELAYER_TRST_ACCT "$mnemonic" >>$relayer_logs 2>&1
+    printf "INTO <> $chain - Adding relayer keys..."
+    $relayer_exec rly keys restore trst $RELAYER_INTO_ACCT "$mnemonic" >>$relayer_logs 2>&1
     $relayer_exec rly keys restore $chain_name $account_name "$mnemonic" >>$relayer_logs 2>&1
     echo "Done"
 
     chmod -R 777 $STATE/relayer-${chain_name}/config
-    printf "TRST <> $chain - Creating client, connection, and transfer channel..." | tee -a $relayer_logs
+    printf "INTO <> $chain - Creating client, connection, and transfer channel..." | tee -a $relayer_logs
 
     $relayer_exec rly tx link trst-${chain_name} >>$relayer_logs 2>&1
     echo "Done"

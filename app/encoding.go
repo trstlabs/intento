@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/cosmos/cosmos-sdk/std"
-	appparams "github.com/trstlabs/trst/app/params"
+	appparams "github.com/trstlabs/intento/app/params"
 )
 
 // MakeEncodingConfig creates an EncodingConfig for testing

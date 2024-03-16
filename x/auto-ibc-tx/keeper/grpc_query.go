@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 // InterchainAccountFromAddress implements the Query/InterchainAccountFromAddress gRPC method

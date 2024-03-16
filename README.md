@@ -1,6 +1,6 @@
 # Intento
 
-![Welcome to Intento](docs/images/web.png)
+![Welcome to Intento](docs/static/img/web.png)
 
 With Intento, any action can be set anywhere based on conditions, seamlessly bridging intentions with execution. Intento is a general purpose intent processing zone.
 
@@ -85,7 +85,7 @@ Beyond transaction fees, we've introduced a flexible, gas-based fee system. It's
 
 ## Learn more
 
-[Intento documentation](https://docs.trustlesshub.com)
+[Intento documentation](https://docs.intento.zone)
 
 Other useful links
 

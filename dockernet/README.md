@@ -134,7 +134,7 @@ paths:
   ...
     trst-{new-host-zone}:
     src:
-      chain-id: TRST
+      chain-id: INTO
     dst:
       chain-id: {CHAIN_ID}
     src-channel-filter:

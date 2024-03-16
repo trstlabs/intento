@@ -15,10 +15,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/trstlabs/trst/x/claim/client/cli"
+	"github.com/trstlabs/intento/x/claim/client/cli"
 
-	"github.com/trstlabs/trst/x/claim/keeper"
-	"github.com/trstlabs/trst/x/claim/types"
+	"github.com/trstlabs/intento/x/claim/keeper"
+	"github.com/trstlabs/intento/x/claim/types"
 )
 
 var (

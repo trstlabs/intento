@@ -14,10 +14,10 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
-	"github.com/trstlabs/trst/app"
-	alloctypes "github.com/trstlabs/trst/x/alloc/types"
-	"github.com/trstlabs/trst/x/claim/keeper"
-	"github.com/trstlabs/trst/x/claim/types"
+	"github.com/trstlabs/intento/app"
+	alloctypes "github.com/trstlabs/intento/x/alloc/types"
+	"github.com/trstlabs/intento/x/claim/keeper"
+	"github.com/trstlabs/intento/x/claim/types"
 )
 
 type KeeperTestSuite struct {

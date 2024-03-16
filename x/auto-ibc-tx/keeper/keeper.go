@@ -13,7 +13,7 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 

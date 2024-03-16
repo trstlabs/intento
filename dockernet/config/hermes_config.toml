@@ -26,7 +26,7 @@ host = '0.0.0.0'
 port = 3001
 
 [[chains]]
-id = 'TRST'
+id = 'INTO'
 rpc_addr = 'http://trst1:26657'
 grpc_addr = 'http://trst1:9090'
 websocket_addr = 'ws://trst1:26657/websocket'
@@ -36,7 +36,7 @@ key_name = 'hrly1'
 store_prefix = 'ibc'
 default_gas = 100000
 max_gas = 5000000
-gas_price = { price = 0.000, denom = 'utrst' }
+gas_price = { price = 0.000, denom = 'uinto' }
 gas_multiplier = 1.1
 max_msg_num = 30
 max_tx_size = 2097152

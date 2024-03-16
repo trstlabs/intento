@@ -56,7 +56,7 @@ ifeq ($(LEDGER_ENABLED),true)
   endif
 endif
 
-ifeq (cleveldb,$(findstring cleveldb,$(TRST_BUILD_OPTIONS)))
+ifeq (cleveldb,$(findstring cleveldb,$(INTO_BUILD_OPTIONS)))
   build_tags += gcc cleveldb
 endif
 build_tags += $(BUILD_TAGS)
@@ -70,16 +70,16 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 # process linker flags
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=trst \
-		  -X github.com/cosmos/cosmos-sdk/version.AppName=trstd \
+		  -X github.com/cosmos/cosmos-sdk/version.AppName=intentod \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
 			-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(TM_VERSION)
 
-ifeq (cleveldb,$(findstring cleveldb,$(TRST_BUILD_OPTIONS)))
+ifeq (cleveldb,$(findstring cleveldb,$(INTO_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
 endif
-ifeq (,$(findstring nostrip,$(TRST_BUILD_OPTIONS)))
+ifeq (,$(findstring nostrip,$(INTO_BUILD_OPTIONS)))
   ldflags += -w -s
 endif
 ldflags += $(LDFLAGS)
@@ -87,7 +87,7 @@ ldflags := $(strip $(ldflags))
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 # check for nostrip option
-ifeq (,$(findstring nostrip,$(TRST_BUILD_OPTIONS)))
+ifeq (,$(findstring nostrip,$(INTO_BUILD_OPTIONS)))
   BUILD_FLAGS += -trimpath
 endif
 
@@ -113,7 +113,7 @@ BUILD_TARGETS := build install
 build: BUILD_ARGS=-o $(BUILDDIR)/
 
 $(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
-	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./cmd/trstd
+	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./cmd/intentod
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
@@ -247,16 +247,16 @@ format:
 ###############################################################################
 
 start-localnet-ci: build
-	rm -rf ~/.trstd-liveness
-	./build/trstd init liveness --chain-id liveness --home ~/.trstd-liveness
-	./build/trstd config chain-id liveness --home ~/.trstd-liveness
-	./build/trstd config keyring-backend test --home ~/.trstd-liveness
-	./build/trstd keys add val --home ~/.trstd-liveness
-	./build/trstd add-genesis-account val 10000000000000000000000000stake --home ~/.trstd-liveness --keyring-backend test
-	./build/trstd gentx val 1000000000stake --home ~/.trstd-liveness --chain-id liveness
-	./build/trstd collect-gentxs --home ~/.trstd-liveness
-	sed -i.bak'' 's/minimum-gas-prices = ""/minimum-gas-prices = "0uatom"/' ~/.trstd-liveness/config/app.toml
-	./build/trstd start --home ~/.trstd-liveness --x-crisis-skip-assert-invariants
+	rm -rf ~/.intentod-liveness
+	./build/intentod init liveness --chain-id liveness --home ~/.intentod-liveness
+	./build/intentod config chain-id liveness --home ~/.intentod-liveness
+	./build/intentod config keyring-backend test --home ~/.intentod-liveness
+	./build/intentod keys add val --home ~/.intentod-liveness
+	./build/intentod add-genesis-account val 10000000000000000000000000stake --home ~/.intentod-liveness --keyring-backend test
+	./build/intentod gentx val 1000000000stake --home ~/.intentod-liveness --chain-id liveness
+	./build/intentod collect-gentxs --home ~/.intentod-liveness
+	sed -i.bak'' 's/minimum-gas-prices = ""/minimum-gas-prices = "0uatom"/' ~/.intentod-liveness/config/app.toml
+	./build/intentod start --home ~/.intentod-liveness --x-crisis-skip-assert-invariants
 
 .PHONY: start-localnet-ci
 
@@ -306,13 +306,13 @@ create-rly-juno:
 	./deployment/ibc/relayer/init-juno.sh
 
 restart-rly: @echo "Restarting relayer..."
-	rly tx connection trstdev1-trstdev2 --override
-	rly start trstdev1-trstdev2 -p events -b 100 --debug > rly.log
+	rly tx connection intentodev1-intentodev2 --override
+	rly start intentodev1-intentodev2 -p events -b 100 --debug > rly.log
 
 kill-dev:
-	@echo "Killing trstd and removing previous data"
+	@echo "Killing intentod and removing previous data"
 	-@rm -rf ./data
-	-@killall trstd 2>/dev/null
+	-@killall intentod 2>/dev/null
 
 # starts Trst relayer given the localchains are running
 run-rly: 

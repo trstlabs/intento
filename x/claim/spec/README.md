@@ -2,7 +2,7 @@
 
 ## Abstract
 
-The TRST claims module has users begin with a portion of their total airdrop allocation,
+The INTO claims module has users begin with a portion of their total airdrop allocation,
 and then be able to automatically claim higher percentages as they perform certain tasks on-chain.
 Furthermore, these claimable assets 'expire' if not claimed.
 Users have two months (`DurationUntilDecay`) to claim their full airdrop amount.

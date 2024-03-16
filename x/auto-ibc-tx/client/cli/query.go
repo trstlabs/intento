@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 // GetQueryCmd creates and returns the auto-ibc-tx query command

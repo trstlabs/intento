@@ -14,9 +14,9 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/stretchr/testify/suite"
-	icaapp "github.com/trstlabs/trst/app"
-	keeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
-	trstibctesting "github.com/trstlabs/trst/x/auto-ibc-tx/keeper/tests"
+	icaapp "github.com/trstlabs/intento/app"
+	keeper "github.com/trstlabs/intento/x/auto-ibc-tx/keeper"
+	trstibctesting "github.com/trstlabs/intento/x/auto-ibc-tx/keeper/tests"
 )
 
 var (

@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/trstlabs/trst/x/alloc/types"
+	"github.com/trstlabs/intento/x/alloc/types"
 )
 
 // GetParams returns the total set of minting parameters.

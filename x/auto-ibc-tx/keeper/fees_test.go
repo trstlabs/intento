@@ -9,7 +9,7 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 func TestDistributeCoinsNotRecurring(t *testing.T) {

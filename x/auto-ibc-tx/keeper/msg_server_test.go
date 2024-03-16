@@ -9,8 +9,8 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/keeper"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {

@@ -15,7 +15,7 @@ const (
 	// AutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultAutoTxConstantFee int64 = 5_000 // 0.005trst
 	// AutoTxFlexFeeMul is the denominator for the gas-dependent flex fee to prioritize auto messages in the block, to be distributed to validators
-	DefaultAutoTxFlexFeeMul int64 = 3 // 3% of minutes for a given period as utrst (1_000m = 20utrst)
+	DefaultAutoTxFlexFeeMul int64 = 3 // 3% of minutes for a given period as uinto (1_000m = 20uinto)
 	// RecurringAutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultRecurringAutoTxConstantFee int64 = 5_000 // 0.005trst
 	// Default max period for a AutoTx that is self-executing
@@ -140,7 +140,7 @@ func validateAutoTxConstantFee(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	//10_000_000 = 10TRST we do not want to go this high
+	//10_000_000 = 10INTO we do not want to go this high
 	if v > 10_000_000 {
 		return fmt.Errorf("AutoTxConstantFee must be lower: %T", i)
 	}
@@ -170,7 +170,7 @@ func validateRecurringAutoTxConstantFee(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	//10_000_000 = 10TRST we do not want to go this high
+	//10_000_000 = 10INTO we do not want to go this high
 	if v > 10_000_000 {
 		return fmt.Errorf("RecurringAutoTxConstantFee must be lower: %T", i)
 	}
@@ -187,7 +187,7 @@ func validateRelayerRewards(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	for i, v := range list {
-		// 10_000_000 = 10TRST we do not want to go this high
+		// 10_000_000 = 10INTO we do not want to go this high
 		if v > 10_000_000 {
 			return fmt.Errorf("RelayerReward for message must be lower: %T", i)
 		}

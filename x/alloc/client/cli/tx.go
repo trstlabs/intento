@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	// "github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/trstlabs/trst/x/alloc/types"
+	"github.com/trstlabs/intento/x/alloc/types"
 )
 
 var (

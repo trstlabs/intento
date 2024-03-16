@@ -11,7 +11,7 @@ PEER_PORT=26656
 DOCKER_COMPOSE="docker-compose -f $DOCKERNET_HOME/docker-compose.yml"
 
 # Logs
-TRST_LOGS=$LOGS/trst.log
+INTO_LOGS=$LOGS/intento.log
 TX_LOGS=$DOCKERNET_HOME/logs/tx.log
 KEYS_LOGS=$DOCKERNET_HOME/logs/keys.log
 
@@ -35,7 +35,7 @@ elif [[ "${#HOST_CHAINS[@]}" == "0" ]]; then
 fi
 
 # DENOMS
-TRST_DENOM="utrst"
+INTO_DENOM="uinto"
 ATOM_DENOM="uatom"
 JUNO_DENOM="ujuno"
 OSMO_DENOM="uosmo"
@@ -44,7 +44,7 @@ COSM_DENOM="ucosm"
 EVMOS_DENOM="aevmos"
 
 
-IBC_TRST_DENOM='ibc/BE4E6F930E604F5E410DCA660E8F4DB6F2BDE1F8E4730CAE2C4B15982EFB42B8'
+IBC_INTO_DENOM='ibc/BE4E6F930E604F5E410DCA660E8F4DB6F2BDE1F8E4730CAE2C4B15982EFB42B8'
 
 IBC_GAIA_CHANNEL_0_DENOM='ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2'
 IBC_GAIA_CHANNEL_1_DENOM='ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9'
@@ -97,7 +97,7 @@ VOTING_PERIOD="30s"
 INITIAL_ANNUAL_PROVISIONS="10000000000000.000000000000000000"
 
 # Tokens are denominated in the macro-unit
-# (e.g. 5000000TRST implies 5000000000000utrst)
+# (e.g. 5000000INTO implies 5000000000000uinto)
 GENESIS_TOKENS=40000000
 STAKE_TOKENS=30000000
 ADMIN_TOKENS=10000
@@ -124,31 +124,31 @@ VAL_MNEMONICS=(
 
 USER_MNEMONIC="tonight bonus finish chaos orchard plastic view nurse salad regret pause awake link bacon process core talent whale million hope luggage sauce card weasel"
 
-# TRST
-TRST_CHAIN_ID=TRST
-TRST_NODE_PREFIX=trst
-TRST_NUM_NODES=3
-TRST_VAL_PREFIX=val
-TRST_USER_ACCT=usr1
-TRST_USER_ADDRESS=trust1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t
-TRST_ADDRESS_PREFIX=trust
-TRST_DENOM=$TRST_DENOM
-TRST_RPC_PORT=26657
-TRST_ADMIN_ACCT=admin
-TRST_ADMIN_ADDRESS=trust1u20df3trc2c2zdhm8qvh2hdjx9ewh00sxv8dyg
-TRST_ADMIN_MNEMONIC="tone cause tribe this switch near host damage idle fragile antique tail soda alien depth write wool they rapid unfold body scan pledge soft"
+# Intento
+INTO_CHAIN_ID=INTO
+INTO_NODE_PREFIX=intento
+INTO_NUM_NODES=3
+INTO_VAL_PREFIX=val
+INTO_USER_ACCT=usr1
+INTO_USER_ADDRESS=trust1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t
+INTO_ADDRESS_PREFIX=trust
+INTO_DENOM=$INTO_DENOM
+INTO_RPC_PORT=26657
+INTO_ADMIN_ACCT=admin
+INTO_ADMIN_ADDRESS=trust1u20df3trc2c2zdhm8qvh2hdjx9ewh00sxv8dyg
+INTO_ADMIN_MNEMONIC="tone cause tribe this switch near host damage idle fragile antique tail soda alien depth write wool they rapid unfold body scan pledge soft"
 
 # Binaries are contigent on whether we're doing an upgrade or not
 if [[ "${UPGRADE_NAME:-}" == "" ]]; then
-  TRST_BINARY="$DOCKERNET_HOME/../build/trstd"
+  INTO_BINARY="$DOCKERNET_HOME/../build/intentod"
 else
   if [[ "${NEW_BINARY:-false}" == "false" ]]; then
-    TRST_BINARY="$UPGRADES/binaries/trstd1"
+    INTO_BINARY="$UPGRADES/binaries/intentod1"
   else
-    TRST_BINARY="$UPGRADES/binaries/trstd2"
+    INTO_BINARY="$UPGRADES/binaries/intentod2"
   fi
 fi
-TRST_MAIN_CMD="$TRST_BINARY --home $DOCKERNET_HOME/state/${TRST_NODE_PREFIX}1"
+INTO_MAIN_CMD="$INTO_BINARY --home $DOCKERNET_HOME/state/${INTO_NODE_PREFIX}1"
 
 # GAIA
 GAIA_CHAIN_ID=GAIA
@@ -210,7 +210,7 @@ STARS_RECEIVER_ADDRESS='stars15dywcmy6gzsc8wfefkrx0c9czlwvwrjenqthyq'
 HOST_CHAIN_ID=HOST
 HOST_NODE_PREFIX=host
 HOST_NUM_NODES=1
-HOST_BINARY="$DOCKERNET_HOME/../build/trstd"
+HOST_BINARY="$DOCKERNET_HOME/../build/intentod"
 HOST_VAL_PREFIX=hval
 HOST_ADDRESS_PREFIX=trust
 HOST_USER_ACCT=husr1
@@ -243,7 +243,7 @@ RELAYER_STARS_EXEC="$DOCKER_COMPOSE run --rm relayer-stars"
 RELAYER_EVMOS_EXEC="$DOCKER_COMPOSE run --rm relayer-evmos"
 RELAYER_HOST_EXEC="$DOCKER_COMPOSE run --rm relayer-host"
 
-RELAYER_TRST_ACCT=rly1
+RELAYER_INTO_ACCT=rly1
 RELAYER_GAIA_ACCT=rly2
 RELAYER_JUNO_ACCT=rly3
 RELAYER_OSMO_ACCT=rly4
@@ -274,10 +274,10 @@ RELAYER_MNEMONICS=(
   "$RELAYER_EVMOS_MNEMONIC"
 )
 
-TRST_ADDRESS() {
+INTO_ADDRESS() {
   # After an upgrade, the keys query can sometimes print migration info,
   # so we need to filter by valid addresses using the prefix
-  $TRST_MAIN_CMD keys show ${TRST_USER_ACCT} --keyring-backend test -a | grep $TRST_ADDRESS_PREFIX
+  $INTO_MAIN_CMD keys show ${INTO_USER_ACCT} --keyring-backend test -a | grep $INTO_ADDRESS_PREFIX
 }
 GAIA_ADDRESS() {
   $GAIA_MAIN_CMD keys show ${GAIA_USER_ACCT} --keyring-backend test -a
@@ -324,12 +324,12 @@ GET_AUTO_TX_ID() {
   max_blocks=${2:-10} # Default to 10 if not specified
 
   # Fetch initial transaction IDs
-  initial_autotxs=($($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | grep 'tx_id:' | awk '{print $2}'))
+  initial_autotxs=($($INTO_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | grep 'tx_id:' | awk '{print $2}'))
   echo "Initial AutoTxs: ${initial_autotxs[*]}"
 
   for i in $(seq $max_blocks); do
     # Fetch new transaction IDs
-    new_autotxs=($($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | grep 'tx_id:' | awk '{print $2}'))
+    new_autotxs=($($INTO_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | grep 'tx_id:' | awk '{print $2}'))
 
     # Find new transaction ID by comparing initial and new lists
     for tx_id in "${new_autotxs[@]}"; do
@@ -342,7 +342,7 @@ GET_AUTO_TX_ID() {
     done
 
     # Wait for the next block
-    WAIT_FOR_BLOCK $TRST_LOGS 1
+    WAIT_FOR_BLOCK $INTO_LOGS 1
 
     # Optional: Handle case where no new transactions are found after max_blocks
     if [[ $i -eq $max_blocks ]]; then
@@ -358,7 +358,7 @@ WAIT_FOR_EXECUTED_TX_BY_ID() {
 
   for i in $(seq $max_blocks); do
     # Fetch transaction info for the specified tx_id
-    tx_info=$($TRST_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | awk -v txid="$tx_id" '
+    tx_info=$($INTO_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | awk -v txid="$tx_id" '
       /auto_tx_history/{capture=1;next} 
       capture && /tx_id: /{capture=0} 
       capture && /tx_id: "'"$txid"'"/{found=1;next} 
@@ -373,7 +373,7 @@ WAIT_FOR_EXECUTED_TX_BY_ID() {
     fi
 
     # Wait for the next blocks
-    WAIT_FOR_BLOCK $TRST_LOGS 1
+    WAIT_FOR_BLOCK $INTO_LOGS 1
 
     # Handle case where the transaction is not executed after max_blocks
     if [[ $i -eq $max_blocks ]]; then
@@ -397,8 +397,8 @@ GET_ICA_ADDR() {
   connection_id="$1"
   user_address="$2"
 
-  # $TRST_MAIN_CMD q stakeibc show-host-zone $chain_id | grep ${ica_type}_account -A 1 | grep address | awk '{print $2}'
-  $TRST_MAIN_CMD query auto-ibc-tx interchainaccounts $connection_id $user_address json | grep interchain_account_address | awk '{print $2}'
+  # $INTO_MAIN_CMD q stakeibc show-host-zone $chain_id | grep ${ica_type}_account -A 1 | grep address | awk '{print $2}'
+  $INTO_MAIN_CMD query auto-ibc-tx interchainaccounts $connection_id $user_address json | grep interchain_account_address | awk '{print $2}'
 }
 
 TRIM_TX() {

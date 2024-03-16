@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/trstlabs/trst/x/claim/types"
+	"github.com/trstlabs/intento/x/claim/types"
 )
 
 /*

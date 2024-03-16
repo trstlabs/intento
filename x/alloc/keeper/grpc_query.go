@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/trstlabs/trst/x/alloc/types"
+	"github.com/trstlabs/intento/x/alloc/types"
 )
 
 var _ types.QueryServer = Keeper{}

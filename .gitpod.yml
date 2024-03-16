@@ -1,11 +1,11 @@
-image: ghcr.io/trstlabs/trst-dev:latest
+image: ghcr.io/trstlabs/intento-dev:latest
 
 tasks:
   - name: set up permissions
     command: |
       sudo chown gitpod:gitpod /go -R
       sudo chown gitpod:gitpod /usr/local/cargo -R
-      export TRST_ENCLAVE_DIR=/workspace/trst/go-cosmwasm/
+      export INTO_ENCLAVE_DIR=/workspace/trst/go-cosmwasm/
 vscode:
   extensions:
     - rust-lang.rust

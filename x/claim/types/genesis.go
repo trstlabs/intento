@@ -22,7 +22,7 @@ func DefaultGenesis() *GenesisState {
 			AirdropStartTime:       time.Time{},
 			DurationUntilDecay:     DefaultDurationUntilDecay, // 2 month
 			DurationOfDecay:        DefaultDurationOfDecay,    // 4 months
-			ClaimDenom:             DefaultClaimDenom,         // utrst
+			ClaimDenom:             DefaultClaimDenom,         // uinto
 			DurationVestingPeriods: DefaultDurationVestingPeriods,
 		},
 		ClaimRecords: []ClaimRecord{},

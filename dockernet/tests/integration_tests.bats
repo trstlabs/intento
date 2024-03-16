@@ -34,10 +34,10 @@ setup_file() {
   # random address with nil balance
   HOST_RECEIVER_ADDRESS=$(GET_VAR_VALUE ${CHAIN_NAME}_RECEIVER_ADDRESS)
 
-  TRST_USER=$(GET_VAR_VALUE TRST_USER_ACCT)
-  TRST_VAL=${TRST_VAL_PREFIX}1
+  INTO_USER=$(GET_VAR_VALUE INTO_USER_ACCT)
+  INTO_VAL=${INTO_VAL_PREFIX}1
 
-  TRST_TRANFER_CHANNEL="channel-${TRANSFER_CHANNEL_NUMBER}"
+  INTO_TRANFER_CHANNEL="channel-${TRANSFER_CHANNEL_NUMBER}"
   HOST_TRANSFER_CHANNEL="channel-0"
 
   TRANSFER_AMOUNT=5000000
@@ -81,30 +81,30 @@ setup_file() {
 # Reordering existing tests could break them
 
 ##############################################################################################
-######                TEST BASIC TRST FUNCTIONALITY                                   ######
+######                TEST BASIC INTO FUNCTIONALITY                                   ######
 ##############################################################################################
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc transfer updates all balances" {
   # get initial balances
-  trst_user_trst_balance_start=$($TRST_MAIN_CMD q bank balances $(TRST_ADDRESS) --denom $TRST_DENOM | GETBAL)
-  host_user_trst_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $IBC_TRST_DENOM | GETBAL)
+  trst_user_trst_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
+  host_user_trst_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $IBC_INTO_DENOM | GETBAL)
   printf "host_user_trst_balance_start (sender): %s\n" "$host_user_trst_balance_start"
-  trst_user_token_balance_start=$($TRST_MAIN_CMD q bank balances $(TRST_ADDRESS) --denom $HOST_IBC_DENOM | GETBAL)
+  trst_user_token_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $HOST_IBC_DENOM | GETBAL)
   host_user_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
   printf "host_user_token_balance_start (sender): %s\n" "$host_user_token_balance_start"
   # do IBC transfer
-  $TRST_MAIN_CMD tx ibc-transfer transfer transfer $TRST_TRANFER_CHANNEL $HOST_USER_ADDRESS ${TRANSFER_AMOUNT}${TRST_DENOM} --from $TRST_USER -y
-  $HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL $(TRST_ADDRESS) ${TRANSFER_AMOUNT}${HOST_DENOM} --from $HOST_USER -y
+  $INTO_MAIN_CMD tx ibc-transfer transfer transfer $INTO_TRANFER_CHANNEL $HOST_USER_ADDRESS ${TRANSFER_AMOUNT}${INTO_DENOM} --from $INTO_USER -y
+  $HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL $(INTO_ADDRESS) ${TRANSFER_AMOUNT}${HOST_DENOM} --from $HOST_USER -y
 
-  WAIT_FOR_BLOCK $TRST_LOGS 8
+  WAIT_FOR_BLOCK $INTO_LOGS 8
 
   # get new balances
-  trst_user_trst_balance_end=$($TRST_MAIN_CMD q bank balances $(TRST_ADDRESS) --denom $TRST_DENOM | GETBAL)
-  host_user_trst_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $IBC_TRST_DENOM | GETBAL)
+  trst_user_trst_balance_end=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
+  host_user_trst_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $IBC_INTO_DENOM | GETBAL)
 
-  trst_user_token_balance_end=$($TRST_MAIN_CMD q bank balances $(TRST_ADDRESS) --denom $HOST_IBC_DENOM | GETBAL)
+  trst_user_token_balance_end=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $HOST_IBC_DENOM | GETBAL)
   host_user_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
 
-  # get all TRST balance diffs
+  # get all INTO balance diffs
   trst_user_trst_balance_diff=$((trst_user_trst_balance_start - trst_user_trst_balance_end))
   host_user_trst_balance_diff=$((host_user_trst_balance_start - host_user_trst_balance_end))
 
@@ -123,19 +123,19 @@ setup_file() {
   # get initial balances on host account
   receiver_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
 
-  # get token balance user on TRST
-  user_trst_balance_start=$($TRST_MAIN_CMD q bank balances $(TRST_ADDRESS) --denom $TRST_DENOM | GETBAL)
+  # get token balance user on INTO
+  user_trst_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
 
   # build MsgRegisterAccount and retrieve trigger ICA account
-  $TRST_MAIN_CMD tx autoibctx register --connection-id connection-$CONNECTION_ID --counterparty-connection-id connection-0 --from $TRST_USER -y
+  $INTO_MAIN_CMD tx autoibctx register --connection-id connection-$CONNECTION_ID --counterparty-connection-id connection-0 --from $INTO_USER -y
 
   sleep 20
-  ICA_ADDRESS=$($TRST_MAIN_CMD q autoibctx interchainaccounts $(TRST_ADDRESS) connection-$CONNECTION_ID)
+  ICA_ADDRESS=$($INTO_MAIN_CMD q autoibctx interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
   ICA_ADDRESS=$(echo "$ICA_ADDRESS" | awk '{print $2}')
 
   fund_ica=$($HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ICA_ADDRESS $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
 
-  WAIT_FOR_BLOCK $TRST_LOGS 2
+  WAIT_FOR_BLOCK $INTO_LOGS 2
 
   ica_token_balance_start=$($HOST_MAIN_CMD q bank balances $ICA_ADDRESS --denom $HOST_DENOM | GETBAL)
 
@@ -156,12 +156,12 @@ setup_file() {
 EOF
 
   # build MsgSubmitAutoTx with MsgSend, 60sec non-recurring
-  msg_submit_auto_tx=$($TRST_MAIN_CMD tx autoibctx submit-auto-tx "$msg_send_file" --label "MsgSend using ICA" --duration "60s" --connection-id connection-$CONNECTION_ID --from $TRST_USER -y)
+  msg_submit_auto_tx=$($INTO_MAIN_CMD tx autoibctx submit-auto-tx "$msg_send_file" --label "MsgSend using ICA" --duration "60s" --connection-id connection-$CONNECTION_ID --from $INTO_USER -y)
   echo "$msg_submit_auto_tx"
 
-  GET_AUTO_TX_ID $(TRST_ADDRESS) 8
+  GET_AUTO_TX_ID $(INTO_ADDRESS) 8
   
-  WAIT_FOR_EXECUTED_TX_BY_ID $(TRST_ADDRESS) 50
+  WAIT_FOR_EXECUTED_TX_BY_ID $(INTO_ADDRESS) 50
 
   # calculate difference between token balance user before and after, should equal MSGSEND_AMOUNT
   ica_token_balance_end=$($HOST_MAIN_CMD q bank balances $ICA_ADDRESS --denom $HOST_DENOM | GETBAL)
@@ -180,15 +180,15 @@ EOF
   user_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
   receiver_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
 
-  # get token balance user on TRST
-  user_trst_balance_start=$($TRST_MAIN_CMD q bank balances $(TRST_ADDRESS) --denom $TRST_DENOM | GETBAL)
+  # get token balance user on INTO
+  user_trst_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
 
-  ICA_ADDRESS=$($TRST_MAIN_CMD q autoibctx interchainaccounts $(TRST_ADDRESS) connection-$CONNECTION_ID)
+  ICA_ADDRESS=$($INTO_MAIN_CMD q autoibctx interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
   ICA_ADDRESS=$(echo "$ICA_ADDRESS" | awk '{print $2}')
   echo "ICA ADDR: $ICA_ADDRESS"
 
   $HOST_MAIN_CMD_TX authz grant $ICA_ADDRESS generic --msg-type "/cosmos.bank.v1beta1.MsgSend" --from $HOST_USER -y
-  WAIT_FOR_BLOCK $TRST_LOGS 2
+  WAIT_FOR_BLOCK $INTO_LOGS 2
   $HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ICA_ADDRESS $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y
 
   # Define the file path
@@ -216,12 +216,12 @@ EOF
 EOF
 
   # build MsgSubmitAutoTx with MsgSend, 60sec non-recurring
-  msg_submit_auto_tx=$($TRST_MAIN_CMD tx autoibctx submit-auto-tx "$msg_exec_file" --label "MsgSend using AuthZ" --duration "60s" --connection-id connection-$CONNECTION_ID --from $TRST_USER -y)
+  msg_submit_auto_tx=$($INTO_MAIN_CMD tx autoibctx submit-auto-tx "$msg_exec_file" --label "MsgSend using AuthZ" --duration "60s" --connection-id connection-$CONNECTION_ID --from $INTO_USER -y)
   echo "$msg_submit_auto_tx"
 
-  GET_AUTO_TX_ID $(TRST_ADDRESS) 8
+  GET_AUTO_TX_ID $(INTO_ADDRESS) 8
   
-  WAIT_FOR_EXECUTED_TX_BY_ID $(TRST_ADDRESS) 50
+  WAIT_FOR_EXECUTED_TX_BY_ID $(INTO_ADDRESS) 50
 
   # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
   user_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
@@ -245,16 +245,16 @@ EOF
   receiver_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
 
   # do IBC transfer
-  memo='{"auto_tx": {"msgs": [{"@type": "/cosmos.bank.v1beta1.MsgSend","amount": [{"amount": "'$MSGSEND_AMOUNT'","denom": "'$HOST_DENOM'"}],"from_address":"ICA_ADDR","to_address": "'$HOST_RECEIVER_ADDRESS'"}],"duration":"2880h","interval":"60s","label":"MsgSend using ICS20 hook","cid":"connection-'$CONNECTION_ID'","start_at":"0", "owner": "'$(TRST_ADDRESS)'" }}'
-  $HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL $(TRST_ADDRESS) ${ICS20HOOK_AMOUNT}${IBC_TRST_DENOM} --memo "$memo" --from $HOST_USER -y
+  memo='{"auto_tx": {"msgs": [{"@type": "/cosmos.bank.v1beta1.MsgSend","amount": [{"amount": "'$MSGSEND_AMOUNT'","denom": "'$HOST_DENOM'"}],"from_address":"ICA_ADDR","to_address": "'$HOST_RECEIVER_ADDRESS'"}],"duration":"2880h","interval":"60s","label":"MsgSend using ICS20 hook","cid":"connection-'$CONNECTION_ID'","start_at":"0", "owner": "'$(INTO_ADDRESS)'" }}'
+  $HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL $(INTO_ADDRESS) ${ICS20HOOK_AMOUNT}${IBC_INTO_DENOM} --memo "$memo" --from $HOST_USER -y
 
-  GET_AUTO_TX_ID $(TRST_ADDRESS) 8
+  GET_AUTO_TX_ID $(INTO_ADDRESS) 8
 
-  ICA_ADDRESS=$($TRST_MAIN_CMD q autoibctx interchainaccounts $(TRST_ADDRESS) connection-$CONNECTION_ID)
+  ICA_ADDRESS=$($INTO_MAIN_CMD q autoibctx interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
   ICA_ADDRESS=$(echo "$ICA_ADDRESS" | awk '{print $2}')
   $HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ICA_ADDRESS $MSGSEND_AMOUNT_TOTAL$HOST_DENOM --from $HOST_USER -y
   
-  WAIT_FOR_EXECUTED_TX_BY_ID $(TRST_ADDRESS) 50
+  WAIT_FOR_EXECUTED_TX_BY_ID $(INTO_ADDRESS) 50
 
   # calculate difference between token balance of host user before and after, should equal 2xMSGSEND_AMOUNT
   user_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)

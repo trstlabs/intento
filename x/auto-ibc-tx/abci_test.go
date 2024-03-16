@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
-	keeper "github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	keeper "github.com/trstlabs/intento/x/auto-ibc-tx/keeper"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 func TestBeginBlocker(t *testing.T) {

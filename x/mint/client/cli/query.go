@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/trstlabs/trst/x/mint/types"
+	"github.com/trstlabs/intento/x/mint/types"
 )
 
 // GetQueryCmd returns the cli query commands for the minting module.

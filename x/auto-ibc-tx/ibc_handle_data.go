@@ -9,8 +9,8 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	proto "github.com/cosmos/gogoproto/proto"
-	msgregistry "github.com/trstlabs/trst/x/auto-ibc-tx/msg_registry"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	msgregistry "github.com/trstlabs/intento/x/auto-ibc-tx/msg_registry"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (proto.Message, int, error) {

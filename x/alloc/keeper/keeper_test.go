@@ -10,8 +10,8 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/suite"
-	"github.com/trstlabs/trst/app"
-	"github.com/trstlabs/trst/x/alloc/types"
+	"github.com/trstlabs/intento/app"
+	"github.com/trstlabs/intento/x/alloc/types"
 )
 
 type KeeperTestSuite struct {

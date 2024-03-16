@@ -4,7 +4,7 @@ FROM alpine:3.15
 ARG upgrade_name
 ENV UPGRADE_NAME=$upgrade_name
 
-ENV DAEMON_NAME=trstd
+ENV DAEMON_NAME=intentod
 ENV DAEMON_HOME=/home/trst/.trst
 ENV DAEMON_RESTART_AFTER_UPGRADE=true
 ENV COSMOVISOR_HOME=/home/trst/cosmovisor
@@ -14,9 +14,9 @@ RUN apk add --update vim bash \
     && adduser -S -h /home/trst -D trst -u 1000 -G trst
 
 COPY --from=trustlesshub:cosmovisor /opt/cosmos-sdk/cosmovisor/cosmovisor /usr/local/bin/cosmovisor
-COPY --from=trustlesshub:cosmovisor --chown=trst:trst /opt/build/trstd1 ${COSMOVISOR_HOME}/genesis/bin/trstd
-COPY --from=trustlesshub:trst --chown=trst:trst /usr/local/bin/trstd ${COSMOVISOR_HOME}/upgrades/${UPGRADE_NAME}/bin/trstd
-COPY --from=trustlesshub:trst --chown=trst:trst /usr/local/bin/trstd /usr/local/bin/trstd
+COPY --from=trustlesshub:cosmovisor --chown=trst:trst /opt/build/intentod1 ${COSMOVISOR_HOME}/genesis/bin/intentod
+COPY --from=trustlesshub:trst --chown=trst:trst /usr/local/bin/intentod ${COSMOVISOR_HOME}/upgrades/${UPGRADE_NAME}/bin/intentod
+COPY --from=trustlesshub:trst --chown=trst:trst /usr/local/bin/intentod /usr/local/bin/intentod
 
 USER trst
 WORKDIR /home/trst

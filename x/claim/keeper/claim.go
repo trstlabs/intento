@@ -9,7 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/trstlabs/trst/x/claim/types"
+	"github.com/trstlabs/intento/x/claim/types"
 )
 
 // GetModuleAccountAddress gets the airdrop coin balance of module account

@@ -8,12 +8,12 @@ chains:
     type: cosmos
     value:
       key: rly1
-      chain-id: TRST
+      chain-id: INTO
       rpc-addr: http://trst2:26657
       account-prefix: trust
       keyring-backend: test
       gas-adjustment: 1.3
-      gas-prices: 0.02utrst
+      gas-prices: 0.02uinto
       coin-type: 118
       debug: false
       timeout: 40s
@@ -130,7 +130,7 @@ chains:
 paths:
   trst-gaia:
     src:
-      chain-id: TRST
+      chain-id: INTO
     dst:
       chain-id: GAIA
     src-channel-filter:
@@ -138,7 +138,7 @@ paths:
       channel-list: []
   trst-osmo:
     src:
-      chain-id: TRST
+      chain-id: INTO
     dst:
       chain-id: OSMO
     src-channel-filter:
@@ -146,7 +146,7 @@ paths:
       channel-list: []
   trst-juno:
     src:
-      chain-id: TRST
+      chain-id: INTO
     dst:
       chain-id: JUNO
     src-channel-filter:
@@ -154,7 +154,7 @@ paths:
       channel-list: []
   trst-stars:
     src:
-      chain-id: TRST
+      chain-id: INTO
     dst:
       chain-id: STARS
     src-channel-filter:
@@ -162,7 +162,7 @@ paths:
       channel-list: []
   trst-host:
     src:
-      chain-id: TRST
+      chain-id: INTO
     dst:
       chain-id: HOST
     src-channel-filter:
@@ -170,7 +170,7 @@ paths:
       channel-list: []
   trst-evmos:
     src:
-      chain-id: TRST
+      chain-id: INTO
     dst:
       chain-id: evmos_9001-2
     src-channel-filter:
@@ -178,7 +178,7 @@ paths:
       channel-list: []
   # trst-{new-host-zone}:
   #   src:
-  #     chain-id: TRST
+  #     chain-id: INTO
   #   dst:
   #     chain-id: {CHAIN_ID}
   #   src-channel-filter:

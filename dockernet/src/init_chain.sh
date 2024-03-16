@@ -33,7 +33,7 @@ set_trst_genesis() {
 
     # update params
     jq '.app_state.claim.claim_records[0].address = "trust1nf6v2paty9m22l3ecm7dpakq2c92ueyue2d5yv"' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    jq '.app_state.claim.claim_records[0].initial_claimable_amount = [{"amount":"10000","denom":"utrst"}]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].initial_claimable_amount = [{"amount":"10000","denom":"uinto"}]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].status[0].action_completed = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].status[0].vesting_period_completed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].status[0].vesting_period_claimed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
@@ -84,7 +84,7 @@ echo "Initializing $CHAIN chain..."
 for (( i=1; i <= $NUM_NODES; i++ )); do
     # Node names will be of the form: "trst1"
     node_name="${NODE_PREFIX}${i}"
-    # Moniker is of the form: TRST_1
+    # Moniker is of the form: INTO_1
     moniker=$(printf "${NODE_PREFIX}_${i}" | awk '{ print toupper($0) }')
 
     # Create a state directory for the current node and initialize the chain
@@ -103,7 +103,7 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     chmod -R 777 $STATE/$node_name
 
     # set testnet params
-    if [ "$CHAIN" == "TRST" ]; then
+    if [ "$CHAIN" == "INTO" ]; then
     $cmd prepare-genesis testnet $CHAIN_ID
     fi
 
@@ -168,16 +168,16 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     fi
 done
 
-if [ "$CHAIN" == "TRST" ]; then
+if [ "$CHAIN" == "INTO" ]; then
     # Add the trst trigger admin account
-    echo "$TRST_ADMIN_MNEMONIC" | $MAIN_CMD keys add $TRST_ADMIN_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
-    TRST_ADMIN_ADDRESS=$($MAIN_CMD keys show $TRST_ADMIN_ACCT --keyring-backend test -a)
-    $MAIN_CMD add-genesis-account ${TRST_ADMIN_ADDRESS} ${ADMIN_TOKENS}${DENOM}
+    echo "$INTO_ADMIN_MNEMONIC" | $MAIN_CMD keys add $INTO_ADMIN_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
+    INTO_ADMIN_ADDRESS=$($MAIN_CMD keys show $INTO_ADMIN_ACCT --keyring-backend test -a)
+    $MAIN_CMD add-genesis-account ${INTO_ADMIN_ADDRESS} ${ADMIN_TOKENS}${DENOM}
 
     echo "$TEST_FAUCET_MNEMONIC" | $MAIN_CMD keys add $TEST_FAUCET_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
-    TRST_TEST_FAUCET_ADDRESS=$($MAIN_CMD keys show $TEST_FAUCET_ACCT --keyring-backend test -a)
-    echo "FAUCET Address: " $TRST_TEST_FAUCET_ADDRESS
-    $MAIN_CMD add-genesis-account ${TRST_TEST_FAUCET_ADDRESS} ${FAUCET_TOKENS}${DENOM}
+    INTO_TEST_FAUCET_ADDRESS=$($MAIN_CMD keys show $TEST_FAUCET_ACCT --keyring-backend test -a)
+    echo "FAUCET Address: " $INTO_TEST_FAUCET_ADDRESS
+    $MAIN_CMD add-genesis-account ${INTO_TEST_FAUCET_ADDRESS} ${FAUCET_TOKENS}${DENOM}
 
     # Add a user account
     USER_ACCT_VAR=${CHAIN}_USER_ACCT
@@ -229,7 +229,7 @@ sed -i -E "s|persistent_peers = .*|persistent_peers = \"\"|g" $MAIN_CONFIG
 sed -i -E "s|seeds = .*|seeds = \"\"|g" $MAIN_CONFIG
 
 # update chain-specific settings
-if [ "$CHAIN" == "TRST" ]; then 
+if [ "$CHAIN" == "INTO" ]; then 
    # sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"500ms\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"1s\"|g" $MAIN_CONFIG

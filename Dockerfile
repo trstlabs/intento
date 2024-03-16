@@ -23,20 +23,20 @@ RUN LINK_STATICALLY=true make build
 # Add to a distroless container
 FROM ${RUNNER_IMAGE}
 
-COPY --from=builder /opt/build/trstd /usr/local/bin/trstd
+COPY --from=builder /opt/build/intentod /usr/local/bin/intentod
 RUN apk add bash vim sudo dasel \
-    && addgroup -g 1000 trst \
-    && adduser -S -h /home/trst -D trst -u 1000 -G trst 
+    && addgroup -g 1000 intento \
+    && adduser -S -h /home/intento -D intento -u 1000 -G intento 
 
 RUN mkdir -p /etc/sudoers.d \
     && echo '%wheel ALL=(ALL) ALL' > /etc/sudoers.d/wheel \
     && echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers \
-    && adduser trst wheel 
+    && adduser intento wheel 
 
 USER 1000
-ENV HOME /home/trst
+ENV HOME /home/intento
 WORKDIR $HOME
 
 EXPOSE 26657 26656 1317 9090
 
-CMD ["trstd", "start"]
+CMD ["intentod", "start"]

@@ -13,6 +13,6 @@ current_branch=$(git rev-parse --abbrev-ref HEAD)
 git checkout $UPGRADE_OLD_VERSION
 bash ${DOCKERNET_HOME}/build.sh -s ${BUILDDIR}
 mkdir -p ${DOCKERNET_HOME}/upgrades/binaries
-rm -f ${DOCKERNET_HOME}/upgrades/binaries/trstd1
-cp ${BUILDDIR}/trstd ${DOCKERNET_HOME}/upgrades/binaries/trstd1
+rm -f ${DOCKERNET_HOME}/upgrades/binaries/intentod1
+cp ${BUILDDIR}/intentod ${DOCKERNET_HOME}/upgrades/binaries/intentod1
 git checkout $current_branch

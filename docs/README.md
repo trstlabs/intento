@@ -1,20 +1,39 @@
-![Welcome to Intento](./images/banner.png)
+<!--
+parent:
+  order: false
+layout: home
+-->
 
-# Intento
+# Cosmos Hub Documentation
 
-Intento is a decentralized finance (DeFi) platform for automation of on-chain processes and enables recurring transfers, time-based strategies, and autonomous services. 
-Intento brings traditional finance features to the DeFi space, allowing users to automate their on-chain processes in a secure manner. The platform offers several advantages over current solutions, such as bot networks, including enhanced efficiency, and the ability to automate assets without locking assets in smart contracts. 
+Welcome to the documentation of the **Cosmos Hub application: `gaia`**.
 
-Using the Inter-Blockchain Communication (IBC) and Interchain Accounts industry standards, this allows developers and organizations to create powerful automated services including payroll and subscription services on any IBC-enabled chain whilst keeping balances on that chain.
+## What is Gaia?
 
-With Intento, users can schedule transactions for recurring transfers, subscriptions, trading and asset management in a seamless manner. The platform also enables time-based strategies, such as dollar-cost averaging, for DeFi users while retaining full control of their assets. Additionally, on-chain autonomous agents can perform various functions, such as facilitating transactions and managing assets across time.
+- [Intro to the `gaia` software](./getting-started/what-is-gaia.md)
+- [Interacting with the `gaiad` binary](./hub-tutorials/gaiad.md)
 
+## Join the Cosmos Hub Mainnet
 
-## Using BFT consensus and Cosmos SDK
+- [Install the `gaia` application](./getting-started/installation.md)
+- [Upgrade to a validator node](./validators/validator-setup.md)
 
-Many projects already showcase the Cosmos BFT consensus engine and the Cosmos SDK. Explore the [Cosmos Network Ecosystem](https://cosmos.network/ecosystem/apps) to discover a wide variety of apps, blockchains, wallets, and explorers that are built in the Cosmos ecosystem.
+## Join the Cosmos Hub Public Testnet
 
-## Applications
+- [Join the testnet](./hub-tutorials/join-testnet.md)
 
-* [TriggerPørtal](https://triggerportal.zone) - Schedule payments and trigger automations and across IBC-enabled blockchains
-<!-- * [Interact Wallet](https://interact.trustlesshub.com) - Wallet interface to send tokens, stake and interact with Trustless Contracts -->
+## Setup Your Own `gaia` Testnet
+
+- [Setup your own `gaia` testnet](https://github.com/cosmos/testnets/tree/master/local/previous-local-testnets/v7-theta)
+
+## Additional Resources
+
+- [Validator Resources](./validators/README.md): Contains documentation for `gaia` validators.
+- [Delegator Resources](./delegators/README.md): Contains documentation for delegators.
+- [Other Resources](./resources/README.md): Contains documentation on `gaiad`, genesis file, service providers, ledger wallets, ...
+- [Cosmos Hub Archives](./resources/archives.md): State archives of past iteration of the Cosmos Hub.
+
+# Contribute
+
+See [this file](./DOCS_README.md) for details of the build process and
+considerations when making changes.

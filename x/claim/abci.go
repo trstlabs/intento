@@ -4,7 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/trstlabs/trst/x/claim/keeper"
+	"github.com/trstlabs/intento/x/claim/keeper"
 )
 
 // EndBlocker called every block, process inflation, update validator set.

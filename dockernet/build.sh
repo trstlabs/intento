@@ -17,12 +17,12 @@ build_local_and_docker() {
 
    printf '%s' "Building $title Locally...  "
 
-   trst_home=$PWD
+   intento_home=$PWD
    cd $folder
 
    # Clear any previously build binaries, otherwise the binary can get corrupted
-   if [[ "$module" == "trst" ]]; then
-      rm -f build/trstd
+   if [[ "$module" == "intento" ]]; then
+      rm -f build/intentod
    else
       rm -f build/*
    fi
@@ -33,7 +33,7 @@ build_local_and_docker() {
    # The following command overrides the check_version using a temporary Makefile override
    BUILDDIR=$BUILDDIR make -f Makefile -f <(echo -e 'check_version: ;') build --silent 
    local_build_succeeded=${PIPESTATUS[0]}
-   cd $trst_home
+   cd $intento_home
 
    # Some projects have a hard coded build directory, while others allow the passing of BUILDDIR
    # In the event that they have it hard coded, this will copy it into our build directory
@@ -48,7 +48,7 @@ build_local_and_docker() {
    fi
 
    echo "Building $title Docker... "
-   if [[ "$module" == "trst" ]]; then
+   if [[ "$module" == "intento" ]]; then
       image=Dockerfile
    else
       image=dockernet/dockerfiles/Dockerfile.$module
@@ -70,7 +70,7 @@ build_local_and_docker() {
 # build docker images and local binaries
 while getopts tgjosehrn flag; do
    case "${flag}" in
-      t) build_local_and_docker trst . ;;
+      t) build_local_and_docker intento . ;;
       g) build_local_and_docker gaia deps/gaia ;;
       j) build_local_and_docker juno deps/juno ;;
       o) build_local_and_docker osmo deps/osmosis ;;

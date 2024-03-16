@@ -1,4 +1,4 @@
-name: Compile TRST
+name: Compile INTO
 
 on:
   push:
@@ -31,5 +31,5 @@ jobs:
         run: make build
       - uses: actions/upload-artifact@v3
         with:
-          name: trstd ${{ matrix.targetos }} ${{ matrix.arch }}
-          path: build/trstd
+          name: intentod ${{ matrix.targetos }} ${{ matrix.arch }}
+          path: build/intentod

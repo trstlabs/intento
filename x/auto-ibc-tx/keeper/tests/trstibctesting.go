@@ -1,4 +1,4 @@
-package trstibctesting
+package intentoibctesting
 
 import (
 	"encoding/json"
@@ -7,9 +7,9 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
-	"github.com/trstlabs/trst/app"
-	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
-	// "github.com/trstlabs/trst/x/compute"
+	"github.com/trstlabs/intento/app"
+	autoibctxtypes "github.com/trstlabs/intento/x/auto-ibc-tx/types"
+	// "github.com/trstlabs/intento/x/compute"
 )
 
 type TestChain struct {

@@ -18,9 +18,9 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/trstlabs/trst/x/alloc/client/cli"
-	"github.com/trstlabs/trst/x/alloc/keeper"
-	"github.com/trstlabs/trst/x/alloc/types"
+	"github.com/trstlabs/intento/x/alloc/client/cli"
+	"github.com/trstlabs/intento/x/alloc/keeper"
+	"github.com/trstlabs/intento/x/alloc/types"
 )
 
 var (

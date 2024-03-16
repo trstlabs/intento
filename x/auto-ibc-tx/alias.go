@@ -1,8 +1,8 @@
 package autoibctx
 
 import (
-	"github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/keeper"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 const (

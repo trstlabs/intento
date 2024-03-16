@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Specify the TRST version tag"
+        description: "Specify the INTO version tag"
 
 jobs:
   build-image:
@@ -38,6 +38,6 @@ jobs:
           DOCKER_BUILDKIT: 1
         shell: bash
         run: |
-          tag=ghcr.io/trstlabs/trst:${{ env.version }}
+          tag=ghcr.io/trstlabs/intento:${{ env.version }}
           docker build -t $tag .
           docker push $tag

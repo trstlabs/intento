@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
-	"github.com/trstlabs/trst/x/claim/types"
+	"github.com/trstlabs/intento/x/claim/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

@@ -23,9 +23,9 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	appparams "github.com/trstlabs/trst/app/params"
-	claimkeeper "github.com/trstlabs/trst/x/claim/keeper"
-	claimtypes "github.com/trstlabs/trst/x/claim/types"
+	appparams "github.com/trstlabs/intento/app/params"
+	claimkeeper "github.com/trstlabs/intento/x/claim/keeper"
+	claimtypes "github.com/trstlabs/intento/x/claim/types"
 
 	//icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
@@ -35,7 +35,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
-	///auto-ibc-tx "github.com/trstlabs/trst/x/auto-ibc-tx"
+	///auto-ibc-tx "github.com/trstlabs/intento/x/auto-ibc-tx"
 
 	"github.com/stretchr/testify/require"
 
@@ -82,8 +82,8 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	mintkeeper "github.com/trstlabs/trst/x/mint/keeper"
-	minttypes "github.com/trstlabs/trst/x/mint/types"
+	mintkeeper "github.com/trstlabs/intento/x/mint/keeper"
+	minttypes "github.com/trstlabs/intento/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -95,8 +95,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 
-	autoibctxtypes "github.com/trstlabs/trst/x/auto-ibc-tx/types"
-	// "github.com/trstlabs/trst/x/registration"
+	autoibctxtypes "github.com/trstlabs/intento/x/auto-ibc-tx/types"
+	// "github.com/trstlabs/intento/x/registration"
 )
 
 func setupTest(t *testing.T, additionalCoinsInWallets sdk.Coins) (sdk.Context, Keeper, sdk.AccAddress, crypto.PrivKey, sdk.AccAddress, crypto.PrivKey) {

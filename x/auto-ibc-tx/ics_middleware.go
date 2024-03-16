@@ -20,8 +20,8 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/keeper"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 var _ porttypes.Middleware = &IBCMiddleware{}

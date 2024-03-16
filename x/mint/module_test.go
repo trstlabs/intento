@@ -11,7 +11,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/testutil"
 	"github.com/stretchr/testify/require"
-	"github.com/trstlabs/trst/x/mint/types"
+	"github.com/trstlabs/intento/x/mint/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

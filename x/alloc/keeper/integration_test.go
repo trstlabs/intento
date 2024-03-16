@@ -9,9 +9,9 @@ import (
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	app "github.com/trstlabs/trst/app"
-	"github.com/trstlabs/trst/x/mint/types"
-	// "github.com/trstlabs/trst/x/compute"
+	app "github.com/trstlabs/intento/app"
+	"github.com/trstlabs/intento/x/mint/types"
+	// "github.com/trstlabs/intento/x/compute"
 )
 
 // returns context and an app with updated mint keeper

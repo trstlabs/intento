@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	//tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 func newFakeMsgWithdrawDelegatorReward(delegator sdk.AccAddress, validator stakingtypes.Validator) *distrtypes.MsgWithdrawDelegatorReward {

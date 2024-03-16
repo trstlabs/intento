@@ -139,7 +139,7 @@ services:
   # being run when testing upgrades
   host1:
     image: trustlesshub:trst
-    command: trstd start
+    command: intentod start
     volumes:
       - ./state/host1:/home/trst/.trst
     ports:
@@ -149,25 +149,25 @@ services:
 
   host2:
     image: trustlesshub:trst
-    command: trstd start
+    command: intentod start
     volumes:
       - ./state/host2:/home/trst/.trst
 
   host3:
     image: trustlesshub:trst
-    command: trstd start
+    command: intentod start
     volumes:
       - ./state/host3:/home/trst/.trst
 
   host4:
     image: trustlesshub:trst
-    command: trstd start
+    command: intentod start
     volumes:
       - ./state/host4:/home/trst/.trst
 
   host5:
     image: trustlesshub:trst
-    command: trstd start
+    command: intentod start
     volumes:
       - ./state/host5:/home/trst/.trst
 

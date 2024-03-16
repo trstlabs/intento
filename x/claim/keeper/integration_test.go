@@ -8,8 +8,8 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/trstlabs/trst/app"
-	"github.com/trstlabs/trst/x/mint/types"
+	"github.com/trstlabs/intento/app"
+	"github.com/trstlabs/intento/x/mint/types"
 )
 
 // returns context and an app with updated mint keeper

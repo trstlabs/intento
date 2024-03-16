@@ -3,10 +3,10 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 
 	// authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
-	// "github.com/trstlabs/trst/x/AutoIbcTx/internal/types"
+	// "github.com/trstlabs/intento/x/AutoIbcTx/internal/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -82,7 +82,7 @@ func (k Keeper) GetAutoIbcTxModuleAccount(ctx sdk.Context) (ModuleName authtypes
 
 // GetAutoIbcTxModuleBalance returns the module account balance
 func (k Keeper) GetAutoIbcTxModuleBalance(ctx sdk.Context) sdk.Coin {
-	return k.bankKeeper.GetBalance(ctx, k.GetAutoIbcTxModuleAccount(ctx).GetAddress(), "utrst")
+	return k.bankKeeper.GetBalance(ctx, k.GetAutoIbcTxModuleAccount(ctx).GetAddress(), "uinto")
 }
 
 // InitializeAutoIbcTxModule sets up the module account from genesis

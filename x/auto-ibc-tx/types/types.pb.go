@@ -310,7 +310,7 @@ type Params struct {
 	MinAutoTxDuration time.Duration `protobuf:"bytes,6,opt,name=MinAutoTxDuration,proto3,stdduration" json:"min_auto_tx_duration,omitempty"`
 	//  Minimum period for self-executing AutoTx
 	MinAutoTxInterval time.Duration `protobuf:"bytes,8,opt,name=MinAutoTxInterval,proto3,stdduration" json:"min_auto_tx_interval,omitempty"`
-	//relayer rewards in utrst for each message type 0=SDK,1=Wasm, 2=Osmo. Rewards are in utrst and topped up in the module account by alloc module.
+	//relayer rewards in uinto for each message type 0=SDK,1=Wasm, 2=Osmo. Rewards are in uinto and topped up in the module account by alloc module.
 	RelayerRewards []int64 `protobuf:"varint,9,rep,packed,name=relayer_rewards,json=relayerRewards,proto3" json:"relayer_rewards,omitempty"`
 }
 

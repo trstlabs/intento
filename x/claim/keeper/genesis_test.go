@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	"github.com/trstlabs/trst/x/claim"
-	"github.com/trstlabs/trst/x/claim/types"
+	"github.com/trstlabs/intento/x/claim"
+	"github.com/trstlabs/intento/x/claim/types"
 )
 
 func (s *KeeperTestSuite) TestExportGenesis() {

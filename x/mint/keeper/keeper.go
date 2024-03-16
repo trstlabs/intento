@@ -6,7 +6,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/trstlabs/trst/x/mint/types"
+	"github.com/trstlabs/intento/x/mint/types"
 )
 
 // Keeper of the mint store

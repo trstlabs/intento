@@ -1,4 +1,4 @@
-module github.com/trstlabs/trst
+module github.com/trstlabs/intento
 
 go 1.20
 

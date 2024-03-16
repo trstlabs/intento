@@ -6,7 +6,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 )
 
-var Denom = "utrst"
+var Denom = "uinto"
 var ParseICAValue = "ICA_ADDR"
 
 // GetTxMsgs unpacks sdk messages from any messages

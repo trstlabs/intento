@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package intento.alloc.v1beta1;
+
+option go_package = "github.com/trstlabs/intento/x/alloc/types";
+
+import "gogoproto/gogo.proto";
+
+message WeightedAddress {
+  string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+  string weight = 2 [
+    (gogoproto.moretags) = "yaml:\"weight\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message DistributionProportions {
+  string staking = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"staking\"",
+    (gogoproto.nullable) = false
+  ];
+  string trustless_contract_incentives = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"trustless_contract_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  string relayer_incentives = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"relayer_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  /*
+   string item_incentives = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"item_incentives\"",
+    (gogoproto.nullable) = false
+  ];
+  */
+  string contributor_rewards = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"contributor_rewards\"",
+    (gogoproto.nullable) = false
+  ];
+
+  // community_pool defines the proportion of the minted minted_denom that is
+  // to be allocated to the community pool.
+  string community_pool = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.moretags) = "yaml:\"community_pool\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message Params {
+  // distribution_proportions defines the proportion of the minted denom
+  DistributionProportions distribution_proportions = 1
+      [ (gogoproto.nullable) = false ];
+  // address to receive developer rewards
+  repeated WeightedAddress weighted_contributor_rewards_receivers = 2 [
+    (gogoproto.moretags) = "yaml:\"contributor_rewards_receiver\"",
+    (gogoproto.nullable) = false
+  ];
+}

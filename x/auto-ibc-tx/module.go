@@ -16,10 +16,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/client/cli"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/keeper"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/msg_registry"
-	"github.com/trstlabs/trst/x/auto-ibc-tx/types"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/client/cli"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/keeper"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/msg_registry"
+	"github.com/trstlabs/intento/x/auto-ibc-tx/types"
 )
 
 var (

@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/trstlabs/trst/x/claim/keeper"
-	"github.com/trstlabs/trst/x/claim/types"
+	"github.com/trstlabs/intento/x/claim/keeper"
+	"github.com/trstlabs/intento/x/claim/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

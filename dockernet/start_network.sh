@@ -5,7 +5,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source ${SCRIPT_DIR}/config.sh
 
 # Confirm binaries are present
-for chain in TRST ${HOST_CHAINS[@]}; do
+for chain in INTO ${HOST_CHAINS[@]}; do
     binary_path=$(GET_VAR_VALUE ${chain}_BINARY)
     binary_path=$(realpath "$binary_path")
     if [[ ! -e "$binary_path" ]]; then
@@ -28,8 +28,8 @@ if [[ "${UPGRADE_NAME:-}" != "" ]]; then
     
     # Update binary #2 with the binary that was just compiled
     mkdir -p $UPGRADES/binaries
-    rm -f $UPGRADES/binaries/trstd2
-    cp $DOCKERNET_HOME/../build/trstd $UPGRADES/binaries/trstd2
+    rm -f $UPGRADES/binaries/intentod2
+    cp $DOCKERNET_HOME/../build/intentod $UPGRADES/binaries/intentod2
 
     # Build a cosmovisor image with the old binary and replace the trst docker image with a new one
     #  that has both binaries and is running cosmovisor
@@ -38,10 +38,10 @@ if [[ "${UPGRADE_NAME:-}" != "" ]]; then
     docker build \
         -t trustlesshub:cosmovisor \
         --build-arg old_commit_hash=$UPGRADE_OLD_VERSION \
-        --build-arg trst_admin_address=$TRST_ADMIN_ADDRESS \
+        --build-arg trst_admin_address=$INTO_ADMIN_ADDRESS \
         -f $UPGRADES/Dockerfile.cosmovisor .
 
-    echo "Re-Building TRST with Upgrade Support..."
+    echo "Re-Building INTO with Upgrade Support..."
     docker build \
         -t trustlesshub:trst \
         --build-arg upgrade_name=$UPGRADE_NAME \
@@ -52,7 +52,7 @@ fi
 
 
 # Initialize the state for each chain
-for chain in TRST ${HOST_CHAINS[@]}; do
+for chain in INTO ${HOST_CHAINS[@]}; do
     echo "Initializing $chain..."
     bash $SRC/init_chain.sh $chain
 done

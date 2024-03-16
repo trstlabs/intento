@@ -16,7 +16,7 @@ done
 cd ..
 
 # Move proto files to the right places
-cp -r github.com/trstlabs/trst/x/* x/
+cp -r github.com/trstlabs/intento/x/* x/
 rm -rf github.com
 
 # go mod tidy

@@ -8,7 +8,7 @@ This is useful for Cosmos and smart contract developers wanting to automate mess
 
 Use cases include payroll, dollar-cost averaging, managing contract workflows. Respective messages for these actions are: MsgSend on any Cosmos SDK chain; MsgSwapExactAmountIn on Osmosis and MsgExecuteContract on CosmWasm chains.
 
-Local messages to this chain can also be scheduled. This can be used to Autocompound tokens to any validator, stream local TRST tokens or even stream IBC Transfers.
+Local messages to this chain can also be scheduled. This can be used to Autocompound tokens to any validator, stream local INTO tokens or even stream IBC Transfers.
 
 ## Automating user assets
 
@@ -50,7 +50,7 @@ const (
  // AutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
  DefaultAutoTxConstantFee int64 = 5_000 // 0.005trst
  // AutoTxFlexFeeMul is the denominator for the gas-dependent flex fee to prioritize auto messages in the block, to be distributed to validators
- DefaultAutoTxFlexFeeMul int64 = 3 // 3% of minutes for a given period as utrst (1_000m = 20utrst)
+ DefaultAutoTxFlexFeeMul int64 = 3 // 3% of minutes for a given period as uinto (1_000m = 20uinto)
  // RecurringAutoTxConstantFee fee to prevent spam of auto messages, to be distributed to community pool
  DefaultRecurringAutoTxConstantFee int64 = 5_000 // 0.005trst
  // Default max period for a AutoTx that is self-executing
@@ -123,7 +123,7 @@ ICS20 is JSON native, so we use JSON for the memo format.
             "interval":"11h",
             "start_at":"11h",
             "label":"my_label",
-            "cid":"connection-0", //optional, omit or leave blank in case local TRST message.
+            "cid":"connection-0", //optional, omit or leave blank in case local INTO message.
             "register_ica": "false"//optional, set to true to register interchain account
         },
         //"version":""//optional, will attempt to register account when filled (this will never override any existing ICA address)
@@ -140,7 +140,7 @@ An ICS20 packet is formatted correctly for submitting an auto_tx if the followin
 * `memo["auto_tx"]` has exactly the entries mentioned above
 * `memo["auto_tx"]["msgs"]` is an array with valid JSON SDK message objects with a key "@type" and sdk message values
 * `receiver == memo["auto_tx"]["owner"]`. Optional, owner should equal receiver and is the address that receives remaining fee balance after execution ends. 
-* `memo["auto_tx"]["connection_id"]`is a valid connectionID on TRST -> Destination chain, or blank/empty for local TRST execution of the message.
+* `memo["auto_tx"]["connection_id"]`is a valid connectionID on INTO -> Destination chain, or blank/empty for local INTO execution of the message.
 * `memo["auto_tx"]["register_ica"]` can be added, and true to register an ICA. 
 
 Fees are paid with a newly generated and AutoTx specific fee account.
