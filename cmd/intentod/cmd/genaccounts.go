@@ -292,14 +292,14 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 			}
 
 			// figure out normalizationFactor to normalize snapshot balances to desired airdrop supply
-			normalizationFactor := sdk.NewDecFromInt(genesisParams.AirdropSupply).QuoInt(snapshot.TotalTrstAirdropAmount)
+			normalizationFactor := sdk.NewDecFromInt(genesisParams.AirdropSupply).QuoInt(snapshot.TotalIntoAirdropAmount)
 
 			fmt.Printf("total snapshot accounts: %v\n", len(snapshot.Accounts))
 			fmt.Printf("normalization factor: %s\n", normalizationFactor)
-			fmt.Printf("snapshot total supply: %s\n", snapshot.TotalTrstAirdropAmount)
+			fmt.Printf("snapshot total supply: %s\n", snapshot.TotalIntoAirdropAmount)
 
 			// donating the remainder to the rainforrest foundation https://rainforestfoundation.org/
-			toDonate := genesisParams.AirdropSupply.Sub(snapshot.TotalTrstAirdropAmount)
+			toDonate := genesisParams.AirdropSupply.Sub(snapshot.TotalIntoAirdropAmount)
 			rainForrestFoundationAddr, _ := sdk.AccAddressFromHexUnsafe("17F318875145240F05259C65FCAB0E9C3DB92C0B")
 			nonAirdropAccs[rainForrestFoundationAddr.String()] = sdk.NewCoins(sdk.NewCoin("uinto", toDonate))
 			fmt.Printf("donated: %s \n", toDonate)
@@ -328,10 +328,10 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				// initial liquid amounts
 				// We consistently round down to the nearest uinto
 				// get normalized trst balance for account
-				normalizedTrstBalance := sdk.NewDecFromInt(acc.TrstBalance).Mul(normalizationFactor)
+				normalizedIntoBalance := sdk.NewDecFromInt(acc.IntoBalance).Mul(normalizationFactor)
 
-				//liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, acc.TrstBalance))
-				//liquidAmount := normalizedTrstBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
+				//liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, acc.IntoBalance))
+				//liquidAmount := normalizedIntoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
 				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, sdk.NewInt(696969)))
 
 				if coins, ok := nonAirdropAccs[address.String()]; ok {
@@ -353,10 +353,10 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				accs = append(accs, baseAccount)
 
 				// claimable balances
-				claimableAmount := normalizedTrstBalance.TruncateInt().Sub(sdk.NewInt(696969)) //.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
-				if normalizedTrstBalance.Sub(sdk.NewDec(696969)).IsNegative() {
+				claimableAmount := normalizedIntoBalance.TruncateInt().Sub(sdk.NewInt(696969)) //.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
+				if normalizedIntoBalance.Sub(sdk.NewDec(696969)).IsNegative() {
 					claimableAmount = sdk.ZeroInt()
-					liquidCoins = sdk.NewCoins(sdk.NewCoin("uinto", normalizedTrstBalance.TruncateInt()))
+					liquidCoins = sdk.NewCoins(sdk.NewCoin("uinto", normalizedIntoBalance.TruncateInt()))
 				}
 				status := claimtypes.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{

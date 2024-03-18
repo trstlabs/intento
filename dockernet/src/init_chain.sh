@@ -28,7 +28,7 @@ STAKE_TOKENS=${STAKE_TOKENS}${MICRO_DENOM_UNITS}
 ADMIN_TOKENS=${ADMIN_TOKENS}${MICRO_DENOM_UNITS}
 FAUCET_TOKENS=${FAUCET_TOKENS}${MICRO_DENOM_UNITS}
 
-set_trst_genesis() {
+set_into_genesis() {
     genesis_config=$1
 
     # update params
@@ -233,7 +233,7 @@ if [ "$CHAIN" == "INTO" ]; then
    # sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"500ms\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"1s\"|g" $MAIN_CONFIG
-    set_trst_genesis $MAIN_GENESIS
+    set_into_genesis $MAIN_GENESIS
 else
     # sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     set_host_genesis $MAIN_GENESIS

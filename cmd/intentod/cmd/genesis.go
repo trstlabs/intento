@@ -36,7 +36,7 @@ import (
 const (
 	HumanCoinUnit = "into"
 	BaseCoinUnit  = "uinto"
-	TrstExponent  = 6
+	IntoExponent  = 6
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
 	Bech32PrefixAccAddr = "into"
@@ -300,7 +300,7 @@ func MainnetGenesisParams() GenesisParams {
 				},
 				{
 					Denom:    HumanCoinUnit,
-					Exponent: TrstExponent,
+					Exponent: IntoExponent,
 					Aliases:  nil,
 				},
 			},

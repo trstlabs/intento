@@ -332,7 +332,7 @@ func (a appCreator) newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Wr
 		chainID = appGenesis.ChainID
 	}
 
-	return app.NewTrstApp(
+	return app.NewIntoApp(
 		logger, db, traceStore, true,
 		a.encCfg,
 		// this line is used by starport scaffolding # stargate/root/appArgument
@@ -357,7 +357,7 @@ func (a appCreator) appExport(
 	logger log.Logger, db cometbftdb.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	var anApp *app.TrstApp
+	var anApp *app.IntoApp
 
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
 	if !ok || homePath == "" {
@@ -365,7 +365,7 @@ func (a appCreator) appExport(
 	}
 
 	if height != -1 {
-		anApp = app.NewTrstApp(
+		anApp = app.NewIntoApp(
 			logger,
 			db,
 			traceStore,
@@ -379,7 +379,7 @@ func (a appCreator) appExport(
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		anApp = app.NewTrstApp(
+		anApp = app.NewIntoApp(
 			logger,
 			db,
 			traceStore,

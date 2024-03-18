@@ -193,8 +193,8 @@ var (
 )
 
 var (
-	_ runtime.AppI            = (*TrstApp)(nil)
-	_ servertypes.Application = (*TrstApp)(nil)
+	_ runtime.AppI            = (*IntoApp)(nil)
+	_ servertypes.Application = (*IntoApp)(nil)
 )
 
 func init() {
@@ -209,7 +209,7 @@ func init() {
 // App extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
-type TrstApp struct {
+type IntoApp struct {
 	*baseapp.BaseApp
 
 	legacyAmino       *codec.LegacyAmino
@@ -264,8 +264,8 @@ type TrstApp struct {
 	configurator module.Configurator
 }
 
-// NewTrstApp returns a reference to an initialized Trst App.
-func NewTrstApp(
+// NewIntoApp returns a reference to an initialized Into App.
+func NewIntoApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
@@ -273,7 +273,7 @@ func NewTrstApp(
 	encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
-) *TrstApp {
+) *IntoApp {
 
 	appCodec := encodingConfig.Codec
 	legacyAmino := encodingConfig.Amino
@@ -321,7 +321,7 @@ func NewTrstApp(
 		os.Exit(1)
 	}
 
-	app := &TrstApp{
+	app := &IntoApp{
 		BaseApp:           bApp,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
@@ -651,20 +651,20 @@ func NewTrstApp(
 }
 
 // Name returns the name of the App
-func (app *TrstApp) Name() string { return app.BaseApp.Name() }
+func (app *IntoApp) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker application updates every begin block
-func (app *TrstApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+func (app *IntoApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
 }
 
 // EndBlocker application updates every end block
-func (app *TrstApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
+func (app *IntoApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
 // InitChainer application update at chain initialization
-func (app *TrstApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *IntoApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
@@ -691,12 +691,12 @@ func (app *TrstApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci
 }
 
 // LoadHeight loads a particular height
-func (app *TrstApp) LoadHeight(height int64) error {
+func (app *IntoApp) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (app *TrstApp) ModuleAccountAddrs() map[string]bool {
+func (app *IntoApp) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
@@ -707,7 +707,7 @@ func (app *TrstApp) ModuleAccountAddrs() map[string]bool {
 
 // BlockedAddrs returns all the app's module account addresses that are not
 // allowed to receive external tokens.
-func (app *TrstApp) BlockedAddrs() map[string]bool {
+func (app *IntoApp) BlockedAddrs() map[string]bool {
 	blockedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
@@ -720,7 +720,7 @@ func (app *TrstApp) BlockedAddrs() map[string]bool {
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *TrstApp) LegacyAmino() *codec.LegacyAmino {
+func (app *IntoApp) LegacyAmino() *codec.LegacyAmino {
 	return app.legacyAmino
 }
 
@@ -728,47 +728,47 @@ func (app *TrstApp) LegacyAmino() *codec.LegacyAmino {
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *TrstApp) AppCodec() codec.Codec {
+func (app *IntoApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
 // InterfaceRegistry returns Gaia's InterfaceRegistry
-func (app *TrstApp) InterfaceRegistry() types.InterfaceRegistry {
+func (app *IntoApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *TrstApp) GetKey(storeKey string) *storetypes.KVStoreKey {
+func (app *IntoApp) GetKey(storeKey string) *storetypes.KVStoreKey {
 	return app.keys[storeKey]
 }
 
 // GetTKey returns the TransientStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *TrstApp) GetTKey(storeKey string) *storetypes.TransientStoreKey {
+func (app *IntoApp) GetTKey(storeKey string) *storetypes.TransientStoreKey {
 	return app.tkeys[storeKey]
 }
 
 // GetMemKey returns the MemStoreKey for the provided mem key.
 //
 // NOTE: This is solely used for testing purposes.
-func (app *TrstApp) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
+func (app *IntoApp) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
 	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.
 //
 // NOTE: This is solely to be used for testing purposes.
-func (app *TrstApp) GetSubspace(moduleName string) paramstypes.Subspace {
+func (app *IntoApp) GetSubspace(moduleName string) paramstypes.Subspace {
 	subspace, _ := app.ParamsKeeper.GetSubspace(moduleName)
 	return subspace
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
-func (app *TrstApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (app *IntoApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	// Register new tx routes from grpc-gateway.
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
@@ -788,12 +788,12 @@ func (app *TrstApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICo
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
-func (app *TrstApp) RegisterTxService(clientCtx client.Context) {
+func (app *IntoApp) RegisterTxService(clientCtx client.Context) {
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (app *TrstApp) RegisterTendermintService(clientCtx client.Context) {
+func (app *IntoApp) RegisterTendermintService(clientCtx client.Context) {
 	tmservice.RegisterTendermintService(
 		clientCtx,
 		app.BaseApp.GRPCQueryRouter(),
@@ -835,7 +835,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 }
 
 // // setupUpgradeHandlers sets all necessary upgrade handlers for testing purposes
-// func (app *TrstApp) setupUpgradeHandlers() {
+// func (app *IntoApp) setupUpgradeHandlers() {
 // 	// NOTE: The moduleName arg of v6.CreateUpgradeHandler refers to the auth module ScopedKeeper name to which the channel capability should be migrated from.
 // 	// This should be the same string value provided upon instantiation of the ScopedKeeper with app.CapabilityKeeper.ScopeToModule()
 // 	// TODO: update git tag in link below
@@ -856,27 +856,27 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 // TestingApp functions
 
 // GetBaseApp implements the TestingApp interface.
-func (app *TrstApp) GetBaseApp() *baseapp.BaseApp {
+func (app *IntoApp) GetBaseApp() *baseapp.BaseApp {
 	return app.BaseApp
 }
 
 // GetStakingKeeper implements the TestingApp interface.
-func (app *TrstApp) GetStakingKeeper() ibctestingtypes.StakingKeeper {
+func (app *IntoApp) GetStakingKeeper() ibctestingtypes.StakingKeeper {
 	return app.StakingKeeper
 }
 
 // GetIBCKeeper implements the TestingApp interface.
-func (app *TrstApp) GetIBCKeeper() *ibckeeper.Keeper {
+func (app *IntoApp) GetIBCKeeper() *ibckeeper.Keeper {
 	return app.IBCKeeper
 }
 
 // GetScopedIBCKeeper implements the TestingApp interface.
-func (app *TrstApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
+func (app *IntoApp) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 	return app.ScopedIBCKeeper
 }
 
 // TxConfig returns SimApp's TxConfig
-func (app *TrstApp) GetTxConfig() client.TxConfig {
+func (app *IntoApp) GetTxConfig() client.TxConfig {
 	return app.txConfig
 }
 
@@ -901,11 +901,11 @@ func BlockedAddresses() map[string]bool {
 	return modAccAddrs
 }
 
-func (app *TrstApp) RegisterNodeService(clientCtx client.Context) {
+func (app *IntoApp) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
 }
 
 // SimulationManager implements the SimulationApp interface
-func (app *TrstApp) SimulationManager() *module.SimulationManager {
+func (app *IntoApp) SimulationManager() *module.SimulationManager {
 	return app.sm
 }

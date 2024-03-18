@@ -25,18 +25,18 @@ import (
 const (
 	MinNumCosmosTxs = 100 //min num cosmos txs for given address to counter bots
 	//additonal rules may be added
-	MaxTrstPerSupportedConnection = 100_000_000_000_000 //uinto
+	MaxIntoPerSupportedConnection = 100_000_000_000_000 //uinto
 )
 
 type TestnetSnapshot struct {
-	TotalTrstAirdropAmount sdkmath.Int                       `json:"total_trst_amount"`
+	TotalIntoAirdropAmount sdkmath.Int                       `json:"total_into_amount"`
 	NumAccounts            uint64                            `json:"num_accounts"`
 	Accounts               map[string]TestnetSnapshotAccount `json:"accounts"`
 }
 type TestnetSnapshotAccount struct {
-	TrstAddress                string            `json:"trst_address"`
+	IntoAddress                string            `json:"into_address"`
 	TestnetParticpationPercent sdkmath.LegacyDec `json:"testnet_participation_percent"`
-	TrstTotalClaimable         sdkmath.Int       `json:"trst_total_claimable"`
+	IntoTotalClaimable         sdkmath.Int       `json:"into_total_claimable"`
 }
 
 type Transaction struct {
@@ -156,7 +156,7 @@ intentod export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/t
 				}
 			}
 
-			// 3. remove entries from autoTxUsageByUser where the coin amount is higher than MaxTrstPerSupportedConnection
+			// 3. remove entries from autoTxUsageByUser where the coin amount is higher than MaxIntoPerSupportedConnection
 			for i := 0; i < len(autoTxUsageByUser); i++ {
 				usage := &autoTxUsageByUser[i]
 				for j := 0; j < len(usage.Txs); j++ {
@@ -165,8 +165,8 @@ intentod export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/t
 					if err != nil {
 						return err
 					}
-					if coinAmount > MaxTrstPerSupportedConnection {
-						tx.Coin.Amount = fmt.Sprint(MaxTrstPerSupportedConnection) //append(tx.Coin[:k], tx.Coin[k+1:]...)
+					if coinAmount > MaxIntoPerSupportedConnection {
+						tx.Coin.Amount = fmt.Sprint(MaxIntoPerSupportedConnection) //append(tx.Coin[:k], tx.Coin[k+1:]...)
 					}
 
 					// If the usage has no more entries, remove it from autoTxUsageByUser
@@ -178,14 +178,14 @@ intentod export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/t
 				}
 			}
 
-			// 4. For each entry in `supportedList`, calculate `ParticipationPercentage` and `TrstTotalClaimable` for each `autoTxUsageByUser` address based on the total amount of supported tokens. Then, create a `TestnetSnapshotAccount` for each combination of `supported.ConnectionID` and `usage.Address`, and add it to the `snapshot.Accounts` map.
-			// Finally, update the `snapshot.TotalTrstAirdropAmount` variable for each supported token.
+			// 4. For each entry in `supportedList`, calculate `ParticipationPercentage` and `IntoTotalClaimable` for each `autoTxUsageByUser` address based on the total amount of supported tokens. Then, create a `TestnetSnapshotAccount` for each combination of `supported.ConnectionID` and `usage.Address`, and add it to the `snapshot.Accounts` map.
+			// Finally, update the `snapshot.TotalIntoAirdropAmount` variable for each supported token.
 			//
 			// To do this, we first initialize `snapshot` and `trstTotalClaimable`, and loop over the `supportedList` to calculate the total IBC amount for all supported tokens. Then, we loop over the `autoTxUsageByUser` slice and calculate the `participationPercentage` and `trstTotalClaimable` for each `autoTxUsageByUser` address based on the total IBC amount.
 			// We also update the `TestnetSnapshotAccount` for each address with the calculated values.
-			// Finally, we add the updated `TestnetSnapshotAccount` to the `snapshot.Accounts` map, and update the `snapshot.TotalTrstAirdropAmount` variable for each supported token.
+			// Finally, we add the updated `TestnetSnapshotAccount` to the `snapshot.Accounts` map, and update the `snapshot.TotalIntoAirdropAmount` variable for each supported token.
 			var snapshot TestnetSnapshot
-			snapshot.TotalTrstAirdropAmount = sdk.ZeroInt()
+			snapshot.TotalIntoAirdropAmount = sdk.ZeroInt()
 			snapshot.Accounts = make(map[string]TestnetSnapshotAccount)
 
 			var trstTotalClaimable sdkmath.Int
@@ -196,7 +196,7 @@ intentod export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/t
 
 			for _, usage := range autoTxUsageByUser {
 				var account TestnetSnapshotAccount
-				account.TrstAddress = usage.Address
+				account.IntoAddress = usage.Address
 				for _, tx := range usage.Txs {
 					for _, supported := range supportedList {
 						if tx.Coin.Denom == supported.IbcDenom && tx.ConnectionID == supported.ConnectionID {
@@ -210,8 +210,8 @@ intentod export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/t
 							participationPercentage := sdk.NewDecFromInt(trstAmount).QuoInt(sdk.NewInt(totalAirdropAmount))
 
 							account.TestnetParticpationPercent = account.TestnetParticpationPercent.Add(participationPercentage)
-							account.TrstTotalClaimable = account.TrstTotalClaimable.Add(trstAmount)
-							snapshot.TotalTrstAirdropAmount = snapshot.TotalTrstAirdropAmount.Add(trstAmount)
+							account.IntoTotalClaimable = account.IntoTotalClaimable.Add(trstAmount)
+							snapshot.TotalIntoAirdropAmount = snapshot.TotalIntoAirdropAmount.Add(trstAmount)
 						}
 					}
 				}
@@ -293,10 +293,10 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 
 			fmt.Printf("total snapshot accounts: %v\n", len(snapshot.Accounts))
 
-			fmt.Printf("snapshot total supply: %s\n", snapshot.TotalTrstAirdropAmount)
+			fmt.Printf("snapshot total supply: %s\n", snapshot.TotalIntoAirdropAmount)
 
 			// donating the remainder to the rainforrest foundation https://rainforestfoundation.org/
-			if !genesisParams.AirdropSupply.Sub(snapshot.TotalTrstAirdropAmount).IsNil() {
+			if !genesisParams.AirdropSupply.Sub(snapshot.TotalIntoAirdropAmount).IsNil() {
 				return fmt.Errorf("snapshot supply does not match genesis")
 			}
 
@@ -311,7 +311,7 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 				// read address from snapshot
 				//we cannot have duplicate accounts
 
-				address, err := sdk.AccAddressFromBech32(acc.TrstAddress)
+				address, err := sdk.AccAddressFromBech32(acc.IntoAddress)
 				if err != nil {
 					return fmt.Errorf("trst acc from snapshot invalid: %s", err)
 				}
@@ -327,10 +327,10 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 				accs = append(accs, baseAccount)
 
 				// claimable balances
-				claimableAmount := acc.TrstTotalClaimable.Sub(sdk.NewInt(696969))
-				if acc.TrstTotalClaimable.Sub(sdk.NewInt(696969)).IsNegative() {
+				claimableAmount := acc.IntoTotalClaimable.Sub(sdk.NewInt(696969))
+				if acc.IntoTotalClaimable.Sub(sdk.NewInt(696969)).IsNegative() {
 					claimableAmount = sdk.ZeroInt()
-					liquidCoins = sdk.NewCoins(sdk.NewCoin("uinto", acc.TrstTotalClaimable))
+					liquidCoins = sdk.NewCoins(sdk.NewCoin("uinto", acc.IntoTotalClaimable))
 				}
 
 				liquidBalances = append(liquidBalances, banktypes.Balance{

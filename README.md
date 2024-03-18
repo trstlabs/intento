@@ -37,7 +37,7 @@ Our goal with this integration is to leverage Dymension’s unique settlement ca
 
 ## How Intento Works
 
-Intento leverages a combination of algorithms, the Cosmos SDK and IBC to provide a seamless automation experience. Users can orchestrate complex sets of actions, ranging from simple automated payments to sophisticated interchain operations, all executed directly from the Intento processing chain. By integrating with the IBC protocol, Intento not only automates within a single blockchain but also across different blockchains, offering unprecedented flexibility and power.
+Intento leverages a combination of algorithms, the Cosmos SDK and IBC to provide a seamless automation experience. Users can orchestrate complex sets of actions, ranging from simple automated payments to sophisticated interchain operations, all executed directly from the Intento processing chain. By integrating with the IBC protocol, Intento not only automates within a single blockchain but also across different blockchains, offering unprecedented flexibility and scalability.
 
 ## Why Intento?
 
@@ -74,7 +74,7 @@ Intento opens up endless possibilities for developers, DAOs and end-users alike,
 
 ## Gas Cost Comparison and Efficiency
 
-Intento sets a new standard for efficiency, outperforming existing solutions like Gelato on Ethereum and CronCat on Juno and Neutron, with an estimated logic cost of about 100,000 gas. This efficiency not only reduces costs for users but also broadens accessibility, introduces new use cases, and improves the overall user experience in the crypto ecosystem.
+Intento sets a new standard for efficiency, outperforming existing solutions that are off-chain, with low gas gas costs. This efficiency not only reduces costs for users but also broadens accessibility, introduces new use cases, and improves the overall user experience in the crypto ecosystem.
 
 ## Fee model
 

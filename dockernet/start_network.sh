@@ -38,7 +38,7 @@ if [[ "${UPGRADE_NAME:-}" != "" ]]; then
     docker build \
         -t trustlesshub:cosmovisor \
         --build-arg old_commit_hash=$UPGRADE_OLD_VERSION \
-        --build-arg trst_admin_address=$INTO_ADMIN_ADDRESS \
+        --build-arg into_admin_address=$INTO_ADMIN_ADDRESS \
         -f $UPGRADES/Dockerfile.cosmovisor .
 
     echo "Re-Building INTO with Upgrade Support..."

@@ -102,7 +102,7 @@ endif
 
 check_version:
 ifneq ($(GO_SYSTEM_VERSION), $(REQUIRE_GO_VERSION))
-	@echo "ERROR: Go version 1.20 is required for $(VERSION) of Trst."
+	@echo "ERROR: Go version 1.20 is required for $(VERSION) of Intento."
 	exit 1
 endif
 
@@ -314,17 +314,17 @@ kill-dev:
 	-@rm -rf ./data
 	-@killall intentod 2>/dev/null
 
-# starts Trst relayer given the localchains are running
+# starts Into relayer given the localchains are running
 run-rly: 
 	@echo "Starting up local test relayer..."
 	./deployment/ibc/start.sh
 
-# starts a Trst relayer, localtrst 1&2 and localjuno
+# starts a Into relayer, localtrst 1&2 and localjuno
 run-rly-juno: 
 	@echo "Starting up local test relayers..."
 	docker compose -f deployment/ibc/docker-compose-rly.yml up
 
-# stops  a Trst relayer, localtrst 1&2 and localjuno
+# stops  a Into relayer, localtrst 1&2 and localjuno
 kill-rly-juno: 
 	@echo "Stopping and removing local test relayers..."
 	docker compose -f deployment/ibc/docker-compose-rly.yml stop 

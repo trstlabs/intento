@@ -23,9 +23,9 @@ import (
 const (
 	MaxCap = 5000000000 //5000 tokens from one address on one chain
 
-	TotalTrstAirdropAmountCosmos = 100000000000000 //Cosmos Hub
-	TotalTrstAirdropAmountCosm   = 50000000000000  //Cosm is a placeholder for some second Cosmos ecoystem chain to airdrop tokens to
-	TotalTrstAirdropAmountSecret = 30000000000000  //Secret may or may not be possible to airdrop tokens to. TODO: check if code works and otherwise remove
+	TotalIntoAirdropAmountCosmos = 100000000000000 //Cosmos Hub
+	TotalIntoAirdropAmountCosm   = 50000000000000  //Cosm is a placeholder for some second Cosmos ecoystem chain to airdrop tokens to
+	TotalIntoAirdropAmountSecret = 30000000000000  //Secret may or may not be possible to airdrop tokens to. TODO: check if code works and otherwise remove
 )
 
 // ExportAirdropSnapshotCmd generates a snapshot.json from a provided cosmos-sdk v0.36 genesis export.
@@ -57,38 +57,38 @@ intentod export-airdrop-snapshot ~/genesisfiles/genesis.cosmoshub-4.json ~/genes
 
 			var snapshot Snapshot
 			snapshot.Accounts = make(map[string]SnapshotAccount)
-			snapshot.TotalTrstAirdropAmount = sdk.ZeroInt()
+			snapshot.TotalIntoAirdropAmount = sdk.ZeroInt()
 
 			snapshot = exportSnapShotFromGenesisFile(clientCtx, firstGenesisFile, "uatom", snapshot)
 
 			var snapshotSecret Snapshot
 			snapshotSecret.Accounts = make(map[string]SnapshotAccount)
-			snapshotSecret.TotalTrstAirdropAmount = sdk.ZeroInt()
+			snapshotSecret.TotalIntoAirdropAmount = sdk.ZeroInt()
 
 			snapshotSecret = exportSecretSnapShotFromGenesisFile(clientCtx, secondGenesisFile, "uscrt", snapshotSecret)
 
 			var snapshotCosm Snapshot
 			snapshotCosm.Accounts = make(map[string]SnapshotAccount)
-			snapshotCosm.TotalTrstAirdropAmount = sdk.ZeroInt()
+			snapshotCosm.TotalIntoAirdropAmount = sdk.ZeroInt()
 
 			snapshotCosm = exportSnapShotFromGenesisFile(clientCtx, thirdGenesisFile, "ucosm", snapshotCosm)
 
 			fmt.Printf("Cosmos atom amount %s \n", snapshot.TotalTokenAmount)
-			fmt.Printf("Cosmos Trst amount %s \n", snapshot.TotalTrstAirdropAmount)
+			fmt.Printf("Cosmos Into amount %s \n", snapshot.TotalIntoAirdropAmount)
 			fmt.Printf("# Cosmos atom accounts %v \n", len(snapshot.Accounts))
 			fmt.Printf("Secret scrt amount %s \n", snapshotSecret.TotalTokenAmount)
-			fmt.Printf("Secret Trst amount %s \n", snapshotSecret.TotalTrstAirdropAmount)
+			fmt.Printf("Secret Into amount %s \n", snapshotSecret.TotalIntoAirdropAmount)
 			fmt.Printf("# Secret scrt accounts %v \n", len(snapshotSecret.Accounts))
 			fmt.Printf("Cosm luna amount %s \n", snapshotCosm.TotalTokenAmount)
-			fmt.Printf("Cosm Trst amount %s \n", snapshotCosm.TotalTrstAirdropAmount)
+			fmt.Printf("Cosm Into amount %s \n", snapshotCosm.TotalIntoAirdropAmount)
 			fmt.Printf("# Cosm luna accounts %v \n", len(snapshotCosm.Accounts))
-			snapshot.TotalTrstAirdropAmount = snapshot.TotalTrstAirdropAmount.Add(snapshotSecret.TotalTrstAirdropAmount.Add(snapshotCosm.TotalTrstAirdropAmount))
+			snapshot.TotalIntoAirdropAmount = snapshot.TotalIntoAirdropAmount.Add(snapshotSecret.TotalIntoAirdropAmount.Add(snapshotCosm.TotalIntoAirdropAmount))
 			snapshot.TotalTokenAmount = snapshot.TotalTokenAmount.Add(snapshotSecret.TotalTokenAmount.Add(snapshotCosm.TotalTokenAmount))
 
 			snapshot.Accounts = removeDuplicatesFromSnapshot(snapshot.Accounts, snapshotSecret.Accounts, snapshotCosm.Accounts)
 
 			fmt.Printf("# total INTO accounts %v \n", len(snapshot.Accounts))
-			fmt.Printf("# total INTO coins %s \n", snapshot.TotalTrstAirdropAmount)
+			fmt.Printf("# total INTO coins %s \n", snapshot.TotalIntoAirdropAmount)
 			//remove any other duplicates from the lists
 			//var snapshotClean = snapshot
 			//	snapshotClean.Accounts = removeDuplicates(snapshot.Accounts)
@@ -248,7 +248,7 @@ func exportSnapShotFromGenesisFile(clientCtx client.Context, genesisFile string,
 
 		if allTokens.IsZero() {
 			acc.TokenStakedPercent = sdk.ZeroDec()
-			acc.TrstBalance = sdk.ZeroInt()
+			acc.IntoBalance = sdk.ZeroInt()
 			snapshotAccs[address] = acc
 			continue
 		}
@@ -257,18 +257,18 @@ func exportSnapShotFromGenesisFile(clientCtx client.Context, genesisFile string,
 		stakedPercent := stakedTokens.Quo(allTokens)
 
 		acc.TokenStakedPercent = stakedPercent
-		acc.TrstBalance = acc.TokenOwnershipPercent.MulInt(sdk.NewInt(TotalTrstAirdropAmountCosmos)).RoundInt()
+		acc.IntoBalance = acc.TokenOwnershipPercent.MulInt(sdk.NewInt(TotalIntoAirdropAmountCosmos)).RoundInt()
 
-		totalBalance = totalBalance.Add(acc.TrstBalance)
+		totalBalance = totalBalance.Add(acc.IntoBalance)
 		snapshotAccount, ok := snapshot.Accounts[address]
 		if !ok {
 			snapshot.Accounts[address] = acc
 			totalTokenBalance = totalTokenBalance.Add(acc.TokenBalance)
 		} else {
-			if snapshotAccount.TrstBalance.IsNil() {
-				snapshotAccount.TrstBalance = sdk.ZeroInt()
+			if snapshotAccount.IntoBalance.IsNil() {
+				snapshotAccount.IntoBalance = sdk.ZeroInt()
 			}
-			snapshotAccount.TrstBalance = snapshotAccount.TrstBalance.Add(acc.TrstBalance)
+			snapshotAccount.IntoBalance = snapshotAccount.IntoBalance.Add(acc.IntoBalance)
 			snapshotAccount.TokenBalance = snapshotAccount.TokenBalance.Add(acc.TokenBalance)
 			snapshotAccount.TokenUnstakedBalance = snapshotAccount.TokenUnstakedBalance.Add(acc.TokenUnstakedBalance)
 			snapshot.Accounts[address] = snapshotAccount
@@ -277,14 +277,14 @@ func exportSnapShotFromGenesisFile(clientCtx client.Context, genesisFile string,
 		}
 	}
 	snapshot.TotalTokenAmount = totalTokenBalance
-	snapshot.TotalTrstAirdropAmount = snapshot.TotalTrstAirdropAmount.Add(totalBalance)
+	snapshot.TotalIntoAirdropAmount = snapshot.TotalIntoAirdropAmount.Add(totalBalance)
 	snapshot.NumberAccounts = snapshot.NumberAccounts + uint64(len(snapshot.Accounts))
 
 	fmt.Printf("Complete read genesis file %s \n", genesisFile)
 	fmt.Printf("# atom accounts: %d\n", len(snapshotAccs))
 	fmt.Printf("# atom accounts in snapshot: %d\n", len(snapshot.Accounts))
 	fmt.Printf("Token TotalSupply: %s\n", totalTokenBalance.String())
-	fmt.Printf("Trst TotalSupply: %s\n", totalBalance.String())
+	fmt.Printf("Into TotalSupply: %s\n", totalBalance.String())
 	return snapshot
 }
 
@@ -398,7 +398,7 @@ func exportSecretSnapShotFromGenesisFile(clientCtx client.Context, genesisFile s
 
 		if allTokens.IsZero() {
 			acc.TokenStakedPercent = sdk.ZeroDec()
-			acc.TrstBalance = sdk.ZeroInt()
+			acc.IntoBalance = sdk.ZeroInt()
 			snapshotAccs[address] = acc
 			continue
 		}
@@ -407,18 +407,18 @@ func exportSecretSnapShotFromGenesisFile(clientCtx client.Context, genesisFile s
 		stakedPercent := stakedTokens.Quo(allTokens)
 
 		acc.TokenStakedPercent = stakedPercent
-		acc.TrstBalance = acc.TokenOwnershipPercent.MulInt(sdk.NewInt(TotalTrstAirdropAmountSecret)).RoundInt()
+		acc.IntoBalance = acc.TokenOwnershipPercent.MulInt(sdk.NewInt(TotalIntoAirdropAmountSecret)).RoundInt()
 
-		totalBalance = totalBalance.Add(acc.TrstBalance)
+		totalBalance = totalBalance.Add(acc.IntoBalance)
 		snapshotAccount, ok := snapshot.Accounts[address]
 		if !ok {
 			snapshot.Accounts[address] = acc
 			totalTokenBalance = totalTokenBalance.Add(acc.TokenBalance)
 		} else {
-			if snapshotAccount.TrstBalance.IsNil() {
-				snapshotAccount.TrstBalance = sdk.ZeroInt()
+			if snapshotAccount.IntoBalance.IsNil() {
+				snapshotAccount.IntoBalance = sdk.ZeroInt()
 			}
-			snapshotAccount.TrstBalance = snapshotAccount.TrstBalance.Add(acc.TrstBalance)
+			snapshotAccount.IntoBalance = snapshotAccount.IntoBalance.Add(acc.IntoBalance)
 			snapshotAccount.TokenBalance = snapshotAccount.TokenBalance.Add(acc.TokenBalance)
 			snapshotAccount.TokenUnstakedBalance = snapshotAccount.TokenUnstakedBalance.Add(acc.TokenUnstakedBalance)
 			snapshot.Accounts[address] = snapshotAccount
@@ -427,14 +427,14 @@ func exportSecretSnapShotFromGenesisFile(clientCtx client.Context, genesisFile s
 		}
 	}
 	snapshot.TotalTokenAmount = totalTokenBalance
-	snapshot.TotalTrstAirdropAmount = snapshot.TotalTrstAirdropAmount.Add(totalBalance)
+	snapshot.TotalIntoAirdropAmount = snapshot.TotalIntoAirdropAmount.Add(totalBalance)
 	snapshot.NumberAccounts = snapshot.NumberAccounts + uint64(len(snapshot.Accounts))
 
 	fmt.Printf("Complete read genesis file %s \n", genesisFile)
 	fmt.Printf("# scrt accounts: %d\n", len(snapshotAccs))
 	fmt.Printf("# scrt accounts in snapshot: %d\n", len(snapshot.Accounts))
 	fmt.Printf("Scrt TotalSupply: %s\n", totalTokenBalance.String())
-	fmt.Printf("Trst TotalSupply: %s\n", totalBalance.String())
+	fmt.Printf("Into TotalSupply: %s\n", totalBalance.String())
 
 	return snapshot
 }
@@ -560,7 +560,7 @@ type GenesisFile struct {
 
 type Snapshot struct {
 	TotalTokenAmount       math.Int `json:"total_atom_amount"`
-	TotalTrstAirdropAmount math.Int `json:"total_trst_amount"`
+	TotalIntoAirdropAmount math.Int `json:"total_into_amount"`
 	NumberAccounts         uint64   `json:"num_accounts"`
 
 	Accounts map[string]SnapshotAccount `json:"accounts"`
@@ -577,7 +577,7 @@ type SnapshotAccount struct {
 	TokenUnstakedBalance math.Int       `json:"atom_unstaked_balance"` // TokenStakedPercent = TokenStakedBalance / TokenBalance
 	TokenStakedPercent   math.LegacyDec `json:"atom_staked_percent"`
 
-	TrstBalance math.Int `json:"trst_balance"`
+	IntoBalance math.Int `json:"into_balance"`
 	Denominator math.Int `json:"denominator"`
 }
 
@@ -695,7 +695,7 @@ func removeDuplicatesFromSnapshot(first map[string]SnapshotAccount, second map[s
 		} else {
 			//	fmt.Println("delete secret acc  %s\n", acc)
 			var acct = first[newAcc]
-			acct.TrstBalance = acct.TrstBalance.Add(value.TrstBalance)
+			acct.IntoBalance = acct.IntoBalance.Add(value.IntoBalance)
 			delete(second, acc)
 			first[newAcc] = acct
 			fmt.Println("merged scrt acc", acc)
@@ -714,7 +714,7 @@ func removeDuplicatesFromSnapshot(first map[string]SnapshotAccount, second map[s
 		} else {
 			//	fmt.Println("delete secret acc  %s\n", acc)
 			var acct = first[newAcc]
-			acct.TrstBalance = acct.TrstBalance.Add(value.TrstBalance)
+			acct.IntoBalance = acct.IntoBalance.Add(value.IntoBalance)
 			first[newAcc] = acct
 
 			fmt.Println("merged terra acc", acc)

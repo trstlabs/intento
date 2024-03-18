@@ -85,10 +85,10 @@ setup_file() {
 ##############################################################################################
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc transfer updates all balances" {
   # get initial balances
-  trst_user_trst_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
-  host_user_trst_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $IBC_INTO_DENOM | GETBAL)
-  printf "host_user_trst_balance_start (sender): %s\n" "$host_user_trst_balance_start"
-  trst_user_token_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $HOST_IBC_DENOM | GETBAL)
+  into_user_into_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
+  host_user_into_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $IBC_INTO_DENOM | GETBAL)
+  printf "host_user_into_balance_start (sender): %s\n" "$host_user_into_balance_start"
+  into_user_token_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $HOST_IBC_DENOM | GETBAL)
   host_user_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
   printf "host_user_token_balance_start (sender): %s\n" "$host_user_token_balance_start"
   # do IBC transfer
@@ -98,24 +98,24 @@ setup_file() {
   WAIT_FOR_BLOCK $INTO_LOGS 8
 
   # get new balances
-  trst_user_trst_balance_end=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
-  host_user_trst_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $IBC_INTO_DENOM | GETBAL)
+  into_user_into_balance_end=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
+  host_user_into_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $IBC_INTO_DENOM | GETBAL)
 
-  trst_user_token_balance_end=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $HOST_IBC_DENOM | GETBAL)
+  into_user_token_balance_end=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $HOST_IBC_DENOM | GETBAL)
   host_user_token_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
 
   # get all INTO balance diffs
-  trst_user_trst_balance_diff=$((trst_user_trst_balance_start - trst_user_trst_balance_end))
-  host_user_trst_balance_diff=$((host_user_trst_balance_start - host_user_trst_balance_end))
+  into_user_into_balance_diff=$((into_user_into_balance_start - into_user_into_balance_end))
+  host_user_into_balance_diff=$((host_user_into_balance_start - host_user_into_balance_end))
 
-  assert_equal "$trst_user_trst_balance_diff" "$TRANSFER_AMOUNT"
-  assert_equal "$host_user_trst_balance_diff" "-$TRANSFER_AMOUNT"
+  assert_equal "$into_user_into_balance_diff" "$TRANSFER_AMOUNT"
+  assert_equal "$host_user_into_balance_diff" "-$TRANSFER_AMOUNT"
 
   # get all host balance diffs
-  trst_user_token_balance_diff=$((trst_user_token_balance_start - trst_user_token_balance_end))
+  into_user_token_balance_diff=$((into_user_token_balance_start - into_user_token_balance_end))
   host_user_token_balance_diff=$((host_user_token_balance_start - host_user_token_balance_end))
 
-  assert_equal "$trst_user_token_balance_diff" "-$TRANSFER_AMOUNT"
+  assert_equal "$into_user_token_balance_diff" "-$TRANSFER_AMOUNT"
   assert_equal "$host_user_token_balance_diff" "5002500" #TRANSFER_AMOUNT+fee
 }
 
@@ -124,7 +124,7 @@ setup_file() {
   receiver_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
 
   # get token balance user on INTO
-  user_trst_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
+  user_into_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
 
   # build MsgRegisterAccount and retrieve trigger ICA account
   $INTO_MAIN_CMD tx autoibctx register --connection-id connection-$CONNECTION_ID --counterparty-connection-id connection-0 --from $INTO_USER -y
@@ -181,7 +181,7 @@ EOF
   receiver_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
 
   # get token balance user on INTO
-  user_trst_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
+  user_into_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
 
   ICA_ADDRESS=$($INTO_MAIN_CMD q autoibctx interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
   ICA_ADDRESS=$(echo "$ICA_ADDRESS" | awk '{print $2}')
