@@ -15,7 +15,7 @@ import (
 )
 
 // returns context and an app with updated mint keeper
-func createTestApp(isCheckTx bool) (*app.TrstApp, sdk.Context) {
+func createTestApp(isCheckTx bool) (*app.IntoApp, sdk.Context) {
 	app := setup(isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
@@ -25,7 +25,7 @@ func createTestApp(isCheckTx bool) (*app.TrstApp, sdk.Context) {
 	return app, ctx
 }
 
-func setup(isCheckTx bool) *app.TrstApp {
+func setup(isCheckTx bool) *app.IntoApp {
 	app, genesisState := genApp(!isCheckTx, 5)
 
 	if !isCheckTx {
@@ -48,10 +48,10 @@ func setup(isCheckTx bool) *app.TrstApp {
 	return app
 }
 
-func genApp(withGenesis bool, invCheckPeriod uint) (*app.TrstApp, app.GenesisState) {
+func genApp(withGenesis bool, invCheckPeriod uint) (*app.IntoApp, app.GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := app.MakeEncodingConfig()
-	TrstApp := app.NewTrstApp(
+	IntoApp := app.NewIntoApp(
 		log.NewNopLogger(),
 		db,
 		nil,
@@ -61,8 +61,8 @@ func genApp(withGenesis bool, invCheckPeriod uint) (*app.TrstApp, app.GenesisSta
 	)
 
 	if withGenesis {
-		return TrstApp, app.NewDefaultGenesisState(encCdc.Codec)
+		return IntoApp, app.NewDefaultGenesisState(encCdc.Codec)
 	}
 
-	return TrstApp, app.GenesisState{}
+	return IntoApp, app.GenesisState{}
 }

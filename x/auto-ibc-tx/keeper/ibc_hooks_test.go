@@ -44,7 +44,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWorks() {
 	data := transfertypes.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.String(), suite.chainA.SenderAccount.GetAddress().String(), receiver, "")
 	packet := channeltypes.NewPacket(data.GetBytes(), seq, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, clienttypes.NewHeight(1, 100), 0)
 
-	ack := suite.chainB.GetTrstApp().TransferStack.OnRecvPacket(suite.chainB.GetContext(), packet, suite.chainA.SenderAccount.GetAddress())
+	ack := suite.chainB.GetIntoApp().TransferStack.OnRecvPacket(suite.chainB.GetContext(), packet, suite.chainA.SenderAccount.GetAddress())
 
 	suite.Require().True(ack.Success())
 
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAutoTxWorks() {
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	autoTx := suite.chainA.GetTrstApp().AutoIbcTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
+	autoTx := suite.chainA.GetIntoApp().AutoIbcTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
 
 	suite.Require().Equal(autoTx.Owner, addr.String())
 	suite.Require().Equal(autoTx.Label, "my_trigger")
@@ -80,7 +80,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAutoTxWorks() {
 	suite.Require().Equal(autoTx.Interval, time.Second*60)
 
 	var txMsgAny codectypes.Any
-	cdc := codec.NewProtoCodec(suite.chainA.GetTrstApp().InterfaceRegistry())
+	cdc := codec.NewProtoCodec(suite.chainA.GetIntoApp().InterfaceRegistry())
 
 	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
 	suite.Require().NoError(err)
@@ -114,7 +114,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	autoTx := suite.chainA.GetTrstApp().AutoIbcTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
+	autoTx := suite.chainA.GetIntoApp().AutoIbcTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
 
 	suite.Require().Equal(autoTx.Owner, addr.String())
 	suite.Require().Equal(autoTx.Label, "my_trigger")
@@ -123,11 +123,11 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleAutoTxsWorks()
 
 	suite.Require().Equal(autoTx.Interval, time.Second*60)
 
-	_, found := suite.chainA.GetTrstApp().ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ICAConfig.ConnectionID, autoTx.ICAConfig.PortID)
+	_, found := suite.chainA.GetIntoApp().ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), autoTx.ICAConfig.ConnectionID, autoTx.ICAConfig.PortID)
 	suite.Require().True(found)
 
 	var txMsgAny codectypes.Any
-	cdc := codec.NewProtoCodec(suite.chainA.GetTrstApp().InterfaceRegistry())
+	cdc := codec.NewProtoCodec(suite.chainA.GetIntoApp().InterfaceRegistry())
 
 	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
 	suite.Require().NoError(err)
@@ -159,10 +159,10 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	autoTxKeeper := suite.chainA.GetTrstApp().AutoIbcTxKeeper
+	autoTxKeeper := suite.chainA.GetIntoApp().AutoIbcTxKeeper
 	autoTx := autoTxKeeper.GetAutoTxInfo(suite.chainA.GetContext(), 1)
 	feeAddr, _ := sdk.AccAddressFromBech32(autoTx.FeeAddress)
-	types.Denom = suite.chainA.GetTrstApp().BankKeeper.GetAllBalances(suite.chainA.GetContext(), feeAddr)[0].Denom
+	types.Denom = suite.chainA.GetIntoApp().BankKeeper.GetAllBalances(suite.chainA.GetContext(), feeAddr)[0].Denom
 
 	unpacker := suite.chainA.Codec
 	unpackedMsgs := autoTx.GetTxMsgs(unpacker)

@@ -280,7 +280,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		tkeys[paramstypes.TStoreKey],
 	)
 
-	//TrstApp := app.NewTrstApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, app.EmptyAppOptions{})
+	//IntoApp := app.NewIntoApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, app.EmptyAppOptions{})
 
 	paramsKeeper.Subspace(authtypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)

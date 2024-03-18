@@ -1,0 +1,84 @@
+---
+sidebar_position: 2
+title: Use Cases
+description: Use cases of Smart Contract Automation
+---
+
+import DocusaurusSvg from './../images/actions.svg';
+
+Protocols, Developers and end-users will be able to use and integrate Intento's Intent-Centric Automation. DAOs can use payroll services, NFT solutions can have subscriptions, and games can do in-game battles with time-based winner appointment.
+
+<DocusaurusSvg width="100%" height="100%" />
+
+### Use Cases by category
+
+#### DeFi
+
+Using Intento, you can automatically trade dependent on price changes. 
+
+| DeFi | Explanation                                                                                                                                                              |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Automated Rebalancing                    | Automated portfolio rebalancing based on pre-set criteria, such as market conditions or portfolio weightings, ensuring optimal performance and risk management.          |
+| Autocompounding Staking Rewards          | Automated claiming of staking rewards to token holders on a regular basis, such as weekly or monthly. These can be compounded to earn additional yield.                  |
+| Dollar-Cost Averaging (DCA)              | Automated DCA strategies that invest a fixed amount of funds at regular intervals, reducing the impact of market volatility and potentially improving long-term returns. |
+| Automated Loan Repayments              | Repay crypto loans once certain dates or balance thresholds are met. |
+| Yield Harvesting             | Harvest yield when it exceeds a certain amount or at preset intervals. |
+| Liquidity Pool Rebalancing           | Automatically rebalance liquidity pool funds based on conditions to maintain composition. |
+| Swap streaming         | Perform swaps over a small period of time to reduce the slippage or price impact of an illiquid token |
+
+#### Payments
+
+Pay family-members, employees and contractors each day/week/month, without exposing privacy-sensitive data. Recipients can be paid in desired currency and can continuously earn yield
+
+With recurring payments on current smart contracts recipients have to claim tokens manually.
+By integrating with Intento end-users receive tokens automatically.
+
+| Payment Type               | Explanation                                                                                                                                                                                                                                                   |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Scheduled Payments         | Payment systems can be automated to send payments at specific times, such as weekly or monthly, for billing or payroll.                                                                                                                                       |
+| Subscription Renewals      | Payment systems can be automated to renew subscriptions at specific intervals, ensuring that customers continue to have access to a service or product.                                                                                                       |
+| Pre-Authorized Payments    | Customers can pre-authorize recurring payments for services or products, ensuring that payments are made on time and without the need for manual intervention.                                                                                                |
+| Reward Distributions       | Automate the distribution of rewards or dividends to stakeholders or customers based on predefined criteria, such as holding certain assets or participation in events.                                                                                       |
+| Escrow Services            | Secure transactions between parties by holding funds in escrow until predefined conditions are met, ensuring fairness and trust in transactions, especially in marketplaces or trade platforms.                                                                |
+| Donation Collections       | Enable automatic collection of donations at specified intervals or when certain conditions are met, supporting fundraising efforts for charities, non-profits, or crowdfunding campaigns.                                                                     |
+| Debt Repayment Scheduling  | Automate the repayment of loans or debts in installments, with schedules adjusted according to terms agreed upon by the lender and borrower, including interest calculations.                                                                                  |
+| Loyalty Program Rewards    | Automatically issue points, credits, or other rewards as part of loyalty programs, based on customer purchases or activities, which can then be redeemed for services, products, or discounts.                                                                 |
+| Utility Bill Payments      | Automate the payment of recurring utility bills such as electricity, water, internet, and more, ensuring timely payments and avoiding service interruptions or late fees.                                                                                      |
+
+
+#### Community Pools and DAOs
+
+| DAOs | Explanation                                                                                                                                                                                           |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scheduled Voting                         | DAOs can schedule votes on proposals to take place at a specific time, ensuring that all members have a fair chance to participate in the decision-making process.                                    |
+| Token Vesting                            | DAOs can automate the vesting of tokens over a period of time, enabling fair distribution of rewards and preventing dumping of tokens on the market.                                                  |
+| Dividend Distribution                    | DAOs can automate the distribution of dividends to token holders based on a predetermined schedule, ensuring transparency and fairness in profit-sharing.                                             |
+| Periodic Reporting                       | DAOs can automate the generation and distribution of periodic reports on the performance of the organization, enabling members to make informed decisions about future investments or participation.  |
+| Automatic Proposals                      | DAOs can be programmed to automatically generate proposals based on certain conditions, such as when a certain threshold of tokens is reached or when a specific event occurs.                        |
+| Time-based Smart Contract Execution      | DAOs can automate the execution of smart contracts based on a predetermined time or interval, ensuring that transactions take place at the right time without the need for human intervention.        |
+| Staking Rewards                          | DAOs can automate the distribution of staking rewards to members who have staked their tokens for a certain period of time, incentivizing long-term participation and commitment to the organization. |
+| Token Burn                               | DAOs can automate the burning of tokens at a predetermined time or interval, reducing the overall token supply and increasing the value of remaining tokens.                                          |
+| Membership Renewal                       | DAOs can automate the renewal of membership for existing members at a predetermined time or interval, ensuring that members remain active and engaged in the organization.                            |
+| Vesting Periods for Team Members         | DAOs can automate vesting periods for team members, ensuring that incentives are aligned with long-term goals and that team members are motivated to stay with the organization over time.            |
+
+
+### Example Use Cases For Protocols
+
+#### Staking protocols
+
+Staking protocols, such as Lido, Swell and EigenLayer, can integrate Intento to automatically restake tokens, providing their users with additional yield. Auto compounding is currently done outside of the protocol's DAO control in vault and escrow smart contracts controlled by protocols that essentially hold custody of the users stake, and depend on bot triggers. Stride, a Cosmos liquid staking Appchain, has built auto-compounding into their solution using a time-based function in their chain. By outsourcing auto compounding calls to the Intent-Centric Automation module, EVM-based staking protocols can now also initiate auto compounding in a non-custodial and trustless manner. This ensures network security and fosters reliability and confidence in the staking protocol.
+
+#### Cross-Chain Asset Management and Coordination
+
+A large digital asset issuer, such as Circle, can integrate Intento to optimize liquidity across fragmented ecosystems so that once tokens are periodically burned on one chain and automatically minted on another chain, using a predictable trigger address. This trust-minimized automation solution can become a key part of the protocol of asset issuers in that it reduces both smart contract risks and counterparty risks.
+
+#### Efficient AMM Strategies
+
+A large EVM-based DEX, such as Uniswap, can integrate Intento so that limit orders and DCA swaps are processed on a reliable basis. Moreover, with the trigger coming from a predictable address coming from Cosmos Hub, Uniswap can allow time-based swap automation without the need for intermediate smart contracts such as vaults and escrow contracts, improving the liquidity position of their users. Furthermore, Concentrated LP tokens can be rebalanced periodically to mitigate impermanent loss. As the trigger is a predictable address, tokens do not need to be locked in a custodial rebalancing protocol. These periodic actions can improve liquidity and allow the protocol to be more stable.
+
+In sum, the Intento module aims to enhance user liquidity and accessibility by enabling instant and secure automation of tokens and assets, eliminating the need for locking them in smart contracts. This improves user experience, increases liquidity, and encourages broader participation. Furthermore, the module facilitates seamless integration of automation with EVM chains, attracting protocols from Ethereum and other EVM-based ecosystems. Protocols can now leverage the benefits of Intento, cross-chain liquidity, and expanded possibilities, both within the Cosmos Ecosystem and across EVM chains, fostering a vibrant and interconnected ecosystem.
+
+
+#### Automate any protocol
+
+Learn more on the [main site](https://intento.zone).

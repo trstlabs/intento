@@ -1,15 +1,14 @@
 ---
-order: 7
+sidebar_position: 5
 title: Frontend Integration
 description: How to integrate automation into your interchain dApp
 ---
 
 ## TrustlessJS
 
-We've built a JS framework called [TrustlessJS](https://npmjs.com/package/trustlessjs) to send AutoTx transactions. An implementation for this is [TriggerPørtal](https://triggerportal.zone). It contains a message registry that you can use to encode and decode protobuf messages that Intento supports, including CosmWasm and Osmosis messages.
+We've built a JS framework called [TrustlessJS](https://npmjs.com/package/trustlessjs) to submit actions to the chain. It contains a message registry that you can use to encode and decode protobuf messages that Intento supports, including CosmWasm and Osmosis messages. An implementation is [TriggerPortal](https://triggerportal.zone).
 
-An example of submitting an MsgSubmitAutoTx in typescript. A label is optional but recommended to keep track an overview of triggers.
-Sta
+An example of submitting an MsgSubmitAutoTx in typescript. A label is optional but recommended to keep track an overview of the actions.
 
 ```js
 
@@ -51,10 +50,10 @@ let msgs = []
   }
 
     await client.tx.auto_tx.submit_auto_tx({
-      connectionId: AutoTxData.connectionId, 
+      connectionId: AutoTxData.connectionId,
       owner,
       msgs,
-      label: AutoTxData.label ? AutoTxData.label : "",
+      label,
       duration,
       interval,
       startAt,
@@ -62,45 +61,61 @@ let msgs = []
     },
       { gasLimit: 100_000 }
     )
-    
+
 }
 ```
 
 ## Example AutoTxFee calculation
 
-The following is used in TriggerPørtal to estimate fees.
+The following is used in TriggerPortal to estimate fees.
 
 ```js
+export const getExpectedAutoTxFee = async (
+  client: TrustlessChainClient,
+  durationSeconds: number,
+  lenMsgs: number,
+  intervalSeconds?: number
+) => {
+  try {
+    const params = await getAutoTxParams(client);
+    const recurrences =
+      intervalSeconds && intervalSeconds < durationSeconds
+        ? Math.floor(durationSeconds / intervalSeconds)
+        : 1;
+    const periodSeconds =
+      intervalSeconds && intervalSeconds < durationSeconds
+        ? intervalSeconds
+        : durationSeconds;
+    const periodMinutes = Math.trunc(periodSeconds / 60);
+    const flexFeeForPeriod =
+      (Number(params.AutoTxFlexFeeMul) / 100) * periodMinutes;
+    const AutoTxFee =
+      recurrences * flexFeeForPeriod +
+      recurrences * Number(params.AutoTxConstantFee) * lenMsgs;
+    const AutoTxFeeDenom = convertMicroDenomToDenom(AutoTxFee, 6);
 
-export const getExpectedAutoTxFee = async (client: TrustlessChainClient, durationSeconds: number, lenMsgs: number, intervalSeconds?: number) => {
-    try {
-        const params = await getAutoTxParams(client) 
-        const recurrences = intervalSeconds && intervalSeconds < durationSeconds ? Math.floor(durationSeconds / intervalSeconds) : 1;
-        const periodSeconds = intervalSeconds && intervalSeconds < durationSeconds ? intervalSeconds : durationSeconds;
-        const periodMinutes = Math.trunc(periodSeconds / 60)
-        const flexFeeForPeriod = (Number(params.AutoTxFlexFeeMul) / 100) * periodMinutes
-        const AutoTxFee = recurrences * flexFeeForPeriod + recurrences * Number(params.AutoTxConstantFee) * lenMsgs
-        const AutoTxFeeDenom = convertMicroDenomToDenom(AutoTxFee, 6)
-
-        return AutoTxFeeDenom
-    } catch (e) { console.error('err(getExpectedAutoTxFee):', e) }
-}
-
+    return AutoTxFeeDenom;
+  } catch (e) {
+    console.error("err(getExpectedAutoTxFee):", e);
+  }
+};
 
 async function getAutoTxParams(client: TrustlessChainClient) {
-    console.log("getAutoTxParams")
-    try {
-        const resp = await client.query.auto_tx.params({})
-        console.log(resp)
-        return resp.params
-    } catch (e) { console.error('err(getAutoTxParams):', e) }
+  console.log("getAutoTxParams");
+  try {
+    const resp = await client.query.auto_tx.params({});
+    return resp.params;
+  } catch (e) {
+    console.error("err(getAutoTxParams):", e);
+  }
 }
 ```
+
 The function returns a Promise that resolves to the expected transaction fee in Intento chain's native denomination, INTO.
 
 The JavaScript function getExpectedAutoTxFee calculates the expected transaction fee for a trustless chain transaction based on the duration of the transaction, the length of the messages to be sent, and the recurrence interval (optional). The formula for calculating the fee is:
 
-AutoTxFee = recurrences * flexFeeForPeriod + recurrences * constantFee * lenMsgs
+AutoTxFee = recurrences _ flexFeeForPeriod + recurrences _ constantFee \* lenMsgs
 
 where:
 
@@ -110,7 +125,7 @@ recurrences = intervalSeconds && intervalSeconds < durationSeconds ? Math.floor(
 
 flexFeeForPeriod is the flex fee for each recurrence, calculated as:
 
-flexFeeForPeriod = (Number(params.AutoTxFlexFeeMul) / 100) * periodMinutes
+flexFeeForPeriod = (Number(params.AutoTxFlexFeeMul) / 100) \* periodMinutes
 
 where params.AutoTxFlexFeeMul is a parameter retrieved from the Intento client and periodMinutes is the duration of each recurrence in minutes.
 

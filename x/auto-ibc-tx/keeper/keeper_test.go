@@ -48,8 +48,8 @@ type KeeperTestSuite struct {
 	chainB *trstibctesting.TestChain
 }
 
-func GetICAApp(chain *ibctesting.TestChain) *icaapp.TrstApp {
-	app, ok := chain.App.(*icaapp.TrstApp)
+func GetICAApp(chain *ibctesting.TestChain) *icaapp.IntoApp {
+	app, ok := chain.App.(*icaapp.IntoApp)
 	if !ok {
 		panic("not ica app")
 	}
@@ -58,7 +58,7 @@ func GetICAApp(chain *ibctesting.TestChain) *icaapp.TrstApp {
 }
 
 func GetAutoTxKeeper(chain *trstibctesting.TestChain) keeper.Keeper {
-	app, ok := chain.App.(*icaapp.TrstApp)
+	app, ok := chain.App.(*icaapp.IntoApp)
 	if !ok {
 		panic("not ica app")
 	}
@@ -66,7 +66,7 @@ func GetAutoTxKeeper(chain *trstibctesting.TestChain) keeper.Keeper {
 	return app.AutoIbcTxKeeper
 }
 
-func GetAutoTxKeeperFromApp(app *icaapp.TrstApp) keeper.Keeper {
+func GetAutoTxKeeperFromApp(app *icaapp.IntoApp) keeper.Keeper {
 
 	return app.AutoIbcTxKeeper
 }
@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) receiveTransferPacketWithSequence(receiver, memo s
 		path.EndpointB.ChannelID)
 	packet := suite.makeMockPacket(receiver, memo, prevSequence, path)
 
-	_, err := suite.chainB.GetTrstApp().IBCKeeper.ChannelKeeper.SendPacket(
+	_, err := suite.chainB.GetIntoApp().IBCKeeper.ChannelKeeper.SendPacket(
 		suite.chainB.GetContext(), channelCap, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, clienttypes.ZeroHeight(), uint64(suite.chainB.GetContext().BlockTime().Add(time.Minute).UnixNano()), packet.Data)
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 

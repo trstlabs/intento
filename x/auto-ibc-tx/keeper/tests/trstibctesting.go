@@ -18,15 +18,15 @@ type TestChain struct {
 
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	encCdc := app.MakeEncodingConfig()
-	TrstApp := *app.NewTrstApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, encCdc, app.EmptyAppOptions{} /* , compute.DefaultWasmConfig(), app.GetEnabledProposals() */)
-	TrstApp.AutoIbcTxKeeper.SetParams(TrstApp.GetBaseApp().NewContext(true, tmproto.Header{Height: TrstApp.LastBlockHeight()}), autoibctxtypes.DefaultParams())
+	IntoApp := *app.NewIntoApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, encCdc, app.EmptyAppOptions{} /* , compute.DefaultWasmConfig(), app.GetEnabledProposals() */)
+	IntoApp.AutoIbcTxKeeper.SetParams(IntoApp.GetBaseApp().NewContext(true, tmproto.Header{Height: IntoApp.LastBlockHeight()}), autoibctxtypes.DefaultParams())
 	//encCdc := app.MakeEncodingConfig()
-	return &TrstApp, app.NewDefaultGenesisState(encCdc.Codec)
+	return &IntoApp, app.NewDefaultGenesisState(encCdc.Codec)
 }
 
-// GetTrstApp returns the current chain's app as an TrstApp
-func (chain *TestChain) GetTrstApp() *app.TrstApp {
-	v, _ := chain.App.(*app.TrstApp)
+// GetIntoApp returns the current chain's app as an IntoApp
+func (chain *TestChain) GetIntoApp() *app.IntoApp {
+	v, _ := chain.App.(*app.IntoApp)
 
 	return v
 }

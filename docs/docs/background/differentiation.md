@@ -1,7 +1,6 @@
 ---
-order: 3
-title: Solution
-description: Enabling Smart Contracts 2.0
+title: Differentiation
+sidebar_position: 3
 ---
 
 # Differentiation
@@ -17,10 +16,10 @@ We also find some profound limitations for developers to this approach over our 
 
 ## Privileged smart contracts
 
-In CosmWasm implementations it is possible for privileged smart contacts to call functions on a block basis based on the BeginBlocker or EndBlocker function. Production blockchains where this is integrated  are Injective and Tgrade. On Injective, CosmWasm contracts can interact with the on-chain orderbook, which uses block-based execution for trades. In addition, privileged smart contacts, granted by the team or chain governance can use the chain’s BeginBlocker or EndBlocker hooks. These are blockchain functions that run in the beginning and ending of the block, respectively, and allow the chain/contract to call the contract. On a high level, this approach is highly similar to our Trustless Contracts solution, as these also depend on the BeginBlocker or EndBlocker functions. Next to our solution being permissionless, execution parameters can be set easily at contract instantiation. In theory, a similar on-chain solution to Trustless Triggers may be built into a privileged smart contract. However, this poses several challenges and risks, to the underlying smart contract blockchain and their users in the long term. 
+In CosmWasm implementations it is possible for privileged smart contacts to call functions on a block basis based on the BeginBlocker or EndBlocker function. Production blockchains where this is integrated  are Injective and Tgrade. On Injective, CosmWasm contracts can interact with the on-chain orderbook, which uses block-based execution for trades. In addition, privileged smart contacts, granted by the team or chain governance can use the chain’s BeginBlocker or EndBlocker hooks. These are blockchain functions that run in the beginning and ending of the block, respectively, and allow the chain/contract to call the contract. On a high level, this approach is highly similar to our Trustless Contracts solution, as these also depend on the BeginBlocker or EndBlocker functions. Next to our solution being permissionless, execution parameters can be set easily at contract instantiation. In theory, a similar on-chain solution to Intento's Intents may be built into a privileged smart contract. However, this poses several challenges and risks, to the underlying smart contract blockchain and their users in the long term. 
 
 Blockchains and their communities indirectly make a trade-off between blockspace availability for time-based calls and general purpose transactions. To combat unnecessary network congestion and spam, some measures would have to be taken at the smart contract and/or chain level. One of these measures is allowing only privileged smart contracts to execute. Other measures include a transaction limit or a fee mechanism. These mechanisms should be actively governed based on network conditions. Inadequate regulation endangers both protocol managers and end users in performing general purpose transactions. Excessive regulation may reduce decentralization and adoption.
-By granting only selected decentralized applications privileges, centralization may occur. As more privileged decentralized applications are built, approving privileges to new decentralized applications with minor enhancements may become harder to justify over time. Furthermore, having to request permission makes the network less attractive for new projects to choose the network as their preferred platform. 
+By granting only selected decentralized applications privileges, centralization may occur. As more privileged decentralized applications are built, approving privileges to new decentralized applications with minor enhancements becomes harder to justify. Furthermore, having to request permission makes the network less attractive for new projects to choose the network as their preferred platform. 
 
 Intento provides a neutral and permissionless platform for developing time-based automation applications and has these mechanisms built right into the chain’s governance. Governance of trigger parameters fits into Cosmos’s App-Chain thesis as time-based programmability is the primary application of the chain. In practice, this means that sophisticated trade-offs can be made where the interest of to-be scheduled automations is safeguarded, and where developers and users do not experience excessive fees or restrictions. 
 
@@ -29,7 +28,7 @@ Intento provides a neutral and permissionless platform for developing time-based
 Because Intento  automation on-chain, the caller of the execution is the validator set. Because of this, transfers of assets can be automated.
 This is the major difference that Intento provides compared to other solutions. With Transaction Automation using Interchain Accounts, the caller is a predictable address generated on-chain.
 
-| Trustless Triggers                                | Trustless Contracts                                                       | Bot Networks (Gelato, CronCat)                                     |
+| Intento's Intents                                | Trustless Contracts                                                       | Bot Networks (Gelato, CronCat)                                     |
 |---------------------------------------------------|---------------------------------------------------------------------------|--------------------------------------------------------------------|
 | Time-based actions with a predictable address                          | Triggers triggered by a the contract that supports a wide range of events                                       | Triggers are executed by a third party addresses |
 | Automates financial transactions                  | Can create protocols with built-in automation                             | Can be used to create trading bots and other automated tools       |
@@ -37,3 +36,17 @@ This is the major difference that Intento provides compared to other solutions. 
 | Highly customizable and flexible                  | Adaptable to a wide range of use cases                                    | Can be customized and optimized for specific use cases             |
 | Enhances security and control over funds          |  smart contract risks              |  Smart contract risks and may pose additional security risks if not implemented correctly               |
 | Reduces transaction fees and increases efficiency | Can reduce the need for intermediaries and third-party payment processors | No relay time to consider as bots are off-chain |
+
+
+## A Closer Look at Gas Costs: How Intento Automation Stands Out
+
+In crypto, the efficiency and cost of transactions, often expressed through "gas costs" play a significant role in the user experience. Our comparison between various automation services like Gelato on Ethereum, CronCat on Juno and Neutron, and Intento reveal significant enhancements in security, efficiency and cost-effectiveness.
+
+Gelato's services on Ethereum come with a protocol logic cost of 940,000 gas, translating to about $41, with an additional 20% protocol fee that elevates the cost per execution to $49. This cost structure is further compounded by risks associated with Gelato's proxy contract. On the other hand, CronCat, operating on Juno and Neutron, offers a more efficient protocol logic, consuming around 720,000 gas for execution, of which 170,000 gas is for the execution itself and about 550,000 gas for protocol logic.
+
+In comparison, Intento has an estimated logic cost of just about 100,000 gas based on its lines of code. This stark reduction in gas usage not only offers substantial cost savings for users, enabling more frequent automation of transactions but also broadens accessibility.
+
+Moreover, the efficiency of Intento unlocks new use cases and significantly enhances the user experience within crypto. The USP in gas cost efficiency not only positions Intento as a highly attractive option for users but also accentuates its role in establishing the Dymension Hub as a pivotal platform for interchain coordination. 
+
+
+Read more on gas cost savings in [our blog post](https://intento.zone/post/the-economics-of-modular-automation-a-comparative-gas-cost-analysis)
