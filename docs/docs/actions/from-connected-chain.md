@@ -286,7 +286,7 @@ The ICA_ADDR should also have some [funds to execute](#paying-for-fees) and have
 
 #### Paying for fees
 
-Action fees on Intento are paid from the funds sent in the ICS20 message, so that you do not need to worry about it. 
+Action fees on Intento are paid from the funds sent in the ICS20 message, so that you do not need to worry about it.
 
 **Action on Intento**
 
@@ -297,10 +297,11 @@ If you want to execute actions locally on Intento, set `auto_tx["connection_id"]
 To execute actions on the `destination chain`, the `Action Account` on the destination chain should be funded with `destination chain`'s fee token.
 The action can be funded by sending tokens to the account on `destination chain` before the first trigger. <!-- Fees can  granting the ICA to use fees from another account using a Feegrant. -->
 
-Alternatively, you can submit an additional proposal to send tokens using `MsgSend` or `MsgTransfer` to `destination_chain` with the `destination_chain_ica_address` as the receiver.
-For this, a message needs to be sent. 
+Alternatively, you can submit an additional proposal to send tokens ( `MsgSend` or `MsgTransfer`) to `destination_chain` with the `destination_chain_ica_address` as the receiver.
+For this, a message needs to be sent.
 
-<!--  Here's an example:
+<!-- 
+Here's an example:
 
 ```json
 [
@@ -321,14 +322,15 @@ For this, a message needs to be sent.
   }
 ]
 ``` 
---> 
+-->
 
 :::tip Tip: if the destination chain is the same as the source chain, the DAO can create a FeeGrant for the `destination_chain_ica_address`.
 :::
 
 #### Setting permissions
 
-If your action is on a Cosmos chain, you can set an AuthZ grant through `MsgGrant`. If you action is going to be on an EVM chain you can give the action account `allowance` for an  ERC20 token or `approval` in case of an NFT.
+If your action is on a Cosmos chain, you can set an AuthZ grant through `MsgGrant`. If you action is going to be on an EVM chain you can give the action account `allowance` for an ERC20 token or `approval` in case of an NFT.
+
 <!--
 #### Setting permissions
 
