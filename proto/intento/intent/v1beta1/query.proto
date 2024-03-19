@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package intento.intent.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "intento/intent/v1beta1/action.proto";
+import "intento/intent/v1beta1/params.proto";
+import "intento/intent/v1beta1/usage.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "github.com/trstlabs/intento/x/intent/types";
+
+option (gogoproto.goproto_getters_all) = false;
+option (gogoproto.equal_all) = false;
+
+// Query defines the gRPC querier service.
+service Query {
+  // QueryInterchainAccountFromAddress returns the interchain account for given
+  // owner address on a given connection pair
+  rpc InterchainAccountFromAddress(QueryInterchainAccountFromAddressRequest)
+      returns (QueryInterchainAccountFromAddressResponse) {
+    option (google.api.http).get = "/intento/intent/v1beta1/address-to-ica";
+  };
+  // Action returns the auto-executing interchain account tx
+  rpc Action(QueryActionRequest) returns (QueryActionResponse) {
+    option (google.api.http).get = "/intento/intent/v1beta1/action/{id}";
+  };
+  // ActionHistory returns the auto tx history
+  rpc ActionHistory(QueryActionHistoryRequest) returns (QueryActionHistoryResponse) {
+  option (google.api.http).get = "/intento/intent/v1beta1/action-history/{id}";
+  };
+  // Actions returns the all auto-executing interchain account messages
+  rpc Actions(QueryActionsRequest) returns (QueryActionsResponse) {
+    option (google.api.http).get = "/intento/intent/v1beta1/actions";
+  };
+  // ActionsForOwner returns the auto-executing interchain account messages for
+  // given owner
+  rpc ActionsForOwner(QueryActionsForOwnerRequest)
+      returns (QueryActionsForOwnerResponse) {
+    option (google.api.http).get =
+        "/intento/intent/v1beta1/actions-for-owner/{owner}";
+  };
+  // Params returns the total set of Intent parameters.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/intento/intent/v1beta1/params";
+  };
+  // ActionIbcTxUsage returns statistics on usage of IBC transactions
+  rpc ActionIbcTxUsage(QueryActionIbcUsageRequest)
+      returns (QueryActionIbcUsageResponse) {
+    option (google.api.http).get = "/intento/intent/v1beta1/action-ibc-usage";
+  };
+}
+
+// QueryInterchainAccountFromAddressRequest is the request type for the
+// Query/InterchainAccountAddress RPC
+message QueryInterchainAccountFromAddressRequest {
+  string owner = 1;
+  string connection_id = 2 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
+}
+
+// QueryInterchainAccountFromAddressResponse the response type for the
+// Query/InterchainAccountAddress RPC
+message QueryInterchainAccountFromAddressResponse {
+  string interchain_account_address = 1
+      [ (gogoproto.moretags) = "yaml:\"interchain_account_address\"" ];
+}
+
+// QueryActionRequest is the request type for the Query/ActionRequest RPC
+message QueryActionRequest { string id = 1; }
+
+// QueryActionResponse the response type for the Query/ActionRequest RPC
+message QueryActionResponse {
+  ActionInfo action_info = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryActionHistoryRequest is the request type for the Query/QueryActionHistoryRequest RPC
+message QueryActionHistoryRequest { 
+  // id of the action
+  string id = 1; 
+  // Pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryActionHistoryResponse the response type for the Query/QueryActionHistoryResponse RPC
+message QueryActionHistoryResponse {
+  repeated ActionHistoryEntry history = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+
+// QueryActionsRequest is the request type for the Query/ActionsRequest RPC
+message QueryActionsRequest {
+  // Pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryActionsResponse the response type for the Query/ActionsRequest RPCπ
+message QueryActionsResponse {
+  repeated ActionInfo action_infos = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryActionsForOwnerRequest is the request type for the
+// Query/ActionsForOwnerRequest RPC
+message QueryActionsForOwnerRequest {
+  string owner = 1;
+  // Pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryActionsForOwnerResponse the response type for the
+// Query/ActionsForOwnerRequest RPC
+message QueryActionsForOwnerResponse {
+  repeated ActionInfo action_infos = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryParamsRequest is the request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is the response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params defines the parameters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryAutoIbcUsageRequest is the request type for the
+// Query/QueryAutoIbcUsageRequest RPC
+message QueryActionIbcUsageRequest {
+  // Pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAutoIbcUsageResponse the response type for the
+// Query/QueryAutoIbcUsageResponse RPC
+message QueryActionIbcUsageResponse {
+  repeated ActionIbcUsage action_ibc_usage = 1
+      [ (gogoproto.nullable) = false ];
+  // Pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

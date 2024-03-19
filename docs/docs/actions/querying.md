@@ -18,14 +18,14 @@ The available queries are as follows:
 
 | Query                        | Description                                                                             | Parameter                                | Returns                                   | HTTP Method | Endpoint                                        |
 | ---------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ----------- | ----------------------------------------------- |
-| InterchainAccountFromAddress | Returns the interchain account for a given owner address on a specified connection pair | QueryInterchainAccountFromAddressRequest | QueryInterchainAccountFromAddressResponse | GET         | /auto-ibc-tx/v1beta1/address-to-ica             |
-| AutoTX                       | Returns the auto-executing interchain account transaction for a specified ID            | QueryAutoTxRequest                       | QueryAutoTxResponse                       | GET         | /auto-ibc-tx/v1beta1/auto-tx/{id}               |
-| AutoTXs                      | Returns all action infomration                                                          | QueryAutoTxsRequest                      | QueryAutoTxsResponse                      | GET         | /auto-ibc-tx/v1beta1/auto-txs                   |
-| AutoTXsForOwner              | Returns all action infomration for a given owner                                        | QueryAutoTxsForOwnerRequest              | QueryAutoTxsForOwnerResponse              | GET         | /auto-ibc-tx/v1beta1/auto-txs-for-owner/{owner} |
-| AutoTXHistoru                | Returns action execution history for a given action                                     | QueryAutoTxHistoryRequest                | QueryAutoTxHistoryResponse                | GET         | /auto-ibc-tx/v1beta1/auto-txs-history           |
-| Params                       | Returns the total set of the AutoIbcTx module parameters                                | QueryParamsRequest                       | QueryParamsResponse                       | GET         | /auto-ibc-tx/v1beta1/params                     |
+| InterchainAccountFromAddress | Returns the interchain account for a given owner address on a specified connection pair | QueryInterchainAccountFromAddressRequest | QueryInterchainAccountFromAddressResponse | GET         | /intento/intent/v1beta1/address-to-ica             |
+| AutoTX                       | Returns the auto-executing interchain account transaction for a specified ID            | QueryActionRequest                       | QueryActionResponse                       | GET         | /intento/intent/v1beta1/action/{id}               |
+| AutoTXs                      | Returns all action infomration                                                          | QueryActionsRequest                      | QueryActionsResponse                      | GET         | /intento/intent/v1beta1/actions                   |
+| AutoTXsForOwner              | Returns all action infomration for a given owner                                        | QueryActionsForOwnerRequest              | QueryActionsForOwnerResponse              | GET         | /intento/intent/v1beta1/actions-for-owner/{owner} |
+| AutoTXHistoru                | Returns action execution history for a given action                                     | QueryActionHistoryRequest                | QueryActionHistoryResponse                | GET         | /intento/intent/v1beta1/actions-history           |
+| Params                       | Returns the total set of the Intent module parameters                                | QueryParamsRequest                       | QueryParamsResponse                       | GET         | /intento/intent/v1beta1/params                     |
 
-These proto queries provide a convenient way to interact with the AutoIbcTx module and access information about automatic interchain transactions.
+These proto queries provide a convenient way to interact with the Intent module and access information about automatic interchain transactions.
 
 You can use pagination fields to narrow down the scope.
 

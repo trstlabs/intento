@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package intento.intent.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/any.proto";
+import "cosmos_proto/cosmos.proto";
+
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/trstlabs/intento/x/intent/types";
+
+option (gogoproto.goproto_getters_all) = false;
+option (gogoproto.equal_all) = true;
+
+// ActionInfo stores the info for the auto executing interchain accounts transaction
+message ActionInfo {
+    uint64 id = 1 [(gogoproto.customname) = "ID"];
+    string owner = 2;
+    string label = 3;
+    string fee_address = 4;
+    repeated google.protobuf.Any msgs           = 5  [(cosmos_proto.accepts_interface) = "sdk.Msg"];
+    google.protobuf.Duration interval = 6 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "interval,omitempty"
+  ];
+    google.protobuf.Timestamp start_time = 7 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp exec_time = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp end_time = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    repeated google.protobuf.Timestamp update_history = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    ICAConfig ica_config = 11 [(gogoproto.customname) = "ICAConfig"];
+    ExecutionConfiguration configuration = 12;
+    //ExecutionConditions conditions = 14;
+}
+
+message ICAConfig {
+      string port_id = 1 [(gogoproto.customname) = "PortID"];
+      string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
+      string host_connection_id = 3 [(gogoproto.customname) = "HostConnectionID"];
+}
+
+// ExecutionConfiguration provides the execution-related configuration of the Action
+message ExecutionConfiguration {
+       // if true, the Action outputs are saved and can be used in condition-based logic
+      bool save_msg_responses = 1;
+      // if true, the Action is not updatable
+      bool updating_disabled = 2;           
+      // If true, will execute until we get a successful Action, if false/unset will always execute
+      bool stop_on_success = 3;
+      // If true, will execute until successful Action, if false/unset will always execute
+      bool stop_on_failure = 4;
+      // If true, owner account balance is used when trigger account funds run out
+      bool fallback_to_owner_balance = 5;
+      // If true, allows the Action to continue execution after an ibc channel times out (recommended)
+      bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];
+  }
+
+// ExecutionConditions provides execution conditions for the Action
+message ExecutionConditions {
+      //optional array of dependent Actions that when executing succesfully, stops further execution
+      repeated int64 stop_on_success_of = 5;
+      //optional array of dependent Actions that when not executing succesfully, stops further execution
+      repeated int64 stop_on_failure_of = 6;      
+      //optional array of dependent Actions that should be executed succesfully in their latest call before upcomming execution is allowed
+      repeated int64 skip_on_failure_of = 7;
+      //optional array of dependent actions that should fail their latest call before upcomming execution is allowed
+      repeated int64 skip_on_success_of = 8;
+      //Comparison comparison = 1; // Comparison runs before execution of Action and outputs true or false
+      //UseResponseValue response = 2; // Replace value with value from message or response from another Actions latest output
+}
+
+// ActionHistory execution history
+message ActionHistory {
+      repeated ActionHistoryEntry history = 1 [ (gogoproto.nullable) = false ];
+}
+
+// ActionHistoryEntry provides a the history of Action interchain tx call
+message ActionHistoryEntry {
+    google.protobuf.Timestamp  scheduled_exec_time = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    google.protobuf.Timestamp  actual_exec_time = 2 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+    cosmos.base.v1beta1.Coin exec_fee = 3 [(gogoproto.nullable) = false];
+    // whether all messages are executed, independent of succesfull result
+    bool executed = 4;
+    //timed out from execution over IBC
+    bool timed_out = 5;
+    // errors from execution, if executed and no error the execution was succesfull
+    repeated string errors = 6;
+    //will be empty when save_msg_responses is false
+    repeated google.protobuf.Any msg_responses           =7;
+}

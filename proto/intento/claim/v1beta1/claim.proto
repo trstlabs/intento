@@ -13,8 +13,8 @@ service Msg {
 
 enum Action {
   option (gogoproto.goproto_enum_prefix) = false;
-  ActionAutoTxAuthz = 0;
-  ActionAutoTxWasm = 1;
+  ActionActionAuthz = 0;
+  ActionActionWasm = 1;
   ActionGovernanceVote = 2;
   ActionDelegateStake = 3;
 }

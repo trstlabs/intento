@@ -34,7 +34,7 @@ while getopts sgojhir{n} flag; do
 
 ``` yml
   {new-host-zone}1:
-    image: trustlesshub:{new-host-zone}
+    image: intento:{new-host-zone}
     volumes:
       - ./dockernet/state/{new-host-zone}1:/home/{new-host-zone}/.{new-host-zone}d
     ports:
@@ -43,23 +43,23 @@ while getopts sgojhir{n} flag; do
       - "{grpc-port}:9090"
 
   {new-host-zone}2:
-    image: trustlesshub:{new-host-zone}
+    image: intento:{new-host-zone}
     volumes:
       - ./dockernet/state/{new-host-zone}2:/home/{new-host-zone}/.{new-host-zone}d
 
     ...
 
   {new-host-zone}5:
-    image: trustlesshub:{new-host-zone}
+    image: intento:{new-host-zone}
     volumes:
       - ./dockernet/state/{new-host-zone}5:/home/{new-host-zone}/.{new-host-zone}d
   ...
   relayer-{chain_id}:
-    image: trustlesshub:relayer
+    image: intento:relayer
     volumes:
       - ./state/relayer-{chain_id}:/home/relayer/.relayer
     restart: always
-    command: [ "bash", "start.sh", "trst-{chain_id}" ]   
+    command: [ "bash", "start.sh", "into-{chain_id}" ]   
 ```
 
 * Add the following parameters to `dockernet/config.sh`, where `CHAIN` is the ID of the new host zone. For the relayer, you can use the mnemonic below or create your own. Note: you'll have to add the variables in the right places in `dockernet/config.sh`, as noted below.
@@ -109,7 +109,7 @@ ${CHAIN_ID}_ADDRESS() {
 
 ```
 
-* Add the IBC denom's for the host zone across each channel to `dockernet/config.sh` (e.g. `IBC_{HOST}_CHANNEL_{N}_DENOM)`). You can generate the variables by uncommenting `x/auto-ibc-tx/keeper/get_denom_traces_test.go`, specifying the ChainID and denom, and running `make test-unit`. Add the output to `dockernet/config.sh`. Note: You have to run the test using the "run test" button in VSCode, or pass in the `-v` flag and run the tests using `go test -mod=readonly ./x/auto-ibc-tx/...`, for the output to show up.
+* Add the IBC denom's for the host zone across each channel to `dockernet/config.sh` (e.g. `IBC_{HOST}_CHANNEL_{N}_DENOM)`). You can generate the variables by uncommenting `x/intent/keeper/get_denom_traces_test.go`, specifying the ChainID and denom, and running `make test-unit`. Add the output to `dockernet/config.sh`. Note: You have to run the test using the "run test" button in VSCode, or pass in the `-v` flag and run the tests using `go test -mod=readonly ./x/intent/...`, for the output to show up.
 * Add a section to the `dockernet/config/relayer_config.yaml`. Most chains will use either the cosmos coin type (118) or eth coin type (60). If a new coin type is used, add it to the top of `config.sh` for future reference.
 
 ``` toml
@@ -132,7 +132,7 @@ chains:
   ...
 paths:
   ...
-    trst-{new-host-zone}:
+    into-{new-host-zone}:
     src:
       chain-id: INTO
     dst:

@@ -8,12 +8,12 @@ import (
 	"github.com/trstlabs/intento/x/claim/types"
 )
 
-func (k Keeper) AfterAutoTxAuthz(ctx sdk.Context, recipient sdk.AccAddress) {
-	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionAutoTxAuthz)
+func (k Keeper) AfterActionAuthz(ctx sdk.Context, recipient sdk.AccAddress) {
+	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionActionAuthz)
 }
 
-func (k Keeper) AfterAutoTxWasm(ctx sdk.Context, recipient sdk.AccAddress) {
-	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionAutoTxWasm)
+func (k Keeper) AfterActionWasm(ctx sdk.Context, recipient sdk.AccAddress) {
+	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionActionWasm)
 }
 
 func (k Keeper) AfterGovernanceVoted(ctx sdk.Context, recipient sdk.AccAddress) {
@@ -102,11 +102,11 @@ func (h Hooks) BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, f
 }
 
 // AutoIBCTX hooks
-func (h Hooks) AfterAutoTxAuthz(ctx sdk.Context, recipientAddr sdk.AccAddress) {
-	h.k.AfterAutoTxAuthz(ctx, recipientAddr)
+func (h Hooks) AfterActionAuthz(ctx sdk.Context, recipientAddr sdk.AccAddress) {
+	h.k.AfterActionAuthz(ctx, recipientAddr)
 }
-func (h Hooks) AfterAutoTxWasm(ctx sdk.Context, recipientAddr sdk.AccAddress) {
-	h.k.AfterAutoTxWasm(ctx, recipientAddr)
+func (h Hooks) AfterActionWasm(ctx sdk.Context, recipientAddr sdk.AccAddress) {
+	h.k.AfterActionWasm(ctx, recipientAddr)
 }
 
 func (h Hooks) AfterAutoSwap(ctx sdk.Context, recipientAddr sdk.AccAddress) {

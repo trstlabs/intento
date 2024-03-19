@@ -50,12 +50,12 @@ type Transaction struct {
 	NumCosmosTxs  int64     `json:"num_cosmos_txs"`
 }
 
-type AutoTxIbcUsage struct {
-	Address string         `json:"address"`
-	Txs     []AutoIbcTxAck `json:"auto_txs"`
+type ActionIbcUsage struct {
+	Address string      `json:"address"`
+	Txs     []ActionAck `json:"actions"`
 }
 
-type AutoIbcTxAck struct {
+type ActionAck struct {
 	Coin struct {
 		Amount string `json:"amount"`
 		Denom  string `json:"denom"`
@@ -67,10 +67,10 @@ type SupportedConnectionToken struct {
 	ConnectionID            string
 	IbcDenom                string
 	Allocation              int64
-	MaxTokenAmountForAutoTx int64
+	MaxTokenAmountForAction int64
 }
 
-var supportedList = []SupportedConnectionToken{{ConnectionID: "connection-0", IbcDenom: "ibc/BE4E6F930E604F5E410DCA660E8F4DB6F2BDE1F8E4730CAE2C4B15982EFB42B8", Allocation: 40_000_000_000_000, MaxTokenAmountForAutoTx: 5_000_000_000}, {ConnectionID: "connection-1", IbcDenom: "ibc/8E2FEFCBD754FA3C97411F0126B9EC76191BAA1B3959CB73CECF396A4037BBF0", Allocation: 40_000_000_000_000, MaxTokenAmountForAutoTx: 5_000_000_000}}
+var supportedList = []SupportedConnectionToken{{ConnectionID: "connection-0", IbcDenom: "ibc/BE4E6F930E604F5E410DCA660E8F4DB6F2BDE1F8E4730CAE2C4B15982EFB42B8", Allocation: 40_000_000_000_000, MaxTokenAmountForAction: 5_000_000_000}, {ConnectionID: "connection-1", IbcDenom: "ibc/8E2FEFCBD754FA3C97411F0126B9EC76191BAA1B3959CB73CECF396A4037BBF0", Allocation: 40_000_000_000_000, MaxTokenAmountForAction: 5_000_000_000}}
 
 func ExportTestnetSnapshotCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -78,7 +78,7 @@ func ExportTestnetSnapshotCmd() *cobra.Command {
 		Short: "Export a testnet snapshot from provided exports",
 		Long: `Export a  testnet snapshot from provided usage file and faucet details
 Example:
-intentod export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/transactions.json ./testnet-snapshot.json
+intentod export-testnet-snapshot ~/into/analytics.json ~/cosmos-discord-faucet/transactions.json ./testnet-snapshot.json
 `,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -104,17 +104,17 @@ intentod export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/t
 				return err
 			}
 
-			autoTxUsage := make([]AutoTxIbcUsage, 0)
+			autoTxUsage := make([]ActionIbcUsage, 0)
 			err = json.Unmarshal([]byte(usageFile), &autoTxUsage)
 			if err != nil {
 				return err
 			}
 
-			// make a new []AutoTxIbcUsage{} called autoTxUsageByUser and put in only
+			// make a new []ActionIbcUsage{} called autoTxUsageByUser and put in only
 			// the address that matches a unique discordID from faucetTransactions based
 			// on the highest amount of NumCosmosTxs
 
-			var autoTxUsageByUser []AutoTxIbcUsage
+			var autoTxUsageByUser []ActionIbcUsage
 			uniqueDiscordIDs := make(map[string]bool)
 
 			// iterate through faucetTransactions and get the unique Discord IDs
@@ -134,10 +134,10 @@ intentod export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/t
 						}
 					}
 
-					// create a new AutoTxIbcUsage with the address and Txs from the highest NumCosmosTxs faucet transaction
-					var autoTxIbcUsage AutoTxIbcUsage
+					// create a new ActionIbcUsage with the address and Txs from the highest NumCosmosTxs faucet transaction
+					var autoTxIbcUsage ActionIbcUsage
 					autoTxIbcUsage.Address = highestNumCosmosTxsTx.Address
-					autoTxIbcUsage.Txs = []AutoIbcTxAck{}
+					autoTxIbcUsage.Txs = []ActionAck{}
 					autoTxUsageByUser = append(autoTxUsageByUser, autoTxIbcUsage)
 				}
 			}
@@ -201,8 +201,8 @@ intentod export-testnet-snapshot ~/trst/analytics.json ~/cosmos-discord-faucet/t
 					for _, supported := range supportedList {
 						if tx.Coin.Denom == supported.IbcDenom && tx.ConnectionID == supported.ConnectionID {
 							coinAmount, _ := strconv.ParseInt(tx.Coin.Amount, 10, 64)
-							if coinAmount > supported.MaxTokenAmountForAutoTx {
-								coinAmount = supported.MaxTokenAmountForAutoTx
+							if coinAmount > supported.MaxTokenAmountForAction {
+								coinAmount = supported.MaxTokenAmountForAction
 							}
 							//for example if tx.Coin.Amount is 5, out of 50 (totalIbcDenomAmount) is 10% and supported.Allocation is 100, trstAmount should be 10
 							trstAmount := sdk.NewInt(coinAmount).Quo(sdk.NewInt(totalIbcDenomAmount[supported.IbcDenom])).Mul(sdk.NewInt(supported.Allocation))
@@ -247,7 +247,7 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 		INTO is illiquid, a small amount INTO of of the airdropped coins is liquid in accounts.
 		The illiqud INTO is placed in the claims module, to be claimed after performing several actions.
 		Example:
-		intentod import-testnet-snapshot ~/trst/snapshot.json
+		intentod import-testnet-snapshot ~/into/snapshot.json
 		- Check input genesis:
 			file is at ~/.intentod/config/genesis.json
 `,
@@ -313,7 +313,7 @@ func ImportTestnetSnapshotCmd(defaultNodeHome string) *cobra.Command {
 
 				address, err := sdk.AccAddressFromBech32(acc.IntoAddress)
 				if err != nil {
-					return fmt.Errorf("trst acc from snapshot invalid: %s", err)
+					return fmt.Errorf("into acc from snapshot invalid: %s", err)
 				}
 
 				// initial liquid amounts

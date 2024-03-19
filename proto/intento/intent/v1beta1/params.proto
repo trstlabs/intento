@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package intento.intent.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+option go_package = "github.com/trstlabs/intento/x/intent/types";
+
+option (gogoproto.goproto_getters_all) = false;
+option (gogoproto.equal_all) = true;
+
+// Params defines the params for activeness of Actions on governance proposals.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  int64 ActionFundsCommission = 1;
+  int64 ActionFlexFeeMul = 2;
+  int64 ActionConstantFee = 3;
+  int64 RecurringActionConstantFee = 4;
+  //  Maximum period for self-executing Action
+  google.protobuf.Duration MaxActionDuration = 5 [
+        (gogoproto.nullable)    = false,
+        (gogoproto.stdduration) = true,
+        (gogoproto.jsontag)     = "max_action_duration,omitempty"
+  ];
+  //  Minimum period for self-executing Action
+  google.protobuf.Duration MinActionDuration = 6 [
+        (gogoproto.nullable)    = false,
+        (gogoproto.stdduration) = true,
+        (gogoproto.jsontag)     = "min_action_duration,omitempty"
+  ];
+  //  Minimum period for self-executing Action
+  google.protobuf.Duration MinActionInterval = 8 [
+        (gogoproto.nullable)    = false,
+        (gogoproto.stdduration) = true,
+        (gogoproto.jsontag)     = "min_action_interval,omitempty"
+  ];
+  //relayer rewards in uinto for each message type 0=SDK,1=Wasm, 2=Osmo. Rewards are in uinto and topped up in the module account by alloc module.
+  repeated int64 relayer_rewards = 9;
+}

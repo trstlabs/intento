@@ -13,14 +13,14 @@ make UPGRADE_OLD_VERSION={VERSION} UPGRADE_NAME={NAME} start-dockernet
 * The startup script will:
     * Compile the new binary
     * Create the cosmosvisor file structure required for upgrades
-    * Rebuild and replace the trst docker image with an image that has both binaries and is running cosmosvisor
+    * Rebuild and replace the into docker image with an image that has both binaries and is running cosmosvisor
         * This image pulls the new binary from the normal docker build that happens at the start of running this make command
 * Once the chain is up and running, submit the upgrade by running the following (the upgrade will occur at block 150):
 ```bash
 # e.g. make UPGRADE_NAME=v10 submit-upgrade-immediately
 make UPGRADE_NAME={NAME} submit-upgrade-immediately
 ```
-* View the trst logs - you should notice an update occuring at the specified upgrade height.
+* View the into logs - you should notice an update occuring at the specified upgrade height.
 
 ## Testing Upgrades with Integration Tests
 * **WARNING**: The integration tests may change between versions - the following only works if there were not breaking changes. If there are breaking changes, you can replace the GAIA and EVMOS integration test files with those from the old version.
@@ -34,7 +34,7 @@ make UPGRADE_OLD_VERSION={VERSION} upgrade-build-old-binary
 # e.g. make UPGRADE_OLD_VERSION=v8.0.0 UPGRADE_NAME=v10 upgrade-integration-tests-part-1
 make UPGRADE_OLD_VERSION={VERSION} UPGRADE_NAME={NAME} upgrade-integration-tests-part-1
 ```
-* Once the integration tests pass and the upgrade has been proposed, wait for the upgrade to occur at block 400. Check the trst logs to confirm the upgrade passes successfully
+* Once the integration tests pass and the upgrade has been proposed, wait for the upgrade to occur at block 400. Check the into logs to confirm the upgrade passes successfully
 * Finally, run the remaining integration tests 
 ```bash
 # e.g. make UPGRADE_NAME=v10 finish-upgrade-integration-tests

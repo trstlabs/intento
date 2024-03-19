@@ -12,7 +12,7 @@ In addition, you can also submit an AutoTX from another chain using the [ICS20 s
 
 ### Interchain Accounts
 
-Users and entities on Cosmos SDK chains may be able set up [interchain account](https://tutorials.cosmos.network/academy/3-ibc/8-ica.html) to Intento and submit the actions using [MsgSubmitAutoTx](@site/docs/actions/ibc-actions.md). It is also easy to deploy using the ICS20 standard.
+Users and entities on Cosmos SDK chains may be able set up [interchain account](https://tutorials.cosmos.network/academy/3-ibc/8-ica.html) to Intento and submit the actions using `MsgSubmitAction`. It is also easy to deploy using the ICS20 standard.
 
 ### ICS20 Standard
 
@@ -29,7 +29,7 @@ Setting up an action on a connected chain can be particularly useful for DAOs. U
 
 ## ICS20 Middleware
 
-A MsgRegisterAccountAndSubmitAutoTx or a MsgSubmitAutoTx can be derrived from the memo field in the ICS20 transfer message.
+A MsgRegisterAccountAndSubmitAction or a MsgSubmitAction can be derrived from the memo field in the ICS20 transfer message.
 
 ![ics20](@site/docs/images/connected_chain/from_connected_chain.png)
 
@@ -37,22 +37,22 @@ Our custom middleware is based on the wasmhooks implementation on [Osmosis](http
 
 The mechanism enabling this is a `memo` field on every ICS20 transfer packet as of [IBC v3.4.0](https://medium.com/the-interchain-foundation/moving-beyond-simple-token-transfers-d42b2b1dc29b).
 
-ics_middleware.go is IBC middleware that parses an ICS20 transfer, and if the `memo` field is of a particular form, it creates an action by parsing and handling a SubmitAutoTx message.
+ics_middleware.go is IBC middleware that parses an ICS20 transfer, and if the `memo` field is of a particular form, it creates an action by parsing and handling a SubmitAction message.
 
-These are the fields for `auto_tx` that are derived from the ICS20 message:
+These are the fields for `action` that are derived from the ICS20 message:
 
 - **Owner**: This field is directly obtained from the ICS20 packet metadata and equals the ICS20 recipient. If unspecified, a placeholder is made from the ICS20 sender and channel.
 - **Msg**: This field should be directly obtained from the ICS20 packet metadata.
 - **FeeFunds**: This field is set to the amount of funds being sent over in the ICS20 packet. One detail here is that the denom in the packet is the source chains representation of the denom, this will be translated into INTO on Intento.
 
-The constructed message for MsgSubmitAutoTx under the hood will look like:
+The constructed message for MsgSubmitAction under the hood will look like:
 
 ```go
-msg := MsgSubmitAutoTx{
+msg := MsgSubmitAction{
  // If let unspecified, owner is the actor that submitted the ICS20 message and a placeholder only
- Owner: "into1-hash-of-channel-and-sender" OR packet.data.memo["auto_tx"]["owner"],
+ Owner: "into1-hash-of-channel-and-sender" OR packet.data.memo["action"]["owner"],
  // Array of Msg json encoded, then transformed into a proto.message
- Msgs: packet.data.memo["auto_tx"]["msgs"],
+ Msgs: packet.data.memo["action"]["msgs"],
  // Funds coins that are transferred to the owner
  FeeFunds: sdk.NewCoin{Denom: ibc.ConvertSenderDenomToLocalDenom(packet.data.Denom), Amount: packet.data.Amount}
 
@@ -74,7 +74,7 @@ ICS20 is JSON native, so we use JSON for the memo format.
     "sender": "...",
     "receiver": "A INTO addr prefixed with into1",
     "memo": {
-      "auto_tx": {
+      "action": {
         "owner": "into1address", //owner is optional
         "msgs": [
           {
@@ -100,19 +100,19 @@ ICS20 is JSON native, so we use JSON for the memo format.
 }
 ```
 
-An ICS20 packet is formatted correctly for submitting an auto_tx if the following all hold:
+An ICS20 packet is formatted correctly for submitting an action if the following all hold:
 
 - `memo` is not blank
 - `memo` is valid JSON
-- `memo` has at least one key, `"auto_tx"`
-- `memo["auto_tx"]["msgs"]` is an array with valid JSON SDK message objects with a key "@type" and sdk message values
-- `receiver == memo["auto_tx"]["owner"]`. Optional, an owner can be specifed and is the address that receives remaining fee balance after execution ends.
-- `memo["auto_tx"]["cid"]`is a valid connection ID on INTO -> Destination chain, omit it for local INTO execution of the message.
-- `memo["auto_tx"]["register_ica"]` can be added, and true to register an ICA.
+- `memo` has at least one key, `"action"`
+- `memo["action"]["msgs"]` is an array with valid JSON SDK message objects with a key "@type" and sdk message values
+- `receiver == memo["action"]["owner"]`. Optional, an owner can be specifed and is the address that receives remaining fee balance after execution ends.
+- `memo["action"]["cid"]`is a valid connection ID on INTO -> Destination chain, omit it for local INTO execution of the message.
+- `memo["action"]["register_ica"]` can be added, and true to register an ICA.
 
 Fees are paid with a newly generated and AutoTX specific fee account.
 
-If an ICS20 packet does not contain a memo containing "auto_tx", a regular MsgTransfer takes place.
+If an ICS20 packet does not contain a memo containing "action", a regular MsgTransfer takes place.
 If an ICS20 packet is directed towards AutoTX, and is formated incorrectly, then it returns an error.
 
 ## Example: DAO Integration
@@ -167,7 +167,7 @@ Having adequate liquidity is crucial to ensure smooth operations and financial s
 
 ![icsdao](@site/docs/images/connected_chain/from_connected_chain_flow2.png)
 
-Submit a proposal with a custom message to execute. For a CosmWasm-based DAO like [DAO DAO](https://daodao.zone/) DAOs on Neutron, This message contains the ICS20 message`MsgTransfer`. In the `memo` you provide the `AutoTx` details such as the messages to automate, time parameters and set a custom label.
+Submit a proposal with a custom message to execute. For a CosmWasm-based DAO like [DAO DAO](https://daodao.zone/) DAOs on Neutron, This message contains the ICS20 message`MsgTransfer`. In the `memo` you provide the `Action` details such as the messages to automate, time parameters and set a custom label.
 
 Below is how the proposal action message could look like for a CosmWasm-based DAO:
 
@@ -184,7 +184,7 @@ Below is how the proposal action message could look like for a CosmWasm-based DA
         // sender - a bech32 address on source chain
         "sender": "neutron1validbech32address",
         // the recipient address on Intento
-        // is replaced with a newly generated address when auto_tx["owner"] in memo is blank
+        // is replaced with a newly generated address when action["owner"] in memo is blank
         "receiver": "into1address",
         // Timeout height relative to the current block height.
         // The timeout is disabled when set to 0.
@@ -193,7 +193,7 @@ Below is how the proposal action message could look like for a CosmWasm-based DA
         // The timeout is disabled when set to 0.
         "timeout_timestamp": "0",
         "memo": {
-          "auto_tx": {
+          "action": {
             //owner is optional and should equal recipient
             "owner": "into1address",
             "msgs": [
@@ -227,7 +227,7 @@ Here it is important that the `timeout_timestamp` or `timeout_height` takes into
 
 Further it is important that the field `register_ica` is set to `"true"` the first time you create an AutoTX. This will register an Interchain Account from Intento on the destination chain.
 
-A message in the `auto_tx["msgs"]` array can be like the following MsgSend:
+A message in the `action["msgs"]` array can be like the following MsgSend:
 
 ```json
 {
@@ -290,7 +290,7 @@ Action fees on Intento are paid from the funds sent in the ICS20 message, so tha
 
 **Action on Intento**
 
-If you want to execute actions locally on Intento, set `auto_tx["connection_id"]` to `""`. The funds sent with the ICS20 transfer will be used to pay for AutoTx fees.
+If you want to execute actions locally on Intento, set `action["connection_id"]` to `""`. The funds sent with the ICS20 transfer will be used to pay for Action fees.
 
 **With execution over IBC**
 
@@ -338,20 +338,20 @@ Alternatively, you can create a FeeGrant for the `destination_chain_ica_address`
 
 Initiating an action for the first time locally on Neutron can be done as follows:
 
- 1. Proposal 1 Message 1: IC20 token tranfser: Submit AutoTX on Intento.  In the `auto_tx` memo, `msgs` should contain AuthZ's MsgExec with `MsgExecuteContract`.
+ 1. Proposal 1 Message 1: IC20 token tranfser: Submit AutoTX on Intento.  In the `action` memo, `msgs` should contain AuthZ's MsgExec with `MsgExecuteContract`.
  2. Proposal 2 Message 1: Allow the DAO's NTRN tokens to be used for fees by `destination_chain_ica_address` with a FeeGrant.
   Proposal 2 Message 2: AuthZ grant to ICA to execute `MsgExecuteContract`.
 
  For a DAO swapping tokens on a recurring basis on Osmosis for the first time, 2 proposals should be made.
 
- 1. Proposal 1 Message 1: IC20 token tranfser: Submit AutoTX on Intento. In the `auto_tx` memo, `msgs` should contain AuthZ's MsgExec with `MsgSwapExactAmountOut`
+ 1. Proposal 1 Message 1: IC20 token tranfser: Submit AutoTX on Intento. In the `action` memo, `msgs` should contain AuthZ's MsgExec with `MsgSwapExactAmountOut`
  2. Proposal 2 Message 1: Send OSMO tokens to using `MsgTransfer` to `destination_chain_ica_address`.
   Proposal 2 Message 2: AuthZ grant to ICA to execute `MsgSwapExactAmountOut`.
 
 <!-- FeeGrant typeURL:  `/cosmos.feegrant.v1beta1.Grant`
 AuthZ typeURL: `/cosmos.authz.v1beta1.MsgGrant` -->
 
-when the funds and grants are in place from a previous action on that particular Interchain Account only one proposal action containing the `auto_tx` memo has to be specified.
+when the funds and grants are in place from a previous action on that particular Interchain Account only one proposal action containing the `action` memo has to be specified.
 
 ![example4](@site/docs/images/connected_chain/from_connected_chain_flow4.png)
 

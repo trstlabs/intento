@@ -69,7 +69,7 @@ build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 # process linker flags
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=trst \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=into \
 		  -X github.com/cosmos/cosmos-sdk/version.AppName=intentod \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
@@ -190,7 +190,7 @@ mocks: $(MOCKS_DIR)
 
 
 test-unit:
-	@go test -mod=readonly ./x/alloc... ./x/mint... ./x/claim... ./x/auto-ibc-tx... ./app/...
+	@go test -mod=readonly ./x/alloc... ./x/mint... ./x/claim... ./x/intent... ./app/...
 
 test-unit-path:
 	@go test -mod=readonly ./x/$(path)/...
@@ -209,8 +209,8 @@ RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
 
 docker-build:
 	@DOCKER_BUILDKIT=1 docker build \
-		-t ghcr.io/trstlabs/localtrst:${DOCKER_TAG} \
-		-t ghcr.io/trstlabs/localtrst-distroless:${DOCKER_TAG} \
+		-t ghcr.io/trstlabs/localintento:${DOCKER_TAG} \
+		-t ghcr.io/trstlabs/localintento-distroless:${DOCKER_TAG} \
 		--build-arg GO_VERSION=$(GO_VERSION) \
 		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_DISTROLESS) \
 		--build-arg GIT_VERSION=$(VERSION) \
@@ -319,12 +319,12 @@ run-rly:
 	@echo "Starting up local test relayer..."
 	./deployment/ibc/start.sh
 
-# starts a Into relayer, localtrst 1&2 and localjuno
+# starts a Into relayer, localintento 1&2 and localjuno
 run-rly-juno: 
 	@echo "Starting up local test relayers..."
 	docker compose -f deployment/ibc/docker-compose-rly.yml up
 
-# stops  a Into relayer, localtrst 1&2 and localjuno
+# stops  a Into relayer, localintento 1&2 and localjuno
 kill-rly-juno: 
 	@echo "Stopping and removing local test relayers..."
 	docker compose -f deployment/ibc/docker-compose-rly.yml stop 

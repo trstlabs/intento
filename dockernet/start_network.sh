@@ -31,21 +31,21 @@ if [[ "${UPGRADE_NAME:-}" != "" ]]; then
     rm -f $UPGRADES/binaries/intentod2
     cp $DOCKERNET_HOME/../build/intentod $UPGRADES/binaries/intentod2
 
-    # Build a cosmovisor image with the old binary and replace the trst docker image with a new one
+    # Build a cosmovisor image with the old binary and replace the into docker image with a new one
     #  that has both binaries and is running cosmovisor
     # The reason for having a separate cosmovisor image is so we can cache the building of cosmovisor and the old binary
     echo "Building Cosmovisor..."
     docker build \
-        -t trustlesshub:cosmovisor \
+        -t intento:cosmovisor \
         --build-arg old_commit_hash=$UPGRADE_OLD_VERSION \
         --build-arg into_admin_address=$INTO_ADMIN_ADDRESS \
         -f $UPGRADES/Dockerfile.cosmovisor .
 
     echo "Re-Building INTO with Upgrade Support..."
     docker build \
-        -t trustlesshub:trst \
+        -t intento:into \
         --build-arg upgrade_name=$UPGRADE_NAME \
-        -f $UPGRADES/Dockerfile.trst .
+        -f $UPGRADES/Dockerfile.into .
 
     echo "Done"
 fi

@@ -54,7 +54,7 @@ build_local_and_docker() {
       image=dockernet/dockerfiles/Dockerfile.$module
    fi
 
-   DOCKER_BUILDKIT=1 docker build --tag trustlesshub:$module -f $image . 
+   DOCKER_BUILDKIT=1 docker build --tag intento:$module -f $image . 
    docker_build_succeeded=${PIPESTATUS[0]}
 
    if [[ "$docker_build_succeeded" == "0" ]]; then
@@ -79,7 +79,7 @@ while getopts tgjosehrn flag; do
       n) continue ;; # build_local_and_docker {new-host-zone} deps/{new-host-zone} ;;
       r) build_local_and_docker relayer deps/relayer ;;  
       h) echo "Building Hermes Docker... ";
-         docker build --tag trustlesshub:hermes -f dockernet/dockerfiles/Dockerfile.hermes . ;
+         docker build --tag intento:hermes -f dockernet/dockerfiles/Dockerfile.hermes . ;
 
          printf '%s' "Building Hermes Locally... ";
          cd deps/hermes; 

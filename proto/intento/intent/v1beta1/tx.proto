@@ -1,0 +1,144 @@
+syntax = "proto3";
+
+package intento.intent.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "intento/intent/v1beta1/action.proto";
+
+option go_package = "github.com/trstlabs/intento/x/intent/types";
+
+
+// Msg defines the ica-authentication Msg service.
+service Msg {
+  // Register defines a rpc handler for MsgRegisterAccount
+  rpc RegisterAccount(MsgRegisterAccount) returns (MsgRegisterAccountResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/register-account";
+  };
+  rpc SubmitTx(MsgSubmitTx) returns (MsgSubmitTxResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/submit-tx";
+  };
+  rpc SubmitAction(MsgSubmitAction) returns (MsgSubmitActionResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/submit-action";
+  };
+  rpc RegisterAccountAndSubmitAction(MsgRegisterAccountAndSubmitAction) returns (MsgRegisterAccountAndSubmitActionResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/register-account-submit-action";
+  };
+  rpc UpdateAction(MsgUpdateAction) returns (MsgUpdateActionResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/update-action";
+  };
+}
+
+// MsgRegisterAccount registers an interchain account for the given owner over the specified connection pair
+message MsgRegisterAccount {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  string owner                      = 1;
+  string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string version                    = 3;
+}
+
+// MsgRegisterAccountResponse is the response type for Msg/RegisterAccount
+message MsgRegisterAccountResponse {}
+
+// MsgSubmitTx creates and submits an arbitrary transaction msg to be executed locally or using an interchain account
+message MsgSubmitTx {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  string owner                      = 1;
+  string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  google.protobuf.Any msg           = 3;
+}
+
+// MsgSubmitTxResponse defines the MsgSubmitTx response type
+message MsgSubmitTxResponse {}
+
+// MsgSubmitAction creates, submits and schedules an arbitrary transaction msg to be executed locally or using an interchain account
+message MsgSubmitAction {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  string owner                      = 1;
+  string label                      = 3;
+  repeated google.protobuf.Any msgs           = 4  [(cosmos_proto.accepts_interface) = "sdk.Msg"];
+  // duration defines the time that the code should run for
+  string duration = 5;
+  // start_at when set as a unix time after block inclusion, creates a custom start time for execution
+  uint64 start_at = 6;
+  //interval defines the interval between auto_msg calls
+  string interval = 7;
+  //optional fees to be used for auto tx execution limiting the amount of fees incurred
+  repeated cosmos.base.v1beta1.Coin fee_funds = 8 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"fee_funds\""
+  ];
+   //optional configuration parameters
+  ExecutionConfiguration configuration = 9;
+  //for ibc config
+  string connection_id              = 10 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string host_connection_id              = 11 [(gogoproto.moretags) = "yaml:\"host_connection_id\""];
+}
+
+// MsgSubmitTxResponse defines the MsgSubmitTx response type
+message MsgSubmitActionResponse {}
+
+// MsgRegisterAccountAndSubmitAction creates an interchain account, submits and schedules an arbitrary transaction msg to be executed by this interchain account
+message MsgRegisterAccountAndSubmitAction {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  string owner                      = 1;
+  string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string label                      = 3;
+  repeated google.protobuf.Any msgs           = 4  [(cosmos_proto.accepts_interface) = "sdk.Msg"];
+  // duration defines the time that the code should run for
+  string duration = 5;
+  // start_at when set as a unix time after block inclusion, creates a custom start time for execution
+  uint64 start_at = 6;
+  //interval defines the interval between auto_msg calls
+  string interval = 7;
+  //optional fees to be used for auto tx execution limiting the amount of fees incurred
+  repeated cosmos.base.v1beta1.Coin fee_funds = 8 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"fee_funds\""
+  ];
+  //optional array of dependent txs that should be executed before execution is allowed
+  ExecutionConfiguration configuration = 9;
+  string version                    = 10;
+  string host_connection_id              = 11 [(gogoproto.moretags) = "yaml:\"host_connection_id\""];
+}
+
+// MsgRegisterAccountAndSubmitActionResponse defines the MsgSubmitTx response type
+message MsgRegisterAccountAndSubmitActionResponse {}
+
+
+
+// MsgUpdateAction updates an arbitrary transaction msg to be executed locally or using an interchain account
+message MsgUpdateAction {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  string owner                      = 1;
+  uint64 id = 2  [(gogoproto.customname) = "ID"];;
+  string connection_id              = 3 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string label                      = 4;
+  repeated google.protobuf.Any msgs           = 5 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
+  // end_time when set defines the time that the code should run for
+  uint64 end_time = 6;
+  // start_at when set as a unix time after block inclusion, creates a custom start time for execution
+  uint64 start_at = 7;
+  //interval defines the interval between auto_msg calls
+  string interval = 8;
+  //optional fees to be used for auto tx execution limiting the amount of fees incurred
+  repeated cosmos.base.v1beta1.Coin fee_funds = 9 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"fee_funds\""
+  ];
+  ExecutionConfiguration configuration = 10;
+}
+
+// MsgUpdateTxResponse defines the MsgUpdateTx response type
+message MsgUpdateActionResponse {}

@@ -10,12 +10,6 @@ Intento uses general Cosmos SDK modules, modules required to run a Dymension Rol
 The Intent module in Version 2 will enable actions to be highly configurable and conditional, whereby the actions can depend on execution results. For example, a protocol user could set up a sequence of actions such as swapping ATOM for USDC on Osmosis and then paying for a subscription that is settled on Ethereum using the Axelar bridge with General Message Passing. By enabling time-based intents, protocols and their end-users can automate complex workflows in a seamless manner.
 
 ### Fee Mechanism
-
-We have specified 2 main governance parameters for gas fees:
-
--   Flat Gas Fee per execution: To prevent network congestion
-    
--   Flexible Gas Fee per execution: To compensate validators for computational resources
     
 Based on lines of code, we expect the module to be using 100,000 gas for triggering an execution. Significantly less than Gelato on EVM chains (1,000,000) and CronCat (700,000) whilst bringing trust assumptions to the minimum. This makes the module highly scalable for any specified intent.
 
@@ -37,22 +31,42 @@ Actions are specified in an Action object that contains data about when to execu
 ### Configuration
 
 ```proto
-// ExecutionConfiguration provides the execution-related configuration of the AutoTx
+// ExecutionConfiguration provides the execution-related configuration of the Action
 message ExecutionConfiguration {
-       // if true, the AutoTx outputs are saved and can be used in condition-based logic
+       // if true, the Action outputs are saved and can be used in condition-based logic
       bool save_msg_responses = 1;
-      // if true, the AutoTx is not updatable
+      // if true, the Action is not updatable
       bool updating_disabled = 2;           
-      // If true, will execute until we get a successful AutoTx, if false/unset will always execute
+      // If true, will execute until we get a successful Action, if false/unset will always execute
       bool stop_on_success = 3;
-      // If true, will execute until successful AutoTx, if false/unset will always execute
+      // If true, will execute until successful Action, if false/unset will always execute
       bool stop_on_failure = 4;
       // If true, owner account balance is used when trigger account funds run out
       bool fallback_to_owner_balance = 5;
-      // If true, allows the AutoTx to continue execution after an ibc channel times out (recommended)
+      // If true, allows the Action to continue execution after an ibc channel times out (recommended)
       bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];
 }
 ```
+
+## Parameters
+
+A number of action-related governance parameters can be adjusted. Parameters can be adjusted by governance to ensure that fees and rewards are appropriate. The default values are the following:
+
+```golang
+const (
+ DefaultActionFundsCommission int64 = 2 //2%
+
+ DefaultMaxActionDuration time.Duration = time.Hour * 24 * 366 * 2 // a little over 2 years
+
+ DefaultMinActionDuration time.Duration = time.Second * 60 //1minute
+
+ DefaultMinActionInterval time.Duration = time.Second * 60 //1minute
+)
+
+```
+
+Gas-related parameters are also to-be governance controlled.
+
 <!-- 
 ### Conditions
 

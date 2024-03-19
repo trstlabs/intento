@@ -44,7 +44,7 @@ set_into_genesis() {
     jq '.app_state.gov.params.max_deposit_period = $newVal' --arg newVal "$MAX_DEPOSIT_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.gov.params.voting_period = $newVal' --arg newVal "$VOTING_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
 
-    # enable trst as an interchain accounts controller
+    # enable into as an interchain accounts controller
     jq "del(.app_state.interchain_accounts)" $genesis_config > json.tmp && mv json.tmp $genesis_config
     interchain_accts=$(cat $DOCKERNET_HOME/config/ica_controller.json)
     jq ".app_state += $interchain_accts" $genesis_config > json.tmp && mv json.tmp $genesis_config
@@ -169,7 +169,7 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
 done
 
 if [ "$CHAIN" == "INTO" ]; then
-    # Add the trst trigger admin account
+    # Add the into trigger admin account
     echo "$INTO_ADMIN_MNEMONIC" | $MAIN_CMD keys add $INTO_ADMIN_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
     INTO_ADMIN_ADDRESS=$($MAIN_CMD keys show $INTO_ADMIN_ACCT --keyring-backend test -a)
     $MAIN_CMD add-genesis-account ${INTO_ADMIN_ADDRESS} ${ADMIN_TOKENS}${DENOM}

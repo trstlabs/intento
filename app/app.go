@@ -114,10 +114,10 @@ import (
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 	appparams "github.com/trstlabs/intento/app/params"
-	autoibctx "github.com/trstlabs/intento/x/auto-ibc-tx"
-	autoibctxkeeper "github.com/trstlabs/intento/x/auto-ibc-tx/keeper"
-	autoibctxtypes "github.com/trstlabs/intento/x/auto-ibc-tx/types"
 	"github.com/trstlabs/intento/x/claim"
+	intent "github.com/trstlabs/intento/x/intent"
+	intentkeeper "github.com/trstlabs/intento/x/intent/keeper"
+	intenttypes "github.com/trstlabs/intento/x/intent/types"
 	"github.com/trstlabs/intento/x/mint"
 	mintkeeper "github.com/trstlabs/intento/x/mint/keeper"
 	minttypes "github.com/trstlabs/intento/x/mint/types"
@@ -165,7 +165,7 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		ica.AppModuleBasic{},
-		autoibctx.AppModuleBasic{},
+		intent.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 	)
@@ -183,7 +183,7 @@ var (
 		ibcfeetypes.ModuleName:         nil,
 		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		alloctypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		autoibctxtypes.ModuleName:      {authtypes.Minter},
+		intenttypes.ModuleName:         {authtypes.Minter},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -240,19 +240,19 @@ type IntoApp struct {
 	IBCFeeKeeper          ibcfeekeeper.Keeper
 	ICAControllerKeeper   icacontrollerkeeper.Keeper
 	ICAHostKeeper         icahostkeeper.Keeper
-	AutoIbcTxKeeper       autoibctxkeeper.Keeper
+	IntentKeeper          intentkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
-	TransferStack         *autoibctx.IBCMiddleware
+	TransferStack         *intent.IBCMiddleware
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
 	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
-	ScopedAutoIbcTxKeeper     capabilitykeeper.ScopedKeeper
+	ScopedIntentKeeper        capabilitykeeper.ScopedKeeper
 
 	// the module manager
 	mm *module.Manager
@@ -308,7 +308,7 @@ func NewIntoApp(
 		capabilitytypes.StoreKey,
 		claimtypes.StoreKey,
 		alloctypes.StoreKey,
-		autoibctxtypes.StoreKey,
+		intenttypes.StoreKey,
 		ibcfeetypes.StoreKey,
 	)
 
@@ -344,7 +344,7 @@ func NewIntoApp(
 	// grant capabilities for the ibc and ibc-transfer modules
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	scopedAutoIbcTxKeeper := app.CapabilityKeeper.ScopeToModule(autoibctxtypes.ModuleName)
+	scopedIntentKeeper := app.CapabilityKeeper.ScopeToModule(intenttypes.ModuleName)
 	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 
@@ -485,11 +485,11 @@ func NewIntoApp(
 	)
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
 
-	app.AutoIbcTxKeeper = autoibctxkeeper.NewKeeper(appCodec, keys[autoibctxtypes.StoreKey], app.ICAControllerKeeper, scopedAutoIbcTxKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.GetSubspace(autoibctxtypes.ModuleName), autoibctxkeeper.NewMultiAutoIbcTxHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter())
-	autoIbcTxModule := autoibctx.NewAppModule(appCodec, app.AutoIbcTxKeeper)
-	autoIbcTxIBCModule := autoibctx.NewIBCModule(app.AutoIbcTxKeeper)
+	app.IntentKeeper = intentkeeper.NewKeeper(appCodec, keys[intenttypes.StoreKey], app.ICAControllerKeeper, scopedIntentKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.GetSubspace(intenttypes.ModuleName), intentkeeper.NewMultiIntentHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter())
+	autoIbcTxModule := intent.NewAppModule(appCodec, app.IntentKeeper)
+	autoIbcTxIBCModule := intent.NewIBCModule(app.IntentKeeper)
 
-	autoTxIcs20HooksTransferModule := autoibctx.NewIBCMiddleware(transferIBCModule, app.AutoIbcTxKeeper, interfaceRegistry)
+	autoTxIcs20HooksTransferModule := intent.NewIBCMiddleware(transferIBCModule, app.IntentKeeper, interfaceRegistry)
 	app.TransferStack = &autoTxIcs20HooksTransferModule
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(autoIbcTxIBCModule, app.ICAControllerKeeper)
 	icaControllerStack := ibcfee.NewIBCMiddleware(icaControllerIBCModule, app.IBCFeeKeeper)
@@ -502,7 +502,7 @@ func NewIntoApp(
 	ibcRouter.
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(ibctransfertypes.ModuleName, app.TransferStack).
-		AddRoute(autoibctxtypes.ModuleName, icaControllerStack).
+		AddRoute(intenttypes.ModuleName, icaControllerStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostStack) /* .
 		AddRoute(ibctransfertypes.ModuleName, transferIBCModule) */
 
@@ -560,14 +560,14 @@ func NewIntoApp(
 		alloctypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibcexported.ModuleName, ibctransfertypes.ModuleName, authtypes.ModuleName,
 		banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, authz.ModuleName, feegrant.ModuleName,
-		paramstypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, autoibctxtypes.ModuleName, ibcfeetypes.ModuleName, claimtypes.ModuleName,
+		paramstypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, intenttypes.ModuleName, ibcfeetypes.ModuleName, claimtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, ibcexported.ModuleName, ibctransfertypes.ModuleName,
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		minttypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName,
-		upgradetypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, autoibctxtypes.ModuleName, ibcfeetypes.ModuleName, minttypes.ModuleName,
+		upgradetypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, intenttypes.ModuleName, ibcfeetypes.ModuleName, minttypes.ModuleName,
 		alloctypes.ModuleName, claimtypes.ModuleName,
 	)
 
@@ -581,7 +581,7 @@ func NewIntoApp(
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, claimtypes.ModuleName,
 		alloctypes.ModuleName, crisistypes.ModuleName,
 		ibcexported.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
-		icatypes.ModuleName, autoibctxtypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
+		icatypes.ModuleName, intenttypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 	)
 
@@ -645,7 +645,7 @@ func NewIntoApp(
 	app.ScopedTransferKeeper = scopedTransferKeeper
 	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
-	app.ScopedAutoIbcTxKeeper = scopedAutoIbcTxKeeper
+	app.ScopedIntentKeeper = scopedIntentKeeper
 
 	return app
 }
@@ -827,7 +827,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
-	paramsKeeper.Subspace(autoibctx.ModuleName)
+	paramsKeeper.Subspace(intent.ModuleName)
 	paramsKeeper.Subspace(claimtypes.ModuleName)
 	paramsKeeper.Subspace(alloctypes.ModuleName)
 
@@ -848,7 +848,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 // 			app.appCodec,
 // 			app.keys[capabilitytypes.ModuleName],
 // 			app.CapabilityKeeper,
-// 			autoibctxtypes.ModuleName,
+// 			intenttypes.ModuleName,
 // 		),
 // 	)
 // }

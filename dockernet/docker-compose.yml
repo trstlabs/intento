@@ -1,26 +1,26 @@
 version: "3"
 services:
-  trst1:
-    image: trustlesshub:trst
+  into1:
+    image: intento:into
     volumes:
-      - ./state/trst1:/home/trst/.trst
+      - ./state/into1:/home/into/.into
     ports:
       - "26657:26657"
       - "1317:1317"
       - "9090:9090"
 
-  trst2:
-    image: trustlesshub:trst
+  into2:
+    image: intento:into
     volumes:
-      - ./state/trst2:/home/trst/.trst
+      - ./state/into2:/home/into/.into
 
-  trst3:
-    image: trustlesshub:trst
+  into3:
+    image: intento:into
     volumes:
-      - ./state/trst3:/home/trst/.trst
+      - ./state/into3:/home/into/.into
 
   gaia1:
-    image: trustlesshub:gaia
+    image: intento:gaia
     volumes:
       - ./state/gaia1:/home/gaia/.gaia
     ports:
@@ -29,27 +29,27 @@ services:
       - "9080:9090"
 
   gaia2:
-    image: trustlesshub:gaia
+    image: intento:gaia
     volumes:
       - ./state/gaia2:/home/gaia/.gaia
 
   gaia3:
-    image: trustlesshub:gaia
+    image: intento:gaia
     volumes:
       - ./state/gaia3:/home/gaia/.gaia
 
   gaia4:
-    image: trustlesshub:gaia
+    image: intento:gaia
     volumes:
       - ./state/gaia4:/home/gaia/.gaia
 
   gaia5:
-    image: trustlesshub:gaia
+    image: intento:gaia
     volumes:
       - ./state/gaia5:/home/gaia/.gaia
 
   juno1:
-    image: trustlesshub:juno
+    image: intento:juno
     volumes:
       - ./state/juno1:/home/juno/.juno
     ports:
@@ -58,27 +58,27 @@ services:
       - "9070:9090"
 
   juno2:
-    image: trustlesshub:juno
+    image: intento:juno
     volumes:
       - ./state/juno2:/home/juno/.juno
 
   juno3:
-    image: trustlesshub:juno
+    image: intento:juno
     volumes:
       - ./state/juno3:/home/juno/.juno
 
   juno4:
-    image: trustlesshub:juno
+    image: intento:juno
     volumes:
       - ./state/juno4:/home/juno/.juno
 
   juno5:
-    image: trustlesshub:juno
+    image: intento:juno
     volumes:
       - ./state/juno5:/home/juno/.juno
 
   osmo1:
-    image: trustlesshub:osmo
+    image: intento:osmo
     volumes:
       - ./state/osmo1:/home/osmosis/.osmosisd
     ports:
@@ -87,27 +87,27 @@ services:
       - "9060:9090"
 
   osmo2:
-    image: trustlesshub:osmo
+    image: intento:osmo
     volumes:
       - ./state/osmo2:/home/osmosis/.osmosisd
 
   osmo3:
-    image: trustlesshub:osmo
+    image: intento:osmo
     volumes:
       - ./state/osmo3:/home/osmosis/.osmosisd
 
   osmo4:
-    image: trustlesshub:osmo
+    image: intento:osmo
     volumes:
       - ./state/osmo4:/home/osmosis/.osmosisd
 
   osmo5:
-    image: trustlesshub:osmo
+    image: intento:osmo
     volumes:
       - ./state/osmo5:/home/osmosis/.osmosisd
 
   stars1:
-    image: trustlesshub:stars
+    image: intento:stars
     volumes:
       - ./state/stars1:/home/stars/.starsd
     ports:
@@ -116,63 +116,63 @@ services:
       - "9050:9090"
 
   stars2:
-    image: trustlesshub:stars
+    image: intento:stars
     volumes:
       - ./state/stars2:/home/stars/.starsd
 
   stars3:
-    image: trustlesshub:stars
+    image: intento:stars
     volumes:
       - ./state/stars3:/home/stars/.starsd
 
   stars4:
-    image: trustlesshub:stars
+    image: intento:stars
     volumes:
       - ./state/stars4:/home/stars/.starsd
 
   stars5:
-    image: trustlesshub:stars
+    image: intento:stars
     volumes:
       - ./state/stars5:/home/stars/.starsd
 
   # For the host chain, we must override the command to prevent an old binary from
   # being run when testing upgrades
   host1:
-    image: trustlesshub:trst
+    image: intento:into
     command: intentod start
     volumes:
-      - ./state/host1:/home/trst/.trst
+      - ./state/host1:/home/into/.into
     ports:
       - "26157:26657"
       - "1267:1317"
       - "9040:9090"
 
   host2:
-    image: trustlesshub:trst
+    image: intento:into
     command: intentod start
     volumes:
-      - ./state/host2:/home/trst/.trst
+      - ./state/host2:/home/into/.into
 
   host3:
-    image: trustlesshub:trst
+    image: intento:into
     command: intentod start
     volumes:
-      - ./state/host3:/home/trst/.trst
+      - ./state/host3:/home/into/.into
 
   host4:
-    image: trustlesshub:trst
+    image: intento:into
     command: intentod start
     volumes:
-      - ./state/host4:/home/trst/.trst
+      - ./state/host4:/home/into/.into
 
   host5:
-    image: trustlesshub:trst
+    image: intento:into
     command: intentod start
     volumes:
-      - ./state/host5:/home/trst/.trst
+      - ./state/host5:/home/into/.into
 
   evmos1:
-    image: trustlesshub:evmos
+    image: intento:evmos
     volumes:
       - ./state/evmos1:/home/evmos/.evmosd
     ports:
@@ -181,79 +181,79 @@ services:
       - "9030:9090"
 
   evmos2:
-    image: trustlesshub:evmos
+    image: intento:evmos
     volumes:
       - ./state/evmos2:/home/evmos/.evmosd
 
   evmos3:
-    image: trustlesshub:evmos
+    image: intento:evmos
     volumes:
       - ./state/evmos3:/home/evmos/.evmosd
 
   evmos4:
-    image: trustlesshub:evmos
+    image: intento:evmos
     volumes:
       - ./state/evmos4:/home/evmos/.evmosd
 
   evmos5:
-    image: trustlesshub:evmos
+    image: intento:evmos
     volumes:
       - ./state/evmos5:/home/evmos/.evmosd
 
   # Fill in new host zone being tested here
 
   hermes:
-    image: trustlesshub:hermes
+    image: intento:hermes
     volumes:
       - ~/.hermes:/home/hermes/.hermes
       - ./state/hermes/config.toml:/home/hermes/.hermes/config.toml
     restart: always
 
   relayer-gaia:
-    image: trustlesshub:relayer
+    image: intento:relayer
     volumes:
       - ./state/relayer-gaia:/home/relayer/.relayer
       
     restart: always
-    command: [ "bash", "start.sh", "trst-gaia" ]
+    command: [ "bash", "start.sh", "into-gaia" ]
 
   relayer-juno:
-    image: trustlesshub:relayer
+    image: intento:relayer
     volumes:
       - ./state/relayer-juno:/home/relayer/.relayer
     restart: always
-    command: [ "bash", "start.sh", "trst-juno" ]
+    command: [ "bash", "start.sh", "into-juno" ]
 
   relayer-osmo:
-    image: trustlesshub:relayer
+    image: intento:relayer
     volumes:
       - ./state/relayer-osmo:/home/relayer/.relayer
     restart: always
-    command: [ "bash", "start.sh", "trst-osmo" ]
+    command: [ "bash", "start.sh", "into-osmo" ]
 
   relayer-stars:
-    image: trustlesshub:relayer
+    image: intento:relayer
     volumes:
       - ./state/relayer-stars:/home/relayer/.relayer
     restart: always
-    command: [ "bash", "start.sh", "trst-stars" ]
+    command: [ "bash", "start.sh", "into-stars" ]
 
   relayer-host:
-    image: trustlesshub:relayer
+    image: intento:relayer
     volumes:
       - ./state/relayer-host:/home/relayer/.relayer
     restart: always
-    command: [ "bash", "start.sh", "trst-host" ]
+    command: [ "bash", "start.sh", "into-host" ]
 
   relayer-evmos:
-    image: trustlesshub:relayer
+    image: intento:relayer
     volumes:
       - ./state/relayer-evmos:/home/relayer/.relayer
     restart: always
-    command: [ "bash", "start.sh", "trst-evmos" ]
+    command: [ "bash", "start.sh", "into-evmos" ]
 
   relayer-juno-osmo:
-    image: trustlesshub:relayer
+    image: intento:relayer
     volumes:
       - ./state/relayer-juno-osmo:/home/relayer/.relayer
     restart: always

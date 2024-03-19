@@ -71,11 +71,11 @@ func (k Keeper) DistributeInflation(ctx sdk.Context) error {
 	// k.Logger(ctx).Debug("funded contract module", "amount", contractIncentiveCoins.String(), "from", blockInflationAddr)
 
 	relayerIncentiveCoin := k.GetProportions(ctx, blockInflation, proportions.RelayerIncentives)
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "autoibctx", sdk.NewCoins(relayerIncentiveCoin))
+	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "intent", sdk.NewCoins(relayerIncentiveCoin))
 	if err != nil {
 		return err
 	}
-	k.Logger(ctx).Debug("funded autoibctx module", "amount", relayerIncentiveCoin.String(), "from", blockInflationAddr)
+	k.Logger(ctx).Debug("funded Intent module", "amount", relayerIncentiveCoin.String(), "from", blockInflationAddr)
 
 	/*itemIncentiveCoins := sdk.NewCoins(k.GetProportions(ctx, blockInflation, proportions.ItemIncentives))
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, authtypes.FeeCollectorName, "item_incentives", itemIncentiveCoins)

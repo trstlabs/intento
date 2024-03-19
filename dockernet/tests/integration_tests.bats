@@ -119,7 +119,7 @@ setup_file() {
   assert_equal "$host_user_token_balance_diff" "5002500" #TRANSFER_AMOUNT+fee
 }
 
-@test "[INTEGRATION-BASIC-$CHAIN_NAME] AutoIbcTx MsgSend using ICA" {
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] Intent MsgSend using ICA" {
   # get initial balances on host account
   receiver_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
 
@@ -127,10 +127,10 @@ setup_file() {
   user_into_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
 
   # build MsgRegisterAccount and retrieve trigger ICA account
-  $INTO_MAIN_CMD tx autoibctx register --connection-id connection-$CONNECTION_ID --counterparty-connection-id connection-0 --from $INTO_USER -y
+  $INTO_MAIN_CMD tx intent register --connection-id connection-$CONNECTION_ID --counterparty-connection-id connection-0 --from $INTO_USER -y
 
   sleep 20
-  ICA_ADDRESS=$($INTO_MAIN_CMD q autoibctx interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
+  ICA_ADDRESS=$($INTO_MAIN_CMD q intent interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
   ICA_ADDRESS=$(echo "$ICA_ADDRESS" | awk '{print $2}')
 
   fund_ica=$($HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ICA_ADDRESS $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
@@ -155,9 +155,9 @@ setup_file() {
 }
 EOF
 
-  # build MsgSubmitAutoTx with MsgSend, 60sec non-recurring
-  msg_submit_auto_tx=$($INTO_MAIN_CMD tx autoibctx submit-auto-tx "$msg_send_file" --label "MsgSend using ICA" --duration "60s" --connection-id connection-$CONNECTION_ID --from $INTO_USER -y)
-  echo "$msg_submit_auto_tx"
+  # build MsgSubmitAction with MsgSend, 60sec non-recurring
+  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_send_file" --label "MsgSend using ICA" --duration "60s" --connection-id connection-$CONNECTION_ID --from $INTO_USER -y)
+  echo "$msg_submit_action"
 
   GET_AUTO_TX_ID $(INTO_ADDRESS) 8
   
@@ -175,7 +175,7 @@ EOF
   assert_equal "$receiver_diff" $MSGSEND_AMOUNT 
 }
 
-@test "[INTEGRATION-BASIC-$CHAIN_NAME] AutoIbcTx MsgSend using AuthZ" {
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] Intent MsgSend using AuthZ" {
   # get initial balances on host account
   user_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
   receiver_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
@@ -183,7 +183,7 @@ EOF
   # get token balance user on INTO
   user_into_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
 
-  ICA_ADDRESS=$($INTO_MAIN_CMD q autoibctx interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
+  ICA_ADDRESS=$($INTO_MAIN_CMD q intent interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
   ICA_ADDRESS=$(echo "$ICA_ADDRESS" | awk '{print $2}')
   echo "ICA ADDR: $ICA_ADDRESS"
 
@@ -215,9 +215,9 @@ EOF
 }
 EOF
 
-  # build MsgSubmitAutoTx with MsgSend, 60sec non-recurring
-  msg_submit_auto_tx=$($INTO_MAIN_CMD tx autoibctx submit-auto-tx "$msg_exec_file" --label "MsgSend using AuthZ" --duration "60s" --connection-id connection-$CONNECTION_ID --from $INTO_USER -y)
-  echo "$msg_submit_auto_tx"
+  # build MsgSubmitAction with MsgSend, 60sec non-recurring
+  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_exec_file" --label "MsgSend using AuthZ" --duration "60s" --connection-id connection-$CONNECTION_ID --from $INTO_USER -y)
+  echo "$msg_submit_action"
 
   GET_AUTO_TX_ID $(INTO_ADDRESS) 8
   
@@ -237,7 +237,7 @@ EOF
   assert_equal "$receiver_diff" $MSGSEND_AMOUNT #from MsgSend
 }
 
-# test auto-tx MsgSend from ICS20 message with Trigger Address ICA Account with MsgSubmitAutoTx ICA_ADDR parsing
+# test action MsgSend from ICS20 message with Trigger Address ICA Account with MsgSubmitAction ICA_ADDR parsing
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc ics20 transfer, create trigger and auto-parse address" {
 
   # get initial balances
@@ -245,12 +245,12 @@ EOF
   receiver_token_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
 
   # do IBC transfer
-  memo='{"auto_tx": {"msgs": [{"@type": "/cosmos.bank.v1beta1.MsgSend","amount": [{"amount": "'$MSGSEND_AMOUNT'","denom": "'$HOST_DENOM'"}],"from_address":"ICA_ADDR","to_address": "'$HOST_RECEIVER_ADDRESS'"}],"duration":"2880h","interval":"60s","label":"MsgSend using ICS20 hook","cid":"connection-'$CONNECTION_ID'","start_at":"0", "owner": "'$(INTO_ADDRESS)'" }}'
+  memo='{"action": {"msgs": [{"@type": "/cosmos.bank.v1beta1.MsgSend","amount": [{"amount": "'$MSGSEND_AMOUNT'","denom": "'$HOST_DENOM'"}],"from_address":"ICA_ADDR","to_address": "'$HOST_RECEIVER_ADDRESS'"}],"duration":"2880h","interval":"60s","label":"MsgSend using ICS20 hook","cid":"connection-'$CONNECTION_ID'","start_at":"0", "owner": "'$(INTO_ADDRESS)'" }}'
   $HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL $(INTO_ADDRESS) ${ICS20HOOK_AMOUNT}${IBC_INTO_DENOM} --memo "$memo" --from $HOST_USER -y
 
   GET_AUTO_TX_ID $(INTO_ADDRESS) 8
 
-  ICA_ADDRESS=$($INTO_MAIN_CMD q autoibctx interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
+  ICA_ADDRESS=$($INTO_MAIN_CMD q intent interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
   ICA_ADDRESS=$(echo "$ICA_ADDRESS" | awk '{print $2}')
   $HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ICA_ADDRESS $MSGSEND_AMOUNT_TOTAL$HOST_DENOM --from $HOST_USER -y
   
@@ -272,5 +272,5 @@ EOF
 }
 
 # TODO
-# test auto-tx MsgSend with user address over AuthZ grant to ICA Account with MsgRegisterAccountAndSubmitAutoTx ICA_ADDR parsing
-# test auto-tx with other msgs like MsgWithdrawalRewards, MsgSubmitProposal
+# test action MsgSend with user address over AuthZ grant to ICA Account with MsgRegisterAccountAndSubmitAction ICA_ADDR parsing
+# test action with other msgs like MsgWithdrawalRewards, MsgSubmitProposal

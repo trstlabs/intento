@@ -93,7 +93,7 @@ func (suite *KeeperTestSuite) TestDistribution() {
 	/* 	totalDistr := params.DistributionProportions.TrustlessContractIncentives.
 	Add(params.DistributionProportions.ContributorRewards.Add(params.DistributionProportions.CommunityPool)).Add(params.DistributionProportions.RelayerIncentives) // 40% */
 	totalDistr := params.DistributionProportions.ContributorRewards.Add(params.DistributionProportions.CommunityPool).Add(params.DistributionProportions.RelayerIncentives) // 40%
-	autoIbcTxModule := suite.app.AccountKeeper.GetModuleAddress("autoibctx")
+	autoIbcTxModule := suite.app.AccountKeeper.GetModuleAddress("intent")
 	suite.Equal(
 		sdk.NewDecFromInt(mintCoin.Amount).Mul(params.DistributionProportions.RelayerIncentives).RoundInt().String(),
 		suite.app.BankKeeper.GetAllBalances(suite.ctx, autoIbcTxModule).AmountOf(denom).String())

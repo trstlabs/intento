@@ -17,12 +17,12 @@ RUN --mount=type=cache,target=/root/.cache/go-build cd /opt/cosmos-sdk && make c
 
 # Build the old binary
 RUN git clone https://github.com/trstlabs/intento.git \
-    && cd trst \
+    && cd into \
     && git checkout $old_commit_hash \
     && sed -i -E "s|trst1k8c2m5cn322akk5wy8lpt87dd2f4yh9azg7jlh|$into_admin_address|g" utils/admins.go \
     && env GOOS=linux GOARCH=amd64 go build -mod=readonly -trimpath -o /opt/build/ ./... \
     && mv /opt/build/intentod /opt/build/intentod1 
 
-RUN --mount=type=cache,target=/root/.cache/go-build cd /opt/trst && make build
+RUN --mount=type=cache,target=/root/.cache/go-build cd /opt/into && make build
 
 

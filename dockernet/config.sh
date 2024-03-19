@@ -324,19 +324,19 @@ GET_AUTO_TX_ID() {
   max_blocks=${2:-10} # Default to 10 if not specified
 
   # Fetch initial transaction IDs
-  initial_autotxs=($($INTO_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | grep 'tx_id:' | awk '{print $2}'))
-  echo "Initial AutoTxs: ${initial_autotxs[*]}"
+  initial_actions=($($INTO_MAIN_CMD q intent list-actions-by-owner $address | grep 'id:' | awk '{print $2}'))
+  echo "Initial Actions: ${initial_actions[*]}"
 
   for i in $(seq $max_blocks); do
     # Fetch new transaction IDs
-    new_autotxs=($($INTO_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | grep 'tx_id:' | awk '{print $2}'))
+    new_actions=($($INTO_MAIN_CMD q intent list-actions-by-owner $address | grep 'id:' | awk '{print $2}'))
 
     # Find new transaction ID by comparing initial and new lists
-    for tx_id in "${new_autotxs[@]}"; do
-      if [[ ! " ${initial_autotxs[*]} " =~ " ${tx_id} " ]]; then
-        echo "New AutoTx detected with ID: $tx_id"
-       #  return $((10#$tx_id)) # Return the transaction ID as an integer
-       FOUND_TX_ID=$tx_id
+    for id in "${new_actions[@]}"; do
+      if [[ ! " ${initial_actions[*]} " =~ " ${id} " ]]; then
+        echo "New Action detected with ID: $id"
+       #  return $((10#$id)) # Return the transaction ID as an integer
+       FOUND_TX_ID=$id
        return 0
       fi
     done
@@ -346,7 +346,7 @@ GET_AUTO_TX_ID() {
 
     # Optional: Handle case where no new transactions are found after max_blocks
     if [[ $i -eq $max_blocks ]]; then
-      echo "No new AutoTxs found after $max_blocks blocks."
+      echo "No new Actions found after $max_blocks blocks."
       return -1 # Indicate no new transaction was found
     fi
   done
@@ -357,18 +357,18 @@ WAIT_FOR_EXECUTED_TX_BY_ID() {
   max_blocks=${2:-10} # Default to 10 if not specified
 
   for i in $(seq $max_blocks); do
-    # Fetch transaction info for the specified tx_id
-    tx_info=$($INTO_MAIN_CMD q autoibctx list-auto-txs-by-owner $address | awk -v txid="$tx_id" '
-      /auto_tx_history/{capture=1;next} 
-      capture && /tx_id: /{capture=0} 
-      capture && /tx_id: "'"$txid"'"/{found=1;next} 
-      found{print; if (/auto_tx_history/ || /tx_id: /) exit}')
+    # Fetch transaction info for the specified id
+    tx_info=$($INTO_MAIN_CMD q intent list-actions-by-owner $address | awk -v txid="$id" '
+      /action_history/{capture=1;next} 
+      capture && /id: /{capture=0} 
+      capture && /id: "'"$txid"'"/{found=1;next} 
+      found{print; if (/action_history/ || /id: /) exit}')
     
-    # Check if executed is true for the specified tx_id
+    # Check if executed is true for the specified id
     executed=$(echo "$tx_info" | grep 'executed' | awk '{print $2}')
     if [[ "$executed" == "true" ]]; then
-      echo "AutoTx ID info $tx_info."
-      echo "AutoTx ID $FOUND_TX_ID executed."
+      echo "Action ID info $tx_info."
+      echo "Action ID $FOUND_TX_ID executed."
       return 0
     fi
 
@@ -377,7 +377,7 @@ WAIT_FOR_EXECUTED_TX_BY_ID() {
 
     # Handle case where the transaction is not executed after max_blocks
     if [[ $i -eq $max_blocks ]]; then
-      echo "AutoTx ID $FOUND_TX_ID not executed after $max_blocks blocks."
+      echo "Action ID $FOUND_TX_ID not executed after $max_blocks blocks."
       return -1
     fi
   done
@@ -398,7 +398,7 @@ GET_ICA_ADDR() {
   user_address="$2"
 
   # $INTO_MAIN_CMD q stakeibc show-host-zone $chain_id | grep ${ica_type}_account -A 1 | grep address | awk '{print $2}'
-  $INTO_MAIN_CMD query auto-ibc-tx interchainaccounts $connection_id $user_address json | grep interchain_account_address | awk '{print $2}'
+  $INTO_MAIN_CMD query intent interchainaccounts $connection_id $user_address json | grep interchain_account_address | awk '{print $2}'
 }
 
 TRIM_TX() {

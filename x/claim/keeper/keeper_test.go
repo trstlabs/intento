@@ -108,7 +108,7 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 	s.Contains(err.Error(), "address does not have claim record")
 
 	// claim
-	s.app.ClaimKeeper.AfterAutoTxAuthz(s.ctx, addr1)
+	s.app.ClaimKeeper.AfterActionAuthz(s.ctx, addr1)
 
 	record, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Require().NoError(err)
@@ -145,7 +145,7 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 	s.Require().Equal([]bool{true, false, false, false}, record.Status[0].VestingPeriodCompleted)
 
 	// claim 2
-	s.app.ClaimKeeper.AfterAutoTxWasm(s.ctx, addr1)
+	s.app.ClaimKeeper.AfterActionWasm(s.ctx, addr1)
 
 	record, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Require().NoError(err)
@@ -183,8 +183,8 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 	s.Require().Equal([]bool{true, false, false, false}, record.Status[1].VestingPeriodCompleted)
 
 	// claim second address
-	s.app.ClaimKeeper.AfterAutoTxAuthz(s.ctx, addr2)
-	s.app.ClaimKeeper.AfterAutoTxWasm(s.ctx, addr2)
+	s.app.ClaimKeeper.AfterActionAuthz(s.ctx, addr2)
+	s.app.ClaimKeeper.AfterActionWasm(s.ctx, addr2)
 	record, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr2)
 	s.Require().NoError(err)
 	s.Require().True(record.Status[0].ActionCompleted)

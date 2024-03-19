@@ -34131,7 +34131,7 @@ paths:
             format: byte
       tags:
         - gRPC Gateway API
-  /auto-ibc-tx/v1beta1/address-to-ica:
+  /intento/intent/v1beta1/address-to-ica:
     get:
       summary: QueryInterchainAccountFromAddress returns the interchain account for
         given owner address on a given connection pair
@@ -63574,7 +63574,7 @@ components:
         data:
           type: string
           format: byte
-    trst.autoibctx.v1beta1.QueryInterchainAccountFromAddressResponse:
+    trst.intent.v1beta1.QueryInterchainAccountFromAddressResponse:
       type: object
       properties:
         interchain_account_address:

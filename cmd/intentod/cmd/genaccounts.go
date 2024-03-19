@@ -327,7 +327,7 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 				//if !accs.Contains(address) {
 				// initial liquid amounts
 				// We consistently round down to the nearest uinto
-				// get normalized trst balance for account
+				// get normalized into balance for account
 				normalizedIntoBalance := sdk.NewDecFromInt(acc.IntoBalance).Mul(normalizationFactor)
 
 				//liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, acc.IntoBalance))
@@ -380,7 +380,7 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 			fmt.Printf("Total airdrop coins %s \n", claimModuleAccountBalance.Add(totalAirdrop.AmountOf("uinto")))
 			//fmt.Println(supply.AmountOf("uinto"))
 
-			// distribute remaining trst to accounts not in fairdrop
+			// distribute remaining into to accounts not in fairdrop
 			for addr, coin := range nonAirdropAccs {
 				// read address from snapshot
 				address, err := sdk.AccAddressFromBech32(addr)

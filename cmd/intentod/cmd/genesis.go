@@ -25,8 +25,8 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/spf13/cobra"
 	alloctypes "github.com/trstlabs/intento/x/alloc/types"
-	autoibctxtypes "github.com/trstlabs/intento/x/auto-ibc-tx/types"
 	claimtypes "github.com/trstlabs/intento/x/claim/types"
+	intenttypes "github.com/trstlabs/intento/x/intent/types"
 
 	// compute "github.com/trstlabs/intento/x/compute"
 	minttypes "github.com/trstlabs/intento/x/mint/types"
@@ -62,8 +62,8 @@ type GenesisParams struct {
 	ClaimParams    claimtypes.Params
 	MintParams     minttypes.Params
 	// ComputeParams   compute.Params
-	IcaParams       icatypes.Params
-	AutoIbcTxParams autoibctxtypes.Params
+	IcaParams    icatypes.Params
+	IntentParams intenttypes.Params
 	//	ItemParams     itemtypes.Params
 }
 
@@ -76,7 +76,7 @@ Examples include:
 	- Setting module initial params
 	- Setting denom metadata
 Example:
-	intentod prepare-genesis mainnet trustlesshub-1
+	intentod prepare-genesis mainnet intento-1
 	- Check input genesis:
 		file is at ~/.intentod/config/genesis.json
 `,
@@ -243,14 +243,14 @@ func PrepareGenesis(
 	}
 	appState[alloctypes.ModuleName] = allocGenStateBz
 
-	// autoIbcTx module genesis
-	autoTxGenState := autoibctxtypes.DefaultGenesis()
-	autoTxGenState.Params = genesisParams.AutoIbcTxParams
+	// Intent module genesis
+	autoTxGenState := intenttypes.DefaultGenesis()
+	autoTxGenState.Params = genesisParams.IntentParams
 	autoTxGenStateBz, err := cdc.MarshalJSON(autoTxGenState)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal autoIbcTx genesis state: %w", err)
 	}
-	appState[autoibctxtypes.ModuleName] = autoTxGenStateBz
+	appState[intenttypes.ModuleName] = autoTxGenStateBz
 
 	// compute module genesis
 	// computeGenState := compute.DefaultGenesis()
@@ -387,15 +387,15 @@ func MainnetGenesisParams() GenesisParams {
 	// genParams.ComputeParams.MaxContractIncentive = 500_000_000
 
 	//AutoIBCTx
-	genParams.AutoIbcTxParams = autoibctxtypes.DefaultParams()
-	genParams.AutoIbcTxParams.MaxAutoTxDuration = time.Hour * 24 * 366 * 2
-	genParams.AutoIbcTxParams.MinAutoTxDuration = time.Second * 60
-	genParams.AutoIbcTxParams.MinAutoTxInterval = time.Second * 60
-	genParams.AutoIbcTxParams.AutoTxFundsCommission = 2
-	genParams.AutoIbcTxParams.AutoTxConstantFee = 7_000
-	genParams.AutoIbcTxParams.AutoTxFlexFeeMul = 3
-	genParams.AutoIbcTxParams.RecurringAutoTxConstantFee = 5_000
-	genParams.AutoIbcTxParams.RelayerRewards = []int64{10_000, 15_000, 18_000, 22_000}
+	genParams.IntentParams = intenttypes.DefaultParams()
+	genParams.IntentParams.MaxActionDuration = time.Hour * 24 * 366 * 2
+	genParams.IntentParams.MinActionDuration = time.Second * 60
+	genParams.IntentParams.MinActionInterval = time.Second * 60
+	genParams.IntentParams.ActionFundsCommission = 2
+	genParams.IntentParams.ActionConstantFee = 7_000
+	genParams.IntentParams.ActionFlexFeeMul = 3
+	genParams.IntentParams.RecurringActionConstantFee = 5_000
+	genParams.IntentParams.RelayerRewards = []int64{10_000, 15_000, 18_000, 22_000}
 
 	//claim
 	genParams.ClaimParams = claimtypes.DefaultGenesis().Params
@@ -437,9 +437,9 @@ func TestnetGenesisParams() GenesisParams {
 	votingPeriod := time.Minute
 	genParams.GovParams.VotingPeriod = &votingPeriod
 
-	//autotx
-	genParams.AutoIbcTxParams.MinAutoTxDuration = time.Second * 40
-	genParams.AutoIbcTxParams.MinAutoTxInterval = time.Second * 40
+	//action
+	genParams.IntentParams.MinActionDuration = time.Second * 40
+	genParams.IntentParams.MinActionInterval = time.Second * 40
 
 	//claim
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime

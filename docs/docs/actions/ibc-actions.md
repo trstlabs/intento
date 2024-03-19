@@ -4,7 +4,7 @@ title: Interchain Actions
 pagination_label: How AutoTX enables automation of assets on any IBC-enabled chain
 ---
 
-Intento can perform actions on IBC-compatible chains that utilize the Interchain Accounts standard. They are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitAutoTx` as well as IBC-specific settings such as the `connection_id`.
+Intento can perform actions on IBC-compatible chains that utilize the Interchain Accounts standard. They are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitAction` as well as IBC-specific settings such as the `connection_id`.
 
 This is great for both automating actions, such as sending tokens or auto-compounding as well as for orchestrating workflows across chains. 
 Developers can use this to automate their protocols and build solutions for end-users to automate their assets.
@@ -30,13 +30,13 @@ Using the Authz module on the host chain - the chain you want to execute at - yo
 
 ![IBC flow](@site/docs/images/ibc_trigger.png)
 
-## MsgSubmitAutoTx
+## MsgSubmitAction
 
-Submitting a MsgSubmitAutoTx takes the following input:
+Submitting a MsgSubmitAction takes the following input:
 
 | Field Name         | Data Type                           | Description                                                                                                   | optional |
 | ------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------- |
-| `Owner`            | `string`                            | The owner of the AutoTx                                                                                       |          |
+| `Owner`            | `string`                            | The owner of the Action                                                                                       |          |
 | `Msgs`             | `repeated google.protobuf.Any`      | A list of arbitrary messages to include in the transaction                                                    |          |
 | `Duration`         | `string`                            | The amount of time that the transaction code should run for                                                   |          |
 | `StartAt`          | `uint64`                            | A Unix timestamp representing the custom start time for execution (if set after block inclusion)              | ✔️       |
@@ -56,8 +56,8 @@ Submitting a MsgSubmitAutoTx takes the following input:
 
 ## Action Process
 
-1. (Register an interchain account with `MsgRegisterAccount` or `MsgRegisterAccountAndSubmitAutoTx` when acting on a chain for the first time)
-2. Submit an AutoTX using `MsgSubmitAutoTx` - if fee funds are sent along with it, a new fee address is generated
+1. (Register an interchain account with `MsgRegisterAccount` or `MsgRegisterAccountAndSubmitAction` when acting on a chain for the first time)
+2. Submit an AutoTX using `MsgSubmitAction` - if fee funds are sent along with it, a new fee address is generated
 3. Chain checks if execution settings from `Conditions` are ok
 4. `AutoTX` is inserted in a queue
 5. In each block,scheduled AutoTXs are retrieved given the current block time

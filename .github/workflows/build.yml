@@ -17,7 +17,7 @@ jobs:
         include:
           - targetos: darwin
             arch: arm64
-    name: trst ${{ matrix.arch }} for ${{ matrix.targetos }}
+    name: intento ${{ matrix.arch }} for ${{ matrix.targetos }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -27,7 +27,7 @@ jobs:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
 
-      - name: Compile trst
+      - name: Compile intento
         run: make build
       - uses: actions/upload-artifact@v3
         with:

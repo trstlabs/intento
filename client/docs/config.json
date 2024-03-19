@@ -7,24 +7,24 @@
   },
   "apis": [
     {
-      "url": "../../tmp-swagger-gen/alloc/v1beta1/query.swagger.json",
+      "url": "../../tmp-swagger-gen/intento/alloc/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "../../tmp-swagger-gen/alloc/v1beta1/query.swagger.jsonParams",
-          "Pool": "../../tmp-swagger-gen/alloc/v1beta1/query.swagger.jsonPool",
-          "DelegatorValidators": "../../tmp-swagger-gen/alloc/v1beta1/query.swagger.jsonDelegatorValidators",
-          "UpgradedConsensusState": "../../tmp-swagger-gen/alloc/v1beta1/query.swagger.jsonUpgradedConsensusState"
+          "Params": "../../tmp-swagger-gen/intento/alloc/v1beta1/query.swagger.jsonParams",
+          "Pool": "../../tmp-swagger-gen/intento/alloc/v1beta1/query.swagger.jsonPool",
+          "DelegatorValidators": "../../tmp-swagger-gen/intento/alloc/v1beta1/query.swagger.jsonDelegatorValidators",
+          "UpgradedConsensusState": "../../tmp-swagger-gen/intento/alloc/v1beta1/query.swagger.jsonUpgradedConsensusState"
         }
       }
     },
     {
-      "url": "../../tmp-swagger-gen/claim/v1beta1/query.swagger.json",
+      "url": "../../tmp-swagger-gen/intento/claim/v1beta1/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "../../tmp-swagger-gen/claim/v1beta1/query.swagger.jsonParams",
-          "Pool": "../../tmp-swagger-gen/claim/v1beta1/query.swagger.jsonPool",
-          "DelegatorValidators": "../../tmp-swagger-gen/claim/v1beta1/query.swagger.jsonDelegatorValidators",
-          "UpgradedConsensusState": "../../tmp-swagger-gen/claim/v1beta1/query.swagger.jsonUpgradedConsensusState"
+          "Params": "../../tmp-swagger-gen/intento/claim/v1beta1/query.swagger.jsonParams",
+          "Pool": "../../tmp-swagger-gen/intento/claim/v1beta1/query.swagger.jsonPool",
+          "DelegatorValidators": "../../tmp-swagger-gen/intento/claim/v1beta1/query.swagger.jsonDelegatorValidators",
+          "UpgradedConsensusState": "../../tmp-swagger-gen/intento/claim/v1beta1/query.swagger.jsonUpgradedConsensusState"
         }
       }
     },

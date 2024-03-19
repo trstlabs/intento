@@ -21,7 +21,7 @@ message QueryParamsResponse {
 service Query {
   // this line is used by starport scaffolding # 2
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/alloc/v1beta1/params";
+    option (google.api.http).get = "/intento/alloc/v1beta1/params";
   }
 }
 

@@ -4,12 +4,12 @@ global:
   memo: ""
   light-cache-size: 20
 chains:
-  trst:
+  into:
     type: cosmos
     value:
       key: rly1
       chain-id: INTO
-      rpc-addr: http://trst2:26657
+      rpc-addr: http://into2:26657
       account-prefix: trust
       keyring-backend: test
       gas-adjustment: 1.3
@@ -128,7 +128,7 @@ chains:
   #     sign-mode: direct
 
 paths:
-  trst-gaia:
+  into-gaia:
     src:
       chain-id: INTO
     dst:
@@ -136,7 +136,7 @@ paths:
     src-channel-filter:
       rule: ""
       channel-list: []
-  trst-osmo:
+  into-osmo:
     src:
       chain-id: INTO
     dst:
@@ -144,7 +144,7 @@ paths:
     src-channel-filter:
       rule: ""
       channel-list: []
-  trst-juno:
+  into-juno:
     src:
       chain-id: INTO
     dst:
@@ -152,7 +152,7 @@ paths:
     src-channel-filter:
       rule: ""
       channel-list: []
-  trst-stars:
+  into-stars:
     src:
       chain-id: INTO
     dst:
@@ -160,7 +160,7 @@ paths:
     src-channel-filter:
       rule: ""
       channel-list: []
-  trst-host:
+  into-host:
     src:
       chain-id: INTO
     dst:
@@ -168,7 +168,7 @@ paths:
     src-channel-filter:
       rule: ""
       channel-list: []
-  trst-evmos:
+  into-evmos:
     src:
       chain-id: INTO
     dst:
@@ -176,7 +176,7 @@ paths:
     src-channel-filter:
       rule: ""
       channel-list: []
-  # trst-{new-host-zone}:
+  # into-{new-host-zone}:
   #   src:
   #     chain-id: INTO
   #   dst:
