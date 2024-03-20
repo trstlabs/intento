@@ -4,9 +4,9 @@ title: Frontend Integration
 description: How to integrate automation into your interchain dApp
 ---
 
-## TrustlessJS
+## IntentoJS
 
-We've built a JS framework called [TrustlessJS](https://npmjs.com/package/trustlessjs) to submit actions to the chain. It contains a message registry that you can use to encode and decode protobuf messages that Intento supports, including CosmWasm and Osmosis messages. An implementation is [TriggerPortal](https://triggerportal.zone).
+We've built a JS framework called [IntentoJS](https://npmjs.com/package/intentojs) to submit actions to the chain. It contains a message registry that you can use to encode and decode protobuf messages that Intento supports, including CosmWasm and Osmosis messages. An implementation is [TriggerPortal](https://triggerportal.zone).
 
 An example of submitting an MsgSubmitAction in typescript. A label is optional but recommended to keep track an overview of the actions.
 
@@ -16,14 +16,14 @@ import {
   Coin,
   msgRegistry, Registry,
   toUtf8,
-  TrustlessChainClient,
-} from 'trustlessjs'
+  IntentoChainClient,
+} from 'intentojs'
 
 
 type ExecuteSubmitActionArgs = {
   owner: string
   ActionData: ActionData
-  client: TrustlessChainClient
+  client: IntentoChainClient
 }
 
 export const executeSubmitAction = async ({
@@ -71,7 +71,7 @@ The following is used in TriggerPortal to estimate fees.
 
 ```js
 export const getExpectedActionFee = async (
-  client: TrustlessChainClient,
+  client: IntentoChainClient,
   durationSeconds: number,
   lenMsgs: number,
   intervalSeconds?: number
@@ -100,7 +100,7 @@ export const getExpectedActionFee = async (
   }
 };
 
-async function getActionParams(client: TrustlessChainClient) {
+async function getActionParams(client: IntentoChainClient) {
   console.log("getActionParams");
   try {
     const resp = await client.query.action.params({});

@@ -26,46 +26,46 @@ import (
 // GetActionInfo
 func (k Keeper) GetActionInfo(ctx sdk.Context, autoID uint64) types.ActionInfo {
 	store := ctx.KVStore(k.storeKey)
-	var autoTx types.ActionInfo
-	autoTxBz := store.Get(types.GetActionKey(autoID))
+	var action types.ActionInfo
+	actionBz := store.Get(types.GetActionKey(autoID))
 
-	k.cdc.MustUnmarshal(autoTxBz, &autoTx)
-	return autoTx
+	k.cdc.MustUnmarshal(actionBz, &action)
+	return action
 }
 
 // TryGetActionInfo
 func (k Keeper) TryGetActionInfo(ctx sdk.Context, autoID uint64) (types.ActionInfo, error) {
 	store := ctx.KVStore(k.storeKey)
-	var autoTx types.ActionInfo
-	autoTxBz := store.Get(types.GetActionKey(autoID))
+	var action types.ActionInfo
+	actionBz := store.Get(types.GetActionKey(autoID))
 
-	err := k.cdc.Unmarshal(autoTxBz, &autoTx)
+	err := k.cdc.Unmarshal(actionBz, &action)
 	if err != nil {
 		return types.ActionInfo{}, err
 	}
-	return autoTx, nil
+	return action, nil
 }
 
-func (k Keeper) SetActionInfo(ctx sdk.Context, autoTx *types.ActionInfo) {
+func (k Keeper) SetActionInfo(ctx sdk.Context, action *types.ActionInfo) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetActionKey(autoTx.ID), k.cdc.MustMarshal(autoTx))
+	store.Set(types.GetActionKey(action.ID), k.cdc.MustMarshal(action))
 }
 
-func (k Keeper) SendAction(ctx sdk.Context, autoTx *types.ActionInfo) (error, bool, []*cdctypes.Any) {
-	//check if autoTx is local
-	if autoTx.ICAConfig == nil || autoTx.ICAConfig.ConnectionID == "" {
-		txMsgs := autoTx.GetTxMsgs(k.cdc)
-		err, msgResponses := handleLocalAction(k, ctx, txMsgs, *autoTx)
+func (k Keeper) SendAction(ctx sdk.Context, action *types.ActionInfo) (error, bool, []*cdctypes.Any) {
+	//check if action is local
+	if action.ICAConfig == nil || action.ICAConfig.ConnectionID == "" {
+		txMsgs := action.GetTxMsgs(k.cdc)
+		err, msgResponses := handleLocalAction(k, ctx, txMsgs, *action)
 		return err, err == nil, msgResponses
 	}
 
-	channelID, found := k.icaControllerKeeper.GetActiveChannelID(ctx, autoTx.ICAConfig.ConnectionID, autoTx.ICAConfig.PortID)
+	channelID, found := k.icaControllerKeeper.GetActiveChannelID(ctx, action.ICAConfig.ConnectionID, action.ICAConfig.PortID)
 	if !found {
 		return icatypes.ErrActiveChannelNotFound, false, nil
 	}
 
 	//if message contains ICA_ADDR, the ICA address is retrieved and parsed
-	txMsgs, err := k.parseAndSetMsgs(ctx, autoTx)
+	txMsgs, err := k.parseAndSetMsgs(ctx, action)
 	if err != nil {
 		fmt.Printf("ERrrr")
 		return err, false, nil
@@ -82,7 +82,7 @@ func (k Keeper) SendAction(ctx sdk.Context, autoTx *types.ActionInfo) (error, bo
 	relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
 
 	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.icaControllerKeeper)
-	icaMsg := icacontrollertypes.NewMsgSendTx(autoTx.Owner, autoTx.ICAConfig.ConnectionID, relativeTimeoutTimestamp, packetData)
+	icaMsg := icacontrollertypes.NewMsgSendTx(action.Owner, action.ICAConfig.ConnectionID, relativeTimeoutTimestamp, packetData)
 
 	res, err := msgServer.SendTx(ctx, icaMsg)
 	if err != nil {
@@ -90,11 +90,11 @@ func (k Keeper) SendAction(ctx sdk.Context, autoTx *types.ActionInfo) (error, bo
 	}
 
 	k.Logger(ctx).Debug("action", "ibc_sequence", res.Sequence)
-	k.setTmpActionID(ctx, autoTx.ID, autoTx.ICAConfig.PortID, channelID, res.Sequence)
+	k.setTmpActionID(ctx, action.ID, action.ICAConfig.PortID, channelID, res.Sequence)
 	return nil, false, nil
 }
 
-func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTx types.ActionInfo) (error, []*cdctypes.Any) {
+func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types.ActionInfo) (error, []*cdctypes.Any) {
 	// CacheContext returns a new context with the multi-store branched into a cached storage object
 	// writeCache is called only if all msgs succeed, performing state transitions atomically
 	var msgResponses []*cdctypes.Any
@@ -102,7 +102,7 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTx types
 	cacheCtx, writeCache := ctx.CacheContext()
 	for _, msg := range txMsgs {
 		// if sdk.MsgTypeURL(msg) == "/ibc.applications.transfer.v1.MsgTransfer" {
-		// 	transferMsg, err := types.GetTransferMsg(k.cdc, autoTx.Msgs[index])
+		// 	transferMsg, err := types.GetTransferMsg(k.cdc, action.Msgs[index])
 		// 	if err != nil {
 		// 		return err, nil
 		// 	}
@@ -115,7 +115,7 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTx types
 
 		handler := k.msgRouter.Handler(msg)
 		for _, acct := range msg.GetSigners() {
-			if acct.String() != autoTx.Owner {
+			if acct.String() != action.Owner {
 				return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "owner doesn't have permission to send this message"), nil
 			}
 		}
@@ -144,7 +144,7 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTx types
 						}
 					}
 
-					msgDelegate := stakingtypes.MsgDelegate{DelegatorAddress: autoTx.Owner, ValidatorAddress: validator, Amount: amount}
+					msgDelegate := stakingtypes.MsgDelegate{DelegatorAddress: action.Owner, ValidatorAddress: validator, Amount: amount}
 					handler := k.msgRouter.Handler(&msgDelegate)
 					_, err = handler(cacheCtx, &msgDelegate)
 					if err != nil {
@@ -157,7 +157,7 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTx types
 
 	}
 	writeCache()
-	if !autoTx.Configuration.SaveMsgResponses {
+	if !action.Configuration.SaveMsgResponses {
 		msgResponses = nil
 	}
 	return nil, msgResponses
@@ -166,7 +166,7 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, autoTx types
 func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string, msgs []*cdctypes.Any, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, configuration types.ExecutionConfiguration, portID string, connectionId string, hostConnectionId string) error {
 
 	id := k.autoIncrementID(ctx, types.KeyLastID)
-	autoTxAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
+	actionAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
 	if err != nil {
 		return err
 	}
@@ -182,11 +182,11 @@ func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string
 		}
 	}
 
-	autoTx := types.ActionInfo{
+	action := types.ActionInfo{
 		ID:            id,
 		Owner:         owner.String(),
 		Label:         label,
-		FeeAddress:    autoTxAddress.String(),
+		FeeAddress:    actionAddress.String(),
 		Msgs:          msgs,
 		Interval:      interval,
 		StartTime:     startAt,
@@ -196,7 +196,7 @@ func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string
 		Configuration: &configuration,
 	}
 
-	k.SetActionInfo(ctx, &autoTx)
+	k.SetActionInfo(ctx, &action)
 	k.addToActionOwnerIndex(ctx, owner, id)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -207,36 +207,36 @@ func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string
 }
 
 func (k Keeper) createFeeAccount(ctx sdk.Context, id uint64, owner sdk.AccAddress, feeFunds sdk.Coins) (sdk.AccAddress, error) {
-	autoTxAddress := k.generateActionFeeAddress(ctx, id)
-	existingAcct := k.accountKeeper.GetAccount(ctx, autoTxAddress)
+	actionAddress := k.generateActionFeeAddress(ctx, id)
+	existingAcct := k.accountKeeper.GetAccount(ctx, actionAddress)
 	if existingAcct != nil {
 		return nil, errorsmod.Wrap(types.ErrAccountExists, existingAcct.GetAddress().String())
 	}
 
-	// deposit initial autoTx funds
+	// deposit initial action funds
 	if !feeFunds.IsZero() && !feeFunds[0].Amount.IsZero() {
 		if k.bankKeeper.BlockedAddr(owner) {
 			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "blocked address can not be used")
 		}
-		sdkerr := k.bankKeeper.SendCoins(ctx, owner, autoTxAddress, feeFunds)
+		sdkerr := k.bankKeeper.SendCoins(ctx, owner, actionAddress, feeFunds)
 		if sdkerr != nil {
 			return nil, sdkerr
 		}
 	} else {
 		// create an empty account (so we don't have issues later)
-		autoTxAccount := k.accountKeeper.NewAccountWithAddress(ctx, autoTxAddress)
-		k.accountKeeper.SetAccount(ctx, autoTxAccount)
+		actionAccount := k.accountKeeper.NewAccountWithAddress(ctx, actionAddress)
+		k.accountKeeper.SetAccount(ctx, actionAccount)
 	}
-	return autoTxAddress, nil
+	return actionAddress, nil
 }
 
-// generates a autoTx address from id + instanceID
+// generates a action address from id + instanceID
 func (k Keeper) generateActionFeeAddress(ctx sdk.Context, id uint64) sdk.AccAddress {
 	instanceID := k.autoIncrementID(ctx, types.KeyLastTxAddrID)
-	return autoTxAddress(id, instanceID)
+	return actionAddress(id, instanceID)
 }
 
-func autoTxAddress(id, instanceID uint64) sdk.AccAddress {
+func actionAddress(id, instanceID uint64) sdk.AccAddress {
 	// NOTE: It is possible to get a duplicate address if either id or instanceID
 	// overflow 32 bits. This is highly improbable, but something that could be refactored.
 	autoID := id<<32 + instanceID
@@ -309,15 +309,15 @@ func (k Keeper) importAutoIncrementID(ctx sdk.Context, lastIDKey []byte, val uin
 	return nil
 }
 
-func (k Keeper) importActionInfo(ctx sdk.Context, actionId uint64, autoTx types.ActionInfo) error {
+func (k Keeper) importActionInfo(ctx sdk.Context, actionId uint64, action types.ActionInfo) error {
 
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetActionKey(actionId)
 	if store.Has(key) {
 		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate code: %d", actionId)
 	}
-	// 0x01 | actionId (uint64) -> autoTx
-	store.Set(key, k.cdc.MustMarshal(&autoTx))
+	// 0x01 | actionId (uint64) -> action
+	store.Set(key, k.cdc.MustMarshal(&action))
 	return nil
 }
 
@@ -334,14 +334,14 @@ func (k Keeper) IterateActionInfos(ctx sdk.Context, cb func(uint64, types.Action
 	}
 }
 
-// addToActionOwnerIndex adds element to the index for autoTxs-by-creator queries
+// addToActionOwnerIndex adds element to the index for actions-by-creator queries
 func (k Keeper) addToActionOwnerIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, autoID uint64) {
 	store := ctx.KVStore(k.storeKey)
 
 	store.Set(types.GetActionByOwnerIndexKey(ownerAddress, autoID), []byte{})
 }
 
-// IterateActionsByOwner iterates over all autoTxs with given creator address in order of creation time asc.
+// IterateActionsByOwner iterates over all actions with given creator address in order of creation time asc.
 func (k Keeper) IterateActionsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb func(address sdk.AccAddress) bool) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetActionsByOwnerPrefix(owner))
 	for iter := prefixStore.Iterator(nil, nil); iter.Valid(); iter.Next() {
@@ -361,10 +361,10 @@ func (k Keeper) SetActionResult(ctx sdk.Context, portID string, channelID string
 
 	k.Logger(ctx).Debug("action", "executed", "on host")
 
-	autoTx := k.GetActionInfo(ctx, id)
+	action := k.GetActionInfo(ctx, id)
 
-	k.UpdateActionIbcUsage(ctx, autoTx)
-	owner, err := sdk.AccAddressFromBech32(autoTx.Owner)
+	k.UpdateActionIbcUsage(ctx, action)
+	owner, err := sdk.AccAddressFromBech32(action.Owner)
 	if err != nil {
 		return err
 	}
@@ -375,17 +375,17 @@ func (k Keeper) SetActionResult(ctx sdk.Context, portID string, channelID string
 		k.hooks.AfterActionWasm(ctx, owner)
 	}
 
-	autoTxHistory := k.GetActionHistory(ctx, id)
+	actionHistory := k.GetActionHistory(ctx, id)
 
-	autoTxHistory.History[len(autoTxHistory.History)-1].Executed = true
+	actionHistory.History[len(actionHistory.History)-1].Executed = true
 
-	if autoTx.Configuration.SaveMsgResponses {
-		autoTxHistory.History[len(autoTxHistory.History)-1].MsgResponses = msgResponses
+	if action.Configuration.SaveMsgResponses {
+		actionHistory.History[len(actionHistory.History)-1].MsgResponses = msgResponses
 	}
 
-	k.SetActionInfo(ctx, &autoTx)
+	k.SetActionInfo(ctx, &action)
 
-	k.SetActionHistory(ctx, autoTx.ID, &autoTxHistory)
+	k.SetActionHistory(ctx, action.ID, &actionHistory)
 
 	return nil
 }
@@ -397,23 +397,23 @@ func (k Keeper) SetActionOnTimeout(ctx sdk.Context, sourcePort string, channelID
 	if id <= 0 {
 		return nil
 	}
-	autoTx := k.GetActionInfo(ctx, id)
-	if autoTx.Configuration.ReregisterICAAfterTimeout {
-		autoTx := k.GetActionInfo(ctx, id)
-		metadataString := icatypes.NewDefaultMetadataString(autoTx.ICAConfig.ConnectionID, autoTx.ICAConfig.HostConnectionID)
-		err := k.RegisterInterchainAccount(ctx, autoTx.ICAConfig.ConnectionID, autoTx.Owner, metadataString)
+	action := k.GetActionInfo(ctx, id)
+	if action.Configuration.ReregisterICAAfterTimeout {
+		action := k.GetActionInfo(ctx, id)
+		metadataString := icatypes.NewDefaultMetadataString(action.ICAConfig.ConnectionID, action.ICAConfig.HostConnectionID)
+		err := k.RegisterInterchainAccount(ctx, action.ICAConfig.ConnectionID, action.Owner, metadataString)
 		if err != nil {
 			return err
 		}
 	} else {
-		k.RemoveFromActionQueue(ctx, autoTx)
+		k.RemoveFromActionQueue(ctx, action)
 	}
 	k.Logger(ctx).Debug("action packet timed out", "action_id", id)
 
-	autoTxHistory := k.GetActionHistory(ctx, id)
+	actionHistory := k.GetActionHistory(ctx, id)
 
-	autoTxHistory.History[len(autoTxHistory.History)-1].TimedOut = true
-	k.SetActionHistory(ctx, id, &autoTxHistory)
+	actionHistory.History[len(actionHistory.History)-1].TimedOut = true
+	k.SetActionHistory(ctx, id, &actionHistory)
 
 	return nil
 }
@@ -427,18 +427,18 @@ func (k Keeper) SetActionError(ctx sdk.Context, sourcePort string, channelID str
 
 	k.Logger(ctx).Debug("action", "id", id, "error", err)
 
-	autoTxHistory := k.GetActionHistory(ctx, id)
+	actionHistory := k.GetActionHistory(ctx, id)
 
-	autoTxHistory.History[len(autoTxHistory.History)-1].Errors = append(autoTxHistory.History[len(autoTxHistory.History)-1].Errors, err)
-	k.SetActionHistory(ctx, id, &autoTxHistory)
+	actionHistory.History[len(actionHistory.History)-1].Errors = append(actionHistory.History[len(actionHistory.History)-1].Errors, err)
+	k.SetActionHistory(ctx, id, &actionHistory)
 }
 
 // AllowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
 // insert the next entry when execution has not happend yet
-func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx types.ActionInfo) bool {
+func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo) bool {
 	allowedToExecute := true
-	// shouldRecur := autoTx.ExecTime.Before(autoTx.EndTime) && autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime)
-	// conditions := autoTx.Conditions
+	// shouldRecur := action.ExecTime.Before(action.EndTime) && action.ExecTime.Add(action.Interval).Before(action.EndTime)
+	// conditions := action.Conditions
 
 	// //check if dependent tx executions succeeded
 	// for _, actionId := range conditions.StopOnSuccessOf {
@@ -488,11 +488,11 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, autoTx types.ActionInfo) bool 
 
 	// //if not allowed to execute, remove entry
 	// if !allowedToExecute {
-	// 	k.RemoveFromActionQueue(ctx, autoTx)
+	// 	k.RemoveFromActionQueue(ctx, action)
 	// 	//insert the next entry given a recurring tx
 	// 	if shouldRecur {
 	// 		// adding next execTime and a new entry into the queue based on interval
-	// 		k.InsertActionQueue(ctx, autoTx.ID, autoTx.ExecTime.Add(autoTx.Interval))
+	// 		k.InsertActionQueue(ctx, action.ID, action.ExecTime.Add(action.Interval))
 	// 	}
 	// }
 
@@ -522,11 +522,11 @@ func (k Keeper) setTmpActionID(ctx sdk.Context, autoID uint64, portID string, ch
 	store.Set(key, types.GetBytesForUint(autoID))
 }
 
-func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTx *types.ActionInfo) (protoMsgs []proto.Message, err error) {
+func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo) (protoMsgs []proto.Message, err error) {
 	fmt.Printf("denom %s\n", types.Denom)
 	store := ctx.KVStore(k.storeKey)
-	if store.Has(types.GetActionHistoryKey(autoTx.ID)) {
-		txMsgs := autoTx.GetTxMsgs(k.cdc)
+	if store.Has(types.GetActionHistoryKey(action.ID)) {
+		txMsgs := action.GetTxMsgs(k.cdc)
 		for _, msg := range txMsgs {
 			protoMsgs = append(protoMsgs, msg)
 		}
@@ -536,7 +536,7 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTx *types.ActionInfo) (prot
 	var txMsgs []sdk.Msg
 	var parsedIcaAddr bool
 
-	for _, msg := range autoTx.Msgs {
+	for _, msg := range action.Msgs {
 		var txMsg sdk.Msg
 		err := k.cdc.UnpackAny(msg, &txMsg)
 		if err != nil {
@@ -557,7 +557,7 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTx *types.ActionInfo) (prot
 			continue
 		}
 
-		ica, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, autoTx.ICAConfig.ConnectionID, autoTx.ICAConfig.PortID)
+		ica, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, action.ICAConfig.ConnectionID, action.ICAConfig.PortID)
 		if !found {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrKeyNotFound, "ICA address not found")
 		}
@@ -582,8 +582,8 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, autoTx *types.ActionInfo) (prot
 		if err != nil {
 			return nil, err
 		}
-		autoTx.Msgs = anys
+		action.Msgs = anys
 	}
-	fmt.Printf("parsed %v\n", autoTx.Msgs)
+	fmt.Printf("parsed %v\n", action.Msgs)
 	return protoMsgs, nil
 }

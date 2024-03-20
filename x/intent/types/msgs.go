@@ -194,7 +194,7 @@ func (msg MsgSubmitAction) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate action message: %s", err.Error())
 		}
 	}
 
@@ -271,7 +271,7 @@ func (msg MsgRegisterAccountAndSubmitAction) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate action message: %s", err.Error())
 		}
 	}
 
@@ -342,7 +342,7 @@ func (msg MsgUpdateAction) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate autoTx message: %s", err.Error())
+			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate action message: %s", err.Error())
 		}
 	}
 

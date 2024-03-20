@@ -47,23 +47,23 @@ func (k Keeper) GetRelayerRewardsAvailability(ctx sdk.Context) bool {
 // GetActionIbcUsage
 func (k Keeper) TryGetActionIbcUsage(ctx sdk.Context, owner string) (types.ActionIbcUsage, error) {
 	store := ctx.KVStore(k.storeKey)
-	var autoTxUsage types.ActionIbcUsage
-	autoTxBz := store.Get(append(types.ActionIbcUsageKeyPrefix, []byte(owner)...))
+	var actionUsage types.ActionIbcUsage
+	actionBz := store.Get(append(types.ActionIbcUsageKeyPrefix, []byte(owner)...))
 
-	err := k.cdc.Unmarshal(autoTxBz, &autoTxUsage)
+	err := k.cdc.Unmarshal(actionBz, &actionUsage)
 	if err != nil {
 		return types.ActionIbcUsage{}, err
 	}
-	return autoTxUsage, nil
+	return actionUsage, nil
 }
 
-func (k Keeper) SetActionIbcUsage(ctx sdk.Context, autoTxUsage *types.ActionIbcUsage) {
+func (k Keeper) SetActionIbcUsage(ctx sdk.Context, actionUsage *types.ActionIbcUsage) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(append(types.ActionIbcUsageKeyPrefix, []byte(autoTxUsage.Address)...), k.cdc.MustMarshal(autoTxUsage))
+	store.Set(append(types.ActionIbcUsageKeyPrefix, []byte(actionUsage.Address)...), k.cdc.MustMarshal(actionUsage))
 }
 
-func (k Keeper) UpdateActionIbcUsage(ctx sdk.Context, autoTx types.ActionInfo) {
-	for _, msg := range autoTx.Msgs {
+func (k Keeper) UpdateActionIbcUsage(ctx sdk.Context, action types.ActionInfo) {
+	for _, msg := range action.Msgs {
 		if msg.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
 			return
 		}
@@ -117,21 +117,21 @@ func (k Keeper) UpdateActionIbcUsage(ctx sdk.Context, autoTx types.ActionInfo) {
 				return
 			}
 
-			k.appendToActionIbcUsage(ctx, autoTx.Owner, &types.ActionAck{
+			k.appendToActionIbcUsage(ctx, action.Owner, &types.ActionAck{
 				Coin:         coin,
-				ConnectionId: autoTx.ICAConfig.ConnectionID,
+				ConnectionId: action.ICAConfig.ConnectionID,
 			})
 		}
 	}
 }
 
-func (k Keeper) appendToActionIbcUsage(ctx sdk.Context, owner string, autoTxAck *types.ActionAck) {
+func (k Keeper) appendToActionIbcUsage(ctx sdk.Context, owner string, actionAck *types.ActionAck) {
 	autoIbcUsage, err := k.TryGetActionIbcUsage(ctx, owner)
 	if err != nil {
-		autoIbcUsage.Txs = append(autoIbcUsage.Txs, autoTxAck)
+		autoIbcUsage.Txs = append(autoIbcUsage.Txs, actionAck)
 	} else {
 		autoIbcUsage.Address = owner
-		autoIbcUsage.Txs = []*types.ActionAck{autoTxAck}
+		autoIbcUsage.Txs = []*types.ActionAck{actionAck}
 	}
 	k.SetActionIbcUsage(ctx, &autoIbcUsage)
 }

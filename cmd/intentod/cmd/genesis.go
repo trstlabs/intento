@@ -244,13 +244,13 @@ func PrepareGenesis(
 	appState[alloctypes.ModuleName] = allocGenStateBz
 
 	// Intent module genesis
-	autoTxGenState := intenttypes.DefaultGenesis()
-	autoTxGenState.Params = genesisParams.IntentParams
-	autoTxGenStateBz, err := cdc.MarshalJSON(autoTxGenState)
+	actionGenState := intenttypes.DefaultGenesis()
+	actionGenState.Params = genesisParams.IntentParams
+	actionGenStateBz, err := cdc.MarshalJSON(actionGenState)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal autoIbcTx genesis state: %w", err)
 	}
-	appState[intenttypes.ModuleName] = autoTxGenStateBz
+	appState[intenttypes.ModuleName] = actionGenStateBz
 
 	// compute module genesis
 	// computeGenState := compute.DefaultGenesis()

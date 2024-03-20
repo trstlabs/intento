@@ -129,7 +129,7 @@ import (
 	claimtypes "github.com/trstlabs/intento/x/claim/types"
 )
 
-const Name = "trst"
+const Name = "into"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -489,8 +489,8 @@ func NewIntoApp(
 	autoIbcTxModule := intent.NewAppModule(appCodec, app.IntentKeeper)
 	autoIbcTxIBCModule := intent.NewIBCModule(app.IntentKeeper)
 
-	autoTxIcs20HooksTransferModule := intent.NewIBCMiddleware(transferIBCModule, app.IntentKeeper, interfaceRegistry)
-	app.TransferStack = &autoTxIcs20HooksTransferModule
+	actionIcs20HooksTransferModule := intent.NewIBCMiddleware(transferIBCModule, app.IntentKeeper, interfaceRegistry)
+	app.TransferStack = &actionIcs20HooksTransferModule
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(autoIbcTxIBCModule, app.ICAControllerKeeper)
 	icaControllerStack := ibcfee.NewIBCMiddleware(icaControllerIBCModule, app.IBCFeeKeeper)
 

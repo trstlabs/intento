@@ -56,9 +56,9 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 // NewParams creates a new Params object
-func NewParams(autoTxFundsCommission int64, ActionConstantFee int64, ActionFlexFeeMul int64, RecurringActionConstantFee int64, maxActionDuration time.Duration, minActionDuration time.Duration, minActionInterval time.Duration, relayerRewards []int64) Params {
-	//fmt.Printf("default intent params. %v \n", autoTxFundsCommission)
-	return Params{ActionFundsCommission: autoTxFundsCommission, ActionConstantFee: ActionConstantFee, ActionFlexFeeMul: ActionFlexFeeMul, RecurringActionConstantFee: RecurringActionConstantFee, MaxActionDuration: maxActionDuration, MinActionDuration: minActionDuration, MinActionInterval: minActionInterval, RelayerRewards: relayerRewards}
+func NewParams(actionFundsCommission int64, ActionConstantFee int64, ActionFlexFeeMul int64, RecurringActionConstantFee int64, maxActionDuration time.Duration, minActionDuration time.Duration, minActionInterval time.Duration, relayerRewards []int64) Params {
+	//fmt.Printf("default intent params. %v \n", actionFundsCommission)
+	return Params{ActionFundsCommission: actionFundsCommission, ActionConstantFee: ActionConstantFee, ActionFlexFeeMul: ActionFlexFeeMul, RecurringActionConstantFee: RecurringActionConstantFee, MaxActionDuration: maxActionDuration, MinActionDuration: minActionDuration, MinActionInterval: minActionInterval, RelayerRewards: relayerRewards}
 }
 
 // DefaultParams default parameters for intent

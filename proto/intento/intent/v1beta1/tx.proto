@@ -121,7 +121,7 @@ message MsgUpdateAction {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner                      = 1;
-  uint64 id = 2  [(gogoproto.customname) = "ID"];;
+  uint64 id = 2  [(gogoproto.customname) = "ID"];
   string connection_id              = 3 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   string label                      = 4;
   repeated google.protobuf.Any msgs           = 5 [(cosmos_proto.accepts_interface) = "sdk.Msg"];

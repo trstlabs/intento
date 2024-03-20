@@ -28,13 +28,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
 		}
 	}
 	var maxID uint64
-	for i, autoTxInfo := range gs.ActionInfos {
-		err := k.importActionInfo(ctx, autoTxInfo.ID, autoTxInfo)
+	for i, actionInfo := range gs.ActionInfos {
+		err := k.importActionInfo(ctx, actionInfo.ID, actionInfo)
 		if err != nil {
-			return errorsmod.Wrapf(err, "autoTxInfo %d with id: %d", i, autoTxInfo.ID)
+			return errorsmod.Wrapf(err, "actionInfo %d with id: %d", i, actionInfo.ID)
 		}
-		if autoTxInfo.ID > maxID {
-			maxID = autoTxInfo.ID
+		if actionInfo.ID > maxID {
+			maxID = actionInfo.ID
 		}
 	}
 

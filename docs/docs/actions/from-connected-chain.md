@@ -6,7 +6,7 @@ description: How to setup automation from a connected chain
 
 ## Setting up Automation
 
-In the previous step we showed how the action process looks like by submitting an AutoTX on Intento. You can do this with the [TriggerPortal](https://triggerportal.zone) interface, a TrustlessJS front-end integration or locally through the CLI.
+In the previous step we showed how the action process looks like by submitting an AutoTX on Intento. You can do this with the [TriggerPortal](https://triggerportal.zone) interface, a IntentoJS front-end integration or locally through the CLI.
 
 In addition, you can also submit an AutoTX from another chain using the [ICS20 standard](https://github.com/cosmos/ibc-go/blob/main/docs/apps/transfer/messages.md).
 

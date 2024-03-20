@@ -146,4 +146,4 @@ An ICS20 packet is formatted correctly for submitting an action if the following
 Fees are paid with a newly generated and Action specific fee account.
 
 If an ICS20 packet does not contain a memo containing "action", a regular MsgTransfer takes place.
-If an ICS20 packet is directed towards autoTx, and is formated incorrectly, then it returns an error.
+If an ICS20 packet is directed towards action, and is formated incorrectly, then it returns an error.

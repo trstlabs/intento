@@ -40,18 +40,18 @@ func TestCreateAction(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the auto transaction was created correctly
-	autoTx := keepers.IntentKeeper.GetActionInfo(ctx, 1)
+	action := keepers.IntentKeeper.GetActionInfo(ctx, 1)
 
-	require.Equal(t, uint64(1), autoTx.ID)
-	require.Equal(t, owner.String(), autoTx.Owner)
-	require.Equal(t, label, autoTx.Label)
-	addr, _ := sdk.AccAddressFromBech32(autoTx.FeeAddress)
+	require.Equal(t, uint64(1), action.ID)
+	require.Equal(t, owner.String(), action.Owner)
+	require.Equal(t, label, action.Label)
+	addr, _ := sdk.AccAddressFromBech32(action.FeeAddress)
 	require.Equal(t, feeFunds, keepers.BankKeeper.GetAllBalances(ctx, addr))
-	require.Equal(t, interval, autoTx.Interval)
-	require.Equal(t, startTime, autoTx.StartTime)
-	require.Equal(t, portID, autoTx.ICAConfig.PortID)
-	require.Equal(t, connectionID, autoTx.ICAConfig.ConnectionID)
-	require.Equal(t, configuration, *autoTx.Configuration)
+	require.Equal(t, interval, action.Interval)
+	require.Equal(t, startTime, action.StartTime)
+	require.Equal(t, portID, action.ICAConfig.PortID)
+	require.Equal(t, connectionID, action.ICAConfig.ConnectionID)
+	require.Equal(t, configuration, *action.Configuration)
 }
 
 func TestCreateActionWithZeroFeeFundsWorks(t *testing.T) {
@@ -84,16 +84,16 @@ func TestCreateActionWithZeroFeeFundsWorks(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the auto transaction was created correctly
-	autoTx := keepers.IntentKeeper.GetActionInfo(ctx, 1)
+	action := keepers.IntentKeeper.GetActionInfo(ctx, 1)
 
-	require.Equal(t, uint64(1), autoTx.ID)
-	require.Equal(t, owner.String(), autoTx.Owner)
-	require.Equal(t, label, autoTx.Label)
-	addr, _ := sdk.AccAddressFromBech32(autoTx.FeeAddress)
+	require.Equal(t, uint64(1), action.ID)
+	require.Equal(t, owner.String(), action.Owner)
+	require.Equal(t, label, action.Label)
+	addr, _ := sdk.AccAddressFromBech32(action.FeeAddress)
 	require.Equal(t, sdk.Coins{}, keepers.BankKeeper.GetAllBalances(ctx, addr))
-	require.Equal(t, interval, autoTx.Interval)
-	require.Equal(t, startTime, autoTx.StartTime)
-	require.Equal(t, portID, autoTx.ICAConfig.PortID)
-	require.Equal(t, connectionID, autoTx.ICAConfig.ConnectionID)
-	require.Equal(t, configuration, *autoTx.Configuration)
+	require.Equal(t, interval, action.Interval)
+	require.Equal(t, startTime, action.StartTime)
+	require.Equal(t, portID, action.ICAConfig.PortID)
+	require.Equal(t, connectionID, action.ICAConfig.ConnectionID)
+	require.Equal(t, configuration, *action.Configuration)
 }

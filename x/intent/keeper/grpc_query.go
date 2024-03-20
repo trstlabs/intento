@@ -52,16 +52,16 @@ func (k Keeper) Action(c context.Context, req *types.QueryActionRequest) (*types
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	autoTxInfo, err := k.TryGetActionInfo(ctx, id)
+	actionInfo, err := k.TryGetActionInfo(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	// for msg := range autoTxInfo.Msgs{
-	// 	makeReadableMsgData(&autoTxInfo, msg)
+	// for msg := range actionInfo.Msgs{
+	// 	makeReadableMsgData(&actionInfo, msg)
 	// }
 
 	return &types.QueryActionResponse{
-		ActionInfo: autoTxInfo,
+		ActionInfo: actionInfo,
 	}, nil
 }
 
@@ -76,13 +76,13 @@ func (k Keeper) ActionHistory(c context.Context, req *types.QueryActionHistoryRe
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	autoTxHistory, err := k.TryGetActionHistory(ctx, id)
+	actionHistory, err := k.TryGetActionHistory(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.QueryActionHistoryResponse{
-		History: autoTxHistory.History,
+		History: actionHistory.History,
 	}, nil
 }
 
@@ -92,13 +92,13 @@ func (k Keeper) Actions(c context.Context, req *types.QueryActionsRequest) (*typ
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	autoTxs := make([]types.ActionInfo, 0)
+	actions := make([]types.ActionInfo, 0)
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.ActionKeyPrefix)
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			var c types.ActionInfo
 			k.cdc.MustUnmarshal(value, &c)
-			autoTxs = append(autoTxs, c)
+			actions = append(actions, c)
 
 		}
 		return true, nil
@@ -109,7 +109,7 @@ func (k Keeper) Actions(c context.Context, req *types.QueryActionsRequest) (*typ
 	}
 
 	return &types.QueryActionsResponse{
-		ActionInfos: autoTxs,
+		ActionInfos: actions,
 		Pagination:  pageRes,
 	}, nil
 }
@@ -120,7 +120,7 @@ func (k Keeper) ActionsForOwner(c context.Context, req *types.QueryActionsForOwn
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	autoTxs := make([]types.ActionInfo, 0)
+	actions := make([]types.ActionInfo, 0)
 
 	ownerAddress, err := sdk.AccAddressFromBech32(req.Owner)
 	if err != nil {
@@ -130,13 +130,13 @@ func (k Keeper) ActionsForOwner(c context.Context, req *types.QueryActionsForOwn
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			autoID := types.GetIDFromBytes(key /* [types.TimeTimeLen:] */)
-			autoTxInfo := k.GetActionInfo(ctx, autoID)
-			// msg, err := icatypes.DeserializeCosmosTx(k.cdc, autoTxInfo.Data)
+			actionInfo := k.GetActionInfo(ctx, autoID)
+			// msg, err := icatypes.DeserializeCosmosTx(k.cdc, actionInfo.Data)
 			// if err != nil {
 			// 	return false, err
 			// }
-			// makeReadableMsgData(&autoTxInfo, msg)
-			autoTxs = append(autoTxs, autoTxInfo)
+			// makeReadableMsgData(&actionInfo, msg)
+			actions = append(actions, actionInfo)
 
 		}
 		return true, nil
@@ -146,7 +146,7 @@ func (k Keeper) ActionsForOwner(c context.Context, req *types.QueryActionsForOwn
 	}
 
 	return &types.QueryActionsForOwnerResponse{
-		ActionInfos: autoTxs,
+		ActionInfos: actions,
 		Pagination:  pageRes,
 	}, nil
 }
@@ -157,14 +157,14 @@ func (k Keeper) ActionIbcTxUsage(c context.Context, req *types.QueryActionIbcUsa
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	autoTxIbcUsage := make([]types.ActionIbcUsage, 0)
+	actionIbcUsage := make([]types.ActionIbcUsage, 0)
 
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.ActionIbcUsageKeyPrefix)
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			var c types.ActionIbcUsage
 			k.cdc.MustUnmarshal(value, &c)
-			autoTxIbcUsage = append(autoTxIbcUsage, c)
+			actionIbcUsage = append(actionIbcUsage, c)
 
 		}
 		return true, nil
@@ -174,7 +174,7 @@ func (k Keeper) ActionIbcTxUsage(c context.Context, req *types.QueryActionIbcUsa
 	}
 
 	return &types.QueryActionIbcUsageResponse{
-		ActionIbcUsage: autoTxIbcUsage,
+		ActionIbcUsage: actionIbcUsage,
 		Pagination:     pageRes,
 	}, nil
 }

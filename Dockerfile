@@ -1,7 +1,7 @@
 # syntax = docker/dockerfile:1
 
-ARG GO_VERSION="1.20"
-ARG RUNNER_IMAGE="alpine:3.16"
+ARG GO_VERSION="1.21"
+ARG RUNNER_IMAGE="alpine:3.17"
 
 FROM golang:${GO_VERSION}-alpine as builder
 

@@ -104,17 +104,17 @@ intentod export-testnet-snapshot ~/into/analytics.json ~/cosmos-discord-faucet/t
 				return err
 			}
 
-			autoTxUsage := make([]ActionIbcUsage, 0)
-			err = json.Unmarshal([]byte(usageFile), &autoTxUsage)
+			actionUsage := make([]ActionIbcUsage, 0)
+			err = json.Unmarshal([]byte(usageFile), &actionUsage)
 			if err != nil {
 				return err
 			}
 
-			// make a new []ActionIbcUsage{} called autoTxUsageByUser and put in only
+			// make a new []ActionIbcUsage{} called actionUsageByUser and put in only
 			// the address that matches a unique discordID from faucetTransactions based
 			// on the highest amount of NumCosmosTxs
 
-			var autoTxUsageByUser []ActionIbcUsage
+			var actionUsageByUser []ActionIbcUsage
 			uniqueDiscordIDs := make(map[string]bool)
 
 			// iterate through faucetTransactions and get the unique Discord IDs
@@ -135,17 +135,17 @@ intentod export-testnet-snapshot ~/into/analytics.json ~/cosmos-discord-faucet/t
 					}
 
 					// create a new ActionIbcUsage with the address and Txs from the highest NumCosmosTxs faucet transaction
-					var autoTxIbcUsage ActionIbcUsage
-					autoTxIbcUsage.Address = highestNumCosmosTxsTx.Address
-					autoTxIbcUsage.Txs = []ActionAck{}
-					autoTxUsageByUser = append(autoTxUsageByUser, autoTxIbcUsage)
+					var actionIbcUsage ActionIbcUsage
+					actionIbcUsage.Address = highestNumCosmosTxsTx.Address
+					actionIbcUsage.Txs = []ActionAck{}
+					actionUsageByUser = append(actionUsageByUser, actionIbcUsage)
 				}
 			}
 
 			//2. get total amount of IbcDenom for each Tx in Txs
 
 			totalIbcDenomAmount := make(map[string]int64)
-			for _, usage := range autoTxUsageByUser {
+			for _, usage := range actionUsageByUser {
 				for _, tx := range usage.Txs {
 					for _, supported := range supportedList {
 						if tx.Coin.Denom == supported.IbcDenom && tx.ConnectionID == supported.ConnectionID {
@@ -156,9 +156,9 @@ intentod export-testnet-snapshot ~/into/analytics.json ~/cosmos-discord-faucet/t
 				}
 			}
 
-			// 3. remove entries from autoTxUsageByUser where the coin amount is higher than MaxIntoPerSupportedConnection
-			for i := 0; i < len(autoTxUsageByUser); i++ {
-				usage := &autoTxUsageByUser[i]
+			// 3. remove entries from actionUsageByUser where the coin amount is higher than MaxIntoPerSupportedConnection
+			for i := 0; i < len(actionUsageByUser); i++ {
+				usage := &actionUsageByUser[i]
 				for j := 0; j < len(usage.Txs); j++ {
 					tx := &usage.Txs[j]
 					coinAmount, err := strconv.ParseInt(tx.Coin.Amount, 10, 64)
@@ -169,19 +169,19 @@ intentod export-testnet-snapshot ~/into/analytics.json ~/cosmos-discord-faucet/t
 						tx.Coin.Amount = fmt.Sprint(MaxIntoPerSupportedConnection) //append(tx.Coin[:k], tx.Coin[k+1:]...)
 					}
 
-					// If the usage has no more entries, remove it from autoTxUsageByUser
+					// If the usage has no more entries, remove it from actionUsageByUser
 					if len(usage.Txs) == 0 {
-						autoTxUsageByUser = append(autoTxUsageByUser[:i], autoTxUsageByUser[i+1:]...)
+						actionUsageByUser = append(actionUsageByUser[:i], actionUsageByUser[i+1:]...)
 						i--
 						break
 					}
 				}
 			}
 
-			// 4. For each entry in `supportedList`, calculate `ParticipationPercentage` and `IntoTotalClaimable` for each `autoTxUsageByUser` address based on the total amount of supported tokens. Then, create a `TestnetSnapshotAccount` for each combination of `supported.ConnectionID` and `usage.Address`, and add it to the `snapshot.Accounts` map.
+			// 4. For each entry in `supportedList`, calculate `ParticipationPercentage` and `IntoTotalClaimable` for each `actionUsageByUser` address based on the total amount of supported tokens. Then, create a `TestnetSnapshotAccount` for each combination of `supported.ConnectionID` and `usage.Address`, and add it to the `snapshot.Accounts` map.
 			// Finally, update the `snapshot.TotalIntoAirdropAmount` variable for each supported token.
 			//
-			// To do this, we first initialize `snapshot` and `trstTotalClaimable`, and loop over the `supportedList` to calculate the total IBC amount for all supported tokens. Then, we loop over the `autoTxUsageByUser` slice and calculate the `participationPercentage` and `trstTotalClaimable` for each `autoTxUsageByUser` address based on the total IBC amount.
+			// To do this, we first initialize `snapshot` and `trstTotalClaimable`, and loop over the `supportedList` to calculate the total IBC amount for all supported tokens. Then, we loop over the `actionUsageByUser` slice and calculate the `participationPercentage` and `trstTotalClaimable` for each `actionUsageByUser` address based on the total IBC amount.
 			// We also update the `TestnetSnapshotAccount` for each address with the calculated values.
 			// Finally, we add the updated `TestnetSnapshotAccount` to the `snapshot.Accounts` map, and update the `snapshot.TotalIntoAirdropAmount` variable for each supported token.
 			var snapshot TestnetSnapshot
@@ -194,7 +194,7 @@ intentod export-testnet-snapshot ~/into/analytics.json ~/cosmos-discord-faucet/t
 				totalAirdropAmount += supported.Allocation //
 			}
 
-			for _, usage := range autoTxUsageByUser {
+			for _, usage := range actionUsageByUser {
 				var account TestnetSnapshotAccount
 				account.IntoAddress = usage.Address
 				for _, tx := range usage.Txs {

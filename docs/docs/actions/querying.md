@@ -6,7 +6,7 @@ description: How to retreive action data
 
 ## Ways to Query
 
-Retreiving `AutoTX` -related information can be through the [TriggerPortal](https://triggerportal.zone) interface, a front-end integration through `TrustlessJS`, locally through a Command-Line Interface or through a Celestia RPC endpoint.
+Retreiving `AutoTX` -related information can be through the [TriggerPortal](https://triggerportal.zone) interface, a front-end integration through `IntentoJS`, locally through a Command-Line Interface or through a Celestia RPC endpoint.
 
 <!--
 Here's an RPC endpoint: [openrpc.intento.zone](https://openrpc.intento.zone).

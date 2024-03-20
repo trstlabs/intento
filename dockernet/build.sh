@@ -21,7 +21,7 @@ build_local_and_docker() {
    cd $folder
 
    # Clear any previously build binaries, otherwise the binary can get corrupted
-   if [[ "$module" == "intento" ]]; then
+   if [[ "$module" == "into" ]]; then
       rm -f build/intentod
    else
       rm -f build/*
@@ -48,7 +48,7 @@ build_local_and_docker() {
    fi
 
    echo "Building $title Docker... "
-   if [[ "$module" == "intento" ]]; then
+   if [[ "$module" == "into" ]]; then
       image=Dockerfile
    else
       image=dockernet/dockerfiles/Dockerfile.$module
@@ -70,7 +70,7 @@ build_local_and_docker() {
 # build docker images and local binaries
 while getopts tgjosehrn flag; do
    case "${flag}" in
-      t) build_local_and_docker intento . ;;
+      t) build_local_and_docker into . ;;
       g) build_local_and_docker gaia deps/gaia ;;
       j) build_local_and_docker juno deps/juno ;;
       o) build_local_and_docker osmo deps/osmosis ;;

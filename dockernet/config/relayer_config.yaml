@@ -10,7 +10,7 @@ chains:
       key: rly1
       chain-id: INTO
       rpc-addr: http://into2:26657
-      account-prefix: trust
+      account-prefix: into
       keyring-backend: test
       gas-adjustment: 1.3
       gas-prices: 0.02uinto
@@ -85,7 +85,7 @@ chains:
       key: rly6
       chain-id: HOST
       rpc-addr: http://host1:26657
-      account-prefix: trust
+      account-prefix: into
       keyring-backend: test
       gas-adjustment: 1.3
       gas-prices: 0.02ucosm

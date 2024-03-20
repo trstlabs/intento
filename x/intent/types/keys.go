@@ -52,7 +52,7 @@ func GetActionHistoryKey(autoID uint64) []byte {
 	return append(ActionHistoryPrefix, GetBytesForUint(autoID)...)
 }
 
-// GetActionsByOwnerPrefix returns the autoTxs by creator prefix
+// GetActionsByOwnerPrefix returns the actions by creator prefix
 func GetActionsByOwnerPrefix(addr sdk.AccAddress) []byte {
 	bz := address.MustLengthPrefix(addr)
 	return append(ActionsByOwnerPrefix, bz...)
@@ -72,7 +72,7 @@ func ActionByTimeKey(execTime time.Time) []byte {
 	return append(ActionQueuePrefix, sdk.FormatTimeBytes(execTime)...)
 }
 
-// from the key we get the autoTx and end time
+// from the key we get the action and end time
 func splitKeyWithTime(key []byte) (autoID uint64, execTime time.Time) {
 
 	execTime, _ = sdk.ParseTimeBytes(key[1 : 1+lenTime])
@@ -83,7 +83,7 @@ func splitKeyWithTime(key []byte) (autoID uint64, execTime time.Time) {
 	return
 }
 
-// ActionQueueKey returns the key with prefix for an autoTx in the Listed Item Queue
+// ActionQueueKey returns the key with prefix for an action in the Listed Item Queue
 func ActionQueueKey(autoID uint64, execTime time.Time) []byte {
 	return append(ActionByTimeKey(execTime), GetBytesForUint(autoID)...)
 }

@@ -10,9 +10,9 @@ var Denom = "uinto"
 var ParseICAValue = "ICA_ADDR"
 
 // GetTxMsgs unpacks sdk messages from any messages
-func (autoTxInfo ActionInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sdk.Msg) {
+func (actionInfo ActionInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sdk.Msg) {
 
-	for _, message := range autoTxInfo.Msgs {
+	for _, message := range actionInfo.Msgs {
 		var sdkMsg sdk.Msg
 		err := unpacker.UnpackAny(message, &sdkMsg)
 		if err != nil {

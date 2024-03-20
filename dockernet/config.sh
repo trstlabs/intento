@@ -126,16 +126,16 @@ USER_MNEMONIC="tonight bonus finish chaos orchard plastic view nurse salad regre
 
 # Intento
 INTO_CHAIN_ID=INTO
-INTO_NODE_PREFIX=intento
+INTO_NODE_PREFIX=into
 INTO_NUM_NODES=3
 INTO_VAL_PREFIX=val
 INTO_USER_ACCT=usr1
-INTO_USER_ADDRESS=into1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t
-INTO_ADDRESS_PREFIX=trust
+INTO_USER_ADDRESS=into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6
+INTO_ADDRESS_PREFIX=into
 INTO_DENOM=$INTO_DENOM
 INTO_RPC_PORT=26657
 INTO_ADMIN_ACCT=admin
-INTO_ADMIN_ADDRESS=into1u20df3trc2c2zdhm8qvh2hdjx9ewh00sxv8dyg
+INTO_ADMIN_ADDRESS=into1u20df3trc2c2zdhm8qvh2hdjx9ewh00sqnuu4e
 INTO_ADMIN_MNEMONIC="tone cause tribe this switch near host damage idle fragile antique tail soda alien depth write wool they rapid unfold body scan pledge soft"
 
 # Binaries are contigent on whether we're doing an upgrade or not
@@ -212,7 +212,7 @@ HOST_NODE_PREFIX=host
 HOST_NUM_NODES=1
 HOST_BINARY="$DOCKERNET_HOME/../build/intentod"
 HOST_VAL_PREFIX=hval
-HOST_ADDRESS_PREFIX=trust
+HOST_ADDRESS_PREFIX=into
 HOST_USER_ACCT=husr1
 HOST_USER_ADDRESS='into1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t'
 HOST_DENOM=$COSM_DENOM

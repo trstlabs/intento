@@ -213,14 +213,14 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 		expPass  bool
 	}{
 		{
-			"success - IBC autoTx", func() {
+			"success - IBC action", func() {
 				registerInterchainAccount = true
 				connectionId = path.EndpointA.ConnectionID
 				hostConnectionId = path.EndpointB.ConnectionID
 			}, true,
 		},
 		{
-			"success - local autoTx", func() {
+			"success - local action", func() {
 				registerInterchainAccount = false
 				connectionId = ""
 				hostConnectionId = ""
@@ -338,29 +338,29 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 				err = msg.ValidateBasic()
 				suite.Require().NoError(err)
 			}
-			autoTxKeeper := icaAppA.IntentKeeper
+			actionKeeper := icaAppA.IntentKeeper
 
 			suite.chainA.CurrentHeader.Time = suite.chainA.CurrentHeader.Time.Add(interval)
 			types.Denom = "stake"
-			FakeBeginBlocker(suite.chainA.GetContext(), autoTxKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
+			FakeBeginBlocker(suite.chainA.GetContext(), actionKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
 			suite.chainA.NextBlock()
 
-			autoTx := autoTxKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
+			action := actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
 
-			suite.Require().NotEqual(autoTx, types.ActionInfo{})
-			suite.Require().Equal(autoTx.Owner, owner)
-			suite.Require().Equal(autoTx.Label, label)
-			suite.Require().Contains(autoTx.Msgs[0].TypeUrl, "MsgSend")
+			suite.Require().NotEqual(action, types.ActionInfo{})
+			suite.Require().Equal(action.Owner, owner)
+			suite.Require().Equal(action.Label, label)
+			suite.Require().Contains(action.Msgs[0].TypeUrl, "MsgSend")
 
 			//ibc action
 			if connectionId != "" {
-				suite.Require().Equal(autoTx.ICAConfig.PortID, "icacontroller-"+owner)
-				suite.Require().Equal(autoTx.ICAConfig.ConnectionID, path.EndpointA.ConnectionID)
+				suite.Require().Equal(action.ICAConfig.PortID, "icacontroller-"+owner)
+				suite.Require().Equal(action.ICAConfig.ConnectionID, path.EndpointA.ConnectionID)
 			}
 
 			if parseIcaAddress {
 				var txMsg sdk.Msg
-				err = icaAppA.AppCodec().UnpackAny(autoTx.Msgs[0], &txMsg)
+				err = icaAppA.AppCodec().UnpackAny(action.Msgs[0], &txMsg)
 				suite.Require().NoError(err)
 				index := strings.Index(txMsg.String(), types.ParseICAValue)
 				suite.Require().Equal(-1, index)
@@ -390,7 +390,7 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 		expPass  bool
 	}{
 		{
-			"success - update autoTx", func() {
+			"success - update action", func() {
 				registerInterchainAccount = true
 				owner = TestOwnerAddress
 				connectionId = path.EndpointA.ConnectionID
@@ -400,7 +400,7 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 			}, true,
 		},
 		{
-			"success - update local autoTx", func() {
+			"success - update local action", func() {
 				registerInterchainAccount = false
 				owner = TestOwnerAddress
 				connectionId = ""
@@ -474,12 +474,12 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 			suite.Require().NoError(err)
 
 			if addFakeExecHistory {
-				autoTxHistory := icaAppA.IntentKeeper.GetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), 1)
-				autoTx := icaAppA.IntentKeeper.GetActionInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
-				suite.Require().NotNil(autoTxHistory)
-				fakeEntry := types.ActionHistoryEntry{ScheduledExecTime: autoTx.ExecTime}
-				autoTxHistory.History = []types.ActionHistoryEntry{fakeEntry}
-				icaAppA.IntentKeeper.SetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), autoTx.ID, &autoTxHistory)
+				actionHistory := icaAppA.IntentKeeper.GetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				action := icaAppA.IntentKeeper.GetActionInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				suite.Require().NotNil(actionHistory)
+				fakeEntry := types.ActionHistoryEntry{ScheduledExecTime: action.ExecTime}
+				actionHistory.History = []types.ActionHistoryEntry{fakeEntry}
+				icaAppA.IntentKeeper.SetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), action.ID, &actionHistory)
 				suite.chainA.NextBlock()
 			}
 			updateMsg, err := types.NewMsgUpdateAction(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, &types.ExecutionConfiguration{SaveMsgResponses: false})
@@ -498,11 +498,11 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 				suite.chainA.NextBlock()
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-				autoTx := icaAppA.IntentKeeper.GetActionInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
-				suite.Require().Equal(autoTx.Label, updateMsg.Label)
-				suite.Require().Equal(autoTx.StartTime.Unix(), int64(updateMsg.StartAt))
-				suite.Require().Equal(autoTx.EndTime.Unix(), int64(updateMsg.EndTime))
-				suite.Require().Equal((autoTx.Interval.String()), updateMsg.Interval)
+				action := icaAppA.IntentKeeper.GetActionInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				suite.Require().Equal(action.Label, updateMsg.Label)
+				suite.Require().Equal(action.StartTime.Unix(), int64(updateMsg.StartAt))
+				suite.Require().Equal(action.EndTime.Unix(), int64(updateMsg.EndTime))
+				suite.Require().Equal((action.Interval.String()), updateMsg.Interval)
 
 			}
 

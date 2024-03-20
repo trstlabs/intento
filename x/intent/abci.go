@@ -22,68 +22,68 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	}
 
 	logger := k.Logger(ctx)
-	autoTxs := k.GetActionsForBlock(ctx)
+	actions := k.GetActionsForBlock(ctx)
 
 	timeOfBlock := ctx.BlockHeader().Time
-	for _, autoTx := range autoTxs {
-		autoTxHistory, _ := k.TryGetActionHistory(ctx, autoTx.ID)
+	for _, action := range actions {
+		actionHistory, _ := k.TryGetActionHistory(ctx, action.ID)
 		// check dependent txs
-		if !k.AllowedToExecute(ctx, autoTx) {
-			k.AddActionHistory(ctx, &autoTxHistory, &autoTx, timeOfBlock, sdk.Coin{}, false, nil, types.ErrActionConditions)
-			autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
-			k.SetActionInfo(ctx, &autoTx)
+		if !k.AllowedToExecute(ctx, action) {
+			k.AddActionHistory(ctx, &actionHistory, &action, timeOfBlock, sdk.Coin{}, false, nil, types.ErrActionConditions)
+			action.ExecTime = action.ExecTime.Add(action.Interval)
+			k.SetActionInfo(ctx, &action)
 			continue
 		}
 
-		logger.Debug("action execution", "id", autoTx.ID)
+		logger.Debug("action execution", "id", action.ID)
 
-		isRecurring := autoTx.ExecTime.Before(autoTx.EndTime)
+		isRecurring := action.ExecTime.Before(action.EndTime)
 
-		flexFee := calculateTimeBasedFlexFee(autoTx, autoTxHistory)
-		fee, err := k.DistributeCoins(ctx, autoTx, flexFee, isRecurring, req.Header.ProposerAddress)
+		flexFee := calculateTimeBasedFlexFee(action, actionHistory)
+		fee, err := k.DistributeCoins(ctx, action, flexFee, isRecurring, req.Header.ProposerAddress)
 
-		k.RemoveFromActionQueue(ctx, autoTx)
+		k.RemoveFromActionQueue(ctx, action)
 		if err != nil {
 			errorString := fmt.Sprintf(types.ErrActionDistribution, err.Error())
-			k.AddActionHistory(ctx, &autoTxHistory, &autoTx, timeOfBlock, fee, false, nil, errorString)
+			k.AddActionHistory(ctx, &actionHistory, &action, timeOfBlock, fee, false, nil, errorString)
 		} else {
-			err, executedLocally, msgResponses := k.SendAction(ctx, &autoTx)
+			err, executedLocally, msgResponses := k.SendAction(ctx, &action)
 			if err != nil {
-				k.AddActionHistory(ctx, &autoTxHistory, &autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrActionMsgHandling, err.Error()))
+				k.AddActionHistory(ctx, &actionHistory, &action, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrActionMsgHandling, err.Error()))
 			} else {
-				k.AddActionHistory(ctx, &autoTxHistory, &autoTx, ctx.BlockTime(), fee, executedLocally, msgResponses)
+				k.AddActionHistory(ctx, &actionHistory, &action, ctx.BlockTime(), fee, executedLocally, msgResponses)
 			}
 
 			// setting new ExecTime and adding a new entry into the queue based on interval
-			shouldRecur := isRecurring && (autoTx.ExecTime.Add(autoTx.Interval).Before(autoTx.EndTime) || autoTx.ExecTime.Add(autoTx.Interval) == autoTx.EndTime)
-			allowedToRecur := (!autoTx.Configuration.StopOnSuccess && !autoTx.Configuration.StopOnFailure) || autoTx.Configuration.StopOnSuccess && err != nil || autoTx.Configuration.StopOnFailure && err == nil
+			shouldRecur := isRecurring && (action.ExecTime.Add(action.Interval).Before(action.EndTime) || action.ExecTime.Add(action.Interval) == action.EndTime)
+			allowedToRecur := (!action.Configuration.StopOnSuccess && !action.Configuration.StopOnFailure) || action.Configuration.StopOnSuccess && err != nil || action.Configuration.StopOnFailure && err == nil
 
 			if shouldRecur && allowedToRecur {
-				//fmt.Printf("action will recur: %v \n", autoTx.ID)
-				autoTx.ExecTime = autoTx.ExecTime.Add(autoTx.Interval)
-				k.InsertActionQueue(ctx, autoTx.ID, autoTx.ExecTime)
+				//fmt.Printf("action will recur: %v \n", action.ID)
+				action.ExecTime = action.ExecTime.Add(action.Interval)
+				k.InsertActionQueue(ctx, action.ID, action.ExecTime)
 			}
 		}
-		k.SetActionInfo(ctx, &autoTx)
+		k.SetActionInfo(ctx, &action)
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeAction,
-				sdk.NewAttribute(types.AttributeKeyActionID, fmt.Sprint(autoTx.ID)),
-				sdk.NewAttribute(types.AttributeKeyActionOwner, autoTx.Owner),
+				sdk.NewAttribute(types.AttributeKeyActionID, fmt.Sprint(action.ID)),
+				sdk.NewAttribute(types.AttributeKeyActionOwner, action.Owner),
 			),
 		)
 	}
 }
 
 // we may reimplement this as a configuration-based gas fee
-func calculateTimeBasedFlexFee(autoTx types.ActionInfo, ActionHistory types.ActionHistory) sdkmath.Int {
+func calculateTimeBasedFlexFee(action types.ActionInfo, ActionHistory types.ActionHistory) sdkmath.Int {
 	if len(ActionHistory.History) != 0 {
 		prevEntry := ActionHistory.History[len(ActionHistory.History)-1].ActualExecTime
-		period := (autoTx.ExecTime.Sub(prevEntry))
+		period := (action.ExecTime.Sub(prevEntry))
 		return sdk.NewInt(int64(period.Milliseconds()))
 	}
 
-	period := autoTx.ExecTime.Sub(autoTx.StartTime)
+	period := action.ExecTime.Sub(action.StartTime)
 	if period.Seconds() <= 60 {
 		//base fee so we do not have a zero fee
 		return sdk.NewInt(60_000)

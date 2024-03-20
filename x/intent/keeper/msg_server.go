@@ -58,7 +58,7 @@ func (k msgServer) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*typ
 		return nil, err
 	}
 
-	// //store 0 as autoTx id as a regular submit is not autoTx
+	// //store 0 as action id as a regular submit is not action
 	// k.setTmpActionID(ctx, 0, portID, "", sequence)
 	return &types.MsgSubmitTxResponse{}, nil
 }
@@ -208,26 +208,26 @@ func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *ty
 func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateAction) (*types.MsgUpdateActionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	autoTx, err := k.TryGetActionInfo(ctx, msg.ID)
+	action, err := k.TryGetActionInfo(ctx, msg.ID)
 	if err != nil {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
-	if autoTx.Owner != msg.Owner {
+	if action.Owner != msg.Owner {
 		return nil, sdkerrors.ErrInvalidAddress
 	}
 
-	if autoTx.Configuration.UpdatingDisabled {
+	if action.Configuration.UpdatingDisabled {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "updating is disabled")
 	}
 
 	if msg.ConnectionId != "" {
-		autoTx.ICAConfig.PortID, err = icatypes.NewControllerPortID(msg.Owner)
+		action.ICAConfig.PortID, err = icatypes.NewControllerPortID(msg.Owner)
 		if err != nil {
 			return nil, err
 		}
-		autoTx.ICAConfig.ConnectionID = msg.ConnectionId
+		action.ICAConfig.ConnectionID = msg.ConnectionId
 	}
-	newExecTime := autoTx.ExecTime
+	newExecTime := action.ExecTime
 	if msg.EndTime > 0 {
 		endTime := time.Unix(int64(msg.EndTime), 0)
 		if err != nil {
@@ -236,9 +236,9 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 		if endTime.Before(ctx.BlockTime().Add(time.Minute * 2)) {
 			return nil, types.ErrInvalidTime
 		}
-		autoTx.EndTime = endTime
+		action.EndTime = endTime
 
-		if autoTx.Interval != 0 && msg.Interval != "" {
+		if action.Interval != 0 && msg.Interval != "" {
 			newExecTime = endTime
 		}
 	}
@@ -250,10 +250,10 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 			return nil, errorsmod.Wrap(types.ErrUpdateAction, err.Error())
 		}
 
-		if interval != 0 && interval < p.MinActionInterval || interval > autoTx.EndTime.Sub(autoTx.StartTime) {
+		if interval != 0 && interval < p.MinActionInterval || interval > action.EndTime.Sub(action.StartTime) {
 			return nil, errorsmod.Wrapf(types.ErrUpdateAction, "interval: %s  must be longer than minimum interval:  %s, and execution should happen before end time", interval, p.MinActionInterval)
 		}
-		autoTx.Interval = interval
+		action.Interval = interval
 	}
 
 	if msg.StartAt > 0 {
@@ -264,14 +264,14 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
-		if startTime.After(autoTx.EndTime) {
+		if startTime.After(action.EndTime) {
 			return nil, errorsmod.Wrapf(types.ErrUpdateAction, "start time: %s must be before end time", startTime)
 		}
-		autoTxHistory := k.GetActionHistory(ctx, autoTx.ID)
-		if len(autoTxHistory.History) != 0 {
+		actionHistory := k.GetActionHistory(ctx, action.ID)
+		if len(actionHistory.History) != 0 {
 			return nil, errorsmod.Wrapf(types.ErrUpdateAction, "start time: %s must occur before first execution", startTime)
 		}
-		autoTx.StartTime = startTime
+		action.StartTime = startTime
 		newExecTime = startTime
 	}
 	/* 	configuration := msg.Configuration
@@ -280,25 +280,25 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 	   	} */
 
 	if msg.Label != "" {
-		autoTx.Label = msg.Label
+		action.Label = msg.Label
 	}
 	if msg.Configuration != nil {
-		autoTx.Configuration = msg.Configuration
+		action.Configuration = msg.Configuration
 	}
 
 	if len(msg.Msgs) != 0 {
-		autoTx.Msgs = msg.Msgs
+		action.Msgs = msg.Msgs
 	}
 
-	if newExecTime != autoTx.ExecTime {
-		k.RemoveFromActionQueue(ctx, autoTx)
-		autoTx.ExecTime = newExecTime
-		k.InsertActionQueue(ctx, autoTx.ID, newExecTime)
+	if newExecTime != action.ExecTime {
+		k.RemoveFromActionQueue(ctx, action)
+		action.ExecTime = newExecTime
+		k.InsertActionQueue(ctx, action.ID, newExecTime)
 	}
 
-	autoTx.UpdateHistory = append(autoTx.UpdateHistory, ctx.BlockTime())
+	action.UpdateHistory = append(action.UpdateHistory, ctx.BlockTime())
 
-	k.SetActionInfo(ctx, &autoTx)
+	k.SetActionInfo(ctx, &action)
 
 	return &types.MsgUpdateActionResponse{}, nil
 }

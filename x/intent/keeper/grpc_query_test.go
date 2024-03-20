@@ -23,7 +23,7 @@ import (
 
 func TestQueryActionsByOwnerList(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	autoTxKeeper := keepers.IntentKeeper
+	actionKeeper := keepers.IntentKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
@@ -35,10 +35,10 @@ func TestQueryActionsByOwnerList(t *testing.T) {
 
 	// create 10 actions
 	for i := 0; i < 10; i++ {
-		autoTx, err := CreateFakeAction(autoTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+		action, err := CreateFakeAction(actionKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
 
-		expectedActions = append(expectedActions, autoTx)
+		expectedActions = append(expectedActions, action)
 	}
 
 	specs := map[string]struct {
@@ -89,7 +89,7 @@ func TestQueryActionsByOwnerList(t *testing.T) {
 
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			got, err := autoTxKeeper.ActionsForOwner(sdk.WrapSDKContext(ctx), spec.srcQuery)
+			got, err := actionKeeper.ActionsForOwner(sdk.WrapSDKContext(ctx), spec.srcQuery)
 
 			if spec.expErr != nil {
 				require.Equal(t, spec.expErr, err)
@@ -98,7 +98,7 @@ func TestQueryActionsByOwnerList(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			for i, expectedAction := range spec.expActionInfos {
-				assert.Equal(t, expectedAction.GetTxMsgs(autoTxKeeper.cdc), got.ActionInfos[i].GetTxMsgs(autoTxKeeper.cdc))
+				assert.Equal(t, expectedAction.GetTxMsgs(actionKeeper.cdc), got.ActionInfos[i].GetTxMsgs(actionKeeper.cdc))
 				assert.Equal(t, expectedAction.ICAConfig.PortID, got.ActionInfos[i].ICAConfig.PortID)
 				assert.Equal(t, expectedAction.Owner, got.ActionInfos[i].Owner)
 				assert.Equal(t, expectedAction.ICAConfig.ConnectionID, got.ActionInfos[i].ICAConfig.ConnectionID)
@@ -112,23 +112,23 @@ func TestQueryActionsByOwnerList(t *testing.T) {
 
 func TestQueryActionHistory(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	autoTxKeeper := keepers.IntentKeeper
+	actionKeeper := keepers.IntentKeeper
 
-	autoTxHistory, err := CreateFakeActionHistory(autoTxKeeper, ctx, ctx.BlockTime())
+	actionHistory, err := CreateFakeActionHistory(actionKeeper, ctx, ctx.BlockTime())
 	require.NoError(t, err)
 
 	ID := "1"
-	got, err := autoTxKeeper.ActionHistory(sdk.WrapSDKContext(ctx), &types.QueryActionHistoryRequest{Id: ID})
+	got, err := actionKeeper.ActionHistory(sdk.WrapSDKContext(ctx), &types.QueryActionHistoryRequest{Id: ID})
 	require.NoError(t, err)
 	require.NotNil(t, got)
-	require.Equal(t, got.History[0].ScheduledExecTime, autoTxHistory.History[0].ScheduledExecTime)
-	require.Equal(t, got.History[0].ActualExecTime, autoTxHistory.History[0].ActualExecTime)
+	require.Equal(t, got.History[0].ScheduledExecTime, actionHistory.History[0].ScheduledExecTime)
+	require.Equal(t, got.History[0].ActualExecTime, actionHistory.History[0].ActualExecTime)
 
 }
 
 func TestQueryActionsList(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	autoTxKeeper := keepers.IntentKeeper
+	actionKeeper := keepers.IntentKeeper
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
 
@@ -139,19 +139,19 @@ func TestQueryActionsList(t *testing.T) {
 
 	// create 10 actions
 	for i := 0; i < 10; i++ {
-		autoTx, err := CreateFakeAction(autoTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+		action, err := CreateFakeAction(actionKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
 
-		expectedActions = append(expectedActions, autoTx)
+		expectedActions = append(expectedActions, action)
 	}
 
-	got, err := autoTxKeeper.Actions(sdk.WrapSDKContext(ctx), &types.QueryActionsRequest{})
+	got, err := actionKeeper.Actions(sdk.WrapSDKContext(ctx), &types.QueryActionsRequest{})
 
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	for i, expectedAction := range expectedActions {
 
-		assert.Equal(t, expectedAction.GetTxMsgs(autoTxKeeper.cdc), got.ActionInfos[i].GetTxMsgs(autoTxKeeper.cdc))
+		assert.Equal(t, expectedAction.GetTxMsgs(actionKeeper.cdc), got.ActionInfos[i].GetTxMsgs(actionKeeper.cdc))
 		assert.Equal(t, expectedAction.ICAConfig.PortID, got.ActionInfos[i].ICAConfig.PortID)
 		assert.Equal(t, expectedAction.Owner, got.ActionInfos[i].Owner)
 		assert.Equal(t, expectedAction.ICAConfig.ConnectionID, got.ActionInfos[i].ICAConfig.ConnectionID)
@@ -164,7 +164,7 @@ func TestQueryActionsList(t *testing.T) {
 
 func TestQueryActionsListWithAuthZMsg(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	autoTxKeeper := keepers.IntentKeeper
+	actionKeeper := keepers.IntentKeeper
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
@@ -174,18 +174,18 @@ func TestQueryActionsListWithAuthZMsg(t *testing.T) {
 	portID, err := icatypes.NewControllerPortID(creator.String())
 	require.NoError(t, err)
 
-	expectedAction, err := CreateFakeAuthZAction(autoTxKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+	expectedAction, err := CreateFakeAuthZAction(actionKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 	require.NoError(t, err)
-	got, err := autoTxKeeper.Actions(sdk.WrapSDKContext(ctx), &types.QueryActionsRequest{})
+	got, err := actionKeeper.Actions(sdk.WrapSDKContext(ctx), &types.QueryActionsRequest{})
 
 	require.NoError(t, err)
 	require.NotNil(t, got)
 
 	var txMsg sdk.Msg
-	autoTxKeeper.cdc.UnpackAny(expectedAction.Msgs[0], &txMsg)
+	actionKeeper.cdc.UnpackAny(expectedAction.Msgs[0], &txMsg)
 
 	var gotMsg sdk.Msg
-	autoTxKeeper.cdc.UnpackAny(got.ActionInfos[0].Msgs[0], &gotMsg)
+	actionKeeper.cdc.UnpackAny(got.ActionInfos[0].Msgs[0], &gotMsg)
 
 	assert.Equal(t, expectedAction.Msgs, got.ActionInfos[0].Msgs)
 	//	assert.Equal(t, txMsg, gotMsg)
@@ -201,9 +201,9 @@ func TestQueryActionsListWithAuthZMsg(t *testing.T) {
 
 func TestQueryParams(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	autoTxKeeper := keepers.IntentKeeper
+	actionKeeper := keepers.IntentKeeper
 
-	resp, err := autoTxKeeper.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})
+	resp, err := actionKeeper.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})
 	require.NoError(t, err)
 	require.Equal(t, resp.Params, types.DefaultParams())
 }
@@ -226,11 +226,11 @@ func NewICA(t *testing.T) (*ibctesting.Coordinator, *ibctesting.Path) {
 func CreateFakeAction(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) (types.ActionInfo, error) {
 
 	id := k.autoIncrementID(ctx, types.KeyLastID)
-	autoTxAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
+	actionAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
 	if err != nil {
 		return types.ActionInfo{}, err
 	}
-	fakeMsg := banktypes.NewMsgSend(owner, autoTxAddress, feeFunds)
+	fakeMsg := banktypes.NewMsgSend(owner, actionAddress, feeFunds)
 
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{fakeMsg})
 	if err != nil {
@@ -239,9 +239,9 @@ func CreateFakeAction(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 
 	// fakeData, _ := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{fakeMsg})
 	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, id, interval)
-	autoTx := types.ActionInfo{
+	action := types.ActionInfo{
 		ID:         id,
-		FeeAddress: autoTxAddress.String(),
+		FeeAddress: actionAddress.String(),
 		Owner:      owner.String(),
 		// Data:       fakeData,
 		Msgs:     anys,
@@ -254,12 +254,12 @@ func CreateFakeAction(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 		Configuration: &types.ExecutionConfiguration{SaveMsgResponses: true},
 	}
 
-	k.SetActionInfo(ctx, &autoTx)
+	k.SetActionInfo(ctx, &action)
 	k.addToActionOwnerIndex(ctx, owner, id)
 
 	var newAction types.ActionInfo
-	autoTxBz := k.cdc.MustMarshal(&autoTx)
-	k.cdc.MustUnmarshal(autoTxBz, &newAction)
+	actionBz := k.cdc.MustMarshal(&action)
+	k.cdc.MustUnmarshal(actionBz, &newAction)
 	return newAction, nil
 }
 
@@ -272,23 +272,23 @@ func CreateFakeActionHistory(k Keeper, ctx sdk.Context, startAt time.Time) (type
 		Executed:          true,
 	}
 
-	autoTxHistory := types.ActionHistory{
+	actionHistory := types.ActionHistory{
 		History: []types.ActionHistoryEntry{entry},
 	}
 
-	k.SetActionHistory(ctx, 1, &autoTxHistory)
+	k.SetActionHistory(ctx, 1, &actionHistory)
 
-	return autoTxHistory, nil
+	return actionHistory, nil
 }
 
 func CreateFakeAuthZAction(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) (types.ActionInfo, error) {
 
 	id := k.autoIncrementID(ctx, types.KeyLastID)
-	autoTxAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
+	actionAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
 	if err != nil {
 		return types.ActionInfo{}, err
 	}
-	fakeMsg := banktypes.NewMsgSend(owner, autoTxAddress, feeFunds)
+	fakeMsg := banktypes.NewMsgSend(owner, actionAddress, feeFunds)
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{fakeMsg})
 	if err != nil {
 		return types.ActionInfo{}, err
@@ -303,9 +303,9 @@ func CreateFakeAuthZAction(k Keeper, ctx sdk.Context, owner sdk.AccAddress, port
 
 	// fakeData, _ := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{fakeMsg})
 	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, id, interval)
-	autoTx := types.ActionInfo{
+	action := types.ActionInfo{
 		ID:         id,
-		FeeAddress: autoTxAddress.String(),
+		FeeAddress: actionAddress.String(),
 		Owner:      owner.String(),
 		// Data:       fakeData,
 		Msgs:          anys,
@@ -316,10 +316,10 @@ func CreateFakeAuthZAction(k Keeper, ctx sdk.Context, owner sdk.AccAddress, port
 		EndTime:       endTime,
 		ICAConfig:     &types.ICAConfig{PortID: portID},
 	}
-	k.SetActionInfo(ctx, &autoTx)
+	k.SetActionInfo(ctx, &action)
 	k.addToActionOwnerIndex(ctx, owner, id)
-	autoTxBz := k.cdc.MustMarshal(&autoTx)
+	actionBz := k.cdc.MustMarshal(&action)
 	var newAction types.ActionInfo
-	k.cdc.MustUnmarshal(autoTxBz, &newAction)
+	k.cdc.MustUnmarshal(actionBz, &newAction)
 	return newAction, nil
 }

@@ -13,41 +13,41 @@ import (
 )
 
 // GetActionHistory
-func (k Keeper) GetActionHistory(ctx sdk.Context, autoTxHistoryID uint64) types.ActionHistory {
+func (k Keeper) GetActionHistory(ctx sdk.Context, actionHistoryID uint64) types.ActionHistory {
 	store := ctx.KVStore(k.storeKey)
-	var autoTxHistory types.ActionHistory
-	autoTxHistoryBz := store.Get(types.GetActionHistoryKey(autoTxHistoryID))
+	var actionHistory types.ActionHistory
+	actionHistoryBz := store.Get(types.GetActionHistoryKey(actionHistoryID))
 
-	k.cdc.MustUnmarshal(autoTxHistoryBz, &autoTxHistory)
-	return autoTxHistory
+	k.cdc.MustUnmarshal(actionHistoryBz, &actionHistory)
+	return actionHistory
 }
 
 // TryGetActionHistory
-func (k Keeper) TryGetActionHistory(ctx sdk.Context, autoTxHistoryID uint64) (types.ActionHistory, error) {
+func (k Keeper) TryGetActionHistory(ctx sdk.Context, actionHistoryID uint64) (types.ActionHistory, error) {
 	store := ctx.KVStore(k.storeKey)
-	var autoTxHistory types.ActionHistory
-	autoTxHistoryBz := store.Get(types.GetActionHistoryKey(autoTxHistoryID))
+	var actionHistory types.ActionHistory
+	actionHistoryBz := store.Get(types.GetActionHistoryKey(actionHistoryID))
 
-	err := k.cdc.Unmarshal(autoTxHistoryBz, &autoTxHistory)
+	err := k.cdc.Unmarshal(actionHistoryBz, &actionHistory)
 	if err != nil {
 		return types.ActionHistory{}, err
 	}
-	return autoTxHistory, nil
+	return actionHistory, nil
 }
 
-func (k Keeper) SetActionHistory(ctx sdk.Context, actionId uint64, autoTxHistory *types.ActionHistory) {
+func (k Keeper) SetActionHistory(ctx sdk.Context, actionId uint64, actionHistory *types.ActionHistory) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.GetActionHistoryKey(actionId), k.cdc.MustMarshal(autoTxHistory))
+	store.Set(types.GetActionHistoryKey(actionId), k.cdc.MustMarshal(actionHistory))
 }
 
-func (k Keeper) importActionHistory(ctx sdk.Context, autoTxHistoryId uint64, ActionHistory types.ActionHistory) error {
+func (k Keeper) importActionHistory(ctx sdk.Context, actionHistoryId uint64, ActionHistory types.ActionHistory) error {
 
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetActionHistoryKey(autoTxHistoryId)
+	key := types.GetActionHistoryKey(actionHistoryId)
 	if store.Has(key) {
-		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate code: %d", autoTxHistoryId)
+		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate code: %d", actionHistoryId)
 	}
-	// 0x01 | autoTxHistoryId (uint64) -> ActionHistory
+	// 0x01 | actionHistoryId (uint64) -> ActionHistory
 	store.Set(key, k.cdc.MustMarshal(&ActionHistory))
 	return nil
 }
@@ -65,9 +65,9 @@ func (k Keeper) IterateActionHistorys(ctx sdk.Context, cb func(uint64, types.Act
 	}
 }
 
-func (k Keeper) AddActionHistory(ctx sdk.Context, autoTxHistory *types.ActionHistory, autoTx *types.ActionInfo, actualExecTime time.Time, execFee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, err ...string) {
+func (k Keeper) AddActionHistory(ctx sdk.Context, actionHistory *types.ActionHistory, action *types.ActionInfo, actualExecTime time.Time, execFee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, err ...string) {
 	historyEntry := types.ActionHistoryEntry{
-		ScheduledExecTime: autoTx.ExecTime,
+		ScheduledExecTime: action.ExecTime,
 		ActualExecTime:    actualExecTime,
 		ExecFee:           execFee,
 	}
@@ -82,7 +82,7 @@ func (k Keeper) AddActionHistory(ctx sdk.Context, autoTxHistory *types.ActionHis
 		historyEntry.Executed = false
 	}
 
-	autoTxHistory.History = append(autoTxHistory.History, historyEntry)
-	k.SetActionHistory(ctx, autoTx.ID, autoTxHistory)
+	actionHistory.History = append(actionHistory.History, historyEntry)
+	k.SetActionHistory(ctx, action.ID, actionHistory)
 
 }

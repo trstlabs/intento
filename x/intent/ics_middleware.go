@@ -413,14 +413,14 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 	ics20Raw := metadata["action"]
 
 	// Make sure the ics20 key is a map. If it isn't, ignore this packet
-	autoTx, ok := ics20Raw.(map[string]interface{})
+	action, ok := ics20Raw.(map[string]interface{})
 	if !ok {
 		return isActionRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, types.ExecutionConfiguration{}, "",
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, "action metadata is not a valid JSON map object")
 	}
 
 	// Get the owner
-	owner, ok := autoTx["owner"].(string)
+	owner, ok := action["owner"].(string)
 	if !ok {
 		owner = ""
 	}
@@ -440,20 +440,20 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 	}
 
 	// Ensure the message key is provided
-	if autoTx["msgs"] == nil {
+	if action["msgs"] == nil {
 		return isActionRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, types.ExecutionConfiguration{}, "",
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `action["msgs"]`)
 	}
 
 	// Make sure the msg key is an array of maps. If it isn't, return an error
-	msgs, ok := autoTx["msgs"].([]interface{})
+	msgs, ok := action["msgs"].([]interface{})
 	if !ok {
 		return isActionRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, types.ExecutionConfiguration{}, "",
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `action["msgs"] is not an array`)
 	}
 
 	// Get the label
-	label, ok = autoTx["label"].(string)
+	label, ok = action["label"].(string)
 	if !ok {
 		// The tokens will be returned
 		return isActionRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, types.ExecutionConfiguration{}, "",
@@ -461,13 +461,13 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 	}
 
 	// Get the connectionId. To save space we write cid instead of connection_id
-	connectionId, _ = autoTx["cid"].(string)
+	connectionId, _ = action["cid"].(string)
 
 	// Get the version
-	counterpartyConnectionID, _ = autoTx["host_cid"].(string)
+	counterpartyConnectionID, _ = action["host_cid"].(string)
 
 	// optional for updating trigger end time
-	endTimeString, ok := autoTx["end_time"].(string)
+	endTimeString, ok := action["end_time"].(string)
 	if ok {
 		endTime, err = strconv.ParseUint(endTimeString, 10, 64)
 		if err != nil {
@@ -477,7 +477,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 	}
 
 	// Get the duration
-	duration, ok = autoTx["duration"].(string)
+	duration, ok = action["duration"].(string)
 	// A sumbitAction should have a duration key, an updateAction should have an endTime key
 	if !ok && endTime == 0 {
 		// The tokens will be returned
@@ -485,10 +485,10 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `action["duration"]`)
 	}
 	// Get the interval,optional
-	interval, _ = autoTx["interval"].(string)
+	interval, _ = action["interval"].(string)
 
 	// Get the label
-	startAtString, ok := autoTx["start_at"].(string)
+	startAtString, ok := action["start_at"].(string)
 	if ok {
 		// The tokens will be returned
 		// return isActionRouted, sdk.AccAddress{}, nil, "", "", "", "","", 0, 0, false, types.ExecutionConfiguration{}, "",
@@ -501,43 +501,43 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `action["start_at"]`)
 	}
 
-	registerICAString, ok := autoTx["register_ica"].(string)
+	registerICAString, ok := action["register_ica"].(string)
 	if ok && registerICAString == "true" {
 		registerICA = true
 	}
 
 	updateDisabled := false
-	updateDisabledString, ok := autoTx["update_disabled"].(string)
+	updateDisabledString, ok := action["update_disabled"].(string)
 	if ok && updateDisabledString == "true" {
 		updateDisabled = true
 	}
 
 	saveMsgResponses := false
-	saveMsgResponsesString, ok := autoTx["save_responses"].(string)
+	saveMsgResponsesString, ok := action["save_responses"].(string)
 	if ok && saveMsgResponsesString == "true" {
 		saveMsgResponses = true
 	}
 
 	stopOnSuccess := false
-	stopOnSuccessString, ok := autoTx["stop_on_success"].(string)
+	stopOnSuccessString, ok := action["stop_on_success"].(string)
 	if ok && stopOnSuccessString == "true" {
 		stopOnSuccess = true
 	}
 
 	stopOnFailure := false
-	stopOnFailureString, ok := autoTx["stop_on_fail"].(string)
+	stopOnFailureString, ok := action["stop_on_fail"].(string)
 	if ok && stopOnFailureString == "true" {
 		stopOnFailure = true
 	}
 
 	reregisterICA := false
-	reregisterICAString, ok := autoTx["allow_reregister"].(string)
+	reregisterICAString, ok := action["allow_reregister"].(string)
 	if ok && reregisterICAString == "true" {
 		reregisterICA = true
 	}
 	/*
-		// Assuming autoTx is a map[string]interface{} containing JSON data
-		stopOnSuccessOfInterface, ok := autoTx["stop_on_success_of"].([]interface{})
+		// Assuming action is a map[string]interface{} containing JSON data
+		stopOnSuccessOfInterface, ok := action["stop_on_success_of"].([]interface{})
 		var stopOnSuccessOf []int64
 
 		if ok {
@@ -548,8 +548,8 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 			}
 		}
 
-		// Assuming autoTx is a map[string]interface{} containing JSON data
-		stopOnFailureOfInterface, ok := autoTx["stop_on_fail_of"].([]interface{})
+		// Assuming action is a map[string]interface{} containing JSON data
+		stopOnFailureOfInterface, ok := action["stop_on_fail_of"].([]interface{})
 		var stopOnFailureOf []int64
 
 		if ok {
@@ -560,8 +560,8 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 			}
 		}
 
-		// Assuming autoTx is a map[string]interface{} containing JSON data
-		skipOnFailureOfInterface, ok := autoTx["skip_on_fail_of"].([]interface{})
+		// Assuming action is a map[string]interface{} containing JSON data
+		skipOnFailureOfInterface, ok := action["skip_on_fail_of"].([]interface{})
 		var skipOnFailureOf []int64
 
 		if ok {
@@ -572,8 +572,8 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 			}
 		}
 
-		// Assuming autoTx is a map[string]interface{} containing JSON data
-		skipOnSuccessOfInterface, ok := autoTx["skip_on_success_of"].([]interface{})
+		// Assuming action is a map[string]interface{} containing JSON data
+		skipOnSuccessOfInterface, ok := action["skip_on_success_of"].([]interface{})
 		var skipOnSuccessOf []int64
 
 		if ok {

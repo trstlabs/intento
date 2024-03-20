@@ -20,13 +20,13 @@ DOCKER := $(shell which docker)
 
 DOCKERNET_HOME=./dockernet
 DOCKERNET_COMPOSE_FILE=$(DOCKERNET_HOME)/docker-compose.yml
-DOCKER_IMAGE_BUILD=t
+DOCKER_IMAGE_BUILD=tgr
 BUILDDIR ?= $(CURDIR)/build
 
 DOCKER_TAG ?= latest
 
 GO_SYSTEM_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1-2)
-REQUIRE_GO_VERSION = 1.20
+REQUIRE_GO_VERSION = 1.21
 
 export GO111MODULE = on
 
@@ -102,7 +102,7 @@ endif
 
 check_version:
 ifneq ($(GO_SYSTEM_VERSION), $(REQUIRE_GO_VERSION))
-	@echo "ERROR: Go version 1.20 is required for $(VERSION) of Intento."
+	@echo "ERROR: Go version $(REQUIRE_GO_VERSION) is required for $(VERSION) of Intento."
 	exit 1
 endif
 

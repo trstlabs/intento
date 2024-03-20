@@ -37,7 +37,7 @@ func newFakeMsgSend(fromAddr sdk.AccAddress, toAddr sdk.AccAddress) *banktypes.M
 func TestSendLocalTx(t *testing.T) {
 	ctx, keepers, addr1, _, addr2, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
 
-	autoTxAddr, _ := CreateFakeFundedAccount(ctx, keepers.accountKeeper, keepers.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	actionAddr, _ := CreateFakeFundedAccount(ctx, keepers.accountKeeper, keepers.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 
 	types.Denom = "stake"
 
@@ -45,10 +45,10 @@ func TestSendLocalTx(t *testing.T) {
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 	require.NoError(t, err)
 
-	autoTxInfo := createBaseActionInfo(addr1, autoTxAddr)
-	autoTxInfo.Msgs = anys
+	actionInfo := createBaseActionInfo(addr1, actionAddr)
+	actionInfo.Msgs = anys
 
-	err, executedLocally, msgResponses := keepers.SendAction(ctx, &autoTxInfo)
+	err, executedLocally, msgResponses := keepers.SendAction(ctx, &actionInfo)
 	require.NoError(t, err)
 	require.NotNil(t, msgResponses)
 	require.True(t, executedLocally)
@@ -57,18 +57,18 @@ func TestSendLocalTx(t *testing.T) {
 func TestSendLocalTxAutoCompound(t *testing.T) {
 	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
 
-	autoTxAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 
 	types.Denom = "stake"
 
 	// Set baseline
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
 
-	autoTxInfo := createBaseActionInfo(delAddr, autoTxAddr)
+	actionInfo := createBaseActionInfo(delAddr, actionAddr)
 	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
-	autoTxInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
+	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 
-	err, executedLocally, _ := keeper.SendAction(ctx, &autoTxInfo)
+	err, executedLocally, _ := keeper.SendAction(ctx, &actionInfo)
 	require.NoError(t, err)
 	require.True(t, executedLocally)
 
@@ -126,11 +126,11 @@ func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.A
 	return val, ctx
 }
 
-func createBaseActionInfo(ownerAddr sdk.AccAddress, autoTxAddr sdk.AccAddress) types.ActionInfo {
-	autoTxInfo := types.ActionInfo{
+func createBaseActionInfo(ownerAddr sdk.AccAddress, actionAddr sdk.AccAddress) types.ActionInfo {
+	actionInfo := types.ActionInfo{
 		ID:            1,
 		Owner:         ownerAddr.String(),
-		FeeAddress:    autoTxAddr.String(),
+		FeeAddress:    actionAddr.String(),
 		Msgs:          []*cdctypes.Any{},
 		Interval:      time.Second * 20,
 		StartTime:     time.Now().Add(time.Hour * -1),
@@ -138,7 +138,7 @@ func createBaseActionInfo(ownerAddr sdk.AccAddress, autoTxAddr sdk.AccAddress) t
 		ICAConfig:     &types.ICAConfig{},
 		Configuration: &types.ExecutionConfiguration{SaveMsgResponses: true},
 	}
-	return autoTxInfo
+	return actionInfo
 }
 
 // This will commit the current set, update the block height, and set historic info

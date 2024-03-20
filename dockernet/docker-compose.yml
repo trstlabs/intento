@@ -3,7 +3,7 @@ services:
   into1:
     image: intento:into
     volumes:
-      - ./state/into1:/home/into/.into
+      - ./state/into1:/home/intento/.into
     ports:
       - "26657:26657"
       - "1317:1317"
@@ -12,12 +12,12 @@ services:
   into2:
     image: intento:into
     volumes:
-      - ./state/into2:/home/into/.into
+      - ./state/into2:/home/intento/.into
 
   into3:
     image: intento:into
     volumes:
-      - ./state/into3:/home/into/.into
+      - ./state/into3:/home/intento/.into
 
   gaia1:
     image: intento:gaia

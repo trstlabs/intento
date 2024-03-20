@@ -26,9 +26,9 @@ func NewQueryActionsForOwnerRequest(owner string, pagination *query.PageRequest)
 }
 
 // NewQueryActionsForOwnerResponse creates and returns a new QueryActionsForOwnerFromAddressResponse
-func NewQueryActionsForOwnerResponse(autoTxInfos []ActionInfo) *QueryActionsForOwnerResponse {
+func NewQueryActionsForOwnerResponse(actionInfos []ActionInfo) *QueryActionsForOwnerResponse {
 	return &QueryActionsForOwnerResponse{
-		ActionInfos: autoTxInfos,
+		ActionInfos: actionInfos,
 	}
 }
 
@@ -45,8 +45,8 @@ func NewQueryActionRequest(id string) *QueryActionRequest {
 }
 
 // NewQueryActionsForOwnerResponse creates and returns a new QueryActionsForOwnerFromAddressResponse
-func NewQueryActionsResponse(autoTxInfos []ActionInfo) *QueryActionsResponse {
+func NewQueryActionsResponse(actionInfos []ActionInfo) *QueryActionsResponse {
 	return &QueryActionsResponse{
-		ActionInfos: autoTxInfos,
+		ActionInfos: actionInfos,
 	}
 }

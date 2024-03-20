@@ -12,8 +12,8 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-// DistributeCoins distributes Action fees and handles remaining autoTx fee balance after last execution
-func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.ActionInfo, flexFee sdkmath.Int, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
+// DistributeCoins distributes Action fees and handles remaining action fee balance after last execution
+func (k Keeper) DistributeCoins(ctx sdk.Context, actionInfo types.ActionInfo, flexFee sdkmath.Int, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
 	cacheCtx, writeCache := ctx.CacheContext()
 	p := k.GetParams(ctx)
 
@@ -25,29 +25,29 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.ActionInfo, fl
 	// if flexFeeMulDec.TruncateInt().IsZero() {
 	// 	flexFeeMulDec = flexFeeMulDec.Ceil()
 	// }
-	feeAddr, err := sdk.AccAddressFromBech32(autoTxInfo.FeeAddress)
+	feeAddr, err := sdk.AccAddressFromBech32(actionInfo.FeeAddress)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	ownerAddr, err := sdk.AccAddressFromBech32(autoTxInfo.Owner)
+	ownerAddr, err := sdk.AccAddressFromBech32(actionInfo.Owner)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	autoTxAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
+	actionAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
 
 	//depending if execution is recurring the constant fee may differ (gov param)
-	fixedFee := sdk.NewInt(p.ActionConstantFee * int64(len(autoTxInfo.Msgs)))
+	fixedFee := sdk.NewInt(p.ActionConstantFee * int64(len(actionInfo.Msgs)))
 	if isRecurring {
-		fixedFee = sdk.NewInt(p.RecurringActionConstantFee * int64(len(autoTxInfo.Msgs)))
+		fixedFee = sdk.NewInt(p.RecurringActionConstantFee * int64(len(actionInfo.Msgs)))
 	}
 
 	fixedFeeCommunityCoin := sdk.NewCoin(types.Denom, fixedFee)
 
 	//if last execution, return remaining balance minus commision
-	if !isRecurring && !autoTxAddrBalance.Empty() {
+	if !isRecurring && !actionAddrBalance.Empty() {
 		percentageActionFundsCommission := sdk.NewDecWithPrec(p.ActionFundsCommission, 2)
-		amountActionFundsCommissionCoin := sdk.NewCoin(types.Denom, percentageActionFundsCommission.MulInt(autoTxAddrBalance.AmountOf(types.Denom)).Ceil().TruncateInt())
+		amountActionFundsCommissionCoin := sdk.NewCoin(types.Denom, percentageActionFundsCommission.MulInt(actionAddrBalance.AmountOf(types.Denom)).Ceil().TruncateInt())
 		fixedFeeCommunityCoin = fixedFeeCommunityCoin.Add(amountActionFundsCommissionCoin)
 	}
 	fixedFeeCommunityCoins := sdk.NewCoins(fixedFeeCommunityCoin)
@@ -67,7 +67,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.ActionInfo, fl
 	//the trigger account should be funded with the fee amount
 	err = k.bankKeeper.SendCoinsFromAccountToModule(cacheCtx, feeAddr, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
 	if err != nil {
-		if autoTxInfo.Configuration.FallbackToOwnerBalance {
+		if actionInfo.Configuration.FallbackToOwnerBalance {
 			err := k.bankKeeper.SendCoinsFromAccountToModule(cacheCtx, ownerAddr, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
 			if err != nil {
 				return sdk.Coin{}, err
@@ -88,7 +88,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, autoTxInfo types.ActionInfo, fl
 	}
 	//pay out any remaining balance to the owner after deducting fee, commision and gas
 	if !isRecurring {
-		toOwnerCoins, negative := autoTxAddrBalance.Sort().SafeSub(totalActionFees)
+		toOwnerCoins, negative := actionAddrBalance.Sort().SafeSub(totalActionFees)
 
 		if !negative {
 			err := k.bankKeeper.SendCoins(cacheCtx, feeAddr, ownerAddr, toOwnerCoins)

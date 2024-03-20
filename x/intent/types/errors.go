@@ -22,7 +22,7 @@ var (
 	ErrUpdateAction = sdkerrors.Register(ModuleName, 31, "cannot update action parameter")
 
 	ErrBadMetadataFormatMsg = "metadata not properly formatted for: '%v'. %s"
-	ErrBadActionMsg         = "cannot create autoTx: %v"
+	ErrBadActionMsg         = "cannot create action: %v"
 	ErrActionConditions     = "conditions to execute not met"
 	ErrActionDistribution   = "distribution error: %s"
 	ErrActionMsgHandling    = "msg handling error: %s"
