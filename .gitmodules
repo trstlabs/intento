@@ -20,3 +20,6 @@
 [submodule "deps/osmosis"]
 	path = deps/osmosis
 	url = https://github.com/osmosis-labs/osmosis.git
+[submodule "deps/dymension"]
+	path = deps/dymension
+	url = https://github.com/dymensionxyz/dymension
