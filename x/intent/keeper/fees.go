@@ -7,7 +7,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/trstlabs/intento/x/intent/types"
 )
@@ -57,7 +56,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, actionInfo types.ActionInfo, fl
 	// transfer collected fees to the distribution module account
 	flexFeeCoin := sdk.NewCoin(types.Denom, flexFeeMulDec.Ceil().TruncateInt())
 	if flexFeeCoin.Amount.IsZero() {
-		return sdk.Coin{}, errorsmod.Wrap(sdkerrors.ErrInsufficientFee, "flexFeeCoin was zero")
+		return sdk.Coin{}, errorsmod.Wrap(errorsmod.ErrPanic, "flexFeeCoin was zero, this should never happen")
 	}
 
 	proposerAddr := k.stakingKeeper.ValidatorByConsAddr(cacheCtx, proposer)

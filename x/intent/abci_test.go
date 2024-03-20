@@ -37,7 +37,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	//queue in BeginBocker
 	queue = k.GetActionsForBlock(ctx3)
-	actionHistory := k.GetActionHistory(ctx3, queue[0].ID)
+	actionHistory := k.MustGetActionHistory(ctx3, queue[0].ID)
 	// test that action history was updated
 	require.Equal(t, ctx3.BlockHeader().Time, queue[0].ExecTime)
 	require.Equal(t, 1, len(actionHistory.History))
@@ -134,7 +134,7 @@ func TestErrorDistributionIsSaved(t *testing.T) {
 	action = k.GetActionInfo(ctx2, action.ID)
 	ctx3 := createNextExecutionContext(ctx2, action.ExecTime.Add(time.Hour))
 	action = k.GetActionInfo(ctx3, action.ID)
-	actionHistory := k.GetActionHistory(ctx3, queue[0].ID)
+	actionHistory := k.MustGetActionHistory(ctx3, queue[0].ID)
 
 	require.True(t, action.ExecTime.Before(ctx3.BlockTime()))
 	require.NotNil(t, actionHistory.History[0].Errors)
@@ -145,27 +145,27 @@ func TestErrorDistributionIsSaved(t *testing.T) {
 func fakeActionExec(k keeper.Keeper, ctx sdk.Context, action types.ActionInfo) {
 	timeOfBlock := ctx.BlockHeader().Time
 	action = k.GetActionInfo(ctx, action.ID)
-	actionHistory, _ := k.TryGetActionHistory(ctx, action.ID)
+
 	if !k.AllowedToExecute(ctx, action) {
-		k.AddActionHistory(ctx, &actionHistory, &action, timeOfBlock, sdk.Coin{}, false, nil, types.ErrActionConditions)
+		k.AddActionHistory(ctx, &action, timeOfBlock, sdk.Coin{}, false, nil, types.ErrActionConditions)
 		action.ExecTime = action.ExecTime.Add(action.Interval)
 		k.SetActionInfo(ctx, &action)
 	}
 	isRecurring := action.ExecTime.Before(action.EndTime)
 
-	flexFee := calculateTimeBasedFlexFee(action, actionHistory)
+	flexFee := k.CalculateTimeBasedFlexFee(ctx, action)
 	fee, err := k.DistributeCoins(ctx, action, flexFee, isRecurring, ctx.BlockHeader().ProposerAddress)
 
 	k.RemoveFromActionQueue(ctx, action)
 	if err != nil {
 		errorString := fmt.Sprintf(types.ErrActionDistribution, err.Error())
-		k.AddActionHistory(ctx, &actionHistory, &action, timeOfBlock, fee, false, nil, errorString)
+		k.AddActionHistory(ctx, &action, timeOfBlock, fee, false, nil, errorString)
 	} else {
 		err, executedLocally, msgResponses := k.SendAction(ctx, &action)
 		if err != nil {
-			k.AddActionHistory(ctx, &actionHistory, &action, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrActionMsgHandling, err.Error()))
+			k.AddActionHistory(ctx, &action, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrActionMsgHandling, err.Error()))
 		} else {
-			k.AddActionHistory(ctx, &actionHistory, &action, ctx.BlockTime(), fee, executedLocally, msgResponses)
+			k.AddActionHistory(ctx, &action, ctx.BlockTime(), fee, executedLocally, msgResponses)
 		}
 
 		shouldRecur := isRecurring && (action.ExecTime.Add(action.Interval).Before(action.EndTime) || action.ExecTime.Add(action.Interval) == action.EndTime)
@@ -207,8 +207,7 @@ func TestOwnerMustBeSignerForLocalAction(t *testing.T) {
 	err := action.GetTxMsgs(cdc)[0].ValidateBasic()
 	require.NoError(t, err)
 
-	actionHistory, _ := k.TryGetActionHistory(ctx, action.ID)
-	flexFee := calculateTimeBasedFlexFee(action, actionHistory)
+	flexFee := k.CalculateTimeBasedFlexFee(ctx, action)
 
 	fee, err := k.DistributeCoins(ctx, action, flexFee, true, ctx.BlockHeader().ProposerAddress)
 

@@ -8,13 +8,13 @@ const (
 	// The connection end identifier on the controller chain
 	flagConnectionID = "connection-id"
 	// The controller chain channel version
-	flagCounterpartyConnectionID = "host-connection-id"
-	flagLabel                    = "label"
-	flagDuration                 = "duration"
-	flagInterval                 = "interval"
-	flagStartAt                  = "start-at"
-	flagFeeFunds                 = "fee-funds"
-	flagEndTime                  = "end-at"
+	flagHostConnectionID = "host-connection-id"
+	flagLabel            = "label"
+	flagDuration         = "duration"
+	flagInterval         = "interval"
+	flagStartAt          = "start-at"
+	flagFeeFunds         = "fee-funds"
+	flagEndTime          = "end-at"
 
 	//Execution conditions
 	flagUpdatingDisabled          = "updating-disabled"
@@ -40,7 +40,8 @@ func init() {
 	fsAction.String(flagInterval, "", "A custom interval for the Action e.g. 2h, 6000s, 72h3m0.5s, optional")
 	fsAction.String(flagStartAt, "0", "A custom start time in UNIX time, optional")
 	fsAction.String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
-	fsAction.String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain, optional")
+	fsAction.String(flagConnectionID, "", "Connection ID from this chain to the host chain, optional")
+	fsAction.String(flagHostConnectionID, "", "Connection ID from host chain to this chain, optional")
 	fsAction.Bool(flagUpdatingDisabled, false, "disable future updates to the configuration'")
 	fsAction.Bool(flagSaveMsgResponses, true, "save message responses to tx history (Cosmos SDK v0.46+ chains only)'")
 	fsAction.Bool(flagStopOnSuccess, false, "stop execution after success'")

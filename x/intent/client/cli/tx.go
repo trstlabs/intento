@@ -51,7 +51,7 @@ func getRegisterAccountCmd() *cobra.Command {
 			version := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
 				Version:                icatypes.Version,
 				ControllerConnectionId: viper.GetString(flagConnectionID),
-				HostConnectionId:       viper.GetString(flagCounterpartyConnectionID),
+				HostConnectionId:       viper.GetString(flagHostConnectionID),
 				Encoding:               icatypes.EncodingProtobuf,
 				TxType:                 icatypes.TxTypeSDKMultiMsg,
 			}))
@@ -69,10 +69,10 @@ func getRegisterAccountCmd() *cobra.Command {
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
-
-	cmd.Flags().String(flagCounterpartyConnectionID, "", "Counterparty Connection ID, from host chain")
+	cmd.Flags().String(flagHostConnectionID, "", "Connection ID, from host chain")
 	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain")
 	_ = cmd.MarkFlagRequired(flagConnectionID)
+	_ = cmd.MarkFlagRequired(flagHostConnectionID)
 
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -121,6 +121,7 @@ func getSubmitTxCmd() *cobra.Command {
 	cmd.Flags().String(flagConnectionID, "", "Connection ID, an IBC ID from this chain to the host chain, optional")
 
 	_ = cmd.MarkFlagRequired(flagConnectionID)
+	_ = cmd.MarkFlagRequired(flagHostConnectionID)
 
 	flags.AddTxFlagsToCmd(cmd)
 
@@ -177,7 +178,7 @@ func getSubmitActionCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAction(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagCounterpartyConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration)
+			msg, err := types.NewMsgSubmitAction(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagHostConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration)
 			if err != nil {
 				return err
 			}
@@ -250,7 +251,7 @@ func getRegisterAccountAndSubmitActionCmd() *cobra.Command {
 			version := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
 				Version:                icatypes.Version,
 				ControllerConnectionId: viper.GetString(flagConnectionID),
-				HostConnectionId:       viper.GetString(flagCounterpartyConnectionID),
+				HostConnectionId:       viper.GetString(flagHostConnectionID),
 				Encoding:               icatypes.EncodingProtobuf,
 				TxType:                 icatypes.TxTypeSDKMultiMsg,
 			}))
@@ -270,7 +271,6 @@ func getRegisterAccountAndSubmitActionCmd() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(fsAction)
 	cmd.Flags().String(flagDuration, "", "A custom duration for the Action e.g. 2h, 6000s, 72h3m0.5s")
-	cmd.Flags().String(flagCounterpartyConnectionID, "", "Counterparty Connection ID, from host chain, optional")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -377,11 +377,11 @@ func getExecutionConfiguration(cmd *cobra.Command) *types.ExecutionConfiguration
 // 	var result []int64
 
 // 	for _, id := range stringSlice {
-// 		txId, err := strconv.ParseInt(id, 10, 64)
+// 		id, err := strconv.ParseInt(id, 10, 64)
 // 		if err != nil {
 // 			return nil, errors.Wrap(err, "invalid id, must be a number")
 // 		}
-// 		result = append(result, txId)
+// 		result = append(result, id)
 // 	}
 
 // 	return result, nil

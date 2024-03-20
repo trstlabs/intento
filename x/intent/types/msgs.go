@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
@@ -36,10 +36,10 @@ func NewMsgRegisterAccount(owner, connectionID string, version string) *MsgRegis
 // ValidateBasic implements sdk.Msg
 func (msg MsgRegisterAccount) ValidateBasic() error {
 	if strings.TrimSpace(msg.Owner) == "" {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "missing sender address")
+		return errorsmod.Wrap(ErrInvalidAddress, "missing sender address")
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "failed to parse address: %s", msg.Owner)
+		return errorsmod.Wrapf(ErrInvalidAddress, "failed to parse address: %s", msg.Owner)
 	}
 	return nil
 }
@@ -194,7 +194,7 @@ func (msg MsgSubmitAction) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate action message: %s", err.Error())
+			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate action message: %s", err.Error())
 		}
 	}
 
@@ -271,7 +271,7 @@ func (msg MsgRegisterAccountAndSubmitAction) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate action message: %s", err.Error())
+			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate action message: %s", err.Error())
 		}
 	}
 
@@ -342,7 +342,7 @@ func (msg MsgUpdateAction) ValidateBasic() error {
 		// check if the msgs contain valid inputs
 		err := message.ValidateBasic()
 		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
-			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "cannot validate action message: %s", err.Error())
+			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate action message: %s", err.Error())
 		}
 	}
 

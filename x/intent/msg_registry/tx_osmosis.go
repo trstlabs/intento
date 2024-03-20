@@ -3,7 +3,7 @@ package msg_registry
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/trstlabs/intento/x/intent/types"
 )
 
 // constants.
@@ -23,7 +23,7 @@ var _ sdk.Msg = &MsgSwapExactAmountIn{}
 func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(types.ErrValidateMsgRegistryMsg, "Invalid sender address (%s)", err)
 	}
 
 	// err = SwapAmountInRoutes(msg.Routes).Validate()
@@ -32,7 +32,7 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	// }
 
 	if !msg.TokenIn.IsValid() || !msg.TokenIn.IsPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
+		return errorsmod.Wrap(types.ErrValidateMsgRegistryMsg, msg.TokenIn.String())
 	}
 
 	// if !msg.TokenOutMinAmount.IsPositive() {
@@ -61,7 +61,7 @@ var _ sdk.Msg = &MsgSwapExactAmountOut{}
 func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(types.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	// err = SwapAmountOutRoutes(msg.Routes).Validate()
@@ -70,7 +70,7 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	// }
 
 	if !msg.TokenOut.IsValid() || !msg.TokenOut.IsPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String())
+		return errorsmod.Wrap(types.ErrValidateMsgRegistryMsg, msg.TokenOut.String())
 	}
 
 	// if !msg.TokenInMaxAmount.IsPositive() {
@@ -99,7 +99,7 @@ var _ sdk.Msg = &MsgJoinPool{}
 func (msg MsgJoinPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(types.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !msg.ShareOutAmount.IsPositive() {
@@ -108,7 +108,7 @@ func (msg MsgJoinPool) ValidateBasic() error {
 
 	tokenInMaxs := sdk.Coins(msg.TokenInMaxs)
 	if !tokenInMaxs.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, tokenInMaxs.String())
+		return errorsmod.Wrap(types.ErrValidateMsgRegistryMsg, tokenInMaxs.String())
 	}
 
 	return nil
@@ -133,7 +133,7 @@ var _ sdk.Msg = &MsgExitPool{}
 func (msg MsgExitPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(types.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !msg.ShareInAmount.IsPositive() {
@@ -142,7 +142,7 @@ func (msg MsgExitPool) ValidateBasic() error {
 
 	tokenOutMins := sdk.Coins(msg.TokenOutMins)
 	if !tokenOutMins.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, tokenOutMins.String())
+		return errorsmod.Wrap(types.ErrValidateMsgRegistryMsg, tokenOutMins.String())
 	}
 
 	return nil
@@ -167,11 +167,11 @@ var _ sdk.Msg = &MsgJoinSwapExternAmountIn{}
 func (msg MsgJoinSwapExternAmountIn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(types.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !msg.TokenIn.IsValid() || !msg.TokenIn.IsPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
+		return errorsmod.Wrap(types.ErrValidateMsgRegistryMsg, msg.TokenIn.String())
 	}
 
 	if !msg.ShareOutMinAmount.IsPositive() {
@@ -200,7 +200,7 @@ var _ sdk.Msg = &MsgJoinSwapShareAmountOut{}
 func (msg MsgJoinSwapShareAmountOut) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(types.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = sdk.ValidateDenom(msg.TokenInDenom)
@@ -238,11 +238,11 @@ var _ sdk.Msg = &MsgExitSwapExternAmountOut{}
 func (msg MsgExitSwapExternAmountOut) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(types.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !msg.TokenOut.IsValid() || !msg.TokenOut.IsPositive() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String())
+		return errorsmod.Wrap(types.ErrValidateMsgRegistryMsg, msg.TokenOut.String())
 	}
 
 	if !msg.ShareInMaxAmount.IsPositive() {
@@ -271,7 +271,7 @@ var _ sdk.Msg = &MsgExitSwapShareAmountIn{}
 func (msg MsgExitSwapShareAmountIn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return errorsmod.Wrapf(types.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = sdk.ValidateDenom(msg.TokenOutDenom)
@@ -303,6 +303,6 @@ func (msg MsgExitSwapShareAmountIn) GetSigners() []sdk.AccAddress {
 }
 
 var (
-	ErrNotPositiveCriteria      = sdkerrors.Register("osmosis_msg_gamm", 29, "min out amount or max in amount should be positive")
-	ErrNotPositiveRequireAmount = sdkerrors.Register("osmosis_msg_gamm", 30, "required amount should be positive")
+	ErrNotPositiveCriteria      = errorsmod.Register("osmosis_msg_gamm", 29, "min out amount or max in amount should be positive")
+	ErrNotPositiveRequireAmount = errorsmod.Register("osmosis_msg_gamm", 30, "required amount should be positive")
 )

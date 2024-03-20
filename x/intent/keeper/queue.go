@@ -16,9 +16,9 @@ func (k Keeper) IterateActionQueue(ctx sdk.Context, execTime time.Time, cb func(
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 
-		autoID, _ := types.SplitActionQueueKey(iterator.Key())
-		//fmt.Printf("action id is:  %v \n", autoID)
-		action := k.GetActionInfo(ctx, autoID)
+		actionID, _ := types.SplitActionQueueKey(iterator.Key())
+		//fmt.Printf("action id is:  %v \n", actionID)
+		action := k.GetActionInfo(ctx, actionID)
 
 		if cb(action) {
 			break
@@ -42,12 +42,12 @@ func (k Keeper) ActionQueueIterator(ctx sdk.Context, execTime time.Time) sdk.Ite
 }
 
 // InsertActionQueue Inserts a action into the auto tx queue
-func (k Keeper) InsertActionQueue(ctx sdk.Context, autoID uint64, execTime time.Time) {
+func (k Keeper) InsertActionQueue(ctx sdk.Context, actionID uint64, execTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
-	bz := types.GetBytesForUint(autoID)
+	bz := types.GetBytesForUint(actionID)
 
 	//here the key is time+action appended (as bytes) and value is action in bytes
-	store.Set(types.ActionQueueKey(autoID, execTime), bz)
+	store.Set(types.ActionQueueKey(actionID, execTime), bz)
 }
 
 // RemoveFromActionQueue removes a action from the Inactive Item Queue

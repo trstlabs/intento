@@ -3,7 +3,6 @@ package intent
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -73,7 +72,7 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (proto.Message, int, e
 	}
 
 	if err := proto.Unmarshal(msgData.Data, msgResponse); err != nil {
-		return nil, -1, errorsmod.Wrapf(sdkerrors.ErrJSONUnmarshal, "cannot unmarshal response message: %s", err.Error())
+		return nil, -1, errorsmod.Wrapf(types.ErrJSONUnmarshal, "cannot unmarshal response message: %s", err.Error())
 	}
 
 	return msgResponse, rewardType, nil

@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/gogoproto/proto"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
@@ -69,7 +68,7 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 
 	msgOwner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 	portID := ""
 	if msg.ConnectionId != "" {
@@ -91,7 +90,7 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 	if msg.Interval != "" {
 		interval, err = time.ParseDuration(msg.Interval)
 		if err != nil {
-			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 		}
 	}
 
@@ -102,26 +101,26 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 			return nil, err
 		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
 	}
 
 	p := k.GetParams(ctx)
 	if interval != 0 && (interval < p.MinActionInterval || interval > duration) {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinActionInterval, duration)
+		return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinActionInterval, duration)
 	}
 	if duration != 0 {
 		if duration > p.MaxActionDuration {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxActionDuration)
+			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxActionDuration)
 		} else if duration < p.MinActionDuration {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinActionDuration)
+			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinActionDuration)
 		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxActionDuration)) {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
+			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
 	/* 	configuration := msg.Configuration
 	   	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
-	   		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoIDs and have less than 10 messages")
+	   		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "must depend on less than 10 actionIDs and have less than 10 messages")
 	   	} */
 
 	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, portID, msg.ConnectionId, msg.HostConnectionId)
@@ -158,7 +157,7 @@ func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *ty
 	if msg.Interval != "" {
 		interval, err = time.ParseDuration(msg.Interval)
 		if err != nil {
-			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 		}
 	}
 
@@ -169,31 +168,31 @@ func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *ty
 			return nil, err
 		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
 	}
 
 	msgOwner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 
 	p := k.GetParams(ctx)
 	if interval != 0 && (interval < p.MinActionInterval || interval > duration) {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinActionInterval, duration)
+		return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinActionInterval, duration)
 	}
 	if duration != 0 {
 		if duration > p.MaxActionDuration {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxActionDuration)
+			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxActionDuration)
 		} else if duration < p.MinActionDuration {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinActionDuration)
+			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinActionDuration)
 		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxActionDuration)) {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "start time: %s must be before current time and maximum duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
+			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and maximum duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
 	/* configuration := msg.Configuration
 	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoIDs and have less than 10 messages")
+		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "must depend on less than 10 actionIDs and have less than 10 messages")
 	} */
 
 	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, portID, msg.ConnectionId, msg.HostConnectionId)
@@ -210,14 +209,14 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 
 	action, err := k.TryGetActionInfo(ctx, msg.ID)
 	if err != nil {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 	if action.Owner != msg.Owner {
-		return nil, sdkerrors.ErrInvalidAddress
+		return nil, types.ErrInvalidAddress
 	}
 
 	if action.Configuration.UpdatingDisabled {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "updating is disabled")
+		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "updating is disabled")
 	}
 
 	if msg.ConnectionId != "" {
@@ -262,13 +261,13 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 			return nil, err
 		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
 		if startTime.After(action.EndTime) {
 			return nil, errorsmod.Wrapf(types.ErrUpdateAction, "start time: %s must be before end time", startTime)
 		}
-		actionHistory := k.GetActionHistory(ctx, action.ID)
-		if len(actionHistory.History) != 0 {
+		latestEntry, err := k.GetLatestActionHistoryEntry(ctx, action.ID)
+		if err != nil || latestEntry != nil {
 			return nil, errorsmod.Wrapf(types.ErrUpdateAction, "start time: %s must occur before first execution", startTime)
 		}
 		action.StartTime = startTime
@@ -276,7 +275,7 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 	}
 	/* 	configuration := msg.Configuration
 	   	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
-	   		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "must depend on less than 10 autoIDs and have less than 10 messages")
+	   		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "must depend on less than 10 actionIDs and have less than 10 messages")
 	   	} */
 
 	if msg.Label != "" {

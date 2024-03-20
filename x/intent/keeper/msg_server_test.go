@@ -352,7 +352,7 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 			suite.Require().Equal(action.Label, label)
 			suite.Require().Contains(action.Msgs[0].TypeUrl, "MsgSend")
 
-			//ibc action
+			//ibc autotx
 			if connectionId != "" {
 				suite.Require().Equal(action.ICAConfig.PortID, "icacontroller-"+owner)
 				suite.Require().Equal(action.ICAConfig.ConnectionID, path.EndpointA.ConnectionID)
@@ -474,13 +474,13 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 			suite.Require().NoError(err)
 
 			if addFakeExecHistory {
-				actionHistory := icaAppA.IntentKeeper.GetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), 1)
 				action := icaAppA.IntentKeeper.GetActionInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
-				suite.Require().NotNil(actionHistory)
-				fakeEntry := types.ActionHistoryEntry{ScheduledExecTime: action.ExecTime}
-				actionHistory.History = []types.ActionHistoryEntry{fakeEntry}
-				icaAppA.IntentKeeper.SetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), action.ID, &actionHistory)
+				fakeEntry := types.ActionHistoryEntry{ScheduledExecTime: action.ExecTime, ActualExecTime: action.ExecTime}
+
+				icaAppA.IntentKeeper.SetActionHistoryEntry(sdk.UnwrapSDKContext(wrappedCtx), action.ID, &fakeEntry)
 				suite.chainA.NextBlock()
+				actionHistory := icaAppA.IntentKeeper.MustGetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				suite.Require().NotZero(actionHistory.History[0].ActualExecTime)
 			}
 			updateMsg, err := types.NewMsgUpdateAction(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, &types.ExecutionConfiguration{SaveMsgResponses: false})
 			suite.Require().NoError(err)
@@ -488,7 +488,14 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 			suite.Require().NotEqual(suite.chainA.GetContext(), wrappedCtx)
 			wrappedCtx = sdk.WrapSDKContext(suite.chainA.GetContext())
 
-			msgSrv = keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
+			if addFakeExecHistory {
+				actionHistory := icaAppA.IntentKeeper.MustGetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				suite.Require().NotZero(actionHistory.History[0].ActualExecTime)
+				actionHistoryEntry, err := icaAppA.IntentKeeper.GetLatestActionHistoryEntry(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				suite.Require().NoError(err)
+				suite.Require().NotNil(actionHistoryEntry)
+			}
+
 			res, err := msgSrv.UpdateAction(wrappedCtx, updateMsg)
 
 			if !tc.expPass {

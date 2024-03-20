@@ -3,7 +3,7 @@ package msg_registry
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/trstlabs/intento/x/intent/types"
 )
 
 // GetSigners implements the sdk.Msg interface. It returns the address(es) that
@@ -28,7 +28,7 @@ func (msg MsgExecuteContract) ValidateBasic() error {
 	}
 
 	if !msg.Funds.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "sentFunds")
+		return errorsmod.Wrap(types.ErrValidateMsgRegistryMsg, "sentFunds")
 	}
 
 	return nil
@@ -40,15 +40,15 @@ func (msg MsgInstantiateContract) ValidateBasic() error {
 	}
 
 	if msg.CodeID == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "code id is required")
+		return errorsmod.Wrap(types.ErrInvalidRequest, "code id is required")
 	}
 
 	// if err := ValidateLabel(msg.Label); err != nil {
-	// 	return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "label is required")
+	// 	return errorsmod.Wrap(types.ErrInvalidRequest, "label is required")
 	// }
 
 	if !msg.Funds.IsValid() {
-		return sdkerrors.ErrInvalidCoins
+		return types.ErrValidateMsgRegistryMsg
 	}
 
 	if len(msg.Admin) != 0 {
@@ -76,15 +76,15 @@ func (msg MsgInstantiateContract2) ValidateBasic() error {
 	}
 
 	if msg.CodeID == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "code id is required")
+		return errorsmod.Wrap(types.ErrInvalidRequest, "code id is required")
 	}
 
 	// if err := ValidateLabel(msg.Label); err != nil {
-	// 	return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "label is required")
+	// 	return errorsmod.Wrap(types.ErrInvalidRequest, "label is required")
 	// }
 
 	if !msg.Funds.IsValid() {
-		return sdkerrors.ErrInvalidCoins
+		return types.ErrValidateMsgRegistryMsg
 	}
 
 	if len(msg.Admin) != 0 {

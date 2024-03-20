@@ -49,7 +49,6 @@ import (
 	crypto "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 
@@ -95,6 +94,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 
+	"github.com/trstlabs/intento/x/intent/types"
 	intenttypes "github.com/trstlabs/intento/x/intent/types"
 	// "github.com/trstlabs/intento/x/registration"
 )
@@ -280,7 +280,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		tkeys[paramstypes.TStoreKey],
 	)
 
-	//IntoApp := app.NewIntoApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, app.EmptyAppOptions{})
+	//TrstApp := app.NewTrstApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, app.EmptyAppOptions{})
 
 	paramsKeeper.Subspace(authtypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)
@@ -591,7 +591,7 @@ type protoTxProvider interface {
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*sdktx.Tx, error) { // nolint
 	protoProvider, ok := txBuilder.(protoTxProvider)
 	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
+		return nil, errorsmod.Wrapf(types.ErrInvalidType, "expected proto tx builder, got %T", txBuilder)
 	}
 
 	return protoProvider.GetProtoTx(), nil

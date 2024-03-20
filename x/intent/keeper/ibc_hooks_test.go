@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 	FakeBeginBlocker(suite.chainA.GetContext(), actionKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
 
 	action = actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
-	actionHistory, _ := actionKeeper.TryGetActionHistory(suite.chainA.GetContext(), action.ID)
+	actionHistory, _ := actionKeeper.GetActionHistory(suite.chainA.GetContext(), action.ID)
 	suite.Require().NotNil(actionHistory.History)
 	suite.Require().Empty(actionHistory.History[0].Errors)
 	suite.Require().Equal(action.Owner, addr.String())

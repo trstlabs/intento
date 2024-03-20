@@ -28,7 +28,8 @@ var (
 	TmpActionIDLatestTX           = []byte{0x06}
 	KeyRelayerRewardsAvailability = []byte{0x07}
 	ActionIbcUsageKeyPrefix       = []byte{0x08}
-	KeyLastID                     = append(SequenceKeyPrefix, []byte("lastID")...)
+	ActionHistorySequencePrefix   = []byte{0x09}
+	KeyLastID                     = append(SequenceKeyPrefix, []byte("lastId")...)
 	KeyLastTxAddrID               = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
 )
 
@@ -43,13 +44,13 @@ var (
 )
 
 // GetActionKey returns the key for the auto interchain tx
-func GetActionKey(autoID uint64) []byte {
-	return append(ActionKeyPrefix, GetBytesForUint(autoID)...)
+func GetActionKey(actionID uint64) []byte {
+	return append(ActionKeyPrefix, GetBytesForUint(actionID)...)
 }
 
 // GetActionHistoryKey returns the key for the auto interchain tx
-func GetActionHistoryKey(autoID uint64) []byte {
-	return append(ActionHistoryPrefix, GetBytesForUint(autoID)...)
+func GetActionHistoryKey(actionID uint64) []byte {
+	return append(ActionHistoryPrefix, GetBytesForUint(actionID)...)
 }
 
 // GetActionsByOwnerPrefix returns the actions by creator prefix
@@ -63,7 +64,7 @@ func GetActionsByOwnerPrefix(addr sdk.AccAddress) []byte {
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 
 // SplitActionQueueKey split the listed key and returns the id and execTime
-func SplitActionQueueKey(key []byte) (autoID uint64, execTime time.Time) {
+func SplitActionQueueKey(key []byte) (actionID uint64, execTime time.Time) {
 	return splitKeyWithTime(key)
 }
 
@@ -73,19 +74,19 @@ func ActionByTimeKey(execTime time.Time) []byte {
 }
 
 // from the key we get the action and end time
-func splitKeyWithTime(key []byte) (autoID uint64, execTime time.Time) {
+func splitKeyWithTime(key []byte) (actionID uint64, execTime time.Time) {
 
 	execTime, _ = sdk.ParseTimeBytes(key[1 : 1+lenTime])
 
 	//returns an id from bytes
-	autoID = binary.BigEndian.Uint64(key[1+lenTime:])
+	actionID = binary.BigEndian.Uint64(key[1+lenTime:])
 
 	return
 }
 
 // ActionQueueKey returns the key with prefix for an action in the Listed Item Queue
-func ActionQueueKey(autoID uint64, execTime time.Time) []byte {
-	return append(ActionByTimeKey(execTime), GetBytesForUint(autoID)...)
+func ActionQueueKey(actionID uint64, execTime time.Time) []byte {
+	return append(ActionByTimeKey(execTime), GetBytesForUint(actionID)...)
 }
 
 // GetBytesForUint returns the byte representation of the itemID
@@ -102,14 +103,14 @@ func GetIDFromBytes(bz []byte) (id uint64) {
 	return binary.BigEndian.Uint64(bz)
 }
 
-// GetActionByOwnerIndexKey returns the id: `<prefix><ownerAddress length><ownerAddress><autoID>`
-func GetActionByOwnerIndexKey(bz []byte, autoID uint64) []byte {
+// GetActionByOwnerIndexKey returns the id: `<prefix><ownerAddress length><ownerAddress><actionID>`
+func GetActionByOwnerIndexKey(bz []byte, actionID uint64) []byte {
 	prefixBytes := GetActionsByOwnerPrefix(bz)
 	lenPrefixBytes := len(prefixBytes)
 	r := make([]byte, lenPrefixBytes+8)
 
 	copy(r[:lenPrefixBytes], prefixBytes)
-	copy(r[lenPrefixBytes:], GetBytesForUint(autoID))
+	copy(r[lenPrefixBytes:], GetBytesForUint(actionID))
 
 	return r
 }

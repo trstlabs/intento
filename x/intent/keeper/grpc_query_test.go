@@ -121,6 +121,23 @@ func TestQueryActionHistory(t *testing.T) {
 	got, err := actionKeeper.ActionHistory(sdk.WrapSDKContext(ctx), &types.QueryActionHistoryRequest{Id: ID})
 	require.NoError(t, err)
 	require.NotNil(t, got)
+
+	require.Equal(t, got.History[0].ScheduledExecTime, actionHistory.History[0].ScheduledExecTime)
+	require.Equal(t, got.History[0].ActualExecTime, actionHistory.History[0].ActualExecTime)
+
+}
+
+func TestQueryActionHistoryLimit(t *testing.T) {
+	ctx, keepers, _ := CreateTestInput(t, false)
+	actionKeeper := keepers.IntentKeeper
+
+	actionHistory, err := CreateFakeActionHistory(actionKeeper, ctx, ctx.BlockTime())
+	require.NoError(t, err)
+
+	ID := "1"
+	got, err := actionKeeper.ActionHistory(sdk.WrapSDKContext(ctx), &types.QueryActionHistoryRequest{Id: ID, Pagination: &query.PageRequest{Limit: 3}})
+	require.NoError(t, err)
+	require.NotNil(t, got)
 	require.Equal(t, got.History[0].ScheduledExecTime, actionHistory.History[0].ScheduledExecTime)
 	require.Equal(t, got.History[0].ActualExecTime, actionHistory.History[0].ActualExecTime)
 
@@ -182,10 +199,10 @@ func TestQueryActionsListWithAuthZMsg(t *testing.T) {
 	require.NotNil(t, got)
 
 	var txMsg sdk.Msg
-	actionKeeper.cdc.UnpackAny(expectedAction.Msgs[0], &txMsg)
+	_ = actionKeeper.cdc.UnpackAny(expectedAction.Msgs[0], &txMsg)
 
 	var gotMsg sdk.Msg
-	actionKeeper.cdc.UnpackAny(got.ActionInfos[0].Msgs[0], &gotMsg)
+	_ = actionKeeper.cdc.UnpackAny(got.ActionInfos[0].Msgs[0], &gotMsg)
 
 	assert.Equal(t, expectedAction.Msgs, got.ActionInfos[0].Msgs)
 	//	assert.Equal(t, txMsg, gotMsg)
@@ -265,18 +282,23 @@ func CreateFakeAction(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 
 func CreateFakeActionHistory(k Keeper, ctx sdk.Context, startAt time.Time) (types.ActionHistory, error) {
 
-	entry := types.ActionHistoryEntry{
-		ScheduledExecTime: startAt.Add(time.Minute),
-		ActualExecTime:    startAt.Add(time.Minute).Add(time.Microsecond),
-		Errors:            []string{"text"},
-		Executed:          true,
-	}
-
+	// Create an empty ActionHistory with a pre-allocated slice for efficiency
 	actionHistory := types.ActionHistory{
-		History: []types.ActionHistoryEntry{entry},
+		History: make([]types.ActionHistoryEntry, 0, 10), // Pre-allocate space for 10 entries
 	}
 
-	k.SetActionHistory(ctx, 1, &actionHistory)
+	// Loop to create and append 10 entries
+	for i := 0; i < 10; i++ {
+		entry := types.ActionHistoryEntry{
+			ScheduledExecTime: startAt.Add(time.Duration(i) * time.Minute),
+			ActualExecTime:    startAt.Add(time.Duration(i) * time.Minute).Add(time.Microsecond),
+			Errors:            []string{"error text"}, // Example error text
+			Executed:          true,
+		}
+
+		k.SetActionHistoryEntry(ctx, 1, &entry)
+		actionHistory.History = append(actionHistory.History, entry)
+	}
 
 	return actionHistory, nil
 }

@@ -65,24 +65,40 @@ func (k Keeper) Action(c context.Context, req *types.QueryActionRequest) (*types
 	}, nil
 }
 
-// ActionHistory implements the Query/ActionHistory method
-func (k Keeper) ActionHistory(c context.Context, req *types.QueryActionHistoryRequest) (*types.QueryActionHistoryResponse, error) {
+func (k Keeper) ActionHistory(ctx context.Context, req *types.QueryActionHistoryRequest) (*types.QueryActionHistoryResponse, error) {
 	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
+		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
+	// Convert id from the request
 	id, err := strconv.ParseUint(req.Id, 10, 64)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-	actionHistory, err := k.TryGetActionHistory(ctx, id)
-	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
+	// Assuming ActionHistoryEntry items are stored with keys prefixed by id
+	store := prefix.NewStore(sdkCtx.KVStore(k.storeKey), types.GetActionHistoryKey(id))
+
+	// Paginate over the prefixed store
+	var historyEntries []types.ActionHistoryEntry
+	pageRes, err := query.Paginate(store, req.Pagination, func(key []byte, value []byte) error {
+		var historyEntry types.ActionHistoryEntry
+		if err := k.cdc.Unmarshal(value, &historyEntry); err != nil {
+			return err
+		}
+		historyEntries = append(historyEntries, historyEntry)
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "paginate: %v", err)
+	}
+
+	// Return paginated results
 	return &types.QueryActionHistoryResponse{
-		History: actionHistory.History,
+		History:    historyEntries,
+		Pagination: pageRes,
 	}, nil
 }
 
@@ -129,8 +145,8 @@ func (k Keeper) ActionsForOwner(c context.Context, req *types.QueryActionsForOwn
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetActionsByOwnerPrefix(ownerAddress))
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
-			autoID := types.GetIDFromBytes(key /* [types.TimeTimeLen:] */)
-			actionInfo := k.GetActionInfo(ctx, autoID)
+			actionID := types.GetIDFromBytes(key /* [types.TimeTimeLen:] */)
+			actionInfo := k.GetActionInfo(ctx, actionID)
 			// msg, err := icatypes.DeserializeCosmosTx(k.cdc, actionInfo.Data)
 			// if err != nil {
 			// 	return false, err

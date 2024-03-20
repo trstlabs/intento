@@ -1,26 +1,34 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 var (
-	ErrAccountExists  = sdkerrors.Register(ModuleName, 6, "fee account already exists")
-	ErrDuplicate      = sdkerrors.Register(ModuleName, 14, "duplicate")
-	ErrInvalidGenesis = sdkerrors.Register(ModuleName, 1, "invalid ids upon genesis")
-	ErrEmpty          = sdkerrors.Register(ModuleName, 11, "empty")
-
+	ErrUnauthorized   = errorsmod.Register(ModuleName, 2, "unauthorized")
+	ErrAccountExists  = errorsmod.Register(ModuleName, 6, "fee account already exists")
+	ErrDuplicate      = errorsmod.Register(ModuleName, 14, "duplicate")
+	ErrInvalidGenesis = errorsmod.Register(ModuleName, 1, "invalid ids upon genesis")
+	ErrEmpty          = errorsmod.Register(ModuleName, 11, "empty")
+	ErrInvalidRequest = errorsmod.Register(ModuleName, 8, "invalid request")
+	ErrUnknownRequest = errorsmod.Register(ModuleName, 4, "unknown request")
+	ErrNotFound       = errorsmod.Register(ModuleName, 16, "not found")
+	ErrInvalidType    = errorsmod.Register(ModuleName, 12, "invalid type")
+	ErrInvalidAddress = errorsmod.Register(ModuleName, 5, "invalid address")
+	ErrJSONUnmarshal  = errorsmod.Register(ModuleName, 15, "failed unmarshal json")
 	//ics20 hooks
-	ErrMsgValidation = sdkerrors.Register("ics20-hooks", 20, "error in ics20 hook message validation")
-	ErrMarshaling    = sdkerrors.Register("ics20-hooks", 21, "cannot marshal the ICS20 packet")
-	ErrInvalidPacket = sdkerrors.Register("ics20-hooks", 22, "invalid packet data")
-	ErrBadResponse   = sdkerrors.Register("ics20-hooks", 23, "cannot create response")
-	ErrIcs20Error    = sdkerrors.Register("ics20-hooks", 24, "ics20 hook error")
-	ErrBadSender     = sdkerrors.Register("ics20-hooks", 25, "bad sender")
+	ErrMsgValidation = errorsmod.Register("ics20-hooks", 20, "error in ics20 hook message validation")
+	ErrMarshaling    = errorsmod.Register("ics20-hooks", 21, "cannot marshal the ICS20 packet")
+	ErrInvalidPacket = errorsmod.Register("ics20-hooks", 22, "invalid packet data")
+	ErrBadResponse   = errorsmod.Register("ics20-hooks", 23, "cannot create response")
+	ErrIcs20Error    = errorsmod.Register("ics20-hooks", 24, "ics20 hook error")
+	ErrBadSender     = errorsmod.Register("ics20-hooks", 25, "bad sender")
 
-	ErrInvalidTime  = sdkerrors.Register(ModuleName, 30, "time must be longer than 2 minutes from now")
-	ErrUpdateAction = sdkerrors.Register(ModuleName, 31, "cannot update action parameter")
+	ErrInvalidTime            = errorsmod.Register(ModuleName, 30, "time must be longer than 2 minutes from now")
+	ErrUpdateAction           = errorsmod.Register(ModuleName, 31, "cannot update action parameter")
+	ErrValidateMsgRegistryMsg = errorsmod.Register(ModuleName, 32, "could not validate Action message")
 
+	//errors specific to Action execution that are to be appended to ActionHistory entries
 	ErrBadMetadataFormatMsg = "metadata not properly formatted for: '%v'. %s"
 	ErrBadActionMsg         = "cannot create action: %v"
 	ErrActionConditions     = "conditions to execute not met"

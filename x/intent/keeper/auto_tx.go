@@ -12,7 +12,6 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -24,20 +23,20 @@ import (
 )
 
 // GetActionInfo
-func (k Keeper) GetActionInfo(ctx sdk.Context, autoID uint64) types.ActionInfo {
+func (k Keeper) GetActionInfo(ctx sdk.Context, actionID uint64) types.ActionInfo {
 	store := ctx.KVStore(k.storeKey)
 	var action types.ActionInfo
-	actionBz := store.Get(types.GetActionKey(autoID))
+	actionBz := store.Get(types.GetActionKey(actionID))
 
 	k.cdc.MustUnmarshal(actionBz, &action)
 	return action
 }
 
 // TryGetActionInfo
-func (k Keeper) TryGetActionInfo(ctx sdk.Context, autoID uint64) (types.ActionInfo, error) {
+func (k Keeper) TryGetActionInfo(ctx sdk.Context, actionID uint64) (types.ActionInfo, error) {
 	store := ctx.KVStore(k.storeKey)
 	var action types.ActionInfo
-	actionBz := store.Get(types.GetActionKey(autoID))
+	actionBz := store.Get(types.GetActionKey(actionID))
 
 	err := k.cdc.Unmarshal(actionBz, &action)
 	if err != nil {
@@ -116,7 +115,7 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 		handler := k.msgRouter.Handler(msg)
 		for _, acct := range msg.GetSigners() {
 			if acct.String() != action.Owner {
-				return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "owner doesn't have permission to send this message"), nil
+				return errorsmod.Wrap(types.ErrUnauthorized, "owner doesn't have permission to send this message"), nil
 			}
 		}
 
@@ -173,13 +172,10 @@ func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string
 
 	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, id, interval)
 
-	icaConfig := types.ICAConfig{}
-	if portID != "" && connectionId != "" && hostConnectionId != "" {
-		icaConfig = types.ICAConfig{
-			PortID:           portID,
-			ConnectionID:     connectionId,
-			HostConnectionID: hostConnectionId,
-		}
+	icaConfig := types.ICAConfig{
+		PortID:           portID,
+		ConnectionID:     connectionId,
+		HostConnectionID: hostConnectionId,
 	}
 
 	action := types.ActionInfo{
@@ -216,7 +212,7 @@ func (k Keeper) createFeeAccount(ctx sdk.Context, id uint64, owner sdk.AccAddres
 	// deposit initial action funds
 	if !feeFunds.IsZero() && !feeFunds[0].Amount.IsZero() {
 		if k.bankKeeper.BlockedAddr(owner) {
-			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "blocked address can not be used")
+			return nil, errorsmod.Wrap(types.ErrInvalidAddress, "blocked address can not be used")
 		}
 		sdkerr := k.bankKeeper.SendCoins(ctx, owner, actionAddress, feeFunds)
 		if sdkerr != nil {
@@ -239,8 +235,8 @@ func (k Keeper) generateActionFeeAddress(ctx sdk.Context, id uint64) sdk.AccAddr
 func actionAddress(id, instanceID uint64) sdk.AccAddress {
 	// NOTE: It is possible to get a duplicate address if either id or instanceID
 	// overflow 32 bits. This is highly improbable, but something that could be refactored.
-	autoID := id<<32 + instanceID
-	return addrFromUint64(autoID)
+	actionID := id<<32 + instanceID
+	return addrFromUint64(actionID)
 
 }
 
@@ -263,9 +259,9 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash(addr))
 }
 
-func (k Keeper) calculateTimeAndInsertQueue(ctx sdk.Context, startTime time.Time, duration time.Duration, autoID uint64, interval time.Duration) (time.Time, time.Time) {
+func (k Keeper) calculateTimeAndInsertQueue(ctx sdk.Context, startTime time.Time, duration time.Duration, actionID uint64, interval time.Duration) (time.Time, time.Time) {
 	endTime, execTime := calculateEndAndExecTimes(ctx, startTime, duration, interval)
-	k.InsertActionQueue(ctx, autoID, execTime)
+	k.InsertActionQueue(ctx, actionID, execTime)
 
 	return endTime, execTime
 }
@@ -335,10 +331,10 @@ func (k Keeper) IterateActionInfos(ctx sdk.Context, cb func(uint64, types.Action
 }
 
 // addToActionOwnerIndex adds element to the index for actions-by-creator queries
-func (k Keeper) addToActionOwnerIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, autoID uint64) {
+func (k Keeper) addToActionOwnerIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, actionID uint64) {
 	store := ctx.KVStore(k.storeKey)
 
-	store.Set(types.GetActionByOwnerIndexKey(ownerAddress, autoID), []byte{})
+	store.Set(types.GetActionByOwnerIndexKey(ownerAddress, actionID), []byte{})
 }
 
 // IterateActionsByOwner iterates over all actions with given creator address in order of creation time asc.
@@ -375,17 +371,20 @@ func (k Keeper) SetActionResult(ctx sdk.Context, portID string, channelID string
 		k.hooks.AfterActionWasm(ctx, owner)
 	}
 
-	actionHistory := k.GetActionHistory(ctx, id)
+	actionHistoryEntry, newErr := k.GetLatestActionHistoryEntry(ctx, id)
+	if newErr != nil {
+		actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, newErr.Error())
+	}
 
-	actionHistory.History[len(actionHistory.History)-1].Executed = true
+	actionHistoryEntry.Executed = true
 
 	if action.Configuration.SaveMsgResponses {
-		actionHistory.History[len(actionHistory.History)-1].MsgResponses = msgResponses
+		actionHistoryEntry.MsgResponses = msgResponses
 	}
 
 	k.SetActionInfo(ctx, &action)
 
-	k.SetActionHistory(ctx, action.ID, &actionHistory)
+	k.SetActionHistoryEntry(ctx, action.ID, actionHistoryEntry)
 
 	return nil
 }
@@ -410,10 +409,13 @@ func (k Keeper) SetActionOnTimeout(ctx sdk.Context, sourcePort string, channelID
 	}
 	k.Logger(ctx).Debug("action packet timed out", "action_id", id)
 
-	actionHistory := k.GetActionHistory(ctx, id)
+	actionHistoryEntry, err := k.GetLatestActionHistoryEntry(ctx, id)
+	if err != nil {
+		return err
+	}
 
-	actionHistory.History[len(actionHistory.History)-1].TimedOut = true
-	k.SetActionHistory(ctx, id, &actionHistory)
+	actionHistoryEntry.TimedOut = true
+	k.SetActionHistoryEntry(ctx, id, actionHistoryEntry)
 
 	return nil
 }
@@ -427,10 +429,13 @@ func (k Keeper) SetActionError(ctx sdk.Context, sourcePort string, channelID str
 
 	k.Logger(ctx).Debug("action", "id", id, "error", err)
 
-	actionHistory := k.GetActionHistory(ctx, id)
+	actionHistoryEntry, newErr := k.GetLatestActionHistoryEntry(ctx, id)
+	if newErr != nil {
+		actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, newErr.Error())
+	}
 
-	actionHistory.History[len(actionHistory.History)-1].Errors = append(actionHistory.History[len(actionHistory.History)-1].Errors, err)
-	k.SetActionHistory(ctx, id, &actionHistory)
+	actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, err)
+	k.SetActionHistoryEntry(ctx, id, actionHistoryEntry)
 }
 
 // AllowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
@@ -499,7 +504,7 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo) bool 
 	return allowedToExecute
 }
 
-// getTmpActionID getds tmp actionId for a certain port and sequence. This is used to set results and timeouts.
+// getTmpActionID getds tmp ActionId for a certain port and sequence. This is used to set results and timeouts.
 func (k Keeper) getTmpActionID(ctx sdk.Context, portID string, channelID string, seq uint64) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	// Append both portID and channelID to the key
@@ -507,19 +512,19 @@ func (k Keeper) getTmpActionID(ctx sdk.Context, portID string, channelID string,
 	key = append(key, []byte(channelID)...)          // Append channelID after portID
 	key = append(key, types.GetBytesForUint(seq)...) // Append sequence number
 
-	autoIDBz := store.Get(key)
+	actionIDBz := store.Get(key)
 
-	return types.GetIDFromBytes(autoIDBz)
+	return types.GetIDFromBytes(actionIDBz)
 }
 
-func (k Keeper) setTmpActionID(ctx sdk.Context, autoID uint64, portID string, channelID string, seq uint64) {
+func (k Keeper) setTmpActionID(ctx sdk.Context, actionID uint64, portID string, channelID string, seq uint64) {
 	store := ctx.KVStore(k.storeKey)
 	// Append both portID and channelID to the key
 	key := append(types.TmpActionIDLatestTX, []byte(portID)...)
 	key = append(key, []byte(channelID)...)          // Append channelID after portID
 	key = append(key, types.GetBytesForUint(seq)...) // Append sequence number
 
-	store.Set(key, types.GetBytesForUint(autoID))
+	store.Set(key, types.GetBytesForUint(actionID))
 }
 
 func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo) (protoMsgs []proto.Message, err error) {
@@ -559,7 +564,7 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo) (prot
 
 		ica, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, action.ICAConfig.ConnectionID, action.ICAConfig.PortID)
 		if !found {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrKeyNotFound, "ICA address not found")
+			return nil, errorsmod.Wrapf(types.ErrNotFound, "ICA address not found")
 		}
 
 		// Replace the text "ICA_ADDR" in the JSON string
@@ -584,6 +589,6 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo) (prot
 		}
 		action.Msgs = anys
 	}
-	fmt.Printf("parsed %v\n", action.Msgs)
+
 	return protoMsgs, nil
 }
