@@ -42,11 +42,11 @@ message ICAConfig {
       string host_connection_id = 3 [(gogoproto.customname) = "HostConnectionID"];
 }
 
-// ExecutionConfiguration provides the execution-related configuration of the Action
+// ExecutionConfiguration provides the execution-related configuration of the action
 message ExecutionConfiguration {
-       // if true, the Action outputs are saved and can be used in condition-based logic
+       // if true, the action outputs are saved and can be used in condition-based logic
       bool save_msg_responses = 1;
-      // if true, the Action is not updatable
+      // if true, the action is not updatable
       bool updating_disabled = 2;           
       // If true, will execute until we get a successful Action, if false/unset will always execute
       bool stop_on_success = 3;
@@ -54,11 +54,11 @@ message ExecutionConfiguration {
       bool stop_on_failure = 4;
       // If true, owner account balance is used when trigger account funds run out
       bool fallback_to_owner_balance = 5;
-      // If true, allows the Action to continue execution after an ibc channel times out (recommended)
+      // If true, allows the action to continue execution after an ibc channel times out (recommended)
       bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];
   }
 
-// ExecutionConditions provides execution conditions for the Action
+// ExecutionConditions provides execution conditions for the action
 message ExecutionConditions {
       //optional array of dependent Actions that when executing succesfully, stops further execution
       repeated int64 stop_on_success_of = 5;

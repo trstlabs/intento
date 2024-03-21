@@ -6,9 +6,9 @@ description: How to setup automation from a connected chain
 
 ## Setting up Automation
 
-In the previous step we showed how the action process looks like by submitting an AutoTX on Intento. You can do this with the [TriggerPortal](https://triggerportal.zone) interface, a IntentoJS front-end integration or locally through the CLI.
+In the previous step we showed how the action process looks like by submitting an action on Intento. You can do this with the [TriggerPortal](https://triggerportal.zone) interface, a IntentoJS front-end integration or locally through the CLI.
 
-In addition, you can also submit an AutoTX from another chain using the [ICS20 standard](https://github.com/cosmos/ibc-go/blob/main/docs/apps/transfer/messages.md).
+In addition, you can also submit an action from another chain using the [ICS20 standard](https://github.com/cosmos/ibc-go/blob/main/docs/apps/transfer/messages.md).
 
 ### Interchain Accounts
 
@@ -110,10 +110,10 @@ An ICS20 packet is formatted correctly for submitting an action if the following
 - `memo["action"]["cid"]`is a valid connection ID on INTO -> Destination chain, omit it for local INTO execution of the message.
 - `memo["action"]["register_ica"]` can be added, and true to register an ICA.
 
-Fees are paid with a newly generated and AutoTX specific fee account.
+Fees are paid with a newly generated and action specific fee account.
 
 If an ICS20 packet does not contain a memo containing "action", a regular MsgTransfer takes place.
-If an ICS20 packet is directed towards AutoTX, and is formated incorrectly, then it returns an error.
+If an ICS20 packet is directed towards action, and is formated incorrectly, then it returns an error.
 
 ## Example: DAO Integration
 
@@ -163,7 +163,7 @@ This Trigger on Intento allows us to automate asset workflows. It allows our DAO
 
 Having adequate liquidity is crucial to ensure smooth operations and financial stability. It enables you to fulfill your financial obligations to suppliers, lenders, and other stakeholders, which strengthens your credibility and reputation in the marketplace. With sufficient liquidity, you can easily pay for bills and expenses, invest in growth opportunities, and effectively manage your DAO's resources. Thus, prioritizing and managing liquidity effectively can help you achieve long-term success and sustainable growth.
 
-### 1. Submitting AutoTX
+### 1. Submitting Action
 
 ![icsdao](@site/docs/images/connected_chain/from_connected_chain_flow2.png)
 
@@ -225,7 +225,7 @@ Below is how the proposal action message could look like for a CosmWasm-based DA
 
 Here it is important that the `timeout_timestamp` or `timeout_height` takes into account the proposal's end time. Alternatively both of the timeout values can be set to `0`.
 
-Further it is important that the field `register_ica` is set to `"true"` the first time you create an AutoTX. This will register an Interchain Account from Intento on the destination chain.
+Further it is important that the field `register_ica` is set to `"true"` the first time you create an action. This will register an Interchain Account from Intento on the destination chain.
 
 A message in the `action["msgs"]` array can be like the following MsgSend:
 
@@ -281,7 +281,7 @@ We can also perform [MsgSwapExactAmountOut](https://github.com/osmosis-labs/osmo
 
 The ICA_ADDR should also have some [funds to execute](#paying-for-fees) and have the proper [permissions](#setting-permissions) set up
 
-:::tip write ICA_ADDR as a `sender` or any other field in an AutoTX and Intento will parse the to-be defined Interchain Account address.
+:::tip write ICA_ADDR as a `sender` or any other field in an action and Intento will parse the to-be defined Interchain Account address.
 :::
 
 #### Paying for fees
@@ -290,7 +290,7 @@ Action fees on Intento are paid from the funds sent in the ICS20 message, so tha
 
 **Action on Intento**
 
-If you want to execute actions locally on Intento, set `action["connection_id"]` to `""`. The funds sent with the ICS20 transfer will be used to pay for Action fees.
+If you want to execute actions locally on Intento, set `action["connection_id"]` to `""`. The funds sent with the ICS20 transfer will be used to pay for action fees.
 
 **With execution over IBC**
 
@@ -338,13 +338,13 @@ Alternatively, you can create a FeeGrant for the `destination_chain_ica_address`
 
 Initiating an action for the first time locally on Neutron can be done as follows:
 
- 1. Proposal 1 Message 1: IC20 token tranfser: Submit AutoTX on Intento.  In the `action` memo, `msgs` should contain AuthZ's MsgExec with `MsgExecuteContract`.
+ 1. Proposal 1 Message 1: IC20 token tranfser: Submit action on Intento.  In the `action` memo, `msgs` should contain AuthZ's MsgExec with `MsgExecuteContract`.
  2. Proposal 2 Message 1: Allow the DAO's NTRN tokens to be used for fees by `destination_chain_ica_address` with a FeeGrant.
   Proposal 2 Message 2: AuthZ grant to ICA to execute `MsgExecuteContract`.
 
  For a DAO swapping tokens on a recurring basis on Osmosis for the first time, 2 proposals should be made.
 
- 1. Proposal 1 Message 1: IC20 token tranfser: Submit AutoTX on Intento. In the `action` memo, `msgs` should contain AuthZ's MsgExec with `MsgSwapExactAmountOut`
+ 1. Proposal 1 Message 1: IC20 token tranfser: Submit action on Intento. In the `action` memo, `msgs` should contain AuthZ's MsgExec with `MsgSwapExactAmountOut`
  2. Proposal 2 Message 1: Send OSMO tokens to using `MsgTransfer` to `destination_chain_ica_address`.
   Proposal 2 Message 2: AuthZ grant to ICA to execute `MsgSwapExactAmountOut`.
 
