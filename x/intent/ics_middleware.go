@@ -227,7 +227,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 	// Calculate the receiver / contract caller based on the packet's channel and sender
 	// The funds sent on this packet need to be transferred to an intermediary account for the sender.
 	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
-	// and execute the underlying OnRecvPacket() call. Hereafter we send the funds from the intermediary account to the Action FeeFunds address
+	// and execute the underlying OnRecvPacket() call. Hereafter we send the funds from the intermediary account to the action FeeFunds address
 	ownerAddr, errAck := makeOwnerForChannelSender(ownerAddr, &packet, data)
 	if errAck != nil {
 		return errAck

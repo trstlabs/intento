@@ -192,7 +192,7 @@ func getSubmitActionCmd() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(fsAction)
-	cmd.Flags().String(flagDuration, "", "A custom duration for the Action e.g. 2h, 6000s, 72h3m0.5s")
+	cmd.Flags().String(flagDuration, "", "A custom duration for the action e.g. 2h, 6000s, 72h3m0.5s")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -270,7 +270,7 @@ func getRegisterAccountAndSubmitActionCmd() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(fsAction)
-	cmd.Flags().String(flagDuration, "", "A custom duration for the Action e.g. 2h, 6000s, 72h3m0.5s")
+	cmd.Flags().String(flagDuration, "", "A custom duration for the action e.g. 2h, 6000s, 72h3m0.5s")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
@@ -353,6 +353,7 @@ func getUpdateActionCmd() *cobra.Command {
 }
 
 func getExecutionConfiguration(cmd *cobra.Command) *types.ExecutionConfiguration {
+
 	updatingDisabled := viper.GetBool(flagUpdatingDisabled)
 	saveMsgResponses := viper.GetBool(flagSaveMsgResponses)
 	fallbackToOwnerBalance := viper.GetBool(flagFallbackToOwnerBalance)
@@ -360,7 +361,7 @@ func getExecutionConfiguration(cmd *cobra.Command) *types.ExecutionConfiguration
 	stopOnSuccess := viper.GetBool(flagStopOnSuccess)
 	stopOnFailure := viper.GetBool(flagStopOnFailure)
 
-	configuration := &types.ExecutionConfiguration{
+	configuration := types.ExecutionConfiguration{
 		UpdatingDisabled:          updatingDisabled,
 		SaveMsgResponses:          saveMsgResponses,
 		StopOnSuccess:             stopOnSuccess,
@@ -369,7 +370,7 @@ func getExecutionConfiguration(cmd *cobra.Command) *types.ExecutionConfiguration
 		ReregisterICAAfterTimeout: reregisterICAAfterTimeout,
 	}
 
-	return configuration
+	return &configuration
 }
 
 // func parseIntSlice(flagName string) ([]int64, error) {
