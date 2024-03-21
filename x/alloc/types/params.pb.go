@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -73,12 +73,11 @@ type DistributionProportions struct {
 	Staking                     github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=staking,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"staking" yaml:"staking"`
 	TrustlessContractIncentives github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=trustless_contract_incentives,json=trustlessContractIncentives,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"trustless_contract_incentives" yaml:"trustless_contract_incentives"`
 	RelayerIncentives           github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=relayer_incentives,json=relayerIncentives,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"relayer_incentives" yaml:"relayer_incentives"`
-	//
-	//string item_incentives = 3 [
-	//(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-	//(gogoproto.moretags) = "yaml:\"item_incentives\"",
-	//(gogoproto.nullable) = false
-	//];
+	// string item_incentives = 3 [
+	// (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+	// (gogoproto.moretags) = "yaml:\"item_incentives\"",
+	// (gogoproto.nullable) = false
+	// ];
 	ContributorRewards github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=contributor_rewards,json=contributorRewards,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"contributor_rewards" yaml:"contributor_rewards"`
 	// community_pool defines the proportion of the minted minted_denom that is
 	// to be allocated to the community pool.
