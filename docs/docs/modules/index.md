@@ -24,18 +24,18 @@ Based on lines of code, we expect the module to be using 100,000 gas for trigger
 
 # Actions
 
-Actions are specified in an Action object that contains data about when to execute, what to execute by an array of registered cosmos messages, where through an optional ICA Configuration, and how through a configuration and conditions.
+Actions are specified in an action object that contains data about when to execute, what to execute by an array of registered cosmos messages, where through an optional ICA Configuration, and how through a configuration and conditions.
 
 ## Technical Specification
 
 ### Configuration
 
 ```proto
-// ExecutionConfiguration provides the execution-related configuration of the Action
+// ExecutionConfiguration provides the execution-related configuration of the action
 message ExecutionConfiguration {
-       // if true, the Action outputs are saved and can be used in condition-based logic
+       // if true, the action outputs are saved and can be used in condition-based logic
       bool save_msg_responses = 1;
-      // if true, the Action is not updatable
+      // if true, the action is not updatable
       bool updating_disabled = 2;           
       // If true, will execute until we get a successful Action, if false/unset will always execute
       bool stop_on_success = 3;
@@ -43,7 +43,7 @@ message ExecutionConfiguration {
       bool stop_on_failure = 4;
       // If true, owner account balance is used when trigger account funds run out
       bool fallback_to_owner_balance = 5;
-      // If true, allows the Action to continue execution after an ibc channel times out (recommended)
+      // If true, allows the action to continue execution after an ibc channel times out (recommended)
       bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];
 }
 ```
@@ -81,7 +81,7 @@ Let's explain conditions by examining what would be required for performing an a
 
 
 ```proto
-// ExecutionConditions provides execution conditions for the Action
+// ExecutionConditions provides execution conditions for the action
 message ExecutionConditions {
     // Comparison runs before execution of Action and outputs true or false
     EventComparision event_comparison = 1;

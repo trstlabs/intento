@@ -137,6 +137,21 @@ func (k Keeper) AddActionHistory(ctx sdk.Context, action *types.ActionInfo, actu
 
 }
 
+func (k Keeper) SetCurrentActionHistoryEntry(ctx sdk.Context, actionId uint64, entry *types.ActionHistoryEntry) {
+	store := ctx.KVStore(k.storeKey)
+	sequenceKey := append(types.ActionHistorySequencePrefix, sdk.Uint64ToBigEndian(actionId)...)
+	sequenceBytes := store.Get(sequenceKey)
+	var sequence uint64
+	if sequenceBytes != nil {
+		sequence = sdk.BigEndianToUint64(sequenceBytes)
+	}
+	// Composite key: ActionHistoryKey + ActionId + Sequence
+	key := append(types.GetActionHistoryKey(actionId), sdk.Uint64ToBigEndian(sequence)...)
+
+	// Store the entry
+	store.Set(key, k.cdc.MustMarshal(entry))
+}
+
 // we may reimplement this as a configuration-based gas fee
 func (k Keeper) CalculateTimeBasedFlexFee(ctx sdk.Context, action types.ActionInfo) sdkmath.Int {
 	historyEntry, _ := k.GetLatestActionHistoryEntry(ctx, action.ID)

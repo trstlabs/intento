@@ -1,22 +1,22 @@
 ---
 sidebar_position: 1
-title: Interchain Actions
-pagination_label: How AutoTX enables automation of assets on any IBC-enabled chain
+title: Interchain actions
+pagination_label: automation of assets on any IBC-enabled chain
 ---
 
 Intento can perform actions on IBC-compatible chains that utilize the Interchain Accounts standard. They are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitAction` as well as IBC-specific settings such as the `connection_id`.
 
-This is great for both automating actions, such as sending tokens or auto-compounding as well as for orchestrating workflows across chains. 
+This is great for both automating actions, such as sending tokens or auto-compounding as well as for orchestrating workflows across chains.
 Developers can use this to automate their protocols and build solutions for end-users to automate their assets.
 
 Interchain Accounts are a key component of Intento's Intents. They allow for the creation and management of accounts across different IBC-connected chains. This means that Intento's Intents can execute actions on other chains based on custom logic, making them extremely versatile and useful for a wide range of applications.
 
-To use Interchain Actions with Interchain Accounts, the user must first register an interchain account. This involves creating a port ID and connection ID, which allows the user to connect their account to other chains over IBC.
+To use Interchain actions with Interchain Accounts, the user must first register an interchain account. This involves creating a port ID and connection ID, which allows the user to connect their account to other chains over IBC.
 
 An action is an object containing messages that are triggered at a specified time, or recurringly with intervals, given conditions.
-AutoTX entries are scheduled at the beginning of a new block.
+Action entries are scheduled at the beginning of a new block.
 
-AutoTXs can execute Cosmos SDK blockchain messages on Cosmos Chains such as:
+Actions can execute Cosmos SDK blockchain messages on Cosmos Chains such as:
 
 - `MsgSend` for token transfers
 - `MsgSwapExactAmountIn` for token swapping on Osmosis
@@ -36,7 +36,7 @@ Submitting a MsgSubmitAction takes the following input:
 
 | Field Name         | Data Type                           | Description                                                                                                   | optional |
 | ------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------- |
-| `Owner`            | `string`                            | The owner of the Action                                                                                       |          |
+| `Owner`            | `string`                            | The owner of the action                                                                                       |          |
 | `Msgs`             | `repeated google.protobuf.Any`      | A list of arbitrary messages to include in the transaction                                                    |          |
 | `Duration`         | `string`                            | The amount of time that the transaction code should run for                                                   |          |
 | `StartAt`          | `uint64`                            | A Unix timestamp representing the custom start time for execution (if set after block inclusion)              | ✔️       |
@@ -50,22 +50,22 @@ Submitting a MsgSubmitAction takes the following input:
 
 #### Optionality of the fields
 
-- When `Interval` is not provided, the end of the duration will be the time the AutoTX executes.
+- When `Interval` is not provided, the end of the duration will be the time the action executes.
 - When `FeeFunds` are not provided, fees can be deducted from the Owner account by setting `FallbackToOwnerBalance` to true in `Configuration`.
 - When `ConnectionID` or `HostConnectionID` are not provided, it is assumed that `Msgs` are local messages to be executed on Intento.
 
 ## Action Process
 
 1. (Register an interchain account with `MsgRegisterAccount` or `MsgRegisterAccountAndSubmitAction` when acting on a chain for the first time)
-2. Submit an AutoTX using `MsgSubmitAction` - if fee funds are sent along with it, a new fee address is generated
+2. Submit an action using `MsgSubmitAction` - if fee funds are sent along with it, a new fee address is generated
 3. Chain checks if execution settings from `Conditions` are ok
-4. `AutoTX` is inserted in a queue
-5. In each block,scheduled AutoTXs are retrieved given the current block time
-6. Fees are calculated and deducted. AutoTX data is updated with information on the exact fees and execution time.
+4. `Action` is inserted in a queue
+5. In each block,scheduled actions are retrieved given the current block time
+6. Fees are calculated and deducted. action data is updated with information on the exact fees and execution time.
 7. (IBC transaction is sent to the host chain)
-8. If AutoTX is recurring, a new entry is inserted into the queue
-9. Packet gets acknowledged by a relayer and the AutoTX entry is updated stating execution was succesfull
-10. Funds sent to an Action account are returned to the AutoTX owner
+8. If action is recurring, a new entry is inserted into the queue
+9. Packet gets acknowledged by a relayer and the action entry is updated stating execution was succesfull
+10. Funds sent to an action account are returned to the action owner
 
 _Read more on how the module works in the [module](@site/docs/modules/index.md) section of our documetation._
 

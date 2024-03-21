@@ -36,8 +36,8 @@ var (
 )
 
 func init() {
-	fsAction.String(flagLabel, "", "A custom label for the Action e.g. AutoTransfer, UpdateContractParams, optional")
-	fsAction.String(flagInterval, "", "A custom interval for the Action e.g. 2h, 6000s, 72h3m0.5s, optional")
+	fsAction.String(flagLabel, "", "A custom label for the action e.g. AutoTransfer, UpdateContractParams, optional")
+	fsAction.String(flagInterval, "", "A custom interval for the action e.g. 2h, 6000s, 72h3m0.5s, optional")
 	fsAction.String(flagStartAt, "0", "A custom start time in UNIX time, optional")
 	fsAction.String(flagFeeFunds, "", "Coins to sent to limit the fees incurred, optional")
 	fsAction.String(flagConnectionID, "", "Connection ID from this chain to the host chain, optional")
@@ -47,7 +47,7 @@ func init() {
 	fsAction.Bool(flagStopOnSuccess, false, "stop execution after success'")
 	fsAction.Bool(flagStopOnFailure, false, "stop execution after failure'")
 	fsAction.Bool(flagFallbackToOwnerBalance, false, "fallback to owner balance'")
-	fsAction.Bool(flagReregisterICAAfterTimeout, true, " If true, allows the Action to continue execution after an ibc channel times out (recommended)'")
+	fsAction.Bool(flagReregisterICAAfterTimeout, true, " If true, allows the action to continue execution after an ibc channel times out (recommended)'")
 	// fsAction.StringArray(flagSkipOnSuccessOf, []string{}, "array of ids that should fail, e.g. '5, 623'")
 	// fsAction.StringArray(flagSkipOnFailureOf, []string{}, "array of ids that should execute successfully, e.g. '5, 623'")
 	// fsAction.StringArray(flagStopOnSuccessOf, []string{}, "array of ids that should execute successfully, will otherwise stop execution'")
