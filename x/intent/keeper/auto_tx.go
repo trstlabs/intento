@@ -389,7 +389,7 @@ func (k Keeper) SetActionResult(ctx sdk.Context, portID string, channelID string
 	return nil
 }
 
-// SetActionOnTimeout sets the Action timeout result to the Action
+// SetActionOnTimeout sets the action timeout result to the action
 
 func (k Keeper) SetActionOnTimeout(ctx sdk.Context, sourcePort string, channelID string, seq uint64) error {
 	id := k.getTmpActionID(ctx, sourcePort, channelID, seq)
@@ -415,12 +415,12 @@ func (k Keeper) SetActionOnTimeout(ctx sdk.Context, sourcePort string, channelID
 	}
 
 	actionHistoryEntry.TimedOut = true
-	k.SetActionHistoryEntry(ctx, id, actionHistoryEntry)
+	k.SetCurrentActionHistoryEntry(ctx, id, actionHistoryEntry)
 
 	return nil
 }
 
-// SetActionOnTimeout sets the Action timeout result to the Action
+// SetActionOnTimeout sets the action timeout result to the action
 func (k Keeper) SetActionError(ctx sdk.Context, sourcePort string, channelID string, seq uint64, err string) {
 	id := k.getTmpActionID(ctx, sourcePort, channelID, seq)
 	if id <= 0 {
@@ -435,7 +435,7 @@ func (k Keeper) SetActionError(ctx sdk.Context, sourcePort string, channelID str
 	}
 
 	actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, err)
-	k.SetActionHistoryEntry(ctx, id, actionHistoryEntry)
+	k.SetCurrentActionHistoryEntry(ctx, id, actionHistoryEntry)
 }
 
 // AllowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
