@@ -384,7 +384,7 @@ func (k Keeper) SetActionResult(ctx sdk.Context, portID string, channelID string
 
 	k.SetActionInfo(ctx, &action)
 
-	k.SetActionHistoryEntry(ctx, action.ID, actionHistoryEntry)
+	k.SetCurrentActionHistoryEntry(ctx, action.ID, actionHistoryEntry)
 
 	return nil
 }

@@ -44,6 +44,11 @@ func NewQueryActionRequest(id string) *QueryActionRequest {
 	return &QueryActionRequest{Id: id}
 }
 
+// NewQueryActionsForOwnerRequest creates and returns a new QueryActionsForOwnerFromAddressRequest
+func NewQueryActionHistoryRequest(id string) *QueryActionHistoryRequest {
+	return &QueryActionHistoryRequest{Id: id}
+}
+
 // NewQueryActionsForOwnerResponse creates and returns a new QueryActionsForOwnerFromAddressResponse
 func NewQueryActionsResponse(actionInfos []ActionInfo) *QueryActionsResponse {
 	return &QueryActionsResponse{

@@ -20,7 +20,7 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(getInterchainAccountCmd(), getActionCmd(), getActionsForOwnerCmd(), getActionsCmd())
+	cmd.AddCommand(getInterchainAccountCmd(), getActionCmd(), getActionHistoryCmd(), getActionsForOwnerCmd(), getActionsCmd())
 
 	return cmd
 }
@@ -92,6 +92,31 @@ func getActionCmd() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 			res, err := queryClient.Action(cmd.Context(), types.NewQueryActionRequest(args[0]))
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func getActionHistoryCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:  "action-history [id]",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.ActionHistory(cmd.Context(), types.NewQueryActionHistoryRequest(args[0]))
 			if err != nil {
 				return err
 			}
