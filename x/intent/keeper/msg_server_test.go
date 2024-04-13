@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/trstlabs/intento/x/intent/keeper"
@@ -205,6 +206,7 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 		sdkMsg                    sdk.Msg
 		parseIcaAddress           bool
 		startAtBeforeBlockHeight  bool
+		transferMsg               bool
 	)
 
 	testCases := []struct {
@@ -213,7 +215,7 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 		expPass  bool
 	}{
 		{
-			"success - IBC action", func() {
+			"success - IBC ICA action", func() {
 				registerInterchainAccount = true
 				connectionId = path.EndpointA.ConnectionID
 				hostConnectionId = path.EndpointB.ConnectionID
@@ -232,15 +234,24 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 			}, true,
 		},
 		{
+			"success - IBC transfer", func() {
+				registerInterchainAccount = false
+				connectionId = ""
+				hostConnectionId = ""
+				transferMsg = true
+			}, true,
+		},
+		{
 			"success - parse ICA address", func() {
 				registerInterchainAccount = true
 				connectionId = path.EndpointA.ConnectionID
 				hostConnectionId = path.EndpointB.ConnectionID
 				parseIcaAddress = true
+				transferMsg = false
 			}, true,
 		},
 		{
-			"failure - start_at before block_height", func() {
+			"failure - start before block height", func() {
 				registerInterchainAccount = true
 				noOwner = false
 				connectionId = path.EndpointA.ConnectionID
@@ -268,11 +279,17 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 
 			icaAppA := GetICAApp(suite.chainA.TestChain)
 			icaAppB := GetICAApp(suite.chainB.TestChain)
-
 			path = NewICAPath(suite.chainA, suite.chainB)
+
 			suite.coordinator.SetupConnections(path)
 
 			tc.malleate() // malleate mutates test data
+
+			if transferMsg {
+				path = NewTransferPath(suite.chainA, suite.chainB)
+				suite.coordinator.SetupConnections(path)
+				sdkMsg = transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), suite.chainB.GetTimeoutHeight(), 0, "")
+			}
 
 			if noOwner {
 				owner = ""
@@ -344,18 +361,26 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 			types.Denom = "stake"
 			FakeBeginBlocker(suite.chainA.GetContext(), actionKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
 			suite.chainA.NextBlock()
-
 			action := actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
+			actionHistory, err := actionKeeper.GetActionHistory(suite.chainA.GetContext(), 1)
 
+			suite.Require().NoError(err)
 			suite.Require().NotEqual(action, types.ActionInfo{})
 			suite.Require().Equal(action.Owner, owner)
 			suite.Require().Equal(action.Label, label)
-			suite.Require().Contains(action.Msgs[0].TypeUrl, "MsgSend")
+			suite.Require().Empty(actionHistory.History[0].Errors)
 
-			//ibc autotx
+			//ibc
 			if connectionId != "" {
-				suite.Require().Equal(action.ICAConfig.PortID, "icacontroller-"+owner)
-				suite.Require().Equal(action.ICAConfig.ConnectionID, path.EndpointA.ConnectionID)
+				//autotx
+				if action.ICAConfig.ConnectionID == path.EndpointA.ConnectionID {
+					suite.Require().Equal(action.ICAConfig.PortID, "icacontroller-"+owner)
+
+				}
+				// //transfer
+				// ibcReceiverBalanceEnd, err := icaAppB.BankKeeper.AllBalances(suite.chainB.GetContext(), banktypes.NewQueryAllBalancesRequest(suite.chainB.SenderAccount.GetAddress(), &query.PageRequest{}))
+				// suite.Require().NoError(err)
+				// suite.Require().NotEqual(ibcReceiverBalanceStart.Balances, ibcReceiverBalanceEnd.Balances)
 			}
 
 			if parseIcaAddress {

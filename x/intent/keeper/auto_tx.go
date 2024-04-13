@@ -66,7 +66,7 @@ func (k Keeper) SendAction(ctx sdk.Context, action *types.ActionInfo) (error, bo
 	//if message contains ICA_ADDR, the ICA address is retrieved and parsed
 	txMsgs, err := k.parseAndSetMsgs(ctx, action)
 	if err != nil {
-		fmt.Printf("ERrrr")
+
 		return err, false, nil
 	}
 	data, err := icatypes.SerializeCosmosTx(k.cdc, txMsgs)
@@ -99,18 +99,18 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 	var msgResponses []*cdctypes.Any
 
 	cacheCtx, writeCache := ctx.CacheContext()
-	for _, msg := range txMsgs {
-		// if sdk.MsgTypeURL(msg) == "/ibc.applications.transfer.v1.MsgTransfer" {
-		// 	transferMsg, err := types.GetTransferMsg(k.cdc, action.Msgs[index])
-		// 	if err != nil {
-		// 		return err, nil
-		// 	}
-		// 	_, err = k.transferKeeper.Transfer(ctx, &transferMsg)
-		// 	if err != nil {
-		// 		return err, nil
-		// 	}
-		// 	continue
-		// }
+	for index, msg := range txMsgs {
+		if action.Msgs[index].TypeUrl == "/ibc.applications.transfer.v1.MsgTransfer" {
+			transferMsg, err := types.GetTransferMsg(k.cdc, action.Msgs[index])
+			if err != nil {
+				return err, nil
+			}
+			_, err = k.transferKeeper.Transfer(sdk.WrapSDKContext(ctx), &transferMsg)
+			if err != nil {
+				return err, nil
+			}
+			continue
+		}
 
 		handler := k.msgRouter.Handler(msg)
 		for _, acct := range msg.GetSigners() {
