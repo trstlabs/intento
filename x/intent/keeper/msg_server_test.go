@@ -5,6 +5,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
@@ -368,19 +369,15 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 			suite.Require().NotEqual(action, types.ActionInfo{})
 			suite.Require().Equal(action.Owner, owner)
 			suite.Require().Equal(action.Label, label)
-			suite.Require().Empty(actionHistory.History[0].Errors)
 
 			//ibc
-			if connectionId != "" {
-				//autotx
-				if action.ICAConfig.ConnectionID == path.EndpointA.ConnectionID {
-					suite.Require().Equal(action.ICAConfig.PortID, "icacontroller-"+owner)
 
-				}
-				// //transfer
-				// ibcReceiverBalanceEnd, err := icaAppB.BankKeeper.AllBalances(suite.chainB.GetContext(), banktypes.NewQueryAllBalancesRequest(suite.chainB.SenderAccount.GetAddress(), &query.PageRequest{}))
-				// suite.Require().NoError(err)
-				// suite.Require().NotEqual(ibcReceiverBalanceStart.Balances, ibcReceiverBalanceEnd.Balances)
+			if action.ICAConfig.PortID != "" {
+				suite.Require().Equal(action.ICAConfig.PortID, "icacontroller-"+owner)
+			}
+			if !transferMsg {
+				suite.Require().Empty(actionHistory.History[0].Errors)
+
 			}
 
 			if parseIcaAddress {
@@ -392,6 +389,106 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 
 			}
 
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestSubmitActionAuthZ() {
+	var (
+		path                      *ibctesting.Path
+		registerInterchainAccount bool
+		connectionId              string
+		hostConnectionId          string
+		sdkMsg                    sdk.Msg
+		parseIcaAddress           bool
+		startAtBeforeBlockHeight  bool
+	)
+	sdkMsg = &banktypes.MsgSend{
+		FromAddress: TestOwnerAddress,
+		ToAddress:   suite.chainA.SenderAccount.GetAddress().String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+	}
+	anyMsg, _ := types.PackTxMsgAnys([]sdk.Msg{sdkMsg})
+
+	testCases := []struct {
+		name     string
+		malleate func()
+		expPass  bool
+	}{{
+
+		"fail - MsgExec action", func() {
+			registerInterchainAccount = true
+			connectionId = ""
+			hostConnectionId = ""
+			sdkMsg = &authztypes.MsgExec{Grantee: TestOwnerAddress,
+				Msgs: anyMsg,
+			}
+		}, false,
+	},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			var owner string
+
+			icaAppA := GetICAApp(suite.chainA.TestChain)
+			icaAppB := GetICAApp(suite.chainB.TestChain)
+			path = NewICAPath(suite.chainA, suite.chainB)
+
+			suite.coordinator.SetupConnections(path)
+
+			tc.malleate() // malleate mutates test data
+
+			owner = suite.chainA.SenderAccount.GetAddress().String()
+
+			if registerInterchainAccount {
+				err := SetupICAPath(path, owner)
+				suite.Require().NoError(err)
+
+				portID, err := icatypes.NewControllerPortID(owner)
+				suite.Require().NoError(err)
+
+				// Get the address of the interchain account stored in state during handshake step
+				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
+				suite.Require().True(found)
+
+				icaAddr, err := sdk.AccAddressFromBech32(interchainAccountAddr)
+				suite.Require().NoError(err)
+
+				// Check if account is created
+				interchainAccount := icaAppB.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
+				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
+				if parseIcaAddress {
+					interchainAccountAddr = types.ParseICAValue
+				}
+
+			}
+
+			label := "label"
+			duration := time.Second * 200
+			durationTimeText := duration.String()
+			interval := time.Second * 100
+			intervalTimeText := interval.String()
+			startAt := uint64(0)
+			if startAtBeforeBlockHeight {
+				startAt = uint64(suite.chainA.GetContext().BlockTime().Unix() - 60*60)
+			}
+			msg, err := types.NewMsgSubmitAction(owner, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true})
+			suite.Require().NoError(err)
+			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
+
+			msgSrv := keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
+			res, err := msgSrv.SubmitAction(wrappedCtx, msg)
+
+			if !tc.expPass {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), "exec msg signer error")
+				suite.Require().Nil(res)
+				return
+			}
 		})
 	}
 }

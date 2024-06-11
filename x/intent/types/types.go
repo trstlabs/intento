@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	proto "github.com/cosmos/gogoproto/proto"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 )
@@ -23,6 +24,27 @@ func (actionInfo ActionInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sd
 		sdkMsgs = append(sdkMsgs, sdkMsg)
 	}
 	return sdkMsgs
+}
+
+// grantee should always be action owner
+func (actionInfo ActionInfo) ActionAuthzSignerOk(unpacker types.AnyUnpacker) bool {
+	for _, message := range actionInfo.Msgs {
+		if (message.TypeUrl) == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+			var authzMsg authztypes.MsgExec
+			if err := proto.Unmarshal(message.Value, &authzMsg); err != nil {
+				return false
+			}
+			var sdkMsg sdk.Msg
+			err := unpacker.UnpackAny(message, &sdkMsg)
+			if err != nil {
+				return false
+			}
+			if sdkMsg.GetSigners()[0].String() != actionInfo.Owner {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // GetTxMsgs unpacks sdk messages from any messages

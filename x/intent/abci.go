@@ -43,7 +43,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 
 		k.RemoveFromActionQueue(ctx, action)
 		if err != nil {
-			errorString := fmt.Sprintf(types.ErrActionDistribution, err.Error())
+			errorString := fmt.Sprintf(types.ErrActionFeeDistribution, err.Error())
 			k.AddActionHistory(ctx, &action, timeOfBlock, fee, false, nil, errorString)
 		} else {
 			err, executedLocally, msgResponses := k.SendAction(ctx, &action)

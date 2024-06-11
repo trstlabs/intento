@@ -158,7 +158,7 @@ func fakeActionExec(k keeper.Keeper, ctx sdk.Context, action types.ActionInfo) {
 
 	k.RemoveFromActionQueue(ctx, action)
 	if err != nil {
-		errorString := fmt.Sprintf(types.ErrActionDistribution, err.Error())
+		errorString := fmt.Sprintf(types.ErrActionFeeDistribution, err.Error())
 		k.AddActionHistory(ctx, &action, timeOfBlock, fee, false, nil, errorString)
 	} else {
 		err, executedLocally, msgResponses := k.SendAction(ctx, &action)

@@ -8,6 +8,7 @@ var (
 	ErrUnauthorized   = errorsmod.Register(ModuleName, 2, "unauthorized")
 	ErrAccountExists  = errorsmod.Register(ModuleName, 6, "fee account already exists")
 	ErrDuplicate      = errorsmod.Register(ModuleName, 14, "duplicate")
+	ErrAuthzSigner    = errorsmod.Register(ModuleName, 19, "exec msg signer error")
 	ErrInvalidGenesis = errorsmod.Register(ModuleName, 1, "invalid ids upon genesis")
 	ErrEmpty          = errorsmod.Register(ModuleName, 11, "empty")
 	ErrInvalidRequest = errorsmod.Register(ModuleName, 8, "invalid request")
@@ -29,9 +30,9 @@ var (
 	ErrValidateMsgRegistryMsg = errorsmod.Register(ModuleName, 32, "could not validate Action message")
 
 	//errors specific to Action execution that are to be appended to ActionHistory entries
-	ErrBadMetadataFormatMsg = "metadata not properly formatted for: '%v'. %s"
-	ErrBadActionMsg         = "cannot create action: %v"
-	ErrActionConditions     = "conditions to execute not met"
-	ErrActionDistribution   = "distribution error: %s"
-	ErrActionMsgHandling    = "msg handling error: %s"
+	ErrBadMetadataFormatMsg  = "metadata not properly formatted for: '%v'. %s"
+	ErrBadActionMsg          = "cannot create action: %v"
+	ErrActionConditions      = "conditions to execute not met"
+	ErrActionFeeDistribution = "distribution error: %s"
+	ErrActionMsgHandling     = "msg handling error: %s"
 )

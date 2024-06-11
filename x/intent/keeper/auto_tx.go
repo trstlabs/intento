@@ -192,6 +192,9 @@ func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string
 		Configuration: &configuration,
 	}
 
+	if !action.ActionAuthzSignerOk(k.cdc) {
+		return errorsmod.Wrapf(types.ErrAuthzSigner, "action id: %v", id)
+	}
 	k.SetActionInfo(ctx, &action)
 	k.addToActionOwnerIndex(ctx, owner, id)
 	ctx.EventManager().EmitEvent(

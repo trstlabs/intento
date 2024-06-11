@@ -194,7 +194,6 @@ func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *ty
 	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "must depend on less than 10 actionIDs and have less than 10 messages")
 	} */
-
 	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, portID, msg.ConnectionId, msg.HostConnectionId)
 	if err != nil {
 		return nil, err
@@ -297,6 +296,9 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 
 	action.UpdateHistory = append(action.UpdateHistory, ctx.BlockTime())
 
+	if !action.ActionAuthzSignerOk(k.cdc) {
+		return nil, errorsmod.Wrapf(types.ErrUpdateAction, "action signer: %s   is not message signer", action.Owner)
+	}
 	k.SetActionInfo(ctx, &action)
 
 	return &types.MsgUpdateActionResponse{}, nil
