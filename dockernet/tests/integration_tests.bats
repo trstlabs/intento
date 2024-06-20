@@ -40,6 +40,7 @@ setup_file() {
 
   TRANSFER_AMOUNT=50000000
   MSGSEND_AMOUNT=100000
+  EXPECTED_FEE=2500
   ICS20_MSGSEND_AMOUNT_TOTAL=200000          #100000*2
   RECURRING_MSGSEND_AMOUNT_TOTAL=17280000000 #100000*120*24*60
   ICS20_AMOUNT_FOR_LOCAL_GAS=50000
@@ -297,7 +298,8 @@ EOF
   # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
   user_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
   user_diff=$(($host_user_balance_start - $user_balance_end))
-  assert_equal "$user_diff" 205000 #MsgSend to ICA and MsgSend using AuthZ + host tx fees for MsgGrant,MsgSend
+  expected_diff=$(($MSGSEND_AMOUNT + $MSGSEND_AMOUNT + $EXPECTED_FEE + $EXPECTED_FEE))  #MsgSend to ICA and MsgSend using AuthZ + host tx fees for MsgGrant,MsgSend
+  assert_equal "$user_diff" $expected_diff
 
   # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
   host_receiver_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
@@ -326,12 +328,13 @@ EOF
   # calculate difference between token balance of host user before and after, should equal 2xMSGSEND_AMOUNT
   user_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
   user_diff=$(($host_user_balance_start - $user_balance_end))
-  assert_equal "$user_diff" 105000 #ICS20_MSGSEND_AMOUNT_TOTAL for all MsgSends(10000)+2x host tx fee(2500)
+  expected_diff=$(($MSGSEND_AMOUNT + $EXPECTED_FEE + $EXPECTED_FEE)) #ICS20_MSGSEND_AMOUNT_TOTAL for all MsgSends(10000)+2x host tx fee(2500)
+  assert_equal "$user_diff" $expected_diff
 
   # calculate difference between token balance receiver before and after, should equal 1xMSGSEND_AMOUNT
   host_receiver_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
   receiver_diff=$(($host_receiver_balance_end - $host_receiver_balance_start))
-  assert_equal "$receiver_diff" 100000 #one MsgSend received
+  assert_equal "$receiver_diff" $MSGSEND_AMOUNT #one MsgSend received
 
 }
 
@@ -379,7 +382,7 @@ EOF
 
   GET_ACTION_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_ACTION_BY_ID
-
+  sleep 10
   # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
   host_receiver_balance_mid=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
   receiver_diff=$(($host_receiver_balance_mid - $host_receiver_balance_start))
