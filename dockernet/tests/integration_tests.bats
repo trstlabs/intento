@@ -28,7 +28,6 @@ setup_file() {
   HOST_DENOM=$(GET_VAR_VALUE ${CHAIN_NAME}_DENOM)
   HOST_IBC_DENOM=$(GET_VAR_VALUE IBC_${CHAIN_NAME}_CHANNEL_${TRANSFER_CHANNEL_NUMBER}_DENOM)
   HOST_MAIN_CMD=$(GET_VAR_VALUE ${CHAIN_NAME}_MAIN_CMD)
-  HOST_MAIN_CMD_TX="$HOST_MAIN_CMD tx --fees 2500$HOST_DENOM"
   HOST_USER_ADDRESS=$(GET_VAR_VALUE ${CHAIN_NAME}_USER_ADDRESS)
   HOST_USER=$(GET_VAR_VALUE ${CHAIN_NAME}_USER_ACCT)
   HOST_TRANSFER_CHANNEL="channel-0"
@@ -38,9 +37,10 @@ setup_file() {
   INTO_VAL=${INTO_VAL_PREFIX}1
   INTO_TRANFER_CHANNEL="channel-${TRANSFER_CHANNEL_NUMBER}"
 
-  TRANSFER_AMOUNT=50000000
-  MSGSEND_AMOUNT=100000
+  TRANSFER_AMOUNT=500000
+  MSGSEND_AMOUNT=1000
   EXPECTED_FEE=2500
+  HOST_MAIN_CMD_TX="$HOST_MAIN_CMD tx --fees $EXPECTED_FEE$HOST_DENOM"
   ICS20_MSGSEND_AMOUNT_TOTAL=200000          #100000*2
   RECURRING_MSGSEND_AMOUNT_TOTAL=17280000000 #100000*120*24*60
   ICS20_AMOUNT_FOR_LOCAL_GAS=50000
@@ -113,7 +113,8 @@ setup_file() {
   host_user_balance_diff=$((host_host_user_balance_start - host_user_balance_end))
 
   assert_equal "$into_user_balance_diff" "-$TRANSFER_AMOUNT"
-  assert_equal "$host_user_balance_diff" "50002500" #TRANSFER_AMOUNT+fee
+  expected_diff=$(($TRANSFER_AMOUNT + $EXPECTED_FEE)) #TRANSFER_AMOUNT+fee
+  assert_equal "$host_user_balance_diff" $expected_diff
 }
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Action MsgTransfer" {
@@ -189,6 +190,7 @@ EOF
 }
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Action Update MsgSend" {
+  sleep 10
   msg_update_action=$($INTO_MAIN_CMD tx intent update-action $ACTION_ID --label "MsgSend" --updating-disabled --from $INTO_USER -y)
   echo "$msg_update_action"
 
@@ -204,9 +206,9 @@ EOF
   user_into_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
 
   # build MsgRegisterAccount and retrieve trigger ICA account
-  $INTO_MAIN_CMD tx intent register --connection-id connection-$CONNECTION_ID --host-connection-id connection-0 --from $INTO_USER -y
-
-  sleep 40
+  msg_register_account=$($INTO_MAIN_CMD tx intent register --connection-id connection-$CONNECTION_ID --host-connection-id connection-0 --from $INTO_USER -y)
+  echo $msg_register_account
+  sleep 100
 
   ica_address=$($INTO_MAIN_CMD q intent interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
   ica_address=$(echo "$ica_address" | awk '{print $2}')
@@ -239,7 +241,7 @@ EOF
   GET_ACTION_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_ACTION_BY_ID
 
-  # calculate difference between token balance user before and after, should equal MSGSEND_AMOUNT
+  # calculate difference between token balance ica before and after, should equal MSGSEND_AMOUNT
   ica_balance_end=$($HOST_MAIN_CMD q bank balances $ica_address --denom $HOST_DENOM | GETBAL)
   ica_diff=$(($ica_balance_start - $ica_balance_end))
   assert_equal "$ica_balance_end" 0
@@ -294,6 +296,7 @@ EOF
 
   GET_ACTION_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_ACTION_BY_ID
+  sleep 60
 
   # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
   user_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
@@ -324,6 +327,7 @@ EOF
   $HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ica_address $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y
 
   WAIT_FOR_EXECUTED_ACTION_BY_ID
+  sleep 60
 
   # calculate difference between token balance of host user before and after, should equal 2xMSGSEND_AMOUNT
   user_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
@@ -334,6 +338,7 @@ EOF
   # calculate difference between token balance receiver before and after, should equal 1xMSGSEND_AMOUNT
   host_receiver_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
   receiver_diff=$(($host_receiver_balance_end - $host_receiver_balance_start))
+
   assert_equal "$receiver_diff" $MSGSEND_AMOUNT #one MsgSend received
 
 }
@@ -377,18 +382,18 @@ EOF
 }
 EOF
 
-  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_exec_file" --label "Recurring transfer on host chain from host user" --duration "2880h" --interval "120s" --fee-funds $RECURRING_MSGSEND_AMOUNT_TOTAL$INTO_DENOM --connection-id connection-$CONNECTION_ID --host-connection-id connection-0 --from $INTO_USER --fallback-to-owner-balance --reregister_ica_after_timeout -y)
+  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_exec_file" --label "Recurring transfer on host chain from host user" --duration "2880h" --interval "60s" --fee-funds $RECURRING_MSGSEND_AMOUNT_TOTAL$INTO_DENOM --connection-id connection-$CONNECTION_ID --host-connection-id connection-0 --from $INTO_USER --fallback-to-owner-balance --reregister-ica-after-timeout -y)
   echo "$msg_submit_action"
 
   GET_ACTION_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_ACTION_BY_ID
-  sleep 10
+  sleep 20
   # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
   host_receiver_balance_mid=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
   receiver_diff=$(($host_receiver_balance_mid - $host_receiver_balance_start))
   assert_equal "$receiver_diff" $MSGSEND_AMOUNT
 
-  sleep 120
+  sleep 60
   # WAIT_FOR_EXECUTED_ACTION_BY_ID
 
   # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
@@ -397,6 +402,72 @@ EOF
   assert_equal "$receiver_diff" $MSGSEND_AMOUNT
 }
 
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] Action MsgSend using Hosted ICA" {
+  # get initial balances on host account
+  host_user_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
+  host_receiver_balance_start=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
+
+  # get token balance user on INTO
+  user_into_balance_start=$($INTO_MAIN_CMD q bank balances $(INTO_ADDRESS) --denom $INTO_DENOM | GETBAL)
+
+  # build ICA and retrieve ICA account
+  msg_create_hosted_account=$($INTO_MAIN_CMD tx intent create-hosted-account --connection-id connection-$CONNECTION_ID --host-connection-id connection-0 --fee-coins-suported "10"$INTO_DENOM,"10"$HOST_IBC_DENOM --from $INTO_USER -y)
+  echo $msg_create_hosted_account
+  sleep 100
+
+  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts )
+  hosted_address=$(echo "$hosted_accounts" | grep 'hosted_address' | awk -F': ' '{print $2}' | tr -d '"' | tail -n 1)
+  ica_address=$($INTO_MAIN_CMD q intent interchainaccounts $hosted_address connection-$CONNECTION_ID)
+  ica_address=$(echo "$ica_address" | awk '{print $2}')
+  
+  fund_ica_hosted=$($HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ica_address $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
+
+  WAIT_FOR_BLOCK $INTO_LOGS 2
+
+  ica_balance_start=$($HOST_MAIN_CMD q bank balances $ica_address --denom $HOST_DENOM | GETBAL)
+
+
+  # Define the file path
+  msg_exec_file="msg_exec.json"
+  cat <<EOF >"$msg_exec_file"
+{
+  "@type": "/cosmos.authz.v1beta1.MsgExec",
+  "msgs": [
+    {
+      "@type": "/cosmos.bank.v1beta1.MsgSend",
+      "amount": [
+        {
+          "amount": "$MSGSEND_AMOUNT",
+          "denom": "$HOST_DENOM"
+        }
+      ],
+      "from_address": "$HOST_USER_ADDRESS",
+      "to_address": "$HOST_RECEIVER_ADDRESS"
+    }
+  ],
+  "grantee": "$ica_address"
+}
+EOF
+
+  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_exec_file" --label "MsgSend using Hosted ICA and AuthZ" --duration "60s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance -y)
+  echo "$msg_submit_action"
+
+  GET_ACTION_ID $(INTO_ADDRESS)
+  WAIT_FOR_EXECUTED_ACTION_BY_ID
+  
+  sleep 20
+  # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
+  user_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_USER_ADDRESS --denom $HOST_DENOM | GETBAL)
+  user_diff=$(($host_user_balance_start - $user_balance_end))
+  expected_diff=$(($MSGSEND_AMOUNT + $MSGSEND_AMOUNT + $EXPECTED_FEE + $EXPECTED_FEE))  #MsgSend to ICA and MsgSend using AuthZ + host tx fees for MsgGrant,MsgSend
+  assert_equal "$user_diff" $expected_diff
+
+  # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
+  host_receiver_balance_end=$($HOST_MAIN_CMD q bank balances $HOST_RECEIVER_ADDRESS --denom $HOST_DENOM | GETBAL)
+  receiver_diff=$(($host_receiver_balance_end - $host_receiver_balance_start))
+  assert_equal "$receiver_diff" $MSGSEND_AMOUNT #from MsgSend
+}
+
+
 # TODO
-# test action ICS20 MsgSend with user address over AuthZ grant to ICA Account with MsgRegisterAccountAndSubmitAutoTx ICA_ADDR parsing
 # test action with other msgs like MsgWithdrawalRewards, MsgSubmitProposal
