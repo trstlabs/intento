@@ -16,6 +16,8 @@ var (
 	_ sdk.Msg = &MsgSubmitAction{}
 	_ sdk.Msg = &MsgRegisterAccountAndSubmitAction{}
 	_ sdk.Msg = &MsgUpdateAction{}
+	_ sdk.Msg = &MsgCreateHostedAccount{}
+	_ sdk.Msg = &MsgUpdateHostedAccount{}
 
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitTx{}
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitAction{}
@@ -125,7 +127,7 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 }
 
 // NewMsgSubmitAction creates a new NewMsgSubmitAction instance
-func NewMsgSubmitAction(owner, label string, sdkMsgs []sdk.Msg, connectionID string, hostConnectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration) (*MsgSubmitAction, error) {
+func NewMsgSubmitAction(owner, label string, sdkMsgs []sdk.Msg, connectionID string, hostConnectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration) (*MsgSubmitAction, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -142,6 +144,8 @@ func NewMsgSubmitAction(owner, label string, sdkMsgs []sdk.Msg, connectionID str
 		Configuration:    configuration,
 		ConnectionId:     connectionID,
 		HostConnectionId: hostConnectionID,
+		HostedConfig: &HostedConfig{HostedAddress: hostedAddress,
+			FeeCoinLimit: hostedFeeLimit},
 	}, nil
 }
 
@@ -218,7 +222,6 @@ func NewMsgRegisterAccountAndSubmitAction(owner, label string, sdkMsgs []sdk.Msg
 		FeeFunds:      feeFunds,
 		Configuration: configuration,
 		Version:       version,
-		//Retries:        retries,
 	}, nil
 }
 
@@ -278,7 +281,7 @@ func (msg MsgRegisterAccountAndSubmitAction) ValidateBasic() error {
 }
 
 // NewMsgUpdateAction creates a new NewMsgUpdateAction instance
-func NewMsgUpdateAction(owner string, id uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration) (*MsgUpdateAction, error) {
+func NewMsgUpdateAction(owner string, id uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration) (*MsgUpdateAction, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -295,7 +298,8 @@ func NewMsgUpdateAction(owner string, id uint64, label string, sdkMsgs []sdk.Msg
 		Interval:      interval,
 		Configuration: configuration,
 		FeeFunds:      feeFunds,
-		//Retries:        retries,
+		HostedConfig: &HostedConfig{HostedAddress: hostedAddress,
+			FeeCoinLimit: hostedFeeLimit},
 	}, nil
 }
 
@@ -333,6 +337,13 @@ func (msg MsgUpdateAction) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic implements sdk.Msg
 func (msg MsgUpdateAction) ValidateBasic() error {
+	if strings.TrimSpace(msg.Owner) == "" {
+		return errorsmod.Wrap(ErrInvalidAddress, "missing creator address")
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Owner); err != nil {
+		return errorsmod.Wrapf(ErrInvalidAddress, "failed to parse address: %s", msg.Owner)
+	}
+
 	if len(msg.Msgs) >= 10 {
 		return fmt.Errorf("can't execute more than 9 messages")
 	}
@@ -346,4 +357,67 @@ func (msg MsgUpdateAction) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// NewMsgCreateHostedAccount creates a new MsgCreateHostedAccount instance
+func NewMsgCreateHostedAccount(creator, connectionID, version string, feeFundsSupported sdk.Coins) *MsgCreateHostedAccount {
+	return &MsgCreateHostedAccount{
+		Creator:          creator,
+		ConnectionId:     connectionID,
+		Version:          version,
+		FeeCoinsSuported: feeFundsSupported,
+	}
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgCreateHostedAccount) ValidateBasic() error {
+	if strings.TrimSpace(msg.Creator) == "" {
+		return errorsmod.Wrap(ErrInvalidAddress, "missing creator address")
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+		return errorsmod.Wrapf(ErrInvalidAddress, "failed to parse address: %s", msg.Creator)
+	}
+	return nil
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgCreateHostedAccount) GetSigners() []sdk.AccAddress {
+	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.AccAddress{accAddr}
+}
+
+// NewMsgUpdateHostedAccount creates a new NewMsgUpdateHostedAccount instance
+func NewMsgUpdateHostedAccount(admin, hostedAddress, connectionID, hostConnectionID, newAdmin string, feeFundsSupported sdk.Coins) *MsgUpdateHostedAccount {
+
+	return &MsgUpdateHostedAccount{
+		Admin:            admin,
+		HostedAddress:    hostedAddress,
+		ConnectionId:     connectionID,
+		HostConnectionId: hostConnectionID,
+		HostFeeConfig:    &HostFeeConfig{FeeCoinsSuported: feeFundsSupported, Admin: newAdmin},
+	}
+}
+
+// ValidateBasic implements sdk.Msg
+func (msg MsgUpdateHostedAccount) ValidateBasic() error {
+	if strings.TrimSpace(msg.Admin) == "" {
+		return errorsmod.Wrap(ErrInvalidAddress, "missing creator address")
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
+		return errorsmod.Wrapf(ErrInvalidAddress, "failed to parse address: %s", msg.Admin)
+	}
+	return nil
+}
+
+// GetSigners implements sdk.Msg
+func (msg MsgUpdateHostedAccount) GetSigners() []sdk.AccAddress {
+	admin, err := sdk.AccAddressFromBech32(msg.Admin)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{admin}
 }

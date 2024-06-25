@@ -195,7 +195,47 @@ func (k Keeper) ActionIbcTxUsage(c context.Context, req *types.QueryActionIbcUsa
 	}, nil
 }
 
-// func makeReadableMsgData(info *types.ActionInfo, msg []sdk.Msg) {
-// 	info.Data = []byte(sdk.MsgTypeURL(msg[0]) + "," + msg[0].String())
-// 	//fmt.Printf(string(info.Data))
-// }
+// HostedAccount implements the Query/HostedAccount gRPC method
+func (k Keeper) HostedAccount(c context.Context, req *types.QueryHostedAccountRequest) (*types.QueryHostedAccountResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	hosted, err := k.TryGetHostedAccount(ctx, req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryHostedAccountResponse{
+		HostedAccount: hosted,
+	}, nil
+}
+
+// HostedAccounts implements the Query/HostedAccounts gRPC method
+func (k Keeper) HostedAccounts(c context.Context, req *types.QueryHostedAccountsRequest) (*types.QueryHostedAccountsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	hostedAccounts := make([]types.HostedAccount, 0)
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.HostedAccountKeyPrefix)
+	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
+		if accumulate {
+			var c types.HostedAccount
+			k.cdc.MustUnmarshal(value, &c)
+			hostedAccounts = append(hostedAccounts, c)
+
+		}
+		return true, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryHostedAccountsResponse{
+		HostedAccounts: hostedAccounts,
+		Pagination:     pageRes,
+	}, nil
+}

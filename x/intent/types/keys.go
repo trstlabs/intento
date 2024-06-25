@@ -29,6 +29,7 @@ var (
 	KeyRelayerRewardsAvailability = []byte{0x07}
 	ActionIbcUsageKeyPrefix       = []byte{0x08}
 	ActionHistorySequencePrefix   = []byte{0x09}
+	HostedAccountKeyPrefix        = []byte{0x10}
 	KeyLastID                     = append(SequenceKeyPrefix, []byte("lastId")...)
 	KeyLastTxAddrID               = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
 )
@@ -43,12 +44,12 @@ var (
 	KeyActionIncentiveForAuthzTx = 3
 )
 
-// GetActionKey returns the key for the auto interchain tx
+// GetActionKey returns the key for the action
 func GetActionKey(actionID uint64) []byte {
 	return append(ActionKeyPrefix, GetBytesForUint(actionID)...)
 }
 
-// GetActionHistoryKey returns the key for the auto interchain tx
+// GetActionHistoryKey returns the key for the action
 func GetActionHistoryKey(actionID uint64) []byte {
 	return append(ActionHistoryPrefix, GetBytesForUint(actionID)...)
 }
@@ -57,6 +58,11 @@ func GetActionHistoryKey(actionID uint64) []byte {
 func GetActionsByOwnerPrefix(addr sdk.AccAddress) []byte {
 	bz := address.MustLengthPrefix(addr)
 	return append(ActionsByOwnerPrefix, bz...)
+}
+
+// GetHostedAccountKey returns the key for the hosted account
+func GetHostedAccountKey(address string) []byte {
+	return append(HostedAccountKeyPrefix, []byte(address)...)
 }
 
 ////queue types

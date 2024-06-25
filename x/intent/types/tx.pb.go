@@ -36,7 +36,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // MsgRegisterAccount registers an interchain account for the given owner over the specified connection pair
 type MsgRegisterAccount struct {
 	Owner        string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	ConnectionId string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	ConnectionId string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 	Version      string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
 }
 
@@ -113,7 +113,7 @@ var xxx_messageInfo_MsgRegisterAccountResponse proto.InternalMessageInfo
 // MsgSubmitTx creates and submits an arbitrary transaction msg to be executed locally or using an interchain account
 type MsgSubmitTx struct {
 	Owner        string     `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	ConnectionId string     `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	ConnectionId string     `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 	Msg          *types.Any `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
 }
 
@@ -202,9 +202,11 @@ type MsgSubmitAction struct {
 	FeeFunds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,8,rep,name=fee_funds,json=feeFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fee_funds" yaml:"fee_funds"`
 	//optional configuration parameters
 	Configuration *ExecutionConfiguration `protobuf:"bytes,9,opt,name=configuration,proto3" json:"configuration,omitempty"`
-	//for ibc config
-	ConnectionId     string `protobuf:"bytes,10,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
-	HostConnectionId string `protobuf:"bytes,11,opt,name=host_connection_id,json=hostConnectionId,proto3" json:"host_connection_id,omitempty" yaml:"host_connection_id"`
+	//optional for interchain account
+	ConnectionId     string `protobuf:"bytes,10,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	HostConnectionId string `protobuf:"bytes,11,opt,name=host_connection_id,json=hostConnectionId,proto3" json:"host_connection_id,omitempty"`
+	//optional use of a hosted account
+	HostedConfig *HostedConfig `protobuf:"bytes,12,opt,name=hosted_config,json=hostedConfig,proto3" json:"hosted_config,omitempty"`
 }
 
 func (m *MsgSubmitAction) Reset()         { *m = MsgSubmitAction{} }
@@ -280,7 +282,7 @@ var xxx_messageInfo_MsgSubmitActionResponse proto.InternalMessageInfo
 // MsgRegisterAccountAndSubmitAction creates an interchain account, submits and schedules an arbitrary transaction msg to be executed by this interchain account
 type MsgRegisterAccountAndSubmitAction struct {
 	Owner        string       `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	ConnectionId string       `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	ConnectionId string       `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 	Label        string       `protobuf:"bytes,3,opt,name=label,proto3" json:"label,omitempty"`
 	Msgs         []*types.Any `protobuf:"bytes,4,rep,name=msgs,proto3" json:"msgs,omitempty"`
 	// duration defines the time that the code should run for
@@ -294,7 +296,7 @@ type MsgRegisterAccountAndSubmitAction struct {
 	//optional array of dependent txs that should be executed before execution is allowed
 	Configuration    *ExecutionConfiguration `protobuf:"bytes,9,opt,name=configuration,proto3" json:"configuration,omitempty"`
 	Version          string                  `protobuf:"bytes,10,opt,name=version,proto3" json:"version,omitempty"`
-	HostConnectionId string                  `protobuf:"bytes,11,opt,name=host_connection_id,json=hostConnectionId,proto3" json:"host_connection_id,omitempty" yaml:"host_connection_id"`
+	HostConnectionId string                  `protobuf:"bytes,11,opt,name=host_connection_id,json=hostConnectionId,proto3" json:"host_connection_id,omitempty"`
 }
 
 func (m *MsgRegisterAccountAndSubmitAction) Reset()         { *m = MsgRegisterAccountAndSubmitAction{} }
@@ -375,7 +377,7 @@ var xxx_messageInfo_MsgRegisterAccountAndSubmitActionResponse proto.InternalMess
 type MsgUpdateAction struct {
 	Owner        string       `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	ID           uint64       `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
-	ConnectionId string       `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	ConnectionId string       `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 	Label        string       `protobuf:"bytes,4,opt,name=label,proto3" json:"label,omitempty"`
 	Msgs         []*types.Any `protobuf:"bytes,5,rep,name=msgs,proto3" json:"msgs,omitempty"`
 	// end_time when set defines the time that the code should run for
@@ -387,6 +389,7 @@ type MsgUpdateAction struct {
 	//optional fees to be used for auto tx execution limiting the amount of fees incurred
 	FeeFunds      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,9,rep,name=fee_funds,json=feeFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fee_funds" yaml:"fee_funds"`
 	Configuration *ExecutionConfiguration                  `protobuf:"bytes,10,opt,name=configuration,proto3" json:"configuration,omitempty"`
+	HostedConfig  *HostedConfig                            `protobuf:"bytes,11,opt,name=hosted_config,json=hostedConfig,proto3" json:"hosted_config,omitempty"`
 }
 
 func (m *MsgUpdateAction) Reset()         { *m = MsgUpdateAction{} }
@@ -459,6 +462,168 @@ func (m *MsgUpdateActionResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateActionResponse proto.InternalMessageInfo
 
+type MsgCreateHostedAccount struct {
+	Creator          string                                   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	ConnectionId     string                                   `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	HostConnectionId string                                   `protobuf:"bytes,3,opt,name=host_connection_id,json=hostConnectionId,proto3" json:"host_connection_id,omitempty"`
+	Version          string                                   `protobuf:"bytes,4,opt,name=version,proto3" json:"version,omitempty"`
+	FeeCoinsSuported github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,5,rep,name=fee_coins_suported,json=feeCoinsSuported,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fee_coins_suported"`
+}
+
+func (m *MsgCreateHostedAccount) Reset()         { *m = MsgCreateHostedAccount{} }
+func (m *MsgCreateHostedAccount) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateHostedAccount) ProtoMessage()    {}
+func (*MsgCreateHostedAccount) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83cb0574b3fe990a, []int{10}
+}
+func (m *MsgCreateHostedAccount) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateHostedAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateHostedAccount.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateHostedAccount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateHostedAccount.Merge(m, src)
+}
+func (m *MsgCreateHostedAccount) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateHostedAccount) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateHostedAccount.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateHostedAccount proto.InternalMessageInfo
+
+type MsgCreateHostedAccountResponse struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *MsgCreateHostedAccountResponse) Reset()         { *m = MsgCreateHostedAccountResponse{} }
+func (m *MsgCreateHostedAccountResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateHostedAccountResponse) ProtoMessage()    {}
+func (*MsgCreateHostedAccountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83cb0574b3fe990a, []int{11}
+}
+func (m *MsgCreateHostedAccountResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateHostedAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateHostedAccountResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateHostedAccountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateHostedAccountResponse.Merge(m, src)
+}
+func (m *MsgCreateHostedAccountResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateHostedAccountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateHostedAccountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateHostedAccountResponse proto.InternalMessageInfo
+
+func (m *MsgCreateHostedAccountResponse) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+type MsgUpdateHostedAccount struct {
+	Admin            string         `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	HostedAddress    string         `protobuf:"bytes,2,opt,name=hosted_address,json=hostedAddress,proto3" json:"hosted_address,omitempty"`
+	ConnectionId     string         `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	HostConnectionId string         `protobuf:"bytes,4,opt,name=host_connection_id,json=hostConnectionId,proto3" json:"host_connection_id,omitempty"`
+	HostFeeConfig    *HostFeeConfig `protobuf:"bytes,5,opt,name=host_fee_config,json=hostFeeConfig,proto3" json:"host_fee_config,omitempty"`
+}
+
+func (m *MsgUpdateHostedAccount) Reset()         { *m = MsgUpdateHostedAccount{} }
+func (m *MsgUpdateHostedAccount) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateHostedAccount) ProtoMessage()    {}
+func (*MsgUpdateHostedAccount) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83cb0574b3fe990a, []int{12}
+}
+func (m *MsgUpdateHostedAccount) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateHostedAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateHostedAccount.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateHostedAccount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateHostedAccount.Merge(m, src)
+}
+func (m *MsgUpdateHostedAccount) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateHostedAccount) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateHostedAccount.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateHostedAccount proto.InternalMessageInfo
+
+type MsgUpdateHostedAccountResponse struct {
+}
+
+func (m *MsgUpdateHostedAccountResponse) Reset()         { *m = MsgUpdateHostedAccountResponse{} }
+func (m *MsgUpdateHostedAccountResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateHostedAccountResponse) ProtoMessage()    {}
+func (*MsgUpdateHostedAccountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83cb0574b3fe990a, []int{13}
+}
+func (m *MsgUpdateHostedAccountResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateHostedAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateHostedAccountResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateHostedAccountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateHostedAccountResponse.Merge(m, src)
+}
+func (m *MsgUpdateHostedAccountResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateHostedAccountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateHostedAccountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateHostedAccountResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgRegisterAccount)(nil), "intento.intent.v1beta1.MsgRegisterAccount")
 	proto.RegisterType((*MsgRegisterAccountResponse)(nil), "intento.intent.v1beta1.MsgRegisterAccountResponse")
@@ -470,69 +635,88 @@ func init() {
 	proto.RegisterType((*MsgRegisterAccountAndSubmitActionResponse)(nil), "intento.intent.v1beta1.MsgRegisterAccountAndSubmitActionResponse")
 	proto.RegisterType((*MsgUpdateAction)(nil), "intento.intent.v1beta1.MsgUpdateAction")
 	proto.RegisterType((*MsgUpdateActionResponse)(nil), "intento.intent.v1beta1.MsgUpdateActionResponse")
+	proto.RegisterType((*MsgCreateHostedAccount)(nil), "intento.intent.v1beta1.MsgCreateHostedAccount")
+	proto.RegisterType((*MsgCreateHostedAccountResponse)(nil), "intento.intent.v1beta1.MsgCreateHostedAccountResponse")
+	proto.RegisterType((*MsgUpdateHostedAccount)(nil), "intento.intent.v1beta1.MsgUpdateHostedAccount")
+	proto.RegisterType((*MsgUpdateHostedAccountResponse)(nil), "intento.intent.v1beta1.MsgUpdateHostedAccountResponse")
 }
 
 func init() { proto.RegisterFile("intento/intent/v1beta1/tx.proto", fileDescriptor_83cb0574b3fe990a) }
 
 var fileDescriptor_83cb0574b3fe990a = []byte{
-	// 914 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x96, 0xcd, 0x8f, 0xdb, 0x44,
-	0x18, 0xc6, 0xe3, 0x7c, 0x3a, 0x93, 0xa2, 0x56, 0x26, 0x14, 0xc7, 0x2a, 0xf6, 0xd6, 0x2b, 0x68,
-	0xba, 0x55, 0x6c, 0xba, 0x08, 0x04, 0x95, 0x40, 0x4a, 0x76, 0x41, 0xaa, 0xd0, 0x5e, 0xcc, 0x72,
-	0xe1, 0x12, 0xf9, 0x63, 0xe2, 0x5a, 0x8d, 0x67, 0x22, 0xcf, 0x78, 0x49, 0x24, 0x4e, 0x5c, 0xe0,
-	0x82, 0x84, 0x04, 0x12, 0xd7, 0x4a, 0xdc, 0xb8, 0x21, 0xf1, 0x47, 0x54, 0x3d, 0x55, 0xe2, 0xc2,
-	0x85, 0x80, 0xb2, 0x1c, 0x38, 0xef, 0x95, 0x0b, 0xf2, 0xf8, 0x03, 0x7b, 0xb3, 0xf9, 0x68, 0xa1,
-	0x70, 0xe1, 0xe4, 0x7d, 0x33, 0xcf, 0xfb, 0xce, 0x33, 0x33, 0xbf, 0x79, 0x77, 0x80, 0xe2, 0x21,
-	0x0a, 0x11, 0xc5, 0x7a, 0xfc, 0xd5, 0x4f, 0x6e, 0x5b, 0x90, 0x9a, 0xb7, 0x75, 0x3a, 0xd5, 0x26,
-	0x01, 0xa6, 0x58, 0xb8, 0x9a, 0x08, 0xb4, 0xf8, 0xab, 0x25, 0x02, 0xa9, 0xed, 0x62, 0x17, 0x33,
-	0x89, 0x1e, 0xfd, 0x15, 0xab, 0xa5, 0x8e, 0x8b, 0xb1, 0x3b, 0x86, 0x3a, 0x8b, 0xac, 0x70, 0xa4,
-	0x9b, 0x68, 0x96, 0x0c, 0x5d, 0x4b, 0x86, 0xcc, 0x89, 0xa7, 0x9b, 0x08, 0x61, 0x6a, 0x52, 0x0f,
-	0x23, 0x92, 0x8c, 0xca, 0x36, 0x26, 0x3e, 0x26, 0xba, 0x65, 0x12, 0x98, 0x99, 0xb0, 0xb1, 0x87,
-	0xd2, 0xc2, 0xf1, 0xf8, 0x30, 0x9e, 0x31, 0x0e, 0x92, 0xa1, 0xdd, 0x15, 0x4b, 0x30, 0xed, 0x68,
-	0x82, 0x58, 0xa4, 0x7e, 0xc1, 0x01, 0xe1, 0x88, 0xb8, 0x06, 0x74, 0x3d, 0x42, 0x61, 0xd0, 0xb7,
-	0x6d, 0x1c, 0x22, 0x2a, 0xb4, 0x41, 0x0d, 0x7f, 0x8c, 0x60, 0x20, 0x72, 0x3b, 0x5c, 0xb7, 0x69,
-	0xc4, 0x81, 0xf0, 0x36, 0x78, 0xce, 0xc6, 0x08, 0x41, 0x56, 0x60, 0xe8, 0x39, 0x62, 0x39, 0x1a,
-	0x1d, 0x88, 0x67, 0x73, 0xa5, 0x3d, 0x33, 0xfd, 0xf1, 0x1d, 0xb5, 0x30, 0xac, 0x1a, 0x97, 0xfe,
-	0x8a, 0xef, 0x3a, 0x82, 0x08, 0x1a, 0x27, 0x30, 0x20, 0x1e, 0x46, 0x62, 0x85, 0x95, 0x4d, 0xc3,
-	0x3b, 0xfc, 0xe7, 0x0f, 0x94, 0xd2, 0xef, 0x0f, 0x94, 0x92, 0x7a, 0x0d, 0x48, 0xcb, 0x76, 0x0c,
-	0x48, 0x26, 0x18, 0x11, 0xa8, 0x7e, 0xcd, 0x81, 0xd6, 0x11, 0x71, 0x3f, 0x08, 0x2d, 0xdf, 0xa3,
-	0xc7, 0xd3, 0x67, 0x63, 0xf3, 0x15, 0x50, 0xf1, 0x89, 0xcb, 0x2c, 0xb6, 0xf6, 0xdb, 0x5a, 0x7c,
-	0x3c, 0x5a, 0x7a, 0x72, 0x5a, 0x1f, 0xcd, 0x8c, 0x48, 0x90, 0x33, 0xfd, 0x02, 0x78, 0x3e, 0xe7,
-	0x2a, 0x73, 0xfb, 0x7d, 0x15, 0x5c, 0xce, 0x7e, 0xef, 0xb3, 0xf2, 0x2b, 0x1c, 0xb7, 0x41, 0x6d,
-	0x6c, 0x5a, 0x70, 0x9c, 0xec, 0x4b, 0x1c, 0x08, 0xaf, 0x83, 0xaa, 0x4f, 0x5c, 0x22, 0x56, 0x77,
-	0x2a, 0xab, 0x9c, 0x0c, 0x5a, 0x8f, 0x7e, 0xe8, 0x35, 0x88, 0x73, 0x5f, 0x8b, 0x76, 0x8d, 0xc9,
-	0x05, 0x09, 0xf0, 0x4e, 0x18, 0x30, 0x8a, 0xc4, 0x1a, 0xab, 0x97, 0xc5, 0x42, 0x07, 0xf0, 0x84,
-	0x9a, 0x01, 0x1d, 0x9a, 0x54, 0xac, 0xef, 0x70, 0xdd, 0xaa, 0xd1, 0x60, 0x71, 0x9f, 0x46, 0x69,
-	0x11, 0x28, 0xc1, 0x89, 0x39, 0x16, 0x1b, 0x71, 0x5a, 0x1a, 0x0b, 0x9f, 0x80, 0xe6, 0x08, 0xc2,
-	0xe1, 0x28, 0x44, 0x0e, 0x11, 0x79, 0x66, 0xa7, 0xa3, 0x25, 0xb0, 0x45, 0x64, 0xa6, 0xf4, 0x6b,
-	0x07, 0xd8, 0x43, 0x83, 0xc3, 0x87, 0x73, 0xa5, 0x74, 0x36, 0x57, 0xae, 0xc4, 0x9b, 0x9d, 0x65,
-	0xaa, 0xdf, 0xfd, 0xa2, 0x74, 0x5d, 0x8f, 0xde, 0x0b, 0x2d, 0xcd, 0xc6, 0x7e, 0x42, 0x6b, 0xf2,
-	0xe9, 0x11, 0xe7, 0xbe, 0x4e, 0x67, 0x13, 0x48, 0x58, 0x11, 0x62, 0xf0, 0x23, 0x08, 0xdf, 0x8b,
-	0xd2, 0x84, 0x63, 0x76, 0x9e, 0x23, 0xcf, 0x4d, 0x57, 0xd5, 0x64, 0x47, 0xa3, 0x69, 0x17, 0x5f,
-	0x41, 0xed, 0xdd, 0x29, 0xb4, 0xc3, 0x48, 0x78, 0x90, 0xcf, 0x32, 0x8a, 0x45, 0x96, 0x29, 0x01,
-	0x4f, 0x44, 0xc9, 0xfb, 0x40, 0xb8, 0x87, 0x09, 0x1d, 0x16, 0x6b, 0xb4, 0x58, 0x8d, 0x97, 0xce,
-	0xe6, 0x4a, 0x27, 0xae, 0xb1, 0xac, 0x51, 0x8d, 0x2b, 0xd1, 0x8f, 0x07, 0xb9, 0x62, 0x39, 0x94,
-	0x3a, 0xe0, 0xc5, 0x73, 0xc8, 0x64, 0x38, 0xfd, 0x5c, 0x05, 0xd7, 0x97, 0xef, 0x46, 0x1f, 0x39,
-	0x5b, 0x00, 0xf6, 0x37, 0xaf, 0xc4, 0xff, 0x7c, 0xfe, 0xfb, 0x7c, 0xe6, 0xba, 0x25, 0x28, 0x74,
-	0xcb, 0x67, 0x85, 0xde, 0x2d, 0x70, 0x73, 0x23, 0x5e, 0x19, 0x8c, 0x7f, 0x54, 0x58, 0x6f, 0xfb,
-	0x70, 0xe2, 0x98, 0x14, 0xae, 0x45, 0xef, 0x2a, 0x28, 0x27, 0xbc, 0x55, 0x07, 0xf5, 0xc5, 0x5c,
-	0x29, 0xdf, 0x3d, 0x34, 0xca, 0x9e, 0xb3, 0x8c, 0x64, 0xe5, 0xe9, 0x90, 0xac, 0x5e, 0x84, 0x64,
-	0xed, 0xc9, 0x90, 0xec, 0x00, 0x1e, 0x22, 0x67, 0x48, 0x3d, 0x1f, 0xa6, 0xd8, 0x41, 0xe4, 0x1c,
-	0x7b, 0x3e, 0x2c, 0x10, 0xd9, 0x58, 0x4d, 0x24, 0xbf, 0x8e, 0xc8, 0xe6, 0x7f, 0x4e, 0x24, 0xf8,
-	0x07, 0x88, 0x5c, 0xea, 0x52, 0xf9, 0xc3, 0x4f, 0xc1, 0xd8, 0x7f, 0x54, 0x07, 0x95, 0x23, 0xe2,
-	0x0a, 0xdf, 0x72, 0xe0, 0xf2, 0xf9, 0x57, 0xc5, 0xde, 0xaa, 0xf9, 0x97, 0xb9, 0x93, 0xf6, 0xb7,
-	0xd7, 0x66, 0x50, 0xbe, 0xfa, 0xe9, 0x8f, 0xbf, 0x7d, 0x55, 0xde, 0x53, 0xbb, 0xfa, 0x8a, 0xa7,
-	0x4f, 0x90, 0x24, 0xf6, 0xcc, 0xc4, 0xd1, 0x67, 0x1c, 0xe0, 0xb3, 0xd7, 0xc4, 0xee, 0x9a, 0x29,
-	0x53, 0x91, 0x74, 0x6b, 0x0b, 0x51, 0x66, 0xe8, 0x26, 0x33, 0xb4, 0xab, 0x5e, 0x5f, 0x65, 0x88,
-	0xb0, 0x8c, 0x1e, 0x9d, 0x0a, 0xdf, 0x70, 0xe0, 0x52, 0xa1, 0x91, 0xdf, 0xd8, 0x38, 0x51, 0x2c,
-	0x94, 0xf4, 0x2d, 0x85, 0x99, 0xab, 0x1e, 0x73, 0x75, 0x43, 0x7d, 0x79, 0x83, 0xab, 0xf8, 0xa1,
-	0x28, 0xcc, 0x39, 0x20, 0x6f, 0xf8, 0xa7, 0xf3, 0xd6, 0xf6, 0x87, 0x75, 0x2e, 0x55, 0xea, 0x3f,
-	0x75, 0x6a, 0xb6, 0x9e, 0x77, 0xd8, 0x7a, 0xde, 0x54, 0xdf, 0xd8, 0xf6, 0xd8, 0x7b, 0xc5, 0x05,
-	0x46, 0x5b, 0x5f, 0x68, 0x64, 0xeb, 0xb6, 0x3e, 0x2f, 0x5c, 0xbb, 0xf5, 0x17, 0xdd, 0x8e, 0xcd,
-	0x5b, 0x1f, 0xb2, 0xac, 0xc4, 0xd9, 0xe0, 0xf0, 0xe1, 0x42, 0xe6, 0x1e, 0x2f, 0x64, 0xee, 0xd7,
-	0x85, 0xcc, 0x7d, 0x79, 0x2a, 0x97, 0x1e, 0x9f, 0xca, 0xa5, 0x9f, 0x4e, 0xe5, 0xd2, 0x47, 0x7b,
-	0xb9, 0xae, 0x40, 0x03, 0x42, 0xc7, 0xa6, 0x45, 0xb2, 0x9a, 0xd3, 0xb4, 0x2a, 0xeb, 0x0e, 0x56,
-	0x9d, 0xb5, 0xbf, 0xd7, 0xfe, 0x0c, 0x00, 0x00, 0xff, 0xff, 0x10, 0x65, 0xb0, 0x21, 0xd4, 0x0c,
+	// 1154 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x57, 0x3f, 0x6c, 0x23, 0xc5,
+	0x17, 0xf6, 0xda, 0xeb, 0xd8, 0x99, 0xe4, 0x7e, 0x89, 0xf6, 0xf2, 0x0b, 0x1b, 0xeb, 0x64, 0xe7,
+	0x36, 0x84, 0xcb, 0xe5, 0xf0, 0xee, 0x5d, 0xd0, 0x9d, 0x20, 0x05, 0x92, 0x93, 0x70, 0x22, 0x45,
+	0x1a, 0x5f, 0x68, 0x68, 0xac, 0xb5, 0x77, 0xbc, 0x59, 0x9d, 0x3d, 0x63, 0xed, 0x8c, 0x43, 0x82,
+	0xa8, 0x68, 0xa0, 0x44, 0xa2, 0xa0, 0x8d, 0x04, 0x15, 0xa2, 0xbc, 0x82, 0x9e, 0xe6, 0x44, 0x75,
+	0x12, 0x0d, 0x55, 0x40, 0x09, 0x05, 0x35, 0x3d, 0x12, 0x9a, 0x3f, 0xbb, 0xec, 0xc6, 0xbb, 0xeb,
+	0x0d, 0x9c, 0xa0, 0xa1, 0x5a, 0xbf, 0x9d, 0x6f, 0xe6, 0x7d, 0xf3, 0xbd, 0x6f, 0xde, 0x8e, 0x41,
+	0xc3, 0x43, 0x14, 0x22, 0x8a, 0x2d, 0xf1, 0xb4, 0x8e, 0x1f, 0x74, 0x21, 0xb5, 0x1f, 0x58, 0xf4,
+	0xc4, 0x1c, 0xf9, 0x98, 0x62, 0x6d, 0x59, 0x02, 0x4c, 0xf1, 0x34, 0x25, 0xa0, 0xb6, 0xe4, 0x62,
+	0x17, 0x73, 0x88, 0xc5, 0x7e, 0x09, 0x74, 0x6d, 0xc5, 0xc5, 0xd8, 0x1d, 0x40, 0x8b, 0x47, 0xdd,
+	0x71, 0xdf, 0xb2, 0xd1, 0xa9, 0x1c, 0xba, 0x25, 0x87, 0xec, 0x91, 0x67, 0xd9, 0x08, 0x61, 0x6a,
+	0x53, 0x0f, 0x23, 0x22, 0x47, 0xeb, 0x3d, 0x4c, 0x86, 0x98, 0x58, 0x5d, 0x9b, 0xc0, 0x90, 0x44,
+	0x0f, 0x7b, 0x28, 0x58, 0x58, 0x8c, 0x77, 0x44, 0x46, 0x11, 0xc8, 0xa1, 0xb5, 0x94, 0x2d, 0xd8,
+	0x3d, 0x96, 0x40, 0x82, 0x36, 0x53, 0x40, 0x47, 0x98, 0x50, 0xe8, 0xd8, 0xbd, 0x1e, 0x1e, 0x23,
+	0x2a, 0xb0, 0x06, 0x01, 0xda, 0x01, 0x71, 0xdb, 0xd0, 0xf5, 0x08, 0x85, 0x7e, 0x4b, 0x8c, 0x69,
+	0x4b, 0xa0, 0x8c, 0x3f, 0x40, 0xd0, 0xd7, 0x95, 0x55, 0x65, 0x63, 0xb6, 0x2d, 0x02, 0x6d, 0x0d,
+	0xdc, 0xe8, 0x61, 0x84, 0x20, 0xcf, 0xd5, 0xf1, 0x1c, 0xbd, 0xc8, 0x47, 0xe7, 0xff, 0x7c, 0xb9,
+	0xef, 0x68, 0x3a, 0xa8, 0x1c, 0x43, 0x9f, 0x78, 0x18, 0xe9, 0x25, 0x3e, 0x1c, 0x84, 0xdb, 0xd5,
+	0x4f, 0xcf, 0x1a, 0x85, 0x5f, 0xcf, 0x1a, 0x05, 0xe3, 0x16, 0xa8, 0x4d, 0x26, 0x6d, 0x43, 0x32,
+	0xc2, 0x88, 0x40, 0xe3, 0x43, 0x30, 0x77, 0x40, 0xdc, 0x27, 0xe3, 0xee, 0xd0, 0xa3, 0x87, 0x27,
+	0x7f, 0x87, 0xcb, 0x6b, 0xa0, 0x34, 0x24, 0x2e, 0xe7, 0x31, 0xb7, 0xb5, 0x64, 0x8a, 0xa2, 0x98,
+	0x41, 0xbd, 0xcc, 0x16, 0x3a, 0x6d, 0x33, 0x40, 0x84, 0xd9, 0xff, 0xc1, 0xcd, 0x48, 0xee, 0x90,
+	0xd2, 0x77, 0x2a, 0x58, 0x08, 0xdf, 0xb7, 0xf8, 0xf2, 0x29, 0xbc, 0x96, 0x40, 0x79, 0x60, 0x77,
+	0xe1, 0x40, 0x6e, 0x5e, 0x04, 0xda, 0x43, 0xa0, 0x0e, 0x89, 0x4b, 0x74, 0x75, 0xb5, 0x94, 0xc6,
+	0x64, 0x67, 0xee, 0xfb, 0x67, 0xcd, 0x0a, 0x71, 0x9e, 0x9a, 0x4c, 0x1a, 0x0e, 0xd7, 0x6a, 0xa0,
+	0xea, 0x8c, 0x7d, 0xee, 0x1d, 0xbd, 0xcc, 0xd7, 0x0b, 0x63, 0x6d, 0x05, 0x54, 0x09, 0xb5, 0x7d,
+	0xda, 0xb1, 0xa9, 0x3e, 0xb3, 0xaa, 0x6c, 0xa8, 0xed, 0x0a, 0x8f, 0x5b, 0x94, 0x4d, 0x63, 0x95,
+	0xf7, 0x8f, 0xed, 0x81, 0x5e, 0x11, 0xd3, 0x82, 0x58, 0xfb, 0x08, 0xcc, 0xf6, 0x21, 0xec, 0xf4,
+	0xc7, 0xc8, 0x21, 0x7a, 0x95, 0xd3, 0x59, 0x31, 0xa5, 0xc5, 0x98, 0x1f, 0x03, 0xcf, 0x9b, 0xbb,
+	0xd8, 0x43, 0x3b, 0x7b, 0xcf, 0xcf, 0x1b, 0x85, 0xdf, 0xce, 0x1b, 0x8b, 0xa7, 0xf6, 0x70, 0xb0,
+	0x6d, 0x84, 0x33, 0x8d, 0xaf, 0x7f, 0x6a, 0x6c, 0xb8, 0x1e, 0x3d, 0x1a, 0x77, 0xcd, 0x1e, 0x1e,
+	0x4a, 0x8f, 0xca, 0x47, 0x93, 0x38, 0x4f, 0x2d, 0x7a, 0x3a, 0x82, 0x84, 0x2f, 0x42, 0xda, 0xd5,
+	0x3e, 0x84, 0x8f, 0xd9, 0x34, 0xed, 0x90, 0x57, 0xad, 0xef, 0xb9, 0xc1, 0xae, 0x66, 0x79, 0x69,
+	0x4c, 0x33, 0xf9, 0xe0, 0x99, 0xef, 0x9c, 0xc0, 0xde, 0x98, 0x01, 0x77, 0xa3, 0xb3, 0xda, 0xf1,
+	0x45, 0x26, 0xbd, 0x00, 0x12, 0xbc, 0xf0, 0x3a, 0xd0, 0x98, 0xff, 0x3b, 0x71, 0xe4, 0x1c, 0x47,
+	0x2e, 0xb2, 0x91, 0xdd, 0x28, 0x7a, 0x1f, 0xdc, 0x10, 0xa7, 0xa5, 0x23, 0x52, 0xe9, 0xf3, 0x9c,
+	0xe8, 0xab, 0x69, 0x44, 0xdf, 0xe5, 0x60, 0xc1, 0xb2, 0x3d, 0x7f, 0x14, 0x89, 0x22, 0xe6, 0x5a,
+	0x01, 0xaf, 0x5c, 0x31, 0x51, 0x68, 0xb0, 0xaf, 0x54, 0x70, 0x7b, 0xf2, 0x48, 0xb4, 0x90, 0x93,
+	0xc3, 0x72, 0xb9, 0x8e, 0xc2, 0x7f, 0xbe, 0xfc, 0xe7, 0x7d, 0x19, 0x69, 0x85, 0x20, 0xd6, 0x0a,
+	0xaf, 0x67, 0xc6, 0x88, 0x83, 0xee, 0x81, 0xbb, 0x53, 0x5d, 0x12, 0x7a, 0xea, 0x1b, 0xd1, 0xb4,
+	0xde, 0x1b, 0x39, 0x36, 0x85, 0x99, 0x0e, 0x5a, 0x06, 0x45, 0x69, 0x1b, 0x75, 0x67, 0xe6, 0xe2,
+	0xbc, 0x51, 0xdc, 0xdf, 0x6b, 0x17, 0x3d, 0x67, 0xd2, 0x59, 0xa5, 0x2c, 0x67, 0xa9, 0x49, 0xce,
+	0x2a, 0x5f, 0xcf, 0x59, 0x2b, 0xa0, 0x0a, 0x91, 0xd3, 0xa1, 0xde, 0x10, 0x06, 0xee, 0x81, 0xc8,
+	0x39, 0xf4, 0x86, 0x30, 0x66, 0xac, 0x4a, 0xba, 0xb1, 0xaa, 0x59, 0xc6, 0x9a, 0xfd, 0xd7, 0x8d,
+	0x05, 0x5e, 0x86, 0xb1, 0x26, 0xba, 0xd3, 0xdc, 0x4b, 0xeb, 0x4e, 0x51, 0xb7, 0x84, 0x4e, 0x3a,
+	0x2b, 0x82, 0xe5, 0x03, 0xe2, 0xee, 0xfa, 0xd0, 0xa6, 0x50, 0x2c, 0x16, 0xdc, 0x14, 0x74, 0x50,
+	0xe9, 0xb1, 0xd7, 0x38, 0xb0, 0x54, 0x10, 0xe6, 0x6b, 0x4b, 0xc9, 0x07, 0xa1, 0x94, 0xd2, 0x95,
+	0x23, 0x07, 0x4a, 0x8d, 0x1f, 0xa8, 0x53, 0xa0, 0xb1, 0x5a, 0xb1, 0x4b, 0x14, 0xe9, 0x90, 0xf1,
+	0x08, 0xfb, 0x14, 0x3a, 0xd2, 0x7c, 0x19, 0xe5, 0xbe, 0xcf, 0xca, 0x7d, 0xad, 0xd2, 0x2e, 0xf6,
+	0x21, 0xe4, 0xbf, 0x9e, 0xc8, 0x24, 0xdb, 0x2a, 0x53, 0xd0, 0xd8, 0x06, 0xf5, 0x64, 0x85, 0x02,
+	0x11, 0x19, 0x79, 0xdb, 0x71, 0x7c, 0x48, 0x48, 0xa0, 0x94, 0x0c, 0x8d, 0xdf, 0x15, 0x2e, 0xaf,
+	0x90, 0x3e, 0x2e, 0xef, 0x12, 0x28, 0xdb, 0xce, 0xd0, 0x43, 0xc1, 0x79, 0xe5, 0x81, 0xb6, 0x0e,
+	0xfe, 0x27, 0xeb, 0x1f, 0xac, 0x28, 0xb4, 0x95, 0xae, 0x68, 0x89, 0x97, 0xf9, 0x8e, 0x6f, 0x72,
+	0x05, 0xd4, 0x94, 0x0a, 0x1c, 0x80, 0x05, 0x8e, 0x16, 0x62, 0x73, 0xef, 0x95, 0xb9, 0xf7, 0xd6,
+	0xb3, 0xbc, 0xf7, 0x98, 0x69, 0xc6, 0xcd, 0xc7, 0x19, 0x86, 0xa1, 0xd4, 0x6e, 0x95, 0x6b, 0x97,
+	0xb0, 0xfd, 0x40, 0xbb, 0xad, 0x6f, 0x67, 0x41, 0xe9, 0x80, 0xb8, 0xda, 0x97, 0x0a, 0x58, 0xb8,
+	0x7a, 0x57, 0xdd, 0x4c, 0xcb, 0x3c, 0xd9, 0x29, 0x6b, 0x5b, 0xf9, 0xb1, 0xa1, 0xf9, 0xef, 0x7f,
+	0xfc, 0xc3, 0x2f, 0x9f, 0x17, 0x37, 0x8d, 0x0d, 0x2b, 0xe5, 0x5a, 0xed, 0xcb, 0x89, 0x4d, 0x79,
+	0xb3, 0xd6, 0x3e, 0x51, 0x40, 0x35, 0xbc, 0xbe, 0xae, 0x65, 0xa4, 0x0c, 0x40, 0xb5, 0x7b, 0x39,
+	0x40, 0x21, 0xa1, 0xbb, 0x9c, 0xd0, 0x9a, 0x71, 0x3b, 0x8d, 0x10, 0xe1, 0x33, 0x9a, 0xf4, 0x44,
+	0xfb, 0x42, 0x01, 0xf3, 0xb1, 0x1b, 0xc4, 0x9d, 0xa9, 0x89, 0x04, 0xb0, 0x66, 0xe5, 0x04, 0x86,
+	0xac, 0x9a, 0x9c, 0xd5, 0x1d, 0x63, 0x7d, 0x0a, 0x2b, 0xf1, 0x4f, 0x45, 0x3b, 0x57, 0x40, 0x7d,
+	0xca, 0x6d, 0xe7, 0xad, 0xfc, 0xc5, 0xba, 0x32, 0xb5, 0xd6, 0xfa, 0xcb, 0x53, 0xc3, 0xfd, 0xbc,
+	0xcd, 0xf7, 0xf3, 0xa6, 0xf1, 0x28, 0x6f, 0xd9, 0x9b, 0xf1, 0x0d, 0x32, 0xe9, 0x63, 0x9f, 0xde,
+	0x2c, 0xe9, 0xa3, 0xc0, 0x4c, 0xe9, 0x13, 0xdb, 0xf3, 0x54, 0xe9, 0xc7, 0x7c, 0x56, 0xc0, 0xec,
+	0x99, 0x02, 0x6e, 0x26, 0xb5, 0x72, 0x33, 0x23, 0x6f, 0x02, 0xbe, 0xf6, 0xe8, 0x7a, 0xf8, 0x90,
+	0xee, 0x43, 0x4e, 0xd7, 0x32, 0x9a, 0x69, 0x74, 0xf9, 0x17, 0x04, 0x36, 0x45, 0x33, 0x0b, 0x4f,
+	0x15, 0xa3, 0x9d, 0xd4, 0x22, 0xcd, 0xa9, 0x72, 0xe5, 0xa7, 0x9d, 0xd1, 0x83, 0xa6, 0xd3, 0x96,
+	0x2a, 0xc7, 0x69, 0xef, 0xec, 0x3d, 0xbf, 0xa8, 0x2b, 0x2f, 0x2e, 0xea, 0xca, 0xcf, 0x17, 0x75,
+	0xe5, 0xb3, 0xcb, 0x7a, 0xe1, 0xc5, 0x65, 0xbd, 0xf0, 0xe3, 0x65, 0xbd, 0xf0, 0xfe, 0x66, 0xe4,
+	0xa3, 0x43, 0x7d, 0x42, 0x07, 0x76, 0x97, 0x84, 0x6b, 0x9f, 0x04, 0xab, 0xf3, 0x8f, 0x4f, 0x77,
+	0x86, 0x5f, 0x9c, 0xde, 0xf8, 0x23, 0x00, 0x00, 0xff, 0xff, 0x3a, 0x00, 0xfa, 0x68, 0xc3, 0x10,
 	0x00, 0x00,
 }
 
@@ -554,6 +738,8 @@ type MsgClient interface {
 	SubmitAction(ctx context.Context, in *MsgSubmitAction, opts ...grpc.CallOption) (*MsgSubmitActionResponse, error)
 	RegisterAccountAndSubmitAction(ctx context.Context, in *MsgRegisterAccountAndSubmitAction, opts ...grpc.CallOption) (*MsgRegisterAccountAndSubmitActionResponse, error)
 	UpdateAction(ctx context.Context, in *MsgUpdateAction, opts ...grpc.CallOption) (*MsgUpdateActionResponse, error)
+	CreateHostedAccount(ctx context.Context, in *MsgCreateHostedAccount, opts ...grpc.CallOption) (*MsgCreateHostedAccountResponse, error)
+	UpdateHostedAccount(ctx context.Context, in *MsgUpdateHostedAccount, opts ...grpc.CallOption) (*MsgUpdateHostedAccountResponse, error)
 }
 
 type msgClient struct {
@@ -609,6 +795,24 @@ func (c *msgClient) UpdateAction(ctx context.Context, in *MsgUpdateAction, opts 
 	return out, nil
 }
 
+func (c *msgClient) CreateHostedAccount(ctx context.Context, in *MsgCreateHostedAccount, opts ...grpc.CallOption) (*MsgCreateHostedAccountResponse, error) {
+	out := new(MsgCreateHostedAccountResponse)
+	err := c.cc.Invoke(ctx, "/intento.intent.v1beta1.Msg/CreateHostedAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateHostedAccount(ctx context.Context, in *MsgUpdateHostedAccount, opts ...grpc.CallOption) (*MsgUpdateHostedAccountResponse, error) {
+	out := new(MsgUpdateHostedAccountResponse)
+	err := c.cc.Invoke(ctx, "/intento.intent.v1beta1.Msg/UpdateHostedAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// Register defines a rpc handler for MsgRegisterAccount
@@ -617,6 +821,8 @@ type MsgServer interface {
 	SubmitAction(context.Context, *MsgSubmitAction) (*MsgSubmitActionResponse, error)
 	RegisterAccountAndSubmitAction(context.Context, *MsgRegisterAccountAndSubmitAction) (*MsgRegisterAccountAndSubmitActionResponse, error)
 	UpdateAction(context.Context, *MsgUpdateAction) (*MsgUpdateActionResponse, error)
+	CreateHostedAccount(context.Context, *MsgCreateHostedAccount) (*MsgCreateHostedAccountResponse, error)
+	UpdateHostedAccount(context.Context, *MsgUpdateHostedAccount) (*MsgUpdateHostedAccountResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -637,6 +843,12 @@ func (*UnimplementedMsgServer) RegisterAccountAndSubmitAction(ctx context.Contex
 }
 func (*UnimplementedMsgServer) UpdateAction(ctx context.Context, req *MsgUpdateAction) (*MsgUpdateActionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAction not implemented")
+}
+func (*UnimplementedMsgServer) CreateHostedAccount(ctx context.Context, req *MsgCreateHostedAccount) (*MsgCreateHostedAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateHostedAccount not implemented")
+}
+func (*UnimplementedMsgServer) UpdateHostedAccount(ctx context.Context, req *MsgUpdateHostedAccount) (*MsgUpdateHostedAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateHostedAccount not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -733,6 +945,42 @@ func _Msg_UpdateAction_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateHostedAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateHostedAccount)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateHostedAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/intento.intent.v1beta1.Msg/CreateHostedAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateHostedAccount(ctx, req.(*MsgCreateHostedAccount))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateHostedAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateHostedAccount)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateHostedAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/intento.intent.v1beta1.Msg/UpdateHostedAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateHostedAccount(ctx, req.(*MsgUpdateHostedAccount))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "intento.intent.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -756,6 +1004,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateAction",
 			Handler:    _Msg_UpdateAction_Handler,
+		},
+		{
+			MethodName: "CreateHostedAccount",
+			Handler:    _Msg_CreateHostedAccount_Handler,
+		},
+		{
+			MethodName: "UpdateHostedAccount",
+			Handler:    _Msg_UpdateHostedAccount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -921,6 +1177,18 @@ func (m *MsgSubmitAction) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.HostedConfig != nil {
+		{
+			size, err := m.HostedConfig.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x62
+	}
 	if len(m.HostConnectionId) > 0 {
 		i -= len(m.HostConnectionId)
 		copy(dAtA[i:], m.HostConnectionId)
@@ -1194,6 +1462,18 @@ func (m *MsgUpdateAction) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.HostedConfig != nil {
+		{
+			size, err := m.HostedConfig.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x5a
+	}
 	if m.Configuration != nil {
 		{
 			size, err := m.Configuration.MarshalToSizedBuffer(dAtA[:i])
@@ -1296,6 +1576,187 @@ func (m *MsgUpdateActionResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgUpdateActionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateHostedAccount) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateHostedAccount) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateHostedAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.FeeCoinsSuported) > 0 {
+		for iNdEx := len(m.FeeCoinsSuported) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.FeeCoinsSuported[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.Version) > 0 {
+		i -= len(m.Version)
+		copy(dAtA[i:], m.Version)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Version)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.HostConnectionId) > 0 {
+		i -= len(m.HostConnectionId)
+		copy(dAtA[i:], m.HostConnectionId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.HostConnectionId)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ConnectionId) > 0 {
+		i -= len(m.ConnectionId)
+		copy(dAtA[i:], m.ConnectionId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ConnectionId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateHostedAccountResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateHostedAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateHostedAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateHostedAccount) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateHostedAccount) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateHostedAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.HostFeeConfig != nil {
+		{
+			size, err := m.HostFeeConfig.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.HostConnectionId) > 0 {
+		i -= len(m.HostConnectionId)
+		copy(dAtA[i:], m.HostConnectionId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.HostConnectionId)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ConnectionId) > 0 {
+		i -= len(m.ConnectionId)
+		copy(dAtA[i:], m.ConnectionId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ConnectionId)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.HostedAddress) > 0 {
+		i -= len(m.HostedAddress)
+		copy(dAtA[i:], m.HostedAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.HostedAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateHostedAccountResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateHostedAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateHostedAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1423,6 +1884,10 @@ func (m *MsgSubmitAction) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
+	if m.HostedConfig != nil {
+		l = m.HostedConfig.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
 	return n
 }
 
@@ -1547,10 +2012,96 @@ func (m *MsgUpdateAction) Size() (n int) {
 		l = m.Configuration.Size()
 		n += 1 + l + sovTx(uint64(l))
 	}
+	if m.HostedConfig != nil {
+		l = m.HostedConfig.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
 	return n
 }
 
 func (m *MsgUpdateActionResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgCreateHostedAccount) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ConnectionId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.HostConnectionId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Version)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.FeeCoinsSuported) > 0 {
+		for _, e := range m.FeeCoinsSuported {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgCreateHostedAccountResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateHostedAccount) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.HostedAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ConnectionId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.HostConnectionId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.HostFeeConfig != nil {
+		l = m.HostFeeConfig.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateHostedAccountResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2304,6 +2855,42 @@ func (m *MsgSubmitAction) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.HostConnectionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HostedConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.HostedConfig == nil {
+				m.HostedConfig = &HostedConfig{}
+			}
+			if err := m.HostedConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3141,6 +3728,42 @@ func (m *MsgUpdateAction) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HostedConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.HostedConfig == nil {
+				m.HostedConfig = &HostedConfig{}
+			}
+			if err := m.HostedConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -3189,6 +3812,564 @@ func (m *MsgUpdateActionResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateActionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateHostedAccount) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateHostedAccount: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateHostedAccount: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConnectionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HostConnectionId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HostConnectionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Version", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Version = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeCoinsSuported", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FeeCoinsSuported = append(m.FeeCoinsSuported, types1.Coin{})
+			if err := m.FeeCoinsSuported[len(m.FeeCoinsSuported)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateHostedAccountResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateHostedAccountResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateHostedAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateHostedAccount) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateHostedAccount: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateHostedAccount: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HostedAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HostedAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConnectionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HostConnectionId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HostConnectionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HostFeeConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.HostFeeConfig == nil {
+				m.HostFeeConfig = &HostFeeConfig{}
+			}
+			if err := m.HostFeeConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateHostedAccountResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateHostedAccountResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateHostedAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

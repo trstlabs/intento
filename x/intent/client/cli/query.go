@@ -20,7 +20,7 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(getInterchainAccountCmd(), getActionCmd(), getActionHistoryCmd(), getActionsForOwnerCmd(), getActionsCmd())
+	cmd.AddCommand(getInterchainAccountCmd(), getActionCmd(), getActionHistoryCmd(), getActionsForOwnerCmd(), getActionsCmd(), getHostedAccountsCmd(), getHostedAccountCmd())
 
 	return cmd
 }
@@ -175,4 +175,59 @@ func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 		panic(err.Error())
 	}
 	return flagSet
+}
+
+func getHostedAccountCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:  "hosted-account [hosted address]",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.HostedAccount(cmd.Context(), types.NewQueryHostedAccountRequest(args[0]))
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func getHostedAccountsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:  "list-hosted-accounts",
+		Args: cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			pageReq, err := client.ReadPageRequest(withPageKeyDecoded(cmd.Flags()))
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+			res, err := queryClient.HostedAccounts(cmd.Context(), types.NewQueryHostedAccountsRequest(pageReq))
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, "hosted-accounts")
+
+	return cmd
 }

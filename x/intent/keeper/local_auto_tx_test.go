@@ -48,7 +48,7 @@ func TestSendLocalTx(t *testing.T) {
 	actionInfo := createBaseActionInfo(addr1, actionAddr)
 	actionInfo.Msgs = anys
 
-	err, executedLocally, msgResponses := keepers.SendAction(ctx, &actionInfo)
+	executedLocally, msgResponses, err := keepers.TriggerAction(ctx, &actionInfo)
 	require.NoError(t, err)
 	require.NotNil(t, msgResponses)
 	require.True(t, executedLocally)
@@ -68,7 +68,7 @@ func TestSendLocalTxAutoCompound(t *testing.T) {
 	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 
-	err, executedLocally, _ := keeper.SendAction(ctx, &actionInfo)
+	executedLocally, _, err := keeper.TriggerAction(ctx, &actionInfo)
 	require.NoError(t, err)
 	require.True(t, executedLocally)
 
@@ -106,7 +106,7 @@ func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.A
 	keepers.distrKeeper.AllocateTokensToValidator(ctx, val, decCoins)
 	keepers.distrKeeper.SetValidatorCurrentRewards(ctx, val.GetOperator(), distrtypes.NewValidatorCurrentRewards(decCoins, 3))
 	keepers.distrKeeper.IncrementValidatorPeriod(ctx, val)
-	ctx = nextStakingBlocks(ctx, keepers.stakingKeeper, 1)
+	ctx = nextStakingBlock(ctx, keepers.stakingKeeper)
 
 	keepers.distrKeeper.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 3, distrtypes.ValidatorHistoricalRewards{
 		CumulativeRewardRatio: decCoins,
@@ -143,7 +143,7 @@ func createBaseActionInfo(ownerAddr sdk.AccAddress, actionAddr sdk.AccAddress) t
 
 // This will commit the current set, update the block height, and set historic info
 // Basically, it lets blocks pass
-func nextStakingBlocks(ctx sdk.Context, stakingKeeper stakingkeeper.Keeper, count int) sdk.Context {
+func nextStakingBlock(ctx sdk.Context, stakingKeeper stakingkeeper.Keeper) sdk.Context {
 	// for i := 0; i < count; i++ {
 	staking.EndBlocker(ctx, &stakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)

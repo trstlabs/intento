@@ -19,7 +19,7 @@ const (
 	// RecurringActionConstantFee fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultRecurringActionConstantFee int64 = 5_000 // 0.005trst
 	// Default max period for a Action that is self-executing
-	DefaultMaxActionDuration time.Duration = time.Hour * 24 * 366 * 2 // a little over 2 years
+	DefaultMaxActionDuration time.Duration = time.Hour * 24 * 366 * 10 // a little over 2 years
 	// MinActionDuration sets the minimum duration for a self-executing Action
 	DefaultMinActionDuration time.Duration = time.Second * 60
 	// MinActionInterval sets the minimum interval self-execution

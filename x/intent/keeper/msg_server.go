@@ -123,7 +123,7 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 	   		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "must depend on less than 10 actionIDs and have less than 10 messages")
 	   	} */
 
-	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, portID, msg.ConnectionId, msg.HostConnectionId)
+	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, *msg.HostedConfig, portID, msg.ConnectionId, msg.HostConnectionId)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *ty
 	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "must depend on less than 10 actionIDs and have less than 10 messages")
 	} */
-	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, portID, msg.ConnectionId, msg.HostConnectionId)
+	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, types.HostedConfig{}, portID, msg.ConnectionId, msg.HostConnectionId)
 	if err != nil {
 		return nil, err
 	}
@@ -297,9 +297,88 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 	action.UpdateHistory = append(action.UpdateHistory, ctx.BlockTime())
 
 	if !action.ActionAuthzSignerOk(k.cdc) {
-		return nil, errorsmod.Wrapf(types.ErrUpdateAction, "action signer: %s   is not message signer", action.Owner)
+		return nil, errorsmod.Wrapf(types.ErrUpdateAction, "action signer: %s is not message signer", action.Owner)
 	}
+
+	//set hosted config
+	if msg.HostedConfig != nil {
+		action.HostedConfig = msg.HostedConfig
+	}
+
 	k.SetActionInfo(ctx, &action)
 
 	return &types.MsgUpdateActionResponse{}, nil
+}
+
+// CreateHostedAccount implements the Msg/CreateHostedAccount interface
+func (k msgServer) CreateHostedAccount(goCtx context.Context, msg *types.MsgCreateHostedAccount) (*types.MsgCreateHostedAccountResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	hostedAddress, err := DeriveHostedAddress(msg.Creator, msg.ConnectionId)
+	if err != nil {
+		return nil, err
+	}
+	//register ICA
+	err = k.RegisterInterchainAccount(ctx, msg.ConnectionId, hostedAddress.String(), msg.Version)
+	if err != nil {
+		return nil, err
+	}
+	portID, err := icatypes.NewControllerPortID(hostedAddress.String())
+	if err != nil {
+		return nil, err
+	}
+	//store hosted config by address on hosted key prefix
+	k.SetHostedAccount(ctx, &types.HostedAccount{HostedAddress: hostedAddress.String(), HostFeeConfig: &types.HostFeeConfig{Admin: msg.Creator, FeeCoinsSuported: msg.FeeCoinsSuported}, ICAConfig: &types.ICAConfig{ConnectionID: msg.ConnectionId, HostConnectionID: msg.HostConnectionId, PortID: portID}})
+	return &types.MsgCreateHostedAccountResponse{Address: hostedAddress.String()}, nil
+}
+
+// UpdateHosted implements the Msg/UpdateHosted interface
+func (k msgServer) UpdateHostedAccount(goCtx context.Context, msg *types.MsgUpdateHostedAccount) (*types.MsgUpdateHostedAccountResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	//get hosted config by address on hosted key prefix
+	hostedAccount, err := k.TryGetHostedAccount(ctx, msg.HostedAddress)
+	if err != nil {
+		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
+	}
+	//check admin address
+	if hostedAccount.HostFeeConfig.Admin != msg.Admin {
+		return nil, types.ErrInvalidAddress
+	}
+
+	hostedAddress := hostedAccount.HostedAddress
+	connectionID := hostedAccount.ICAConfig.ConnectionID
+	hostConnectionID := hostedAccount.ICAConfig.HostConnectionID
+	if msg.ConnectionId != "" && msg.HostConnectionId != "" {
+		// hostedAddressAcc, err := DeriveHostedAddress(hostedAccount.HostedAddress, msg.ConnectionId)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// hostedAddress = hostedAddressAcc.String()
+		// portID, err := icatypes.NewControllerPortID(hostedAddress)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		connectionID = msg.ConnectionId
+		hostConnectionID = msg.HostConnectionId
+	}
+
+	admin := hostedAccount.HostFeeConfig.Admin
+	if msg.HostFeeConfig.Admin != "" {
+		_, err := sdk.AccAddressFromBech32(msg.HostFeeConfig.Admin)
+		if err != nil {
+			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
+		}
+		admin = msg.HostFeeConfig.Admin
+	}
+
+	feeCoinsSupported := hostedAccount.HostFeeConfig.FeeCoinsSuported
+	if msg.HostFeeConfig.FeeCoinsSuported != nil {
+		feeCoinsSupported = msg.HostFeeConfig.FeeCoinsSuported
+	}
+
+	k.SetHostedAccount(ctx, &types.HostedAccount{HostedAddress: hostedAddress, HostFeeConfig: &types.HostFeeConfig{Admin: admin, FeeCoinsSuported: feeCoinsSupported}, ICAConfig: &types.ICAConfig{ConnectionID: connectionID, HostConnectionID: hostConnectionID, PortID: hostedAccount.ICAConfig.PortID}})
+
+	//set hosted config by address on hosted key prefix
+	return &types.MsgUpdateHostedAccountResponse{}, nil
 }

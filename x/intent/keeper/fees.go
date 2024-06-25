@@ -12,7 +12,7 @@ import (
 )
 
 // DistributeCoins distributes Action fees and handles remaining action fee balance after last execution
-func (k Keeper) DistributeCoins(ctx sdk.Context, actionInfo types.ActionInfo, flexFee sdkmath.Int, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
+func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, flexFee sdkmath.Int, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
 	cacheCtx, writeCache := ctx.CacheContext()
 	p := k.GetParams(ctx)
 
@@ -24,11 +24,11 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, actionInfo types.ActionInfo, fl
 	// if flexFeeMulDec.TruncateInt().IsZero() {
 	// 	flexFeeMulDec = flexFeeMulDec.Ceil()
 	// }
-	feeAddr, err := sdk.AccAddressFromBech32(actionInfo.FeeAddress)
+	feeAddr, err := sdk.AccAddressFromBech32(action.FeeAddress)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	ownerAddr, err := sdk.AccAddressFromBech32(actionInfo.Owner)
+	ownerAddr, err := sdk.AccAddressFromBech32(action.Owner)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -36,9 +36,9 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, actionInfo types.ActionInfo, fl
 	actionAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
 
 	//depending if execution is recurring the constant fee may differ (gov param)
-	fixedFee := sdk.NewInt(p.ActionConstantFee * int64(len(actionInfo.Msgs)))
+	fixedFee := sdk.NewInt(p.ActionConstantFee * int64(len(action.Msgs)))
 	if isRecurring {
-		fixedFee = sdk.NewInt(p.RecurringActionConstantFee * int64(len(actionInfo.Msgs)))
+		fixedFee = sdk.NewInt(p.RecurringActionConstantFee * int64(len(action.Msgs)))
 	}
 
 	fixedFeeCommunityCoin := sdk.NewCoin(types.Denom, fixedFee)
@@ -66,7 +66,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, actionInfo types.ActionInfo, fl
 	//the trigger account should be funded with the fee amount
 	err = k.bankKeeper.SendCoinsFromAccountToModule(cacheCtx, feeAddr, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
 	if err != nil {
-		if actionInfo.Configuration.FallbackToOwnerBalance {
+		if action.Configuration.FallbackToOwnerBalance {
 			err := k.bankKeeper.SendCoinsFromAccountToModule(cacheCtx, ownerAddr, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
 			if err != nil {
 				return sdk.Coin{}, err
@@ -104,4 +104,32 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, actionInfo types.ActionInfo, fl
 	k.Logger(ctx).Debug("flex_fee", "amount", flexFeeCoin.Amount, "to", proposer.String())
 
 	return totalActionFees, nil
+}
+
+func (k Keeper) SendFeesToHosted(ctx sdk.Context, action types.ActionInfo, hostedAccount types.HostedAccount) error {
+	feeAddr, err := sdk.AccAddressFromBech32(action.FeeAddress)
+	if err != nil {
+		return err
+	}
+
+	hostedAddr, err := sdk.AccAddressFromBech32(hostedAccount.HostedAddress)
+	if err != nil {
+		return err
+	}
+	found, feeCoin := hostedAccount.HostFeeConfig.FeeCoinsSuported.Sort().Find(action.HostedConfig.FeeCoinLimit.Denom)
+	if !found {
+		return errorsmod.Wrap(types.ErrNotFound, "coin not in hosted config")
+	}
+
+	if feeCoin.Amount.GT(action.HostedConfig.FeeCoinLimit.Amount) {
+		return types.ErrHostedFeeLimit
+	}
+
+	err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAddr, sdk.Coins{feeCoin})
+	if err != nil {
+		return err
+	}
+	return nil
+
+	//nice to have: ics20 transfer to destination (needed: channelID)
 }

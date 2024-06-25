@@ -1,9 +1,0 @@
-{
-    "@type": "/cosmos.staking.v1beta1.MsgDelegate",
-    "amount": {
-        "amount": "69",
-        "denom": "utrst"
-    },
-    "delegator_address": "trust1f6at7lhm02rttcqjnqfuedvg87zwrhpqhxcgsqzn5j9emt2jf8tseld4td",
-    "validator_address": "trustvaloper1q6k0w4cejawpkzxgqhvs4m2v6uvdzm6jhmz5jy"
-}

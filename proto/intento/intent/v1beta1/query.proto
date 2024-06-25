@@ -6,6 +6,8 @@ import "gogoproto/gogo.proto";
 import "intento/intent/v1beta1/action.proto";
 import "intento/intent/v1beta1/params.proto";
 import "intento/intent/v1beta1/usage.proto";
+import "intento/intent/v1beta1/hostedaccount.proto";
+
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
@@ -41,6 +43,16 @@ service Query {
     option (google.api.http).get =
         "/intento/intent/v1beta1/actions-for-owner/{owner}";
   };
+  rpc HostedAccount(QueryHostedAccountRequest) returns (QueryHostedAccountResponse) {
+    option (google.api.http).get =
+        "/intento/intent/v1beta1/hosted-account/{address}";
+  };
+
+  rpc HostedAccounts(QueryHostedAccountsRequest) returns (QueryHostedAccountsResponse) {
+    option (google.api.http).get =
+        "/intento/intent/v1beta1/hosted-accounts";
+  };
+
   // Params returns the total set of Intent parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/intento/intent/v1beta1/params";
@@ -56,7 +68,7 @@ service Query {
 // Query/InterchainAccountAddress RPC
 message QueryInterchainAccountFromAddressRequest {
   string owner = 1;
-  string connection_id = 2 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
+  string connection_id = 2;
 }
 
 // QueryInterchainAccountFromAddressResponse the response type for the
@@ -127,6 +139,34 @@ message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
+
+
+// QueryHostedAccount is the request type for the Query/Params RPC method.
+message QueryHostedAccountRequest {
+  string address = 1;
+}
+
+// QueryHostedAccountResponse is the response type for the Query/HostedAccount RPC method.
+message QueryHostedAccountResponse {
+  // HostedAccount
+  HostedAccount hosted_account = 1 [ (gogoproto.nullable) = false ];
+}
+
+
+// QueryHostedAccount is the request type for the Query/HostedAccount RPC method.
+message QueryHostedAccountsRequest {
+    // Pagination defines an optional pagination for the request.
+    cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryHostedAccountResponse is the response type for the Query/HostedAccount RPC method.
+message QueryHostedAccountsResponse {
+  // HostedAccounts
+  repeated HostedAccount hosted_accounts = 1 [ (gogoproto.nullable) = false ];
+  // Pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
 
 // QueryAutoIbcUsageRequest is the request type for the
 // Query/QueryAutoIbcUsageRequest RPC

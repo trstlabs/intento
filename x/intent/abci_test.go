@@ -17,7 +17,7 @@ import (
 func TestBeginBlocker(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
 	configuration := types.ExecutionConfiguration{SaveMsgResponses: true}
-	action, sendToAddr := createTestSendAction(ctx, configuration, keepers)
+	action, sendToAddr := createTestTriggerAction(ctx, configuration, keepers)
 	err := action.ValidateBasic()
 	require.NoError(t, err)
 	k := keepers.IntentKeeper
@@ -51,7 +51,7 @@ func TestBeginBlocker(t *testing.T) {
 func TestBeginBlockerStopOnSuccess(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
 	configuration := types.ExecutionConfiguration{StopOnSuccess: true}
-	action, _ := createTestSendAction(ctx, configuration, keepers)
+	action, _ := createTestTriggerAction(ctx, configuration, keepers)
 	err := action.ValidateBasic()
 	require.NoError(t, err)
 	k := keepers.IntentKeeper
@@ -111,7 +111,7 @@ func TestBeginBlockerStopOnFailure(t *testing.T) {
 func TestErrorDistributionIsSaved(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
 	configuration := types.ExecutionConfiguration{StopOnFailure: true}
-	action, emptyBalanceAcc := createTestSendAction(ctx, configuration, keepers)
+	action, emptyBalanceAcc := createTestTriggerAction(ctx, configuration, keepers)
 
 	err := action.ValidateBasic()
 	require.NoError(t, err)
@@ -161,7 +161,7 @@ func fakeActionExec(k keeper.Keeper, ctx sdk.Context, action types.ActionInfo) {
 		errorString := fmt.Sprintf(types.ErrActionFeeDistribution, err.Error())
 		k.AddActionHistory(ctx, &action, timeOfBlock, fee, false, nil, errorString)
 	} else {
-		err, executedLocally, msgResponses := k.SendAction(ctx, &action)
+		executedLocally, msgResponses, err := k.TriggerAction(ctx, &action)
 		if err != nil {
 			k.AddActionHistory(ctx, &action, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrActionMsgHandling, err.Error()))
 		} else {
@@ -212,7 +212,7 @@ func TestOwnerMustBeSignerForLocalAction(t *testing.T) {
 	fee, err := k.DistributeCoins(ctx, action, flexFee, true, ctx.BlockHeader().ProposerAddress)
 
 	require.NoError(t, err)
-	err, executedLocally, _ := k.SendAction(ctx, &action)
+	executedLocally, _, err := k.TriggerAction(ctx, &action)
 	require.Contains(t, err.Error(), "owner doesn't have permission to send this message: unauthorized")
 	require.False(t, executedLocally)
 
@@ -235,7 +235,7 @@ func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers, codec.Cod
 	return ctx, keepers, cdc
 }
 
-func createTestSendAction(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.ActionInfo, sdk.AccAddress) {
+func createTestTriggerAction(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.ActionInfo, sdk.AccAddress) {
 	actionOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	fundedFeeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	emptyBalanceAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
@@ -310,14 +310,14 @@ func createNextExecutionContext(ctx sdk.Context, nextExecTime time.Time) sdk.Con
 
 type KeeperMock struct {
 	AllowedToExecuteFunc      func(ctx sdk.Context, action types.ActionInfo) bool
-	SendActionFunc            func(ctx sdk.Context, action types.ActionInfo) error
+	TriggerActionFunc         func(ctx sdk.Context, action types.ActionInfo) error
 	DistributeCoinsFunc       func(ctx sdk.Context, action types.ActionInfo, flexFee uint64, isRecurring bool, isLastExec bool, proposer sdk.AccAddress) (uint64, error)
 	RemoveFromActionQueueFunc func(ctx sdk.Context, actions ...types.ActionInfo)
 	AddToActionQueueFunc      func(ctx sdk.Context, action types.ActionInfo)
 	SetActionInfoFunc         func(ctx sdk.Context, id string, action *types.ActionInfo)
 }
 
-func createTestSendActions(ctx sdk.Context, count int, keepers keeper.TestKeepers) []types.ActionInfo {
+func createTestTriggerActions(ctx sdk.Context, count int, keepers keeper.TestKeepers) []types.ActionInfo {
 	actions := make([]types.ActionInfo, count)
 	startTime := ctx.BlockHeader().Time
 	execTime := ctx.BlockHeader().Time.Add(time.Hour)

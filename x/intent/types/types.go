@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,18 +31,30 @@ func (actionInfo ActionInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sd
 // grantee should always be action owner
 func (actionInfo ActionInfo) ActionAuthzSignerOk(unpacker types.AnyUnpacker) bool {
 	for _, message := range actionInfo.Msgs {
-		if (message.TypeUrl) == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+		var sdkMsg sdk.Msg
+		err := unpacker.UnpackAny(message, &sdkMsg)
+		if err != nil {
+			return false
+		}
+
+		// fmt.Printf("signer: %v owner %v \n", sdkMsg.GetSigners()[0].String(), actionInfo.Owner)
+		if sdkMsg.GetSigners()[0].String() != actionInfo.Owner && ((message.TypeUrl) == sdk.MsgTypeURL(&authztypes.MsgExec{})) {
 			var authzMsg authztypes.MsgExec
 			if err := proto.Unmarshal(message.Value, &authzMsg); err != nil {
 				return false
 			}
-			var sdkMsg sdk.Msg
-			err := unpacker.UnpackAny(message, &sdkMsg)
-			if err != nil {
-				return false
-			}
-			if sdkMsg.GetSigners()[0].String() != actionInfo.Owner {
-				return false
+			for _, message := range authzMsg.Msgs {
+				var sdkMsgAuthZ sdk.Msg
+				err := unpacker.UnpackAny(message, &sdkMsgAuthZ)
+				if err != nil {
+					return false
+				}
+				//fmt.Printf("signer3: %v \n", sdkMsgAuthZ.GetSigners()[0].String())
+				if sdkMsgAuthZ.GetSigners()[0].String() != "" && sdkMsgAuthZ.GetSigners()[0].String() != actionInfo.Owner {
+					fmt.Printf("false: %v %v \n", sdkMsgAuthZ.GetSigners()[0].String(), actionInfo.Owner)
+					// fmt.Printf("sdkMsg: %v \n", sdkMsgAuthZ)
+					return false
+				}
 			}
 		}
 	}

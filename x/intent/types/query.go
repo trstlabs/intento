@@ -39,19 +39,45 @@ func NewQueryActionsRequest(pagination *query.PageRequest) *QueryActionsRequest 
 	}
 }
 
-// NewQueryActionsForOwnerRequest creates and returns a new QueryActionsForOwnerFromAddressRequest
-func NewQueryActionRequest(id string) *QueryActionRequest {
-	return &QueryActionRequest{Id: id}
-}
-
-// NewQueryActionsForOwnerRequest creates and returns a new QueryActionsForOwnerFromAddressRequest
-func NewQueryActionHistoryRequest(id string) *QueryActionHistoryRequest {
-	return &QueryActionHistoryRequest{Id: id}
-}
-
 // NewQueryActionsForOwnerResponse creates and returns a new QueryActionsForOwnerFromAddressResponse
 func NewQueryActionsResponse(actionInfos []ActionInfo) *QueryActionsResponse {
 	return &QueryActionsResponse{
 		ActionInfos: actionInfos,
+	}
+}
+
+// NewQueryActionRequest creates and returns a new QueryActionRequest
+func NewQueryActionRequest(id string) *QueryActionRequest {
+	return &QueryActionRequest{Id: id}
+}
+
+// NewQueryActionHistoryRequest creates and returns a new QueryActionHistoryRequest
+func NewQueryActionHistoryRequest(id string) *QueryActionHistoryRequest {
+	return &QueryActionHistoryRequest{Id: id}
+}
+
+// NewQueryHostedAccountRequest creates and returns a new QueryHostedAccountsRequest
+func NewQueryHostedAccountRequest(address string) *QueryHostedAccountRequest {
+	return &QueryHostedAccountRequest{Address: address}
+}
+
+// NewQueryHostedAccountResponse creates and returns a new QueryHostedAccountsResponse
+func NewQueryHostedAccountResponse(hostedAccount HostedAccount) *QueryHostedAccountResponse {
+	return &QueryHostedAccountResponse{
+		HostedAccount: hostedAccount,
+	}
+}
+
+// NewQueryHostedAccountRequest creates and returns a new QueryHostedAccountsRequest
+func NewQueryHostedAccountsRequest(pagination *query.PageRequest) *QueryHostedAccountsRequest {
+	return &QueryHostedAccountsRequest{
+		Pagination: pagination,
+	}
+}
+
+// NewQueryHostedAccountResponse creates and returns a new QueryHostedAccountsResponse
+func NewQueryHostedAccountsResponse(hostedAccounts []HostedAccount) *QueryHostedAccountsResponse {
+	return &QueryHostedAccountsResponse{
+		HostedAccounts: hostedAccounts,
 	}
 }

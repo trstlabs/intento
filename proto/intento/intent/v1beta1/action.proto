@@ -33,6 +33,7 @@ message ActionInfo {
     repeated google.protobuf.Timestamp update_history = 10 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
     ICAConfig ica_config = 11 [(gogoproto.customname) = "ICAConfig"];
     ExecutionConfiguration configuration = 12;
+    HostedConfig hosted_config = 14 [(gogoproto.customname) = "HostedConfig"];
     //ExecutionConditions conditions = 14;
 }
 
@@ -40,6 +41,11 @@ message ICAConfig {
       string port_id = 1 [(gogoproto.customname) = "PortID"];
       string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
       string host_connection_id = 3 [(gogoproto.customname) = "HostConnectionID"];
+}
+
+message HostedConfig {
+      string hosted_address = 1;
+      cosmos.base.v1beta1.Coin fee_coin_limit = 3 [(gogoproto.nullable) = false];
 }
 
 // ExecutionConfiguration provides the execution-related configuration of the action

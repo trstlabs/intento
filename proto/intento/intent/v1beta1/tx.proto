@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "intento/intent/v1beta1/action.proto";
+import "intento/intent/v1beta1/hostedaccount.proto";
 
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 
@@ -30,6 +31,12 @@ service Msg {
   rpc UpdateAction(MsgUpdateAction) returns (MsgUpdateActionResponse) {
     option (google.api.http).post = "/intento/intent/v1beta1/update-action";
   };
+  rpc CreateHostedAccount(MsgCreateHostedAccount) returns (MsgCreateHostedAccountResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/create-hosted-account";
+  };
+  rpc UpdateHostedAccount(MsgUpdateHostedAccount) returns (MsgUpdateHostedAccountResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/update-hosted-account";
+  };
 }
 
 // MsgRegisterAccount registers an interchain account for the given owner over the specified connection pair
@@ -37,7 +44,7 @@ message MsgRegisterAccount {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner                      = 1;
-  string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string connection_id              = 2;
   string version                    = 3;
 }
 
@@ -49,7 +56,7 @@ message MsgSubmitTx {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner                      = 1;
-  string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string connection_id              = 2;
   google.protobuf.Any msg           = 3;
 }
 
@@ -75,11 +82,13 @@ message MsgSubmitAction {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"fee_funds\""
   ];
-   //optional configuration parameters
+  //optional configuration parameters
   ExecutionConfiguration configuration = 9;
-  //for ibc config
-  string connection_id              = 10 [(gogoproto.moretags) = "yaml:\"connection_id\""];
-  string host_connection_id              = 11 [(gogoproto.moretags) = "yaml:\"host_connection_id\""];
+  //optional for interchain account
+  string connection_id              = 10;
+  string host_connection_id              = 11;
+  //optional use of a hosted account
+  HostedConfig hosted_config = 12;
 }
 
 // MsgSubmitTxResponse defines the MsgSubmitTx response type
@@ -90,7 +99,7 @@ message MsgRegisterAccountAndSubmitAction {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner                      = 1;
-  string connection_id              = 2 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string connection_id              = 2;
   string label                      = 3;
   repeated google.protobuf.Any msgs           = 4  [(cosmos_proto.accepts_interface) = "sdk.Msg"];
   // duration defines the time that the code should run for
@@ -108,7 +117,7 @@ message MsgRegisterAccountAndSubmitAction {
   //optional array of dependent txs that should be executed before execution is allowed
   ExecutionConfiguration configuration = 9;
   string version                    = 10;
-  string host_connection_id              = 11 [(gogoproto.moretags) = "yaml:\"host_connection_id\""];
+  string host_connection_id              = 11;
 }
 
 // MsgRegisterAccountAndSubmitActionResponse defines the MsgSubmitTx response type
@@ -122,7 +131,7 @@ message MsgUpdateAction {
   option (gogoproto.goproto_getters) = false;
   string owner                      = 1;
   uint64 id = 2  [(gogoproto.customname) = "ID"];
-  string connection_id              = 3 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string connection_id              = 3;
   string label                      = 4;
   repeated google.protobuf.Any msgs           = 5 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
   // end_time when set defines the time that the code should run for
@@ -138,7 +147,36 @@ message MsgUpdateAction {
     (gogoproto.moretags) = "yaml:\"fee_funds\""
   ];
   ExecutionConfiguration configuration = 10;
+  HostedConfig hosted_config = 11;
 }
 
 // MsgUpdateTxResponse defines the MsgUpdateTx response type
 message MsgUpdateActionResponse {}
+
+
+message MsgCreateHostedAccount {
+  option (gogoproto.goproto_getters) = false;
+  string creator                      = 1;
+  string connection_id              = 2;
+  string host_connection_id              = 3;
+  string version                    = 4;
+  repeated cosmos.base.v1beta1.Coin fee_coins_suported = 5 [
+      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+      (gogoproto.nullable) = false
+    ];
+}
+
+message MsgCreateHostedAccountResponse {
+  string address                      = 1;
+}
+
+message MsgUpdateHostedAccount {
+  option (gogoproto.goproto_getters) = false;
+  string admin                      = 1;
+  string hosted_address                      = 2;
+  string connection_id              = 3;
+  string host_connection_id              = 4;
+  HostFeeConfig host_fee_config = 5;
+}
+
+message MsgUpdateHostedAccountResponse {}

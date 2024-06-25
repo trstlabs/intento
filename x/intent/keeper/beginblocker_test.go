@@ -43,7 +43,7 @@ func FakeBeginBlocker(ctx sdk.Context, k keeper.Keeper, fakeProposer sdk.ConsAdd
 			errorString := fmt.Sprintf(types.ErrActionFeeDistribution, err.Error())
 			k.AddActionHistory(ctx, &action, timeOfBlock, fee, false, nil, errorString)
 		} else {
-			err, executedLocally, msgResponses := k.SendAction(ctx, &action)
+			executedLocally, msgResponses, err := k.TriggerAction(ctx, &action)
 			if err != nil {
 				k.AddActionHistory(ctx, &action, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrActionMsgHandling, err.Error()))
 			} else {

@@ -28,7 +28,7 @@ func TestCreateAction(t *testing.T) {
 
 	// Create a mock connection ID, duration, interval, start time, and dependencies
 	connectionID := "test-connection-id"
-	version := "test-version"
+	hostConn := "test-connection-id-2"
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
@@ -36,7 +36,7 @@ func TestCreateAction(t *testing.T) {
 
 	// Call the CreateAction function
 	// Call the CreateAction function
-	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, portID, connectionID, version)
+	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, portID, connectionID, hostConn)
 	require.NoError(t, err)
 
 	// Verify that the auto transaction was created correctly
@@ -73,14 +73,14 @@ func TestCreateActionWithZeroFeeFundsWorks(t *testing.T) {
 
 	// Create a mock connection ID, duration, interval, start time, and dependencies
 	connectionID := "test-connection-id"
-	version := "test-version"
+	hostConn := "test-connection-id-2"
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
 	configuration := types.ExecutionConfiguration{SaveMsgResponses: false}
 
 	// Call the CreateAction function
-	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, portID, connectionID, version)
+	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, portID, connectionID, hostConn)
 	require.NoError(t, err)
 
 	// Verify that the auto transaction was created correctly
