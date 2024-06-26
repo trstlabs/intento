@@ -63,3 +63,4 @@ bash $SRC/start_chain.sh
 
 echo "Start relayers and the transfer channels..."
 bash $SRC/start_relayers.sh 
+#bash $SRC/start_hermes.sh 

@@ -54,7 +54,7 @@ build_local_and_docker() {
       image=dockernet/dockerfiles/Dockerfile.$module
    fi
 
-   DOCKER_BUILDKIT=1 docker build --tag intento:$module -f $image . 
+   DOCKER_BUILDKIT=1 docker build --tag intento:$module -f $image .
    docker_build_succeeded=${PIPESTATUS[0]}
 
    if [[ "$docker_build_succeeded" == "0" ]]; then
@@ -68,23 +68,19 @@ build_local_and_docker() {
 }
 
 # build docker images and local binaries
-while getopts tgjosehrn flag; do
+while getopts igdosehrn flag; do
    case "${flag}" in
-      t) build_local_and_docker into . ;;
+      i) build_local_and_docker into . ;;
       g) build_local_and_docker gaia deps/gaia ;;
-      j) build_local_and_docker juno deps/juno ;;
       o) build_local_and_docker osmo deps/osmosis ;;
-      s) build_local_and_docker stars deps/stargaze ;;
-      e) build_local_and_docker evmos deps/evmos ;;
       n) continue ;; # build_local_and_docker {new-host-zone} deps/{new-host-zone} ;;
       r) build_local_and_docker relayer deps/relayer ;;  
       h) echo "Building Hermes Docker... ";
          docker build --tag intento:hermes -f dockernet/dockerfiles/Dockerfile.hermes . ;
-
-         printf '%s' "Building Hermes Locally... ";
-         cd deps/hermes; 
-         cargo build --release --target-dir $BUILDDIR/hermes; 
-         cd ../..
-         echo "Done" ;;
+         # printf '%s' "Building Hermes Locally... ";
+         # cd deps/hermes; 
+         # cargo build --release --target-dir $BUILDDIR/hermes; 
+         # cd ../..
+         # echo "Done" ;;
    esac
 done

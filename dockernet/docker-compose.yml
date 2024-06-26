@@ -48,35 +48,6 @@ services:
     volumes:
       - ./state/gaia5:/home/gaia/.gaia
 
-  juno1:
-    image: intento:juno
-    volumes:
-      - ./state/juno1:/home/juno/.juno
-    ports:
-      - "26457:26657"
-      - "1297:1317"
-      - "9070:9090"
-
-  juno2:
-    image: intento:juno
-    volumes:
-      - ./state/juno2:/home/juno/.juno
-
-  juno3:
-    image: intento:juno
-    volumes:
-      - ./state/juno3:/home/juno/.juno
-
-  juno4:
-    image: intento:juno
-    volumes:
-      - ./state/juno4:/home/juno/.juno
-
-  juno5:
-    image: intento:juno
-    volumes:
-      - ./state/juno5:/home/juno/.juno
-
   osmo1:
     image: intento:osmo
     volumes:
@@ -105,35 +76,6 @@ services:
     image: intento:osmo
     volumes:
       - ./state/osmo5:/home/osmosis/.osmosisd
-
-  stars1:
-    image: intento:stars
-    volumes:
-      - ./state/stars1:/home/stars/.starsd
-    ports:
-      - "26257:26657"
-      - "1277:1317"
-      - "9050:9090"
-
-  stars2:
-    image: intento:stars
-    volumes:
-      - ./state/stars2:/home/stars/.starsd
-
-  stars3:
-    image: intento:stars
-    volumes:
-      - ./state/stars3:/home/stars/.starsd
-
-  stars4:
-    image: intento:stars
-    volumes:
-      - ./state/stars4:/home/stars/.starsd
-
-  stars5:
-    image: intento:stars
-    volumes:
-      - ./state/stars5:/home/stars/.starsd
 
   # For the host chain, we must override the command to prevent an old binary from
   # being run when testing upgrades
@@ -171,42 +113,12 @@ services:
     volumes:
       - ./state/host5:/home/into/.into
 
-  evmos1:
-    image: intento:evmos
-    volumes:
-      - ./state/evmos1:/home/evmos/.evmosd
-    ports:
-      - "26057:26657"
-      - "1257:1317"
-      - "9030:9090"
-
-  evmos2:
-    image: intento:evmos
-    volumes:
-      - ./state/evmos2:/home/evmos/.evmosd
-
-  evmos3:
-    image: intento:evmos
-    volumes:
-      - ./state/evmos3:/home/evmos/.evmosd
-
-  evmos4:
-    image: intento:evmos
-    volumes:
-      - ./state/evmos4:/home/evmos/.evmosd
-
-  evmos5:
-    image: intento:evmos
-    volumes:
-      - ./state/evmos5:/home/evmos/.evmosd
-
   # Fill in new host zone being tested here
 
   hermes:
     image: intento:hermes
     volumes:
-      - ~/.hermes:/home/hermes/.hermes
-      - ./state/hermes/config.toml:/home/hermes/.hermes/config.toml
+      - ./state/hermes:/home/hermes/.hermes
     restart: always
 
   relayer-gaia:
@@ -217,13 +129,6 @@ services:
     restart: always
     command: [ "bash", "start.sh", "into-gaia" ]
 
-  relayer-juno:
-    image: intento:relayer
-    volumes:
-      - ./state/relayer-juno:/home/relayer/.relayer
-    restart: always
-    command: [ "bash", "start.sh", "into-juno" ]
-
   relayer-osmo:
     image: intento:relayer
     volumes:
@@ -231,30 +136,9 @@ services:
     restart: always
     command: [ "bash", "start.sh", "into-osmo" ]
 
-  relayer-stars:
-    image: intento:relayer
-    volumes:
-      - ./state/relayer-stars:/home/relayer/.relayer
-    restart: always
-    command: [ "bash", "start.sh", "into-stars" ]
-
   relayer-host:
     image: intento:relayer
     volumes:
       - ./state/relayer-host:/home/relayer/.relayer
     restart: always
     command: [ "bash", "start.sh", "into-host" ]
-
-  relayer-evmos:
-    image: intento:relayer
-    volumes:
-      - ./state/relayer-evmos:/home/relayer/.relayer
-    restart: always
-    command: [ "bash", "start.sh", "into-evmos" ]
-
-  relayer-juno-osmo:
-    image: intento:relayer
-    volumes:
-      - ./state/relayer-juno-osmo:/home/relayer/.relayer
-    restart: always
-    command: [ "bash", "start.sh", "juno-osmo" ]

@@ -5,7 +5,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 source ${SCRIPT_DIR}/../config.sh
 
-for chain in ${HOST_CHAINS[@]}; do
+for chain in ${RLY_HOST_CHAINS[@]}; do
     relayer_exec=$(GET_VAR_VALUE RELAYER_${chain}_EXEC)
     chain_name=$(printf "$chain" | awk '{ print tolower($0) }')
     account_name=$(GET_VAR_VALUE RELAYER_${chain}_ACCT)
@@ -25,7 +25,6 @@ for chain in ${HOST_CHAINS[@]}; do
 
     chmod -R 777 $STATE/relayer-${chain_name}/config
     printf "INTO <> $chain - Creating client, connection, and transfer channel..." | tee -a $relayer_logs
-
     $relayer_exec rly tx link into-${chain_name} >>$relayer_logs 2>&1
     echo "Done"
 
