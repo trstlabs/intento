@@ -56,7 +56,7 @@ A number of action-related governance parameters can be adjusted. Parameters can
 const (
  DefaultActionFundsCommission int64 = 2 //2%
 
- DefaultMaxActionDuration time.Duration = time.Hour * 24 * 366 * 2 // a little over 2 years
+ DefaultMaxActionDuration time.Duration = time.Hour * 24 * 366 * 10 // a little over 10 years
 
  DefaultMinActionDuration time.Duration = time.Second * 60 //1minute
 

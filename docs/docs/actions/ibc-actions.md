@@ -9,14 +9,14 @@ Intento can perform actions on IBC-compatible chains that utilize the Interchain
 This is great for both automating actions, such as sending tokens or auto-compounding as well as for orchestrating workflows across chains.
 Developers can use this to automate their protocols and build solutions for end-users to automate their assets.
 
-Interchain Accounts are a key component of Intento's Intents. They allow for the creation and management of accounts across different IBC-connected chains. This means that Intento's Intents can execute actions on other chains based on custom logic, making them extremely versatile and useful for a wide range of applications.
+Interchain Accounts are a key component of Intento. They allow for the creation and management of accounts across different IBC-connected chains. This means that Intento's Intents can execute actions on other chains based on custom logic, making them extremely versatile and useful for a wide range of applications.
 
-To use Interchain actions with Interchain Accounts, the user must first register an interchain account. This involves creating a port ID and connection ID, which allows the user to connect their account to other chains over IBC.
+
 
 An action is an object containing messages that are triggered at a specified time, or recurringly with intervals, given conditions.
 Action entries are scheduled at the beginning of a new block.
 
-Actions can execute Cosmos SDK blockchain messages on Cosmos Chains such as:
+Interchain Accounts can execute Cosmos SDK blockchain messages such as:
 
 - `MsgSend` for token transfers
 - `MsgSwapExactAmountIn` for token swapping on Osmosis
@@ -24,7 +24,26 @@ Actions can execute Cosmos SDK blockchain messages on Cosmos Chains such as:
 - `MsgExecuteContract` to execute a CosmWasm contract
 - `MsgInstantiateContract` to instantiate a CosmWasm contract
 
-Intento executes messages on other chains using an IBC protocol called Interchain Accounts.
+
+#### Approaches for Executing Messages on Other Chains
+
+Intento can execute messages on other chains using several approaches:
+
+1. **ICS20 Transfers with a Memo**
+   - Easy to set up on available chains by using packet forwarding
+   - Memo field actions have limited support by chains
+
+2. **Hosted Interchain Accounts**
+   - Easy to set up and manage
+   - Host chain fees are managed by an admin
+   - You configure a fee limit
+   
+3. **Self-Hosted Interchain Accounts**
+   - Full control over the account
+   - You have to manage host chain fee balances yourself
+
+
+To use Self-Hosted Interchain Accounts, you first register an interchain account. This involves creating a port ID and connection ID, which allows you to connect their account to other chains over IBC. You additionaly have to send funds for fees on the host chain.
 
 Using the Authz module on the host chain - the chain you want to execute at - you can grant the trigger on Intento permission to execute a specific message.
 
@@ -32,40 +51,42 @@ Using the Authz module on the host chain - the chain you want to execute at - yo
 
 ## MsgSubmitAction
 
-Submitting a MsgSubmitAction takes the following input:
+Submitting an action with MsgSubmitAction can be done with the following input:
 
-| Field Name         | Data Type                           | Description                                                                                                   | optional |
-| ------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------- |
-| `Owner`            | `string`                            | The owner of the action                                                                                       |          |
-| `Msgs`             | `repeated google.protobuf.Any`      | A list of arbitrary messages to include in the transaction                                                    |          |
-| `Duration`         | `string`                            | The amount of time that the transaction code should run for                                                   |          |
-| `StartAt`          | `uint64`                            | A Unix timestamp representing the custom start time for execution (if set after block inclusion)              | ✔️       |
-| `Interval`         | `string`                            | The interval between automatic message calls                                                                  | ✔️       |
-| `FeeFunds`         | `repeated cosmos.base.v1beta1.Coin` | Optional funds to be used for transaction fees, limiting the amount of fees incurred                          | ✔️       |
-| `ConnectionID`     | `string`                            | The ID of the connection to use for the transaction (in YAML format)                                          | ✔️       |
-| `HostConnectionID` | `string`                            | The ID of the host chain connection to use for the transaction (in YAML format)                               | ✔️       |
-| `Configuration`    | `ExecutionConfiguration`            | Optional set of basic conditions and settings for the action                                                  | ✔️       |
-| `Label`            | `string`                            | A label for the action                                                                                        | ✔️       |
-| `Conditions`       | `repeated Condition`                | [V2] Powerful set of conditions for the action execution entry such as comparisons and event atribute parsing | ✔️       |
+| Field Name              | Data Type                           | Description                                                                                                        | optional |
+| ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------- |
+| `Owner`                 | `string`                            | The owner of the action                                                                                            |          |
+| `Msgs`                  | `repeated google.protobuf.Any`      | A list of arbitrary messages to include in the transaction                                                         |          |
+| `Duration`              | `string`                            | The amount of time that the transaction code should run for                                                        |          |
+| `Label`                 | `string`                            | A label for the action                                                                                             | ✔️       |
+| `StartAt`               | `uint64`                            | A Unix timestamp representing the custom start time for execution (if set after block inclusion)                   | ✔️       |
+| `Interval`              | `string`                            | The interval between automatic message calls                                                                       | ✔️       |
+| `FeeFunds`              | `repeated cosmos.base.v1beta1.Coin` | Optional funds to be used for transaction fees, limiting the amount of fees incurred                               | ✔️       |
+| `ConnectionID`          | `string`                            | The ID of the connection to use for a self-hosted ICA                                                              | ✔️       |
+| `HostConnectionID`      | `string`                            | The ID of the host chain connection to use for a self-hosted ICA                                                   | ✔️       |
+| `HostedAccount`         | `string`                            | Hosted ICA account that executes on a host chain on your behalf                                                    | ✔️       |
+| `HostedAccountFeeLimit` | `cosmos.base.v1beta1.Coin`          | A limit of the fees a hosted account can charge per action execution                                               | ✔️       |
+| `Configuration`         | `ExecutionConfiguration`            | Optional set of basic conditions and settings for the action                                                       | ✔️       |
+| `Conditions`            | `repeated Condition`                | [Roadmap] Powerful set of conditions for the action execution entry such as comparisons and event atribute parsing | ✔️       |
 
-#### Optionality of the fields
+#### Notes
 
 - When `Interval` is not provided, the end of the duration will be the time the action executes.
 - When `FeeFunds` are not provided, fees can be deducted from the Owner account by setting `FallbackToOwnerBalance` to true in `Configuration`.
-- When `ConnectionID` or `HostConnectionID` are not provided, it is assumed that `Msgs` are local messages to be executed on Intento.
+- When `ConnectionID`,`HostConnectionID` and `HostedAccount` are not provided, it is assumed that `Msgs` are local messages to be executed on Intento.
+- `HostedAccount` requires `HostedAccountFeeLimit`
 
-## Action Process
+## Exeution Process
 
-1. (Register an interchain account with `MsgRegisterAccount` or `MsgRegisterAccountAndSubmitAction` when acting on a chain for the first time)
-2. Submit an action using `MsgSubmitAction` - if fee funds are sent along with it, a new fee address is generated
-3. Chain checks if execution settings from `Conditions` are ok
-4. `Action` is inserted in a queue
-5. In each block,scheduled actions are retrieved given the current block time
-6. Fees are calculated and deducted. action data is updated with information on the exact fees and execution time.
-7. (IBC transaction is sent to the host chain)
-8. If action is recurring, a new entry is inserted into the queue
-9. Packet gets acknowledged by a relayer and the action entry is updated stating execution was succesfull
-10. Funds sent to an action account are returned to the action owner
+1. Submit an action using `MsgSubmitAction` - if fee funds are sent along with it, a new fee address is generated
+2. Chain checks if execution settings from `Conditions` are ok
+3. `Action` is inserted in a queue
+4. In each block, scheduled actions are retrieved given the current block time
+5. Fees are calculated and deducted. action data is updated with information on the exact fees and execution time.
+6. IBC transaction is sent and executed to the host chain
+7. If action is recurring, a new entry is inserted into the queue
+8. IBC Packet gets acknowledged by a relayer and the action entry is updated
+9. Remaining funds sent to an action account are returned to the action owner
 
 _Read more on how the module works in the [module](@site/docs/modules/index.md) section of our documetation._
 

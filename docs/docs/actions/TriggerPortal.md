@@ -4,7 +4,7 @@ title: Creating actions with TriggerPortal
 pagination_label: How to set actions using TriggerPortal
 ---
 
-TriggerPortal is a decentralized application (dApp) that provides a one-stop solution for actions. It allows users to automate various tasks such as sending tokens on a recurring basis to multiple recipients, scheduling messages on IBC-enabled chains, autocompounding INTO tokens, and managing on-chain time-based triggers.
+TriggerPortal is a decentralized application (dApp) that provides a one-stop solution for actions. It allows users to automate various actions such as sending tokens on a recurring basis to multiple recipients, scheduling messages on IBC-enabled chains, autocompounding INTO tokens, and managing on-chain time-based triggers.
 
 With TriggerPortal, users can easily set up automated token transfers to multiple recipients at regular intervals. This feature is particularly useful for businesses or individuals who need to send payments on a recurring basis.
 
@@ -21,11 +21,13 @@ Finally, TriggerPortal provides users with a simple interface for viewing and ma
 - Easily schedule payments
 - Autocompound tokens
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/z5hG0GsD_tg?si=oTdi9EgmlEQCqtsR" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## Automate Token Sending
 
 1. Getting started
 
-With TriggerPortal you can send any kind of transaction. You can send on a recurring basis to one or multiple recipients across IBC-enabled chains.
+You can send on a recurring basis to one or multiple recipients across IBC-enabled chains.
 
 You have all kinds of options to transfer tokens, depending on where your recipients want to receive tokens and where you want to store your balance.
 
@@ -40,18 +42,13 @@ For now we focus on 1 and 2, and you can learn about advanced actions [here](#ad
 Transfer tokens to TriggerPortal and send tokens locally on Intento.
 
 To make sure you have a sent tokens that are supported by TriggerPortal, import tokens over IBC in the Transfer tab of the menu.
-![tp1](@site/docs/images/triggerportal/send/tp1.png)
 
 Here you can deposit tokens over IBC on supported chains.
-![tp2](@site/docs/images/triggerportal/send/tp2.png)
 
-Next, we can head over to the send page. We select a token to send.
-![tp4](@site/docs/images/triggerportal/send/tp4.png)
+Next, head over to the send page. We select a token to send.
 
 We can select a chain to send the token to. These will then be transferred over IBC to any connected chain.
 Alternatively, you can send the tokens locally over Intento by leaving it blank.
-
-![tp6](@site/docs/images/triggerportal/send/tp6.png)
 
 You can send tokens right away by clicking the `send` button and you can specify a date or recurrence by clicking the `schedule recurrence` button.
 
@@ -59,7 +56,6 @@ You can send tokens right away by clicking the `send` button and you can specify
 
 When selecting `schedule recurrence`, a dialog will pop u. In the actions dialog you can specify the duration, interval and a start time. By clicking on a selected value, you unselect it. By unselecting start time, the first interval, in this case `1 day`, will be used as the first time the token send takes place.
 
-![tp7](@site/docs/images/triggerportal/send/tp7.png)
 
 Under `Execution Settings` you can specify whether to deduct from your account or create a fee account. If you use your account, be sure that it has suffient INTO balance to pay for fees at the moment of execution.
 
@@ -69,7 +65,6 @@ You can now click on `Automate` to submit the trigger. An alert will pop up whic
 
 ## Advanced Actions
 
-![automate](@site/docs/images/triggerportal/automate/automate.png)
 
 Advanced Actions is for power users that know what Cosmos SDK messages and AuthZ permissions are.
 
@@ -77,14 +72,12 @@ Cosmos SDK messages contain `values` and a `typeUrl`. Message `values` are what 
 
 **AuthZ permissions** are permissions you can grant to execute actions on your behalf. This can possibly be dangerous when given to a third party. When submitting triggers using AuthZ on Intento, you assume the Intento chain and it's validator set are secure.
 
-:::warning As you can make errors, using this can possibly be dangerous. Humans make errors, you risk losing your funds. Double check what you are doing before performing any action.
+:::info As you can make errors, using this can possibly be dangerous. Humans make errors, you risk losing your funds. Double check what you are doing before performing any action.
 :::
 Navigate to the Automation tab. Here, you can specify a chain to execute the transaction on.
 
 When you have an interchain account address registered, it will pop up. The interchain account should be funded on host chain. You can set this in the actions dialog.
 If this is your first actions on a given chain, you can register an interchain account by clicking `Register Interchain Account`.
-
-![automate](@site/docs/images/triggerportal/automate/register_ica.png)
 
 There are several message examples available. For a CosmWasm-supported chain such as `Juno` there are examples available to interact with smart contracts on a recurring basis.
 
@@ -121,11 +114,6 @@ There are several terms used in autocompounding staked tokens.
 
 Using the actions dialog you can specify the interval of the autocompound. Your strategy should take into account execution fees which are estimated under `Execution Settings`.
 
-## Future Implementations
+## Future Improvements
 
-Here's a list -in no particular order- of the features for future versions.
-Do you have an interesting feature? Mention it on our [Github](https://github.com/trstlabs/triggerportal-frontend) or [Twitter](https://twitter.com/intento) and it may get implemented.
-
-- Notification subscriptions
-- Share buttons to share trigger details
-- UX and UI enhancements
+Do you have an interesting feature in mind? Mention it on our [Github](https://github.com/trstlabs/triggerportal-frontend) or [X/Twitter](https://twitter.com/intento) and it may get added to the roadmap.

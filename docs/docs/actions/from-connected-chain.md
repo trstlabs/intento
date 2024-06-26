@@ -125,7 +125,7 @@ Our ICS20 middleware is developped to allow DAOs to perform time-based actions. 
 
 There are several caveats to using ICS20 to set up an action. When automating on a destination chain for the first time, not one but two transactions is required to activate the trigger. One transaction is to set the action and create an Interchain Account at Intento and another is to set permissions/send funds to the Interchain Account on the destination chain.
 
-To demonstrate how DAOs can integrate with Intento's Intents we explain the process using an example.
+To demonstrate how DAOs can integrate with Intento we explain the process using an example.
 
 `DAO` wants to pay `Service provider ABC` for their services that they provide on a monthly basis in `TOKEN1` and holds `TOKEN2` and `NTRN`.
 
@@ -134,7 +134,7 @@ _Service provider ABC invoice example_
 
 In this example a `DAO` on DAODAO triggers a swap of TOKEN2 for TOKEN1 on dex "DEX" on a recurring basis.
 Then it can automatically send these tokens to `Service provider ABC`.
-This is a neat use case for Intento's Intents as it requires movement from assets between chains and accounts. The tokens to send can remain in control of the DAO.
+This is a neat use case for Intento as it requires movement from assets between chains and accounts. The tokens to send can remain in control of the DAO.
 As action triggers are on-chain, the process can be done completely without trusted third parties.
 
 The DAO can appoint an owner that can manage the action or use a placeholder account on Intento to remain in full control.
@@ -290,7 +290,7 @@ Action fees on Intento are paid from the funds sent in the ICS20 message, so tha
 
 **Action on Intento**
 
-If you want to execute actions locally on Intento, set `action["connection_id"]` to `""`. The funds sent with the ICS20 transfer will be used to pay for action fees.
+If you want to execute actions locally on Intento, the funds sent with the ICS20 transfer will be used to pay for fees.
 
 **With execution over IBC**
 

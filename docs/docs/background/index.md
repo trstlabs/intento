@@ -4,11 +4,7 @@ sidebar_position: 1
 order: 1
 ---
 
-Intento is RollApp using Cosmos SDK modules developed and maintained by TRST Labs to enable permissionless automation of decentralized applications. Our `Intent` module, developped using the Cosmos SDK, has been under development since early 2023 and serves as a foundation for interchain intents. The module abstracts transaction complexities and offers chain-agnostic and interdependent orchestration of actions. By simplifying asset control and enabling permissionless automation of actions on connected IBC chains, this module moves value across protocols.
-
-# Dymension
-
-Dymension is a home for easily deployable and lightning fast app-chains, called RollApps. Dymension Hub is a specialized modular blockchain built to service RollApps.
+Intento is distributed and decentralized system built with the Cosmos SDK for submitting and executing intents. TRST Lab's `Intent` module, developped using the Cosmos SDK, has been under development since early 2023. The module abstracts transaction complexities and offers chain-agnostic and interdependent orchestration of actions. By simplifying asset control and enabling permissionless automation of actions on connected IBC chains, this module moves value across protocols.
 
 ## Cosmos
 

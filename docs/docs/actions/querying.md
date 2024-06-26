@@ -16,14 +16,14 @@ A list of RPC endpoints is to-be added. -->
 
 The available queries are as follows:
 
-| Query                        | Description                                                                             | Parameter                                | Returns                                   | HTTP Method | Endpoint                                        |
-| ---------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ----------- | ----------------------------------------------- |
-| InterchainAccountFromAddress | Returns the interchain account for a given owner address on a specified connection pair | QueryInterchainAccountFromAddressRequest | QueryInterchainAccountFromAddressResponse | GET         | /intento/intent/v1beta1/address-to-ica             |
+| Query                        | Description                                                                             | Parameter                                | Returns                                   | HTTP Method | Endpoint                                          |
+| ---------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ----------- | ------------------------------------------------- |
+| InterchainAccountFromAddress | Returns the interchain account for a given owner address on a specified connection pair | QueryInterchainAccountFromAddressRequest | QueryInterchainAccountFromAddressResponse | GET         | /intento/intent/v1beta1/address-to-ica            |
 | Action                       | Returns the auto-executing interchain account transaction for a specified ID            | QueryActionRequest                       | QueryActionResponse                       | GET         | /intento/intent/v1beta1/action/{id}               |
 | Actions                      | Returns all action infomration                                                          | QueryActionsRequest                      | QueryActionsResponse                      | GET         | /intento/intent/v1beta1/actions                   |
 | ActionsForOwner              | Returns all action infomration for a given owner                                        | QueryActionsForOwnerRequest              | QueryActionsForOwnerResponse              | GET         | /intento/intent/v1beta1/actions-for-owner/{owner} |
-| ActionHistoru                | Returns action execution history for a given action                                     | QueryActionHistoryRequest                | QueryActionHistoryResponse                | GET         | /intento/intent/v1beta1/actions-history           |
-| Params                       | Returns the total set of the Intent module parameters                                | QueryParamsRequest                       | QueryParamsResponse                       | GET         | /intento/intent/v1beta1/params                     |
+| ActionHistory                | Returns action execution history for a given action                                     | QueryActionHistoryRequest                | QueryActionHistoryResponse                | GET         | /intento/intent/v1beta1/actions-history           |
+| Params                       | Returns the total set of the Intent module parameters                                   | QueryParamsRequest                       | QueryParamsResponse                       | GET         | /intento/intent/v1beta1/params                    |
 
 These proto queries provide a convenient way to interact with the Intent module and access information about automatic interchain transactions.
 

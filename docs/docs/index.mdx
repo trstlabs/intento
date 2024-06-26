@@ -18,25 +18,26 @@ Cosmos Hub will be upgraded to [v14.1](https://github.com/cosmos/gaia/releases/t
 With Intento, any action can be set anywhere based on conditions, seamlessly bridging intentions with execution. Intento is a general purpose intent processing zone.
 
 
-## What is Intento?
+## Overview
 
-Intento is a protocol that revolutionizes on-chain automation through a custom Cosmos SDK module. It is designed to process and execute user intentions across IBC-connected chains, making on-chain processes more intuitive, accessible, and efficient. Intento covers a broad range of use cases, from simple scheduled payments to complex interchain operations.
+Intento is a system that enables new ways to execute actions on different chains. It is designed to process and execute user intentions across IBC-connected chains, making on-chain processes more intuitive, accessible, and efficient. Intento covers a broad range of use cases, from simple scheduled payments to complex interchain operations.
 
-## What is intent processing?
+## Intent processing
 
-Intents contain actions and predefined conditions, which determine how actions are processed. In crypto, we want to process actions with no counterparty risk and in a permissionless and decentralized manner. This has so far only been possible by directly sending transactions to the destination chain. With Intento, you will be able specify your intent to perform any action, anywhere at any moment given any conditions.
-
-## A modular chain
+Intents contain actions and predefined conditions, which determine how actions are processed. In crypto, we want to process actions with no counterparty risk and in a permissionless and decentralized manner. This has so far only been possible by directly sending transactions to the destination chain. With Intento, you specify your intent to perform any action, anywhere at any moment given any conditions.
+<!--
+## A modular approach
 #### a RollApp using Dymension and Celestia
 
 One of our goals with the integration of Dymension as a settlement layer is to leverage Dymension’s IBC connections and unique settlement capabilities to offer unparalleled scalability in processing actions. Through a Dymension integration we are also looking to leverage security benefits through Celestia’s Data Availability. 
 For Intento, IBC connectivity and access to a wide variety of chains is vital. We aim to leverage Dymension’s IBC-connections bridging infrastructure connected chains to process actions for as many destination chains as possible. Dymension Hub is the IBC gateway for RollApps, and we expect that Dymension will be an important IBC routing hub in the future. 
+-->
 
 ## Key Features
 
-- Full On-Chain Execution: Ensures a completely decentralized automation process.
+- Non-custiodial Execution
     
-- Permissionless: Open for everyone.
+- Permissionless access
     
 - TriggerPortal: An easy to use frontend UI to submit actions
     
@@ -44,11 +45,13 @@ For Intento, IBC connectivity and access to a wide variety of chains is vital. W
     
 - Scalable and VM Agnostic: Designed for compatibility of executing actions on various VMs (CosmWasm and EVM).
     
-- IBC-Native: Set coordinated actions across blockchains using Interchain Accounts and IBC-hooks
+- IBC-Native: Set coordinated actions across blockchains using Interchain Accounts, or a Non-custiodal Hosted Account that abstracts away funds
+
+- Submit actions from anywhere by sending tokens to Intento with an Action in the memo field.
     
-- Modular and Secure: Utilizes Cosmos SDK, Dymension for settlement and Celestia for security.
+- Modular and Secure: Built using the Cosmos SDK, secured by Celestia
     
-- Privileged Execution: Execute actions on your account by granting permissions to a fixed trigger address.
+- Privileged Execution: Intento can execute actions on behalf of your account by granting permissions to a non-custidial execution address
 
 ## How Intento Works
 

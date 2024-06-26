@@ -30,9 +30,8 @@ intentod tx intent submit-action  '{
 Fees are denominated in `uinto`. Similar to other Cosmos chains, it is a 6-decimal denomination of `INTO`.
 `intentod tx intent submit-action` takes one argument, a JSON-encoded Cosmos message. `@type` can be retrieved from the destination chain's `/proto` directory.
 For parsing a message to automate with the CLI, use snake case. `fromAddress` will be `from_address`.
-:::warning the Cosmos message type should be a registered type on Intento
+:::info the Cosmos message type should be a registered type on Intento
 :::
-
 
 This "type url" is based of the proto package name, in this example it is `cosmos.bank.v1beta1` and the name of the message is `MsgSend`. TRST Labs has registerd types of CosmWasm types and the Osmosis types. Any message should be registered before it can be encoded correctly on Intento.
 
@@ -42,9 +41,12 @@ This "type url" is based of the proto package name, in this example it is `cosmo
 When an action should execute once, `duration` will be the time between now and the execution time.
 If the action is recurring, `duration` will be the time execution will be unavailable.
 
-## With Interchain Accounts
+## With Interchain Accounts (ICA)
 
-Message flow is similar to the above. A *connection_id* should be specified. You can find all available connections with `intentod q ibc connection connections`.
+The message will be similar to the above.
+You can choose a self-hosted ICA or a hosted ICA that takes care of the fees for you. Learn about the difference [here].
+For both accounts a _connection_id_ flag should be specified. You can find all available connections with `intentod q ibc connection connections`.
+For a hosted account the `--hosted-account` and the `--hosted-account-fee-limit` flags should be specified. See examples below. You can find all available host accounts with `intentod q intent list-host-accounts`.
 
 ### What is a connection and how does it differ from a channel?
 
@@ -55,11 +57,11 @@ Channels have ports such as `icacontroller-into1...` or `transfer`. By using a c
 This source port is denoted as `icacontroller-into1...`. For an Interchain Account host, the destination port is `host`.
 A connection is needed to create the channels and ports.
 
-### Register and Submit Action
+### Register Self-Hosted ICA and Submit Action
 
-When you submit an action for the first time using interchain Accounts, you should perfrom `register-ica-and-submit-action` instead of `submit-action`.
+When you submit an action for the first time using a self-hosted Interchain Accounts, you can perform `register-ica-and-submit-action` instead of `submit-action`.
 
-Alternatively you can `intentod tx intent register` and specify the `--connection-id` flag.
+Alternatively you can first perform `intentod tx intent register` and specify the `--connection-id` fla and later submit the action.
 
 You can submit an action with the following command:
 
@@ -94,7 +96,7 @@ export ICA_ADDR=$(intentod q intent interchainaccounts $WALLET_1 connection-0 -o
 
 ## With AuthZ
 
-Message flow is similar to interchain acccounts. For using AuthZ, it is required to create a grant on the host chain. In the messages below, the grantee is the interchain account address.
+This flow is similar to interchain acccounts. For AuthZ, you first create a grant on the host chain. In the messages below, the grantee is the interchain account address associated with the action. This can be a self-hosted or a hosted ICA.
 
 For this we use another local Intento chain. On a host chain you can create a grant with a command like the following:
 
@@ -120,28 +122,29 @@ intentod tx intent submit-action  '{
 }' --duration 4h --interval 60s --keyring-backend test -y --from b --fees 600uinto --connection-id connection-0
 ```
 
-
 ## Configuration
 
-You can set and the following flags:
+You can specify the following flags:
 
-| Flag                           | Description                                                                               | Example Value     |
-| ------------------------------ | ----------------------------------------------------------------------------------------- | ----------------- |
-| `connection-id`                | Identifier for the connection end on the controller chain.                                | `connnection-123` |
-| `host-connection-id`           | Identifier for the controller chain channel version.                                      | `connnection-456` |
-| `label`                        | Custom label for the action, such as transaction type or operation name. Optional.        | `AutoTransfer`    |
-| `duration`                     | Duration for which the action remains active. Optional.                                   | `48h`             |
-| `interval`                     | Custom interval between Action executions. Optional.                                      | `2h`              |
-| `start-at`                     | Custom start time for the action in UNIX time format. Optional.                           | `1625097600`      |
-| `fee-funds`                    | Coins sent to limit the fees incurred during transaction execution. Optional.             | `100atom`         |
-| `end-at`                       | Custom end time for the action in UNIX time format. Optional.                             | `1625184000`      |
-| `updating-disabled`            | Disables future updates to the action configuration.                                      | `false`           |
-| `save-msg-responses`           | Saves message responses to transaction history for Cosmos SDK v0.46+ chains only.         | `true`            |
-| `fallback-to-owner-balance`    | Uses owner's balance as fallback for transaction fees if `fee-funds` are insufficient.    | `true`            |
-| `stop-on-success`              | Stops execution of the action after a successful transaction.                             | `true`            |
-| `stop-on-failure`              | Stops execution of the action after a failed transaction.                                 | `true`            |
-| `stop-on-success-of`           | Stops execution if a specified action succeeds. Optional and requires custom logic.       | `23,58`           |
-| `stop-on-failure-of`           | Stops execution if a specified action fails. Optional and requires custom logic.          | `4536,234`        |
-| `skip-on-success-of`           | Skips the next execution if a specified action succeeds. Optional, requires custom logic. | `234,234`         |
-| `skip-on-failure-of`           | Skips the next execution if a specified action fails. Optional, requires custom logic.    | ``3456,12`        |
-| `reregister_ica_after_timeout` | Allows Action to continue execution after an IBC channel timeout. Recommended.            | `true`            |
+| Flag                           | Description                                                                               | Example Value                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `connection-id`                | Identifier for the connection end on the controller chain.                                | `connnection-123`                                                                 |
+| `host-connection-id`           | Identifier for the controller chain channel version.                                      | `connnection-456`                                                                 |
+| `label`                        | Custom label for the action, such as transaction type or operation name. Optional.        | `AutoTransfer`                                                                    |
+| `duration`                     | Duration for which the action remains active. Optional.                                   | `48h`                                                                             |
+| `interval`                     | Custom interval between Action executions. Optional.                                      | `2h`                                                                              |
+| `start-at`                     | Custom start time for the action in UNIX time format. Optional.                           | `1625097600`                                                                      |
+| `fee-funds`                    | Coins sent to limit the fees incurred during transaction execution. Optional.             | `100atom`                                                                         |
+| `end-at`                       | Custom end time for the action in UNIX time format. Optional.                             | `1625184000`                                                                      |
+| `updating-disabled`            | Disables future updates to the action configuration.                                      | `false`                                                                           |
+| `save-msg-responses`           | Saves message responses to transaction history for Cosmos SDK v0.46+ chains only.         | `true`                                                                            |
+| `fallback-to-owner-balance`    | Uses owner's balance as fallback for transaction fees if `fee-funds` are insufficient.    | `true`                                                                            |
+| `stop-on-success`              | Stops execution of the action after a successful transaction.                             | `true`                                                                            |
+| `stop-on-failure`              | Stops execution of the action after a failed transaction.                                 | `true`                                                                            |
+| `stop-on-success-of`           | Stops execution if a specified action succeeds. Optional and requires custom logic.       | `23,58`                                                                           |
+| `stop-on-failure-of`           | Stops execution if a specified action fails. Optional and requires custom logic.          | `4536,234`                                                                        |
+| `skip-on-success-of`           | Skips the next execution if a specified action succeeds. Optional, requires custom logic. | `234,234`                                                                         |
+| `skip-on-failure-of`           | Skips the next execution if a specified action fails. Optional, requires custom logic.    | ``3456,12`                                                                        |
+| `reregister_ica_after_timeout` | Allows Action to continue execution after an IBC channel timeout. Recommended.            | `true`                                                                            |
+| `hosted-account`            | A hosted account to execute actions on a host, optional                                   | `into13f5dq5pqtwxe4dvr30m70tqcr47n95sc07uj25z5xrngvppkp52qncvzvw`                 |
+| `hosted-account-fee-limit`    | Coin to set to limit the hosted fees, optional                                            | `10uinto,100ibc/9117A26BA81E29FA4F78F57DC2BD90CD3D26848101BA880445F119B22A1E254E` |
