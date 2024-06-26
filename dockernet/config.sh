@@ -24,14 +24,13 @@ HOST_CHAINS=()
 # Available host zones:
 #  - GAIA
 #  - OSMO
-#  - EVMOS
 #  - HOST (our chain enabled as a host zone)
 if [[ "${ALL_HOST_CHAINS:-false}" == "true" ]]; then
-  HOST_CHAINS=(GAIA OSMO) #all
-  RLY_HOST_CHAINS=(GAIA OSMO)
+  HOST_CHAINS=(GAIA OSMO HOST) #all
+  RLY_HOST_CHAINS=(GAIA OSMO HOST)
 elif [[ "${#HOST_CHAINS[@]}" == "0" ]]; then
-  HOST_CHAINS=(GAIA) #()
-  RLY_HOST_CHAINS=(GAIA) #(OSMO)
+  HOST_CHAINS=(GAIA)
+  RLY_HOST_CHAINS=(GAIA) #you can add a testnet chain here (if configured)
 fi
 
 # DENOMS
