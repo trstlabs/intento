@@ -192,6 +192,19 @@ func (msg MsgSubmitAction) ValidateBasic() error {
 	if len(msg.Msgs) >= 10 {
 		return fmt.Errorf("can't execute more than 9 messages")
 	}
+	if msg.Conditions != nil {
+		if msg.Conditions.UseResponseValue != nil {
+			if msg.Conditions.UseResponseValue.MsgKey == "" || msg.Conditions.UseResponseValue.ResponseKey == "" || msg.Conditions.UseResponseValue.ValueType == "" || msg.Conditions.UseResponseValue.MsgsIndex == 0 {
+				return errorsmod.Wrapf(ErrUnknownRequest, "condition UseResponseValue fields are not complete: %+v", msg.Conditions)
+			}
+		}
+		if msg.Conditions.ResponseComparison != nil {
+			if msg.Conditions.ResponseComparison.ComparisonOperator <= 0 || msg.Conditions.ResponseComparison.ResponseKey == "" || msg.Conditions.ResponseComparison.ValueType == "" {
+				return errorsmod.Wrapf(ErrUnknownRequest, "condition comparision fields are not complete: %+v", msg.Conditions)
+			}
+		}
+
+	}
 
 	for _, message := range msg.GetTxMsgs() {
 		// check if the msgs contain valid inputs

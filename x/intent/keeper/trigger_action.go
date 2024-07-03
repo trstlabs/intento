@@ -1,14 +1,13 @@
 package keeper
 
 import (
+	"strings"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
@@ -46,7 +45,6 @@ func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, 
 	//if a message contains "ICA_ADDR" string, the ICA address for the action is retrieved and parsed
 	txMsgs, err := k.parseAndSetMsgs(ctx, action, connectionID, portID)
 	if err != nil {
-
 		return false, nil, err
 	}
 	data, err := icatypes.SerializeCosmosTx(k.cdc, txMsgs)
@@ -106,33 +104,33 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 
 		msgResponses = append(msgResponses, res.MsgResponses...)
 		//autocompound example
-		if sdk.MsgTypeURL(msg) == "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" {
-			validator := ""
-			amount := sdk.NewCoin(types.Denom, sdk.ZeroInt())
-			for _, ev := range res.Events {
-				if ev.Type == distrtypes.EventTypeWithdrawRewards {
-					for _, attr := range ev.Attributes {
-						if string(attr.Key) == distrtypes.AttributeKeyValidator {
-							validator = string(attr.Value)
-						}
-						if string(attr.Key) == sdk.AttributeKeyAmount {
-							amount, err = sdk.ParseCoinNormalized(string(attr.Value))
-							if err != nil {
-								return nil, err
-							}
-						}
-					}
+		// if sdk.MsgTypeURL(msg) == "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" {
+		// 	validator := ""
+		// 	amount := sdk.NewCoin(types.Denom, sdk.ZeroInt())
+		// 	for _, ev := range res.Events {
+		// 		if ev.Type == distrtypes.EventTypeWithdrawRewards {
+		// 			for _, attr := range ev.Attributes {
+		// 				if string(attr.Key) == distrtypes.AttributeKeyValidator {
+		// 					validator = string(attr.Value)
+		// 				}
+		// 				if string(attr.Key) == sdk.AttributeKeyAmount {
+		// 					amount, err = sdk.ParseCoinNormalized(string(attr.Value))
+		// 					if err != nil {
+		// 						return nil, err
+		// 					}
+		// 				}
+		// 			}
 
-					msgDelegate := stakingtypes.MsgDelegate{DelegatorAddress: action.Owner, ValidatorAddress: validator, Amount: amount}
-					handler := k.msgRouter.Handler(&msgDelegate)
-					_, err = handler(cacheCtx, &msgDelegate)
-					if err != nil {
-						return nil, err
-					}
-				}
-			}
+		// 			msgDelegate := stakingtypes.MsgDelegate{DelegatorAddress: action.Owner, ValidatorAddress: validator, Amount: amount}
+		// 			handler := k.msgRouter.Handler(&msgDelegate)
+		// 			_, err = handler(cacheCtx, &msgDelegate)
+		// 			if err != nil {
+		// 				return nil, err
+		// 			}
+		// 		}
+		// 	}
 
-		}
+		// }
 
 	}
 	writeCache()
@@ -142,8 +140,8 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 	return msgResponses, nil
 }
 
-// SetActionResult sets the result of the last executed ID set at SendAction.
-func (k Keeper) SetActionResult(ctx sdk.Context, portID string, channelID string, rewardType int, seq uint64, msgResponses []*cdctypes.Any) error {
+// HandleResponseAndSetActionResult sets the result of the last executed ID set at SendAction.
+func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string, channelID string, rewardType int, seq uint64, msgResponses []*cdctypes.Any) error {
 	id := k.getTmpActionID(ctx, portID, channelID, seq)
 	if id <= 0 {
 		return nil
@@ -176,6 +174,17 @@ func (k Keeper) SetActionResult(ctx sdk.Context, portID string, channelID string
 		actionHistoryEntry.MsgResponses = msgResponses
 	}
 
+	//trigger remaining executions
+	if action.Conditions != nil && action.Conditions.UseResponseValue != nil && action.Conditions.UseResponseValue.MsgsIndex != 0 {
+		if len(msgResponses) > int(action.Conditions.UseResponseValue.MsgsIndex) && strings.Contains(msgResponses[action.Conditions.UseResponseValue.MsgsIndex].TypeUrl, action.Msgs[action.Conditions.UseResponseValue.MsgsIndex].TypeUrl) {
+			tmpAction := action
+			tmpAction.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex+1:]
+			_, _, err = k.TriggerAction(ctx, &tmpAction)
+			if err != nil {
+				actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, types.ErrSettingActionResult+err.Error())
+			}
+		}
+	}
 	k.SetActionInfo(ctx, &action)
 
 	k.SetCurrentActionHistoryEntry(ctx, action.ID, actionHistoryEntry)

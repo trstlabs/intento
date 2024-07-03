@@ -516,6 +516,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		autoIbcTxSubsp,
 		NewMultiIntentHooks(claimKeeper.Hooks()),
 		msgServiceRouter,
+		encodingConfig.InterfaceRegistry,
 	)
 	autoIbcTxKeeper.SetParams(ctx, intenttypes.DefaultParams())
 

@@ -143,8 +143,9 @@ func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResponses []*cdctypes
 		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 		return
 	}
+
 	//msgClass is used for Relayer Reward and Airdrop Reward
-	var msgClass int // Initialize msgClass outside the loop
+	var msgClass int
 	for index, anyResp := range msgResponses {
 		im.keeper.Logger(ctx).Debug("msg response in ICS-27 packet", "response", anyResp.GoString(), "typeURL", anyResp.GetTypeUrl())
 
@@ -155,14 +156,11 @@ func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResponses []*cdctypes
 		}
 	}
 
-	// set result in Action history
-	err := im.keeper.SetActionResult(ctx, packet.SourcePort, packet.SourceChannel, msgClass, packet.Sequence, msgResponses)
+	// handle response (trigger next messages if response parsing) set result in Action history
+	err := im.keeper.HandleResponseAndSetActionResult(ctx, packet.SourcePort, packet.SourceChannel, msgClass, packet.Sequence, msgResponses)
 	if err != nil {
 		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
-		return
 	}
-
-	return
 }
 
 func (im IBCModule) handleDeprecatedMsgResponses(ctx sdk.Context, txMsgData sdk.TxMsgData, relayer sdk.AccAddress, packet channeltypes.Packet) error {
@@ -185,7 +183,7 @@ func (im IBCModule) handleDeprecatedMsgResponses(ctx sdk.Context, txMsgData sdk.
 	}
 
 	// set result in Action history
-	err := im.keeper.SetActionResult(ctx, packet.SourcePort, packet.SourceChannel, msgClass, packet.Sequence, nil)
+	err := im.keeper.HandleResponseAndSetActionResult(ctx, packet.SourcePort, packet.SourceChannel, msgClass, packet.Sequence, nil)
 	if err != nil {
 		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 		return err

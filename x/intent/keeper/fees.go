@@ -127,7 +127,19 @@ func (k Keeper) SendFeesToHosted(ctx sdk.Context, action types.ActionInfo, hoste
 
 	err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAddr, sdk.Coins{feeCoin})
 	if err != nil {
-		return err
+		if action.Configuration.FallbackToOwnerBalance {
+			feeAddr, err = sdk.AccAddressFromBech32(action.Owner)
+			if err != nil {
+				return err
+			}
+			err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAddr, sdk.Coins{feeCoin})
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+
 	}
 	return nil
 

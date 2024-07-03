@@ -25,6 +25,15 @@ func newFakeMsgWithdrawDelegatorReward(delegator sdk.AccAddress, validator staki
 	return msgWithdrawDelegatorReward
 }
 
+func newFakeMsgDelegate(delegator sdk.AccAddress, validator stakingtypes.Validator) *stakingtypes.MsgDelegate {
+	MsgDelegate := &stakingtypes.MsgDelegate{
+		DelegatorAddress: delegator.String(),
+		ValidatorAddress: validator.GetOperator().String(),
+		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000)),
+	}
+	return MsgDelegate
+}
+
 func newFakeMsgSend(fromAddr sdk.AccAddress, toAddr sdk.AccAddress) *banktypes.MsgSend {
 	msgSend := &banktypes.MsgSend{
 		FromAddress: fromAddr.String(),
@@ -54,7 +63,7 @@ func TestSendLocalTx(t *testing.T) {
 	require.True(t, executedLocally)
 }
 
-func TestSendLocalTxAutoCompound(t *testing.T) {
+func TestSendLocalTxAutocompound(t *testing.T) {
 	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
 
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
@@ -66,13 +75,16 @@ func TestSendLocalTxAutoCompound(t *testing.T) {
 
 	actionInfo := createBaseActionInfo(delAddr, actionAddr)
 	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
-	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
-
+	msgDelegate := newFakeMsgDelegate(delAddr, val)
+	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward, msgDelegate})
+	actionInfo.Conditions = &types.ExecutionConditions{UseResponseValue: &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "sdk.Int"}}
+	delegations := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
+	require.Equal(t, delegations[0].Shares.TruncateInt64(), sdk.NewDec(77).TruncateInt64())
 	executedLocally, _, err := keeper.TriggerAction(ctx, &actionInfo)
 	require.NoError(t, err)
 	require.True(t, executedLocally)
 
-	delegations := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
+	delegations = keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
 	require.Greater(t, delegations[0].Shares.TruncateInt64(), sdk.NewDec(77).TruncateInt64())
 }
 

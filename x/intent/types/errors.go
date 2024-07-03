@@ -31,9 +31,11 @@ var (
 	ErrValidateMsgRegistryMsg = errorsmod.Register(ModuleName, 32, "could not validate Action message")
 
 	//errors specific to Action execution that are to be appended to ActionHistory entries
-	ErrBadMetadataFormatMsg  = "metadata not properly formatted for: '%v'. %s"
-	ErrBadActionMsg          = "cannot create action: %v"
-	ErrActionConditions      = "conditions to execute not met"
-	ErrActionFeeDistribution = "distribution error: %s"
-	ErrActionMsgHandling     = "msg handling error: %s"
+	ErrBadMetadataFormatMsg   = "metadata not properly formatted for: '%v'. %s"
+	ErrBadActionMsg           = "cannot create action: %v"
+	ErrActionConditions       = "conditions to execute not met"
+	ErrActionFeeDistribution  = "distribution error: %s"
+	ErrActionMsgHandling      = "msg handling error: %s"
+	ErrActionResponseUseValue = "msg handling error using response value: %s"
+	ErrSettingActionResult    = "cannot set action result: %s"
 )

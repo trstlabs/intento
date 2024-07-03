@@ -41,7 +41,7 @@ func (k Keeper) SetActionInfo(ctx sdk.Context, action *types.ActionInfo) {
 	store.Set(types.GetActionKey(action.ID), k.cdc.MustMarshal(action))
 }
 
-func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string, msgs []*cdctypes.Any, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, configuration types.ExecutionConfiguration, hostedConfig types.HostedConfig, portID string, connectionId string, hostConnectionId string) error {
+func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string, msgs []*cdctypes.Any, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, configuration types.ExecutionConfiguration, hostedConfig types.HostedConfig, portID string, connectionId string, hostConnectionId string, conditions types.ExecutionConditions) error {
 
 	id := k.autoIncrementID(ctx, types.KeyLastID)
 	actionAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
@@ -70,6 +70,7 @@ func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string
 		ICAConfig:     &icaConfig,
 		Configuration: &configuration,
 		HostedConfig:  &hostedConfig,
+		Conditions:    &conditions,
 	}
 
 	if !action.ActionAuthzSignerOk(k.cdc) {

@@ -885,23 +885,23 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_InterchainAccountFromAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "address-to-ica"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_InterchainAccountFromAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "address-to-ica"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Action_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "action", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Action_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "action", "id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ActionHistory_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "action-history", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ActionHistory_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "action-history", "id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Actions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "actions"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Actions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "actions"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ActionsForOwner_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "actions-for-owner", "owner"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ActionsForOwner_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "actions-for-owner", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_HostedAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "hostedaccount-account", "address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_HostedAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "hosted-account", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_HostedAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "hostedaccount-accounts"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_HostedAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "hosted-accounts"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ActionIbcTxUsage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "action-ibc-usage"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ActionIbcTxUsage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "action-ibc-usage"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

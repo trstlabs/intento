@@ -89,6 +89,7 @@ message MsgSubmitAction {
   string host_connection_id              = 11;
   //optional use of a hosted account
   HostedConfig hosted_config = 12;
+  ExecutionConditions conditions = 14;
 }
 
 // MsgSubmitTxResponse defines the MsgSubmitTx response type
@@ -118,6 +119,7 @@ message MsgRegisterAccountAndSubmitAction {
   ExecutionConfiguration configuration = 9;
   string version                    = 10;
   string host_connection_id              = 11;
+  ExecutionConditions conditions = 12;
 }
 
 // MsgRegisterAccountAndSubmitActionResponse defines the MsgSubmitTx response type
@@ -148,6 +150,7 @@ message MsgUpdateAction {
   ];
   ExecutionConfiguration configuration = 10;
   HostedConfig hosted_config = 11;
+  //ExecutionConditions conditions = 12;
 }
 
 // MsgUpdateTxResponse defines the MsgUpdateTx response type

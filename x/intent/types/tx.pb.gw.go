@@ -637,19 +637,19 @@ func RegisterMsgHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 }
 
 var (
-	pattern_Msg_RegisterAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "register-account"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Msg_RegisterAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "register-account"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_SubmitTx_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "submit-tx"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Msg_SubmitTx_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "submit-tx"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_SubmitAction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "submit-action"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Msg_SubmitAction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "submit-action"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_RegisterAccountAndSubmitAction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "register-account-submit-action"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Msg_RegisterAccountAndSubmitAction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "register-account-submit-action"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_UpdateAction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "update-action"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Msg_UpdateAction_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "update-action"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_CreateHostedAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "create-hosted-account"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Msg_CreateHostedAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "create-hosted-account"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_UpdateHostedAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "update-hosted-account"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Msg_UpdateHostedAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "update-hosted-account"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

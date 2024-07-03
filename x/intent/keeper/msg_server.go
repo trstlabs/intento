@@ -118,12 +118,21 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
+	configuration := types.ExecutionConfiguration{}
+	if msg.Configuration != nil {
+		configuration = *msg.Configuration
+	}
+
+	conditions := types.ExecutionConditions{}
+	if msg.Conditions != nil {
+		conditions = *msg.Conditions
+	}
 	/* 	configuration := msg.Configuration
 	   	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
 	   		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "must depend on less than 10 actionIDs and have less than 10 messages")
 	   	} */
 
-	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, *msg.HostedConfig, portID, msg.ConnectionId, msg.HostConnectionId)
+	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, *msg.HostedConfig, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -190,11 +199,16 @@ func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *ty
 			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and maximum duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
-	/* configuration := msg.Configuration
-	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
-		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "must depend on less than 10 actionIDs and have less than 10 messages")
-	} */
-	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, *msg.Configuration, types.HostedConfig{}, portID, msg.ConnectionId, msg.HostConnectionId)
+	configuration := types.ExecutionConfiguration{}
+	if msg.Configuration != nil {
+		configuration = *msg.Configuration
+	}
+
+	conditions := types.ExecutionConditions{}
+	if msg.Conditions != nil {
+		conditions = *msg.Conditions
+	}
+	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, types.HostedConfig{}, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -272,18 +286,19 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 		action.StartTime = startTime
 		newExecTime = startTime
 	}
-	/* 	configuration := msg.Configuration
-	   	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
-	   		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "must depend on less than 10 actionIDs and have less than 10 messages")
-	   	} */
 
 	if msg.Label != "" {
 		action.Label = msg.Label
 	}
+
 	if msg.Configuration != nil {
 		action.Configuration = msg.Configuration
 	}
 
+	// conditions := types.ExecutionConditions{}
+	// if msg.Conditions != nil {
+	// 	conditions = *msg.Conditions
+	// }
 	if len(msg.Msgs) != 0 {
 		action.Msgs = msg.Msgs
 	}

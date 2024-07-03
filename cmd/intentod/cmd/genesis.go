@@ -388,7 +388,7 @@ func MainnetGenesisParams() GenesisParams {
 
 	//AutoIBCTx
 	genParams.IntentParams = intenttypes.DefaultParams()
-	genParams.IntentParams.MaxActionDuration = time.Hour * 24 * 366 * 2
+	genParams.IntentParams.MaxActionDuration = time.Hour * 24 * 366 * 10
 	genParams.IntentParams.MinActionDuration = time.Second * 60
 	genParams.IntentParams.MinActionInterval = time.Second * 60
 	genParams.IntentParams.ActionFundsCommission = 2

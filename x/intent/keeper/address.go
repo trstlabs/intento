@@ -39,7 +39,6 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo, conne
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal %s message", msg)
 		}
-
 		msgJSONString := string(msgJSON)
 
 		index := strings.Index(msgJSONString, types.ParseICAValue)

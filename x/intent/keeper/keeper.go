@@ -6,16 +6,16 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	"github.com/trstlabs/intento/x/intent/types"
-
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
@@ -34,9 +34,11 @@ type Keeper struct {
 	paramSpace          paramtypes.Subspace
 	hooks               IntentHooks
 	msgRouter           MessageRouter
+	interfaceRegistry   cdctypes.InterfaceRegistry
 }
 
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, paramSpace paramtypes.Subspace, ah IntentHooks, msgRouter MessageRouter) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, paramSpace paramtypes.Subspace, ah IntentHooks, msgRouter MessageRouter, interfaceRegistry cdctypes.InterfaceRegistry,
+) Keeper {
 	moduleAccAddr := accountKeeper.GetModuleAddress(types.ModuleName)
 	// ensure module account is set
 	if moduleAccAddr == nil {
@@ -61,6 +63,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontr
 		accountKeeper:       accountKeeper,
 		hooks:               ah,
 		msgRouter:           msgRouter,
+		interfaceRegistry:   interfaceRegistry,
 	}
 }
 

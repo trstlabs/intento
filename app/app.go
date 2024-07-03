@@ -485,7 +485,7 @@ func NewIntoApp(
 	)
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
 
-	app.IntentKeeper = intentkeeper.NewKeeper(appCodec, keys[intenttypes.StoreKey], app.ICAControllerKeeper, scopedIntentKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.GetSubspace(intenttypes.ModuleName), intentkeeper.NewMultiIntentHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter())
+	app.IntentKeeper = intentkeeper.NewKeeper(appCodec, keys[intenttypes.StoreKey], app.ICAControllerKeeper, scopedIntentKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.GetSubspace(intenttypes.ModuleName), intentkeeper.NewMultiIntentHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter(), interfaceRegistry)
 	autoIbcTxModule := intent.NewAppModule(appCodec, app.IntentKeeper)
 	autoIbcTxIBCModule := intent.NewIBCModule(app.IntentKeeper)
 
