@@ -78,7 +78,6 @@ func TestKeeperTestSuite(t *testing.T) {
 
 // SetupTest creates a coordinator with 2 test chains.
 func (suite *KeeperTestSuite) SetupTest() {
-
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
 	ibctesting.DefaultTestingAppInit = intentoibctesting.SetupTestingApp
 	suite.chainA = &intentoibctesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1))}

@@ -14,33 +14,27 @@ import (
 )
 
 // CompareResponseValue compares the value of a response key based on the ResponseComparision
-func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses *[]*cdctypes.Any, comparison types.ResponseComparision) (bool, error) {
+func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses []*cdctypes.Any, comparison types.ResponseComparision) (bool, error) {
 	if comparison.ResponseKey == "" {
 		return true, nil
 	}
-	// if comparison.ActionID != 0 {
-	// 	actionID = comparison.ActionID
-	// }
 
-	if len(*responses) <= int(comparison.ResponseIndex) {
-		return false, fmt.Errorf("not enough responses to compare, number of responses: %v", len(*responses))
+	if len(responses) <= int(comparison.ResponseIndex) {
+		return false, fmt.Errorf("not enough responses to compare, number of responses: %v", len(responses))
 	}
 	var resp interface{}
-	err := k.cdc.UnpackAny((*responses)[comparison.ResponseIndex], &resp)
+	err := k.cdc.UnpackAny((responses)[comparison.ResponseIndex], &resp)
 	if err != nil {
 		return false, fmt.Errorf("error unpacking: %v", err)
 	}
-	fmt.Printf("resp %v\n", resp)
 	value, err := ParseResponseValue(resp, comparison.ResponseKey, comparison.ValueType)
 	if err != nil {
 		return false, fmt.Errorf("error parsing value: %v", err)
 	}
-	fmt.Printf("value %v\n", value)
 	operand, err := ParseOperand(comparison.ComparisonOperand, comparison.ValueType)
 	if err != nil {
 		return false, fmt.Errorf("error parsing operand: %v", err)
 	}
-	fmt.Printf("operand %v\n", operand)
 	switch comparison.ComparisonOperator {
 	case types.ComparisonOperator_EQUAL:
 		return reflect.DeepEqual(value, operand), nil
@@ -299,9 +293,7 @@ func compareNumbers(value, operand interface{}, compareFunc func(int, int) bool)
 func traverseFields(msgInterface interface{}, inputKey string) (reflect.Value, error) {
 	keys := strings.Split(inputKey, ".")
 	val := reflect.ValueOf(msgInterface)
-	fmt.Printf("msgInterface %v \n", msgInterface)
 	for _, key := range keys {
-		fmt.Printf("key %v \n", key)
 		// Handle slices
 		if val.Kind() == reflect.Slice {
 			index, err := parseIndex(key)

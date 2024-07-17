@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,8 +49,6 @@ func (actionInfo ActionInfo) ActionAuthzSignerOk(unpacker types.AnyUnpacker) boo
 				}
 				//fmt.Printf("signer3: %v \n", sdkMsgAuthZ.GetSigners()[0].String())
 				if sdkMsgAuthZ.GetSigners()[0].String() != "" && sdkMsgAuthZ.GetSigners()[0].String() != actionInfo.Owner {
-					fmt.Printf("false: %v %v \n", sdkMsgAuthZ.GetSigners()[0].String(), actionInfo.Owner)
-					// fmt.Printf("sdkMsg: %v \n", sdkMsgAuthZ)
 					return false
 				}
 			}
@@ -60,6 +56,8 @@ func (actionInfo ActionInfo) ActionAuthzSignerOk(unpacker types.AnyUnpacker) boo
 	}
 	return true
 }
+
+var GasFeeCoinsSupported sdk.Coins = sdk.Coins{sdk.NewCoin(Denom, sdk.NewInt(10))}
 
 // GetTxMsgs unpacks sdk messages from any messages
 func GetTransferMsg(cdc codec.Codec, anyTransfer *types.Any) (transferMsg ibctransfertypes.MsgTransfer, err error) {

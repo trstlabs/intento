@@ -46,7 +46,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		var txMsgAny codectypes.Any
 		cdc := codec.NewProtoCodec(im.registry)
 		if err := cdc.UnmarshalJSON(msgBytes, &txMsgAny); err != nil {
-			im.keeper.Logger(ctx).Debug("Intent, Error ICS20 packet unmarshalling", err.Error())
+			im.keeper.Logger(ctx).Debug("Intent, Error ICS20 packet unmarshalling action message in msg array", err.Error())
 			return channeltypes.NewErrorAcknowledgement(types.ErrMsgValidation)
 		}
 		txMsgsAny = append(txMsgsAny, &txMsgAny)
@@ -93,6 +93,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		}
 		response, err := registerAndSubmitTx(im.keeper, ctx, &msg)
 		if err != nil {
+			im.keeper.Logger(ctx).Debug("error handling ICS20 packet action", err.Error())
 			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
 		}
 		bz, err := json.Marshal(response)
@@ -121,6 +122,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		}
 		response, err := updateAction(im.keeper, ctx, &msg)
 		if err != nil {
+			im.keeper.Logger(ctx).Debug("error handling ICS20 packet action update", err.Error())
 			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
 		}
 		bz, err := json.Marshal(response)
@@ -146,6 +148,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		}
 		response, err := submitAction(im.keeper, ctx, &msg)
 		if err != nil {
+			im.keeper.Logger(ctx).Debug("error handling ICS20 packet action submission", err.Error())
 			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
 		}
 		bz, err := json.Marshal(response)
@@ -334,7 +337,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 	}
 
 	//optional hosted account
-	hostedAddress, ok = action["hosted"].(string)
+	hostedAddress, ok = action["hosted_account"].(string)
 	if !ok {
 		hostedAddress = ""
 	}
@@ -381,6 +384,11 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 	reregisterICAString, ok := action["allow_reregister"].(string)
 	if ok && reregisterICAString == "true" {
 		reregisterICA = true
+	}
+	fallbackOwner := false
+	fallbackOwnerString, ok := action["fallback"].(string)
+	if ok && fallbackOwnerString == "true" {
+		fallbackOwner = true
 	}
 	/*
 		// Assuming action is a map[string]interface{} containing JSON data
@@ -439,6 +447,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 		StopOnSuccess:             stopOnSuccess,
 		StopOnFailure:             stopOnFailure,
 		ReregisterICAAfterTimeout: reregisterICA,
+		FallbackToOwnerBalance:    fallbackOwner,
 	}
 
 	// conditions = types.ExecutionConditions{

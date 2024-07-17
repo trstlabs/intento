@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -16,16 +15,16 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
 
-	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 30_000_000)))
 
 	keeper.SetParams(ctx, types.Params{
-		ActionFundsCommission:      10,
-		ActionConstantFee:          1_000_000,                 // 1trst
-		ActionFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
-		RecurringActionConstantFee: 1_000_000,                 // x1trst
-		MaxActionDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinActionDuration:          time.Second * 60,
-		MinActionInterval:          time.Second * 20,
+		ActionFundsCommission: 10,
+		ActionConstantFee:     1_000_000, // 1trst
+		ActionFlexFeeMul:      10,
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))),
+		MaxActionDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinActionDuration:     time.Second * 60,
+		MinActionInterval:     time.Second * 20,
 	})
 
 	pub2 := secp256k1.GenPrivKey().PubKey()
@@ -33,69 +32,79 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 	types.Denom = "stake"
 
 	actionInfo := types.ActionInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: actionAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
 	require.Equal(t, sdk.ZeroDec(), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
-
-	_, err := keeper.DistributeCoins(ctx, actionInfo, sdk.NewInt(time.Minute.Milliseconds()), false, ctx.BlockHeader().ProposerAddress)
+	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1000000)
+	require.Empty(t, err)
+	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, types.Denom, false, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, actionAddr, sdk.DefaultBondDenom))
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt((3_000_000*0.9-1_000_000-time.Minute.Milliseconds()))), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom))
-	// check validator current rewards
-	require.Equal(t, sdk.NewDec(time.Minute.Milliseconds()), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+	//require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, feeAddr, sdk.DefaultBondDenom))
+
+	///moduleAcc := keeper.accountKeeper.GetModuleAccount(ctx, "intent").GetAddress()
+
+	//require.Equal(t, keeper.bankKeeper.GetBalance(ctx, moduleAcc, types.Denom), fee)
+	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
+	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt(), fee.Amount)
+	require.Equal(t, sdk.NewInt64Coin(denom, 30_000_000), keeper.bankKeeper.GetBalance(ctx, feeAddr, sdk.DefaultBondDenom).Add(fee))
+
 }
 
-func TestDistributeCoinsOwnerFeeFallback(t *testing.T) {
+func TestDistributeCoinsOwnerFeeFallbackLastExec(t *testing.T) {
 
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
 
 	keeper.SetParams(ctx, types.Params{
-		ActionFundsCommission:      2,
-		ActionConstantFee:          1_000_000,                 // 1trst
-		ActionFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
-		RecurringActionConstantFee: 1_000_000,                 // 1trst
-		MaxActionDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinActionDuration:          time.Second * 60,
-		MinActionInterval:          time.Second * 20,
+		ActionFundsCommission: 2,
+		ActionConstantFee:     1_000_000, // 1trst
+		ActionFlexFeeMul:      10,
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))),
+		MaxActionDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinActionDuration:     time.Second * 60,
+		MinActionInterval:     time.Second * 20,
 	})
 
 	pub1 := secp256k1.GenPrivKey().PubKey()
-	actionAddr := sdk.AccAddress(pub1.Address())
-	ownerAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	feeAddr := sdk.AccAddress(pub1.Address())
+	ownerAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 30_000_000)))
 	types.Denom = "stake"
 
 	actionInfo := types.ActionInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: actionAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"}, Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"}, Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
 	}
-
-	_, err := keeper.DistributeCoins(ctx, actionInfo, sdk.NewInt(time.Minute.Milliseconds()), true, ctx.BlockHeader().ProposerAddress)
+	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1000000)
+	require.Empty(t, err)
+	require.NotEmpty(t, denom)
+	require.NotEmpty(t, acc)
+	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, denom, false, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, actionAddr, sdk.DefaultBondDenom))
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_940_000)), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom))
-
-	// check validator current rewards
-	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
-	require.Equal(t, sdk.NewDec(time.Minute.Milliseconds()), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, feeAddr, sdk.DefaultBondDenom))
+	//moduleAcc := keeper.accountKeeper.GetModuleAccount(ctx, "intent").GetAddress()
+	//require.Equal(t, keeper.bankKeeper.GetBalance(ctx, moduleAcc, types.Denom), fee)
+	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
+	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt(), fee.Amount)
+	require.Equal(t, sdk.NewInt64Coin(denom, 30_000_000), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom).Add(fee))
 
 }
 
-func TestDistributeCoinsEmptyActionBalanceNotLastExec(t *testing.T) {
+func TestDistributeCoinsEmptyActionBalance(t *testing.T) {
 
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
-	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
 
 	keeper.SetParams(ctx, types.Params{
-		ActionFundsCommission:      2,
-		ActionConstantFee:          1_000_000,                 // 1trst
-		ActionFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
-		RecurringActionConstantFee: 1_000_000,                 // 1trst
-		MaxActionDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinActionDuration:          time.Second * 60,
-		MinActionInterval:          time.Second * 60,
+		ActionFundsCommission: 2,
+		ActionConstantFee:     1_000_000, // 1trst
+		ActionFlexFeeMul:      100,
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))),
+		MaxActionDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinActionDuration:     time.Second * 60,
+		MinActionInterval:     time.Second * 60,
 	})
 
 	pub2 := secp256k1.GenPrivKey().PubKey()
@@ -104,32 +113,27 @@ func TestDistributeCoinsEmptyActionBalanceNotLastExec(t *testing.T) {
 	types.Denom = "stake"
 
 	actionInfo := types.ActionInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: actionAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
-	_, err := keeper.DistributeCoins(ctx, actionInfo, sdk.NewInt(time.Minute.Milliseconds()), true, ctx.BlockHeader().ProposerAddress)
-	require.Empty(t, err)
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_940_000)), keeper.bankKeeper.GetBalance(ctx, actionAddr, sdk.DefaultBondDenom))
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom))
-
-	// check validator current rewards
-	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
-	require.Equal(t, sdk.NewDec(time.Minute.Milliseconds()), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
-
+	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	_, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1000000)
+	require.Nil(t, err)
+	require.Empty(t, denom)
 }
 
 func TestDistributeCoinsEmptyActionBalanceAndMultipliedFlexFee(t *testing.T) {
 
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
-	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 300_000_000)))
 	keeper.SetParams(ctx, types.Params{
-		ActionFundsCommission:      2,
-		ActionConstantFee:          1_000_000,                 // 1trst
-		ActionFlexFeeMul:           250,                       // 250/100 = 2.5x
-		RecurringActionConstantFee: 1_000_000,                 // 1trst
-		MaxActionDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinActionDuration:          time.Second * 60,
-		MinActionInterval:          time.Second * 20,
+		ActionFundsCommission: 2,
+		ActionConstantFee:     1_000_000, // 1trst
+		ActionFlexFeeMul:      250,       // 250/100 = 2.5x
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))),
+		MaxActionDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinActionDuration:     time.Second * 60,
+		MinActionInterval:     time.Second * 20,
 	})
 
 	pub2 := secp256k1.GenPrivKey().PubKey()
@@ -138,88 +142,20 @@ func TestDistributeCoinsEmptyActionBalanceAndMultipliedFlexFee(t *testing.T) {
 	types.Denom = "stake"
 
 	actionInfo := types.ActionInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: actionAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
-	_, err := keeper.DistributeCoins(ctx, actionInfo, sdk.NewInt(time.Minute.Milliseconds()), false, ctx.BlockHeader().ProposerAddress)
+	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1000000)
 	require.Empty(t, err)
-	fmt.Printf("%v\n", keeper.bankKeeper.GetBalance(ctx, actionAddr, sdk.DefaultBondDenom))
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, actionAddr, sdk.DefaultBondDenom))
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3_000_000*0.98-1_000_000-time.Minute.Milliseconds()*250/100)), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom))
-
-	// check validator current rewards
-	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
-	require.Equal(t, sdk.NewDec(time.Minute.Milliseconds()*250/100), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
-
-}
-
-func TestDistributeCoinsEmptyActionBalanceAndDiscountedFlexFee(t *testing.T) {
-
-	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
-	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
-	keeper.SetParams(ctx, types.Params{
-		ActionFundsCommission:      2,
-		ActionConstantFee:          1_000_000,                 // 1trst
-		ActionFlexFeeMul:           25,                        // 250/100 = 0.25x
-		RecurringActionConstantFee: 1_000_000,                 // 1trst
-		MaxActionDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinActionDuration:          time.Second * 60,
-		MinActionInterval:          time.Second * 20,
-	})
-
-	pub2 := secp256k1.GenPrivKey().PubKey()
-
-	ownerAddr := sdk.AccAddress(pub2.Address())
-	types.Denom = "stake"
-
-	actionInfo := types.ActionInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: actionAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
-	}
-
-	_, err := keeper.DistributeCoins(ctx, actionInfo, sdk.NewInt(time.Minute.Milliseconds()), false, ctx.BlockHeader().ProposerAddress)
-	require.Empty(t, err)
-	fmt.Printf("%v\n", keeper.bankKeeper.GetBalance(ctx, actionAddr, sdk.DefaultBondDenom))
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, actionAddr, sdk.DefaultBondDenom))
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(3_000_000*0.98-1_000_000-time.Minute.Milliseconds()*25/100)), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom))
-
-	// check validator current rewards
-	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
-	require.Equal(t, sdk.NewDec(time.Minute.Milliseconds()*25/100), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
-
-}
-
-func TestDistributeCoinsLargeFee(t *testing.T) {
-
-	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
-
-	keeper.SetParams(ctx, types.Params{
-		ActionFundsCommission:      2,
-		ActionConstantFee:          1_000_000,                 // 1trst
-		ActionFlexFeeMul:           100,                       // 100/100 = 1 = gasUsed
-		RecurringActionConstantFee: 1_000_000,                 // 1trst
-		MaxActionDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinActionDuration:          time.Second * 60,
-		MinActionInterval:          time.Second * 20,
-	})
-
-	pub1 := secp256k1.GenPrivKey().PubKey()
-	actionAddr := sdk.AccAddress(pub1.Address())
-	ownerAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000)))
-	types.Denom = "stake"
-
-	actionInfo := types.ActionInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: actionAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"}, Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
-	}
-
-	_, err := keeper.DistributeCoins(ctx, actionInfo, sdk.NewInt(time.Hour.Milliseconds()*24*30), true, ctx.BlockHeader().ProposerAddress)
+	require.NotEmpty(t, denom)
+	require.NotEmpty(t, acc)
+	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, denom, false, ctx.BlockHeader().ProposerAddress)
 	require.Empty(t, err)
 
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, actionAddr, sdk.DefaultBondDenom))
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(407000000)), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom))
-
-	// check validator current rewards
-	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
-	require.Equal(t, sdk.NewDec(time.Hour.Milliseconds()*24*30), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
+	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt(), fee.Amount)
+	require.Equal(t, sdk.NewInt64Coin(denom, 300_000_000), keeper.bankKeeper.GetBalance(ctx, feeAddr, sdk.DefaultBondDenom).Add(fee))
 
 }
 

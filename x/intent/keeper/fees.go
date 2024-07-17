@@ -5,92 +5,58 @@ import (
 	//"log"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
 // DistributeCoins distributes Action fees and handles remaining action fee balance after last execution
-func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, flexFee sdkmath.Int, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
-	cacheCtx, writeCache := ctx.CacheContext()
+func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAddr sdk.AccAddress, feeDenom string, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
 	p := k.GetParams(ctx)
-
-	flexFeeMultiplier := sdk.NewDec(p.ActionFlexFeeMul).QuoInt64(100)
-
-	flexFeeMulDec := sdk.NewDecFromInt(flexFee).Mul(flexFeeMultiplier)
-
-	// //round flex to one int if it is smaller than one
-	// if flexFeeMulDec.TruncateInt().IsZero() {
-	// 	flexFeeMulDec = flexFeeMulDec.Ceil()
-	// }
-	feeAddr, err := sdk.AccAddressFromBech32(action.FeeAddress)
-	if err != nil {
-		return sdk.Coin{}, err
+	gasMultipleSmall := sdk.NewIntFromUint64(ctx.GasMeter().GasConsumed() * uint64(p.ActionFlexFeeMul))
+	gasMultiple := gasMultipleSmall.Quo(math.NewInt(100))
+	if !gasMultiple.IsPositive() {
+		return sdk.Coin{}, types.ErrIntOverflowAction
 	}
-	ownerAddr, err := sdk.AccAddressFromBech32(action.Owner)
-	if err != nil {
-		return sdk.Coin{}, err
+	found, coins := p.GasFeeCoins.Sort().Find(feeDenom)
+	if !found {
+		return sdk.Coin{}, errorsmod.Wrap(types.ErrNotFound, "coin not found")
 	}
-
-	actionAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
+	gasFeeAmount := coins.Amount.Mul(gasMultiple)
 
 	//depending if execution is recurring the constant fee may differ (gov param)
-	fixedFee := sdk.NewInt(p.ActionConstantFee * int64(len(action.Msgs)))
-	if isRecurring {
-		fixedFee = sdk.NewInt(p.RecurringActionConstantFee * int64(len(action.Msgs)))
-	}
 
-	fixedFeeCommunityCoin := sdk.NewCoin(types.Denom, fixedFee)
-
-	//if last execution, return remaining balance minus commision
-	if !isRecurring && !actionAddrBalance.Empty() {
-		percentageActionFundsCommission := sdk.NewDecWithPrec(p.ActionFundsCommission, 2)
-		amountActionFundsCommissionCoin := sdk.NewCoin(types.Denom, percentageActionFundsCommission.MulInt(actionAddrBalance.AmountOf(types.Denom)).Ceil().TruncateInt())
-		fixedFeeCommunityCoin = fixedFeeCommunityCoin.Add(amountActionFundsCommissionCoin)
-	}
-	fixedFeeCommunityCoins := sdk.NewCoins(fixedFeeCommunityCoin)
-	totalActionFees := fixedFeeCommunityCoin.Add(sdk.NewCoin(types.Denom, flexFeeMulDec.Ceil().TruncateInt()))
+	totalActionFees := sdk.NewCoin(feeDenom, gasFeeAmount)
 
 	// proposer reward
 	// transfer collected fees to the distribution module account
-	flexFeeCoin := sdk.NewCoin(types.Denom, flexFeeMulDec.Ceil().TruncateInt())
+	flexFeeCoin := sdk.NewCoin(feeDenom, gasFeeAmount)
 	if flexFeeCoin.Amount.IsZero() {
 		return sdk.Coin{}, errorsmod.Wrap(errorsmod.ErrPanic, "flexFeeCoin was zero, this should never happen")
 	}
 
-	proposerAddr := k.stakingKeeper.ValidatorByConsAddr(cacheCtx, proposer)
-
-	k.distrKeeper.AllocateTokensToValidator(cacheCtx, proposerAddr, sdk.NewDecCoinsFromCoins(flexFeeCoin))
-
-	//the trigger account should be funded with the fee amount
-	err = k.bankKeeper.SendCoinsFromAccountToModule(cacheCtx, feeAddr, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
-	if err != nil {
-		if action.Configuration.FallbackToOwnerBalance {
-			err := k.bankKeeper.SendCoinsFromAccountToModule(cacheCtx, ownerAddr, authtypes.FeeCollectorName, sdk.NewCoins(flexFeeCoin))
-			if err != nil {
-				return sdk.Coin{}, err
-			}
-
-			err = k.distrKeeper.FundCommunityPool(cacheCtx, fixedFeeCommunityCoins, ownerAddr)
-			if err != nil {
-				return sdk.Coin{}, err
-			}
-		} else {
-			return sdk.Coin{}, err
-		}
-	} else {
-		err = k.distrKeeper.FundCommunityPool(cacheCtx, fixedFeeCommunityCoins, feeAddr)
-		if err != nil {
-			return sdk.Coin{}, err
-		}
-	}
 	//pay out any remaining balance to the owner after deducting fee, commision and gas
-	if !isRecurring {
+	if p.ActionConstantFee != 0 {
+		fixedFee := sdk.NewInt(p.ActionConstantFee * int64(len(action.Msgs)))
+		fixedFeeCommunityCoin := sdk.NewCoin(feeDenom, fixedFee)
+		totalActionFees = totalActionFees.Add(fixedFeeCommunityCoin)
+	}
+
+	if !isRecurring && action.Configuration != nil && !action.Configuration.FallbackToOwnerBalance {
+		actionAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
+
+		percentageActionFundsCommission := sdk.NewDecWithPrec(p.ActionFundsCommission, 2)
+		amountActionFundsCommissionCoin := sdk.NewCoin(feeDenom, percentageActionFundsCommission.MulInt(actionAddrBalance.AmountOf(feeDenom)).Ceil().TruncateInt())
+		totalActionFees = totalActionFees.Add(amountActionFundsCommissionCoin)
+
 		toOwnerCoins, negative := actionAddrBalance.Sort().SafeSub(totalActionFees)
 
 		if !negative {
-			err := k.bankKeeper.SendCoins(cacheCtx, feeAddr, ownerAddr, toOwnerCoins)
+			ownerAddr, err := sdk.AccAddressFromBech32(action.Owner)
+			if err != nil {
+				return sdk.Coin{}, err
+			}
+			err = k.bankKeeper.SendCoins(ctx, feeAddr, ownerAddr, toOwnerCoins)
 			if err != nil {
 				return sdk.Coin{}, err
 			}
@@ -98,10 +64,12 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, flexFe
 		}
 	}
 
-	//we only write to the state when we know the send actions succeed
-	writeCache()
+	err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(totalActionFees), feeAddr)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
 
-	k.Logger(ctx).Debug("flex_fee", "amount", flexFeeCoin.Amount, "to", proposer.String())
+	k.Logger(ctx).Debug("fee", "amount", flexFeeCoin.Amount, "to", proposer.String())
 
 	return totalActionFees, nil
 }
@@ -144,4 +112,58 @@ func (k Keeper) SendFeesToHosted(ctx sdk.Context, action types.ActionInfo, hoste
 	return nil
 
 	//nice to have: ics20 transfer to destination (needed: channelID)
+}
+
+// CheckBalanceForGasFee checks if the address has enough balance to cover the gas fee.
+func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, action types.ActionInfo, expectedGas int64) (account sdk.AccAddress, denom string, err error) {
+	p := k.GetParams(ctx)
+
+	feeAddr, err := sdk.AccAddressFromBech32(action.FeeAddress)
+	if err != nil {
+		return nil, "", err
+	}
+
+	actionAddrBalances := k.bankKeeper.GetAllBalances(ctx, feeAddr).Sort()
+	// Calculate the required fee
+	minFee := sdk.NewCoins()
+	for _, coin := range p.GasFeeCoins {
+		amount := coin.Amount.Mul(sdk.NewInt(p.ActionFlexFeeMul * expectedGas))
+		minFee = minFee.Add(sdk.NewCoin(coin.Denom, amount))
+	}
+	denom = GetDenomIfAnyGTE(actionAddrBalances, minFee)
+	// Check if the address balance has enough coins to cover the required fee
+	if denom == "" {
+		if action.Configuration != nil && action.Configuration.FallbackToOwnerBalance {
+			ownerAddr, err := sdk.AccAddressFromBech32(action.Owner)
+			if err != nil {
+				return nil, "", err
+			}
+
+			actionAddrBalances = k.bankKeeper.GetAllBalances(ctx, ownerAddr).Sort()
+			denom = GetDenomIfAnyGTE(actionAddrBalances, minFee)
+			if denom == "" {
+				return nil, "", err
+			}
+			feeAddr = ownerAddr
+
+		}
+
+	}
+
+	return feeAddr, denom, nil
+}
+
+func GetDenomIfAnyGTE(coins sdk.Coins, coinsB sdk.Coins) string {
+	if len(coinsB) == 0 {
+		return ""
+	}
+
+	for _, coin := range coins {
+		amt := coinsB.AmountOf(coin.Denom)
+		if coin.Amount.GTE(amt) && !amt.IsZero() {
+			return coin.Denom
+		}
+	}
+
+	return ""
 }

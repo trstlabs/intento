@@ -486,12 +486,12 @@ func NewIntoApp(
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
 
 	app.IntentKeeper = intentkeeper.NewKeeper(appCodec, keys[intenttypes.StoreKey], app.ICAControllerKeeper, scopedIntentKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.GetSubspace(intenttypes.ModuleName), intentkeeper.NewMultiIntentHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter(), interfaceRegistry)
-	autoIbcTxModule := intent.NewAppModule(appCodec, app.IntentKeeper)
-	autoIbcTxIBCModule := intent.NewIBCModule(app.IntentKeeper)
+	intentModule := intent.NewAppModule(appCodec, app.IntentKeeper)
+	intentIBCModule := intent.NewIBCModule(app.IntentKeeper)
 
-	actionIcs20HooksTransferModule := intent.NewIBCMiddleware(transferIBCModule, app.IntentKeeper, interfaceRegistry)
-	app.TransferStack = &actionIcs20HooksTransferModule
-	icaControllerIBCModule := icacontroller.NewIBCMiddleware(autoIbcTxIBCModule, app.ICAControllerKeeper)
+	intentIcs20HooksTransferModule := intent.NewIBCMiddleware(transferIBCModule, app.IntentKeeper, interfaceRegistry)
+	app.TransferStack = &intentIcs20HooksTransferModule
+	icaControllerIBCModule := icacontroller.NewIBCMiddleware(intentIBCModule, app.ICAControllerKeeper)
 	icaControllerStack := ibcfee.NewIBCMiddleware(icaControllerIBCModule, app.IBCFeeKeeper)
 
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
@@ -547,7 +547,7 @@ func NewIntoApp(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		icaModule,
-		autoIbcTxModule,
+		intentModule,
 		ibcfee.NewAppModule(app.IBCFeeKeeper),
 	)
 

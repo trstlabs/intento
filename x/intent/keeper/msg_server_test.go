@@ -277,6 +277,10 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 			var owner string
+			params := types.DefaultParams()
+			params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
+			params.ActionFlexFeeMul = 1
+			suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
 
 			icaAppA := GetICAApp(suite.chainA.TestChain)
 			icaAppB := GetICAApp(suite.chainB.TestChain)

@@ -108,14 +108,14 @@ func setupTest(t *testing.T, additionalCoinsInWallets sdk.Coins) (sdk.Context, K
 	walletB, privKeyB := CreateFakeFundedAccount(ctx, accKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 5000)).Add(additionalCoinsInWallets...))
 
 	keeper.SetParams(ctx, intenttypes.Params{
-		ActionFundsCommission:      2,
-		ActionConstantFee:          1_000_000,
-		ActionFlexFeeMul:           100,
-		RecurringActionConstantFee: 1_000_000,
-		MaxActionDuration:          time.Hour * 24 * 366 * 10,
-		MinActionDuration:          time.Second * 60,
-		MinActionInterval:          time.Second * 20,
-		RelayerRewards:             []int64{10_000, 10_000, 10_000, 10_000},
+		ActionFundsCommission: 2,
+		ActionConstantFee:     1_000_000,
+		ActionFlexFeeMul:      100,
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))),
+		MaxActionDuration:     time.Hour * 24 * 366 * 10,
+		MinActionDuration:     time.Second * 60,
+		MinActionInterval:     time.Second * 20,
+		RelayerRewards:        []int64{10_000, 10_000, 10_000, 10_000},
 	})
 	return ctx, keeper, walletA, privKeyA, walletB, privKeyB
 }
@@ -327,8 +327,6 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	bankParams := banktypes.DefaultParams()
-	bankParams.DefaultSendEnabled = true
 	bankKeeper.SetParams(ctx, banktypes.DefaultParams())
 
 	stakingKeeper := stakingkeeper.NewKeeper(
@@ -394,9 +392,9 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	notBondedPool := authtypes.NewEmptyModuleAccount(stakingtypes.NotBondedPoolName, authtypes.Burner, authtypes.Staking)
 	bondPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, authtypes.Staking)
 	feeCollectorAcc := authtypes.NewEmptyModuleAccount(authtypes.FeeCollectorName)
-	autoIbcTxAcc := authtypes.NewEmptyModuleAccount(intenttypes.ModuleName)
+	intentAcc := authtypes.NewEmptyModuleAccount(intenttypes.ModuleName)
 
-	authKeeper.SetModuleAccount(ctx, autoIbcTxAcc)
+	authKeeper.SetModuleAccount(ctx, intentAcc)
 	authKeeper.SetModuleAccount(ctx, distrAcc)
 	authKeeper.SetModuleAccount(ctx, bondPool)
 	authKeeper.SetModuleAccount(ctx, notBondedPool)
@@ -457,7 +455,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 
 	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedIBCControllerKeeper := capabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
-	scopedAutoIBCTXKeeper := capabilityKeeper.ScopeToModule(intenttypes.ModuleName)
+	scopedintentKeeper := capabilityKeeper.ScopeToModule(intenttypes.ModuleName)
 	scopedTransferKeeper := capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 
 	ibchostSubSp, _ := paramsKeeper.GetSubspace(ibcexported.ModuleName)
@@ -497,28 +495,28 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	queryRouter.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
 	msgServiceRouter.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
-	//AutoIBCTXKeeper := AutoIBCTXKeeper.NewKeeper(appCodec, ak.keys[icaauthtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedAutoIBCTXKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(icaauthtypes.ModuleName))
-	autoIbcTxSubsp, _ := paramsKeeper.GetSubspace(intenttypes.ModuleName)
+	//intentKeeper := intentKeeper.NewKeeper(appCodec, ak.keys[icaauthtypes.StoreKey], *ak.ICAControllerKeeper, ak.ScopedintentKeeper, ak.BankKeeper, *ak.DistrKeeper, *ak.StakingKeeper, *ak.AccountKeeper, ak.GetSubspace(icaauthtypes.ModuleName))
+	intentSubsp, _ := paramsKeeper.GetSubspace(intenttypes.ModuleName)
 	govKeeper := govkeeper.NewKeeper(
 		encodingConfig.Codec, keys[govtypes.StoreKey], accountKeeper, bankKeeper,
 		stakingKeeper, msgServiceRouter, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	autoIbcTxKeeper := NewKeeper(
+	intentKeeper := NewKeeper(
 		encodingConfig.Codec,
 		keys[intenttypes.StoreKey],
 		icacontrollerKeeper,
-		scopedAutoIBCTXKeeper,
+		scopedintentKeeper,
 		bankKeeper,
 		distKeeper,
 		*stakingKeeper,
 		ibctransferKeeper,
 		accountKeeper,
-		autoIbcTxSubsp,
+		intentSubsp,
 		NewMultiIntentHooks(claimKeeper.Hooks()),
 		msgServiceRouter,
 		encodingConfig.InterfaceRegistry,
 	)
-	autoIbcTxKeeper.SetParams(ctx, intenttypes.DefaultParams())
+	intentKeeper.SetParams(ctx, intenttypes.DefaultParams())
 
 	am := module.NewManager( // minimal module set that we use for message/ query tests
 		bank.NewAppModule(encodingConfig.Codec, bankKeeper, authKeeper, GetSubspace(banktypes.ModuleName, paramsKeeper)),
@@ -534,7 +532,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		AccountKeeper:             authKeeper,
 		StakingKeeper:             *stakingKeeper,
 		DistKeeper:                distKeeper,
-		IntentKeeper:              autoIbcTxKeeper,
+		IntentKeeper:              intentKeeper,
 		GovKeeper:                 *govKeeper,
 		BankKeeper:                bankKeeper,
 		MintKeeper:                mintKeeper,

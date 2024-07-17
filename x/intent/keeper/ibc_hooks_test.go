@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/trstlabs/intento/x/intent/types"
+	intenttypes "github.com/trstlabs/intento/x/intent/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
@@ -18,14 +19,14 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 )
 
-func (suite *KeeperTestSuite) TestOnRecvTransferPacketWorks() {
+func (suite *KeeperTestSuite) TestOnRecvTransferPacket() {
 	var (
 		trace    transfertypes.DenomTrace
 		amount   sdkmath.Int
 		receiver string
 	)
 
-	suite.SetupTest() // reset
+	suite.SetupTest()
 
 	path := NewTransferPath(suite.chainA, suite.chainB)
 	suite.coordinator.Setup(path)
@@ -50,8 +51,13 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWorks() {
 
 }
 
-func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithActionWorks() {
-	suite.SetupTest() // reset
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
+	suite.SetupTest()
+
+	params := intenttypes.DefaultParams()
+	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
+	params.ActionFlexFeeMul = 1
+	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
 
 	addr := suite.chainA.SenderAccount.GetAddress()
 	msg := `{
@@ -64,9 +70,8 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithActionWorks() {
 		"to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
 
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
-	// ackStr := string(ackBytes)
-	// fmt.Println(ackStr)
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0", "fallback": "true" } }`, addr, msg))
+
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
@@ -87,8 +92,13 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithActionWorks() {
 	suite.True(action.Msgs[0].Equal(txMsgAny))
 }
 
-func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActionsWorks() {
-	suite.SetupTest() // reset
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
+	suite.SetupTest()
+
+	params := intenttypes.DefaultParams()
+	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
+	params.ActionFlexFeeMul = 1
+	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
 
 	addr := suite.chainA.SenderAccount.GetAddress()
 	msg := `{
@@ -107,7 +117,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActionsWorks()
 	suite.Require().NoError(err)
 
 	//chainB sends packet to chainA. connectionID to execute on chainB is on chainAs config
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my_trigger", "cid":"%s", "host_cid":"%s","msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my_trigger", "cid":"%s", "host_cid":"%s","msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0", "fallback": "true" } }`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
@@ -134,8 +144,13 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActionsWorks()
 	suite.True(action.Msgs[0].Equal(txMsgAny))
 }
 
-func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingWorks() {
-	suite.SetupTest() // reset
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing() {
+	suite.SetupTest()
+
+	params := intenttypes.DefaultParams()
+	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
+	params.ActionFlexFeeMul = 1
+	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
 
 	addr := suite.chainA.SenderAccount.GetAddress()
 	msg := `{
@@ -153,7 +168,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 	err := SetupICAPath(path, addr.String())
 	suite.Require().NoError(err)
 
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my trigger", "cid":"%s","host_cid":"%s","msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0"} }`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my trigger", "cid":"%s","host_cid":"%s","msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0", "fallback": "true" }}`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
@@ -161,9 +176,6 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 
 	actionKeeper := suite.chainA.GetIntoApp().IntentKeeper
 	action := actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
-	feeAddr, _ := sdk.AccAddressFromBech32(action.FeeAddress)
-	types.Denom = suite.chainA.GetIntoApp().BankKeeper.GetAllBalances(suite.chainA.GetContext(), feeAddr)[0].Denom
-
 	unpacker := suite.chainA.Codec
 	unpackedMsgs := action.GetTxMsgs(unpacker)
 	suite.Require().True(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
@@ -183,4 +195,51 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingW
 	unpackedMsgs = action.GetTxMsgs(unpacker)
 	suite.Require().False(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
 	suite.Require().Equal(action.Interval, time.Second*60)
+}
+
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxWithSentDenomInParams() {
+	suite.SetupTest()
+
+	addr := suite.chainA.SenderAccount.GetAddress()
+	msg := `{
+		"@type":"/cosmos.bank.v1beta1.MsgSend",
+		"amount": [{
+			"amount": "70",
+			"denom": "stake"
+		}],
+		"from_address": "ICA_ADDR",
+		"to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
+	}`
+
+	path := NewICAPath(suite.chainA, suite.chainB)
+	suite.coordinator.SetupConnections(path)
+	err := SetupICAPath(path, addr.String())
+	suite.Require().NoError(err)
+
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my trigger", "cid":"%s","host_cid":"%s","msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0", "fallback": "true" }}`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err = json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().NotContains(ack, "error")
+
+	actionKeeper := suite.chainA.GetIntoApp().IntentKeeper
+	action := actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
+	feeAddr, _ := sdk.AccAddressFromBech32(action.FeeAddress)
+	bDenom := suite.chainA.GetIntoApp().BankKeeper.GetAllBalances(suite.chainA.GetContext(), feeAddr)[0].Denom
+	params := intenttypes.DefaultParams()
+	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin(bDenom, sdk.NewInt(2)), sdk.NewCoin("stake", sdk.OneInt()))
+	params.ActionFlexFeeMul = 1
+	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
+
+	unpacker := suite.chainA.Codec
+	unpackedMsgs := action.GetTxMsgs(unpacker)
+	suite.Require().True(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
+
+	suite.chainA.CurrentHeader.Time = suite.chainA.CurrentHeader.Time.Add(time.Minute)
+	FakeBeginBlocker(suite.chainA.GetContext(), actionKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
+
+	action = actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
+	actionHistory, _ := actionKeeper.GetActionHistory(suite.chainA.GetContext(), action.ID)
+	suite.Require().NotNil(actionHistory.History)
+	suite.Require().Empty(actionHistory.History[0].Errors)
 }

@@ -243,66 +243,93 @@ func (k Keeper) SetActionError(ctx sdk.Context, sourcePort string, channelID str
 
 // AllowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
 // insert the next entry when execution has not happend yet
-func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo) bool {
+func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo) (bool, error) {
 	allowedToExecute := true
-	// shouldRecur := action.ExecTime.Before(action.EndTime) && action.ExecTime.Add(action.Interval).Before(action.EndTime)
-	// conditions := action.Conditions
+	shouldRecur := action.ExecTime.Before(action.EndTime) && action.ExecTime.Add(action.Interval).Before(action.EndTime)
+	conditions := action.Conditions
+	if conditions == nil {
+		return true, nil
+	}
+	if conditions.ResponseComparison != nil {
+		history, err := k.GetActionHistory(ctx, conditions.ResponseComparison.ActionID)
+		if err != nil {
+			allowedToExecute = false
+			return allowedToExecute, err
+		}
+		responses := history.History[len(history.History)-1].MsgResponses
+		isTrue, err := k.CompareResponseValue(ctx, action.ID, responses, *conditions.ResponseComparison)
+		if !isTrue {
+			allowedToExecute = false
+			return allowedToExecute, err
+		}
+	}
+	//check if dependent tx executions succeeded
+	for _, actionId := range conditions.StopOnSuccessOf {
+		history, err := k.GetActionHistory(ctx, actionId)
+		if err != nil {
+			allowedToExecute = false
+		}
+		if len(history.History) != 0 {
+			success := history.History[len(history.History)-1].Executed && history.History[len(history.History)-1].Errors != nil
+			if !success {
+				allowedToExecute = false
+				shouldRecur = false
+			}
+		}
+	}
 
-	// //check if dependent tx executions succeeded
-	// for _, actionId := range conditions.StopOnSuccessOf {
-	// 	dependentTx := k.GetActionInfo(ctx, uint64(actionId))
-	// 	if len(dependentTx.ActionHistory) != 0 {
-	// 		success := dependentTx.ActionHistory[len(dependentTx.ActionHistory)-1].Executed && dependentTx.ActionHistory[len(dependentTx.ActionHistory)-1].Errors != nil
-	// 		if !success {
-	// 			allowedToExecute = false
-	// 			shouldRecur = false
-	// 		}
-	// 	}
-	// }
+	//check if dependent tx executions failed
+	for _, actionId := range conditions.StopOnFailureOf {
+		history, err := k.GetActionHistory(ctx, actionId)
+		if err != nil {
+			allowedToExecute = false
+		}
+		if len(history.History) != 0 {
+			success := history.History[len(history.History)-1].Executed && history.History[len(history.History)-1].Errors != nil
+			if success {
+				allowedToExecute = false
+				shouldRecur = false
+			}
+		}
+	}
 
-	// //check if dependent tx executions failed
-	// for _, actionId := range conditions.StopOnFailureOf {
-	// 	dependentTx := k.GetActionInfo(ctx, uint64(actionId))
-	// 	if len(dependentTx.ActionHistory) != 0 {
-	// 		success := dependentTx.ActionHistory[len(dependentTx.ActionHistory)-1].Executed && dependentTx.ActionHistory[len(dependentTx.ActionHistory)-1].Errors != nil
-	// 		if success {
-	// 			allowedToExecute = false
-	// 			shouldRecur = false
-	// 		}
-	// 	}
-	// }
+	//check if dependent tx executions succeeded
+	for _, actionId := range conditions.SkipOnFailureOf {
+		history, err := k.GetActionHistory(ctx, actionId)
+		if err != nil {
+			allowedToExecute = false
+		}
+		if len(history.History) != 0 {
+			success := history.History[len(history.History)-1].Executed && history.History[len(history.History)-1].Errors != nil
+			if !success {
+				allowedToExecute = false
+			}
+		}
+	}
 
-	// //check if dependent tx executions succeeded
-	// for _, actionId := range conditions.skipOnFailureOf {
-	// 	dependentTx := k.GetActionInfo(ctx, uint64(actionId))
-	// 	if len(dependentTx.ActionHistory) != 0 {
-	// 		success := dependentTx.ActionHistory[len(dependentTx.ActionHistory)-1].Executed && dependentTx.ActionHistory[len(dependentTx.ActionHistory)-1].Errors != nil
-	// 		if !success {
-	// 			allowedToExecute = false
-	// 		}
-	// 	}
-	// }
+	//check if dependent tx executions failed
+	for _, actionId := range conditions.SkipOnSuccessOf {
+		history, err := k.GetActionHistory(ctx, actionId)
+		if err != nil {
+			allowedToExecute = false
+		}
+		if len(history.History) != 0 {
+			success := history.History[len(history.History)-1].Executed && history.History[len(history.History)-1].Errors != nil
+			if success {
+				allowedToExecute = false
+			}
+		}
+	}
 
-	// //check if dependent tx executions failed
-	// for _, actionId := range conditions.skipOnSuccessOf {
-	// 	dependentTx := k.GetActionInfo(ctx, uint64(actionId))
-	// 	if len(dependentTx.ActionHistory) != 0 {
-	// 		success := dependentTx.ActionHistory[len(dependentTx.ActionHistory)-1].Executed && dependentTx.ActionHistory[len(dependentTx.ActionHistory)-1].Errors != nil
-	// 		if success {
-	// 			allowedToExecute = false
-	// 		}
-	// 	}
-	// }
+	//if not allowed to execute, remove entry
+	if !allowedToExecute {
+		k.RemoveFromActionQueue(ctx, action)
+		//insert the next entry given a recurring tx
+		if shouldRecur {
+			// adding next execTime and a new entry into the queue based on interval
+			k.InsertActionQueue(ctx, action.ID, action.ExecTime.Add(action.Interval))
+		}
+	}
+	return allowedToExecute, nil
 
-	// //if not allowed to execute, remove entry
-	// if !allowedToExecute {
-	// 	k.RemoveFromActionQueue(ctx, action)
-	// 	//insert the next entry given a recurring tx
-	// 	if shouldRecur {
-	// 		// adding next execTime and a new entry into the queue based on interval
-	// 		k.InsertActionQueue(ctx, action.ID, action.ExecTime.Add(action.Interval))
-	// 	}
-	// }
-
-	return allowedToExecute
 }

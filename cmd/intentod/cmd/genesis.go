@@ -394,7 +394,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.IntentParams.ActionFundsCommission = 2
 	genParams.IntentParams.ActionConstantFee = 7_000
 	genParams.IntentParams.ActionFlexFeeMul = 3
-	genParams.IntentParams.RecurringActionConstantFee = 5_000
+	genParams.IntentParams.GasFeeCoins = sdk.Coins(sdk.NewCoins(sdk.NewCoin(BaseCoinUnit, sdk.OneInt())))
 	genParams.IntentParams.RelayerRewards = []int64{10_000, 15_000, 18_000, 22_000}
 
 	//claim

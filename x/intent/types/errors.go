@@ -33,9 +33,10 @@ var (
 	//errors specific to Action execution that are to be appended to ActionHistory entries
 	ErrBadMetadataFormatMsg   = "metadata not properly formatted for: '%v'. %s"
 	ErrBadActionMsg           = "cannot create action: %v"
-	ErrActionConditions       = "conditions to execute not met"
+	ErrActionConditions       = "conditions to execute not met: %v"
 	ErrActionFeeDistribution  = "distribution error: %s"
 	ErrActionMsgHandling      = "msg handling error: %s"
 	ErrActionResponseUseValue = "msg handling error using response value: %s"
 	ErrSettingActionResult    = "cannot set action result: %s"
+	ErrBalanceLow             = "balance too low to change expected fee"
 )

@@ -7,6 +7,7 @@ import (
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
@@ -43,6 +44,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.Equal(t, 1, len(actionHistory.History))
 	require.Equal(t, ctx2.BlockHeader().Time, actionHistory.History[0].ScheduledExecTime)
 	require.Equal(t, ctx2.BlockHeader().Time, actionHistory.History[0].ActualExecTime)
+	// require.Equal(t, ctx3.BlockHeader().Time, actionHistory.History[0].Errors, []string{""})
 	require.NotNil(t, ctx3.BlockHeader().Time, actionHistory.History[0].MsgResponses[0].Value)
 	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx3, sendToAddr)[0].Amount, sdk.NewInt(100))
 
@@ -65,15 +67,10 @@ func TestBeginBlockerStopOnSuccess(t *testing.T) {
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 	// BeginBlocker logic
-	// check dependent txs
-	// setting new ExecTime and adding a new entry into the queue based on interval
-	//fmt.Printf("action will recur: %v \n", action.ID)
-
 	fakeActionExec(k, ctx2, action)
 	action = k.GetActionInfo(ctx2, action.ID)
 	ctx3 := createNextExecutionContext(ctx2, action.ExecTime.Add(time.Hour))
 	action = k.GetActionInfo(ctx3, action.ID)
-	fmt.Printf("%v\n", action.ExecTime)
 	require.True(t, action.ExecTime.Before(ctx3.BlockTime()))
 
 }
@@ -95,10 +92,6 @@ func TestBeginBlockerStopOnFailure(t *testing.T) {
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 
-	// BeginBlocker logic
-	// check dependent txs
-	// setting new ExecTime and adding a new entry into the queue based on interval
-	//fmt.Printf("action will recur: %v \n", action.ID)
 	fakeActionExec(k, ctx2, action)
 	action = k.GetActionInfo(ctx2, action.ID)
 	ctx3 := createNextExecutionContext(ctx2, action.ExecTime.Add(time.Hour))
@@ -108,7 +101,7 @@ func TestBeginBlockerStopOnFailure(t *testing.T) {
 
 }
 
-func TestErrorDistributionIsSaved(t *testing.T) {
+func TestErrorIsSavedToActionInfo(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
 	configuration := types.ExecutionConfiguration{StopOnFailure: true}
 	action, emptyBalanceAcc := createTestTriggerAction(ctx, configuration, keepers)
@@ -138,91 +131,96 @@ func TestErrorDistributionIsSaved(t *testing.T) {
 
 	require.True(t, action.ExecTime.Before(ctx3.BlockTime()))
 	require.NotNil(t, actionHistory.History[0].Errors)
-	require.Contains(t, actionHistory.History[0].Errors[0], "distribution")
+	require.Contains(t, actionHistory.History[0].Errors[0], "balance too low")
 
 }
 
 func fakeActionExec(k keeper.Keeper, ctx sdk.Context, action types.ActionInfo) {
-	timeOfBlock := ctx.BlockHeader().Time
-	action = k.GetActionInfo(ctx, action.ID)
+	errorString := ""
+	fee := sdk.Coin{}
+	executedLocally := false
+	msgResponses := []*cdctypes.Any{}
 
-	if !k.AllowedToExecute(ctx, action) {
-		k.AddActionHistory(ctx, &action, timeOfBlock, sdk.Coin{}, false, nil, types.ErrActionConditions)
+	allowed, err := k.AllowedToExecute(ctx, action)
+	// check conditions
+	if !allowed {
+		k.AddActionHistory(ctx, &action, ctx.BlockTime(), sdk.Coin{}, false, nil, fmt.Sprintf(types.ErrActionConditions, err.Error()))
 		action.ExecTime = action.ExecTime.Add(action.Interval)
 		k.SetActionInfo(ctx, &action)
+		return
 	}
+
 	isRecurring := action.ExecTime.Before(action.EndTime)
-
 	k.RemoveFromActionQueue(ctx, action)
-	flexFee := k.CalculateTimeBasedFlexFee(ctx, action)
-	fee, err := k.DistributeCoins(ctx, action, flexFee, isRecurring, ctx.BlockHeader().ProposerAddress)
-	if err != nil {
-		errorString := fmt.Sprintf(types.ErrActionFeeDistribution, err.Error())
-		k.AddActionHistory(ctx, &action, timeOfBlock, fee, false, nil, errorString)
-	} else {
-		actionCtx := ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
+	actionCtx := ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 
-		err := k.UseResponseValue(ctx, action.ID, &action.Msgs, action.Conditions)
-		if err != nil {
-			k.AddActionHistory(ctx, &action, ctx.BlockTime(), fee, false, nil, fmt.Sprintf(types.ErrActionResponseUseValue, err.Error()))
-		}
-
-		//Handle response parsing
-		var actionErrors []string
-		if action.Conditions != nil && action.Conditions.UseResponseValue != nil && action.Conditions.UseResponseValue.MsgsIndex != 0 {
-			actionTmp := action
-			actionTmp.Msgs = action.Msgs[:action.Conditions.UseResponseValue.MsgsIndex+1]
-			executedLocally, msgResponses, err := k.TriggerAction(actionCtx, &actionTmp)
-			if err != nil {
-				actionErrors = []string{types.ErrSettingActionResult + err.Error()}
-			}
-			err = k.UseResponseValue(ctx, action.ID, &actionTmp.Msgs, action.Conditions)
-			if err != nil {
-				actionErrors = []string{types.ErrSettingActionResult + err.Error()}
-			}
-			if executedLocally {
-				actionTmp.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex+1:]
-				_, _, err2 := k.TriggerAction(ctx, &actionTmp)
-				if err2 != nil {
-					actionErrors = append(actionErrors, types.ErrActionResponseUseValue+err2.Error())
-				}
-				if err != nil {
-					k.AddActionHistory(ctx, &action, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrActionMsgHandling, actionErrors))
-				} else {
-					k.AddActionHistory(ctx, &action, ctx.BlockTime(), fee, executedLocally, msgResponses)
-				}
-			}
-
-		} else {
-			executedLocally, msgResponses, err := k.TriggerAction(actionCtx, &action)
-			if err != nil {
-				k.AddActionHistory(ctx, &action, ctx.BlockTime(), fee, executedLocally, msgResponses, fmt.Sprintf(types.ErrActionMsgHandling, err.Error()))
-			} else {
-				k.AddActionHistory(ctx, &action, ctx.BlockTime(), fee, executedLocally, msgResponses)
-			}
-		}
-
-		// setting new ExecTime and adding a new entry into the queue based on interval
-		shouldRecur := isRecurring && (action.ExecTime.Add(action.Interval).Before(action.EndTime) || action.ExecTime.Add(action.Interval) == action.EndTime)
-		allowedToRecur := (!action.Configuration.StopOnSuccess && !action.Configuration.StopOnFailure) || action.Configuration.StopOnSuccess && err != nil || action.Configuration.StopOnFailure && err == nil
-
-		if shouldRecur && allowedToRecur {
-			//fmt.Printf("action will recur: %v \n", action.ID)
-			action.ExecTime = action.ExecTime.Add(action.Interval)
-			k.InsertActionQueue(ctx, action.ID, action.ExecTime)
-		}
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeAction,
-				sdk.NewAttribute(types.AttributeKeyActionID, fmt.Sprint(action.ID)),
-				sdk.NewAttribute(types.AttributeKeyActionOwner, action.Owner),
-			),
-		)
+	cacheCtx, writeCtx := actionCtx.CacheContext()
+	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, action, 1_000_000)
+	if err != nil || feeAddr == nil || feeDenom == "" {
+		errorString = types.ErrBalanceLow
 	}
+	if errorString == "" {
+		err = k.UseResponseValue(cacheCtx, action.ID, &action.Msgs, action.Conditions)
+		if err != nil {
+			errorString = fmt.Sprintf(types.ErrActionResponseUseValue, err.Error())
+		}
+
+		if errorString == "" {
+			//Handle response parsing
+
+			if action.Conditions == nil || action.Conditions.UseResponseValue == nil || action.Conditions.UseResponseValue.MsgsIndex == 0 {
+				executedLocally, msgResponses, err = k.TriggerAction(cacheCtx, &action)
+				if err != nil {
+					errorString = fmt.Sprintf(types.ErrActionMsgHandling, err.Error())
+				}
+			} else {
+				actionTmp := action
+				actionTmp.Msgs = action.Msgs[:action.Conditions.UseResponseValue.MsgsIndex+1]
+				executedLocally, msgResponses, err = k.TriggerAction(cacheCtx, &actionTmp)
+				if err != nil {
+					errorString = fmt.Sprintf(types.ErrSettingActionResult + err.Error())
+				}
+				if errorString == "" {
+					err = k.UseResponseValue(cacheCtx, action.ID, &actionTmp.Msgs, action.Conditions)
+					if err != nil {
+						errorString = fmt.Sprintf(types.ErrSettingActionResult + err.Error())
+
+					} else if executedLocally {
+						actionTmp.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex+1:]
+						_, msgResponses2, err2 := k.TriggerAction(cacheCtx, &actionTmp)
+						errorString = fmt.Sprintf(types.ErrActionMsgHandling, err2)
+						msgResponses = append(msgResponses, msgResponses2...)
+					}
+				}
+			}
+
+		}
+
+		fee, err = k.DistributeCoins(cacheCtx, action, feeAddr, feeDenom, isRecurring, ctx.BlockHeader().ProposerAddress)
+		if err != nil {
+			errorString = fmt.Sprintf(types.ErrActionFeeDistribution, err.Error())
+		}
+	}
+	k.AddActionHistory(cacheCtx, &action, ctx.BlockTime(), fee, executedLocally, msgResponses, errorString)
+	writeCtx()
+	// setting new ExecTime and adding a new entry into the queue based on interval
+	shouldRecur := isRecurring && (action.ExecTime.Add(action.Interval).Before(action.EndTime) || action.ExecTime.Add(action.Interval) == action.EndTime)
+	allowedToRecur := (!action.Configuration.StopOnSuccess && !action.Configuration.StopOnFailure) || action.Configuration.StopOnSuccess && err != nil || action.Configuration.StopOnFailure && err == nil
+
+	if shouldRecur && allowedToRecur {
+		action.ExecTime = action.ExecTime.Add(action.Interval)
+		k.InsertActionQueue(ctx, action.ID, action.ExecTime)
+	}
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeAction,
+			sdk.NewAttribute(types.AttributeKeyActionID, fmt.Sprint(action.ID)),
+			sdk.NewAttribute(types.AttributeKeyActionOwner, action.Owner),
+		),
+	)
+
 	k.SetActionInfo(ctx, &action)
-
 }
-
 func TestOwnerMustBeSignerForLocalAction(t *testing.T) {
 	ctx, keepers, cdc := createTestContext(t)
 
@@ -248,9 +246,7 @@ func TestOwnerMustBeSignerForLocalAction(t *testing.T) {
 	err := action.GetTxMsgs(cdc)[0].ValidateBasic()
 	require.NoError(t, err)
 
-	flexFee := k.CalculateTimeBasedFlexFee(ctx, action)
-
-	fee, err := k.DistributeCoins(ctx, action, flexFee, true, ctx.BlockHeader().ProposerAddress)
+	fee, err := k.DistributeCoins(ctx, action, feeAddr, types.Denom, true, ctx.BlockHeader().ProposerAddress)
 
 	require.NoError(t, err)
 	executedLocally, _, err := k.TriggerAction(ctx, &action)
@@ -265,13 +261,13 @@ func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers, codec.Cod
 
 	types.Denom = "stake"
 	keepers.IntentKeeper.SetParams(ctx, types.Params{
-		ActionFundsCommission:      2,
-		ActionConstantFee:          1_000_000,                 // 1trst
-		ActionFlexFeeMul:           3,                         // 3*calculated time-based flexFee
-		RecurringActionConstantFee: 1_000_000,                 // 1trst
-		MaxActionDuration:          time.Hour * 24 * 366 * 10, // a little over 10 years
-		MinActionDuration:          time.Second * 60,
-		MinActionInterval:          time.Second * 20,
+		ActionFundsCommission: 2,
+		ActionConstantFee:     1_000_000,                 // 1trst
+		ActionFlexFeeMul:      3,                         //
+		MaxActionDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinActionDuration:     time.Second * 60,
+		MinActionInterval:     time.Second * 20,
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.OneInt())),
 	})
 	return ctx, keepers, cdc
 }
@@ -356,35 +352,4 @@ type KeeperMock struct {
 	RemoveFromActionQueueFunc func(ctx sdk.Context, actions ...types.ActionInfo)
 	AddToActionQueueFunc      func(ctx sdk.Context, action types.ActionInfo)
 	SetActionInfoFunc         func(ctx sdk.Context, id string, action *types.ActionInfo)
-}
-
-func createTestTriggerActions(ctx sdk.Context, count int, keepers keeper.TestKeepers) []types.ActionInfo {
-	actions := make([]types.ActionInfo, count)
-	startTime := ctx.BlockHeader().Time
-	execTime := ctx.BlockHeader().Time.Add(time.Hour)
-	endTime := ctx.BlockHeader().Time.Add(time.Hour * 2)
-
-	for i := 0; i < count; i++ {
-		actionOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
-		feeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
-		toSendAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
-		localMsg := &banktypes.MsgSend{
-			FromAddress: actionOwnerAddr.String(),
-			ToAddress:   toSendAcc.String(),
-			Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
-		}
-		anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
-		actions[i] = types.ActionInfo{
-			ID:            uint64(i),
-			Owner:         actionOwnerAddr.String(),
-			FeeAddress:    feeAddr.String(),
-			ExecTime:      execTime,
-			EndTime:       endTime,
-			Interval:      time.Hour,
-			StartTime:     startTime,
-			Msgs:          anys,
-			Configuration: &types.ExecutionConfiguration{SaveMsgResponses: false},
-		}
-	}
-	return actions
 }

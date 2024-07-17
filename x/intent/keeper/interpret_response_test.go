@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"testing"
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -35,7 +34,7 @@ func TestParseCoin(t *testing.T) {
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(101)))
-	fmt.Printf("msgDelegate.Amount %v \n", msgDelegate.Amount)
+
 	executedLocally, _, err = keeper.TriggerAction(ctx, &actionInfo)
 	require.NoError(t, err)
 	require.True(t, executedLocally)
@@ -66,7 +65,7 @@ func TestParseInnerString(t *testing.T) {
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
 	require.Equal(t, msgDelegate.Amount.Denom, "stake")
-	fmt.Printf("msgDelegate.Amount %v \n", msgDelegate.Amount)
+
 	executedLocally, _, err = keeper.TriggerAction(ctx, &actionInfo)
 	require.NoError(t, err)
 	require.True(t, executedLocally)
@@ -143,7 +142,7 @@ func TestCompareInnerIntTrue(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparision{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", ComparisonOperator: 0, ComparisonOperand: "101"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, &msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -165,7 +164,7 @@ func TestCompareCoinTrue(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparision{ResponseIndex: 0, ResponseKey: "Amount.[0]", ValueType: "sdk.Coin", ComparisonOperator: 0, ComparisonOperand: "101stake"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, &msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -187,7 +186,7 @@ func TestCompareIntFalse(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparision{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", ComparisonOperator: 0, ComparisonOperand: "100000000000"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, &msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
 	require.NoError(t, err)
 
 	require.False(t, boolean)
@@ -209,7 +208,7 @@ func TestCompareDenomString(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparision{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", ValueType: "string", ComparisonOperator: 0, ComparisonOperand: "stake"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, &msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -231,7 +230,7 @@ func TestInvalidResponseIndex(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparision{ResponseIndex: 1, ResponseKey: "Amount.[0].Denom", ValueType: "string", ComparisonOperator: 0, ComparisonOperand: "sta"}
-	_, err = keeper.CompareResponseValue(ctx, actionInfo.ID, &msgResponses, *actionInfo.Conditions.ResponseComparison)
+	_, err = keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
 	require.Error(t, err)
 
 	require.Contains(t, err.Error(), "number of responses")
@@ -253,7 +252,7 @@ func TestCompareDenomStringContains(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparision{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", ValueType: "string", ComparisonOperator: 1, ComparisonOperand: "sta"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, &msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -275,7 +274,7 @@ func TestCompareArrayCoinsContainsTrue(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparision{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", ComparisonOperator: 1, ComparisonOperand: "101stake"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, &msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -288,7 +287,7 @@ func TestCompareArrayCoinsContainsFalse(t *testing.T) {
 	any, _ := cdctypes.NewAnyWithValue(&msgResponse)
 	msgResponses := []*cdctypes.Any{any}
 	responseComparison := &types.ResponseComparision{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", ComparisonOperator: 0, ComparisonOperand: "100aaa"}
-	boolean, err := keeper.CompareResponseValue(ctx, 1, &msgResponses, *responseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, 1, msgResponses, *responseComparison)
 	require.NoError(t, err)
 
 	require.False(t, boolean)
@@ -301,7 +300,7 @@ func TestCompareArrayEquals(t *testing.T) {
 	any, _ := cdctypes.NewAnyWithValue(&msgResponse)
 	msgResponses := []*cdctypes.Any{any}
 	responseComparison := &types.ResponseComparision{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", ComparisonOperator: 0, ComparisonOperand: "1000abc,3000000000degf"}
-	boolean, err := keeper.CompareResponseValue(ctx, 1, &msgResponses, *responseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, 1, msgResponses, *responseComparison)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
