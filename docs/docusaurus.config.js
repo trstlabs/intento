@@ -57,7 +57,7 @@ const config = {
           versions: {
             current: {
               path: "/",
-              banner: "unreleased",
+              banner: "none",
             },
           },
         },
@@ -83,7 +83,15 @@ const config = {
           autoCollapseCategories: true,
           hideable: true,
         },
+        
       },
+      // announcementBar: {
+      //   id: "support_us",
+      //   content: "ddd",
+      //   backgroundColor: "#fafbfc",
+      //   textColor: "#091E42",
+      //   isCloseable: false,
+      // },
       navbar: {
         // title: 'INTENTO',
         logo: {
@@ -91,50 +99,11 @@ const config = {
           src: "img/intento_text.png",
         },
         items: [
-          //           {
-          //             type: 'dropdown',
-          //             label: 'Community',
-          //             position: 'right',
-          //             items: [
-          //               {
-          //                 href: 'https://github.com/trstlabs/intento',
-          //                 html: '<i class="fa-fw fa-brands fa-github"></i> Github',
-          //               },
-          // /*               {
-          //                 href: 'https://reddit.com/r/cosmosnetwork',
-          //                 html: '<i class="fa-fw fa-brands fa-reddit"></i> Reddit',
-          //               },
-          //               {
-          //                 href: 'https://www.youtube.com/c/CosmosProject',
-          //                 html: '<i class="fa-fw fa-brands fa-youtube"></i> YouTube',
-          //               },
-          //               {
-          //                 href: 'https://discord.gg/cosmosnetwork',
-          //                 html: '<i class="fa-fw fa-brands fa-discord"></i> Discord',
-          //               }, */
-          //               {
-          //                 href: 'https://forum.intento.zone/',
-          //                 html: '<i class="fa-fw fa-regular fa-comments"></i> Intento Forum',
-          //               },
-          //             ],
-          //           },
           // {
           //   type: 'docsVersionDropdown',
           //   position: 'left',
+          //   dropdownItemsAfter: [{to: '/versions', label: 'All versions'}],
           //   dropdownActiveClassDisabled: true,
-          //   // versions not yet migrated to docusaurus
-          //   dropdownItemsAfter: [
-          //     // {
-          //     //   href: 'https://hub.cosmos.network/v11/',
-          //     //   label: 'v11',
-          //     //   target: '_self',
-          //     // },
-          //     // {
-          //     //   href: 'https://hub.cosmos.network/v10/',
-          //     //   label: 'v10',
-          //     //   target: '_self',
-          //     // },
-          //   ],
           // },
         ],
       },
