@@ -127,7 +127,7 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 }
 
 // NewMsgSubmitAction creates a new NewMsgSubmitAction instance
-func NewMsgSubmitAction(owner, label string, sdkMsgs []sdk.Msg, connectionID string, hostConnectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration) (*MsgSubmitAction, error) {
+func NewMsgSubmitAction(owner, label string, sdkMsgs []sdk.Msg, connectionID string, hostConnectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgSubmitAction, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -146,6 +146,7 @@ func NewMsgSubmitAction(owner, label string, sdkMsgs []sdk.Msg, connectionID str
 		HostConnectionId: hostConnectionID,
 		HostedConfig: &HostedConfig{HostedAddress: hostedAddress,
 			FeeCoinLimit: hostedFeeLimit},
+		Conditions: conditions,
 	}, nil
 }
 
@@ -294,7 +295,7 @@ func (msg MsgRegisterAccountAndSubmitAction) ValidateBasic() error {
 }
 
 // NewMsgUpdateAction creates a new NewMsgUpdateAction instance
-func NewMsgUpdateAction(owner string, id uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration) (*MsgUpdateAction, error) {
+func NewMsgUpdateAction(owner string, id uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgUpdateAction, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -313,6 +314,7 @@ func NewMsgUpdateAction(owner string, id uint64, label string, sdkMsgs []sdk.Msg
 		FeeFunds:      feeFunds,
 		HostedConfig: &HostedConfig{HostedAddress: hostedAddress,
 			FeeCoinLimit: hostedFeeLimit},
+		Conditions: conditions,
 	}, nil
 }
 

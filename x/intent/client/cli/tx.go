@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -167,6 +168,14 @@ func getSubmitActionCmd() *cobra.Command {
 				}
 			}
 
+			conditions := types.ExecutionConditions{}
+			coditionsString := viper.GetString(flagConditions)
+			if coditionsString != "" {
+				if err := json.Unmarshal([]byte(coditionsString), &conditions); err != nil {
+					return errors.Wrap(err, "error unmarshalling conditions")
+				}
+			}
+
 			// Get execution configuration
 			configuration := getExecutionConfiguration()
 			funds := sdk.Coins{}
@@ -187,7 +196,7 @@ func getSubmitActionCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAction(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagHostConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration)
+			msg, err := types.NewMsgSubmitAction(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagHostConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}
@@ -331,6 +340,15 @@ func getUpdateActionCmd() *cobra.Command {
 					txMsgs = append(txMsgs, txMsg)
 				}
 			}
+
+			conditions := types.ExecutionConditions{}
+			coditionsString := viper.GetString(flagConditions)
+			if coditionsString != "" {
+				if err := json.Unmarshal([]byte(coditionsString), &conditions); err != nil {
+					return errors.Wrap(err, "error unmarshalling conditions")
+				}
+			}
+
 			// Get execution configuration
 			configuration := getExecutionConfiguration()
 			funds := sdk.Coins{}
@@ -349,7 +367,7 @@ func getUpdateActionCmd() *cobra.Command {
 					return err
 				}
 			}
-			msg, err := types.NewMsgUpdateAction(clientCtx.GetFromAddress().String(), id, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration /* viper.GetUint64(flagRetries) */ /* , viper.GetString(flagVersion) */)
+			msg, err := types.NewMsgUpdateAction(clientCtx.GetFromAddress().String(), id, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}

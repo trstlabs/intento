@@ -13,8 +13,8 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-// CompareResponseValue compares the value of a response key based on the ResponseComparision
-func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses []*cdctypes.Any, comparison types.ResponseComparision) (bool, error) {
+// CompareResponseValue compares the value of a response key based on the ResponseComparison
+func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses []*cdctypes.Any, comparison types.ResponseComparison) (bool, error) {
 	if comparison.ResponseKey == "" {
 		return true, nil
 	}
@@ -81,6 +81,9 @@ func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 	responsesAnys := history.History[len(history.History)-1].MsgResponses
 	if len(responsesAnys) == 0 {
 		return nil
+	}
+	if int(useResp.ResponseIndex+1) < len(responsesAnys) {
+		return fmt.Errorf("response index out of range")
 	}
 
 	protoMsg, err := k.interfaceRegistry.Resolve(responsesAnys[useResp.ResponseIndex].TypeUrl)

@@ -6,6 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/gogoproto/proto"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
@@ -125,13 +126,25 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 
 	conditions := types.ExecutionConditions{}
 	if msg.Conditions != nil {
+		if msg.Conditions.UseResponseValue != nil {
+			if int(msg.Conditions.UseResponseValue.MsgsIndex) >= len(msg.Msgs) {
+				if msg.Msgs[0].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+					msgExec := &authztypes.MsgExec{}
+					if err := proto.Unmarshal(msg.Msgs[0].Value, msgExec); err != nil {
+						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msg exec could not unmarshal")
+					}
+
+					if int(msg.Conditions.UseResponseValue.MsgsIndex) >= len(msgExec.Msgs) {
+						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgExec msgs array: %s", msg.Conditions.UseResponseValue.MsgsIndex, msgExec.Msgs)
+
+					} else {
+						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgs array: %s", msg.Conditions.UseResponseValue.MsgsIndex, msg.Msgs)
+					}
+				}
+			}
+		}
 		conditions = *msg.Conditions
 	}
-	/* 	configuration := msg.Configuration
-	   	if len(append(append(append(configuration.skipOnFailureOf, configuration.skipOnSuccessOf...), configuration.StopOnSuccessOf...), configuration.StopOnFailureOf...)) >= 20 || len(msg.Msgs) >= 10 {
-	   		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "must depend on less than 10 actionIDs and have less than 10 messages")
-	   	} */
-
 	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, *msg.HostedConfig, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
 	if err != nil {
 		return nil, err
@@ -295,10 +308,26 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 		action.Configuration = msg.Configuration
 	}
 
-	// conditions := types.ExecutionConditions{}
-	// if msg.Conditions != nil {
-	// 	conditions = *msg.Conditions
-	// }
+	if msg.Conditions != nil {
+		if msg.Conditions.UseResponseValue != nil {
+			if int(msg.Conditions.UseResponseValue.MsgsIndex) >= len(msg.Msgs) {
+				if msg.Msgs[0].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+					msgExec := &authztypes.MsgExec{}
+					if err := proto.Unmarshal(msg.Msgs[0].Value, msgExec); err != nil {
+						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msg exec could not unmarshal")
+					}
+
+					if int(msg.Conditions.UseResponseValue.MsgsIndex) >= len(msgExec.Msgs) {
+						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgExec msgs array: %s", msg.Conditions.UseResponseValue.MsgsIndex, msgExec.Msgs)
+
+					} else {
+						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgs array: %s", msg.Conditions.UseResponseValue.MsgsIndex, msg.Msgs)
+					}
+				}
+			}
+		}
+		action.Conditions = msg.Conditions
+	}
 	if len(msg.Msgs) != 0 {
 		action.Msgs = msg.Msgs
 	}

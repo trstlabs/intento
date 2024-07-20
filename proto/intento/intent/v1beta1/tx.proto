@@ -150,7 +150,7 @@ message MsgUpdateAction {
   ];
   ExecutionConfiguration configuration = 10;
   HostedConfig hosted_config = 11;
-  //ExecutionConditions conditions = 12;
+  ExecutionConditions conditions = 12;
 }
 
 // MsgUpdateTxResponse defines the MsgUpdateTx response type
