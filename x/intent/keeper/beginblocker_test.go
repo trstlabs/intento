@@ -68,7 +68,7 @@ func FakeBeginBlocker(ctx sdk.Context, k keeper.Keeper, fakeProposer sdk.ConsAdd
 					}
 				} else {
 					actionTmp := action
-					actionTmp.Msgs = action.Msgs[:action.Conditions.UseResponseValue.MsgsIndex+1]
+					actionTmp.Msgs = action.Msgs[:action.Conditions.UseResponseValue.MsgsIndex]
 					executedLocally, msgResponses, err = k.TriggerAction(cacheCtx, &actionTmp)
 					if err != nil {
 						errorString = fmt.Sprintf(types.ErrSettingActionResult + err.Error())
@@ -79,7 +79,7 @@ func FakeBeginBlocker(ctx sdk.Context, k keeper.Keeper, fakeProposer sdk.ConsAdd
 							errorString = fmt.Sprintf(types.ErrSettingActionResult + err.Error())
 
 						} else if executedLocally {
-							actionTmp.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex+1:]
+							actionTmp.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex:]
 							_, _, err2 := k.TriggerAction(cacheCtx, &actionTmp)
 							errorString = fmt.Sprintf(types.ErrActionMsgHandling, err2)
 

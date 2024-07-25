@@ -70,7 +70,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 		"to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
 
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0", "fallback": "true" } }`, addr, msg))
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)

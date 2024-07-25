@@ -13,6 +13,7 @@ var (
 	ErrEmpty          = errorsmod.Register(ModuleName, 11, "empty")
 	ErrInvalidRequest = errorsmod.Register(ModuleName, 8, "invalid request")
 	ErrUnknownRequest = errorsmod.Register(ModuleName, 4, "unknown request")
+	ErrAckErr         = errorsmod.Register(ModuleName, 33, "acknowledgement error")
 	ErrNotFound       = errorsmod.Register(ModuleName, 16, "not found")
 	ErrHostedFeeLimit = errorsmod.Register(ModuleName, 17, "fee limit reached for hosted account")
 	ErrInvalidType    = errorsmod.Register(ModuleName, 12, "invalid type")
@@ -37,6 +38,6 @@ var (
 	ErrActionFeeDistribution  = "distribution error: %s"
 	ErrActionMsgHandling      = "msg handling error: %s"
 	ErrActionResponseUseValue = "msg handling error using response value: %s"
-	ErrSettingActionResult    = "cannot set action result: %s"
+	ErrSettingActionResult    = "cannot set action result"
 	ErrBalanceLow             = "balance too low to change expected fee"
 )

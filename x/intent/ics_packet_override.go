@@ -27,31 +27,31 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 	if !isIcs20 {
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
-	im.keeper.Logger(ctx).Debug("Handling ICS20 packet", data.GetMemo())
+
 	// Validate the memo
 	isActionRouted, ownerAddr, msgsBytes, label, connectionId, hostConnectionId, duration, interval, startAt, endTime, registerICA, hostedAddress, hostedFeeLimit, configuration, version, err := ValidateAndParseMemo(data.GetMemo(), data.Receiver)
-
 	if !isActionRouted {
+		im.keeper.Logger(ctx).Debug("ics20 packet not routed")
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
 	if err != nil {
-		im.keeper.Logger(ctx).Debug("error handling ICS20 packet memo content", err.Error())
+		im.keeper.Logger(ctx).Debug("handling ICS20 packet memo content", "error", err.Error())
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
 	if msgsBytes == nil /* || ownerAddr == nil  */ { // This should never happen
-		return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrMsgValidation, err.Error()))
+		return channeltypes.NewErrorAcknowledgement(types.ErrMsgValidation)
 	}
 	var txMsgsAny []*codectypes.Any
 	for _, msgBytes := range msgsBytes {
 		var txMsgAny codectypes.Any
 		cdc := codec.NewProtoCodec(im.registry)
 		if err := cdc.UnmarshalJSON(msgBytes, &txMsgAny); err != nil {
-			im.keeper.Logger(ctx).Debug("Intent, Error ICS20 packet unmarshalling action message in msg array", err.Error())
+			im.keeper.Logger(ctx).Debug("ICS20 packet unmarshalling action message in msg array", "error", err.Error())
 			return channeltypes.NewErrorAcknowledgement(types.ErrMsgValidation)
 		}
 		txMsgsAny = append(txMsgsAny, &txMsgAny)
 	}
-
+	//im.keeper.Logger(ctx).Info("ics20 got messages in array", "first", txMsgsAny[0].TypeUrl)
 	// Calculate the receiver / contract caller based on the packet's channel and sender
 	// The funds sent on this packet need to be transferred to an intermediary account for the sender.
 	// For this, we override the ICS20 packet's Receiver (essentially hijacking the funds to this new address)
@@ -155,7 +155,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		if err != nil {
 			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, err.Error()))
 		}
-
+		im.keeper.Logger(ctx).Debug("action via ics20 submitted sucesssfully")
 		return channeltypes.NewResultAcknowledgement(bz)
 	}
 
@@ -244,7 +244,6 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 	if !isActionRouted {
 		return isActionRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, "", sdk.Coin{}, types.ExecutionConfiguration{}, "", nil
 	}
-
 	ics20Raw := metadata["action"]
 
 	// Make sure the ics20 key is a map. If it isn't, ignore this packet
@@ -284,7 +283,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 	msgs, ok := action["msgs"].([]interface{})
 	if !ok {
 		return isActionRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, "", sdk.Coin{}, types.ExecutionConfiguration{}, "",
-			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `action["msgs"] is not an array`)
+			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `action["msgs"] is not an array of interfaces`)
 	}
 
 	// Get the label
@@ -325,15 +324,12 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 	// Get the label
 	startAtString, ok := action["start_at"].(string)
 	if ok {
-		// The tokens will be returned
-		// return isActionRouted, sdk.AccAddress{}, nil, "", "", "", "","", 0, 0, false, "", sdk.Coin{}, types.ExecutionConfiguration{}, "",
-		// 	fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `action["start_at"]`)
 		startAt, err = strconv.ParseUint(startAtString, 10, 64)
-	}
 
-	if err != nil {
-		return isActionRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, "", sdk.Coin{}, types.ExecutionConfiguration{}, "",
-			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `action["start_at"]`)
+		if err != nil {
+			return isActionRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, "", sdk.Coin{}, types.ExecutionConfiguration{}, "",
+				fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `action["start_at"]`)
+		}
 	}
 
 	//optional hosted account

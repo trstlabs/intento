@@ -47,7 +47,7 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 		actionCtx := ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 
 		cacheCtx, writeCtx := actionCtx.CacheContext()
-		feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, action, 1_000_000)
+		feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, action, 500_000)
 		if err != nil || feeAddr == nil || feeDenom == "" {
 			errorString = types.ErrBalanceLow
 		}
@@ -67,22 +67,27 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 					}
 				} else {
 					actionTmp := action
-					actionTmp.Msgs = action.Msgs[:action.Conditions.UseResponseValue.MsgsIndex+1]
+					if action.Conditions.UseResponseValue.ActionID == 0 {
+						actionTmp.Msgs = action.Msgs[:action.Conditions.UseResponseValue.MsgsIndex]
+					}
 					executedLocally, msgResponses, err = k.TriggerAction(cacheCtx, &actionTmp)
 					if err != nil {
 						errorString = fmt.Sprintf(types.ErrSettingActionResult + err.Error())
 					}
-					if errorString == "" {
-						err = k.UseResponseValue(cacheCtx, action.ID, &actionTmp.Msgs, action.Conditions)
-						if err != nil {
-							errorString = fmt.Sprintf(types.ErrSettingActionResult + err.Error())
 
-						} else if executedLocally {
-							actionTmp.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex+1:]
-							_, msgResponses2, err2 := k.TriggerAction(cacheCtx, &actionTmp)
-							errorString = fmt.Sprintf(types.ErrActionMsgHandling, err2)
-							msgResponses = append(msgResponses, msgResponses2...)
+					if errorString == "" {
+						if action.Conditions.UseResponseValue.ActionID != 0 {
+							err = k.UseResponseValue(cacheCtx, action.ID, &actionTmp.Msgs, action.Conditions)
+							if err != nil {
+								errorString = fmt.Sprintf(types.ErrSettingActionResult + err.Error())
+							}
 						}
+					}
+					if executedLocally {
+						actionTmp.Msgs = actionTmp.Msgs[action.Conditions.UseResponseValue.MsgsIndex:]
+						_, msgResponses2, err2 := k.TriggerAction(cacheCtx, &actionTmp)
+						errorString = fmt.Sprintf(types.ErrActionMsgHandling, err2)
+						msgResponses = append(msgResponses, msgResponses2...)
 					}
 				}
 			}

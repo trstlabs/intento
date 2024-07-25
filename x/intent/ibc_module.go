@@ -117,7 +117,10 @@ func (im IBCModule) OnAcknowledgementPacket(
 		return errorsmod.Wrapf(types.ErrUnknownRequest, "cannot unmarshal ICS-27 packet acknowledgement: %v", err)
 	}
 	if !ack.Success() {
-		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, "error handling packet on host chain: see host chain events for details")
+		errorString := "error handling packet on host chain: see host chain events for details, error: " + ack.GetError()
+		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, errorString)
+		return nil //errorsmod.Wrapf(types.ErrAckErr, errorString)
+		//im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, "error handling packet on host chain: see host chain events for details")
 	}
 	var txMsgData sdk.TxMsgData
 	if err := proto.Unmarshal(ack.GetResult(), &txMsgData); err != nil {
@@ -133,7 +136,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 		//we process errors internally and return nil so acknoledgement is succesfull and ordered channel stays active.
 		return nil
 	default:
-		return im.handleDeprecatedMsgResponses(ctx, txMsgData, relayer, packet)
+		return nil // im.handleDeprecatedMsgResponses(ctx, txMsgData, relayer, packet)
 	}
 }
 
@@ -144,53 +147,40 @@ func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResponses []*cdctypes
 		return
 	}
 
-	//msgClass is used for Relayer Reward and Airdrop Reward
-	var msgClass int
-	for index, anyResp := range msgResponses {
-		im.keeper.Logger(ctx).Debug("msg response in ICS-27 packet", "response", anyResp.GoString(), "typeURL", anyResp.GetTypeUrl())
-
-		rewardClass := getMsgRewardType(ctx, anyResp.GetTypeUrl())
-		if index == 0 && rewardClass > 0 {
-			msgClass = rewardClass
-			im.keeper.HandleRelayerReward(ctx, relayer, msgClass)
-		}
-	}
-
 	// handle response (trigger next messages if response parsing) set result in Action history
-	err := im.keeper.HandleResponseAndSetActionResult(ctx, packet.SourcePort, packet.SourceChannel, msgClass, packet.Sequence, msgResponses)
+	err := im.keeper.HandleResponseAndSetActionResult(ctx, packet.SourcePort, packet.SourceChannel, relayer, packet.Sequence, msgResponses)
 	if err != nil {
 		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 	}
 }
 
-func (im IBCModule) handleDeprecatedMsgResponses(ctx sdk.Context, txMsgData sdk.TxMsgData, relayer sdk.AccAddress, packet channeltypes.Packet) error {
-	//msgClass is used for Relayer Reward and Airdrop Reward
-	var msgClass int // Initialize msgClass outside the loop
+// func (im IBCModule) handleDeprecatedMsgResponses(ctx sdk.Context, txMsgData sdk.TxMsgData, relayer sdk.AccAddress, packet channeltypes.Packet) error {
+// 	//msgClass is used for Relayer Reward and Airdrop Reward
 
-	for index, msgData := range txMsgData.Data {
-		response, rewardClass, err := handleMsgData(ctx, msgData)
-		if err != nil {
-			im.keeper.Logger(ctx).Debug("message response error in ICS-27 packet response", "error", err)
-			return err
-		}
+// 	for index, msgData := range txMsgData.Data {
+// 		response, rewardClass, err := handleMsgData(ctx, msgData)
+// 		if err != nil {
+// 			im.keeper.Logger(ctx).Debug("message response error in ICS-27 packet response", "error", err)
+// 			return err
+// 		}
 
-		im.keeper.Logger(ctx).Debug("message response in ICS-27 packet response", "response", response.String())
-		if index == 0 && rewardClass > 0 {
-			msgClass = rewardClass
-			im.keeper.HandleRelayerReward(ctx, relayer, rewardClass)
-		}
+// 		im.keeper.Logger(ctx).Debug("message response in ICS-27 packet response", "response", response.String())
+// 		if index == 0 && rewardClass > 0 {
 
-	}
+// 			im.keeper.HandleRelayerReward(ctx, relayer, rewardClass)
+// 		}
 
-	// set result in Action history
-	err := im.keeper.HandleResponseAndSetActionResult(ctx, packet.SourcePort, packet.SourceChannel, msgClass, packet.Sequence, nil)
-	if err != nil {
-		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
-		return err
-	}
+// 	}
 
-	return nil
-}
+// 	// set result in Action history
+// 	err := im.keeper.HandleResponseAndSetActionResult(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, nil)
+// 	if err != nil {
+// 		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
+// 		return err
+// 	}
+
+// 	return nil
+// }
 
 // OnTimeoutPacket implements the IBCModule interface.
 func (im IBCModule) OnTimeoutPacket(

@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/trstlabs/intento/x/intent/types"
 )
@@ -95,19 +96,34 @@ func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 	if err != nil {
 		return err
 	}
-
-	value, err := ParseResponseValue(protoMsg, useResp.ResponseKey /* "string" */, useResp.ValueType)
+	k.Logger(ctx).Debug("use response value", "protoMsg", protoMsg.String(), "TypeUrl", responsesAnys[useResp.ResponseIndex].TypeUrl)
+	valueFromResponse, err := ParseResponseValue(protoMsg, useResp.ResponseKey /* "string" */, useResp.ValueType)
 	if err != nil {
 		return err
 	}
-	var msgToInterface proto.Message
+	var msgToInterface sdk.Msg
+	//var msgToInterface interface{}
 	msgAny := (*msgs)[useResp.MsgsIndex]
+	if msgAny.TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+		msgExec := &authztypes.MsgExec{}
+		if err := proto.Unmarshal(msgAny.Value, msgExec); err != nil {
+			return err
+		}
+		msgAny = msgExec.Msgs[0]
+	}
+
 	err = k.cdc.UnpackAny(msgAny, &msgToInterface)
 	if err != nil {
 		return err
 	}
 
-	msgTo := reflect.ValueOf(msgToInterface)
+	//k.Logger(ctx).Debug("use response value", "interface", msgToInterface, "valueFromResponse", valueFromResponse)
+
+	msgProto, ok := msgToInterface.(proto.Message)
+	if !ok {
+		return fmt.Errorf("can't proto marshal %T", msgToInterface)
+	}
+	msgTo := reflect.ValueOf(msgProto)
 
 	// If the value is a pointer, get the element it points to
 	if msgTo.Kind() == reflect.Ptr {
@@ -116,29 +132,44 @@ func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 
 	// Ensure we're dealing with a struct
 	if msgTo.Kind() != reflect.Struct {
+		// k.Logger(ctx).Debug("use response value", "msgTo.Kind", msgTo.Kind())
 		return fmt.Errorf("expected a struct, got %v", msgTo.Kind())
 	}
 
-	field, err := traverseFields(msgToInterface, useResp.MsgKey)
+	fieldToReplace, err := traverseFields(msgToInterface, useResp.MsgKey)
 	if err != nil {
+		return err
+	}
+	k.Logger(ctx).Debug("use response value", "fieldToReplace", fieldToReplace)
+
+	// Set the new value
+	if fieldToReplace.CanSet() {
+		fieldToReplace.Set(reflect.ValueOf(valueFromResponse))
+	} else {
+		return fmt.Errorf("field %s cannot be set", fieldToReplace)
+	}
+
+	newMsgAny, err := cdctypes.NewAnyWithValue(msgToInterface)
+	if err != nil {
+		// k.Logger(ctx).Debug("use response value", "err", err, "newMsgAny", newMsgAny)
 		return err
 	}
 
-	// Set the new value
-	if field.CanSet() {
-		field.Set(reflect.ValueOf(value))
-	} else {
-		return fmt.Errorf("field %s cannot be set", useResp.MsgKey)
+	if (*msgs)[useResp.MsgsIndex].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+		msgExec := &authztypes.MsgExec{}
+		if err := proto.Unmarshal((*msgs)[useResp.MsgsIndex].Value, msgExec); err != nil {
+			return err
+		}
+		msgExec.Msgs[0] = newMsgAny
+		k.Logger(ctx).Debug("use response value", "msgExec", msgExec.String())
+		msgExecAnys, err := types.PackTxMsgAnys([]sdk.Msg{msgExec})
+		if err != nil {
+			return err
+		}
+		newMsgAny = msgExecAnys[0]
 	}
-	// Assert the message to a proto.Message
-	// protoMsg, ok := msgToInterface.(proto.Message)
-	// if !ok {
-	// 	return fmt.Errorf("expected proto.Message, got %T", msgToInterface)
-	// }
-	newMsgAny, err := cdctypes.NewAnyWithValue(msgToInterface)
-	if err != nil {
-		return err
-	}
+	k.Logger(ctx).Debug("use response value", "newMsgAny", newMsgAny.TypeUrl)
+
 	(*msgs)[useResp.MsgsIndex] = newMsgAny
 	return nil
 }

@@ -1,13 +1,14 @@
 package keeper
 
 import (
-	"strings"
+	"fmt"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/cosmos/gogoproto/proto"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
@@ -24,16 +25,18 @@ func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, 
 
 	connectionID := action.ICAConfig.ConnectionID
 	portID := action.ICAConfig.PortID
-
+	triggerAddress := action.Owner
 	//get hosted account from hosted config
-	if action.HostedConfig.HostedAddress != "" {
+	if action.HostedConfig != nil && action.HostedConfig.HostedAddress != "" {
 		hostedAccount := k.GetHostedAccount(ctx, action.HostedConfig.HostedAddress)
 		connectionID = hostedAccount.ICAConfig.ConnectionID
 		portID = hostedAccount.ICAConfig.PortID
+		triggerAddress = hostedAccount.HostedAddress
 		err := k.SendFeesToHosted(ctx, *action, hostedAccount)
 		if err != nil {
 			return false, nil, err
 		}
+
 	}
 
 	//check channel is active
@@ -59,7 +62,7 @@ func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, 
 	relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
 
 	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.icaControllerKeeper)
-	icaMsg := icacontrollertypes.NewMsgSendTx(action.Owner, connectionID, relativeTimeoutTimestamp, packetData)
+	icaMsg := icacontrollertypes.NewMsgSendTx(triggerAddress, connectionID, relativeTimeoutTimestamp, packetData)
 
 	res, err := msgServer.SendTx(ctx, icaMsg)
 	if err != nil {
@@ -103,34 +106,6 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 		}
 
 		msgResponses = append(msgResponses, res.MsgResponses...)
-		//autocompound example
-		// if sdk.MsgTypeURL(msg) == "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" {
-		// 	validator := ""
-		// 	amount := sdk.NewCoin(types.Denom, sdk.ZeroInt())
-		// 	for _, ev := range res.Events {
-		// 		if ev.Type == distrtypes.EventTypeWithdrawRewards {
-		// 			for _, attr := range ev.Attributes {
-		// 				if string(attr.Key) == distrtypes.AttributeKeyValidator {
-		// 					validator = string(attr.Value)
-		// 				}
-		// 				if string(attr.Key) == sdk.AttributeKeyAmount {
-		// 					amount, err = sdk.ParseCoinNormalized(string(attr.Value))
-		// 					if err != nil {
-		// 						return nil, err
-		// 					}
-		// 				}
-		// 			}
-
-		// 			msgDelegate := stakingtypes.MsgDelegate{DelegatorAddress: action.Owner, ValidatorAddress: validator, Amount: amount}
-		// 			handler := k.msgRouter.Handler(&msgDelegate)
-		// 			_, err = handler(cacheCtx, &msgDelegate)
-		// 			if err != nil {
-		// 				return nil, err
-		// 			}
-		// 		}
-		// 	}
-
-		// }
 
 	}
 	writeCache()
@@ -141,55 +116,125 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 }
 
 // HandleResponseAndSetActionResult sets the result of the last executed ID set at SendAction.
-func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string, channelID string, rewardType int, seq uint64, msgResponses []*cdctypes.Any) error {
+func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string, channelID string, relayer sdk.AccAddress, seq uint64, msgResponses []*cdctypes.Any) error {
 	id := k.getTmpActionID(ctx, portID, channelID, seq)
 	if id <= 0 {
 		return nil
 	}
-
-	k.Logger(ctx).Debug("action", "executed", "on host")
-
 	action := k.GetActionInfo(ctx, id)
-
-	k.UpdateActionIbcUsage(ctx, action)
-	owner, err := sdk.AccAddressFromBech32(action.Owner)
-	if err != nil {
-		return err
-	}
-	//airdrop reward hooks
-	if rewardType == 3 {
-		k.hooks.AfterActionAuthz(ctx, owner)
-	} else if rewardType == 1 {
-		k.hooks.AfterActionWasm(ctx, owner)
-	}
 
 	actionHistoryEntry, newErr := k.GetLatestActionHistoryEntry(ctx, id)
 	if newErr != nil {
 		actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, newErr.Error())
 	}
 
+	msgResponses, msgClass, err := k.HandleDeepResponses(ctx, msgResponses, relayer, action, len(actionHistoryEntry.MsgResponses))
+	if err != nil {
+		return err
+	}
+
+	k.UpdateActionIbcUsage(ctx, action)
+	owner, err := sdk.AccAddressFromBech32(action.Owner)
+	if err != nil {
+		return err
+	}
+	// reward hooks
+	if msgClass == 3 {
+		k.hooks.AfterActionAuthz(ctx, owner)
+	} else if msgClass == 1 {
+		k.hooks.AfterActionWasm(ctx, owner)
+	}
+
 	actionHistoryEntry.Executed = true
 
 	if action.Configuration.SaveMsgResponses {
-		actionHistoryEntry.MsgResponses = msgResponses
+		actionHistoryEntry.MsgResponses = append(actionHistoryEntry.MsgResponses, msgResponses...)
 	}
-
-	//trigger remaining executions
-	if action.Conditions != nil && action.Conditions.UseResponseValue != nil && action.Conditions.UseResponseValue.MsgsIndex != 0 {
-		if len(msgResponses) > int(action.Conditions.UseResponseValue.MsgsIndex) && strings.Contains(msgResponses[action.Conditions.UseResponseValue.MsgsIndex].TypeUrl, action.Msgs[action.Conditions.UseResponseValue.MsgsIndex].TypeUrl) {
-			tmpAction := action
-			tmpAction.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex+1:]
-			_, _, err = k.TriggerAction(ctx, &tmpAction)
-			if err != nil {
-				actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, types.ErrSettingActionResult+err.Error())
-			}
-		}
-	}
-	k.SetActionInfo(ctx, &action)
 
 	k.SetCurrentActionHistoryEntry(ctx, action.ID, actionHistoryEntry)
 
+	//trigger remaining execution
+	if action.Conditions != nil && action.Conditions.UseResponseValue != nil && action.Conditions.UseResponseValue.MsgsIndex != 0 && action.Conditions.UseResponseValue.ActionID == 0 && len(actionHistoryEntry.MsgResponses)-1 < int(action.Conditions.UseResponseValue.MsgsIndex) {
+		err = k.UseResponseValue(ctx, action.ID, &action.Msgs, action.Conditions)
+		if err != nil {
+			return errorsmod.Wrap(err, types.ErrSettingActionResult)
+		}
+		tmpAction := action
+		tmpAction.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex:]
+
+		k.Logger(ctx).Debug("triggering msgs", "id", action.ID, "msgs", len(tmpAction.Msgs))
+		_, _, err = k.TriggerAction(ctx, &tmpAction)
+		if err != nil {
+			actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, types.ErrActionMsgHandling+err.Error())
+			k.SetCurrentActionHistoryEntry(ctx, action.ID, actionHistoryEntry)
+		}
+		//}
+	}
+	k.SetActionInfo(ctx, &action)
+
 	return nil
+}
+
+func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, action types.ActionInfo, previousMsgsExecuted int) ([]*cdctypes.Any, int, error) {
+	var msgClass int
+
+	for index, anyResp := range msgResponses {
+		k.Logger(ctx).Debug("msg response in ICS-27 packet", "response", anyResp.GoString(), "typeURL", anyResp.GetTypeUrl())
+
+		rewardClass := getMsgRewardType(ctx, anyResp.GetTypeUrl())
+		if index == 0 && rewardClass > 0 {
+			msgClass = rewardClass
+			k.HandleRelayerReward(ctx, relayer, msgClass)
+		}
+		if anyResp.GetTypeUrl() == "/cosmos.authz.v1beta1.MsgExecResponse" {
+
+			msgExecResponse := authztypes.MsgExecResponse{}
+			err := proto.Unmarshal(anyResp.GetValue(), &msgExecResponse)
+			if err != nil {
+				fmt.Printf("err %v \n", err)
+				k.Logger(ctx).Debug("action response", "err", err)
+				return nil, 0, err
+			}
+
+			actionIndex := index + previousMsgsExecuted
+			// if actionIndex < 0 {
+			// 	actionIndex = 0
+			// }
+			msgExec := &authztypes.MsgExec{}
+			if err := proto.Unmarshal(action.Msgs[actionIndex].Value, msgExec); err != nil {
+				return nil, 0, err
+			}
+
+			msgResponses = []*cdctypes.Any{}
+
+			for _, resultBytes := range msgExecResponse.Results {
+				// var result sdk.Result
+				// if err := proto.Unmarshal(resultBytes, &result); err != nil {
+				// 	k.Logger(ctx).Debug("action result", "err", err)
+				// 	fmt.Printf("err 2%v \n", err)
+				// 	return nil, 0, err
+				// }
+
+				k.Logger(ctx).Debug("action result", "resultBytes", resultBytes)
+
+				//as we do not get typeURL we have to rely in this, MsgExec is the only regisrered message that should return results
+				msgRespProto, _, err := handleMsgData(ctx, &sdk.MsgData{Data: resultBytes, MsgType: msgExec.Msgs[0].TypeUrl})
+				if err != nil {
+					fmt.Printf("err 3%v \n", err)
+					return nil, 0, err
+				}
+				respAny, err := cdctypes.NewAnyWithValue(msgRespProto)
+				if err != nil {
+					fmt.Printf("err4 %v \n", err)
+					return nil, 0, err
+				}
+
+				msgResponses = append(msgResponses, respAny)
+
+			}
+		}
+	}
+	return msgResponses, msgClass, nil
 }
 
 // SetActionOnTimeout sets the action timeout result to the action

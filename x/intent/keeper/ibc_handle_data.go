@@ -1,4 +1,4 @@
-package intent
+package keeper
 
 import (
 	errorsmod "cosmossdk.io/errors"

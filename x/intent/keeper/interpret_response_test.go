@@ -305,3 +305,44 @@ func TestCompareArrayEquals(t *testing.T) {
 
 	require.True(t, boolean)
 }
+
+// func TestParseCoinAuthZ(t *testing.T) {
+// 	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+// 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+// 	types.Denom = "stake"
+// 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+// 	actionInfo := createBaseActionInfo(delAddr, actionAddr)
+
+// 	msgs := newFakeMsgAuthZWithdrawDelegatorReward(delAddr, delAddr, val)
+// 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgs})
+// 	executedLocally, msgResponses, err := keeper.TriggerAction(ctx, &actionInfo)
+// 	require.NoError(t, err)
+// 	require.True(t, executedLocally)
+// 	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
+
+// 	msgDelegate := newFakeMsgDelegate(delAddr, val)
+// 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
+// 	actionInfo.Conditions = &types.ExecutionConditions{}
+// 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
+// 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin"}
+// 	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
+// 	require.NoError(t, err)
+// 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
+// 	require.NoError(t, err)
+// 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(101)))
+
+// 	executedLocally, _, err = keeper.TriggerAction(ctx, &actionInfo)
+// 	require.NoError(t, err)
+// 	require.True(t, executedLocally)
+// }
+
+// func newFakeMsgAuthZWithdrawDelegatorReward(delegator, grantee sdk.AccAddress, validator stakingtypes.Validator) *authztypes.MsgExec {
+// 	msgWithdrawDelegatorReward := &distrtypes.MsgWithdrawDelegatorReward{
+// 		DelegatorAddress: delegator.String(),
+// 		ValidatorAddress: validator.GetOperator().String(),
+// 	}
+// 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
+
+// 	msgExec := &authztypes.MsgExec{Grantee: grantee.String(), Msgs: anys}
+// 	return msgExec
+// }
