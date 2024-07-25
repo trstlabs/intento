@@ -13,6 +13,9 @@ import (
 // DistributeCoins distributes Action fees and handles remaining action fee balance after last execution
 func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAddr sdk.AccAddress, feeDenom string, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
 	p := k.GetParams(ctx)
+
+	k.Logger(ctx).Debug("gas", "consumed", sdk.NewIntFromUint64(ctx.GasMeter().GasConsumed()))
+
 	gasMultipleSmall := sdk.NewIntFromUint64(ctx.GasMeter().GasConsumed() * uint64(p.ActionFlexFeeMul))
 	gasMultiple := gasMultipleSmall.Quo(math.NewInt(100))
 	if !gasMultiple.IsPositive() {
@@ -26,8 +29,6 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 
 	//depending if execution is recurring the constant fee may differ (gov param)
 
-	totalActionFees := sdk.NewCoin(feeDenom, gasFeeAmount)
-
 	// proposer reward
 	// transfer collected fees to the distribution module account
 	flexFeeCoin := sdk.NewCoin(feeDenom, gasFeeAmount)
@@ -35,11 +36,20 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 		return sdk.Coin{}, errorsmod.Wrap(errorsmod.ErrPanic, "flexFeeCoin was zero, this should never happen")
 	}
 
+	totalActionFees := flexFeeCoin
+	toCommunityPool := flexFeeCoin
+
 	//pay out any remaining balance to the owner after deducting fee, commision and gas
 	if p.ActionConstantFee != 0 {
 		fixedFee := sdk.NewInt(p.ActionConstantFee * int64(len(action.Msgs)))
-		fixedFeeCommunityCoin := sdk.NewCoin(feeDenom, fixedFee)
-		totalActionFees = totalActionFees.Add(fixedFeeCommunityCoin)
+		fixedFeeCoin := sdk.NewCoin(feeDenom, fixedFee)
+		totalActionFees = totalActionFees.Add(fixedFeeCoin)
+
+		// if feeDenom == types.Denom {
+		// 	k.bankKeeper.BurnCoins(ctx, "intent", sdk.NewCoins(fixedFeeCoin))
+		// } else {
+		toCommunityPool = toCommunityPool.Add(fixedFeeCoin)
+		//}
 	}
 
 	if !isRecurring && action.Configuration != nil && !action.Configuration.FallbackToOwnerBalance {
@@ -64,11 +74,10 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 		}
 	}
 
-	err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(totalActionFees), feeAddr)
+	err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(toCommunityPool), feeAddr)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-
 	k.Logger(ctx).Debug("fee", "amount", flexFeeCoin.Amount, "to", proposer.String())
 
 	return totalActionFees, nil
@@ -127,7 +136,8 @@ func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, action types.ActionInfo
 	// Calculate the required fee
 	minFee := sdk.NewCoins()
 	for _, coin := range p.GasFeeCoins {
-		amount := coin.Amount.Mul(sdk.NewInt(p.ActionFlexFeeMul * expectedGas))
+		amountSmall := coin.Amount.Mul(sdk.NewInt(p.ActionFlexFeeMul * expectedGas))
+		amount := amountSmall.Quo(math.NewInt(100))
 		minFee = minFee.Add(sdk.NewCoin(coin.Denom, amount))
 	}
 	denom = GetDenomIfAnyGTE(actionAddrBalances, minFee)
