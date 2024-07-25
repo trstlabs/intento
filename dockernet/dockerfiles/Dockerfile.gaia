@@ -1,17 +1,41 @@
+# FROM golang:1.21-alpine AS builder
+
+# WORKDIR /opt/
+
+# RUN set -eux; apk add --no-cache ca-certificates build-base git linux-headers
+
+# RUN git clone https://github.com/cosmos/gaia.git  gaia \
+#     && cd gaia \
+#     && git checkout v16.0.0
+
+# WORKDIR /opt/gaia/
+
+# RUN make build
+
+# FROM alpine:3.16
+# COPY --from=builder /opt/gaia/build/gaiad /usr/local/bin/
+# RUN apk add bash vim \
+#     && addgroup -g 1000 gaia \
+#     && adduser -S -h /home/gaia -D gaia -u 1000 -G gaia
+
+# USER 1000
+# WORKDIR /home/gaia
+
+# EXPOSE 26657 26656 1317 9090
+
+# CMD ["gaiad", "start"]
 FROM golang:1.20-alpine AS builder
 
 WORKDIR /opt
 
 RUN apk add --update curl make git libc-dev bash gcc linux-headers eudev-dev python3
 
-ENV COMMIT_HASH=v14.1.0
+ENV COMMIT_HASH=v15.0.0
 
 RUN git clone https://github.com/cosmos/gaia gaia-install \
     && cd gaia-install \
     && git checkout $COMMIT_HASH \
     && CGO_ENABLED=0 make install
-
-# RUN LEDGER_ENABLED=false BUILD_TAGS=muslc LINK_STATICALLY=true make build
 
 FROM alpine:3.16
 COPY --from=builder /go/bin/gaiad /usr/local/bin/

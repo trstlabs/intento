@@ -50,12 +50,28 @@ set_into_genesis() {
     jq ".app_state += $interchain_accts" $genesis_config > json.tmp && mv json.tmp $genesis_config
 }
 
+# LSM Params
+LSM_VALIDATOR_BOND_FACTOR="250"
+LSM_GLOBAL_LIQUID_STAKING_CAP="0.25"
+LSM_VALIDATOR_LIQUID_STAKING_CAP="0.50"
+#MIN_ATOM_AMOUNT="[{"denom":"uatom","amount":"0"}]"
 set_host_genesis() {
     genesis_config=$1
 
     # Shorten epochs and unbonding time
-
+    # jq '(.app_state.epochs.epochs[]? | select(.identifier=="day") ).duration = $epochLen' --arg epochLen $HOST_DAY_EPOCH_DURATION $genesis_config > json.tmp && mv json.tmp $genesis_config
+    # jq '(.app_state.epochs.epochs[]? | select(.identifier=="hour") ).duration = $epochLen' --arg epochLen $HOST_HOUR_EPOCH_DURATION $genesis_config > json.tmp && mv json.tmp $genesis_config
+    # jq '(.app_state.epochs.epochs[]? | select(.identifier=="week") ).duration = $epochLen' --arg epochLen $HOST_WEEK_EPOCH_DURATION $genesis_config > json.tmp && mv json.tmp $genesis_config
+    # jq '(.app_state.epochs.epochs[]? | select(.identifier=="mint") ).duration = $epochLen' --arg epochLen $HOST_MINT_EPOCH_DURATION $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.staking.params.unbonding_time = $newVal' --arg newVal "$UNBONDING_TIME" $genesis_config > json.tmp && mv json.tmp $genesis_config
+    
+    # # Shorten voting period (we need both of these to support both versions of the SDK)
+    # if [[ "$(jq '.app_state.gov | has("voting_params")' $genesis_config)" == "true" ]]; then
+    #     jq '.app_state.gov.voting_params.voting_period = $newVal' --arg newVal "$VOTING_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
+    # fi
+    # if [[ "$(jq '.app_state.gov | has("params")' $genesis_config)" == "true" ]]; then
+      
+    # fi
 
     # Set the mint start time to the genesis time if the chain configures inflation at the block level (e.g. stars)
     # also reduce the number of initial annual provisions so the inflation rate is not too high
@@ -73,6 +89,15 @@ set_host_genesis() {
     sed -i -E 's|"signed_blocks_window": "100"|"signed_blocks_window": "10"|g' $genesis_config
     sed -i -E 's|"downtime_jail_duration": "600s"|"downtime_jail_duration": "10s"|g' $genesis_config
     sed -i -E 's|"slash_fraction_downtime": "0.010000000000000000"|"slash_fraction_downtime": "0.050000000000000000"|g' $genesis_config
+
+    # LSM params
+    if [[ "$CHAIN" == "GAIA" ]]; then
+        jq '.app_state.gov.params.voting_period = $newVal' --arg newVal "$VOTING_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.staking.params.min_commission_rate = $newVal' --arg newVal "0.010000000000000000" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.staking.params.validator_bond_factor = $newVal' --arg newVal "$LSM_VALIDATOR_BOND_FACTOR" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.staking.params.validator_liquid_staking_cap = $newVal' --arg newVal "$LSM_VALIDATOR_LIQUID_STAKING_CAP" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.staking.params.global_liquid_staking_cap = $newVal' --arg newVal "$LSM_GLOBAL_LIQUID_STAKING_CAP" $genesis_config > json.tmp && mv json.tmp $genesis_config
+    fi
 }
 
 MAIN_ID=1 # Node responsible for genesis and persistent_peers
@@ -230,7 +255,7 @@ sed -i -E "s|seeds = .*|seeds = \"\"|g" $MAIN_CONFIG
 
 # update chain-specific settings
 if [ "$CHAIN" == "INTO" ]; then 
-   # sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
+    #sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"500ms\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"1s\"|g" $MAIN_CONFIG
     set_into_genesis $MAIN_GENESIS
