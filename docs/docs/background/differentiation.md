@@ -1,23 +1,40 @@
 ---
 title: Differentiation
-sidebar_position: 3
+sidebar_position: 2
 ---
 
 # Differentiation
 
-Intento differs from other decentralized automation solutions in several ways.
+Currently, performing intent-based actions requires a combination of smart contracts and off-chain bot networks.
 
-## Bot networks
+For both bot networks and privileged smart contracts, developing, testing, and auditing custom smart contracts are crucial. Developers must ensure that their solutions are efficient, fair, and secure, considering factors such as network congestion, centralization risks, and computational costs.
+The development of custom smart contracts can be costly. On average, the cost of developing a smart contract ranges between $5,000 and $25,000, depending on complexity and security requirements. This estimate includes the costs of designing, coding, testing, and auditing the contract. [Source: ConsenSys](https://consensys.net/blog/blockchain-development/the-cost-of-developing-a-smart-contract/) provides detailed insights into these costs. For accurate budgeting and planning, it's essential to factor in the potential expenses for ongoing maintenance and upgrades as well.
 
-Decentralized scheduled task execution is facilitated by bot networks, addressing challenges of server-based setups and central points of failure. Tasks are registered on an on-chain smart contract, with often the first successful bot claiming a reward. Inefficiencies arise with multiple bots executing transactions simultaneously, increasing network congestion and gas costs. Additionally, critics highlight issues like rewarding agents on a first-come basis, leading to centralization as unprofitable agents exit. In addition, having arbitrary trigger addresses pose limitations, requiring additional smart contract logic for privileged execution, thereby increasing the complexity of an automation workflow.
+Intento makes it easy to set any action with given conditions at a fraction of the cost, and in a non-custodial manner.
 
-## Privileged Smart Contracts
+## Bot Networks and Privileged Smart Contracts
 
-In CosmWasm blockchains, smart contracts can run with privileges. These can leverage BeginBlocker and EndBlocker functions for scheduling block-based execution. Several chains have integrated this. This feature may seem similar to Intento, but the system is permissioned. Privileged smart contracts demand more computational resources per execution. Running trigger engines inside smart contracts increases gas costs for users and makes such a system less flexible. Running a trigger engine inside a virtual machine has fixed computational costs, as a check for scheduled executions needs to be performed on an recurring basis. Thus, this also impacts potential fee revenue of such a solution.
+### Bot Networks
 
-With recurring executions, blockchains have to find a balance for time-based executions and general transactions in terms of blockspace usage. Hence, we also find a necessity for governance for measures like limits per block and fee settings. Intento offers a protocol-neutral, permissionless platform with integrated governance parameters, allowing the community to find the balance between blnetwork usage and fee revenue.
+Decentralized scheduled task execution through bot networks addresses challenges associated with server-based setups and central points of failure. In these networks, tasks are registered on an on-chain smart contract, and the first successful bot typically claims a reward. However, there are notable inefficiencies:
 
-## A Closer Look at Gas Costs: How Intento Automation Stands Out
+- **Network Congestion and Gas Costs:** Multiple bots executing transactions simultaneously can lead to increased congestion and higher gas costs.
+- **Centralization Risks:** The first-come-first-served reward mechanism can lead to centralization, as less profitable agents may exit the network.
+- **Complex Automation Workflows:** Arbitrary trigger addresses and the need for additional smart contract logic for privileged execution add complexity to the automation process.
+
+These issues highlight the need for careful development, testing, and auditing of custom smart contracts. Developers must ensure that their smart contracts are optimized for efficiency and that the network remains decentralized and fair.
+
+### Privileged Smart Contracts
+
+In CosmWasm blockchains, privileged smart contracts can use BeginBlocker and EndBlocker functions for scheduling block-based executions. While this feature provides scheduling capabilities, it introduces several challenges:
+
+- **Increased Computational Resources:** Privileged smart contracts require more computational resources per execution, leading to higher gas costs for users.
+- **Fixed Computational Costs:** Running trigger engines inside smart contracts or virtual machines entails fixed costs and can impact fee revenue.
+- **Balance of Blockspace Usage:** Blockchains need to balance time-based executions with general transactions, necessitating governance measures for blockspace limits and fee settings.
+
+Compared to permissioned systems like Intento, which offers a protocol-neutral and permissionless platform with integrated governance parameters, privileged smart contracts may lack flexibility. Intento allows the community to manage the balance between blockchain network usage and fee revenue, providing a more adaptable solution for automated tasks.
+
+## How Intento Automation Stands Out
 
 In crypto, the efficiency and cost of transactions, often expressed through "gas costs" play a significant role in the user experience. Our comparison between various automation services like Gelato on Ethereum, CronCat on Juno and Neutron, and Intento reveal significant enhancements in security, efficiency and cost-effectiveness.
 
@@ -25,7 +42,6 @@ Gelato's services on Ethereum come with a protocol logic cost of 940,000 gas, tr
 
 In comparison, Intento has an estimated logic cost of just about 100,000 gas based on its lines of code. This stark reduction in gas usage not only offers substantial cost savings for users, enabling more frequent automation of transactions but also broadens accessibility.
 
-Moreover, the efficiency of Intento unlocks new use cases and significantly enhances the user experience within crypto. The USP in gas cost efficiency not only positions Intento as a highly attractive option for users but also accentuates its role in establishing the Dymension Hub as a pivotal platform for interchain coordination. 
+The scalability unlocked by this efficiency unlocks new use cases and significantly enhances the user experience within crypto.
 
-
-Read more on gas cost savings in [our blog post](https://intento.zone/post/the-economics-of-modular-automation-a-comparative-gas-cost-analysis)
+Read more on gas cost savings in [our blog post](https://intento.zone/post/gas-cost-in-action-processing-an-analysis/)
