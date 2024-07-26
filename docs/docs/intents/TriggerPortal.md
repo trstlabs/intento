@@ -1,5 +1,5 @@
 ---
-sidebar_position: 2
+sidebar_position: 3
 title: Creating actions with TriggerPortal
 pagination_label: How to set actions using TriggerPortal
 ---
@@ -116,4 +116,4 @@ Using the actions dialog you can specify the interval of the autocompound. Your 
 
 ## Future Improvements
 
-Do you have an interesting feature in mind? Mention it on our [Github](https://github.com/trstlabs/triggerportal-frontend) or [X/Twitter](https://twitter.com/intento) and it may get added to the roadmap.
+Do you have an interesting feature in mind? Mention it on our [Github](https://github.com/trstlabs/triggerportal-frontend) (Public Access To be announced) or [X/Twitter](https://twitter.com/intentozone) and it may get added to the roadmap.

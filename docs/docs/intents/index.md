@@ -1,5 +1,5 @@
 ---
-title: Actions
+title: Intents
 order: 2
 ---
 

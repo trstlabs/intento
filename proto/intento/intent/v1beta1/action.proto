@@ -140,7 +140,6 @@ message ResponseComparison {
   string value_type = 4; // can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int 
   ComparisonOperator comparison_operator = 5;
   string comparison_operand = 6;
-
 }
 
 // Comparison operators that can be used for various types.

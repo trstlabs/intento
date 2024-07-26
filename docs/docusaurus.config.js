@@ -117,7 +117,7 @@ const config = {
               },
             ],
           },
-          {
+         /*  {
             title: "Documentation",
             items: [
               {
@@ -141,15 +141,15 @@ const config = {
                 href: "https://ibc.cosmos.network/",
               },
             ],
-          },
+          }, */
           {
             title: "Community",
             items: [
               {
                 label: "Blog",
-                href: "https://blog.cosmos.network/",
+                href: "https://blog.intento.zone/",
               },
-              {
+/*               {
                 label: "Forum",
                 href: "https://forum.cosmos.network/",
               },
@@ -160,28 +160,29 @@ const config = {
               {
                 label: "Reddit",
                 href: "https://reddit.com/r/cosmosnetwork",
-              },
+              }, */
             ],
           },
           {
             title: "Social",
             items: [
               {
+                label: "X",
+                href: "https://x.com/intentozone",
+              },
+              {
                 label: "Discord",
-                href: "https://discord.gg/cosmosnetwork",
+                href: "https://discord.gg/teRhcmwu",
               },
-              {
-                label: "Twitter",
-                href: "https://twitter.com/cosmoshub",
-              },
-              {
+
+/*               {
                 label: "Youtube",
                 href: "https://www.youtube.com/c/CosmosProject",
-              },
-              {
+              }, */
+/*               {
                 label: "Telegram",
                 href: "https://t.me/cosmosproject",
-              },
+              }, */
             ],
           },
         ],

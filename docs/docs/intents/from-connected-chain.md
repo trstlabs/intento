@@ -1,10 +1,10 @@
 ---
-sidebar_position: 3
-title: Creating actions from a connected chain
-description: How to setup automation from a connected chain
+sidebar_position: 4
+title: Submitting actions from a connected chain
+description: How to setup actions from a connected chain
 ---
 
-## Setting up Automation
+## Setting up Actions
 
 In the previous step we showed how the action process looks like by submitting an action on Intento. You can do this with the [TriggerPortal](https://triggerportal.zone) interface, a IntentoJS front-end integration or locally through the CLI.
 
@@ -23,7 +23,7 @@ Using ICS20, accounts on connected chains can create actions. Sebders specify ac
 
 This is useful for DAOs and other decentralized organizations on any connected chain. They can safely and reliably execute on Intento's connected chains. For DAOs, this gives certainty to stakeholders, whilst also reducing manual work on governance proposals.
 
-## Automation for DAOs
+## For DAOs
 
 Setting up an action on a connected chain can be particularly useful for DAOs. Using this middleware, DAOs can now automate tasks not only on their chain but also on any chain connected to Intento. What can DAO's do with this? DAOs can automate periodic token swaps, payroll, payment in installments amongst other scheduled actions. These actions can be performed in one proposal, which normally require periodically voting on individual proposals. This normally requires manual action from the proposer and DAO participants.
 

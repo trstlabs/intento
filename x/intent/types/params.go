@@ -18,7 +18,7 @@ var (
 	// ActionFlexFeeMul is the denominator for the gas-dependent flex fee to prioritize auto messages in the block, to be distributed to validators
 	DefaultActionFlexFeeMul int64 = 34 // in %
 	// GasFeeCoins fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultGasFeeCoins sdk.Coins = sdk.NewCoins(sdk.NewCoin(Denom, sdk.NewInt(1))) // 0.005trst
+	DefaultGasFeeCoins sdk.Coins = sdk.NewCoins(sdk.NewCoin(Denom, sdk.NewInt(1))) // 1uinto
 	// Default max period for a Action that is self-executing
 	DefaultMaxActionDuration time.Duration = time.Hour * 24 * 366 * 10 // a little over 2 years
 	// MinActionDuration sets the minimum duration for a Action

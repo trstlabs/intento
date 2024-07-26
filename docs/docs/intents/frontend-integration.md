@@ -1,7 +1,7 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Frontend Integration
-description: How to integrate automation into your interchain dApp
+description: How to integrate intent-based actions into your interchain dApp
 ---
 
 ## IntentoJS

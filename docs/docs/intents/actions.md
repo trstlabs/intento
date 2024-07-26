@@ -1,22 +1,20 @@
 ---
 sidebar_position: 1
-title: Interchain actions
-pagination_label: automation of assets on any IBC-enabled chain
+title: Any action, anywhere
+pagination_label: Interchain actions
 ---
 
-Intento can perform actions on IBC-compatible chains that utilize the Interchain Accounts standard. They are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitAction` as well as IBC-specific settings such as the `connection_id`.
+# Introduction
 
-This is great for both automating actions, such as sending tokens or auto-compounding as well as for orchestrating workflows across chains.
-Developers can use this to automate their protocols and build solutions for end-users to automate their assets.
+Intents contain actions and predefined conditions, which determine how actions are processed. In crypto, we want to process actions with no counterparty risk and in a permissionless and decentralized manner. This has so far only been possible by directly sending transactions to the destination chain. With Intento, you will be able specify your intent to perform any action, anywhere at any moment given any conditions.
 
-Interchain Accounts are a key component of Intento. They allow for the creation and management of accounts across different IBC-connected chains. This means that Intento's Intents can execute actions on other chains based on custom logic, making them extremely versatile and useful for a wide range of applications.
+Intent-based actions are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitAction`, IBC-specific settings such as the `ConnectionID` or a `HostedAccount`, and conditions such as comparisions and feedback loops.
 
+An action in technical terms is an object containing messages that are triggered at a specified time, or recurringly with intervals, with given conditions.
 
-
-An action is an object containing messages that are triggered at a specified time, or recurringly with intervals, given conditions.
 Action entries are scheduled at the beginning of a new block.
 
-Interchain Accounts can execute Cosmos SDK blockchain messages such as:
+Interchain Accounts are a key component of Intento. They allow for the secure management of assets across different IBC-connected chains. This means that Intento's Intents can execute actions on other chains based on custom logic, making them extremely versatile and useful for a wide range of applications. Interchain Accounts can execute Cosmos SDK blockchain messages such as:
 
 - `MsgSend` for token transfers
 - `MsgSwapExactAmountIn` for token swapping on Osmosis
@@ -24,12 +22,12 @@ Interchain Accounts can execute Cosmos SDK blockchain messages such as:
 - `MsgExecuteContract` to execute a CosmWasm contract
 - `MsgInstantiateContract` to instantiate a CosmWasm contract
 
-
 #### Approaches for Executing Messages on Other Chains
 
 Intento can execute messages on other chains using several approaches:
 
 1. **ICS20 Transfers with a Memo**
+
    - Easy to set up on available chains by using packet forwarding
    - Memo field actions have limited support by chains
 
@@ -37,11 +35,9 @@ Intento can execute messages on other chains using several approaches:
    - Easy to set up and manage
    - Host chain fees are managed by an admin
    - You configure a fee limit
-   
 3. **Self-Hosted Interchain Accounts**
    - Full control over the account
    - You have to manage host chain fee balances yourself
-
 
 To use Self-Hosted Interchain Accounts, you first register an interchain account. This involves creating a port ID and connection ID, which allows you to connect their account to other chains over IBC. You additionaly have to send funds for fees on the host chain.
 
@@ -88,7 +84,7 @@ Submitting an action with MsgSubmitAction can be done with the following input:
 8. IBC Packet gets acknowledged by a relayer and the action entry is updated
 9. Remaining funds sent to an action account are returned to the action owner
 
-_Read more on how the module works in the [module](@site/docs/modules/index.md) section of our documetation._
+<!-- _Continue reading on on how intent module works in the [module](@site/docs/module/index.md) section of our documetation._ -->
 
 <!-- ## Considerations
 

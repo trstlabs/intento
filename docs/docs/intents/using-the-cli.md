@@ -1,5 +1,5 @@
 ---
-order: 4
+order: 5
 title: Using the CLI
 description: How to set up actions using the CLI
 ---
