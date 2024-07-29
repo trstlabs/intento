@@ -83,7 +83,6 @@ const config = {
           autoCollapseCategories: true,
           hideable: true,
         },
-        
       },
       // announcementBar: {
       //   id: "support_us",
@@ -117,31 +116,19 @@ const config = {
               },
             ],
           },
-         /*  {
-            title: "Documentation",
+          {
+            title: "Ecosystem",
             items: [
               {
-                label: "Dymension ",
-                href: "https://docs.dymension.xyz",
+                label: "TriggerPortal",
+                href: "https://triggerportal.zone/",
               },
               {
-                label: "Cosmos SDK",
-                href: "https://docs.cosmos.network/",
-              },
-              {
-                label: "CometBFT",
-                href: "https://docs.cometbft.com/",
-              },
-              {
-                label: "IBC Specs",
-                href: "https://github.com/cosmos/ibc",
-              },
-              {
-                label: "IBC Go",
-                href: "https://ibc.cosmos.network/",
+                label: "TRST Labs",
+                href: "https://trstlabs.xyz/",
               },
             ],
-          }, */
+          },
           {
             title: "Community",
             items: [
@@ -149,7 +136,15 @@ const config = {
                 label: "Blog",
                 href: "https://blog.intento.zone/",
               },
-/*               {
+              {
+                label: "X",
+                href: "https://x.com/intentozone",
+              },
+              {
+                label: "Discord",
+                href: "https://discord.gg/teRhcmwu",
+              },
+              /*               {
                 label: "Forum",
                 href: "https://forum.cosmos.network/",
               },
@@ -162,29 +157,7 @@ const config = {
                 href: "https://reddit.com/r/cosmosnetwork",
               }, */
             ],
-          },
-          {
-            title: "Social",
-            items: [
-              {
-                label: "X",
-                href: "https://x.com/intentozone",
-              },
-              {
-                label: "Discord",
-                href: "https://discord.gg/teRhcmwu",
-              },
-
-/*               {
-                label: "Youtube",
-                href: "https://www.youtube.com/c/CosmosProject",
-              }, */
-/*               {
-                label: "Telegram",
-                href: "https://t.me/cosmosproject",
-              }, */
-            ],
-          },
+          }
         ],
         copyright: `This website is maintained by TRST Labs.`,
       },

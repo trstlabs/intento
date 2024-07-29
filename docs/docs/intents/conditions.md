@@ -50,7 +50,7 @@ message UseResponseValue {
 
 ### Response Comparison
 
-The `ResponseComparison` message allows you to compare a response value with a specified operand before the execution of an action. This comparison controls whether the action proceeds based on the outcome.
+The `ResponseComparison` message allows you to compare a response value with a specified operand before the execution of an action message. This comparison controls whether the action proceeds based on the outcome.
 
 ```proto
 message ResponseComparison {
@@ -107,10 +107,10 @@ message MsgWithdrawDelegatorReward {
 
 #### 2. Use the Withdrawn Amount as Input
 
-Use the `UseResponseValue` to take the withdrawn amount as input for the next action:
+Use the `UseResponseValue` to take the withdrawn amount as input for the next action message:
 
-```proto
-UseResponseValue {
+```os
+use_response_value {
   action_id: 1 // Action ID of the reward withdrawal
   response_index: 0 // First response
   response_key: "amount[0].amount" // Key to extract the amount
@@ -124,8 +124,8 @@ UseResponseValue {
 
 Use `ResponseComparison` to ensure the amount is greater than 200,000 "uatom":
 
-```proto
-ResponseComparison {
+```js
+comparision {
   action_id: 1 // Action ID of the reward withdrawal
   response_index: 0 // First response
   response_key: "amount[0].amount" // Key to compare the amount
@@ -151,8 +151,8 @@ message MsgSend {
 
 Combine the conditions into `ExecutionConditions` for the transfer action:
 
-```proto
-ExecutionConditions {
+```js
+conditions {
   use_response_value: {
     action_id: 1 // Action ID of the reward withdrawal
     response_index: 0 // First response
@@ -162,7 +162,7 @@ ExecutionConditions {
     value_type: "sdk.Int" // Value type
   }
   response_comparison: {
-    action_id: 1 // Action ID of the reward withdrawal
+    action_id: 1" // Action ID of the reward withdrawal
     response_index: 0 // First response
     response_key: "amount[0].amount" // Key to compare the amount
     value_type: "sdk.Int" // Value type
@@ -172,4 +172,4 @@ ExecutionConditions {
 }
 ```
 
-With these conditions, the `MsgSend` action will only execute if the withdrawn amount is greater than 200,000 "uatom", and the withdrawn amount will be used as the transfer amount.
+With these conditions, the `MsgSend` action message will only execute if the withdrawn amount is greater than 200,000 "uatom", and the withdrawn amount will be used as the transfer amount.
