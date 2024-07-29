@@ -145,7 +145,12 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 		}
 		conditions = *msg.Conditions
 	}
-	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, *msg.HostedConfig, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
+	hostedConfig := types.HostedConfig{}
+	if msg.HostedConfig != nil {
+		hostedConfig = *msg.HostedConfig
+	}
+
+	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, hostedConfig, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -371,8 +376,13 @@ func (k msgServer) CreateHostedAccount(goCtx context.Context, msg *types.MsgCrea
 	if err != nil {
 		return nil, err
 	}
+	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
+	}
 	//store hosted config by address on hosted key prefix
 	k.SetHostedAccount(ctx, &types.HostedAccount{HostedAddress: hostedAddress.String(), HostFeeConfig: &types.HostFeeConfig{Admin: msg.Creator, FeeCoinsSuported: msg.FeeCoinsSuported}, ICAConfig: &types.ICAConfig{ConnectionID: msg.ConnectionId, HostConnectionID: msg.HostConnectionId, PortID: portID}})
+	k.addToHostedAccountAdminIndex(ctx, creator, hostedAddress.String())
 	return &types.MsgCreateHostedAccountResponse{Address: hostedAddress.String()}, nil
 }
 
@@ -409,11 +419,16 @@ func (k msgServer) UpdateHostedAccount(goCtx context.Context, msg *types.MsgUpda
 
 	admin := hostedAccount.HostFeeConfig.Admin
 	if msg.HostFeeConfig.Admin != "" {
-		_, err := sdk.AccAddressFromBech32(msg.HostFeeConfig.Admin)
+		newAdminAddr, err := sdk.AccAddressFromBech32(msg.HostFeeConfig.Admin)
+		if err != nil {
+			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
+		}
+		currentAdminAddr, err := sdk.AccAddressFromBech32(hostedAccount.HostFeeConfig.Admin)
 		if err != nil {
 			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 		}
 		admin = msg.HostFeeConfig.Admin
+		k.changeHostedAccountAdminIndex(ctx, currentAdminAddr, newAdminAddr, hostedAccount.HostedAddress)
 	}
 
 	feeCoinsSupported := hostedAccount.HostFeeConfig.FeeCoinsSuported

@@ -164,6 +164,14 @@ func (k Keeper) addToActionOwnerIndex(ctx sdk.Context, ownerAddress sdk.AccAddre
 	store.Set(types.GetActionByOwnerIndexKey(ownerAddress, actionID), []byte{})
 }
 
+// changeActionOwnerIndex changes element to the index for actions-by-creator queries
+// func (k Keeper) changeActionOwnerIndex(ctx sdk.Context, ownerAddress, newOwnerAddress sdk.AccAddress, actionID uint64) {
+// 	store := ctx.KVStore(k.storeKey)
+
+// 	store.Set(types.GetActionByOwnerIndexKey(newOwnerAddress, actionID), []byte{})
+// 	store.Delete(types.GetActionByOwnerIndexKey(ownerAddress, actionID))
+// }
+
 // IterateActionsByOwner iterates over all actions with given creator address in order of creation time asc.
 func (k Keeper) IterateActionsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb func(address sdk.AccAddress) bool) {
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetActionsByOwnerPrefix(owner))

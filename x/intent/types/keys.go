@@ -30,6 +30,7 @@ var (
 	ActionIbcUsageKeyPrefix       = []byte{0x08}
 	ActionHistorySequencePrefix   = []byte{0x09}
 	HostedAccountKeyPrefix        = []byte{0x10}
+	HostedAccountsByAdminPrefix   = []byte{0x11}
 	KeyLastID                     = append(SequenceKeyPrefix, []byte("lastId")...)
 	KeyLastTxAddrID               = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
 )
@@ -63,6 +64,12 @@ func GetActionsByOwnerPrefix(addr sdk.AccAddress) []byte {
 // GetHostedAccountKey returns the key for the hosted account
 func GetHostedAccountKey(address string) []byte {
 	return append(HostedAccountKeyPrefix, []byte(address)...)
+}
+
+// GetHostedAccountsByAdminPrefix returns the actions by creator prefix
+func GetHostedAccountsByAdminPrefix(addr sdk.AccAddress) []byte {
+	bz := address.MustLengthPrefix(addr)
+	return append(HostedAccountsByAdminPrefix, bz...)
 }
 
 ////queue types
@@ -119,4 +126,10 @@ func GetActionByOwnerIndexKey(bz []byte, actionID uint64) []byte {
 	copy(r[lenPrefixBytes:], GetBytesForUint(actionID))
 
 	return r
+}
+
+// GetHostedAccountsByAdminIndexKey returns the id: `<prefix><adminAddress length><adminAddress><hostedaccountID>`
+func GetHostedAccountsByAdminIndexKey(bz []byte, hostedAccountAddress string) []byte {
+	prefixBytes := GetHostedAccountsByAdminPrefix(bz)
+	return append(prefixBytes, []byte(hostedAccountAddress)...)
 }

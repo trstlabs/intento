@@ -145,13 +145,9 @@ func (k Keeper) ActionsForOwner(c context.Context, req *types.QueryActionsForOwn
 	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetActionsByOwnerPrefix(ownerAddress))
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
-			actionID := types.GetIDFromBytes(key /* [types.TimeTimeLen:] */)
+			actionID := types.GetIDFromBytes(key)
 			actionInfo := k.GetActionInfo(ctx, actionID)
-			// msg, err := icatypes.DeserializeCosmosTx(k.cdc, actionInfo.Data)
-			// if err != nil {
-			// 	return false, err
-			// }
-			// makeReadableMsgData(&actionInfo, msg)
+
 			actions = append(actions, actionInfo)
 
 		}
@@ -235,6 +231,39 @@ func (k Keeper) HostedAccounts(c context.Context, req *types.QueryHostedAccounts
 	}
 
 	return &types.QueryHostedAccountsResponse{
+		HostedAccounts: hostedAccounts,
+		Pagination:     pageRes,
+	}, nil
+}
+
+// HostedAccountsByAdmin implements the Query/HostedAccountsByAdmin gRPC method
+func (k Keeper) HostedAccountsByAdmin(c context.Context, req *types.QueryHostedAccountsByAdminRequest) (*types.QueryHostedAccountsByAdminResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	hostedAccounts := make([]types.HostedAccount, 0)
+
+	admin, err := sdk.AccAddressFromBech32(req.Admin)
+	if err != nil {
+		return nil, err
+	}
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetHostedAccountsByAdminPrefix(admin))
+	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
+		if accumulate {
+			hostedAccountAddress := string(key)
+			actionInfo := k.GetHostedAccount(ctx, hostedAccountAddress)
+
+			hostedAccounts = append(hostedAccounts, actionInfo)
+
+		}
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryHostedAccountsByAdminResponse{
 		HostedAccounts: hostedAccounts,
 		Pagination:     pageRes,
 	}, nil

@@ -12,24 +12,24 @@ import (
 // GetHostedAccount
 func (k Keeper) GetHostedAccount(ctx sdk.Context, address string) types.HostedAccount {
 	store := ctx.KVStore(k.storeKey)
-	var action types.HostedAccount
-	actionBz := store.Get(types.GetHostedAccountKey(address))
+	var hostedAccount types.HostedAccount
+	hostedAccountBz := store.Get(types.GetHostedAccountKey(address))
 
-	k.cdc.MustUnmarshal(actionBz, &action)
-	return action
+	k.cdc.MustUnmarshal(hostedAccountBz, &hostedAccount)
+	return hostedAccount
 }
 
 // TryGetHostedAccount
 func (k Keeper) TryGetHostedAccount(ctx sdk.Context, address string) (types.HostedAccount, error) {
 	store := ctx.KVStore(k.storeKey)
-	var action types.HostedAccount
-	actionBz := store.Get(types.GetHostedAccountKey(address))
+	var hostedAccount types.HostedAccount
+	hostedAccountBz := store.Get(types.GetHostedAccountKey(address))
 
-	err := k.cdc.Unmarshal(actionBz, &action)
+	err := k.cdc.Unmarshal(hostedAccountBz, &hostedAccount)
 	if err != nil {
 		return types.HostedAccount{}, err
 	}
-	return action, nil
+	return hostedAccount, nil
 }
 
 func (k Keeper) SetHostedAccount(ctx sdk.Context, hostedAccount *types.HostedAccount) {
@@ -37,15 +37,15 @@ func (k Keeper) SetHostedAccount(ctx sdk.Context, hostedAccount *types.HostedAcc
 	store.Set(types.GetHostedAccountKey(hostedAccount.HostedAddress), k.cdc.MustMarshal(hostedAccount))
 }
 
-// func (k Keeper) importHostedAccount(ctx sdk.Context, address string, action types.HostedAccount) error {
+// func (k Keeper) importHostedAccount(ctx sdk.Context, address string, hostedAccount types.HostedAccount) error {
 
 // 	store := ctx.KVStore(k.storeKey)
 // 	key := types.GetHostedAccountKey(address)
 // 	if store.Has(key) {
 // 		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate address: %s", address)
 // 	}
-// 	// 0x01 | address (uint64) -> action
-// 	store.Set(key, k.cdc.MustMarshal(&action))
+// 	// 0x01 | address (uint64) -> hostedAccount
+// 	store.Set(key, k.cdc.MustMarshal(&hostedAccount))
 // 	return nil
 // }
 
@@ -57,6 +57,31 @@ func (k Keeper) IterateHostedAccounts(ctx sdk.Context, cb func(uint64, types.Hos
 		k.cdc.MustUnmarshal(iter.Value(), &c)
 		// cb returns true to stop early
 		if cb(binary.BigEndian.Uint64(iter.Key()), c) {
+			return
+		}
+	}
+}
+
+// addToHostedAccountAdminIndex adds element to the index for hostedAccounts-by-creator queries
+func (k Keeper) addToHostedAccountAdminIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, hostedAccountAddress string) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.GetHostedAccountsByAdminIndexKey(ownerAddress, hostedAccountAddress), []byte{})
+}
+
+// changeHostedAccountAdminIndex changes element to the index for hostedAccounts-by-creator queries
+func (k Keeper) changeHostedAccountAdminIndex(ctx sdk.Context, ownerAddress, newAdminAddress sdk.AccAddress, hostedAccountAddress string) {
+	store := ctx.KVStore(k.storeKey)
+
+	store.Set(types.GetHostedAccountsByAdminIndexKey(newAdminAddress, hostedAccountAddress), []byte{})
+	store.Delete(types.GetHostedAccountsByAdminIndexKey(ownerAddress, hostedAccountAddress))
+}
+
+// IterateHostedAccountsByAdmin iterates over all hostedAccounts with given creator address in order of creation time asc.
+func (k Keeper) IterateHostedAccountsByAdmin(ctx sdk.Context, owner sdk.AccAddress, cb func(address sdk.AccAddress) bool) {
+	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetHostedAccountsByAdminPrefix(owner))
+	for iter := prefixStore.Iterator(nil, nil); iter.Valid(); iter.Next() {
+		key := iter.Key()
+		if cb(key) {
 			return
 		}
 	}
