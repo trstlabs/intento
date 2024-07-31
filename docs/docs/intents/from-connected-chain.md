@@ -1,6 +1,6 @@
 ---
 sidebar_position: 4
-title: Submitting actions from a connected chain
+title: Submitting from a connected chain
 description: How to setup actions from a connected chain
 ---
 
