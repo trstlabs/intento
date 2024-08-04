@@ -23,3 +23,6 @@
 [submodule "deps/dymension"]
 	path = deps/dymension
 	url = https://github.com/dymensionxyz/dymension
+[submodule "deps/ntrn"]
+	path = deps/ntrn
+	url = https://github.com/neutron-org/neutron
