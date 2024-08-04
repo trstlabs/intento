@@ -8,27 +8,27 @@ TriggerPortal is a powerful dApp designed for developers, and integrators, offer
 
 ### Key Features of TriggerPortal
 
-- **Conditional Automated Token Transfers:**
+- **Conditional Automated Token Transfers**
 
   Effortlessly set up token transfers with conditional logic to multiple recipients at regular intervals. Ideal for organisations or individuals managing recurring payments, TriggerPortal ensures precise control over the distribution process based on predefined conditions.
 
-- **Sophisticated On-Chain Time-Based Actions:**
+- **Sophisticated On-Chain Time-Based Actions**
   TriggerPortal allows users to set up time-based actions incorporating feedback loops and comparisons to ensure actions are performed under specific conditions. This capability supports intricate workflows that react dynamically to on-chain events.
 
 ### Benefits for Developers and Integrators
 
-- **Efficiency and Precision:**
+- **Efficiency and Precision**
   - Save time and ensure accuracy by automating repetitive tasks with condition-based actions and feedback mechanisms.
-- **Cross-Chain Interoperability:**
+- **Cross-Chain Interoperability**
   - Seamlessly integrate and build processes across multiple blockchains, leveraging IBC capabilities.
-- **Enhanced Investment Strategies:**
+- **Enhanced Investment Strategies**
   - Automatically reinvest rewards based on intelligent conditions, optimizing growth without manual effort.
-- **Dynamic Workflow Management:**
+- **Dynamic Workflow Management**
   - Create sophisticated, buildd workflows that respond to real-time on-chain data and conditions, enhancing operational efficiency.
 
 TriggerPortal is your comprehensive tool for automating and managing blockchain interactions with advanced intent-based actions. Whether you are sending recurring payments, scheduling cross-chain messages, or optimizing token compounding, TriggerPortal equips you with the tools to execute with precision and reliability.
 
-## Buid Actions
+## Build Actions
 
 ### Getting started
 
