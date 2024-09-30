@@ -3,9 +3,9 @@ title: Differentiation
 sidebar_position: 2
 ---
 
-# Differentiation
+## Differentiation
 
-Currently, performing intent-based actions requires a combination of smart contracts and off-chain bot networks.
+Currently, building and processing intent-based blockchain actions in a decentralized manner requires a combination of smart contracts and a off-chain bot network.
 
 For both bot networks and privileged smart contracts, developing, testing, and auditing custom smart contracts are crucial. Developers must ensure that their solutions are efficient, fair, and secure, considering factors such as network congestion, centralization risks, and computational costs.
 The development of custom smart contracts can be costly. On average, the cost of developing a smart contract ranges between $5,000 and $25,000, depending on complexity and security requirements. This estimate includes the costs of designing, coding, testing, and auditing the contract. [Source: ConsenSys](https://consensys.net/blog/blockchain-development/the-cost-of-developing-a-smart-contract/) provides detailed insights into these costs. For accurate budgeting and planning, it's essential to factor in the potential expenses for ongoing maintenance and upgrades as well.
@@ -34,7 +34,7 @@ In CosmWasm blockchains, privileged smart contracts can use BeginBlocker and End
 
 Compared to permissioned systems like Intento, which offers a protocol-neutral and permissionless platform with integrated governance parameters, privileged smart contracts may lack flexibility. Intento allows the community to manage the balance between blockchain network usage and fee revenue, providing a more adaptable solution for automated tasks.
 
-## How Intento Automation Stands Out
+## Gas Savings
 
 In crypto, the efficiency and cost of transactions, often expressed through "gas costs" play a significant role in the user experience. Our comparison between various automation services like Gelato on Ethereum, CronCat on Juno and Neutron, and Intento reveal significant enhancements in security, efficiency and cost-effectiveness.
 

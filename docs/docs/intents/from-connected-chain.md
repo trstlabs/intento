@@ -19,7 +19,7 @@ Users and entities on Cosmos SDK chains may be able set up [interchain account](
 With Intento’s ICS20 transfer middleware, you send a transfer token memo on a chain, and Intento will convert the token transfer to an action submission.
 ICS20 is an interchain standard that enables the transfer of fungible tokens between independent blockchains. It is a protocol that defines a standard interface for token transfers across different blockchains that implement the Inter-Blockchain Communication (IBC) protocol.
 
-Using ICS20, accounts on connected chains can create actions. Sebders specify action details in the memo field of the ICS20 message. Based on these inputs, the IBC hooks in the intent module build a submit message.
+Using ICS20, accounts on connected chains can create actions. This can be done by specifying action details in the memo field of an ICS20 transfer message. Upon receiving this message, Intento's IBC hooks transforms this into a submit action message.
 
 This is useful for DAOs and other decentralized organizations on any connected chain. They can safely and reliably execute on Intento's connected chains. For DAOs, this gives certainty to stakeholders, whilst also reducing manual work on governance proposals.
 

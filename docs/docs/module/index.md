@@ -15,7 +15,7 @@ The Intent module enables actions to be highly configurable and conditional, whe
 
 Based on lines of code, we expect the module to be using 80,000 to 100,000 gas for triggering up to 10 executions. Significantly less than Gelato on EVM chains (1,000,000) and CronCat (700,000) whilst bringing trust assumptions to the minimum. This makes the module highly scalable for any specified intent.
 
-# Actions
+## Actions
 
 Actions are specified in an action object that contains data about when to execute, what to execute by an array of registered cosmos messages, where through an optional ICA Configuration, and how through a configuration and conditions.
 
