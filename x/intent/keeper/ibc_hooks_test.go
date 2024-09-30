@@ -128,6 +128,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 
 	suite.Require().Equal(action.Owner, addr.String())
 	suite.Require().Equal(action.Label, "my_trigger")
+	suite.Require().Equal(action.Configuration.FallbackToOwnerBalance, true)
 	suite.Require().Equal(action.ICAConfig.PortID, "icacontroller-"+addr.String())
 	suite.Require().Equal(action.ICAConfig.ConnectionID, path.EndpointA.ConnectionID)
 
@@ -168,7 +169,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 	err := SetupICAPath(path, addr.String())
 	suite.Require().NoError(err)
 
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my trigger", "cid":"%s","host_cid":"%s","msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0", "fallback": "true" }}`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my trigger", "cid":"%s","host_cid":"%s","msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0", "fallback":"true" }}`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)

@@ -39,8 +39,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 	totalActionFees := flexFeeCoin
 	toCommunityPool := flexFeeCoin
 
-	//pay out any remaining balance to the owner after deducting fee, commision and gas
-	if p.ActionConstantFee != 0 {
+	if p.ActionConstantFee != 0 && feeDenom == types.Denom {
 		fixedFee := sdk.NewInt(p.ActionConstantFee * int64(len(action.Msgs)))
 		fixedFeeCoin := sdk.NewCoin(feeDenom, fixedFee)
 		totalActionFees = totalActionFees.Add(fixedFeeCoin)
@@ -52,25 +51,26 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 		//}
 	}
 
-	if !isRecurring && action.Configuration != nil && !action.Configuration.FallbackToOwnerBalance {
+	if !isRecurring && action.Configuration != nil /* && !action.Configuration.FallbackToOwnerBalance */ {
 		actionAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
+		if !actionAddrBalance.IsAnyNil() {
+			percentageActionFundsCommission := sdk.NewDecWithPrec(p.ActionFundsCommission, 2)
+			amountActionFundsCommissionCoin := sdk.NewCoin(feeDenom, percentageActionFundsCommission.MulInt(actionAddrBalance.AmountOf(feeDenom)).Ceil().TruncateInt())
+			totalActionFees = totalActionFees.Add(amountActionFundsCommissionCoin)
 
-		percentageActionFundsCommission := sdk.NewDecWithPrec(p.ActionFundsCommission, 2)
-		amountActionFundsCommissionCoin := sdk.NewCoin(feeDenom, percentageActionFundsCommission.MulInt(actionAddrBalance.AmountOf(feeDenom)).Ceil().TruncateInt())
-		totalActionFees = totalActionFees.Add(amountActionFundsCommissionCoin)
+			toOwnerCoins, negative := actionAddrBalance.Sort().SafeSub(totalActionFees)
 
-		toOwnerCoins, negative := actionAddrBalance.Sort().SafeSub(totalActionFees)
+			if !negative {
+				ownerAddr, err := sdk.AccAddressFromBech32(action.Owner)
+				if err != nil {
+					return sdk.Coin{}, err
+				}
+				err = k.bankKeeper.SendCoins(ctx, feeAddr, ownerAddr, toOwnerCoins)
+				if err != nil {
+					return sdk.Coin{}, err
+				}
 
-		if !negative {
-			ownerAddr, err := sdk.AccAddressFromBech32(action.Owner)
-			if err != nil {
-				return sdk.Coin{}, err
 			}
-			err = k.bankKeeper.SendCoins(ctx, feeAddr, ownerAddr, toOwnerCoins)
-			if err != nil {
-				return sdk.Coin{}, err
-			}
-
 		}
 	}
 
