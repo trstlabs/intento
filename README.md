@@ -62,8 +62,11 @@ Beyond transaction fees, we've introduced a flexible, gas-based fee system. It's
 Other useful links -->
 
 [Intento main website](https://intento.zone/)
+
 [TRST Labs website](https://trstlabs.xyz/)
+
 [TriggerPortal - one stop action building tool](https://triggerportal.zone/)
+
 [Cosmonaut GPT - your helping hand in building actions](https://chatgpt.com/g/g-cRhoPo6YH-cosmonaut/)
 
 <!-- [Cosmos SDK documentation](https://docs.cosmos.network)

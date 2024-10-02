@@ -15,8 +15,8 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/stretchr/testify/suite"
 	icaapp "github.com/trstlabs/intento/app"
+	apptesting "github.com/trstlabs/intento/app/apptesting"
 	keeper "github.com/trstlabs/intento/x/intent/keeper"
-	intentoibctesting "github.com/trstlabs/intento/x/intent/keeper/tests"
 )
 
 var (
@@ -44,8 +44,8 @@ type KeeperTestSuite struct {
 	coordinator *ibctesting.Coordinator
 
 	// testing chains used for convenience and readability
-	chainA *intentoibctesting.TestChain
-	chainB *intentoibctesting.TestChain
+	chainA *apptesting.TestChain
+	chainB *apptesting.TestChain
 }
 
 func GetICAApp(chain *ibctesting.TestChain) *icaapp.IntoApp {
@@ -57,7 +57,7 @@ func GetICAApp(chain *ibctesting.TestChain) *icaapp.IntoApp {
 	return app
 }
 
-func GetActionKeeper(chain *intentoibctesting.TestChain) keeper.Keeper {
+func GetActionKeeper(chain *apptesting.TestChain) keeper.Keeper {
 	app, ok := chain.App.(*icaapp.IntoApp)
 	if !ok {
 		panic("not ica app")
@@ -79,13 +79,13 @@ func TestKeeperTestSuite(t *testing.T) {
 // SetupTest creates a coordinator with 2 test chains.
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
-	ibctesting.DefaultTestingAppInit = intentoibctesting.SetupTestingApp
-	suite.chainA = &intentoibctesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1))}
-	suite.chainB = &intentoibctesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2))}
+	ibctesting.DefaultTestingAppInit = apptesting.SetupTestingApp
+	suite.chainA = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1))}
+	suite.chainB = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2))}
 
 }
 
-func NewICAPath(chainA, chainB *intentoibctesting.TestChain) *ibctesting.Path {
+func NewICAPath(chainA, chainB *apptesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = icatypes.HostPortID
 	path.EndpointB.ChannelConfig.PortID = icatypes.HostPortID
@@ -98,7 +98,7 @@ func NewICAPath(chainA, chainB *intentoibctesting.TestChain) *ibctesting.Path {
 }
 
 // ToDo: Move this to osmosistesting to avoid repetition
-func NewTransferPath(chainA, chainB *intentoibctesting.TestChain) *ibctesting.Path {
+func NewTransferPath(chainA, chainB *apptesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort

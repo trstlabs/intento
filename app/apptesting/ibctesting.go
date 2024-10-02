@@ -1,4 +1,4 @@
-package intentoibctesting
+package apptesting
 
 import (
 	"encoding/json"
