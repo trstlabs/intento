@@ -3,8 +3,6 @@ title: Differentiation
 sidebar_position: 2
 ---
 
-## Differentiation
-
 Currently, building and processing intent-based blockchain actions in a decentralized manner requires a combination of smart contracts and a off-chain bot network.
 
 For both bot networks and privileged smart contracts, developing, testing, and auditing custom smart contracts are crucial. Developers must ensure that their solutions are efficient, fair, and secure, considering factors such as network congestion, centralization risks, and computational costs.

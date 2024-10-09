@@ -26,6 +26,8 @@ import (
 	appparams "github.com/trstlabs/intento/app/params"
 	claimkeeper "github.com/trstlabs/intento/x/claim/keeper"
 	claimtypes "github.com/trstlabs/intento/x/claim/types"
+	interchainquerykeeper "github.com/trstlabs/intento/x/interchainquery/keeper"
+	interchainquerytypes "github.com/trstlabs/intento/x/interchainquery/types"
 
 	//icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
@@ -501,6 +503,8 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		encodingConfig.Codec, keys[govtypes.StoreKey], accountKeeper, bankKeeper,
 		stakingKeeper, msgServiceRouter, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+	interchainQueryKeeper := interchainquerykeeper.NewKeeper(encodingConfig.Codec, keys[interchainquerytypes.StoreKey], ibcKeeper)
+
 	intentKeeper := NewKeeper(
 		encodingConfig.Codec,
 		keys[intenttypes.StoreKey],
@@ -511,6 +515,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		*stakingKeeper,
 		ibctransferKeeper,
 		accountKeeper,
+		interchainQueryKeeper,
 		intentSubsp,
 		NewMultiIntentHooks(claimKeeper.Hooks()),
 		msgServiceRouter,

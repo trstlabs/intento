@@ -12,7 +12,7 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (proto.Message, int, error) {
+func handleMsgData(msgData *sdk.MsgData) (proto.Message, int, error) {
 	// fmt.Printf("handling data for typeurl: %v and data: %v\n", msgData.MsgType, msgData.Data)
 
 	var msgResponse proto.Message
@@ -78,7 +78,7 @@ func handleMsgData(ctx sdk.Context, msgData *sdk.MsgData) (proto.Message, int, e
 	return msgResponse, rewardType, nil
 }
 
-func getMsgRewardType(ctx sdk.Context, typeUrl string) int {
+func getMsgRewardType(typeUrl string) int {
 	var rewardType int
 
 	switch typeUrl {

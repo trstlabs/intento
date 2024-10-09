@@ -35,7 +35,6 @@ func TestCreateAction(t *testing.T) {
 	configuration := types.ExecutionConfiguration{SaveMsgResponses: false}
 
 	// Call the CreateAction function
-	// Call the CreateAction function
 	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, portID, connectionID, hostConn, types.ExecutionConditions{})
 	require.NoError(t, err)
 

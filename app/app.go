@@ -118,6 +118,9 @@ import (
 	intent "github.com/trstlabs/intento/x/intent"
 	intentkeeper "github.com/trstlabs/intento/x/intent/keeper"
 	intenttypes "github.com/trstlabs/intento/x/intent/types"
+	interchainquery "github.com/trstlabs/intento/x/interchainquery"
+	interchainquerykeeper "github.com/trstlabs/intento/x/interchainquery/keeper"
+	interchainquerytypes "github.com/trstlabs/intento/x/interchainquery/types"
 	"github.com/trstlabs/intento/x/mint"
 	mintkeeper "github.com/trstlabs/intento/x/mint/keeper"
 	minttypes "github.com/trstlabs/intento/x/mint/types"
@@ -168,22 +171,24 @@ var (
 		intent.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		consensus.AppModuleBasic{},
+		interchainquery.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		icatypes.ModuleName:            nil,
-		ibcfeetypes.ModuleName:         nil,
-		claimtypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		alloctypes.ModuleName:          {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		intenttypes.ModuleName:         {authtypes.Minter},
+		authtypes.FeeCollectorName:      nil,
+		distrtypes.ModuleName:           nil,
+		minttypes.ModuleName:            {authtypes.Minter},
+		stakingtypes.BondedPoolName:     {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:  {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:             {authtypes.Burner},
+		ibctransfertypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
+		icatypes.ModuleName:             nil,
+		ibcfeetypes.ModuleName:          nil,
+		claimtypes.ModuleName:           {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		alloctypes.ModuleName:           {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		intenttypes.ModuleName:          {authtypes.Minter},
+		interchainquerytypes.ModuleName: nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -241,6 +246,7 @@ type IntoApp struct {
 	ICAControllerKeeper   icacontrollerkeeper.Keeper
 	ICAHostKeeper         icahostkeeper.Keeper
 	IntentKeeper          intentkeeper.Keeper
+	InterchainQueryKeeper interchainquerykeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
@@ -310,6 +316,7 @@ func NewIntoApp(
 		alloctypes.StoreKey,
 		intenttypes.StoreKey,
 		ibcfeetypes.StoreKey,
+		interchainquerytypes.StoreKey,
 	)
 
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -484,8 +491,10 @@ func NewIntoApp(
 		app.AccountKeeper, scopedICAHostKeeper, app.MsgServiceRouter(),
 	)
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
+	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
+	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper)
 
-	app.IntentKeeper = intentkeeper.NewKeeper(appCodec, keys[intenttypes.StoreKey], app.ICAControllerKeeper, scopedIntentKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.GetSubspace(intenttypes.ModuleName), intentkeeper.NewMultiIntentHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter(), interfaceRegistry)
+	app.IntentKeeper = intentkeeper.NewKeeper(appCodec, keys[intenttypes.StoreKey], app.ICAControllerKeeper, scopedIntentKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.InterchainQueryKeeper, app.GetSubspace(intenttypes.ModuleName), intentkeeper.NewMultiIntentHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter(), interfaceRegistry)
 	intentModule := intent.NewAppModule(appCodec, app.IntentKeeper)
 	intentIBCModule := intent.NewIBCModule(app.IntentKeeper)
 
@@ -496,6 +505,9 @@ func NewIntoApp(
 
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 	icaHostStack := ibcfee.NewIBCMiddleware(icaHostIBCModule, app.IBCFeeKeeper)
+
+	// Register ICQ callbacks
+	//_ = app.InterchainQueryKeeper.SetCallbackHandler(intenttypes.ModuleName, app.IntentKeeper.ICQCallbackHandler())
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
@@ -548,6 +560,7 @@ func NewIntoApp(
 		transferModule,
 		icaModule,
 		intentModule,
+		interchainQueryModule,
 		ibcfee.NewAppModule(app.IBCFeeKeeper),
 	)
 
@@ -560,14 +573,14 @@ func NewIntoApp(
 		alloctypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibcexported.ModuleName, ibctransfertypes.ModuleName, authtypes.ModuleName,
 		banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, authz.ModuleName, feegrant.ModuleName,
-		paramstypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, intenttypes.ModuleName, ibcfeetypes.ModuleName, claimtypes.ModuleName,
+		paramstypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, interchainquerytypes.ModuleName, intenttypes.ModuleName, ibcfeetypes.ModuleName, claimtypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName, ibcexported.ModuleName, ibctransfertypes.ModuleName,
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		minttypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName,
-		upgradetypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, intenttypes.ModuleName, ibcfeetypes.ModuleName, minttypes.ModuleName,
+		upgradetypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, interchainquerytypes.ModuleName, intenttypes.ModuleName, ibcfeetypes.ModuleName, minttypes.ModuleName,
 		alloctypes.ModuleName, claimtypes.ModuleName,
 	)
 
@@ -581,7 +594,7 @@ func NewIntoApp(
 		slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName, claimtypes.ModuleName,
 		alloctypes.ModuleName, crisistypes.ModuleName,
 		ibcexported.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
-		icatypes.ModuleName, intenttypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
+		icatypes.ModuleName, interchainquerytypes.ModuleName, intenttypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
 		ibcfeetypes.ModuleName,
 	)
 
@@ -830,6 +843,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(intent.ModuleName)
 	paramsKeeper.Subspace(claimtypes.ModuleName)
 	paramsKeeper.Subspace(alloctypes.ModuleName)
+	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
 
 	return paramsKeeper
 }

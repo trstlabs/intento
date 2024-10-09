@@ -15,7 +15,6 @@ import (
 )
 
 func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo, connectionID, portID string) (protoMsgs []proto.Message, err error) {
-	fmt.Printf("denom %s\n", types.Denom)
 	store := ctx.KVStore(k.storeKey)
 	if store.Has(types.GetActionHistoryKey(action.ID)) {
 		txMsgs := action.GetTxMsgs(k.cdc)

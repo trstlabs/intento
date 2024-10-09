@@ -13,6 +13,7 @@ import (
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	"github.com/trstlabs/intento/x/intent/types"
+	icqtypes "github.com/trstlabs/intento/x/interchainquery/types"
 )
 
 func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, []*cdctypes.Any, error) {
@@ -20,7 +21,7 @@ func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, 
 	if (action.ICAConfig == nil || action.ICAConfig.ConnectionID == "") && (action.HostedConfig == nil || action.HostedConfig.HostedAddress == "") {
 		txMsgs := action.GetTxMsgs(k.cdc)
 		msgResponses, err := handleLocalAction(k, ctx, txMsgs, *action)
-		return err == nil, msgResponses, err
+		return err == nil, msgResponses, errorsmod.Wrap(err, "could execute local action")
 	}
 
 	connectionID := action.ICAConfig.ConnectionID
@@ -34,7 +35,7 @@ func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, 
 		triggerAddress = hostedAccount.HostedAddress
 		err := k.SendFeesToHosted(ctx, *action, hostedAccount)
 		if err != nil {
-			return false, nil, err
+			return false, nil, errorsmod.Wrap(err, "could not pay hosted account")
 		}
 
 	}
@@ -48,7 +49,7 @@ func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, 
 	//if a message contains "ICA_ADDR" string, the ICA address for the action is retrieved and parsed
 	txMsgs, err := k.parseAndSetMsgs(ctx, action, connectionID, portID)
 	if err != nil {
-		return false, nil, err
+		return false, nil, errorsmod.Wrap(err, "could parse and set messages")
 	}
 	data, err := icatypes.SerializeCosmosTx(k.cdc, txMsgs)
 	if err != nil {
@@ -66,7 +67,7 @@ func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, 
 
 	res, err := msgServer.SendTx(ctx, icaMsg)
 	if err != nil {
-		return false, nil, err
+		return false, nil, errorsmod.Wrap(err, "could not send ICA message")
 	}
 
 	k.Logger(ctx).Debug("action", "ibc_sequence", res.Sequence)
@@ -155,7 +156,7 @@ func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string,
 
 	//trigger remaining execution
 	if action.Conditions != nil && action.Conditions.UseResponseValue != nil && action.Conditions.UseResponseValue.MsgsIndex != 0 && action.Conditions.UseResponseValue.ActionID == 0 && len(actionHistoryEntry.MsgResponses)-1 < int(action.Conditions.UseResponseValue.MsgsIndex) {
-		err = k.UseResponseValue(ctx, action.ID, &action.Msgs, action.Conditions)
+		err = k.UseResponseValue(ctx, action.ID, &action.Msgs, action.Conditions, nil)
 		if err != nil {
 			return errorsmod.Wrap(err, types.ErrSettingActionResult)
 		}
@@ -181,7 +182,7 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 	for index, anyResp := range msgResponses {
 		k.Logger(ctx).Debug("msg response in ICS-27 packet", "response", anyResp.GoString(), "typeURL", anyResp.GetTypeUrl())
 
-		rewardClass := getMsgRewardType(ctx, anyResp.GetTypeUrl())
+		rewardClass := getMsgRewardType(anyResp.GetTypeUrl())
 		if index == 0 && rewardClass > 0 {
 			msgClass = rewardClass
 			k.HandleRelayerReward(ctx, relayer, msgClass)
@@ -218,7 +219,7 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 				k.Logger(ctx).Debug("action result", "resultBytes", resultBytes)
 
 				//as we do not get typeURL we have to rely in this, MsgExec is the only regisrered message that should return results
-				msgRespProto, _, err := handleMsgData(ctx, &sdk.MsgData{Data: resultBytes, MsgType: msgExec.Msgs[0].TypeUrl})
+				msgRespProto, _, err := handleMsgData(&sdk.MsgData{Data: resultBytes, MsgType: msgExec.Msgs[0].TypeUrl})
 				if err != nil {
 					fmt.Printf("err 3%v \n", err)
 					return nil, 0, err
@@ -288,7 +289,7 @@ func (k Keeper) SetActionError(ctx sdk.Context, sourcePort string, channelID str
 
 // AllowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
 // insert the next entry when execution has not happend yet
-func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo) (bool, error) {
+func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo, queryCallback *icqtypes.Query) (bool, error) {
 	allowedToExecute := true
 	shouldRecur := action.ExecTime.Before(action.EndTime) && action.ExecTime.Add(action.Interval).Before(action.EndTime)
 	conditions := action.Conditions
@@ -301,8 +302,8 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo) (bool
 			allowedToExecute = false
 			return allowedToExecute, err
 		}
-		responses := history.History[len(history.History)-1].MsgResponses
-		isTrue, err := k.CompareResponseValue(ctx, action.ID, responses, *conditions.ResponseComparison)
+		responses := history[len(history)-1].MsgResponses
+		isTrue, err := k.CompareResponseValue(ctx, action.ID, responses, *conditions.ResponseComparison, queryCallback)
 		if !isTrue {
 			allowedToExecute = false
 			return allowedToExecute, err
@@ -314,8 +315,8 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo) (bool
 		if err != nil {
 			allowedToExecute = false
 		}
-		if len(history.History) != 0 {
-			success := history.History[len(history.History)-1].Executed && history.History[len(history.History)-1].Errors != nil
+		if len(history) != 0 {
+			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
 			if !success {
 				allowedToExecute = false
 				shouldRecur = false
@@ -329,8 +330,8 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo) (bool
 		if err != nil {
 			allowedToExecute = false
 		}
-		if len(history.History) != 0 {
-			success := history.History[len(history.History)-1].Executed && history.History[len(history.History)-1].Errors != nil
+		if len(history) != 0 {
+			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
 			if success {
 				allowedToExecute = false
 				shouldRecur = false
@@ -344,8 +345,8 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo) (bool
 		if err != nil {
 			allowedToExecute = false
 		}
-		if len(history.History) != 0 {
-			success := history.History[len(history.History)-1].Executed && history.History[len(history.History)-1].Errors != nil
+		if len(history) != 0 {
+			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
 			if !success {
 				allowedToExecute = false
 			}
@@ -358,8 +359,8 @@ func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo) (bool
 		if err != nil {
 			allowedToExecute = false
 		}
-		if len(history.History) != 0 {
-			success := history.History[len(history.History)-1].Executed && history.History[len(history.History)-1].Errors != nil
+		if len(history) != 0 {
+			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
 			if success {
 				allowedToExecute = false
 			}

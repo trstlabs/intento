@@ -8,6 +8,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "intento/interchainquery/v1/genesis.proto";
 
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 option (gogoproto.equal_all) = true;
@@ -47,12 +48,14 @@ message ActionInfo {
   ExecutionConditions conditions = 15;
 }
 
+//config for self-hosted ICA
 message ICAConfig {
   string port_id = 1 [(gogoproto.customname) = "PortID"];
   string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
   string host_connection_id = 3 [(gogoproto.customname) = "HostConnectionID"];
 }
 
+//config for hosted account
 message HostedConfig {
   string hosted_address = 1;
   cosmos.base.v1beta1.Coin fee_coin_limit = 3 [(gogoproto.nullable) = false];
@@ -61,17 +64,17 @@ message HostedConfig {
 // ExecutionConfiguration provides the execution-related configuration of the action
 message ExecutionConfiguration {
   // if true, the action response outputs are saved and can be used in logic
- bool save_msg_responses = 1;
- // if true, the action is not updatable
- bool updating_disabled = 2;           
- // If true, will execute until we get a successful Action, if false/unset will always execute
- bool stop_on_success = 3;
- // If true, will execute until successful Action, if false/unset will always execute
- bool stop_on_failure = 4;
- // If true, owner account balance is used when trigger account funds run out
- bool fallback_to_owner_balance = 5;
- // If true, allows the action to continue execution after an ibc channel times out (recommended)
- bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];
+  bool save_msg_responses = 1;
+  // if true, the action is not updatable
+  bool updating_disabled = 2;
+  // If true, will execute until we get a successful Action, if false/unset will always execute
+  bool stop_on_success = 3;
+  // If true, will execute until successful Action, if false/unset will always execute
+  bool stop_on_failure = 4;
+  // If true, owner account balance is used when trigger account funds run out
+  bool fallback_to_owner_balance = 5;
+  // If true, allows the action to continue execution after an ibc channel times out (recommended)
+  bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];
 }
 
 // ActionHistory execution history
@@ -114,32 +117,30 @@ message ExecutionConditions {
   repeated uint64 skip_on_failure_of = 7;
   //optional array of dependent intents that should fail after their latest call before execution is allowed
   repeated uint64 skip_on_success_of = 8;
+  ICQConfig icq_config = 9 [(gogoproto.customname) = "ICQConfig"];
 }
 
 // Replace value with value from message or response from another action’s latest output before execution
 message UseResponseValue {
   uint64 action_id = 1 [(gogoproto.customname) = "ActionID"]; //action to get the latest response value from, optional
-  uint32 response_index = 3;  //index of the responses
+  uint32 response_index = 3; //index of the responses
   string response_key = 2; // for example "Amount"
   uint32 msgs_index = 4; //index of the msg to replace
   string msg_key = 5; //key of the message to replace (e.g. Amount[0].Amount, FromAddress)
-  string value_type = 6; //can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int 
+  string value_type = 6; //can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int
+  bool from_icq = 7 [(gogoproto.customname) = "FromICQ"];
 }
-
-//match an attribute key with a selected value
-// message AttributeMatch {
-//   string attribute_key = 1; //'sender'
-//   string match = 2; //sender address (into1...)
-// }
 
 // ResponseComparison is checked on the response in JSON before execution of action and outputs true or false
 message ResponseComparison {
   uint64 action_id = 1 [(gogoproto.customname) = "ActionID"]; //action to get the latest response value from, optional
-  uint32 response_index = 2;  //index of the response
-  string response_key = 3;// e.g. Amount[0].Amount, FromAddress
-  string value_type = 4; // can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int 
+  uint32 response_index = 2; //index of the response
+  string response_key = 3; // e.g. Amount[0].Amount, FromAddress
+
+  string value_type = 4; // can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int
   ComparisonOperator comparison_operator = 5;
   string comparison_operand = 6;
+  bool from_icq = 7 [(gogoproto.customname) = "FromICQ"]; //true to use query response from icq config
 }
 
 // Comparison operators that can be used for various types.
@@ -154,4 +155,17 @@ enum ComparisonOperator {
   STARTS_WITH = 7; // Starts with check (for strings)
   ENDS_WITH = 8; // Ends with check (for strings)
   NOT_EQUAL = 9; // Not equal check (for all types)
+}
+
+//config for using interchain queries
+message ICQConfig {
+  string connection_id = 1;
+  string chain_id = 2;
+  intento.interchainquery.v1.TimeoutPolicy timeout_policy = 3;
+  google.protobuf.Duration timeout_duration = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true
+  ];
+  string query_type = 5; // e.g. store/bank/key store/staking/key
+  string query_key = 6; //key in the store to query e.g. stakingtypes.GetValidatorKey(validatorAddressBz) idea: abstract this in TP. See x/interchainquery/types/keys.go
 }

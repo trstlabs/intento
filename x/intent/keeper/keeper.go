@@ -14,30 +14,31 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
-	"github.com/trstlabs/intento/x/intent/types"
-
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+	"github.com/trstlabs/intento/x/intent/types"
+	interchainquerykeeper "github.com/trstlabs/intento/x/interchainquery/keeper"
 )
 
 type Keeper struct {
-	cdc                 codec.Codec
-	storeKey            storetypes.StoreKey
-	scopedKeeper        capabilitykeeper.ScopedKeeper
-	icaControllerKeeper icacontrollerkeeper.Keeper
-	bankKeeper          bankkeeper.Keeper
-	distrKeeper         distrkeeper.Keeper
-	stakingKeeper       stakingkeeper.Keeper
-	transferKeeper      ibctransferkeeper.Keeper
-	accountKeeper       authkeeper.AccountKeeper
-	paramSpace          paramtypes.Subspace
-	hooks               IntentHooks
-	msgRouter           MessageRouter
-	interfaceRegistry   cdctypes.InterfaceRegistry
+	cdc                   codec.Codec
+	storeKey              storetypes.StoreKey
+	scopedKeeper          capabilitykeeper.ScopedKeeper
+	icaControllerKeeper   icacontrollerkeeper.Keeper
+	bankKeeper            bankkeeper.Keeper
+	distrKeeper           distrkeeper.Keeper
+	stakingKeeper         stakingkeeper.Keeper
+	transferKeeper        ibctransferkeeper.Keeper
+	accountKeeper         authkeeper.AccountKeeper
+	interchainQueryKeeper interchainquerykeeper.Keeper
+	paramSpace            paramtypes.Subspace
+	hooks                 IntentHooks
+	msgRouter             MessageRouter
+	interfaceRegistry     cdctypes.InterfaceRegistry
 }
 
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, paramSpace paramtypes.Subspace, ah IntentHooks, msgRouter MessageRouter, interfaceRegistry cdctypes.InterfaceRegistry,
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, interchainQueryKeeper interchainquerykeeper.Keeper, paramSpace paramtypes.Subspace, ah IntentHooks, msgRouter MessageRouter, interfaceRegistry cdctypes.InterfaceRegistry,
 ) Keeper {
 	moduleAccAddr := accountKeeper.GetModuleAddress(types.ModuleName)
 	// ensure module account is set
@@ -51,19 +52,20 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontr
 	}
 
 	return Keeper{
-		cdc:                 cdc,
-		storeKey:            storeKey,
-		scopedKeeper:        scopedKeeper,
-		icaControllerKeeper: icaKeeper,
-		paramSpace:          paramSpace,
-		bankKeeper:          bankKeeper,
-		distrKeeper:         distrKeeper,
-		stakingKeeper:       stakingKeeper,
-		transferKeeper:      transferKeeper,
-		accountKeeper:       accountKeeper,
-		hooks:               ah,
-		msgRouter:           msgRouter,
-		interfaceRegistry:   interfaceRegistry,
+		cdc:                   cdc,
+		storeKey:              storeKey,
+		scopedKeeper:          scopedKeeper,
+		icaControllerKeeper:   icaKeeper,
+		paramSpace:            paramSpace,
+		bankKeeper:            bankKeeper,
+		distrKeeper:           distrKeeper,
+		stakingKeeper:         stakingKeeper,
+		transferKeeper:        transferKeeper,
+		accountKeeper:         accountKeeper,
+		interchainQueryKeeper: interchainQueryKeeper,
+		hooks:                 ah,
+		msgRouter:             msgRouter,
+		interfaceRegistry:     interfaceRegistry,
 	}
 }
 

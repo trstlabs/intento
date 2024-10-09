@@ -12,10 +12,11 @@ import (
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/trstlabs/intento/x/intent/types"
+	icqtypes "github.com/trstlabs/intento/x/interchainquery/types"
 )
 
 // CompareResponseValue compares the value of a response key based on the ResponseComparison
-func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses []*cdctypes.Any, comparison types.ResponseComparison) (bool, error) {
+func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses []*cdctypes.Any, comparison types.ResponseComparison, queryCallback *icqtypes.Query) (bool, error) {
 	if comparison.ResponseKey == "" {
 		return true, nil
 	}
@@ -63,10 +64,11 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses
 }
 
 // UseResponseValue replaces the value in a message with the value from a response
-func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdctypes.Any, conditions *types.ExecutionConditions) error {
+func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdctypes.Any, conditions *types.ExecutionConditions, queryCallback *icqtypes.Query) error {
 	if conditions == nil || conditions.UseResponseValue == nil || conditions.UseResponseValue.ResponseKey == "" {
 		return nil
 	}
+	fmt.Printf("UseResponseValue\n")
 	useResp := conditions.UseResponseValue
 	if useResp.ActionID != 0 {
 		actionID = useResp.ActionID
@@ -76,30 +78,41 @@ func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 	if err != nil {
 		return err
 	}
-	if len(history.History) == 0 {
+	if len(history) == 0 {
 		return nil
 	}
-	responsesAnys := history.History[len(history.History)-1].MsgResponses
-	if len(responsesAnys) == 0 {
-		return nil
-	}
-	if int(useResp.ResponseIndex+1) < len(responsesAnys) {
-		return fmt.Errorf("response index out of range")
-	}
+	var valueFromResponse interface{}
+	if queryCallback == nil {
+		responsesAnys := history[len(history)-1].MsgResponses
+		if len(responsesAnys) == 0 {
+			return nil
+		}
+		if int(useResp.ResponseIndex+1) < len(responsesAnys) {
+			return fmt.Errorf("response index out of range")
+		}
 
-	protoMsg, err := k.interfaceRegistry.Resolve(responsesAnys[useResp.ResponseIndex].TypeUrl)
-	if err != nil {
-		return fmt.Errorf("failed to resolve type URL %s: %w", responsesAnys[useResp.ResponseIndex].TypeUrl, err)
-	}
+		protoMsg, err := k.interfaceRegistry.Resolve(responsesAnys[useResp.ResponseIndex].TypeUrl)
+		if err != nil {
+			return fmt.Errorf("failed to resolve type URL %s: %w", responsesAnys[useResp.ResponseIndex].TypeUrl, err)
+		}
 
-	err = proto.Unmarshal(responsesAnys[useResp.ResponseIndex].Value, protoMsg)
-	if err != nil {
-		return err
-	}
-	k.Logger(ctx).Debug("use response value", "protoMsg", protoMsg.String(), "TypeUrl", responsesAnys[useResp.ResponseIndex].TypeUrl)
-	valueFromResponse, err := ParseResponseValue(protoMsg, useResp.ResponseKey /* "string" */, useResp.ValueType)
-	if err != nil {
-		return err
+		err = proto.Unmarshal(responsesAnys[useResp.ResponseIndex].Value, protoMsg)
+		if err != nil {
+			return err
+		}
+
+		k.Logger(ctx).Debug("use response value", "protoMsg", protoMsg.String(), "TypeUrl", responsesAnys[useResp.ResponseIndex].TypeUrl)
+		valueFromResponse, err = ParseResponseValue(protoMsg, useResp.ResponseKey, useResp.ValueType)
+		if err != nil {
+			return err
+		}
+	} else {
+		fmt.Printf("OARSE FROM Q")
+		valueFromResponse, err = ParseResponseValue(queryCallback.CallbackData, useResp.ResponseKey, useResp.ValueType)
+		if err != nil {
+			fmt.Printf("ERR ParseResponseValue %s\n", err)
+			return err
+		}
 	}
 	var msgToInterface sdk.Msg
 	//var msgToInterface interface{}
@@ -195,6 +208,9 @@ func ParseResponseValue(response interface{}, responseKey, responseType string) 
 
 	val, err := traverseFields(response, responseKey)
 	if err != nil {
+		// if responseKey == ""{
+		// 	val =
+		// }
 		return nil, err
 	}
 

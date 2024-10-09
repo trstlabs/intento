@@ -1,22 +1,29 @@
 package keeper_test
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
-	//"github.com/cosmos/cosmos-sdk/simapp"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/spf13/cast"
 
+	//"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/stretchr/testify/suite"
 	icaapp "github.com/trstlabs/intento/app"
+	apptesting "github.com/trstlabs/intento/app/apptesting"
 	keeper "github.com/trstlabs/intento/x/intent/keeper"
-	intentoibctesting "github.com/trstlabs/intento/x/intent/keeper/tests"
+	"github.com/trstlabs/intento/x/intent/types"
+	icqtypes "github.com/trstlabs/intento/x/interchainquery/types"
 )
 
 var (
@@ -24,7 +31,7 @@ var (
 	// TODO: update crypto.AddressHash() when sdk uses address.Module()
 	//TestAccAddress = icatypes.GenerateAddress(sdk.AccAddress(crypto.AddressHash([]byte(icatypes.ModuleName))), ibctesting.FirstConnectionID, TestPortID)
 	// TestOwnerAddress defines a reusable bech32 address for testing purposes
-	TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
+	TestOwnerAddress = "into17dtl0mjt3t77kpuhg2edqzjpszulwhgznsqmhz"
 	// TestPortID defines a resuable port identifier for testing purposes
 	TestPortID, _ = icatypes.NewControllerPortID(TestOwnerAddress)
 	// TestVersion defines a resuable interchainaccounts version string for testing purposes
@@ -44,8 +51,8 @@ type KeeperTestSuite struct {
 	coordinator *ibctesting.Coordinator
 
 	// testing chains used for convenience and readability
-	chainA *intentoibctesting.TestChain
-	chainB *intentoibctesting.TestChain
+	chainA *apptesting.TestChain
+	chainB *apptesting.TestChain
 }
 
 func GetICAApp(chain *ibctesting.TestChain) *icaapp.IntoApp {
@@ -57,7 +64,7 @@ func GetICAApp(chain *ibctesting.TestChain) *icaapp.IntoApp {
 	return app
 }
 
-func GetActionKeeper(chain *intentoibctesting.TestChain) keeper.Keeper {
+func GetActionKeeper(chain *apptesting.TestChain) keeper.Keeper {
 	app, ok := chain.App.(*icaapp.IntoApp)
 	if !ok {
 		panic("not ica app")
@@ -79,13 +86,13 @@ func TestKeeperTestSuite(t *testing.T) {
 // SetupTest creates a coordinator with 2 test chains.
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
-	ibctesting.DefaultTestingAppInit = intentoibctesting.SetupTestingApp
-	suite.chainA = &intentoibctesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1))}
-	suite.chainB = &intentoibctesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2))}
+	ibctesting.DefaultTestingAppInit = apptesting.SetupTestingApp
+	suite.chainA = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1))}
+	suite.chainB = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2))}
 
 }
 
-func NewICAPath(chainA, chainB *intentoibctesting.TestChain) *ibctesting.Path {
+func NewICAPath(chainA, chainB *apptesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = icatypes.HostPortID
 	path.EndpointB.ChannelConfig.PortID = icatypes.HostPortID
@@ -98,7 +105,7 @@ func NewICAPath(chainA, chainB *intentoibctesting.TestChain) *ibctesting.Path {
 }
 
 // ToDo: Move this to osmosistesting to avoid repetition
-func NewTransferPath(chainA, chainB *intentoibctesting.TestChain) *ibctesting.Path {
+func NewTransferPath(chainA, chainB *apptesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
@@ -214,4 +221,63 @@ func (suite *KeeperTestSuite) makeMockPacket(receiver, memo string, prevSequence
 		clienttypes.ZeroHeight(),
 		uint64(suite.chainB.GetContext().BlockTime().Add(time.Minute).UnixNano()),
 	)
+}
+
+func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse(ICQConfig types.ICQConfig, id uint64) (icqtypes.MsgSubmitQueryResponse, icqtypes.Query) {
+	// define the query
+
+	h := GetLightClientHeight(*s.chainA.GetIntoApp().IBCKeeper, s.chainA.GetContext(), ICQConfig.ConnectionId)
+
+	height := int64(h - 1) // start at the (LC height) - 1  height, which is the height the query executes at!
+	result := []byte("result-example")
+	proofOps := crypto.ProofOps{}
+	fromAddress := s.chainA.SenderAccount.String()
+	//expectedId := "9792c1d779a3846a8de7ae82f31a74d308b279a521fa9e0d5c4f08917117bf3e"
+
+	_, addr, _ := bech32.DecodeAndConvert(s.chainA.SenderAccount.String())
+	data := banktypes.CreateAccountBalancesPrefix(addr)
+	ID := strconv.FormatUint(id, 10)
+	timeoutDuration := time.Minute
+	query := icqtypes.Query{
+		Id:               ID,
+		CallbackId:       ID,
+		CallbackModule:   "intent",
+		ChainId:          ICQConfig.ChainId,
+		ConnectionId:     ICQConfig.ConnectionId,
+		QueryType:        ICQConfig.QueryType, // intentionally leave off key to skip proof
+		RequestData:      append(data, []byte(apptesting.HostChainId)...),
+		TimeoutDuration:  timeoutDuration,
+		TimeoutTimestamp: uint64(s.chainA.GetContext().BlockTime().Add(timeoutDuration).UnixNano()),
+	}
+
+	return icqtypes.MsgSubmitQueryResponse{
+			ChainId:     ICQConfig.ChainId,
+			QueryId:     ID,
+			Result:      result,
+			ProofOps:    &proofOps,
+			Height:      height,
+			FromAddress: fromAddress,
+		},
+
+		query
+
+}
+
+// Given a connection ID, returns the light client height
+func GetLightClientHeight(ibcKeeper ibckeeper.Keeper, ctx sdk.Context, connectionID string) (height uint64) {
+	connection, found := ibcKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
+	if !found {
+		return 0
+	}
+
+	clientState, found := ibcKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
+	if !found {
+		return 0
+	}
+
+	latestHeight, err := cast.ToUint64E(clientState.GetLatestHeight().GetRevisionHeight())
+	if err != nil {
+		return 0
+	}
+	return latestHeight
 }

@@ -33,6 +33,7 @@ const (
 	flagFeeCoinsSupported = "fee-coins-suported"
 	flagNewAdmin          = "new-admin"
 	flagConditions        = "conditions"
+	flagICQConfig         = "icq-config"
 )
 
 // common flagsets to add to various functions
@@ -52,6 +53,8 @@ func init() {
 	fsAction.String(flagHostedAccount, "", "A hosted account to execute actions on a host, optional")
 	fsAction.String(flagConditions, "", "intent conditions in JSON format, optional")
 	fsAction.String(flagHostedAccountFeeLimit, "", "Coin to sent to limit the hosted fees, optional")
+	fsAction.String(flagICQConfig, "", "A config to query keyvalue store on a host, optional")
+
 	fsAction.Bool(flagUpdatingDisabled, false, "disable future updates to the configuration'")
 	fsAction.Bool(flagSaveMsgResponses, true, "save message responses to tx history (Cosmos SDK v0.46+ chains only)'")
 	fsAction.Bool(flagStopOnSuccess, false, "stop execution after success'")

@@ -33,7 +33,7 @@ func (k Keeper) GetLatestActionHistoryEntry(ctx sdk.Context, actionId uint64) (*
 }
 
 // GetActionHistory retrieves all history entries for a specific actionId.
-func (k Keeper) GetActionHistory(ctx sdk.Context, actionId uint64) (*types.ActionHistory, error) {
+func (k Keeper) GetActionHistory(ctx sdk.Context, actionId uint64) ([]types.ActionHistoryEntry, error) {
 	store := ctx.KVStore(k.storeKey)
 	prefixStore := prefix.NewStore(store, types.GetActionHistoryKey(actionId))
 
@@ -50,11 +50,11 @@ func (k Keeper) GetActionHistory(ctx sdk.Context, actionId uint64) (*types.Actio
 		historyEntries = append(historyEntries, entry)
 	}
 
-	return &types.ActionHistory{History: historyEntries}, nil
+	return historyEntries, nil
 }
 
 // MustGetActionHistory tries to retrieve the auto transaction history, returning nil if it fails.
-func (k Keeper) MustGetActionHistory(ctx sdk.Context, actionId uint64) *types.ActionHistory {
+func (k Keeper) MustGetActionHistory(ctx sdk.Context, actionId uint64) []types.ActionHistoryEntry {
 	actionHistory, err := k.GetActionHistory(ctx, actionId)
 	if err != nil {
 		return nil
@@ -150,6 +150,35 @@ func (k Keeper) SetCurrentActionHistoryEntry(ctx sdk.Context, actionId uint64, e
 
 	// Store the entry
 	store.Set(key, k.cdc.MustMarshal(entry))
+}
+
+func (k Keeper) getCurrentActionHistoryEntry(ctx sdk.Context, actionId uint64) (*types.ActionHistoryEntry, bool) {
+	store := ctx.KVStore(k.storeKey)
+
+	// Retrieve the current sequence for the actionId
+	sequenceKey := append(types.ActionHistorySequencePrefix, sdk.Uint64ToBigEndian(actionId)...)
+	sequenceBytes := store.Get(sequenceKey)
+	if sequenceBytes == nil {
+		// No sequence found, so no entry exists
+		return nil, false
+	}
+
+	// Decode the current sequence
+	sequence := sdk.BigEndianToUint64(sequenceBytes)
+
+	// Composite key: ActionHistoryKey + ActionId + Sequence (latest entry)
+	key := append(types.GetActionHistoryKey(actionId), sdk.Uint64ToBigEndian(sequence)...)
+
+	// Fetch the current entry
+	entryBytes := store.Get(key)
+	if entryBytes == nil {
+		// No entry exists at the latest sequence
+		return nil, false
+	}
+	var entry types.ActionHistoryEntry
+	k.cdc.MustUnmarshal(entryBytes, &entry)
+
+	return &entry, true
 }
 
 // we may reimplement this as a configuration-based gas fee

@@ -1,0 +1,21 @@
+syntax = "proto3";
+package intento.interchainquery.v1;
+
+import "intento/interchainquery/v1/genesis.proto";
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/trstlabs/intento/x/interchainquery/types";
+
+service QueryService {
+  rpc PendingQueries(QueryPendingQueriesRequest)
+      returns (QueryPendingQueriesResponse) {
+    option (google.api.http).get =
+        "/intento/interchainquery/pending_queries";
+  }
+}
+
+message QueryPendingQueriesRequest {}
+message QueryPendingQueriesResponse {
+  repeated Query pending_queries = 1 [ (gogoproto.nullable) = false ];
+}

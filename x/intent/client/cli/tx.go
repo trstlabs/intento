@@ -83,7 +83,7 @@ func getRegisterAccountCmd() *cobra.Command {
 
 func getSubmitTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "submit-tx [path/to/sdk_msg.json]",
+		Use:  "submit-ica-tx [path/to/sdk_msg.json]",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
