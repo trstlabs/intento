@@ -246,7 +246,7 @@ type IntoApp struct {
 	ICAControllerKeeper   icacontrollerkeeper.Keeper
 	ICAHostKeeper         icahostkeeper.Keeper
 	IntentKeeper          intentkeeper.Keeper
-	InterchainqueryKeeper interchainquerykeeper.Keeper
+	InterchainQueryKeeper interchainquerykeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
@@ -491,10 +491,10 @@ func NewIntoApp(
 		app.AccountKeeper, scopedICAHostKeeper, app.MsgServiceRouter(),
 	)
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
-	app.InterchainqueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
-	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainqueryKeeper)
+	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
+	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper)
 
-	app.IntentKeeper = intentkeeper.NewKeeper(appCodec, keys[intenttypes.StoreKey], app.ICAControllerKeeper, scopedIntentKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.InterchainqueryKeeper, app.GetSubspace(intenttypes.ModuleName), intentkeeper.NewMultiIntentHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter(), interfaceRegistry)
+	app.IntentKeeper = intentkeeper.NewKeeper(appCodec, keys[intenttypes.StoreKey], app.ICAControllerKeeper, scopedIntentKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.InterchainQueryKeeper, app.GetSubspace(intenttypes.ModuleName), intentkeeper.NewMultiIntentHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter(), interfaceRegistry)
 	intentModule := intent.NewAppModule(appCodec, app.IntentKeeper)
 	intentIBCModule := intent.NewIBCModule(app.IntentKeeper)
 
@@ -507,7 +507,7 @@ func NewIntoApp(
 	icaHostStack := ibcfee.NewIBCMiddleware(icaHostIBCModule, app.IBCFeeKeeper)
 
 	// Register ICQ callbacks
-	_ = app.InterchainqueryKeeper.SetCallbackHandler(intenttypes.ModuleName, app.IntentKeeper.ICQCallbackHandler())
+	//_ = app.InterchainQueryKeeper.SetCallbackHandler(intenttypes.ModuleName, app.IntentKeeper.ICQCallbackHandler())
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
