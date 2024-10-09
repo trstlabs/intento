@@ -24,13 +24,3 @@ With Intento you can automate smart contracts easily over IBC. What's more is th
 These then too benefit from strong automation. EVM Developers can build automation for end users without the need for locking tokens in vault and escrow smart contracts.
 
 ![IBC flow](@site/docs/images/ibc_trigger.png)
-
-## About TRST Labs
-
-"Innovating Today for a Better Tomorrow" is our slogan - We empower Trustless Solutions & Inclusive Access to Blockchain Services.
-
-At our core, we are driven by the pursuit of innovation to create a better future. Through our intent-centric automation solutions, we are building new **trustless** solutions. By building **non-custodial** on-chain and permissionless automation solutions **, we empower users to take full control of their assets and on-chain actions, eliminating the need for intermediaries and enabling** a more secure and transparent ecosystem.
-
-But our mission goes beyond technological advancements. We believe in the power of blockchain technology to **transform lives and uplift communities**. That's why we are committed to building permissionless solutions for all. We recognize that not everyone has equal opportunities or freedom to access and utilize financial services due to oppressive regimes or societal barriers. Our intent-centric automation module opens doors for individuals in these circumstances, allowing them to leverage blockchain technology in a **seamless and empowering** manner. We envision a future where every person, regardless of their background or location, can access and benefit from decentralized finance.
-
-We are dedicated to **building a better tomorrow**, where trustless financial solutions and inclusive access are the norm. Join us on this journey as we work together to shape a future that empowers individuals, strengthens communities, and creates lasting positive change.

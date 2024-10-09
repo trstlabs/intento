@@ -1,10 +1,8 @@
 ---
-sidebar_position: 5
+sidebar_position: 7
 title: Querying actions
 description: How to retreive action data
 ---
-
-## Ways to Query
 
 Retreiving `Action` -related information can be through the [TriggerPortal](https://triggerportal.zone) interface, a front-end integration through `IntentoJS`, locally through a Command-Line Interface or through a Celestia RPC endpoint.
 
