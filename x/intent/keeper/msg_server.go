@@ -131,7 +131,7 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 				if msg.Msgs[0].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
 					msgExec := &authztypes.MsgExec{}
 					if err := proto.Unmarshal(msg.Msgs[0].Value, msgExec); err != nil {
-						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msg exec could not unmarshal")
+						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msg exec could not unmarshal, can not check conditions")
 					}
 
 					if int(msg.Conditions.UseResponseValue.MsgsIndex) >= len(msgExec.Msgs) {
@@ -143,8 +143,29 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 				}
 			}
 		}
+		if msg.Conditions.ResponseComparison != nil {
+			if int(msg.Conditions.ResponseComparison.ResponseIndex) >= len(msg.Msgs) {
+				return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "response index: %v must be shorter than length msgs array: %s", msg.Conditions.ResponseComparison.ResponseIndex, msg.Msgs)
+
+			}
+		}
+
+		if msg.Conditions.ICQConfig != nil {
+			if msg.Conditions.ICQConfig.TimeoutDuration != 0 {
+				if msg.Conditions.ICQConfig.TimeoutDuration > duration || msg.Conditions.ICQConfig.TimeoutDuration > interval {
+					return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the action interval or duration")
+				}
+			}
+			if msg.Conditions.UseResponseValue == nil || !msg.Conditions.UseResponseValue.FromICQ {
+				if msg.Conditions.ResponseComparison == nil || !msg.Conditions.ResponseComparison.FromICQ {
+					return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "Query must be used in UseResponseValue or ResponseComparison")
+				}
+			}
+
+		}
 		conditions = *msg.Conditions
 	}
+
 	hostedConfig := types.HostedConfig{}
 	if msg.HostedConfig != nil {
 		hostedConfig = *msg.HostedConfig

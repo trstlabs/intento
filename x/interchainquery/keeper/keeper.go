@@ -35,14 +35,14 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, ibckeeper *ibckeep
 	}
 }
 
-func (k *Keeper) SetCallbackHandler(module string, handler types.QueryCallbacks) error {
-	_, found := k.callbacks[module]
-	if found {
-		return fmt.Errorf("callback handler already set for %s", module)
-	}
-	k.callbacks[module] = handler.RegisterICQCallbacks()
-	return nil
-}
+// func (k *Keeper) SetCallbackHandler(module string, handler types.QueryCallbacks) error {
+// 	_, found := k.callbacks[module]
+// 	if found {
+// 		return fmt.Errorf("callback handler already set for %s", module)
+// 	}
+// 	k.callbacks[module] = handler.RegisterICQCallbacks()
+// 	return nil
+// }
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

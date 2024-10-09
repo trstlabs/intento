@@ -24,7 +24,7 @@ func (s *KeeperTestSuite) SetupTest() {
 //	which can change depending on the type of test
 //	(e.g. tests with only one Stride chain vs tests with multiple chains and IBC support)
 func (s *KeeperTestSuite) GetMsgServer() types.MsgServer {
-	return keeper.NewMsgServerImpl(s.App.InterchainqueryKeeper)
+	return keeper.NewMsgServerImpl(s.App.InterchainQueryKeeper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

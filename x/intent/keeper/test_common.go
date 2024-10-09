@@ -503,7 +503,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		encodingConfig.Codec, keys[govtypes.StoreKey], accountKeeper, bankKeeper,
 		stakingKeeper, msgServiceRouter, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	interchainqueryKeeper := interchainquerykeeper.NewKeeper(encodingConfig.Codec, keys[interchainquerytypes.StoreKey], ibcKeeper)
+	interchainQueryKeeper := interchainquerykeeper.NewKeeper(encodingConfig.Codec, keys[interchainquerytypes.StoreKey], ibcKeeper)
 
 	intentKeeper := NewKeeper(
 		encodingConfig.Codec,
@@ -515,7 +515,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		*stakingKeeper,
 		ibctransferKeeper,
 		accountKeeper,
-		interchainqueryKeeper,
+		interchainQueryKeeper,
 		intentSubsp,
 		NewMultiIntentHooks(claimKeeper.Hooks()),
 		msgServiceRouter,

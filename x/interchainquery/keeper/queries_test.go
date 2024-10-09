@@ -50,8 +50,8 @@ func (s *KeeperTestSuite) TestGetQueryId() {
 		TimeoutTimestamp: timeoutTimestamp,
 	}
 
-	queryId := s.App.InterchainqueryKeeper.GetQueryId(s.Ctx, query, false)
-	uniqueQueryId := s.App.InterchainqueryKeeper.GetQueryId(s.Ctx, query, true)
+	queryId := s.App.InterchainQueryKeeper.GetQueryId(s.Ctx, query, false)
+	uniqueQueryId := s.App.InterchainQueryKeeper.GetQueryId(s.Ctx, query, true)
 
 	s.Require().Equal(expectedQueryId, queryId, "query ID")
 	s.Require().Equal(expectedUniqueQueryId, uniqueQueryId, "unique query ID")
@@ -197,7 +197,7 @@ func (s *KeeperTestSuite) TestValidateQuery() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			actualError := s.App.InterchainqueryKeeper.ValidateQuery(s.Ctx, tc.query)
+			actualError := s.App.InterchainQueryKeeper.ValidateQuery(s.Ctx, tc.query)
 			if tc.expectedError == "" {
 				s.Require().NoError(actualError)
 			} else {
@@ -210,7 +210,7 @@ func (s *KeeperTestSuite) TestValidateQuery() {
 func (s *KeeperTestSuite) GetQueryUID() {
 	// Helper function to get the next uid
 	getUniqueSuffix := func() int {
-		return int(binary.BigEndian.Uint64(s.App.InterchainqueryKeeper.GetQueryUID(s.Ctx)))
+		return int(binary.BigEndian.Uint64(s.App.InterchainQueryKeeper.GetQueryUID(s.Ctx)))
 	}
 
 	// Grabbing the uid for the first time should return 1

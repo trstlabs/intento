@@ -29,7 +29,7 @@ func TestParseCoin(t *testing.T) {
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin"}
-	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
+	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
@@ -60,7 +60,7 @@ func TestParseInnerString(t *testing.T) {
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount.Denom, "test")
 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", MsgsIndex: 0, MsgKey: "Amount.Denom", ValueType: "string"}
-	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
+	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
@@ -91,7 +91,7 @@ func TestParseInnerStringFail(t *testing.T) {
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount.Denom, "test")
 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 0, MsgKey: "Amount.Denom", ValueType: "string"}
-	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
+	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
 	require.Error(t, err)
 
 }
@@ -115,7 +115,7 @@ func TestParseInnerInt(t *testing.T) {
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "sdk.Int"}
-	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
+	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
@@ -142,7 +142,7 @@ func TestCompareInnerIntTrue(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", ComparisonOperator: 0, ComparisonOperand: "101"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -164,7 +164,7 @@ func TestCompareCoinTrue(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount.[0]", ValueType: "sdk.Coin", ComparisonOperator: 0, ComparisonOperand: "101stake"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -186,7 +186,7 @@ func TestCompareIntFalse(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", ComparisonOperator: 0, ComparisonOperand: "100000000000"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
 	require.NoError(t, err)
 
 	require.False(t, boolean)
@@ -208,7 +208,7 @@ func TestCompareDenomString(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", ValueType: "string", ComparisonOperator: 0, ComparisonOperand: "stake"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -230,7 +230,7 @@ func TestInvalidResponseIndex(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 1, ResponseKey: "Amount.[0].Denom", ValueType: "string", ComparisonOperator: 0, ComparisonOperand: "sta"}
-	_, err = keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
+	_, err = keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
 	require.Error(t, err)
 
 	require.Contains(t, err.Error(), "number of responses")
@@ -252,7 +252,7 @@ func TestCompareDenomStringContains(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", ValueType: "string", ComparisonOperator: 1, ComparisonOperand: "sta"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -274,7 +274,7 @@ func TestCompareArrayCoinsContainsTrue(t *testing.T) {
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", ComparisonOperator: 1, ComparisonOperand: "101stake"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -287,7 +287,7 @@ func TestCompareArrayCoinsContainsFalse(t *testing.T) {
 	any, _ := cdctypes.NewAnyWithValue(&msgResponse)
 	msgResponses := []*cdctypes.Any{any}
 	responseComparison := &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", ComparisonOperator: 0, ComparisonOperand: "100aaa"}
-	boolean, err := keeper.CompareResponseValue(ctx, 1, msgResponses, *responseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, 1, msgResponses, *responseComparison, nil)
 	require.NoError(t, err)
 
 	require.False(t, boolean)
@@ -300,7 +300,7 @@ func TestCompareArrayEquals(t *testing.T) {
 	any, _ := cdctypes.NewAnyWithValue(&msgResponse)
 	msgResponses := []*cdctypes.Any{any}
 	responseComparison := &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", ComparisonOperator: 0, ComparisonOperand: "1000abc,3000000000degf"}
-	boolean, err := keeper.CompareResponseValue(ctx, 1, msgResponses, *responseComparison)
+	boolean, err := keeper.CompareResponseValue(ctx, 1, msgResponses, *responseComparison, nil)
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -325,7 +325,7 @@ func TestCompareArrayEquals(t *testing.T) {
 // 	actionInfo.Conditions = &types.ExecutionConditions{}
 // 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
 // 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin"}
-// 	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
+// 	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
 // 	require.NoError(t, err)
 // 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 // 	require.NoError(t, err)

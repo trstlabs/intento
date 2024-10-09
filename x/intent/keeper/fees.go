@@ -43,7 +43,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 		fixedFee := sdk.NewInt(p.ActionConstantFee * int64(len(action.Msgs)))
 		fixedFeeCoin := sdk.NewCoin(feeDenom, fixedFee)
 		totalActionFees = totalActionFees.Add(fixedFeeCoin)
-
+		//todo efficient burn
 		// if feeDenom == types.Denom {
 		// 	k.bankKeeper.BurnCoins(ctx, "intent", sdk.NewCoins(fixedFeeCoin))
 		// } else {
@@ -51,15 +51,15 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 		//}
 	}
 
-	if !isRecurring && action.Configuration != nil /* && !action.Configuration.FallbackToOwnerBalance */ {
+	if !isRecurring {
 		actionAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
-		if !actionAddrBalance.IsAnyNil() {
+		if !actionAddrBalance.IsZero() {
 			percentageActionFundsCommission := sdk.NewDecWithPrec(p.ActionFundsCommission, 2)
 			amountActionFundsCommissionCoin := sdk.NewCoin(feeDenom, percentageActionFundsCommission.MulInt(actionAddrBalance.AmountOf(feeDenom)).Ceil().TruncateInt())
 			totalActionFees = totalActionFees.Add(amountActionFundsCommissionCoin)
 
+			toCommunityPool = toCommunityPool.Add(amountActionFundsCommissionCoin)
 			toOwnerCoins, negative := actionAddrBalance.Sort().SafeSub(totalActionFees)
-
 			if !negative {
 				ownerAddr, err := sdk.AccAddressFromBech32(action.Owner)
 				if err != nil {
@@ -78,7 +78,8 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	k.Logger(ctx).Debug("fee", "amount", flexFeeCoin.Amount, "to", proposer.String())
+	//fmt.Printf("totalActionFees %s\n", totalActionFees)
+	k.Logger(ctx).Debug("fee", "amount", totalActionFees, "to", proposer.String())
 
 	return totalActionFees, nil
 }

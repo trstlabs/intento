@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/trstlabs/intento/x/intent/types"
-	intenttypes "github.com/trstlabs/intento/x/intent/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
@@ -54,7 +53,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacket() {
 func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 	suite.SetupTest()
 
-	params := intenttypes.DefaultParams()
+	params := types.DefaultParams()
 	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
 	params.ActionFlexFeeMul = 1
 	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
@@ -95,7 +94,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 	suite.SetupTest()
 
-	params := intenttypes.DefaultParams()
+	params := types.DefaultParams()
 	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
 	params.ActionFlexFeeMul = 1
 	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
@@ -148,7 +147,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing() {
 	suite.SetupTest()
 
-	params := intenttypes.DefaultParams()
+	params := types.DefaultParams()
 	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
 	params.ActionFlexFeeMul = 1
 	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
@@ -182,12 +181,12 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 	suite.Require().True(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
 
 	suite.chainA.CurrentHeader.Time = suite.chainA.CurrentHeader.Time.Add(time.Minute)
-	FakeBeginBlocker(suite.chainA.GetContext(), actionKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
+	actionKeeper.HandleAction(suite.chainA.GetContext(), actionKeeper.Logger(suite.chainA.GetContext()), action, suite.chainA.GetContext().BlockTime(), nil)
 
 	action = actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
 	actionHistory, _ := actionKeeper.GetActionHistory(suite.chainA.GetContext(), action.ID)
-	suite.Require().NotNil(actionHistory.History)
-	suite.Require().Empty(actionHistory.History[0].Errors)
+	suite.Require().NotNil(actionHistory)
+	suite.Require().Empty(actionHistory[0].Errors)
 	suite.Require().Equal(action.Owner, addr.String())
 	suite.Require().Equal(action.Label, "my trigger")
 	suite.Require().Equal(action.ICAConfig.PortID, "icacontroller-"+addr.String())
@@ -227,7 +226,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxWithSentDenomInPar
 	action := actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
 	feeAddr, _ := sdk.AccAddressFromBech32(action.FeeAddress)
 	bDenom := suite.chainA.GetIntoApp().BankKeeper.GetAllBalances(suite.chainA.GetContext(), feeAddr)[0].Denom
-	params := intenttypes.DefaultParams()
+	params := types.DefaultParams()
 	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin(bDenom, sdk.NewInt(2)), sdk.NewCoin("stake", sdk.OneInt()))
 	params.ActionFlexFeeMul = 1
 	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
@@ -237,10 +236,10 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxWithSentDenomInPar
 	suite.Require().True(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
 
 	suite.chainA.CurrentHeader.Time = suite.chainA.CurrentHeader.Time.Add(time.Minute)
-	FakeBeginBlocker(suite.chainA.GetContext(), actionKeeper, sdk.ConsAddress(suite.chainA.Vals.Proposer.Address))
+	actionKeeper.HandleAction(suite.chainA.GetContext(), actionKeeper.Logger(suite.chainA.GetContext()), action, suite.chainA.GetContext().BlockTime(), nil)
 
 	action = actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
 	actionHistory, _ := actionKeeper.GetActionHistory(suite.chainA.GetContext(), action.ID)
-	suite.Require().NotNil(actionHistory.History)
-	suite.Require().Empty(actionHistory.History[0].Errors)
+	suite.Require().NotNil(actionHistory)
+	suite.Require().Empty(actionHistory[0].Errors)
 }

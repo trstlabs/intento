@@ -31,14 +31,14 @@ type Keeper struct {
 	stakingKeeper         stakingkeeper.Keeper
 	transferKeeper        ibctransferkeeper.Keeper
 	accountKeeper         authkeeper.AccountKeeper
-	interchainqueryKeeper interchainquerykeeper.Keeper
+	interchainQueryKeeper interchainquerykeeper.Keeper
 	paramSpace            paramtypes.Subspace
 	hooks                 IntentHooks
 	msgRouter             MessageRouter
 	interfaceRegistry     cdctypes.InterfaceRegistry
 }
 
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, interchainqueryKeeper interchainquerykeeper.Keeper, paramSpace paramtypes.Subspace, ah IntentHooks, msgRouter MessageRouter, interfaceRegistry cdctypes.InterfaceRegistry,
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, interchainQueryKeeper interchainquerykeeper.Keeper, paramSpace paramtypes.Subspace, ah IntentHooks, msgRouter MessageRouter, interfaceRegistry cdctypes.InterfaceRegistry,
 ) Keeper {
 	moduleAccAddr := accountKeeper.GetModuleAddress(types.ModuleName)
 	// ensure module account is set
@@ -62,7 +62,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontr
 		stakingKeeper:         stakingKeeper,
 		transferKeeper:        transferKeeper,
 		accountKeeper:         accountKeeper,
-		interchainqueryKeeper: interchainqueryKeeper,
+		interchainQueryKeeper: interchainQueryKeeper,
 		hooks:                 ah,
 		msgRouter:             msgRouter,
 		interfaceRegistry:     interfaceRegistry,

@@ -33,7 +33,6 @@ var _ types.MsgServer = msgServer{}
 // check if the query requires proving; if it does, verify it!
 func (k Keeper) VerifyKeyProof(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query) error {
 	pathParts := strings.Split(query.QueryType, "/")
-	fmt.Printf("VerifyKeyProof\n")
 	// the query does NOT have an associated proof, so no need to verify it.
 	if pathParts[len(pathParts)-1] != "key" {
 		return nil
@@ -135,7 +134,6 @@ func (k Keeper) HandleQueryTimeout(ctx sdk.Context, msg *types.MsgSubmitQueryRes
 
 // call the query's associated callback function
 func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryResponse, query types.Query) error {
-	fmt.Printf("InvokeCallback\n")
 	// get all the callback handlers and sort them for determinism
 	// (each module has their own callback handler)
 	moduleNames := []string{}
@@ -169,7 +167,7 @@ func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 // Handle ICQ query responses by validating the proof, and calling the query's corresponding callback
 func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubmitQueryResponse) (*types.MsgSubmitQueryResponseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	fmt.Printf("SubmitQueryResponse\n")
+
 	// check if the response has an associated query stored on stride
 	query, found := k.GetQuery(ctx, msg.QueryId)
 	if !found {
@@ -190,7 +188,6 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 			sdk.NewAttribute(types.AttributeKeyChainId, query.ChainId),
 		),
 	})
-
 	// Verify the response's proof, if one exists
 	err := k.VerifyKeyProof(ctx, msg, query)
 	if err != nil {
@@ -201,7 +198,6 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 
 	// Immediately delete the query so it cannot process again
 	k.DeleteQuery(ctx, query.Id)
-
 	// If the query is contentless, end
 	if len(msg.Result) == 0 {
 		k.Logger(ctx).Info(LogICQCallbackWithHostChain(query.ChainId, query.CallbackId,
@@ -216,7 +212,6 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 		}
 		return &types.MsgSubmitQueryResponseResponse{}, nil
 	}
-
 	// Invoke the query callback (if the query has not timed out)
 	if err := k.InvokeCallback(ctx, msg, query); err != nil {
 		return nil, err

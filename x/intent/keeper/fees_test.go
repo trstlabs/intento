@@ -37,19 +37,14 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
 	require.Equal(t, sdk.ZeroDec(), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
-	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1000000)
-	require.Empty(t, err)
+	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 500_000)
+	require.Nil(t, err)
 	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, types.Denom, false, ctx.BlockHeader().ProposerAddress)
-	require.Empty(t, err)
+	require.Nil(t, err)
 
-	//require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, feeAddr, sdk.DefaultBondDenom))
-
-	///moduleAcc := keeper.accountKeeper.GetModuleAccount(ctx, "intent").GetAddress()
-
-	//require.Equal(t, keeper.bankKeeper.GetBalance(ctx, moduleAcc, types.Denom), fee)
 	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
-	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt(), fee.Amount)
-	require.Equal(t, sdk.NewInt64Coin(denom, 30_000_000), keeper.bankKeeper.GetBalance(ctx, feeAddr, sdk.DefaultBondDenom).Add(fee))
+	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt().String(), fee.Amount.String())
+	require.Equal(t, sdk.NewInt64Coin(denom, 30_000_000), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom).Add(fee))
 
 }
 
@@ -76,19 +71,18 @@ func TestDistributeCoinsOwnerFeeFallbackLastExec(t *testing.T) {
 		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"}, Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
 	}
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1000000)
-	require.Empty(t, err)
+	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 500_000)
+	require.Nil(t, err)
 	require.NotEmpty(t, denom)
-	require.NotEmpty(t, acc)
+	require.Equal(t, acc, ownerAddr)
 	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, denom, false, ctx.BlockHeader().ProposerAddress)
-	require.Empty(t, err)
+	require.Nil(t, err)
 
-	require.Equal(t, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, feeAddr, sdk.DefaultBondDenom))
-	//moduleAcc := keeper.accountKeeper.GetModuleAccount(ctx, "intent").GetAddress()
-	//require.Equal(t, keeper.bankKeeper.GetBalance(ctx, moduleAcc, types.Denom), fee)
+	require.Equal(t, sdk.NewCoin(types.Denom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, feeAddr, types.Denom))
+
 	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
 	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt(), fee.Amount)
-	require.Equal(t, sdk.NewInt64Coin(denom, 30_000_000), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom).Add(fee))
+	require.Equal(t, sdk.NewInt64Coin(denom, 30_000_000), keeper.bankKeeper.GetBalance(ctx, ownerAddr, types.Denom).Add(fee))
 
 }
 
@@ -147,15 +141,15 @@ func TestDistributeCoinsEmptyActionBalanceAndMultipliedFlexFee(t *testing.T) {
 
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1000000)
-	require.Empty(t, err)
+	require.Nil(t, err)
 	require.NotEmpty(t, denom)
 	require.NotEmpty(t, acc)
 	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, denom, false, ctx.BlockHeader().ProposerAddress)
-	require.Empty(t, err)
+	require.Nil(t, err)
 
 	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
 	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt(), fee.Amount)
-	require.Equal(t, sdk.NewInt64Coin(denom, 300_000_000), keeper.bankKeeper.GetBalance(ctx, feeAddr, sdk.DefaultBondDenom).Add(fee))
+	require.Equal(t, sdk.NewInt64Coin(denom, 300_000_000), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom).Add(fee))
 
 }
 
