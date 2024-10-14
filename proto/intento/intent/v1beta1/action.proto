@@ -64,7 +64,7 @@ message HostedConfig {
 // ExecutionConfiguration provides the execution-related configuration of the action
 message ExecutionConfiguration {
   // if true, the action response outputs are saved and can be used in logic
-  bool save_msg_responses = 1;
+  bool save_responses = 1;
   // if true, the action is not updatable
   bool updating_disabled = 2;
   // If true, will execute until we get a successful Action, if false/unset will always execute
@@ -101,6 +101,8 @@ message ActionHistoryEntry {
   repeated string errors = 6;
   //will be empty when save_responses is false
   repeated google.protobuf.Any msg_responses = 7;
+  //will be empty when save_responses is false
+  string query_response = 8;
 }
 
 // ExecutionConditions provides execution conditions for the action

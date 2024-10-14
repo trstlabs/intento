@@ -15,7 +15,7 @@ import (
 
 func TestBeginBlocker(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
-	configuration := types.ExecutionConfiguration{SaveMsgResponses: true}
+	configuration := types.ExecutionConfiguration{SaveResponses: true}
 	action, sendToAddr := createTestTriggerAction(ctx, configuration, keepers)
 	err := action.ValidateBasic()
 	require.NoError(t, err)
@@ -30,7 +30,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 
-	k.HandleAction(ctx2, k.Logger(ctx2), action, ctx.BlockTime(), nil)
+	k.HandleAction(ctx2, k.Logger(ctx2), action, ctx2.BlockTime(), nil)
 	action = k.GetActionInfo(ctx2, action.ID)
 	ctx3 := createNextExecutionContext(ctx2, action.ExecTime)
 
@@ -42,8 +42,8 @@ func TestBeginBlocker(t *testing.T) {
 	require.Equal(t, 1, len(actionHistory))
 	require.Equal(t, ctx2.BlockHeader().Time, actionHistory[0].ScheduledExecTime)
 	require.Equal(t, ctx2.BlockHeader().Time, actionHistory[0].ActualExecTime)
-	// require.Equal(t, ctx3.BlockHeader().Time, actionHistory[0].Errors, []string{""})
 	require.NotNil(t, ctx3.BlockHeader().Time, actionHistory[0].MsgResponses[0].Value)
+
 	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx3, sendToAddr)[0].Amount, sdk.NewInt(100))
 
 }
@@ -158,7 +158,7 @@ func TestOwnerMustBeSignerForLocalAction(t *testing.T) {
 	err := action.GetTxMsgs(cdc)[0].ValidateBasic()
 	require.NoError(t, err)
 
-	fee, err := k.DistributeCoins(ctx, action, feeAddr, types.Denom, true, ctx.BlockHeader().ProposerAddress)
+	fee, err := k.DistributeCoins(ctx, action, feeAddr, types.Denom, ctx.BlockHeader().ProposerAddress)
 
 	require.NoError(t, err)
 	executedLocally, _, err := k.TriggerAction(ctx, &action)
@@ -258,7 +258,7 @@ func createNextExecutionContext(ctx sdk.Context, nextExecTime time.Time) sdk.Con
 }
 
 type KeeperMock struct {
-	AllowedToExecuteFunc      func(ctx sdk.Context, action types.ActionInfo) bool
+	allowedToExecuteFunc      func(ctx sdk.Context, action types.ActionInfo) bool
 	TriggerActionFunc         func(ctx sdk.Context, action types.ActionInfo) error
 	DistributeCoinsFunc       func(ctx sdk.Context, action types.ActionInfo, flexFee uint64, isRecurring bool, isLastExec bool, proposer sdk.AccAddress) (uint64, error)
 	RemoveFromActionQueueFunc func(ctx sdk.Context, actions ...types.ActionInfo)
