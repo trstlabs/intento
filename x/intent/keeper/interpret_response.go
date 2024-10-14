@@ -68,7 +68,7 @@ func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 	if conditions == nil || conditions.UseResponseValue == nil || conditions.UseResponseValue.ResponseKey == "" {
 		return nil
 	}
-	fmt.Printf("UseResponseValue\n")
+
 	useResp := conditions.UseResponseValue
 	if useResp.ActionID != 0 {
 		actionID = useResp.ActionID
@@ -107,10 +107,8 @@ func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 			return err
 		}
 	} else {
-		fmt.Printf("OARSE FROM Q")
 		valueFromResponse, err = ParseResponseValue(queryCallback.CallbackData, useResp.ResponseKey, useResp.ValueType)
 		if err != nil {
-			fmt.Printf("ERR ParseResponseValue %s\n", err)
 			return err
 		}
 	}

@@ -20,7 +20,7 @@ const (
 
 	//Execution conditions
 	flagUpdatingDisabled          = "updating-disabled"
-	flagSaveMsgResponses          = "save-msg-responses"
+	flagSaveResponses             = "save-msg-responses"
 	flagFallbackToOwnerBalance    = "fallback-to-owner-balance"
 	flagStopOnSuccess             = "stop-on-success"
 	flagStopOnFailure             = "stop-on-failure"
@@ -56,7 +56,7 @@ func init() {
 	fsAction.String(flagICQConfig, "", "A config to query keyvalue store on a host, optional")
 
 	fsAction.Bool(flagUpdatingDisabled, false, "disable future updates to the configuration'")
-	fsAction.Bool(flagSaveMsgResponses, true, "save message responses to tx history (Cosmos SDK v0.46+ chains only)'")
+	fsAction.Bool(flagSaveResponses, true, "save message responses to tx history (Cosmos SDK v0.46+ chains only)'")
 	fsAction.Bool(flagStopOnSuccess, false, "stop execution after success'")
 	fsAction.Bool(flagStopOnFailure, false, "stop execution after failure'")
 	fsAction.Bool(flagFallbackToOwnerBalance, false, "fallback to owner balance'")

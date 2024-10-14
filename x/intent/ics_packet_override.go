@@ -358,10 +358,10 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 		updateDisabled = true
 	}
 
-	saveMsgResponses := false
-	saveMsgResponsesString, ok := action["save_responses"].(string)
-	if ok && saveMsgResponsesString == "true" {
-		saveMsgResponses = true
+	SaveResponses := false
+	SaveResponsesString, ok := action["save_responses"].(string)
+	if ok && SaveResponsesString == "true" {
+		SaveResponses = true
 	}
 
 	stopOnSuccess := false
@@ -438,7 +438,7 @@ func ValidateAndParseMemo(memo string, receiver string) (isActionRouted bool, ow
 	// int64Array now contains your parsed int64 values or is an empty slice if not present or not an int64 array
 
 	configuration = types.ExecutionConfiguration{
-		SaveMsgResponses:          saveMsgResponses,
+		SaveResponses:             SaveResponses,
 		UpdatingDisabled:          updateDisabled,
 		StopOnSuccess:             stopOnSuccess,
 		StopOnFailure:             stopOnFailure,

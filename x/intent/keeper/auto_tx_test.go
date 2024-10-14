@@ -32,7 +32,7 @@ func TestCreateAction(t *testing.T) {
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
-	configuration := types.ExecutionConfiguration{SaveMsgResponses: false}
+	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateAction function
 	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, portID, connectionID, hostConn, types.ExecutionConditions{})
@@ -76,7 +76,7 @@ func TestCreateActionWithZeroFeeFundsWorks(t *testing.T) {
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
-	configuration := types.ExecutionConfiguration{SaveMsgResponses: false}
+	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateAction function
 	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, portID, connectionID, hostConn, types.ExecutionConditions{})

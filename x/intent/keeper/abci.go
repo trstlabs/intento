@@ -21,45 +21,47 @@ func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.Ac
 		msgResponses    = []*cdctypes.Any{}
 	)
 
-	allowed, err := k.AllowedToExecute(ctx, action, queryCallback)
+	allowed, err := k.allowedToExecute(ctx, action, queryCallback)
 	if !allowed {
-		k.recordFailedAction(ctx, action, timeOfBlock, fmt.Sprintf(types.ErrActionConditions, err.Error()))
+		k.recordFailedAction(ctx, &action, timeOfBlock, fmt.Sprintf(types.ErrActionConditions, err.Error()))
 		return
 	}
 
-	logger.Debug("action execution", "id", action.ID)
-	isRecurring := action.ExecTime.Before(action.EndTime)
 	k.RemoveFromActionQueue(ctx, action)
 
 	actionCtx := ctx.WithGasMeter(sdk.NewGasMeter(1_000_000))
 	cacheCtx, writeCtx := actionCtx.CacheContext()
 
-	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, action, 500_000)
+	logger.Debug("action execution", "id", action.ID)
+
+	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, action, 1_000_000)
 	if err != nil || feeAddr == nil || feeDenom == "" {
 		errorString = appendError(errorString, types.ErrBalanceLow)
 	}
 
 	if errorString == "" {
 		executedLocally, errorString = k.handleActionExecution(cacheCtx, &action, &msgResponses, errorString, queryCallback)
-	}
 
-	fee, err = k.DistributeCoins(cacheCtx, action, feeAddr, feeDenom, isRecurring, ctx.BlockHeader().ProposerAddress)
-	if err != nil {
-		errorString = appendError(errorString, fmt.Sprintf(types.ErrActionFeeDistribution, err.Error()))
+		fee, err = k.DistributeCoins(cacheCtx, action, feeAddr, feeDenom, ctx.BlockHeader().ProposerAddress)
+		if err != nil {
+			errorString = appendError(errorString, fmt.Sprintf(types.ErrActionFeeDistribution, err.Error()))
+		}
+
 	}
 
 	// Check if timeOfBlock is zero and act accordingly
-	if timeOfBlock.IsZero() {
+	if timeOfBlock.IsZero() && queryCallback != nil {
 		// Append to the prior action history entry
-		k.appendToPriorActionHistory(cacheCtx, action, fee, executedLocally, msgResponses, errorString)
+		k.appendToPriorActionHistory(cacheCtx, &action, fee, executedLocally, msgResponses, string(queryCallback.GetCallbackData()), errorString)
 	} else {
 		// Record a new action history entry
-		k.recordActionHistory(cacheCtx, action, timeOfBlock, fee, executedLocally, msgResponses, errorString)
+		k.addActionHistory(cacheCtx, &action, timeOfBlock, fee, executedLocally, msgResponses, errorString)
 	}
 	writeCtx()
 
 	if shouldRecur(action, errorString) {
-		k.requeueAction(ctx, action)
+		action.ExecTime = action.ExecTime.Add(action.Interval)
+		k.InsertActionQueue(ctx, action.ID, action.ExecTime)
 	}
 
 	emitActionEvent(ctx, action)
@@ -88,7 +90,6 @@ func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, action types.ActionInfo, 
 // handleActionExecution handles the core logic of triggering an action and processing responses
 func (k Keeper) handleActionExecution(ctx sdk.Context, action *types.ActionInfo, msgResponses *[]*cdctypes.Any, errorString string, queryCallback *icqtypes.Query) (bool, string) {
 	var executedLocally bool
-
 	// Safe check to ensure conditions exist before proceeding
 	if action.Conditions == nil || action.Conditions.UseResponseValue == nil {
 		// If no UseResponseValue conditions are present, just execute all Msgs normally
@@ -148,15 +149,15 @@ func (k Keeper) handleUseResponseValue(ctx sdk.Context, action *types.ActionInfo
 }
 
 // recordFailedAction adds a failed action to the action history and reschedules it
-func (k Keeper) recordFailedAction(ctx sdk.Context, action types.ActionInfo, timeOfBlock time.Time, errorMsg string) {
-	k.AddActionHistory(ctx, &action, timeOfBlock, sdk.Coin{}, false, nil, errorMsg)
+func (k Keeper) recordFailedAction(ctx sdk.Context, action *types.ActionInfo, timeOfBlock time.Time, errorMsg string) {
+	k.addActionHistory(ctx, action, timeOfBlock, sdk.Coin{}, false, nil, errorMsg)
 	action.ExecTime = action.ExecTime.Add(action.Interval)
-	k.SetActionInfo(ctx, &action)
+	k.SetActionInfo(ctx, action)
 }
 
 // shouldRecur checks whether the action should be rescheduled based on recurrence rules
 func shouldRecur(action types.ActionInfo, errorString string) bool {
-	isRecurring := action.ExecTime.Add(action.Interval).Before(action.EndTime) || action.ExecTime.Add(action.Interval).Equal(action.EndTime)
+	isRecurring := action.ExecTime.Before(action.EndTime) && (action.ExecTime.Add(action.Interval).Before(action.EndTime) || action.ExecTime.Add(action.Interval).Equal(action.EndTime))
 	allowedToRecur := (!action.Configuration.StopOnSuccess && !action.Configuration.StopOnFailure) ||
 		(action.Configuration.StopOnSuccess && errorString == "") ||
 		(action.Configuration.StopOnFailure && errorString != "")
@@ -164,19 +165,8 @@ func shouldRecur(action types.ActionInfo, errorString string) bool {
 	return isRecurring && allowedToRecur
 }
 
-// requeueAction re-inserts the action into the queue for the next execution cycle
-func (k Keeper) requeueAction(ctx sdk.Context, action types.ActionInfo) {
-	action.ExecTime = action.ExecTime.Add(action.Interval)
-	k.InsertActionQueue(ctx, action.ID, action.ExecTime)
-}
-
-// recordActionHistory adds an entry to the action history
-func (k Keeper) recordActionHistory(ctx sdk.Context, action types.ActionInfo, timeOfBlock time.Time, fee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, errorString string) {
-	k.AddActionHistory(ctx, &action, timeOfBlock, fee, executedLocally, msgResponses, errorString)
-}
-
 // appendToPriorActionHistory appends results to the prior history entry for the action
-func (k Keeper) appendToPriorActionHistory(ctx sdk.Context, action types.ActionInfo, fee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, errorString string) {
+func (k Keeper) appendToPriorActionHistory(ctx sdk.Context, action *types.ActionInfo, fee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, queryResponse string, errorString string) {
 	// Fetch the last recorded action history for the action
 	entry, found := k.getCurrentActionHistoryEntry(ctx, action.ID)
 	if !found {
@@ -185,11 +175,13 @@ func (k Keeper) appendToPriorActionHistory(ctx sdk.Context, action types.ActionI
 	// Append the new data to the existing history entry
 	entry.ExecFee = entry.ExecFee.Add(fee)
 	entry.Executed = entry.Executed || executedLocally
-	entry.MsgResponses = append(entry.MsgResponses, msgResponses...)
-	if errorString != "" {
-		entry.Errors = append(entry.Errors, errorString)
+	if action.Configuration.SaveResponses {
+		entry.MsgResponses = append(entry.MsgResponses, msgResponses...)
+		entry.QueryResponse = queryResponse
+		if errorString != "" {
+			entry.Errors = append(entry.Errors, errorString)
+		}
 	}
-
 	// Update the action history with the new appended data
 	k.SetCurrentActionHistoryEntry(ctx, action.ID, entry)
 }

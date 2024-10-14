@@ -352,7 +352,7 @@ func CreateFakeAction(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, c
 		ExecTime:      execTime,
 		EndTime:       endTime,
 		ICAConfig:     &types.ICAConfig{PortID: portID},
-		Configuration: &types.ExecutionConfiguration{SaveMsgResponses: true},
+		Configuration: &types.ExecutionConfiguration{SaveResponses: true},
 	}
 
 	k.SetActionInfo(ctx, &action)

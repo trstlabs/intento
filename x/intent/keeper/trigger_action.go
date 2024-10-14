@@ -110,7 +110,7 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 
 	}
 	writeCache()
-	if !action.Configuration.SaveMsgResponses {
+	if !action.Configuration.SaveResponses {
 		msgResponses = nil
 	}
 	return msgResponses, nil
@@ -148,7 +148,7 @@ func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string,
 
 	actionHistoryEntry.Executed = true
 
-	if action.Configuration.SaveMsgResponses {
+	if action.Configuration.SaveResponses {
 		actionHistoryEntry.MsgResponses = append(actionHistoryEntry.MsgResponses, msgResponses...)
 	}
 
@@ -287,9 +287,9 @@ func (k Keeper) SetActionError(ctx sdk.Context, sourcePort string, channelID str
 	k.SetCurrentActionHistoryEntry(ctx, id, actionHistoryEntry)
 }
 
-// AllowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
+// allowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
 // insert the next entry when execution has not happend yet
-func (k Keeper) AllowedToExecute(ctx sdk.Context, action types.ActionInfo, queryCallback *icqtypes.Query) (bool, error) {
+func (k Keeper) allowedToExecute(ctx sdk.Context, action types.ActionInfo, queryCallback *icqtypes.Query) (bool, error) {
 	allowedToExecute := true
 	shouldRecur := action.ExecTime.Before(action.EndTime) && action.ExecTime.Add(action.Interval).Before(action.EndTime)
 	conditions := action.Conditions

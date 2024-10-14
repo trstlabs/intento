@@ -4,6 +4,8 @@ import (
 
 	//"log"
 
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +13,7 @@ import (
 )
 
 // DistributeCoins distributes Action fees and handles remaining action fee balance after last execution
-func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAddr sdk.AccAddress, feeDenom string, isRecurring bool, proposer sdk.ConsAddress) (sdk.Coin, error) {
+func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAddr sdk.AccAddress, feeDenom string, proposer sdk.ConsAddress) (sdk.Coin, error) {
 	p := k.GetParams(ctx)
 
 	k.Logger(ctx).Debug("gas", "consumed", sdk.NewIntFromUint64(ctx.GasMeter().GasConsumed()))
@@ -23,7 +25,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 	}
 	found, coins := p.GasFeeCoins.Sort().Find(feeDenom)
 	if !found {
-		return sdk.Coin{}, errorsmod.Wrap(types.ErrNotFound, "coin not found")
+		return sdk.Coin{}, errorsmod.Wrap(types.ErrNotFound, "gas fee denom not supported")
 	}
 	gasFeeAmount := coins.Amount.Mul(gasMultiple)
 
@@ -50,8 +52,10 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 		toCommunityPool = toCommunityPool.Add(fixedFeeCoin)
 		//}
 	}
-
-	if !isRecurring {
+	fmt.Printf("ACTION %v\n", action)
+	//not recurring
+	if action.ExecTime.Equal(action.EndTime) {
+		fmt.Print("NOT RECURRIN G\n")
 		actionAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
 		if !actionAddrBalance.IsZero() {
 			percentageActionFundsCommission := sdk.NewDecWithPrec(p.ActionFundsCommission, 2)
@@ -73,7 +77,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 			}
 		}
 	}
-
+	fmt.Print("RECURRINGGGGGG G\n")
 	err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(toCommunityPool), feeAddr)
 	if err != nil {
 		return sdk.Coin{}, err

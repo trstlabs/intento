@@ -91,6 +91,8 @@ func (k *Keeper) RetryICQRequest(ctx sdk.Context, query types.Query) error {
 	// Delete old query
 	k.DeleteQuery(ctx, query.Id)
 
+	//custom logic: we retry once, and then it should be rejected to prevent looping.
+	query.TimeoutPolicy = types.TimeoutPolicy_REJECT_QUERY_RESPONSE
 	// Submit a new query (with a new ID)
 	if err := k.SubmitICQRequest(ctx, query, true); err != nil {
 		return errorsmod.Wrap(err, types.ErrFailedToRetryQuery.Error())

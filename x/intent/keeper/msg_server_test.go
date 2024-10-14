@@ -733,7 +733,7 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAction(owner, "label", []sdk.Msg{sdkMsg}, connectionId, "", "200s", "100s", uint64(suite.chainA.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveMsgResponses: false}, nil)
+			msg, err := types.NewMsgSubmitAction(owner, "label", []sdk.Msg{sdkMsg}, connectionId, "", "200s", "100s", uint64(suite.chainA.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
 			suite.Require().NoError(err)
 			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
 			msgSrv := keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
@@ -749,7 +749,7 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 				actionHistory := icaAppA.IntentKeeper.MustGetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), 1)
 				suite.Require().NotZero(actionHistory[0].ActualExecTime)
 			}
-			updateMsg, err := types.NewMsgUpdateAction(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveMsgResponses: false}, nil)
+			updateMsg, err := types.NewMsgUpdateAction(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
 			suite.Require().NoError(err)
 			suite.chainA.Coordinator.IncrementTime()
 			suite.Require().NotEqual(suite.chainA.GetContext(), wrappedCtx)

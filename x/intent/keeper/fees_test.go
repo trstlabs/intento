@@ -32,14 +32,14 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 	types.Denom = "stake"
 
 	actionInfo := types.ActionInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ExecTime: time.Now().Add(time.Second * 20),
 	}
 
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
 	require.Equal(t, sdk.ZeroDec(), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
-	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 500_000)
+	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1_0000_000)
 	require.Nil(t, err)
-	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, types.Denom, false, ctx.BlockHeader().ProposerAddress)
+	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, types.Denom, ctx.BlockHeader().ProposerAddress)
 	require.Nil(t, err)
 
 	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
@@ -68,14 +68,14 @@ func TestDistributeCoinsOwnerFeeFallbackLastExec(t *testing.T) {
 	types.Denom = "stake"
 
 	actionInfo := types.ActionInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"}, Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ExecTime: time.Now().Add(time.Second * 20), Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
 	}
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 500_000)
+	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1_0000_000)
 	require.Nil(t, err)
 	require.NotEmpty(t, denom)
 	require.Equal(t, acc, ownerAddr)
-	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, denom, false, ctx.BlockHeader().ProposerAddress)
+	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, denom, ctx.BlockHeader().ProposerAddress)
 	require.Nil(t, err)
 
 	require.Equal(t, sdk.NewCoin(types.Denom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, feeAddr, types.Denom))
@@ -111,7 +111,7 @@ func TestDistributeCoinsEmptyActionBalance(t *testing.T) {
 	}
 
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-	_, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1000000)
+	_, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1_0000_000)
 	require.Nil(t, err)
 	require.Empty(t, denom)
 }
@@ -140,11 +140,11 @@ func TestDistributeCoinsEmptyActionBalanceAndMultipliedFlexFee(t *testing.T) {
 	}
 
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
-	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1000000)
+	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1_0000_000)
 	require.Nil(t, err)
 	require.NotEmpty(t, denom)
 	require.NotEmpty(t, acc)
-	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, denom, false, ctx.BlockHeader().ProposerAddress)
+	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, denom, ctx.BlockHeader().ProposerAddress)
 	require.Nil(t, err)
 
 	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool

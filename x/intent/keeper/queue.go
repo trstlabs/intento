@@ -17,9 +17,8 @@ func (k Keeper) IterateActionQueue(ctx sdk.Context, execTime time.Time, cb func(
 	for ; iterator.Valid(); iterator.Next() {
 
 		actionID, _ := types.SplitActionQueueKey(iterator.Key())
-		//fmt.Printf("action id is:  %v \n", actionID)
-		action := k.GetActionInfo(ctx, actionID)
 
+		action := k.GetActionInfo(ctx, actionID)
 		if cb(action) {
 			break
 		}
@@ -35,13 +34,13 @@ func (k Keeper) GetActionsForBlock(ctx sdk.Context) (actions []types.ActionInfo)
 	return
 }
 
-// ActionQueueIterator returns an sdk.Iterator for all the items in the Inactive Queue that expire by execTime
+// ActionQueueIterator returns an sdk.Iterator for all the actions in the Inactive Queue that expire by execTime
 func (k Keeper) ActionQueueIterator(ctx sdk.Context, execTime time.Time) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return store.Iterator(types.ActionQueuePrefix, sdk.PrefixEndBytes(types.ActionByTimeKey(execTime))) //we check the end of the bites array for the execution time
 }
 
-// InsertActionQueue Inserts a action into the auto tx queue
+// InsertActionQueue Inserts a action into the action queue
 func (k Keeper) InsertActionQueue(ctx sdk.Context, actionID uint64, execTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	bz := types.GetBytesForUint(actionID)
@@ -50,7 +49,7 @@ func (k Keeper) InsertActionQueue(ctx sdk.Context, actionID uint64, execTime tim
 	store.Set(types.ActionQueueKey(actionID, execTime), bz)
 }
 
-// RemoveFromActionQueue removes a action from the Inactive Item Queue
+// RemoveFromActionQueue removes a action from the Inactive action queue
 func (k Keeper) RemoveFromActionQueue(ctx sdk.Context, action types.ActionInfo) {
 
 	store := ctx.KVStore(k.storeKey)

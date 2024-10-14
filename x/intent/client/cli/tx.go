@@ -390,7 +390,7 @@ func getUpdateActionCmd() *cobra.Command {
 func getExecutionConfiguration() *types.ExecutionConfiguration {
 
 	updatingDisabled := viper.GetBool(flagUpdatingDisabled)
-	saveMsgResponses := viper.GetBool(flagSaveMsgResponses)
+	SaveResponses := viper.GetBool(flagSaveResponses)
 	fallbackToOwnerBalance := viper.GetBool(flagFallbackToOwnerBalance)
 	reregisterICAAfterTimeout := viper.GetBool(flagReregisterICAAfterTimeout)
 	stopOnSuccess := viper.GetBool(flagStopOnSuccess)
@@ -398,7 +398,7 @@ func getExecutionConfiguration() *types.ExecutionConfiguration {
 
 	configuration := types.ExecutionConfiguration{
 		UpdatingDisabled:          updatingDisabled,
-		SaveMsgResponses:          saveMsgResponses,
+		SaveResponses:             SaveResponses,
 		StopOnSuccess:             stopOnSuccess,
 		StopOnFailure:             stopOnFailure,
 		FallbackToOwnerBalance:    fallbackToOwnerBalance,

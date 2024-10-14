@@ -148,7 +148,7 @@ func createBaseActionInfo(ownerAddr sdk.AccAddress, actionAddr sdk.AccAddress) t
 		StartTime:     time.Now().Add(time.Hour * -1),
 		EndTime:       time.Now().Add(time.Second * 20),
 		ICAConfig:     &types.ICAConfig{},
-		Configuration: &types.ExecutionConfiguration{SaveMsgResponses: true},
+		Configuration: &types.ExecutionConfiguration{SaveResponses: true},
 	}
 	return actionInfo
 }

@@ -39,5 +39,5 @@ var (
 	ErrActionMsgHandling      = "msg handling error: %s"
 	ErrActionResponseUseValue = "msg handling error using response value: %s"
 	ErrSettingActionResult    = "cannot set action result"
-	ErrBalanceLow             = "balance too low to change expected fee"
+	ErrBalanceLow             = "balance too low to deduct expected fee"
 )
