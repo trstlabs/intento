@@ -22,7 +22,7 @@ Actions are specified in an action object that contains data about when to execu
 // ExecutionConfiguration provides the execution-related configuration of the action
 message ExecutionConfiguration {
        // if true, the action outputs are saved and can be used in condition-based logic
-      bool save_msg_responses = 1;
+      bool save_responses = 1;
       // if true, the action is not updatable
       bool updating_disabled = 2;
       // If true, will execute until we get a successful Action, if false/unset will always execute
