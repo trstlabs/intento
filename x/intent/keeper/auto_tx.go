@@ -28,11 +28,14 @@ func (k Keeper) TryGetActionInfo(ctx sdk.Context, actionID uint64) (types.Action
 	store := ctx.KVStore(k.storeKey)
 	var action types.ActionInfo
 	actionBz := store.Get(types.GetActionKey(actionID))
-
+	if actionBz == nil {
+		return types.ActionInfo{}, errorsmod.Wrapf(types.ErrNotFound, "action")
+	}
 	err := k.cdc.Unmarshal(actionBz, &action)
 	if err != nil {
 		return types.ActionInfo{}, err
 	}
+
 	return action, nil
 }
 

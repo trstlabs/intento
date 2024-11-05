@@ -128,7 +128,7 @@ func (k Keeper) HandleQueryTimeout(ctx sdk.Context, msg *types.MsgSubmitQueryRes
 		return k.InvokeCallback(ctx, msg, query)
 
 	default:
-		return fmt.Errorf("Unsupported query timeout policy: %s", query.TimeoutPolicy.String())
+		return fmt.Errorf("unsupported query timeout policy: %s", query.TimeoutPolicy.String())
 	}
 }
 
@@ -144,7 +144,6 @@ func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 
 	// Loop through each module until the callbackId is found in one of the module handlers
 	for _, moduleName := range moduleNames {
-		fmt.Printf("moduleName %s\n", moduleName)
 		moduleCallbackHandler := k.callbacks[moduleName]
 
 		// Once the callback is found, invoke the function
@@ -153,7 +152,6 @@ func (k Keeper) InvokeCallback(ctx sdk.Context, msg *types.MsgSubmitQueryRespons
 				k.Logger(ctx).Error(LogICQCallbackWithHostChain(query.ChainId, query.CallbackId,
 					"Error invoking ICQ callback, error: %s, %s, Query Response: %s",
 					err.Error(), query.Description(), msg.Result))
-
 				return err
 			}
 			return nil
@@ -198,7 +196,8 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 
 	// Immediately delete the query so it cannot process again
 	k.DeleteQuery(ctx, query.Id)
-	// If the query is contentless, end
+
+	// If the query is contentless, end (should be after checking for timeout)
 	if len(msg.Result) == 0 {
 		k.Logger(ctx).Info(LogICQCallbackWithHostChain(query.ChainId, query.CallbackId,
 			"Query response is contentless - QueryId: %s", query.Id))

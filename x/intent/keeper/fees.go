@@ -4,8 +4,6 @@ import (
 
 	//"log"
 
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,19 +14,20 @@ import (
 func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAddr sdk.AccAddress, feeDenom string, proposer sdk.ConsAddress) (sdk.Coin, error) {
 	p := k.GetParams(ctx)
 
-	k.Logger(ctx).Debug("gas", "consumed", sdk.NewIntFromUint64(ctx.GasMeter().GasConsumed()))
+	k.Logger(ctx).Debug("gas", "consumed", sdk.NewIntFromUint64(ctx.GasMeter().GasConsumed()), "actionID", action.ID)
 
-	gasMultipleSmall := sdk.NewIntFromUint64(ctx.GasMeter().GasConsumed() * uint64(p.ActionFlexFeeMul))
-	gasMultiple := gasMultipleSmall.Quo(math.NewInt(100))
-	if !gasMultiple.IsPositive() {
+	gasSmall := sdk.NewIntFromUint64(ctx.GasMeter().GasConsumed() * uint64(p.ActionFlexFeeMul))
+	//fmt.Printf("gasSmall %v\n", gasSmall)
+	gas := gasSmall.Quo(math.NewInt(100))
+	if !gas.IsPositive() {
 		return sdk.Coin{}, types.ErrIntOverflowAction
 	}
 	found, coins := p.GasFeeCoins.Sort().Find(feeDenom)
 	if !found {
 		return sdk.Coin{}, errorsmod.Wrap(types.ErrNotFound, "gas fee denom not supported")
 	}
-	gasFeeAmount := coins.Amount.Mul(gasMultiple)
-
+	gasFeeAmount := coins.Amount.Mul(gas)
+	//fmt.Printf("gasFeeAmount %v\n", gasFeeAmount)
 	//depending if execution is recurring the constant fee may differ (gov param)
 
 	// proposer reward
@@ -52,12 +51,12 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 		toCommunityPool = toCommunityPool.Add(fixedFeeCoin)
 		//}
 	}
-	fmt.Printf("ACTION %v\n", action)
+	//fmt.Printf("totalActionFees %v\n", totalActionFees)
 	//not recurring
+	//fmt.Printf("ACTION %+v\n", action)
 	if action.ExecTime.Equal(action.EndTime) {
-		fmt.Print("NOT RECURRIN G\n")
-		actionAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
-		if !actionAddrBalance.IsZero() {
+		if feeAddr.String() != action.Owner {
+			actionAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
 			percentageActionFundsCommission := sdk.NewDecWithPrec(p.ActionFundsCommission, 2)
 			amountActionFundsCommissionCoin := sdk.NewCoin(feeDenom, percentageActionFundsCommission.MulInt(actionAddrBalance.AmountOf(feeDenom)).Ceil().TruncateInt())
 			totalActionFees = totalActionFees.Add(amountActionFundsCommissionCoin)
@@ -77,7 +76,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 			}
 		}
 	}
-	fmt.Print("RECURRINGGGGGG G\n")
+	//fmt.Printf("totalActionFees %v\n", totalActionFees)
 	err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(toCommunityPool), feeAddr)
 	if err != nil {
 		return sdk.Coin{}, err

@@ -15,8 +15,8 @@ var (
 	DefaultActionFundsCommission int64 = 2 //2%
 	// ActionConstantFee fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultActionConstantFee int64 = 5_000 // 0.005trst
-	// ActionFlexFeeMul is the denominator for the gas-dependent flex fee to prioritize auto messages in the block, to be distributed to validators
-	DefaultActionFlexFeeMul int64 = 34 // in %
+	// ActionFlexFeeMul is the denominator for the gas fee
+	DefaultActionFlexFeeMul int64 = 10 // in %
 	// GasFeeCoins fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultGasFeeCoins sdk.Coins = sdk.NewCoins(sdk.NewCoin(Denom, sdk.NewInt(1))) // 1uinto
 	// Default max period for a Action that is self-executing

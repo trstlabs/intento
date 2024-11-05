@@ -13,7 +13,6 @@ import (
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	"github.com/trstlabs/intento/x/intent/types"
-	icqtypes "github.com/trstlabs/intento/x/interchainquery/types"
 )
 
 func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, []*cdctypes.Any, error) {
@@ -158,7 +157,7 @@ func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string,
 	if action.Conditions != nil && action.Conditions.UseResponseValue != nil && action.Conditions.UseResponseValue.MsgsIndex != 0 && action.Conditions.UseResponseValue.ActionID == 0 && len(actionHistoryEntry.MsgResponses)-1 < int(action.Conditions.UseResponseValue.MsgsIndex) {
 		err = k.UseResponseValue(ctx, action.ID, &action.Msgs, action.Conditions, nil)
 		if err != nil {
-			return errorsmod.Wrap(err, types.ErrSettingActionResult)
+			return errorsmod.Wrap(err, fmt.Sprintf(types.ErrSettingActionResult, err))
 		}
 		tmpAction := action
 		tmpAction.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex:]
@@ -192,8 +191,7 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 			msgExecResponse := authztypes.MsgExecResponse{}
 			err := proto.Unmarshal(anyResp.GetValue(), &msgExecResponse)
 			if err != nil {
-				fmt.Printf("err %v \n", err)
-				k.Logger(ctx).Debug("action response", "err", err)
+				k.Logger(ctx).Debug("handling deep action response", "err", err)
 				return nil, 0, err
 			}
 
@@ -209,24 +207,26 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 			msgResponses = []*cdctypes.Any{}
 
 			for _, resultBytes := range msgExecResponse.Results {
-				// var result sdk.Result
-				// if err := proto.Unmarshal(resultBytes, &result); err != nil {
-				// 	k.Logger(ctx).Debug("action result", "err", err)
-				// 	fmt.Printf("err 2%v \n", err)
-				// 	return nil, 0, err
-				// }
+				var msgResponse = cdctypes.Any{}
+				if err := proto.Unmarshal(resultBytes, &msgResponse); err == nil {
+					k.Logger(ctx).Debug("parsing response authz v0.52+", "msgResponse", msgResponse)
+					if msgResponse.GetTypeUrl() != "" {
+						msgResponses = append(msgResponses, &msgResponse)
+						continue
+					}
 
-				k.Logger(ctx).Debug("action result", "resultBytes", resultBytes)
+				}
+				// in v0.50.8 we were writing msgResponse.Data in that [][]byte and no marshalled anys
+				// https://github.com/cosmos/cosmos-sdk/blob/v0.50.8/x/authz/keeper/keeper.go#L166-L186
+				//	k.Logger(ctx).Debug("action result", "resultBytes", resultBytes)
 
-				//as we do not get typeURL we have to rely in this, MsgExec is the only regisrered message that should return results
+				//as we do not get typeURL (until cosmos 0.52 and is not possible in 51) we have to rely in this, MsgExec is the only regisrered message that should return results
 				msgRespProto, _, err := handleMsgData(&sdk.MsgData{Data: resultBytes, MsgType: msgExec.Msgs[0].TypeUrl})
 				if err != nil {
-					fmt.Printf("err 3%v \n", err)
 					return nil, 0, err
 				}
 				respAny, err := cdctypes.NewAnyWithValue(msgRespProto)
 				if err != nil {
-					fmt.Printf("err4 %v \n", err)
 					return nil, 0, err
 				}
 
@@ -289,7 +289,7 @@ func (k Keeper) SetActionError(ctx sdk.Context, sourcePort string, channelID str
 
 // allowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
 // insert the next entry when execution has not happend yet
-func (k Keeper) allowedToExecute(ctx sdk.Context, action types.ActionInfo, queryCallback *icqtypes.Query) (bool, error) {
+func (k Keeper) allowedToExecute(ctx sdk.Context, action types.ActionInfo, queryCallback []byte) (bool, error) {
 	allowedToExecute := true
 	shouldRecur := action.ExecTime.Before(action.EndTime) && action.ExecTime.Add(action.Interval).Before(action.EndTime)
 	conditions := action.Conditions

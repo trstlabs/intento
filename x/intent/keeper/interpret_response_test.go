@@ -306,6 +306,105 @@ func TestCompareArrayEquals(t *testing.T) {
 	require.True(t, boolean)
 }
 
+func TestParseAmountICQ(t *testing.T) {
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	types.Denom = "stake"
+	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+	actionInfo := createBaseActionInfo(delAddr, actionAddr)
+
+	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
+	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
+
+	msgDelegate := newFakeMsgDelegate(delAddr, val)
+	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
+	actionInfo.Conditions = &types.ExecutionConditions{}
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
+	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "sdk.Int", FromICQ: true}
+	queryCallback, err := sdk.NewInt(39999999999).Marshal()
+	require.NoError(t, err)
+	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, queryCallback)
+	require.NoError(t, err)
+	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
+	require.NoError(t, err)
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(39999999999)))
+}
+
+func TestParseCoinICQ(t *testing.T) {
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	types.Denom = "stake"
+	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+	actionInfo := createBaseActionInfo(delAddr, actionAddr)
+
+	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
+	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
+
+	msgDelegate := newFakeMsgDelegate(delAddr, val)
+	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
+	actionInfo.Conditions = &types.ExecutionConditions{}
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
+	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin", FromICQ: true}
+	coin := sdk.NewCoin("stake", sdk.NewInt(39999999999))
+	queryCallback, err := coin.Marshal()
+	require.NoError(t, err)
+	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, queryCallback)
+	require.NoError(t, err)
+	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
+	require.NoError(t, err)
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(39999999999)))
+}
+
+func TestParseStringICQ(t *testing.T) {
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	types.Denom = "stake"
+	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+	actionInfo := createBaseActionInfo(delAddr, actionAddr)
+
+	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
+	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
+
+	msgDelegate := newFakeMsgDelegate(delAddr, val)
+	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
+	actionInfo.Conditions = &types.ExecutionConditions{}
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
+	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount.Denom", ValueType: "string", FromICQ: true}
+	text := []byte("fuzz")
+
+	err := keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, text)
+	require.NoError(t, err)
+	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
+	require.NoError(t, err)
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("fuzz", sdk.NewInt(1000)))
+}
+
+func TestCompareCoinTrueICQ(t *testing.T) {
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	types.Denom = "stake"
+	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+	actionInfo := createBaseActionInfo(delAddr, actionAddr)
+
+	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
+	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
+	executedLocally, msgResponses, err := keeper.TriggerAction(ctx, &actionInfo)
+	require.NoError(t, err)
+	require.True(t, executedLocally)
+	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
+
+	actionInfo.Conditions = &types.ExecutionConditions{}
+	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "", ValueType: "sdk.Coin", ComparisonOperator: 4, ComparisonOperand: "101stake", FromICQ: true}
+
+	coin := sdk.NewCoin("stake", sdk.NewInt(39999999999))
+	queryCallback, err := coin.Marshal()
+	require.NoError(t, err)
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, queryCallback)
+	require.NoError(t, err)
+
+	require.True(t, boolean)
+}
+
 // func TestParseCoinAuthZ(t *testing.T) {
 // 	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
 // 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))

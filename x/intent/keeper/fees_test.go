@@ -30,9 +30,9 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 	pub2 := secp256k1.GenPrivKey().PubKey()
 	ownerAddr := sdk.AccAddress(pub2.Address())
 	types.Denom = "stake"
-
+	lastTime := time.Now().Add(time.Second * 20)
 	actionInfo := types.ActionInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ExecTime: time.Now().Add(time.Second * 20),
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime,
 	}
 
 	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
@@ -66,9 +66,9 @@ func TestDistributeCoinsOwnerFeeFallbackLastExec(t *testing.T) {
 	feeAddr := sdk.AccAddress(pub1.Address())
 	ownerAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 30_000_000)))
 	types.Denom = "stake"
-
+	lastTime := time.Now().Add(time.Second * 20)
 	actionInfo := types.ActionInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ExecTime: time.Now().Add(time.Second * 20), Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime, Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
 	}
 	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1_0000_000)
@@ -116,7 +116,7 @@ func TestDistributeCoinsEmptyActionBalance(t *testing.T) {
 	require.Empty(t, denom)
 }
 
-func TestDistributeCoinsEmptyActionBalanceAndMultipliedFlexFee(t *testing.T) {
+func TestDistributeCoinsEmptyOwnerBalanceAndMultipliedFlexFee(t *testing.T) {
 
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
 	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 300_000_000)))
@@ -149,7 +149,8 @@ func TestDistributeCoinsEmptyActionBalanceAndMultipliedFlexFee(t *testing.T) {
 
 	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
 	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt(), fee.Amount)
-	require.Equal(t, sdk.NewInt64Coin(denom, 300_000_000), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom).Add(fee))
+	require.Equal(t, sdk.NewInt64Coin(denom, 300_000_000), keeper.bankKeeper.GetBalance(ctx, feeAddr, sdk.DefaultBondDenom).Add(fee))
+	require.Equal(t, sdk.NewInt64Coin(denom, 0), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom))
 
 }
 

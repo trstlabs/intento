@@ -38,6 +38,6 @@ var (
 	ErrActionFeeDistribution  = "distribution error: %s"
 	ErrActionMsgHandling      = "msg handling error: %s"
 	ErrActionResponseUseValue = "msg handling error using response value: %s"
-	ErrSettingActionResult    = "cannot set action result"
+	ErrSettingActionResult    = "setting action result:  %s"
 	ErrBalanceLow             = "balance too low to deduct expected fee"
 )

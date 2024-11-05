@@ -152,7 +152,7 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 
 		if msg.Conditions.ICQConfig != nil {
 			if msg.Conditions.ICQConfig.TimeoutDuration != 0 {
-				if msg.Conditions.ICQConfig.TimeoutDuration > duration || msg.Conditions.ICQConfig.TimeoutDuration > interval {
+				if msg.Conditions.ICQConfig.TimeoutDuration > duration || interval != 0 && msg.Conditions.ICQConfig.TimeoutDuration > interval {
 					return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the action interval or duration")
 				}
 			}

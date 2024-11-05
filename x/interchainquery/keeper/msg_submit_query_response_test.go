@@ -54,7 +54,7 @@ func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse() MsgSubmitQueryResponseTe
 	result := []byte("result-example")
 	proofOps := crypto.ProofOps{}
 	fromAddress := s.TestAccs[0].String()
-	expectedId := "9792c1d779a3846a8de7ae82f31a74d308b279a521fa9e0d5c4f08917117bf3e"
+	expectedId := "12334567"
 
 	_, addr, _ := bech32.DecodeAndConvert(s.TestAccs[0].String())
 	data := banktypes.CreateAccountBalancesPrefix(addr)
@@ -62,8 +62,8 @@ func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse() MsgSubmitQueryResponseTe
 	timeoutDuration := time.Minute
 	query := types.Query{
 		Id:               expectedId,
-		CallbackId:       "withdrawalbalance",
 		CallbackModule:   "intent",
+		CallbackId:       "action",
 		ChainId:          apptesting.HostChainId,
 		ConnectionId:     s.TransferPath.EndpointA.ConnectionID,
 		QueryType:        "store/bank", // intentionally leave off key to skip proof
@@ -195,7 +195,6 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_ExecuteCallback() {
 
 func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_FindAndInvokeCallback() {
 	tc := s.SetupMsgSubmitQueryResponse()
-
 	s.App.InterchainQueryKeeper.SetQuery(s.Ctx, tc.query)
 
 	// The withdrawal balance test is already covered in it's respective module
@@ -204,5 +203,5 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_FindAndInvokeCallback() {
 	// mocked state, and catch the expected error that happens at the beginning of
 	// the callback
 	_, err := s.GetMsgServer().SubmitQueryResponse(tc.goCtx, &tc.validMsg)
-	s.Require().ErrorContains(err, "unable to determine balance from query response")
+	s.Require().ErrorContains(err, "not found")
 }

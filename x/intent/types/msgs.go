@@ -195,21 +195,21 @@ func (msg MsgSubmitAction) ValidateBasic() error {
 	}
 	if msg.Conditions != nil {
 		if msg.Conditions.UseResponseValue != nil {
-			if msg.Conditions.UseResponseValue.MsgKey == "" || msg.Conditions.UseResponseValue.ValueType == "" || msg.Conditions.UseResponseValue.MsgsIndex == 0 {
-				return errorsmod.Wrapf(ErrUnknownRequest, "condition UseResponseValue fields are not complete: %+v", msg.Conditions)
+			if msg.Conditions.UseResponseValue.MsgKey == "" || msg.Conditions.UseResponseValue.ValueType == "" {
+				return errorsmod.Wrapf(ErrUnknownRequest, "condition UseResponseValue fields are not complete: %+v", msg.Conditions.UseResponseValue)
 			}
 			if int(msg.Conditions.UseResponseValue.ResponseIndex) >= len(msg.Msgs) {
-				return errorsmod.Wrapf(ErrInvalidRequest, "response index: %v must be shorter than length msgs array: %s", msg.Conditions.ResponseComparison.ResponseIndex, msg.Msgs)
+				return errorsmod.Wrapf(ErrInvalidRequest, "response index: %v must be shorter than length msgs array: %+v", msg.Conditions.UseResponseValue.ResponseIndex, msg.Msgs)
 			}
 		}
 
 		if msg.Conditions.ResponseComparison != nil {
 			if msg.Conditions.ResponseComparison.ComparisonOperator <= 0 || msg.Conditions.ResponseComparison.ValueType == "" {
-				return errorsmod.Wrapf(ErrUnknownRequest, "condition comparision fields are not complete: %+v", msg.Conditions)
+				return errorsmod.Wrapf(ErrUnknownRequest, "condition Comparision fields are not complete: %+v", msg.Conditions)
 			}
 		}
 		if msg.Conditions.ICQConfig != nil {
-			if msg.Conditions.ICQConfig.TimeoutDuration == 0 || msg.Conditions.ICQConfig.ChainId != "" || msg.Conditions.ICQConfig.QueryKey != "" {
+			if msg.Conditions.ICQConfig.TimeoutDuration == 0 || msg.Conditions.ICQConfig.ChainId == "" || msg.Conditions.ICQConfig.QueryKey == "" {
 				return errorsmod.Wrapf(ErrUnknownRequest, "ICQ Config fields are not complete: %+v", msg.Conditions.ICQConfig)
 			}
 		}

@@ -309,7 +309,7 @@ func TestQueryHostedAccountsByAdmin(t *testing.T) {
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
 			got, err := intentKeeper.HostedAccountsByAdmin(sdk.WrapSDKContext(ctx), spec.srcQuery)
-			fmt.Println(got)
+			//fmt.Println(got)
 			if spec.expErr != nil {
 				require.Equal(t, spec.expErr, err)
 				return

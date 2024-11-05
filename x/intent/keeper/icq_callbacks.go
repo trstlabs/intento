@@ -1,16 +1,18 @@
 package keeper
 
 import (
-	"fmt"
 	"strconv"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	icqtypes "github.com/trstlabs/intento/x/interchainquery/types"
 )
 
-// ICQCallbacks wrapper struct for stakeibc keeper
+const (
+	ICQCallbackID_Action = "action"
+)
+
+// ICQCallbacks wrapper struct for keeper
 type ICQCallback func(Keeper, sdk.Context, []byte, icqtypes.Query) error
 
 type ICQCallbacks struct {
@@ -25,20 +27,7 @@ func (k Keeper) ICQCallbackHandler() ICQCallbacks {
 }
 
 func (c ICQCallbacks) CallICQCallback(ctx sdk.Context, id string, args []byte, query icqtypes.Query) error {
-
-	fmt.Print("CallICQCallback")
-
-	actionID, err := strconv.ParseUint(id, 10, 64)
-	if err != nil {
-		return err
-	}
-	action, err := c.k.TryGetActionInfo(ctx, actionID)
-	if err != nil {
-		return err
-	}
-
-	c.k.HandleAction(ctx, c.k.Logger(ctx), action, time.Time{}, &query)
-	return nil
+	return c.callbacks[id](c.k, ctx, args, query)
 }
 
 func (c ICQCallbacks) HasICQCallback(id string) bool {
@@ -49,4 +38,24 @@ func (c ICQCallbacks) HasICQCallback(id string) bool {
 func (c ICQCallbacks) AddICQCallback(id string, fn interface{}) icqtypes.QueryCallbacks {
 	c.callbacks[id] = fn.(ICQCallback)
 	return c
+}
+
+func (c ICQCallbacks) RegisterICQCallbacks() icqtypes.QueryCallbacks {
+	return c.
+		AddICQCallback(ICQCallbackID_Action, ICQCallback(HandleActionCallback))
+
+}
+
+func HandleActionCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	actionID, err := strconv.ParseUint(query.Id, 10, 64)
+	if err != nil {
+		return err
+	}
+	action, err := k.TryGetActionInfo(ctx, actionID)
+	if err != nil {
+		return err
+	}
+
+	k.HandleAction(ctx, k.Logger(ctx), action, ctx.BlockTime(), args)
+	return nil
 }

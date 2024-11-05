@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strconv"
 	"time"
@@ -13,7 +14,7 @@ import (
 )
 
 // HandleAction processes a single action during the block
-func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.ActionInfo, timeOfBlock time.Time, queryCallback *icqtypes.Query) {
+func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.ActionInfo, timeOfBlock time.Time, queryCallback []byte) {
 	var (
 		errorString     = ""
 		fee             = sdk.Coin{}
@@ -50,13 +51,13 @@ func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.Ac
 	}
 
 	// Check if timeOfBlock is zero and act accordingly
-	if timeOfBlock.IsZero() && queryCallback != nil {
-		// Append to the prior action history entry
-		k.appendToPriorActionHistory(cacheCtx, &action, fee, executedLocally, msgResponses, string(queryCallback.GetCallbackData()), errorString)
-	} else {
-		// Record a new action history entry
-		k.addActionHistory(cacheCtx, &action, timeOfBlock, fee, executedLocally, msgResponses, errorString)
-	}
+	// if timeOfBlock.IsZero() && queryCallback != nil {
+	// Append to the prior action history entry
+	// k.appendToPriorActionHistory(cacheCtx, &action, fee, executedLocally, msgResponses, string(queryCallback.GetCallbackData()), errorString)
+	// } else {
+	// Record a new action history entry
+	k.addActionHistory(cacheCtx, &action, timeOfBlock, fee, executedLocally, msgResponses, string(queryCallback), errorString)
+	// }
 	writeCtx()
 
 	if shouldRecur(action, errorString) {
@@ -69,26 +70,37 @@ func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.Ac
 }
 
 // submitInterchainQuery submits an interchain query when ICQConfig is present
-func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, action types.ActionInfo, logger log.Logger) bool {
+func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, action types.ActionInfo, logger log.Logger) {
+	_, found := k.interchainQueryKeeper.GetQuery(ctx, strconv.FormatUint(action.ID, 10))
+	if found {
+		return
+	}
+	requestData, err := base64.StdEncoding.DecodeString(action.Conditions.ICQConfig.QueryKey)
+	if err != nil {
+		k.SetActionHistoryEntry(ctx, action.ID, &types.ActionHistoryEntry{Errors: []string{fmt.Sprint("Error submitting ICQ: decoding Base64 string: ", err)}})
+		k.RemoveFromActionQueue(ctx, action)
+		return
+	}
+	id := strconv.FormatUint(action.ID, 10)
 	// Submit the interchain query using the configuration provided in action.Conditions.ICQConfig
 	query := icqtypes.Query{
-		Id:             strconv.FormatUint(action.ID, 10),
-		CallbackId:     strconv.FormatUint(action.ID, 10),
-		ConnectionId:   action.Conditions.ICQConfig.ConnectionId,
-		ChainId:        action.Conditions.ICQConfig.ChainId,
-		TimeoutPolicy:  action.Conditions.ICQConfig.TimeoutPolicy,
-		QueryType:      action.Conditions.ICQConfig.QueryType,
-		RequestData:    []byte(action.Conditions.ICQConfig.QueryKey),
-		CallbackModule: "intent",
+		Id:              id,
+		CallbackId:      ICQCallbackID_Action,
+		ConnectionId:    action.Conditions.ICQConfig.ConnectionId,
+		ChainId:         action.Conditions.ICQConfig.ChainId,
+		TimeoutPolicy:   action.Conditions.ICQConfig.TimeoutPolicy,
+		TimeoutDuration: action.Conditions.ICQConfig.TimeoutDuration,
+		QueryType:       action.Conditions.ICQConfig.QueryType,
+		RequestData:     requestData,
+		CallbackModule:  types.ModuleName,
 	}
 	k.interchainQueryKeeper.SetQuery(ctx, query)
 	// Log successful submission of the interchain query
 	logger.Debug("interchain query submitted", "actionID", action.ID)
-	return true
 }
 
 // handleActionExecution handles the core logic of triggering an action and processing responses
-func (k Keeper) handleActionExecution(ctx sdk.Context, action *types.ActionInfo, msgResponses *[]*cdctypes.Any, errorString string, queryCallback *icqtypes.Query) (bool, string) {
+func (k Keeper) handleActionExecution(ctx sdk.Context, action *types.ActionInfo, msgResponses *[]*cdctypes.Any, errorString string, queryCallback []byte) (bool, string) {
 	var executedLocally bool
 	// Safe check to ensure conditions exist before proceeding
 	if action.Conditions == nil || action.Conditions.UseResponseValue == nil {
@@ -108,7 +120,7 @@ func (k Keeper) handleActionExecution(ctx sdk.Context, action *types.ActionInfo,
 }
 
 // handleUseResponseValue processes the UseResponseValue logic when it's set
-func (k Keeper) handleUseResponseValue(ctx sdk.Context, action *types.ActionInfo, msgResponses *[]*cdctypes.Any, errorString string, queryCallback *icqtypes.Query) (bool, string) {
+func (k Keeper) handleUseResponseValue(ctx sdk.Context, action *types.ActionInfo, msgResponses *[]*cdctypes.Any, errorString string, queryCallback []byte) (bool, string) {
 	actionTmp := *action
 
 	// Ensure MsgsIndex is valid and avoid out-of-bound slices
@@ -125,7 +137,7 @@ func (k Keeper) handleUseResponseValue(ctx sdk.Context, action *types.ActionInfo
 	*msgResponses = append(*msgResponses, responses...)
 
 	// If ActionID is set, attempt to process its value based on the response of the first set
-	if executedLocally && action.Conditions.UseResponseValue.ActionID != 0 {
+	if action.Conditions.UseResponseValue.ActionID != 0 || executedLocally || queryCallback != nil {
 		err = k.UseResponseValue(ctx, action.ID, &actionTmp.Msgs, action.Conditions, queryCallback)
 		if err != nil {
 			return false, appendError(errorString, fmt.Sprintf(types.ErrSettingActionResult, err.Error()))
@@ -150,7 +162,7 @@ func (k Keeper) handleUseResponseValue(ctx sdk.Context, action *types.ActionInfo
 
 // recordFailedAction adds a failed action to the action history and reschedules it
 func (k Keeper) recordFailedAction(ctx sdk.Context, action *types.ActionInfo, timeOfBlock time.Time, errorMsg string) {
-	k.addActionHistory(ctx, action, timeOfBlock, sdk.Coin{}, false, nil, errorMsg)
+	k.addActionHistory(ctx, action, timeOfBlock, sdk.Coin{}, false, nil, "", errorMsg)
 	action.ExecTime = action.ExecTime.Add(action.Interval)
 	k.SetActionInfo(ctx, action)
 }
@@ -165,26 +177,26 @@ func shouldRecur(action types.ActionInfo, errorString string) bool {
 	return isRecurring && allowedToRecur
 }
 
-// appendToPriorActionHistory appends results to the prior history entry for the action
-func (k Keeper) appendToPriorActionHistory(ctx sdk.Context, action *types.ActionInfo, fee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, queryResponse string, errorString string) {
-	// Fetch the last recorded action history for the action
-	entry, found := k.getCurrentActionHistoryEntry(ctx, action.ID)
-	if !found {
-		return
-	}
-	// Append the new data to the existing history entry
-	entry.ExecFee = entry.ExecFee.Add(fee)
-	entry.Executed = entry.Executed || executedLocally
-	if action.Configuration.SaveResponses {
-		entry.MsgResponses = append(entry.MsgResponses, msgResponses...)
-		entry.QueryResponse = queryResponse
-		if errorString != "" {
-			entry.Errors = append(entry.Errors, errorString)
-		}
-	}
-	// Update the action history with the new appended data
-	k.SetCurrentActionHistoryEntry(ctx, action.ID, entry)
-}
+// // appendToPriorActionHistory appends results to the prior history entry for the action
+// func (k Keeper) appendToPriorActionHistory(ctx sdk.Context, action *types.ActionInfo, fee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, queryResponse string, errorString string) {
+// 	// Fetch the last recorded action history for the action
+// 	entry, found := k.getCurrentActionHistoryEntry(ctx, action.ID)
+// 	if !found {
+// 		return
+// 	}
+// 	// Append the new data to the existing history entry
+// 	entry.ExecFee = entry.ExecFee.Add(fee)
+// 	entry.Executed = entry.Executed || executedLocally
+// 	if action.Configuration.SaveResponses {
+// 		entry.MsgResponses = append(entry.MsgResponses, msgResponses...)
+// 		entry.QueryResponse = queryResponse
+// 		if errorString != "" {
+// 			entry.Errors = append(entry.Errors, errorString)
+// 		}
+// 	}
+// 	// Update the action history with the new appended data
+// 	k.SetCurrentActionHistoryEntry(ctx, action.ID, entry)
+// }
 
 // emitActionEvent creates an event for the action execution
 func emitActionEvent(ctx sdk.Context, action types.ActionInfo) {

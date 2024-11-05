@@ -23,10 +23,10 @@ func BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock, k keeper.Keeper) 
 	for _, action := range actions {
 		// Check if ICQConfig is present and submit an interchain query if applicable
 		if action.Conditions != nil && action.Conditions.ICQConfig != nil {
-			if k.SubmitInterchainQuery(ctx, action, logger) {
-				// If the query is submitted, we skip handling this action for now
-				continue
-			}
+			k.SubmitInterchainQuery(ctx, action, logger)
+			// If the query is submitted, we skip handling this action for now
+			continue
+
 		}
 		k.HandleAction(ctx, logger, action, timeOfBlock, nil)
 	}

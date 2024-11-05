@@ -506,8 +506,8 @@ func NewIntoApp(
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 	icaHostStack := ibcfee.NewIBCMiddleware(icaHostIBCModule, app.IBCFeeKeeper)
 
-	// Register ICQ callbacks
-	//_ = app.InterchainQueryKeeper.SetCallbackHandler(intenttypes.ModuleName, app.IntentKeeper.ICQCallbackHandler())
+	//Register ICQ callbacks
+	_ = app.InterchainQueryKeeper.SetCallbackHandler(intenttypes.ModuleName, app.IntentKeeper.ICQCallbackHandler())
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
