@@ -11,10 +11,9 @@ require (
 	github.com/cosmos/cosmos-sdk v0.47.5
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/ibc-go/v7 v7.3.1
-	github.com/golang/protobuf v1.5.3
+	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.5.1
@@ -24,6 +23,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529
 	google.golang.org/grpc v1.56.2
+	google.golang.org/protobuf v1.33.0
 
 )
 
@@ -37,7 +37,6 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -53,7 +52,6 @@ require (
 	golang.org/x/tools v0.10.0 // indirect
 	google.golang.org/genproto v0.0.0-20230706204954-ccb25ca9f130 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
 )
 
 require (

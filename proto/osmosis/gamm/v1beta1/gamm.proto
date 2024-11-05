@@ -6,7 +6,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 import "osmosis/poolmanager/v1beta1/swap_route.proto";
 
-option go_package = "github.com/trstlabs/trst/x/auto-ibc-tx/msg_registry";
+option go_package = "github.com/trstlabs/intento/x/intent/msg_registry";
 
 // ===================== MsgJoinPool
 // This is really MsgJoinPoolNoSwap

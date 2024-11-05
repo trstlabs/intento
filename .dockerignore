@@ -16,6 +16,6 @@ README.md
 .vscode
 .github
 .git
-dockernet
+dockernet/logs
 deps
 genesis
