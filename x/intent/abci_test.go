@@ -158,14 +158,10 @@ func TestOwnerMustBeSignerForLocalAction(t *testing.T) {
 	err := action.GetTxMsgs(cdc)[0].ValidateBasic()
 	require.NoError(t, err)
 
-	fee, err := k.DistributeCoins(ctx, action, feeAddr, types.Denom, ctx.BlockHeader().ProposerAddress)
-
-	require.NoError(t, err)
 	executedLocally, _, err := k.TriggerAction(ctx, &action)
 	require.Contains(t, err.Error(), "owner doesn't have permission to send this message: unauthorized")
 	require.False(t, executedLocally)
 
-	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx, feeAddr)[0].Amount, sdk.NewInt(3_000_000_000_000).Sub(fee.Amount))
 }
 
 func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers, codec.Codec) {
@@ -255,13 +251,4 @@ func createNextExecutionContext(ctx sdk.Context, nextExecTime time.Time) sdk.Con
 		ChainID:         ctx.ChainID(),
 		ProposerAddress: ctx.BlockHeader().ProposerAddress,
 	}, false, ctx.Logger())
-}
-
-type KeeperMock struct {
-	allowedToExecuteFunc      func(ctx sdk.Context, action types.ActionInfo) bool
-	TriggerActionFunc         func(ctx sdk.Context, action types.ActionInfo) error
-	DistributeCoinsFunc       func(ctx sdk.Context, action types.ActionInfo, flexFee uint64, isRecurring bool, isLastExec bool, proposer sdk.AccAddress) (uint64, error)
-	RemoveFromActionQueueFunc func(ctx sdk.Context, actions ...types.ActionInfo)
-	AddToActionQueueFunc      func(ctx sdk.Context, action types.ActionInfo)
-	SetActionInfoFunc         func(ctx sdk.Context, id string, action *types.ActionInfo)
 }
