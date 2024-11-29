@@ -6,12 +6,12 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	app "github.com/trstlabs/intento/app"
 	"github.com/trstlabs/intento/x/mint/types"
-	// "github.com/trstlabs/intento/x/compute"
 )
 
 // returns context and an app with updated mint keeper
@@ -58,6 +58,7 @@ func genApp(withGenesis bool, invCheckPeriod uint) (*app.IntoApp, app.GenesisSta
 		true,
 		encCdc,
 		app.EmptyAppOptions{},
+		[]wasmkeeper.Option{},
 	)
 
 	if withGenesis {

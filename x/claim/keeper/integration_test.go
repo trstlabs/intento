@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/json"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
@@ -56,14 +57,8 @@ func genApp(withGenesis bool, invCheckPeriod uint) (*app.IntoApp, app.GenesisSta
 		true,
 		encCdc,
 		app.EmptyAppOptions{},
-		// compute.GetConfig(simapp.EmptyAppOptions{}),
-		// app.GetEnabledProposals(),
+		[]wasmkeeper.Option{},
 	)
-
-	// if withGenesis {
-	// 	encCdc := app.MakeEncodingConfig()
-	// 	return IntoApp, app.NewDefaultGenesisState(encCdc.Codec)
-	// }
 
 	return IntoApp, app.GenesisState{}
 }

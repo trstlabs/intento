@@ -3,6 +3,7 @@ package apptesting
 import (
 	"encoding/json"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
@@ -15,7 +16,7 @@ type TestChain struct {
 
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	encCdc := app.MakeEncodingConfig()
-	IntoApp := app.NewIntoApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, encCdc, app.EmptyAppOptions{})
+	IntoApp := app.NewIntoApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, encCdc, app.EmptyAppOptions{}, []wasmkeeper.Option{})
 	return IntoApp, app.NewDefaultGenesisState(encCdc.Codec)
 }
 

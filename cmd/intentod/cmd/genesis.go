@@ -6,6 +6,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,14 +24,17 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibctypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	"github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
+	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	ccvprovidertypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
+	ccvtypes "github.com/cosmos/interchain-security/v4/x/ccv/types"
 	"github.com/spf13/cobra"
+	"github.com/trstlabs/intento/app"
 	alloctypes "github.com/trstlabs/intento/x/alloc/types"
 	claimtypes "github.com/trstlabs/intento/x/claim/types"
 	intenttypes "github.com/trstlabs/intento/x/intent/types"
-
-	// compute "github.com/trstlabs/intento/x/compute"
 	minttypes "github.com/trstlabs/intento/x/mint/types"
-	//	itemtypes "github.com/trstlabs/intento/x/item/types"
 )
 
 const (
@@ -61,10 +65,11 @@ type GenesisParams struct {
 	AllocParams    alloctypes.Params
 	ClaimParams    claimtypes.Params
 	MintParams     minttypes.Params
-	// ComputeParams   compute.Params
-	IcaParams    icatypes.Params
-	IntentParams intenttypes.Params
-	//	ItemParams     itemtypes.Params
+
+	IcaParams            icatypes.Params
+	IntentParams         intenttypes.Params
+	WasmParams           wasmtypes.Params
+	ConsumerGenesisState ccvtypes.ConsumerGenesisState
 }
 
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
@@ -152,6 +157,7 @@ func PrepareGenesis(
 	cdc := clientCtx.Codec
 	// ---
 	// bank module genesis
+
 	bankGenState := banktypes.DefaultGenesisState()
 	bankGenState.Params.DefaultSendEnabled = true
 	bankGenStateBz, err := cdc.MarshalJSON(bankGenState)
@@ -308,6 +314,26 @@ func MainnetGenesisParams() GenesisParams {
 			Display: HumanCoinUnit,
 		},
 	}
+
+	//minimal ccv
+	genesisState := ccvtypes.DefaultConsumerGenesisState()
+	genesisState.Params.Enabled = true
+	genesisState.NewChain = true
+	genesisState.Provider.ClientState = ccvprovidertypes.DefaultParams().TemplateClient
+	genesisState.Provider.ClientState.ChainId = ChainID
+	genesisState.Provider.ClientState.LatestHeight = ibctypes.Height{RevisionNumber: 0, RevisionHeight: 1}
+	trustPeriod, err := ccvtypes.CalculateTrustPeriod(genesisState.Params.UnbondingPeriod, ccvprovidertypes.DefaultTrustingPeriodFraction)
+	if err != nil {
+		panic("provider client trusting period error")
+	}
+	genesisState.Provider.ClientState.TrustingPeriod = trustPeriod
+	genesisState.Provider.ClientState.UnbondingPeriod = genesisState.Params.UnbondingPeriod
+	genesisState.Provider.ClientState.MaxClockDrift = ccvprovidertypes.DefaultMaxClockDrift
+	genesisState.Provider.ConsensusState = &ibctmtypes.ConsensusState{
+		Timestamp: time.Now().UTC(),
+		Root:      types.MerkleRoot{Hash: []byte("dummy")},
+	}
+
 	// alloc
 	genParams.AllocParams = alloctypes.DefaultParams()
 	genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
@@ -364,27 +390,8 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.SlashingParams.DowntimeJailDuration = time.Minute                      // 1 minute jail period
 	genParams.SlashingParams.SlashFractionDoubleSign = sdk.MustNewDecFromStr("0.05") // 5% double sign slashing
 	genParams.SlashingParams.SlashFractionDowntime = sdk.MustNewDecFromStr("0.0001") // 0.01% liveness slashing               // 0% liveness slashing
-	//item
-	/*
-		genParams.ItemParams.MaxActivePeriod = time.Hour * 24 * 30
-		genParams.ItemParams.MaxEstimatorCreatorRatio = 50
-		genParams.ItemParams.MaxBuyerReward = 5000000000
-		genParams.ItemParams.EstimationRatioForNewItem = 0
-		genParams.ItemParams.CreateItemFee = 0
-	*/
 
-	//compute
-	// genParams.ComputeParams = compute.DefaultParams()
-	// genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 366 * 2
-	// genParams.ComputeParams.MinContractDuration = time.Second * 30
-	// genParams.ComputeParams.MinContractInterval = time.Second * 60
-	// genParams.ComputeParams.AutoMsgFundsCommission = 2
-	// genParams.ComputeParams.AutoMsgConstantFee = 5_000
-	// genParams.ComputeParams.AutoMsgFlexFeeMul = 100
-	// genParams.ComputeParams.RecurringAutoMsgConstantFee = 10_000
-	// genParams.ComputeParams.MinContractDurationForIncentive = time.Hour * 24 * 4
-	// genParams.ComputeParams.MinContractBalanceForIncentive = 50_000_000
-	// genParams.ComputeParams.MaxContractIncentive = 500_000_000
+	genParams.WasmParams = wasmtypes.DefaultParams()
 
 	//AutoIBCTx
 	genParams.IntentParams = intenttypes.DefaultParams()
@@ -413,6 +420,9 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ConsensusParams.Evidence.MaxAgeNumBlocks = int64(genParams.StakingParams.UnbondingTime.Seconds()) / 3
 	genParams.ConsensusParams.Version.App = 1
 	genParams.DistributedAccounts = []banktypes.Balance{}
+
+	consumerGenesisState := app.CreateMinimalConsumerTestGenesis()
+	genParams.ConsumerGenesisState = *consumerGenesisState
 
 	//interchain accounts host
 	genParams.IcaParams.AllowMessages = []string{"*"} // allow all msgs
@@ -449,19 +459,8 @@ func TestnetGenesisParams() GenesisParams {
 
 	//31,536,000 seconds a year and estimated 4s block times
 	genParams.MintParams.BlocksPerYear = uint64(31540000 / 4)
-	//compute
-	// genParams.ComputeParams.MaxContractDuration = time.Hour * 24 * 60
-	// genParams.ComputeParams.MinContractDuration = time.Second * 10
-	// genParams.ComputeParams.MinContractInterval = time.Second * 20
-	// genParams.ComputeParams.MinContractDurationForIncentive = time.Second
-	// genParams.ComputeParams.MinContractBalanceForIncentive = 50000
-	// genParams.ComputeParams.MaxContractIncentive = 500000
 
-	//item
-	/*
-		genParams.ItemParams.MaxActivePeriod = time.Hour * 24 * 5 // 5 days
-		genParams.ItemParams.MaxEstimatorCreatorRatio = 100
-		genParams.ItemParams.MaxBuyerReward = 500000000000
-	*/
+	genParams.WasmParams.CodeUploadAccess = wasmtypes.AllowEverybody
+	genParams.WasmParams.InstantiateDefaultPermission = wasmtypes.AccessTypeEverybody
 	return genParams
 }

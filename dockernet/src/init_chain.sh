@@ -44,10 +44,11 @@ set_into_genesis() {
     jq '.app_state.gov.params.max_deposit_period = $newVal' --arg newVal "$MAX_DEPOSIT_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.gov.params.voting_period = $newVal' --arg newVal "$VOTING_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
     
-    # enable into as an interchain accounts controller
+    # enable intento as an interchain accounts controller
     jq "del(.app_state.interchain_accounts)" $genesis_config > json.tmp && mv json.tmp $genesis_config
     interchain_accts=$(cat $DOCKERNET_HOME/config/ica_controller.json)
     jq ".app_state += $interchain_accts" $genesis_config > json.tmp && mv json.tmp $genesis_config
+
 }
 
 
@@ -236,6 +237,21 @@ set_host_genesis() {
     fi
 }
 
+
+set_consumer_genesis() {
+    genesis_config=$1
+
+    # add consumer genesis
+    home_directories=""
+    for (( i=1; i <= $NUM_NODES; i++ )); do
+        home_directories+="${STATE}/${NODE_PREFIX}${i},"
+    done
+
+    $MAIN_CMD add-consumer-section --validator-home-directories $home_directories
+    jq '.app_state.ccvconsumer.params.unbonding_period = $newVal' --arg newVal "$UNBONDING_TIME" $genesis_config > json.tmp && mv json.tmp $genesis_config
+}
+
+
 MAIN_ID=1 # Node responsible for genesis and persistent_peers
 MAIN_NODE_NAME=""
 MAIN_NODE_ID=""
@@ -360,6 +376,8 @@ if [ "$CHAIN" == "INTO" ]; then
         RELAYER_ADDRESS=$($MAIN_CMD keys show $RELAYER_ACCT --keyring-backend test -a)
         $MAIN_CMD add-genesis-account ${RELAYER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
     done
+
+
 else
     # Add a user account
     USER_ACCT_VAR=${CHAIN}_USER_ACCT
@@ -394,7 +412,7 @@ sed -i -E "s|seeds = .*|seeds = \"\"|g" $MAIN_CONFIG
 
 # update chain-specific settings
 if [ "$CHAIN" == "INTO" ]; then
-    sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
+    #sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"500ms\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"1s\"|g" $MAIN_CONFIG
     set_into_genesis $MAIN_GENESIS
@@ -402,6 +420,13 @@ else
     #sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     set_host_genesis $MAIN_GENESIS
 fi
+
+
+# update consumer genesis for binary chains
+if [[ "$CHAIN" == "INTO" || "$CHAIN" == "HOST" ]]; then
+    set_consumer_genesis $MAIN_GENESIS
+fi
+
 
 # for all peer nodes....
 for (( i=2; i <= $NUM_NODES; i++ )); do

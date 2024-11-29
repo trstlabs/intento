@@ -6,6 +6,7 @@ import (
 	"os"
 	"sort"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	cometbftdb "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -28,12 +29,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	appparams "github.com/trstlabs/intento/app/params"
-
 	"github.com/trstlabs/intento/app"
+	appparams "github.com/trstlabs/intento/app/params"
 )
 
 var ChainID string
@@ -176,7 +177,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		genutilcli.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
-		NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+		//NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
 		config.Cmd(),
@@ -186,6 +187,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		ExportTestnetSnapshotCmd(),
 		ImportTestnetSnapshotCmd(app.DefaultNodeHome),
 		PrepareGenesisCmd(app.DefaultNodeHome, app.ModuleBasics),
+		AddConsumerSectionCmd(app.DefaultNodeHome),
 		// this line is used by starport scaffolding # stargate/root/commands
 	)
 
@@ -282,79 +284,15 @@ func (a appCreator) newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Wr
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
 		skipUpgradeHeights[int64(h)] = true
 	}
+	var wasmOpts []wasmkeeper.Option
+	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
+		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
+	}
 
-	return app.NewIntoApp(logger, db, traceStore, true, a.encCfg, appOpts, baseappOptions...)
+	return app.NewIntoApp(logger, db, traceStore, true, a.encCfg, appOpts, wasmOpts,
+		baseappOptions...)
 
 }
-
-// // newApp is an AppCreator
-// func (a appCreator) newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
-// 	var cache sdk.MultiStorePersistentCache
-
-// 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
-// 		cache = store.NewCommitKVStoreCacheManager()
-// 	}
-
-// 	skipUpgradeHeights := make(map[int64]bool)
-// 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
-// 		h_, err := cast.ToInt64E(h)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		skipUpgradeHeights[h_] = true
-// 	}
-
-// 	pruningOpts, err := server.GetPruningOptionsFromFlags(appOpts)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	snapshotDir := filepath.Join(cast.ToString(appOpts.Get(flags.FlagHome)), "data", "snapshots")
-// 	snapshotDB, err := cometbftdb.NewDB("metadata", cometbftdb.GoLevelDBBackend, snapshotDir)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	snapshotOptions := snapshottypes.NewSnapshotOptions(
-// 		cast.ToUint64(appOpts.Get(server.FlagStateSyncSnapshotInterval)),
-// 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
-// 	)
-
-// 	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
-// 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
-// 	if chainID == "" {
-// 		// fallback to genesis chain-id
-// 		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
-// 		if err != nil {
-// 			panic(err)
-// 		}
-
-// 		chainID = appGenesis.ChainID
-// 	}
-
-// 	return app.NewIntoApp(
-// 		logger, db, traceStore, true,
-// 		a.encCfg,
-// 		// this line is used by starport scaffolding # stargate/root/appArgument
-// 		appOpts,
-// 		baseapp.SetPruning(pruningOpts),
-// 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
-// 		baseapp.SetMinRetainBlocks(cast.ToUint64(appOpts.Get(server.FlagMinRetainBlocks))),
-// 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
-// 		baseapp.SetHaltTime(cast.ToUint64(appOpts.Get(server.FlagHaltTime))),
-// 		baseapp.SetInterBlockCache(cache),
-// 		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
-// 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
-// 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
-// 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
-// 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(server.FlagDisableIAVLFastNode))),
-// 		baseapp.SetChainID(chainID),
-// 	)
-// }
 
 // appExport creates a new simapp (optionally at a given height)
 func (a appCreator) appExport(
@@ -377,6 +315,7 @@ func (a appCreator) appExport(
 
 			a.encCfg,
 			appOpts,
+			[]wasmkeeper.Option{},
 		)
 
 		if err := anApp.LoadHeight(height); err != nil {
@@ -391,6 +330,7 @@ func (a appCreator) appExport(
 
 			a.encCfg,
 			appOpts,
+			[]wasmkeeper.Option{},
 		)
 	}
 

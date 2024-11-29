@@ -10,9 +10,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		//cosmwasm v1
-		&MsgInstantiateContract{},
-		&MsgInstantiateContract2{},
-		&MsgExecuteContract{},
+		// &MsgInstantiateContract{},
+		// &MsgInstantiateContract2{},
+		// &MsgExecuteContract{},
 		//osmosis gamm v1beta1
 		&MsgExitPool{},
 		&MsgExitSwapExternAmountOut{},

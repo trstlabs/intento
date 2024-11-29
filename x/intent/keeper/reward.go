@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
@@ -86,9 +87,9 @@ func (k Keeper) UpdateActionIbcUsage(ctx sdk.Context, action types.ActionInfo) {
 					coin = msgValue.Amount[0]
 				}
 
-			case sdk.MsgTypeURL(&msgregistry.MsgExecuteContract{}):
+			case sdk.MsgTypeURL(&wasm.MsgExecuteContract{}):
 				{
-					msgValue := &msgregistry.MsgExecuteContract{}
+					msgValue := &wasm.MsgExecuteContract{}
 					if err := proto.Unmarshal(msgInMsgExec.Value, msgValue); err != nil {
 						return
 					}

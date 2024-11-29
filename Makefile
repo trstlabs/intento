@@ -1,37 +1,21 @@
 #!/usr/bin/make -f
-
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+VERSION := $(shell echo $(shell git describe --tags))
+BUILDDIR ?= $(CURDIR)/build
+build=i
+cache=false
 COMMIT := $(shell git log -1 --format='%H')
-
-# don't override user values
-ifeq (,$(VERSION))
-  VERSION := $(shell git describe --exact-match 2>/dev/null)
-  # if VERSION is empty, then populate it with branch's name and raw commit hash
-  ifeq (,$(VERSION))
-    VERSION := $(BRANCH)-$(COMMIT)
-  endif
-endif
-
-PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-LEDGER_ENABLED ?= false
-SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed  's/ /\@/g')
-TM_VERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::') # grab everything after the space in "github.com/cometbft/cometbft v0.34.7"
 DOCKER := $(shell which docker)
-
+DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf:1.7.0
+INTENTO_HOME=./
 DOCKERNET_HOME=./dockernet
 DOCKERNET_COMPOSE_FILE=$(DOCKERNET_HOME)/docker-compose.yml
-DOCKER_IMAGE_BUILD=tgr
-BUILDDIR ?= $(CURDIR)/build
-
-DOCKER_TAG ?= latest
-
-GO_SYSTEM_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1-2)
-REQUIRE_GO_VERSION = 1.21
-
-export GO111MODULE = on
+LOCALINTENTO_HOME=./testutil/localintento
+LOCALNET_COMPOSE_FILE=$(LOCALINTENTO_HOME)/localnet/docker-compose.yml
+STATE_EXPORT_COMPOSE_FILE=$(LOCALINTENTO_HOME)/state-export/docker-compose.yml
+LOCAL_TO_MAIN_COMPOSE_FILE=./scripts/local-to-mainnet/docker-compose.yml
 
 # process build tags
-
+LEDGER_ENABLED ?= true
 build_tags = netgo
 ifeq ($(LEDGER_ENABLED),true)
   ifeq ($(OS),Windows_NT)
@@ -56,141 +40,65 @@ ifeq ($(LEDGER_ENABLED),true)
   endif
 endif
 
-ifeq (cleveldb,$(findstring cleveldb,$(INTO_BUILD_OPTIONS)))
-  build_tags += gcc cleveldb
-endif
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 
 whitespace :=
-whitespace := $(whitespace) $(whitespace)
+whitespace += $(whitespace)
 comma := ,
 build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 # process linker flags
-
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=into \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=intento \
 		  -X github.com/cosmos/cosmos-sdk/version.AppName=intentod \
 		  -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		  -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
-			-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(TM_VERSION)
+		  -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" 
 
-ifeq (cleveldb,$(findstring cleveldb,$(INTO_BUILD_OPTIONS)))
-  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
-endif
-ifeq (,$(findstring nostrip,$(INTO_BUILD_OPTIONS)))
-  ldflags += -w -s
+ifeq ($(LINK_STATICALLY),true)
+	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
 endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
-# check for nostrip option
-ifeq (,$(findstring nostrip,$(INTO_BUILD_OPTIONS)))
-  BUILD_FLAGS += -trimpath
-endif
 
-#$(info $$BUILD_FLAGS is [$(BUILD_FLAGS)])
-
-# # The below include contains the tools target.
-# include contrib/devtools/Makefile
+.PHONY: build
 
 ###############################################################################
-###                              Build                                      ###
+###                            Build & Clean                                ###
 ###############################################################################
 
-check_version:
-ifneq ($(GO_SYSTEM_VERSION), $(REQUIRE_GO_VERSION))
-	@echo "ERROR: Go version $(REQUIRE_GO_VERSION) is required for $(VERSION) of Intento."
-	exit 1
-endif
-
-all: install lint run-tests test-e2e vulncheck
-
-BUILD_TARGETS := build install
-
-build: BUILD_ARGS=-o $(BUILDDIR)/
-
-$(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
-	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./cmd/intentod
-
-$(BUILDDIR)/:
+build:
+	which go
 	mkdir -p $(BUILDDIR)/
+	go build -mod=readonly $(BUILD_FLAGS) -trimpath -o $(BUILDDIR) ./...;
 
-vulncheck: $(BUILDDIR)/
-	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
-	$(BUILDDIR)/govulncheck ./...
+build-linux:
+	GOOS=linux GOARCH=amd64 $(MAKE) build
 
-build-linux: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
-
-go-mod-cache: go.sum
-	@echo "--> Download go modules to local cache"
-	@go mod download
-
-go.sum: go.mod
-	@echo "--> Ensure dependencies have not been modified"
-	@go mod verify
-
-draw-deps:
-	@# requires brew install graphviz or apt-get install graphviz
-	go install github.com/RobotsAndPencils/goviz
-	@goviz -i ./cmd -d 2 | dot -Tpng -o dependency-graph.png
+install: go.sum
+	go install $(BUILD_FLAGS) ./cmd/intentod
 
 clean:
-	rm -rf $(BUILDDIR)/ artifacts/
-
-distclean: clean
-	rm -rf vendor/
+	rm -rf $(BUILDDIR)/*
 
 ###############################################################################
-###                                Release                                  ###
+###                                CI                                       ###
 ###############################################################################
 
-# create tag and run goreleaser without publishing
-create-release-dry-run:
-ifneq ($(strip $(TAG)),)
-	@echo "--> Dry running release for tag: $(TAG)"
-	@echo "--> Create tag: $(TAG) dry run"
-	git tag -s $(TAG) -m $(TAG)
-	git push origin $(TAG) --dry-run
-	@echo "--> Delete local tag: $(TAG)"
-	@git tag -d $(TAG)
-	@echo "--> Running goreleaser"
-	@go install github.com/goreleaser/goreleaser@latest
-	TM_VERSION=$(TM_VERSION) goreleaser release --snapshot --clean
-	@rm -rf dist/
-	@echo "--> Done create-release-dry-run for tag: $(TAG)"
-else
-	@echo "--> No tag specified, skipping tag release"
-endif
+gosec:
+	gosec -exclude-dir=deps -severity=high ./...
 
-# create tag and publish it
-create-release:
-ifneq ($(strip $(TAG)),)
-	@echo "--> Running release for tag: $(TAG)"
-	@echo "--> Create release tag: $(TAG)"
-	git tag -s $(TAG) -m $(TAG)
-	git push origin $(TAG)
-	@echo "--> Done creating release tag: $(TAG)"
-else
-	@echo "--> No tag specified, skipping create-release"
-endif
-
+lint:
+	golangci-lint run
 
 ###############################################################################
-###                      		     Tests		                            ###
+###                                Tests                                    ###
 ###############################################################################
-
-mocks: $(MOCKS_DIR)
-	@go install github.com/golang/mock/mockgen@v1.6.0
-	sh ./scripts/mockgen.sh
-.PHONY: mocks
-
 
 test-unit:
-	@go test -mod=readonly ./x/alloc... ./x/mint... ./x/claim... ./x/intent... ./app/...
+	@go test -mod=readonly ./x/... ./app/...
 
 test-unit-path:
 	@go test -mod=readonly ./x/$(path)/...
@@ -198,186 +106,87 @@ test-unit-path:
 test-cover:
 	@go test -mod=readonly -race -coverprofile=coverage.out -covermode=atomic ./x/$(path)/...
 
+test-integration-docker:
+	bash $(DOCKERNET_HOME)/tests/run_all_tests.sh
+
+test-integration-docker-all:
+	@ALL_HOST_CHAINS=true bash $(DOCKERNET_HOME)/tests/run_all_tests.sh
 
 ###############################################################################
-###                                Docker                                  ###
+###                                DockerNet                                ###
 ###############################################################################
 
-RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
-RUNNER_BASE_IMAGE_ALPINE := alpine:3.17
-RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
+sync:
+	@git submodule sync --recursive
+	@git submodule update --init --recursive --depth 1
 
-docker-build:
-	@DOCKER_BUILDKIT=1 docker build \
-		-t ghcr.io/trstlabs/localintento:${DOCKER_TAG} \
-		-t ghcr.io/trstlabs/localintento-distroless:${DOCKER_TAG} \
-		--build-arg GO_VERSION=$(GO_VERSION) \
-		--build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_DISTROLESS) \
-		--build-arg GIT_VERSION=$(VERSION) \
-		--build-arg GIT_COMMIT=$(COMMIT) \
-		-f Dockerfile .
+build-docker:
+	@bash $(DOCKERNET_HOME)/build.sh -${build} ${BUILDDIR}
 
+start-docker: stop-docker
+	@bash $(DOCKERNET_HOME)/start_network.sh
 
+start-docker-all: stop-docker build-docker
+	@ALL_HOST_CHAINS=true bash $(DOCKERNET_HOME)/start_network.sh
 
-###############################################################################
-###                                Linting                                  ###
-###############################################################################
-golangci_lint_cmd=golangci-lint
-golangci_version=v1.52.2
+clean-docker:
+	@docker compose -f $(DOCKERNET_COMPOSE_FILE) stop
+	@docker compose -f $(DOCKERNET_COMPOSE_FILE) down
+	rm -rf $(DOCKERNET_HOME)/state
+	docker image prune -a
 
-lint:
-	@echo "--> Running linter"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	@$(golangci_lint_cmd) run --timeout=10m
+stop-docker:
+	@bash $(DOCKERNET_HOME)/pkill.sh
+	docker compose -f $(DOCKERNET_COMPOSE_FILE) down
 
-lint-fix:
-	@echo "--> Running linter"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	@$(golangci_lint_cmd) run --fix --out-format=tab --issues-exit-code=0
+upgrade-build-old-binary:
+	@DOCKERNET_HOME=$(DOCKERNET_HOME) BUILDDIR=$(BUILDDIR) bash $(DOCKERNET_HOME)/upgrades/build_old_binary.sh
 
-format:
-	@go install mvdan.cc/gofumpt@latest
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -path "./tests/mocks/*" -not -name "*.pb.go" -not -name "*.pb.gw.go" -not -name "*.pulsar.go" -not -path "./crypto/keys/secp256k1/*" | xargs gofumpt -w -l
-	$(golangci_lint_cmd) run --fix
-.PHONY: format
+submit-upgrade-immediately:
+	UPGRADE_HEIGHT=150 bash $(DOCKERNET_HOME)/upgrades/submit_upgrade.sh
 
-###############################################################################
-###                                Localnet                                 ###
-###############################################################################
+submit-upgrade-after-tests:
+	UPGRADE_HEIGHT=500 bash $(DOCKERNET_HOME)/upgrades/submit_upgrade.sh
 
-start-localnet-ci: build
-	rm -rf ~/.intentod-liveness
-	./build/intentod init liveness --chain-id liveness --home ~/.intentod-liveness
-	./build/intentod config chain-id liveness --home ~/.intentod-liveness
-	./build/intentod config keyring-backend test --home ~/.intentod-liveness
-	./build/intentod keys add val --home ~/.intentod-liveness
-	./build/intentod add-genesis-account val 10000000000000000000000000stake --home ~/.intentod-liveness --keyring-backend test
-	./build/intentod gentx val 1000000000stake --home ~/.intentod-liveness --chain-id liveness
-	./build/intentod collect-gentxs --home ~/.intentod-liveness
-	sed -i.bak'' 's/minimum-gas-prices = ""/minimum-gas-prices = "0uatom"/' ~/.intentod-liveness/config/app.toml
-	./build/intentod start --home ~/.intentod-liveness --x-crisis-skip-assert-invariants
+start-upgrade-integration-tests:
+	PART=1 bash $(DOCKERNET_HOME)/tests/run_tests_upgrade.sh
 
-.PHONY: start-localnet-ci
+finish-upgrade-integration-tests:
+	PART=2 bash $(DOCKERNET_HOME)/tests/run_tests_upgrade.sh
+
+upgrade-integration-tests-part-1: start-docker-all start-upgrade-integration-tests submit-upgrade-after-tests
+
+setup-ics:
+	UPGRADE_HEIGHT=150 bash $(DOCKERNET_HOME)/upgrades/setup_ics.sh
 
 ###############################################################################
-###                     Local Hermes+TransferPort+ICA+AutoIBCT              ###
+###                              LocalNet                                   ###
 ###############################################################################
-
-
-build-hermes:
-	docker build -f deployment/ibc/hermes/hermes.Dockerfile -t hermes:v0.0.0 deployment/ibc/hermes
-
-# builds a local IBC connection and channel with hermes and docker
-run-localibc: build-hermes
-	docker compose -f deployment/ibc/hermes/docker-compose.yml up
-
-kill-localibc:
-	docker compose -f deployment/ibc/hermes/docker-compose.yml stop 
-	docker compose -f deployment/ibc/hermes/docker-compose.yml rm -f
+start-local-node: build
+	@bash scripts/start_local_node.sh
 
 ###############################################################################
-###                 		    Local Go-Relayer			                ###
+###                           Local to Mainnet                              ###
 ###############################################################################
+start-local-to-main:
+	bash scripts/local-to-mainnet/start.sh
 
-
-# runs 2 local chains
-run-localchains: 
-	@echo "Initializing both blockchains..."
-	docker compose -f deployment/ibc/relayer/docker-compose.yml up
-
-kill-localchains:
-	@echo "Killing both blockchains..."
-	docker compose -f deployment/ibc/relayer/docker-compose.yml stop 
-	docker compose -f deployment/ibc/relayer/docker-compose.yml rm -f
-
-init-golang-rly:
-	@echo "Initializing relayer..."
-	./deployment/ibc/relayer/interchain-acc-config/rly-init.sh
-
-# creates a relayer for 2 local chains and adds them to rly config
-create-rly: kill-dev
-	@echo "Initializing relayer..."
-	./deployment/ibc/relayer/init.sh
-
-# adds juno to the rly config
-create-rly-juno:
-	@echo "Initializing relayer..."
-	./deployment/ibc/relayer/init-juno.sh
-
-restart-rly: @echo "Restarting relayer..."
-	rly tx connection intentodev1-intentodev2 --override
-	rly start intentodev1-intentodev2 -p events -b 100 --debug > rly.log
-
-kill-dev:
-	@echo "Killing intentod and removing previous data"
-	-@rm -rf ./data
-	-@killall intentod 2>/dev/null
-
-# starts Into relayer given the localchains are running
-run-rly: 
-	@echo "Starting up local test relayer..."
-	./deployment/ibc/start.sh
-
-# starts a Into relayer, localintento 1&2 and localjuno
-run-rly-juno: 
-	@echo "Starting up local test relayers..."
-	docker compose -f deployment/ibc/docker-compose-rly.yml up
-
-# stops  a Into relayer, localintento 1&2 and localjuno
-kill-rly-juno: 
-	@echo "Stopping and removing local test relayers..."
-	docker compose -f deployment/ibc/docker-compose-rly.yml stop 
-	docker compose -f deployment/ibc/docker-compose-rly.yml rm -f
-
-run-go-rly:
-	./deployment/ibc/relayer/interchain-acc-config/rly-start.sh
-
-run-localchains-juno: build-hermes
-	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml up
-
-kill-localchains-juno:
-	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml stop 
-	docker compose -f deployment/ibc/relayer/docker-compose-juno.yml rm -f
-
-###############################################################################
-###                                Swagger                                  ###
-###############################################################################
-
-# Install the runsim binary with a temporary workaround of entering an outside
-# directory as the "go get" command ignores the -mod option and will polute the
-# go.{mod, sum} files.
-#
-# ref: https://github.com/golang/go/issues/30515
-statik:
-	@echo "Installing statik..."
-	@(cd /tmp && GO111MODULE=on go get github.com/rakyll/statik@v0.1.6)
-
-
-update-swagger-docs: statik
-	statik -src=client/docs/static/swagger/ -dest=client/docs -f -m
-	@if [ -n "$(git status --porcelain)" ]; then \
-        echo "\033[91mSwagger docs are out of sync!!!\033[0m";\
-        exit 1;\
-    else \
-        echo "\033[92mSwagger docs are in sync\033[0m";\
-    fi
-
-.PHONY: update-swagger-docs statik
+stop-local-to-main:
+	docker compose -f $(LOCAL_TO_MAIN_COMPOSE_FILE) down
 
 ###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.11.0
-containerProtoImage=ghcr.io/cosmos/proto-builder:$(protoVer)
-containerProtoGen=cosmos-sdk-proto-gen-$(protoVer)
-containerProtoFmt=cosmos-sdk-proto-fmt-$(protoVer)
+containerProtoVer=0.14.0
+containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
+
+proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
-		sh ./scripts/protocgen.sh; fi
+	@$(DOCKER) run --user $(id -u):$(id -g) --rm -v $(CURDIR):/workspace --workdir /workspace $(containerProtoImage) \
+		sh ./scripts/protocgen.sh; 
 
 proto-format:
 	@echo "Formatting Protobuf files"
@@ -395,48 +204,45 @@ proto-lint:
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
-
-
 ###############################################################################
-###                                DockerNet                                ###
+###                             LocalIntento                                 ###
 ###############################################################################
 
-build-dockernet:
-	@bash $(DOCKERNET_HOME)/build.sh -${DOCKER_IMAGE_BUILD} ${BUILDDIR}
+# localnet-keys:
+# 	. $(LOCALINTENTO_HOME)/localnet/add_keys.sh
 
-start-dockernet: 
-	@bash $(DOCKERNET_HOME)/start_network.sh
+# localnet-init: localnet-clean localnet-build
 
-start-dockernet-all:
-	@ALL_HOST_CHAINS=true bash $(DOCKERNET_HOME)/start_network.sh
+# localnet-clean:
+# 	@rm -rfI $(HOME)/.intento/
 
-clean-dockernet:
-	@docker-compose -f $(DOCKERNET_COMPOSE_FILE) stop
-	@docker-compose -f $(DOCKERNET_COMPOSE_FILE) down
-	@bash $(DOCKERNET_HOME)/pkill.sh
-	rm -rf $(DOCKERNET_HOME)/state
-	docker image prune -a
+# localnet-build:
+# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) build
 
-stop-dockernet:
-	@docker-compose -f $(DOCKERNET_COMPOSE_FILE) stop
-	@docker-compose -f $(DOCKERNET_COMPOSE_FILE) down -v
+# localnet-start:
+# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) up
 
-test-integration-dockernet:
-	bash $(DOCKERNET_HOME)/tests/run_all_tests.sh
+# localnet-startd:
+# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) up -d
 
-upgrade-build-old-binary:
-	@DOCKERNET_HOME=$(DOCKERNET_HOME) BUILDDIR=$(BUILDDIR) bash $(DOCKERNET_HOME)/upgrades/build_old_binary.sh
+# localnet-stop:
+# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) down
 
-submit-upgrade-immediately:
-	UPGRADE_HEIGHT=100 bash $(DOCKERNET_HOME)/upgrades/submit_upgrade.sh
+# localnet-state-export-init: localnet-state-export-clean localnet-state-export-build
 
-submit-upgrade-after-tests:
-	UPGRADE_HEIGHT=400 bash $(DOCKERNET_HOME)/upgrades/submit_upgrade.sh
+# localnet-state-export-build:
+# 	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f $(STATE_EXPORT_COMPOSE_FILE) build
 
-start-upgrade-integration-tests:
-	PART=1 bash $(DOCKERNET_HOME)/tests/run_tests_upgrade.sh
+# localnet-state-export-start:
+# 	@docker compose -f $(STATE_EXPORT_COMPOSE_FILE) up
 
-finish-upgrade-integration-tests:
-	PART=2 bash $(DOCKERNET_HOME)/tests/run_tests_upgrade.sh
+# localnet-state-export-startd:
+# 	@docker compose -f $(STATE_EXPORT_COMPOSE_FILE) up -d
 
-upgrade-integration-tests-part-1: start-dockernet-all start-upgrade-integration-tests submit-upgrade-after-tests
+# localnet-state-export-upgrade:
+# 	bash $(LOCALINTENTO_HOME)/state-export/scripts/submit_upgrade.sh
+
+# localnet-state-export-stop:
+# 	@docker compose -f $(STATE_EXPORT_COMPOSE_FILE) down
+
+# localnet-state-export-clean: localnet-clean

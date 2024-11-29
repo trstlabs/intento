@@ -2,14 +2,25 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	wasmvm "github.com/CosmWasm/wasmvm"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
+	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v7"
+	ibchookskeeper "github.com/cosmos/ibc-apps/modules/ibc-hooks/v7/keeper"
+	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v7/types"
+	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
+	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
+	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 
 	// "github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	"github.com/spf13/cast"
@@ -113,6 +124,12 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
+	ccvconsumer "github.com/cosmos/interchain-security/v4/x/ccv/consumer"
+	ccvconsumerkeeper "github.com/cosmos/interchain-security/v4/x/ccv/consumer/keeper"
+	ccvconsumertypes "github.com/cosmos/interchain-security/v4/x/ccv/consumer/types"
+	ccvdistr "github.com/cosmos/interchain-security/v4/x/ccv/democracy/distribution"
+	ccvgov "github.com/cosmos/interchain-security/v4/x/ccv/democracy/governance"
+	ccvstaking "github.com/cosmos/interchain-security/v4/x/ccv/democracy/staking"
 	appparams "github.com/trstlabs/intento/app/params"
 	"github.com/trstlabs/intento/x/claim"
 	intent "github.com/trstlabs/intento/x/intent"
@@ -149,6 +166,7 @@ var (
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		claim.AppModuleBasic{},
+		ccvconsumer.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
 		alloc.AppModuleBasic{},
 		distr.AppModuleBasic{},
@@ -170,25 +188,31 @@ var (
 		ica.AppModuleBasic{},
 		intent.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
+		wasm.AppModuleBasic{},
+		ibchooks.AppModuleBasic{},
+		ibcwasm.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:      nil,
-		distrtypes.ModuleName:           nil,
-		minttypes.ModuleName:            {authtypes.Minter},
-		stakingtypes.BondedPoolName:     {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:  {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:             {authtypes.Burner},
-		ibctransfertypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
-		icatypes.ModuleName:             nil,
-		ibcfeetypes.ModuleName:          nil,
-		claimtypes.ModuleName:           {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		alloctypes.ModuleName:           {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		intenttypes.ModuleName:          {authtypes.Minter},
-		interchainquerytypes.ModuleName: nil,
+		authtypes.FeeCollectorName:                    nil,
+		distrtypes.ModuleName:                         nil,
+		minttypes.ModuleName:                          {authtypes.Minter},
+		stakingtypes.BondedPoolName:                   {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:                {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                           {authtypes.Burner},
+		ibctransfertypes.ModuleName:                   {authtypes.Minter, authtypes.Burner},
+		icatypes.ModuleName:                           nil,
+		ibcfeetypes.ModuleName:                        nil,
+		claimtypes.ModuleName:                         {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		ccvconsumertypes.ConsumerRedistributeName:     nil,
+		ccvconsumertypes.ConsumerToSendToProviderName: nil,
+		alloctypes.ModuleName:                         {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		intenttypes.ModuleName:                        {authtypes.Minter},
+		interchainquerytypes.ModuleName:               nil,
+		wasmtypes.ModuleName:                          {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -236,6 +260,7 @@ type IntoApp struct {
 	MintKeeper            mintkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	ClaimKeeper           claimkeeper.Keeper
+	ConsumerKeeper        ccvconsumerkeeper.Keeper
 	AllocKeeper           allockeeper.Keeper
 	GovKeeper             govkeeper.Keeper
 	CrisisKeeper          *crisiskeeper.Keeper
@@ -252,14 +277,24 @@ type IntoApp struct {
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
-	TransferStack         *intent.IBCMiddleware
+
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
 	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 	ScopedIntentKeeper        capabilitykeeper.ScopedKeeper
+	ScopedCCVConsumerKeeper   capabilitykeeper.ScopedKeeper
+	ScopedWasmKeeper          capabilitykeeper.ScopedKeeper
+	WasmKeeper                wasmkeeper.Keeper
+	ContractKeeper            *wasmkeeper.PermissionedKeeper
+	IBCHooksKeeper            ibchookskeeper.Keeper
+	WasmClientKeeper          ibcwasmkeeper.Keeper
 
+	// Middleware for IBCHooks
+	Ics20WasmHooks   *ibchooks.WasmHooks
+	HooksICS4Wrapper ibchooks.ICS4Middleware
+	TransferStack    porttypes.IBCModule
 	// the module manager
 	mm *module.Manager
 
@@ -278,6 +313,7 @@ func NewIntoApp(
 	loadLatest bool,
 	encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
+	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *IntoApp {
 
@@ -317,6 +353,10 @@ func NewIntoApp(
 		intenttypes.StoreKey,
 		ibcfeetypes.StoreKey,
 		interchainquerytypes.StoreKey,
+		wasmtypes.StoreKey,
+		ibchookstypes.StoreKey,
+		ibcwasmtypes.StoreKey,
+		ccvconsumertypes.StoreKey,
 	)
 
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -354,7 +394,8 @@ func NewIntoApp(
 	scopedIntentKeeper := app.CapabilityKeeper.ScopeToModule(intenttypes.ModuleName)
 	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-
+	scopedCCVConsumerKeeper := app.CapabilityKeeper.ScopeToModule(ccvconsumertypes.ModuleName)
+	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 	// seal capability keeper after scoping modules
 	app.CapabilityKeeper.Seal()
 
@@ -405,6 +446,13 @@ func NewIntoApp(
 	app.CrisisKeeper = crisiskeeper.NewKeeper(appCodec, keys[crisistypes.StoreKey], invCheckPeriod,
 		app.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
+	// Add ICS Consumer Keeper
+	app.ConsumerKeeper = ccvconsumerkeeper.NewNonZeroKeeper(
+		appCodec,
+		keys[ccvconsumertypes.StoreKey],
+		app.GetSubspace(ccvconsumertypes.ModuleName),
+	)
+
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper)
@@ -425,7 +473,13 @@ func NewIntoApp(
 		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ClaimKeeper.Hooks()),
 	)
 
-	// ... other modules keepers
+	// Create IBC Hooks Keeper (must be defined after the wasmKeeper is created)
+	app.IBCHooksKeeper = ibchookskeeper.NewKeeper(
+		keys[ibchookstypes.StoreKey],
+	)
+	wasmHooks := ibchooks.NewWasmHooks(&app.IBCHooksKeeper, nil, Bech32Prefix) // the contract keeper is set later
+	app.Ics20WasmHooks = &wasmHooks
+	app.Ics20WasmHooks.ContractKeeper = &app.WasmKeeper // wasm keeper initialized below
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
@@ -498,8 +552,89 @@ func NewIntoApp(
 	intentModule := intent.NewAppModule(appCodec, app.IntentKeeper)
 	intentIBCModule := intent.NewIBCModule(app.IntentKeeper)
 
+	// Add wasm keeper and wasm client keeper (must be after IBCKeeper and TransferKeeper)
+	wasmContractMemoryLimit := uint32(32)
+	wasmCapabilities := "iterator,staking,stargate,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_3,cosmwasm_1_4"
+	wasmDir := filepath.Join(homePath, "wasm")
+	wasmVmDir := filepath.Join(homePath, "wasm", "wasm")
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic(fmt.Sprintf("error while reading wasm config: %s", err))
+	}
+
+	wasmer, err := wasmvm.NewVM(
+		wasmVmDir,
+		wasmCapabilities,
+		wasmContractMemoryLimit,
+		wasmConfig.ContractDebugMode,
+		wasmConfig.MemoryCacheSize,
+	)
+	if err != nil {
+		panic(err)
+	}
+	wasmOpts = append(wasmOpts, wasmkeeper.WithWasmEngine(wasmer))
+
+	app.WasmKeeper = wasmkeeper.NewKeeper(
+		appCodec,
+		keys[wasmtypes.StoreKey],
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		distrkeeper.NewQuerier(app.DistrKeeper),
+		app.IBCKeeper.ChannelKeeper, // ICS4Wrapper
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedWasmKeeper,
+		app.TransferKeeper,
+		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(),
+		wasmDir,
+		wasmConfig,
+		wasmCapabilities,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		wasmOpts...,
+	)
+	app.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
+
+	app.WasmClientKeeper = ibcwasmkeeper.NewKeeperWithVM(
+		appCodec,
+		keys[ibcwasmtypes.StoreKey],
+		app.IBCKeeper.ClientKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		wasmer,
+		app.GRPCQueryRouter(),
+	)
+
+	// Create CCV consumer and modules
+	app.ConsumerKeeper = ccvconsumerkeeper.NewKeeper(
+		appCodec,
+		keys[ccvconsumertypes.StoreKey],
+		app.GetSubspace(ccvconsumertypes.ModuleName),
+		scopedCCVConsumerKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		app.IBCKeeper.ConnectionKeeper,
+		app.IBCKeeper.ClientKeeper,
+		app.SlashingKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
+		&app.TransferKeeper,
+		app.IBCKeeper,
+		authtypes.FeeCollectorName,
+	)
+	app.ConsumerKeeper.SetStandaloneStakingKeeper(app.StakingKeeper)
+	// register slashing module StakingHooks to the consumer keeper
+	app.ConsumerKeeper = *app.ConsumerKeeper.SetHooks(app.SlashingKeeper.Hooks())
+	consumerModule := ccvconsumer.NewAppModule(app.ConsumerKeeper, app.GetSubspace(ccvconsumertypes.ModuleName))
+	// Create the ICS4 wrapper which routes up the stack from ibchooks -> ratelimit
+	// (see full stack definition below)
+	app.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
+		app.IBCKeeper.ChannelKeeper,
+		app.Ics20WasmHooks,
+	)
 	intentIcs20HooksTransferModule := intent.NewIBCMiddleware(transferIBCModule, app.IntentKeeper, interfaceRegistry)
-	app.TransferStack = &intentIcs20HooksTransferModule
+	app.TransferStack = ibchooks.NewIBCMiddleware(intentIcs20HooksTransferModule, &app.HooksICS4Wrapper)
+
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(intentIBCModule, app.ICAControllerKeeper)
 	icaControllerStack := ibcfee.NewIBCMiddleware(icaControllerIBCModule, app.IBCFeeKeeper)
 
@@ -515,8 +650,8 @@ func NewIntoApp(
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(ibctransfertypes.ModuleName, app.TransferStack).
 		AddRoute(intenttypes.ModuleName, icaControllerStack).
-		AddRoute(icahosttypes.SubModuleName, icaHostStack) /* .
-		AddRoute(ibctransfertypes.ModuleName, transferIBCModule) */
+		AddRoute(icahosttypes.SubModuleName, icaHostStack).
+		AddRoute(ccvconsumertypes.ModuleName, consumerModule)
 
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -562,6 +697,14 @@ func NewIntoApp(
 		intentModule,
 		interchainQueryModule,
 		ibcfee.NewAppModule(app.IBCFeeKeeper),
+		consumerModule,
+		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
+		ibchooks.NewAppModule(app.AccountKeeper),
+		transfer.NewAppModule(app.TransferKeeper),
+		ibcwasm.NewAppModule(app.WasmClientKeeper),
+		ccvgov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, IsProposalWhitelisted, app.GetSubspace(govtypes.ModuleName), IsModuleWhiteList),
+		ccvdistr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, authtypes.FeeCollectorName, app.GetSubspace(distrtypes.ModuleName)),
+		ccvstaking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -574,6 +717,10 @@ func NewIntoApp(
 		evidencetypes.ModuleName, stakingtypes.ModuleName, ibcexported.ModuleName, ibctransfertypes.ModuleName, authtypes.ModuleName,
 		banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName, genutiltypes.ModuleName, authz.ModuleName, feegrant.ModuleName,
 		paramstypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, interchainquerytypes.ModuleName, intenttypes.ModuleName, ibcfeetypes.ModuleName, claimtypes.ModuleName,
+		wasmtypes.ModuleName,
+		ibchookstypes.ModuleName,
+		ibcwasmtypes.ModuleName,
+		ccvconsumertypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -581,7 +728,10 @@ func NewIntoApp(
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		minttypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName,
 		upgradetypes.ModuleName, vestingtypes.ModuleName, icatypes.ModuleName, interchainquerytypes.ModuleName, intenttypes.ModuleName, ibcfeetypes.ModuleName, minttypes.ModuleName,
-		alloctypes.ModuleName, claimtypes.ModuleName,
+		alloctypes.ModuleName, claimtypes.ModuleName, wasmtypes.ModuleName,
+		ibchookstypes.ModuleName,
+		ibcwasmtypes.ModuleName,
+		ccvconsumertypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -595,7 +745,10 @@ func NewIntoApp(
 		alloctypes.ModuleName, crisistypes.ModuleName,
 		ibcexported.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, ibctransfertypes.ModuleName,
 		icatypes.ModuleName, interchainquerytypes.ModuleName, intenttypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
-		ibcfeetypes.ModuleName,
+		ibcfeetypes.ModuleName, wasmtypes.ModuleName,
+		ibchookstypes.ModuleName,
+		ibcwasmtypes.ModuleName,
+		ccvconsumertypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
@@ -659,6 +812,8 @@ func NewIntoApp(
 	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
 	app.ScopedICAHostKeeper = scopedICAHostKeeper
 	app.ScopedIntentKeeper = scopedIntentKeeper
+	app.ScopedCCVConsumerKeeper = scopedCCVConsumerKeeper
+	app.ScopedWasmKeeper = scopedWasmKeeper
 
 	return app
 }
@@ -844,7 +999,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(claimtypes.ModuleName)
 	paramsKeeper.Subspace(alloctypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
-
+	paramsKeeper.Subspace(ccvconsumertypes.ModuleName)
 	return paramsKeeper
 }
 
@@ -922,4 +1077,10 @@ func (app *IntoApp) RegisterNodeService(clientCtx client.Context) {
 // SimulationManager implements the SimulationApp interface
 func (app *IntoApp) SimulationManager() *module.SimulationManager {
 	return app.sm
+}
+
+// ConsumerApp interface implementations for e2e tests
+// GetConsumerKeeper implements the ConsumerApp interface.
+func (app *IntoApp) GetConsumerKeeper() ccvconsumerkeeper.Keeper {
+	return app.ConsumerKeeper
 }

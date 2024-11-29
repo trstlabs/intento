@@ -2,6 +2,7 @@ package keeper
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"github.com/CosmWasm/wasmd/x/wasm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -42,12 +43,12 @@ func handleMsgData(msgData *sdk.MsgData) (proto.Message, int, error) {
 		rewardType = types.KeyActionIncentiveForSDKTx
 
 	// wasm
-	case sdk.MsgTypeURL(&msgregistry.MsgExecuteContract{}):
-		msgResponse = &msgregistry.MsgExecuteContractResponse{}
+	case sdk.MsgTypeURL(&wasm.MsgExecuteContract{}):
+		msgResponse = &wasm.MsgExecuteContractResponse{}
 		rewardType = types.KeyActionIncentiveForWasmTx
 
-	case sdk.MsgTypeURL(&msgregistry.MsgInstantiateContract{}):
-		msgResponse = &msgregistry.MsgInstantiateContractResponse{}
+	case sdk.MsgTypeURL(&wasm.MsgInstantiateContract{}):
+		msgResponse = &wasm.MsgInstantiateContractResponse{}
 		rewardType = types.KeyActionIncentiveForWasmTx
 
 	// osmo
@@ -101,10 +102,10 @@ func getMsgRewardType(typeUrl string) int {
 		rewardType = types.KeyActionIncentiveForSDKTx
 
 	// wasm
-	case sdk.MsgTypeURL(&msgregistry.MsgExecuteContract{}):
+	case sdk.MsgTypeURL(&wasm.MsgExecuteContract{}):
 		rewardType = types.KeyActionIncentiveForWasmTx
 
-	case sdk.MsgTypeURL(&msgregistry.MsgInstantiateContract{}):
+	case sdk.MsgTypeURL(&wasm.MsgInstantiateContract{}):
 		rewardType = types.KeyActionIncentiveForWasmTx
 
 	// osmo

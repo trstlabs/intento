@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	app "github.com/trstlabs/intento/app"
 
-	// "github.com/trstlabs/intento/x/compute"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/trstlabs/intento/x/mint/types"
 )
 
@@ -59,8 +59,7 @@ func genApp(withGenesis bool, invCheckPeriod uint) (*app.IntoApp, app.GenesisSta
 		true,
 		encCdc,
 		app.EmptyAppOptions{},
-		// compute.GetConfig(simapp.EmptyAppOptions{}),
-		// app.GetEnabledProposals(),
+		[]wasmkeeper.Option{},
 	)
 
 	if withGenesis {
