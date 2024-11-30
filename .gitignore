@@ -15,3 +15,5 @@ dockernet/upgrades/binaries
 dockernet/upgrades/cosmovisor
 dockernet/temp.sh
 msg_*.json
+/*.sh
+*.json

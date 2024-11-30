@@ -48,7 +48,7 @@ set_into_genesis() {
     jq "del(.app_state.interchain_accounts)" $genesis_config > json.tmp && mv json.tmp $genesis_config
     interchain_accts=$(cat $DOCKERNET_HOME/config/ica_controller.json)
     jq ".app_state += $interchain_accts" $genesis_config > json.tmp && mv json.tmp $genesis_config
-
+    
 }
 
 
@@ -100,16 +100,51 @@ set_host_genesis() {
         LSM_VALIDATOR_BOND_FACTOR="250"
         LSM_GLOBAL_LIQUID_STAKING_CAP="0.25"
         LSM_VALIDATOR_LIQUID_STAKING_CAP="0.50"
+        UPGRADE_TIMEOUT="2526374086000000000"
         jq '.app_state.gov.params.voting_period = $newVal' --arg newVal "$VOTING_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.staking.params.min_commission_rate = $newVal' --arg newVal "0.010000000000000000" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.staking.params.validator_bond_factor = $newVal' --arg newVal "$LSM_VALIDATOR_BOND_FACTOR" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.staking.params.validator_liquid_staking_cap = $newVal' --arg newVal "$LSM_VALIDATOR_LIQUID_STAKING_CAP" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.staking.params.global_liquid_staking_cap = $newVal' --arg newVal "$LSM_GLOBAL_LIQUID_STAKING_CAP" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.ibc.channel_genesis.params.upgrade_timeout.timestamp = $newVal' --arg newVal "$UPGRADE_TIMEOUT" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.provider.params.max_provider_consensus_validators = $newVal' --arg newVal "180" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.provider.params.blocks_per_epoch = $newVal' --arg newVal "3" $genesis_config > json.tmp && mv json.tmp $genesis_config
+
+        # jq '.app_state.feemarket.params.min_base_gas_price = $newVal' --arg newVal "0.0025" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        # jq '.app_state.feemarket.params.fee_denom = $newVal' --arg newVal "uatom" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        # jq '.app_state.feemarket.params.enabled = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
+        #  jq '.app_state.feemarket.params.window = 1' $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.feemarket.state.base_gas_price = $newVal' --arg newVal "0.002" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.feemarket.state.window = ["1"]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.feemarket.state.learning_rate = "0.1"' $genesis_config > json.tmp && mv json.tmp $genesis_config
+       jq '.app_state.feemarket.params = {
+    alpha: "0.1",
+    beta: "0.1",
+    gamma: "0.1",
+    delta: "0.1",
+    min_base_gas_price: "0.002",
+    min_learning_rate: "0.1",
+    max_learning_rate: "0.1",
+    max_block_utilization: "10",
+    window: "1",
+    enabled: false, 
+    fee_denom: "uatom"
+}' $genesis_config > json.tmp && mv json.tmp $genesis_config
+
+        jq "del(.app_state.provider.mature_unbonding_ops)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.unbonding_ops)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.consumer_addition_proposals)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.consumer_removal_proposals)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.consumer_addrs_to_prune)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        
+        jq "del(.app_state.provider.params.max_throttled_packets)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.params.init_timeout_period)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.params.vsc_timeout_period)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config 
     fi
     
     
     # Add poolmanager params
-    if [[ "$CHAIN" == "OSMO" ]]; then        
+    if [[ "$CHAIN" == "OSMO" ]]; then
         jq "del(.app_state.poolincentives.pool_to_gauges)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
         jq "del(.app_state.bank.supply_offsets)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
         jq "del(.app_state.staking.params.min_self_delegation)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
@@ -349,7 +384,7 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
 done
 
 if [ "$CHAIN" == "INTO" ]; then
-    # Add the into trigger admin account
+    # Add the into admin account
     echo "$INTO_ADMIN_MNEMONIC" | $MAIN_CMD keys add $INTO_ADMIN_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
     INTO_ADMIN_ADDRESS=$($MAIN_CMD keys show $INTO_ADMIN_ACCT --keyring-backend test -a)
     $MAIN_CMD add-genesis-account ${INTO_ADMIN_ADDRESS} ${ADMIN_TOKENS}${DENOM}
@@ -376,8 +411,8 @@ if [ "$CHAIN" == "INTO" ]; then
         RELAYER_ADDRESS=$($MAIN_CMD keys show $RELAYER_ACCT --keyring-backend test -a)
         $MAIN_CMD add-genesis-account ${RELAYER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
     done
-
-
+    
+    
 else
     # Add a user account
     USER_ACCT_VAR=${CHAIN}_USER_ACCT
@@ -423,9 +458,9 @@ fi
 
 
 # update consumer genesis for binary chains
-if [[ "$CHAIN" == "INTO" || "$CHAIN" == "HOST" ]]; then
-    set_consumer_genesis $MAIN_GENESIS
-fi
+# if [[ "$CHAIN" == "INTO" || "$CHAIN" == "HOST" ]]; then
+#     set_consumer_genesis $MAIN_GENESIS
+# fi
 
 
 # for all peer nodes....
