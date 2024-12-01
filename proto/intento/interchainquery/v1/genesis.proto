@@ -49,4 +49,3 @@ message DataPoint {
 message GenesisState {
   repeated Query queries = 1 [ (gogoproto.nullable) = false ];
 }
-
