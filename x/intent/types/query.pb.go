@@ -191,7 +191,8 @@ func (m *QueryActionResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryActionResponse proto.InternalMessageInfo
 
-// QueryActionHistoryRequest is the request type for the Query/QueryActionHistoryRequest RPC
+// QueryActionHistoryRequest is the request type for the
+// Query/QueryActionHistoryRequest RPC
 type QueryActionHistoryRequest struct {
 	// id of the action
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -232,7 +233,8 @@ func (m *QueryActionHistoryRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryActionHistoryRequest proto.InternalMessageInfo
 
-// QueryActionHistoryResponse the response type for the Query/QueryActionHistoryResponse RPC
+// QueryActionHistoryResponse the response type for the
+// Query/QueryActionHistoryResponse RPC
 type QueryActionHistoryResponse struct {
 	History []ActionHistoryEntry `protobuf:"bytes,1,rep,name=history,proto3" json:"history"`
 	// Pagination defines the pagination in the response.
@@ -547,7 +549,8 @@ func (m *QueryHostedAccountRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryHostedAccountRequest proto.InternalMessageInfo
 
-// QueryHostedAccountResponse is the response type for the Query/HostedAccount RPC method.
+// QueryHostedAccountResponse is the response type for the Query/HostedAccount
+// RPC method.
 type QueryHostedAccountResponse struct {
 	// HostedAccount
 	HostedAccount HostedAccount `protobuf:"bytes,1,opt,name=hosted_account,json=hostedAccount,proto3" json:"hosted_account"`
@@ -586,7 +589,8 @@ func (m *QueryHostedAccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryHostedAccountResponse proto.InternalMessageInfo
 
-// QueryHostedAccounts is the request type for the Query/HostedAccount RPC method.
+// QueryHostedAccounts is the request type for the Query/HostedAccount RPC
+// method.
 type QueryHostedAccountsRequest struct {
 	// Pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -625,7 +629,8 @@ func (m *QueryHostedAccountsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryHostedAccountsRequest proto.InternalMessageInfo
 
-// QueryHostedAccountsResponse is the response type for the Query/HostedAccount RPC method.
+// QueryHostedAccountsResponse is the response type for the Query/HostedAccount
+// RPC method.
 type QueryHostedAccountsResponse struct {
 	// HostedAccounts
 	HostedAccounts []HostedAccount `protobuf:"bytes,1,rep,name=hosted_accounts,json=hostedAccounts,proto3" json:"hosted_accounts"`
@@ -706,7 +711,8 @@ func (m *QueryHostedAccountsByAdminRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryHostedAccountsByAdminRequest proto.InternalMessageInfo
 
-// QueryHostedAccountResponse is the response type for the Query/HostedAccount RPC method.
+// QueryHostedAccountResponse is the response type for the Query/HostedAccount
+// RPC method.
 type QueryHostedAccountsByAdminResponse struct {
 	// HostedAccounts
 	HostedAccounts []HostedAccount `protobuf:"bytes,1,rep,name=hosted_accounts,json=hostedAccounts,proto3" json:"hosted_accounts"`
@@ -1303,6 +1309,7 @@ func _Query_ActionIbcTxUsage_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "intento.intent.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),

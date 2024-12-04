@@ -1,10 +1,10 @@
 package config
 
 import (
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-
-	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -55,11 +55,11 @@ func SetBip44CoinType(config *sdk.Config) {
 
 // RegisterDenoms registers the base and display denominations to the SDK.
 func RegisterDenoms() {
-	if err := sdk.RegisterDenom(HumanReadableCoinUnit, sdk.OneDec()); err != nil {
+	if err := sdk.RegisterDenom(HumanReadableCoinUnit, math.LegacyOneDec()); err != nil {
 		panic(err)
 	}
 
-	if err := sdk.RegisterDenom(BaseCoinUnit, sdk.NewDecWithPrec(1, 6)); err != nil {
+	if err := sdk.RegisterDenom(BaseCoinUnit, math.LegacyNewDecWithPrec(1, 6)); err != nil {
 		panic(err)
 	}
 }

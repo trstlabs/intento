@@ -221,10 +221,15 @@ func (msg MsgSubmitAction) ValidateBasic() error {
 
 	for _, message := range msg.GetTxMsgs() {
 		// check if the msgs contain valid inputs
-		err := message.ValidateBasic()
-		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
+		m, ok := message.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate action message: %s", err.Error())
 		}
+
 	}
 
 	return nil
@@ -297,10 +302,15 @@ func (msg MsgRegisterAccountAndSubmitAction) ValidateBasic() error {
 
 	for _, message := range msg.GetTxMsgs() {
 		// check if the msgs contain valid inputs
-		err := message.ValidateBasic()
-		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
+		m, ok := message.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate action message: %s", err.Error())
 		}
+
 	}
 	if len(msg.Label) > 50 {
 		return fmt.Errorf("label must be shorter than 50 characters")
@@ -379,10 +389,15 @@ func (msg MsgUpdateAction) ValidateBasic() error {
 
 	for _, message := range msg.GetTxMsgs() {
 		// check if the msgs contain valid inputs
-		err := message.ValidateBasic()
-		if err != nil && !strings.Contains(err.Error(), "bech32") && !strings.Contains(err.Error(), "Bech32") {
+		m, ok := message.(sdk.HasValidateBasic)
+		if !ok {
+			continue
+		}
+
+		if err := m.ValidateBasic(); err != nil {
 			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate action message: %s", err.Error())
 		}
+
 	}
 	if len(msg.Label) > 50 {
 		return fmt.Errorf("label must be shorter than 50 characters")

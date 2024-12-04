@@ -178,7 +178,7 @@ stop-local-to-main:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-containerProtoVer=0.15.0
+containerProtoVer=0.15.1
 containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
 
 proto-all: proto-format proto-lint proto-gen
@@ -203,6 +203,11 @@ proto-lint:
 
 proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
+
+#? proto-update-deps: Update protobuf dependencies
+proto-update-deps:
+	@echo "Updating Protobuf dependencies"
+	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace  --user $(id -u):$(id -g) --workdir /workspace $(containerProtoImage) buf mod update 
 
 ###############################################################################
 ###                             LocalIntento                                 ###

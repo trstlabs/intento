@@ -3,27 +3,29 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/collections"
+	corestoretypes "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	"github.com/trstlabs/intento/internal/collcompat"
 	"github.com/trstlabs/intento/x/intent/types"
 	interchainquerykeeper "github.com/trstlabs/intento/x/interchainquery/keeper"
 )
 
 type Keeper struct {
 	cdc                   codec.Codec
-	storeKey              storetypes.StoreKey
+	storeService          corestoretypes.KVStoreService
+	Schema                collections.Schema
 	scopedKeeper          capabilitykeeper.ScopedKeeper
 	icaControllerKeeper   icacontrollerkeeper.Keeper
 	bankKeeper            bankkeeper.Keeper
@@ -32,13 +34,14 @@ type Keeper struct {
 	transferKeeper        ibctransferkeeper.Keeper
 	accountKeeper         authkeeper.AccountKeeper
 	interchainQueryKeeper interchainquerykeeper.Keeper
-	paramSpace            paramtypes.Subspace
 	hooks                 IntentHooks
 	msgRouter             MessageRouter
 	interfaceRegistry     cdctypes.InterfaceRegistry
+	Params                collections.Item[types.Params]
+	authority             string
 }
 
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, interchainQueryKeeper interchainquerykeeper.Keeper, paramSpace paramtypes.Subspace, ah IntentHooks, msgRouter MessageRouter, interfaceRegistry cdctypes.InterfaceRegistry,
+func NewKeeper(cdc codec.Codec, storeService corestoretypes.KVStoreService, icaKeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, bankKeeper bankkeeper.Keeper, distrKeeper distrkeeper.Keeper, stakingKeeper stakingkeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, accountKeeper authkeeper.AccountKeeper, interchainQueryKeeper interchainquerykeeper.Keeper, ah IntentHooks, msgRouter MessageRouter, interfaceRegistry cdctypes.InterfaceRegistry, authority string,
 ) Keeper {
 	moduleAccAddr := accountKeeper.GetModuleAddress(types.ModuleName)
 	// ensure module account is set
@@ -46,17 +49,13 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontr
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
-	// set KeyTable if it has not already been set
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(ParamKeyTable())
-	}
+	sb := collections.NewSchemaBuilder(storeService)
 
-	return Keeper{
+	keeper := Keeper{
 		cdc:                   cdc,
-		storeKey:              storeKey,
+		storeService:          storeService,
 		scopedKeeper:          scopedKeeper,
 		icaControllerKeeper:   icaKeeper,
-		paramSpace:            paramSpace,
 		bankKeeper:            bankKeeper,
 		distrKeeper:           distrKeeper,
 		stakingKeeper:         stakingKeeper,
@@ -66,7 +65,21 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, icaKeeper icacontr
 		hooks:                 ah,
 		msgRouter:             msgRouter,
 		interfaceRegistry:     interfaceRegistry,
+		Params: collections.NewItem(
+			sb,
+			types.ParamsKey,
+			"params",
+			collcompat.ProtoValue[types.Params](cdc),
+		),
+		authority: authority,
 	}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	keeper.Schema = schema
+	return keeper
+
 }
 
 // RegisterInterchainAccount registers account
@@ -85,4 +98,9 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 // MessageRouter ADR 031 request type routing
 type MessageRouter interface {
 	Handler(msg sdk.Msg) baseapp.MsgServiceHandler
+}
+
+// GetAuthority returns the module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }

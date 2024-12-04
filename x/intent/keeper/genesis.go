@@ -2,6 +2,7 @@ package keeper
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/trstlabs/intento/x/intent/types"
 
@@ -22,7 +23,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
 	// genesis block
 	//fmt.Print("intent InitGenesis... \n")
 	if k.GetIntentModuleBalance(ctx).IsZero() {
-		err := k.InitializeIntentModule(ctx, sdk.NewCoin(types.Denom, sdk.ZeroInt()))
+		err := k.InitializeIntentModule(ctx, sdk.NewCoin(types.Denom, math.ZeroInt()))
 		if err != nil {
 			return err
 		}
@@ -58,8 +59,11 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) *types.GenesisState {
 	//var genState types.GenesisState
 	genState := *types.DefaultGenesis()
 
-	genState.Params = keeper.GetParams(ctx)
-
+	genStateParams, err := keeper.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
+	genState.Params = genStateParams
 	keeper.IterateActionInfos(ctx, func(id uint64, info types.ActionInfo) bool {
 		genState.ActionInfos = append(genState.ActionInfos, info)
 		return false

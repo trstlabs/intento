@@ -4,14 +4,16 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Parameter store keys
 var (
-	KeyDistributionProportions    = []byte("DistributionProportions")
-	KeyContributorRewardsReceiver = []byte("ContributorRewardsReceiver")
+	KeyDistributionProportions  = []byte("DistributionProportions")
+	KeyDeveloperRewardsReceiver = []byte("DeveloperRewardsReceiver")
+	KeySupplementAmount         = []byte("SupplementAmount")
 )
 
 // ParamTable for module.
@@ -23,10 +25,9 @@ func NewParams(
 	distrProportions DistributionProportions,
 	weightedDevRewardsReceivers []WeightedAddress,
 ) Params {
-
 	return Params{
-		DistributionProportions:             distrProportions,
-		WeightedContributorRewardsReceivers: weightedDevRewardsReceivers,
+		DistributionProportions:           distrProportions,
+		WeightedDeveloperRewardsReceivers: weightedDevRewardsReceivers,
 	}
 }
 
@@ -34,12 +35,12 @@ func NewParams(
 func DefaultParams() Params {
 	return Params{
 		DistributionProportions: DistributionProportions{
-			Staking:            sdk.MustNewDecFromStr("0.60"),
-			RelayerIncentives:  sdk.MustNewDecFromStr("0.10"),
-			ContributorRewards: sdk.MustNewDecFromStr("0.05"),
-			CommunityPool:      sdk.MustNewDecFromStr("0.25"),
+			RelayerIncentives: math.LegacyNewDecWithPrec(20, 2), // 20%
+			DeveloperRewards:  math.LegacyNewDecWithPrec(5, 2),  // 15%
+			CommunityPool:     math.LegacyNewDecWithPrec(15, 2), // 5%
 		},
-		WeightedContributorRewardsReceivers: []WeightedAddress{},
+		WeightedDeveloperRewardsReceivers: []WeightedAddress{},
+		SupplementAmount:                  sdk.NewCoins(),
 	}
 }
 
@@ -48,8 +49,7 @@ func (p Params) Validate() error {
 	if err := validateDistributionProportions(p.DistributionProportions); err != nil {
 		return err
 	}
-	err := validateWeightedContributorRewardsReceivers(p.WeightedContributorRewardsReceivers)
-	return err
+	return validateWeightedRewardsReceivers(p.WeightedDeveloperRewardsReceivers)
 }
 
 // Implements params.ParamSet
@@ -57,8 +57,22 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDistributionProportions, &p.DistributionProportions, validateDistributionProportions),
 		paramtypes.NewParamSetPair(
-			KeyContributorRewardsReceiver, &p.WeightedContributorRewardsReceivers, validateWeightedContributorRewardsReceivers),
+			KeyDeveloperRewardsReceiver, &p.WeightedDeveloperRewardsReceivers, validateWeightedRewardsReceivers),
+		paramtypes.NewParamSetPair(
+			KeySupplementAmount, &p.SupplementAmount, validateSupplementAmount),
 	}
+}
+
+func validateSupplementAmount(i interface{}) error {
+	v, ok := i.(sdk.Coins)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if len(v) == 0 {
+		return nil
+	}
+	return v.Validate()
 }
 
 func validateDistributionProportions(i interface{}) error {
@@ -68,33 +82,27 @@ func validateDistributionProportions(i interface{}) error {
 	}
 
 	if v.RelayerIncentives.IsNegative() {
-		return errors.New("contract incentives distribution ratio should not be negative")
+		return errors.New("NFT incentives distribution ratio should not be negative")
 	}
 
-	if v.Staking.IsNegative() {
-		return errors.New("staking distribution ratio should not be negative")
-	}
-
-	if v.ContributorRewards.IsNegative() {
+	if v.DeveloperRewards.IsNegative() {
 		return errors.New("developer rewards distribution ratio should not be negative")
 	}
 
 	if v.CommunityPool.IsNegative() {
-		return errors.New("community pool distribution ratio should not be negative")
+		return errors.New("community pool ratio should not be negative")
 	}
 
-	totalProportions := v.RelayerIncentives.Add(v.ContributorRewards)
+	totalProportions := v.RelayerIncentives.Add(v.DeveloperRewards).Add(v.CommunityPool)
 
-	// at least 60% is allocated to incentives
-
-	if !totalProportions.Sub(sdk.NewDecWithPrec(60, 2)).IsNegative() {
-		return errors.New("total distributions ratio should be at least 60%")
+	if totalProportions.GT(math.LegacyOneDec()) {
+		return errors.New("total distributions can not be higher than 100%")
 	}
 
 	return nil
 }
 
-func validateWeightedContributorRewardsReceivers(i interface{}) error {
+func validateWeightedRewardsReceivers(i interface{}) error {
 	v, ok := i.([]WeightedAddress)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -105,7 +113,7 @@ func validateWeightedContributorRewardsReceivers(i interface{}) error {
 		return nil
 	}
 
-	weightSum := sdk.NewDec(0)
+	weightSum := math.LegacyNewDec(0)
 	for i, w := range v {
 		// we allow address to be "" to go to community pool
 		if w.Address != "" {
@@ -117,13 +125,13 @@ func validateWeightedContributorRewardsReceivers(i interface{}) error {
 		if !w.Weight.IsPositive() {
 			return fmt.Errorf("non-positive weight at %dth", i)
 		}
-		if w.Weight.GT(sdk.NewDec(1)) {
+		if w.Weight.GT(math.LegacyNewDec(1)) {
 			return fmt.Errorf("more than 1 weight at %dth", i)
 		}
 		weightSum = weightSum.Add(w.Weight)
 	}
 
-	if !weightSum.Equal(sdk.NewDec(1)) {
+	if !weightSum.Equal(math.LegacyNewDec(1)) {
 		return fmt.Errorf("invalid weight sum: %s", weightSum.String())
 	}
 

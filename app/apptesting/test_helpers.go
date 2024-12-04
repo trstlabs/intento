@@ -5,33 +5,29 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	tmencoding "github.com/cometbft/cometbft/crypto/encoding"
-	tmtypesproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/cosmos/gogoproto/proto"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
-	"github.com/cosmos/ibc-go/v7/testing/simapp"
-	appProvider "github.com/cosmos/interchain-security/v4/app/provider"
-	icstestingutils "github.com/cosmos/interchain-security/v4/testutil/ibc_testing"
-	e2e "github.com/cosmos/interchain-security/v4/testutil/integration"
-	testkeeper "github.com/cosmos/interchain-security/v4/testutil/keeper"
-	consumertypes "github.com/cosmos/interchain-security/v4/x/ccv/consumer/types"
-	ccvtypes "github.com/cosmos/interchain-security/v4/x/ccv/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	"github.com/cosmos/ibc-go/v8/testing/simapp"
+	appProvider "github.com/cosmos/interchain-security/v6/app/provider"
+	icstestingutils "github.com/cosmos/interchain-security/v6/testutil/ibc_testing"
+	e2e "github.com/cosmos/interchain-security/v6/testutil/integration"
+	testkeeper "github.com/cosmos/interchain-security/v6/testutil/keeper"
+	consumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
+	providertypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
+	ccvtypes "github.com/cosmos/interchain-security/v6/x/ccv/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -84,7 +80,7 @@ type AppTestHelper struct {
 // AppTestHelper Constructor
 func (s *AppTestHelper) Setup() {
 	s.App = app.InitIntentoTestApp(true)
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypesproto.Header{Height: 1, ChainID: IntentoChainID})
+	s.Ctx = s.App.BaseApp.NewContext(false)
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
 		Ctx:             s.Ctx,
@@ -92,6 +88,7 @@ func (s *AppTestHelper) Setup() {
 	s.TestAccs = CreateRandomAccounts(4)
 	s.IbcEnabled = false
 	s.IcaAddresses = make(map[string]string)
+	s.SetupIBCChains(ibctesting.GetChainID(2))
 
 }
 
@@ -101,7 +98,7 @@ func (s *AppTestHelper) Setup() {
 func SetupSuitelessTestHelper() SuitelessAppTestHelper {
 	s := SuitelessAppTestHelper{}
 	s.App = app.InitIntentoTestApp(true)
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypesproto.Header{Height: 1, ChainID: IntentoChainID})
+	s.Ctx = s.App.BaseApp.NewContext(false)
 	return s
 }
 
@@ -151,23 +148,40 @@ func (s *AppTestHelper) SetupIBCChains(hostChainID string) {
 	// Initialize a host testing app using SimApp -> TestingApp
 	ibctesting.DefaultTestingAppInit = ibctesting.SetupTestingApp
 	s.HostChain = ibctesting.NewTestChain(s.T(), s.Coordinator, hostChainID)
-
-	// create a consumer addition prop
-	// NOTE: the initial height passed to CreateConsumerClient
-	// must be the height on the consumer when InitGenesis is called
-	prop := testkeeper.GetTestConsumerAdditionProp()
-	prop.ChainId = IntentoChainID
-	prop.UnbondingPeriod = s.ProviderApp.GetTestStakingKeeper().UnbondingTime(s.ProviderChain.GetContext())
-	prop.InitialHeight = clienttypes.Height{RevisionNumber: 0, RevisionHeight: 3}
-
+	// bundle := icstestingutils.AddConsumer[icstestutil.ProviderApp, icstestutil.ConsumerApp](
+	// 	s.Coordinator,
+	// 	&s.Suite,
+	// 	0,
+	// 	testutil.SetupValSetAppIniter,
+	// )
 	// create a consumer client on the provider chain
 	providerKeeper := s.ProviderApp.GetProviderKeeper()
-	err := providerKeeper.CreateConsumerClient(
+	providerKeeper.SetConsumerChainId(s.ProviderChain.GetContext(), IntentoChainID, "chainID")
+	//prop := testkeeper.GetTestConsumerMetadata()
+	err := providerKeeper.SetConsumerMetadata(s.ProviderChain.GetContext(), IntentoChainID, testkeeper.GetTestConsumerMetadata())
+	s.Require().NoError(err)
+	err = providerKeeper.SetConsumerInitializationParameters(s.ProviderChain.GetContext(), IntentoChainID, testkeeper.GetTestInitializationParameters())
+	s.Require().NoError(err)
+	err = providerKeeper.SetConsumerPowerShapingParameters(s.ProviderChain.GetContext(), IntentoChainID, testkeeper.GetTestPowerShapingParameters())
+	s.Require().NoError(err)
+	providerKeeper.SetConsumerPhase(s.ProviderChain.GetContext(), IntentoChainID, providertypes.CONSUMER_PHASE_INITIALIZED)
+	err = providerKeeper.CreateConsumerClient(
 		s.ProviderChain.GetContext(),
-		prop,
+		IntentoChainID,
+		[]byte{},
 	)
 	s.Require().NoError(err)
+	err = providerKeeper.AppendConsumerToBeLaunched(s.ProviderChain.GetContext(), IntentoChainID, s.Coordinator.CurrentTime)
+	s.Require().NoError(err)
 
+	// opt-in all validators
+	lastVals, err := providerKeeper.GetLastBondedValidators(s.ProviderChain.GetContext())
+	s.Require().NoError(err)
+
+	for _, v := range lastVals {
+		consAddr, _ := v.GetConsAddr()
+		providerKeeper.SetOptedIn(s.ProviderChain.GetContext(), IntentoChainID, providertypes.NewProviderConsAddress(consAddr))
+	}
 	// move provider and host chain to next block
 	s.Coordinator.CommitBlock(s.ProviderChain)
 	s.Coordinator.CommitBlock(s.HostChain)
@@ -548,42 +562,6 @@ func (s *AppTestHelper) MockICAChannel(connectionId, channelId, owner, address s
 	// Then set the address and make the channel active
 	s.App.ICAControllerKeeper.SetInterchainAccountAddress(s.Ctx, connectionId, portId, address)
 	s.App.ICAControllerKeeper.SetActiveChannelID(s.Ctx, connectionId, portId, channelId)
-}
-
-func (s *AppTestHelper) ConfirmUpgradeSucceededs(upgradeName string, upgradeHeight int64) {
-	s.Ctx = s.Ctx.WithBlockHeight(upgradeHeight - 1)
-	plan := upgradetypes.Plan{
-		Name:   upgradeName,
-		Height: upgradeHeight,
-	}
-
-	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
-	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
-
-	s.Ctx = s.Ctx.WithBlockHeight(upgradeHeight)
-	s.Require().NotPanics(func() {
-		beginBlockRequest := abci.RequestBeginBlock{}
-		s.App.BeginBlocker(s.Ctx, beginBlockRequest)
-	})
-}
-
-// Returns the bank store key prefix for an address and denom
-// Useful for testing balance ICQs
-func (s *AppTestHelper) GetBankStoreKeyPrefix(address, denom string) []byte {
-	_, addressBz, err := bech32.DecodeAndConvert(address)
-	s.Require().NoError(err, "no error expected when bech decoding address")
-	return append(banktypes.CreateAccountBalancesPrefix(addressBz), []byte(denom)...)
-}
-
-// Extracts the address and denom from a bank store prefix
-// Useful for testing balance ICQs as it can confirm that the serialized query request
-// data has the proper address and denom
-func (s *AppTestHelper) ExtractAddressAndDenomFromBankPrefix(data []byte) (address, denom string) {
-	addressBz, denom, err := banktypes.AddressAndDenomFromBalancesStore(data[1:]) // Remove BalancePrefix byte
-	s.Require().NoError(err, "no error expected when getting address and denom from balance store")
-	return addressBz.String(), denom
 }
 
 // Generates a valid and invalid test address (used for non-keeper tests)

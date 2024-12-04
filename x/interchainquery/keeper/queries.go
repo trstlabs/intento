@@ -6,15 +6,16 @@ import (
 	"strings"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
-
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 
 	"github.com/trstlabs/intento/x/interchainquery/types"
 )
@@ -70,7 +71,8 @@ func (k Keeper) ValidateQuery(ctx sdk.Context, query types.Query) error {
 // GetQuery returns query
 func (k Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) {
 	query := types.Query{}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
+	kvStore := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(kvStore, types.KeyPrefixQuery)
 	bz := store.Get([]byte(id))
 	if len(bz) == 0 {
 		return query, false
@@ -81,14 +83,16 @@ func (k Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) {
 
 // SetQuery set query info
 func (k Keeper) SetQuery(ctx sdk.Context, query types.Query) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
+	kvStore := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(kvStore, types.KeyPrefixQuery)
 	bz := k.cdc.MustMarshal(&query)
 	store.Set([]byte(query.Id), bz)
 }
 
 // DeleteQuery delete query info
 func (k Keeper) DeleteQuery(ctx sdk.Context, id string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
+	kvStore := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(kvStore, types.KeyPrefixQuery)
 	store.Delete([]byte(id))
 }
 
@@ -96,7 +100,7 @@ func (k Keeper) DeleteQuery(ctx sdk.Context, id string) {
 // This is implemented using a counter that increments every time a UID is retrieved
 // The uid is returned as a byte array since it's appended to the serialized query key
 func (k Keeper) GetQueryUID(ctx sdk.Context) []byte {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	uidBz := store.Get(types.KeyQueryCounter)
 
 	// Initialize the UID if there is nothing in the store yet
@@ -117,8 +121,9 @@ func (k Keeper) GetQueryUID(ctx sdk.Context) []byte {
 
 // IterateQueries iterate through queries
 func (k Keeper) IterateQueries(ctx sdk.Context, fn func(index int64, queryInfo types.Query) (stop bool)) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	kvStore := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(kvStore, types.KeyPrefixQuery)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)

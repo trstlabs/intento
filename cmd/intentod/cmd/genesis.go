@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -22,13 +23,14 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibctypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	"github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
-	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	ccvprovidertypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
-	ccvtypes "github.com/cosmos/interchain-security/v4/x/ccv/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibctypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	"github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
+	ibctmtypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
+	ccvprovidertypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
+	ccvtypes "github.com/cosmos/interchain-security/v6/x/ccv/types"
 	"github.com/spf13/cobra"
 	"github.com/trstlabs/intento/app"
 	alloctypes "github.com/trstlabs/intento/x/alloc/types"
@@ -69,7 +71,7 @@ type GenesisParams struct {
 	IcaParams            icatypes.Params
 	IntentParams         intenttypes.Params
 	WasmParams           wasmtypes.Params
-	ConsumerGenesisState ccvtypes.ConsumerGenesisState
+	ConsumerGenesisState ccvconsumertypes.GenesisState
 }
 
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {
@@ -122,7 +124,7 @@ Example:
 			}
 			genDoc.GenesisTime = genesisParams.GenesisTime
 			genDoc.ChainID = chainID
-			genDoc.ConsensusParams = genesisParams.ConsensusParams
+			// genDoc.ConsensusParams = genesisParams.ConsensusParams
 
 			// validate genesis state
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, appState); err != nil {
@@ -293,7 +295,7 @@ func PrepareGenesis(
 func MainnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
-	genParams.AirdropSupply = sdk.NewInt(100_000_000_000_000)             // (100M INTO)
+	genParams.AirdropSupply = math.NewInt(100_000_000_000_000)            // (100M INTO)
 	genParams.GenesisTime = time.Date(2023, 02, 1, 17, 0, 0, 0, time.UTC) // 2023 2 Feb - 17:00 UTC
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{
@@ -320,7 +322,7 @@ func MainnetGenesisParams() GenesisParams {
 	genesisState.Params.Enabled = true
 	genesisState.NewChain = true
 	genesisState.Provider.ClientState = ccvprovidertypes.DefaultParams().TemplateClient
-	genesisState.Provider.ClientState.ChainId = ChainID
+	//genesisState.Provider.ClientState.ChainId = ChainID
 	genesisState.Provider.ClientState.LatestHeight = ibctypes.Height{RevisionNumber: 0, RevisionHeight: 1}
 	trustPeriod, err := ccvtypes.CalculateTrustPeriod(genesisState.Params.UnbondingPeriod, ccvprovidertypes.DefaultTrustingPeriodFraction)
 	if err != nil {
@@ -336,23 +338,22 @@ func MainnetGenesisParams() GenesisParams {
 
 	// alloc
 	genParams.AllocParams = alloctypes.DefaultParams()
-	genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
-		Staking:                     sdk.MustNewDecFromStr("0.45"),
-		CommunityPool:               sdk.MustNewDecFromStr("0.45"),
-		TrustlessContractIncentives: sdk.MustNewDecFromStr("0.00"),
-		RelayerIncentives:           sdk.MustNewDecFromStr("0.10"),
-		//ItemIncentives:              sdk.MustNewDecFromStr("0.05"),
-		ContributorRewards: sdk.MustNewDecFromStr("0.00"),
-	}
+	// genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
+	// 	Staking:                     sdk.MustNewDecFromStr("0.45"),
+	// 	CommunityPool:               sdk.MustNewDecFromStr("0.45"),
+	// 	TrustlessContractIncentives: sdk.MustNewDecFromStr("0.00"),
+	// 	RelayerIncentives:           sdk.MustNewDecFromStr("0.10"),
+	// 	DeveloperRewards: sdk.MustNewDecFromStr("0.00"),
+	// }
 	//genParams.AllocParams.WeightedContributorRewardsReceivers = []alloctypes.WeightedAddress{}
 
 	// mint
 	genParams.MintParams = minttypes.DefaultParams()
 	genParams.MintParams.MintDenom = BaseCoinUnit
 	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(0, 6, 0)
-	genParams.MintParams.InitialAnnualProvisions = sdk.NewDec(150_000_000_000_000)
+	genParams.MintParams.InitialAnnualProvisions = math.LegacyNewDec(150_000_000_000_000)
 
-	genParams.MintParams.ReductionFactor = sdk.NewDec(3).QuoInt64(4)
+	genParams.MintParams.ReductionFactor = math.LegacyNewDec(3).QuoInt64(4)
 	//31,536,000 seconds a year
 	genParams.MintParams.BlocksPerYear = uint64(31540000 / 2) //assuming 2s average block times, param to be updated periodically
 	// staking
@@ -365,7 +366,7 @@ func MainnetGenesisParams() GenesisParams {
 	// distr
 	genParams.DistributionParams = distributiontypes.DefaultParams()
 
-	genParams.DistributionParams.CommunityTax = sdk.MustNewDecFromStr("0.05")
+	genParams.DistributionParams.CommunityTax = math.LegacyNewDecWithPrec(5, 2)
 	genParams.DistributionParams.WithdrawAddrEnabled = true
 	// gov
 	genParams.GovParams = govtypesv1.DefaultParams()
@@ -373,7 +374,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.GovParams.MaxDepositPeriod = &maxDepositPeriod
 	genParams.GovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
-		sdk.NewInt(1_000_000_000),
+		math.NewInt(1_000_000_000),
 	))
 	genParams.GovParams.Quorum = "0.200000000000000000" // 20%
 	votingPeriod := time.Hour * 24 * 3                  // 3 days
@@ -381,15 +382,15 @@ func MainnetGenesisParams() GenesisParams {
 	// crisis
 	genParams.CrisisConstantFee = sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
-		sdk.NewInt(100_000_000_000),
+		math.NewInt(100_000_000_000),
 	)
 	// slash
 	genParams.SlashingParams = slashingtypes.DefaultParams()
-	genParams.SlashingParams.SignedBlocksWindow = int64(25000)                       // ~41 hr at 6 second blocks
-	genParams.SlashingParams.MinSignedPerWindow = sdk.MustNewDecFromStr("0.05")      // 5% minimum liveness
-	genParams.SlashingParams.DowntimeJailDuration = time.Minute                      // 1 minute jail period
-	genParams.SlashingParams.SlashFractionDoubleSign = sdk.MustNewDecFromStr("0.05") // 5% double sign slashing
-	genParams.SlashingParams.SlashFractionDowntime = sdk.MustNewDecFromStr("0.0001") // 0.01% liveness slashing               // 0% liveness slashing
+	genParams.SlashingParams.SignedBlocksWindow = int64(25000)                         // ~41 hr at 6 second blocks
+	genParams.SlashingParams.MinSignedPerWindow = math.LegacyNewDecWithPrec(5, 2)      // 5% minimum liveness
+	genParams.SlashingParams.DowntimeJailDuration = time.Minute                        // 1 minute jail period
+	genParams.SlashingParams.SlashFractionDoubleSign = math.LegacyNewDecWithPrec(5, 2) // 5% double sign slashing
+	genParams.SlashingParams.SlashFractionDowntime = math.LegacyNewDecWithPrec(1, 4)   // 0.01% liveness slashing               // 0% liveness slashing
 
 	genParams.WasmParams = wasmtypes.DefaultParams()
 
@@ -401,7 +402,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.IntentParams.ActionFundsCommission = 2
 	genParams.IntentParams.ActionConstantFee = 10_000
 	genParams.IntentParams.ActionFlexFeeMul = 10
-	genParams.IntentParams.GasFeeCoins = sdk.Coins(sdk.NewCoins(sdk.NewCoin(BaseCoinUnit, sdk.OneInt())))
+	genParams.IntentParams.GasFeeCoins = sdk.Coins(sdk.NewCoins(sdk.NewCoin(BaseCoinUnit, math.OneInt())))
 	genParams.IntentParams.RelayerRewards = []int64{10_000, 15_000, 18_000, 22_000}
 
 	//claim
@@ -441,7 +442,7 @@ func TestnetGenesisParams() GenesisParams {
 	//gov
 	genParams.GovParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
-		sdk.NewInt(1_000_000), // 1 INTO
+		math.NewInt(1_000_000), // 1 INTO
 	))
 	genParams.GovParams.Quorum = "0.100000000000000000" // 10%
 	votingPeriod := time.Minute

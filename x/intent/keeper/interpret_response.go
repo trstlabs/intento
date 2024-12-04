@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -336,7 +337,7 @@ func ParseOperand(operand string, responseType string) (interface{}, error) {
 		return coins, err
 	case "sdk.Int":
 		var sdkInt sdkmath.Int
-		sdkInt, ok := sdk.NewIntFromString(operand)
+		sdkInt, ok := math.NewIntFromString(operand)
 		if !ok {
 			return nil, fmt.Errorf("unsupported int operand")
 		}
@@ -393,9 +394,9 @@ func ParseICQResponse(response []byte, valueType string) (interface{}, error) {
 		err := json.Unmarshal(response, &strings)
 		return strings, err
 	case "[]sdk.Int":
-		var ints []sdk.Int
+		var ints []math.Int
 		for len(response) > 0 {
-			var intVal sdk.Int
+			var intVal math.Int
 			if err := intVal.Unmarshal(response); err != nil {
 				return nil, err
 			}
@@ -537,8 +538,8 @@ func remainingBytesAfterCoinUnmarshal(coin sdk.Coin, response []byte) ([]byte, e
 	return response[len(encodedCoin):], nil
 }
 
-// remainingBytesAfterIntUnmarshal calculates the remaining bytes after an sdk.Int is unmarshalled
-func remainingBytesAfterIntUnmarshal(intVal sdk.Int, response []byte) ([]byte, error) {
+// remainingBytesAfterIntUnmarshal calculates the remaining bytes after an math.Int is unmarshalled
+func remainingBytesAfterIntUnmarshal(intVal math.Int, response []byte) ([]byte, error) {
 	encodedInt, err := intVal.Marshal()
 	if err != nil {
 		return nil, err

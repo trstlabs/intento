@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
+	math "cosmossdk.io/math"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
@@ -20,7 +20,8 @@ import (
 func newFakeMsgWithdrawDelegatorReward(delegator sdk.AccAddress, validator stakingtypes.Validator) *distrtypes.MsgWithdrawDelegatorReward {
 	msgWithdrawDelegatorReward := &distrtypes.MsgWithdrawDelegatorReward{
 		DelegatorAddress: delegator.String(),
-		ValidatorAddress: validator.GetOperator().String(),
+		//ValidatorAddress: validator.GetOperator().String(),
+		ValidatorAddress: validator.GetOperator(),
 	}
 	return msgWithdrawDelegatorReward
 }
@@ -28,8 +29,8 @@ func newFakeMsgWithdrawDelegatorReward(delegator sdk.AccAddress, validator staki
 func newFakeMsgDelegate(delegator sdk.AccAddress, validator stakingtypes.Validator) *stakingtypes.MsgDelegate {
 	MsgDelegate := &stakingtypes.MsgDelegate{
 		DelegatorAddress: delegator.String(),
-		ValidatorAddress: validator.GetOperator().String(),
-		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000)),
+		ValidatorAddress: validator.GetOperator(),
+		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000)),
 	}
 	return MsgDelegate
 }
@@ -38,13 +39,13 @@ func newFakeMsgSend(fromAddr sdk.AccAddress, toAddr sdk.AccAddress) *banktypes.M
 	msgSend := &banktypes.MsgSend{
 		FromAddress: fromAddr.String(),
 		ToAddress:   toAddr.String(),
-		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 	}
 	return msgSend
 }
 
 func TestSendLocalTx(t *testing.T) {
-	ctx, keepers, addr1, _, addr2, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keepers, addr1, _, addr2, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keepers.accountKeeper, keepers.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 
@@ -64,7 +65,7 @@ func TestSendLocalTx(t *testing.T) {
 }
 
 func TestSendLocalTxAutocompound(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 
@@ -78,60 +79,62 @@ func TestSendLocalTxAutocompound(t *testing.T) {
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward, msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{UseResponseValue: &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "sdk.Int"}}
-	delegations := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
-	require.Equal(t, delegations[0].Shares.TruncateInt64(), sdk.NewDec(77).TruncateInt64())
+	delegations, _ := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
+	require.Equal(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
 	executedLocally, _, err := keeper.TriggerAction(ctx, &actionInfo)
 	require.NoError(t, err)
 	require.True(t, executedLocally)
 
-	delegations = keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
-	require.Greater(t, delegations[0].Shares.TruncateInt64(), sdk.NewDec(77).TruncateInt64())
+	delegations, _ = keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
+	require.Greater(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
 }
 
 func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.AccAddress) (stakingtypes.Validator, sdk.Context) {
-	val := keepers.stakingKeeper.GetAllValidators(ctx)[0]
-	require.NotEmpty(t, val)
+	vals, _ := keepers.stakingKeeper.GetAllValidators(ctx)
+	require.NotEmpty(t, vals)
+	val := vals[0]
+	val.Tokens = math.NewInt(5000)
+	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
+	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
-	val.Tokens = sdk.NewInt(5000)
-	val.DelegatorShares = sdk.NewDecFromInt(val.Tokens)
-	val.Commission = stakingtypes.NewCommission(sdk.NewDecWithPrec(5, 1), sdk.NewDecWithPrec(5, 1), sdk.NewDec(0))
 	keepers.stakingKeeper.SetValidator(ctx, val)
 
-	keepers.distrKeeper.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 2, distrtypes.ValidatorHistoricalRewards{
+	keepers.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddr, 2, distrtypes.ValidatorHistoricalRewards{
 		CumulativeRewardRatio: sdk.DecCoins{},
 		ReferenceCount:        2,
 	})
-	keepers.distrKeeper.SetValidatorCurrentRewards(ctx, val.GetOperator(), distrtypes.ValidatorCurrentRewards{
+	keepers.distrKeeper.SetValidatorCurrentRewards(ctx, valAddr, distrtypes.ValidatorCurrentRewards{
 		Rewards: sdk.DecCoins{},
 		Period:  3,
 	})
 	count := keepers.distrKeeper.GetValidatorHistoricalReferenceCount(ctx)
 	require.Equal(t, uint64(2), count)
-	rewards := keepers.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator())
+	rewards, _ := keepers.distrKeeper.GetValidatorCurrentRewards(ctx, valAddr)
 	require.Equal(t, uint64(3), rewards.Period)
 
-	newShares, err := keepers.stakingKeeper.Delegate(ctx, delAddr, sdk.NewInt(77), stakingtypes.Unbonded, val, true)
+	newShares, err := keepers.stakingKeeper.Delegate(ctx, delAddr, math.NewInt(77), stakingtypes.Unbonded, val, true)
 	require.NoError(t, err)
-	require.Equal(t, newShares, sdk.NewDec(77))
+	require.Equal(t, newShares, math.LegacyNewDec(77))
 
-	decCoins := sdk.NewDecCoins(sdk.NewDecCoin("stake", sdk.NewInt(6666)))
+	decCoins := sdk.NewDecCoins(sdk.NewDecCoin("stake", math.NewInt(6666)))
 	keepers.distrKeeper.AllocateTokensToValidator(ctx, val, decCoins)
-	keepers.distrKeeper.SetValidatorCurrentRewards(ctx, val.GetOperator(), distrtypes.NewValidatorCurrentRewards(decCoins, 3))
+	keepers.distrKeeper.SetValidatorCurrentRewards(ctx, valAddr, distrtypes.NewValidatorCurrentRewards(decCoins, 3))
 	keepers.distrKeeper.IncrementValidatorPeriod(ctx, val)
 	ctx = nextStakingBlock(ctx, keepers.stakingKeeper)
 
-	keepers.distrKeeper.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 3, distrtypes.ValidatorHistoricalRewards{
+	keepers.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddr, 3, distrtypes.ValidatorHistoricalRewards{
 		CumulativeRewardRatio: decCoins,
 		ReferenceCount:        2,
 	})
 
-	rewards = keepers.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator())
+	rewards, _ = keepers.distrKeeper.GetValidatorCurrentRewards(ctx, valAddr)
 	require.Equal(t, uint64(4), rewards.Period)
 
 	count = keepers.distrKeeper.GetValidatorHistoricalReferenceCount(ctx)
 	require.Equal(t, uint64(2), count)
 
-	keepers.distrKeeper.SetValidatorCurrentRewards(ctx, val.GetOperator(), distrtypes.ValidatorCurrentRewards{
+	keepers.distrKeeper.SetValidatorCurrentRewards(ctx, valAddr, distrtypes.ValidatorCurrentRewards{
 		Rewards: decCoins,
 		Period:  4,
 	})
@@ -157,9 +160,10 @@ func createBaseActionInfo(ownerAddr sdk.AccAddress, actionAddr sdk.AccAddress) t
 // Basically, it lets blocks pass
 func nextStakingBlock(ctx sdk.Context, stakingKeeper stakingkeeper.Keeper) sdk.Context {
 	// for i := 0; i < count; i++ {
-	staking.EndBlocker(ctx, &stakingKeeper)
+	stakingKeeper.EndBlocker(ctx)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	staking.BeginBlocker(ctx, &stakingKeeper)
+	stakingKeeper.BeginBlocker(ctx)
+	//staking.BeginBlocker(ctx, &stakingKeeper)
 	return ctx
 	// }
 }

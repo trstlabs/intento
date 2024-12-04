@@ -5,23 +5,21 @@ import (
 	"testing"
 	"time"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/spf13/cast"
 
 	//"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/stretchr/testify/suite"
 	icaapp "github.com/trstlabs/intento/app"
 	apptesting "github.com/trstlabs/intento/app/apptesting"
-	keeper "github.com/trstlabs/intento/x/intent/keeper"
 	"github.com/trstlabs/intento/x/intent/types"
 	icqtypes "github.com/trstlabs/intento/x/interchainquery/types"
 )
@@ -34,7 +32,7 @@ var (
 	TestOwnerAddress = "into17dtl0mjt3t77kpuhg2edqzjpszulwhgznsqmhz"
 	// TestPortID defines a resuable port identifier for testing purposes
 	TestPortID, _ = icatypes.NewControllerPortID(TestOwnerAddress)
-	// TestVersion defines a resuable interchainaccounts version string for testing purposes
+	// TestVersion defines a resuable interIntentoChainccounts version string for testing purposes
 	TestVersion = string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
 		Version:                icatypes.Version,
 		ControllerConnectionId: ibctesting.FirstConnectionID,
@@ -45,14 +43,13 @@ var (
 )
 
 // KeeperTestSuite is a testing suite to test keeper functions
+
 type KeeperTestSuite struct {
-	suite.Suite
+	apptesting.AppTestHelper
+}
 
-	coordinator *ibctesting.Coordinator
-
-	// testing chains used for convenience and readability
-	chainA *apptesting.TestChain
-	chainB *apptesting.TestChain
+func (s *KeeperTestSuite) SetupTest() {
+	s.Setup()
 }
 
 func GetICAApp(chain *ibctesting.TestChain) *icaapp.IntoApp {
@@ -64,19 +61,19 @@ func GetICAApp(chain *ibctesting.TestChain) *icaapp.IntoApp {
 	return app
 }
 
-func GetActionKeeper(chain *apptesting.TestChain) keeper.Keeper {
-	app, ok := chain.App.(*icaapp.IntoApp)
-	if !ok {
-		panic("not ica app")
-	}
+// func GetActionKeeper(chain *apptesting.TestChain) keeper.Keeper {
+// 	app, ok := chain.App.(*icaapp.IntoApp)
+// 	if !ok {
+// 		panic("not ica app")
+// 	}
 
-	return app.IntentKeeper
-}
+// 	return app.IntentKeeper
+// }
 
-func GetActionKeeperFromApp(app *icaapp.IntoApp) keeper.Keeper {
+// func GetActionKeeperFromApp(app *icaapp.IntoApp) keeper.Keeper {
 
-	return app.IntentKeeper
-}
+// 	return app.IntentKeeper
+// }
 
 // TestKeeperTestSuite runs all the tests within this package.
 func TestKeeperTestSuite(t *testing.T) {
@@ -84,16 +81,16 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 // SetupTest creates a coordinator with 2 test chains.
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
-	ibctesting.DefaultTestingAppInit = apptesting.SetupTestingApp
-	suite.chainA = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1))}
-	suite.chainB = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2))}
+// func (suite *KeeperTestSuite) SetupTest() {
+// 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+// 	ibctesting.DefaultTestingAppInit = apptesting.SetupTestingApp
+// 	suite.IntentoChain = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1))}
+// 	suite.HostChain = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2))}
 
-}
+// }
 
-func NewICAPath(chainA, chainB *apptesting.TestChain) *ibctesting.Path {
-	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
+func NewICAPath(IntentoChain, HostChain *ibctesting.TestChain) *ibctesting.Path {
+	path := ibctesting.NewPath(IntentoChain, HostChain)
 	path.EndpointA.ChannelConfig.PortID = icatypes.HostPortID
 	path.EndpointB.ChannelConfig.PortID = icatypes.HostPortID
 	path.EndpointA.ChannelConfig.Order = channeltypes.ORDERED
@@ -105,8 +102,8 @@ func NewICAPath(chainA, chainB *apptesting.TestChain) *ibctesting.Path {
 }
 
 // ToDo: Move this to osmosistesting to avoid repetition
-func NewTransferPath(chainA, chainB *apptesting.TestChain) *ibctesting.Path {
-	path := ibctesting.NewPath(chainA.TestChain, chainB.TestChain)
+func NewTransferPath(IntentoChain, HostChain *ibctesting.TestChain) *ibctesting.Path {
+	path := ibctesting.NewPath(IntentoChain, HostChain)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointA.ChannelConfig.Version = transfertypes.Version
@@ -115,8 +112,9 @@ func NewTransferPath(chainA, chainB *apptesting.TestChain) *ibctesting.Path {
 	return path
 }
 
-// SetupICAPath invokes the InterchainAccounts entrypoint and subsequent channel handshake handlers
+// SetupICAPath invokes the InterIntentoChainccounts entrypoint and subsequent channel handshake handlers
 func SetupICAPath(path *ibctesting.Path, owner string) error {
+
 	if err := RegisterInterchainAccount(path.EndpointA, owner); err != nil {
 		return err
 	}
@@ -164,16 +162,16 @@ func (suite *KeeperTestSuite) receiveTransferPacket(receiver, memo string) []byt
 
 func (suite *KeeperTestSuite) receiveTransferPacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
 	// fmt.Println(memo)
-	path := NewTransferPath(suite.chainA, suite.chainB)
+	path := NewTransferPath(suite.IntentoChain, suite.HostChain)
 
-	suite.coordinator.Setup(path)
-	channelCap := suite.chainB.GetChannelCapability(
+	suite.Coordinator.Setup(path)
+	channelCap := suite.HostChain.GetChannelCapability(
 		path.EndpointB.ChannelConfig.PortID,
 		path.EndpointB.ChannelID)
 	packet := suite.makeMockPacket(receiver, memo, prevSequence, path)
 
-	_, err := suite.chainB.GetIntoApp().IBCKeeper.ChannelKeeper.SendPacket(
-		suite.chainB.GetContext(), channelCap, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, clienttypes.ZeroHeight(), uint64(suite.chainB.GetContext().BlockTime().Add(time.Minute).UnixNano()), packet.Data)
+	_, err := suite.HostChain.App.GetIBCKeeper().ChannelKeeper.SendPacket(
+		suite.HostChain.GetContext(), channelCap, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, clienttypes.ZeroHeight(), uint64(suite.HostChain.GetContext().BlockTime().Add(time.Minute).UnixNano()), packet.Data)
 	suite.Require().NoError(err, "IBC send failed. Expected success. %s", err)
 
 	// Update both clients
@@ -206,7 +204,7 @@ func (suite *KeeperTestSuite) makeMockPacket(receiver, memo string, prevSequence
 	packetData := transfertypes.FungibleTokenPacketData{
 		Denom:    sdk.DefaultBondDenom,
 		Amount:   "1000000",
-		Sender:   suite.chainB.SenderAccount.GetAddress().String(),
+		Sender:   suite.HostChain.SenderAccount.GetAddress().String(),
 		Receiver: receiver,
 		Memo:     memo,
 	}
@@ -219,23 +217,23 @@ func (suite *KeeperTestSuite) makeMockPacket(receiver, memo string, prevSequence
 		path.EndpointA.ChannelConfig.PortID,
 		path.EndpointA.ChannelID,
 		clienttypes.ZeroHeight(),
-		uint64(suite.chainB.GetContext().BlockTime().Add(time.Minute).UnixNano()),
+		uint64(suite.HostChain.GetContext().BlockTime().Add(time.Minute).UnixNano()),
 	)
 }
 
 func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse(ICQConfig types.ICQConfig, id uint64) (icqtypes.MsgSubmitQueryResponse, icqtypes.Query) {
 	// define the query
 
-	h := GetLightClientHeight(*s.chainA.GetIntoApp().IBCKeeper, s.chainA.GetContext(), ICQConfig.ConnectionId)
+	h := GetLightClientHeight(*s.IntentoChain.App.GetIBCKeeper(), s.IntentoChain.GetContext(), ICQConfig.ConnectionId)
 
 	height := int64(h - 1) // start at the (LC height) - 1  height, which is the height the query executes at!
 	result := []byte("result-example")
 	proofOps := crypto.ProofOps{}
-	fromAddress := s.chainA.SenderAccount.String()
+	fromAddress := s.IntentoChain.SenderAccount.String()
 	//expectedId := "9792c1d779a3846a8de7ae82f31a74d308b279a521fa9e0d5c4f08917117bf3e"
 
-	_, addr, _ := bech32.DecodeAndConvert(s.chainA.SenderAccount.String())
-	data := banktypes.CreateAccountBalancesPrefix(addr)
+	_, addr, _ := bech32.DecodeAndConvert(s.IntentoChain.SenderAccount.String())
+	//data := banktypes.CreateAccountBalancesPrefix(addr)
 	ID := strconv.FormatUint(id, 10)
 	timeoutDuration := time.Minute
 	query := icqtypes.Query{
@@ -245,9 +243,9 @@ func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse(ICQConfig types.ICQConfig,
 		ChainId:          ICQConfig.ChainId,
 		ConnectionId:     ICQConfig.ConnectionId,
 		QueryType:        ICQConfig.QueryType, // intentionally leave off key to skip proof
-		RequestData:      append(data, []byte(apptesting.HostChainId)...),
+		RequestData:      addr,                //append(data, []byte(apptesting.HostChainId)...),
 		TimeoutDuration:  timeoutDuration,
-		TimeoutTimestamp: uint64(s.chainA.GetContext().BlockTime().Add(timeoutDuration).UnixNano()),
+		TimeoutTimestamp: uint64(s.IntentoChain.GetContext().BlockTime().Add(timeoutDuration).UnixNano()),
 	}
 
 	return icqtypes.MsgSubmitQueryResponse{

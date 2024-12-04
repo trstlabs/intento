@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdktypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +15,7 @@ import (
 
 func TestDistributeCoinsNotRecurring(t *testing.T) {
 
-	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 
 	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 30_000_000)))
 
@@ -21,7 +23,7 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 		ActionFundsCommission: 10,
 		ActionConstantFee:     1_000_000, // 1trst
 		ActionFlexFeeMul:      10,
-		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))),
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1))),
 		MaxActionDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
 		MinActionDuration:     time.Second * 60,
 		MinActionInterval:     time.Second * 20,
@@ -35,15 +37,19 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime,
 	}
 
-	val := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
-	require.Equal(t, sdk.ZeroDec(), keeper.distrKeeper.GetValidatorCurrentRewards(ctx, val.GetOperator()).Rewards.AmountOf(sdk.DefaultBondDenom))
+	val, _ := keeper.stakingKeeper.ValidatorByConsAddr(ctx, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
+	rewards, err := keeper.distrKeeper.GetValidatorCurrentRewards(ctx, sdk.ValAddress(val.GetOperator()))
+	require.Nil(t, err)
+
+	require.Equal(t, math.LegacyZeroDec(), rewards.Rewards.AmountOf(sdk.DefaultBondDenom))
 	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1_0000_000)
 	require.Nil(t, err)
 	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, types.Denom, ctx.BlockHeader().ProposerAddress)
 	require.Nil(t, err)
 
-	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
-	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt().String(), fee.Amount.String())
+	feePool, err := keeper.distrKeeper.FeePool.Get(ctx)
+	require.Nil(t, err)
+	require.Equal(t, feePool.CommunityPool.AmountOf(types.Denom).TruncateInt().String(), fee.Amount.String())
 	require.Equal(t, sdk.NewInt64Coin(denom, 30_000_000), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom).Add(fee))
 
 }
@@ -56,7 +62,7 @@ func TestDistributeCoinsOwnerFeeFallbackLastExec(t *testing.T) {
 		ActionFundsCommission: 2,
 		ActionConstantFee:     1_000_000, // 1trst
 		ActionFlexFeeMul:      10,
-		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))),
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1))),
 		MaxActionDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
 		MinActionDuration:     time.Second * 60,
 		MinActionInterval:     time.Second * 20,
@@ -70,7 +76,7 @@ func TestDistributeCoinsOwnerFeeFallbackLastExec(t *testing.T) {
 	actionInfo := types.ActionInfo{
 		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime, Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
 	}
-	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1_0000_000)
 	require.Nil(t, err)
 	require.NotEmpty(t, denom)
@@ -78,10 +84,11 @@ func TestDistributeCoinsOwnerFeeFallbackLastExec(t *testing.T) {
 	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, denom, ctx.BlockHeader().ProposerAddress)
 	require.Nil(t, err)
 
-	require.Equal(t, sdk.NewCoin(types.Denom, sdk.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, feeAddr, types.Denom))
+	require.Equal(t, sdk.NewCoin(types.Denom, math.NewInt(0)), keeper.bankKeeper.GetBalance(ctx, feeAddr, types.Denom))
 
-	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
-	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt(), fee.Amount)
+	feePool, err := keeper.distrKeeper.FeePool.Get(ctx)
+	require.Nil(t, err)
+	require.Equal(t, feePool.CommunityPool.AmountOf(types.Denom).TruncateInt().String(), fee.Amount.String())
 	require.Equal(t, sdk.NewInt64Coin(denom, 30_000_000), keeper.bankKeeper.GetBalance(ctx, ownerAddr, types.Denom).Add(fee))
 
 }
@@ -95,7 +102,7 @@ func TestDistributeCoinsEmptyActionBalance(t *testing.T) {
 		ActionFundsCommission: 2,
 		ActionConstantFee:     1_000_000, // 1trst
 		ActionFlexFeeMul:      100,
-		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))),
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1))),
 		MaxActionDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
 		MinActionDuration:     time.Second * 60,
 		MinActionInterval:     time.Second * 60,
@@ -110,7 +117,7 @@ func TestDistributeCoinsEmptyActionBalance(t *testing.T) {
 		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
-	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 	_, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1_0000_000)
 	require.Nil(t, err)
 	require.Empty(t, denom)
@@ -124,7 +131,7 @@ func TestDistributeCoinsEmptyOwnerBalanceAndMultipliedFlexFee(t *testing.T) {
 		ActionFundsCommission: 2,
 		ActionConstantFee:     1_000_000, // 1trst
 		ActionFlexFeeMul:      250,       // 250/100 = 2.5x
-		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1))),
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1))),
 		MaxActionDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
 		MinActionDuration:     time.Second * 60,
 		MinActionInterval:     time.Second * 20,
@@ -139,7 +146,7 @@ func TestDistributeCoinsEmptyOwnerBalanceAndMultipliedFlexFee(t *testing.T) {
 		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
-	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, actionInfo, 1_0000_000)
 	require.Nil(t, err)
 	require.NotEmpty(t, denom)
@@ -147,8 +154,9 @@ func TestDistributeCoinsEmptyOwnerBalanceAndMultipliedFlexFee(t *testing.T) {
 	fee, err := keeper.DistributeCoins(ctx, actionInfo, acc, denom, ctx.BlockHeader().ProposerAddress)
 	require.Nil(t, err)
 
-	feePool := keeper.distrKeeper.GetFeePool(ctx).CommunityPool
-	require.Equal(t, feePool.Sort().AmountOf(types.Denom).TruncateInt(), fee.Amount)
+	feePool, err := keeper.distrKeeper.FeePool.Get(ctx)
+	require.Nil(t, err)
+	require.Equal(t, feePool.CommunityPool.AmountOf(types.Denom).TruncateInt().String(), fee.Amount.String())
 	require.Equal(t, sdk.NewInt64Coin(denom, 300_000_000), keeper.bankKeeper.GetBalance(ctx, feeAddr, sdk.DefaultBondDenom).Add(fee))
 	require.Equal(t, sdk.NewInt64Coin(denom, 0), keeper.bankKeeper.GetBalance(ctx, ownerAddr, sdk.DefaultBondDenom))
 

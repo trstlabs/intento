@@ -6,14 +6,13 @@ import (
 	"os"
 	"sort"
 
+	"cosmossdk.io/log"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	cometbftdb "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client"
-	config "github.com/cosmos/cosmos-sdk/client/config"
-	"github.com/cosmos/cosmos-sdk/client/debug"
+	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
@@ -23,12 +22,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	vestingcli "github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
+	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -141,7 +141,7 @@ func initAppConfig() (string, interface{}) {
 	srvCfg.MinGasPrices = "0uinto"
 	srvCfg.API.Enable = true
 	srvCfg.API.EnableUnsafeCORS = true
-	srvCfg.GRPCWeb.EnableUnsafeCORS = true
+	//srvCfg.GRPCWeb.EnableUnsafeCORS = true
 
 	// This ensures that upgraded nodes will use iavl fast node.
 	srvCfg.IAVLDisableFastNode = false
@@ -173,34 +173,34 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, gentxModule.GenTxValidator),
-		genutilcli.MigrateGenesisCmd(),
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, gentxModule.GenTxValidator, encodingConfig.TxConfig.SigningContext().ValidatorAddressCodec()),
+		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, encodingConfig.TxConfig.SigningContext().ValidatorAddressCodec()),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
-		//NewTestnetCmd(app.ModuleBasics, banktypes.GenesisBalancesIterator{}),
+
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
-		config.Cmd(),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		ImportGenesisAccountsFromSnapshotCmd(app.DefaultNodeHome),
-		ExportAirdropSnapshotCmd(),
-		ExportTestnetSnapshotCmd(),
-		ImportTestnetSnapshotCmd(app.DefaultNodeHome),
+		// ExportSnapshotFromCSV(),
+		// ExportTestnetSnapshotCmd(),
+		// ImportTestnetSnapshotCmd(app.DefaultNodeHome),
 		PrepareGenesisCmd(app.DefaultNodeHome, app.ModuleBasics),
 		AddConsumerSectionCmd(app.DefaultNodeHome),
 		// this line is used by starport scaffolding # stargate/root/commands
 	)
 
-	a := appCreator{encodingConfig}
-	server.AddCommands(rootCmd, app.DefaultNodeHome, a.newApp, a.appExport, addModuleInitFlags)
+	server.AddCommands(rootCmd, app.DefaultNodeHome, newApp, appExport, addModuleInitFlags)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
+		server.StatusCommand(),
+		server.ShowValidatorCmd(),
+		server.ShowNodeIDCmd(),
+		server.ShowAddressCmd(),
 		queryCommand(),
 		txCommand(),
+		keys.Commands(),
 		genesisCommand(encodingConfig),
-		keys.Commands(app.DefaultNodeHome),
 	)
 
 }
@@ -231,9 +231,10 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		server.QueryBlockResultsCmd(),
+		server.QueryBlocksCmd(),
+		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
@@ -264,8 +265,8 @@ func txCommand() *cobra.Command {
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
 		flags.LineBreak,
-		vestingcli.GetTxCmd(),
-		authcmd.GetAuxToFeeCommand(),
+
+		// authcmd.GetAuxToFeeCommand(),
 	)
 
 	app.ModuleBasics.AddTxCommands(cmd)
@@ -274,11 +275,7 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
-type appCreator struct {
-	encCfg appparams.EncodingConfig
-}
-
-func (a appCreator) newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	skipUpgradeHeights := make(map[int64]bool)
 	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
@@ -289,14 +286,14 @@ func (a appCreator) newApp(logger log.Logger, db cometbftdb.DB, traceStore io.Wr
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
 
-	return app.NewIntoApp(logger, db, traceStore, true, a.encCfg, appOpts, wasmOpts,
+	return app.NewIntoApp(logger, db, traceStore, true, appOpts, wasmOpts,
 		baseappOptions...)
 
 }
 
 // appExport creates a new simapp (optionally at a given height)
-func (a appCreator) appExport(
-	logger log.Logger, db cometbftdb.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
+func appExport(
+	logger log.Logger, db dbm.DB, traceStore io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string,
 	appOpts servertypes.AppOptions, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	var anApp *app.IntoApp
@@ -313,7 +310,6 @@ func (a appCreator) appExport(
 			traceStore,
 			false,
 
-			a.encCfg,
 			appOpts,
 			[]wasmkeeper.Option{},
 		)
@@ -327,8 +323,6 @@ func (a appCreator) appExport(
 			db,
 			traceStore,
 			true,
-
-			a.encCfg,
 			appOpts,
 			[]wasmkeeper.Option{},
 		)

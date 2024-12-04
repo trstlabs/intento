@@ -6,8 +6,9 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/trstlabs/intento/x/intent/types"
@@ -15,7 +16,7 @@ import (
 
 // GetActionInfo
 func (k Keeper) GetActionInfo(ctx sdk.Context, actionID uint64) types.ActionInfo {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	var action types.ActionInfo
 	actionBz := store.Get(types.GetActionKey(actionID))
 
@@ -25,7 +26,7 @@ func (k Keeper) GetActionInfo(ctx sdk.Context, actionID uint64) types.ActionInfo
 
 // TryGetActionInfo
 func (k Keeper) TryGetActionInfo(ctx sdk.Context, actionID uint64) (types.ActionInfo, error) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	var action types.ActionInfo
 	actionBz := store.Get(types.GetActionKey(actionID))
 	if actionBz == nil {
@@ -40,7 +41,7 @@ func (k Keeper) TryGetActionInfo(ctx sdk.Context, actionID uint64) (types.Action
 }
 
 func (k Keeper) SetActionInfo(ctx sdk.Context, action *types.ActionInfo) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store.Set(types.GetActionKey(action.ID), k.cdc.MustMarshal(action))
 }
 
@@ -116,7 +117,7 @@ func calculateExecTime(ctx sdk.Context, duration, interval time.Duration, startT
 
 // peekAutoIncrementID reads the current value without incrementing it.
 func (k Keeper) peekAutoIncrementID(ctx sdk.Context, lastIDKey []byte) uint64 {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	bz := store.Get(lastIDKey)
 	id := uint64(1)
 	if bz != nil {
@@ -126,7 +127,7 @@ func (k Keeper) peekAutoIncrementID(ctx sdk.Context, lastIDKey []byte) uint64 {
 }
 
 func (k Keeper) importAutoIncrementID(ctx sdk.Context, lastIDKey []byte, val uint64) error {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	if store.Has(lastIDKey) {
 		return errorsmod.Wrapf(types.ErrDuplicate, "autoincrement id: %s", string(lastIDKey))
 	}
@@ -137,7 +138,7 @@ func (k Keeper) importAutoIncrementID(ctx sdk.Context, lastIDKey []byte, val uin
 
 func (k Keeper) importActionInfo(ctx sdk.Context, actionId uint64, action types.ActionInfo) error {
 
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	key := types.GetActionKey(actionId)
 	if store.Has(key) {
 		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate code: %d", actionId)
@@ -148,7 +149,9 @@ func (k Keeper) importActionInfo(ctx sdk.Context, actionId uint64, action types.
 }
 
 func (k Keeper) IterateActionInfos(ctx sdk.Context, cb func(uint64, types.ActionInfo) bool) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.ActionKeyPrefix)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.ActionKeyPrefix)
+
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
 		var c types.ActionInfo
@@ -162,14 +165,14 @@ func (k Keeper) IterateActionInfos(ctx sdk.Context, cb func(uint64, types.Action
 
 // addToActionOwnerIndex adds element to the index for actions-by-creator queries
 func (k Keeper) addToActionOwnerIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, actionID uint64) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	store.Set(types.GetActionByOwnerIndexKey(ownerAddress, actionID), []byte{})
 }
 
 // changeActionOwnerIndex changes element to the index for actions-by-creator queries
 // func (k Keeper) changeActionOwnerIndex(ctx sdk.Context, ownerAddress, newOwnerAddress sdk.AccAddress, actionID uint64) {
-// 	store := ctx.KVStore(k.storeKey)
+// 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 // 	store.Set(types.GetActionByOwnerIndexKey(newOwnerAddress, actionID), []byte{})
 // 	store.Delete(types.GetActionByOwnerIndexKey(ownerAddress, actionID))
@@ -177,7 +180,8 @@ func (k Keeper) addToActionOwnerIndex(ctx sdk.Context, ownerAddress sdk.AccAddre
 
 // IterateActionsByOwner iterates over all actions with given creator address in order of creation time asc.
 func (k Keeper) IterateActionsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb func(address sdk.AccAddress) bool) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetActionsByOwnerPrefix(owner))
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.GetActionsByOwnerPrefix(owner))
 	for iter := prefixStore.Iterator(nil, nil); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		if cb(key) {
@@ -188,7 +192,7 @@ func (k Keeper) IterateActionsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb 
 
 // getTmpActionID getds tmp ActionId for a certain port and sequence. This is used to set results and timeouts.
 func (k Keeper) getTmpActionID(ctx sdk.Context, portID string, channelID string, seq uint64) uint64 {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	// Append both portID and channelID to the key
 	key := append(types.TmpActionIDLatestTX, []byte(portID)...)
 	key = append(key, []byte(channelID)...)          // Append channelID after portID
@@ -200,7 +204,7 @@ func (k Keeper) getTmpActionID(ctx sdk.Context, portID string, channelID string,
 }
 
 func (k Keeper) setTmpActionID(ctx sdk.Context, actionID uint64, portID string, channelID string, seq uint64) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	// Append both portID and channelID to the key
 	key := append(types.TmpActionIDLatestTX, []byte(portID)...)
 	key = append(key, []byte(channelID)...)          // Append channelID after portID

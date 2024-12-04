@@ -6,16 +6,17 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/trstlabs/intento/x/intent/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 )
 
 func (suite *KeeperTestSuite) TestOnRecvTransferPacket() {
@@ -27,24 +28,24 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacket() {
 
 	suite.SetupTest()
 
-	path := NewTransferPath(suite.chainA, suite.chainB)
-	suite.coordinator.Setup(path)
-	receiver = suite.chainB.SenderAccount.GetAddress().String() // must be explicitly changed
+	path := NewTransferPath(suite.IntentoChain, suite.HostChain)
+	suite.Coordinator.Setup(path)
+	receiver = suite.HostChain.SenderAccount.GetAddress().String() // must be explicitly changed
 
-	amount = sdk.NewInt(100) // must be explicitly changed in malleate
+	amount = math.NewInt(100) // must be explicitly changed in malleate
 	seq := uint64(1)
 
 	trace = transfertypes.ParseDenomTrace(sdk.DefaultBondDenom)
 
-	// send coin from chainA to chainB
-	transferMsg := transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(trace.IBCDenom(), amount), suite.chainA.SenderAccount.GetAddress().String(), receiver, clienttypes.NewHeight(1, 110), 0, "")
-	_, err := suite.chainA.SendMsgs(transferMsg)
+	// send coin from IntentoChain to HostChain
+	transferMsg := transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(trace.IBCDenom(), amount), suite.IntentoChain.SenderAccount.GetAddress().String(), receiver, clienttypes.NewHeight(1, 110), 0, "")
+	_, err := suite.IntentoChain.SendMsgs(transferMsg)
 	suite.Require().NoError(err) // message committed
 
-	data := transfertypes.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.String(), suite.chainA.SenderAccount.GetAddress().String(), receiver, "")
+	data := transfertypes.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.String(), suite.IntentoChain.SenderAccount.GetAddress().String(), receiver, "")
 	packet := channeltypes.NewPacket(data.GetBytes(), seq, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, clienttypes.NewHeight(1, 100), 0)
 
-	ack := suite.chainB.GetIntoApp().TransferStack.OnRecvPacket(suite.chainB.GetContext(), packet, suite.chainA.SenderAccount.GetAddress())
+	ack := suite.App.TransferStack.OnRecvPacket(suite.HostChain.GetContext(), packet, suite.IntentoChain.SenderAccount.GetAddress())
 
 	suite.Require().True(ack.Success())
 
@@ -54,11 +55,11 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 	suite.SetupTest()
 
 	params := types.DefaultParams()
-	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
+	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
 	params.ActionFlexFeeMul = 1
-	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
+	suite.App.IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
 
-	addr := suite.chainA.SenderAccount.GetAddress()
+	addr := suite.IntentoChain.SenderAccount.GetAddress()
 	msg := `{
 		"@type":"/cosmos.bank.v1beta1.MsgSend",
 		"amount": [{
@@ -76,7 +77,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	action := suite.chainA.GetIntoApp().IntentKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
+	action := suite.App.IntentKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
 
 	suite.Require().Equal(action.Owner, addr.String())
 	suite.Require().Equal(action.Label, "my_trigger")
@@ -84,7 +85,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 	suite.Require().Equal(action.Interval, time.Second*60)
 
 	var txMsgAny codectypes.Any
-	cdc := codec.NewProtoCodec(suite.chainA.GetIntoApp().InterfaceRegistry())
+	cdc := codec.NewProtoCodec(suite.App.InterfaceRegistry())
 
 	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
 	suite.Require().NoError(err)
@@ -95,11 +96,11 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 	suite.SetupTest()
 
 	params := types.DefaultParams()
-	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
+	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
 	params.ActionFlexFeeMul = 1
-	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
+	suite.App.IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
 
-	addr := suite.chainA.SenderAccount.GetAddress()
+	addr := suite.IntentoChain.SenderAccount.GetAddress()
 	msg := `{
 		"@type":"/cosmos.bank.v1beta1.MsgSend",
 		"amount": [{
@@ -110,12 +111,12 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 		"to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
 
-	path := NewICAPath(suite.chainA, suite.chainB)
-	suite.coordinator.SetupConnections(path)
+	path := NewICAPath(suite.IntentoChain, suite.HostChain)
+	suite.Coordinator.SetupConnections(path)
 	err := SetupICAPath(path, addr.String())
 	suite.Require().NoError(err)
 
-	//chainB sends packet to chainA. connectionID to execute on chainB is on chainAs config
+	//HostChain sends packet to IntentoChain. connectionID to execute on HostChain is on IntentoChains config
 	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my_trigger", "cid":"%s", "host_cid":"%s","msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0", "fallback": "true" } }`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
@@ -123,7 +124,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	action := suite.chainA.GetIntoApp().IntentKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
+	action := suite.App.IntentKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
 
 	suite.Require().Equal(action.Owner, addr.String())
 	suite.Require().Equal(action.Label, "my_trigger")
@@ -133,11 +134,11 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 
 	suite.Require().Equal(action.Interval, time.Second*60)
 
-	_, found := suite.chainA.GetIntoApp().ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), action.ICAConfig.ConnectionID, action.ICAConfig.PortID)
+	_, found := suite.App.ICAControllerKeeper.GetInterchainAccountAddress(suite.IntentoChain.GetContext(), action.ICAConfig.ConnectionID, action.ICAConfig.PortID)
 	suite.Require().True(found)
 
 	var txMsgAny codectypes.Any
-	cdc := codec.NewProtoCodec(suite.chainA.GetIntoApp().InterfaceRegistry())
+	cdc := codec.NewProtoCodec(suite.App.InterfaceRegistry())
 
 	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
 	suite.Require().NoError(err)
@@ -148,11 +149,11 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 	suite.SetupTest()
 
 	params := types.DefaultParams()
-	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
+	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
 	params.ActionFlexFeeMul = 1
-	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
+	//suite.IntentoChain.IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
 
-	addr := suite.chainA.SenderAccount.GetAddress()
+	addr := suite.IntentoChain.SenderAccount.GetAddress()
 	msg := `{
 		"@type":"/cosmos.bank.v1beta1.MsgSend",
 		"amount": [{
@@ -163,8 +164,8 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 		"to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
 
-	path := NewICAPath(suite.chainA, suite.chainB)
-	suite.coordinator.SetupConnections(path)
+	path := NewICAPath(suite.IntentoChain, suite.HostChain)
+	suite.Coordinator.SetupConnections(path)
 	err := SetupICAPath(path, addr.String())
 	suite.Require().NoError(err)
 
@@ -174,17 +175,17 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	actionKeeper := suite.chainA.GetIntoApp().IntentKeeper
-	action := actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
-	unpacker := suite.chainA.Codec
+	actionKeeper := suite.App.IntentKeeper
+	action := actionKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
+	unpacker := suite.IntentoChain.Codec
 	unpackedMsgs := action.GetTxMsgs(unpacker)
 	suite.Require().True(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
 
-	suite.chainA.CurrentHeader.Time = suite.chainA.CurrentHeader.Time.Add(time.Minute)
-	actionKeeper.HandleAction(suite.chainA.GetContext(), actionKeeper.Logger(suite.chainA.GetContext()), action, suite.chainA.GetContext().BlockTime(), nil)
+	suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(time.Minute)
+	actionKeeper.HandleAction(suite.IntentoChain.GetContext(), actionKeeper.Logger(suite.IntentoChain.GetContext()), action, suite.IntentoChain.GetContext().BlockTime(), nil)
 
-	action = actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
-	actionHistory, _ := actionKeeper.GetActionHistory(suite.chainA.GetContext(), action.ID)
+	action = actionKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
+	actionHistory, _ := actionKeeper.GetActionHistory(suite.IntentoChain.GetContext(), action.ID)
 	suite.Require().NotNil(actionHistory)
 	suite.Require().Empty(actionHistory[0].Errors)
 	suite.Require().Equal(action.Owner, addr.String())
@@ -200,7 +201,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxWithSentDenomInParams() {
 	suite.SetupTest()
 
-	addr := suite.chainA.SenderAccount.GetAddress()
+	addr := suite.IntentoChain.SenderAccount.GetAddress()
 	msg := `{
 		"@type":"/cosmos.bank.v1beta1.MsgSend",
 		"amount": [{
@@ -211,8 +212,8 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxWithSentDenomInPar
 		"to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
 	}`
 
-	path := NewICAPath(suite.chainA, suite.chainB)
-	suite.coordinator.SetupConnections(path)
+	path := NewICAPath(suite.IntentoChain, suite.HostChain)
+	suite.Coordinator.SetupConnections(path)
 	err := SetupICAPath(path, addr.String())
 	suite.Require().NoError(err)
 
@@ -222,24 +223,24 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxWithSentDenomInPar
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	actionKeeper := suite.chainA.GetIntoApp().IntentKeeper
-	action := actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
+	actionKeeper := suite.App.IntentKeeper
+	action := actionKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
 	feeAddr, _ := sdk.AccAddressFromBech32(action.FeeAddress)
-	bDenom := suite.chainA.GetIntoApp().BankKeeper.GetAllBalances(suite.chainA.GetContext(), feeAddr)[0].Denom
+	bDenom := suite.App.BankKeeper.GetAllBalances(suite.IntentoChain.GetContext(), feeAddr)[0].Denom
 	params := types.DefaultParams()
-	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin(bDenom, sdk.NewInt(2)), sdk.NewCoin("stake", sdk.OneInt()))
+	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin(bDenom, math.NewInt(2)), sdk.NewCoin("stake", math.OneInt()))
 	params.ActionFlexFeeMul = 1
-	suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
+	suite.App.IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
 
-	unpacker := suite.chainA.Codec
+	unpacker := suite.IntentoChain.Codec
 	unpackedMsgs := action.GetTxMsgs(unpacker)
 	suite.Require().True(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
 
-	suite.chainA.CurrentHeader.Time = suite.chainA.CurrentHeader.Time.Add(time.Minute)
-	actionKeeper.HandleAction(suite.chainA.GetContext(), actionKeeper.Logger(suite.chainA.GetContext()), action, suite.chainA.GetContext().BlockTime(), nil)
+	suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(time.Minute)
+	actionKeeper.HandleAction(suite.IntentoChain.GetContext(), actionKeeper.Logger(suite.IntentoChain.GetContext()), action, suite.IntentoChain.GetContext().BlockTime(), nil)
 
-	action = actionKeeper.GetActionInfo(suite.chainA.GetContext(), 1)
-	actionHistory, _ := actionKeeper.GetActionHistory(suite.chainA.GetContext(), action.ID)
+	action = actionKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
+	actionHistory, _ := actionKeeper.GetActionHistory(suite.IntentoChain.GetContext(), action.ID)
 	suite.Require().NotNil(actionHistory)
 	suite.Require().Empty(actionHistory[0].Errors)
 }

@@ -7,16 +7,39 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
+var _ types.QueryServer = &QueryServer{}
+
+// QueryServer implements the module gRPC query service.
+type QueryServer struct {
+	keeper Keeper
+}
+
+// NewQueryServer creates a new gRPC query server.
+func NewQueryServer(keeper Keeper) *QueryServer {
+	return &QueryServer{
+		keeper: keeper,
+	}
+}
+
+// Params returns params of the alloc module.
+func (q QueryServer) Params(goCtx context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	params, err := q.keeper.GetParams(ctx)
+
+	return &types.QueryParamsResponse{Params: params}, err
+}
+
 // InterchainAccountFromAddress implements the Query/InterchainAccountFromAddress gRPC method
-func (k Keeper) InterchainAccountFromAddress(goCtx context.Context, req *types.QueryInterchainAccountFromAddressRequest) (*types.QueryInterchainAccountFromAddressResponse, error) {
+func (q QueryServer) InterchainAccountFromAddress(goCtx context.Context, req *types.QueryInterchainAccountFromAddressRequest) (*types.QueryInterchainAccountFromAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	portID, err := icatypes.NewControllerPortID(req.Owner)
@@ -24,7 +47,7 @@ func (k Keeper) InterchainAccountFromAddress(goCtx context.Context, req *types.Q
 		return nil, status.Errorf(codes.InvalidArgument, "could not find account: %s", err)
 	}
 
-	ica, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, req.ConnectionId, portID)
+	ica, found := q.keeper.icaControllerKeeper.GetInterchainAccountAddress(ctx, req.ConnectionId, portID)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "no account found for connectionID: %s and portID: %s",
 			req.ConnectionId, portID)
@@ -33,16 +56,8 @@ func (k Keeper) InterchainAccountFromAddress(goCtx context.Context, req *types.Q
 	return types.NewQueryInterchainAccountResponse(ica), nil
 }
 
-// Params returns params of the mint module.
-func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	params := k.GetParams(ctx)
-
-	return &types.QueryParamsResponse{Params: params}, nil
-}
-
 // Action implements the Query/ActiongRPC method
-func (k Keeper) Action(c context.Context, req *types.QueryActionRequest) (*types.QueryActionResponse, error) {
+func (q QueryServer) Action(c context.Context, req *types.QueryActionRequest) (*types.QueryActionResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -52,7 +67,7 @@ func (k Keeper) Action(c context.Context, req *types.QueryActionRequest) (*types
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	actionInfo, err := k.TryGetActionInfo(ctx, id)
+	actionInfo, err := q.keeper.TryGetActionInfo(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -65,11 +80,10 @@ func (k Keeper) Action(c context.Context, req *types.QueryActionRequest) (*types
 	}, nil
 }
 
-func (k Keeper) ActionHistory(ctx context.Context, req *types.QueryActionHistoryRequest) (*types.QueryActionHistoryResponse, error) {
+func (q QueryServer) ActionHistory(ctx context.Context, req *types.QueryActionHistoryRequest) (*types.QueryActionHistoryResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// Convert id from the request
 	id, err := strconv.ParseUint(req.Id, 10, 64)
@@ -78,13 +92,14 @@ func (k Keeper) ActionHistory(ctx context.Context, req *types.QueryActionHistory
 	}
 
 	// Assuming ActionHistoryEntry items are stored with keys prefixed by id
-	store := prefix.NewStore(sdkCtx.KVStore(k.storeKey), types.GetActionHistoryKey(id))
 
+	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.GetActionHistoryKey(id))
 	// Paginate over the prefixed store
 	var historyEntries []types.ActionHistoryEntry
-	pageRes, err := query.Paginate(store, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(prefixStore, req.Pagination, func(key []byte, value []byte) error {
 		var historyEntry types.ActionHistoryEntry
-		if err := k.cdc.Unmarshal(value, &historyEntry); err != nil {
+		if err := q.keeper.cdc.Unmarshal(value, &historyEntry); err != nil {
 			return err
 		}
 		historyEntries = append(historyEntries, historyEntry)
@@ -103,17 +118,19 @@ func (k Keeper) ActionHistory(ctx context.Context, req *types.QueryActionHistory
 }
 
 // Actions implements the Query/Actions gRPC method
-func (k Keeper) Actions(c context.Context, req *types.QueryActionsRequest) (*types.QueryActionsResponse, error) {
+func (q QueryServer) Actions(c context.Context, req *types.QueryActionsRequest) (*types.QueryActionsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	actions := make([]types.ActionInfo, 0)
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.ActionKeyPrefix)
+	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.ActionKeyPrefix)
+
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			var c types.ActionInfo
-			k.cdc.MustUnmarshal(value, &c)
+			q.keeper.cdc.MustUnmarshal(value, &c)
 			actions = append(actions, c)
 
 		}
@@ -131,7 +148,7 @@ func (k Keeper) Actions(c context.Context, req *types.QueryActionsRequest) (*typ
 }
 
 // ActionsForOwner implements the Query/ActionsForOwner gRPC method
-func (k Keeper) ActionsForOwner(c context.Context, req *types.QueryActionsForOwnerRequest) (*types.QueryActionsForOwnerResponse, error) {
+func (q QueryServer) ActionsForOwner(c context.Context, req *types.QueryActionsForOwnerRequest) (*types.QueryActionsForOwnerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -142,11 +159,13 @@ func (k Keeper) ActionsForOwner(c context.Context, req *types.QueryActionsForOwn
 	if err != nil {
 		return nil, err
 	}
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetActionsByOwnerPrefix(ownerAddress))
+	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.GetActionsByOwnerPrefix(ownerAddress))
+
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			actionID := types.GetIDFromBytes(key)
-			actionInfo := k.GetActionInfo(ctx, actionID)
+			actionInfo := q.keeper.GetActionInfo(ctx, actionID)
 
 			actions = append(actions, actionInfo)
 
@@ -163,42 +182,27 @@ func (k Keeper) ActionsForOwner(c context.Context, req *types.QueryActionsForOwn
 	}, nil
 }
 
-// ActionsForOwner implements the Query/ActionsForOwner gRPC method
-func (k Keeper) ActionIbcTxUsage(c context.Context, req *types.QueryActionIbcUsageRequest) (*types.QueryActionIbcUsageResponse, error) {
+func (q QueryServer) ActionIbcTxUsage(c context.Context, req *types.QueryActionIbcUsageRequest) (*types.QueryActionIbcUsageResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+
 	actionIbcUsage := make([]types.ActionIbcUsage, 0)
-
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.ActionIbcUsageKeyPrefix)
-	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
-		if accumulate {
-			var c types.ActionIbcUsage
-			k.cdc.MustUnmarshal(value, &c)
-			actionIbcUsage = append(actionIbcUsage, c)
-
-		}
-		return true, nil
-	})
-	if err != nil {
-		return nil, err
-	}
 
 	return &types.QueryActionIbcUsageResponse{
 		ActionIbcUsage: actionIbcUsage,
-		Pagination:     pageRes,
+		Pagination:     nil,
 	}, nil
 }
 
 // HostedAccount implements the Query/HostedAccount gRPC method
-func (k Keeper) HostedAccount(c context.Context, req *types.QueryHostedAccountRequest) (*types.QueryHostedAccountResponse, error) {
+func (q QueryServer) HostedAccount(c context.Context, req *types.QueryHostedAccountRequest) (*types.QueryHostedAccountResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	hosted, err := k.TryGetHostedAccount(ctx, req.Address)
+	hosted, err := q.keeper.TryGetHostedAccount(ctx, req.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -209,17 +213,19 @@ func (k Keeper) HostedAccount(c context.Context, req *types.QueryHostedAccountRe
 }
 
 // HostedAccounts implements the Query/HostedAccounts gRPC method
-func (k Keeper) HostedAccounts(c context.Context, req *types.QueryHostedAccountsRequest) (*types.QueryHostedAccountsResponse, error) {
+func (q QueryServer) HostedAccounts(c context.Context, req *types.QueryHostedAccountsRequest) (*types.QueryHostedAccountsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 	hostedAccounts := make([]types.HostedAccount, 0)
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.HostedAccountKeyPrefix)
+	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.HostedAccountKeyPrefix)
+
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			var c types.HostedAccount
-			k.cdc.MustUnmarshal(value, &c)
+			q.keeper.cdc.MustUnmarshal(value, &c)
 			hostedAccounts = append(hostedAccounts, c)
 
 		}
@@ -237,7 +243,7 @@ func (k Keeper) HostedAccounts(c context.Context, req *types.QueryHostedAccounts
 }
 
 // HostedAccountsByAdmin implements the Query/HostedAccountsByAdmin gRPC method
-func (k Keeper) HostedAccountsByAdmin(c context.Context, req *types.QueryHostedAccountsByAdminRequest) (*types.QueryHostedAccountsByAdminResponse, error) {
+func (q QueryServer) HostedAccountsByAdmin(c context.Context, req *types.QueryHostedAccountsByAdminRequest) (*types.QueryHostedAccountsByAdminResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -248,11 +254,12 @@ func (k Keeper) HostedAccountsByAdmin(c context.Context, req *types.QueryHostedA
 	if err != nil {
 		return nil, err
 	}
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetHostedAccountsByAdminPrefix(admin))
+	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.GetHostedAccountsByAdminPrefix(admin))
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			hostedAccountAddress := string(key)
-			actionInfo := k.GetHostedAccount(ctx, hostedAccountAddress)
+			actionInfo := q.keeper.GetHostedAccount(ctx, hostedAccountAddress)
 
 			hostedAccounts = append(hostedAccounts, actionInfo)
 

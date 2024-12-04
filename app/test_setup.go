@@ -2,60 +2,81 @@ package app
 
 import (
 	"encoding/json"
+	"os"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	cometbftdb "github.com/cometbft/cometbft-db"
+	cometbftdb "github.com/cosmos/cosmos-db"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	"github.com/cometbft/cometbft/libs/log"
 	tmtypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	committypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
-	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
-	appconsumer "github.com/cosmos/interchain-security/v4/app/consumer"
-	consumertypes "github.com/cosmos/interchain-security/v4/x/ccv/consumer/types"
-	ccvprovidertypes "github.com/cosmos/interchain-security/v4/x/ccv/provider/types"
-	ccvtypes "github.com/cosmos/interchain-security/v4/x/ccv/types"
-)
+	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
+	ibccommitmenttypes "github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
+	ibctmtypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
+	ccvprovidertypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
 
-const Bech32Prefix = "into"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	appconsumer "github.com/cosmos/interchain-security/v6/app/consumer"
+	consumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
+
+	ccvtypes "github.com/cosmos/interchain-security/v6/x/ccv/types"
+)
 
 func init() {
 	SetupConfig()
 }
 
 func SetupConfig() {
+	const Bech32Prefix = "cosmos"
+
 	config := sdk.GetConfig()
 	valoper := sdk.PrefixValidator + sdk.PrefixOperator
 	valoperpub := sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
 	config.SetBech32PrefixForAccount(Bech32Prefix, Bech32Prefix+sdk.PrefixPublic)
 	config.SetBech32PrefixForValidator(Bech32Prefix+valoper, Bech32Prefix+valoperpub)
+	//BaseCoinUnit := sdk.DefaultBondDenom
+	// if err := sdk.RegisterDenom(BaseCoinUnit, math.LegacyNewDecWithPrec(1, 6)); err != nil {
+	// 	panic(err)
+	// }
+	// deno, _ := sdk.GetDenomUnit(BaseCoinUnit)
+	// fmt.Printf("DEM %s", deno)
+	// den, err := sdk.GetBaseDenom()
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Printf("DEM %s", den)
+	// if err := sdk.SetBaseDenom(BaseCoinUnit); err != nil {
+	// 	panic(err)
+	// }
 
 }
 
 // Initializes a new IntoApp without IBC functionality
 func InitIntentoTestApp(initChain bool) *IntoApp {
 	db := cometbftdb.NewMemDB()
-	encCdc := MakeEncodingConfig()
+	dir, _ := os.MkdirTemp("", "ibctest")
+	appOptions := sims.NewAppOptionsWithFlagHome(dir)
+
 	app := NewIntoApp(
 		log.NewNopLogger(),
 		db,
 		nil,
 		true,
-		encCdc,
-		EmptyAppOptions{},
+		appOptions,
 		[]wasmkeeper.Option{},
 	)
 	if initChain {
@@ -66,7 +87,7 @@ func InitIntentoTestApp(initChain bool) *IntoApp {
 		}
 
 		app.InitChain(
-			abci.RequestInitChain{
+			&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
@@ -89,7 +110,7 @@ func GenesisStateWithValSet(app *IntoApp) GenesisState {
 	acc := authtypes.NewBaseAccountWithAddress(senderPrivKey.PubKey().Address().Bytes())
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
 	}
 
 	//////////////////////
@@ -106,7 +127,7 @@ func GenesisStateWithValSet(app *IntoApp) GenesisState {
 	initValPowers := []abci.ValidatorUpdate{}
 
 	for _, val := range valSet.Validators {
-		pk, _ := cryptocodec.FromTmPubKeyInterface(val.PubKey)
+		pk, _ := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		pkAny, _ := codectypes.NewAnyWithValue(pk)
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
@@ -114,15 +135,15 @@ func GenesisStateWithValSet(app *IntoApp) GenesisState {
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
+			DelegatorShares:   math.LegacyOneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			MinSelfDelegation: sdkmath.ZeroInt(),
+			Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
+			MinSelfDelegation: math.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), math.LegacyOneDec()))
 
 		// add initial validator powers so consumer InitGenesis runs correctly
 		pub, _ := val.ToProto()
@@ -197,23 +218,46 @@ func InitIntentoIBCTestingApp(initValPowers []abci.ValidatorUpdate) func() (ibct
 // This function creates consumer module genesis state that is used as starting point for modifications
 // that allow chain to be started locally without having to start the provider chain and the relayer.
 // It is also used in tests that are starting the chain node.
-func CreateMinimalConsumerTestGenesis() *ccvtypes.ConsumerGenesisState {
-	genesisState := ccvtypes.DefaultConsumerGenesisState()
+// func CreateMinimalConsumerTestGenesis() *ccvtypes.ConsumerGenesisState {
+// 	genesisState := ccvconsumertypes.DefaultGenesisState()
+// 	genesisState.Params.Enabled = true
+// 	genesisState.NewChain = true
+// 	genesisState.Provider.ClientState = ccvprovidertypes.DefaultParams().TemplateClient
+// 	genesisState.Provider.ClientState.ChainId = "intento"
+// 	genesisState.Provider.ClientState.LatestHeight = ibctypes.Height{RevisionNumber: 0, RevisionHeight: 1}
+// 	trustPeriod, err := ccvtypes.CalculateTrustPeriod(genesisState.Params.UnbondingPeriod, ccvprovidertypes.DefaultTrustingPeriodFraction)
+// 	if err != nil {
+// 		panic("provider client trusting period error")
+// 	}
+// 	genesisState.Provider.ClientState.TrustingPeriod = trustPeriod
+// 	genesisState.Provider.ClientState.UnbondingPeriod = genesisState.Params.UnbondingPeriod
+// 	genesisState.Provider.ClientState.MaxClockDrift = ccvprovidertypes.DefaultMaxClockDrift
+// 	genesisState.Provider.ConsensusState = &ibctmtypes.ConsensusState{
+// 		Timestamp: time.Now().UTC(),
+// 		Root:      committypes.MerkleRoot{Hash: []byte("dummy")},
+// 	}
+
+// 	return genesisState
+// }
+
+func CreateMinimalConsumerTestGenesis() *ccvconsumertypes.GenesisState {
+	genesisState := ccvconsumertypes.DefaultGenesisState()
 	genesisState.Params.Enabled = true
 	genesisState.NewChain = true
 	genesisState.Provider.ClientState = ccvprovidertypes.DefaultParams().TemplateClient
 	genesisState.Provider.ClientState.ChainId = "intento"
-	genesisState.Provider.ClientState.LatestHeight = ibctypes.Height{RevisionNumber: 0, RevisionHeight: 1}
+	genesisState.Provider.ClientState.LatestHeight = ibcclienttypes.Height{RevisionNumber: 0, RevisionHeight: 1}
 	trustPeriod, err := ccvtypes.CalculateTrustPeriod(genesisState.Params.UnbondingPeriod, ccvprovidertypes.DefaultTrustingPeriodFraction)
 	if err != nil {
 		panic("provider client trusting period error")
 	}
 	genesisState.Provider.ClientState.TrustingPeriod = trustPeriod
+
 	genesisState.Provider.ClientState.UnbondingPeriod = genesisState.Params.UnbondingPeriod
 	genesisState.Provider.ClientState.MaxClockDrift = ccvprovidertypes.DefaultMaxClockDrift
 	genesisState.Provider.ConsensusState = &ibctmtypes.ConsensusState{
 		Timestamp: time.Now().UTC(),
-		Root:      committypes.MerkleRoot{Hash: []byte("dummy")},
+		Root:      ibccommitmenttypes.MerkleRoot{Hash: []byte("dummy")},
 	}
 
 	return genesisState

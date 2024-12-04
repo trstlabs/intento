@@ -7,8 +7,7 @@ import (
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	"github.com/spf13/cast"
 	_ "github.com/stretchr/testify/suite"
 	"github.com/trstlabs/intento/app/apptesting"
@@ -57,7 +56,7 @@ func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse() MsgSubmitQueryResponseTe
 	expectedId := "12334567"
 
 	_, addr, _ := bech32.DecodeAndConvert(s.TestAccs[0].String())
-	data := banktypes.CreateAccountBalancesPrefix(addr)
+	data := addr // banktypes.CreateAccountBalancesPrefix(addr)
 
 	timeoutDuration := time.Minute
 	query := types.Query{

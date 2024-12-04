@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -24,7 +25,8 @@ import (
 
 func TestQueryActionsByOwnerList(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	intentKeeper := keepers.IntentKeeper
+
+	qs := NewQueryServer(keepers.IntentKeeper)
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
@@ -36,7 +38,7 @@ func TestQueryActionsByOwnerList(t *testing.T) {
 
 	// create 10 actions
 	for i := 0; i < 10; i++ {
-		action, err := CreateFakeAction(intentKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+		action, err := CreateFakeAction(keepers.IntentKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
 
 		expectedActions = append(expectedActions, action)
@@ -90,7 +92,7 @@ func TestQueryActionsByOwnerList(t *testing.T) {
 
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			got, err := intentKeeper.ActionsForOwner(sdk.WrapSDKContext(ctx), spec.srcQuery)
+			got, err := qs.ActionsForOwner(sdk.WrapSDKContext(ctx), spec.srcQuery)
 
 			if spec.expErr != nil {
 				require.Equal(t, spec.expErr, err)
@@ -99,7 +101,7 @@ func TestQueryActionsByOwnerList(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			for i, expectedAction := range spec.expActionInfos {
-				assert.Equal(t, expectedAction.GetTxMsgs(intentKeeper.cdc), got.ActionInfos[i].GetTxMsgs(intentKeeper.cdc))
+				assert.Equal(t, expectedAction.GetTxMsgs(keepers.IntentKeeper.cdc), got.ActionInfos[i].GetTxMsgs(keepers.IntentKeeper.cdc))
 				assert.Equal(t, expectedAction.ICAConfig.PortID, got.ActionInfos[i].ICAConfig.PortID)
 				assert.Equal(t, expectedAction.Owner, got.ActionInfos[i].Owner)
 				assert.Equal(t, expectedAction.ICAConfig.ConnectionID, got.ActionInfos[i].ICAConfig.ConnectionID)
@@ -113,13 +115,13 @@ func TestQueryActionsByOwnerList(t *testing.T) {
 
 func TestQueryActionHistory(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	intentKeeper := keepers.IntentKeeper
 
-	actionHistory, err := CreateFakeActionHistory(intentKeeper, ctx, ctx.BlockTime())
+	qs := NewQueryServer(keepers.IntentKeeper)
+	actionHistory, err := CreateFakeActionHistory(keepers.IntentKeeper, ctx, ctx.BlockTime())
 	require.NoError(t, err)
 
 	ID := "1"
-	got, err := intentKeeper.ActionHistory(sdk.WrapSDKContext(ctx), &types.QueryActionHistoryRequest{Id: ID})
+	got, err := qs.ActionHistory(sdk.WrapSDKContext(ctx), &types.QueryActionHistoryRequest{Id: ID})
 	require.NoError(t, err)
 	require.NotNil(t, got)
 
@@ -130,13 +132,14 @@ func TestQueryActionHistory(t *testing.T) {
 
 func TestQueryActionHistoryLimit(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	intentKeeper := keepers.IntentKeeper
 
-	actionHistory, err := CreateFakeActionHistory(intentKeeper, ctx, ctx.BlockTime())
+	qs := NewQueryServer(keepers.IntentKeeper)
+
+	actionHistory, err := CreateFakeActionHistory(keepers.IntentKeeper, ctx, ctx.BlockTime())
 	require.NoError(t, err)
 
 	ID := "1"
-	got, err := intentKeeper.ActionHistory(sdk.WrapSDKContext(ctx), &types.QueryActionHistoryRequest{Id: ID, Pagination: &query.PageRequest{Limit: 3}})
+	got, err := qs.ActionHistory(sdk.WrapSDKContext(ctx), &types.QueryActionHistoryRequest{Id: ID, Pagination: &query.PageRequest{Limit: 3}})
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	require.Equal(t, got.History[0].ScheduledExecTime, actionHistory.History[0].ScheduledExecTime)
@@ -146,7 +149,8 @@ func TestQueryActionHistoryLimit(t *testing.T) {
 
 func TestQueryActionsList(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	intentKeeper := keepers.IntentKeeper
+
+	qs := NewQueryServer(keepers.IntentKeeper)
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
 
@@ -157,19 +161,19 @@ func TestQueryActionsList(t *testing.T) {
 
 	// create 10 actions
 	for i := 0; i < 10; i++ {
-		action, err := CreateFakeAction(intentKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+		action, err := CreateFakeAction(keepers.IntentKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 		require.NoError(t, err)
 
 		expectedActions = append(expectedActions, action)
 	}
 
-	got, err := intentKeeper.Actions(sdk.WrapSDKContext(ctx), &types.QueryActionsRequest{})
+	got, err := qs.Actions(sdk.WrapSDKContext(ctx), &types.QueryActionsRequest{})
 
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	for i, expectedAction := range expectedActions {
 
-		assert.Equal(t, expectedAction.GetTxMsgs(intentKeeper.cdc), got.ActionInfos[i].GetTxMsgs(intentKeeper.cdc))
+		assert.Equal(t, expectedAction.GetTxMsgs(keepers.IntentKeeper.cdc), got.ActionInfos[i].GetTxMsgs(keepers.IntentKeeper.cdc))
 		assert.Equal(t, expectedAction.ICAConfig.PortID, got.ActionInfos[i].ICAConfig.PortID)
 		assert.Equal(t, expectedAction.Owner, got.ActionInfos[i].Owner)
 		assert.Equal(t, expectedAction.ICAConfig.ConnectionID, got.ActionInfos[i].ICAConfig.ConnectionID)
@@ -182,8 +186,8 @@ func TestQueryActionsList(t *testing.T) {
 
 func TestQueryActionsListWithAuthZMsg(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	intentKeeper := keepers.IntentKeeper
 
+	qs := NewQueryServer(keepers.IntentKeeper)
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
 
@@ -192,18 +196,18 @@ func TestQueryActionsListWithAuthZMsg(t *testing.T) {
 	portID, err := icatypes.NewControllerPortID(creator.String())
 	require.NoError(t, err)
 
-	expectedAction, err := CreateFakeAuthZAction(intentKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
+	expectedAction, err := CreateFakeAuthZAction(keepers.IntentKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 	require.NoError(t, err)
-	got, err := intentKeeper.Actions(sdk.WrapSDKContext(ctx), &types.QueryActionsRequest{})
+	got, err := qs.Actions(sdk.WrapSDKContext(ctx), &types.QueryActionsRequest{})
 
 	require.NoError(t, err)
 	require.NotNil(t, got)
 
 	var txMsg sdk.Msg
-	_ = intentKeeper.cdc.UnpackAny(expectedAction.Msgs[0], &txMsg)
+	_ = keepers.IntentKeeper.cdc.UnpackAny(expectedAction.Msgs[0], &txMsg)
 
 	var gotMsg sdk.Msg
-	_ = intentKeeper.cdc.UnpackAny(got.ActionInfos[0].Msgs[0], &gotMsg)
+	_ = keepers.IntentKeeper.cdc.UnpackAny(got.ActionInfos[0].Msgs[0], &gotMsg)
 
 	assert.Equal(t, expectedAction.Msgs, got.ActionInfos[0].Msgs)
 	//	assert.Equal(t, txMsg, gotMsg)
@@ -219,9 +223,10 @@ func TestQueryActionsListWithAuthZMsg(t *testing.T) {
 
 func TestQueryParams(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	intentKeeper := keepers.IntentKeeper
 
-	resp, err := intentKeeper.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})
+	qs := NewQueryServer(keepers.IntentKeeper)
+
+	resp, err := qs.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})
 	require.NoError(t, err)
 	require.Equal(t, resp.Params, types.DefaultParams())
 }
@@ -243,7 +248,8 @@ func NewICA(t *testing.T) (*ibctesting.Coordinator, *ibctesting.Path) {
 
 func TestQueryHostedAccountsByAdmin(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
-	intentKeeper := keepers.IntentKeeper
+
+	qs := NewQueryServer(keepers.IntentKeeper)
 
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 
@@ -254,7 +260,7 @@ func TestQueryHostedAccountsByAdmin(t *testing.T) {
 
 	// create 10
 	for i := 0; i < 10; i++ {
-		hostAcc, err := CreateFakeHostedAcc(intentKeeper, ctx, creator.String(), portID, ibctesting.FirstConnectionID+(fmt.Sprint(i)), ibctesting.FirstConnectionID)
+		hostAcc, err := CreateFakeHostedAcc(keepers.IntentKeeper, ctx, creator.String(), portID, ibctesting.FirstConnectionID+(fmt.Sprint(i)), ibctesting.FirstConnectionID)
 		require.NoError(t, err)
 
 		expectedHostedAccounts = append(expectedHostedAccounts, hostAcc)
@@ -308,7 +314,7 @@ func TestQueryHostedAccountsByAdmin(t *testing.T) {
 
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			got, err := intentKeeper.HostedAccountsByAdmin(sdk.WrapSDKContext(ctx), spec.srcQuery)
+			got, err := qs.HostedAccountsByAdmin(sdk.WrapSDKContext(ctx), spec.srcQuery)
 			//fmt.Println(got)
 			if spec.expErr != nil {
 				require.Equal(t, spec.expErr, err)
@@ -440,7 +446,7 @@ func CreateFakeHostedAcc(k Keeper, ctx sdk.Context, creator, portID, connectionI
 	if err != nil {
 		return types.HostedAccount{}, err
 	}
-	hostedAcc := types.HostedAccount{HostedAddress: hostedAddress.String(), HostFeeConfig: &types.HostFeeConfig{Admin: creator, FeeCoinsSuported: sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.NewInt(1)))}, ICAConfig: &types.ICAConfig{ConnectionID: connectionId, HostConnectionID: hostConnectionId, PortID: portID}}
+	hostedAcc := types.HostedAccount{HostedAddress: hostedAddress.String(), HostFeeConfig: &types.HostFeeConfig{Admin: creator, FeeCoinsSuported: sdk.NewCoins(sdk.NewCoin(types.Denom, math.NewInt(1)))}, ICAConfig: &types.ICAConfig{ConnectionID: connectionId, HostConnectionID: hostConnectionId, PortID: portID}}
 	//store hosted config by address on hosted key prefix
 	k.SetHostedAccount(ctx, &hostedAcc)
 	k.addToHostedAccountAdminIndex(ctx, creatorAddr, hostedAddress.String())

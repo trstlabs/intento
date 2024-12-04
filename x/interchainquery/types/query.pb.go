@@ -209,6 +209,7 @@ func _QueryService_PendingQueries_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+var QueryService_serviceDesc = _QueryService_serviceDesc
 var _QueryService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "intento.interchainquery.v1.QueryService",
 	HandlerType: (*QueryServiceServer)(nil),

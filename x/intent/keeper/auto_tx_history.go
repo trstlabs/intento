@@ -5,15 +5,17 @@ import (
 
 	"time"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
 func (k Keeper) GetLatestActionHistoryEntry(ctx sdk.Context, actionId uint64) (*types.ActionHistoryEntry, error) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	prefixStore := prefix.NewStore(store, types.GetActionHistoryKey(actionId))
 
 	// Use a reverse prefix iterator to start from the latest entry
@@ -34,7 +36,7 @@ func (k Keeper) GetLatestActionHistoryEntry(ctx sdk.Context, actionId uint64) (*
 
 // GetActionHistory retrieves all history entries for a specific actionId.
 func (k Keeper) GetActionHistory(ctx sdk.Context, actionId uint64) ([]types.ActionHistoryEntry, error) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	prefixStore := prefix.NewStore(store, types.GetActionHistoryKey(actionId))
 
 	iterator := prefixStore.Iterator(nil, nil)
@@ -63,7 +65,7 @@ func (k Keeper) MustGetActionHistory(ctx sdk.Context, actionId uint64) []types.A
 }
 
 func (k Keeper) SetActionHistoryEntry(ctx sdk.Context, actionId uint64, entry *types.ActionHistoryEntry) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	// Generate a unique sequence number for this entry. Alternatively, you can use a timestamp.
 	// This assumes you have a function to get the next available sequence number or you can store the count somewhere.
@@ -79,7 +81,7 @@ func (k Keeper) SetActionHistoryEntry(ctx sdk.Context, actionId uint64, entry *t
 func (k Keeper) GetNextActionHistorySequence(ctx sdk.Context, actionId uint64) uint64 {
 	// This is a simplified example. You need to implement the logic to get the next sequence number.
 	// This could involve getting the current count from the store and incrementing it.
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	sequenceKey := append(types.ActionHistorySequencePrefix, sdk.Uint64ToBigEndian(actionId)...)
 	sequenceBytes := store.Get(sequenceKey)
 	var sequence uint64
@@ -93,7 +95,7 @@ func (k Keeper) GetNextActionHistorySequence(ctx sdk.Context, actionId uint64) u
 
 // func (k Keeper) importActionHistory(ctx sdk.Context, actionHistoryId uint64, ActionHistory types.ActionHistory) error {
 
-// 	store := ctx.KVStore(k.storeKey)
+// 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 // 	key := types.GetActionHistoryKey(actionHistoryId)
 // 	if store.Has(key) {
 // 		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate code: %d", actionHistoryId)
@@ -104,7 +106,8 @@ func (k Keeper) GetNextActionHistorySequence(ctx sdk.Context, actionId uint64) u
 // }
 
 func (k Keeper) IterateActionHistorys(ctx sdk.Context, cb func(uint64, types.ActionHistory) bool) {
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.ActionKeyPrefix)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.ActionKeyPrefix)
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
 		var c types.ActionHistory
@@ -142,7 +145,7 @@ func (k Keeper) addActionHistory(ctx sdk.Context, action *types.ActionInfo, actu
 }
 
 func (k Keeper) SetCurrentActionHistoryEntry(ctx sdk.Context, actionId uint64, entry *types.ActionHistoryEntry) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	sequenceKey := append(types.ActionHistorySequencePrefix, sdk.Uint64ToBigEndian(actionId)...)
 	sequenceBytes := store.Get(sequenceKey)
 	var sequence uint64
@@ -157,7 +160,7 @@ func (k Keeper) SetCurrentActionHistoryEntry(ctx sdk.Context, actionId uint64, e
 }
 
 func (k Keeper) getCurrentActionHistoryEntry(ctx sdk.Context, actionId uint64) (*types.ActionHistoryEntry, bool) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	// Retrieve the current sequence for the actionId
 	sequenceKey := append(types.ActionHistorySequencePrefix, sdk.Uint64ToBigEndian(actionId)...)
@@ -192,13 +195,13 @@ func (k Keeper) CalculateTimeBasedFlexFee(ctx sdk.Context, action types.ActionIn
 	if historyEntry != nil {
 		prevEntryTime := historyEntry.ActualExecTime
 		period := (action.ExecTime.Sub(prevEntryTime))
-		return sdk.NewInt(int64(period.Milliseconds()))
+		return math.NewInt(int64(period.Milliseconds()))
 	}
 
 	period := action.ExecTime.Sub(action.StartTime)
 	if period.Seconds() <= 60 {
 		//base fee so we do not have a zero fee
-		return sdk.NewInt(6_000)
+		return math.NewInt(6_000)
 	}
-	return sdk.NewInt(int64(period.Seconds() * 10))
+	return math.NewInt(int64(period.Seconds() * 10))
 }

@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/gogoproto/proto"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -39,7 +39,7 @@ func (k msgServer) RegisterAccount(goCtx context.Context, msg *types.MsgRegister
 func (k msgServer) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*types.MsgSubmitTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	data, err := icatypes.SerializeCosmosTx(k.cdc, []proto.Message{msg.GetTxMsg()})
+	data, err := icatypes.SerializeCosmosTx(k.cdc, []proto.Message{msg.GetTxMsg()}, icatypes.EncodingProtobuf)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,10 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 		}
 	}
 
-	p := k.GetParams(ctx)
+	p, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 	if interval != 0 && (interval < p.MinActionInterval || interval > duration) {
 		return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinActionInterval, duration)
 	}
@@ -225,7 +228,10 @@ func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *ty
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 
-	p := k.GetParams(ctx)
+	p, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 	if interval != 0 && (interval < p.MinActionInterval || interval > duration) {
 		return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinActionInterval, duration)
 	}
@@ -293,7 +299,10 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 			newExecTime = endTime
 		}
 	}
-	p := k.GetParams(ctx)
+	p, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	if msg.Interval != "" {
 		interval, err := time.ParseDuration(msg.Interval)

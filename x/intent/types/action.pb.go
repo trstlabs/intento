@@ -212,19 +212,23 @@ func (m *HostedConfig) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_HostedConfig proto.InternalMessageInfo
 
-// ExecutionConfiguration provides the execution-related configuration of the action
+// ExecutionConfiguration provides the execution-related configuration of the
+// action
 type ExecutionConfiguration struct {
 	// if true, the action response outputs are saved and can be used in logic
 	SaveResponses bool `protobuf:"varint,1,opt,name=save_responses,json=saveResponses,proto3" json:"save_responses,omitempty"`
 	// if true, the action is not updatable
 	UpdatingDisabled bool `protobuf:"varint,2,opt,name=updating_disabled,json=updatingDisabled,proto3" json:"updating_disabled,omitempty"`
-	// If true, will execute until we get a successful Action, if false/unset will always execute
+	// If true, will execute until we get a successful Action, if false/unset will
+	// always execute
 	StopOnSuccess bool `protobuf:"varint,3,opt,name=stop_on_success,json=stopOnSuccess,proto3" json:"stop_on_success,omitempty"`
-	// If true, will execute until successful Action, if false/unset will always execute
+	// If true, will execute until successful Action, if false/unset will always
+	// execute
 	StopOnFailure bool `protobuf:"varint,4,opt,name=stop_on_failure,json=stopOnFailure,proto3" json:"stop_on_failure,omitempty"`
 	// If true, owner account balance is used when trigger account funds run out
 	FallbackToOwnerBalance bool `protobuf:"varint,5,opt,name=fallback_to_owner_balance,json=fallbackToOwnerBalance,proto3" json:"fallback_to_owner_balance,omitempty"`
-	// If true, allows the action to continue execution after an ibc channel times out (recommended)
+	// If true, allows the action to continue execution after an ibc channel times
+	// out (recommended)
 	ReregisterICAAfterTimeout bool `protobuf:"varint,6,opt,name=reregister_ica_after_timeout,json=reregisterIcaAfterTimeout,proto3" json:"reregister_ica_after_timeout,omitempty"`
 }
 
@@ -306,13 +310,14 @@ type ActionHistoryEntry struct {
 	ExecFee           types1.Coin `protobuf:"bytes,3,opt,name=exec_fee,json=execFee,proto3" json:"exec_fee"`
 	// whether all messages are executed, independent of succesfull result
 	Executed bool `protobuf:"varint,4,opt,name=executed,proto3" json:"executed,omitempty"`
-	//timed out from execution over IBC
+	// timed out from execution over IBC
 	TimedOut bool `protobuf:"varint,5,opt,name=timed_out,json=timedOut,proto3" json:"timed_out,omitempty"`
-	// errors from execution, if executed and no error the execution was succesfull
+	// errors from execution, if executed and no error the execution was
+	// succesfull
 	Errors []string `protobuf:"bytes,6,rep,name=errors,proto3" json:"errors,omitempty"`
-	//will be empty when save_responses is false
+	// will be empty when save_responses is false
 	MsgResponses []*types.Any `protobuf:"bytes,7,rep,name=msg_responses,json=msgResponses,proto3" json:"msg_responses,omitempty"`
-	//will be empty when save_responses is false
+	// will be empty when save_responses is false
 	QueryResponse string `protobuf:"bytes,8,opt,name=query_response,json=queryResponse,proto3" json:"query_response,omitempty"`
 }
 
@@ -351,17 +356,22 @@ var xxx_messageInfo_ActionHistoryEntry proto.InternalMessageInfo
 
 // ExecutionConditions provides execution conditions for the action
 type ExecutionConditions struct {
-	// Replace value with value from message or response from another action’s latest output
+	// Replace value with value from message or response from another action’s
+	// latest output
 	UseResponseValue *UseResponseValue `protobuf:"bytes,2,opt,name=use_response_value,json=useResponseValue,proto3" json:"use_response_value,omitempty"`
 	// Comparison with response response value
 	ResponseComparison *ResponseComparison `protobuf:"bytes,1,opt,name=response_comparison,json=responseComparison,proto3" json:"response_comparison,omitempty"`
-	//optional array of dependent intents that when executing succesfully, stops execution
+	// optional array of dependent intents that when executing succesfully, stops
+	// execution
 	StopOnSuccessOf []uint64 `protobuf:"varint,5,rep,packed,name=stop_on_success_of,json=stopOnSuccessOf,proto3" json:"stop_on_success_of,omitempty"`
-	//optional array of dependent intents that when not executing succesfully, stops execution
+	// optional array of dependent intents that when not executing succesfully,
+	// stops execution
 	StopOnFailureOf []uint64 `protobuf:"varint,6,rep,packed,name=stop_on_failure_of,json=stopOnFailureOf,proto3" json:"stop_on_failure_of,omitempty"`
-	//optional array of dependent intents that should be executed succesfully after their latest call before execution is allowed
+	// optional array of dependent intents that should be executed succesfully
+	// after their latest call before execution is allowed
 	SkipOnFailureOf []uint64 `protobuf:"varint,7,rep,packed,name=skip_on_failure_of,json=skipOnFailureOf,proto3" json:"skip_on_failure_of,omitempty"`
-	//optional array of dependent intents that should fail after their latest call before execution is allowed
+	// optional array of dependent intents that should fail after their latest
+	// call before execution is allowed
 	SkipOnSuccessOf []uint64   `protobuf:"varint,8,rep,packed,name=skip_on_success_of,json=skipOnSuccessOf,proto3" json:"skip_on_success_of,omitempty"`
 	ICQConfig       *ICQConfig `protobuf:"bytes,9,opt,name=icq_config,json=icqConfig,proto3" json:"icq_config,omitempty"`
 }
@@ -399,7 +409,8 @@ func (m *ExecutionConditions) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ExecutionConditions proto.InternalMessageInfo
 
-// Replace value with value from message or response from another action’s latest output before execution
+// Replace value with value from message or response from another action’s
+// latest output before execution
 type UseResponseValue struct {
 	ActionID      uint64 `protobuf:"varint,1,opt,name=action_id,json=actionId,proto3" json:"action_id,omitempty"`
 	ResponseIndex uint32 `protobuf:"varint,3,opt,name=response_index,json=responseIndex,proto3" json:"response_index,omitempty"`
@@ -407,7 +418,8 @@ type UseResponseValue struct {
 	MsgsIndex     uint32 `protobuf:"varint,4,opt,name=msgs_index,json=msgsIndex,proto3" json:"msgs_index,omitempty"`
 	MsgKey        string `protobuf:"bytes,5,opt,name=msg_key,json=msgKey,proto3" json:"msg_key,omitempty"`
 	ValueType     string `protobuf:"bytes,6,opt,name=value_type,json=valueType,proto3" json:"value_type,omitempty"`
-	FromICQ       bool   `protobuf:"varint,7,opt,name=from_icq,json=fromIcq,proto3" json:"from_icq,omitempty"`
+	// string, []string, []sdk.Int
+	FromICQ bool `protobuf:"varint,7,opt,name=from_icq,json=fromIcq,proto3" json:"from_icq,omitempty"`
 }
 
 func (m *UseResponseValue) Reset()         { *m = UseResponseValue{} }
@@ -443,12 +455,14 @@ func (m *UseResponseValue) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UseResponseValue proto.InternalMessageInfo
 
-// ResponseComparison is checked on the response in JSON before execution of action and outputs true or false
+// ResponseComparison is checked on the response in JSON before execution of
+// action and outputs true or false
 type ResponseComparison struct {
-	ActionID           uint64             `protobuf:"varint,1,opt,name=action_id,json=actionId,proto3" json:"action_id,omitempty"`
-	ResponseIndex      uint32             `protobuf:"varint,2,opt,name=response_index,json=responseIndex,proto3" json:"response_index,omitempty"`
-	ResponseKey        string             `protobuf:"bytes,3,opt,name=response_key,json=responseKey,proto3" json:"response_key,omitempty"`
-	ValueType          string             `protobuf:"bytes,4,opt,name=value_type,json=valueType,proto3" json:"value_type,omitempty"`
+	ActionID      uint64 `protobuf:"varint,1,opt,name=action_id,json=actionId,proto3" json:"action_id,omitempty"`
+	ResponseIndex uint32 `protobuf:"varint,2,opt,name=response_index,json=responseIndex,proto3" json:"response_index,omitempty"`
+	ResponseKey   string `protobuf:"bytes,3,opt,name=response_key,json=responseKey,proto3" json:"response_key,omitempty"`
+	ValueType     string `protobuf:"bytes,4,opt,name=value_type,json=valueType,proto3" json:"value_type,omitempty"`
+	// string, []string, []sdk.Int
 	ComparisonOperator ComparisonOperator `protobuf:"varint,5,opt,name=comparison_operator,json=comparisonOperator,proto3,enum=intento.intent.v1beta1.ComparisonOperator" json:"comparison_operator,omitempty"`
 	ComparisonOperand  string             `protobuf:"bytes,6,opt,name=comparison_operand,json=comparisonOperand,proto3" json:"comparison_operand,omitempty"`
 	FromICQ            bool               `protobuf:"varint,7,opt,name=from_icq,json=fromIcq,proto3" json:"from_icq,omitempty"`

@@ -8,30 +8,31 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/cometbft/cometbft/libs/log"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	corestoretypes "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	"github.com/trstlabs/intento/x/interchainquery/types"
 )
 
 // Keeper of this module maintains collections of registered zones.
 type Keeper struct {
-	cdc       codec.Codec
-	storeKey  storetypes.StoreKey
-	callbacks map[string]types.QueryCallbacks
-	IBCKeeper *ibckeeper.Keeper
+	cdc          codec.Codec
+	storeService corestoretypes.KVStoreService
+	callbacks    map[string]types.QueryCallbacks
+	IBCKeeper    *ibckeeper.Keeper
+	authority    string
 }
 
 // NewKeeper returns a new instance of zones Keeper
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, ibckeeper *ibckeeper.Keeper) Keeper {
+func NewKeeper(cdc codec.Codec, storeService corestoretypes.KVStoreService, ibckeeper *ibckeeper.Keeper) Keeper {
 	return Keeper{
-		cdc:       cdc,
-		storeKey:  storeKey,
-		callbacks: make(map[string]types.QueryCallbacks),
-		IBCKeeper: ibckeeper,
+		cdc:          cdc,
+		storeService: storeService,
+		callbacks:    make(map[string]types.QueryCallbacks),
+		IBCKeeper:    ibckeeper,
 	}
 }
 
@@ -117,4 +118,9 @@ func logCallbackWithHostChain(chainId string, callbackId string, callbackType st
 //	| COSMOSHUB-4   |  DELEGATE ICACALLBACK  |  string
 func LogICQCallbackWithHostChain(chainId string, callbackId string, s string, a ...any) string {
 	return logCallbackWithHostChain(chainId, callbackId, "ICQCALLBACK", s, a...)
+}
+
+// GetAuthority returns the module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }

@@ -22,14 +22,14 @@ const (
 	// ClaimRecordsStorePrefix defines the store prefix for the claim records
 	ClaimRecordsStorePrefix = "claimrecords"
 
-	// ParamsKey defines the store key for claim module parameters
-	ParamsKey = "params"
-
 	// ActionKey defines the store key to store user accomplished actions
 	ActionKey = "action"
 
 	MemStoreKey = "mem_claim"
 )
+
+// ParamsKey stores the module params
+var ParamsKey = []byte{0x01}
 
 // nolint
 var (
@@ -56,7 +56,7 @@ func VestingByTimeKey(endTime time.Time) []byte {
 	return append(VestingQueuePrefix, sdk.FormatTimeBytes(endTime)...)
 }
 
-//from the key we get the claim and end time
+// from the key we get the claim and end time
 func splitKeyWithTime(key []byte) (vestingAddr string, endTime time.Time) {
 
 	/*if len(key[1:]) != 8+lenTime {

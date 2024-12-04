@@ -1,12 +1,13 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	proto "github.com/cosmos/gogoproto/proto"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 )
 
 var Denom = "uinto"
@@ -27,28 +28,42 @@ func (actionInfo ActionInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sd
 }
 
 // grantee should always be action owner
-func (actionInfo ActionInfo) ActionAuthzSignerOk(unpacker types.AnyUnpacker) bool {
+func (actionInfo ActionInfo) ActionAuthzSignerOk(codec codec.Codec) bool {
 	for _, message := range actionInfo.Msgs {
 		var sdkMsg sdk.Msg
-		err := unpacker.UnpackAny(message, &sdkMsg)
+		err := codec.UnpackAny(message, &sdkMsg)
 		if err != nil {
 			return false
 		}
 
 		// fmt.Printf("signer: %v owner %v \n", sdkMsg.GetSigners()[0].String(), actionInfo.Owner)
-		if sdkMsg.GetSigners()[0].String() != actionInfo.Owner && ((message.TypeUrl) == sdk.MsgTypeURL(&authztypes.MsgExec{})) {
+		if ((message.TypeUrl) == sdk.MsgTypeURL(&authztypes.MsgExec{})) {
 			var authzMsg authztypes.MsgExec
 			if err := proto.Unmarshal(message.Value, &authzMsg); err != nil {
 				return false
 			}
+
 			for _, message := range authzMsg.Msgs {
-				var sdkMsgAuthZ sdk.Msg
-				err := unpacker.UnpackAny(message, &sdkMsgAuthZ)
+				signers, _, err := codec.GetMsgV1Signers(message)
 				if err != nil {
 					return false
 				}
-				//fmt.Printf("signer3: %v \n", sdkMsgAuthZ.GetSigners()[0].String())
-				if sdkMsgAuthZ.GetSigners()[0].String() != "" && sdkMsgAuthZ.GetSigners()[0].String() != actionInfo.Owner {
+				for _, acct := range signers {
+					if sdk.AccAddress(acct).String() != actionInfo.Owner {
+						return false
+					}
+				}
+				var sdkMsgAuthZ sdk.Msg
+				err = codec.UnpackAny(message, &sdkMsgAuthZ)
+				if err != nil {
+					return false
+				}
+				m, ok := sdkMsgAuthZ.(sdk.HasValidateBasic)
+				if !ok {
+					continue
+				}
+
+				if err := m.ValidateBasic(); err != nil {
 					return false
 				}
 			}
@@ -57,7 +72,7 @@ func (actionInfo ActionInfo) ActionAuthzSignerOk(unpacker types.AnyUnpacker) boo
 	return true
 }
 
-var GasFeeCoinsSupported sdk.Coins = sdk.Coins{sdk.NewCoin(Denom, sdk.NewInt(10))}
+var GasFeeCoinsSupported sdk.Coins = sdk.Coins{sdk.NewCoin(Denom, math.NewInt(10))}
 
 // GetTxMsgs unpacks sdk messages from any messages
 func GetTransferMsg(cdc codec.Codec, anyTransfer *types.Any) (transferMsg ibctransfertypes.MsgTransfer, err error) {
