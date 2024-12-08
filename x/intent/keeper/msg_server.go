@@ -318,9 +318,6 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 
 	if msg.StartAt > 0 {
 		startTime := time.Unix(int64(msg.StartAt), 0)
-		if err != nil {
-			return nil, err
-		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
 			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
@@ -375,10 +372,9 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 
 	action.UpdateHistory = append(action.UpdateHistory, ctx.BlockTime())
 
-	if !action.ActionAuthzSignerOk(k.cdc) {
-		return nil, errorsmod.Wrapf(types.ErrUpdateAction, "action signer: %s is not message signer", action.Owner)
+	if err := k.SignerOk(ctx, k.cdc, action); err != nil {
+		return nil, errorsmod.Wrapf(types.ErrSignerNotOk, err.Error())
 	}
-
 	//set hosted config
 	if msg.HostedConfig != nil {
 		action.HostedConfig = msg.HostedConfig

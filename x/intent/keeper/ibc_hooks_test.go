@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/trstlabs/intento/x/intent/types"
@@ -22,7 +22,7 @@ import (
 func (suite *KeeperTestSuite) TestOnRecvTransferPacket() {
 	var (
 		trace    transfertypes.DenomTrace
-		amount   sdkmath.Int
+		amount   math.Int
 		receiver string
 	)
 
@@ -45,7 +45,8 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacket() {
 	data := transfertypes.NewFungibleTokenPacketData(trace.GetFullDenomPath(), amount.String(), suite.IntentoChain.SenderAccount.GetAddress().String(), receiver, "")
 	packet := channeltypes.NewPacket(data.GetBytes(), seq, path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, path.EndpointB.ChannelConfig.PortID, path.EndpointB.ChannelID, clienttypes.NewHeight(1, 100), 0)
 
-	ack := suite.App.TransferStack.OnRecvPacket(suite.HostChain.GetContext(), packet, suite.IntentoChain.SenderAccount.GetAddress())
+	//a little hack as this check would be on HostChain OnRecvPacket
+	ack := GetICAApp(suite.IntentoChain).TransferStack.OnRecvPacket(suite.IntentoChain.GetContext(), packet, suite.IntentoChain.SenderAccount.GetAddress())
 
 	suite.Require().True(ack.Success())
 
@@ -57,7 +58,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 	params := types.DefaultParams()
 	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
 	params.ActionFlexFeeMul = 1
-	suite.App.IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
+	GetICAApp(suite.IntentoChain).IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
 
 	addr := suite.IntentoChain.SenderAccount.GetAddress()
 	msg := `{
@@ -77,7 +78,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	action := suite.App.IntentKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
+	action := GetICAApp(suite.IntentoChain).IntentKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
 
 	suite.Require().Equal(action.Owner, addr.String())
 	suite.Require().Equal(action.Label, "my_trigger")
@@ -85,7 +86,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 	suite.Require().Equal(action.Interval, time.Second*60)
 
 	var txMsgAny codectypes.Any
-	cdc := codec.NewProtoCodec(suite.App.InterfaceRegistry())
+	cdc := codec.NewProtoCodec(GetICAApp(suite.IntentoChain).InterfaceRegistry())
 
 	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
 	suite.Require().NoError(err)
@@ -98,7 +99,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 	params := types.DefaultParams()
 	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
 	params.ActionFlexFeeMul = 1
-	suite.App.IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
+	GetICAApp(suite.IntentoChain).IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
 
 	addr := suite.IntentoChain.SenderAccount.GetAddress()
 	msg := `{
@@ -124,7 +125,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	action := suite.App.IntentKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
+	action := GetICAApp(suite.IntentoChain).IntentKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
 
 	suite.Require().Equal(action.Owner, addr.String())
 	suite.Require().Equal(action.Label, "my_trigger")
@@ -134,11 +135,11 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 
 	suite.Require().Equal(action.Interval, time.Second*60)
 
-	_, found := suite.App.ICAControllerKeeper.GetInterchainAccountAddress(suite.IntentoChain.GetContext(), action.ICAConfig.ConnectionID, action.ICAConfig.PortID)
+	_, found := GetICAApp(suite.IntentoChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.IntentoChain.GetContext(), action.ICAConfig.ConnectionID, action.ICAConfig.PortID)
 	suite.Require().True(found)
 
 	var txMsgAny codectypes.Any
-	cdc := codec.NewProtoCodec(suite.App.InterfaceRegistry())
+	cdc := codec.NewProtoCodec(GetICAApp(suite.IntentoChain).InterfaceRegistry())
 
 	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
 	suite.Require().NoError(err)
@@ -151,7 +152,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 	params := types.DefaultParams()
 	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
 	params.ActionFlexFeeMul = 1
-	//suite.IntentoChain.IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
+	GetICAApp(suite.IntentoChain).IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
 
 	addr := suite.IntentoChain.SenderAccount.GetAddress()
 	msg := `{
@@ -175,7 +176,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	actionKeeper := suite.App.IntentKeeper
+	actionKeeper := GetICAApp(suite.IntentoChain).IntentKeeper
 	action := actionKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
 	unpacker := suite.IntentoChain.Codec
 	unpackedMsgs := action.GetTxMsgs(unpacker)
@@ -223,14 +224,14 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxWithSentDenomInPar
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	actionKeeper := suite.App.IntentKeeper
+	actionKeeper := GetICAApp(suite.IntentoChain).IntentKeeper
 	action := actionKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
 	feeAddr, _ := sdk.AccAddressFromBech32(action.FeeAddress)
-	bDenom := suite.App.BankKeeper.GetAllBalances(suite.IntentoChain.GetContext(), feeAddr)[0].Denom
+	bDenom := GetICAApp(suite.IntentoChain).BankKeeper.GetAllBalances(suite.IntentoChain.GetContext(), feeAddr)[0].Denom
 	params := types.DefaultParams()
 	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin(bDenom, math.NewInt(2)), sdk.NewCoin("stake", math.OneInt()))
 	params.ActionFlexFeeMul = 1
-	suite.App.IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
+	GetICAApp(suite.IntentoChain).IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
 
 	unpacker := suite.IntentoChain.Codec
 	unpackedMsgs := action.GetTxMsgs(unpacker)

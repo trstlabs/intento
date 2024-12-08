@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	proto "github.com/cosmos/gogoproto/proto"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 )
@@ -25,51 +24,6 @@ func (actionInfo ActionInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sd
 		sdkMsgs = append(sdkMsgs, sdkMsg)
 	}
 	return sdkMsgs
-}
-
-// grantee should always be action owner
-func (actionInfo ActionInfo) ActionAuthzSignerOk(codec codec.Codec) bool {
-	for _, message := range actionInfo.Msgs {
-		var sdkMsg sdk.Msg
-		err := codec.UnpackAny(message, &sdkMsg)
-		if err != nil {
-			return false
-		}
-
-		// fmt.Printf("signer: %v owner %v \n", sdkMsg.GetSigners()[0].String(), actionInfo.Owner)
-		if ((message.TypeUrl) == sdk.MsgTypeURL(&authztypes.MsgExec{})) {
-			var authzMsg authztypes.MsgExec
-			if err := proto.Unmarshal(message.Value, &authzMsg); err != nil {
-				return false
-			}
-
-			for _, message := range authzMsg.Msgs {
-				signers, _, err := codec.GetMsgV1Signers(message)
-				if err != nil {
-					return false
-				}
-				for _, acct := range signers {
-					if sdk.AccAddress(acct).String() != actionInfo.Owner {
-						return false
-					}
-				}
-				var sdkMsgAuthZ sdk.Msg
-				err = codec.UnpackAny(message, &sdkMsgAuthZ)
-				if err != nil {
-					return false
-				}
-				m, ok := sdkMsgAuthZ.(sdk.HasValidateBasic)
-				if !ok {
-					continue
-				}
-
-				if err := m.ValidateBasic(); err != nil {
-					return false
-				}
-			}
-		}
-	}
-	return true
 }
 
 var GasFeeCoinsSupported sdk.Coins = sdk.Coins{sdk.NewCoin(Denom, math.NewInt(10))}

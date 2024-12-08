@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) TestGetQueryId() {
 
 	//  note: the queryID is a has of (module, callbackId, chainId, connectionId, queryType, and request)
 	// .    meaning for a given query type, the ID will be identical across each epoch
-	expectedQueryId := "e97f7bdad3c4c521165321f78a8329c54f35db23ee9cec7bddf5c60703ac9ba7"
+	expectedQueryId := "614049865bb322ad4ca243289d310ad59a02f8309452e05d49b0bf2f687dc8e2"
 	expectedUniqueQueryId := "cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50"
 
 	query := types.Query{

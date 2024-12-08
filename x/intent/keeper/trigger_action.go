@@ -86,7 +86,7 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 			if err != nil {
 				return nil, err
 			}
-			_, err = k.transferKeeper.Transfer(sdk.WrapSDKContext(ctx), &transferMsg)
+			_, err = k.transferKeeper.Transfer(ctx, &transferMsg)
 			if err != nil {
 				return nil, err
 			}

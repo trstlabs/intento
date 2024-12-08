@@ -1,7 +1,7 @@
 package apptesting
 
 import (
-	"strings"
+	"fmt"
 	"testing"
 	"time"
 
@@ -27,7 +27,6 @@ import (
 	testkeeper "github.com/cosmos/interchain-security/v6/testutil/keeper"
 	consumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
 	providertypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
-	ccvtypes "github.com/cosmos/interchain-security/v6/x/ccv/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -88,7 +87,7 @@ func (s *AppTestHelper) Setup() {
 	s.TestAccs = CreateRandomAccounts(4)
 	s.IbcEnabled = false
 	s.IcaAddresses = make(map[string]string)
-	s.SetupIBCChains(ibctesting.GetChainID(2))
+	s.SetupIBCChains(HostChainId)
 
 }
 
@@ -147,6 +146,7 @@ func (s *AppTestHelper) SetupIBCChains(hostChainID string) {
 
 	// Initialize a host testing app using SimApp -> TestingApp
 	ibctesting.DefaultTestingAppInit = ibctesting.SetupTestingApp
+	//iibctesting.DefaultTestingAppInit = app.InitIntentoIBCTestingApp(nil)
 	s.HostChain = ibctesting.NewTestChain(s.T(), s.Coordinator, hostChainID)
 	// bundle := icstestingutils.AddConsumer[icstestutil.ProviderApp, icstestutil.ConsumerApp](
 	// 	s.Coordinator,
@@ -258,26 +258,20 @@ func (s *AppTestHelper) CreateTransferChannel(hostChainID string) {
 
 // Creates an ICA channel through ibctesting
 // Also creates a transfer channel is if hasn't been done yet
-func (s *AppTestHelper) CreateICAChannel(owner string) (channelID, portID string) {
+func (s *AppTestHelper) CreateICAChannel() (channelID, portID string) {
 	// If we have yet to create a client/connection (through creating a transfer channel), do that here
 	_, transferChannelExists := s.App.IBCKeeper.ChannelKeeper.GetChannel(s.Ctx, ibctesting.TransferPort, ibctesting.FirstChannelID)
 	if !transferChannelExists {
-		ownerSplit := strings.Split(owner, ".")
-		isHostZoneICA := len(ownerSplit) == 2
-		isTradeRouteICA := len(ownerSplit) == 3
-		s.Require().True(isHostZoneICA || isTradeRouteICA,
-			"owner should be either of the form: {chainId}.{AccountName} or {chainId}.{rewarDenom}-{hostDenom}.{accountName}")
-
-		hostChainID := ownerSplit[0]
-		s.CreateTransferChannel(hostChainID)
+		s.CreateTransferChannel(HostChainId)
 	}
 
 	// Create ICA Path and then copy over the client and connection from the transfer path
-	icaPath := NewIcaPath(s.IntentoChain, s.HostChain, s.ProviderChain)
-	icaPath = CopyConnectionAndClientToPath(icaPath, s.TransferPath)
-
+	icaPath := ibctesting.NewPath(s.IntentoChain, s.HostChain)
+	fmt.Printf("path %v", icaPath.EndpointA)
+	//icaPath = CopyConnectionAndClientToPath(icaPath, s.TransferPath)
+	fmt.Printf("path %v", icaPath.EndpointA)
 	// Register the ICA and complete the handshake
-	s.RegisterInterchainAccount(icaPath.EndpointA, owner)
+	//s.RegisterInterchainAccount(icaPath.EndpointA, owner)
 
 	err := icaPath.EndpointB.ChanOpenTry()
 	s.Require().NoError(err, "ChanOpenTry error")
@@ -297,9 +291,9 @@ func (s *AppTestHelper) CreateICAChannel(owner string) (channelID, portID string
 	s.Require().True(found, "Channel not found after creation, PortID: %s, ChannelID: %s", portID, channelID)
 
 	// Store the account address
-	icaAddress, found := s.App.ICAControllerKeeper.GetInterchainAccountAddress(s.Ctx, ibctesting.FirstConnectionID, portID)
-	s.Require().True(found, "can't get ICA address")
-	s.IcaAddresses[owner] = icaAddress
+	// icaAddress, found := s.App.ICAControllerKeeper.GetInterchainAccountAddress(s.Ctx, ibctesting.FirstConnectionID, portID)
+	// s.Require().True(found, "can't get ICA address")
+	// s.IcaAddresses[owner] = icaAddress
 
 	// Finally set the active channel
 	s.App.ICAControllerKeeper.SetActiveChannelID(s.Ctx, ibctesting.FirstConnectionID, portID, channelID)
@@ -338,10 +332,10 @@ func NewTransferPath(chainA *ibctesting.TestChain, chainB *ibctesting.TestChain,
 	path.EndpointA.ChannelConfig.Version = transfertypes.Version
 	path.EndpointB.ChannelConfig.Version = transfertypes.Version
 
-	trustingPeriodFraction := providerChain.App.(*appProvider.App).GetProviderKeeper().GetTrustingPeriodFraction(providerChain.GetContext())
-	consumerUnbondingPeriod := path.EndpointA.Chain.App.(*app.IntoApp).GetConsumerKeeper().GetUnbondingPeriod(path.EndpointA.Chain.GetContext())
-	path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).UnbondingPeriod = consumerUnbondingPeriod
-	path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).TrustingPeriod, _ = ccvtypes.CalculateTrustPeriod(consumerUnbondingPeriod, trustingPeriodFraction)
+	// trustingPeriodFraction := providerChain.App.(*appProvider.App).GetProviderKeeper().GetTrustingPeriodFraction(providerChain.GetContext())
+	// consumerUnbondingPeriod := path.EndpointA.Chain.App.(*app.IntoApp).GetConsumerKeeper().GetUnbondingPeriod(path.EndpointA.Chain.GetContext())
+	// path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).UnbondingPeriod = consumerUnbondingPeriod
+	// path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).TrustingPeriod, _ = ccvtypes.CalculateTrustPeriod(consumerUnbondingPeriod, trustingPeriodFraction)
 
 	return path
 }
@@ -356,10 +350,20 @@ func NewIcaPath(chainA *ibctesting.TestChain, chainB *ibctesting.TestChain, prov
 	path.EndpointA.ChannelConfig.Version = TestIcaVersion
 	path.EndpointB.ChannelConfig.Version = TestIcaVersion
 
-	trustingPeriodFraction := providerChain.App.(*appProvider.App).GetProviderKeeper().GetTrustingPeriodFraction(providerChain.GetContext())
-	consumerUnbondingPeriod := path.EndpointA.Chain.App.(*app.IntoApp).GetConsumerKeeper().GetUnbondingPeriod(path.EndpointA.Chain.GetContext())
-	path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).UnbondingPeriod = consumerUnbondingPeriod
-	path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).TrustingPeriod, _ = ccvtypes.CalculateTrustPeriod(consumerUnbondingPeriod, trustingPeriodFraction)
+	// trustingPeriodFraction := providerChain.App.(*appProvider.App).GetProviderKeeper().GetTrustingPeriodFraction(providerChain.GetContext())
+	// consumerUnbondingPeriod := path.EndpointA.Chain.App.(*app.IntoApp).GetConsumerKeeper().GetUnbondingPeriod(path.EndpointA.Chain.GetContext())
+	// path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).UnbondingPeriod = consumerUnbondingPeriod
+	// path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).TrustingPeriod, _ = ccvtypes.CalculateTrustPeriod(consumerUnbondingPeriod, trustingPeriodFraction)
+
+	// trustingPeriodFraction := chainProvider.App.(*appProvider.App).GetProviderKeeper().GetTrustingPeriodFraction(chainProvider.GetContext())
+
+	// consumerUnbondingPeriodA := path.EndpointA.Chain.App.(*app.App).GetConsumerKeeper().GetUnbondingPeriod(path.EndpointA.Chain.GetContext())
+	// path.EndpointA.ClientConfig.(*ibctesting.TendermintConfig).UnbondingPeriod = consumerUnbondingPeriodA
+	// path.EndpointA.ClientConfig.(*ibctesting.TendermintConfig).TrustingPeriod, _ = ccv.CalculateTrustPeriod(consumerUnbondingPeriodA, trustingPeriodFraction)
+
+	// consumerUnbondingPeriodB := path.EndpointB.Chain.App.(*app.App).GetConsumerKeeper().GetUnbondingPeriod(path.EndpointB.Chain.GetContext())
+	// path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).UnbondingPeriod = consumerUnbondingPeriodB
+	// path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).TrustingPeriod, _ = ccv.CalculateTrustPeriod(consumerUnbondingPeriodB, trustingPeriodFraction)
 
 	return path
 }

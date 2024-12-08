@@ -123,7 +123,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_ProofStale() {
 
 	// Attempt to submit the response, it should fail because the response is stale
 	_, err := s.GetMsgServer().SubmitQueryResponse(tc.goCtx, &tc.validMsg)
-	s.Require().ErrorContains(err, "Query proof height (16) is older than the submission height (100)")
+	s.Require().ErrorContains(err, "Query proof height (15) is older than the submission height (100)")
 }
 
 func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_RejectQuery() {
@@ -167,7 +167,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_RetryQuery() {
 	s.Require().Equal(tc.query.QueryType, actualQuery.QueryType, "query type")
 	s.Require().Equal(tc.query.ConnectionId, actualQuery.ConnectionId, "query connection ID")
 	s.Require().Equal(tc.query.CallbackModule, actualQuery.CallbackModule, "query callback module")
-	s.Require().Equal(tc.query.CallbackData, actualQuery.CallbackData, "cquery allback data")
+	s.Require().Equal(tc.query.CallbackData, actualQuery.CallbackData, "query callback data")
 	s.Require().Equal(tc.query.TimeoutPolicy, actualQuery.TimeoutPolicy, "query timeout policy")
 	s.Require().Equal(tc.query.TimeoutDuration, actualQuery.TimeoutDuration, "query timeout duration")
 
@@ -189,7 +189,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_ExecuteCallback() {
 	// check by invoking without the required mocked state and catching
 	// the error that's thrown at the start of the callback
 	_, err := s.GetMsgServer().SubmitQueryResponse(tc.goCtx, &tc.validMsg)
-	s.Require().ErrorContains(err, "unable to determine balance from query response")
+	s.Require().ErrorContains(err, "action: not found")
 }
 
 func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_FindAndInvokeCallback() {

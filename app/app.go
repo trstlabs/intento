@@ -24,10 +24,13 @@ import (
 	ibcwasm "github.com/cosmos/ibc-go/modules/light-clients/08-wasm"
 	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
+	ccvtypes "github.com/cosmos/interchain-security/v6/x/ccv/types"
 
 	// "github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	"github.com/spf13/cast"
 
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -80,7 +83,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -90,7 +92,7 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	legacygovtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -99,7 +101,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/modules/capability"
@@ -120,7 +122,6 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client"
 	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	ibcconnectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
@@ -134,7 +135,12 @@ import (
 	ccvdistr "github.com/cosmos/interchain-security/v6/x/ccv/democracy/distribution"
 	ccvgov "github.com/cosmos/interchain-security/v6/x/ccv/democracy/governance"
 	ccvstaking "github.com/cosmos/interchain-security/v6/x/ccv/democracy/staking"
+	"github.com/trstlabs/intento/x/alloc"
+	allockeeper "github.com/trstlabs/intento/x/alloc/keeper"
+	alloctypes "github.com/trstlabs/intento/x/alloc/types"
 	"github.com/trstlabs/intento/x/claim"
+	claimkeeper "github.com/trstlabs/intento/x/claim/keeper"
+	claimtypes "github.com/trstlabs/intento/x/claim/types"
 	intent "github.com/trstlabs/intento/x/intent"
 	intentkeeper "github.com/trstlabs/intento/x/intent/keeper"
 	intenttypes "github.com/trstlabs/intento/x/intent/types"
@@ -144,12 +150,6 @@ import (
 	"github.com/trstlabs/intento/x/mint"
 	mintkeeper "github.com/trstlabs/intento/x/mint/keeper"
 	minttypes "github.com/trstlabs/intento/x/mint/types"
-
-	"github.com/trstlabs/intento/x/alloc"
-	allockeeper "github.com/trstlabs/intento/x/alloc/keeper"
-	alloctypes "github.com/trstlabs/intento/x/alloc/types"
-	claimkeeper "github.com/trstlabs/intento/x/claim/keeper"
-	claimtypes "github.com/trstlabs/intento/x/claim/types"
 )
 
 const Name = "into"
@@ -166,13 +166,15 @@ var (
 		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		bank.AppModuleBasic{},
 		capability.AppModuleBasic{},
-		staking.AppModuleBasic{},
+		// distr.AppModuleBasic{},
+		// staking.AppModuleBasic{},
+		ccvdistr.AppModuleBasic{},
+		ccvstaking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		claim.AppModuleBasic{},
 		ccvconsumer.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
 		alloc.AppModuleBasic{},
-		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			[]govclient.ProposalHandler{paramsclient.ProposalHandler},
 		),
@@ -442,7 +444,7 @@ func NewIntoApp(
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, app.StakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, app.StakingKeeper, ccvconsumertypes.ConsumerRedistributeName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.ClaimKeeper = claimkeeper.NewKeeper(
 		appCodec,
@@ -473,13 +475,6 @@ func NewIntoApp(
 	app.CrisisKeeper = crisiskeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[crisistypes.StoreKey]), invCheckPeriod,
 		app.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(), app.AccountKeeper.AddressCodec())
 
-	// Add ICS Consumer Keeper
-	app.ConsumerKeeper = ccvconsumerkeeper.NewNonZeroKeeper(
-		appCodec,
-		keys[ccvconsumertypes.StoreKey],
-		app.GetSubspace(ccvconsumertypes.ModuleName),
-	)
-
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[feegrant.StoreKey]), app.AccountKeeper)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(runtime.NewKVStoreService(keys[authzkeeper.StoreKey]), appCodec, app.MsgServiceRouter(), app.AccountKeeper)
@@ -508,20 +503,22 @@ func NewIntoApp(
 	app.Ics20WasmHooks = &wasmHooks
 	app.Ics20WasmHooks.ContractKeeper = &app.WasmKeeper // wasm keeper initialized below
 
-	// Create IBC Keeper
-	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibcexported.StoreKey], app.GetSubspace(ibcexported.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	// Add ICS Consumer Keeper
+	app.ConsumerKeeper = ccvconsumerkeeper.NewNonZeroKeeper(
+		appCodec,
+		keys[ccvconsumertypes.StoreKey],
+		app.GetSubspace(ccvconsumertypes.ModuleName),
 	)
 
-	// Register the proposal types
-	// Deprecated: Avoid adding new handlers, instead use the new proposal flow
-	// by granting the governance module the right to execute the message.
-	// See: https://github.com/cosmos/cosmos-sdk/blob/release/v0.46.x/x/gov/spec/01_concepts.md#proposal-messages
-	govRouter := govv1beta1.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		// AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
+	// Create IBC Keeper
+	app.IBCKeeper = ibckeeper.NewKeeper(
+		appCodec, keys[ibcexported.StoreKey], app.GetSubspace(ibcexported.ModuleName), &app.ConsumerKeeper, app.UpgradeKeeper, scopedIBCKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
+	// register the proposal types
+	govRouter := legacygovtypes.NewRouter()
+	govRouter.AddRoute(govtypes.RouterKey, legacygovtypes.ProposalHandler).
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
 
 	govConfig := govtypes.DefaultConfig()
 	/*
@@ -575,7 +572,6 @@ func NewIntoApp(
 	app.ICAHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
 	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[interchainquerytypes.StoreKey]), app.IBCKeeper)
-	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper)
 
 	app.IntentKeeper = intentkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[intenttypes.StoreKey]), app.ICAControllerKeeper, scopedIntentKeeper, app.BankKeeper, app.DistrKeeper, *app.StakingKeeper, app.TransferKeeper, app.AccountKeeper, app.InterchainQueryKeeper, intentkeeper.NewMultiIntentHooks(app.ClaimKeeper.Hooks()), app.MsgServiceRouter(), app.interfaceRegistry, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	intentModule := intent.NewAppModule(appCodec, app.IntentKeeper)
@@ -656,6 +652,7 @@ func NewIntoApp(
 		address.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		address.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
+	//TODO Check if we need this
 	app.ConsumerKeeper.SetStandaloneStakingKeeper(app.StakingKeeper)
 	// register slashing module StakingHooks to the consumer keeper
 	app.ConsumerKeeper = *app.ConsumerKeeper.SetHooks(app.SlashingKeeper.Hooks())
@@ -715,11 +712,9 @@ func NewIntoApp(
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper /*  app.GetSubspace(minttypes.ModuleName) */),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		ccvstaking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
@@ -729,7 +724,7 @@ func NewIntoApp(
 		transferModule,
 		icaModule,
 		intentModule,
-		interchainQueryModule,
+		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
 		ibcfee.NewAppModule(app.IBCFeeKeeper),
 		consumerModule,
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
@@ -738,7 +733,7 @@ func NewIntoApp(
 		ibcwasm.NewAppModule(app.IBCWasmKeeper),
 		ccvgov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, IsProposalWhitelisted, app.GetSubspace(govtypes.ModuleName), IsModuleWhiteList),
 		ccvdistr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, authtypes.FeeCollectorName, app.GetSubspace(distrtypes.ModuleName)),
-		ccvstaking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		ibctm.NewAppModule(),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -955,6 +950,11 @@ func (app *IntoApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
+// TxConfig returns TxConfig
+func (app *IntoApp) TxConfig() client.TxConfig {
+	return app.txConfig
+}
+
 // InterfaceRegistry returns Gaia's InterfaceRegistry
 func (app *IntoApp) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
@@ -1043,15 +1043,15 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(ibcexported.ModuleName)
-	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
-	paramsKeeper.Subspace(icahosttypes.SubModuleName)
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
+	paramsKeeper.Subspace(ibcexported.ModuleName).WithKeyTable(keyTable)
+	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
+	paramsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable())
 	paramsKeeper.Subspace(intenttypes.ModuleName)
 	paramsKeeper.Subspace(claimtypes.ModuleName)
 	paramsKeeper.Subspace(alloctypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
-	paramsKeeper.Subspace(ccvconsumertypes.ModuleName)
+	paramsKeeper.Subspace(ccvconsumertypes.ModuleName).WithKeyTable(ccvtypes.ParamKeyTable())
 	return paramsKeeper
 }
 
@@ -1118,6 +1118,7 @@ func BlockedAddresses() map[string]bool {
 
 	// allow the following addresses to receive funds
 	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	delete(modAccAddrs, authtypes.NewModuleAddress(ccvconsumertypes.ConsumerToSendToProviderName).String())
 
 	return modAccAddrs
 }
@@ -1165,4 +1166,33 @@ func (a *IntoApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 // EndBlocker application updates every end block
 func (a *IntoApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	return a.ModuleManager.EndBlock(ctx)
+}
+
+// AutoCliOpts returns the autocli options for the app, excluding specified modules.
+func (app *IntoApp) AutoCliOpts() autocli.AppOptions {
+	excludedModules := map[string]bool{
+		"distribution": true,
+		"staking":      true,
+	}
+
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range app.ModuleManager.Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if excludedModules[moduleName] {
+				continue
+			}
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
+		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+	}
 }

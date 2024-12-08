@@ -14,7 +14,7 @@ func main() {
 	cmdcfg.SetupConfig()
 	cmdcfg.RegisterDenoms()
 
-	rootCmd, _ := cmd.NewRootCmd()
+	rootCmd := cmd.NewRootCmd()
 	if err := svrcmd.Execute(rootCmd, "INTENTOD", app.DefaultNodeHome); err != nil {
 		os.Exit(1)
 	}

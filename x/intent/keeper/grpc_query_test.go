@@ -92,7 +92,7 @@ func TestQueryActionsByOwnerList(t *testing.T) {
 
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			got, err := qs.ActionsForOwner(sdk.WrapSDKContext(ctx), spec.srcQuery)
+			got, err := qs.ActionsForOwner(ctx, spec.srcQuery)
 
 			if spec.expErr != nil {
 				require.Equal(t, spec.expErr, err)
@@ -121,7 +121,7 @@ func TestQueryActionHistory(t *testing.T) {
 	require.NoError(t, err)
 
 	ID := "1"
-	got, err := qs.ActionHistory(sdk.WrapSDKContext(ctx), &types.QueryActionHistoryRequest{Id: ID})
+	got, err := qs.ActionHistory(ctx, &types.QueryActionHistoryRequest{Id: ID})
 	require.NoError(t, err)
 	require.NotNil(t, got)
 
@@ -139,7 +139,7 @@ func TestQueryActionHistoryLimit(t *testing.T) {
 	require.NoError(t, err)
 
 	ID := "1"
-	got, err := qs.ActionHistory(sdk.WrapSDKContext(ctx), &types.QueryActionHistoryRequest{Id: ID, Pagination: &query.PageRequest{Limit: 3}})
+	got, err := qs.ActionHistory(ctx, &types.QueryActionHistoryRequest{Id: ID, Pagination: &query.PageRequest{Limit: 3}})
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	require.Equal(t, got.History[0].ScheduledExecTime, actionHistory.History[0].ScheduledExecTime)
@@ -167,7 +167,7 @@ func TestQueryActionsList(t *testing.T) {
 		expectedActions = append(expectedActions, action)
 	}
 
-	got, err := qs.Actions(sdk.WrapSDKContext(ctx), &types.QueryActionsRequest{})
+	got, err := qs.Actions(ctx, &types.QueryActionsRequest{})
 
 	require.NoError(t, err)
 	require.NotNil(t, got)
@@ -198,7 +198,7 @@ func TestQueryActionsListWithAuthZMsg(t *testing.T) {
 
 	expectedAction, err := CreateFakeAuthZAction(keepers.IntentKeeper, ctx, creator, portID, ibctesting.FirstConnectionID, time.Minute, time.Hour, ctx.BlockTime(), topUp)
 	require.NoError(t, err)
-	got, err := qs.Actions(sdk.WrapSDKContext(ctx), &types.QueryActionsRequest{})
+	got, err := qs.Actions(ctx, &types.QueryActionsRequest{})
 
 	require.NoError(t, err)
 	require.NotNil(t, got)
@@ -226,7 +226,7 @@ func TestQueryParams(t *testing.T) {
 
 	qs := NewQueryServer(keepers.IntentKeeper)
 
-	resp, err := qs.Params(sdk.WrapSDKContext(ctx), &types.QueryParamsRequest{})
+	resp, err := qs.Params(ctx, &types.QueryParamsRequest{})
 	require.NoError(t, err)
 	require.Equal(t, resp.Params, types.DefaultParams())
 }
@@ -314,8 +314,7 @@ func TestQueryHostedAccountsByAdmin(t *testing.T) {
 
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			got, err := qs.HostedAccountsByAdmin(sdk.WrapSDKContext(ctx), spec.srcQuery)
-			//fmt.Println(got)
+			got, err := qs.HostedAccountsByAdmin(ctx, spec.srcQuery)
 			if spec.expErr != nil {
 				require.Equal(t, spec.expErr, err)
 				return

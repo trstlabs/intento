@@ -29,7 +29,7 @@ var (
 	// TODO: update crypto.AddressHash() when sdk uses address.Module()
 	//TestAccAddress = icatypes.GenerateAddress(sdk.AccAddress(crypto.AddressHash([]byte(icatypes.ModuleName))), ibctesting.FirstConnectionID, TestPortID)
 	// TestOwnerAddress defines a reusable bech32 address for testing purposes
-	TestOwnerAddress = "into17dtl0mjt3t77kpuhg2edqzjpszulwhgznsqmhz"
+	TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
 	// TestPortID defines a resuable port identifier for testing purposes
 	TestPortID, _ = icatypes.NewControllerPortID(TestOwnerAddress)
 	// TestVersion defines a resuable interIntentoChainccounts version string for testing purposes
@@ -161,7 +161,6 @@ func (suite *KeeperTestSuite) receiveTransferPacket(receiver, memo string) []byt
 }
 
 func (suite *KeeperTestSuite) receiveTransferPacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
-	// fmt.Println(memo)
 	path := NewTransferPath(suite.IntentoChain, suite.HostChain)
 
 	suite.Coordinator.Setup(path)

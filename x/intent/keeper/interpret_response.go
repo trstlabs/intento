@@ -195,11 +195,7 @@ func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 
 	k.Logger(ctx).Debug("use response value", "interface", msgToInterface, "valueFromResponse", valueFromResponse)
 
-	msgProto, ok := msgToInterface.(proto.Message)
-	if !ok {
-		return fmt.Errorf("can't proto marshal %T", msgToInterface)
-	}
-	msgTo := reflect.ValueOf(msgProto)
+	msgTo := reflect.ValueOf(msgToInterface)
 
 	// If the value is a pointer, get the element it points to
 	if msgTo.Kind() == reflect.Ptr {
@@ -252,22 +248,6 @@ func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 
 // ParseResponseValue retrieves and parses the value of a response key to the specified response type
 func ParseResponseValue(response interface{}, responseKey, responseType string) (interface{}, error) {
-	// val := reflect.ValueOf(response)
-
-	// // If the value is a pointer, get the element it points to
-	// if val.Kind() == reflect.Ptr {
-	// 	val = val.Elem()
-	// }
-
-	// // Ensure we're dealing with a struct
-	// if val.Kind() != reflect.Struct {
-	// 	return nil, fmt.Errorf("expected a struct, got %v", val.Kind())
-	// }
-
-	// field := val.FieldByName(responseKey)
-	// if !field.IsValid() {
-	// 	return nil, fmt.Errorf("field %s not found", responseKey)
-	// }
 
 	val, err := traverseFields(response, responseKey)
 	if err != nil {

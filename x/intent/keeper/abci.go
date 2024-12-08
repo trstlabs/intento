@@ -22,7 +22,6 @@ func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.Ac
 		executedLocally = false
 		msgResponses    = []*cdctypes.Any{}
 	)
-
 	allowed, err := k.allowedToExecute(ctx, action, queryCallback)
 	if !allowed {
 		k.recordFailedAction(ctx, &action, timeOfBlock, fmt.Sprintf(types.ErrActionConditions, err.Error()))

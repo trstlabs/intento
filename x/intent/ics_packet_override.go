@@ -187,7 +187,7 @@ func registerAndSubmitTx(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types
 		return nil, fmt.Errorf(types.ErrBadActionMsg, err.Error())
 	}
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
-	return ics20MsgServer.RegisterAccountAndSubmitAction(sdk.WrapSDKContext(ctx), ics20ParsedMsg)
+	return ics20MsgServer.RegisterAccountAndSubmitAction(ctx, ics20ParsedMsg)
 }
 
 func submitAction(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgSubmitAction) (*types.MsgSubmitActionResponse, error) {
@@ -195,7 +195,7 @@ func submitAction(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgSub
 		return nil, fmt.Errorf(types.ErrBadActionMsg, err.Error())
 	}
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
-	return ics20MsgServer.SubmitAction(sdk.WrapSDKContext(ctx), ics20ParsedMsg)
+	return ics20MsgServer.SubmitAction(ctx, ics20ParsedMsg)
 }
 
 func updateAction(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgUpdateAction) (*types.MsgUpdateActionResponse, error) {
@@ -203,7 +203,7 @@ func updateAction(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgUpd
 		return nil, fmt.Errorf(types.ErrBadActionMsg, err.Error())
 	}
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
-	return ics20MsgServer.UpdateAction(sdk.WrapSDKContext(ctx), ics20ParsedMsg)
+	return ics20MsgServer.UpdateAction(ctx, ics20ParsedMsg)
 }
 
 func isIcs20Packet(packet channeltypes.Packet) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {

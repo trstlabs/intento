@@ -46,7 +46,7 @@ const (
 
  ActionConstantFee int64 = 0 // e.g. 5_000 in default denom
 
- GasFeeCoins sdk.Coins = sdk.NewCoins(sdk.NewCoin(Denom, sdk.NewInt(1))) // 1uinto
+ GasFeeCoins sdk.Coins = sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(1))) // 1uinto
 
  MinActionDuration time.Duration = time.Second * 60 //1minute
 

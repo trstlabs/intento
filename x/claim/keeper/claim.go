@@ -250,7 +250,6 @@ func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress,
 	//creates entries into the endblocker ( 4 )
 	err = k.InsertEntriesIntoVestingQueue(ctx, addr.String(), byte(action), ctx.BlockHeader().Time)
 	if err != nil {
-		fmt.Printf("err: %v \n", err)
 		return err
 	}
 
@@ -258,10 +257,9 @@ func (k Keeper) ClaimInitialCoinsForAction(ctx sdk.Context, addr sdk.AccAddress,
 	claimRecord.Status[action].ActionCompleted = true
 	err = k.SetClaimRecord(ctx, claimRecord)
 	if err != nil {
-		fmt.Printf("err: %v \n", err)
 		return err
 	}
-	fmt.Printf("test %v \n", claimableCoin)
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeClaim,

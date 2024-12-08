@@ -10,7 +10,7 @@ import "google/protobuf/any.proto";
 import "cosmos/msg/v1/msg.proto";
 import "intento/intent/v1beta1/action.proto";
 import "intento/intent/v1beta1/hostedaccount.proto";
-
+import "amino/amino.proto";
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 
 // Msg defines the ica-authentication Msg service.
@@ -49,6 +49,8 @@ service Msg {
 // MsgRegisterAccount registers an interchain account for the given owner over
 // the specified connection pair
 message MsgRegisterAccount {
+  option (cosmos.msg.v1.signer) = "owner";
+  option (amino.name)           = "intent/MsgRegisterAccount";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
@@ -62,6 +64,8 @@ message MsgRegisterAccountResponse {}
 // MsgSubmitTx creates and submits an arbitrary transaction msg to be executed
 // locally or using an interchain account
 message MsgSubmitTx {
+  option (cosmos.msg.v1.signer) = "owner";
+  option (amino.name)           = "intent/MsgRegisterAccount";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
@@ -75,6 +79,8 @@ message MsgSubmitTxResponse {}
 // MsgSubmitAction creates, submits and schedules an arbitrary transaction msg
 // to be executed locally or using an interchain account
 message MsgSubmitAction {
+  option (cosmos.msg.v1.signer) = "owner";
+  option (amino.name)           = "intent/MsgSubmitAction";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
@@ -112,6 +118,8 @@ message MsgSubmitActionResponse {}
 // schedules an arbitrary transaction msg to be executed by this interchain
 // account
 message MsgRegisterAccountAndSubmitAction {
+  option (cosmos.msg.v1.signer) = "owner";
+  option (amino.name)           = "intent/MsgRegisterAccountAndSubmitAction";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
@@ -148,6 +156,8 @@ message MsgRegisterAccountAndSubmitActionResponse {}
 // MsgUpdateAction updates an arbitrary transaction msg to be executed locally
 // or using an interchain account
 message MsgUpdateAction {
+  option (cosmos.msg.v1.signer) = "owner";
+  option (amino.name)           = "intent/MsgUpdateAction";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
@@ -179,6 +189,8 @@ message MsgUpdateAction {
 message MsgUpdateActionResponse {}
 
 message MsgCreateHostedAccount {
+  option (cosmos.msg.v1.signer) = "creator";
+  option (amino.name)           = "intent/MsgCreateHostedAccount";
   option (gogoproto.goproto_getters) = false;
   string creator = 1;
   string connection_id = 2;
@@ -193,6 +205,8 @@ message MsgCreateHostedAccount {
 message MsgCreateHostedAccountResponse { string address = 1; }
 
 message MsgUpdateHostedAccount {
+  option (cosmos.msg.v1.signer) = "admin";
+  option (amino.name)           = "intent/MsgUpdateHostedAccount";
   option (gogoproto.goproto_getters) = false;
   string admin = 1;
   string hosted_address = 2;

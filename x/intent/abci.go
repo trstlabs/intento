@@ -11,7 +11,7 @@ import (
 
 // BeginBlocker called every block, processes auto execution
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	ensureRelayerRewardsAvailable(ctx, k)
 

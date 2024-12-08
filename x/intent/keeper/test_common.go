@@ -536,23 +536,20 @@ func CreateFakeFundedAccount(ctx sdk.Context, am authkeeper.AccountKeeper, bk ba
 	priv, _, addr := keyPubAddr()
 	baseAcct := am.NewAccountWithAddress(ctx, addr)
 
-	am.NewAccount(ctx, baseAcct)
-
-	fundAccounts(ctx, am, bk, addr, coins)
+	fundAccounts(ctx, am, bk, baseAcct, coins)
 	return addr, priv
 }
 
 const faucetAccountName = "faucet"
 
-func fundAccounts(ctx sdk.Context, am authkeeper.AccountKeeper, bk bankkeeper.Keeper, addr sdk.AccAddress, coins sdk.Coins) {
-	baseAcct := am.GetAccount(ctx, addr)
+func fundAccounts(ctx sdk.Context, am authkeeper.AccountKeeper, bk bankkeeper.Keeper, addr sdk.AccountI, coins sdk.Coins) {
 	if err := bk.MintCoins(ctx, faucetAccountName, coins); err != nil {
 		panic(err)
 	}
 
-	_ = bk.SendCoinsFromModuleToAccount(ctx, faucetAccountName, addr, coins)
+	_ = bk.SendCoinsFromModuleToAccount(ctx, faucetAccountName, addr.GetAddress(), coins)
 
-	am.NewAccount(ctx, baseAcct)
+	am.NewAccount(ctx, addr)
 }
 
 var keyCounter uint64 = 0
