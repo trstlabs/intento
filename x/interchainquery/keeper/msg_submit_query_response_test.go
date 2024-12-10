@@ -168,7 +168,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_RetryQuery() {
 	s.Require().Equal(tc.query.ConnectionId, actualQuery.ConnectionId, "query connection ID")
 	s.Require().Equal(tc.query.CallbackModule, actualQuery.CallbackModule, "query callback module")
 	s.Require().Equal(tc.query.CallbackData, actualQuery.CallbackData, "query callback data")
-	s.Require().Equal(tc.query.TimeoutPolicy, actualQuery.TimeoutPolicy, "query timeout policy")
+	s.Require().Equal(tc.query.TimeoutPolicy, 0, "query timeout policy is set to reject to prevent looping")
 	s.Require().Equal(tc.query.TimeoutDuration, actualQuery.TimeoutDuration, "query timeout duration")
 
 	// Confirm timeout was reset

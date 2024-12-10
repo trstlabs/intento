@@ -77,7 +77,6 @@ func (k Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) {
 	if len(bz) == 0 {
 		return query, false
 	}
-	fmt.Printf("GetQuery Serialized query: %v\n", bz)
 	k.cdc.MustUnmarshal(bz, &query)
 	return query, true
 }
@@ -87,7 +86,6 @@ func (k Keeper) SetQuery(ctx sdk.Context, query types.Query) {
 	kvStore := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(kvStore, types.KeyPrefixQuery)
 	bz := k.cdc.MustMarshal(&query)
-	fmt.Printf("SetQuery Serialized query: %v\n", bz)
 	store.Set([]byte(query.Id), bz)
 }
 
