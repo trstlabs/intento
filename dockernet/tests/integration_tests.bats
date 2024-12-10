@@ -38,7 +38,7 @@ setup_file() {
 
   TRANSFER_AMOUNT=5000
   MSGSEND_AMOUNT=1000
-  MSGDELEGATE_AMOUNT=100000
+  MSGDELEGATE_AMOUNT=10000000
   EXPECTED_FEE=2500
   HOST_MAIN_CMD_TX="$HOST_MAIN_CMD tx --fees $EXPECTED_FEE$HOST_DENOM"
   RECURRING_MSGSEND_AMOUNT_TOTAL=1728000 #100000*120*24*60
@@ -403,7 +403,7 @@ EOF
     echo "No hosted address found for connection ID: $CONNECTION_ID"
   fi
 
-  fund_ica_hosted=$($HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ica_address $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
+  # fund_ica_hosted=$($HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ica_address $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
 
   WAIT_FOR_BLOCK $INTO_LOGS 2
 
@@ -498,7 +498,7 @@ EOF
       "delegator_address": "$HOST_USER_ADDRESS",
       "validator_address": "$validator_address",
       "amount": {
-          "amount": "0",
+          "amount": "10",
           "denom": "$HOST_DENOM"
       }
     }
@@ -507,7 +507,7 @@ EOF
 }
 EOF
 
-  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action $msg_withdraw $msg_delegate --label "Autocompound on host chain" --duration "1440h" --interval "1200s" --stop-on-failure --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "use_response_value": {"response_index":0,"response_key": "Amount.[0]", "msgs_index":0, "msg_key":"Amount","value_type": "sdk.Coin"}}' -y)
+  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action $msg_withdraw $msg_delegate --label "Autocompound on host chain" --duration "1440h" --interval "120s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "use_response_value": {"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}}' -y)
   echo "$msg_submit_action"
 
   GET_ACTION_ID $(INTO_ADDRESS)
@@ -516,7 +516,7 @@ EOF
   # sleep 40
   # # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
   staking_balance_end=$($HOST_MAIN_CMD q staking delegation $HOST_USER_ADDRESS $validator_address $HOST_DENOM | GETBAL)
-  staking_balance_diff=$(($MSGDELEGATE_AMOUNT - $user_balance_end))
+  staking_balance_diff=$(($MSGDELEGATE_AMOUNT - $staking_balance_end))
 
   assert_not_equal "$staking_balance_diff" "0"
 }
