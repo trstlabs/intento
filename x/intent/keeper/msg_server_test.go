@@ -4,13 +4,15 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+
 	"github.com/trstlabs/intento/x/intent/keeper"
 	"github.com/trstlabs/intento/x/intent/types"
 	icqkeeper "github.com/trstlabs/intento/x/interchainquery/keeper"
@@ -33,7 +35,7 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 		{
 			"port is already bound",
 			func() {
-				GetICAApp(suite.chainA.TestChain).GetIBCKeeper().PortKeeper.BindPort(suite.chainA.GetContext(), TestPortID)
+				GetICAApp(suite.IntentoChain).GetIBCKeeper().PortKeeper.BindPort(suite.IntentoChain.GetContext(), TestPortID)
 			},
 			false,
 		},
@@ -57,9 +59,9 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 					[]string{path.EndpointA.ConnectionID},
 					path.EndpointA.ChannelConfig.Version,
 				)
-				GetICAApp(suite.chainA.TestChain).IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, ibctesting.FirstChannelID, channel)
+				GetICAApp(suite.IntentoChain).IBCKeeper.ChannelKeeper.SetChannel(suite.IntentoChain.GetContext(), portID, ibctesting.FirstChannelID, channel)
 
-				GetICAApp(suite.chainA.TestChain).ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), ibctesting.FirstConnectionID, portID, ibctesting.FirstChannelID)
+				GetICAApp(suite.IntentoChain).ICAControllerKeeper.SetActiveChannelID(suite.IntentoChain.GetContext(), ibctesting.FirstConnectionID, portID, ibctesting.FirstChannelID)
 			},
 			false,
 		},
@@ -73,15 +75,15 @@ func (suite *KeeperTestSuite) TestRegisterInterchainAccount() {
 
 			owner = TestOwnerAddress // must be explicitly changed
 
-			path = NewICAPath(suite.chainA, suite.chainB)
-			suite.coordinator.SetupConnections(path)
+			path = NewICAPath(suite.IntentoChain, suite.HostChain)
+			suite.Coordinator.SetupConnections(path)
 
 			tc.malleate() // malleate mutates test data
 
-			msgSrv := keeper.NewMsgServerImpl(GetActionKeeper(suite.chainA))
+			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
 			msg := types.NewMsgRegisterAccount(owner, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version)
 
-			res, err := msgSrv.RegisterAccount(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+			res, err := msgSrv.RegisterAccount(sdk.WrapSDKContext(suite.IntentoChain.GetContext()), msg)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -146,12 +148,11 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
+			suite.CreateICAChannel()
+			//path = NewICAPath(suite.IntentoChain, suite.HostChain)
+			//path = apptesting.CopyConnectionAndClientToPath(path, suite.TransferPath)
 
-			icaAppA := GetICAApp(suite.chainA.TestChain)
-			icaAppB := GetICAApp(suite.chainB.TestChain)
-
-			path = NewICAPath(suite.chainA, suite.chainB)
-			suite.coordinator.SetupConnections(path)
+			//suite.Coordinator.SetupConnections(path)
 
 			tc.malleate() // malleate mutates test data
 
@@ -163,29 +164,29 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 				suite.Require().NoError(err)
 
 				// Get the address of the interchain account stored in state during handshake step
-				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
+				interchainAccountAddr, found := GetICAApp(suite.IntentoChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.IntentoChain.GetContext(), path.EndpointA.ConnectionID, portID)
 				suite.Require().True(found)
 
 				icaAddr, err := sdk.AccAddressFromBech32(interchainAccountAddr)
 				suite.Require().NoError(err)
 
 				// Check if account is created
-				interchainAccount := icaAppB.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
+				interchainAccount := suite.HostApp.AccountKeeper.GetAccount(suite.HostChain.GetContext(), icaAddr)
 				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
 
 				// Create bank transfer message to execute on the host
 				sdkMsg = &banktypes.MsgSend{
 					FromAddress: interchainAccountAddr,
-					ToAddress:   suite.chainB.SenderAccount.GetAddress().String(),
-					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+					ToAddress:   suite.HostChain.SenderAccount.GetAddress().String(),
+					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 				}
 			}
 
-			msgSrv := keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
+			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
 			msg, err := types.NewMsgSubmitTx(owner, sdkMsg, connectionId)
 			suite.Require().NoError(err)
 
-			res, err := msgSrv.SubmitTx(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+			res, err := msgSrv.SubmitTx(sdk.WrapSDKContext(suite.IntentoChain.GetContext()), msg)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -199,6 +200,8 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 }
 
 func (suite *KeeperTestSuite) TestSubmitAction() {
+	owner := suite.IntentoChain.SenderAccount.GetAddress().String()
+	types.Denom = sdk.DefaultBondDenom
 	var (
 		path                      *ibctesting.Path
 		registerInterchainAccount bool
@@ -230,9 +233,9 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 				connectionId = ""
 				hostConnectionId = ""
 				sdkMsg = &banktypes.MsgSend{
-					FromAddress: suite.chainA.SenderAccount.GetAddress().String(),
+					FromAddress: owner,
 					ToAddress:   TestOwnerAddress,
-					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 				}
 			}, true,
 		},
@@ -251,11 +254,11 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 				hostConnectionId = ""
 				transferMsg = false
 				sdkMsg = &banktypes.MsgSend{
-					FromAddress: suite.chainA.SenderAccount.GetAddress().String(),
+					FromAddress: owner,
 					ToAddress:   TestOwnerAddress,
-					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 				}
-				conditions = types.ExecutionConditions{UseResponseValue: &types.UseResponseValue{MsgsIndex: 0, MsgKey: "amount", ResponseIndex: 0, ResponseKey: "", FromICQ: true, ValueType: "sdk.Coin"}, ICQConfig: &types.ICQConfig{ChainId: suite.chainB.ChainID, QueryType: "store/bank/key", QueryKey: "fake_key_owner", TimeoutPolicy: 1, TimeoutDuration: time.Second * 30}}
+				conditions = types.ExecutionConditions{UseResponseValue: &types.UseResponseValue{MsgsIndex: 0, MsgKey: "amount", ResponseIndex: 0, ResponseKey: "", FromICQ: true, ValueType: "sdk.Coin"}, ICQConfig: &types.ICQConfig{ChainId: suite.HostChain.ChainID, QueryType: "store/bank/key", QueryKey: "fake_key_owner", TimeoutPolicy: 1, TimeoutDuration: time.Second * 30}}
 			}, true,
 		},
 		{
@@ -293,30 +296,31 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
-			owner := suite.chainA.SenderAccount.GetAddress().String()
+
 			params := types.DefaultParams()
-			params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", sdk.OneInt()))
+			params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
 			params.ActionFlexFeeMul = 1
-			suite.chainA.GetIntoApp().IntentKeeper.SetParams(suite.chainA.GetContext(), params)
 
-			icaAppA := GetICAApp(suite.chainA.TestChain)
-			icaAppB := GetICAApp(suite.chainB.TestChain)
-			path = NewICAPath(suite.chainA, suite.chainB)
+			icaAppA := GetICAApp(suite.IntentoChain)
+			icaAppB := suite.HostChain
+			icaAppA.IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
 
-			suite.coordinator.SetupConnections(path)
+			path = NewICAPath(suite.IntentoChain, suite.HostChain)
+
+			suite.Coordinator.SetupConnections(path)
 
 			tc.malleate() // malleate mutates test data
 
-			ctx := suite.chainA.GetContext()
+			ctx := suite.IntentoChain.GetContext()
 			if transferMsg {
-				path = NewTransferPath(suite.chainA, suite.chainB)
-				suite.coordinator.SetupConnections(path)
-				sdkMsg = transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100)), suite.chainA.SenderAccount.GetAddress().String(), suite.chainB.SenderAccount.GetAddress().String(), suite.chainB.GetTimeoutHeight(), 0, "")
+				path = NewTransferPath(suite.IntentoChain, suite.HostChain)
+				suite.Coordinator.SetupConnections(path)
+				sdkMsg = transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)), owner, suite.HostChain.SenderAccount.GetAddress().String(), suite.HostChain.GetTimeoutHeight(), 0, "")
 			}
 
 			if conditions.ICQConfig != nil {
-				path = NewTransferPath(suite.chainA, suite.chainB)
-				suite.coordinator.SetupConnections(path)
+				path = NewTransferPath(suite.IntentoChain, suite.HostChain)
+				suite.Coordinator.SetupConnections(path)
 				conditions.ICQConfig.ConnectionId = path.EndpointA.ConnectionID
 			}
 
@@ -331,14 +335,14 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 				suite.Require().NoError(err)
 
 				// Get the address of the interchain account stored in state during handshake step
-				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).ICAControllerKeeper.GetInterchainAccountAddress(ctx, path.EndpointA.ConnectionID, portID)
+				interchainAccountAddr, found := GetICAApp(suite.IntentoChain).ICAControllerKeeper.GetInterchainAccountAddress(ctx, path.EndpointA.ConnectionID, portID)
 				suite.Require().True(found)
 
 				icaAddr, err := sdk.AccAddressFromBech32(interchainAccountAddr)
 				suite.Require().NoError(err)
 
 				// Check if account is created
-				interchainAccount := icaAppB.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
+				interchainAccount := icaAppB.GetSimApp().AccountKeeper.GetAccount(suite.HostChain.GetContext(), icaAddr)
 				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
 				if parseIcaAddress {
 					interchainAccountAddr = types.ParseICAValue
@@ -346,8 +350,8 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 				// Create bank transfer message to execute on the host
 				sdkMsg = &banktypes.MsgSend{
 					FromAddress: interchainAccountAddr,
-					ToAddress:   suite.chainB.SenderAccount.GetAddress().String(),
-					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+					ToAddress:   suite.HostChain.SenderAccount.GetAddress().String(),
+					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 				}
 			}
 
@@ -364,10 +368,9 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 			msg, err := types.NewMsgSubmitAction(owner, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, &conditions)
 
 			suite.Require().NoError(err)
-			wrappedCtx := sdk.WrapSDKContext(ctx)
 
-			msgSrv := keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
-			res, err := msgSrv.SubmitAction(wrappedCtx, msg)
+			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
+			res, err := msgSrv.SubmitAction(suite.IntentoChain.GetContext(), msg)
 
 			if !tc.expPass {
 				suite.Require().Error(err)
@@ -379,14 +382,18 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 			suite.Require().NotNil(res)
 
 			if parseIcaAddress {
-				err := sdkMsg.ValidateBasic()
+				//err := sdkMsg.ValidateBasic()
+				m, ok := sdkMsg.(sdk.HasValidateBasic)
+				suite.Require().True(ok)
+				err = m.ValidateBasic()
+
 				suite.Require().Contains(err.Error(), "bech32")
 				err = msg.ValidateBasic()
 				suite.Require().NoError(err)
 			}
 			actionKeeper := icaAppA.IntentKeeper
 
-			suite.chainA.CurrentHeader.Time = suite.chainA.CurrentHeader.Time.Add(interval)
+			suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(interval)
 			action := actionKeeper.GetActionInfo(ctx, 1)
 			types.Denom = "stake"
 			if action.Conditions != nil && action.Conditions.ICQConfig != nil {
@@ -394,7 +401,7 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 
 			}
 			actionKeeper.HandleAction(ctx, actionKeeper.Logger(ctx), action, ctx.BlockTime(), nil)
-			suite.chainA.NextBlock()
+			suite.IntentoChain.NextBlock()
 			action = actionKeeper.GetActionInfo(ctx, 1)
 			actionHistory, err := actionKeeper.GetActionHistory(ctx, 1)
 
@@ -404,12 +411,13 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 			suite.Require().Equal(action.Label, label)
 
 			//ibc
-
 			if action.ICAConfig.PortID != "" {
 				suite.Require().Equal(action.ICAConfig.PortID, "icacontroller-"+owner)
 			}
 			if !transferMsg {
+				//icq should return this error
 				if actionHistory[0].Errors != nil {
+					// fmt.Printf("ICQ MSG %v", action.Msgs[0].GetCachedValue())
 					suite.Require().Contains(actionHistory[0].Errors[0], "Error submitting ICQ")
 				}
 
@@ -417,7 +425,7 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 			if msg.Conditions.ICQConfig != nil {
 				msgQueryResp, _ := suite.SetupMsgSubmitQueryResponse(*msg.Conditions.ICQConfig, action.ID)
 
-				msgSrvICQ := icqkeeper.NewMsgServerImpl(suite.chainA.GetIntoApp().InterchainQueryKeeper)
+				msgSrvICQ := icqkeeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).InterchainQueryKeeper)
 				_, err := msgSrvICQ.SubmitQueryResponse(ctx, &msgQueryResp)
 
 				//as we cannot fully test this, the code should run
@@ -441,36 +449,23 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSubmitActionAuthZ() {
-	var (
-		path                      *ibctesting.Path
-		registerInterchainAccount bool
-		connectionId              string
-		hostConnectionId          string
-		startAtBeforeBlockHeight  bool
-	)
-
+func (suite *KeeperTestSuite) TestSubmitActionSigner() {
+	icaAddrString := "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6"
 	testCases := []struct {
-		name     string
-		malleate func()
-		expPass  bool
-	}{{
-
-		"success - MsgExec action with ICA", func() {
-			registerInterchainAccount = true
-			connectionId = path.EndpointA.ConnectionID
-			hostConnectionId = path.EndpointB.ConnectionID
-
-		}, true,
-	},
+		name      string
+		malleate  func()
+		from      string
+		expPass   bool
+		withAuthZ bool
+	}{
 		{
-
-			"fail - MsgExec action with other address", func() {
-				registerInterchainAccount = true
-				connectionId = path.EndpointA.ConnectionID
-				hostConnectionId = path.EndpointB.ConnectionID
-
-			}, false,
+			"success - MsgExec message with ICA sender", func() {}, suite.IntentoChain.SenderAccount.GetAddress().String(), true, true,
+		},
+		{
+			"fail - MsgExec message with other from ", func() {}, TestOwnerAddress, true, true,
+		},
+		{
+			"fail - MsgExec message with ICA with other from & prefix", func() {}, "into1g6qdx6kdhpf000afvvpte7hp0vnpzaputyyrem", true, true,
 		},
 	}
 
@@ -478,78 +473,41 @@ func (suite *KeeperTestSuite) TestSubmitActionAuthZ() {
 		tc := tc
 
 		suite.Run(tc.name, func() {
-			suite.SetupTest()
+
 			var owner string
-
-			icaAppA := GetICAApp(suite.chainA.TestChain)
-			icaAppB := GetICAApp(suite.chainB.TestChain)
-			path = NewICAPath(suite.chainA, suite.chainB)
-
-			suite.coordinator.SetupConnections(path)
+			suite.SetupTest()
 
 			tc.malleate() // malleate mutates test data
 
-			owner = suite.chainA.SenderAccount.GetAddress().String()
+			owner = suite.IntentoChain.SenderAccount.GetAddress().String()
+
 			var sdkMsg sdk.Msg
 			sdkMsg = &banktypes.MsgSend{
-				FromAddress: suite.chainA.SenderAccount.GetAddress().String(),
+				FromAddress: tc.from,
 				ToAddress:   TestOwnerAddress,
-				Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+				Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 			}
-			anyMsg, _ := types.PackTxMsgAnys([]sdk.Msg{sdkMsg})
-			sdkMsg = &authztypes.MsgExec{Grantee: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
-				Msgs: anyMsg,
-			}
-			if !tc.expPass {
-				sdkMsgOtherFrom := &banktypes.MsgSend{
-					FromAddress: "into1g6qdx6kdhpf000afvvpte7hp0vnpzaputyyrem",
-					ToAddress:   suite.chainA.SenderAccount.GetAddress().String(),
-					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+			if tc.withAuthZ {
+				anyMsg, _ := types.PackTxMsgAnys([]sdk.Msg{sdkMsg})
+				sdkMsgAuthZ := &authztypes.MsgExec{Grantee: icaAddrString,
+					Msgs: anyMsg,
 				}
-				anyMsgOtherFrom, _ := types.PackTxMsgAnys([]sdk.Msg{sdkMsgOtherFrom})
-
-				sdkMsg = &authztypes.MsgExec{Grantee: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
-					Msgs: anyMsgOtherFrom,
-				}
+				sdkMsg = sdkMsgAuthZ
 			}
-			if registerInterchainAccount {
-				err := SetupICAPath(path, owner)
-				suite.Require().NoError(err)
-
-				portID, err := icatypes.NewControllerPortID(owner)
-				suite.Require().NoError(err)
-
-				// Get the address of the interchain account stored in state during handshake step
-				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
-				suite.Require().True(found)
-
-				icaAddr, err := sdk.AccAddressFromBech32(interchainAccountAddr)
-				suite.Require().NoError(err)
-
-				// Check if account is created
-				interchainAccount := icaAppB.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
-				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
-
-			}
-
 			label := "label"
 			duration := time.Second * 200
 			durationTimeText := duration.String()
 			interval := time.Second * 100
 			intervalTimeText := interval.String()
 			startAt := uint64(0)
-			if startAtBeforeBlockHeight {
-				startAt = uint64(suite.chainA.GetContext().BlockTime().Unix() - 60*60)
-			}
-
-			msg, err := types.NewMsgSubmitAction(owner, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
+			GetICAApp(suite.IntentoChain).ICAControllerKeeper.SetInterchainAccountAddress(suite.IntentoChain.GetContext(), "", "", icaAddrString)
+			msg, err := types.NewMsgSubmitAction(owner, label, []sdk.Msg{sdkMsg}, "", "", durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
 			suite.Require().NoError(err)
 			err = msg.ValidateBasic()
 			suite.Require().NoError(err)
-			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
 
-			msgSrv := keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
-			res, err := msgSrv.SubmitAction(wrappedCtx, msg)
+			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
+			res, err := msgSrv.SubmitAction(suite.IntentoChain.GetContext(), msg)
 
 			if !tc.expPass {
 				suite.Require().Error(err)
@@ -572,8 +530,8 @@ func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 	)
 	sdkMsg = &banktypes.MsgSend{
 		FromAddress: TestOwnerAddress,
-		ToAddress:   suite.chainA.SenderAccount.GetAddress().String(),
-		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+		ToAddress:   suite.TestAccs[0].String(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 	}
 
 	testCases := []struct {
@@ -595,22 +553,17 @@ func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
+			path = NewICAPath(suite.IntentoChain, suite.HostChain)
 
-			icaAppA := GetICAApp(suite.chainA.TestChain)
-			//icaAppB := GetICAApp(suite.chainB.TestChain)
-			path = NewICAPath(suite.chainA, suite.chainB)
+			suite.Coordinator.SetupConnections(path)
 
-			suite.coordinator.SetupConnections(path)
+			tc.malleate()                                                     // malleate mutates test data
+			creator := suite.IntentoChain.SenderAccount.GetAddress().String() //suite.TestAccs[0].String()
 
-			tc.malleate() // malleate mutates test data
+			msgHosted := types.NewMsgCreateHostedAccount(creator, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())))
 
-			creator := suite.chainA.SenderAccount.GetAddress().String()
-
-			msgHosted := types.NewMsgCreateHostedAccount(creator, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
-			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
-
-			msgSrv := keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
-			resHosted, err := msgSrv.CreateHostedAccount(wrappedCtx, msgHosted)
+			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
+			resHosted, err := msgSrv.CreateHostedAccount(suite.IntentoChain.GetContext(), msgHosted)
 			suite.Require().Nil(err)
 			suite.Require().NotNil(resHosted.Address)
 			suite.Require().NotEqual(resHosted.Address, creator)
@@ -622,14 +575,13 @@ func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 			intervalTimeText := interval.String()
 			startAt := uint64(0)
 			if startAtBeforeBlockHeight {
-				startAt = uint64(suite.chainA.GetContext().BlockTime().Unix() - 60*60)
+				startAt = uint64(suite.IntentoChain.GetContext().BlockTime().Unix() - 60*60)
 			}
-			msg, err := types.NewMsgSubmitAction(creator, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())), resHosted.Address, sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt()), &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
+			msg, err := types.NewMsgSubmitAction(creator, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())), resHosted.Address, sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()), &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
 			suite.Require().NoError(err)
-			wrappedCtx = sdk.WrapSDKContext(suite.chainA.GetContext())
 
-			msgSrv = keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
-			res, err := msgSrv.SubmitAction(wrappedCtx, msg)
+			msgSrv = keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
+			res, err := msgSrv.SubmitAction(suite.IntentoChain.GetContext(), msg)
 
 			if !tc.expPass {
 				suite.Require().Error(err)
@@ -701,11 +653,11 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			icaAppA := GetICAApp(suite.chainA.TestChain)
-			icaAppB := GetICAApp(suite.chainB.TestChain)
+			icaAppA := suite.App
+			icaAppB := suite.HostApp
 
-			path = NewICAPath(suite.chainA, suite.chainB)
-			suite.coordinator.SetupConnections(path)
+			path = NewICAPath(suite.IntentoChain, suite.HostChain)
+			suite.Coordinator.SetupConnections(path)
 
 			tc.malleate() // malleate mutates test data
 
@@ -717,64 +669,63 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 				suite.Require().NoError(err)
 
 				// Get the address of the interchain account stored in state during handshake step
-				interchainAccountAddr, found := GetICAApp(suite.chainA.TestChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.chainA.GetContext(), path.EndpointA.ConnectionID, portID)
+				interchainAccountAddr, found := GetICAApp(suite.IntentoChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.IntentoChain.GetContext(), path.EndpointA.ConnectionID, portID)
 				suite.Require().True(found)
 
 				icaAddr, err := sdk.AccAddressFromBech32(interchainAccountAddr)
 				suite.Require().NoError(err)
 
 				// Check if account is created
-				interchainAccount := icaAppB.AccountKeeper.GetAccount(suite.chainB.GetContext(), icaAddr)
+				interchainAccount := icaAppB.AccountKeeper.GetAccount(suite.HostChain.GetContext(), icaAddr)
 				suite.Require().Equal(interchainAccount.GetAddress().String(), interchainAccountAddr)
 
 				// Create bank transfer message to execute on the host
 				sdkMsg = &banktypes.MsgSend{
 					FromAddress: interchainAccountAddr,
-					ToAddress:   suite.chainB.SenderAccount.GetAddress().String(),
-					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+					ToAddress:   suite.HostChain.SenderAccount.GetAddress().String(),
+					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAction(owner, "label", []sdk.Msg{sdkMsg}, connectionId, "", "200s", "100s", uint64(suite.chainA.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
+			msg, err := types.NewMsgSubmitAction(owner, "label", []sdk.Msg{sdkMsg}, connectionId, "", "200s", "100s", uint64(suite.IntentoChain.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
 			suite.Require().NoError(err)
-			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
-			msgSrv := keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
-			_, err = msgSrv.SubmitAction(wrappedCtx, msg)
+
+			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
+			_, err = msgSrv.SubmitAction(suite.IntentoChain.GetContext(), msg)
 			suite.Require().NoError(err)
 
 			if addFakeExecHistory {
-				action := icaAppA.IntentKeeper.GetActionInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				action := icaAppA.IntentKeeper.GetActionInfo(sdk.UnwrapSDKContext(suite.IntentoChain.GetContext()), 1)
 				fakeEntry := types.ActionHistoryEntry{ScheduledExecTime: action.ExecTime, ActualExecTime: action.ExecTime}
 
-				icaAppA.IntentKeeper.SetActionHistoryEntry(sdk.UnwrapSDKContext(wrappedCtx), action.ID, &fakeEntry)
-				suite.chainA.NextBlock()
-				actionHistory := icaAppA.IntentKeeper.MustGetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				icaAppA.IntentKeeper.SetActionHistoryEntry(sdk.UnwrapSDKContext(suite.IntentoChain.GetContext()), action.ID, &fakeEntry)
+				suite.IntentoChain.NextBlock()
+				actionHistory := icaAppA.IntentKeeper.MustGetActionHistory(sdk.UnwrapSDKContext(suite.IntentoChain.GetContext()), 1)
 				suite.Require().NotZero(actionHistory[0].ActualExecTime)
 			}
 			updateMsg, err := types.NewMsgUpdateAction(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
 			suite.Require().NoError(err)
-			suite.chainA.Coordinator.IncrementTime()
-			suite.Require().NotEqual(suite.chainA.GetContext(), wrappedCtx)
-			wrappedCtx = sdk.WrapSDKContext(suite.chainA.GetContext())
+			suite.IntentoChain.Coordinator.IncrementTime()
+			suite.Require().NotEqual(suite.IntentoChain.GetContext(), suite.IntentoChain.GetContext())
 
 			if addFakeExecHistory {
-				actionHistory := icaAppA.IntentKeeper.MustGetActionHistory(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				actionHistory := icaAppA.IntentKeeper.MustGetActionHistory(sdk.UnwrapSDKContext(suite.IntentoChain.GetContext()), 1)
 				suite.Require().NotZero(actionHistory[0].ActualExecTime)
-				actionHistoryEntry, err := icaAppA.IntentKeeper.GetLatestActionHistoryEntry(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				actionHistoryEntry, err := icaAppA.IntentKeeper.GetLatestActionHistoryEntry(sdk.UnwrapSDKContext(suite.IntentoChain.GetContext()), 1)
 				suite.Require().NoError(err)
 				suite.Require().NotNil(actionHistoryEntry)
 			}
 
-			res, err := msgSrv.UpdateAction(wrappedCtx, updateMsg)
+			res, err := msgSrv.UpdateAction(suite.IntentoChain.GetContext(), updateMsg)
 
 			if !tc.expPass {
 				suite.Require().Error(err)
 
 			} else {
-				suite.chainA.NextBlock()
+				suite.IntentoChain.NextBlock()
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-				action := icaAppA.IntentKeeper.GetActionInfo(sdk.UnwrapSDKContext(wrappedCtx), 1)
+				action := icaAppA.IntentKeeper.GetActionInfo(sdk.UnwrapSDKContext(suite.IntentoChain.GetContext()), 1)
 				suite.Require().Equal(action.Label, updateMsg.Label)
 				suite.Require().Equal(action.StartTime.Unix(), int64(updateMsg.StartAt))
 				suite.Require().Equal(action.EndTime.Unix(), int64(updateMsg.EndTime))
@@ -819,33 +770,30 @@ func (suite *KeeperTestSuite) TestUpdateHostedAccount() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 
-			icaAppA := GetICAApp(suite.chainA.TestChain)
-			//icaAppB := GetICAApp(suite.chainB.TestChain)
-			path = NewICAPath(suite.chainA, suite.chainB)
+			path = NewICAPath(suite.IntentoChain, suite.HostChain)
 
-			suite.coordinator.SetupConnections(path)
+			suite.Coordinator.SetupConnections(path)
 
 			tc.malleate() // malleate mutates test data
 
-			admin := suite.chainA.SenderAccount.GetAddress().String()
+			admin := suite.IntentoChain.SenderAccount.GetAddress().String()
 
-			msgHosted := types.NewMsgCreateHostedAccount(admin, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.OneInt())))
-			wrappedCtx := sdk.WrapSDKContext(suite.chainA.GetContext())
-			msgSrv := keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
-			resHosted, err := msgSrv.CreateHostedAccount(wrappedCtx, msgHosted)
+			msgHosted := types.NewMsgCreateHostedAccount(admin, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())))
+
+			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
+			resHosted, err := msgSrv.CreateHostedAccount(suite.IntentoChain.GetContext(), msgHosted)
 			suite.Require().Nil(err)
 			suite.Require().NotNil(resHosted.Address)
-			//suite.chainA.NextBlock()
-			hosted := icaAppA.IntentKeeper.GetHostedAccount(suite.chainA.GetContext(), resHosted.Address)
+			//suite.IntentoChain.NextBlock()
+			hosted := GetICAApp(suite.IntentoChain).IntentKeeper.GetHostedAccount(suite.IntentoChain.GetContext(), resHosted.Address)
 
-			msg := types.NewMsgUpdateHostedAccount(admin, resHosted.Address, newConnectionId, newVersion, newAdmin, sdk.NewCoins(sdk.NewCoin(newDenom, sdk.NewIntFromUint64(newFeeAmount))))
+			msg := types.NewMsgUpdateHostedAccount(admin, resHosted.Address, newConnectionId, newVersion, newAdmin, sdk.NewCoins(sdk.NewCoin(newDenom, math.NewIntFromUint64(newFeeAmount))))
 			suite.Require().NoError(err)
-			wrappedCtx = sdk.WrapSDKContext(suite.chainA.GetContext())
 
-			msgSrv = keeper.NewMsgServerImpl(GetActionKeeperFromApp(icaAppA))
-			res, err := msgSrv.UpdateHostedAccount(wrappedCtx, msg)
+			msgSrv = keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
+			res, err := msgSrv.UpdateHostedAccount(suite.IntentoChain.GetContext(), msg)
 
-			hostedNew := icaAppA.IntentKeeper.GetHostedAccount(suite.chainA.GetContext(), resHosted.Address)
+			hostedNew := GetICAApp(suite.IntentoChain).IntentKeeper.GetHostedAccount(suite.IntentoChain.GetContext(), resHosted.Address)
 			if !tc.expPass {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)

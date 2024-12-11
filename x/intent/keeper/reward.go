@@ -1,7 +1,10 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -14,13 +17,16 @@ func (k Keeper) HandleRelayerReward(ctx sdk.Context, relayer sdk.AccAddress, rew
 	if !k.GetRelayerRewardsAvailability(ctx) {
 		return
 	}
-	p := k.GetParams(ctx)
+	p, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	// fmt.Printf("p.RelayerRewards %v\n", p.RelayerRewards)
-	incentiveCoin := sdk.NewCoin(types.Denom, sdk.NewInt(p.RelayerRewards[rewardType]))
+	incentiveCoin := sdk.NewCoin(types.Denom, math.NewInt(p.RelayerRewards[rewardType]))
 
 	// fmt.Printf("relayer %v\n", relayer.String())
-	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, relayer, sdk.NewCoins(incentiveCoin))
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, relayer, sdk.NewCoins(incentiveCoin))
 	if err != nil {
 		//set incentives unavailable
 		k.SetRelayerRewardsAvailability(ctx, false)
@@ -29,7 +35,7 @@ func (k Keeper) HandleRelayerReward(ctx sdk.Context, relayer sdk.AccAddress, rew
 }
 
 func (k Keeper) SetRelayerRewardsAvailability(ctx sdk.Context, rewardsAvailable bool) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	value := []byte("false")
 	if rewardsAvailable {
 		value = []byte("true")
@@ -39,14 +45,14 @@ func (k Keeper) SetRelayerRewardsAvailability(ctx sdk.Context, rewardsAvailable 
 
 // GetRelayerRewardsAvailability returns the rewards availability
 func (k Keeper) GetRelayerRewardsAvailability(ctx sdk.Context) bool {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	value := store.Get([]byte(types.KeyRelayerRewardsAvailability))
 	return string(value) == "true"
 }
 
 // GetActionIbcUsage
 func (k Keeper) TryGetActionIbcUsage(ctx sdk.Context, owner string) (types.ActionIbcUsage, error) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	var actionUsage types.ActionIbcUsage
 	actionBz := store.Get(append(types.ActionIbcUsageKeyPrefix, []byte(owner)...))
 
@@ -58,7 +64,7 @@ func (k Keeper) TryGetActionIbcUsage(ctx sdk.Context, owner string) (types.Actio
 }
 
 func (k Keeper) SetActionIbcUsage(ctx sdk.Context, actionUsage *types.ActionIbcUsage) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store.Set(append(types.ActionIbcUsageKeyPrefix, []byte(actionUsage.Address)...), k.cdc.MustMarshal(actionUsage))
 }
 
@@ -86,9 +92,9 @@ func (k Keeper) UpdateActionIbcUsage(ctx sdk.Context, action types.ActionInfo) {
 					coin = msgValue.Amount[0]
 				}
 
-			case sdk.MsgTypeURL(&msgregistry.MsgExecuteContract{}):
+			case sdk.MsgTypeURL(&wasm.MsgExecuteContract{}):
 				{
-					msgValue := &msgregistry.MsgExecuteContract{}
+					msgValue := &wasm.MsgExecuteContract{}
 					if err := proto.Unmarshal(msgInMsgExec.Value, msgValue); err != nil {
 						return
 					}
@@ -138,7 +144,9 @@ func (k Keeper) appendToActionIbcUsage(ctx sdk.Context, owner string, actionAck 
 
 func (k Keeper) IterateActionUsage(ctx sdk.Context) []types.ActionIbcUsage {
 	// Get an instance of the KVStore for the given storeKey
-	prefixStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.ActionIbcUsageKeyPrefix)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.ActionIbcUsageKeyPrefix)
+
 	iter := prefixStore.Iterator(nil, nil)
 
 	// Defer closing the iterator until the function returns

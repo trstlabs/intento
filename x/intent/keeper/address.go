@@ -7,6 +7,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	sdkaddress "github.com/cosmos/cosmos-sdk/types/address"
@@ -15,7 +16,7 @@ import (
 )
 
 func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo, connectionID, portID string) (protoMsgs []proto.Message, err error) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	if store.Has(types.GetActionHistoryKey(action.ID)) {
 		txMsgs := action.GetTxMsgs(k.cdc)
 		for _, msg := range txMsgs {
@@ -97,7 +98,7 @@ func (k Keeper) createFeeAccount(ctx sdk.Context, id uint64, owner sdk.AccAddres
 	} else {
 		// create an empty account (so we don't have issues later)
 		actionAccount := k.accountKeeper.NewAccountWithAddress(ctx, actionAddress)
-		k.accountKeeper.SetAccount(ctx, actionAccount)
+		k.accountKeeper.NewAccount(ctx, actionAccount)
 	}
 	return actionAddress, nil
 }
@@ -117,7 +118,7 @@ func actionAddress(id, instanceID uint64) sdk.AccAddress {
 }
 
 func (k Keeper) autoIncrementID(ctx sdk.Context, lastIDKey []byte) uint64 {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	bz := store.Get(lastIDKey)
 	id := uint64(1)
 	if bz != nil {

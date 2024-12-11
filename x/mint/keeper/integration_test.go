@@ -3,15 +3,15 @@ package keeper_test
 import (
 	"encoding/json"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	app "github.com/trstlabs/intento/app"
 
-	// "github.com/trstlabs/intento/x/compute"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/trstlabs/intento/x/mint/types"
 )
 
@@ -19,7 +19,7 @@ import (
 func createTestApp(isCheckTx bool) (*app.IntoApp, sdk.Context) {
 	app := setup(isCheckTx)
 
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
+	ctx := app.BaseApp.NewContext(isCheckTx)
 	app.MintKeeper.SetParams(ctx, types.DefaultParams())
 	app.MintKeeper.SetMinter(ctx, types.DefaultInitialMinter())
 
@@ -27,7 +27,7 @@ func createTestApp(isCheckTx bool) (*app.IntoApp, sdk.Context) {
 }
 
 func setup(isCheckTx bool) *app.IntoApp {
-	app, genesisState := genApp(!isCheckTx, 5)
+	app, genesisState := genApp(!isCheckTx)
 
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
@@ -38,7 +38,7 @@ func setup(isCheckTx bool) *app.IntoApp {
 
 		// Initialize the chain
 		app.InitChain(
-			abci.RequestInitChain{
+			&abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: &tmproto.ConsensusParams{},
 				AppStateBytes:   stateBytes,
@@ -49,22 +49,19 @@ func setup(isCheckTx bool) *app.IntoApp {
 	return app
 }
 
-func genApp(withGenesis bool, invCheckPeriod uint) (*app.IntoApp, app.GenesisState) {
+func genApp(withGenesis bool) (*app.IntoApp, app.GenesisState) {
 	db := dbm.NewMemDB()
-	encCdc := app.MakeEncodingConfig()
 	IntoApp := app.NewIntoApp(
 		log.NewNopLogger(),
 		db,
 		nil,
 		true,
-		encCdc,
 		app.EmptyAppOptions{},
-		// compute.GetConfig(simapp.EmptyAppOptions{}),
-		// app.GetEnabledProposals(),
+		[]wasmkeeper.Option{},
 	)
 
 	if withGenesis {
-		return IntoApp, app.NewDefaultGenesisState(encCdc.Codec)
+		return IntoApp, app.NewDefaultGenesisState(IntoApp.AppCodec())
 	}
 
 	return IntoApp, app.GenesisState{}

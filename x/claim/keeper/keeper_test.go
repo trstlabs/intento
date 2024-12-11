@@ -5,7 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -34,8 +36,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
 
-	suite.app.DistrKeeper.SetFeePool(suite.ctx, distrtypes.InitialFeePool())
-	suite.app.ClaimKeeper.CreateModuleAccount(suite.ctx, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
+	suite.app.DistrKeeper.FeePool.Set(suite.ctx, distrtypes.InitialFeePool())
+	suite.app.ClaimKeeper.CreateModuleAccount(suite.ctx, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10000000)))
 	startTime := time.Now()
 
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.app.ClaimKeeper)
@@ -81,8 +83,8 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 		},
 	}
 
-	s.app.AccountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
-	s.app.AccountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccount(addr2, nil, 0, 0))
+	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, pub1, 0, 0))
+	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr2, pub2, 0, 0))
 
 	s.app.ClaimKeeper.SetParams(s.ctx, types.Params{
 		//AirdropEnabled:     false,
@@ -120,16 +122,17 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 	s.Require().NoError(err)
 
 	// addr1 has to delegate
-	validator, err := stakingtypes.NewValidator(valAddr, pub1, stakingtypes.Description{})
+	validator, err := stakingtypes.NewValidator(valAddr.String(), pub1, stakingtypes.Description{})
+	//validator, err := stakingtypes.NewValidator(valAddr, pub1, stakingtypes.Description{})
 	s.Require().NoError(err)
 	validator = stakingkeeper.TestingUpdateValidator(s.app.StakingKeeper, s.ctx, validator, true)
-	s.app.StakingKeeper.Hooks().AfterValidatorCreated(s.ctx, validator.GetOperator())
+	s.app.StakingKeeper.Hooks().AfterValidatorCreated(s.ctx, valAddr)
 
 	validator, _ = validator.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
 
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, addr1, record.InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(20)), stakingtypes.Unbonded, validator, true)
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, addr1, record.InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(20)), stakingtypes.Unbonded, validator, true)
 	s.NoError(err)
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, addr1, record.InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(20)), stakingtypes.Unbonded, validator, true)
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, addr1, record.InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(20)), stakingtypes.Unbonded, validator, true)
 	s.NoError(err)
 
 	msgClaimClaimable = types.NewMsgClaimClaimable(addr1)
@@ -137,7 +140,7 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 	s.Require().NoError(err)
 	claimedCoins := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
 
-	s.Require().Equal(claimedCoins.AmountOf(sdk.DefaultBondDenom), sdk.NewInt(100))
+	s.Require().Equal(claimedCoins.AmountOf(sdk.DefaultBondDenom), math.NewInt(100))
 
 	s.Require().Equal(true, record.Status[0].ActionCompleted)
 
@@ -156,24 +159,25 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 	err = s.app.ClaimKeeper.SetClaimRecord(s.ctx, record)
 	s.Require().NoError(err)
 
-	s.app.StakingKeeper.Delegate(s.ctx, addr1, sdk.NewInt(68), stakingtypes.Unbonded, validator, true)
+	s.app.StakingKeeper.Delegate(s.ctx, addr1, math.NewInt(68), stakingtypes.Unbonded, validator, true)
 
 	msgClaimClaimable = types.NewMsgClaimClaimable(addr1)
 	_, err = s.msgSrvr.ClaimClaimable(ctx, msgClaimClaimable)
 	s.Require().NoError(err)
 
 	//get delegations and calculate min bonded ratio for claim
-	delegationInfo := s.app.StakingKeeper.GetAllDelegatorDelegations(s.ctx, addr1)
-	totalDelegations := sdk.ZeroDec()
+	delegationInfo, err := s.app.StakingKeeper.GetAllDelegatorDelegations(s.ctx, addr1)
+	s.Require().NoError(err)
+	totalDelegations := math.LegacyZeroDec()
 	for _, delegation := range delegationInfo {
 		totalDelegations = totalDelegations.Add(delegation.Shares)
 	}
 	balanceCoins := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
 
 	s.Require().Equal(
-		balanceCoins.AmountOf(sdk.DefaultBondDenom), sdk.NewInt(232))
+		balanceCoins.AmountOf(sdk.DefaultBondDenom), math.NewInt(232))
 	s.Require().Equal(
-		totalDelegations, sdk.NewDec(268))
+		totalDelegations, math.LegacyNewDec(268))
 
 	record, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Require().NoError(err)
@@ -195,24 +199,25 @@ func (s *KeeperTestSuite) TestClaimClaimable() {
 
 	err = s.app.ClaimKeeper.SetClaimRecord(s.ctx, record)
 	s.Require().NoError(err)
-	s.app.StakingKeeper.Delegate(s.ctx, addr2, sdk.NewInt(200), stakingtypes.Unbonded, validator, true)
-	s.app.StakingKeeper.Delegate(s.ctx, addr2, sdk.NewInt(68), stakingtypes.Unbonded, validator, true)
+	s.app.StakingKeeper.Delegate(s.ctx, addr2, math.NewInt(200), stakingtypes.Unbonded, validator, true)
+	s.app.StakingKeeper.Delegate(s.ctx, addr2, math.NewInt(68), stakingtypes.Unbonded, validator, true)
 	msgClaimClaimable = types.NewMsgClaimClaimable(addr2)
 	_, err = s.msgSrvr.ClaimClaimable(ctx, msgClaimClaimable)
 	s.Require().NoError(err)
 
 	//get delegations and calculate min bonded ratio for claim
-	delegationInfo = s.app.StakingKeeper.GetAllDelegatorDelegations(s.ctx, addr2)
-	totalDelegations = sdk.ZeroDec()
+	delegationInfo, err = s.app.StakingKeeper.GetAllDelegatorDelegations(s.ctx, addr2)
+	s.Require().NoError(err)
+	totalDelegations = math.LegacyZeroDec()
 	for _, delegation := range delegationInfo {
 		totalDelegations = totalDelegations.Add(delegation.Shares)
 	}
 	balanceCoins = s.app.BankKeeper.GetAllBalances(s.ctx, addr2)
 
 	s.Require().Equal(
-		balanceCoins.AmountOf(sdk.DefaultBondDenom), sdk.NewInt(232))
+		balanceCoins.AmountOf(sdk.DefaultBondDenom), math.NewInt(232))
 	s.Require().Equal(
-		totalDelegations, sdk.NewDec(268))
+		totalDelegations, math.LegacyNewDec(268))
 
 	record, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr2)
 	s.Require().NoError(err)
@@ -239,7 +244,7 @@ func FundAccount(bankKeeper bankkeeper.Keeper, ctx sdk.Context, addr sdk.AccAddr
 func (s *KeeperTestSuite) TestHookOfUnclaimableAccount() {
 	pub1 := ed25519.GenPrivKey().PubKey()
 	addr1 := sdk.AccAddress(pub1.Address())
-	s.app.AccountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
 
 	claim, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Contains(err.Error(), "address does not have claim record")
@@ -265,8 +270,8 @@ func (s *KeeperTestSuite) TestHookBeforeAirdropStart() {
 		DurationVestingPeriods: types.DefaultDurationVestingPeriods,
 	})
 
-	pub1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pub1.Address())
+	_, _, pub1 := testdata.KeyTestPubAddr()
+	addr1 := sdk.AccAddress(pub1)
 	status := types.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
 	claimRecords := []types.ClaimRecord{
 		{
@@ -275,7 +280,8 @@ func (s *KeeperTestSuite) TestHookBeforeAirdropStart() {
 			Status:                 []types.Status{status, status, status, status},
 		},
 	}
-	s.app.AccountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+
+	s.app.AccountKeeper.NewAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, pub1))
 
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
@@ -299,7 +305,7 @@ func (s *KeeperTestSuite) TestHookBeforeAirdropStart() {
 	balances = s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
 	//fmt.Printf("%v \n", balances)
 	// Now, it is the time for air drop, so claim module should send the balances to the user after delegate.
-	s.Equal(claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(int64(len(types.Action_value)))).Quo(sdk.NewInt(5)), balances.AmountOf(sdk.DefaultBondDenom))
+	s.Equal(claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(int64(len(types.Action_value)))).Quo(math.NewInt(5)), balances.AmountOf(sdk.DefaultBondDenom))
 }
 
 func (s *KeeperTestSuite) TestAirdropDisabled() {
@@ -326,7 +332,7 @@ func (s *KeeperTestSuite) TestAirdropDisabled() {
 			Status:                 []types.Status{status, status, status, status},
 		},
 	}
-	s.app.AccountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
 
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
@@ -394,7 +400,7 @@ func (s *KeeperTestSuite) TestAirdropDisabled() {
 	s.app.ClaimKeeper.AfterDelegationModified(s.ctx.WithBlockTime(airdropStartTime.Add(time.Hour*2)), addr1, sdk.ValAddress(addr1))
 	balances = s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
 	// Now, it is the time for air drop, so claim module should send the balances to the user after delegate.
-	s.Equal(claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(int64(len(types.Action_value)))).Quo(sdk.NewInt(5)), balances.AmountOf(sdk.DefaultBondDenom))
+	s.Equal(claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(int64(len(types.Action_value)))).Quo(math.NewInt(5)), balances.AmountOf(sdk.DefaultBondDenom))
 }
 
 func (s *KeeperTestSuite) TestDuplicatedActionNotWithdrawRepeatedly() {
@@ -410,7 +416,7 @@ func (s *KeeperTestSuite) TestDuplicatedActionNotWithdrawRepeatedly() {
 			Status:                 []types.Status{status, status, status, status},
 		},
 	}
-	s.app.AccountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
 
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
@@ -425,7 +431,7 @@ func (s *KeeperTestSuite) TestDuplicatedActionNotWithdrawRepeatedly() {
 	s.True(claim.Status[3].ActionCompleted)
 
 	claimedCoins := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
-	s.Require().Equal(claimedCoins.AmountOf(sdk.DefaultBondDenom), claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(20)))
+	s.Require().Equal(claimedCoins.AmountOf(sdk.DefaultBondDenom), claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(20)))
 
 	s.app.ClaimKeeper.AfterDelegationModified(s.ctx, addr1, sdk.ValAddress(addr1))
 	claim, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
@@ -433,12 +439,12 @@ func (s *KeeperTestSuite) TestDuplicatedActionNotWithdrawRepeatedly() {
 	s.True(claim.Status[3].ActionCompleted)
 
 	claimedCoins = s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
-	s.Require().Equal(claimedCoins.AmountOf(sdk.DefaultBondDenom), claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(sdk.NewInt(20)))
+	s.Require().Equal(claimedCoins.AmountOf(sdk.DefaultBondDenom), claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(20)))
 }
 
 func (s *KeeperTestSuite) TestNotRunningGenesisBlock() {
 	s.ctx = s.ctx.WithBlockHeight(1)
-	s.app.ClaimKeeper.CreateModuleAccount(s.ctx, sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(10000000)))
+	//s.app.ClaimKeeper.CreateModuleAccount(s.ctx, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10000000)))
 	// set airdrop enabled but with date in the future
 	s.app.ClaimKeeper.SetParams(s.ctx, types.Params{
 		//AirdropEnabled:     true,
@@ -459,7 +465,7 @@ func (s *KeeperTestSuite) TestNotRunningGenesisBlock() {
 			Status:                 []types.Status{status, status, status, status},
 		},
 	}
-	s.app.AccountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
 
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
@@ -507,8 +513,8 @@ func (s *KeeperTestSuite) TestEndAirdrop() {
 		},
 	}
 
-	s.app.AccountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
-	s.app.AccountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccount(addr2, nil, 0, 0))
+	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr2, nil, 0, 0))
 
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)

@@ -23,22 +23,23 @@ message Params {
   ];
   //  Maximum period for self-executing Action
   google.protobuf.Duration MaxActionDuration = 5 [
-        (gogoproto.nullable)    = false,
-        (gogoproto.stdduration) = true,
-        (gogoproto.jsontag)     = "max_action_duration,omitempty"
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "max_action_duration,omitempty"
   ];
   //  Minimum period for self-executing Action
   google.protobuf.Duration MinActionDuration = 6 [
-        (gogoproto.nullable)    = false,
-        (gogoproto.stdduration) = true,
-        (gogoproto.jsontag)     = "min_action_duration,omitempty"
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "min_action_duration,omitempty"
   ];
   //  Minimum period for self-executing Action
   google.protobuf.Duration MinActionInterval = 8 [
-        (gogoproto.nullable)    = false,
-        (gogoproto.stdduration) = true,
-        (gogoproto.jsontag)     = "min_action_interval,omitempty"
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "min_action_interval,omitempty"
   ];
-  //relayer rewards in uinto for each message type 0=SDK,1=Wasm, 2=Osmo. Rewards are in uinto and topped up in the module account by alloc module.
+  // relayer rewards in uinto for each message type 0=SDK,1=Wasm, 2=Osmo.
+  // Rewards are in uinto and topped up in the module account by alloc module.
   repeated int64 relayer_rewards = 9;
 }

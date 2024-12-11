@@ -20,17 +20,19 @@ const (
 
 // nolint
 var (
-	ActionKeyPrefix               = []byte{0x01}
-	ActionHistoryPrefix           = []byte{0x02}
-	ActionQueuePrefix             = []byte{0x03}
-	SequenceKeyPrefix             = []byte{0x04}
-	ActionsByOwnerPrefix          = []byte{0x05}
-	TmpActionIDLatestTX           = []byte{0x06}
-	KeyRelayerRewardsAvailability = []byte{0x07}
-	ActionIbcUsageKeyPrefix       = []byte{0x08}
-	ActionHistorySequencePrefix   = []byte{0x09}
-	HostedAccountKeyPrefix        = []byte{0x10}
-	HostedAccountsByAdminPrefix   = []byte{0x11}
+	// ParamsKey stores the module params
+	ParamsKey                     = []byte{0x01}
+	ActionKeyPrefix               = []byte{0x02}
+	ActionHistoryPrefix           = []byte{0x03}
+	ActionQueuePrefix             = []byte{0x04}
+	SequenceKeyPrefix             = []byte{0x05}
+	ActionsByOwnerPrefix          = []byte{0x06}
+	TmpActionIDLatestTX           = []byte{0x07}
+	KeyRelayerRewardsAvailability = []byte{0x08}
+	ActionIbcUsageKeyPrefix       = []byte{0x09}
+	ActionHistorySequencePrefix   = []byte{0x10}
+	HostedAccountKeyPrefix        = []byte{0x11}
+	HostedAccountsByAdminPrefix   = []byte{0x12}
 	KeyLastID                     = append(SequenceKeyPrefix, []byte("lastId")...)
 	KeyLastTxAddrID               = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
 )

@@ -44,10 +44,11 @@ set_into_genesis() {
     jq '.app_state.gov.params.max_deposit_period = $newVal' --arg newVal "$MAX_DEPOSIT_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.gov.params.voting_period = $newVal' --arg newVal "$VOTING_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
     
-    # enable into as an interchain accounts controller
+    # enable intento as an interchain accounts controller
     jq "del(.app_state.interchain_accounts)" $genesis_config > json.tmp && mv json.tmp $genesis_config
     interchain_accts=$(cat $DOCKERNET_HOME/config/ica_controller.json)
     jq ".app_state += $interchain_accts" $genesis_config > json.tmp && mv json.tmp $genesis_config
+    
 }
 
 
@@ -99,16 +100,51 @@ set_host_genesis() {
         LSM_VALIDATOR_BOND_FACTOR="250"
         LSM_GLOBAL_LIQUID_STAKING_CAP="0.25"
         LSM_VALIDATOR_LIQUID_STAKING_CAP="0.50"
+        UPGRADE_TIMEOUT="2526374086000000000"
         jq '.app_state.gov.params.voting_period = $newVal' --arg newVal "$VOTING_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.staking.params.min_commission_rate = $newVal' --arg newVal "0.010000000000000000" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.staking.params.validator_bond_factor = $newVal' --arg newVal "$LSM_VALIDATOR_BOND_FACTOR" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.staking.params.validator_liquid_staking_cap = $newVal' --arg newVal "$LSM_VALIDATOR_LIQUID_STAKING_CAP" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.staking.params.global_liquid_staking_cap = $newVal' --arg newVal "$LSM_GLOBAL_LIQUID_STAKING_CAP" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.ibc.channel_genesis.params.upgrade_timeout.timestamp = $newVal' --arg newVal "$UPGRADE_TIMEOUT" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.provider.params.max_provider_consensus_validators = $newVal' --arg newVal "180" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.provider.params.blocks_per_epoch = $newVal' --arg newVal "3" $genesis_config > json.tmp && mv json.tmp $genesis_config
+
+        # jq '.app_state.feemarket.params.min_base_gas_price = $newVal' --arg newVal "0.0025" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        # jq '.app_state.feemarket.params.fee_denom = $newVal' --arg newVal "uatom" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        # jq '.app_state.feemarket.params.enabled = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
+        #  jq '.app_state.feemarket.params.window = 1' $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.feemarket.state.base_gas_price = $newVal' --arg newVal "0.002" $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.feemarket.state.window = ["1"]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+        jq '.app_state.feemarket.state.learning_rate = "0.1"' $genesis_config > json.tmp && mv json.tmp $genesis_config
+       jq '.app_state.feemarket.params = {
+    alpha: "0.1",
+    beta: "0.1",
+    gamma: "0.1",
+    delta: "0.1",
+    min_base_gas_price: "0.002",
+    min_learning_rate: "0.1",
+    max_learning_rate: "0.1",
+    max_block_utilization: "10",
+    window: "1",
+    enabled: false, 
+    fee_denom: "uatom"
+}' $genesis_config > json.tmp && mv json.tmp $genesis_config
+
+        jq "del(.app_state.provider.mature_unbonding_ops)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.unbonding_ops)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.consumer_addition_proposals)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.consumer_removal_proposals)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.consumer_addrs_to_prune)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        
+        jq "del(.app_state.provider.params.max_throttled_packets)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.params.init_timeout_period)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
+        jq "del(.app_state.provider.params.vsc_timeout_period)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config 
     fi
     
     
     # Add poolmanager params
-    if [[ "$CHAIN" == "OSMO" ]]; then        
+    if [[ "$CHAIN" == "OSMO" ]]; then
         jq "del(.app_state.poolincentives.pool_to_gauges)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
         jq "del(.app_state.bank.supply_offsets)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
         jq "del(.app_state.staking.params.min_self_delegation)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
@@ -236,6 +272,21 @@ set_host_genesis() {
     fi
 }
 
+
+# set_consumer_genesis() {
+#     genesis_config=$1
+
+#     # add consumer genesis
+#     home_directories=""
+#     for (( i=1; i <= $NUM_NODES; i++ )); do
+#         home_directories+="${STATE}/${NODE_PREFIX}${i},"
+#     done
+
+#     $MAIN_CMD add-consumer-section --validator-home-directories $home_directories
+#     jq '.app_state.ccvconsumer.params.unbonding_period = $newVal' --arg newVal "$UNBONDING_TIME" $genesis_config > json.tmp && mv json.tmp $genesis_config
+# }
+
+
 MAIN_ID=1 # Node responsible for genesis and persistent_peers
 MAIN_NODE_NAME=""
 MAIN_NODE_ID=""
@@ -263,11 +314,14 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     $cmd init $moniker --chain-id $CHAIN_ID --overwrite &> /dev/null
     chmod -R 777 $STATE/$node_name
     
-    
-    if [[ "$CHAIN" == "INTO" || "$CHAIN" == "OSMO" ]]; then
+    if [[ "$CHAIN" == "INTO"  ]]; then
+        TEST_FILES_DIR=$DOCKERNET_HOME/tests/test_files
+        if [ -d "$TEST_FILES_DIR" ]; then
+            $cmd export-snapshot $TEST_FILES_DIR/active-users.csv $TEST_FILES_DIR/nft1.csv $TEST_FILES_DIR/nft2.csv $TEST_FILES_DIR/snapshot_output.json --nft-weight-1 20 --nft-weight 10 --user-weight 5
+            $cmd import-genesis-accounts-from-snapshot $TEST_FILES_DIR/snapshot_output.json $TEST_FILES_DIR/non-airdrop-accounts.json --airdrop-amount=1_000_000_000
+        fi
         $cmd prepare-genesis testnet $CHAIN_ID
     fi
-    
     # Update node networking configuration
     config_toml="${STATE}/${node_name}/config/config.toml"
     client_toml="${STATE}/${node_name}/config/client.toml"
@@ -278,13 +332,12 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     sed -i -E "s|127.0.0.1|0.0.0.0|g" $config_toml
     sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
     sed -i -E "s|timeout_commit = \"2s\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
-    sed -i -E "s|timeout_commit = \"600ms\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
+    sed -i -E "s|timeout_commit = \"500ms\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
     sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"1s\"|g" $config_toml
     sed -i -E "s|timeout_propose = \"2s\"|timeout_propose = \"1s\"|g" $config_toml
+    sed -i -E "s|timeout_propose = \"1.8s\"|timeout_propose = \"1s\"|g" $config_toml
     sed -i -E "s|prometheus = false|prometheus = true|g" $config_toml
     # sed -i -E "s|addr_book_strict = true|addr_book_strict = false|g" $config_toml
-    
-    
     sed -i -E "s|minimum-gas-prices = \".*\"|minimum-gas-prices = \"0${DENOM}\"|g" $app_toml
     sed -i -E '/\[api\]/,/^enable = .*$/ s/^enable = .*$/enable = true/' $app_toml
     sed -i -E 's|unsafe-cors = .*|unsafe-cors = true|g' $app_toml
@@ -308,9 +361,15 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     echo "$val_mnemonic" | $cmd keys add $val_acct --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
     val_addr=$($cmd keys show $val_acct --keyring-backend test -a | tr -cd '[:alnum:]._-')
     # Add this account to the current node
-    $cmd add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
-    # actually set this account as a validator on the current node
+    if [ "$CHAIN" == "GAIA" ]; then
+    $cmd genesis add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
+    $cmd genesis gentx $val_acct ${STAKE_TOKENS}${DENOM} --chain-id $CHAIN_ID --keyring-backend test &> /dev/null
+    else
+    $cmd add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM} 
     $cmd gentx $val_acct ${STAKE_TOKENS}${DENOM} --chain-id $CHAIN_ID --keyring-backend test &> /dev/null
+    fi
+    # actually set this account as a validator on the current node
+
     
     # Cleanup from seds
     rm -rf ${client_toml}-E
@@ -333,7 +392,7 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
 done
 
 if [ "$CHAIN" == "INTO" ]; then
-    # Add the into trigger admin account
+    # Add the into admin account
     echo "$INTO_ADMIN_MNEMONIC" | $MAIN_CMD keys add $INTO_ADMIN_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
     INTO_ADMIN_ADDRESS=$($MAIN_CMD keys show $INTO_ADMIN_ACCT --keyring-backend test -a)
     $MAIN_CMD add-genesis-account ${INTO_ADMIN_ADDRESS} ${ADMIN_TOKENS}${DENOM}
@@ -360,6 +419,8 @@ if [ "$CHAIN" == "INTO" ]; then
         RELAYER_ADDRESS=$($MAIN_CMD keys show $RELAYER_ACCT --keyring-backend test -a)
         $MAIN_CMD add-genesis-account ${RELAYER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
     done
+    
+    
 else
     # Add a user account
     USER_ACCT_VAR=${CHAIN}_USER_ACCT
@@ -367,27 +428,43 @@ else
     echo $USER_MNEMONIC | $MAIN_CMD keys add $USER_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
     USER_ADDRESS=$($MAIN_CMD keys show $USER_ACCT --keyring-backend test -a | tr -cd '[:alnum:]._-')
     echo "USER Address: " $USER_ADDRESS
-    $MAIN_CMD add-genesis-account ${USER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
-    
+    if [ "$CHAIN" == "GAIA" ]; then
+     $MAIN_CMD genesis add-genesis-account ${USER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
+    else
+     $MAIN_CMD add-genesis-account ${USER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
+    fi
     
     echo "$TEST_FAUCET_MNEMONIC" | $MAIN_CMD keys add $TEST_FAUCET_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
     TEST_FAUCET_ADDRESS=$($MAIN_CMD keys show $TEST_FAUCET_ACCT --keyring-backend test -a)
     echo "FAUCET Address: " $TEST_FAUCET_ADDRESS
+
+    if [ "$CHAIN" == "GAIA" ]; then
+    $MAIN_CMD genesis add-genesis-account ${TEST_FAUCET_ADDRESS} ${FAUCET_TOKENS}${DENOM}
+    else
     $MAIN_CMD add-genesis-account ${TEST_FAUCET_ADDRESS} ${FAUCET_TOKENS}${DENOM}
-    
+    fi
     # Add a relayer account
     RELAYER_ACCT=$(GET_VAR_VALUE RELAYER_${CHAIN}_ACCT)
     RELAYER_MNEMONIC=$(GET_VAR_VALUE RELAYER_${CHAIN}_MNEMONIC)
     
     echo "$RELAYER_MNEMONIC" | $MAIN_CMD keys add $RELAYER_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
     RELAYER_ADDRESS=$($MAIN_CMD keys show $RELAYER_ACCT --keyring-backend test -a | tr -cd '[:alnum:]._-')
+    
+    if [ "$CHAIN" == "GAIA" ]; then
+    $MAIN_CMD genesis add-genesis-account ${RELAYER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
+    else
     $MAIN_CMD add-genesis-account ${RELAYER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
+    fi
 fi
 
 
-# now we process gentx txs on the main node
-$MAIN_CMD collect-gentxs &> /dev/null
 
+if [ "$CHAIN" == "GAIA" ]; then
+    $MAIN_CMD genesis collect-gentxs &> /dev/null
+else
+    # now we process gentx txs on the main node
+    $MAIN_CMD collect-gentxs &> /dev/null
+fi
 # wipe out the seeds and persistent peers for the main node (these are incorrectly autogenerated for each validator during collect-gentxs)
 sed -i -E "s|persistent_peers = .*|persistent_peers = \"\"|g" $MAIN_CONFIG
 sed -i -E "s|seeds = .*|seeds = \"\"|g" $MAIN_CONFIG
@@ -402,6 +479,13 @@ else
     #sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     set_host_genesis $MAIN_GENESIS
 fi
+
+
+# update consumer genesis for binary chains
+# if [[ "$CHAIN" == "INTO" || "$CHAIN" == "HOST" ]]; then
+#     set_consumer_genesis $MAIN_GENESIS
+# fi
+
 
 # for all peer nodes....
 for (( i=2; i <= $NUM_NODES; i++ )); do

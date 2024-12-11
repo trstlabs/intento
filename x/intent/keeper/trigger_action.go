@@ -9,9 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/gogoproto/proto"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -50,7 +50,7 @@ func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, 
 	if err != nil {
 		return false, nil, errorsmod.Wrap(err, "could parse and set messages")
 	}
-	data, err := icatypes.SerializeCosmosTx(k.cdc, txMsgs)
+	data, err := icatypes.SerializeCosmosTx(k.cdc, txMsgs, icatypes.EncodingProtobuf)
 	if err != nil {
 		return false, nil, err
 	}
@@ -86,7 +86,7 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 			if err != nil {
 				return nil, err
 			}
-			_, err = k.transferKeeper.Transfer(sdk.WrapSDKContext(ctx), &transferMsg)
+			_, err = k.transferKeeper.Transfer(ctx, &transferMsg)
 			if err != nil {
 				return nil, err
 			}
@@ -94,8 +94,13 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 		}
 
 		handler := k.msgRouter.Handler(msg)
-		for _, acct := range msg.GetSigners() {
-			if acct.String() != action.Owner {
+
+		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+		for _, acct := range signers {
+			if sdk.AccAddress(acct).String() != action.Owner {
 				return nil, errorsmod.Wrap(types.ErrUnauthorized, "owner doesn't have permission to send this message")
 			}
 		}

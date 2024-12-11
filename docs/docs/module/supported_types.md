@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 3
 title: Supported Types
 description: ICQ Supported Types for Interchain Queries
 ---

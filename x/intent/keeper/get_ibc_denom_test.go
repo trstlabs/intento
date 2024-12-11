@@ -8,7 +8,7 @@ package keeper_test
 
 // 	"github.com/cosmos/cosmos-sdk/types/bech32"
 // 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-// 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+// 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 // )
 
 // func (s *KeeperTestSuite) TestIBCDenom() {

@@ -1,30 +1,32 @@
 package apptesting
 
 import (
-	"strings"
+	"fmt"
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmtypesproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmencoding "github.com/cometbft/cometbft/crypto/encoding"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/cosmos/gogoproto/proto"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
-	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
-	"github.com/cosmos/ibc-go/v7/testing/simapp"
-
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	"github.com/cosmos/ibc-go/v8/testing/simapp"
+	appProvider "github.com/cosmos/interchain-security/v6/app/provider"
+	icstestingutils "github.com/cosmos/interchain-security/v6/testutil/ibc_testing"
+	e2e "github.com/cosmos/interchain-security/v6/testutil/integration"
+	testkeeper "github.com/cosmos/interchain-security/v6/testutil/keeper"
+	consumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
+	providertypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -57,15 +59,16 @@ type SuitelessAppTestHelper struct {
 type AppTestHelper struct {
 	suite.Suite
 
-	App     *app.IntoApp
-	HostApp *simapp.SimApp
+	App         *app.IntoApp
+	HostApp     *simapp.SimApp
+	ProviderApp e2e.ProviderApp
 
-	IbcEnabled   bool
-	Coordinator  *ibctesting.Coordinator
-	IntentoChain *TestChain
-	HostChain    *ibctesting.TestChain
-	// ProviderChain *ibctesting.TestChain
-	TransferPath *ibctesting.Path
+	IbcEnabled    bool
+	Coordinator   *ibctesting.Coordinator
+	IntentoChain  *ibctesting.TestChain
+	HostChain     *ibctesting.TestChain
+	ProviderChain *ibctesting.TestChain
+	TransferPath  *ibctesting.Path
 
 	QueryHelper  *baseapp.QueryServiceTestHelper
 	TestAccs     []sdk.AccAddress
@@ -76,7 +79,7 @@ type AppTestHelper struct {
 // AppTestHelper Constructor
 func (s *AppTestHelper) Setup() {
 	s.App = app.InitIntentoTestApp(true)
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypesproto.Header{Height: 1, ChainID: IntentoChainID})
+	s.Ctx = s.App.BaseApp.NewContext(false)
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
 		Ctx:             s.Ctx,
@@ -84,20 +87,8 @@ func (s *AppTestHelper) Setup() {
 	s.TestAccs = CreateRandomAccounts(4)
 	s.IbcEnabled = false
 	s.IcaAddresses = make(map[string]string)
+	s.SetupIBCChains(HostChainId)
 
-	// Remove host zone and accumulating record for staketia, by default,
-	// // since the tests will override it directly if needed
-	// s.App.StaketiaKeeper.RemoveHostZone(s.Ctx)
-	// for _, unbondingRecord := range s.App.StaketiaKeeper.GetAllActiveUnbondingRecords(s.Ctx) {
-	// 	s.App.StaketiaKeeper.RemoveUnbondingRecord(s.Ctx, unbondingRecord.Id)
-	// }
-
-	// // Remove host zone and accumulating record for stakedym, by default,
-	// // since the tests will override it directly if needed
-	// s.App.StakedymKeeper.RemoveHostZone(s.Ctx)
-	// for _, unbondingRecord := range s.App.StakedymKeeper.GetAllActiveUnbondingRecords(s.Ctx) {
-	// 	s.App.StakedymKeeper.RemoveUnbondingRecord(s.Ctx, unbondingRecord.Id)
-	// }
 }
 
 // Instantiates an TestHelper without the test suite
@@ -106,7 +97,7 @@ func (s *AppTestHelper) Setup() {
 func SetupSuitelessTestHelper() SuitelessAppTestHelper {
 	s := SuitelessAppTestHelper{}
 	s.App = app.InitIntentoTestApp(true)
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypesproto.Header{Height: 1, ChainID: IntentoChainID})
+	s.Ctx = s.App.BaseApp.NewContext(false)
 	return s
 }
 
@@ -144,39 +135,118 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	return testAddrs
 }
 
-// SetupIBCChains creates a coordinator with 2 test chains.
-func (suite *AppTestHelper) SetupIBCChains() {
-	ibctesting.DefaultTestingAppInit = SetupTestingApp
-	suite.Coordinator = ibctesting.NewCoordinator(suite.T(), 1)
+// Initializes a ibctesting coordinator to keep track of Intento and a host chain's state
+func (s *AppTestHelper) SetupIBCChains(hostChainID string) {
+	s.Coordinator = ibctesting.NewCoordinator(s.T(), 0)
 
-	//suite.IntentoChain = suite.Coordinator.GetChain(ibctesting.GetChainID(1))
-	suite.IntentoChain = &TestChain{TestChain: suite.Coordinator.GetChain(ibctesting.GetChainID(1))}
+	// Initialize a provider testing app
+	ibctesting.DefaultTestingAppInit = icstestingutils.ProviderAppIniter
+	s.ProviderChain = ibctesting.NewTestChain(s.T(), s.Coordinator, ProviderChainID)
+	s.ProviderApp = s.ProviderChain.App.(*appProvider.App)
 
+	// Initialize a host testing app using SimApp -> TestingApp
 	ibctesting.DefaultTestingAppInit = ibctesting.SetupTestingApp
-	suite.HostChain = ibctesting.NewTestChain(suite.T(), suite.Coordinator, HostChainId) /* suite.Coordinator.GetChain(ibctesting.GetChainID(2)) */
-	// suite.HostChain.ChainID = HostChainId
+	//iibctesting.DefaultTestingAppInit = app.InitIntentoIBCTestingApp(nil)
+	s.HostChain = ibctesting.NewTestChain(s.T(), s.Coordinator, hostChainID)
+	// bundle := icstestingutils.AddConsumer[icstestutil.ProviderApp, icstestutil.ConsumerApp](
+	// 	s.Coordinator,
+	// 	&s.Suite,
+	// 	0,
+	// 	testutil.SetupValSetAppIniter,
+	// )
+	// create a consumer client on the provider chain
+	providerKeeper := s.ProviderApp.GetProviderKeeper()
+	providerKeeper.SetConsumerChainId(s.ProviderChain.GetContext(), IntentoChainID, "chainID")
+	//prop := testkeeper.GetTestConsumerMetadata()
+	err := providerKeeper.SetConsumerMetadata(s.ProviderChain.GetContext(), IntentoChainID, testkeeper.GetTestConsumerMetadata())
+	s.Require().NoError(err)
+	err = providerKeeper.SetConsumerInitializationParameters(s.ProviderChain.GetContext(), IntentoChainID, testkeeper.GetTestInitializationParameters())
+	s.Require().NoError(err)
+	err = providerKeeper.SetConsumerPowerShapingParameters(s.ProviderChain.GetContext(), IntentoChainID, testkeeper.GetTestPowerShapingParameters())
+	s.Require().NoError(err)
+	providerKeeper.SetConsumerPhase(s.ProviderChain.GetContext(), IntentoChainID, providertypes.CONSUMER_PHASE_INITIALIZED)
+	err = providerKeeper.CreateConsumerClient(
+		s.ProviderChain.GetContext(),
+		IntentoChainID,
+		[]byte{},
+	)
+	s.Require().NoError(err)
+	err = providerKeeper.AppendConsumerToBeLaunched(s.ProviderChain.GetContext(), IntentoChainID, s.Coordinator.CurrentTime)
+	s.Require().NoError(err)
 
-	suite.Coordinator.CommitBlock(suite.HostChain)
-	suite.Coordinator.CommitBlock(suite.IntentoChain.TestChain)
-	suite.IntentoChain.NextBlock()
+	// opt-in all validators
+	lastVals, err := providerKeeper.GetLastBondedValidators(s.ProviderChain.GetContext())
+	s.Require().NoError(err)
+
+	for _, v := range lastVals {
+		consAddr, _ := v.GetConsAddr()
+		providerKeeper.SetOptedIn(s.ProviderChain.GetContext(), IntentoChainID, providertypes.NewProviderConsAddress(consAddr))
+	}
+	// move provider and host chain to next block
+	s.Coordinator.CommitBlock(s.ProviderChain)
+	s.Coordinator.CommitBlock(s.HostChain)
+
+	// initialize the consumer chain with the genesis state stored on the provider
+	intentoConsumerGenesis, found := providerKeeper.GetConsumerGenesis(
+		s.ProviderChain.GetContext(),
+		IntentoChainID,
+	)
+	s.Require().True(found, "consumer genesis not found")
+
+	// use the initial validator set from the consumer genesis as the intento chain's initial set
+	var intentoValSet []*tmtypes.Validator
+	for _, update := range intentoConsumerGenesis.Provider.InitialValSet {
+		tmPubKey, err := tmencoding.PubKeyFromProto(update.PubKey)
+		s.Require().NoError(err)
+		intentoValSet = append(intentoValSet, &tmtypes.Validator{
+			PubKey:           tmPubKey,
+			VotingPower:      update.Power,
+			Address:          tmPubKey.Address(),
+			ProposerPriority: 0,
+		})
+	}
+
+	// Initialize the intento consumer chain, casted as a TestingApp
+	ibctesting.DefaultTestingAppInit = app.InitIntentoIBCTestingApp(intentoConsumerGenesis.Provider.InitialValSet)
+	s.IntentoChain = ibctesting.NewTestChainWithValSet(
+		s.T(),
+		s.Coordinator,
+		IntentoChainID,
+		tmtypes.NewValidatorSet(intentoValSet),
+		s.ProviderChain.Signers,
+	)
+
+	// Call InitGenesis on the consumer
+	genesisState := consumertypes.DefaultGenesisState()
+	genesisState.Params = intentoConsumerGenesis.Params
+	genesisState.Provider = intentoConsumerGenesis.Provider
+	s.IntentoChain.App.(*app.IntoApp).GetConsumerKeeper().InitGenesis(s.IntentoChain.GetContext(), genesisState)
+	s.IntentoChain.NextBlock()
+
+	// Update coordinator
+	s.Coordinator.Chains = map[string]*ibctesting.TestChain{
+		IntentoChainID:  s.IntentoChain,
+		hostChainID:     s.HostChain,
+		ProviderChainID: s.ProviderChain,
+	}
+	s.IbcEnabled = true
 }
 
 // Creates clients, connections, and a transfer channel between intento and a host chain
 func (s *AppTestHelper) CreateTransferChannel(hostChainID string) {
 	// If we have yet to create the host chain, do that here
 	if !s.IbcEnabled {
-		s.SetupIBCChains()
+		s.SetupIBCChains(hostChainID)
 	}
 	s.Require().Equal(s.HostChain.ChainID, hostChainID,
 		"The testing app has already been initialized with a different chainID (%s)", s.HostChain.ChainID)
 
 	// Create clients, connections, and a transfer channel
-	s.TransferPath = NewTransferPath(s.IntentoChain.TestChain, s.HostChain, nil)
+	s.TransferPath = NewTransferPath(s.IntentoChain, s.HostChain, s.ProviderChain)
 	s.Coordinator.Setup(s.TransferPath)
-	// fmt.Printf("s.IntentoChain :%v \n", s.IntentoChain.App)
+
 	// Replace intento and host apps with those from TestingApp
 	s.App = s.IntentoChain.App.(*app.IntoApp)
-	// fmt.Printf("s.App :%v \n", s.App)
 	s.HostApp = s.HostChain.GetSimApp()
 	s.Ctx = s.IntentoChain.GetContext()
 
@@ -188,26 +258,20 @@ func (s *AppTestHelper) CreateTransferChannel(hostChainID string) {
 
 // Creates an ICA channel through ibctesting
 // Also creates a transfer channel is if hasn't been done yet
-func (s *AppTestHelper) CreateICAChannel(owner string) (channelID, portID string) {
+func (s *AppTestHelper) CreateICAChannel() (channelID, portID string) {
 	// If we have yet to create a client/connection (through creating a transfer channel), do that here
 	_, transferChannelExists := s.App.IBCKeeper.ChannelKeeper.GetChannel(s.Ctx, ibctesting.TransferPort, ibctesting.FirstChannelID)
 	if !transferChannelExists {
-		ownerSplit := strings.Split(owner, ".")
-		isHostZoneICA := len(ownerSplit) == 2
-		isTradeRouteICA := len(ownerSplit) == 3
-		s.Require().True(isHostZoneICA || isTradeRouteICA,
-			"owner should be either of the form: {chainId}.{AccountName} or {chainId}.{rewarDenom}-{hostDenom}.{accountName}")
-
-		hostChainID := ownerSplit[0]
-		s.CreateTransferChannel(hostChainID)
+		s.CreateTransferChannel(HostChainId)
 	}
 
 	// Create ICA Path and then copy over the client and connection from the transfer path
-	icaPath := NewIcaPath(s.IntentoChain.TestChain, s.HostChain, nil)
-	icaPath = CopyConnectionAndClientToPath(icaPath, s.TransferPath)
-
+	icaPath := ibctesting.NewPath(s.IntentoChain, s.HostChain)
+	fmt.Printf("path %v", icaPath.EndpointA)
+	//icaPath = CopyConnectionAndClientToPath(icaPath, s.TransferPath)
+	fmt.Printf("path %v", icaPath.EndpointA)
 	// Register the ICA and complete the handshake
-	s.RegisterInterchainAccount(icaPath.EndpointA, owner)
+	//s.RegisterInterchainAccount(icaPath.EndpointA, owner)
 
 	err := icaPath.EndpointB.ChanOpenTry()
 	s.Require().NoError(err, "ChanOpenTry error")
@@ -227,9 +291,9 @@ func (s *AppTestHelper) CreateICAChannel(owner string) (channelID, portID string
 	s.Require().True(found, "Channel not found after creation, PortID: %s, ChannelID: %s", portID, channelID)
 
 	// Store the account address
-	icaAddress, found := s.App.ICAControllerKeeper.GetInterchainAccountAddress(s.Ctx, ibctesting.FirstConnectionID, portID)
-	s.Require().True(found, "can't get ICA address")
-	s.IcaAddresses[owner] = icaAddress
+	// icaAddress, found := s.App.ICAControllerKeeper.GetInterchainAccountAddress(s.Ctx, ibctesting.FirstConnectionID, portID)
+	// s.Require().True(found, "can't get ICA address")
+	// s.IcaAddresses[owner] = icaAddress
 
 	// Finally set the active channel
 	s.App.ICAControllerKeeper.SetActiveChannelID(s.Ctx, ibctesting.FirstConnectionID, portID, channelID)
@@ -290,6 +354,16 @@ func NewIcaPath(chainA *ibctesting.TestChain, chainB *ibctesting.TestChain, prov
 	// consumerUnbondingPeriod := path.EndpointA.Chain.App.(*app.IntoApp).GetConsumerKeeper().GetUnbondingPeriod(path.EndpointA.Chain.GetContext())
 	// path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).UnbondingPeriod = consumerUnbondingPeriod
 	// path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).TrustingPeriod, _ = ccvtypes.CalculateTrustPeriod(consumerUnbondingPeriod, trustingPeriodFraction)
+
+	// trustingPeriodFraction := chainProvider.App.(*appProvider.App).GetProviderKeeper().GetTrustingPeriodFraction(chainProvider.GetContext())
+
+	// consumerUnbondingPeriodA := path.EndpointA.Chain.App.(*app.App).GetConsumerKeeper().GetUnbondingPeriod(path.EndpointA.Chain.GetContext())
+	// path.EndpointA.ClientConfig.(*ibctesting.TendermintConfig).UnbondingPeriod = consumerUnbondingPeriodA
+	// path.EndpointA.ClientConfig.(*ibctesting.TendermintConfig).TrustingPeriod, _ = ccv.CalculateTrustPeriod(consumerUnbondingPeriodA, trustingPeriodFraction)
+
+	// consumerUnbondingPeriodB := path.EndpointB.Chain.App.(*app.App).GetConsumerKeeper().GetUnbondingPeriod(path.EndpointB.Chain.GetContext())
+	// path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).UnbondingPeriod = consumerUnbondingPeriodB
+	// path.EndpointB.ClientConfig.(*ibctesting.TendermintConfig).TrustingPeriod, _ = ccv.CalculateTrustPeriod(consumerUnbondingPeriodB, trustingPeriodFraction)
 
 	return path
 }
@@ -492,42 +566,6 @@ func (s *AppTestHelper) MockICAChannel(connectionId, channelId, owner, address s
 	// Then set the address and make the channel active
 	s.App.ICAControllerKeeper.SetInterchainAccountAddress(s.Ctx, connectionId, portId, address)
 	s.App.ICAControllerKeeper.SetActiveChannelID(s.Ctx, connectionId, portId, channelId)
-}
-
-func (s *AppTestHelper) ConfirmUpgradeSucceededs(upgradeName string, upgradeHeight int64) {
-	s.Ctx = s.Ctx.WithBlockHeight(upgradeHeight - 1)
-	plan := upgradetypes.Plan{
-		Name:   upgradeName,
-		Height: upgradeHeight,
-	}
-
-	err := s.App.UpgradeKeeper.ScheduleUpgrade(s.Ctx, plan)
-	s.Require().NoError(err)
-	_, exists := s.App.UpgradeKeeper.GetUpgradePlan(s.Ctx)
-	s.Require().True(exists)
-
-	s.Ctx = s.Ctx.WithBlockHeight(upgradeHeight)
-	s.Require().NotPanics(func() {
-		beginBlockRequest := abci.RequestBeginBlock{}
-		s.App.BeginBlocker(s.Ctx, beginBlockRequest)
-	})
-}
-
-// Returns the bank store key prefix for an address and denom
-// Useful for testing balance ICQs
-func (s *AppTestHelper) GetBankStoreKeyPrefix(address, denom string) []byte {
-	_, addressBz, err := bech32.DecodeAndConvert(address)
-	s.Require().NoError(err, "no error expected when bech decoding address")
-	return append(banktypes.CreateAccountBalancesPrefix(addressBz), []byte(denom)...)
-}
-
-// Extracts the address and denom from a bank store prefix
-// Useful for testing balance ICQs as it can confirm that the serialized query request
-// data has the proper address and denom
-func (s *AppTestHelper) ExtractAddressAndDenomFromBankPrefix(data []byte) (address, denom string) {
-	addressBz, denom, err := banktypes.AddressAndDenomFromBalancesStore(data[1:]) // Remove BalancePrefix byte
-	s.Require().NoError(err, "no error expected when getting address and denom from balance store")
-	return addressBz.String(), denom
 }
 
 // Generates a valid and invalid test address (used for non-keeper tests)

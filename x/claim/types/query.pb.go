@@ -730,6 +730,7 @@ func _Query_TotalClaimable_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "intento.claim.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),

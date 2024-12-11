@@ -41,7 +41,8 @@ type Params struct {
 	MinActionDuration time.Duration `protobuf:"bytes,6,opt,name=MinActionDuration,proto3,stdduration" json:"min_action_duration,omitempty"`
 	//  Minimum period for self-executing Action
 	MinActionInterval time.Duration `protobuf:"bytes,8,opt,name=MinActionInterval,proto3,stdduration" json:"min_action_interval,omitempty"`
-	//relayer rewards in uinto for each message type 0=SDK,1=Wasm, 2=Osmo. Rewards are in uinto and topped up in the module account by alloc module.
+	// relayer rewards in uinto for each message type 0=SDK,1=Wasm, 2=Osmo.
+	// Rewards are in uinto and topped up in the module account by alloc module.
 	RelayerRewards []int64 `protobuf:"varint,9,rep,packed,name=relayer_rewards,json=relayerRewards,proto3" json:"relayer_rewards,omitempty"`
 }
 

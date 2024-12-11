@@ -2,10 +2,13 @@ package apptesting
 
 import (
 	"encoding/json"
+	"os"
 
-	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
-	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	"cosmossdk.io/log"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/testutil/sims"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
 	"github.com/trstlabs/intento/app"
 )
 
@@ -14,9 +17,10 @@ type TestChain struct {
 }
 
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
-	encCdc := app.MakeEncodingConfig()
-	IntoApp := app.NewIntoApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, encCdc, app.EmptyAppOptions{})
-	return IntoApp, app.NewDefaultGenesisState(encCdc.Codec)
+	dir, _ := os.MkdirTemp("", "ibctest")
+	appOptions := sims.NewAppOptionsWithFlagHome(dir)
+	IntoApp := app.NewIntoApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, appOptions, []wasmkeeper.Option{})
+	return IntoApp, app.NewDefaultGenesisState(IntoApp.AppCodec())
 }
 
 // GetIntoApp returns the current chain's app as an IntoApp

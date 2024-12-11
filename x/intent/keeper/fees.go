@@ -12,11 +12,13 @@ import (
 
 // DistributeCoins distributes Action fees and handles remaining action fee balance after last execution
 func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAddr sdk.AccAddress, feeDenom string, proposer sdk.ConsAddress) (sdk.Coin, error) {
-	p := k.GetParams(ctx)
+	p, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
+	k.Logger(ctx).Debug("gas", "consumed", math.NewIntFromUint64(ctx.GasMeter().GasConsumed()), "actionID", action.ID)
 
-	k.Logger(ctx).Debug("gas", "consumed", sdk.NewIntFromUint64(ctx.GasMeter().GasConsumed()), "actionID", action.ID)
-
-	gasSmall := sdk.NewIntFromUint64(ctx.GasMeter().GasConsumed() * uint64(p.ActionFlexFeeMul))
+	gasSmall := math.NewIntFromUint64(ctx.GasMeter().GasConsumed() * uint64(p.ActionFlexFeeMul))
 	//fmt.Printf("gasSmall %v\n", gasSmall)
 	gas := gasSmall.Quo(math.NewInt(100))
 	if !gas.IsPositive() {
@@ -41,7 +43,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 	toCommunityPool := flexFeeCoin
 
 	if p.ActionConstantFee != 0 && feeDenom == types.Denom {
-		fixedFee := sdk.NewInt(p.ActionConstantFee * int64(len(action.Msgs)))
+		fixedFee := math.NewInt(p.ActionConstantFee * int64(len(action.Msgs)))
 		fixedFeeCoin := sdk.NewCoin(feeDenom, fixedFee)
 		totalActionFees = totalActionFees.Add(fixedFeeCoin)
 		//todo efficient burn
@@ -57,7 +59,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 	if action.ExecTime.Equal(action.EndTime) {
 		if feeAddr.String() != action.Owner {
 			actionAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
-			percentageActionFundsCommission := sdk.NewDecWithPrec(p.ActionFundsCommission, 2)
+			percentageActionFundsCommission := math.LegacyNewDecWithPrec(p.ActionFundsCommission, 2)
 			amountActionFundsCommissionCoin := sdk.NewCoin(feeDenom, percentageActionFundsCommission.MulInt(actionAddrBalance.AmountOf(feeDenom)).Ceil().TruncateInt())
 			totalActionFees = totalActionFees.Add(amountActionFundsCommissionCoin)
 
@@ -77,7 +79,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, action types.ActionInfo, feeAdd
 		}
 	}
 	//fmt.Printf("totalActionFees %v\n", totalActionFees)
-	err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(toCommunityPool), feeAddr)
+	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(toCommunityPool), feeAddr)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -129,7 +131,10 @@ func (k Keeper) SendFeesToHosted(ctx sdk.Context, action types.ActionInfo, hoste
 
 // CheckBalanceForGasFee checks if the address has enough balance to cover the gas fee.
 func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, action types.ActionInfo, expectedGas int64) (account sdk.AccAddress, denom string, err error) {
-	p := k.GetParams(ctx)
+	p, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	feeAddr, err := sdk.AccAddressFromBech32(action.FeeAddress)
 	if err != nil {
@@ -140,7 +145,7 @@ func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, action types.ActionInfo
 	// Calculate the required fee
 	minFee := sdk.NewCoins()
 	for _, coin := range p.GasFeeCoins {
-		amountSmall := coin.Amount.Mul(sdk.NewInt(p.ActionFlexFeeMul * expectedGas))
+		amountSmall := coin.Amount.Mul(math.NewInt(p.ActionFlexFeeMul * expectedGas))
 		amount := amountSmall.Quo(math.NewInt(100))
 		minFee = minFee.Add(sdk.NewCoin(coin.Denom, amount))
 	}

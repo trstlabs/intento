@@ -1,11 +1,12 @@
 package config
 
 import (
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-
-	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	appparams "github.com/trstlabs/intento/app/params"
 )
 
 const (
@@ -33,11 +34,17 @@ const (
 )
 
 func SetupConfig() {
-	config := sdk.GetConfig()
-	SetBech32Prefixes(config)
-	SetBip44CoinType(config)
-	SetAddressPrefixes(config)
-	config.Seal()
+	// config := sdk.GetConfig()
+	// SetBech32Prefixes(config)
+	// SetBip44CoinType(config)
+	// SetAddressPrefixes(config)
+	// config.Seal()
+	cfg := sdk.GetConfig()
+	cfg.SetBech32PrefixForAccount(appparams.Bech32PrefixAccAddr, appparams.Bech32PrefixAccPub)
+	cfg.SetBech32PrefixForValidator(appparams.Bech32PrefixValAddr, appparams.Bech32PrefixValPub)
+	cfg.SetBech32PrefixForConsensusNode(appparams.Bech32PrefixConsAddr, appparams.Bech32PrefixConsPub)
+	//cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
+	cfg.Seal()
 }
 
 // SetBech32Prefixes sets the global prefixes to be used when serializing addresses and public keys to Bech32 strings.
@@ -55,11 +62,11 @@ func SetBip44CoinType(config *sdk.Config) {
 
 // RegisterDenoms registers the base and display denominations to the SDK.
 func RegisterDenoms() {
-	if err := sdk.RegisterDenom(HumanReadableCoinUnit, sdk.OneDec()); err != nil {
+	if err := sdk.RegisterDenom(HumanReadableCoinUnit, math.LegacyOneDec()); err != nil {
 		panic(err)
 	}
 
-	if err := sdk.RegisterDenom(BaseCoinUnit, sdk.NewDecWithPrec(1, 6)); err != nil {
+	if err := sdk.RegisterDenom(BaseCoinUnit, math.LegacyNewDecWithPrec(1, 6)); err != nil {
 		panic(err)
 	}
 }

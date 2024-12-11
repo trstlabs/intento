@@ -3,11 +3,13 @@ package intento.claim.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
-
+import "cosmos/msg/v1/msg.proto";
+import "amino/amino.proto";
 option go_package = "github.com/trstlabs/intento/x/claim/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   rpc ClaimClaimable(MsgClaimClaimable) returns (MsgClaimClaimableResponse);
 }
 
@@ -51,7 +53,11 @@ message Status {
       [ (gogoproto.moretags) = "yaml:\"vesting_period_claimed\"" ];
 }
 
-message MsgClaimClaimable { string sender = 1; }
+message MsgClaimClaimable { 
+  option (cosmos.msg.v1.signer) = "sender";
+  option (amino.name)           = "claim/MsgClaimClaimable";
+  string sender = 1; 
+}
 
 message MsgClaimClaimableResponse {
   // returned claimable amount for the address

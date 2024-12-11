@@ -7,11 +7,13 @@ go.sum
 __docs
 docsold
 state/*
-scripts/state
-scripts/logs
 dockernet/state
 dockernet/logs
 dockernet/upgrades/binaries
 dockernet/upgrades/cosmovisor
 dockernet/temp.sh
 msg_*.json
+/*.sh
+*.json
+dockernet/tests/test_files
+dockernet/config/osmo1

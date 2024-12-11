@@ -118,7 +118,7 @@ INTO_RPC_PORT=26657
 INTO_ADMIN_ACCT=admin
 INTO_ADMIN_ADDRESS=into1u20df3trc2c2zdhm8qvh2hdjx9ewh00sqnuu4e
 INTO_ADMIN_MNEMONIC="tone cause tribe this switch near host damage idle fragile antique tail soda alien depth write wool they rapid unfold body scan pledge soft"
-INTO_RECEIVER_ADDRESS='into1ykql5ktedxkpjszj5trzu8f5dxajvgv9jv8lrh'
+INTO_RECEIVER_ADDRESS='into1g6qdx6kdhpf000afvvpte7hp0vnpzaputyyrem'
 
 # Binaries are contigent on whether we're doing an upgrade or not
 if [[ "${UPGRADE_NAME:-}" == "" ]]; then
@@ -144,7 +144,7 @@ GAIA_ADDRESS_PREFIX=cosmos
 GAIA_DENOM=$ATOM_DENOM
 GAIA_RPC_PORT=26557
 GAIA_MAIN_CMD="$GAIA_BINARY --home $DOCKERNET_HOME/state/${GAIA_NODE_PREFIX}1"
-GAIA_RECEIVER_ADDRESS='cosmos1g6qdx6kdhpf000afvvpte7hp0vnpzapuyxp8uf'
+GAIA_RECEIVER_ADDRESS='cosmos1g6qdx6kdhpf000afvvpte7hp0vnpzapuyxp8uf' 
 
 # OSMO
 OSMO_CHAIN_ID=OSMO #osmo-test-5
@@ -158,7 +158,7 @@ OSMO_ADDRESS_PREFIX=osmo
 OSMO_DENOM=$OSMO_DENOM
 OSMO_RPC_PORT=26357
 OSMO_MAIN_CMD="$OSMO_BINARY --home $DOCKERNET_HOME/state/${OSMO_NODE_PREFIX}1"
-OSMO_RECEIVER_ADDRESS='osmo1w6wdc2684g9h3xl8nhgwr282tcxx4kl06n4sjl'
+OSMO_RECEIVER_ADDRESS='osmo1g6qdx6kdhpf000afvvpte7hp0vnpzapuvajh2m'
 
 # NTRN
 NTRN_CHAIN_ID=NTRN
@@ -172,7 +172,7 @@ NTRN_USER_ADDRESS='into1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t'
 NTRN_DENOM=$COSM_DENOM
 NTRN_RPC_PORT=26157
 NTRN_MAIN_CMD="$NTRN_BINARY --home $DOCKERNET_HOME/state/${NTRN_NODE_PREFIX}1"
-NTRN_RECEIVER_ADDRESS='into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx'
+NTRN_RECEIVER_ADDRESS='ntrn1g6qdx6kdhpf000afvvpte7hp0vnpzapumvs33x'
 
 # HOST (Intento running as a host zone)
 HOST_CHAIN_ID=HOST
@@ -186,7 +186,7 @@ HOST_USER_ADDRESS='into1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t'
 HOST_DENOM=$COSM_DENOM
 HOST_RPC_PORT=26157
 HOST_MAIN_CMD="$HOST_BINARY --home $DOCKERNET_HOME/state/${HOST_NODE_PREFIX}1"
-HOST_RECEIVER_ADDRESS='into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx'
+HOST_RECEIVER_ADDRESS='into1g6qdx6kdhpf000afvvpte7hp0vnpzaputyyrem'
 
 # EVMOS
 # EVMOS_CHAIN_ID=evmos_9001-2

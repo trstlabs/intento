@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 
+	math "cosmossdk.io/math"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestParseCoin(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -27,13 +28,13 @@ func TestParseCoin(t *testing.T) {
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin"}
 	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
-	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(101)))
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(101)))
 
 	executedLocally, _, err = keeper.TriggerAction(ctx, &actionInfo)
 	require.NoError(t, err)
@@ -41,7 +42,7 @@ func TestParseCoin(t *testing.T) {
 }
 
 func TestParseInnerString(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -72,7 +73,7 @@ func TestParseInnerString(t *testing.T) {
 }
 
 func TestParseInnerStringFail(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -97,7 +98,7 @@ func TestParseInnerStringFail(t *testing.T) {
 }
 
 func TestParseInnerInt(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -113,13 +114,13 @@ func TestParseInnerInt(t *testing.T) {
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "sdk.Int"}
 	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
-	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(101)))
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(101)))
 
 	executedLocally, _, err = keeper.TriggerAction(ctx, &actionInfo)
 	require.NoError(t, err)
@@ -127,7 +128,7 @@ func TestParseInnerInt(t *testing.T) {
 }
 
 func TestCompareInnerIntTrue(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -149,7 +150,7 @@ func TestCompareInnerIntTrue(t *testing.T) {
 }
 
 func TestCompareCoinTrue(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -171,7 +172,7 @@ func TestCompareCoinTrue(t *testing.T) {
 }
 
 func TestCompareIntFalse(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -193,7 +194,7 @@ func TestCompareIntFalse(t *testing.T) {
 }
 
 func TestCompareDenomString(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -215,7 +216,7 @@ func TestCompareDenomString(t *testing.T) {
 }
 
 func TestInvalidResponseIndex(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -237,7 +238,7 @@ func TestInvalidResponseIndex(t *testing.T) {
 }
 
 func TestCompareDenomStringContains(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -259,7 +260,7 @@ func TestCompareDenomStringContains(t *testing.T) {
 }
 
 func TestCompareArrayCoinsContainsTrue(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -281,7 +282,7 @@ func TestCompareArrayCoinsContainsTrue(t *testing.T) {
 }
 
 func TestCompareArrayCoinsContainsFalse(t *testing.T) {
-	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	fakeCoins, _ := sdk.ParseCoinsNormalized("1000abc,3000000000degf")
 	msgResponse := distrtypes.MsgWithdrawDelegatorRewardResponse{Amount: fakeCoins}
 	any, _ := cdctypes.NewAnyWithValue(&msgResponse)
@@ -294,7 +295,7 @@ func TestCompareArrayCoinsContainsFalse(t *testing.T) {
 }
 
 func TestCompareArrayEquals(t *testing.T) {
-	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	fakeCoins, _ := sdk.ParseCoinsNormalized("1000abc,3000000000degf")
 	msgResponse := distrtypes.MsgWithdrawDelegatorRewardResponse{Amount: fakeCoins}
 	any, _ := cdctypes.NewAnyWithValue(&msgResponse)
@@ -307,7 +308,7 @@ func TestCompareArrayEquals(t *testing.T) {
 }
 
 func TestParseAmountICQ(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -319,19 +320,19 @@ func TestParseAmountICQ(t *testing.T) {
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "sdk.Int", FromICQ: true}
-	queryCallback, err := sdk.NewInt(39999999999).Marshal()
+	queryCallback, err := math.NewInt(39999999999).Marshal()
 	require.NoError(t, err)
 	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, queryCallback)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
-	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(39999999999)))
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(39999999999)))
 }
 
 func TestParseCoinICQ(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -343,20 +344,20 @@ func TestParseCoinICQ(t *testing.T) {
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin", FromICQ: true}
-	coin := sdk.NewCoin("stake", sdk.NewInt(39999999999))
+	coin := sdk.NewCoin("stake", math.NewInt(39999999999))
 	queryCallback, err := coin.Marshal()
 	require.NoError(t, err)
 	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, queryCallback)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
-	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(39999999999)))
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(39999999999)))
 }
 
 func TestParseStringICQ(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -368,7 +369,7 @@ func TestParseStringICQ(t *testing.T) {
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount.Denom", ValueType: "string", FromICQ: true}
 	text := []byte("fuzz")
 
@@ -376,11 +377,11 @@ func TestParseStringICQ(t *testing.T) {
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
-	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("fuzz", sdk.NewInt(1000)))
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("fuzz", math.NewInt(1000)))
 }
 
 func TestCompareCoinTrueICQ(t *testing.T) {
-	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -396,7 +397,7 @@ func TestCompareCoinTrueICQ(t *testing.T) {
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "", ValueType: "sdk.Coin", ComparisonOperator: 4, ComparisonOperand: "101stake", FromICQ: true}
 
-	coin := sdk.NewCoin("stake", sdk.NewInt(39999999999))
+	coin := sdk.NewCoin("stake", math.NewInt(39999999999))
 	queryCallback, err := coin.Marshal()
 	require.NoError(t, err)
 	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, queryCallback)
@@ -406,7 +407,7 @@ func TestCompareCoinTrueICQ(t *testing.T) {
 }
 
 // func TestParseCoinAuthZ(t *testing.T) {
-// 	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1_000_000))))
+// 	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 // 	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 // 	types.Denom = "stake"
 // 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
@@ -422,13 +423,13 @@ func TestCompareCoinTrueICQ(t *testing.T) {
 // 	msgDelegate := newFakeMsgDelegate(delAddr, val)
 // 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 // 	actionInfo.Conditions = &types.ExecutionConditions{}
-// 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(1000)))
+// 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
 // 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin"}
 // 	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
 // 	require.NoError(t, err)
 // 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 // 	require.NoError(t, err)
-// 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", sdk.NewInt(101)))
+// 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(101)))
 
 // 	executedLocally, _, err = keeper.TriggerAction(ctx, &actionInfo)
 // 	require.NoError(t, err)

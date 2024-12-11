@@ -14,7 +14,7 @@ message MsgJoinPool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string share_out_amount = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"pool_amount_out\"",
     (gogoproto.nullable) = false
   ];
@@ -26,7 +26,7 @@ message MsgJoinPool {
 
 message MsgJoinPoolResponse {
   string share_out_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"share_out_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -41,7 +41,7 @@ message MsgExitPool {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   uint64 pool_id = 2 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
   string share_in_amount = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"share_in_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -69,7 +69,7 @@ message MsgSwapExactAmountIn {
     (gogoproto.nullable) = false
   ];
   string token_out_min_amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_out_min_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -77,7 +77,7 @@ message MsgSwapExactAmountIn {
 
 message MsgSwapExactAmountInResponse {
   string token_out_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -88,7 +88,7 @@ message MsgSwapExactAmountOut {
   repeated osmosis.poolmanager.v1beta1.SwapAmountOutRoute routes = 2
       [ (gogoproto.nullable) = false ];
   string token_in_max_amount = 3 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_in_max_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -100,7 +100,7 @@ message MsgSwapExactAmountOut {
 
 message MsgSwapExactAmountOutResponse {
   string token_in_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -116,7 +116,7 @@ message MsgJoinSwapExternAmountIn {
     (gogoproto.nullable) = false
   ];
   string share_out_min_amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"share_out_min_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -128,7 +128,7 @@ message MsgJoinSwapExternAmountIn {
 
 message MsgJoinSwapExternAmountInResponse {
   string share_out_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"share_out_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -141,12 +141,12 @@ message MsgJoinSwapShareAmountOut {
   string token_in_denom = 3
       [ (gogoproto.moretags) = "yaml:\"token_in_denom\"" ];
   string share_out_amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"share_out_amount\"",
     (gogoproto.nullable) = false
   ];
   string token_in_max_amount = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_in_max_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -154,7 +154,7 @@ message MsgJoinSwapShareAmountOut {
 
 message MsgJoinSwapShareAmountOutResponse {
   string token_in_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_in_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -167,12 +167,12 @@ message MsgExitSwapShareAmountIn {
   string token_out_denom = 3
       [ (gogoproto.moretags) = "yaml:\"token_out_denom\"" ];
   string share_in_amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"share_in_amount\"",
     (gogoproto.nullable) = false
   ];
   string token_out_min_amount = 5 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_out_min_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -180,7 +180,7 @@ message MsgExitSwapShareAmountIn {
 
 message MsgExitSwapShareAmountInResponse {
   string token_out_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"token_out_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -195,7 +195,7 @@ message MsgExitSwapExternAmountOut {
     (gogoproto.nullable) = false
   ];
   string share_in_max_amount = 4 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"share_in_max_amount\"",
     (gogoproto.nullable) = false
   ];
@@ -203,7 +203,7 @@ message MsgExitSwapExternAmountOut {
 
 message MsgExitSwapExternAmountOutResponse {
   string share_in_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.moretags) = "yaml:\"share_in_amount\"",
     (gogoproto.nullable) = false
   ];

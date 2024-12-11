@@ -10,20 +10,17 @@ mkdir -p $BUILDDIR
 build_local() {
    set +e
 
-   module="$1"
+   cli="$1"
    folder="$2"
-   title=$(printf "$module" | awk '{ print toupper($0) }')
+   title=$(printf "$cli" | awk '{ print toupper($0) }')
 
-   printf '%s' "Building $title Locally...  "
+   printf '%s' "Building $cli Locally...  "
 
    intento_home=$PWD
    cd $folder
-   # Clear any previously build binaries, otherwise the binary can get corrupted
-   if [[ "$module" == "into" ]]; then
-      rm -f build/intentod
-   # else
-   #    rm -f build/"$module"
-   fi
+
+   rm -f build/"$cli"
+
 
    # Many projects have a "check_version" in their makefile that prevents building
    # the binary if the machine's go version does not match exactly,
@@ -81,23 +78,23 @@ build_docker() {
 while getopts igdosehrn flag; do
    case "${flag}" in
       i)
-         build_local into .
+         build_local intentod .
          build_docker into .
          ;;
       g)
-         build_local gaia deps/gaia
+         build_local gaiad deps/gaia
          build_docker gaia deps/gaia
          ;;
       o)
-         build_local osmo deps/osmosis
+         build_local osmosisd deps/osmosis
          build_docker osmo deps/osmosis
          ;;
       n)
-         build_local ntrn deps/neutron
+         build_local neutrond deps/neutron
          ;;
       n) continue ;; # build_local and build_docker {new-host-zone} deps/{new-host-zone}
       r)
-         build_local relayer deps/relayer
+         build_local rly deps/relayer
          build_docker relayer deps/relayer
          ;;
       h)

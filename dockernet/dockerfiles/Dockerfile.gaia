@@ -1,44 +1,27 @@
-# FROM golang:1.21-alpine AS builder
-
-# WORKDIR /opt/
-
-# RUN set -eux; apk add --no-cache ca-certificates build-base git linux-headers
-
-# RUN git clone https://github.com/cosmos/gaia.git  gaia \
-#     && cd gaia \
-#     && git checkout v16.0.0
-
-# WORKDIR /opt/gaia/
-
-# RUN make build
-
-# FROM alpine:3.16
-# COPY --from=builder /opt/gaia/build/gaiad /usr/local/bin/
-# RUN apk add bash vim \
-#     && addgroup -g 1000 gaia \
-#     && adduser -S -h /home/gaia -D gaia -u 1000 -G gaia
-
-# USER 1000
-# WORKDIR /home/gaia
-
-# EXPOSE 26657 26656 1317 9090
-
-# CMD ["gaiad", "start"]
-FROM golang:1.20-alpine AS builder
+FROM golang:1.22.7-alpine AS builder
 
 WORKDIR /opt
 
-RUN apk add --update curl make git libc-dev bash gcc linux-headers eudev-dev python3
+RUN apk add --update curl make git libc-dev bash gcc linux-headers eudev-dev ca-certificates build-base git 
 
-ENV COMMIT_HASH=v15.0.0
+ENV COMMIT_HASH=v21.0.1
 
-RUN git clone https://github.com/cosmos/gaia gaia-install \
-    && cd gaia-install \
-    && git checkout $COMMIT_HASH \
-    && CGO_ENABLED=0 make install
+RUN git clone https://github.com/cosmos/gaia \
+    && cd gaia \
+    && git checkout $COMMIT_HASH 
 
-FROM alpine:3.16
-COPY --from=builder /go/bin/gaiad /usr/local/bin/
+WORKDIR /opt/gaia
+
+ARG WASMVM_VERSION=v2.1.3
+ADD https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
+ADD https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
+
+RUN cp "/lib/libwasmvm_muslc.$(uname -m).a" /lib/libwasmvm_muslc.a
+
+RUN LEDGER_ENABLED=false LINK_STATICALLY=true BUILD_TAGS=muslc make build
+
+FROM alpine:3.19
+COPY --from=builder /opt/gaia/build/gaiad /usr/local/bin/
 RUN apk add bash vim \
     && addgroup -g 1000 gaia \
     && adduser -S -h /home/gaia -D gaia -u 1000 -G gaia
@@ -48,4 +31,4 @@ WORKDIR /home/gaia
 
 EXPOSE 26657 26656 1317 9090
 
-CMD ["gaiad", "start"]
+CMD ["gaiad", "start", "--x-crisis-skip-assert-invariants"]

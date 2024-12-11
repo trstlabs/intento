@@ -3,8 +3,9 @@ package keeper
 import (
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -35,14 +36,14 @@ func (k Keeper) GetActionsForBlock(ctx sdk.Context) (actions []types.ActionInfo)
 }
 
 // ActionQueueIterator returns an sdk.Iterator for all the actions in the Inactive Queue that expire by execTime
-func (k Keeper) ActionQueueIterator(ctx sdk.Context, execTime time.Time) sdk.Iterator {
-	store := ctx.KVStore(k.storeKey)
-	return store.Iterator(types.ActionQueuePrefix, sdk.PrefixEndBytes(types.ActionByTimeKey(execTime))) //we check the end of the bites array for the execution time
+func (k Keeper) ActionQueueIterator(ctx sdk.Context, execTime time.Time) storetypes.Iterator {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	return store.Iterator(types.ActionQueuePrefix, storetypes.PrefixEndBytes(types.ActionByTimeKey(execTime))) //we check the end of the bites array for the execution time
 }
 
 // InsertActionQueue Inserts a action into the action queue
 func (k Keeper) InsertActionQueue(ctx sdk.Context, actionID uint64, execTime time.Time) {
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	bz := types.GetBytesForUint(actionID)
 
 	//here the key is time+action appended (as bytes) and value is action in bytes
@@ -52,6 +53,6 @@ func (k Keeper) InsertActionQueue(ctx sdk.Context, actionID uint64, execTime tim
 // RemoveFromActionQueue removes a action from the Inactive action queue
 func (k Keeper) RemoveFromActionQueue(ctx sdk.Context, action types.ActionInfo) {
 
-	store := ctx.KVStore(k.storeKey)
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store.Delete(types.ActionQueueKey(action.ID, action.ExecTime))
 }

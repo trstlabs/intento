@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -44,7 +45,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.Equal(t, ctx2.BlockHeader().Time, actionHistory[0].ActualExecTime)
 	require.NotNil(t, ctx3.BlockHeader().Time, actionHistory[0].MsgResponses[0].Value)
 
-	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx3, sendToAddr)[0].Amount, sdk.NewInt(100))
+	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx3, sendToAddr)[0].Amount, math.NewInt(100))
 
 }
 
@@ -134,16 +135,16 @@ func TestErrorIsSavedToActionInfo(t *testing.T) {
 }
 
 func TestOwnerMustBeSignerForLocalAction(t *testing.T) {
-	ctx, keepers, cdc := createTestContext(t)
+	ctx, keepers, _ := createTestContext(t)
 
 	actionOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	feeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	toSendAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
-	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx, actionOwnerAddr)[0].Amount, sdk.NewInt(3_000_000_000_000))
+	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx, actionOwnerAddr)[0].Amount, math.NewInt(3_000_000_000_000))
 	localMsg := &banktypes.MsgSend{
 		FromAddress: toSendAcc.String(),
 		ToAddress:   actionOwnerAddr.String(),
-		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
@@ -154,9 +155,6 @@ func TestOwnerMustBeSignerForLocalAction(t *testing.T) {
 		Msgs:       anys,
 	}
 	k := keepers.IntentKeeper
-
-	err := action.GetTxMsgs(cdc)[0].ValidateBasic()
-	require.NoError(t, err)
 
 	executedLocally, _, err := k.TriggerAction(ctx, &action)
 	require.Contains(t, err.Error(), "owner doesn't have permission to send this message: unauthorized")
@@ -175,7 +173,7 @@ func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers, codec.Cod
 		MaxActionDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
 		MinActionDuration:     time.Second * 60,
 		MinActionInterval:     time.Second * 20,
-		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin(types.Denom, sdk.OneInt())),
+		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin(types.Denom, math.OneInt())),
 	})
 	return ctx, keepers, cdc
 }
@@ -190,7 +188,7 @@ func createTestTriggerAction(ctx sdk.Context, configuration types.ExecutionConfi
 	localMsg := &banktypes.MsgSend{
 		FromAddress: actionOwnerAddr.String(),
 		ToAddress:   emptyBalanceAcc.String(),
-		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
@@ -226,7 +224,7 @@ func createBadAction(ctx sdk.Context, configuration types.ExecutionConfiguration
 	localMsg := &banktypes.MsgSend{
 		FromAddress: actionOwnerAddr.String(),
 		ToAddress:   toSendAcc.String(),
-		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))),
+		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 

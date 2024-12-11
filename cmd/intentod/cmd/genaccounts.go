@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -20,7 +22,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/spf13/cobra"
 	claimtypes "github.com/trstlabs/intento/x/claim/types"
 )
@@ -30,6 +31,15 @@ const (
 	flagVestingEnd   = "vesting-end-time"
 	flagVestingAmt   = "vesting-amount"
 )
+
+// SnapshotEntry represents an entry in the snapshot.
+type SnapshotEntry struct {
+	Address string      `json:"address"`
+	Weight  sdkmath.Int `json:"weight"`
+}
+
+// Snapshot represents the overall snapshot as a slice of SnapshotEntry.
+type Snapshot []SnapshotEntry
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
 func AddGenesisAccountCmd(defaultNodeHome string) *cobra.Command {
@@ -107,8 +117,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			baseAccount := authtypes.NewBaseAccount(addr, nil, 0, 0)
 
 			if !vestingAmt.IsZero() {
-				baseVestingAccount := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
-
+				baseVestingAccount, err := authvesting.NewBaseVestingAccount(baseAccount, vestingAmt.Sort(), vestingEnd)
+				if err != nil {
+					return err
+				}
 				if (balances.Coins.IsZero() && !baseVestingAccount.OriginalVesting.IsZero()) ||
 					baseVestingAccount.OriginalVesting.IsAnyGT(balances.Coins) {
 					return errors.New("vesting amount cannot be greater than total amount")
@@ -197,30 +209,23 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 	return cmd
 }
-
 func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import-genesis-accounts-from-snapshot [input-snapshot-file] [input-non-airdrop-accounts-file]",
-		Short: "Import genesis accounts from the rainbow airdrop snapshot.json and an non-airdrop-accounts.json",
-		Long: `Import genesis accounts from the rainbow airdrop snapshot.json
-		1INTO of the airdrop coins to be received is liquid in accounts.
-		The remaining is placed in the claims module, to be claimed.
-		Must also pass in an snapshot.json file to airdrop genesis INTO coins
-		Example:
-		intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-accounts.json
-		- Check input genesis:
-			file is at ~/.intentod/config/genesis.json
-`,
+		Short: "Import genesis accounts from a snapshot and distribute an airdrop amount.",
+		Long: `Import genesis accounts from a snapshot file and a non-airdrop accounts file.
+Distribute the specified total airdrop amount among the snapshot accounts proportionally based on weights.
+Also include non-airdrop accounts with specified destinations.
+
+Example:
+intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-accounts.json --airdrop-amount=1000000000
+- Input genesis file: ~/.intentod/config/genesis.json`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			// aminoCodec := clientCtx.LegacyAmino.Amino
-
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			serverCtx := server.GetServerContextFromCmd(cmd)
 
 			config := serverCtx.Config
-
 			config.SetRoot(clientCtx.HomeDir)
 
 			genFile := config.GenesisFile()
@@ -233,213 +238,125 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 
 			accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
 			if err != nil {
-				return fmt.Errorf("failed to get accounts from any: %w", err)
+				return fmt.Errorf("failed to get accounts from genesis state: %w", err)
 			}
 
-			// Read snapshot file
-			snapshotInput := args[0]
-			snapshotJSON, err := os.Open(snapshotInput)
+			// Parse command flag
+			airdropAmountFlag, err := cmd.Flags().GetInt64("airdrop-amount")
+			if err != nil || airdropAmountFlag <= 0 {
+				return fmt.Errorf("invalid or missing --airdrop-amount flag")
+			}
+			airdropAmount := math.NewInt(airdropAmountFlag)
+
+			// Load snapshot
+			snapshotFile := args[0]
+			snapshotJSON, err := os.Open(snapshotFile)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to open snapshot file: %w", err)
 			}
 			defer snapshotJSON.Close()
 
 			var snapshot Snapshot
-			decoder := json.NewDecoder(snapshotJSON)
-			if err := decoder.Decode(&snapshot); err != nil {
-				return err
+			if err := json.NewDecoder(snapshotJSON).Decode(&snapshot); err != nil {
+				return fmt.Errorf("failed to parse snapshot file: %w", err)
 			}
 
-			// Read ions file
-			trstInput := args[1]
-			trstJSON, err := os.Open(trstInput)
+			// Load non-airdrop accounts
+			nonAirdropFile := args[1]
+			nonAirdropJSON, err := os.Open(nonAirdropFile)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to open non-airdrop accounts file: %w", err)
 			}
-			defer trstJSON.Close()
+			defer nonAirdropJSON.Close()
 
-			var trstAmts map[string]int64
-			decoder2 := json.NewDecoder(trstJSON)
-			if err := decoder2.Decode(&trstAmts); err != nil {
-				return err
+			var nonAirdropAccounts map[string]struct {
+				Amount int64  `json:"amount"`
+				Name   string `json:"name"`
 			}
-
-			// get genesis params
-			genesisParams := MainnetGenesisParams()
-			nonAirdropAccs := make(map[string]sdk.Coins)
-
-			for _, acc := range genesisParams.DistributedAccounts {
-				nonAirdropAccs[acc.Address] = acc.GetCoins()
+			if err := json.NewDecoder(nonAirdropJSON).Decode(&nonAirdropAccounts); err != nil {
+				return fmt.Errorf("failed to parse non-airdrop accounts file: %w", err)
 			}
 
-			for addr, amt := range trstAmts {
-				// set atom bech32 prefixes
-				bech32Addr, err := ConvertBech32(addr)
-				if err != nil {
-					return err
-				}
-
-				address, err := sdk.AccAddressFromBech32(bech32Addr)
-				if err != nil {
-					return err
-				}
-
-				if val, ok := nonAirdropAccs[address.String()]; ok {
-					nonAirdropAccs[address.String()] = val.Add(sdk.NewCoin("uinto", sdk.NewInt(amt).MulRaw(1_000_000)))
-				} else {
-					nonAirdropAccs[address.String()] = sdk.NewCoins(sdk.NewCoin("uinto", sdk.NewInt(amt).MulRaw(1_000_000)))
-				}
+			// Calculate total weight and normalization factor
+			var totalWeight math.LegacyDec
+			for _, account := range snapshot {
+				totalWeight = totalWeight.Add(math.LegacyNewDecFromInt(account.Weight))
 			}
+			normalizationFactor := math.LegacyNewDecFromInt(airdropAmount).Quo(totalWeight)
 
-			// figure out normalizationFactor to normalize snapshot balances to desired airdrop supply
-			normalizationFactor := sdk.NewDecFromInt(genesisParams.AirdropSupply).QuoInt(snapshot.TotalIntoAirdropAmount)
-
-			fmt.Printf("total snapshot accounts: %v\n", len(snapshot.Accounts))
-			fmt.Printf("normalization factor: %s\n", normalizationFactor)
-			fmt.Printf("snapshot total supply: %s\n", snapshot.TotalIntoAirdropAmount)
-
-			// donating the remainder to the rainforrest foundation https://rainforestfoundation.org/
-			toDonate := genesisParams.AirdropSupply.Sub(snapshot.TotalIntoAirdropAmount)
-			rainForrestFoundationAddr, _ := sdk.AccAddressFromHexUnsafe("17F318875145240F05259C65FCAB0E9C3DB92C0B")
-			nonAirdropAccs[rainForrestFoundationAddr.String()] = sdk.NewCoins(sdk.NewCoin("uinto", toDonate))
-			fmt.Printf("donated: %s \n", toDonate)
-
-			bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
-			liquidBalances := bankGenState.Balances
-
+			// Prepare balances and claim records
+			liquidBalances := []banktypes.Balance{}
 			claimRecords := []claimtypes.ClaimRecord{}
-			claimModuleAccountBalance := sdk.NewInt(0)
+			claimModuleBalance := math.NewInt(0)
 
-			// for each account in the snapshot
-			for _, acc := range snapshot.Accounts {
-				// read address from snapshot
-				//we cannot have duplicate accounts
-
-				bech32Addr, err := ConvertBech32(acc.TokenAddress)
+			// Distribute airdrop
+			for _, account := range snapshot {
+				address, err := sdk.AccAddressFromBech32(account.Address)
 				if err != nil {
-					return err
+					return fmt.Errorf("invalid address in snapshot: %w", err)
 				}
 
-				address, err := sdk.AccAddressFromBech32(bech32Addr)
-				if err != nil {
-					return err
-				}
-				//if !accs.Contains(address) {
-				// initial liquid amounts
-				// We consistently round down to the nearest uinto
-				// get normalized into balance for account
-				normalizedIntoBalance := sdk.NewDecFromInt(acc.IntoBalance).Mul(normalizationFactor)
-
-				//liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, acc.IntoBalance))
-				//liquidAmount := normalizedIntoBalance.Mul(sdk.MustNewDecFromStr("0.2")).TruncateInt() // 20% of airdrop amount
-				liquidCoins := sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, sdk.NewInt(696969)))
-
-				if coins, ok := nonAirdropAccs[address.String()]; ok {
-					liquidCoins = liquidCoins.Add(coins...)
-					delete(nonAirdropAccs, address.String())
-				}
+				airdropShare := math.LegacyNewDecFromInt(account.Weight).Mul(normalizationFactor).TruncateInt()
+				liquidAmount := airdropShare.MulRaw(2).QuoRaw(10) // 20% liquid
+				claimableAmount := airdropShare.Sub(liquidAmount)
 
 				liquidBalances = append(liquidBalances, banktypes.Balance{
 					Address: address.String(),
-					Coins:   liquidCoins,
+					Coins:   sdk.NewCoins(sdk.NewCoin("uinto", liquidAmount)),
 				})
-				//supply = supply.Add(liquidCoins...)
+				claimModuleBalance = claimModuleBalance.Add(claimableAmount)
 
-				// Add the new account to the set of genesis accounts
-				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
-				if err := baseAccount.Validate(); err != nil {
-					return fmt.Errorf("failed to validate new genesis account: %w", err)
-				}
-				accs = append(accs, baseAccount)
-
-				// claimable balances
-				claimableAmount := normalizedIntoBalance.TruncateInt().Sub(sdk.NewInt(696969)) //.Mul(sdk.MustNewDecFromStr("0.8")).TruncateInt()
-				if normalizedIntoBalance.Sub(sdk.NewDec(696969)).IsNegative() {
-					claimableAmount = sdk.ZeroInt()
-					liquidCoins = sdk.NewCoins(sdk.NewCoin("uinto", normalizedIntoBalance.TruncateInt()))
-				}
-				status := claimtypes.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
 					Address:                address.String(),
-					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, claimableAmount)),
-					Status:                 []claimtypes.Status{status, status, status, status},
+					InitialClaimableAmount: sdk.NewCoins(sdk.NewCoin("uinto", claimableAmount)),
+					Status:                 nil,
 				})
-
-				claimModuleAccountBalance = claimModuleAccountBalance.Add(claimableAmount)
-
-				//} else {
-				//	fmt.Printf(" new genesis account contains double account: %w", address)
-				//	}
 			}
-			var totalAirdrop sdk.Coins
-			for _, balance := range liquidBalances {
-				totalAirdrop = totalAirdrop.Add(balance.Coins...)
-			}
-			fmt.Printf("Total liquid coins %s \n", totalAirdrop.AmountOf("uinto"))
-			//fmt.Printf("Total airdrop coins approx %s", totalAirdrop.AmountOf("uinto").MulRaw(5))
-			fmt.Printf("Total airdrop coins %s \n", claimModuleAccountBalance.Add(totalAirdrop.AmountOf("uinto")))
-			//fmt.Println(supply.AmountOf("uinto"))
 
-			// distribute remaining into to accounts not in fairdrop
-			for addr, coin := range nonAirdropAccs {
-				// read address from snapshot
+			// Add non-airdrop accounts
+			for addr, info := range nonAirdropAccounts {
 				address, err := sdk.AccAddressFromBech32(addr)
 				if err != nil {
-					return err
+					return fmt.Errorf("invalid address in non-airdrop accounts: %w", err)
 				}
 
 				liquidBalances = append(liquidBalances, banktypes.Balance{
 					Address: address.String(),
-					Coins:   coin,
+					Coins:   sdk.NewCoins(sdk.NewCoin("uinto", math.NewInt(info.Amount))),
 				})
-				//supply = supply.Add(coin...)
-
-				// Add the new account to the set of genesis accounts
-				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
-				if err := baseAccount.Validate(); err != nil {
-					return fmt.Errorf("failed to validate new genesis account: %w", err)
-				}
-				accs = append(accs, baseAccount)
+				fmt.Printf("Non-airdrop account added: %s (%s) with %d uinto\n", addr, info.Name, info.Amount)
 			}
-			var total sdk.Coins
+
+			// Final output
+			totalLiquid := math.NewInt(0)
 			for _, balance := range liquidBalances {
-				total = total.Add(balance.Coins...)
+				totalLiquid = totalLiquid.Add(balance.Coins.AmountOf("uinto"))
 			}
-			fmt.Printf("Total non-airdrop %s \n", total.Sub(totalAirdrop[0]))
+			fmt.Printf("Total Airdrop: %s uinto\n", airdropAmount)
+			fmt.Printf("Total Liquid: %s uinto\n", totalLiquid)
+			fmt.Printf("Total Claimable: %s uinto\n", claimModuleBalance)
 
-			fmt.Printf("Total balances %s \n", claimModuleAccountBalance.Add(totalAirdrop.AmountOf("uinto")).Add(total.Sub(totalAirdrop[0]).AmountOf("uinto")))
-
-			// auth module genesis
-			accs = authtypes.SanitizeGenesisAccounts(accs)
-			genAccs, err := authtypes.PackAccounts(accs)
+			// Update genesis state
+			authGenState.Accounts, err = authtypes.PackAccounts(accs)
 			if err != nil {
-				return fmt.Errorf("failed to convert accounts into any's: %w", err)
+				return fmt.Errorf("failed to PackAccounts: %w", err)
 			}
-			authGenState.Accounts = genAccs
 			authGenStateBz, err := clientCtx.Codec.MarshalJSON(&authGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal auth genesis state: %w", err)
 			}
 			appState[authtypes.ModuleName] = authGenStateBz
 
-			// bank module genesis
+			bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 			bankGenState.Balances = banktypes.SanitizeGenesisBalances(liquidBalances)
-			//bankGenState.Supply = supply
 			bankGenStateBz, err := clientCtx.Codec.MarshalJSON(bankGenState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal bank genesis state: %w", err)
 			}
 			appState[banktypes.ModuleName] = bankGenStateBz
 
-			byteIBCTransfer, err := appState[ibctransfertypes.ModuleName].MarshalJSON()
-			if err != nil {
-				return fmt.Errorf("error marshal ibc transfer: %w", err)
-			}
-
-			// claim module genesis
 			claimGenState := claimtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
-			claimGenState.ModuleAccountBalance = sdk.NewCoin(genesisParams.NativeCoinMetadatas[0].Base, claimModuleAccountBalance)
-
+			claimGenState.ModuleAccountBalance = sdk.NewCoin("uinto", claimModuleBalance)
 			claimGenState.ClaimRecords = claimRecords
 			claimGenStateBz, err := clientCtx.Codec.MarshalJSON(claimGenState)
 			if err != nil {
@@ -447,30 +364,17 @@ func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command
 			}
 			appState[claimtypes.ModuleName] = claimGenStateBz
 
-			var ibcGenState ibctransfertypes.GenesisState
-			err = ibctransfertypes.ModuleCdc.UnmarshalJSON(byteIBCTransfer, &ibcGenState)
-			if err != nil {
-				return fmt.Errorf("error unmarshal ibc transfer: %w", err)
-			}
-			ibcGenState.Params = ibctransfertypes.NewParams(false, false)
-			ibcGenStateBz, err := clientCtx.Codec.MarshalJSON(&ibcGenState)
-			if err != nil {
-				return fmt.Errorf("failed to marshal ibc genesis state: %w", err)
-			}
-			appState[ibctransfertypes.ModuleName] = ibcGenStateBz
-
 			appStateJSON, err := json.Marshal(appState)
 			if err != nil {
 				return fmt.Errorf("failed to marshal application genesis state: %w", err)
 			}
 			genDoc.AppState = appStateJSON
 
-			err = genutil.ExportGenesisFile(genDoc, genFile)
-			return err
-
+			return genutil.ExportGenesisFile(genDoc, genFile)
 		},
 	}
 
+	cmd.Flags().Int64("airdrop-amount", 0, "Total amount to distribute in the airdrop")
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	flags.AddQueryFlagsToCmd(cmd)
 
@@ -488,26 +392,4 @@ func ConvertBech32(address string) (string, error) {
 		panic(err)
 	}
 	return bech32Addr, err
-}
-
-func cosmosConvertBech32(address string) (string, error) {
-	_, bz, err := bech32.DecodeAndConvert(address)
-	if err != nil {
-		panic(err)
-	}
-
-	bech32Addr, err := bech32.ConvertAndEncode("cosmos", bz)
-	if err != nil {
-		panic(err)
-	}
-	return bech32Addr, err
-}
-
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }

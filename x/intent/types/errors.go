@@ -8,7 +8,7 @@ var (
 	ErrUnauthorized   = errorsmod.Register(ModuleName, 2, "unauthorized")
 	ErrAccountExists  = errorsmod.Register(ModuleName, 6, "fee account already exists")
 	ErrDuplicate      = errorsmod.Register(ModuleName, 14, "duplicate")
-	ErrAuthzSigner    = errorsmod.Register(ModuleName, 19, "message signer is not message sender")
+	ErrSignerNotOk    = errorsmod.Register(ModuleName, 19, "message signer is not message sender")
 	ErrInvalidGenesis = errorsmod.Register(ModuleName, 1, "invalid ids upon genesis")
 	ErrEmpty          = errorsmod.Register(ModuleName, 11, "empty")
 	ErrInvalidRequest = errorsmod.Register(ModuleName, 8, "invalid request")
