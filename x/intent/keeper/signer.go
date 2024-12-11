@@ -28,32 +28,36 @@ func (k Keeper) SignerOk(ctx sdk.Context, codec codec.Codec, actionInfo types.Ac
 	return nil
 }
 
-// validateMessage handles validation for a single message.
-//   - Local messages: Validates that the signer matches the action owner.
-//   - Authz MsgExec messages: Validates the signers for all contained messages.
-//   - ICA messages: Skips validation because signer authentication happens
-//     via IBC for the packet sender. The user controls which ICA to use,
-//     and the expected configuration is already established within the module.
-//     Additional verification is unnecessary.
 func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, actionInfo types.ActionInfo, message *codectypes.Any) error {
 	var sdkMsg sdk.Msg
 	if err := codec.UnpackAny(message, &sdkMsg); err != nil {
 		return errorsmod.Wrap(err, "failed to unpack message")
 	}
 
-	if isAuthzMsgExec(message) {
-		// Validate MsgExec messages for nested signer verification.
+	switch {
+	case isAuthzMsgExec(message):
+		// Validate Authz MsgExec messages.
 		return k.validateAuthzMsg(ctx, codec, actionInfo, message)
-	}
 
-	if isLocalMessage(actionInfo) {
-		// Validate local messages by ensuring the signer matches the action owner.
+	case isLocalMessage(actionInfo):
+		// Validate local messages to ensure the signer matches the owner.
 		return k.validateSigners(ctx, codec, actionInfo, message)
-	}
 
-	// ICA messages are trusted due to IBC authentication and controlled configuration.
-	// No further validation is needed for these cases.
-	return nil
+	case isHostedICAMessage(actionInfo):
+		// Restrict Hosted ICA messages to MsgExec for security.
+		if message.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+			return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Hosted ICA messages")
+		}
+		return nil
+
+	case isSelfHostedICAMessage(actionInfo):
+		// Allow Self-hosted ICA messages without additional validation.
+		return nil
+
+	default:
+		// Unsupported message type.
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "unsupported message type")
+	}
 }
 
 func isAuthzMsgExec(message *codectypes.Any) bool {
@@ -62,6 +66,14 @@ func isAuthzMsgExec(message *codectypes.Any) bool {
 
 func isLocalMessage(actionInfo types.ActionInfo) bool {
 	return (actionInfo.ICAConfig == nil || actionInfo.ICAConfig.ConnectionID == "") && (actionInfo.HostedConfig == nil || actionInfo.HostedConfig.HostedAddress == "")
+}
+
+func isHostedICAMessage(actionInfo types.ActionInfo) bool {
+	return actionInfo.HostedConfig != nil && actionInfo.HostedConfig.HostedAddress != ""
+}
+
+func isSelfHostedICAMessage(actionInfo types.ActionInfo) bool {
+	return actionInfo.ICAConfig != nil && actionInfo.ICAConfig.ConnectionID != ""
 }
 
 // validateAuthzMsg validates an authz MsgExec message.
