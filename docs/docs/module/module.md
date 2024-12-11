@@ -1,12 +1,11 @@
 ---
 sidebar_position: 1
-title: Intent Module
+title: Technical Specification
 description: Intent module for Intent-Based Actions
 ---
 
 The Intent module enables actions to be highly configurable and conditional, whereby the actions can depend on execution results. For example, a protocol user could set up a sequence of actions such as swapping ATOM for USDC on Osmosis and then paying for a subscription that is settled on Ethereum using the Axelar bridge with General Message Passing. By enabling these user intents, protocols and their end-users can automate complex workflows in a seamless manner.
 
-## Technical Specification
 
 ### Gas operations
 
