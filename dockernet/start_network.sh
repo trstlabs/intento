@@ -57,10 +57,14 @@ for chain in INTO ${HOST_CHAINS[@]}; do
     bash $SRC/init_chain.sh $chain
 done
 
-
-echo "Start the chain..."
+echo "Start the chains..."
 bash $SRC/start_chain.sh 
 
-echo "Start relayers and the transfer channels..."
+echo "Setting up ICS..."
+bash $SRC/setup_ics.sh 
+
+#echo "Start relayers and the transfer channels..."
 #bash $SRC/start_relayers.sh 
-bash $SRC/start_hermes.sh 
+#bash $SRC/start_hermes.sh 
+
+
