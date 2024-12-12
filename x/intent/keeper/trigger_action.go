@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -145,9 +146,9 @@ func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string,
 	}
 	// reward hooks
 	if msgClass == 3 {
-		k.hooks.AfterActionAuthz(ctx, owner)
+		k.hooks.AfterActionLocal(ctx, owner)
 	} else if msgClass == 1 {
-		k.hooks.AfterActionWasm(ctx, owner)
+		k.hooks.AfterActionICA(ctx, owner)
 	}
 
 	actionHistoryEntry.Executed = true
@@ -196,14 +197,14 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 			msgExecResponse := authztypes.MsgExecResponse{}
 			err := proto.Unmarshal(anyResp.GetValue(), &msgExecResponse)
 			if err != nil {
-				k.Logger(ctx).Debug("handling deep action response", "err", err)
+				k.Logger(ctx).Debug("handling deep action response unmarshalling", "err", err)
 				return nil, 0, err
 			}
 
 			actionIndex := index + previousMsgsExecuted
-			// if actionIndex < 0 {
-			// 	actionIndex = 0
-			// }
+			if actionIndex >= len(action.Msgs) {
+				return nil, 0, errorsmod.Wrapf(types.ErrMsgResponsesHandling, "expected more message responses")
+			}
 			msgExec := &authztypes.MsgExec{}
 			if err := proto.Unmarshal(action.Msgs[actionIndex].Value, msgExec); err != nil {
 				return nil, 0, err
@@ -214,10 +215,15 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 			for _, resultBytes := range msgExecResponse.Results {
 				var msgResponse = cdctypes.Any{}
 				if err := proto.Unmarshal(resultBytes, &msgResponse); err == nil {
-					k.Logger(ctx).Debug("parsing response authz v0.52+", "msgResponse", msgResponse)
-					if msgResponse.GetTypeUrl() != "" {
+					typeUrl := msgResponse.GetTypeUrl()
+
+					if typeUrl != "" && strings.Contains(typeUrl, "Msg") {
+						// _, err := k.interfaceRegistry.Resolve(typeUrl)
+						// if err == nil {
+						k.Logger(ctx).Debug("parsing response authz v0.52+", "msgResponse", msgResponse)
 						msgResponses = append(msgResponses, &msgResponse)
 						continue
+						//}
 					}
 
 				}
