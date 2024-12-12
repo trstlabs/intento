@@ -5,20 +5,21 @@ import (
 )
 
 var (
-	ErrUnauthorized   = errorsmod.Register(ModuleName, 2, "unauthorized")
-	ErrAccountExists  = errorsmod.Register(ModuleName, 6, "fee account already exists")
-	ErrDuplicate      = errorsmod.Register(ModuleName, 14, "duplicate")
-	ErrSignerNotOk    = errorsmod.Register(ModuleName, 19, "message signer is not message sender")
-	ErrInvalidGenesis = errorsmod.Register(ModuleName, 1, "invalid ids upon genesis")
-	ErrEmpty          = errorsmod.Register(ModuleName, 11, "empty")
-	ErrInvalidRequest = errorsmod.Register(ModuleName, 8, "invalid request")
-	ErrUnknownRequest = errorsmod.Register(ModuleName, 4, "unknown request")
-	ErrAckErr         = errorsmod.Register(ModuleName, 33, "acknowledgement error")
-	ErrNotFound       = errorsmod.Register(ModuleName, 16, "not found")
-	ErrHostedFeeLimit = errorsmod.Register(ModuleName, 17, "fee limit reached for hosted account")
-	ErrInvalidType    = errorsmod.Register(ModuleName, 12, "invalid type")
-	ErrInvalidAddress = errorsmod.Register(ModuleName, 5, "invalid address")
-	ErrJSONUnmarshal  = errorsmod.Register(ModuleName, 15, "failed unmarshal json")
+	ErrUnauthorized         = errorsmod.Register(ModuleName, 2, "unauthorized")
+	ErrAccountExists        = errorsmod.Register(ModuleName, 6, "fee account already exists")
+	ErrDuplicate            = errorsmod.Register(ModuleName, 14, "duplicate")
+	ErrSignerNotOk          = errorsmod.Register(ModuleName, 19, "message signer is not message sender")
+	ErrInvalidGenesis       = errorsmod.Register(ModuleName, 1, "invalid ids upon genesis")
+	ErrEmpty                = errorsmod.Register(ModuleName, 11, "empty")
+	ErrInvalidRequest       = errorsmod.Register(ModuleName, 8, "invalid request")
+	ErrUnknownRequest       = errorsmod.Register(ModuleName, 4, "unknown request")
+	ErrAckErr               = errorsmod.Register(ModuleName, 33, "acknowledgement error")
+	ErrNotFound             = errorsmod.Register(ModuleName, 16, "not found")
+	ErrHostedFeeLimit       = errorsmod.Register(ModuleName, 17, "fee limit reached for hosted account")
+	ErrInvalidType          = errorsmod.Register(ModuleName, 12, "invalid type")
+	ErrInvalidAddress       = errorsmod.Register(ModuleName, 5, "invalid address")
+	ErrJSONUnmarshal        = errorsmod.Register(ModuleName, 15, "failed unmarshal json")
+	ErrMsgResponsesHandling = errorsmod.Register(ModuleName, 18, "error handling msg responses")
 	//ics20 hooks
 	ErrMsgValidation = errorsmod.Register("ics20-hooks", 20, "error in ics20 hook message validation")
 	ErrMarshaling    = errorsmod.Register("ics20-hooks", 21, "cannot marshal the ICS20 packet")
@@ -39,5 +40,5 @@ var (
 	ErrActionMsgHandling      = "msg handling error: %s"
 	ErrActionResponseUseValue = "msg handling error using response value: %s"
 	ErrSettingActionResult    = "setting action result:  %s"
-	ErrBalanceLow             = "balance too low to deduct expected fee"
+	ErrBalanceTooLow          = "balance too low to deduct expected fee; denom: %s"
 )

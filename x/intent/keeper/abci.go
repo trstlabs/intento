@@ -37,7 +37,7 @@ func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.Ac
 
 	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, action, 1_000_000)
 	if err != nil || feeAddr == nil || feeDenom == "" {
-		errorString = appendError(errorString, types.ErrBalanceLow)
+		errorString = appendError(errorString, types.ErrBalanceTooLow+feeDenom)
 	}
 
 	if errorString == "" {
@@ -96,7 +96,7 @@ func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, action types.ActionInfo, 
 	}
 	k.interchainQueryKeeper.SetQuery(ctx, query)
 	// Log successful submission of the interchain query
-	logger.Debug("interchain query submitted", "actionID", action.ID)
+	logger.Debug("interchain query submitted", "actionID", action.ID, "ICQ ID", id)
 }
 
 // handleActionExecution handles the core logic of triggering an action and processing responses
