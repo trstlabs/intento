@@ -2,7 +2,7 @@ module github.com/trstlabs/intento
 
 go 1.22.7
 
-toolchain go1.22.8
+toolchain go1.22.7
 
 require (
 	github.com/CosmWasm/wasmd v0.53.0
