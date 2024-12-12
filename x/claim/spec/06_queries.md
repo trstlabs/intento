@@ -36,7 +36,7 @@ osmosisd query claim claimable-for-action $(osmosisd keys show -a {your key name
 ```
 
 Query the total claimable amount that would be earned if all remaining actions were completed right now.
-Note that even if the decay process hasn't begun yet, this is not always *exactly* the same as `InitialClaimableAmount`, due to rounding errors.
+Note that even if the decay process hasn't begun yet, this is not always *exactly* the same as `MaximumClaimableAmount`, due to rounding errors.
 
 ```sh
 osmosisd query claim total-claimable $(osmosisd keys show -a {your key name}) ActionItemCreated

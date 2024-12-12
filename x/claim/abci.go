@@ -21,7 +21,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 			panic("Failed to get claim record ")
 		}
 		//fmt.Printf("iteration for %s; current time %s; action: %v; period: %v\n", endTime, ctx.BlockHeader().Time, action, period)
-		claimRecord.Status[action].VestingPeriodCompleted[period] = true
+		claimRecord.Status[action].VestingPeriodsCompleted[period] = true
 		err = k.SetClaimRecord(ctx, claimRecord)
 		if err != nil {
 			panic("Failed to set claim record ")

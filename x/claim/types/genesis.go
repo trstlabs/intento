@@ -48,7 +48,7 @@ func (gs GenesisState) Validate() error {
 	totalClaimable := sdk.Coins{}
 
 	for _, claimRecord := range gs.ClaimRecords {
-		totalClaimable = totalClaimable.Add(claimRecord.InitialClaimableAmount...)
+		totalClaimable = totalClaimable.Add(claimRecord.MaximumClaimableAmount)
 	}
 
 	if !totalClaimable.Equal(sdk.NewCoins(gs.ModuleAccountBalance)) {

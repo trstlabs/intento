@@ -9,5 +9,5 @@ import (
 // x/claim module sentinel errors
 var (
 	ErrIncorrectModuleAccountBalance = errorsmod.Register(ModuleName, 1100,
-		"claim module account balance != sum of all claim record InitialClaimableAmounts")
+		"claim module account balance != sum of all claim record MaximumClaimableAmounts")
 )

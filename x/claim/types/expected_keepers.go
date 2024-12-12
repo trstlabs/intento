@@ -34,4 +34,5 @@ type StakingKeeper interface {
 	BondDenom(ctx context.Context) (string, error)
 	// return all delegations for a delegator
 	GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]stakingtypes.Delegation, error)
+	GetDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress, maxRetrieve uint16) ([]stakingtypes.Delegation, error)
 }

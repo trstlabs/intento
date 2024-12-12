@@ -74,8 +74,8 @@ message QueryClaimableForActionRequest {
 }
 
 message QueryClaimableForActionResponse {
-  repeated cosmos.base.v1beta1.Coin coins = 1 [
-    (gogoproto.moretags) = "yaml:\"coins\"",
+  cosmos.base.v1beta1.Coin total = 1 [
+    (gogoproto.moretags) = "yaml:\"total\"",
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
@@ -86,8 +86,8 @@ message QueryTotalClaimableRequest {
 }
 
 message QueryTotalClaimableResponse {
-  repeated cosmos.base.v1beta1.Coin coins = 1 [
-    (gogoproto.moretags) = "yaml:\"coins\"",
+   cosmos.base.v1beta1.Coin total = 1 [
+    (gogoproto.moretags) = "yaml:\"total\"",
     (gogoproto.nullable) = false,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];

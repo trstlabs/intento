@@ -11,7 +11,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// Params returns params of the claim module.
+// Params returns p of the claim module.
 func (k Keeper) ModuleAccountBalance(
 	c context.Context, _ *types.QueryModuleAccountBalanceRequest) (*types.QueryModuleAccountBalanceResponse, error) {
 
@@ -21,15 +21,15 @@ func (k Keeper) ModuleAccountBalance(
 	return &types.QueryModuleAccountBalanceResponse{ModuleAccountBalance: moduleAccBal}, nil
 }
 
-// Params returns params of the claim module.
+// Params returns p of the claim module.
 func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	params, err := k.GetParams(ctx)
+	p, err := k.GetParams(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryParamsResponse{Params: params}, nil
+	return &types.QueryParamsResponse{Params: p}, nil
 }
 
 // ClaimRecord returns claimrecord per account
@@ -66,11 +66,14 @@ func (k Keeper) ClaimableForAction(
 	if err != nil {
 		return nil, err
 	}
-
-	coins, err := k.GetTotalClaimableAmountForAction(ctx, addr, req.Action)
+	p, err := k.GetParams(ctx)
+	if err != nil {
+		return nil, err
+	}
+	total, err := k.GetTotalClaimableAmountPerAction(ctx, addr)
 
 	return &types.QueryClaimableForActionResponse{
-		Coins: coins,
+		Total: sdk.NewCoin(p.ClaimDenom, total),
 	}, err
 }
 
@@ -89,9 +92,9 @@ func (k Keeper) TotalClaimable(
 		return nil, err
 	}
 
-	coins, err := k.GetTotalClaimableForAddr(ctx, addr)
+	total, err := k.GetTotalClaimableForAddr(ctx, addr)
 
 	return &types.QueryTotalClaimableResponse{
-		Coins: coins,
+		Total: total,
 	}, err
 }

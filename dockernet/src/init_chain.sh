@@ -33,10 +33,10 @@ set_into_genesis() {
     
     # update params
     jq '.app_state.claim.claim_records[0].address = "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6"' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    jq '.app_state.claim.claim_records[0].initial_claimable_amount = [{"amount":"10000","denom":"uinto"}]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].maximum_claimable_amount = {"amount":"10000","denom":"uinto"}' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].status[0].action_completed = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    jq '.app_state.claim.claim_records[0].status[0].vesting_period_completed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    jq '.app_state.claim.claim_records[0].status[0].vesting_period_claimed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].status[0].vesting_periods_completed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].status[0].vesting_periods_claimed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     
     jq '.app_state.claim.params.duration_vesting_periods = ["40s","50s","60s","70s"]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     
