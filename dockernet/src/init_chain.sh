@@ -316,11 +316,11 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     
     if [[ "$CHAIN" == "INTO"  ]]; then
         TEST_FILES_DIR=$DOCKERNET_HOME/tests/test_files
-        if [ -d "$TEST_FILES_DIR" ]; then
+        $cmd prepare-genesis testnet $CHAIN_ID
+                if [ -d "$TEST_FILES_DIR" ]; then
             $cmd export-snapshot $TEST_FILES_DIR/active-users.csv $TEST_FILES_DIR/nft1.csv $TEST_FILES_DIR/nft2.csv $TEST_FILES_DIR/snapshot_output.json --nft-weight-1 20 --nft-weight 10 --user-weight 5
             $cmd import-genesis-accounts-from-snapshot $TEST_FILES_DIR/snapshot_output.json $TEST_FILES_DIR/non-airdrop-accounts.json --airdrop-amount=1_000_000_000
         fi
-        $cmd prepare-genesis testnet $CHAIN_ID
     fi
     # Update node networking configuration
     config_toml="${STATE}/${node_name}/config/config.toml"
