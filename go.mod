@@ -2,11 +2,9 @@ module github.com/trstlabs/intento
 
 go 1.22.7
 
-toolchain go1.22.7
-
 require (
 	github.com/CosmWasm/wasmd v0.53.0
-	github.com/CosmWasm/wasmvm/v2 v2.1.3
+	github.com/CosmWasm/wasmvm/v2 v2.1.3 // indirect
 	github.com/cometbft/cometbft v0.38.13
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.50.9
@@ -28,7 +26,7 @@ require (
 
 require (
 	cosmossdk.io/api v0.7.6
-	cosmossdk.io/client/v2 v2.0.0-beta.5 // indirect
+	cosmossdk.io/client/v2 v2.0.0-beta.5
 	cosmossdk.io/collections v0.4.0
 	cosmossdk.io/core v0.11.1
 	cosmossdk.io/errors v1.0.1
@@ -37,7 +35,7 @@ require (
 	cosmossdk.io/store v1.1.1
 	cosmossdk.io/x/evidence v0.1.1
 	cosmossdk.io/x/feegrant v0.1.1
-	cosmossdk.io/x/tx v0.13.5 // indirect
+	cosmossdk.io/x/tx v0.13.5
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/cosmos/cosmos-db v1.0.2
 	github.com/cosmos/ibc-apps/modules/ibc-hooks/v8 v8.0.0-20241122170711-64c5cd5a9fb9
@@ -51,6 +49,7 @@ require (
 
 require (
 	cosmossdk.io/depinject v1.0.0
+	cosmossdk.io/tools/confix v0.1.2
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/cosmos/interchain-security/v6 v6.3.0
 	github.com/golang/mock v1.6.0
@@ -66,7 +65,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	cloud.google.com/go/iam v1.1.9 // indirect
 	cloud.google.com/go/storage v1.41.0 // indirect
-	cosmossdk.io/tools/confix v0.1.2 // indirect
 	cosmossdk.io/x/circuit v0.1.1 // indirect
 	cosmossdk.io/x/nft v0.1.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

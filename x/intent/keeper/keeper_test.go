@@ -61,33 +61,10 @@ func GetICAApp(chain *ibctesting.TestChain) *icaapp.IntoApp {
 	return app
 }
 
-// func GetActionKeeper(chain *apptesting.TestChain) keeper.Keeper {
-// 	app, ok := chain.App.(*icaapp.IntoApp)
-// 	if !ok {
-// 		panic("not ica app")
-// 	}
-
-// 	return app.IntentKeeper
-// }
-
-// func GetActionKeeperFromApp(app *icaapp.IntoApp) keeper.Keeper {
-
-// 	return app.IntentKeeper
-// }
-
 // TestKeeperTestSuite runs all the tests within this package.
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
-
-// SetupTest creates a coordinator with 2 test chains.
-// func (suite *KeeperTestSuite) SetupTest() {
-// 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
-// 	ibctesting.DefaultTestingAppInit = apptesting.SetupTestingApp
-// 	suite.IntentoChain = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1))}
-// 	suite.HostChain = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2))}
-
-// }
 
 func NewICAPath(IntentoChain, HostChain *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(IntentoChain, HostChain)
