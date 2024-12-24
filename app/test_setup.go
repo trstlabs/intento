@@ -181,19 +181,19 @@ func GenesisStateWithValSet(app *IntoApp) GenesisState {
 	)
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
-	// vals, err := tmtypes.PB2TM.ValidatorUpdates(initValPowers)
-	// if err != nil {
-	// 	panic("failed to get vals")
-	// }
+	vals, err := tmtypes.PB2TM.ValidatorUpdates(initValPowers)
+	if err != nil {
+		panic("failed to get vals")
+	}
 
-	// consumerGenesisState := CreateMinimalConsumerTestGenesis()
-	// consumerGenesisState.Provider.InitialValSet = initValPowers
-	// consumerGenesisState.Provider.ConsensusState.NextValidatorsHash = tmtypes.NewValidatorSet(vals).Hash()
-	// consumerGenesisState.Params.Enabled = true
-	// if err := consumerGenesisState.Validate(); err != nil {
-	// 	panic(err)
-	// }
-	// genesisState[ccvconsumertypes.ModuleName] = app.AppCodec().MustMarshalJSON(consumerGenesisState)
+	consumerGenesisState := CreateMinimalConsumerTestGenesis()
+	consumerGenesisState.Provider.InitialValSet = initValPowers
+	consumerGenesisState.Provider.ConsensusState.NextValidatorsHash = tmtypes.NewValidatorSet(vals).Hash()
+	consumerGenesisState.Params.Enabled = true
+	if err := consumerGenesisState.Validate(); err != nil {
+		panic(err)
+	}
+	genesisState[ccvconsumertypes.ModuleName] = app.AppCodec().MustMarshalJSON(consumerGenesisState)
 
 	return genesisState
 }
@@ -204,9 +204,6 @@ func InitIntentoIBCTestingApp(initValPowers []abci.ValidatorUpdate) func() (ibct
 
 		app := InitIntentoTestApp(false)
 		genesisState := NewDefaultGenesisState(app.appCodec)
-		if initValPowers == nil {
-			return app, genesisState
-		}
 		// Feed consumer genesis with provider validators
 		var consumerGenesis ccvconsumertypes.GenesisState
 		app.appCodec.MustUnmarshalJSON(genesisState[ccvconsumertypes.ModuleName], &consumerGenesis)
