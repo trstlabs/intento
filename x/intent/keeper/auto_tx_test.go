@@ -110,7 +110,7 @@ func TestGetActionsForBlock(t *testing.T) {
 	require.NoError(t, err)
 	// Call the CreateAction function
 	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
-
+	require.NoError(t, err)
 	actions := keepers.IntentKeeper.GetActionsForBlock(ctx.WithBlockTime(startTime.Add(interval)))
 	require.Equal(t, len(actions), 2)
 

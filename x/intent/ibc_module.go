@@ -119,8 +119,8 @@ func (im IBCModule) OnAcknowledgementPacket(
 	if !ack.Success() {
 		errorString := "error handling packet on host chain: see host chain events for details, error: " + ack.GetError()
 		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, errorString)
-		return nil //errorsmod.Wrapf(types.ErrAckErr, errorString)
-		//im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, "error handling packet on host chain: see host chain events for details")
+		return nil
+
 	}
 	var txMsgData sdk.TxMsgData
 	if err := proto.Unmarshal(ack.GetResult(), &txMsgData); err != nil {
