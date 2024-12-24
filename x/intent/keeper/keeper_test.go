@@ -89,50 +89,6 @@ func NewTransferPath(IntentoChain, HostChain *ibctesting.TestChain) *ibctesting.
 	return path
 }
 
-// SetupICAPath invokes the InterIntentoChainccounts entrypoint and subsequent channel handshake handlers
-func SetupICAPath(path *ibctesting.Path, owner string) error {
-
-	if err := RegisterInterchainAccount(path.EndpointA, owner); err != nil {
-		return err
-	}
-	if err := path.EndpointB.ChanOpenTry(); err != nil {
-		return err
-	}
-
-	if err := path.EndpointA.ChanOpenAck(); err != nil {
-		return err
-	}
-
-	if err := path.EndpointB.ChanOpenConfirm(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// RegisterInterchainAccount is a helper function for starting the channel handshake
-func RegisterInterchainAccount(endpoint *ibctesting.Endpoint, owner string) error {
-	portID, err := icatypes.NewControllerPortID(owner)
-	if err != nil {
-		return err
-	}
-
-	channelSequence := endpoint.Chain.App.GetIBCKeeper().ChannelKeeper.GetNextChannelSequence(endpoint.Chain.GetContext())
-
-	if err := GetICAApp(endpoint.Chain).ICAControllerKeeper.RegisterInterchainAccount(endpoint.Chain.GetContext(), endpoint.ConnectionID, owner, TestVersion); err != nil {
-		return err
-	}
-
-	// commit state changes for proof verification
-	endpoint.Chain.NextBlock()
-
-	// update port/channel ids
-	endpoint.ChannelID = channeltypes.FormatChannelIdentifier(channelSequence)
-	endpoint.ChannelConfig.PortID = portID
-
-	return nil
-}
-
 func (suite *KeeperTestSuite) receiveTransferPacket(receiver, memo string) []byte {
 	return suite.receiveTransferPacketWithSequence(receiver, memo, 0)
 }

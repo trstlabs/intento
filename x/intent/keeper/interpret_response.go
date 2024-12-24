@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
+
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
@@ -270,8 +270,8 @@ func ParseResponseValue(response interface{}, responseKey, responseType string) 
 		if val.Kind() == reflect.Struct {
 			amountField := val.FieldByName("Amount")
 			denomField := val.FieldByName("Denom")
-			if amountField.IsValid() && denomField.IsValid() && amountField.Type() == reflect.TypeOf(sdkmath.Int{}) && denomField.Kind() == reflect.String {
-				amount := amountField.Interface().(sdkmath.Int)
+			if amountField.IsValid() && denomField.IsValid() && amountField.Type() == reflect.TypeOf(math.Int{}) && denomField.Kind() == reflect.String {
+				amount := amountField.Interface().(math.Int)
 				return sdk.Coin{
 					Amount: amount,
 					Denom:  denomField.String(),
@@ -285,7 +285,7 @@ func ParseResponseValue(response interface{}, responseKey, responseType string) 
 		}
 	case "sdk.Int":
 		if val.Kind() == reflect.Struct && val.Type().Name() == "Int" {
-			return val.Interface().(sdkmath.Int), nil
+			return val.Interface().(math.Int), nil
 		}
 	case "[]string":
 		if val.Kind() == reflect.Slice && val.Type().Elem().Kind() == reflect.String {
@@ -293,7 +293,7 @@ func ParseResponseValue(response interface{}, responseKey, responseType string) 
 		}
 	case "[]sdk.Int":
 		if val.Kind() == reflect.Slice && val.Type().Elem().Name() == "Int" {
-			return val.Interface().([]sdkmath.Int), nil
+			return val.Interface().([]math.Int), nil
 		}
 		// case "[]sdk.Coin":
 		// 	if val.Kind() == reflect.Slice && val.Type().Elem().Name() == "Coin" {
@@ -316,7 +316,7 @@ func ParseOperand(operand string, responseType string) (interface{}, error) {
 		coins, err := sdk.ParseCoinsNormalized(operand)
 		return coins, err
 	case "sdk.Int":
-		var sdkInt sdkmath.Int
+		var sdkInt math.Int
 		sdkInt, ok := math.NewIntFromString(operand)
 		if !ok {
 			return nil, fmt.Errorf("unsupported int operand")
@@ -327,7 +327,7 @@ func ParseOperand(operand string, responseType string) (interface{}, error) {
 		err := json.Unmarshal([]byte(operand), &strArr)
 		return strArr, err
 	case "[]sdk.Int":
-		var intArr []sdkmath.Int
+		var intArr []math.Int
 		err := json.Unmarshal([]byte(operand), &intArr)
 		return intArr, err
 		// case "[]sdk.Coin":
@@ -366,7 +366,7 @@ func ParseICQResponse(response []byte, valueType string) (interface{}, error) {
 		}
 		return coins, nil
 	case "sdk.Int":
-		var sdkInt sdkmath.Int
+		var sdkInt math.Int
 		err := sdkInt.Unmarshal(response)
 		return sdkInt, err
 	case "[]string":
