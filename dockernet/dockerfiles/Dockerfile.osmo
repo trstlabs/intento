@@ -31,4 +31,4 @@ WORKDIR /home/osmosis
 
 EXPOSE 26657 26656 1317 9090
 
-CMD ["osmosisd", "start"]
+CMD ["osmosisd", "start", "--reject-config-defaults"]

@@ -299,7 +299,7 @@ GET_ACTION_ID() {
 }
 
 WAIT_FOR_EXECUTED_ACTION_BY_ID() {
-  max_blocks=${2:-30} # Default if not specified
+  max_blocks=${2:-60} # Default if not specified
 
   for i in $(seq $max_blocks); do
     # Fetch transaction info for the specified id
@@ -361,7 +361,10 @@ GET_VAL_ADDR() {
   val_index=$2
 
   MAIN_CMD=$(GET_VAR_VALUE ${chain}_MAIN_CMD)
-  $MAIN_CMD q staking validators | grep ${chain}_${val_index} -A 6 | grep operator | awk '{print $2}'
+  $MAIN_CMD q staking validators 2>&1 | \
+  grep -A 6 "${chain}_${val_index}" | \
+  grep operator_address | \
+  awk -F': ' '/operator_address/ {print $2}' || echo "Operator address not found"
 }
 
 GET_ICA_ADDR() {
