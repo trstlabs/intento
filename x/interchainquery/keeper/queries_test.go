@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	//intentkeeper "github.com/trstlabs/intento/x/intent/keeper"
 	intenttypes "github.com/trstlabs/intento/x/intent/types"
+
 	"github.com/trstlabs/intento/x/interchainquery/keeper"
 	"github.com/trstlabs/intento/x/interchainquery/types"
 )
@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) TestValidateQuery() {
 
 	// We'll borrow a callback from intent since it's should be already registered in the App
 	validCallbackModule := intenttypes.ModuleName
-	validCallbackId := "1" //intentkeeper.ICQCallbackID_Delegation
+	validCallbackId := "action" //intentkeeper.ICQCallbackID_Delegation
 
 	testCases := []struct {
 		name          string
