@@ -19,9 +19,9 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo, conne
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	if store.Has(types.GetActionHistoryKey(action.ID)) {
 		txMsgs := action.GetTxMsgs(k.cdc)
-		for _, msg := range txMsgs {
-			protoMsgs = append(protoMsgs, msg)
-		}
+
+		protoMsgs = append(protoMsgs, txMsgs...)
+
 		return protoMsgs, nil
 	}
 

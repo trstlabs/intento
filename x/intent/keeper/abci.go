@@ -22,22 +22,25 @@ func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.Ac
 		executedLocally = false
 		msgResponses    = []*cdctypes.Any{}
 	)
-	allowed, err := k.allowedToExecute(ctx, action, queryCallback)
-	if !allowed {
-		k.recordFailedAction(ctx, &action, timeOfBlock, fmt.Sprintf(types.ErrActionConditions, err.Error()))
-		return
-	}
 
 	k.RemoveFromActionQueue(ctx, action)
 
-	actionCtx := ctx.WithGasMeter(storetypes.NewGasMeter(1_000_000))
+	allowed, err := k.allowedToExecute(ctx, action, queryCallback)
+	if !allowed {
+		k.recordActionNotAllowed(ctx, &action, timeOfBlock, fmt.Sprintf(types.ErrActionConditions, err.Error()))
+		return
+	}
+
+	actionCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.MaxGas))
 	cacheCtx, writeCtx := actionCtx.CacheContext()
 
 	logger.Debug("action execution", "id", action.ID)
 
-	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, action, 1_000_000)
-	if err != nil || feeAddr == nil || feeDenom == "" {
-		errorString = appendError(errorString, types.ErrBalanceLow)
+	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, action, types.MaxGas)
+	if err != nil {
+		errorString = appendError(errorString, err.Error())
+	} else if feeAddr == nil || feeDenom == "" {
+		errorString = appendError(errorString, (types.ErrBalanceTooLow + feeDenom))
 	}
 
 	if errorString == "" {
@@ -50,14 +53,8 @@ func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.Ac
 
 	}
 
-	// Check if timeOfBlock is zero and act accordingly
-	// if timeOfBlock.IsZero() && queryCallback != nil {
-	// Append to the prior action history entry
-	// k.appendToPriorActionHistory(cacheCtx, &action, fee, executedLocally, msgResponses, string(queryCallback.GetCallbackData()), errorString)
-	// } else {
-	// Record a new action history entry
 	k.addActionHistory(cacheCtx, &action, timeOfBlock, fee, executedLocally, msgResponses, string(queryCallback), errorString)
-	// }
+
 	writeCtx()
 
 	if shouldRecur(action, errorString) {
@@ -96,7 +93,7 @@ func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, action types.ActionInfo, 
 	}
 	k.interchainQueryKeeper.SetQuery(ctx, query)
 	// Log successful submission of the interchain query
-	logger.Debug("interchain query submitted", "actionID", action.ID)
+	logger.Debug("interchain query submitted", "actionID", action.ID, "ICQ ID", id)
 }
 
 // handleActionExecution handles the core logic of triggering an action and processing responses
@@ -160,19 +157,18 @@ func (k Keeper) handleUseResponseValue(ctx sdk.Context, action *types.ActionInfo
 	return executedLocally, errorString
 }
 
-// recordFailedAction adds a failed action to the action history and reschedules it
-func (k Keeper) recordFailedAction(ctx sdk.Context, action *types.ActionInfo, timeOfBlock time.Time, errorMsg string) {
+// recordActionNotAllowed adds an action entry to the action history
+func (k Keeper) recordActionNotAllowed(ctx sdk.Context, action *types.ActionInfo, timeOfBlock time.Time, errorMsg string) {
+	k.Logger(ctx).Debug("action not allowed to execute", "id", action.ID)
 	k.addActionHistory(ctx, action, timeOfBlock, sdk.Coin{}, false, nil, "", errorMsg)
-	action.ExecTime = action.ExecTime.Add(action.Interval)
-	k.SetActionInfo(ctx, action)
 }
 
 // shouldRecur checks whether the action should be rescheduled based on recurrence rules
 func shouldRecur(action types.ActionInfo, errorString string) bool {
 	isRecurring := action.ExecTime.Before(action.EndTime) && (action.ExecTime.Add(action.Interval).Before(action.EndTime) || action.ExecTime.Add(action.Interval).Equal(action.EndTime))
 	allowedToRecur := (!action.Configuration.StopOnSuccess && !action.Configuration.StopOnFailure) ||
-		(action.Configuration.StopOnSuccess && errorString == "") ||
-		(action.Configuration.StopOnFailure && errorString != "")
+		(action.Configuration.StopOnSuccess && errorString != "") ||
+		(action.Configuration.StopOnFailure && errorString == "")
 
 	return isRecurring && allowedToRecur
 }

@@ -15,21 +15,21 @@ service Msg {
 
 enum Action {
   option (gogoproto.goproto_enum_prefix) = false;
-  ActionActionAuthz = 0;
-  ActionActionWasm = 1;
-  ActionGovernanceVote = 2;
-  ActionDelegateStake = 3;
+  ACTION_ACTION_LOCAL = 0;
+  ACTION_ACTION_ICA = 1;
+  ACTION_GOVERNANCE_VOTE = 2;
+  ACTION_DELEGATE_STAKE = 3;
 }
 
 // A Claim Records is the metadata of claim data per address
 message ClaimRecord {
   // address of recipient
   string address = 1 [ (gogoproto.moretags) = "yaml:\"address\"" ];
-  // total initial claimable amount for the address
-  repeated cosmos.base.v1beta1.Coin initial_claimable_amount = 2 [
+  // maximum claimable amount for the address 
+  cosmos.base.v1beta1.Coin maximum_claimable_amount = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"initial_claimable_amount\""
+    (gogoproto.moretags) = "yaml:\"maximum_claimable_amount\""
   ];
   // index of status array refers to action enum #
   repeated Status status = 3 [
@@ -45,12 +45,12 @@ message Status {
       [ (gogoproto.moretags) = "yaml:\"action_completed\"" ];
   // true if action is completed
   // index refers to the 4 vesting periods for the given action
-  repeated bool vesting_period_completed = 2
-      [ (gogoproto.moretags) = "yaml:\"vesting_period_completed\"" ];
+  repeated bool vesting_periods_completed = 2
+      [ (gogoproto.moretags) = "yaml:\"vesting_periods_completed\"" ];
   // true if action is completed
   // index refers to the 4 vesting periods for the given action
-  repeated bool vesting_period_claimed = 3
-      [ (gogoproto.moretags) = "yaml:\"vesting_period_claimed\"" ];
+  repeated bool vesting_periods_claimed = 3
+      [ (gogoproto.moretags) = "yaml:\"vesting_periods_claimed\"" ];
 }
 
 message MsgClaimClaimable { 

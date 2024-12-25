@@ -31,6 +31,8 @@ const (
 // ParamsKey stores the module params
 var ParamsKey = []byte{0x01}
 
+var ClaimsPortions = int64(5)
+
 // nolint
 var (
 	VestingStorePrefix = []byte{0x01}

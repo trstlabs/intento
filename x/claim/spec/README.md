@@ -63,7 +63,7 @@ type ClaimRecord struct {
     Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
 
     // total initial claimable amount for the user
-    InitialClaimableAmount sdk.Coins
+    MaximumClaimableAmount sdk.Coin
     
     // true if action is completed
     // index of bool in array refers to action enum #

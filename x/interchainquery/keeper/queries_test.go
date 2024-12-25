@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestGetQueryId() {
 	//	 e.g. for querying a validator, `data := stakingtypes.GetValidatorKey(valAddr)`
 	requestData := []byte{0x01, 0x02, 0x03}
 	// module is the name of the module invoking the query, used to find the callback upon response
-	module := "intent"
+	module := "action"
 	// callbackId is a string that is used to identify the callback you'd like to execute upon receiving the result of the query
 	callbackId := "validator"
 	// timeout is the expiry time of the query, in absolute units of time, unix nanos
@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) TestGetQueryId() {
 
 	//  note: the queryID is a has of (module, callbackId, chainId, connectionId, queryType, and request)
 	// .    meaning for a given query type, the ID will be identical across each epoch
-	expectedQueryId := "614049865bb322ad4ca243289d310ad59a02f8309452e05d49b0bf2f687dc8e2"
+	expectedQueryId := "949655bf177ce43b34bc7d995d7da5439ab01c2f4bcc5db1aa2cc315fc8917d5"
 	expectedUniqueQueryId := "cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50"
 
 	query := types.Query{

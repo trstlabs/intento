@@ -61,33 +61,10 @@ func GetICAApp(chain *ibctesting.TestChain) *icaapp.IntoApp {
 	return app
 }
 
-// func GetActionKeeper(chain *apptesting.TestChain) keeper.Keeper {
-// 	app, ok := chain.App.(*icaapp.IntoApp)
-// 	if !ok {
-// 		panic("not ica app")
-// 	}
-
-// 	return app.IntentKeeper
-// }
-
-// func GetActionKeeperFromApp(app *icaapp.IntoApp) keeper.Keeper {
-
-// 	return app.IntentKeeper
-// }
-
 // TestKeeperTestSuite runs all the tests within this package.
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
-
-// SetupTest creates a coordinator with 2 test chains.
-// func (suite *KeeperTestSuite) SetupTest() {
-// 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
-// 	ibctesting.DefaultTestingAppInit = apptesting.SetupTestingApp
-// 	suite.IntentoChain = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(1))}
-// 	suite.HostChain = &apptesting.TestChain{TestChain: suite.coordinator.GetChain(ibctesting.GetChainID(2))}
-
-// }
 
 func NewICAPath(IntentoChain, HostChain *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(IntentoChain, HostChain)
@@ -110,50 +87,6 @@ func NewTransferPath(IntentoChain, HostChain *ibctesting.TestChain) *ibctesting.
 	path.EndpointB.ChannelConfig.Version = transfertypes.Version
 
 	return path
-}
-
-// SetupICAPath invokes the InterIntentoChainccounts entrypoint and subsequent channel handshake handlers
-func SetupICAPath(path *ibctesting.Path, owner string) error {
-
-	if err := RegisterInterchainAccount(path.EndpointA, owner); err != nil {
-		return err
-	}
-	if err := path.EndpointB.ChanOpenTry(); err != nil {
-		return err
-	}
-
-	if err := path.EndpointA.ChanOpenAck(); err != nil {
-		return err
-	}
-
-	if err := path.EndpointB.ChanOpenConfirm(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// RegisterInterchainAccount is a helper function for starting the channel handshake
-func RegisterInterchainAccount(endpoint *ibctesting.Endpoint, owner string) error {
-	portID, err := icatypes.NewControllerPortID(owner)
-	if err != nil {
-		return err
-	}
-
-	channelSequence := endpoint.Chain.App.GetIBCKeeper().ChannelKeeper.GetNextChannelSequence(endpoint.Chain.GetContext())
-
-	if err := GetICAApp(endpoint.Chain).ICAControllerKeeper.RegisterInterchainAccount(endpoint.Chain.GetContext(), endpoint.ConnectionID, owner, TestVersion); err != nil {
-		return err
-	}
-
-	// commit state changes for proof verification
-	endpoint.Chain.NextBlock()
-
-	// update port/channel ids
-	endpoint.ChannelID = channeltypes.FormatChannelIdentifier(channelSequence)
-	endpoint.ChannelConfig.PortID = portID
-
-	return nil
 }
 
 func (suite *KeeperTestSuite) receiveTransferPacket(receiver, memo string) []byte {

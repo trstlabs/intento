@@ -4,10 +4,10 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 type IntentHooks interface {
 
-	// AfterActionAuthz is called after an action on behalf using authz
-	AfterActionAuthz(ctx sdk.Context, sender sdk.AccAddress)
-	// AfterActionWasm is called after a MsgExecuteContract or MsgInstantiateContract
-	AfterActionWasm(ctx sdk.Context, sender sdk.AccAddress)
+	// AfterActionLocal is called after an action on behalf using authz
+	AfterActionLocal(ctx sdk.Context, sender sdk.AccAddress)
+	// AfterActionICA is called after a MsgExecuteContract or MsgInstantiateContract
+	AfterActionICA(ctx sdk.Context, sender sdk.AccAddress)
 }
 
 var _ IntentHooks = MultiIntentHooks{}
@@ -20,14 +20,14 @@ func NewMultiIntentHooks(hooks ...IntentHooks) MultiIntentHooks {
 	return hooks
 }
 
-func (h MultiIntentHooks) AfterActionAuthz(ctx sdk.Context, sender sdk.AccAddress) {
+func (h MultiIntentHooks) AfterActionLocal(ctx sdk.Context, sender sdk.AccAddress) {
 	for i := range h {
-		h[i].AfterActionAuthz(ctx, sender)
+		h[i].AfterActionLocal(ctx, sender)
 	}
 }
 
-func (h MultiIntentHooks) AfterActionWasm(ctx sdk.Context, sender sdk.AccAddress) {
+func (h MultiIntentHooks) AfterActionICA(ctx sdk.Context, sender sdk.AccAddress) {
 	for i := range h {
-		h[i].AfterActionWasm(ctx, sender)
+		h[i].AfterActionICA(ctx, sender)
 	}
 }

@@ -78,7 +78,7 @@ func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string
 	}
 
 	if err := k.SignerOk(ctx, k.cdc, action); err != nil {
-		return errorsmod.Wrapf(types.ErrSignerNotOk, err.Error())
+		return errorsmod.Wrap(types.ErrSignerNotOk, err.Error())
 	}
 
 	k.SetActionInfo(ctx, &action)

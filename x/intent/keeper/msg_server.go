@@ -373,7 +373,7 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 	action.UpdateHistory = append(action.UpdateHistory, ctx.BlockTime())
 
 	if err := k.SignerOk(ctx, k.cdc, action); err != nil {
-		return nil, errorsmod.Wrapf(types.ErrSignerNotOk, err.Error())
+		return nil, errorsmod.Wrap(types.ErrSignerNotOk, err.Error())
 	}
 	//set hosted config
 	if msg.HostedConfig != nil {

@@ -7,7 +7,6 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -29,27 +28,26 @@ type KeeperTestSuite struct {
 	msgSrvr types.MsgServer
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.app, suite.ctx = createTestApp(true)
+func (s *KeeperTestSuite) SetupTest() {
+	s.app, s.ctx = createTestApp(true)
 
-	suite.app.AllocKeeper.SetParams(suite.ctx, alloctypes.DefaultParams())
+	s.app.AllocKeeper.SetParams(s.ctx, alloctypes.DefaultParams())
 
-	suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
+	s.app.StakingKeeper.SetParams(s.ctx, stakingtypes.DefaultParams())
 
-	suite.app.DistrKeeper.FeePool.Set(suite.ctx, distrtypes.InitialFeePool())
-	suite.app.ClaimKeeper.CreateModuleAccount(suite.ctx, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10000000)))
+	s.app.DistrKeeper.FeePool.Set(s.ctx, distrtypes.InitialFeePool())
+	s.app.ClaimKeeper.CreateModuleAccount(s.ctx, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10000000)))
 	startTime := time.Now()
 
-	suite.msgSrvr = keeper.NewMsgServerImpl(suite.app.ClaimKeeper)
-	suite.app.ClaimKeeper.SetParams(suite.ctx, types.Params{
-		//AirdropEnabled:     true,
+	s.msgSrvr = keeper.NewMsgServerImpl(s.app.ClaimKeeper)
+	s.app.ClaimKeeper.SetParams(s.ctx, types.Params{
 		AirdropStartTime:       startTime,
 		DurationUntilDecay:     types.DefaultDurationUntilDecay,
 		DurationOfDecay:        types.DefaultDurationOfDecay,
 		ClaimDenom:             sdk.DefaultBondDenom,
 		DurationVestingPeriods: types.DefaultDurationVestingPeriods,
 	})
-	suite.ctx = suite.ctx.WithBlockTime(startTime)
+	s.ctx = s.ctx.WithBlockTime(startTime)
 }
 
 func (s *KeeperTestSuite) TestModuleAccountCreated() {
@@ -60,174 +58,113 @@ func (s *KeeperTestSuite) TestModuleAccountCreated() {
 }
 
 func (s *KeeperTestSuite) TestClaimClaimable() {
+
 	pub1 := ed25519.GenPrivKey().PubKey()
-	pub2 := ed25519.GenPrivKey().PubKey()
-	pub3 := ed25519.GenPrivKey().PubKey()
-	pub4 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pub1.Address())
-	addr2 := sdk.AccAddress(pub2.Address())
-	addr3 := sdk.AccAddress(pub3.Address())
-	valAddr := sdk.ValAddress(pub4.Address())
 
-	status := types.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
-	claimRecords := []types.ClaimRecord{
-		{
-			Address:                addr1.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2000)),
-			Status:                 []types.Status{status, status, status, status},
-		},
-		{
-			Address:                addr2.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2000)),
-			Status:                 []types.Status{status, status, status, status},
-		},
-	}
+	valAddr := sdk.ValAddress(pub1.Address())
 
-	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, pub1, 0, 0))
-	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr2, pub2, 0, 0))
+	addr1 := s.createAccount()
+	//addr3 := s.createAccount()
+	claimRecords := s.createClaimRecords(addr1, 2000)
 
 	s.app.ClaimKeeper.SetParams(s.ctx, types.Params{
-		//AirdropEnabled:     false,
 		AirdropStartTime:       time.Now().Add(time.Hour * -1),
 		ClaimDenom:             sdk.DefaultBondDenom,
 		DurationUntilDecay:     time.Hour,
 		DurationOfDecay:        time.Hour * 4,
 		DurationVestingPeriods: types.DefaultDurationVestingPeriods,
-		//AllowedClaimers:    make([]types.ClaimAuthorization, 0),
 	})
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
+
+	// Attempt claim - unauthorized address
 	msgClaimClaimable := types.NewMsgClaimClaimable(addr1)
-	ctx := sdk.WrapSDKContext(s.ctx)
-	_, err = s.msgSrvr.ClaimClaimable(ctx, msgClaimClaimable)
-	s.Error(err)
+
+	_, err = s.msgSrvr.ClaimClaimable(s.ctx, msgClaimClaimable)
+	s.Require().Error(err)
 	s.Contains(err.Error(), "address does not have claimable tokens right now")
 
-	// unauthorized
-	msgClaimClaimable = types.NewMsgClaimClaimable(addr3)
-	_, err = s.msgSrvr.ClaimClaimable(ctx, msgClaimClaimable)
-	s.Require().Error(err)
-	s.Contains(err.Error(), "address does not have claim record")
-
-	// claim
-	s.app.ClaimKeeper.AfterActionAuthz(s.ctx, addr1)
-
+	// Setup and process claims
+	s.app.ClaimKeeper.AfterActionLocal(s.ctx, addr1)
 	record, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Require().NoError(err)
 	s.Require().True(record.Status[0].ActionCompleted)
 
-	record.Status[0].VestingPeriodCompleted = []bool{true, false, false, false}
-
-	err = s.app.ClaimKeeper.SetClaimRecord(s.ctx, record)
-	s.Require().NoError(err)
-
-	// addr1 has to delegate
+	// Validator setup for delegation
 	validator, err := stakingtypes.NewValidator(valAddr.String(), pub1, stakingtypes.Description{})
-	//validator, err := stakingtypes.NewValidator(valAddr, pub1, stakingtypes.Description{})
 	s.Require().NoError(err)
 	validator = stakingkeeper.TestingUpdateValidator(s.app.StakingKeeper, s.ctx, validator, true)
 	s.app.StakingKeeper.Hooks().AfterValidatorCreated(s.ctx, valAddr)
-
 	validator, _ = validator.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
 
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, addr1, record.InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(20)), stakingtypes.Unbonded, validator, true)
-	s.NoError(err)
-	_, err = s.app.StakingKeeper.Delegate(s.ctx, addr1, record.InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(20)), stakingtypes.Unbonded, validator, true)
+	balanceBeforeAction := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
+	// Delegate tokens and process claim
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, addr1, math.NewInt(67), stakingtypes.Unbonded, validator, true)
 	s.NoError(err)
 
-	msgClaimClaimable = types.NewMsgClaimClaimable(addr1)
-	_, err = s.msgSrvr.ClaimClaimable(ctx, msgClaimClaimable)
+	balance := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
+
+	//Initial Claimable Action 1
+	s.Require().Equal(balance.AmountOf(sdk.DefaultBondDenom).Sub(balanceBeforeAction[0].Amount).Add(math.NewInt(67)), math.NewInt(2000/4/5))
+
+	_, err = s.msgSrvr.ClaimClaimable(s.ctx, msgClaimClaimable)
+	s.Contains(err.Error(), "address does not have claimable tokens right now")
+
+	//happends in endblocker
+	record.Status[0].VestingPeriodsCompleted = []bool{true, false, false, false}
+	err = s.app.ClaimKeeper.SetClaimRecord(s.ctx, record)
 	s.Require().NoError(err)
-	claimedCoins := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
 
-	s.Require().Equal(claimedCoins.AmountOf(sdk.DefaultBondDenom), math.NewInt(100))
+	_, err = s.msgSrvr.ClaimClaimable(s.ctx, msgClaimClaimable)
+	s.Require().NoError(err)
 
-	s.Require().Equal(true, record.Status[0].ActionCompleted)
+	//Claimable #1
+	balanceAfterClaim := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
+	s.Require().Equal(balanceAfterClaim.AmountOf(sdk.DefaultBondDenom).Sub(balance[0].Amount), math.NewInt(2000/4/5))
 
-	s.Require().Equal([]bool{false, false, false, false}, record.Status[0].VestingPeriodClaimed)
-	s.Require().Equal([]bool{true, false, false, false}, record.Status[0].VestingPeriodCompleted)
-
-	// claim 2
-	s.app.ClaimKeeper.AfterActionWasm(s.ctx, addr1)
-
+	// Process second claim and validate
+	s.app.ClaimKeeper.AfterActionICA(s.ctx, addr1)
 	record, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Require().NoError(err)
 	s.Require().True(record.Status[1].ActionCompleted)
 
-	record.Status[1].VestingPeriodCompleted = []bool{true, false, false, false}
+	//Initial Claimable Action 2
+	balance2 := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
+	s.Require().Equal(balance2.Sub(balanceAfterClaim[0])[0].Amount, math.NewInt(2000/4/5))
 
-	err = s.app.ClaimKeeper.SetClaimRecord(s.ctx, record)
-	s.Require().NoError(err)
-
-	s.app.StakingKeeper.Delegate(s.ctx, addr1, math.NewInt(68), stakingtypes.Unbonded, validator, true)
-
-	msgClaimClaimable = types.NewMsgClaimClaimable(addr1)
-	_, err = s.msgSrvr.ClaimClaimable(ctx, msgClaimClaimable)
-	s.Require().NoError(err)
-
-	//get delegations and calculate min bonded ratio for claim
-	delegationInfo, err := s.app.StakingKeeper.GetAllDelegatorDelegations(s.ctx, addr1)
-	s.Require().NoError(err)
-	totalDelegations := math.LegacyZeroDec()
-	for _, delegation := range delegationInfo {
-		totalDelegations = totalDelegations.Add(delegation.Shares)
-	}
-	balanceCoins := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
-
-	s.Require().Equal(
-		balanceCoins.AmountOf(sdk.DefaultBondDenom), math.NewInt(232))
-	s.Require().Equal(
-		totalDelegations, math.LegacyNewDec(268))
-
+	//happends in endblocker
 	record, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Require().NoError(err)
-	s.Require().Equal(true, record.Status[0].ActionCompleted)
-	s.Require().Equal(true, record.Status[1].ActionCompleted)
-	s.Require().Equal([]bool{true, false, false, false}, record.Status[1].VestingPeriodClaimed)
-	s.Require().Equal([]bool{true, false, false, false}, record.Status[1].VestingPeriodCompleted)
-
-	// claim second address
-	s.app.ClaimKeeper.AfterActionAuthz(s.ctx, addr2)
-	s.app.ClaimKeeper.AfterActionWasm(s.ctx, addr2)
-	record, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr2)
-	s.Require().NoError(err)
-	s.Require().True(record.Status[0].ActionCompleted)
-	s.Require().True(record.Status[1].ActionCompleted)
-
-	record.Status[0].VestingPeriodCompleted = []bool{true, false, false, false}
-	record.Status[1].VestingPeriodCompleted = []bool{true, false, false, false}
-
+	record.Status[1].VestingPeriodsCompleted = []bool{true, false, false, false}
 	err = s.app.ClaimKeeper.SetClaimRecord(s.ctx, record)
 	s.Require().NoError(err)
-	s.app.StakingKeeper.Delegate(s.ctx, addr2, math.NewInt(200), stakingtypes.Unbonded, validator, true)
-	s.app.StakingKeeper.Delegate(s.ctx, addr2, math.NewInt(68), stakingtypes.Unbonded, validator, true)
-	msgClaimClaimable = types.NewMsgClaimClaimable(addr2)
-	_, err = s.msgSrvr.ClaimClaimable(ctx, msgClaimClaimable)
+
+	//claim #3
+	_, err = s.msgSrvr.ClaimClaimable(s.ctx, msgClaimClaimable)
 	s.Require().NoError(err)
 
-	//get delegations and calculate min bonded ratio for claim
-	delegationInfo, err = s.app.StakingKeeper.GetAllDelegatorDelegations(s.ctx, addr2)
+	//Claimable #2
+	balanceAfterClaim2 := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
+	s.Require().Equal(balanceAfterClaim2.AmountOf(sdk.DefaultBondDenom).Sub(balance2[0].Amount), math.NewInt(2000/4/5))
+
+	_, err = s.app.StakingKeeper.Delegate(s.ctx, addr1, math.NewInt(67), stakingtypes.Unbonded, validator, true)
+	s.NoError(err)
+	balanceAfterDelegate2 := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
+
+	//claim #4
+	record, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Require().NoError(err)
-	totalDelegations = math.LegacyZeroDec()
-	for _, delegation := range delegationInfo {
-		totalDelegations = totalDelegations.Add(delegation.Shares)
-	}
-	balanceCoins = s.app.BankKeeper.GetAllBalances(s.ctx, addr2)
-
-	s.Require().Equal(
-		balanceCoins.AmountOf(sdk.DefaultBondDenom), math.NewInt(232))
-	s.Require().Equal(
-		totalDelegations, math.LegacyNewDec(268))
-
-	record, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr2)
+	record.Status[1].VestingPeriodsCompleted = []bool{true, true, false, false}
+	err = s.app.ClaimKeeper.SetClaimRecord(s.ctx, record)
 	s.Require().NoError(err)
-	s.Require().Equal(true, record.Status[0].ActionCompleted)
-	s.Require().Equal(true, record.Status[1].ActionCompleted)
-	s.Require().Equal([]bool{true, false, false, false}, record.Status[0].VestingPeriodClaimed)
-	s.Require().Equal([]bool{true, false, false, false}, record.Status[0].VestingPeriodCompleted)
-	s.Require().Equal([]bool{true, false, false, false}, record.Status[1].VestingPeriodClaimed)
-	s.Require().Equal([]bool{true, false, false, false}, record.Status[1].VestingPeriodCompleted)
 
+	_, err = s.msgSrvr.ClaimClaimable(s.ctx, msgClaimClaimable)
+	s.Require().NoError(err)
+
+	//Claimable #3
+	balanceAfterClaim3 := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
+
+	s.Require().Equal(balanceAfterClaim3.AmountOf(sdk.DefaultBondDenom).Sub(balanceAfterDelegate2[0].Amount), math.NewInt(2000/4/5))
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -242,9 +179,8 @@ func FundAccount(bankKeeper bankkeeper.Keeper, ctx sdk.Context, addr sdk.AccAddr
 }
 
 func (s *KeeperTestSuite) TestHookOfUnclaimableAccount() {
-	pub1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pub1.Address())
-	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+
+	addr1 := s.createAccount()
 
 	claim, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
 	s.Contains(err.Error(), "address does not have claim record")
@@ -262,7 +198,6 @@ func (s *KeeperTestSuite) TestHookBeforeAirdropStart() {
 	airdropStartTime := time.Now().Add(time.Hour)
 
 	s.app.ClaimKeeper.SetParams(s.ctx, types.Params{
-		//AirdropEnabled:     true,
 		ClaimDenom:             sdk.DefaultBondDenom,
 		AirdropStartTime:       airdropStartTime,
 		DurationUntilDecay:     time.Hour,
@@ -270,18 +205,8 @@ func (s *KeeperTestSuite) TestHookBeforeAirdropStart() {
 		DurationVestingPeriods: types.DefaultDurationVestingPeriods,
 	})
 
-	_, _, pub1 := testdata.KeyTestPubAddr()
-	addr1 := sdk.AccAddress(pub1)
-	status := types.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
-	claimRecords := []types.ClaimRecord{
-		{
-			Address:                addr1.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)),
-			Status:                 []types.Status{status, status, status, status},
-		},
-	}
-
-	s.app.AccountKeeper.NewAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, pub1))
+	addr1 := s.createAccount()
+	claimRecords := s.createClaimRecords(addr1, 2000)
 
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
@@ -289,12 +214,12 @@ func (s *KeeperTestSuite) TestHookBeforeAirdropStart() {
 	coins, err := s.app.ClaimKeeper.GetTotalClaimableForAddr(s.ctx, addr1)
 	s.NoError(err)
 	// Now, it is before starting air drop, so this value should return the empty coins
-	s.True(coins.Empty())
+	s.True(coins.IsZero())
 
-	coins, err = s.app.ClaimKeeper.GetTotalClaimableAmountForAction(s.ctx, addr1, types.ActionDelegateStake)
+	totalAction, err := s.app.ClaimKeeper.GetTotalClaimableAmountPerAction(s.ctx, addr1)
 	s.NoError(err)
 	// Now, it is before starting air drop, so this value should return the empty coins
-	s.True(coins.Empty())
+	s.True(totalAction.IsZero())
 
 	s.app.ClaimKeeper.AfterDelegationModified(s.ctx, addr1, sdk.ValAddress(addr1))
 	balances := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
@@ -305,7 +230,7 @@ func (s *KeeperTestSuite) TestHookBeforeAirdropStart() {
 	balances = s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
 	//fmt.Printf("%v \n", balances)
 	// Now, it is the time for air drop, so claim module should send the balances to the user after delegate.
-	s.Equal(claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(int64(len(types.Action_value)))).Quo(math.NewInt(5)), balances.AmountOf(sdk.DefaultBondDenom))
+	s.Equal(claimRecords[0].MaximumClaimableAmount.Amount.Quo(math.NewInt(int64(len(types.Action_value)))).Quo(math.NewInt(types.ClaimsPortions)), balances.AmountOf(sdk.DefaultBondDenom))
 }
 
 func (s *KeeperTestSuite) TestAirdropDisabled() {
@@ -314,25 +239,13 @@ func (s *KeeperTestSuite) TestAirdropDisabled() {
 	airdropStartTime := time.Now().Add(time.Hour)
 
 	s.app.ClaimKeeper.SetParams(s.ctx, types.Params{
-		//AirdropEnabled:     false,
 		ClaimDenom:             sdk.DefaultBondDenom,
 		DurationUntilDecay:     time.Hour,
 		DurationOfDecay:        time.Hour * 4,
 		DurationVestingPeriods: types.DefaultDurationVestingPeriods,
 	})
-
-	pub1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pub1.Address())
-
-	status := types.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
-	claimRecords := []types.ClaimRecord{
-		{
-			Address:                addr1.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)),
-			Status:                 []types.Status{status, status, status, status},
-		},
-	}
-	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+	addr1 := s.createAccount()
+	claimRecords := s.createClaimRecords(addr1, 2000)
 
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
@@ -340,12 +253,12 @@ func (s *KeeperTestSuite) TestAirdropDisabled() {
 	coins, err := s.app.ClaimKeeper.GetTotalClaimableForAddr(s.ctx, addr1)
 	s.NoError(err)
 	// Now, it is before starting air drop, so this value should return the empty coins
-	s.True(coins.Empty())
+	s.True(coins.IsZero())
 
-	coins, err = s.app.ClaimKeeper.GetTotalClaimableAmountForAction(s.ctx, addr1, types.ActionDelegateStake)
+	total, err := s.app.ClaimKeeper.GetTotalClaimableAmountPerAction(s.ctx, addr1)
 	s.NoError(err)
 	// Now, it is before starting air drop, so this value should return the empty coins
-	s.True(coins.Empty())
+	s.True(total.IsZero())
 
 	s.app.ClaimKeeper.AfterDelegationModified(s.ctx, addr1, sdk.ValAddress(addr1))
 	balances := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
@@ -378,7 +291,6 @@ func (s *KeeperTestSuite) TestAirdropDisabled() {
 
 	// set airdrop enabled but with date in the future
 	s.app.ClaimKeeper.SetParams(s.ctx, types.Params{
-		//AirdropEnabled:     true,
 		AirdropStartTime:       airdropStartTime.Add(time.Hour),
 		ClaimDenom:             sdk.DefaultBondDenom,
 		DurationUntilDecay:     time.Hour,
@@ -400,129 +312,134 @@ func (s *KeeperTestSuite) TestAirdropDisabled() {
 	s.app.ClaimKeeper.AfterDelegationModified(s.ctx.WithBlockTime(airdropStartTime.Add(time.Hour*2)), addr1, sdk.ValAddress(addr1))
 	balances = s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
 	// Now, it is the time for air drop, so claim module should send the balances to the user after delegate.
-	s.Equal(claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(int64(len(types.Action_value)))).Quo(math.NewInt(5)), balances.AmountOf(sdk.DefaultBondDenom))
+	s.Equal(claimRecords[0].MaximumClaimableAmount.Amount.Quo(math.NewInt(int64(len(types.Action_value)))).Quo(math.NewInt(types.ClaimsPortions)), balances.AmountOf(sdk.DefaultBondDenom))
 }
-
 func (s *KeeperTestSuite) TestDuplicatedActionNotWithdrawRepeatedly() {
 	s.SetupTest()
 
-	pub1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pub1.Address())
-	status := types.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
-	claimRecords := []types.ClaimRecord{
-		{
-			Address:                addr1.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2000)),
-			Status:                 []types.Status{status, status, status, status},
-		},
-	}
-	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+	addr1 := s.createAccount()
+	claimRecords := s.createClaimRecords(addr1, 2000)
 
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
 
-	coins1, err := s.app.ClaimKeeper.GetTotalClaimableForAddr(s.ctx, addr1)
+	// Initial claimable amount
+	initialCoins, err := s.app.ClaimKeeper.GetTotalClaimableForAddr(s.ctx, addr1)
 	s.Require().NoError(err)
-	s.Require().Equal(coins1, claimRecords[0].InitialClaimableAmount)
+	s.Require().Equal(initialCoins, claimRecords[0].MaximumClaimableAmount)
 
-	s.app.ClaimKeeper.AfterDelegationModified(s.ctx, addr1, sdk.ValAddress(addr1))
-	claim, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
-	s.NoError(err)
+	// First action triggers claim
+	s.triggerDelegationAction(addr1)
+	claim := s.getClaimRecord(addr1)
 	s.True(claim.Status[3].ActionCompleted)
 
-	claimedCoins := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
-	s.Require().Equal(claimedCoins.AmountOf(sdk.DefaultBondDenom), claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(20)))
+	balance := s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
+	expectedClaim := claimRecords[0].MaximumClaimableAmount.Amount.Quo(math.NewInt(20))
+	s.Require().Equal(expectedClaim, balance.AmountOf(sdk.DefaultBondDenom))
 
-	s.app.ClaimKeeper.AfterDelegationModified(s.ctx, addr1, sdk.ValAddress(addr1))
-	claim, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
-	s.NoError(err)
+	// Repeat action should not double the claim
+	s.triggerDelegationAction(addr1)
+	claim = s.getClaimRecord(addr1)
 	s.True(claim.Status[3].ActionCompleted)
 
-	claimedCoins = s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
-	s.Require().Equal(claimedCoins.AmountOf(sdk.DefaultBondDenom), claimRecords[0].InitialClaimableAmount.AmountOf(sdk.DefaultBondDenom).Quo(math.NewInt(20)))
+	balance = s.app.BankKeeper.GetAllBalances(s.ctx, addr1)
+	s.Require().Equal(expectedClaim, balance.AmountOf(sdk.DefaultBondDenom))
 }
 
 func (s *KeeperTestSuite) TestNotRunningGenesisBlock() {
 	s.ctx = s.ctx.WithBlockHeight(1)
-	//s.app.ClaimKeeper.CreateModuleAccount(s.ctx, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10000000)))
-	// set airdrop enabled but with date in the future
+
 	s.app.ClaimKeeper.SetParams(s.ctx, types.Params{
-		//AirdropEnabled:     true,
-		AirdropStartTime:       time.Now().Add(time.Hour * -1),
+		AirdropStartTime:       time.Now().Add(-time.Hour),
 		ClaimDenom:             sdk.DefaultBondDenom,
 		DurationUntilDecay:     time.Hour,
 		DurationOfDecay:        time.Hour * 4,
 		DurationVestingPeriods: types.DefaultDurationVestingPeriods,
 	})
 
-	pub1 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pub1.Address())
-	status := types.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
-	claimRecords := []types.ClaimRecord{
-		{
-			Address:                addr1.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 2000)),
-			Status:                 []types.Status{status, status, status, status},
-		},
-	}
-	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
+	addr1 := s.createAccount()
+	claimRecords := s.createClaimRecords(addr1, 2000)
 
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
 
-	coins1, err := s.app.ClaimKeeper.GetTotalClaimableForAddr(s.ctx, addr1)
+	// Initial claimable amount
+	initialCoins, err := s.app.ClaimKeeper.GetTotalClaimableForAddr(s.ctx, addr1)
 	s.Require().NoError(err)
-	s.Require().Equal(coins1, claimRecords[0].InitialClaimableAmount)
+	s.Require().Equal(initialCoins, claimRecords[0].MaximumClaimableAmount)
 
-	s.app.ClaimKeeper.AfterDelegationModified(s.ctx, addr1, sdk.ValAddress(addr1))
-	claim, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
-	s.NoError(err)
+	// Action should mark claim as completed
+	s.triggerDelegationAction(addr1)
+	claim := s.getClaimRecord(addr1)
 	s.True(claim.Status[3].ActionCompleted)
 
-	coins1, err = s.app.ClaimKeeper.GetTotalClaimableForAddr(s.ctx, addr1)
+	// Claimable amount remains consistent
+	finalCoins, err := s.app.ClaimKeeper.GetTotalClaimableForAddr(s.ctx, addr1)
 	s.Require().NoError(err)
-	s.Require().Equal(coins1, claimRecords[0].InitialClaimableAmount)
+	s.Require().Equal(finalCoins, claimRecords[0].MaximumClaimableAmount)
 }
 
 func (s *KeeperTestSuite) TestEndAirdrop() {
-	// set airdrop enabled but with date in the future
 	s.app.ClaimKeeper.SetParams(s.ctx, types.Params{
-		//AirdropEnabled:     true,
-		AirdropStartTime:       time.Now().Add(time.Hour * -1),
+		AirdropStartTime:       time.Now().Add(-time.Hour),
 		ClaimDenom:             sdk.DefaultBondDenom,
 		DurationUntilDecay:     time.Hour,
 		DurationOfDecay:        time.Hour * 4,
 		DurationVestingPeriods: types.DefaultDurationVestingPeriods,
 	})
 
-	pub1 := ed25519.GenPrivKey().PubKey()
-	pub2 := ed25519.GenPrivKey().PubKey()
-	addr1 := sdk.AccAddress(pub1.Address())
-	addr2 := sdk.AccAddress(pub2.Address())
-	status := types.Status{ActionCompleted: false, VestingPeriodCompleted: []bool{false, false, false, false}, VestingPeriodClaimed: []bool{false, false, false, false}}
+	addr1 := s.createAccount()
+	addr2 := s.createAccount()
 	claimRecords := []types.ClaimRecord{
-		{
-			Address:                addr1.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)),
-			Status:                 []types.Status{status, status, status, status},
-		},
-		{
-			Address:                addr2.String(),
-			InitialClaimableAmount: sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 1000)),
-			Status:                 []types.Status{status, status, status, status},
-		},
+		s.createClaimRecord(addr1, 1000),
+		s.createClaimRecord(addr2, 1000),
 	}
-
-	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr1, nil, 0, 0))
-	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr2, nil, 0, 0))
 
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
 
+	// End the airdrop
 	err = s.app.ClaimKeeper.EndAirdrop(s.ctx)
 	s.Require().NoError(err)
 
+	// Module account should have no remaining balance
 	moduleAccAddr := s.app.AccountKeeper.GetModuleAddress(types.ModuleName)
-	coins := s.app.BankKeeper.GetBalance(s.ctx, moduleAccAddr, sdk.DefaultBondDenom)
-	s.Require().Equal(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0).String(), coins.String())
+	moduleBalance := s.app.BankKeeper.GetBalance(s.ctx, moduleAccAddr, sdk.DefaultBondDenom)
+	s.Require().Equal(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0).String(), moduleBalance.String())
+}
+
+func (s *KeeperTestSuite) createAccount() sdk.AccAddress {
+	pubKey := ed25519.GenPrivKey().PubKey()
+	addr := sdk.AccAddress(pubKey.Address())
+	s.app.AccountKeeper.NewAccount(s.ctx, authtypes.NewBaseAccount(addr, nil, 0, 0))
+	return addr
+}
+
+func (s *KeeperTestSuite) createClaimRecords(addr sdk.AccAddress, amount int64) []types.ClaimRecord {
+	status := types.Status{
+		ActionCompleted:         false,
+		VestingPeriodsCompleted: []bool{false, false, false, false},
+		VestingPeriodsClaimed:   []bool{false, false, false, false},
+	}
+	return []types.ClaimRecord{
+		{
+			Address:                addr.String(),
+			MaximumClaimableAmount: sdk.NewInt64Coin(sdk.DefaultBondDenom, amount),
+			Status:                 []types.Status{status, status, status, status},
+		},
+	}
+}
+
+func (s *KeeperTestSuite) createClaimRecord(addr sdk.AccAddress, amount int64) types.ClaimRecord {
+	return s.createClaimRecords(addr, amount)[0]
+}
+
+func (s *KeeperTestSuite) triggerDelegationAction(addr sdk.AccAddress) {
+	s.app.ClaimKeeper.AfterDelegationModified(s.ctx, addr, sdk.ValAddress(addr))
+}
+
+func (s *KeeperTestSuite) getClaimRecord(addr sdk.AccAddress) types.ClaimRecord {
+	claim, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr)
+	s.Require().NoError(err)
+	return claim
 }

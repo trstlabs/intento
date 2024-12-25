@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"context"
 	"time"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
@@ -18,7 +17,6 @@ import (
 
 type MsgSubmitQueryResponseTestCase struct {
 	validMsg types.MsgSubmitQueryResponse
-	goCtx    context.Context
 	query    types.Query
 }
 
@@ -45,8 +43,6 @@ func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse() MsgSubmitQueryResponseTe
 	// set up IBC
 	s.CreateTransferChannel(apptesting.HostChainId)
 
-	// define the query
-	goCtx := sdk.WrapSDKContext(s.Ctx)
 	h := GetLightClientHeight(*s.App.IBCKeeper, s.Ctx, s.TransferPath.EndpointA.ConnectionID)
 
 	height := int64(h - 1) // start at the (LC height) - 1  height, which is the height the query executes at!
@@ -80,7 +76,6 @@ func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse() MsgSubmitQueryResponseTe
 			Height:      height,
 			FromAddress: fromAddress,
 		},
-		goCtx: goCtx,
 		query: query,
 	}
 }
@@ -92,7 +87,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_WrongProof() {
 
 	s.App.InterchainQueryKeeper.SetQuery(s.Ctx, tc.query)
 
-	resp, err := s.GetMsgServer().SubmitQueryResponse(tc.goCtx, &tc.validMsg)
+	resp, err := s.GetMsgServer().SubmitQueryResponse(s.Ctx, &tc.validMsg)
 	s.Require().ErrorContains(err, "Unable to verify membership proof: proof cannot be empty")
 	s.Require().Nil(resp)
 }
@@ -103,7 +98,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_UnknownId() {
 	tc.query.Id = tc.query.Id + "INVALID_SUFFIX" // create an invalid query id
 	s.App.InterchainQueryKeeper.SetQuery(s.Ctx, tc.query)
 
-	resp, err := s.GetMsgServer().SubmitQueryResponse(tc.goCtx, &tc.validMsg)
+	resp, err := s.GetMsgServer().SubmitQueryResponse(s.Ctx, &tc.validMsg)
 	s.Require().NoError(err)
 	s.Require().NotNil(resp)
 	s.Require().Equal(&types.MsgSubmitQueryResponseResponse{}, resp)
@@ -122,7 +117,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_ProofStale() {
 	s.App.InterchainQueryKeeper.SetQuery(s.Ctx, tc.query)
 
 	// Attempt to submit the response, it should fail because the response is stale
-	_, err := s.GetMsgServer().SubmitQueryResponse(tc.goCtx, &tc.validMsg)
+	_, err := s.GetMsgServer().SubmitQueryResponse(s.Ctx, &tc.validMsg)
 	s.Require().ErrorContains(err, "Query proof height (15) is older than the submission height (100)")
 }
 
@@ -134,7 +129,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_RejectQuery() {
 	tc.query.TimeoutPolicy = types.TimeoutPolicy_REJECT_QUERY_RESPONSE
 	s.App.InterchainQueryKeeper.SetQuery(s.Ctx, tc.query)
 
-	_, err := s.GetMsgServer().SubmitQueryResponse(tc.goCtx, &tc.validMsg)
+	_, err := s.GetMsgServer().SubmitQueryResponse(s.Ctx, &tc.validMsg)
 	s.Require().NoError(err)
 
 	// check that the original query was deleted
@@ -150,7 +145,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_RetryQuery() {
 	tc.query.TimeoutPolicy = types.TimeoutPolicy_RETRY_QUERY_REQUEST
 	s.App.InterchainQueryKeeper.SetQuery(s.Ctx, tc.query)
 
-	_, err := s.GetMsgServer().SubmitQueryResponse(tc.goCtx, &tc.validMsg)
+	_, err := s.GetMsgServer().SubmitQueryResponse(s.Ctx, &tc.validMsg)
 	s.Require().NoError(err)
 
 	// check that the query original query was deleted,
@@ -168,7 +163,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_RetryQuery() {
 	s.Require().Equal(tc.query.ConnectionId, actualQuery.ConnectionId, "query connection ID")
 	s.Require().Equal(tc.query.CallbackModule, actualQuery.CallbackModule, "query callback module")
 	s.Require().Equal(tc.query.CallbackData, actualQuery.CallbackData, "query callback data")
-	s.Require().Equal(tc.query.TimeoutPolicy, 0, "query timeout policy is set to reject to prevent looping")
+	s.Require().Equal(actualQuery.TimeoutPolicy, types.TimeoutPolicy_REJECT_QUERY_RESPONSE, "query timeout policy is set to reject to prevent looping")
 	s.Require().Equal(tc.query.TimeoutDuration, actualQuery.TimeoutDuration, "query timeout duration")
 
 	// Confirm timeout was reset
@@ -188,7 +183,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_ExecuteCallback() {
 	// Rather than testing by executing the callback in its entirety,
 	// check by invoking without the required mocked state and catching
 	// the error that's thrown at the start of the callback
-	_, err := s.GetMsgServer().SubmitQueryResponse(tc.goCtx, &tc.validMsg)
+	_, err := s.GetMsgServer().SubmitQueryResponse(s.Ctx, &tc.validMsg)
 	s.Require().ErrorContains(err, "action: not found")
 }
 
@@ -201,6 +196,6 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_FindAndInvokeCallback() {
 	// To do this, we can just ignore the appropriate withdrawal balance callback
 	// mocked state, and catch the expected error that happens at the beginning of
 	// the callback
-	_, err := s.GetMsgServer().SubmitQueryResponse(tc.goCtx, &tc.validMsg)
+	_, err := s.GetMsgServer().SubmitQueryResponse(s.Ctx, &tc.validMsg)
 	s.Require().ErrorContains(err, "not found")
 }

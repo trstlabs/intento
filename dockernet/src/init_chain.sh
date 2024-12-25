@@ -33,10 +33,10 @@ set_into_genesis() {
     
     # update params
     jq '.app_state.claim.claim_records[0].address = "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6"' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    jq '.app_state.claim.claim_records[0].initial_claimable_amount = [{"amount":"10000","denom":"uinto"}]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].maximum_claimable_amount = {"amount":"10000","denom":"uinto"}' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].status[0].action_completed = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    jq '.app_state.claim.claim_records[0].status[0].vesting_period_completed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    jq '.app_state.claim.claim_records[0].status[0].vesting_period_claimed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].status[0].vesting_periods_completed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.claim_records[0].status[0].vesting_periods_claimed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     
     jq '.app_state.claim.params.duration_vesting_periods = ["40s","50s","60s","70s"]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     
@@ -316,28 +316,31 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     
     if [[ "$CHAIN" == "INTO"  ]]; then
         TEST_FILES_DIR=$DOCKERNET_HOME/tests/test_files
-        if [ -d "$TEST_FILES_DIR" ]; then
-            $cmd export-snapshot $TEST_FILES_DIR/active-users.csv $TEST_FILES_DIR/nft1.csv $TEST_FILES_DIR/nft2.csv $TEST_FILES_DIR/snapshot_output.json --nft-weight-1 20 --nft-weight 10 --user-weight 5
-            $cmd import-genesis-accounts-from-snapshot $TEST_FILES_DIR/snapshot_output.json $TEST_FILES_DIR/non-airdrop-accounts.json --airdrop-amount=1_000_000_000
-        fi
         $cmd prepare-genesis testnet $CHAIN_ID
+                if [ -d "$TEST_FILES_DIR" ]; then
+            $cmd export-snapshot $TEST_FILES_DIR/active-users.csv $TEST_FILES_DIR/nft1.csv $TEST_FILES_DIR/nft2.csv $TEST_FILES_DIR/snapshot_output.json --nft-weight-1 20 --nft-weight 10 --user-weight 5
+            $cmd import-genesis-accounts-from-snapshot $TEST_FILES_DIR/snapshot_output.json $TEST_FILES_DIR/non-airdrop-accounts.json --airdrop-amount=90_000_000_000_000
+        fi
     fi
     # Update node networking configuration
     config_toml="${STATE}/${node_name}/config/config.toml"
     client_toml="${STATE}/${node_name}/config/client.toml"
     app_toml="${STATE}/${node_name}/config/app.toml"
     genesis_json="${STATE}/${node_name}/config/genesis.json"
-    
+
+
     # sed -i -E "s|cors_allowed_origins = \[\]|cors_allowed_origins = [\"\*\"]|g" $config_toml
     sed -i -E "s|127.0.0.1|0.0.0.0|g" $config_toml
     sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
     sed -i -E "s|timeout_commit = \"2s\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
-    sed -i -E "s|timeout_commit = \"500ms\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
-    sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"1s\"|g" $config_toml
+    sed -i -E "s|timeout_commit = \"500ms\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml   
+    sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"${BLOCK_TIME}\"|g" $config_toml
+    sed -i -E 's|timeout_propose = "3s"|timeout_propose = "1s"|g' $config_toml
+    sed -i -E 's|timeout_propose = "1.8s"|timeout_propose = "1s"|g' $config_toml
+
     sed -i -E "s|timeout_propose = \"2s\"|timeout_propose = \"1s\"|g" $config_toml
-    sed -i -E "s|timeout_propose = \"1.8s\"|timeout_propose = \"1s\"|g" $config_toml
     sed -i -E "s|prometheus = false|prometheus = true|g" $config_toml
-    # sed -i -E "s|addr_book_strict = true|addr_book_strict = false|g" $config_toml
+
     sed -i -E "s|minimum-gas-prices = \".*\"|minimum-gas-prices = \"0${DENOM}\"|g" $app_toml
     sed -i -E '/\[api\]/,/^enable = .*$/ s/^enable = .*$/enable = true/' $app_toml
     sed -i -E 's|unsafe-cors = .*|unsafe-cors = true|g' $app_toml

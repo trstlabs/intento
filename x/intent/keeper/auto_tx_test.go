@@ -20,22 +20,18 @@ func TestCreateAction(t *testing.T) {
 
 	// Create a mock label, port ID, and messages
 	label := "test-label"
-	portID := "test-port-id"
 
 	localMsg := newFakeMsgSend(owner, sendTo)
 	msgs, err := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 	require.NoError(t, err)
 
-	// Create a mock connection ID, duration, interval, start time, and dependencies
-	connectionID := "test-connection-id"
-	hostConn := "test-connection-id-2"
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateAction function
-	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, portID, connectionID, hostConn, types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 
 	// Verify that the auto transaction was created correctly
@@ -48,8 +44,6 @@ func TestCreateAction(t *testing.T) {
 	require.Equal(t, feeFunds, keepers.BankKeeper.GetAllBalances(ctx, addr))
 	require.Equal(t, interval, action.Interval)
 	require.Equal(t, startTime, action.StartTime)
-	require.Equal(t, portID, action.ICAConfig.PortID)
-	require.Equal(t, connectionID, action.ICAConfig.ConnectionID)
 	require.Equal(t, configuration, *action.Configuration)
 }
 
@@ -64,22 +58,17 @@ func TestCreateActionWithZeroFeeFundsWorks(t *testing.T) {
 
 	// Create a mock label, port ID, and messages
 	label := "test-label"
-	portID := "test-port-id"
-
 	localMsg := newFakeMsgSend(owner, sendTo)
 	msgs, err := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 	require.NoError(t, err)
 
-	// Create a mock connection ID, duration, interval, start time, and dependencies
-	connectionID := "test-connection-id"
-	hostConn := "test-connection-id-2"
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateAction function
-	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, portID, connectionID, hostConn, types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 
 	// Verify that the auto transaction was created correctly
@@ -92,8 +81,6 @@ func TestCreateActionWithZeroFeeFundsWorks(t *testing.T) {
 	require.Equal(t, sdk.Coins{}, keepers.BankKeeper.GetAllBalances(ctx, addr))
 	require.Equal(t, interval, action.Interval)
 	require.Equal(t, startTime, action.StartTime)
-	require.Equal(t, portID, action.ICAConfig.PortID)
-	require.Equal(t, connectionID, action.ICAConfig.ConnectionID)
 	require.Equal(t, configuration, *action.Configuration)
 }
 
@@ -108,27 +95,22 @@ func TestGetActionsForBlock(t *testing.T) {
 
 	// Create a mock label, port ID, and messages
 	label := "test-label"
-	portID := "test-port-id"
 
 	localMsg := newFakeMsgSend(owner, sendTo)
 	msgs, err := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 	require.NoError(t, err)
 
-	// Create a mock connection ID, duration, interval, start time, and dependencies
-	connectionID := "test-connection-id"
-	hostConn := "test-connection-id-2"
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateAction function
-	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, portID, connectionID, hostConn, types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 	// Call the CreateAction function
-	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, portID, connectionID, hostConn, types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
-
 	actions := keepers.IntentKeeper.GetActionsForBlock(ctx.WithBlockTime(startTime.Add(interval)))
 	require.Equal(t, len(actions), 2)
 

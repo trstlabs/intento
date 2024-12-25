@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
@@ -145,9 +147,9 @@ func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string,
 	}
 	// reward hooks
 	if msgClass == 3 {
-		k.hooks.AfterActionAuthz(ctx, owner)
+		k.hooks.AfterActionLocal(ctx, owner)
 	} else if msgClass == 1 {
-		k.hooks.AfterActionWasm(ctx, owner)
+		k.hooks.AfterActionICA(ctx, owner)
 	}
 
 	actionHistoryEntry.Executed = true
@@ -156,27 +158,67 @@ func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string,
 		actionHistoryEntry.MsgResponses = append(actionHistoryEntry.MsgResponses, msgResponses...)
 	}
 
-	k.SetCurrentActionHistoryEntry(ctx, action.ID, actionHistoryEntry)
-
 	//trigger remaining execution
 	if action.Conditions != nil && action.Conditions.UseResponseValue != nil && action.Conditions.UseResponseValue.MsgsIndex != 0 && action.Conditions.UseResponseValue.ActionID == 0 && len(actionHistoryEntry.MsgResponses)-1 < int(action.Conditions.UseResponseValue.MsgsIndex) {
-		err = k.UseResponseValue(ctx, action.ID, &action.Msgs, action.Conditions, nil)
-		if err != nil {
-			return errorsmod.Wrap(err, fmt.Sprintf(types.ErrSettingActionResult, err))
-		}
 		tmpAction := action
 		tmpAction.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex:]
 
-		k.Logger(ctx).Debug("triggering msgs", "id", action.ID, "msgs", len(tmpAction.Msgs))
-		_, _, err = k.TriggerAction(ctx, &tmpAction)
-		if err != nil {
-			actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, types.ErrActionMsgHandling+err.Error())
-			k.SetCurrentActionHistoryEntry(ctx, action.ID, actionHistoryEntry)
-		}
-		//}
-	}
-	k.SetActionInfo(ctx, &action)
+		err := triggerRemainingMsgs(k, ctx, tmpAction, actionHistoryEntry)
 
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	k.SetCurrentActionHistoryEntry(ctx, action.ID, actionHistoryEntry)
+	return nil
+
+}
+
+func triggerRemainingMsgs(k Keeper, ctx sdk.Context, action types.ActionInfo, actionHistoryEntry *types.ActionHistoryEntry) error {
+	var errorString = ""
+
+	allowed, err := k.allowedToExecute(ctx, action, nil)
+	if !allowed {
+		k.recordActionNotAllowed(ctx, &action, ctx.BlockTime(), fmt.Sprintf(types.ErrActionConditions, err.Error()))
+
+	}
+
+	actionCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.MaxGas))
+	cacheCtx, writeCtx := actionCtx.CacheContext()
+	k.Logger(ctx).Debug("continuing msg execution", "id", action.ID)
+
+	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, action, types.MaxGas)
+	if err != nil {
+		errorString = appendError(errorString, err.Error())
+	} else if feeAddr == nil || feeDenom == "" {
+		errorString = appendError(errorString, (types.ErrBalanceTooLow + feeDenom))
+	}
+
+	err = k.UseResponseValue(cacheCtx, action.ID, &action.Msgs, action.Conditions, nil)
+	if err != nil {
+		return errorsmod.Wrap(err, fmt.Sprintf(types.ErrSettingActionResult, err))
+	}
+
+	k.Logger(ctx).Debug("triggering msgs", "id", action.ID, "msgs", len(action.Msgs))
+	_, _, err = k.TriggerAction(cacheCtx, &action)
+	if err != nil {
+		errorString = appendError(errorString, fmt.Sprintf(types.ErrActionMsgHandling, err.Error()))
+	}
+	fee, err := k.DistributeCoins(cacheCtx, action, feeAddr, feeDenom, ctx.BlockHeader().ProposerAddress)
+	if err != nil {
+		errorString = appendError(errorString, fmt.Sprintf(types.ErrActionFeeDistribution, err.Error()))
+	}
+	actionHistoryEntry.ExecFee = actionHistoryEntry.ExecFee.Add(fee)
+
+	if errorString != "" {
+		actionHistoryEntry.Executed = false
+		actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, types.ErrActionMsgHandling+err.Error())
+
+	}
+	k.SetCurrentActionHistoryEntry(cacheCtx, action.ID, actionHistoryEntry)
+	writeCtx()
 	return nil
 }
 
@@ -196,14 +238,14 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 			msgExecResponse := authztypes.MsgExecResponse{}
 			err := proto.Unmarshal(anyResp.GetValue(), &msgExecResponse)
 			if err != nil {
-				k.Logger(ctx).Debug("handling deep action response", "err", err)
+				k.Logger(ctx).Debug("handling deep action response unmarshalling", "err", err)
 				return nil, 0, err
 			}
 
 			actionIndex := index + previousMsgsExecuted
-			// if actionIndex < 0 {
-			// 	actionIndex = 0
-			// }
+			if actionIndex >= len(action.Msgs) {
+				return nil, 0, errorsmod.Wrapf(types.ErrMsgResponsesHandling, "expected more message responses")
+			}
 			msgExec := &authztypes.MsgExec{}
 			if err := proto.Unmarshal(action.Msgs[actionIndex].Value, msgExec); err != nil {
 				return nil, 0, err
@@ -214,10 +256,15 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 			for _, resultBytes := range msgExecResponse.Results {
 				var msgResponse = cdctypes.Any{}
 				if err := proto.Unmarshal(resultBytes, &msgResponse); err == nil {
-					k.Logger(ctx).Debug("parsing response authz v0.52+", "msgResponse", msgResponse)
-					if msgResponse.GetTypeUrl() != "" {
+					typeUrl := msgResponse.GetTypeUrl()
+
+					if typeUrl != "" && strings.Contains(typeUrl, "Msg") {
+						// _, err := k.interfaceRegistry.Resolve(typeUrl)
+						// if err == nil {
+						k.Logger(ctx).Debug("parsing response authz v0.52+", "msgResponse", msgResponse)
 						msgResponses = append(msgResponses, &msgResponse)
 						continue
+						//}
 					}
 
 				}
@@ -374,11 +421,12 @@ func (k Keeper) allowedToExecute(ctx sdk.Context, action types.ActionInfo, query
 
 	//if not allowed to execute, remove entry
 	if !allowedToExecute {
-		k.RemoveFromActionQueue(ctx, action)
 		//insert the next entry given a recurring tx
 		if shouldRecur {
 			// adding next execTime and a new entry into the queue based on interval
 			k.InsertActionQueue(ctx, action.ID, action.ExecTime.Add(action.Interval))
+			action.ExecTime = action.ExecTime.Add(action.Interval)
+			k.SetActionInfo(ctx, &action)
 		}
 	}
 	return allowedToExecute, nil

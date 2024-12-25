@@ -260,34 +260,6 @@ func PrepareGenesis(
 	}
 	appState[intenttypes.ModuleName] = actionGenStateBz
 
-	// compute module genesis
-	// computeGenState := compute.DefaultGenesis()
-	// computeGenState.Params = genesisParams.ComputeParams
-	// computeGenStateBz, err := cdc.MarshalJSON(computeGenState)
-	// if err != nil {
-	// 	return nil, nil, fmt.Errorf("failed to marshal autoIbcTx genesis state: %w", err)
-	// }
-	// appState[compute.ModuleName] = computeGenStateBz
-
-	// ica module genesis
-	// icaGenState := icagenesistypes.DefaultGenesis()
-	// icaGenState.HostGenesisState.Params = genesisParams.IcaParams
-	// icaGenStateBz, err := cdc.MarshalJSON(icaGenState)
-	// if err != nil {
-	// 	return nil, nil, fmt.Errorf("failed to marshal ica genesis state: %w", err)
-	// }
-	// appState[icagenesistypes.ModuleName] = icaGenStateBz
-
-	// item module genesis
-	/*
-		itemGenState := itemtypes.GetGenesisStateFromAppState(cdc, appState)
-		itemGenState.Params = genesisParams.ItemParams
-		itemGenStateBz, err := cdc.MarshalJSON(itemGenState)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to marshal slashing genesis state: %w", err)
-		}
-		appState[itemtypes.ModuleName] = itemGenStateBz
-	*/
 	// return appState and genDoc
 	return appState, nil
 }

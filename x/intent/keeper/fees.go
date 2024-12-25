@@ -130,7 +130,7 @@ func (k Keeper) SendFeesToHosted(ctx sdk.Context, action types.ActionInfo, hoste
 }
 
 // CheckBalanceForGasFee checks if the address has enough balance to cover the gas fee.
-func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, action types.ActionInfo, expectedGas int64) (account sdk.AccAddress, denom string, err error) {
+func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, action types.ActionInfo, expectedGas uint64) (account sdk.AccAddress, denom string, err error) {
 	p, err := k.GetParams(ctx)
 	if err != nil {
 		panic(err)
@@ -145,7 +145,7 @@ func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, action types.ActionInfo
 	// Calculate the required fee
 	minFee := sdk.NewCoins()
 	for _, coin := range p.GasFeeCoins {
-		amountSmall := coin.Amount.Mul(math.NewInt(p.ActionFlexFeeMul * expectedGas))
+		amountSmall := coin.Amount.Mul(math.NewInt(p.ActionFlexFeeMul * int64(expectedGas)))
 		amount := amountSmall.Quo(math.NewInt(100))
 		minFee = minFee.Add(sdk.NewCoin(coin.Denom, amount))
 	}
@@ -159,6 +159,9 @@ func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, action types.ActionInfo
 			}
 
 			actionAddrBalances = k.bankKeeper.GetAllBalances(ctx, ownerAddr).Sort()
+			if actionAddrBalances.IsZero() {
+				return nil, "", errorsmod.Wrap(types.ErrNotFound, "action owner bank balance is zero")
+			}
 			denom = GetDenomIfAnyGTE(actionAddrBalances, minFee)
 			if denom == "" {
 				return nil, "", err

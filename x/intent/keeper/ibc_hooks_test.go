@@ -60,18 +60,19 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 	params.ActionFlexFeeMul = 1
 	GetICAApp(suite.IntentoChain).IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
 
-	addr := suite.IntentoChain.SenderAccount.GetAddress()
-	msg := `{
+	addr := suite.IntentoChain.SenderAccount.GetAddress().String()
+	addrTo := suite.TestAccs[0].String()
+	msg := fmt.Sprintf(`{
 		"@type":"/cosmos.bank.v1beta1.MsgSend",
 		"amount": [{
 			"amount": "70",
 			"denom": "stake"
 		}],
-		"from_address": "into12gxmzpucje8aflw2vz45rv8x4nyaaj3rp8vjh03dulehkdl5fu6s93ewkp",
-		"to_address": "into1ykql5ktedxkpjszj5trzu8f5dxajvgv95nuwjx"
-	}`
+		"from_address": "%s",
+		"to_address": "%s"
+	}`, addr, addrTo)
 
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
+	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"action": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
@@ -80,7 +81,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithAction() {
 
 	action := GetICAApp(suite.IntentoChain).IntentKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
 
-	suite.Require().Equal(action.Owner, addr.String())
+	suite.Require().Equal(action.Owner, addr)
 	suite.Require().Equal(action.Label, "my_trigger")
 	suite.Require().Equal(action.ICAConfig.PortID, "")
 	suite.Require().Equal(action.Interval, time.Second*60)
@@ -114,7 +115,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleActions() {
 
 	path := NewICAPath(suite.IntentoChain, suite.HostChain)
 	suite.Coordinator.SetupConnections(path)
-	err := SetupICAPath(path, addr.String())
+	err := suite.SetupICAPath(path, addr.String())
 	suite.Require().NoError(err)
 
 	//HostChain sends packet to IntentoChain. connectionID to execute on HostChain is on IntentoChains config
@@ -167,7 +168,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 
 	path := NewICAPath(suite.IntentoChain, suite.HostChain)
 	suite.Coordinator.SetupConnections(path)
-	err := SetupICAPath(path, addr.String())
+	err := suite.SetupICAPath(path, addr.String())
 	suite.Require().NoError(err)
 
 	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my trigger", "cid":"%s","host_cid":"%s","msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0", "fallback":"true" }}`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
@@ -215,7 +216,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxWithSentDenomInPar
 
 	path := NewICAPath(suite.IntentoChain, suite.HostChain)
 	suite.Coordinator.SetupConnections(path)
-	err := SetupICAPath(path, addr.String())
+	err := suite.SetupICAPath(path, addr.String())
 	suite.Require().NoError(err)
 
 	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"action": {"owner": "%s","label": "my trigger", "cid":"%s","host_cid":"%s","msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0", "fallback": "true" }}`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))

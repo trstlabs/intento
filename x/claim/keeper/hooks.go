@@ -11,35 +11,26 @@ import (
 	"github.com/trstlabs/intento/x/claim/types"
 )
 
-func (k Keeper) AfterActionAuthz(ctx sdk.Context, recipient sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionActionAuthz)
-	// fmt.Printf("ClaimInitialCoinsForAction err %v \n", err)
+func (k Keeper) AfterActionLocal(ctx sdk.Context, recipient sdk.AccAddress) {
+	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ACTION_ACTION_LOCAL)
 	k.Logger(ctx).Debug("ClaimInitialCoinsForAction", "error", err, "for", recipient)
 }
 
-func (k Keeper) AfterActionWasm(ctx sdk.Context, recipient sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionActionWasm)
+func (k Keeper) AfterActionICA(ctx sdk.Context, recipient sdk.AccAddress) {
+	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ACTION_ACTION_ICA)
 	k.Logger(ctx).Debug("ClaimInitialCoinsForAction", "error", err, "for", recipient)
 }
 
 func (k Keeper) AfterGovernanceVoted(ctx sdk.Context, recipient sdk.AccAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionGovernanceVote)
+	err := k.ClaimInitialCoinsForAction(ctx, recipient, types.ACTION_GOVERNANCE_VOTE)
 	k.Logger(ctx).Debug("ClaimInitialCoinsForAction", "error", err, "for", recipient)
 }
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
-	err := k.ClaimInitialCoinsForAction(ctx, delAddr, types.ActionDelegateStake)
+	err := k.ClaimInitialCoinsForAction(ctx, delAddr, types.ACTION_DELEGATE_STAKE)
+	//fmt.Printf("ClaimInitialCoinsForAction  \n")
 	k.Logger(ctx).Debug("ClaimInitialCoinsForAction", "error", err, "for", delAddr)
 }
-
-/* func (k Keeper) AfterAutoSwap(ctx context.Context, recipient sdk.AccAddress) {
-	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionAutoSwap)
-
-}
-
-func (k Keeper) AfterRecurringSend(ctx context.Context, recipient sdk.AccAddress) {
-	k.ClaimInitialCoinsForAction(ctx, recipient, types.ActionRecurringSend)
-} */
 
 // ________________________________________________________________________________________
 
@@ -116,11 +107,11 @@ func (h Hooks) BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddres
 }
 
 // intent hooks
-func (h Hooks) AfterActionAuthz(ctx sdk.Context, recipientAddr sdk.AccAddress) {
-	h.k.AfterActionAuthz(ctx, recipientAddr)
+func (h Hooks) AfterActionLocal(ctx sdk.Context, recipientAddr sdk.AccAddress) {
+	h.k.AfterActionLocal(ctx, recipientAddr)
 }
-func (h Hooks) AfterActionWasm(ctx sdk.Context, recipientAddr sdk.AccAddress) {
-	h.k.AfterActionWasm(ctx, recipientAddr)
+func (h Hooks) AfterActionICA(ctx sdk.Context, recipientAddr sdk.AccAddress) {
+	h.k.AfterActionICA(ctx, recipientAddr)
 }
 
 func (h Hooks) AfterAutoSwap(ctx sdk.Context, recipientAddr sdk.AccAddress) {
