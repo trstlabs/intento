@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
+
 	"cosmossdk.io/store/prefix"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -93,18 +93,6 @@ func (k Keeper) GetNextActionHistorySequence(ctx sdk.Context, actionId uint64) u
 	return sequence
 }
 
-// func (k Keeper) importActionHistory(ctx sdk.Context, actionHistoryId uint64, ActionHistory types.ActionHistory) error {
-
-// 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-// 	key := types.GetActionHistoryKey(actionHistoryId)
-// 	if store.Has(key) {
-// 		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate code: %d", actionHistoryId)
-// 	}
-// 	// 0x01 | actionHistoryId (uint64) -> ActionHistory
-// 	store.Set(key, k.cdc.MustMarshal(&ActionHistory))
-// 	return nil
-// }
-
 func (k Keeper) IterateActionHistorys(ctx sdk.Context, cb func(uint64, types.ActionHistory) bool) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	prefixStore := prefix.NewStore(store, types.ActionKeyPrefix)
@@ -119,7 +107,7 @@ func (k Keeper) IterateActionHistorys(ctx sdk.Context, cb func(uint64, types.Act
 	}
 }
 
-func (k Keeper) addActionHistory(ctx sdk.Context, action *types.ActionInfo, actualExecTime time.Time, execFee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, queryResponse string, errorString string) {
+func (k Keeper) addActionHistory(ctx sdk.Context, action *types.ActionInfo, actualExecTime time.Time, execFee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, errorString string) {
 	historyEntry := types.ActionHistoryEntry{
 		ScheduledExecTime: action.ExecTime,
 		ActualExecTime:    actualExecTime,
@@ -127,7 +115,18 @@ func (k Keeper) addActionHistory(ctx sdk.Context, action *types.ActionInfo, actu
 	}
 	if action.Configuration.SaveResponses {
 		historyEntry.MsgResponses = append(historyEntry.MsgResponses, msgResponses...)
-		historyEntry.QueryResponse = queryResponse
+		for i, comparison := range action.Conditions.Comparisons {
+			if comparison.ICQConfig != nil {
+				historyEntry.QueryResponses = append(historyEntry.QueryResponses, string(comparison.ICQConfig.Response))
+				action.Conditions.Comparisons[i].ICQConfig.Response = nil
+			}
+		}
+		for i, feedbackLoop := range action.Conditions.FeedbackLoops {
+			if feedbackLoop.ICQConfig != nil {
+				historyEntry.QueryResponses = append(historyEntry.QueryResponses, string(feedbackLoop.ICQConfig.Response))
+				action.Conditions.FeedbackLoops[i].ICQConfig.Response = nil
+			}
+		}
 
 	}
 	if errorString != "" {
@@ -159,37 +158,44 @@ func (k Keeper) SetCurrentActionHistoryEntry(ctx sdk.Context, actionId uint64, e
 	store.Set(key, k.cdc.MustMarshal(entry))
 }
 
-func (k Keeper) getCurrentActionHistoryEntry(ctx sdk.Context, actionId uint64) (*types.ActionHistoryEntry, bool) {
+func (k Keeper) HasActionHistoryEntry(ctx sdk.Context, actionId uint64) bool {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-
-	// Retrieve the current sequence for the actionId
 	sequenceKey := append(types.ActionHistorySequencePrefix, sdk.Uint64ToBigEndian(actionId)...)
-	sequenceBytes := store.Get(sequenceKey)
-	if sequenceBytes == nil {
-		// No sequence found, so no entry exists
-		return nil, false
-	}
+	return store.Has(sequenceKey)
 
-	// Decode the current sequence
-	sequence := sdk.BigEndianToUint64(sequenceBytes)
-
-	// Composite key: ActionHistoryKey + ActionId + Sequence (latest entry)
-	key := append(types.GetActionHistoryKey(actionId), sdk.Uint64ToBigEndian(sequence)...)
-
-	// Fetch the current entry
-	entryBytes := store.Get(key)
-	if entryBytes == nil {
-		// No entry exists at the latest sequence
-		return nil, false
-	}
-	var entry types.ActionHistoryEntry
-	k.cdc.MustUnmarshal(entryBytes, &entry)
-
-	return &entry, true
 }
 
+// func (k Keeper) getCurrentActionHistoryEntry(ctx sdk.Context, actionId uint64) (*types.ActionHistoryEntry, bool) {
+// 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+
+// 	// Retrieve the current sequence for the actionId
+// 	sequenceKey := append(types.ActionHistorySequencePrefix, sdk.Uint64ToBigEndian(actionId)...)
+// 	sequenceBytes := store.Get(sequenceKey)
+// 	if sequenceBytes == nil {
+// 		// No sequence found, so no entry exists
+// 		return nil, false
+// 	}
+
+// 	// Decode the current sequence
+// 	sequence := sdk.BigEndianToUint64(sequenceBytes)
+
+// 	// Composite key: ActionHistoryKey + ActionId + Sequence (latest entry)
+// 	key := append(types.GetActionHistoryKey(actionId), sdk.Uint64ToBigEndian(sequence)...)
+
+// 	// Fetch the current entry
+// 	entryBytes := store.Get(key)
+// 	if entryBytes == nil {
+// 		// No entry exists at the latest sequence
+// 		return nil, false
+// 	}
+// 	var entry types.ActionHistoryEntry
+// 	k.cdc.MustUnmarshal(entryBytes, &entry)
+
+// 	return &entry, true
+// }
+
 // we may reimplement this as a configuration-based gas fee
-func (k Keeper) CalculateTimeBasedFlexFee(ctx sdk.Context, action types.ActionInfo) sdkmath.Int {
+func (k Keeper) CalculateTimeBasedFlexFee(ctx sdk.Context, action types.ActionInfo) math.Int {
 	historyEntry, _ := k.GetLatestActionHistoryEntry(ctx, action.ID)
 
 	if historyEntry != nil {
