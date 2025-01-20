@@ -1,86 +1,80 @@
 ---
 sidebar_position: 2
-title: Conditions
-pagination_label: Conditions
+title: Execution Conditions
+pagination_label: Execution Conditions
 ---
 
-# Conditions and Comparisons
+In this part of the docs we detail how to use `Conditions` such as `Comparisons` and `Feedback Loops` into your Intent-based Action. With Conditions on Intento you can orchestrate conditional workflows in a structured manner. We will explore these features with examples, including an auto-compounding scenario using `MsgSend`.
 
-This page details how to use `ExecutionConditions` and `ResponseComparison` to create complex, conditional workflows in your application. We will explore these features with examples, including an auto-compounding scenario using `MsgSend`.
+## Conditions
 
-## Execution Conditions
+`Execution Conditions` define the rules that determine when and how actions are executed. By combining feedback loops, comparisons, and dependent intent logic, these conditions enable precise control over execution flows.
 
-The `ExecutionConditions` message sets the rules and dependencies for when and how an action is executed. These conditions include replacing values with previous responses, comparing response values, and controlling execution flow based on the success or failure of dependent intents.
+Imagine a financial ecosystem where every action depends on intricate conditions to proceed. Feedback loops ensure that the system adapts in real-time by feeding outputs from one action as inputs to another. Meanwhile, comparisons act as gatekeepers, evaluating critical data points to decide whether an action should continue. Dependent intent arrays bring context-aware decision-making, stopping or skipping execution based on the success or failure of other operations. And finally, the flexibility to combine comparisons with AND or OR logic provides a fine-grained control mechanism for complex workflows.
 
-### Message Definition
+### Key Elements of Execution Conditions
 
-```proto
-message ExecutionConditions {
-  // Replace value with value from message or response from another action’s latest output
-  UseResponseValue use_response_value = 2;
-  // Comparison with response response value
-  ResponseComparison response_comparison = 1;
-  // Optional array of dependent intents that, when executed successfully, stops execution
-  repeated uint64 stop_on_success_of = 5;
-  // Optional array of dependent intents that, when not executed successfully, stops execution
-  repeated uint64 stop_on_failure_of = 6;
-  // Optional array of dependent intents that should be executed successfully after their latest call before execution is allowed
-  repeated uint64 skip_on_failure_of = 7;
-  // Optional array of dependent intents that should fail after their latest call before execution is allowed
-  repeated uint64 skip_on_success_of = 8;
-}
-```
+| Field                     | Type                    | Description                                                                                                    |
+| ------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `feedback_loops`          | `repeated FeedbackLoop` | A list of feedback loops that dynamically replace message values with the latest response values.              |
+| `comparisons`             | `repeated Comparison`   | A list of comparisons to evaluate response values and decide whether execution should proceed.                 |
+| `stop_on_success_of`      | `repeated uint64`       | An array of dependent intents; execution halts if any of these execute successfully.                           |
+| `stop_on_failure_of`      | `repeated uint64`       | An array of dependent intents; execution halts if any of these fail to execute.                                |
+| `skip_on_failure_of`      | `repeated uint64`       | An array of dependent intents that must execute successfully after their latest call for execution to proceed. |
+| `skip_on_success_of`      | `repeated uint64`       | An array of dependent intents that must fail after their latest call for execution to proceed.                 |
+| `use_and_for_comparisons` | `bool`                  | Determines whether comparisons are combined with AND (true) or OR (false).                                     |
 
-## Feedback Loops
+## Comparisons
 
-### Using a Response Value as Input
+The `Comparison` feature allows you to compare a response value with a specified operand before executing an action message. This comparison determines whether the action proceeds based on the result. You can configure up to 5 conditions per action. It evaluates the output of the last execution to decide if the current execution should proceed.
 
-The `UseResponseValue` message allows you to replace a value in a message with the latest response value from another action before execution. This creates feedback loops where the output of one action becomes the input for another.
+| Field            | Type                 | Description                                                                                      |
+| ---------------- | -------------------- | ------------------------------------------------------------------------------------------------ |
+| `action_id`      | `uint64`             | The ID of the action to fetch the latest response value from (optional).                         |
+| `response_index` | `uint32`             | The index of the message response to use (optional).                                             |
+| `response_key`   | `string`             | The specific response key to use (e.g., `Amount[0].Amount`, `FromAddress`, optional).            |
+| `value_type`     | `string`             | The value type, such as `sdk.Int`, `sdk.Coin`, `sdk.Coins`, `string`, or other compatible types. |
+| `operator`       | `ComparisonOperator` | The operator used for comparison (e.g., `==`, `!=`, `<`, `>`).                                   |
+| `operand`        | `string`             | The value to compare against.                                                                    |
+| `icq_config`     | `ICQConfig`          | The configuration of the Interchain Query (ICQ) to perform.                                      |
 
-```proto
-message UseResponseValue {
-  uint64 action_id = 1 [(gogoproto.customname) = "ActionID"]; // Action to get the latest response value from, optional
-  uint32 response_index = 3;  // Index of the response
-  string response_key = 2; // For example, "Amount"
-  uint32 msgs_index = 4; // Index of the message to replace
-  string msg_key = 5; // Key of the message to replace (e.g., Amount[0].Amount, FromAddress)
-  string value_type = 6; // Can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int
-}
-```
-
-### Response Comparison
-
-The `ResponseComparison` message allows you to compare a response value with a specified operand before the execution of an action message. This comparison controls whether the action proceeds based on the outcome.
-
-```proto
-message ResponseComparison {
-  uint64 action_id = 1 [(gogoproto.customname) = "ActionID"]; // Action to get the latest response value from, optional
-  uint32 response_index = 2;  // Index of the response
-  string response_key = 3; // e.g., Amount[0].Amount, FromAddress
-  string value_type = 4; // Can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int
-  ComparisonOperator comparison_operator = 5;
-  string comparison_operand = 6;
-}
-```
+`
 
 ### Comparison Operators
 
-The `ComparisonOperator` enum defines various operators for comparing values. These support different types such as strings, arrays, and numeric types.
+The `Comparison Operator` offers several options for evaluating response values across various data types, including strings, arrays, and numeric values. These operators provide flexibility for designing precise and logical conditions in execution flows.
 
-```proto
-enum ComparisonOperator {
-  EQUAL = 0; // Equality check (for all types)
-  CONTAINS = 1; // Contains check (for strings, arrays, etc.)
-  NOT_CONTAINS = 2; // Not contains check (for strings, arrays, etc.)
-  SMALLER_THAN = 3; // Less than check (for numeric types)
-  LARGER_THAN = 4; // Greater than check (for numeric types)
-  GREATER_EQUAL = 5; // Greater than or equal to check (for numeric types)
-  LESS_EQUAL = 6; // Less than or equal to check (for numeric types)
-  STARTS_WITH = 7; // Starts with check (for strings)
-  ENDS_WITH = 8; // Ends with check (for strings)
-  NOT_EQUAL = 9; // Not equal check (for all types)
-}
-```
+Imagine you're managing a workflow where decisions must hinge on dynamic and evolving conditions. The `ComparisonOperator` enables fine-grained control to ensure actions proceed only when certain criteria are met. Whether you're verifying numerical thresholds, checking the presence of an item in a list, or ensuring a string starts or ends with specific characters, these operators have you covered.
+
+| Operator        | Description                                                    | Supported Types |
+| --------------- | -------------------------------------------------------------- | --------------- |
+| `EQUAL`         | Checks for equality between two values.                        | All types       |
+| `CONTAINS`      | Verifies if a value is present within a string or array.       | Strings, arrays |
+| `NOT_CONTAINS`  | Confirms that a value is not present within a string or array. | Strings, arrays |
+| `SMALLER_THAN`  | Evaluates if a value is less than another.                     | Numeric types   |
+| `LARGER_THAN`   | Evaluates if a value is greater than another.                  | Numeric types   |
+| `GREATER_EQUAL` | Checks if a value is greater than or equal to another.         | Numeric types   |
+| `LESS_EQUAL`    | Checks if a value is less than or equal to another.            | Numeric types   |
+| `STARTS_WITH`   | Verifies that a string begins with a specified prefix.         | Strings         |
+| `ENDS_WITH`     | Verifies that a string ends with a specified suffix.           | Strings         |
+| `NOT_EQUAL`     | Checks for inequality between two values.                      | All types       |
+
+These operators ensure that comparisons align with your workflow's logical requirements, offering clarity and precision for any conditional execution scenario.
+By leveraging the appropriate comparison operators, you can build intelligent, responsive systems capable of handling even the most complex decision-making requirements.
+
+## Feedback Loops
+
+The `Feedback Loops` feature enables you to replace a value in a message with the latest response value from another action before execution. This creates a feedback loop where the output of one action or Interchain Query becomes the input for another. You can configure up to 5 feedback loops per action.
+
+| Field            | Type        | Description                                                                                      |
+| ---------------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| `action_id`      | `uint64`    | The ID of the action to fetch the latest response value from (optional).                         |
+| `response_index` | `uint32`    | The index of the responses to use.                                                               |
+| `response_key`   | `string`    | The specific response key to use (e.g., "Amount").                                               |
+| `msgs_index`     | `uint32`    | The index of the message to replace.                                                             |
+| `msg_key`        | `string`    | The key of the message to replace (e.g., `Amount[0].Amount`, `FromAddress`).                     |
+| `value_type`     | `string`    | The value type, such as `sdk.Int`, `sdk.Coin`, `sdk.Coins`, `string`, or other compatible types. |
+| `icq_config`     | `ICQConfig` | The configuration of the Interchain Query (ICQ) to perform.                                      |
 
 ## Example: Conditional Transfers with `MsgSend`
 
@@ -107,11 +101,10 @@ message MsgWithdrawDelegatorReward {
 
 #### 2. Use the Withdrawn Amount as Input
 
-Use the `UseResponseValue` to take the withdrawn amount as input for the next action message:
+Use the `FeedbackLoop` to take the withdrawn amount as input for the next action message:
 
 ```os
 use_response_value {
-  action_id: 1 // Action ID of the reward withdrawal
   response_index: 0 // First response
   response_key: "amount[0].amount" // Key to extract the amount
   msgs_index: 1 // Index of the message to replace in the next action
@@ -122,11 +115,10 @@ use_response_value {
 
 #### 3. Compare the Withdrawn Amount
 
-Use `ResponseComparison` to ensure the amount is greater than 200,000 "uatom":
+Use `Comparison` to ensure the amount is greater than 200,000 "uatom":
 
 ```js
 comparision {
-  action_id: 1 // Action ID of the reward withdrawal
   response_index: 0 // First response
   response_key: "amount[0].amount" // Key to compare the amount
   value_type: "sdk.Int" // Value type
@@ -153,22 +145,22 @@ Combine the conditions into `ExecutionConditions` for the transfer action:
 
 ```js
 conditions {
-  use_response_value: {
-    action_id: 1 // Action ID of the reward withdrawal
+  feedback_loops: [{
+    action_id: 0 // Optional action ID of the reward withdrawal
     response_index: 0 // First response
     response_key: "amount[0].amount" // Key to extract the amount
     msgs_index: 1 // Index of the message to replace
     msg_key: "amount" // Message key to replace
     value_type: "sdk.Int" // Value type
-  }
-  response_comparison: {
-    action_id: 1" // Action ID of the reward withdrawal
+  }],
+  comparison: [{
+    action_id: 0 // Optional action ID of the reward withdrawal
     response_index: 0 // First response
     response_key: "amount[0].amount" // Key to compare the amount
     value_type: "sdk.Int" // Value type
     comparison_operator: LARGER_THAN // Operator to check if amount is larger than
     comparison_operand: "200000" // Operand to compare against
-  }
+  }]
 }
 ```
 

@@ -158,7 +158,6 @@ func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string,
 		actionHistoryEntry.MsgResponses = append(actionHistoryEntry.MsgResponses, msgResponses...)
 	}
 
-	// Refactor to handle multiple FeedbackLoops
 	if len(action.Conditions.FeedbackLoops) != 0 {
 		for _, feedbackLoop := range action.Conditions.FeedbackLoops {
 			// Validate MsgsIndex and ActionID

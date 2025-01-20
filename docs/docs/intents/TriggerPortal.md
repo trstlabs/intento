@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
-title: Using TriggerPortal
-pagination_label: How to set actions using TriggerPortal
+title: Interacting with TriggerPortal
+pagination_label: How to set and manage actions using TriggerPortal
 ---
 
 TriggerPortal is a powerful dApp designed for developers, and integrators, offering an advanced solution for setting, viewing and updating intent-based actions with robust conditions, comparisons, and feedback loops. It streamlines automation, allowing users to define sophisticated workflows for various interactions.
@@ -67,7 +67,7 @@ Cosmos SDK messages contain `values` and a `typeUrl`. Message `values` are what 
 
 AuthZ grants are permissions you can grant to an external address to execute messages on your behalf. This can possibly be dangerous when given to a third party. However, with Intento the permission is given to an address that can only execute actions where you were the signer from. There are multiple checks in place for this. This eliminates the risks that arise when granting another account approval. You can grant an ICA with `MsgGrant` with the type of message that is allowed and an `expiration`, and allow the ICA to execute using `MsgExec`. The default expiration on TriggerPortal is 1 year.
 
-:::info As you can make errors, its recommended to, just like with bank transfers, to double check what you specified. Humans make errors so you take risk of a typo in the `value` fields. Double check what you are doing and it is recommended to test first if you are doing it for the first time.
+:::info Double check what you are doing and it is recommended to test first if you are doing it for the first time.
 :::
 
 ### Notes
