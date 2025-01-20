@@ -1,10 +1,12 @@
 package keeper
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
+	"github.com/trstlabs/intento/x/intent/types"
 	icqtypes "github.com/trstlabs/intento/x/interchainquery/types"
 )
 
@@ -47,13 +49,59 @@ func (c ICQCallbacks) RegisterICQCallbacks() icqtypes.QueryCallbacks {
 }
 
 func HandleActionCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	actionID, err := strconv.ParseUint(query.Id, 10, 64)
-	if err != nil {
-		return err
+	k.Logger(ctx).Debug("Action Callback", "queryId", query.Id, "callbackArgs", args)
+	// Parsing the actionID
+	parts := strings.Split(query.Id, ":")
+	if len(parts) < 3 {
+		return fmt.Errorf("invalid query ID format: %s", query.Id)
 	}
+
+	// Parse actionID
+	actionID, err := strconv.ParseUint(parts[1], 10, 64)
+	if err != nil {
+		return fmt.Errorf("failed to parse action ID: %w", err)
+	}
+
 	action, err := k.TryGetActionInfo(ctx, actionID)
 	if err != nil {
 		return err
+	}
+
+	// Parse the index
+	index, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return fmt.Errorf("failed to parse index: %w", err)
+	}
+
+	// Save to action ICQConfig
+	// Check prefix to determine the type (feedback loop or condition)
+	prefix := parts[0]
+	switch prefix {
+	case string(types.ActionFeedbackLoopQueryKeyPrefix):
+		action.Conditions.FeedbackLoops[index].ICQConfig.Response = args
+	case string(types.ActionComparisonQueryKeyPrefix): // Example prefix for conditions
+		action.Conditions.Comparisons[index].ICQConfig.Response = args
+	default:
+		return fmt.Errorf("unknown prefix in query ID: %s", prefix)
+	}
+
+	k.SetActionInfo(ctx, &action)
+
+	// Only if all responses are present (and thus it is the last one), handle the action
+	for _, comparison := range action.Conditions.Comparisons {
+		if comparison.ICQConfig != nil {
+			if comparison.ICQConfig.Response == nil {
+				return nil
+			}
+		}
+	}
+
+	for _, feedbackLoop := range action.Conditions.FeedbackLoops {
+		if feedbackLoop.ICQConfig != nil {
+			if feedbackLoop.ICQConfig.Response == nil {
+				return nil
+			}
+		}
 	}
 
 	k.HandleAction(ctx, k.Logger(ctx), action, ctx.BlockTime(), args)

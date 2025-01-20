@@ -1,7 +1,7 @@
 ---
 order: 5
-title: Using the CLI
-description: How to set up actions using the CLI
+title: Interacting with CLI
+description: How to set up actions using the Command Line Interface
 ---
 
 ### Installing the Intento deamon
@@ -12,7 +12,7 @@ You can configure the RPC endpoint with `intentod config node https://endpoint:p
 
 ## Local Action execution
 
-You can perform local execution, for example for recurring payments, using the following format:
+You can submit actions using the following format:
 
 ```bash
 
@@ -130,21 +130,21 @@ You can specify the following flags:
 | ------------------------------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `connection-id`                | Identifier for the connection end on the controller chain.                                | `connnection-123`                                                                 |
 | `host-connection-id`           | Identifier for the controller chain channel version.                                      | `connnection-456`                                                                 |
-| `label`                        | Custom label for the action, such as message type or operation name. Optional.        | `AutoTransfer`                                                                    |
+| `label`                        | Custom label for the action, such as message type or operation name. Optional.            | `AutoTransfer`                                                                    |
 | `duration`                     | Duration for which the action remains active. Optional.                                   | `48h`                                                                             |
 | `interval`                     | Custom interval between Action executions. Optional.                                      | `2h`                                                                              |
 | `start-at`                     | Custom start time for the action in UNIX time format. Optional.                           | `1625097600`                                                                      |
 | `fee-funds`                    | Coins sent to limit the fees incurred during transaction execution. Optional.             | `100atom`                                                                         |
 | `end-at`                       | Custom end time for the action in UNIX time format. Optional.                             | `1625184000`                                                                      |
 | `updating-disabled`            | Disables future updates to the action configuration.                                      | `false`                                                                           |
-| `save-msg-responses`           | Saves message responses to action history for Cosmos SDK v0.46+ chains only.         | `true`                                                                            |
-| `fallback-to-owner-balance`    | Uses owner's balance as fallback for action fees if `fee-funds` are insufficient.    | `true`                                                                            |
-| `stop-on-success`              | Stops execution of the action after a successful message.                             | `true`                                                                            |
-| `stop-on-failure`              | Stops execution of the action after a failed message.                                 | `true`                                                                            |
+| `save-responses`               | Saves message and ICQ responses to action history, for Cosmos SDK v0.46+ chains only.     | `true`                                                                            |
+| `fallback-to-owner-balance`    | Uses owner's balance as fallback for action fees if `fee-funds` are insufficient.         | `true`                                                                            |
+| `stop-on-success`              | Stops execution of the action after a successful message.                                 | `true`                                                                            |
+| `stop-on-failure`              | Stops execution of the action after a failed message.                                     | `true`                                                                            |
 | `stop-on-success-of`           | Stops execution if a specified action succeeds. Optional and requires custom logic.       | `23,58`                                                                           |
 | `stop-on-failure-of`           | Stops execution if a specified action fails. Optional and requires custom logic.          | `4536,234`                                                                        |
 | `skip-on-success-of`           | Skips the next execution if a specified action succeeds. Optional, requires custom logic. | `234,234`                                                                         |
 | `skip-on-failure-of`           | Skips the next execution if a specified action fails. Optional, requires custom logic.    | ``3456,12`                                                                        |
 | `reregister_ica_after_timeout` | Allows Action to continue execution after an IBC channel timeout. Recommended.            | `true`                                                                            |
-| `hosted-account`            | A hosted account to execute actions on a host, optional                                   | `into13f5dq5pqtwxe4dvr30m70tqcr47n95sc07uj25z5xrngvppkp52qncvzvw`                 |
-| `hosted-account-fee-limit`    | Coin to set to limit the hosted fees, optional                                            | `10uinto,100ibc/9117A26BA81E29FA4F78F57DC2BD90CD3D26848101BA880445F119B22A1E254E` |
+| `hosted-account`               | A hosted account to execute actions on a host, optional                                   | `into13f5dq5pqtwxe4dvr30m70tqcr47n95sc07uj25z5xrngvppkp52qncvzvw`                 |
+| `hosted-account-fee-limit`     | Coin to set to limit the hosted fees, optional                                            | `10uinto,100ibc/9117A26BA81E29FA4F78F57DC2BD90CD3D26848101BA880445F119B22A1E254E` |

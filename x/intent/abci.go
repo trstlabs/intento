@@ -21,8 +21,9 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	timeOfBlock := ctx.BlockHeader().Time
 	for _, action := range actions {
 		// Check if ICQConfig is present and submit an interchain query if applicable
-		if action.Conditions != nil && action.Conditions.ICQConfig != nil {
-			k.SubmitInterchainQuery(ctx, action, logger)
+		if (action.Conditions.FeedbackLoops != nil && action.Conditions.FeedbackLoops[0].ICQConfig != nil) || (action.Conditions.Comparisons != nil && action.Conditions.Comparisons[0].ICQConfig != nil) {
+			k.SubmitInterchainQueries(ctx, action, logger)
+			k.RemoveFromActionQueue(ctx, action)
 			// If the query is submitted, we skip handling this action for now
 			continue
 

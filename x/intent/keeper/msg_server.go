@@ -2,9 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/gogoproto/proto"
@@ -71,107 +73,10 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
-	portID := ""
-	if msg.ConnectionId != "" {
-		portID, err = icatypes.NewControllerPortID(msg.Owner)
-		if err != nil {
-			return nil, err
-		}
-	}
 
-	var duration time.Duration = 0
-	if msg.Duration != "" {
-		duration, err = time.ParseDuration(msg.Duration)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	var interval time.Duration = 0
-	if msg.Interval != "" {
-		interval, err = time.ParseDuration(msg.Interval)
-		if err != nil {
-			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
-		}
-	}
-
-	var startTime time.Time = ctx.BlockHeader().Time
-	if msg.StartAt != 0 {
-		startTime = time.Unix(int64(msg.StartAt), 0)
-		if err != nil {
-			return nil, err
-		}
-		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
-		}
-	}
-
-	p, err := k.GetParams(ctx)
+	portID, duration, interval, startTime, configuration, conditions, hostedConfig, err := checkAndParseActionContent(k, msg, err, ctx)
 	if err != nil {
-		panic(err)
-	}
-	if interval != 0 && (interval < p.MinActionInterval || interval > duration) {
-		return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinActionInterval, duration)
-	}
-	if duration != 0 {
-		if duration > p.MaxActionDuration {
-			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxActionDuration)
-		} else if duration < p.MinActionDuration {
-			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinActionDuration)
-		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxActionDuration)) {
-			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
-		}
-	}
-	configuration := types.ExecutionConfiguration{}
-	if msg.Configuration != nil {
-		configuration = *msg.Configuration
-	}
-
-	conditions := types.ExecutionConditions{}
-	if msg.Conditions != nil {
-		if msg.Conditions.UseResponseValue != nil {
-			if int(msg.Conditions.UseResponseValue.MsgsIndex) >= len(msg.Msgs) {
-				if msg.Msgs[0].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
-					msgExec := &authztypes.MsgExec{}
-					if err := proto.Unmarshal(msg.Msgs[0].Value, msgExec); err != nil {
-						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msg exec could not unmarshal, can not check conditions")
-					}
-
-					if int(msg.Conditions.UseResponseValue.MsgsIndex) >= len(msgExec.Msgs) {
-						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgExec msgs array: %s", msg.Conditions.UseResponseValue.MsgsIndex, msgExec.Msgs)
-
-					} else {
-						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgs array: %s", msg.Conditions.UseResponseValue.MsgsIndex, msg.Msgs)
-					}
-				}
-			}
-		}
-		if msg.Conditions.ResponseComparison != nil {
-			if int(msg.Conditions.ResponseComparison.ResponseIndex) >= len(msg.Msgs) {
-				return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "response index: %v must be shorter than length msgs array: %s", msg.Conditions.ResponseComparison.ResponseIndex, msg.Msgs)
-
-			}
-		}
-
-		if msg.Conditions.ICQConfig != nil {
-			if msg.Conditions.ICQConfig.TimeoutDuration != 0 {
-				if msg.Conditions.ICQConfig.TimeoutDuration > duration || interval != 0 && msg.Conditions.ICQConfig.TimeoutDuration > interval {
-					return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the action interval or duration")
-				}
-			}
-			if msg.Conditions.UseResponseValue == nil || !msg.Conditions.UseResponseValue.FromICQ {
-				if msg.Conditions.ResponseComparison == nil || !msg.Conditions.ResponseComparison.FromICQ {
-					return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "Query must be used in UseResponseValue or ResponseComparison")
-				}
-			}
-
-		}
-		conditions = *msg.Conditions
-	}
-
-	hostedConfig := types.HostedConfig{}
-	if msg.HostedConfig != nil {
-		hostedConfig = *msg.HostedConfig
+		return nil, err
 	}
 
 	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, hostedConfig, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
@@ -191,68 +96,16 @@ func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *ty
 		return nil, err
 	}
 
-	portID, err := icatypes.NewControllerPortID(msg.Owner)
-	if err != nil {
-		return nil, err
-	}
-
-	var duration time.Duration = 0
-	if msg.Duration != "" {
-		duration, err = time.ParseDuration(msg.Duration)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	var interval time.Duration = 0
-	if msg.Interval != "" {
-		interval, err = time.ParseDuration(msg.Interval)
-		if err != nil {
-			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
-		}
-	}
-
-	var startTime time.Time = ctx.BlockHeader().Time
-	if msg.StartAt != 0 {
-		startTime = time.Unix(int64(msg.StartAt), 0)
-		if err != nil {
-			return nil, err
-		}
-		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
-		}
-	}
-
 	msgOwner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 
-	p, err := k.GetParams(ctx)
+	portID, duration, interval, startTime, configuration, conditions, _, err := checkAndParseActionContent(k, msg, err, ctx)
 	if err != nil {
-		panic(err)
-	}
-	if interval != 0 && (interval < p.MinActionInterval || interval > duration) {
-		return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinActionInterval, duration)
-	}
-	if duration != 0 {
-		if duration > p.MaxActionDuration {
-			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxActionDuration)
-		} else if duration < p.MinActionDuration {
-			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinActionDuration)
-		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxActionDuration)) {
-			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and maximum duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
-		}
-	}
-	configuration := types.ExecutionConfiguration{}
-	if msg.Configuration != nil {
-		configuration = *msg.Configuration
+		return nil, err
 	}
 
-	conditions := types.ExecutionConditions{}
-	if msg.Conditions != nil {
-		conditions = *msg.Conditions
-	}
 	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, types.HostedConfig{}, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
 	if err != nil {
 		return nil, err
@@ -264,7 +117,7 @@ func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *ty
 // UpdateAction implements the Msg/UpdateAction interface
 func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateAction) (*types.MsgUpdateActionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
+	timeNowWindow := ctx.BlockTime().Add(time.Minute * 2)
 	action, err := k.TryGetActionInfo(ctx, msg.ID)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
@@ -290,7 +143,7 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 		if err != nil {
 			return nil, err
 		}
-		if endTime.Before(ctx.BlockTime().Add(time.Minute * 2)) {
+		if endTime.Before(timeNowWindow) {
 			return nil, types.ErrInvalidTime
 		}
 		action.EndTime = endTime
@@ -341,24 +194,11 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 	}
 
 	if msg.Conditions != nil {
-		if msg.Conditions.UseResponseValue != nil {
-			if int(msg.Conditions.UseResponseValue.MsgsIndex) >= len(msg.Msgs) {
-				if msg.Msgs[0].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
-					msgExec := &authztypes.MsgExec{}
-					if err := proto.Unmarshal(msg.Msgs[0].Value, msgExec); err != nil {
-						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msg exec could not unmarshal")
-					}
-
-					if int(msg.Conditions.UseResponseValue.MsgsIndex) >= len(msgExec.Msgs) {
-						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgExec msgs array: %s", msg.Conditions.UseResponseValue.MsgsIndex, msgExec.Msgs)
-
-					} else {
-						return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgs array: %s", msg.Conditions.UseResponseValue.MsgsIndex, msg.Msgs)
-					}
-				}
-			}
+		err = updateConditions(action.Conditions, msg.Msgs, action.EndTime.Sub(timeNowWindow), action.Interval)
+		if err != nil {
+			return nil, err
 		}
-		action.Conditions = msg.Conditions
+
 	}
 	if len(msg.Msgs) != 0 {
 		action.Msgs = msg.Msgs
@@ -466,4 +306,182 @@ func (k msgServer) UpdateHostedAccount(goCtx context.Context, msg *types.MsgUpda
 
 	//set hosted config by address on hosted key prefix
 	return &types.MsgUpdateHostedAccountResponse{}, nil
+}
+
+func checkAndParseActionContent(
+	k msgServer,
+	msg sdk.Msg,
+	err error,
+	ctx sdk.Context,
+) (string, time.Duration, time.Duration, time.Time, types.ExecutionConfiguration, types.ExecutionConditions, types.HostedConfig, error) {
+	var (
+		msgOwner         string
+		msgConnectionId  string
+		msgDuration      string
+		msgInterval      string
+		msgStartAt       uint64
+		msgConfiguration *types.ExecutionConfiguration = &types.ExecutionConfiguration{}
+		msgConditions    *types.ExecutionConditions    = &types.ExecutionConditions{}
+		hostedConfig     *types.HostedConfig           = &types.HostedConfig{}
+		msgMsgs          []*cdctypes.Any               = []*cdctypes.Any{}
+	)
+
+	switch msg := msg.(type) {
+	case *types.MsgSubmitAction:
+		// Existing logic for MsgSubmitAction
+		msgOwner = msg.Owner
+		msgDuration = msg.Duration
+		msgConnectionId = msg.ConnectionId
+		msgStartAt = msg.StartAt
+		msgInterval = msg.Interval
+		// Use fallback if hostedConfig is nil
+		if msg.HostedConfig != nil {
+			hostedConfig = msg.HostedConfig
+		}
+		// Use fallback if msgConfiguration is nil
+		if msg.Configuration != nil {
+			msgConfiguration = msg.Configuration
+		}
+		// Use fallback if msgConditions is nil
+		if msg.Conditions != nil {
+			msgConditions = msg.Conditions
+		}
+
+		msgMsgs = msg.Msgs
+
+	case *types.MsgRegisterAccountAndSubmitAction:
+		// Handle RegisterAccountAndSubmitAction
+		msgOwner = msg.Owner
+		msgDuration = msg.Duration
+		msgConnectionId = msg.ConnectionId
+		msgStartAt = msg.StartAt
+		msgInterval = msg.Interval
+		if msg.Configuration != nil {
+			msgConfiguration = msg.Configuration
+		}
+		if msg.Conditions != nil {
+			msgConditions = msg.Conditions
+		}
+
+		msgMsgs = msg.Msgs
+
+	default:
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, fmt.Errorf("unsupported message type: %T", msg)
+	}
+
+	portID := ""
+	if msgConnectionId != "" {
+		portID, err = icatypes.NewControllerPortID(msgOwner)
+		if err != nil {
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, err
+		}
+	}
+
+	var duration time.Duration = 0
+	if msgDuration != "" {
+		duration, err = time.ParseDuration(msgDuration)
+		if err != nil {
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, err
+		}
+	}
+
+	var interval time.Duration = 0
+	if msgInterval != "" {
+		interval, err = time.ParseDuration(msgInterval)
+		if err != nil {
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
+		}
+	}
+
+	var startTime time.Time = ctx.BlockHeader().Time
+	if msgStartAt != 0 {
+		startTime = time.Unix(int64(msgStartAt), 0)
+		if err != nil {
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, err
+		}
+		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+		}
+	}
+
+	p, err := k.GetParams(ctx)
+	if err != nil {
+		panic(err)
+	}
+	if interval != 0 && (interval < p.MinActionInterval || interval > duration) {
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinActionInterval, duration)
+	}
+	if duration != 0 {
+		if duration > p.MaxActionDuration {
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxActionDuration)
+		} else if duration < p.MinActionDuration {
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinActionDuration)
+		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxActionDuration)) {
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
+		}
+	}
+
+	err = updateConditions(msgConditions, msgMsgs, duration, interval)
+	if err != nil {
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, err
+	}
+
+	return portID, duration, interval, startTime,
+		*msgConfiguration,
+		*msgConditions,
+		*hostedConfig,
+		nil
+}
+
+func updateConditions(
+	msgConditions *types.ExecutionConditions,
+	msgMsgs []*cdctypes.Any,
+	duration, interval time.Duration,
+) error {
+	if msgConditions != nil && msgConditions.FeedbackLoops != nil {
+		for _, feedbackLoop := range msgConditions.FeedbackLoops {
+			// Validate MsgsIndex for FeedbackLoops
+			if int(feedbackLoop.MsgsIndex) >= len(msgMsgs) {
+				if msgMsgs[0].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+					msgExec := &authztypes.MsgExec{}
+					if err := proto.Unmarshal(msgMsgs[0].Value, msgExec); err != nil {
+						return errorsmod.Wrapf(types.ErrInvalidRequest, "msg exec could not unmarshal, cannot check conditions")
+					}
+
+					if int(feedbackLoop.MsgsIndex) >= len(msgExec.Msgs) {
+						return errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgExec msgs array: %s", feedbackLoop.MsgsIndex, msgExec.Msgs)
+					} else {
+						return errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgs array: %s", feedbackLoop.MsgsIndex, msgMsgs)
+					}
+				}
+			}
+			// Validate ICQConfig TimeoutDuration for FeedbackLoops
+			if feedbackLoop.ICQConfig != nil {
+				if feedbackLoop.ICQConfig.TimeoutDuration != 0 {
+					if feedbackLoop.ICQConfig.TimeoutDuration > duration || (interval != 0 && feedbackLoop.ICQConfig.TimeoutDuration > interval) {
+						return errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the action interval or duration")
+					}
+				}
+			}
+		}
+	}
+
+	if msgConditions != nil && msgConditions.Comparisons != nil {
+		for _, comparison := range msgConditions.Comparisons {
+			// Validate ResponseIndex for Comparisons
+			if int(comparison.ResponseIndex) >= len(msgMsgs) {
+				return errorsmod.Wrapf(types.ErrInvalidRequest, "response index: %v must be shorter than length msgs array: %s", comparison.ResponseIndex, msgMsgs)
+			}
+			// Validate ICQConfig TimeoutDuration for Comparisons
+			if comparison.ICQConfig != nil {
+				if comparison.ICQConfig.TimeoutDuration != 0 {
+					if comparison.ICQConfig.TimeoutDuration > duration || (interval != 0 && comparison.ICQConfig.TimeoutDuration > interval) {
+						return errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the action interval or duration")
+					}
+				}
+			}
+		}
+	}
+
+	return nil
 }

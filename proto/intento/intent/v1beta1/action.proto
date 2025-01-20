@@ -16,42 +16,49 @@ option (gogoproto.goproto_getters_all) = false;
 
 // ActionInfo stores the info for the action
 message ActionInfo {
-  uint64 id = 1 [ (gogoproto.customname) = "ID" ];
+  uint64 id = 1 [(gogoproto.customname) = "ID"];
   string owner = 2;
   string label = 3;
   string fee_address = 4;
-  repeated google.protobuf.Any msgs = 5
-      [ (cosmos_proto.accepts_interface) = "sdk.Msg" ];
+  repeated google.protobuf.Any msgs = 5 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
   google.protobuf.Duration interval = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag) = "interval,omitempty"
   ];
-  google.protobuf.Timestamp start_time = 7
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  google.protobuf.Timestamp exec_time = 8
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  google.protobuf.Timestamp end_time = 9
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  repeated google.protobuf.Timestamp update_history = 10
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  ICAConfig ica_config = 11 [ (gogoproto.customname) = "ICAConfig" ];
+  google.protobuf.Timestamp start_time = 7 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp exec_time = 8 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp end_time = 9 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
+  repeated google.protobuf.Timestamp update_history = 10 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
+  ICAConfig ica_config = 11 [(gogoproto.customname) = "ICAConfig"];
   ExecutionConfiguration configuration = 12;
-  HostedConfig hosted_config = 14 [ (gogoproto.customname) = "HostedConfig" ];
+  HostedConfig hosted_config = 14 [(gogoproto.customname) = "HostedConfig"];
   ExecutionConditions conditions = 15;
 }
 
 // config for self-hosted ICA
 message ICAConfig {
-  string port_id = 1 [ (gogoproto.customname) = "PortID" ];
-  string connection_id = 2 [ (gogoproto.customname) = "ConnectionID" ];
-  string host_connection_id = 3 [ (gogoproto.customname) = "HostConnectionID" ];
+  string port_id = 1 [(gogoproto.customname) = "PortID"];
+  string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
+  string host_connection_id = 3 [(gogoproto.customname) = "HostConnectionID"];
 }
 
 // config for hosted account
 message HostedConfig {
   string hosted_address = 1;
-  cosmos.base.v1beta1.Coin fee_coin_limit = 3 [ (gogoproto.nullable) = false ];
+  cosmos.base.v1beta1.Coin fee_coin_limit = 3 [(gogoproto.nullable) = false];
 }
 
 // ExecutionConfiguration provides the execution-related configuration of the
@@ -69,24 +76,26 @@ message ExecutionConfiguration {
   bool stop_on_failure = 4;
   // If true, owner account balance is used when trigger account funds run out
   bool fallback_to_owner_balance = 5;
-  // If true, allows the action to continue execution after an ibc channel times
-  // out (recommended)
-  bool reregister_ica_after_timeout = 6
-      [ (gogoproto.customname) = "ReregisterICAAfterTimeout" ];
+  // If true, allows the action to continue execution after an ibc channel times out (recommended)
+  bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];
 }
 
 // ActionHistory execution history
 message ActionHistory {
-  repeated ActionHistoryEntry history = 1 [ (gogoproto.nullable) = false ];
+  repeated ActionHistoryEntry history = 1 [(gogoproto.nullable) = false];
 }
 
 // ActionHistoryEntry provides a the history of action interchain tx call
 message ActionHistoryEntry {
-  google.protobuf.Timestamp scheduled_exec_time = 1
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  google.protobuf.Timestamp actual_exec_time = 2
-      [ (gogoproto.stdtime) = true, (gogoproto.nullable) = false ];
-  cosmos.base.v1beta1.Coin exec_fee = 3 [ (gogoproto.nullable) = false ];
+  google.protobuf.Timestamp scheduled_exec_time = 1 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp actual_exec_time = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin exec_fee = 3 [(gogoproto.nullable) = false];
   // whether all messages are executed, independent of succesfull result
   bool executed = 4;
   // timed out from execution over IBC
@@ -97,16 +106,16 @@ message ActionHistoryEntry {
   // will be empty when save_responses is false
   repeated google.protobuf.Any msg_responses = 7;
   // will be empty when save_responses is false
-  string query_response = 8;
+  repeated string query_responses = 8;
 }
 
 // ExecutionConditions provides execution conditions for the action
 message ExecutionConditions {
   // Replace value with value from message or response from another action’s
   // latest output
-  UseResponseValue use_response_value = 2;
+  repeated FeedbackLoop feedback_loops = 2;
   // Comparison with response response value
-  ResponseComparison response_comparison = 1;
+  repeated Comparison comparisons = 1;
   // optional array of dependent intents that when executing succesfully, stops
   // execution
   repeated uint64 stop_on_success_of = 5;
@@ -119,55 +128,55 @@ message ExecutionConditions {
   // optional array of dependent intents that should fail after their latest
   // call before execution is allowed
   repeated uint64 skip_on_success_of = 8;
-  ICQConfig icq_config = 9 [ (gogoproto.customname) = "ICQConfig" ];
+  bool use_and_for_comparisons = 9; //True: Use AND for combining comparisons. False: Use OR for combining comparisons.
 }
 
 // Replace value with value from message or response from another action’s
 // latest output before execution
-message UseResponseValue {
-  uint64 action_id = 1 [
-    (gogoproto.customname) = "ActionID"
-  ]; // action to get the latest response value from, optional
+message FeedbackLoop {
+  uint64 action_id = 1 [(gogoproto.customname) = "ActionID"]; // action to get the latest response value from, optional
   uint32 response_index = 3; // index of the responses
-  string response_key = 2;   // for example "Amount"
-  uint32 msgs_index = 4;     // index of the msg to replace
-  string msg_key =
-      5; // key of the message to replace (e.g. Amount[0].Amount, FromAddress)
-  string value_type = 6; // can be anything from sdk.Int, sdk.Coin, sdk.Coins,
-                         // string, []string, []sdk.Int
-  bool from_icq = 7 [ (gogoproto.customname) = "FromICQ" ];
+  string response_key = 2; // for example "Amount"
+  uint32 msgs_index = 4; // index of the msg to replace
+  string msg_key = 5; // key of the message to replace (e.g. Amount[0].Amount, FromAddress)
+  string value_type = 6; // can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int
+  //bool calculate_difference = 7; //True: calculate the difference with the previous value instead of using the value directly.
+  ICQConfig icq_config = 8 [(gogoproto.customname) = "ICQConfig"]; // config of ICQ to perform
 }
 
-// ResponseComparison is checked on the response in JSON before execution of
+// Comparison is checked on the response in JSON before execution of
 // action and outputs true or false
-message ResponseComparison {
-  uint64 action_id = 1 [
-    (gogoproto.customname) = "ActionID"
-  ]; // action to get the latest response value from, optional
-  uint32 response_index = 2; // index of the response
-  string response_key = 3;   // e.g. Amount[0].Amount, FromAddress
-
-  string value_type = 4; // can be anything from sdk.Int, sdk.Coin, sdk.Coins,
-                         // string, []string, []sdk.Int
-  ComparisonOperator comparison_operator = 5;
-  string comparison_operand = 6;
-  bool from_icq = 7
-      [ (gogoproto.customname) =
-            "FromICQ" ]; // true to use query response from icq config
+message Comparison {
+  uint64 action_id = 1 [(gogoproto.customname) = "ActionID"]; // get the latest response value from other action, optional
+  uint32 response_index = 2; // index of the message response, optional
+  string response_key = 3; // e.g. Amount[0].Amount, FromAddress, optional
+  string value_type = 4; // can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int
+  ComparisonOperator operator = 5;
+  string operand = 6;
+  //bool calculate_difference = 7; //True: Calculate the difference with the previous value.
+  ICQConfig icq_config = 8 [(gogoproto.customname) = "ICQConfig"]; // config of ICQ to perform
 }
+
+// enum AfterGetValueOperator {
+//   PARSE = 0;
+//   MULITPLY = 1;
+//   DIVIDE = 2;
+//   SUBSTRACT = 3;
+//   ADD = 4;
+// }
 
 // Comparison operators that can be used for various types.
 enum ComparisonOperator {
-  EQUAL = 0;         // Equality check (for all types)
-  CONTAINS = 1;      // Contains check (for strings, arrays, etc.)
-  NOT_CONTAINS = 2;  // Not contains check (for strings, arrays, etc.)
-  SMALLER_THAN = 3;  // Less than check (for numeric types)
-  LARGER_THAN = 4;   // Greater than check (for numeric types)
+  EQUAL = 0; // Equality check (for all types)
+  CONTAINS = 1; // Contains check (for strings, arrays, etc.)
+  NOT_CONTAINS = 2; // Not contains check (for strings, arrays, etc.)
+  SMALLER_THAN = 3; // Less than check (for numeric types)
+  LARGER_THAN = 4; // Greater than check (for numeric types)
   GREATER_EQUAL = 5; // Greater than or equal to check (for numeric types)
-  LESS_EQUAL = 6;    // Less than or equal to check (for numeric types)
-  STARTS_WITH = 7;   // Starts with check (for strings)
-  ENDS_WITH = 8;     // Ends with check (for strings)
-  NOT_EQUAL = 9;     // Not equal check (for all types)
+  LESS_EQUAL = 6; // Less than or equal to check (for numeric types)
+  STARTS_WITH = 7; // Starts with check (for strings)
+  ENDS_WITH = 8; // Ends with check (for strings)
+  NOT_EQUAL = 9; // Not equal check (for all types)
 }
 
 // config for using interchain queries
@@ -175,11 +184,11 @@ message ICQConfig {
   string connection_id = 1;
   string chain_id = 2;
   intento.interchainquery.v1.TimeoutPolicy timeout_policy = 3;
-  google.protobuf.Duration timeout_duration = 4
-      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+  google.protobuf.Duration timeout_duration = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true
+  ];
   string query_type = 5; // e.g. store/bank/key store/staking/key
-  string query_key =
-      6; // key in the store to query e.g.
-         // stakingtypes.GetValidatorKey(validatorAddressBz) idea: abstract this
-         // in TP. See x/interchainquery/types/keys.go
+  string query_key = 6; // key in the store that stores the query e.g. stakingtypes.GetValidatorKey(validatorAddressBz)
+  bytes response = 7; //should be reset after execution
 }
