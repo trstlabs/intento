@@ -75,7 +75,7 @@ func PackTxMsgAnys(sdkMsgs []sdk.Msg) ([]*codectypes.Any, error) {
 	for _, message := range sdkMsgs {
 		msg, ok := message.(proto.Message)
 		if !ok {
-			return nil, fmt.Errorf("can't proto marshal %T", message)
+			return nil, fmt.Errorf("cannot proto marshal %T", message)
 		}
 
 		any, err := codectypes.NewAnyWithValue(msg)
@@ -116,11 +116,11 @@ func (msg MsgSubmitTx) GetSigners() []sdk.AccAddress {
 // ValidateBasic implements sdk.Msg
 func (msg MsgSubmitTx) ValidateBasic() error {
 	if len(msg.Msg.GetValue()) == 0 {
-		return fmt.Errorf("can't execute an empty msg")
+		return fmt.Errorf("cannot execute an empty msg")
 	}
 
 	if msg.ConnectionId == "" {
-		return fmt.Errorf("can't execute an empty ConnectionId")
+		return fmt.Errorf("cannot execute an empty ConnectionId")
 	}
 
 	return nil
@@ -187,33 +187,15 @@ func (msg MsgSubmitAction) ValidateBasic() error {
 	if len(msg.Msgs) == 0 {
 		return fmt.Errorf("msg.Msgs is empty, at least one message is required")
 	}
-	// if len(msg.Msgs[0].GetValue()) == 0 {
-	// 	return fmt.Errorf("can't execute an empty msg")
-	// }
+
 	if len(msg.Msgs) >= 10 {
-		return fmt.Errorf("can't execute more than 9 messages")
+		return fmt.Errorf("cannot execute more than 9 messages")
 	}
 	if msg.Conditions != nil {
-		if msg.Conditions.UseResponseValue != nil {
-			if msg.Conditions.UseResponseValue.MsgKey == "" || msg.Conditions.UseResponseValue.ValueType == "" {
-				return errorsmod.Wrapf(ErrUnknownRequest, "condition UseResponseValue fields are not complete: %+v", msg.Conditions.UseResponseValue)
-			}
-			if int(msg.Conditions.UseResponseValue.ResponseIndex) >= len(msg.Msgs) {
-				return errorsmod.Wrapf(ErrInvalidRequest, "response index: %v must be shorter than length msgs array: %+v", msg.Conditions.UseResponseValue.ResponseIndex, msg.Msgs)
-			}
+		err := checkConditions(*msg.Conditions, len(msg.Msgs))
+		if err != nil {
+			return err
 		}
-
-		if msg.Conditions.ResponseComparison != nil {
-			if msg.Conditions.ResponseComparison.ComparisonOperator <= 0 || msg.Conditions.ResponseComparison.ValueType == "" {
-				return errorsmod.Wrapf(ErrUnknownRequest, "condition Comparision fields are not complete: %+v", msg.Conditions)
-			}
-		}
-		if msg.Conditions.ICQConfig != nil {
-			if msg.Conditions.ICQConfig.TimeoutDuration == 0 || msg.Conditions.ICQConfig.ChainId == "" || msg.Conditions.ICQConfig.QueryKey == "" {
-				return errorsmod.Wrapf(ErrUnknownRequest, "ICQ Config fields are not complete: %+v", msg.Conditions.ICQConfig)
-			}
-		}
-
 	}
 	if len(msg.Label) > 50 {
 		return fmt.Errorf("label must be shorter than 50 characters")
@@ -293,11 +275,12 @@ func (msg MsgRegisterAccountAndSubmitAction) ValidateBasic() error {
 	if len(msg.Msgs) == 0 {
 		return fmt.Errorf("msg.Msgs is empty, at least one message is required")
 	}
-	// if len(msg.Msgs[0].GetValue()) == 0 {
-	// 	return fmt.Errorf("can't execute an empty msg")
-	// }
-	if len(msg.Msgs) >= 10 {
-		return fmt.Errorf("can't execute more than 9 messages")
+
+	if msg.Conditions != nil {
+		err := checkConditions(*msg.Conditions, len(msg.Msgs))
+		if err != nil {
+			return err
+		}
 	}
 
 	for _, message := range msg.GetTxMsgs() {
@@ -314,6 +297,46 @@ func (msg MsgRegisterAccountAndSubmitAction) ValidateBasic() error {
 	}
 	if len(msg.Label) > 50 {
 		return fmt.Errorf("label must be shorter than 50 characters")
+	}
+	return nil
+}
+
+func checkConditions(conditions ExecutionConditions, lenMsgMsgs int) error {
+
+	if conditions.FeedbackLoops != nil {
+		if len(conditions.FeedbackLoops) > 5 {
+			return fmt.Errorf("cannot create more than 5 feedbackloops")
+		}
+		for _, feedbackLoop := range conditions.FeedbackLoops {
+			if feedbackLoop.MsgKey == "" || feedbackLoop.ValueType == "" {
+				return errorsmod.Wrapf(ErrUnknownRequest, "condition FeedbackLoops fields are not complete: %+v", feedbackLoop)
+			}
+			if int(feedbackLoop.ResponseIndex) >= lenMsgMsgs {
+				return errorsmod.Wrapf(ErrInvalidRequest, "response index: %v must be shorter than length msgs array", feedbackLoop.ResponseIndex)
+			}
+			if feedbackLoop.ICQConfig != nil {
+				if feedbackLoop.ICQConfig.TimeoutDuration == 0 || feedbackLoop.ICQConfig.ChainId == "" || feedbackLoop.ICQConfig.QueryKey == "" {
+					return errorsmod.Wrapf(ErrUnknownRequest, "Loop ICQ Config fields are not complete: %+v", feedbackLoop.ICQConfig)
+				}
+			}
+		}
+
+	}
+	if conditions.Comparisons != nil {
+		for _, comparison := range conditions.Comparisons {
+			if len(conditions.Comparisons) > 5 {
+				return fmt.Errorf("cannot create more than 5 Comparisons")
+			}
+			if comparison.Operator <= 0 || comparison.ValueType == "" {
+				return errorsmod.Wrapf(ErrUnknownRequest, "condition Comparision fields are not complete: %+v", conditions)
+			}
+			if comparison.ICQConfig != nil {
+				if comparison.ICQConfig.TimeoutDuration == 0 || comparison.ICQConfig.ChainId == "" || comparison.ICQConfig.QueryKey == "" {
+					return errorsmod.Wrapf(ErrUnknownRequest, "Comparison ICQ Config fields are not complete: %+v", comparison.ICQConfig)
+				}
+			}
+		}
+
 	}
 	return nil
 }
@@ -384,7 +407,7 @@ func (msg MsgUpdateAction) ValidateBasic() error {
 	}
 
 	if len(msg.Msgs) >= 10 {
-		return fmt.Errorf("can't execute more than 9 messages")
+		return fmt.Errorf("cannot execute more than 9 messages")
 	}
 
 	for _, message := range msg.GetTxMsgs() {

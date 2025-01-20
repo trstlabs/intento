@@ -16,8 +16,12 @@ import (
 )
 
 // CompareResponseValue compares the value of a response key based on the ResponseComparison
-func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses []*cdctypes.Any, comparison types.ResponseComparison, queryCallback []byte) (bool, error) {
-	k.Logger(ctx).Debug("response comparison", "responses", responses, "queryCallback", queryCallback)
+func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses []*cdctypes.Any, comparison types.Comparison) (bool, error) {
+	k.Logger(ctx).Debug("response comparison", "responses", responses)
+	var queryCallback []byte = nil
+	if comparison.ICQConfig != nil {
+		queryCallback = comparison.ICQConfig.Response
+	}
 	if comparison.ResponseKey == "" && queryCallback == nil {
 		return true, nil
 	}
@@ -28,7 +32,7 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses
 	var valueFromResponse interface{}
 	var err error
 
-	if queryCallback != nil && comparison.FromICQ {
+	if queryCallback != nil {
 		valueFromResponse, err = ParseICQResponse(queryCallback, comparison.ValueType)
 		if err != nil {
 			var respAny cdctypes.Any
@@ -76,11 +80,11 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses
 		}
 	}
 
-	operand, err := ParseOperand(comparison.ComparisonOperand, comparison.ValueType)
+	operand, err := ParseOperand(comparison.Operand, comparison.ValueType)
 	if err != nil {
 		return false, fmt.Errorf("error parsing operand: %v", err)
 	}
-	switch comparison.ComparisonOperator {
+	switch comparison.Operator {
 	case types.ComparisonOperator_EQUAL:
 		return reflect.DeepEqual(valueFromResponse, operand), nil
 	case types.ComparisonOperator_NOT_EQUAL:
@@ -102,147 +106,157 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses
 	case types.ComparisonOperator_ENDS_WITH:
 		return strings.HasSuffix(valueFromResponse.(string), operand.(string)), nil
 	default:
-		return false, fmt.Errorf("unsupported comparison operator: %v", comparison.ComparisonOperator)
+		return false, fmt.Errorf("unsupported comparison operator: %v", comparison.Operator)
 	}
 }
 
-// UseResponseValue replaces the value in a message with the value from a response
-func (k Keeper) UseResponseValue(ctx sdk.Context, actionID uint64, msgs *[]*cdctypes.Any, conditions *types.ExecutionConditions, queryCallback []byte) error {
-	k.Logger(ctx).Debug("use response value", "actionID", actionID, "queryCallback", queryCallback)
-	if conditions == nil || conditions.UseResponseValue == nil || conditions.UseResponseValue.ValueType == "" {
+// FeedbackLoop replaces the value in a message with the value from a response
+func (k Keeper) RunFeedbackLoops(ctx sdk.Context, actionID uint64, msgs *[]*cdctypes.Any, conditions *types.ExecutionConditions) error {
+	if conditions == nil || len(conditions.FeedbackLoops) == 0 || conditions.FeedbackLoops[0].ValueType == "" {
 		return nil
 	}
+	for _, feedbackLoop := range conditions.FeedbackLoops {
+		var queryCallback []byte = nil
+		if feedbackLoop.ICQConfig != nil {
+			queryCallback = feedbackLoop.ICQConfig.Response
+		}
 
-	useResp := conditions.UseResponseValue
-	if useResp.ActionID != 0 {
-		actionID = useResp.ActionID
+		k.Logger(ctx).Debug("running feedback loop", "actionID", actionID, "queryCallback", queryCallback)
 
-	}
+		if feedbackLoop.ResponseKey == "" && queryCallback == nil {
+			return nil
+		}
 
-	var valueFromResponse interface{}
-	var err error
-	if useResp.FromICQ && queryCallback != nil {
-		valueFromResponse, err = ParseICQResponse(queryCallback, useResp.ValueType)
-		if err != nil {
-			var respAny cdctypes.Any
-			err := k.cdc.Unmarshal(queryCallback, &respAny)
+		if feedbackLoop.ActionID != 0 {
+			actionID = feedbackLoop.ActionID
+
+		}
+
+		var valueFromResponse interface{}
+		var err error
+		if queryCallback != nil {
+			valueFromResponse, err = ParseICQResponse(queryCallback, feedbackLoop.ValueType)
 			if err != nil {
-				k.Logger(ctx).Debug("use value: could not parse query callback data", "CallbackData", queryCallback)
-				return fmt.Errorf("use value: error parsing query callback data: %v", queryCallback)
-			}
-			if respAny.Value != nil {
-
-				var resp interface{}
-				err = k.cdc.UnpackAny(&respAny, &resp)
+				var respAny cdctypes.Any
+				err := k.cdc.Unmarshal(queryCallback, &respAny)
 				if err != nil {
-					return fmt.Errorf("use value: error unpacking: %v", err)
+					k.Logger(ctx).Debug("use value: could not parse query callback data", "CallbackData", queryCallback)
+					return fmt.Errorf("use value: error parsing query callback data: %v", queryCallback)
 				}
-				valueFromResponse, err = ParseResponseValue(queryCallback, useResp.ResponseKey, useResp.ValueType)
-				if err != nil {
-					return err
+				if respAny.Value != nil {
+
+					var resp interface{}
+					err = k.cdc.UnpackAny(&respAny, &resp)
+					if err != nil {
+						return fmt.Errorf("use value: error unpacking: %v", err)
+					}
+					valueFromResponse, err = ParseResponseValue(queryCallback, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
+					if err != nil {
+						return err
+					}
 				}
+
 			}
 
+		} else {
+			history, err := k.GetActionHistory(ctx, actionID)
+			if err != nil {
+				return err
+			}
+			if len(history) == 0 {
+				return nil
+			}
+			responsesAnys := history[len(history)-1].MsgResponses
+			if len(responsesAnys) == 0 {
+				return nil
+			}
+			if int(feedbackLoop.ResponseIndex+1) < len(responsesAnys) {
+				return fmt.Errorf("response index out of range")
+			}
+
+			protoMsg, err := k.interfaceRegistry.Resolve(responsesAnys[feedbackLoop.ResponseIndex].TypeUrl)
+			if err != nil {
+				return fmt.Errorf("failed to resolve type URL %s: %w", responsesAnys[feedbackLoop.ResponseIndex].TypeUrl, err)
+			}
+
+			err = proto.Unmarshal(responsesAnys[feedbackLoop.ResponseIndex].Value, protoMsg)
+			if err != nil {
+				return err
+			}
+
+			//k.Logger(ctx).Debug("use response value", "protoMsg", protoMsg.String(), "TypeUrl", responsesAnys[feedbackLoop.ResponseIndex].TypeUrl)
+			valueFromResponse, err = ParseResponseValue(protoMsg, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
+			if err != nil {
+				return err
+			}
 		}
 
-	} else {
-		history, err := k.GetActionHistory(ctx, actionID)
+		var msgToInterface sdk.Msg
+		msgAny := (*msgs)[feedbackLoop.MsgsIndex]
+		if msgAny.TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+			msgExec := &authztypes.MsgExec{}
+			if err := proto.Unmarshal(msgAny.Value, msgExec); err != nil {
+				return err
+			}
+			msgAny = msgExec.Msgs[0]
+		}
+
+		err = k.cdc.UnpackAny(msgAny, &msgToInterface)
 		if err != nil {
 			return err
 		}
-		if len(history) == 0 {
-			return nil
-		}
-		responsesAnys := history[len(history)-1].MsgResponses
-		if len(responsesAnys) == 0 {
-			return nil
-		}
-		if int(useResp.ResponseIndex+1) < len(responsesAnys) {
-			return fmt.Errorf("response index out of range")
+
+		k.Logger(ctx).Debug("use response value", "interface", msgToInterface, "valueFromResponse", valueFromResponse)
+
+		msgTo := reflect.ValueOf(msgToInterface)
+
+		// If the value is a pointer, get the element it points to
+		if msgTo.Kind() == reflect.Ptr {
+			msgTo = msgTo.Elem()
 		}
 
-		protoMsg, err := k.interfaceRegistry.Resolve(responsesAnys[useResp.ResponseIndex].TypeUrl)
-		if err != nil {
-			return fmt.Errorf("failed to resolve type URL %s: %w", responsesAnys[useResp.ResponseIndex].TypeUrl, err)
+		// Ensure we're dealing with a struct
+		if msgTo.Kind() != reflect.Struct {
+			// k.Logger(ctx).Debug("use response value", "msgTo.Kind", msgTo.Kind())
+			return fmt.Errorf("expected a struct, got %v", msgTo.Kind())
 		}
 
-		err = proto.Unmarshal(responsesAnys[useResp.ResponseIndex].Value, protoMsg)
-		if err != nil {
-			return err
-		}
-
-		k.Logger(ctx).Debug("use response value", "protoMsg", protoMsg.String(), "TypeUrl", responsesAnys[useResp.ResponseIndex].TypeUrl)
-		valueFromResponse, err = ParseResponseValue(protoMsg, useResp.ResponseKey, useResp.ValueType)
+		fieldToReplace, err := traverseFields(msgToInterface, feedbackLoop.MsgKey)
 		if err != nil {
 			return err
 		}
-	}
-	var msgToInterface sdk.Msg
+		//k.Logger(ctx).Debug("use response value", "fieldToReplace", fieldToReplace)
 
-	msgAny := (*msgs)[useResp.MsgsIndex]
-	if msgAny.TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
-		msgExec := &authztypes.MsgExec{}
-		if err := proto.Unmarshal(msgAny.Value, msgExec); err != nil {
-			return err
+		// Set the new value
+		if fieldToReplace.CanSet() && reflect.ValueOf(valueFromResponse).Type().ConvertibleTo(fieldToReplace.Type()) && fieldToReplace.Type().AssignableTo(reflect.ValueOf(valueFromResponse).Type()) {
+			fieldToReplace.Set(reflect.ValueOf(valueFromResponse))
+		} else {
+			return fmt.Errorf("field %v cannot be set by value %v", fieldToReplace, valueFromResponse)
 		}
-		msgAny = msgExec.Msgs[0]
-	}
 
-	err = k.cdc.UnpackAny(msgAny, &msgToInterface)
-	if err != nil {
-		return err
-	}
-
-	k.Logger(ctx).Debug("use response value", "interface", msgToInterface, "valueFromResponse", valueFromResponse)
-
-	msgTo := reflect.ValueOf(msgToInterface)
-
-	// If the value is a pointer, get the element it points to
-	if msgTo.Kind() == reflect.Ptr {
-		msgTo = msgTo.Elem()
-	}
-
-	// Ensure we're dealing with a struct
-	if msgTo.Kind() != reflect.Struct {
-		// k.Logger(ctx).Debug("use response value", "msgTo.Kind", msgTo.Kind())
-		return fmt.Errorf("expected a struct, got %v", msgTo.Kind())
-	}
-
-	fieldToReplace, err := traverseFields(msgToInterface, useResp.MsgKey)
-	if err != nil {
-		return err
-	}
-	k.Logger(ctx).Debug("use response value", "fieldToReplace", fieldToReplace)
-
-	// Set the new value
-	if fieldToReplace.CanSet() && reflect.ValueOf(valueFromResponse).Type().ConvertibleTo(fieldToReplace.Type()) && fieldToReplace.Type().AssignableTo(reflect.ValueOf(valueFromResponse).Type()) {
-		fieldToReplace.Set(reflect.ValueOf(valueFromResponse))
-	} else {
-		return fmt.Errorf("field %v cannot be set by value %v", fieldToReplace, valueFromResponse)
-	}
-
-	newMsgAny, err := cdctypes.NewAnyWithValue(msgToInterface)
-	if err != nil {
-		// k.Logger(ctx).Debug("use response value", "err", err, "newMsgAny", newMsgAny)
-		return err
-	}
-
-	if (*msgs)[useResp.MsgsIndex].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
-		msgExec := &authztypes.MsgExec{}
-		if err := proto.Unmarshal((*msgs)[useResp.MsgsIndex].Value, msgExec); err != nil {
-			return err
-		}
-		msgExec.Msgs[0] = newMsgAny
-		k.Logger(ctx).Debug("use response value", "msgExec", msgExec.String())
-		msgExecAnys, err := types.PackTxMsgAnys([]sdk.Msg{msgExec})
+		newMsgAny, err := cdctypes.NewAnyWithValue(msgToInterface)
 		if err != nil {
+			// k.Logger(ctx).Debug("use response value", "err", err, "newMsgAny", newMsgAny)
 			return err
 		}
-		newMsgAny = msgExecAnys[0]
-	}
-	k.Logger(ctx).Debug("use response value", "newMsgAny", newMsgAny.TypeUrl)
 
-	(*msgs)[useResp.MsgsIndex] = newMsgAny
+		if (*msgs)[feedbackLoop.MsgsIndex].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+			msgExec := &authztypes.MsgExec{}
+			if err := proto.Unmarshal((*msgs)[feedbackLoop.MsgsIndex].Value, msgExec); err != nil {
+				return err
+			}
+			msgExec.Msgs[0] = newMsgAny
+			k.Logger(ctx).Debug("use response value", "msgExec", msgExec.String())
+			msgExecAnys, err := types.PackTxMsgAnys([]sdk.Msg{msgExec})
+			if err != nil {
+				return err
+			}
+			newMsgAny = msgExecAnys[0]
+		}
+		//k.Logger(ctx).Debug("use response value", "newMsgAny", newMsgAny.TypeUrl)
+
+		(*msgs)[feedbackLoop.MsgsIndex] = newMsgAny
+	}
 	return nil
 }
 

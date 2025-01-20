@@ -158,17 +158,27 @@ func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string,
 		actionHistoryEntry.MsgResponses = append(actionHistoryEntry.MsgResponses, msgResponses...)
 	}
 
-	//trigger remaining execution
-	if action.Conditions != nil && action.Conditions.UseResponseValue != nil && action.Conditions.UseResponseValue.MsgsIndex != 0 && action.Conditions.UseResponseValue.ActionID == 0 && len(actionHistoryEntry.MsgResponses)-1 < int(action.Conditions.UseResponseValue.MsgsIndex) {
-		tmpAction := action
-		tmpAction.Msgs = action.Msgs[action.Conditions.UseResponseValue.MsgsIndex:]
+	// Refactor to handle multiple FeedbackLoops
+	if len(action.Conditions.FeedbackLoops) != 0 {
+		for _, feedbackLoop := range action.Conditions.FeedbackLoops {
+			// Validate MsgsIndex and ActionID
+			if feedbackLoop.MsgsIndex == 0 || feedbackLoop.ActionID != 0 {
+				continue // Skip invalid FeedbackLoops or if ActionID is set to non-default
+			}
 
-		err := triggerRemainingMsgs(k, ctx, tmpAction, actionHistoryEntry)
+			// Ensure MsgsIndex is within bounds
+			if len(actionHistoryEntry.MsgResponses)-1 < int(feedbackLoop.MsgsIndex) {
+				continue // Skip if MsgsIndex exceeds available responses
+			}
 
-		if err != nil {
-			return err
+			// Trigger remaining execution for the valid FeedbackLoop
+			tmpAction := action
+			tmpAction.Msgs = action.Msgs[feedbackLoop.MsgsIndex:]
+
+			if err := triggerRemainingMsgs(k, ctx, tmpAction, actionHistoryEntry); err != nil {
+				return err // Return on the first encountered error
+			}
 		}
-		return nil
 	}
 
 	k.SetCurrentActionHistoryEntry(ctx, action.ID, actionHistoryEntry)
@@ -179,9 +189,9 @@ func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string,
 func triggerRemainingMsgs(k Keeper, ctx sdk.Context, action types.ActionInfo, actionHistoryEntry *types.ActionHistoryEntry) error {
 	var errorString = ""
 
-	allowed, err := k.allowedToExecute(ctx, action, nil)
+	allowed, err := k.allowedToExecute(ctx, action)
 	if !allowed {
-		k.recordActionNotAllowed(ctx, &action, ctx.BlockTime(), fmt.Sprintf(types.ErrActionConditions, err.Error()))
+		k.recordActionNotAllowed(ctx, &action, ctx.BlockTime(), err)
 
 	}
 
@@ -196,7 +206,7 @@ func triggerRemainingMsgs(k Keeper, ctx sdk.Context, action types.ActionInfo, ac
 		errorString = appendError(errorString, (types.ErrBalanceTooLow + feeDenom))
 	}
 
-	err = k.UseResponseValue(cacheCtx, action.ID, &action.Msgs, action.Conditions, nil)
+	err = k.RunFeedbackLoops(cacheCtx, action.ID, &action.Msgs, action.Conditions)
 	if err != nil {
 		return errorsmod.Wrap(err, fmt.Sprintf(types.ErrSettingActionResult, err))
 	}
@@ -337,98 +347,4 @@ func (k Keeper) SetActionError(ctx sdk.Context, sourcePort string, channelID str
 
 	actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, err)
 	k.SetCurrentActionHistoryEntry(ctx, id, actionHistoryEntry)
-}
-
-// allowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
-// insert the next entry when execution has not happend yet
-func (k Keeper) allowedToExecute(ctx sdk.Context, action types.ActionInfo, queryCallback []byte) (bool, error) {
-	allowedToExecute := true
-	shouldRecur := action.ExecTime.Before(action.EndTime) && action.ExecTime.Add(action.Interval).Before(action.EndTime)
-	conditions := action.Conditions
-	if conditions == nil {
-		return true, nil
-	}
-	if conditions.ResponseComparison != nil {
-		history, err := k.GetActionHistory(ctx, conditions.ResponseComparison.ActionID)
-		if err != nil {
-			allowedToExecute = false
-			return allowedToExecute, err
-		}
-		responses := history[len(history)-1].MsgResponses
-		isTrue, err := k.CompareResponseValue(ctx, action.ID, responses, *conditions.ResponseComparison, queryCallback)
-		if !isTrue {
-			allowedToExecute = false
-			return allowedToExecute, err
-		}
-	}
-	//check if dependent tx executions succeeded
-	for _, actionId := range conditions.StopOnSuccessOf {
-		history, err := k.GetActionHistory(ctx, actionId)
-		if err != nil {
-			allowedToExecute = false
-		}
-		if len(history) != 0 {
-			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
-			if !success {
-				allowedToExecute = false
-				shouldRecur = false
-			}
-		}
-	}
-
-	//check if dependent tx executions failed
-	for _, actionId := range conditions.StopOnFailureOf {
-		history, err := k.GetActionHistory(ctx, actionId)
-		if err != nil {
-			allowedToExecute = false
-		}
-		if len(history) != 0 {
-			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
-			if success {
-				allowedToExecute = false
-				shouldRecur = false
-			}
-		}
-	}
-
-	//check if dependent tx executions succeeded
-	for _, actionId := range conditions.SkipOnFailureOf {
-		history, err := k.GetActionHistory(ctx, actionId)
-		if err != nil {
-			allowedToExecute = false
-		}
-		if len(history) != 0 {
-			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
-			if !success {
-				allowedToExecute = false
-			}
-		}
-	}
-
-	//check if dependent tx executions failed
-	for _, actionId := range conditions.SkipOnSuccessOf {
-		history, err := k.GetActionHistory(ctx, actionId)
-		if err != nil {
-			allowedToExecute = false
-		}
-		if len(history) != 0 {
-			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
-			if success {
-				allowedToExecute = false
-			}
-		}
-	}
-
-	//if not allowed to execute, remove entry
-	if !allowedToExecute {
-		//insert the next entry given a recurring tx
-		if shouldRecur {
-			// adding next execTime and a new entry into the queue based on interval
-			k.InsertActionQueue(ctx, action.ID, action.ExecTime.Add(action.Interval))
-			action.ExecTime = action.ExecTime.Add(action.Interval)
-			k.SetActionInfo(ctx, &action)
-		}
-	}
-	return allowedToExecute, nil
-
 }

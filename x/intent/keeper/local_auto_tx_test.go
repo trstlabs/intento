@@ -78,7 +78,7 @@ func TestSendLocalTxAutocompound(t *testing.T) {
 	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward, msgDelegate})
-	actionInfo.Conditions = &types.ExecutionConditions{UseResponseValue: &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "sdk.Int"}}
+	actionInfo.Conditions = &types.ExecutionConditions{FeedbackLoops: []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "sdk.Int"}}}
 	delegations, _ := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
 	require.Equal(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
 	executedLocally, _, err := keeper.TriggerAction(ctx, &actionInfo)
@@ -95,7 +95,7 @@ func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.A
 	val := vals[0]
 	val.Tokens = math.NewInt(5000)
 	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
-	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	valAddr, _ := sdk.ValAddressFromBech32(val.OperatorAddress)
 	val.Commission = stakingtypes.NewCommission(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDec(0))
 
 	keepers.stakingKeeper.SetValidator(ctx, val)

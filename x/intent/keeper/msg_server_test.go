@@ -223,7 +223,7 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 					ToAddress:   TestOwnerAddress,
 					Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 				}
-				conditions = types.ExecutionConditions{UseResponseValue: &types.UseResponseValue{MsgsIndex: 0, MsgKey: "amount", ResponseIndex: 0, ResponseKey: "", FromICQ: true, ValueType: "sdk.Coin"}, ICQConfig: &types.ICQConfig{ChainId: suite.HostChain.ChainID, QueryType: "store/bank/key", QueryKey: "fake_key_owner", TimeoutPolicy: 1, TimeoutDuration: time.Second * 30}}
+				conditions = types.ExecutionConditions{FeedbackLoops: []*types.FeedbackLoop{{MsgsIndex: 0, MsgKey: "amount", ResponseIndex: 0, ResponseKey: "", ValueType: "sdk.Coin", ICQConfig: &types.ICQConfig{ChainId: suite.HostChain.ChainID, QueryType: "store/bank/key", QueryKey: "fake_key_owner", TimeoutPolicy: 1, TimeoutDuration: time.Second * 30}}}}
 			}, true,
 		},
 		{
@@ -281,10 +281,10 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 				sdkMsg = transfertypes.NewMsgTransfer(path.EndpointA.ChannelConfig.PortID, path.EndpointA.ChannelID, sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)), owner, suite.HostChain.SenderAccount.GetAddress().String(), suite.HostChain.GetTimeoutHeight(), 0, "")
 			}
 
-			if conditions.ICQConfig != nil {
+			if conditions.FeedbackLoops != nil && conditions.FeedbackLoops[0].ICQConfig != nil {
 				path = NewTransferPath(suite.IntentoChain, suite.HostChain)
 				suite.Coordinator.SetupConnections(path)
-				conditions.ICQConfig.ConnectionId = path.EndpointA.ConnectionID
+				conditions.FeedbackLoops[0].ICQConfig.ConnectionId = path.EndpointA.ConnectionID
 			}
 
 			if noOwner {
@@ -337,9 +337,8 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 			suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(interval)
 			action := actionKeeper.GetActionInfo(ctx, 1)
 
-			if action.Conditions != nil && action.Conditions.ICQConfig != nil {
-				actionKeeper.SubmitInterchainQuery(ctx, action, actionKeeper.Logger(ctx))
-
+			if len(action.Conditions.FeedbackLoops) != 0 && action.Conditions.FeedbackLoops[0].ICQConfig != nil {
+				actionKeeper.SubmitInterchainQueries(ctx, action, actionKeeper.Logger(ctx))
 			}
 			actionKeeper.HandleAction(ctx, actionKeeper.Logger(ctx), action, ctx.BlockTime(), nil)
 			suite.IntentoChain.NextBlock()
@@ -363,8 +362,8 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 				}
 
 			}
-			if msg.Conditions.ICQConfig != nil {
-				msgQueryResp, _ := suite.SetupMsgSubmitQueryResponse(*msg.Conditions.ICQConfig, action.ID)
+			if len(action.Conditions.FeedbackLoops) != 0 && msg.Conditions.FeedbackLoops[0].ICQConfig != nil {
+				msgQueryResp, _ := suite.SetupMsgSubmitQueryResponse(*msg.Conditions.FeedbackLoops[0].ICQConfig, action.ID)
 
 				msgSrvICQ := icqkeeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).InterchainQueryKeeper)
 				_, err := msgSrvICQ.SubmitQueryResponse(ctx, &msgQueryResp)

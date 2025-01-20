@@ -29,8 +29,8 @@ func TestParseCoin(t *testing.T) {
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
-	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin"}
-	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
+	actionInfo.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin"}}
+	err = keeper.RunFeedbackLoops(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
@@ -60,8 +60,8 @@ func TestParseInnerString(t *testing.T) {
 	msgDelegate.Amount.Denom = "test"
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount.Denom, "test")
-	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", MsgsIndex: 0, MsgKey: "Amount.Denom", ValueType: "string"}
-	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
+	actionInfo.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", MsgsIndex: 0, MsgKey: "Amount.Denom", ValueType: "string"}}
+	err = keeper.RunFeedbackLoops(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
@@ -91,8 +91,8 @@ func TestParseInnerStringFail(t *testing.T) {
 	msgDelegate.Amount.Denom = "test"
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount.Denom, "test")
-	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 0, MsgKey: "Amount.Denom", ValueType: "string"}
-	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
+	actionInfo.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 0, MsgKey: "Amount.Denom", ValueType: "string"}}
+	err = keeper.RunFeedbackLoops(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
 	require.Error(t, err)
 
 }
@@ -115,8 +115,8 @@ func TestParseInnerInt(t *testing.T) {
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
-	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "sdk.Int"}
-	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
+	actionInfo.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "sdk.Int"}}
+	err = keeper.RunFeedbackLoops(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
@@ -142,8 +142,8 @@ func TestCompareInnerIntTrue(t *testing.T) {
 	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", ComparisonOperator: 0, ComparisonOperand: "101"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
+	actionInfo.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", Operator: 0, Operand: "101"}}
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.Comparisons[0])
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -164,8 +164,8 @@ func TestCompareCoinTrue(t *testing.T) {
 	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount.[0]", ValueType: "sdk.Coin", ComparisonOperator: 0, ComparisonOperand: "101stake"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
+	actionInfo.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0]", ValueType: "sdk.Coin", Operator: 0, Operand: "101stake"}}
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.Comparisons[0])
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -186,8 +186,8 @@ func TestCompareIntFalse(t *testing.T) {
 	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", ComparisonOperator: 0, ComparisonOperand: "100000000000"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
+	actionInfo.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", Operator: 0, Operand: "100000000000"}}
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.Comparisons[0])
 	require.NoError(t, err)
 
 	require.False(t, boolean)
@@ -208,8 +208,8 @@ func TestCompareDenomString(t *testing.T) {
 	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", ValueType: "string", ComparisonOperator: 0, ComparisonOperand: "stake"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
+	actionInfo.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", ValueType: "string", Operator: 0, Operand: "stake"}}
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.Comparisons[0])
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -230,8 +230,8 @@ func TestInvalidResponseIndex(t *testing.T) {
 	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 1, ResponseKey: "Amount.[0].Denom", ValueType: "string", ComparisonOperator: 0, ComparisonOperand: "sta"}
-	_, err = keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
+	actionInfo.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 1, ResponseKey: "Amount.[0].Denom", ValueType: "string", Operator: 0, Operand: "sta"}}
+	_, err = keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.Comparisons[0])
 	require.Error(t, err)
 
 	require.Contains(t, err.Error(), "number of responses")
@@ -252,8 +252,8 @@ func TestCompareDenomStringContains(t *testing.T) {
 	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", ValueType: "string", ComparisonOperator: 1, ComparisonOperand: "sta"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
+	actionInfo.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Denom", ValueType: "string", Operator: 1, Operand: "sta"}}
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.Comparisons[0])
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -274,8 +274,8 @@ func TestCompareArrayCoinsContainsTrue(t *testing.T) {
 	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", ComparisonOperator: 1, ComparisonOperand: "101stake"}
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, nil)
+	actionInfo.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", Operator: 1, Operand: "101stake"}}
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.Comparisons[0])
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -287,8 +287,8 @@ func TestCompareArrayCoinsContainsFalse(t *testing.T) {
 	msgResponse := distrtypes.MsgWithdrawDelegatorRewardResponse{Amount: fakeCoins}
 	any, _ := cdctypes.NewAnyWithValue(&msgResponse)
 	msgResponses := []*cdctypes.Any{any}
-	responseComparison := &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", ComparisonOperator: 0, ComparisonOperand: "100aaa"}
-	boolean, err := keeper.CompareResponseValue(ctx, 1, msgResponses, *responseComparison, nil)
+	responseComparison := []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", Operator: 0, Operand: "100aaa"}}
+	boolean, err := keeper.CompareResponseValue(ctx, 1, msgResponses, *responseComparison[0])
 	require.NoError(t, err)
 
 	require.False(t, boolean)
@@ -300,8 +300,8 @@ func TestCompareArrayEquals(t *testing.T) {
 	msgResponse := distrtypes.MsgWithdrawDelegatorRewardResponse{Amount: fakeCoins}
 	any, _ := cdctypes.NewAnyWithValue(&msgResponse)
 	msgResponses := []*cdctypes.Any{any}
-	responseComparison := &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", ComparisonOperator: 0, ComparisonOperand: "1000abc,3000000000degf"}
-	boolean, err := keeper.CompareResponseValue(ctx, 1, msgResponses, *responseComparison, nil)
+	responseComparison := []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount", ValueType: "sdk.Coins", Operator: 0, Operand: "1000abc,3000000000degf"}}
+	boolean, err := keeper.CompareResponseValue(ctx, 1, msgResponses, *responseComparison[0])
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -321,10 +321,11 @@ func TestParseAmountICQ(t *testing.T) {
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
-	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "sdk.Int", FromICQ: true}
+	actionInfo.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "sdk.Int"}}
 	queryCallback, err := math.NewInt(39999999999).Marshal()
 	require.NoError(t, err)
-	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, queryCallback)
+	actionInfo.Conditions.FeedbackLoops[0].ICQConfig = &types.ICQConfig{Response: queryCallback}
+	err = keeper.RunFeedbackLoops(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
@@ -345,11 +346,12 @@ func TestParseCoinICQ(t *testing.T) {
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
-	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin", FromICQ: true}
+	actionInfo.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin"}}
 	coin := sdk.NewCoin("stake", math.NewInt(39999999999))
 	queryCallback, err := coin.Marshal()
 	require.NoError(t, err)
-	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, queryCallback)
+	actionInfo.Conditions.FeedbackLoops[0].ICQConfig = &types.ICQConfig{Response: queryCallback}
+	err = keeper.RunFeedbackLoops(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
@@ -370,10 +372,10 @@ func TestParseStringICQ(t *testing.T) {
 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
-	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount.Denom", ValueType: "string", FromICQ: true}
-	text := []byte("fuzz")
-
-	err := keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, text)
+	actionInfo.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount.Denom", ValueType: "string", ICQConfig: &types.ICQConfig{ConnectionId: "connection-0", ChainId: "test"}}}
+	queryCallback := []byte("fuzz")
+	actionInfo.Conditions.FeedbackLoops[0].ICQConfig = &types.ICQConfig{Response: queryCallback}
+	err := keeper.RunFeedbackLoops(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
@@ -395,12 +397,13 @@ func TestCompareCoinTrueICQ(t *testing.T) {
 	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
 
 	actionInfo.Conditions = &types.ExecutionConditions{}
-	actionInfo.Conditions.ResponseComparison = &types.ResponseComparison{ResponseIndex: 0, ResponseKey: "", ValueType: "sdk.Coin", ComparisonOperator: 4, ComparisonOperand: "101stake", FromICQ: true}
+	actionInfo.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "", ValueType: "sdk.Coin", Operator: 4, Operand: "101stake"}}
 
 	coin := sdk.NewCoin("stake", math.NewInt(39999999999))
 	queryCallback, err := coin.Marshal()
 	require.NoError(t, err)
-	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.ResponseComparison, queryCallback)
+	actionInfo.Conditions.Comparisons[0].ICQConfig = &types.ICQConfig{Response: queryCallback}
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.Comparisons[0])
 	require.NoError(t, err)
 
 	require.True(t, boolean)
@@ -424,8 +427,8 @@ func TestCompareCoinTrueICQ(t *testing.T) {
 // 	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 // 	actionInfo.Conditions = &types.ExecutionConditions{}
 // 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
-// 	actionInfo.Conditions.UseResponseValue = &types.UseResponseValue{ResponseIndex: 0, ResponseKey: "Amount", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin"}
-// 	err = keeper.UseResponseValue(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions, nil)
+// 	actionInfo.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount", MsgsIndex: 0, MsgKey: "Amount", ValueType: "sdk.Coin"}
+// 	err = keeper.RunFeedbackLoops(ctx, actionInfo.ID, &actionInfo.Msgs, actionInfo.Conditions)
 // 	require.NoError(t, err)
 // 	err = keeper.cdc.UnpackAny(actionInfo.Msgs[0], &msgDelegate)
 // 	require.NoError(t, err)
