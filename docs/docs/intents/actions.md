@@ -68,6 +68,23 @@ Submitting an action with MsgSubmitAction can be done with the following input:
 - When `ConnectionID`,`HostConnectionID` and `HostedAccount` are not provided, it is assumed that `Msgs` are local messages to be executed on Intento.
 - `HostedAccount` requires `HostedAccountFeeLimit`
 
+## Action History
+
+The `Action History` captures the timeline and details of every executed action and it's messages, providing transparency and accountability. By tracking scheduled times, actual execution times, outcomes, and errors, actions can be monitored and acted upon.
+
+### Anatomy of an Action History Entry
+
+| **Field**              | **Description**                                                                                                   |
+|------------------------|-------------------------------------------------------------------------------------------------------------------|
+| `scheduled_exec_time`  | Specifies the time at which the action was originally scheduled for execution.                                    |
+| `actual_exec_time`     | The time at which the action was actually triggered. This provides insight into delays or on-time performance.     |
+| `exec_fee`             | The fee incurred for executing the action. This is represented as a `Coin` object and is non-nullable.            |
+| `executed`             | A boolean flag indicating whether all messages within the action were executed, regardless of the outcome.        |
+| `timed_out`            | A boolean flag that specifies if the action timed out during execution over IBC.                                  |
+| `errors`               | A list of error messages encountered during the execution. If empty, the execution was successful.                |
+| `msg_responses`        | A collection of responses for the executed messages. This field remains empty if `save_responses` is set to false.|
+| `query_responses`      | Contains responses to any queries performed. This field is also empty if `save_responses` is false.               |
+
 ## Execution Process
 
 A high level overview of the process from action submission to triggering messages across chains.
