@@ -52,7 +52,7 @@ func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.Ac
 
 	}
 
-	k.addActionHistory(cacheCtx, &action, timeOfBlock, fee, executedLocally, msgResponses, errorString)
+	k.addActionHistoryEntry(cacheCtx, &action, timeOfBlock, fee, executedLocally, msgResponses, errorString)
 
 	writeCtx()
 
@@ -68,13 +68,14 @@ func (k Keeper) HandleAction(ctx sdk.Context, logger log.Logger, action types.Ac
 // submitInterchainQuery submits an interchain query when ICQConfig is present
 func (k Keeper) SubmitInterchainQueries(ctx sdk.Context, action types.ActionInfo, logger log.Logger) {
 	for i, feedbackLoop := range action.Conditions.FeedbackLoops {
+		if feedbackLoop.ICQConfig == nil {
+			continue
+		}
 		icqID := fmt.Sprintf("%s:%d:%d", types.ActionFeedbackLoopQueryKeyPrefix, action.ID, i)
-
 		_, found := k.interchainQueryKeeper.GetQuery(ctx, icqID)
 		if found {
 			return //(or continue)
 		}
-
 		err := k.SubmitInterchainQuery(ctx, *feedbackLoop.ICQConfig, logger, icqID)
 		if err != nil {
 			k.SetActionHistoryEntry(ctx, action.ID, &types.ActionHistoryEntry{Errors: []string{fmt.Sprint("Error submitting ICQ: decoding Base64 string: ", err)}})
@@ -83,12 +84,14 @@ func (k Keeper) SubmitInterchainQueries(ctx sdk.Context, action types.ActionInfo
 	}
 
 	for i, comparison := range action.Conditions.Comparisons {
+		if comparison.ICQConfig == nil {
+			continue
+		}
 		icqID := fmt.Sprintf("%s:%d:%d", types.ActionFeedbackLoopQueryKeyPrefix, action.ID, i)
 		_, found := k.interchainQueryKeeper.GetQuery(ctx, icqID)
 		if found {
 			return
 		}
-
 		err := k.SubmitInterchainQuery(ctx, *comparison.ICQConfig, logger, icqID)
 		if err != nil {
 			k.SetActionHistoryEntry(ctx, action.ID, &types.ActionHistoryEntry{Errors: []string{fmt.Sprint("Error submitting ICQ: decoding Base64 string: ", err)}})
@@ -100,7 +103,6 @@ func (k Keeper) SubmitInterchainQueries(ctx sdk.Context, action types.ActionInfo
 
 // submitInterchainQuery submits an interchain query when ICQConfig is present
 func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, icqConfig types.ICQConfig, logger log.Logger, id string) error {
-
 	requestData, err := base64.StdEncoding.DecodeString(icqConfig.QueryKey)
 	if err != nil {
 		return err
@@ -184,153 +186,162 @@ func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, action *types.ActionInfo
 	}
 	return executedLocally, errorString
 }
-
-// allowedToExecute checks if execution conditons are met, e.g. if dependent transactions have executed on the host chain
-// insert the next entry when execution has not happend yet
 func (k Keeper) allowedToExecute(ctx sdk.Context, action types.ActionInfo) (bool, error) {
-	allowedToExecute := true
 	shouldRecur := action.ExecTime.Before(action.EndTime) && action.ExecTime.Add(action.Interval).Before(action.EndTime)
 	conditions := action.Conditions
 	if conditions == nil {
 		return true, nil
 	}
-	if conditions.Comparisons != nil {
-		if conditions.UseAndForComparisons {
-			// AND logic: All comparisons must evaluate to true
-			for _, comparison := range conditions.Comparisons {
-				actionID := action.ID
-				if comparison.ActionID != 0 {
-					actionID = comparison.ActionID
-				}
-				if !k.HasActionHistoryEntry(ctx, actionID) {
-					continue
-				}
-				history, err := k.GetActionHistory(ctx, actionID)
-				if err != nil {
-					return false, err
-				}
 
-				responses := history[len(history)-1].MsgResponses
-				isTrue, err := k.CompareResponseValue(ctx, action.ID, responses, *comparison)
-				if err != nil || !isTrue {
-					return false, err
-				}
-			}
-		} else {
-			// OR logic: At least one comparison must evaluate to true
-			allowedToExecute = false // Default to false, require a true comparison
-			for _, comparison := range conditions.Comparisons {
-				actionID := action.ID
-				if comparison.ActionID != 0 {
-					actionID = comparison.ActionID
-				} else if !k.HasActionHistoryEntry(ctx, actionID) {
-					allowedToExecute = true // If this action has not executed yet there is nothting to compare against so it is true
-					break
-				}
-				history, err := k.GetActionHistory(ctx, actionID)
-				if err != nil {
-					return false, err
-				}
-
-				responses := history[len(history)-1].MsgResponses
-				isTrue, err := k.CompareResponseValue(ctx, action.ID, responses, *comparison)
-				if err == nil && isTrue {
-					return true, nil // Short-circuit on the first true comparison
-				}
-			}
-		}
-	}
-	//check if dependent tx executions succeeded
-	for _, actionID := range conditions.StopOnSuccessOf {
-		if !k.HasActionHistoryEntry(ctx, actionID) {
-			continue
-		}
-		history, err := k.GetActionHistory(ctx, actionID)
-		if err != nil {
-			allowedToExecute = false
-		}
-		if len(history) != 0 {
-			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
-			if !success {
-				allowedToExecute = false
-				shouldRecur = false
-			}
-		}
-	}
-
-	//check if dependent tx executions failed
-	for _, actionID := range conditions.StopOnFailureOf {
-		if !k.HasActionHistoryEntry(ctx, actionID) {
-			continue
-		}
-		history, err := k.GetActionHistory(ctx, actionID)
-		if err != nil {
-			allowedToExecute = false
-		}
-		if len(history) != 0 {
-			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
-			if success {
-				allowedToExecute = false
-				shouldRecur = false
-			}
-		}
-	}
-
-	//check if dependent tx executions succeeded
-	for _, actionID := range conditions.SkipOnFailureOf {
-		if !k.HasActionHistoryEntry(ctx, actionID) {
-			continue
-		}
-		history, err := k.GetActionHistory(ctx, actionID)
-		if err != nil {
-			allowedToExecute = false
-		}
-		if len(history) != 0 {
-			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
-			if !success {
-				allowedToExecute = false
-			}
-		}
-	}
-
-	//check if dependent tx executions failed
-	for _, actionID := range conditions.SkipOnSuccessOf {
-		if !k.HasActionHistoryEntry(ctx, actionID) {
-			continue
-		}
-		history, err := k.GetActionHistory(ctx, actionID)
-		if err != nil {
-			allowedToExecute = false
-		}
-		if len(history) != 0 {
-			success := history[len(history)-1].Executed && history[len(history)-1].Errors != nil
-			if success {
-				allowedToExecute = false
-			}
-		}
-	}
-
-	//if not allowed to execute, remove entry
-	if !allowedToExecute {
-		//insert the next entry given a recurring tx
+	// Step 1: Check comparisons
+	comparisonsResult, err := k.checkComparisons(ctx, action, conditions)
+	if err != nil {
 		if shouldRecur {
-			// adding next execTime and a new entry into the queue based on interval
-			k.InsertActionQueue(ctx, action.ID, action.ExecTime.Add(action.Interval))
-			action.ExecTime = action.ExecTime.Add(action.Interval)
-			k.SetActionInfo(ctx, &action)
+			k.scheduleNextExecution(ctx, action)
+		}
+		return false, err
+	}
+
+	// Step 2: Check dependent actions
+	dependenciesResult := k.checkDependentActions(ctx, conditions, &shouldRecur)
+
+	// Combine results
+	allowedToExecute := comparisonsResult && dependenciesResult
+
+	// Step 3: Handle recurring actions if not allowed to execute
+	if !allowedToExecute && shouldRecur {
+		k.scheduleNextExecution(ctx, action)
+	}
+
+	return allowedToExecute, nil
+}
+
+// checkComparisons evaluates the conditions.Comparisons based on AND/OR logic.
+func (k Keeper) checkComparisons(ctx sdk.Context, action types.ActionInfo, conditions *types.ExecutionConditions) (bool, error) {
+	var err error = nil
+
+	if conditions.Comparisons == nil {
+		return true, nil
+	}
+
+	if conditions.UseAndForComparisons {
+		// AND logic: All comparisons must evaluate to true
+		for _, comparison := range conditions.Comparisons {
+			isTrue, err := k.evaluateComparison(ctx, action, *comparison)
+			if err != nil || !isTrue {
+				return false, err
+			}
+		}
+		return true, nil
+	}
+
+	// OR logic: At least one comparison must evaluate to true
+	for _, comparison := range conditions.Comparisons {
+		isTrue, err := k.evaluateComparison(ctx, action, *comparison)
+		if err == nil && isTrue {
+			return true, nil
 		}
 	}
-	return allowedToExecute, nil
 
+	return false, err
+}
+
+// evaluateComparison checks a single comparison against the action history.
+func (k Keeper) evaluateComparison(ctx sdk.Context, action types.ActionInfo, comparison types.Comparison) (bool, error) {
+	actionID := action.ID
+	if comparison.ActionID != 0 {
+		actionID = comparison.ActionID
+	}
+
+	if !k.HasActionHistoryEntry(ctx, actionID) {
+		return true, nil // No history means there's nothing to compare against
+	}
+
+	history, err := k.GetActionHistory(ctx, actionID)
+	if err != nil {
+		return false, err
+	}
+
+	if history[len(history)-1].MsgResponses == nil && history[len(history)-1].QueryResponses == nil {
+		return false, fmt.Errorf("cannot make a comparison, no responses on the target history. Set SaveResponses to true to use responses for comparison")
+	}
+
+	responses := history[len(history)-1].MsgResponses
+
+	isTrue, err := k.CompareResponseValue(ctx, action.ID, responses, comparison)
+	if err != nil {
+		return false, fmt.Errorf("error in CompareResponseValue: %w", err)
+	}
+
+	return isTrue, nil
+}
+
+// checkDependentActions verifies success/failure conditions of dependent actions.
+func (k Keeper) checkDependentActions(ctx sdk.Context, conditions *types.ExecutionConditions, shouldRecur *bool) bool {
+	checkDependency := func(actionIDs []uint64, successCondition bool, isStop bool) bool {
+		for _, actionID := range actionIDs {
+			if !k.HasActionHistoryEntry(ctx, actionID) {
+				continue
+			}
+
+			history, err := k.GetActionHistory(ctx, actionID)
+			if err != nil || len(history) == 0 {
+				return false
+			}
+
+			success := history[len(history)-1].Executed && history[len(history)-1].Errors == nil
+			if success == successCondition {
+				if isStop {
+					// Stop means do not execute and do not recur
+					*shouldRecur = false
+					return false
+				} else {
+					// Skip means do not execute, but allow to recur
+					return false
+				}
+			}
+		}
+		return true
+	}
+
+	// Stop on success
+	if !checkDependency(conditions.StopOnSuccessOf, true, true) {
+		return false
+	}
+
+	// Stop on failure
+	if !checkDependency(conditions.StopOnFailureOf, false, true) {
+		return false
+	}
+
+	// Skip on success
+	if !checkDependency(conditions.SkipOnSuccessOf, true, false) {
+		return false
+	}
+
+	// Skip on failure
+	if !checkDependency(conditions.SkipOnFailureOf, false, false) {
+		return false
+	}
+
+	return true
+}
+
+// scheduleNextExecution schedules the next execution for recurring actions.
+func (k Keeper) scheduleNextExecution(ctx sdk.Context, action types.ActionInfo) {
+	nextExecTime := action.ExecTime.Add(action.Interval)
+	k.InsertActionQueue(ctx, action.ID, nextExecTime)
+	action.ExecTime = nextExecTime
+	k.SetActionInfo(ctx, &action)
 }
 
 // recordActionNotAllowed adds an action entry to the action history
 func (k Keeper) recordActionNotAllowed(ctx sdk.Context, action *types.ActionInfo, timeOfBlock time.Time, errorMsg error) {
 	k.Logger(ctx).Debug("action not allowed to execute", "id", action.ID)
-	if errorMsg == nil {
-		k.addActionHistory(ctx, action, timeOfBlock, sdk.Coin{}, false, nil, "")
+	if errorMsg != nil {
+		k.addActionHistoryEntry(ctx, action, timeOfBlock, sdk.Coin{}, false, nil, fmt.Sprintf(types.ErrActionConditions, errorMsg.Error()))
 	}
-	k.addActionHistory(ctx, action, timeOfBlock, sdk.Coin{}, false, nil, fmt.Sprintf(types.ErrActionConditions, errorMsg.Error()))
+	k.addActionHistoryEntry(ctx, action, timeOfBlock, sdk.Coin{}, false, nil, "")
 }
 
 // shouldRecur checks whether the action should be rescheduled based on recurrence rules

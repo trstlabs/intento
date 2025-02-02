@@ -107,7 +107,7 @@ func (k Keeper) IterateActionHistorys(ctx sdk.Context, cb func(uint64, types.Act
 	}
 }
 
-func (k Keeper) addActionHistory(ctx sdk.Context, action *types.ActionInfo, actualExecTime time.Time, execFee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, errorString string) {
+func (k Keeper) addActionHistoryEntry(ctx sdk.Context, action *types.ActionInfo, actualExecTime time.Time, execFee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, errorString string) {
 	historyEntry := types.ActionHistoryEntry{
 		ScheduledExecTime: action.ExecTime,
 		ActualExecTime:    actualExecTime,
@@ -134,9 +134,9 @@ func (k Keeper) addActionHistory(ctx sdk.Context, action *types.ActionInfo, actu
 	}
 	if executedLocally {
 		historyEntry.Executed = true
-		if action.Configuration.SaveResponses {
-			historyEntry.MsgResponses = msgResponses
-		}
+		// if action.Configuration.SaveResponses {
+		// 	historyEntry.MsgResponses = msgResponses
+		// }
 	}
 
 	k.SetActionHistoryEntry(ctx, action.ID, &historyEntry)
