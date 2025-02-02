@@ -1,5 +1,5 @@
 syntax = "proto3";
-package intento.interchainquery.v1;
+package stride.interchainquery.v1;
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";

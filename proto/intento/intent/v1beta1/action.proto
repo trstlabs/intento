@@ -8,7 +8,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
-import "intento/interchainquery/v1/genesis.proto";
+import "stride/interchainquery/v1/genesis.proto";
 
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 option (gogoproto.equal_all) = true;
@@ -183,7 +183,7 @@ enum ComparisonOperator {
 message ICQConfig {
   string connection_id = 1;
   string chain_id = 2;
-  intento.interchainquery.v1.TimeoutPolicy timeout_policy = 3;
+  stride.interchainquery.v1.TimeoutPolicy timeout_policy = 3;
   google.protobuf.Duration timeout_duration = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true
