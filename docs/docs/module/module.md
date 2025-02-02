@@ -171,7 +171,7 @@ Suppose you have an action that withdraws rewards and you want to use the withdr
 
 With these conditions, the subsequent action will only execute if the withdrawn amount is greater than 200,000 "uatom", and the amount will be used as an input for this action.
 
-<!-- For Interchain Queries we can implement a similar structure. Due to the added complexity, in development and also in testing and auditing, we leave this out of scope but still we are excited to implement this after the grant work has been completed. With interchain queries we can allow comparisons with pool balances and oracle prices. For example Skip’s slinky oracle aggregator deployed on osmosis. With a similar structure we can look 1 level deep which is sufficient. We can retrieve GetPriceResponse, then with a similar attribute_key we can point to price, which points to the price. We can then compare it to a comparision_value. -->
+<!-- For Interchain Queries we can implement a similar structure. Due to the added complexity, in development and also in testing and auditing, we leave this out of scope but still we are excited to implement this after the grant work has been completed. With interchain queries we can allow comparisons with pool balances and oracle prices. For example Skip’s slinky oracle aggregator deployed on osmosis. With a similar structure we can look 1 level deep which is sufficient. We can retrieve GetPriceResponse, then with a similar attribute_key we can point to price, which points to the price. We can then compare it to a comparison_value. -->
 
 <!--
 ### Creating Intents

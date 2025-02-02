@@ -43,7 +43,7 @@ TriggerPortal is your comprehensive tool for automating and managing blockchain 
    ![2](@site/docs/images/triggerportal/build/2.png)
 3. Thirdly, configure execution details. You can execute until you run into an error for example. Or, maybe you want to keep trying until it succeeds. You can use a wallet fallback so fee funds can be deducted from your main balance automatically.
    ![3](@site/docs/images/triggerportal/build/3.png)
-4. Next, you can set your conditions. You can use response outputs as inputs to create feedback loops, or create comparisions that must turn true for execution to take place.
+4. Next, you can set your conditions. You can use response outputs as inputs to create feedback loops, or create comparisons that must turn true for execution to take place.
    ![4](@site/docs/images/triggerportal/build/4.png)
    You can find inspiration for this in the dashboard!
    ![dialogfullscreen](@site/docs/images/triggerportal/build/Copy.png)

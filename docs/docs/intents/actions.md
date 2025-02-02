@@ -6,7 +6,7 @@ pagination_label: Interchain actions. Any action, anywhere
 
 Intents contain actions and predefined conditions, which determine how actions are processed. In crypto, we want to process actions with no counterparty risk and in a permissionless and decentralized manner. This has so far only been possible by directly sending transactions to the destination chain. With Intento, you will be able specify your intent to perform any action, anywhere at any moment given any conditions.
 
-Intent-based actions are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitAction`, IBC-specific settings such as the `ConnectionID` or a `HostedAccount`, and conditions such as comparisions and feedback loops.
+Intent-based actions are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitAction`, IBC-specific settings such as the `ConnectionID` or a `HostedAccount`, and conditions such as comparisons and feedback loops.
 
 An action in technical terms is an object containing messages that are triggered at a specified time, or recurringly with intervals, with given conditions.
 
