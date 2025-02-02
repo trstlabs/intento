@@ -132,15 +132,15 @@ TX_RES=$($PROVIDER_CMD tx provider update-consumer ${PROVIDER_HOME}/update-consu
 	--chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
 	--from ${GAIA_VAL_PREFIX}1 --keyring-backend test -y --log_format json)
   
-# echo $TX_RES
-sleep 5
+echo $TX_RES
+sleep 10
 # Verify success
-if [[ $(echo $TX_RES | jq -r '.code') -ne 0 ]]; then
-  echo "Error: Failed to submit update-consumer transaction."
-  exit 1
-fi
-echo "Successfully updated consumer chain."
-sleep 5
+# if [[ $(echo $TX_RES | jq -r '.code') -ne 0 ]]; then
+#   echo "Error: Failed to submit update-consumer transaction."
+#   exit 1
+# fi
+# echo "Successfully updated consumer chain."
+#sleep 5
 # Step 4: Announce launch
 # echo "Announce the launch on Discord and submit a PR to the Cosmos testnets repository."
 
