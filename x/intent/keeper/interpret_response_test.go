@@ -162,12 +162,38 @@ func TestCompareCoinTrue(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, executedLocally)
 	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
-
 	actionInfo.Conditions = &types.ExecutionConditions{}
 	actionInfo.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0]", ValueType: "sdk.Coin", Operator: 0, Operand: "101stake"}}
 	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.Comparisons[0])
 	require.NoError(t, err)
 
+	require.True(t, boolean)
+}
+
+func TestCompareCoinLargerThanTrue(t *testing.T) {
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	types.Denom = "stake"
+	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+	actionInfo := createBaseActionInfo(delAddr, actionAddr)
+
+	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
+	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
+	executedLocally, msgResponses, err := keeper.TriggerAction(ctx, &actionInfo)
+	require.NoError(t, err)
+	require.True(t, executedLocally)
+	keeper.SetActionHistoryEntry(ctx, actionInfo.ID, &types.ActionHistoryEntry{MsgResponses: msgResponses})
+
+	actionInfo.Conditions = &types.ExecutionConditions{}
+	comparison := types.Comparison{ResponseIndex: 0, ResponseKey: "Amount.[0]", ValueType: "sdk.Coin", Operator: 4, Operand: "11stake"}
+	actionInfo.Conditions.Comparisons = []*types.Comparison{&comparison}
+
+	boolean, err := keeper.CompareResponseValue(ctx, actionInfo.ID, msgResponses, *actionInfo.Conditions.Comparisons[0])
+	require.NoError(t, err)
+	require.True(t, boolean)
+
+	boolean, err = keeper.allowedToExecute(ctx, actionInfo)
+	require.NoError(t, err)
 	require.True(t, boolean)
 }
 

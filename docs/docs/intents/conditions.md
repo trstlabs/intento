@@ -101,31 +101,41 @@ message MsgWithdrawDelegatorReward {
 
 #### 2. Use the Withdrawn Amount as Input
 
-Use the `FeedbackLoop` to take the withdrawn amount as input for the next action message:
+Use the `FeedbackLoop` to take the withdrawn amount as input for the send message:
 
-```os
-use_response_value {
+```js
+feedback_loops: [{
+  action_id: 0 // Optional action ID of the reward withdrawal
   response_index: 0 // First response
   response_key: "amount[0].amount" // Key to extract the amount
   msgs_index: 1 // Index of the message to replace in the next action
   msg_key: "amount" // Message key to replace in MsgSend
   value_type: "sdk.Int" // Value type
-}
+}]
 ```
+
 
 #### 3. Compare the Withdrawn Amount
 
-Use `Comparison` to ensure the amount is greater than 200,000 "uatom":
+Use `Comparison` to ensure the amount was greater than 200,000 "uatom":
 
 ```js
-comparision {
+comparisons: [{
   response_index: 0 // First response
   response_key: "amount[0].amount" // Key to compare the amount
   value_type: "sdk.Int" // Value type
   comparison_operator: LARGER_THAN // Operator to check if amount is larger than
   comparison_operand: "200000" // Operand to compare against
-}
+}]
 ```
+
+This will compare previous output. Feedback Loops run throughout the flow and can use message 1 outputs for constructing message 2. Comparisons on the other hand, happen at the begining of the flow and determine whether the flow should be executed or not. If you want to use  up-to-date outputs, you can configure the messages into distict Intent-based Actions and reference the withdrawal message from the send action like so:
+
+```js
+comparisons: [{
+  action_id: 2 // Optional action ID of the reward withdrawal
+  ...//other fields
+}]
 
 #### 4. Define the Transfer Action
 
@@ -153,7 +163,7 @@ conditions {
     msg_key: "amount" // Message key to replace
     value_type: "sdk.Int" // Value type
   }],
-  comparison: [{
+  comparisons: [{
     action_id: 0 // Optional action ID of the reward withdrawal
     response_index: 0 // First response
     response_key: "amount[0].amount" // Key to compare the amount
@@ -164,4 +174,4 @@ conditions {
 }
 ```
 
-With these conditions, the `MsgSend` action message will only execute if the withdrawn amount is greater than 200,000 "uatom", and the withdrawn amount will be used as the transfer amount.
+With these conditions, the `MsgSend` action message will only execute if the withdrawn amount was greater than 200,000 "uatom", and the withdrawn amount will be used as the transfer amount.

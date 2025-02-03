@@ -24,6 +24,8 @@ for chain in ${RLY_HOST_CHAINS[@]}; do
     echo "Done"
 
     chmod -R 777 $STATE/relayer-${chain_name}/config
+
+    # comment this part out if running next to hermes
     printf "INTO <> $chain - Creating client, connection, and transfer channel..." | tee -a $relayer_logs
     $relayer_exec rly tx link into-${chain_name} >>$relayer_logs 2>&1
     echo "Done"

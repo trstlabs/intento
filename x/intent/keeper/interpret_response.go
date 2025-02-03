@@ -17,7 +17,7 @@ import (
 
 // CompareResponseValue compares the value of a response key based on the ResponseComparison
 func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses []*cdctypes.Any, comparison types.Comparison) (bool, error) {
-	k.Logger(ctx).Debug("response comparison", "responses", responses)
+	k.Logger(ctx).Debug("response comparison", "actionID", actionID)
 	var queryCallback []byte = nil
 	if comparison.ICQConfig != nil {
 		queryCallback = comparison.ICQConfig.Response
@@ -33,7 +33,7 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses
 	var err error
 
 	if queryCallback != nil {
-		valueFromResponse, err = ParseICQResponse(queryCallback, comparison.ValueType)
+		valueFromResponse, err = parseICQResponse(queryCallback, comparison.ValueType)
 		if err != nil {
 			var respAny cdctypes.Any
 			err := k.cdc.Unmarshal(queryCallback, &respAny)
@@ -48,7 +48,7 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses
 				if err != nil {
 					return false, fmt.Errorf("response comparison: error unpacking: %v", err)
 				}
-				valueFromResponse, err = ParseResponseValue(queryCallback, comparison.ResponseKey, comparison.ValueType)
+				valueFromResponse, err = parseResponseValue(queryCallback, comparison.ResponseKey, comparison.ValueType)
 				if err != nil {
 					return false, err
 				}
@@ -56,31 +56,28 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses
 
 		}
 	} else {
-		var respAny *cdctypes.Any
-		var resp interface{}
+		var respAny cdctypes.Any
 		if len(responses) == 0 {
-			var queryResp = &cdctypes.Any{}
-			if err := proto.Unmarshal(queryCallback, queryResp); err != nil {
-				k.Logger(ctx).Debug("response comparison: could not parse query callback data", "CallbackData", queryCallback)
-				return false, fmt.Errorf("response comparison: error parsing query callback data: %v", queryCallback)
-
-			}
-			respAny = queryResp
+			k.Logger(ctx).Debug("response comparison: could not parse response data")
 		} else {
-			respAny = (responses)[comparison.ResponseIndex]
+			respAny = *responses[comparison.ResponseIndex]
 		}
-		err := k.cdc.UnpackAny(respAny, &resp)
+		protoMsg, err := k.interfaceRegistry.Resolve(respAny.TypeUrl)
 		if err != nil {
-			return false, fmt.Errorf("error unpacking: %v", err)
+			return false, fmt.Errorf("failed to resolve type URL %s: %w", respAny.TypeUrl, err)
 		}
 
-		valueFromResponse, err = ParseResponseValue(resp, comparison.ResponseKey, comparison.ValueType)
+		err = proto.Unmarshal(respAny.Value, protoMsg)
+		if err != nil {
+			return false, err
+		}
+		valueFromResponse, err = parseResponseValue(protoMsg, comparison.ResponseKey, comparison.ValueType)
 		if err != nil {
 			return false, fmt.Errorf("error parsing value: %v", err)
 		}
 	}
 
-	operand, err := ParseOperand(comparison.Operand, comparison.ValueType)
+	operand, err := parseOperand(comparison.Operand, comparison.ValueType)
 	if err != nil {
 		return false, fmt.Errorf("error parsing operand: %v", err)
 	}
@@ -94,13 +91,13 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses
 	case types.ComparisonOperator_NOT_CONTAINS:
 		return !contains(valueFromResponse, operand), nil
 	case types.ComparisonOperator_SMALLER_THAN:
-		return compareNumbers(valueFromResponse, operand, func(a, b int) bool { return a < b })
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a < b })
 	case types.ComparisonOperator_LARGER_THAN:
-		return compareNumbers(valueFromResponse, operand, func(a, b int) bool { return a > b })
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a > b })
 	case types.ComparisonOperator_GREATER_EQUAL:
-		return compareNumbers(valueFromResponse, operand, func(a, b int) bool { return a >= b })
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a >= b })
 	case types.ComparisonOperator_LESS_EQUAL:
-		return compareNumbers(valueFromResponse, operand, func(a, b int) bool { return a <= b })
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a <= b })
 	case types.ComparisonOperator_STARTS_WITH:
 		return strings.HasPrefix(valueFromResponse.(string), operand.(string)), nil
 	case types.ComparisonOperator_ENDS_WITH:
@@ -135,7 +132,7 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 		var valueFromResponse interface{}
 		var err error
 		if queryCallback != nil {
-			valueFromResponse, err = ParseICQResponse(queryCallback, feedbackLoop.ValueType)
+			valueFromResponse, err = parseICQResponse(queryCallback, feedbackLoop.ValueType)
 			if err != nil {
 				var respAny cdctypes.Any
 				err := k.cdc.Unmarshal(queryCallback, &respAny)
@@ -150,7 +147,7 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 					if err != nil {
 						return fmt.Errorf("use value: error unpacking: %v", err)
 					}
-					valueFromResponse, err = ParseResponseValue(queryCallback, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
+					valueFromResponse, err = parseResponseValue(queryCallback, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
 					if err != nil {
 						return err
 					}
@@ -185,7 +182,7 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 			}
 
 			//k.Logger(ctx).Debug("use response value", "protoMsg", protoMsg.String(), "TypeUrl", responsesAnys[feedbackLoop.ResponseIndex].TypeUrl)
-			valueFromResponse, err = ParseResponseValue(protoMsg, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
+			valueFromResponse, err = parseResponseValue(protoMsg, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
 			if err != nil {
 				return err
 			}
@@ -260,8 +257,8 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 	return nil
 }
 
-// ParseResponseValue retrieves and parses the value of a response key to the specified response type
-func ParseResponseValue(response interface{}, responseKey, responseType string) (interface{}, error) {
+// parseResponseValue retrieves and parses the value of a response key to the specified response type
+func parseResponseValue(response interface{}, responseKey, responseType string) (interface{}, error) {
 
 	val, err := traverseFields(response, responseKey)
 	if err != nil {
@@ -318,8 +315,8 @@ func ParseResponseValue(response interface{}, responseKey, responseType string) 
 	return nil, fmt.Errorf("field could not be parsed as %s in %v ", responseType, val)
 }
 
-// ParseOperand parses the operand based on the response type
-func ParseOperand(operand string, responseType string) (interface{}, error) {
+// parseOperand parses the operand based on the response type
+func parseOperand(operand string, responseType string) (interface{}, error) {
 	switch responseType {
 	case "string":
 		return operand, nil
@@ -351,8 +348,8 @@ func ParseOperand(operand string, responseType string) (interface{}, error) {
 	return nil, fmt.Errorf("unsupported operand type: %s", responseType)
 }
 
-// ParseICQResponse parses the operand based on the response type
-func ParseICQResponse(response []byte, valueType string) (interface{}, error) {
+// parseICQResponse parses the ICQ response
+func parseICQResponse(response []byte, valueType string) (interface{}, error) {
 	switch valueType {
 	case "string":
 		return string(response), nil
@@ -404,6 +401,7 @@ func ParseICQResponse(response []byte, valueType string) (interface{}, error) {
 		}
 		return ints, nil
 	}
+	//idea: add more protos here
 	return nil, fmt.Errorf("unsupported operand type: %s", valueType)
 }
 
@@ -432,36 +430,48 @@ func contains(value, operand interface{}) bool {
 	return false
 }
 
-// compareNumbers compares two numeric values based on a provided comparison function
-func compareNumbers(value, operand interface{}, compareFunc func(int, int) bool) (bool, error) {
+func compareNumbers(value, operand interface{}, compareFunc func(int64, int64) bool) (bool, error) {
 	val := reflect.ValueOf(value)
 	operandVal := reflect.ValueOf(operand)
 
 	switch val.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return compareFunc(int(val.Int()), int(operandVal.Int())), nil
+		return compareFunc(val.Int(), operandVal.Int()), nil
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return compareFunc(int(val.Uint()), int(operandVal.Uint())), nil
-	case reflect.Float32, reflect.Float64:
-		return compareFunc(int(val.Float()), int(operandVal.Float())), nil
+		// Convert unsigned integers to int64 safely
+		valInt64 := int64(val.Uint())
+		operandInt64 := int64(operandVal.Uint())
+		return compareFunc(valInt64, operandInt64), nil
 	case reflect.Struct:
-		// Check if the type is `sdk.Int` and use the `Int64` method
 		if val.Type().Name() == "Int" {
+			// Use the `Int64` method for sdk.Int
 			return compareFunc(
-				int(val.MethodByName("Int64").Call(nil)[0].Int()),
-				int(operandVal.MethodByName("Int64").Call(nil)[0].Int()),
+				val.MethodByName("Int64").Call(nil)[0].Int(),
+				operandVal.MethodByName("Int64").Call(nil)[0].Int(),
 			), nil
 		}
-		// Check if the struct is `sdk.Coin` and compare its Amount field
 		if val.Type() == reflect.TypeOf(sdk.Coin{}) {
+			valDenom := val.FieldByName("Denom").String()
+			operandDenom := operandVal.FieldByName("Denom").String()
+
+			// Ensure the Denom fields are equal
+			if valDenom != operandDenom {
+				return false, fmt.Errorf("denom mismatch: %s vs %s", valDenom, operandDenom)
+			}
+
 			valAmount := val.FieldByName("Amount")
 			operandAmount := operandVal.FieldByName("Amount")
 			if valAmount.IsValid() && operandAmount.IsValid() {
-				// Convert to `sdk.Int` and use the `Int64` method for comparison
-				return compareFunc(
-					int(valAmount.MethodByName("Int64").Call(nil)[0].Int()),
-					int(operandAmount.MethodByName("Int64").Call(nil)[0].Int()),
-				), nil
+				// Ensure Amount field has Int64 method
+				valAmountMethod := valAmount.MethodByName("Int64")
+				operandAmountMethod := operandAmount.MethodByName("Int64")
+
+				if valAmountMethod.IsValid() && operandAmountMethod.IsValid() {
+					valInt := valAmountMethod.Call(nil)[0].Int()
+					operandInt := operandAmountMethod.Call(nil)[0].Int()
+					return compareFunc(valInt, operandInt), nil
+				}
+				return false, fmt.Errorf("amount field missing Int64 method")
 			}
 			return false, fmt.Errorf("sdk.Coin struct missing Amount field")
 		}

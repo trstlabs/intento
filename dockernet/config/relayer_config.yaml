@@ -31,7 +31,7 @@ chains:
       gas-prices: 0.02uatom
       coin-type: 118
       debug: false
-      timeout: 20s
+      timeout: 40s
       output-format: json
       sign-mode: direct
   osmo:
@@ -84,16 +84,24 @@ paths:
   into-gaia:
     src:
       chain-id: intento-test-1
+      client-id: 07-tendermint-0
+      connection-id: connection-1
     dst:
       chain-id: GAIA
+      client-id: 07-tendermint-0
+      connection-id: connection-1
     src-channel-filter:
       rule: ""
       channel-list: []
   into-osmo:
     src:
       chain-id: intento-test-1
+      client-id: 07-tendermint-0
+      connection-id: connection-3
     dst:
       chain-id: OSMO #osmo-test-5
+      client-id: 07-tendermint-0
+      connection-id: connection-1
     src-channel-filter:
       rule: ""
       channel-list: []

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
@@ -49,8 +50,8 @@ func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse() MsgSubmitQueryResponseTe
 	result := []byte("result-example")
 	proofOps := crypto.ProofOps{}
 	fromAddress := s.TestAccs[0].String()
-	expectedId := "12334567"
-
+	//expectedId :=
+	expectedId := fmt.Sprintf("%s:%d:%d", []byte{0x14}, 12334567, 1)
 	_, addr, _ := bech32.DecodeAndConvert(s.TestAccs[0].String())
 	data := addr // banktypes.CreateAccountBalancesPrefix(addr)
 

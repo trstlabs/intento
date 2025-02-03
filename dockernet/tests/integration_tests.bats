@@ -432,13 +432,13 @@ EOF
   #query_key='AhRGgNNqzbhS97+pYwK8+uF7JhF0PGliYy81MjRDNjUyMUI0NDQ4Mjc3QTBFOTgzQTVCN0U2NTZGMDREQ0UzQTZGOTAyRUZGQUM3RDMxMDBFQjQyMEYwREZF'
   query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+GliYy81MjRDNjUyMUI0NDQ4Mjc3QTBFOTgzQTVCN0U2NTZGMDREQ0UzQTZGOTAyRUZGQUM3RDMxMDBFQjQyMEYwREZF'
   # echo "Query Key: $query_key"
-  # msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_exec_file" --label "ICQ and Hosted ICA" --interval "60s" --duration "120s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "use_response_value": {"response_index":0,"response_key": "", "msgs_index":0, "msg_key":"Amount.[0].Amount","value_type": "sdk.Int", "from_icq": true}, "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"} }' -y)
+  # msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_exec_file" --label "ICQ and Hosted ICA" --interval "60s" --duration "120s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "", "msgs_index":0, "msg_key":"Amount.[0].Amount","value_type": "sdk.Int", "from_icq": true, "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
   # echo "$msg_submit_action"
 
   GET_ACTION_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_ACTION_BY_ID
 
-  # sleep 40
+  #sleep 40
 
   # # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
   host_receiver_balance_end=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
@@ -468,7 +468,7 @@ EOF
   $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" --from $HOST_USER -y
   WAIT_FOR_BLOCK $INTO_LOGS 2
   $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.staking.v1beta1.MsgDelegate" --from $HOST_USER -y
-  WAIT_FOR_BLOCK $INTO_LOGS 20
+  WAIT_FOR_BLOCK $INTO_LOGS 2
 
   host_user_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
 
@@ -506,13 +506,13 @@ EOF
 }
 EOF
 
-  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action $msg_withdraw $msg_delegate --label "Autocompound on host chain" --duration "1440h" --interval "120s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "use_response_value": {"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}}' -y)
+  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action $msg_withdraw $msg_delegate --label "Autocompound on host chain" --duration "168h" --interval "600s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}' -y)
   echo "$msg_submit_action"
 
   GET_ACTION_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_ACTION_BY_ID
 
-  # sleep 40
+  sleep 40
   # # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
   staking_balance_end=$($HOST_MAIN_CMD 2>&1 q staking delegation $HOST_USER_ADDRESS $validator_address $HOST_DENOM | GETBAL)
   staking_balance_diff=$(($staking_balance_end - $MSGDELEGATE_AMOUNT))
@@ -555,7 +555,7 @@ EOF
 }
 EOF
 
-  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_exec_file" --label "Recurring transfer on host chain from host user" --duration "2880h" --interval "60s" --fee-funds $RECURRING_MSGSEND_AMOUNT_TOTAL$INTO_DENOM --connection-id connection-$CONNECTION_ID --host-connection-id $HOST_CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance --reregister-ica-after-timeout -y)
+  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_exec_file" --label "Recurring transfer on host chain from host user" --duration "2880h" --interval "60s" --stop-on-failure --fee-funds $RECURRING_MSGSEND_AMOUNT_TOTAL$INTO_DENOM --connection-id connection-$CONNECTION_ID --host-connection-id $HOST_CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance --reregister-ica-after-timeout -y)
   echo "$msg_submit_action"
 
   GET_ACTION_ID $(INTO_ADDRESS)
@@ -573,4 +573,75 @@ EOF
   host_receiver_balance_end=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
   receiver_diff=$(($host_receiver_balance_end - $host_receiver_balance_mid))
   assert_equal "$receiver_diff" $MSGSEND_AMOUNT
+}
+
+
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] Action Conditional Autocompound on host" {
+  # call MsgDelegate
+  validator_address=$(GET_VAL_ADDR $HOST_CHAIN_ID 1)
+  delegate=$($HOST_MAIN_CMD_TX staking delegate $validator_address $MSGDELEGATE_AMOUNT$HOST_DENOM --from $HOST_USER -y)
+  WAIT_FOR_BLOCK $INTO_LOGS 2
+
+  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
+  # Use jq to filter the hosted_address based on the connection ID
+  hosted_address=$(echo "$hosted_accounts" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.hosted_accounts[] | select(.ica_config.connection_id == $conn_id) | .hosted_address')
+  if [ -n "$hosted_address" ]; then
+    # Get the interchain account address
+    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$hosted_address" connection-$CONNECTION_ID)
+    ica_address=$(echo "$ica_address" | awk '{print $2}')
+
+    echo "Interchain Account Address: $ica_address"
+  else
+    echo "No hosted address found for connection ID: $CONNECTION_ID"
+  fi
+
+
+  host_user_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
+
+  msg_withdraw="MsgWithdrawDelegatorReward.json"
+  cat <<EOF >"$msg_withdraw"
+{
+  "@type": "/cosmos.authz.v1beta1.MsgExec",
+  "msgs": [
+    {
+      "@type": "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+      "delegator_address": "$HOST_USER_ADDRESS",
+      "validator_address": "$validator_address"
+    }
+  ],
+  "grantee": "$ica_address"
+}
+EOF
+
+  msg_delegate="MsgDelegate.json"
+  cat <<EOF >"$msg_delegate"
+{
+  "@type": "/cosmos.authz.v1beta1.MsgExec",
+  "msgs": [
+    {
+      "@type": "/cosmos.staking.v1beta1.MsgDelegate",
+      "delegator_address": "$HOST_USER_ADDRESS",
+      "validator_address": "$validator_address",
+      "amount": {
+          "amount": "10",
+          "denom": "$HOST_DENOM"
+      }
+    }
+  ],
+  "grantee": "$ica_address"
+}
+EOF
+
+  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action $msg_withdraw $msg_delegate --label "Conditional Autocompound" --duration "168h" --interval "2400s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}' --save-responses -y)
+  echo "$msg_submit_action"
+
+  GET_ACTION_ID $(INTO_ADDRESS)
+  WAIT_FOR_EXECUTED_ACTION_BY_ID
+
+  # sleep 40
+  # # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
+  staking_balance_end=$($HOST_MAIN_CMD 2>&1 q staking delegation $HOST_USER_ADDRESS $validator_address $HOST_DENOM | GETBAL)
+  staking_balance_diff=$(($staking_balance_end - $MSGDELEGATE_AMOUNT))
+
+  assert_not_equal "$staking_balance_diff" 0
 }
