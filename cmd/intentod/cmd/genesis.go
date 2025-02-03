@@ -252,13 +252,13 @@ func PrepareGenesis(
 	appState[alloctypes.ModuleName] = allocGenStateBz
 
 	// Intent module genesis
-	actionGenState := intenttypes.DefaultGenesis()
-	actionGenState.Params = genesisParams.IntentParams
-	actionGenStateBz, err := cdc.MarshalJSON(actionGenState)
+	intentGenState := intenttypes.DefaultGenesis()
+	intentGenState.Params = genesisParams.IntentParams
+	intentGenStateBz, err := cdc.MarshalJSON(intentGenState)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal autoIbcTx genesis state: %w", err)
 	}
-	appState[intenttypes.ModuleName] = actionGenStateBz
+	appState[intenttypes.ModuleName] = intentGenStateBz
 
 	// return appState and genDoc
 	return appState, nil
@@ -368,12 +368,12 @@ func MainnetGenesisParams() GenesisParams {
 
 	//AutoIBCTx
 	genParams.IntentParams = intenttypes.DefaultParams()
-	genParams.IntentParams.MaxActionDuration = time.Hour * 24 * 366 * 10
-	genParams.IntentParams.MinActionDuration = time.Second * 60
-	genParams.IntentParams.MinActionInterval = time.Second * 60
-	genParams.IntentParams.ActionFundsCommission = 2
-	genParams.IntentParams.ActionConstantFee = 10_000
-	genParams.IntentParams.ActionFlexFeeMul = 10
+	genParams.IntentParams.MaxFlowDuration = time.Hour * 24 * 366 * 10
+	genParams.IntentParams.MinFlowDuration = time.Second * 60
+	genParams.IntentParams.MinFlowInterval = time.Second * 60
+	genParams.IntentParams.FlowFundsCommission = 2
+	genParams.IntentParams.FlowConstantFee = 10_000
+	genParams.IntentParams.FlowFlexFeeMul = 10
 	genParams.IntentParams.GasFeeCoins = sdk.Coins(sdk.NewCoins(sdk.NewCoin(BaseCoinUnit, math.OneInt())))
 	genParams.IntentParams.RelayerRewards = []int64{10_000, 15_000, 18_000, 22_000}
 
@@ -420,9 +420,9 @@ func TestnetGenesisParams() GenesisParams {
 	votingPeriod := time.Minute
 	genParams.GovParams.VotingPeriod = &votingPeriod
 
-	//action
-	genParams.IntentParams.MinActionDuration = time.Second * 40
-	genParams.IntentParams.MinActionInterval = time.Second * 40
+	//flow
+	genParams.IntentParams.MinFlowDuration = time.Second * 40
+	genParams.IntentParams.MinFlowInterval = time.Second * 40
 
 	//claim
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime

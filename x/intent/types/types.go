@@ -14,9 +14,9 @@ var ParseICAValue = "ICA_ADDR"
 var MaxGas uint64 = 1_000_000
 
 // GetTxMsgs unpacks sdk messages from any messages
-func (actionInfo ActionInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sdk.Msg) {
+func (flowInfo FlowInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sdk.Msg) {
 
-	for _, message := range actionInfo.Msgs {
+	for _, message := range flowInfo.Msgs {
 		var sdkMsg sdk.Msg
 		err := unpacker.UnpackAny(message, &sdkMsg)
 		if err != nil {

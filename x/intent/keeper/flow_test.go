@@ -9,7 +9,7 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-func TestCreateAction(t *testing.T) {
+func TestCreateFlow(t *testing.T) {
 	// Create a mock context and keeper
 	ctx, keepers, _ := CreateTestInput(t, false)
 	types.Denom = sdk.DefaultBondDenom
@@ -30,24 +30,24 @@ func TestCreateAction(t *testing.T) {
 	startTime := time.Now().UTC()
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
-	// Call the CreateAction function
-	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
+	// Call the CreateFlow function
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 
-	// Verify that the auto transaction was created correctly
-	action := keepers.IntentKeeper.GetActionInfo(ctx, 1)
+	// Verify that the flow was created correctly
+	flow := keepers.IntentKeeper.GetFlowInfo(ctx, 1)
 
-	require.Equal(t, uint64(1), action.ID)
-	require.Equal(t, owner.String(), action.Owner)
-	require.Equal(t, label, action.Label)
-	addr, _ := sdk.AccAddressFromBech32(action.FeeAddress)
+	require.Equal(t, uint64(1), flow.ID)
+	require.Equal(t, owner.String(), flow.Owner)
+	require.Equal(t, label, flow.Label)
+	addr, _ := sdk.AccAddressFromBech32(flow.FeeAddress)
 	require.Equal(t, feeFunds, keepers.BankKeeper.GetAllBalances(ctx, addr))
-	require.Equal(t, interval, action.Interval)
-	require.Equal(t, startTime, action.StartTime)
-	require.Equal(t, configuration, *action.Configuration)
+	require.Equal(t, interval, flow.Interval)
+	require.Equal(t, startTime, flow.StartTime)
+	require.Equal(t, configuration, *flow.Configuration)
 }
 
-func TestCreateActionWithZeroFeeFundsWorks(t *testing.T) {
+func TestCreateFlowWithZeroFeeFundsWorks(t *testing.T) {
 	// Create a mock context and keeper
 	ctx, keepers, _ := CreateTestInput(t, false)
 	types.Denom = sdk.DefaultBondDenom
@@ -67,24 +67,24 @@ func TestCreateActionWithZeroFeeFundsWorks(t *testing.T) {
 	startTime := time.Now().UTC()
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
-	// Call the CreateAction function
-	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
+	// Call the CreateFlow function
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 
-	// Verify that the auto transaction was created correctly
-	action := keepers.IntentKeeper.GetActionInfo(ctx, 1)
+	// Verify that the flow was created correctly
+	flow := keepers.IntentKeeper.GetFlowInfo(ctx, 1)
 
-	require.Equal(t, uint64(1), action.ID)
-	require.Equal(t, owner.String(), action.Owner)
-	require.Equal(t, label, action.Label)
-	addr, _ := sdk.AccAddressFromBech32(action.FeeAddress)
+	require.Equal(t, uint64(1), flow.ID)
+	require.Equal(t, owner.String(), flow.Owner)
+	require.Equal(t, label, flow.Label)
+	addr, _ := sdk.AccAddressFromBech32(flow.FeeAddress)
 	require.Equal(t, sdk.Coins{}, keepers.BankKeeper.GetAllBalances(ctx, addr))
-	require.Equal(t, interval, action.Interval)
-	require.Equal(t, startTime, action.StartTime)
-	require.Equal(t, configuration, *action.Configuration)
+	require.Equal(t, interval, flow.Interval)
+	require.Equal(t, startTime, flow.StartTime)
+	require.Equal(t, configuration, *flow.Configuration)
 }
 
-func TestGetActionsForBlock(t *testing.T) {
+func TestGetFlowsForBlock(t *testing.T) {
 	// Create a mock context and keeper
 	ctx, keepers, _ := CreateTestInput(t, false)
 	types.Denom = sdk.DefaultBondDenom
@@ -105,13 +105,13 @@ func TestGetActionsForBlock(t *testing.T) {
 	startTime := time.Now().UTC()
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
-	// Call the CreateAction function
-	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
+	// Call the CreateFlow function
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
-	// Call the CreateAction function
-	err = keepers.IntentKeeper.CreateAction(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
+	// Call the CreateFlow function
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
-	actions := keepers.IntentKeeper.GetActionsForBlock(ctx.WithBlockTime(startTime.Add(interval)))
-	require.Equal(t, len(actions), 2)
+	flows := keepers.IntentKeeper.GetFlowsForBlock(ctx.WithBlockTime(startTime.Add(interval)))
+	require.Equal(t, len(flows), 2)
 
 }

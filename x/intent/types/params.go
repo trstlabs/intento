@@ -12,82 +12,82 @@ import (
 )
 
 var (
-	// ActionFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
-	DefaultActionFundsCommission int64 = 2 //2%
-	// ActionConstantFee fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultActionConstantFee int64 = 5_000 // 0.005trst
-	// ActionFlexFeeMul is the denominator for the gas fee
-	DefaultActionFlexFeeMul int64 = 10 // in %
+	// FlowFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
+	DefaultFlowFundsCommission int64 = 2 //2%
+	// FlowConstantFee fee to prevent spam of auto messages, to be distributed to community pool
+	DefaultFlowConstantFee int64 = 5_000 // 0.005trst
+	// FlowFlexFeeMul is the denominator for the gas fee
+	DefaultFlowFlexFeeMul int64 = 10 // in %
 	// GasFeeCoins fee to prevent spam of auto messages, to be distributed to community pool
 	DefaultGasFeeCoins sdk.Coins = sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(1))) // 1uinto
-	// Default max period for a Action that is self-executing
-	DefaultMaxActionDuration time.Duration = time.Hour * 24 * 366 * 10 // a little over 2 years
-	// MinActionDuration sets the minimum duration for a Action
-	DefaultMinActionDuration time.Duration = time.Second * 60
-	// MinActionInterval sets the minimum interval self-execution
-	DefaultMinActionInterval time.Duration = time.Second * 60
-	// DefaultRelayerReward for a given action type
+	// Default max period for a Flow that is self-executing
+	DefaultMaxFlowDuration time.Duration = time.Hour * 24 * 366 * 10 // a little over 2 years
+	// MinFlowDuration sets the minimum duration for a Flow
+	DefaultMinFlowDuration time.Duration = time.Second * 60
+	// MinFlowInterval sets the minimum interval self-execution
+	DefaultMinFlowInterval time.Duration = time.Second * 60
+	// DefaultRelayerReward for a given flow type
 	DefaultRelayerReward int64 = 10_000 //0.01trst
 
 )
 
 // Parameter store key
 var (
-	KeyActionFundsCommission = []byte("ActionFundsCommission")
-	KeyActionFlexFeeMul      = []byte("ActionFlexFeeMul")
-	KeyActionConstantFee     = []byte("ActionConstantFee")
-	KeyGasFeeCoins           = []byte("GasFeeCoins")
-	KeyMaxActionDuration     = []byte("MaxActionDuration")
-	KeyMinActionDuration     = []byte("MinActionDuration")
-	KeyMinActionInterval     = []byte("MinActionInterval")
-	KeyRelayerRewards        = []byte("RelayerRewards")
+	KeyFlowFundsCommission = []byte("FlowFundsCommission")
+	KeyFlowFlexFeeMul      = []byte("FlowFlexFeeMul")
+	KeyFlowConstantFee     = []byte("FlowConstantFee")
+	KeyGasFeeCoins         = []byte("GasFeeCoins")
+	KeyMaxFlowDuration     = []byte("MaxFlowDuration")
+	KeyMinFlowDuration     = []byte("MinFlowDuration")
+	KeyMinFlowInterval     = []byte("MinFlowInterval")
+	KeyRelayerRewards      = []byte("RelayerRewards")
 )
 
 // ParamSetPairs - Implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	//fmt.Print("ParamSetPairs..")
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyActionFundsCommission, &p.ActionFundsCommission, validateActionFundsCommission),
-		paramtypes.NewParamSetPair(KeyActionConstantFee, &p.ActionConstantFee, validateActionConstantFee),
-		paramtypes.NewParamSetPair(KeyActionFlexFeeMul, &p.ActionFlexFeeMul, validateActionFlexFeeMul),
+		paramtypes.NewParamSetPair(KeyFlowFundsCommission, &p.FlowFundsCommission, validateFlowFundsCommission),
+		paramtypes.NewParamSetPair(KeyFlowConstantFee, &p.FlowConstantFee, validateFlowConstantFee),
+		paramtypes.NewParamSetPair(KeyFlowFlexFeeMul, &p.FlowFlexFeeMul, validateFlowFlexFeeMul),
 		paramtypes.NewParamSetPair(KeyGasFeeCoins, &p.GasFeeCoins, validateGasFeeCoins),
-		paramtypes.NewParamSetPair(KeyMaxActionDuration, &p.MaxActionDuration, validateActionDuration),
-		paramtypes.NewParamSetPair(KeyMinActionDuration, &p.MinActionDuration, validateActionDuration),
-		paramtypes.NewParamSetPair(KeyMinActionInterval, &p.MinActionInterval, validateActionInterval),
+		paramtypes.NewParamSetPair(KeyMaxFlowDuration, &p.MaxFlowDuration, validateFlowDuration),
+		paramtypes.NewParamSetPair(KeyMinFlowDuration, &p.MinFlowDuration, validateFlowDuration),
+		paramtypes.NewParamSetPair(KeyMinFlowInterval, &p.MinFlowInterval, validateFlowInterval),
 		paramtypes.NewParamSetPair(KeyRelayerRewards, &p.RelayerRewards, validateRelayerRewards),
 	}
 }
 
 // NewParams creates a new Params object
-func NewParams(actionFundsCommission int64, ActionConstantFee int64, ActionFlexFeeMul int64, GasFeeCoins sdk.Coins, maxActionDuration time.Duration, minActionDuration time.Duration, minActionInterval time.Duration, relayerRewards []int64) Params {
-	//fmt.Printf("default intent params. %v \n", actionFundsCommission)
-	return Params{ActionFundsCommission: actionFundsCommission, ActionConstantFee: ActionConstantFee, ActionFlexFeeMul: ActionFlexFeeMul, GasFeeCoins: GasFeeCoins, MaxActionDuration: maxActionDuration, MinActionDuration: minActionDuration, MinActionInterval: minActionInterval, RelayerRewards: relayerRewards}
+func NewParams(flowFundsCommission int64, FlowConstantFee int64, FlowFlexFeeMul int64, GasFeeCoins sdk.Coins, maxFlowDuration time.Duration, minFlowDuration time.Duration, minFlowInterval time.Duration, relayerRewards []int64) Params {
+	//fmt.Printf("default intent params. %v \n", flowFundsCommission)
+	return Params{FlowFundsCommission: flowFundsCommission, FlowConstantFee: FlowConstantFee, FlowFlexFeeMul: FlowFlexFeeMul, GasFeeCoins: GasFeeCoins, MaxFlowDuration: maxFlowDuration, MinFlowDuration: minFlowDuration, MinFlowInterval: minFlowInterval, RelayerRewards: relayerRewards}
 }
 
 // DefaultParams default parameters for intent
 func DefaultParams() Params {
 	//fmt.Print("default intent params..")
-	return NewParams(DefaultActionFundsCommission, DefaultActionConstantFee, DefaultActionFlexFeeMul, DefaultGasFeeCoins, DefaultMaxActionDuration, DefaultMinActionDuration, DefaultMinActionInterval, []int64{DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward})
+	return NewParams(DefaultFlowFundsCommission, DefaultFlowConstantFee, DefaultFlowFlexFeeMul, DefaultGasFeeCoins, DefaultMaxFlowDuration, DefaultMinFlowDuration, DefaultMinFlowInterval, []int64{DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward})
 }
 
 // Validate validates all params
 func (p Params) Validate() error {
-	if err := validateActionFundsCommission(p.ActionFundsCommission); err != nil {
+	if err := validateFlowFundsCommission(p.FlowFundsCommission); err != nil {
 		return err
 	}
-	if err := validateActionDuration(p.MaxActionDuration); err != nil {
+	if err := validateFlowDuration(p.MaxFlowDuration); err != nil {
 		return err
 	}
-	if err := validateActionDuration(p.MinActionDuration); err != nil {
+	if err := validateFlowDuration(p.MinFlowDuration); err != nil {
 		return err
 	}
-	if err := validateActionInterval(p.MinActionInterval); err != nil {
+	if err := validateFlowInterval(p.MinFlowInterval); err != nil {
 		return err
 	}
-	if err := validateActionConstantFee(p.ActionConstantFee); err != nil {
+	if err := validateFlowConstantFee(p.FlowConstantFee); err != nil {
 		return err
 	}
-	if err := validateActionFlexFeeMul(p.ActionFlexFeeMul); err != nil {
+	if err := validateFlowFlexFeeMul(p.FlowFlexFeeMul); err != nil {
 		return err
 	}
 	if err := validateGasFeeCoins(p.GasFeeCoins); err != nil {
@@ -100,70 +100,70 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func validateActionFundsCommission(i interface{}) error {
+func validateFlowFundsCommission(i interface{}) error {
 	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	if v < 1 {
-		return fmt.Errorf("ActionFundsCommission rate must be positive: %d", v)
+		return fmt.Errorf("FlowFundsCommission rate must be positive: %d", v)
 	}
 
 	return nil
 }
 
-func validateActionDuration(i interface{}) error {
+func validateFlowDuration(i interface{}) error {
 	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if v <= 0 {
-		return fmt.Errorf("Action period (between initiation and last self-execuion) must be longer: %d", v)
+		return fmt.Errorf("Flow period (between initiation and last self-execuion) must be longer: %d", v)
 	}
 
 	return nil
 }
 
-func validateActionInterval(i interface{}) error {
+func validateFlowInterval(i interface{}) error {
 	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if v <= 0 {
-		return fmt.Errorf("Action interval must be longer: %d", v)
+		return fmt.Errorf("Flow interval must be longer: %d", v)
 	}
 
 	return nil
 }
 
-func validateActionConstantFee(i interface{}) error {
+func validateFlowConstantFee(i interface{}) error {
 	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	//10_000_000 = 10INTO we do not want to go this high
 	if v > 10_000_000 {
-		return fmt.Errorf("ActionConstantFee must be lower: %T", i)
+		return fmt.Errorf("FlowConstantFee must be lower: %T", i)
 	}
 	if v < 0 {
-		return fmt.Errorf("ActionConstantFee must be 0 or higher: %d", v)
+		return fmt.Errorf("FlowConstantFee must be 0 or higher: %d", v)
 	}
 
 	return nil
 }
-func validateActionFlexFeeMul(i interface{}) error {
+func validateFlowFlexFeeMul(i interface{}) error {
 	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	//5000 = 50x gas cost, we do not want to go this high
 	if v > 5000 {
-		return fmt.Errorf("ActionFlexFeeMul must be lower: %T", i)
+		return fmt.Errorf("FlowFlexFeeMul must be lower: %T", i)
 	}
 	if v < 0 {
-		return fmt.Errorf("ActionFlexFeeMul rate must be 0 or higher: %d", v)
+		return fmt.Errorf("FlowFlexFeeMul rate must be 0 or higher: %d", v)
 	}
 
 	return nil

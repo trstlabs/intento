@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestGetQueryId() {
 	//	 e.g. for querying a validator, `data := stakingtypes.GetValidatorKey(valAddr)`
 	requestData := []byte{0x01, 0x02, 0x03}
 	// module is the name of the module invoking the query, used to find the callback upon response
-	module := "action"
+	module := "flow"
 	// callbackId is a string that is used to identify the callback you'd like to execute upon receiving the result of the query
 	callbackId := "validator"
 	// timeout is the expiry time of the query, in absolute units of time, unix nanos
@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) TestGetQueryId() {
 
 	//  note: the queryID is a has of (module, callbackId, chainId, connectionId, queryType, and request)
 	// .    meaning for a given query type, the ID will be identical across each epoch
-	expectedQueryId := "949655bf177ce43b34bc7d995d7da5439ab01c2f4bcc5db1aa2cc315fc8917d5"
+	expectedQueryId := "89bce283ea12ff8b74763e1d0cb39fdb941c53a416fac86d907d627327b23ddf"
 	expectedUniqueQueryId := "cd2662154e6d76b2b2b92e70c0cac3ccf534f9b74eb5b89819ec509083d00a50"
 
 	query := types.Query{
@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) TestValidateQuery() {
 
 	// We'll borrow a callback from intent since it's should be already registered in the App
 	validCallbackModule := intenttypes.ModuleName
-	validCallbackId := "action" //intentkeeper.ICQCallbackID_Delegation
+	validCallbackId := "flow" //intentkeeper.ICQCallbackID_Delegation
 
 	testCases := []struct {
 		name          string

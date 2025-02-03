@@ -13,16 +13,16 @@ import (
 var (
 	_ sdk.Msg = &MsgRegisterAccount{}
 	_ sdk.Msg = &MsgSubmitTx{}
-	_ sdk.Msg = &MsgSubmitAction{}
-	_ sdk.Msg = &MsgRegisterAccountAndSubmitAction{}
-	_ sdk.Msg = &MsgUpdateAction{}
+	_ sdk.Msg = &MsgSubmitFlow{}
+	_ sdk.Msg = &MsgRegisterAccountAndSubmitFlow{}
+	_ sdk.Msg = &MsgUpdateFlow{}
 	_ sdk.Msg = &MsgCreateHostedAccount{}
 	_ sdk.Msg = &MsgUpdateHostedAccount{}
 
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitTx{}
-	_ codectypes.UnpackInterfacesMessage = MsgSubmitAction{}
-	_ codectypes.UnpackInterfacesMessage = MsgRegisterAccountAndSubmitAction{}
-	_ codectypes.UnpackInterfacesMessage = MsgUpdateAction{}
+	_ codectypes.UnpackInterfacesMessage = MsgSubmitFlow{}
+	_ codectypes.UnpackInterfacesMessage = MsgRegisterAccountAndSubmitFlow{}
+	_ codectypes.UnpackInterfacesMessage = MsgUpdateFlow{}
 )
 
 // NewMsgRegisterAccount creates a new MsgRegisterAccount instance
@@ -126,14 +126,14 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgSubmitAction creates a new NewMsgSubmitAction instance
-func NewMsgSubmitAction(owner, label string, sdkMsgs []sdk.Msg, connectionID string, hostConnectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgSubmitAction, error) {
+// NewMsgSubmitFlow creates a new NewMsgSubmitFlow instance
+func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID string, hostConnectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgSubmitFlow, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
 	}
 
-	return &MsgSubmitAction{
+	return &MsgSubmitFlow{
 		Owner:            owner,
 		Label:            label,
 		Msgs:             anys,
@@ -151,7 +151,7 @@ func NewMsgSubmitAction(owner, label string, sdkMsgs []sdk.Msg, connectionID str
 }
 
 // UnpackInterfaces implements codectypes.UnpackInterfacesMessage
-func (msg MsgSubmitAction) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (msg MsgSubmitFlow) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var sdkMsgs []sdk.Msg
 	for _, message := range msg.Msgs {
 		unpacker.UnpackAny(message, &sdkMsgs)
@@ -160,7 +160,7 @@ func (msg MsgSubmitAction) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // GetTxMsgs fetches cached any messages
-func (msg *MsgSubmitAction) GetTxMsgs() []sdk.Msg {
+func (msg *MsgSubmitFlow) GetTxMsgs() []sdk.Msg {
 	var sdkMsgs []sdk.Msg
 	for _, message := range msg.Msgs {
 		sdkMsg, ok := message.GetCachedValue().(sdk.Msg)
@@ -174,7 +174,7 @@ func (msg *MsgSubmitAction) GetTxMsgs() []sdk.Msg {
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgSubmitAction) GetSigners() []sdk.AccAddress {
+func (msg MsgSubmitFlow) GetSigners() []sdk.AccAddress {
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		panic(err)
@@ -183,7 +183,7 @@ func (msg MsgSubmitAction) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgSubmitAction) ValidateBasic() error {
+func (msg MsgSubmitFlow) ValidateBasic() error {
 	if len(msg.Msgs) == 0 {
 		return fmt.Errorf("msg.Msgs is empty, at least one message is required")
 	}
@@ -209,7 +209,7 @@ func (msg MsgSubmitAction) ValidateBasic() error {
 		}
 
 		if err := m.ValidateBasic(); err != nil {
-			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate action message: %s", err.Error())
+			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate flow message: %s", err.Error())
 		}
 
 	}
@@ -218,13 +218,13 @@ func (msg MsgSubmitAction) ValidateBasic() error {
 }
 
 // NewMsgSend creates a new MsgSend instance
-func NewMsgRegisterAccountAndSubmitAction(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration, version string) (*MsgRegisterAccountAndSubmitAction, error) {
+func NewMsgRegisterAccountAndSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration, version string) (*MsgRegisterAccountAndSubmitFlow, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
 	}
 
-	return &MsgRegisterAccountAndSubmitAction{
+	return &MsgRegisterAccountAndSubmitFlow{
 		Owner:         owner,
 		Label:         label,
 		ConnectionId:  connectionID,
@@ -239,7 +239,7 @@ func NewMsgRegisterAccountAndSubmitAction(owner, label string, sdkMsgs []sdk.Msg
 }
 
 // UnpackInterfaces implements codectypes.UnpackInterfacesMessage
-func (msg MsgRegisterAccountAndSubmitAction) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (msg MsgRegisterAccountAndSubmitFlow) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var sdkMsgs []sdk.Msg
 	for _, message := range msg.Msgs {
 		unpacker.UnpackAny(message, &sdkMsgs)
@@ -248,7 +248,7 @@ func (msg MsgRegisterAccountAndSubmitAction) UnpackInterfaces(unpacker codectype
 }
 
 // GetTxMsgs fetches cached any messages
-func (msg *MsgRegisterAccountAndSubmitAction) GetTxMsgs() []sdk.Msg {
+func (msg *MsgRegisterAccountAndSubmitFlow) GetTxMsgs() []sdk.Msg {
 	var sdkMsgs []sdk.Msg
 	for _, message := range msg.Msgs {
 		sdkMsg, ok := message.GetCachedValue().(sdk.Msg)
@@ -262,7 +262,7 @@ func (msg *MsgRegisterAccountAndSubmitAction) GetTxMsgs() []sdk.Msg {
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgRegisterAccountAndSubmitAction) GetSigners() []sdk.AccAddress {
+func (msg MsgRegisterAccountAndSubmitFlow) GetSigners() []sdk.AccAddress {
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		panic(err)
@@ -271,7 +271,7 @@ func (msg MsgRegisterAccountAndSubmitAction) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgRegisterAccountAndSubmitAction) ValidateBasic() error {
+func (msg MsgRegisterAccountAndSubmitFlow) ValidateBasic() error {
 	if len(msg.Msgs) == 0 {
 		return fmt.Errorf("msg.Msgs is empty, at least one message is required")
 	}
@@ -291,7 +291,7 @@ func (msg MsgRegisterAccountAndSubmitAction) ValidateBasic() error {
 		}
 
 		if err := m.ValidateBasic(); err != nil {
-			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate action message: %s", err.Error())
+			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate flow message: %s", err.Error())
 		}
 
 	}
@@ -341,14 +341,14 @@ func checkConditions(conditions ExecutionConditions, lenMsgMsgs int) error {
 	return nil
 }
 
-// NewMsgUpdateAction creates a new NewMsgUpdateAction instance
-func NewMsgUpdateAction(owner string, id uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgUpdateAction, error) {
+// NewMsgUpdateFlow creates a new NewMsgUpdateFlow instance
+func NewMsgUpdateFlow(owner string, id uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgUpdateFlow, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
 	}
 
-	return &MsgUpdateAction{
+	return &MsgUpdateFlow{
 		Owner:         owner,
 		ID:            id,
 		Label:         label,
@@ -366,7 +366,7 @@ func NewMsgUpdateAction(owner string, id uint64, label string, sdkMsgs []sdk.Msg
 }
 
 // UnpackInterfaces implements codectypes.UnpackInterfacesMessage
-func (msg MsgUpdateAction) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+func (msg MsgUpdateFlow) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	var sdkMsgs []sdk.Msg
 	for _, message := range msg.Msgs {
 		unpacker.UnpackAny(message, &sdkMsgs)
@@ -375,7 +375,7 @@ func (msg MsgUpdateAction) UnpackInterfaces(unpacker codectypes.AnyUnpacker) err
 }
 
 // GetTxMsgs fetches cached any messages
-func (msg *MsgUpdateAction) GetTxMsgs() []sdk.Msg {
+func (msg *MsgUpdateFlow) GetTxMsgs() []sdk.Msg {
 	var sdkMsgs []sdk.Msg
 	for _, message := range msg.Msgs {
 		sdkMsg, ok := message.GetCachedValue().(sdk.Msg)
@@ -389,7 +389,7 @@ func (msg *MsgUpdateAction) GetTxMsgs() []sdk.Msg {
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgUpdateAction) GetSigners() []sdk.AccAddress {
+func (msg MsgUpdateFlow) GetSigners() []sdk.AccAddress {
 	owner, err := sdk.AccAddressFromBech32(msg.Owner)
 	if err != nil {
 		panic(err)
@@ -398,7 +398,7 @@ func (msg MsgUpdateAction) GetSigners() []sdk.AccAddress {
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgUpdateAction) ValidateBasic() error {
+func (msg MsgUpdateFlow) ValidateBasic() error {
 	if strings.TrimSpace(msg.Owner) == "" {
 		return errorsmod.Wrap(ErrInvalidAddress, "missing creator address")
 	}
@@ -418,7 +418,7 @@ func (msg MsgUpdateAction) ValidateBasic() error {
 		}
 
 		if err := m.ValidateBasic(); err != nil {
-			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate action message: %s", err.Error())
+			return errorsmod.Wrapf(ErrUnknownRequest, "cannot validate flow message: %s", err.Error())
 		}
 
 	}

@@ -56,8 +56,8 @@ func (q QueryServer) InterchainAccountFromAddress(goCtx context.Context, req *ty
 	return types.NewQueryInterchainAccountResponse(ica), nil
 }
 
-// Action implements the Query/ActiongRPC method
-func (q QueryServer) Action(c context.Context, req *types.QueryActionRequest) (*types.QueryActionResponse, error) {
+// Flow implements the Query/FlowgRPC method
+func (q QueryServer) Flow(c context.Context, req *types.QueryFlowRequest) (*types.QueryFlowResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -67,20 +67,20 @@ func (q QueryServer) Action(c context.Context, req *types.QueryActionRequest) (*
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	actionInfo, err := q.keeper.TryGetActionInfo(ctx, id)
+	flowInfo, err := q.keeper.TryGetFlowInfo(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	// for msg := range actionInfo.Msgs{
-	// 	makeReadableMsgData(&actionInfo, msg)
+	// for msg := range flowInfo.Msgs{
+	// 	makeReadableMsgData(&flowInfo, msg)
 	// }
 
-	return &types.QueryActionResponse{
-		ActionInfo: actionInfo,
+	return &types.QueryFlowResponse{
+		FlowInfo: flowInfo,
 	}, nil
 }
 
-func (q QueryServer) ActionHistory(ctx context.Context, req *types.QueryActionHistoryRequest) (*types.QueryActionHistoryResponse, error) {
+func (q QueryServer) FlowHistory(ctx context.Context, req *types.QueryFlowHistoryRequest) (*types.QueryFlowHistoryResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")
 	}
@@ -91,14 +91,14 @@ func (q QueryServer) ActionHistory(ctx context.Context, req *types.QueryActionHi
 		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
 	}
 
-	// Assuming ActionHistoryEntry items are stored with keys prefixed by id
+	// Assuming FlowHistoryEntry items are stored with keys prefixed by id
 
 	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.GetActionHistoryKey(id))
+	prefixStore := prefix.NewStore(store, types.GetFlowHistoryKey(id))
 	// Paginate over the prefixed store
-	var historyEntries []types.ActionHistoryEntry
+	var historyEntries []types.FlowHistoryEntry
 	pageRes, err := query.Paginate(prefixStore, req.Pagination, func(key []byte, value []byte) error {
-		var historyEntry types.ActionHistoryEntry
+		var historyEntry types.FlowHistoryEntry
 		if err := q.keeper.cdc.Unmarshal(value, &historyEntry); err != nil {
 			return err
 		}
@@ -111,27 +111,27 @@ func (q QueryServer) ActionHistory(ctx context.Context, req *types.QueryActionHi
 	}
 
 	// Return paginated results
-	return &types.QueryActionHistoryResponse{
+	return &types.QueryFlowHistoryResponse{
 		History:    historyEntries,
 		Pagination: pageRes,
 	}, nil
 }
 
-// Actions implements the Query/Actions gRPC method
-func (q QueryServer) Actions(c context.Context, req *types.QueryActionsRequest) (*types.QueryActionsResponse, error) {
+// Flows implements the Query/Flows gRPC method
+func (q QueryServer) Flows(c context.Context, req *types.QueryFlowsRequest) (*types.QueryFlowsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	actions := make([]types.ActionInfo, 0)
+	flows := make([]types.FlowInfo, 0)
 	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.ActionKeyPrefix)
+	prefixStore := prefix.NewStore(store, types.FlowKeyPrefix)
 
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		if accumulate {
-			var c types.ActionInfo
+			var c types.FlowInfo
 			q.keeper.cdc.MustUnmarshal(value, &c)
-			actions = append(actions, c)
+			flows = append(flows, c)
 
 		}
 		return true, nil
@@ -141,33 +141,33 @@ func (q QueryServer) Actions(c context.Context, req *types.QueryActionsRequest) 
 		return nil, err
 	}
 
-	return &types.QueryActionsResponse{
-		ActionInfos: actions,
-		Pagination:  pageRes,
+	return &types.QueryFlowsResponse{
+		FlowInfos:  flows,
+		Pagination: pageRes,
 	}, nil
 }
 
-// ActionsForOwner implements the Query/ActionsForOwner gRPC method
-func (q QueryServer) ActionsForOwner(c context.Context, req *types.QueryActionsForOwnerRequest) (*types.QueryActionsForOwnerResponse, error) {
+// FlowsForOwner implements the Query/FlowsForOwner gRPC method
+func (q QueryServer) FlowsForOwner(c context.Context, req *types.QueryFlowsForOwnerRequest) (*types.QueryFlowsForOwnerResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	actions := make([]types.ActionInfo, 0)
+	flows := make([]types.FlowInfo, 0)
 
 	ownerAddress, err := sdk.AccAddressFromBech32(req.Owner)
 	if err != nil {
 		return nil, err
 	}
 	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.GetActionsByOwnerPrefix(ownerAddress))
+	prefixStore := prefix.NewStore(store, types.GetFlowsByOwnerPrefix(ownerAddress))
 
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
-			actionID := types.GetIDFromBytes(key)
-			actionInfo := q.keeper.GetActionInfo(ctx, actionID)
+			flowID := types.GetIDFromBytes(key)
+			flowInfo := q.keeper.GetFlowInfo(ctx, flowID)
 
-			actions = append(actions, actionInfo)
+			flows = append(flows, flowInfo)
 
 		}
 		return true, nil
@@ -176,22 +176,9 @@ func (q QueryServer) ActionsForOwner(c context.Context, req *types.QueryActionsF
 		return nil, err
 	}
 
-	return &types.QueryActionsForOwnerResponse{
-		ActionInfos: actions,
-		Pagination:  pageRes,
-	}, nil
-}
-
-func (q QueryServer) ActionIbcTxUsage(c context.Context, req *types.QueryActionIbcUsageRequest) (*types.QueryActionIbcUsageResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	actionIbcUsage := make([]types.ActionIbcUsage, 0)
-
-	return &types.QueryActionIbcUsageResponse{
-		ActionIbcUsage: actionIbcUsage,
-		Pagination:     nil,
+	return &types.QueryFlowsForOwnerResponse{
+		FlowInfos:  flows,
+		Pagination: pageRes,
 	}, nil
 }
 
@@ -259,9 +246,9 @@ func (q QueryServer) HostedAccountsByAdmin(c context.Context, req *types.QueryHo
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			hostedAccountAddress := string(key)
-			actionInfo := q.keeper.GetHostedAccount(ctx, hostedAccountAddress)
+			flowInfo := q.keeper.GetHostedAccount(ctx, hostedAccountAddress)
 
-			hostedAccounts = append(hostedAccounts, actionInfo)
+			hostedAccounts = append(hostedAccounts, flowInfo)
 
 		}
 		return true, nil

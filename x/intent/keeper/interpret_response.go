@@ -16,8 +16,8 @@ import (
 )
 
 // CompareResponseValue compares the value of a response key based on the ResponseComparison
-func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses []*cdctypes.Any, comparison types.Comparison) (bool, error) {
-	k.Logger(ctx).Debug("response comparison", "actionID", actionID)
+func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses []*cdctypes.Any, comparison types.Comparison) (bool, error) {
+	k.Logger(ctx).Debug("response comparison", "flowID", flowID)
 	var queryCallback []byte = nil
 	if comparison.ICQConfig != nil {
 		queryCallback = comparison.ICQConfig.Response
@@ -108,7 +108,7 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, actionID uint64, responses
 }
 
 // FeedbackLoop replaces the value in a message with the value from a response
-func (k Keeper) RunFeedbackLoops(ctx sdk.Context, actionID uint64, msgs *[]*cdctypes.Any, conditions *types.ExecutionConditions) error {
+func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctypes.Any, conditions *types.ExecutionConditions) error {
 	if conditions == nil || len(conditions.FeedbackLoops) == 0 || conditions.FeedbackLoops[0].ValueType == "" {
 		return nil
 	}
@@ -118,14 +118,14 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 			queryCallback = feedbackLoop.ICQConfig.Response
 		}
 
-		k.Logger(ctx).Debug("running feedback loop", "actionID", actionID, "queryCallback", queryCallback)
+		k.Logger(ctx).Debug("running feedback loop", "flowID", flowID, "queryCallback", queryCallback)
 
 		if feedbackLoop.ResponseKey == "" && queryCallback == nil {
 			return nil
 		}
 
-		if feedbackLoop.ActionID != 0 {
-			actionID = feedbackLoop.ActionID
+		if feedbackLoop.FlowID != 0 {
+			flowID = feedbackLoop.FlowID
 
 		}
 
@@ -156,7 +156,7 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, actionID uint64, msgs *[]*cdct
 			}
 
 		} else {
-			history, err := k.GetActionHistory(ctx, actionID)
+			history, err := k.GetFlowHistory(ctx, flowID)
 			if err != nil {
 				return err
 			}

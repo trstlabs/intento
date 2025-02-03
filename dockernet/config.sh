@@ -263,26 +263,26 @@ WAIT_FOR_BLOCK() {
   done
 }
 
-ACTION_ID="1"
+FLOW_ID="1"
 
-GET_ACTION_ID() {
+GET_FLOW_ID() {
   address=$1
   max_blocks=${2:-10} # Default to 10 if not specified
 
-  # Fetch initial transaction IDs
-  initial_actions=($($INTO_MAIN_CMD q intent list-actions-by-owner $address | awk -v RS='  ' '$1 == "id:" {print $2}'))
-  echo "Initial Actions: ${initial_actions[*]}"
+  # Fetch initial flow IDs
+  initial_flows=($($INTO_MAIN_CMD q intent list-flows-by-owner $address | awk -v RS='  ' '$1 == "id:" {print $2}'))
+  echo "Initial Flows: ${initial_flows[*]}"
 
   for i in $(seq $max_blocks); do
-    # Fetch new transaction IDs
-   new_actions=($($INTO_MAIN_CMD q intent list-actions-by-owner $address | awk -v RS='  ' '$1 == "id:" {print $2}'))
-    echo "New Actions: ${new_actions[*]}"
-    # Find new transaction ID by comparing initial and new lists
-    for action_id in "${new_actions[@]}"; do
-      if [[ ! " ${initial_actions[*]} " =~ " ${action_id} " ]]; then
-        echo "New Action detected with ID: $action_id"
-       #  return $((10#$id)) # Return the transaction ID as an integer
-       ACTION_ID=$action_id
+    # Fetch new IDs
+   new_flows=($($INTO_MAIN_CMD q intent list-flows-by-owner $address | awk -v RS='  ' '$1 == "id:" {print $2}'))
+    echo "New Flows: ${new_flows[*]}"
+    # Find new ID by comparing initial and new lists
+    for flow_id in "${new_flows[@]}"; do
+      if [[ ! " ${initial_flows[*]} " =~ " ${flow_id} " ]]; then
+        echo "New Flow detected with ID: $flow_id"
+       #  return $((10#$id)) # Return the ID as an integer
+       FLOW_ID=$flow_id
        return 0
       fi
     done
@@ -290,29 +290,29 @@ GET_ACTION_ID() {
     # Wait for the next block
     WAIT_FOR_BLOCK $INTO_LOGS
 
-    # Optional: Handle case where no new transactions are found after max_blocks
+    # Optional: Handle case where no new flows are found after max_blocks
     if [[ $i -eq $max_blocks ]]; then
-      echo "No new Actions found after $max_blocks blocks."
-      return -1 # Indicate no new transaction was found
+      echo "No new Flows found after $max_blocks blocks."
+      return -1 # Indicate no new flow was found
     fi
   done
 }
 
-WAIT_FOR_EXECUTED_ACTION_BY_ID() {
+WAIT_FOR_EXECUTED_FLOW_BY_ID() {
   max_blocks=${2:-60} # Default if not specified
 
   for i in $(seq $max_blocks); do
     # Fetch transaction info for the specified id
-    echo "Querying with ID: $ACTION_ID"
-    ACTION_ID=$(echo $ACTION_ID | xargs)
-    history=$($INTO_MAIN_CMD q intent action-history $ACTION_ID )
+    echo "Querying with ID: $FLOW_ID"
+    FLOW_ID=$(echo $FLOW_ID | xargs)
+    history=$($INTO_MAIN_CMD q intent flow-history $FLOW_ID )
 
      # Check if all 'executed' keys are true for the specified tx_id
     executed_count=$(echo "$history" | grep 'executed:' | wc -l)
     executed_true_count=$(echo "$history" | grep 'executed: true' | wc -l)
 
    if [[ "$executed_count" -gt 0 ]] && [[ "$executed_count" -eq "$executed_true_count" ]]; then
-      echo "All 'executed' instances for action ID $ACTION_ID are true."
+      echo "All 'executed' instances for flow ID $FLOW_ID are true."
       sleep 20
       return 0
     fi
@@ -323,7 +323,7 @@ WAIT_FOR_EXECUTED_ACTION_BY_ID() {
 
     # Handle case where the transaction is not executed after max_blocks
     if [[ $i -eq $max_blocks ]]; then
-      echo "Action ID $ACTION_ID not executed after $max_blocks blocks."
+      echo "Flow ID $FLOW_ID not executed after $max_blocks blocks."
       return -1
     fi
   done
@@ -334,14 +334,14 @@ WAIT_FOR_UPDATING_DISABLED() {
 
   for i in $(seq $max_blocks); do
     # Fetch transaction info for the specified tx_id
-    ACTION_ID=$(echo $ACTION_ID | xargs)
-    tx_info=$($INTO_MAIN_CMD q intent action $ACTION_ID)
+    FLOW_ID=$(echo $FLOW_ID | xargs)
+    tx_info=$($INTO_MAIN_CMD q intent flow $FLOW_ID)
 
     # Check if 'updating_disabled' is present in the transaction info
     disabled=$(echo "$tx_info" | grep 'updating_disabled' | awk '{print $2}')
     if [[ "$disabled" == "true" ]]; then
-      echo "action ID info $tx_info."
-      echo "action ID $ACTION_ID updating has been disabled."
+      echo "flow ID info $tx_info."
+      echo "flow ID $FLOW_ID updating has been disabled."
       return 0
     fi
 
@@ -350,7 +350,7 @@ WAIT_FOR_UPDATING_DISABLED() {
 
     # Handle case where the transaction is not executed after max_blocks
     if [[ $i -eq $max_blocks ]]; then
-      echo "action ID $ACTION_ID not executed after $max_blocks blocks."
+      echo "flow ID $FLOW_ID not executed after $max_blocks blocks."
       return -1
     fi
   done

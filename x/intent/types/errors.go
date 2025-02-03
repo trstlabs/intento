@@ -29,16 +29,16 @@ var (
 	ErrBadSender     = errorsmod.Register("ics20-hooks", 25, "bad sender")
 
 	ErrInvalidTime            = errorsmod.Register(ModuleName, 30, "time must be longer than 2 minutes from now")
-	ErrUpdateAction           = errorsmod.Register(ModuleName, 31, "cannot update action parameter")
-	ErrValidateMsgRegistryMsg = errorsmod.Register(ModuleName, 32, "could not validate Action message")
+	ErrUpdateFlow             = errorsmod.Register(ModuleName, 31, "cannot update flow parameter")
+	ErrValidateMsgRegistryMsg = errorsmod.Register(ModuleName, 32, "could not validate Flow message")
 
-	//errors specific to Action execution that are to be appended to ActionHistory entries
-	ErrBadMetadataFormatMsg   = "metadata not properly formatted for: '%v'. %s"
-	ErrBadActionMsg           = "cannot create action: %v"
-	ErrActionConditions       = "conditions to execute not met: %v"
-	ErrActionFeeDistribution  = "distribution error: %s"
-	ErrActionMsgHandling      = "msg handling error: %s"
-	ErrActionResponseUseValue = "msg handling error using response value: %s"
-	ErrSettingActionResult    = "setting action result:  %s"
-	ErrBalanceTooLow          = "balance too low to deduct expected fee; denom: %s"
+	//errors specific to Flow execution that are to be appended to FlowHistory entries
+	ErrBadMetadataFormatMsg = "metadata not properly formatted for: '%v'. %s"
+	ErrBadFlowMsg           = "cannot create flow: %v"
+	ErrFlowConditions       = "conditions to execute not met: %v"
+	ErrFlowFeeDistribution  = "distribution error: %s"
+	ErrFlowMsgHandling      = "msg handling error: %s"
+	ErrFlowResponseUseValue = "msg handling error using response value: %s"
+	ErrSettingFlowResult    = "setting flow result:  %s"
+	ErrBalanceTooLow        = "balance too low to deduct expected fee; denom: %s"
 )

@@ -17,24 +17,24 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, []*cdctypes.Any, error) {
-	// local action
-	if (action.ICAConfig == nil || action.ICAConfig.ConnectionID == "") && (action.HostedConfig == nil || action.HostedConfig.HostedAddress == "") {
-		txMsgs := action.GetTxMsgs(k.cdc)
-		msgResponses, err := handleLocalAction(k, ctx, txMsgs, *action)
-		return err == nil, msgResponses, errorsmod.Wrap(err, "could execute local action")
+func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdctypes.Any, error) {
+	// local flow
+	if (flow.ICAConfig == nil || flow.ICAConfig.ConnectionID == "") && (flow.HostedConfig == nil || flow.HostedConfig.HostedAddress == "") {
+		txMsgs := flow.GetTxMsgs(k.cdc)
+		msgResponses, err := handleLocalFlow(k, ctx, txMsgs, *flow)
+		return err == nil, msgResponses, errorsmod.Wrap(err, "could execute local flow")
 	}
 
-	connectionID := action.ICAConfig.ConnectionID
-	portID := action.ICAConfig.PortID
-	triggerAddress := action.Owner
+	connectionID := flow.ICAConfig.ConnectionID
+	portID := flow.ICAConfig.PortID
+	triggerAddress := flow.Owner
 	//get hosted account from hosted config
-	if action.HostedConfig != nil && action.HostedConfig.HostedAddress != "" {
-		hostedAccount := k.GetHostedAccount(ctx, action.HostedConfig.HostedAddress)
+	if flow.HostedConfig != nil && flow.HostedConfig.HostedAddress != "" {
+		hostedAccount := k.GetHostedAccount(ctx, flow.HostedConfig.HostedAddress)
 		connectionID = hostedAccount.ICAConfig.ConnectionID
 		portID = hostedAccount.ICAConfig.PortID
 		triggerAddress = hostedAccount.HostedAddress
-		err := k.SendFeesToHosted(ctx, *action, hostedAccount)
+		err := k.SendFeesToHosted(ctx, *flow, hostedAccount)
 		if err != nil {
 			return false, nil, errorsmod.Wrap(err, "could not pay hosted account")
 		}
@@ -47,8 +47,8 @@ func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, 
 		return false, nil, icatypes.ErrActiveChannelNotFound
 	}
 
-	//if a message contains "ICA_ADDR" string, the ICA address for the action is retrieved and parsed
-	txMsgs, err := k.parseAndSetMsgs(ctx, action, connectionID, portID)
+	//if a message contains "ICA_ADDR" string, the ICA address for the flow is retrieved and parsed
+	txMsgs, err := k.parseAndSetMsgs(ctx, flow, connectionID, portID)
 	if err != nil {
 		return false, nil, errorsmod.Wrap(err, "could parse and set messages")
 	}
@@ -71,20 +71,20 @@ func (k Keeper) TriggerAction(ctx sdk.Context, action *types.ActionInfo) (bool, 
 		return false, nil, errorsmod.Wrap(err, "could not send ICA message")
 	}
 
-	k.Logger(ctx).Debug("action", "ibc_sequence", res.Sequence)
-	k.setTmpActionID(ctx, action.ID, portID, channelID, res.Sequence)
+	k.Logger(ctx).Debug("flow", "ibc_sequence", res.Sequence)
+	k.setTmpFlowID(ctx, flow.ID, portID, channelID, res.Sequence)
 	return false, nil, nil
 }
 
-func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types.ActionInfo) ([]*cdctypes.Any, error) {
+func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.FlowInfo) ([]*cdctypes.Any, error) {
 	// CacheContext returns a new context with the multi-store branched into a cached storage object
 	// writeCache is called only if all msgs succeed, performing state transitions atomically
 	var msgResponses []*cdctypes.Any
 
 	cacheCtx, writeCache := ctx.CacheContext()
 	for index, msg := range txMsgs {
-		if action.Msgs[index].TypeUrl == "/ibc.applications.transfer.v1.MsgTransfer" {
-			transferMsg, err := types.GetTransferMsg(k.cdc, action.Msgs[index])
+		if flow.Msgs[index].TypeUrl == "/ibc.applications.transfer.v1.MsgTransfer" {
+			transferMsg, err := types.GetTransferMsg(k.cdc, flow.Msgs[index])
 			if err != nil {
 				return nil, err
 			}
@@ -102,7 +102,7 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 			return nil, err
 		}
 		for _, acct := range signers {
-			if sdk.AccAddress(acct).String() != action.Owner {
+			if sdk.AccAddress(acct).String() != flow.Owner {
 				return nil, errorsmod.Wrap(types.ErrUnauthorized, "owner doesn't have permission to send this message")
 			}
 		}
@@ -116,32 +116,31 @@ func handleLocalAction(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, action types
 
 	}
 	writeCache()
-	if !action.Configuration.SaveResponses {
+	if !flow.Configuration.SaveResponses {
 		msgResponses = nil
 	}
 	return msgResponses, nil
 }
 
-// HandleResponseAndSetActionResult sets the result of the last executed ID set at SendAction.
-func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string, channelID string, relayer sdk.AccAddress, seq uint64, msgResponses []*cdctypes.Any) error {
-	id := k.getTmpActionID(ctx, portID, channelID, seq)
+// HandleResponseAndSetFlowResult sets the result of the last executed ID set at SendFlow.
+func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, channelID string, relayer sdk.AccAddress, seq uint64, msgResponses []*cdctypes.Any) error {
+	id := k.getTmpFlowID(ctx, portID, channelID, seq)
 	if id <= 0 {
 		return nil
 	}
-	action := k.GetActionInfo(ctx, id)
+	flow := k.GetFlowInfo(ctx, id)
 
-	actionHistoryEntry, newErr := k.GetLatestActionHistoryEntry(ctx, id)
+	flowHistoryEntry, newErr := k.GetLatestFlowHistoryEntry(ctx, id)
 	if newErr != nil {
-		actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, newErr.Error())
+		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, newErr.Error())
 	}
 
-	msgResponses, msgClass, err := k.HandleDeepResponses(ctx, msgResponses, relayer, action, len(actionHistoryEntry.MsgResponses))
+	msgResponses, msgClass, err := k.HandleDeepResponses(ctx, msgResponses, relayer, flow, len(flowHistoryEntry.MsgResponses))
 	if err != nil {
 		return err
 	}
 
-	k.UpdateActionIbcUsage(ctx, action)
-	owner, err := sdk.AccAddressFromBech32(action.Owner)
+	owner, err := sdk.AccAddressFromBech32(flow.Owner)
 	if err != nil {
 		return err
 	}
@@ -152,86 +151,86 @@ func (k Keeper) HandleResponseAndSetActionResult(ctx sdk.Context, portID string,
 		k.hooks.AfterActionICA(ctx, owner)
 	}
 
-	actionHistoryEntry.Executed = true
+	flowHistoryEntry.Executed = true
 
-	if action.Configuration.SaveResponses {
-		actionHistoryEntry.MsgResponses = append(actionHistoryEntry.MsgResponses, msgResponses...)
+	if flow.Configuration.SaveResponses {
+		flowHistoryEntry.MsgResponses = append(flowHistoryEntry.MsgResponses, msgResponses...)
 	}
 
-	if len(action.Conditions.FeedbackLoops) != 0 {
-		for _, feedbackLoop := range action.Conditions.FeedbackLoops {
-			// Validate MsgsIndex and ActionID
-			if feedbackLoop.MsgsIndex == 0 || feedbackLoop.ActionID != 0 {
-				continue // Skip invalid FeedbackLoops or if ActionID is set to non-default
+	if len(flow.Conditions.FeedbackLoops) != 0 {
+		for _, feedbackLoop := range flow.Conditions.FeedbackLoops {
+			// Validate MsgsIndex and FlowID
+			if feedbackLoop.MsgsIndex == 0 || feedbackLoop.FlowID != 0 {
+				continue // Skip invalid FeedbackLoops or if FlowID is set to non-default
 			}
 
 			// Ensure MsgsIndex is within bounds
-			if len(actionHistoryEntry.MsgResponses)-1 < int(feedbackLoop.MsgsIndex) {
+			if len(flowHistoryEntry.MsgResponses)-1 < int(feedbackLoop.MsgsIndex) {
 				continue // Skip if MsgsIndex exceeds available responses
 			}
 
 			// Trigger remaining execution for the valid FeedbackLoop
-			tmpAction := action
-			tmpAction.Msgs = action.Msgs[feedbackLoop.MsgsIndex:]
+			tmpFlow := flow
+			tmpFlow.Msgs = flow.Msgs[feedbackLoop.MsgsIndex:]
 
-			if err := triggerRemainingMsgs(k, ctx, tmpAction, actionHistoryEntry); err != nil {
+			if err := triggerRemainingMsgs(k, ctx, tmpFlow, flowHistoryEntry); err != nil {
 				return err // Return on the first encountered error
 			}
 		}
 	}
 
-	k.SetCurrentActionHistoryEntry(ctx, action.ID, actionHistoryEntry)
+	k.SetCurrentFlowHistoryEntry(ctx, flow.ID, flowHistoryEntry)
 	return nil
 
 }
 
-func triggerRemainingMsgs(k Keeper, ctx sdk.Context, action types.ActionInfo, actionHistoryEntry *types.ActionHistoryEntry) error {
+func triggerRemainingMsgs(k Keeper, ctx sdk.Context, flow types.FlowInfo, flowHistoryEntry *types.FlowHistoryEntry) error {
 	var errorString = ""
 
-	allowed, err := k.allowedToExecute(ctx, action)
+	allowed, err := k.allowedToExecute(ctx, flow)
 	if !allowed {
-		k.recordActionNotAllowed(ctx, &action, ctx.BlockTime(), err)
+		k.recordFlowNotAllowed(ctx, &flow, ctx.BlockTime(), err)
 
 	}
 
-	actionCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.MaxGas))
-	cacheCtx, writeCtx := actionCtx.CacheContext()
-	k.Logger(ctx).Debug("continuing msg execution", "id", action.ID)
+	flowCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.MaxGas))
+	cacheCtx, writeCtx := flowCtx.CacheContext()
+	k.Logger(ctx).Debug("continuing msg execution", "id", flow.ID)
 
-	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, action, types.MaxGas)
+	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, flow, types.MaxGas)
 	if err != nil {
 		errorString = appendError(errorString, err.Error())
 	} else if feeAddr == nil || feeDenom == "" {
 		errorString = appendError(errorString, (types.ErrBalanceTooLow + feeDenom))
 	}
 
-	err = k.RunFeedbackLoops(cacheCtx, action.ID, &action.Msgs, action.Conditions)
+	err = k.RunFeedbackLoops(cacheCtx, flow.ID, &flow.Msgs, flow.Conditions)
 	if err != nil {
-		return errorsmod.Wrap(err, fmt.Sprintf(types.ErrSettingActionResult, err))
+		return errorsmod.Wrap(err, fmt.Sprintf(types.ErrSettingFlowResult, err))
 	}
 
-	k.Logger(ctx).Debug("triggering msgs", "id", action.ID, "msgs", len(action.Msgs))
-	_, _, err = k.TriggerAction(cacheCtx, &action)
+	k.Logger(ctx).Debug("triggering msgs", "id", flow.ID, "msgs", len(flow.Msgs))
+	_, _, err = k.TriggerFlow(cacheCtx, &flow)
 	if err != nil {
-		errorString = appendError(errorString, fmt.Sprintf(types.ErrActionMsgHandling, err.Error()))
+		errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
 	}
-	fee, err := k.DistributeCoins(cacheCtx, action, feeAddr, feeDenom, ctx.BlockHeader().ProposerAddress)
+	fee, err := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom, ctx.BlockHeader().ProposerAddress)
 	if err != nil {
-		errorString = appendError(errorString, fmt.Sprintf(types.ErrActionFeeDistribution, err.Error()))
+		errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, err.Error()))
 	}
-	actionHistoryEntry.ExecFee = actionHistoryEntry.ExecFee.Add(fee)
+	flowHistoryEntry.ExecFee = flowHistoryEntry.ExecFee.Add(fee)
 
 	if errorString != "" {
-		actionHistoryEntry.Executed = false
-		actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, types.ErrActionMsgHandling+err.Error())
+		flowHistoryEntry.Executed = false
+		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, types.ErrFlowMsgHandling+err.Error())
 
 	}
-	k.SetCurrentActionHistoryEntry(cacheCtx, action.ID, actionHistoryEntry)
+	k.SetCurrentFlowHistoryEntry(cacheCtx, flow.ID, flowHistoryEntry)
 	writeCtx()
 	return nil
 }
 
-func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, action types.ActionInfo, previousMsgsExecuted int) ([]*cdctypes.Any, int, error) {
+func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, flow types.FlowInfo, previousMsgsExecuted int) ([]*cdctypes.Any, int, error) {
 	var msgClass int
 
 	for index, anyResp := range msgResponses {
@@ -247,16 +246,16 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 			msgExecResponse := authztypes.MsgExecResponse{}
 			err := proto.Unmarshal(anyResp.GetValue(), &msgExecResponse)
 			if err != nil {
-				k.Logger(ctx).Debug("handling deep action response unmarshalling", "err", err)
+				k.Logger(ctx).Debug("handling deep flow response unmarshalling", "err", err)
 				return nil, 0, err
 			}
 
-			actionIndex := index + previousMsgsExecuted
-			if actionIndex >= len(action.Msgs) {
+			flowIndex := index + previousMsgsExecuted
+			if flowIndex >= len(flow.Msgs) {
 				return nil, 0, errorsmod.Wrapf(types.ErrMsgResponsesHandling, "expected more message responses")
 			}
 			msgExec := &authztypes.MsgExec{}
-			if err := proto.Unmarshal(action.Msgs[actionIndex].Value, msgExec); err != nil {
+			if err := proto.Unmarshal(flow.Msgs[flowIndex].Value, msgExec); err != nil {
 				return nil, 0, err
 			}
 
@@ -279,7 +278,7 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 				}
 				// in v0.50.8 we were writing msgResponse.Data in that [][]byte and no marshalled anys
 				// https://github.com/cosmos/cosmos-sdk/blob/v0.50.8/x/authz/keeper/keeper.go#L166-L186
-				//	k.Logger(ctx).Debug("action result", "resultBytes", resultBytes)
+				//	k.Logger(ctx).Debug("flow result", "resultBytes", resultBytes)
 
 				//as we do not get typeURL (until cosmos 0.52 and is not possible in 51) we have to rely in this, MsgExec is the only regisrered message that should return results
 				msgRespProto, _, err := handleMsgData(&sdk.MsgData{Data: resultBytes, MsgType: msgExec.Msgs[0].TypeUrl})
@@ -299,51 +298,51 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 	return msgResponses, msgClass, nil
 }
 
-// SetActionOnTimeout sets the action timeout result to the action
+// SetFlowOnTimeout sets the flow timeout result to the flow
 
-func (k Keeper) SetActionOnTimeout(ctx sdk.Context, sourcePort string, channelID string, seq uint64) error {
-	id := k.getTmpActionID(ctx, sourcePort, channelID, seq)
+func (k Keeper) SetFlowOnTimeout(ctx sdk.Context, sourcePort string, channelID string, seq uint64) error {
+	id := k.getTmpFlowID(ctx, sourcePort, channelID, seq)
 	if id <= 0 {
 		return nil
 	}
-	action := k.GetActionInfo(ctx, id)
-	if action.Configuration.ReregisterICAAfterTimeout {
-		action := k.GetActionInfo(ctx, id)
-		metadataString := icatypes.NewDefaultMetadataString(action.ICAConfig.ConnectionID, action.ICAConfig.HostConnectionID)
-		err := k.RegisterInterchainAccount(ctx, action.ICAConfig.ConnectionID, action.Owner, metadataString)
+	flow := k.GetFlowInfo(ctx, id)
+	if flow.Configuration.ReregisterICAAfterTimeout {
+		flow := k.GetFlowInfo(ctx, id)
+		metadataString := icatypes.NewDefaultMetadataString(flow.ICAConfig.ConnectionID, flow.ICAConfig.HostConnectionID)
+		err := k.RegisterInterchainAccount(ctx, flow.ICAConfig.ConnectionID, flow.Owner, metadataString)
 		if err != nil {
 			return err
 		}
 	} else {
-		k.RemoveFromActionQueue(ctx, action)
+		k.RemoveFromFlowQueue(ctx, flow)
 	}
-	k.Logger(ctx).Debug("action packet timed out", "action_id", id)
+	k.Logger(ctx).Debug("flow packet timed out", "flow_id", id)
 
-	actionHistoryEntry, err := k.GetLatestActionHistoryEntry(ctx, id)
+	flowHistoryEntry, err := k.GetLatestFlowHistoryEntry(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	actionHistoryEntry.TimedOut = true
-	k.SetCurrentActionHistoryEntry(ctx, id, actionHistoryEntry)
+	flowHistoryEntry.TimedOut = true
+	k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
 
 	return nil
 }
 
-// SetActionOnTimeout sets the action timeout result to the action
-func (k Keeper) SetActionError(ctx sdk.Context, sourcePort string, channelID string, seq uint64, err string) {
-	id := k.getTmpActionID(ctx, sourcePort, channelID, seq)
+// SetFlowOnTimeout sets the flow timeout result to the flow
+func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort string, channelID string, seq uint64, err string) {
+	id := k.getTmpFlowID(ctx, sourcePort, channelID, seq)
 	if id <= 0 {
 		return
 	}
 
-	k.Logger(ctx).Debug("action", "id", id, "error", err)
+	k.Logger(ctx).Debug("flow", "id", id, "error", err)
 
-	actionHistoryEntry, newErr := k.GetLatestActionHistoryEntry(ctx, id)
+	flowHistoryEntry, newErr := k.GetLatestFlowHistoryEntry(ctx, id)
 	if newErr != nil {
-		actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, newErr.Error())
+		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, newErr.Error())
 	}
 
-	actionHistoryEntry.Errors = append(actionHistoryEntry.Errors, err)
-	k.SetCurrentActionHistoryEntry(ctx, id, actionHistoryEntry)
+	flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, err)
+	k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
 }

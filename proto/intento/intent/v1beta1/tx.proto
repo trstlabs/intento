@@ -8,7 +8,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "cosmos/msg/v1/msg.proto";
-import "intento/intent/v1beta1/action.proto";
+import "intento/intent/v1beta1/flow.proto";
 import "intento/intent/v1beta1/hostedaccount.proto";
 import "amino/amino.proto";
 option go_package = "github.com/trstlabs/intento/x/intent/types";
@@ -23,16 +23,16 @@ service Msg {
   rpc SubmitTx(MsgSubmitTx) returns (MsgSubmitTxResponse) {
     option (google.api.http).post = "/intento/intent/v1beta1/submit-tx";
   }
-  rpc SubmitAction(MsgSubmitAction) returns (MsgSubmitActionResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/submit-action";
+  rpc SubmitFlow(MsgSubmitFlow) returns (MsgSubmitFlowResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/submit-flow";
   }
-  rpc RegisterAccountAndSubmitAction(MsgRegisterAccountAndSubmitAction)
-      returns (MsgRegisterAccountAndSubmitActionResponse) {
+  rpc RegisterAccountAndSubmitFlow(MsgRegisterAccountAndSubmitFlow)
+      returns (MsgRegisterAccountAndSubmitFlowResponse) {
     option (google.api.http).post =
-        "/intento/intent/v1beta1/register-account-submit-action";
+        "/intento/intent/v1beta1/register-account-submit-flow";
   }
-  rpc UpdateAction(MsgUpdateAction) returns (MsgUpdateActionResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/update-action";
+  rpc UpdateFlow(MsgUpdateFlow) returns (MsgUpdateFlowResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/update-flow";
   }
   rpc CreateHostedAccount(MsgCreateHostedAccount)
       returns (MsgCreateHostedAccountResponse) {
@@ -61,7 +61,7 @@ message MsgRegisterAccount {
 // MsgRegisterAccountResponse is the response type for Msg/RegisterAccount
 message MsgRegisterAccountResponse {}
 
-// MsgSubmitTx creates and submits an arbitrary transaction msg to be executed
+// MsgSubmitTx creates and submits an arbitrary msg to be executed
 // locally or using an interchain account
 message MsgSubmitTx {
   option (cosmos.msg.v1.signer) = "owner";
@@ -76,11 +76,11 @@ message MsgSubmitTx {
 // MsgSubmitTxResponse defines the MsgSubmitTx response type
 message MsgSubmitTxResponse {}
 
-// MsgSubmitAction creates, submits and schedules an arbitrary transaction msg
+// MsgSubmitFlow creates, submits and schedules an arbitrary msg
 // to be executed locally or using an interchain account
-message MsgSubmitAction {
+message MsgSubmitFlow {
   option (cosmos.msg.v1.signer) = "owner";
-  option (amino.name)           = "intent/MsgSubmitAction";
+  option (amino.name)           = "intent/MsgSubmitFlow";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
@@ -112,14 +112,14 @@ message MsgSubmitAction {
 }
 
 // MsgSubmitTxResponse defines the MsgSubmitTx response type
-message MsgSubmitActionResponse {}
+message MsgSubmitFlowResponse {}
 
-// MsgRegisterAccountAndSubmitAction creates an interchain account, submits and
-// schedules an arbitrary transaction msg to be executed by this interchain
+// MsgRegisterAccountAndSubmitFlow creates an interchain account, submits and
+// schedules an arbitrary msg to be executed by this interchain
 // account
-message MsgRegisterAccountAndSubmitAction {
+message MsgRegisterAccountAndSubmitFlow {
   option (cosmos.msg.v1.signer) = "owner";
-  option (amino.name)           = "intent/MsgRegisterAccountAndSubmitAction";
+  option (amino.name)           = "intent/MsgRegisterAccountAndSubmitFlow";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
@@ -149,15 +149,15 @@ message MsgRegisterAccountAndSubmitAction {
   ExecutionConditions conditions = 12;
 }
 
-// MsgRegisterAccountAndSubmitActionResponse defines the MsgSubmitTx response
+// MsgRegisterAccountAndSubmitFlowResponse defines the MsgSubmitTx response
 // type
-message MsgRegisterAccountAndSubmitActionResponse {}
+message MsgRegisterAccountAndSubmitFlowResponse {}
 
-// MsgUpdateAction updates an arbitrary transaction msg to be executed locally
+// MsgUpdateFlow updates an arbitrary msg to be executed locally
 // or using an interchain account
-message MsgUpdateAction {
+message MsgUpdateFlow {
   option (cosmos.msg.v1.signer) = "owner";
-  option (amino.name)           = "intent/MsgUpdateAction";
+  option (amino.name)           = "intent/MsgUpdateFlow";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
@@ -186,7 +186,7 @@ message MsgUpdateAction {
 }
 
 // MsgUpdateTxResponse defines the MsgUpdateTx response type
-message MsgUpdateActionResponse {}
+message MsgUpdateFlowResponse {}
 
 message MsgCreateHostedAccount {
   option (cosmos.msg.v1.signer) = "creator";

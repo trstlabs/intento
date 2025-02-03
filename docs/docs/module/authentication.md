@@ -4,7 +4,7 @@ title: Message Authentication
 description: Message Authentication in the Intent Module
 ---
 
-In the Intent module, message authentication is a critical part of ensuring that actions are authorized and executed by the correct entities. This document explains the authentication process for various message types, with a focus on local messages, `MsgExec` messages, and ICA messages.
+In the Intent module, message authentication is a critical part of ensuring that flows are authorized and executed by the correct entities. This document explains the authentication process for various message types, with a focus on local messages, `MsgExec` messages, and ICA messages.
 
 ## Authentication Overview
 
@@ -12,7 +12,7 @@ The module processes three primary message types:
 
 1. **Local Messages**:
    - These are standard messages sent directly by users.
-   - Authentication ensures that the signer matches the action owner specified in the request.
+   - Authentication ensures that the signer matches the flow owner specified in the request.
 
 2. **Authz `MsgExec` Messages**:
    - These messages allow one account to execute messages on behalf of another.
@@ -28,11 +28,11 @@ The module processes three primary message types:
 
 ### Local Messages
 
-Local messages require a direct match between the signer and the action owner. The module validates this relationship explicitly:
+Local messages require a direct match between the signer and the flow owner. The module validates this relationship explicitly:
 
 ```go
-if isLocalMessage(actionInfo) {
-    return k.validateSigners(ctx, codec, actionInfo, message)
+if isLocalMessage(flowInfo) {
+    return k.validateSigners(ctx, codec, flowInfo, message)
 }
 ```
 
@@ -42,18 +42,18 @@ For `MsgExec` messages, authentication is applied to each inner message:
 
 ```go
 if isAuthzMsgExec(message) {
-    return k.validateAuthzMsg(ctx, codec, actionInfo, message)
+    return k.validateAuthzMsg(ctx, codec, flowInfo, message)
 }
 ```
 
-This ensures that delegation rules are respected and all actions performed on behalf of another account are authorized.
+This ensures that delegation rules are respected and all flows performed on behalf of another account are authorized.
 
 ### Hosted ICA Messages
 
 Hosted ICA messages are authenticated differently. Since ICA operates via IBC, the packet sender is already verified by the IBC protocol. Additionally, our module controls which Hosted ICA to use through the configuration provided by the user. Because of this controlled environment, further signer validation is unnecessary for Hosted ICA messages. However, Hosted ICA messages are restricted to `MsgExec` only for added security:
 
 ```go
-if isHostedICAMessage(actionInfo) {
+if isHostedICAMessage(flowInfo) {
     if message.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
         return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Hosted ICA messages")
     }
@@ -66,7 +66,7 @@ if isHostedICAMessage(actionInfo) {
 Self-hosted ICA messages do not require additional restrictions. They are trusted based on the direct control of the owner. These messages are allowed without further validation:
 
 ```go
-if isSelfHostedICAMessage(actionInfo) {
+if isSelfHostedICAMessage(flowInfo) {
     return nil
 }
 ```
@@ -83,7 +83,7 @@ if isSelfHostedICAMessage(actionInfo) {
    - The user specifies which Hosted ICA is used, and this configuration is already expected and verified during setup.
 
 3. **Security for `MsgExec`**:
-   - Restricting Hosted ICA messages to `MsgExec` ensures that only delegated actions are performed, maintaining the security model.
+   - Restricting Hosted ICA messages to `MsgExec` ensures that only delegated flows are performed, maintaining the security model.
   
 ---
 
@@ -92,7 +92,7 @@ if isSelfHostedICAMessage(actionInfo) {
 The following code demonstrates how the module handles authentication for different message types:
 
 ```go
-func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, actionInfo types.ActionInfo, message *codectypes.Any) error {
+func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flowInfo types.FlowInfo, message *codectypes.Any) error {
     var sdkMsg sdk.Msg
     if err := codec.UnpackAny(message, &sdkMsg); err != nil {
         return errorsmod.Wrap(err, "failed to unpack message")
@@ -101,20 +101,20 @@ func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, actionInfo t
     switch {
     case isAuthzMsgExec(message):
         // Validate Authz MsgExec messages.
-        return k.validateAuthzMsg(ctx, codec, actionInfo, message)
+        return k.validateAuthzMsg(ctx, codec, flowInfo, message)
 
-    case isLocalMessage(actionInfo):
+    case isLocalMessage(flowInfo):
         // Validate local messages to ensure the signer matches the owner.
-        return k.validateSigners(ctx, codec, actionInfo, message)
+        return k.validateSigners(ctx, codec, flowInfo, message)
 
-    case isHostedICAMessage(actionInfo):
+    case isHostedICAMessage(flowInfo):
         // Restrict Hosted ICA messages to MsgExec for security.
         if message.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
             return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Hosted ICA messages")
         }
         return nil
 
-    case isSelfHostedICAMessage(actionInfo):
+    case isSelfHostedICAMessage(flowInfo):
         // Allow Self-hosted ICA messages without additional validation.
         return nil
 

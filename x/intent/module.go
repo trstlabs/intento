@@ -54,7 +54,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // RegisterInterfaces registers the module's interface types
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
-	// register custom chain message types so that these can be casted as Any in actions
+	// register custom chain message types so that these can be casted as Any in flows
 	msg_registry.RegisterInterfaces(reg)
 }
 

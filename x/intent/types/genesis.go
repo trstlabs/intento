@@ -24,9 +24,9 @@ func (s GenesisState) ValidateBasic() error {
 		return errorsmod.Wrap(err, "params")
 	}
 
-	for i := range s.ActionInfos {
-		if err := s.ActionInfos[i].ValidateBasic(); err != nil {
-			return errorsmod.Wrapf(err, "action: %d", i)
+	for i := range s.FlowInfos {
+		if err := s.FlowInfos[i].ValidateBasic(); err != nil {
+			return errorsmod.Wrapf(err, "flow: %d", i)
 		}
 
 	}
@@ -38,7 +38,7 @@ func (s GenesisState) ValidateBasic() error {
 	return nil
 }
 
-func (a ActionInfo) ValidateBasic() error {
+func (a FlowInfo) ValidateBasic() error {
 	if a.ID == 0 {
 		return errorsmod.Wrap(ErrEmpty, "code id")
 	}

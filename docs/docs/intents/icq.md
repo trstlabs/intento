@@ -1,7 +1,7 @@
 ---
 sidebar_position: 4
 title: Integrating Interchain Queries
-description: Interchain Queries for conditions in Intent-Based Actions
+description: Interchain Queries for conditions in Intent-Based Flows
 ---
 
 The **Interchain Query (ICQ) feature** enables seamless cross-chain interactions by querying the state of one blockchain from another. This feature allows developers to create intent-based actions that trigger specific behaviors based on the queried data. By utilizing interchain queries, you can automate decision-making processes across multiple blockchains, providing an efficient way to orchestrate complex, multi-chain applications.
@@ -53,49 +53,49 @@ message ICQConfig {
 }
 ```
 
-If SaveResponses in the Action Configuration is set to true, query responses are added to the Action History. Check out the [**Supported Types**](./../module/supported_types.md) page or the TriggerPortal Action Builder for some example queries.
+If SaveResponses in the Flow Configuration is set to true, query responses are added to the Flow History. Check out the [**Supported Types**](./../module/supported_types.md) page or the TriggerPortal Flow Builder for some example queries.
 
 ## User Stories
 
-#### 1. Balance Check for Friday Action
+#### 1. Balance Check for Friday Flow
 
-**As a** blockchain participant, I want the system to check my ATOM balance every Friday and perform a predefined action if my balance exceeds 100.
+**As a** blockchain participant, I want Intento to check my ATOM balance every Friday and perform a predefined action if my balance exceeds 100.
 
-#### 2. Action Based on DAO Vote (Negative Outcome)
+#### 2. Flow Based on DAO Vote (Negative Outcome)
 
-**As a** DAO member, I want the system to monitor DAO vote outcomes every Wednesday and trigger a specific action if the result is negative.
+**As a** DAO member, I want Intento to monitor DAO vote outcomes every Wednesday and trigger a specific action if the result is negative.
 
 #### 3. Validator Set Monitoring
 
-**As a** validator, I want the system to check my validator status daily for one year and automatically unbond my stake if I am removed from the set.
+**As a** validator, I want Intento to check my validator status daily for one year and automatically unbond my stake if I am removed from the set.
 
 #### 4. Automatic Staking if ATOM Balance is Above Threshold
 
-**As a** token holder, I want the system to automatically stake any ATOM balance exceeding 100 every Friday to maximize rewards.
+**As a** token holder, I want Intento to automatically stake any ATOM balance exceeding 100 every Friday to maximize rewards.
 
 #### 5. Alert for Validator Removal After One Year
 
-**As a** blockchain participant, I want the system to monitor my validator status for one year and alert me if my validator is out of the set, triggering an unbonding action.
+**As a** blockchain participant, I want Intento to monitor my validator status for one year and alert me if my validator is out of the set, triggering an unbonding action.
 
-#### 6. DAO Vote Rejection and Action Trigger
+#### 6. DAO Vote Rejection and Flow Trigger
 
-**As a** project lead in a DAO, I want the system to trigger a review process if a vote is rejected on Wednesday to adjust the proposal or take alternative steps.
+**As a** project lead in a DAO, I want Intento to trigger a review process if a vote is rejected on Wednesday to adjust the proposal or take alternative steps.
 
-#### 7. Balance-Based Action Adjustment
+#### 7. Balance-Based Flow Adjustment
 
-**As a** token holder, I want the system to scale actions based on my ATOM balance, staking or transferring the amount that exceeds 100 ATOM every Friday.
+**As a** token holder, I want Intento to scale actions based on my ATOM balance, staking or transferring the amount that exceeds 100 ATOM every Friday.
 
-#### 8. Emergency Action for Validator Removal
+#### 8. Emergency Flow for Validator Removal
 
-**As a** validator, I want the system to automatically unbond my stake and transfer my funds if I am removed from the validator set after one year to avoid penalties.
+**As a** validator, I want Intento to automatically unbond my stake and transfer my funds if I am removed from the validator set after one year to avoid penalties.
 
-#### 9. Weekly Balance Check for Alternative Action
+#### 9. Weekly Balance Check for Alternative Flow
 
-**As a** DeFi participant, I want the system to check my ATOM balance every Friday and trigger borrowing or selling assets if my balance is below 100 ATOM.
+**As a** DeFi participant, I want Intento to check my ATOM balance every Friday and trigger borrowing or selling assets if my balance is below 100 ATOM.
 
 #### 10. DAO Vote and Treasury Allocation
 
-**As a** DAO member, I want the system to monitor negative vote outcomes every Wednesday and automatically reallocate funds or adjust the treasury in line with governance rules.
+**As a** DAO member, I want Intento to monitor negative vote outcomes every Wednesday and automatically reallocate funds or adjust the treasury in line with governance rules.
 
 ## x/interchainqueries
 

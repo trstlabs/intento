@@ -2,8 +2,8 @@ package types
 
 // Governance module event types
 const (
-	AttributeKeyActionOwner = "owner"
-	EventTypeAction         = "action"
-	//EventTypeActionExpired  = "action-expired"
-	AttributeKeyActionID = "action-id"
+	AttributeKeyFlowOwner = "owner"
+	EventTypeFlow         = "flow"
+	//EventTypeFlowExpired  = "flow-expired"
+	AttributeKeyFlowID = "flow-id"
 )

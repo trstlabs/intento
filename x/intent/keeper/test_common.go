@@ -108,14 +108,14 @@ func setupTest(t *testing.T, additionalCoinsInWallets sdk.Coins) (sdk.Context, K
 	walletB, privKeyB := CreateFakeFundedAccount(ctx, accKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 5000)).Add(additionalCoinsInWallets...))
 
 	keeper.SetParams(ctx, intenttypes.Params{
-		ActionFundsCommission: 2,
-		ActionConstantFee:     1_000_000,
-		ActionFlexFeeMul:      100,
-		GasFeeCoins:           sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1))),
-		MaxActionDuration:     time.Hour * 24 * 366 * 10,
-		MinActionDuration:     time.Second * 60,
-		MinActionInterval:     time.Second * 20,
-		RelayerRewards:        []int64{10_000, 10_000, 10_000, 10_000},
+		FlowFundsCommission: 2,
+		FlowConstantFee:     1_000_000,
+		FlowFlexFeeMul:      100,
+		GasFeeCoins:         sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1))),
+		MaxFlowDuration:     time.Hour * 24 * 366 * 10,
+		MinFlowDuration:     time.Second * 60,
+		MinFlowInterval:     time.Second * 20,
+		RelayerRewards:      []int64{10_000, 10_000, 10_000, 10_000},
 	})
 	return ctx, keeper, walletA, privKeyA, walletB, privKeyB
 }

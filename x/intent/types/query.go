@@ -17,43 +17,43 @@ func NewQueryInterchainAccountResponse(interchainAccAddr string) *QueryInterchai
 	}
 }
 
-// NewQueryActionsForOwnerRequest creates and returns a new QueryActionsForOwnerFromAddressRequest
-func NewQueryActionsForOwnerRequest(owner string, pagination *query.PageRequest) *QueryActionsForOwnerRequest {
-	return &QueryActionsForOwnerRequest{
+// NewQueryFlowsForOwnerRequest creates and returns a new QueryFlowsForOwnerFromAddressRequest
+func NewQueryFlowsForOwnerRequest(owner string, pagination *query.PageRequest) *QueryFlowsForOwnerRequest {
+	return &QueryFlowsForOwnerRequest{
 		Owner:      owner,
 		Pagination: pagination,
 	}
 }
 
-// NewQueryActionsForOwnerResponse creates and returns a new QueryActionsForOwnerFromAddressResponse
-func NewQueryActionsForOwnerResponse(actionInfos []ActionInfo) *QueryActionsForOwnerResponse {
-	return &QueryActionsForOwnerResponse{
-		ActionInfos: actionInfos,
+// NewQueryFlowsForOwnerResponse creates and returns a new QueryFlowsForOwnerFromAddressResponse
+func NewQueryFlowsForOwnerResponse(flowInfos []FlowInfo) *QueryFlowsForOwnerResponse {
+	return &QueryFlowsForOwnerResponse{
+		FlowInfos: flowInfos,
 	}
 }
 
-// NewQueryActionsForOwnerRequest creates and returns a new QueryActionsForOwnerFromAddressRequest
-func NewQueryActionsRequest(pagination *query.PageRequest) *QueryActionsRequest {
-	return &QueryActionsRequest{
+// NewQueryFlowsForOwnerRequest creates and returns a new QueryFlowsForOwnerFromAddressRequest
+func NewQueryFlowsRequest(pagination *query.PageRequest) *QueryFlowsRequest {
+	return &QueryFlowsRequest{
 		Pagination: pagination,
 	}
 }
 
-// NewQueryActionsForOwnerResponse creates and returns a new QueryActionsForOwnerFromAddressResponse
-func NewQueryActionsResponse(actionInfos []ActionInfo) *QueryActionsResponse {
-	return &QueryActionsResponse{
-		ActionInfos: actionInfos,
+// NewQueryFlowsForOwnerResponse creates and returns a new QueryFlowsForOwnerFromAddressResponse
+func NewQueryFlowsResponse(flowInfos []FlowInfo) *QueryFlowsResponse {
+	return &QueryFlowsResponse{
+		FlowInfos: flowInfos,
 	}
 }
 
-// NewQueryActionRequest creates and returns a new QueryActionRequest
-func NewQueryActionRequest(id string) *QueryActionRequest {
-	return &QueryActionRequest{Id: id}
+// NewQueryFlowRequest creates and returns a new QueryFlowRequest
+func NewQueryFlowRequest(id string) *QueryFlowRequest {
+	return &QueryFlowRequest{Id: id}
 }
 
-// NewQueryActionHistoryRequest creates and returns a new QueryActionHistoryRequest
-func NewQueryActionHistoryRequest(id string) *QueryActionHistoryRequest {
-	return &QueryActionHistoryRequest{Id: id}
+// NewQueryFlowHistoryRequest creates and returns a new QueryFlowHistoryRequest
+func NewQueryFlowHistoryRequest(id string) *QueryFlowHistoryRequest {
+	return &QueryFlowHistoryRequest{Id: id}
 }
 
 // NewQueryHostedAccountRequest creates and returns a new QueryHostedAccountsRequest

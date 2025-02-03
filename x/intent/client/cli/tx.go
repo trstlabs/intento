@@ -22,7 +22,7 @@ import (
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("%s transactions subcommands", types.ModuleName),
+		Short:                      fmt.Sprintf("%s transflows subcommands", types.ModuleName),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -31,9 +31,9 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		getRegisterAccountCmd(),
 		getSubmitTxCmd(),
-		getSubmitActionCmd(),
-		getRegisterAccountAndSubmitActionCmd(),
-		getUpdateActionCmd(),
+		getSubmitFlowCmd(),
+		getRegisterAccountAndSubmitFlowCmd(),
+		getUpdateFlowCmd(),
 		getCreateHostedAccount(),
 		getUpdateHostedAccountCmd(),
 	)
@@ -129,9 +129,9 @@ func getSubmitTxCmd() *cobra.Command {
 	return cmd
 }
 
-func getSubmitActionCmd() *cobra.Command {
+func getSubmitFlowCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "submit-action [path/to/sdk_msg.json]",
+		Use:  "submit-flow [path/to/sdk_msg.json]",
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -196,7 +196,7 @@ func getSubmitActionCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAction(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagHostConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration, &conditions)
+			msg, err := types.NewMsgSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagHostConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}
@@ -209,16 +209,16 @@ func getSubmitActionCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsAction)
-	cmd.Flags().String(flagDuration, "", "A custom duration for the action e.g. 2h, 6000s, 72h3m0.5s")
+	cmd.Flags().AddFlagSet(fsFlow)
+	cmd.Flags().String(flagDuration, "", "A custom duration for the flow e.g. 2h, 6000s, 72h3m0.5s")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-func getRegisterAccountAndSubmitActionCmd() *cobra.Command {
+func getRegisterAccountAndSubmitFlowCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "register-ica-and-submit-action [path/to/sdk_msg.json]",
+		Use:  "register-ica-and-submit-flow [path/to/sdk_msg.json]",
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -274,7 +274,7 @@ func getRegisterAccountAndSubmitActionCmd() *cobra.Command {
 				TxType:                 icatypes.TxTypeSDKMultiMsg,
 			}))
 
-			msg, err := types.NewMsgRegisterAccountAndSubmitAction(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration, version)
+			msg, err := types.NewMsgRegisterAccountAndSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration, version)
 			if err != nil {
 				return err
 			}
@@ -287,16 +287,16 @@ func getRegisterAccountAndSubmitActionCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsAction)
-	cmd.Flags().String(flagDuration, "", "A custom duration for the action e.g. 2h, 6000s, 72h3m0.5s")
+	cmd.Flags().AddFlagSet(fsFlow)
+	cmd.Flags().String(flagDuration, "", "A custom duration for the flow e.g. 2h, 6000s, 72h3m0.5s")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-func getUpdateActionCmd() *cobra.Command {
+func getUpdateFlowCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "update-action [id] [path/to/sdk_msg.json, optional] ",
+		Use:  "update-flow [id] [path/to/sdk_msg.json, optional] ",
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -367,7 +367,7 @@ func getUpdateActionCmd() *cobra.Command {
 					return err
 				}
 			}
-			msg, err := types.NewMsgUpdateAction(clientCtx.GetFromAddress().String(), id, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration, &conditions)
+			msg, err := types.NewMsgUpdateFlow(clientCtx.GetFromAddress().String(), id, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}
@@ -380,7 +380,7 @@ func getUpdateActionCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsAction)
+	cmd.Flags().AddFlagSet(fsFlow)
 	cmd.Flags().String(flagEndTime, "", "A custom end-time in UNIX time, optional")
 	flags.AddTxFlagsToCmd(cmd)
 

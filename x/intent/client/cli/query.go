@@ -20,7 +20,7 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(getInterchainAccountCmd(), getActionCmd(), getActionHistoryCmd(), getActionsForOwnerCmd(), getActionsCmd(), getHostedAccountsCmd(), getHostedAccountCmd())
+	cmd.AddCommand(getInterchainAccountCmd(), getFlowCmd(), getFlowHistoryCmd(), getFlowsForOwnerCmd(), getFlowsCmd(), getHostedAccountsCmd(), getHostedAccountCmd())
 
 	return cmd
 }
@@ -50,9 +50,9 @@ func getInterchainAccountCmd() *cobra.Command {
 	return cmd
 }
 
-func getActionsForOwnerCmd() *cobra.Command {
+func getFlowsForOwnerCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "list-actions-by-owner [owner]",
+		Use:  "list-flows-by-owner [owner]",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -65,7 +65,7 @@ func getActionsForOwnerCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.ActionsForOwner(cmd.Context(), types.NewQueryActionsForOwnerRequest(args[0], pageReq))
+			res, err := queryClient.FlowsForOwner(cmd.Context(), types.NewQueryFlowsForOwnerRequest(args[0], pageReq))
 			if err != nil {
 				return err
 			}
@@ -75,14 +75,14 @@ func getActionsForOwnerCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "list actions by owner")
+	flags.AddPaginationFlagsToCmd(cmd, "list flows by owner")
 
 	return cmd
 }
 
-func getActionCmd() *cobra.Command {
+func getFlowCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "action [id]",
+		Use:  "flow [id]",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -91,7 +91,7 @@ func getActionCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Action(cmd.Context(), types.NewQueryActionRequest(args[0]))
+			res, err := queryClient.Flow(cmd.Context(), types.NewQueryFlowRequest(args[0]))
 			if err != nil {
 				return err
 			}
@@ -105,9 +105,9 @@ func getActionCmd() *cobra.Command {
 	return cmd
 }
 
-func getActionHistoryCmd() *cobra.Command {
+func getFlowHistoryCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "action-history [id]",
+		Use:  "flow-history [id]",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -116,7 +116,7 @@ func getActionHistoryCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.ActionHistory(cmd.Context(), types.NewQueryActionHistoryRequest(args[0]))
+			res, err := queryClient.FlowHistory(cmd.Context(), types.NewQueryFlowHistoryRequest(args[0]))
 			if err != nil {
 				return err
 			}
@@ -130,9 +130,9 @@ func getActionHistoryCmd() *cobra.Command {
 	return cmd
 }
 
-func getActionsCmd() *cobra.Command {
+func getFlowsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "list-actions",
+		Use:  "list-flows",
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -145,7 +145,7 @@ func getActionsCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.Actions(cmd.Context(), types.NewQueryActionsRequest(pageReq))
+			res, err := queryClient.Flows(cmd.Context(), types.NewQueryFlowsRequest(pageReq))
 			if err != nil {
 				return err
 			}
@@ -155,7 +155,7 @@ func getActionsCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "actions")
+	flags.AddPaginationFlagsToCmd(cmd, "flows")
 
 	return cmd
 }
