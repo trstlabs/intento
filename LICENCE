@@ -1,9 +1,31 @@
-LIMITED ACCESS RIGHTS ONLY; NO USAGE OR OTHER LICENSE GRANTED
+TRST Labs Business Source License 1.1 (BSL 1.1)
+Effective Date: 2025-02-03
+Change Date: 2028-02-03
 
-Copyright 2024 Daniel Dijkstra Holding B.V doing business as TRST Labs.
+Copyright © 2025 Daniel Dijkstra Holding B.V. doing business as TRST Labs.
 
-Other than the right to read the software code or associated documentation files (the “Software”) provided by the copyright holder listed above, no permission or right of any kind is granted to any person obtaining a copy of this Software.  You may obtain a commercial license to use the Software by entering into a separate commercial licensing agreement with TRST Labs.
+1. License Grant
+Under this Business Source License 1.1 (the “License”), you may:
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+Run the Software to operate a (validator) node or participate in the TRST Labs blockchain network (the “Network”).
+Modify and contribute to the Software in the official TRST Labs repository.
 
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+2. Use Restrictions
+Except as explicitly permitted above, you may not:
+
+Use the Software outside the Network (e.g., in another blockchain or service).
+Copy, modify, or distribute the Software for any purpose other than operating or contributing to the Network.
+Reverse engineer, decompile, or extract the source code of any compiled components.
+Provide the Software as a service or integrate it into commercial products without a separate commercial license from TRST Labs.
+
+3. Commercial Use Requires a Separate License
+Any use of the Software for commercial purposes (other than running a node) requires a separate commercial license from TRST Labs.
+
+4. Contributions
+By submitting any code to the official repository, you grant TRST Labs a non-exclusive, irrevocable, worldwide, royalty-free license to use, modify, and distribute your contributions as part of the Software.
+
+5. Change Date & Future Licensing
+On the Change Date, this License will automatically convert to Apache 2.0, unless TRST Labs extends the Business Source License.
+
+6. No Warranty
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
