@@ -263,7 +263,11 @@ func (k Keeper) evaluateComparison(ctx sdk.Context, action types.ActionInfo, com
 	}
 
 	if history[len(history)-1].MsgResponses == nil && history[len(history)-1].QueryResponses == nil {
-		return false, fmt.Errorf("cannot make a comparison, no responses on the target history. Set SaveResponses to true to use responses for comparison")
+		// if we should stop on failure or the condition is explicitly set to need all to be true, we return with an error here
+		if action.Configuration.StopOnFailure || action.Conditions.UseAndForComparisons {
+			return false, fmt.Errorf("did not make a comparison, no responses on the target history. Set SaveResponses to true to use responses for comparison")
+		}
+		return true, nil //default to true in case there is nothing to compare against
 	}
 
 	responses := history[len(history)-1].MsgResponses
@@ -340,6 +344,7 @@ func (k Keeper) recordActionNotAllowed(ctx sdk.Context, action *types.ActionInfo
 	k.Logger(ctx).Debug("action not allowed to execute", "id", action.ID)
 	if errorMsg != nil {
 		k.addActionHistoryEntry(ctx, action, timeOfBlock, sdk.Coin{}, false, nil, fmt.Sprintf(types.ErrActionConditions, errorMsg.Error()))
+		return
 	}
 	k.addActionHistoryEntry(ctx, action, timeOfBlock, sdk.Coin{}, false, nil, "")
 }
