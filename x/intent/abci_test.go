@@ -203,6 +203,7 @@ func createTestTriggerAction(ctx sdk.Context, configuration types.ExecutionConfi
 		Msgs:          anys,
 		Configuration: &configuration,
 		ICAConfig:     &types.ICAConfig{},
+		Conditions:    &types.ExecutionConditions{},
 	}
 	return action, emptyBalanceAcc
 }
