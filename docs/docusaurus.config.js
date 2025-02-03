@@ -7,7 +7,7 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 // const googleTrackingId = 'G-EB7MEE3TJ1';
 const algoliaAppKey = "UTAVANG7NO";
 const algoliaAPIKey = "e828406cee19753665694712b1bf7555";
-const algoliaIndexName = "intento_docs";
+const algoliaIndexName = "netlify_7ccb3497-98e3-447a-9141-fb378dc48eb9_main_all";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
