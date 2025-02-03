@@ -59,7 +59,7 @@ func (s *KeeperTestSuite) SetupMsgSubmitQueryResponse() MsgSubmitQueryResponseTe
 	query := types.Query{
 		Id:               expectedId,
 		CallbackModule:   "intent",
-		CallbackId:       "action",
+		CallbackId:       "flow",
 		ChainId:          apptesting.HostChainId,
 		ConnectionId:     s.TransferPath.EndpointA.ConnectionID,
 		QueryType:        "store/bank", // intentionally leave off key to skip proof
@@ -185,7 +185,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_ExecuteCallback() {
 	// check by invoking without the required mocked state and catching
 	// the error that's thrown at the start of the callback
 	_, err := s.GetMsgServer().SubmitQueryResponse(s.Ctx, &tc.validMsg)
-	s.Require().ErrorContains(err, "action: not found")
+	s.Require().ErrorContains(err, "flow: not found")
 }
 
 func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_FindAndInvokeCallback() {

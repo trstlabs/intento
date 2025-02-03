@@ -14,41 +14,41 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-// GetActionInfo
-func (k Keeper) GetActionInfo(ctx sdk.Context, actionID uint64) types.ActionInfo {
+// GetFlowInfo
+func (k Keeper) GetFlowInfo(ctx sdk.Context, flowID uint64) types.FlowInfo {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	var action types.ActionInfo
-	actionBz := store.Get(types.GetActionKey(actionID))
+	var flow types.FlowInfo
+	flowBz := store.Get(types.GetFlowKey(flowID))
 
-	k.cdc.MustUnmarshal(actionBz, &action)
-	return action
+	k.cdc.MustUnmarshal(flowBz, &flow)
+	return flow
 }
 
-// TryGetActionInfo
-func (k Keeper) TryGetActionInfo(ctx sdk.Context, actionID uint64) (types.ActionInfo, error) {
+// TryGetFlowInfo
+func (k Keeper) TryGetFlowInfo(ctx sdk.Context, flowID uint64) (types.FlowInfo, error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	var action types.ActionInfo
-	actionBz := store.Get(types.GetActionKey(actionID))
-	if actionBz == nil {
-		return types.ActionInfo{}, errorsmod.Wrapf(types.ErrNotFound, "action")
+	var flow types.FlowInfo
+	flowBz := store.Get(types.GetFlowKey(flowID))
+	if flowBz == nil {
+		return types.FlowInfo{}, errorsmod.Wrapf(types.ErrNotFound, "flow")
 	}
-	err := k.cdc.Unmarshal(actionBz, &action)
+	err := k.cdc.Unmarshal(flowBz, &flow)
 	if err != nil {
-		return types.ActionInfo{}, err
+		return types.FlowInfo{}, err
 	}
 
-	return action, nil
+	return flow, nil
 }
 
-func (k Keeper) SetActionInfo(ctx sdk.Context, action *types.ActionInfo) {
+func (k Keeper) SetFlowInfo(ctx sdk.Context, flow *types.FlowInfo) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	store.Set(types.GetActionKey(action.ID), k.cdc.MustMarshal(action))
+	store.Set(types.GetFlowKey(flow.ID), k.cdc.MustMarshal(flow))
 }
 
-func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string, msgs []*cdctypes.Any, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, configuration types.ExecutionConfiguration, hostedConfig types.HostedConfig, portID string, connectionId string, hostConnectionId string, conditions types.ExecutionConditions) error {
+func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, msgs []*cdctypes.Any, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, configuration types.ExecutionConfiguration, hostedConfig types.HostedConfig, portID string, connectionId string, hostConnectionId string, conditions types.ExecutionConditions) error {
 
 	id := k.autoIncrementID(ctx, types.KeyLastID)
-	actionAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
+	flowAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
 	if err != nil {
 		return err
 	}
@@ -61,11 +61,11 @@ func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string
 		HostConnectionID: hostConnectionId,
 	}
 
-	action := types.ActionInfo{
+	flow := types.FlowInfo{
 		ID:            id,
 		Owner:         owner.String(),
 		Label:         label,
-		FeeAddress:    actionAddress.String(),
+		FeeAddress:    flowAddress.String(),
 		Msgs:          msgs,
 		Interval:      interval,
 		StartTime:     startAt,
@@ -77,23 +77,23 @@ func (k Keeper) CreateAction(ctx sdk.Context, owner sdk.AccAddress, label string
 		Conditions:    &conditions,
 	}
 
-	if err := k.SignerOk(ctx, k.cdc, action); err != nil {
+	if err := k.SignerOk(ctx, k.cdc, flow); err != nil {
 		return errorsmod.Wrap(types.ErrSignerNotOk, err.Error())
 	}
 
-	k.SetActionInfo(ctx, &action)
-	k.addToActionOwnerIndex(ctx, owner, id)
+	k.SetFlowInfo(ctx, &flow)
+	k.addToFlowOwnerIndex(ctx, owner, id)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeAction,
-			sdk.NewAttribute(types.AttributeKeyActionID, strconv.FormatUint(id, 10)),
+			types.EventTypeFlow,
+			sdk.NewAttribute(types.AttributeKeyFlowID, strconv.FormatUint(id, 10)),
 		))
 	return nil
 }
 
-func (k Keeper) calculateTimeAndInsertQueue(ctx sdk.Context, startTime time.Time, duration time.Duration, actionID uint64, interval time.Duration) (time.Time, time.Time) {
+func (k Keeper) calculateTimeAndInsertQueue(ctx sdk.Context, startTime time.Time, duration time.Duration, flowID uint64, interval time.Duration) (time.Time, time.Time) {
 	endTime, execTime := calculateEndAndExecTimes(ctx, startTime, duration, interval)
-	k.InsertActionQueue(ctx, actionID, execTime)
+	k.InsertFlowQueue(ctx, flowID, execTime)
 
 	return endTime, execTime
 }
@@ -137,25 +137,25 @@ func (k Keeper) importAutoIncrementID(ctx sdk.Context, lastIDKey []byte, val uin
 	return nil
 }
 
-func (k Keeper) importActionInfo(ctx sdk.Context, actionId uint64, action types.ActionInfo) error {
+func (k Keeper) importFlowInfo(ctx sdk.Context, flowId uint64, flow types.FlowInfo) error {
 
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	key := types.GetActionKey(actionId)
+	key := types.GetFlowKey(flowId)
 	if store.Has(key) {
-		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate code: %d", actionId)
+		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate code: %d", flowId)
 	}
-	// 0x01 | actionId (uint64) -> action
-	store.Set(key, k.cdc.MustMarshal(&action))
+	// 0x01 | flowId (uint64) -> flow
+	store.Set(key, k.cdc.MustMarshal(&flow))
 	return nil
 }
 
-func (k Keeper) IterateActionInfos(ctx sdk.Context, cb func(uint64, types.ActionInfo) bool) {
+func (k Keeper) IterateFlowInfos(ctx sdk.Context, cb func(uint64, types.FlowInfo) bool) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.ActionKeyPrefix)
+	prefixStore := prefix.NewStore(store, types.FlowKeyPrefix)
 
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
-		var c types.ActionInfo
+		var c types.FlowInfo
 		k.cdc.MustUnmarshal(iter.Value(), &c)
 		// cb returns true to stop early
 		if cb(binary.BigEndian.Uint64(iter.Key()), c) {
@@ -164,25 +164,25 @@ func (k Keeper) IterateActionInfos(ctx sdk.Context, cb func(uint64, types.Action
 	}
 }
 
-// addToActionOwnerIndex adds element to the index for actions-by-creator queries
-func (k Keeper) addToActionOwnerIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, actionID uint64) {
+// addToFlowOwnerIndex adds element to the index for flows-by-creator queries
+func (k Keeper) addToFlowOwnerIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, flowID uint64) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
-	store.Set(types.GetActionByOwnerIndexKey(ownerAddress, actionID), []byte{})
+	store.Set(types.GetFlowByOwnerIndexKey(ownerAddress, flowID), []byte{})
 }
 
-// changeActionOwnerIndex changes element to the index for actions-by-creator queries
-// func (k Keeper) changeActionOwnerIndex(ctx sdk.Context, ownerAddress, newOwnerAddress sdk.AccAddress, actionID uint64) {
+// changeFlowOwnerIndex changes element to the index for flows-by-creator queries
+// func (k Keeper) changeFlowOwnerIndex(ctx sdk.Context, ownerAddress, newOwnerAddress sdk.AccAddress, flowID uint64) {
 // 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
-// 	store.Set(types.GetActionByOwnerIndexKey(newOwnerAddress, actionID), []byte{})
-// 	store.Delete(types.GetActionByOwnerIndexKey(ownerAddress, actionID))
+// 	store.Set(types.GetFlowByOwnerIndexKey(newOwnerAddress, flowID), []byte{})
+// 	store.Delete(types.GetFlowByOwnerIndexKey(ownerAddress, flowID))
 // }
 
-// IterateActionsByOwner iterates over all actions with given creator address in order of creation time asc.
-func (k Keeper) IterateActionsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb func(address sdk.AccAddress) bool) {
+// IterateFlowsByOwner iterates over all flows with given creator address in order of creation time asc.
+func (k Keeper) IterateFlowsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb func(address sdk.AccAddress) bool) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.GetActionsByOwnerPrefix(owner))
+	prefixStore := prefix.NewStore(store, types.GetFlowsByOwnerPrefix(owner))
 	for iter := prefixStore.Iterator(nil, nil); iter.Valid(); iter.Next() {
 		key := iter.Key()
 		if cb(key) {
@@ -191,25 +191,25 @@ func (k Keeper) IterateActionsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb 
 	}
 }
 
-// getTmpActionID getds tmp ActionId for a certain port and sequence. This is used to set results and timeouts.
-func (k Keeper) getTmpActionID(ctx sdk.Context, portID string, channelID string, seq uint64) uint64 {
+// getTmpFlowID getds tmp FlowID for a certain port and sequence. This is used to set results and timeouts.
+func (k Keeper) getTmpFlowID(ctx sdk.Context, portID string, channelID string, seq uint64) uint64 {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	// Append both portID and channelID to the key
-	key := append(types.TmpActionIDLatestTX, []byte(portID)...)
+	key := append(types.TmpFlowIDLatestTX, []byte(portID)...)
 	key = append(key, []byte(channelID)...)          // Append channelID after portID
 	key = append(key, types.GetBytesForUint(seq)...) // Append sequence number
 
-	actionIDBz := store.Get(key)
+	flowIDBz := store.Get(key)
 
-	return types.GetIDFromBytes(actionIDBz)
+	return types.GetIDFromBytes(flowIDBz)
 }
 
-func (k Keeper) setTmpActionID(ctx sdk.Context, actionID uint64, portID string, channelID string, seq uint64) {
+func (k Keeper) setTmpFlowID(ctx sdk.Context, flowID uint64, portID string, channelID string, seq uint64) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	// Append both portID and channelID to the key
-	key := append(types.TmpActionIDLatestTX, []byte(portID)...)
+	key := append(types.TmpFlowIDLatestTX, []byte(portID)...)
 	key = append(key, []byte(channelID)...)          // Append channelID after portID
 	key = append(key, types.GetBytesForUint(seq)...) // Append sequence number
 
-	store.Set(key, types.GetBytesForUint(actionID))
+	store.Set(key, types.GetBytesForUint(flowID))
 }

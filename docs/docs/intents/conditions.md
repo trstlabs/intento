@@ -4,7 +4,7 @@ title: Execution Conditions
 pagination_label: Execution Conditions
 ---
 
-In this part of the docs we detail how to use `Conditions` such as `Comparisons` and `Feedback Loops` into your Intent-based Action. With Conditions on Intento you can orchestrate conditional workflows in a structured manner. We will explore these features with examples, including an auto-compounding scenario using `MsgSend`.
+In this part of the docs we detail how to use `Conditions` such as `Comparisons` and `Feedback Loops` into your Intent-based Flow. With Conditions on Intento you can orchestrate conditional workflows in a structured manner. We will explore these features with examples, including an auto-compounding scenario using `MsgSend`.
 
 ## Conditions
 
@@ -88,7 +88,7 @@ Let's illustrate these concepts with an reward claim and send scenario.
 
 ### Step-by-Step Example
 
-#### 1. Define the Withdrawal Action
+#### 1. Define the Withdrawal Flow
 
 First, define an action to withdraw rewards:
 
@@ -129,7 +129,7 @@ comparisons: [{
 }]
 ```
 
-This will compare previous output. Feedback Loops run throughout the flow and can use message 1 outputs for constructing message 2. Comparisons on the other hand, happen at the begining of the flow and determine whether the flow should be executed or not. If you want to use  up-to-date outputs, you can configure the messages into distict Intent-based Actions and reference the withdrawal message from the send action like so:
+This will compare previous output. Feedback Loops run throughout the flow and can use message 1 outputs for constructing message 2. Comparisons on the other hand, happen at the begining of the flow and determine whether the flow should be executed or not. If you want to use  up-to-date outputs, you can configure the messages into distict Intent-based Flows and reference the withdrawal message from the send action like so:
 
 ```js
 comparisons: [{
@@ -137,7 +137,7 @@ comparisons: [{
   ...//other fields
 }]
 
-#### 4. Define the Transfer Action
+#### 4. Define the Transfer Flow
 
 Define an action to transfer the amount using `MsgSend`:
 

@@ -2,72 +2,52 @@
 
 ![Welcome to Intento](docs/static/img/web.png)
 
-With Intento, any action can be set anywhere at any time based on conditions, seamlessly bridging intentions with execution. Intento is a general purpose intent processing zone.
+With Intento, any action can be set anywhere at any time based on conditions, seamlessly bridging intentions with execution. Intento is the blockchain for secure, self-custodial and scalable orchestration of intent-driven actions across any blockchain using real-time inputs, on-chain.
 
 ## What is Intento?
 
-Intento is a protocol that revolutionizes on-chain processing of actions, through a custom Cosmos SDK module. It is designed to process and execute user intentions across IBC-connected chains, making on-chain processes more intuitive, accessible, and efficient. Intento covers a broad range of use cases, from simple scheduled payments to complex interchain operations.
+Intento is a protocol that revolutionizes on-chain orchestration of actions, through a custom Cosmos SDK module. It is designed to process and execute user intentions across IBC-connected chains, making on-chain processes more intuitive, accessible, and efficient. Intento covers a broad range of use cases, from simple scheduled payments to complex interchain operations.
 
-## What is intent processing?
+## Processing of intent-based actions via Flows
 
-Intents contain actions and predefined conditions, which determine how actions are processed. In crypto, we want to process actions with no counterparty risk and in a permissionless and decentralized manner. This has so far only been possible by directly sending transactions to the destination chain. With Intento, you will be able specify your intent to perform any action, anywhere at any moment given any conditions.
+Intents contain actions and predefined conditions, which determine how actions are processed. In crypto, we want to orchestrate actions, or `flows`, with no counterparty risk and in a permissionless and decentralized manner. This has so far only been possible by directly sending transactions to the destination chain. With Intento, you will be able specify your intent to perform any action, anywhere at any moment given any conditions.
 
 ## Key Features
 
-- Full Non-custiodial Execution: Ensures a completely sovereign processing of your actions and conditions.
+- Self-custiodial Execution: a completely sovereign processing of your actions and conditions.
 - Permissionless: Open for everyone.
-- TriggerPortal: An easy to use frontend UI to submit actions
-- Orchestration: Set execution for complex interchain operations.
-- Scalable and VM Agnostic: Designed for compatibility of executing actions on various VMs (CosmWasm and EVM).
-- IBC-Native: Set coordinated actions across blockchains using Interchain Accounts and IBC-hooks
-- Modular and Secure: Utilizes Cosmos SDK, Dymension for settlement and Celestia for security.
-- Privileged Execution: Execute actions on your account by granting permissions to a fixed trigger address.
-
-## How Intento Works
-
-Intento leverages a combination of the Cosmos stack and IBC to provide a seamless processing of intents experience. Users, developers and organisations can orchestrate complex sets of actions, ranging from simple automated payments to sophisticated interchain operations, all composed and executed from the Intento processing chain. By integrating with the IBC protocol on a deep level, Intento not only automates from within a single blockchain but also from and to different blockchains, offering a general purpose solution.
+- [TriggerPortal](./intents/TriggerPortal): An easy to use frontend UI to submit flows
+- Orchestration: Specify complex interchain operations.
+- Scalable and VM Agnostic: Compatibility of executing actions on various VMs.
+- IBC-Native: Coordinated actions across blockchains using Interchain Accounts and IBC-hooks
+- Modular and Secure: Utilizes Cosmos SDK and Celestia DA for security.
+- Privileged Execution: Execute actions on your account by granting permissions to a fixed and unique trigger address.
 
 ## Why Intento?
 
-Intento is not just another processing of intents tool; it is a comprehensive solution designed to make blockchain operations effortless, secure, and efficient. With a focus on user intent, scalability, and interchain capabilities, Intento stands out as the most efficient and effective processing of intents solution in the Web3 ecosystem. Whether you're looking to manage portfolios, streamline payments, or coordinate across blockchains, Intento has you covered.
+Intento is a comprehensive solution designed to make blockchain operations effortless, secure, and efficient. With a focus on user intent, scalability, and interchain capabilities, Intento stands out as the most efficient and effective processing of intents solution in the Web3 ecosystem. Whether you're looking to manage portfolios, streamline payments, or coordinate across blockchains, Intento has you covered.
 
-## Use Cases
+Intento leverages a combination of the Cosmos stack and IBC to provide a seamless experience for workflows. Users, developers and organisations can orchestrate complex sets of actions, ranging from simple automated payments to sophisticated interchain operations, all composed and executed from the Intento processing chain. By integrating with the IBC protocol on a deep level, Intento not only automates from within a single blockchain but also from and to different blockchains, offering a general purpose solution.
 
-Intento opens up endless possibilities for developers, DAOs and end-users alike, including but not limited to:
+Find out more about use cases in the [use cases section](./background/use-cases).
 
-- Orchestrating assets across chains
-- Scheduled payments and subscriptions
-- Cross-chain portfolio management
-- Auto-rebalancing indexes
-- Trading strategies
-- Autocompound operations
-- Swap streaming
-- Payroll services
-- Scheduling governance proposals, tallying and executing proposals
+![pillars](./images/pillars.png)
+The strength of Intento is within the pillars above. These pillars not yet achieved in current automation solutions and these pillars make Intento uniquely positioned as the best workflow solution for DeFi.
 
-## Gas Cost Comparison and Efficiency
-
-Intento sets a new standard for efficiency, outperforming existing solutions that are off-chain, with low gas gas costs. This efficiency not only reduces costs for users but also broadens accessibility, introduces new use cases, and improves the overall user experience in the crypto ecosystem.
-
-<!-- ## Fee model
-
-Unlike bot networks, Intento excels by offering a chain-agnostic platform that performs processing on-chain, ensuring a secure, sustainable and scalable solution. Our modular stack enhances scalability, with a token specifically designed for action processing.
-
-Beyond transaction fees, we've introduced a flexible, gas-based fee system. It's a usage based pricing model with cross-Subsidization. More advanced actions are charged more. This allows us to keep the initial price low and competitive. This ensures a sustainable, and scalable revenue model that grows with our platform. -->
+1. **Self-Custodial**
+   By utilizing programmed accounts on a flow level, Intento enables fully self-custodial execution in a secure manner. This ensures a completely sovereign processing of your actions and conditions. By unlocking self-custody, we enhance security, transparency, and trust, allowing users to execute their intentions confidently and autonomously. With Intento, your blockchain experience is not just about participation, it's about freedom and sovereignty.
+2. **Secure on-chain**
+   On-Chain submission, triggering and processing highlights our dedication to enabling seamless and secure execution of actions across multiple blockchain networks. By leveraging the Inter-Blockchain Communication (IBC) bridging protocol, Intento empowers users to trigger actions effortlessly with any chain, ensuring that every transaction is executed securely and reliably. This capability not only enhances interoperability but also fosters a more cohesive blockchain ecosystem
+3. **Scalable**
+   At Intento, scalability is a cornerstone of our design. Our scalability ensures that as your needs grow, the platform can effortlessly adapt, empowering you to execute transactions and manage assets with confidence and efficiency, no matter the blockchain landscape. Intento sets a new standard for efficiency in the blockchain space, making it scalable through its innovative approach that outperforms existing off-chain solutions with significantly lower gas costs. For more information on gas cost calculations associated with Intento read about [our differentiation](./background/differentiation).
 
 ## Learn more
 
-<!-- [Intento documentation](https://docs.intento.zone)
+[Intento documentation](https://docs.intento.zone)
 
-Other useful links -->
+Other useful links
 
-[Intento main website](https://intento.zone/)
-
-[TRST Labs website](https://trstlabs.xyz/)
-
-[TriggerPortal - one stop action building tool](https://triggerportal.zone/)
-
-[Cosmonaut GPT - your helping hand in building actions](https://chatgpt.com/g/g-cRhoPo6YH-cosmonaut/)
-
-<!-- [Cosmos SDK documentation](https://docs.cosmos.network)
-[Cosmos SDK Tutorials](https://tutorials.cosmos.network) -->
+- [Intento website](https://intento.zone/)
+- [TriggerPortal - one stop tool to interact with Intento Flows](https://triggerportal.zone/)
+- [Block Explorer](https://explorer.intento.zone/)
+- [TRST Labs website](https://trstlabs.xyz/)

@@ -2,14 +2,8 @@ package keeper
 
 import (
 	"cosmossdk.io/math"
-	"cosmossdk.io/store/prefix"
-	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	proto "github.com/cosmos/gogoproto/proto"
-	msgregistry "github.com/trstlabs/intento/x/intent/msg_registry"
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -48,120 +42,4 @@ func (k Keeper) GetRelayerRewardsAvailability(ctx sdk.Context) bool {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	value := store.Get([]byte(types.KeyRelayerRewardsAvailability))
 	return string(value) == "true"
-}
-
-// GetActionIbcUsage
-func (k Keeper) TryGetActionIbcUsage(ctx sdk.Context, owner string) (types.ActionIbcUsage, error) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	var actionUsage types.ActionIbcUsage
-	actionBz := store.Get(append(types.ActionIbcUsageKeyPrefix, []byte(owner)...))
-
-	err := k.cdc.Unmarshal(actionBz, &actionUsage)
-	if err != nil {
-		return types.ActionIbcUsage{}, err
-	}
-	return actionUsage, nil
-}
-
-func (k Keeper) SetActionIbcUsage(ctx sdk.Context, actionUsage *types.ActionIbcUsage) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	store.Set(append(types.ActionIbcUsageKeyPrefix, []byte(actionUsage.Address)...), k.cdc.MustMarshal(actionUsage))
-}
-
-func (k Keeper) UpdateActionIbcUsage(ctx sdk.Context, action types.ActionInfo) {
-	for _, msg := range action.Msgs {
-		if msg.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
-			return
-		}
-
-		msgExec := &authztypes.MsgExec{}
-		if err := proto.Unmarshal(msg.Value, msgExec); err != nil {
-			return
-		}
-
-		for _, msgInMsgExec := range msgExec.Msgs {
-			var coin sdk.Coin
-
-			switch msgInMsgExec.TypeUrl {
-			case sdk.MsgTypeURL(&banktypes.MsgSend{}):
-				{
-					msgValue := &banktypes.MsgSend{}
-					if err := proto.Unmarshal(msgInMsgExec.Value, msgValue); err != nil {
-						return
-					}
-					coin = msgValue.Amount[0]
-				}
-
-			case sdk.MsgTypeURL(&wasm.MsgExecuteContract{}):
-				{
-					msgValue := &wasm.MsgExecuteContract{}
-					if err := proto.Unmarshal(msgInMsgExec.Value, msgValue); err != nil {
-						return
-					}
-					coin = msgValue.Funds[0]
-				}
-
-			case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountIn{}):
-				{
-					msgValue := &msgregistry.MsgSwapExactAmountIn{}
-					if err := proto.Unmarshal(msgInMsgExec.Value, msgValue); err != nil {
-						return
-					}
-					coin = msgValue.TokenIn
-				}
-
-			case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountOut{}):
-				{
-					msgValue := &msgregistry.MsgSwapExactAmountOut{}
-					if err := proto.Unmarshal(msgInMsgExec.Value, msgValue); err != nil {
-						return
-					}
-					coin = msgValue.TokenOut
-				}
-
-			default:
-				return
-			}
-
-			k.appendToActionIbcUsage(ctx, action.Owner, &types.ActionAck{
-				Coin:         coin,
-				ConnectionId: action.ICAConfig.ConnectionID,
-			})
-		}
-	}
-}
-
-func (k Keeper) appendToActionIbcUsage(ctx sdk.Context, owner string, actionAck *types.ActionAck) {
-	autoIbcUsage, err := k.TryGetActionIbcUsage(ctx, owner)
-	if err != nil {
-		autoIbcUsage.Txs = append(autoIbcUsage.Txs, actionAck)
-	} else {
-		autoIbcUsage.Address = owner
-		autoIbcUsage.Txs = []*types.ActionAck{actionAck}
-	}
-	k.SetActionIbcUsage(ctx, &autoIbcUsage)
-}
-
-func (k Keeper) IterateActionUsage(ctx sdk.Context) []types.ActionIbcUsage {
-	// Get an instance of the KVStore for the given storeKey
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.ActionIbcUsageKeyPrefix)
-
-	iter := prefixStore.Iterator(nil, nil)
-
-	// Defer closing the iterator until the function returns
-	defer iter.Close()
-
-	// Create a slice to hold the values
-	var values []types.ActionIbcUsage
-
-	// Loop over the iterator and append each value to the slice
-	for ; iter.Valid(); iter.Next() {
-		var c types.ActionIbcUsage
-		k.cdc.MustUnmarshal(iter.Value(), &c)
-		values = append(values, c)
-	}
-
-	// Return the slice of values
-	return values
 }

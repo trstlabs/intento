@@ -24,23 +24,23 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type ActionIbcUsage struct {
-	Address string       `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Txs     []*ActionAck `protobuf:"bytes,2,rep,name=txs,proto3" json:"txs,omitempty"`
+type FlowIbcUsage struct {
+	Address string     `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Txs     []*FlowAck `protobuf:"bytes,2,rep,name=txs,proto3" json:"txs,omitempty"`
 }
 
-func (m *ActionIbcUsage) Reset()         { *m = ActionIbcUsage{} }
-func (m *ActionIbcUsage) String() string { return proto.CompactTextString(m) }
-func (*ActionIbcUsage) ProtoMessage()    {}
-func (*ActionIbcUsage) Descriptor() ([]byte, []int) {
+func (m *FlowIbcUsage) Reset()         { *m = FlowIbcUsage{} }
+func (m *FlowIbcUsage) String() string { return proto.CompactTextString(m) }
+func (*FlowIbcUsage) ProtoMessage()    {}
+func (*FlowIbcUsage) Descriptor() ([]byte, []int) {
 	return fileDescriptor_de93aeb67689c570, []int{0}
 }
-func (m *ActionIbcUsage) XXX_Unmarshal(b []byte) error {
+func (m *FlowIbcUsage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ActionIbcUsage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *FlowIbcUsage) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ActionIbcUsage.Marshal(b, m, deterministic)
+		return xxx_messageInfo_FlowIbcUsage.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -50,49 +50,49 @@ func (m *ActionIbcUsage) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *ActionIbcUsage) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ActionIbcUsage.Merge(m, src)
+func (m *FlowIbcUsage) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowIbcUsage.Merge(m, src)
 }
-func (m *ActionIbcUsage) XXX_Size() int {
+func (m *FlowIbcUsage) XXX_Size() int {
 	return m.Size()
 }
-func (m *ActionIbcUsage) XXX_DiscardUnknown() {
-	xxx_messageInfo_ActionIbcUsage.DiscardUnknown(m)
+func (m *FlowIbcUsage) XXX_DiscardUnknown() {
+	xxx_messageInfo_FlowIbcUsage.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ActionIbcUsage proto.InternalMessageInfo
+var xxx_messageInfo_FlowIbcUsage proto.InternalMessageInfo
 
-func (m *ActionIbcUsage) GetAddress() string {
+func (m *FlowIbcUsage) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
 	return ""
 }
 
-func (m *ActionIbcUsage) GetTxs() []*ActionAck {
+func (m *FlowIbcUsage) GetTxs() []*FlowAck {
 	if m != nil {
 		return m.Txs
 	}
 	return nil
 }
 
-type ActionAck struct {
+type FlowAck struct {
 	Coin         types.Coin `protobuf:"bytes,1,opt,name=coin,proto3" json:"coin"`
 	ConnectionId string     `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 }
 
-func (m *ActionAck) Reset()         { *m = ActionAck{} }
-func (m *ActionAck) String() string { return proto.CompactTextString(m) }
-func (*ActionAck) ProtoMessage()    {}
-func (*ActionAck) Descriptor() ([]byte, []int) {
+func (m *FlowAck) Reset()         { *m = FlowAck{} }
+func (m *FlowAck) String() string { return proto.CompactTextString(m) }
+func (*FlowAck) ProtoMessage()    {}
+func (*FlowAck) Descriptor() ([]byte, []int) {
 	return fileDescriptor_de93aeb67689c570, []int{1}
 }
-func (m *ActionAck) XXX_Unmarshal(b []byte) error {
+func (m *FlowAck) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *ActionAck) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *FlowAck) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_ActionAck.Marshal(b, m, deterministic)
+		return xxx_messageInfo_FlowAck.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -102,26 +102,26 @@ func (m *ActionAck) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *ActionAck) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ActionAck.Merge(m, src)
+func (m *FlowAck) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowAck.Merge(m, src)
 }
-func (m *ActionAck) XXX_Size() int {
+func (m *FlowAck) XXX_Size() int {
 	return m.Size()
 }
-func (m *ActionAck) XXX_DiscardUnknown() {
-	xxx_messageInfo_ActionAck.DiscardUnknown(m)
+func (m *FlowAck) XXX_DiscardUnknown() {
+	xxx_messageInfo_FlowAck.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ActionAck proto.InternalMessageInfo
+var xxx_messageInfo_FlowAck proto.InternalMessageInfo
 
-func (m *ActionAck) GetCoin() types.Coin {
+func (m *FlowAck) GetCoin() types.Coin {
 	if m != nil {
 		return m.Coin
 	}
 	return types.Coin{}
 }
 
-func (m *ActionAck) GetConnectionId() string {
+func (m *FlowAck) GetConnectionId() string {
 	if m != nil {
 		return m.ConnectionId
 	}
@@ -129,8 +129,8 @@ func (m *ActionAck) GetConnectionId() string {
 }
 
 func init() {
-	proto.RegisterType((*ActionIbcUsage)(nil), "intento.intent.v1beta1.ActionIbcUsage")
-	proto.RegisterType((*ActionAck)(nil), "intento.intent.v1beta1.ActionAck")
+	proto.RegisterType((*FlowIbcUsage)(nil), "intento.intent.v1beta1.FlowIbcUsage")
+	proto.RegisterType((*FlowAck)(nil), "intento.intent.v1beta1.FlowAck")
 }
 
 func init() {
@@ -138,28 +138,28 @@ func init() {
 }
 
 var fileDescriptor_de93aeb67689c570 = []byte{
-	// 286 bytes of a gzipped FileDescriptorProto
+	// 288 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x90, 0x31, 0x4e, 0xc3, 0x30,
-	0x18, 0x85, 0x93, 0xb6, 0x02, 0xd5, 0x05, 0x86, 0x08, 0xa1, 0xd0, 0xc1, 0x94, 0xb2, 0x54, 0x0c,
-	0xb6, 0xda, 0x9c, 0xa0, 0x85, 0xa5, 0x6b, 0x24, 0x16, 0x96, 0x2a, 0x76, 0xac, 0x60, 0x41, 0xfd,
-	0x57, 0xb1, 0x8b, 0xca, 0x2d, 0x38, 0x56, 0xc7, 0x8e, 0x4c, 0x08, 0x25, 0x17, 0x41, 0xb6, 0x9b,
-	0xb0, 0x30, 0xfd, 0xf6, 0xef, 0xcf, 0xef, 0x3d, 0x3d, 0x34, 0x96, 0xca, 0x08, 0x65, 0x80, 0xfa,
-	0x49, 0xdf, 0xa7, 0x4c, 0x98, 0x6c, 0x4a, 0xb7, 0x3a, 0x2b, 0x04, 0xd9, 0x94, 0x60, 0x20, 0xba,
-	0x3a, 0x32, 0xc4, 0x4f, 0x72, 0x64, 0x86, 0x97, 0x05, 0x14, 0xe0, 0x10, 0x6a, 0x4f, 0x9e, 0x1e,
-	0x62, 0x0e, 0x7a, 0x0d, 0x9a, 0xb2, 0x4c, 0x8b, 0x56, 0x8e, 0x83, 0x54, 0xfe, 0x7d, 0xbc, 0x42,
-	0x17, 0x73, 0x6e, 0x24, 0xa8, 0x25, 0xe3, 0x4f, 0xd6, 0x25, 0x8a, 0xd1, 0x69, 0x96, 0xe7, 0xa5,
-	0xd0, 0x3a, 0x0e, 0x47, 0xe1, 0xa4, 0x9f, 0x36, 0xd7, 0x28, 0x41, 0x5d, 0xb3, 0xd3, 0x71, 0x67,
-	0xd4, 0x9d, 0x0c, 0x66, 0xb7, 0xe4, 0xff, 0x1c, 0xc4, 0xcb, 0xcd, 0xf9, 0x6b, 0x6a, 0xe9, 0xb1,
-	0x40, 0xfd, 0x76, 0x13, 0x25, 0xa8, 0x67, 0xbd, 0x9d, 0xf0, 0x60, 0x76, 0x4d, 0x7c, 0x38, 0x62,
-	0xc3, 0xb5, 0xff, 0x1f, 0x40, 0xaa, 0x45, 0x6f, 0xff, 0x7d, 0x13, 0xa4, 0x0e, 0x8e, 0xee, 0xd0,
-	0x39, 0x07, 0xa5, 0x84, 0x53, 0x59, 0xc9, 0x3c, 0xee, 0xb8, 0x58, 0x67, 0x7f, 0xcb, 0x65, 0xbe,
-	0x78, 0xdc, 0x57, 0x38, 0x3c, 0x54, 0x38, 0xfc, 0xa9, 0x70, 0xf8, 0x59, 0xe3, 0xe0, 0x50, 0xe3,
-	0xe0, 0xab, 0xc6, 0xc1, 0xf3, 0x7d, 0x21, 0xcd, 0xcb, 0x96, 0x11, 0x0e, 0x6b, 0x6a, 0x4a, 0x6d,
-	0xde, 0x32, 0xa6, 0x69, 0xd3, 0xf3, 0xae, 0x69, 0xda, 0x7c, 0x6c, 0x84, 0x66, 0x27, 0xae, 0x94,
-	0xe4, 0x37, 0x00, 0x00, 0xff, 0xff, 0x06, 0x47, 0x52, 0x8c, 0x88, 0x01, 0x00, 0x00,
+	0x18, 0x85, 0x93, 0xb6, 0xa2, 0xc2, 0x2d, 0x4b, 0x84, 0x50, 0xe8, 0xe0, 0x56, 0x61, 0xa9, 0x18,
+	0x6c, 0xa5, 0x3d, 0x01, 0x05, 0x21, 0x75, 0x8d, 0xc4, 0x02, 0x03, 0x8a, 0x1d, 0x2b, 0x58, 0xb4,
+	0xfe, 0xab, 0xd8, 0x85, 0x72, 0x0b, 0x8e, 0xd5, 0xb1, 0x23, 0x13, 0x42, 0xc9, 0x45, 0x90, 0xe3,
+	0xa4, 0x2c, 0x4c, 0xbf, 0x7f, 0xfb, 0xf3, 0x7b, 0x4f, 0x0f, 0x45, 0x52, 0x19, 0xa1, 0x0c, 0x50,
+	0x37, 0xe9, 0x5b, 0xcc, 0x84, 0x49, 0x63, 0xba, 0xd5, 0x69, 0x2e, 0xc8, 0xa6, 0x00, 0x03, 0xc1,
+	0x45, 0xc3, 0x10, 0x37, 0x49, 0xc3, 0x8c, 0xce, 0x73, 0xc8, 0xa1, 0x46, 0xa8, 0x3d, 0x39, 0x7a,
+	0x84, 0x39, 0xe8, 0x35, 0x68, 0xca, 0x52, 0x2d, 0x8e, 0x72, 0x1c, 0xa4, 0x72, 0xef, 0xd1, 0x13,
+	0x1a, 0xde, 0xaf, 0xe0, 0x7d, 0xc9, 0xf8, 0x83, 0xf5, 0x08, 0x42, 0xd4, 0x4f, 0xb3, 0xac, 0x10,
+	0x5a, 0x87, 0xfe, 0xc4, 0x9f, 0x9e, 0x26, 0xed, 0x1a, 0xc4, 0xa8, 0x6b, 0x76, 0x3a, 0xec, 0x4c,
+	0xba, 0xd3, 0xc1, 0x6c, 0x4c, 0xfe, 0x4f, 0x41, 0xac, 0xd8, 0x0d, 0x7f, 0x4d, 0x2c, 0x1b, 0x71,
+	0xd4, 0x6f, 0xf6, 0x60, 0x8e, 0x7a, 0xd6, 0xb5, 0x16, 0x1d, 0xcc, 0x2e, 0x89, 0x8b, 0x45, 0x6c,
+	0xac, 0xe3, 0xdf, 0x5b, 0x90, 0x6a, 0xd1, 0xdb, 0x7f, 0x8f, 0xbd, 0xa4, 0x86, 0x83, 0x2b, 0x74,
+	0xc6, 0x41, 0x29, 0xc1, 0x8d, 0x04, 0xf5, 0x2c, 0xb3, 0xb0, 0x53, 0x47, 0x1a, 0xfe, 0x5d, 0x2e,
+	0xb3, 0xc5, 0xdd, 0xbe, 0xc4, 0xfe, 0xa1, 0xc4, 0xfe, 0x4f, 0x89, 0xfd, 0xcf, 0x0a, 0x7b, 0x87,
+	0x0a, 0x7b, 0x5f, 0x15, 0xf6, 0x1e, 0xaf, 0x73, 0x69, 0x5e, 0xb6, 0x8c, 0x70, 0x58, 0x53, 0x53,
+	0x68, 0xb3, 0x4a, 0x99, 0xa6, 0x6d, 0xc3, 0xbb, 0xb6, 0x63, 0xf3, 0xb1, 0x11, 0x9a, 0x9d, 0xd4,
+	0x75, 0xcc, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x8c, 0x7f, 0x2a, 0x76, 0x82, 0x01, 0x00, 0x00,
 }
 
-func (m *ActionIbcUsage) Marshal() (dAtA []byte, err error) {
+func (m *FlowIbcUsage) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -169,12 +169,12 @@ func (m *ActionIbcUsage) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ActionIbcUsage) MarshalTo(dAtA []byte) (int, error) {
+func (m *FlowIbcUsage) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ActionIbcUsage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *FlowIbcUsage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -203,7 +203,7 @@ func (m *ActionIbcUsage) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *ActionAck) Marshal() (dAtA []byte, err error) {
+func (m *FlowAck) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -213,12 +213,12 @@ func (m *ActionAck) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *ActionAck) MarshalTo(dAtA []byte) (int, error) {
+func (m *FlowAck) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *ActionAck) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *FlowAck) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -254,7 +254,7 @@ func encodeVarintUsage(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *ActionIbcUsage) Size() (n int) {
+func (m *FlowIbcUsage) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -273,7 +273,7 @@ func (m *ActionIbcUsage) Size() (n int) {
 	return n
 }
 
-func (m *ActionAck) Size() (n int) {
+func (m *FlowAck) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -294,7 +294,7 @@ func sovUsage(x uint64) (n int) {
 func sozUsage(x uint64) (n int) {
 	return sovUsage(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *ActionIbcUsage) Unmarshal(dAtA []byte) error {
+func (m *FlowIbcUsage) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -317,10 +317,10 @@ func (m *ActionIbcUsage) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ActionIbcUsage: wiretype end group for non-group")
+			return fmt.Errorf("proto: FlowIbcUsage: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ActionIbcUsage: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: FlowIbcUsage: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -384,7 +384,7 @@ func (m *ActionIbcUsage) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Txs = append(m.Txs, &ActionAck{})
+			m.Txs = append(m.Txs, &FlowAck{})
 			if err := m.Txs[len(m.Txs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -410,7 +410,7 @@ func (m *ActionIbcUsage) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *ActionAck) Unmarshal(dAtA []byte) error {
+func (m *FlowAck) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -433,10 +433,10 @@ func (m *ActionAck) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: ActionAck: wiretype end group for non-group")
+			return fmt.Errorf("proto: FlowAck: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: ActionAck: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: FlowAck: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

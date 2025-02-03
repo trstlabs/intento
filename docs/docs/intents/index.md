@@ -1,5 +1,5 @@
 ---
-title: Using Intent-based Actions
+title: Using Intento Flows
 order: 2
 ---
 

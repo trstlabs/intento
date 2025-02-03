@@ -47,7 +47,7 @@ func newFakeMsgSend(fromAddr sdk.AccAddress, toAddr sdk.AccAddress) *banktypes.M
 func TestSendLocalTx(t *testing.T) {
 	ctx, keepers, addr1, _, addr2, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 
-	actionAddr, _ := CreateFakeFundedAccount(ctx, keepers.accountKeeper, keepers.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	flowAddr, _ := CreateFakeFundedAccount(ctx, keepers.accountKeeper, keepers.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 
 	types.Denom = "stake"
 
@@ -55,10 +55,10 @@ func TestSendLocalTx(t *testing.T) {
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 	require.NoError(t, err)
 
-	actionInfo := createBaseActionInfo(addr1, actionAddr)
-	actionInfo.Msgs = anys
+	flowInfo := createBaseFlowInfo(addr1, flowAddr)
+	flowInfo.Msgs = anys
 
-	executedLocally, msgResponses, err := keepers.TriggerAction(ctx, &actionInfo)
+	executedLocally, msgResponses, err := keepers.TriggerFlow(ctx, &flowInfo)
 	require.NoError(t, err)
 	require.NotNil(t, msgResponses)
 	require.True(t, executedLocally)
@@ -67,21 +67,21 @@ func TestSendLocalTx(t *testing.T) {
 func TestSendLocalTxAutocompound(t *testing.T) {
 	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
 
-	actionAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	flowAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
 
 	types.Denom = "stake"
 
 	// Set baseline
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
 
-	actionInfo := createBaseActionInfo(delAddr, actionAddr)
+	flowInfo := createBaseFlowInfo(delAddr, flowAddr)
 	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
-	actionInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward, msgDelegate})
-	actionInfo.Conditions = &types.ExecutionConditions{FeedbackLoops: []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "sdk.Int"}}}
+	flowInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward, msgDelegate})
+	flowInfo.Conditions = &types.ExecutionConditions{FeedbackLoops: []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "sdk.Int"}}}
 	delegations, _ := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
 	require.Equal(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
-	executedLocally, _, err := keeper.TriggerAction(ctx, &actionInfo)
+	executedLocally, _, err := keeper.TriggerFlow(ctx, &flowInfo)
 	require.NoError(t, err)
 	require.True(t, executedLocally)
 
@@ -141,11 +141,11 @@ func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.A
 	return val, ctx
 }
 
-func createBaseActionInfo(ownerAddr sdk.AccAddress, actionAddr sdk.AccAddress) types.ActionInfo {
-	actionInfo := types.ActionInfo{
+func createBaseFlowInfo(ownerAddr sdk.AccAddress, flowAddr sdk.AccAddress) types.FlowInfo {
+	flowInfo := types.FlowInfo{
 		ID:            1,
 		Owner:         ownerAddr.String(),
-		FeeAddress:    actionAddr.String(),
+		FeeAddress:    flowAddr.String(),
 		Msgs:          []*cdctypes.Any{},
 		Interval:      time.Second * 20,
 		StartTime:     time.Now().Add(time.Hour * -1),
@@ -153,7 +153,7 @@ func createBaseActionInfo(ownerAddr sdk.AccAddress, actionAddr sdk.AccAddress) t
 		ICAConfig:     &types.ICAConfig{},
 		Configuration: &types.ExecutionConfiguration{SaveResponses: true},
 	}
-	return actionInfo
+	return flowInfo
 }
 
 // This will commit the current set, update the block height, and set historic info

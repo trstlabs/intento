@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	ICQCallbackID_Action = "action"
+	ICQCallbackID_Flow = "flow"
 )
 
 // ICQCallbacks wrapper struct for keeper
@@ -44,25 +44,25 @@ func (c ICQCallbacks) AddICQCallback(id string, fn interface{}) icqtypes.QueryCa
 
 func (c ICQCallbacks) RegisterICQCallbacks() icqtypes.QueryCallbacks {
 	return c.
-		AddICQCallback(ICQCallbackID_Action, ICQCallback(HandleActionCallback))
+		AddICQCallback(ICQCallbackID_Flow, ICQCallback(HandleFlowCallback))
 
 }
 
-func HandleActionCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	k.Logger(ctx).Debug("Action Callback", "queryId", query.Id, "callbackArgs", args)
-	// Parsing the actionID
+func HandleFlowCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	k.Logger(ctx).Debug("Flow Callback", "queryId", query.Id, "callbackArgs", args)
+	// Parsing the flowID
 	parts := strings.Split(query.Id, ":")
 	if len(parts) < 3 {
 		return fmt.Errorf("invalid query ID format: %s", query.Id)
 	}
 
-	// Parse actionID
-	actionID, err := strconv.ParseUint(parts[1], 10, 64)
+	// Parse flowID
+	flowID, err := strconv.ParseUint(parts[1], 10, 64)
 	if err != nil {
-		return fmt.Errorf("failed to parse action ID: %w", err)
+		return fmt.Errorf("failed to parse flow ID: %w", err)
 	}
 
-	action, err := k.TryGetActionInfo(ctx, actionID)
+	flow, err := k.TryGetFlowInfo(ctx, flowID)
 	if err != nil {
 		return err
 	}
@@ -73,22 +73,22 @@ func HandleActionCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return fmt.Errorf("failed to parse index: %w", err)
 	}
 
-	// Save to action ICQConfig
+	// Save to flow ICQConfig
 	// Check prefix to determine the type (feedback loop or condition)
 	prefix := parts[0]
 	switch prefix {
-	case string(types.ActionFeedbackLoopQueryKeyPrefix):
-		action.Conditions.FeedbackLoops[index].ICQConfig.Response = args
-	case string(types.ActionComparisonQueryKeyPrefix): // Example prefix for conditions
-		action.Conditions.Comparisons[index].ICQConfig.Response = args
+	case string(types.FlowFeedbackLoopQueryKeyPrefix):
+		flow.Conditions.FeedbackLoops[index].ICQConfig.Response = args
+	case string(types.FlowComparisonQueryKeyPrefix): // Example prefix for conditions
+		flow.Conditions.Comparisons[index].ICQConfig.Response = args
 	default:
 		return fmt.Errorf("unknown prefix in query ID: %s", prefix)
 	}
 
-	k.SetActionInfo(ctx, &action)
+	k.SetFlowInfo(ctx, &flow)
 
-	// Only if all responses are present (and thus it is the last one), handle the action
-	for _, comparison := range action.Conditions.Comparisons {
+	// Only if all responses are present (and thus it is the last one), handle the flow
+	for _, comparison := range flow.Conditions.Comparisons {
 		if comparison.ICQConfig != nil {
 			if comparison.ICQConfig.Response == nil {
 				return nil
@@ -96,7 +96,7 @@ func HandleActionCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes
 		}
 	}
 
-	for _, feedbackLoop := range action.Conditions.FeedbackLoops {
+	for _, feedbackLoop := range flow.Conditions.FeedbackLoops {
 		if feedbackLoop.ICQConfig != nil {
 			if feedbackLoop.ICQConfig.Response == nil {
 				return nil
@@ -104,6 +104,6 @@ func HandleActionCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes
 		}
 	}
 
-	k.HandleAction(ctx, k.Logger(ctx), action, ctx.BlockTime(), args)
+	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockTime(), args)
 	return nil
 }

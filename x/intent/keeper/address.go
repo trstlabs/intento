@@ -15,10 +15,10 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo, connectionID, portID string) (protoMsgs []proto.Message, err error) {
+func (k Keeper) parseAndSetMsgs(ctx sdk.Context, flow *types.FlowInfo, connectionID, portID string) (protoMsgs []proto.Message, err error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	if store.Has(types.GetActionHistoryKey(action.ID)) {
-		txMsgs := action.GetTxMsgs(k.cdc)
+	if store.Has(types.GetFlowHistoryKey(flow.ID)) {
+		txMsgs := flow.GetTxMsgs(k.cdc)
 
 		protoMsgs = append(protoMsgs, txMsgs...)
 
@@ -28,7 +28,7 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo, conne
 	var txMsgs []sdk.Msg
 	var parsedIcaAddr bool
 
-	for _, msg := range action.Msgs {
+	for _, msg := range flow.Msgs {
 		var txMsg sdk.Msg
 		err := k.cdc.UnpackAny(msg, &txMsg)
 		if err != nil {
@@ -73,47 +73,47 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, action *types.ActionInfo, conne
 		if err != nil {
 			return nil, err
 		}
-		action.Msgs = anys
+		flow.Msgs = anys
 	}
 
 	return protoMsgs, nil
 }
 
 func (k Keeper) createFeeAccount(ctx sdk.Context, id uint64, owner sdk.AccAddress, feeFunds sdk.Coins) (sdk.AccAddress, error) {
-	actionAddress := k.generateActionFeeAddress(ctx, id)
-	existingAcct := k.accountKeeper.GetAccount(ctx, actionAddress)
+	flowAddress := k.generateFlowFeeAddress(ctx, id)
+	existingAcct := k.accountKeeper.GetAccount(ctx, flowAddress)
 	if existingAcct != nil {
 		return nil, errorsmod.Wrap(types.ErrAccountExists, existingAcct.GetAddress().String())
 	}
 
-	// deposit initial action funds
+	// deposit initial flow funds
 	if !feeFunds.IsZero() && !feeFunds[0].Amount.IsZero() {
 		if k.bankKeeper.BlockedAddr(owner) {
 			return nil, errorsmod.Wrap(types.ErrInvalidAddress, "blocked address can not be used")
 		}
-		sdkerr := k.bankKeeper.SendCoins(ctx, owner, actionAddress, feeFunds)
+		sdkerr := k.bankKeeper.SendCoins(ctx, owner, flowAddress, feeFunds)
 		if sdkerr != nil {
 			return nil, sdkerr
 		}
 	} else {
 		// create an empty account (so we don't have issues later)
-		actionAccount := k.accountKeeper.NewAccountWithAddress(ctx, actionAddress)
-		k.accountKeeper.NewAccount(ctx, actionAccount)
+		flowAccount := k.accountKeeper.NewAccountWithAddress(ctx, flowAddress)
+		k.accountKeeper.NewAccount(ctx, flowAccount)
 	}
-	return actionAddress, nil
+	return flowAddress, nil
 }
 
-// generates a action address from id + instanceID
-func (k Keeper) generateActionFeeAddress(ctx sdk.Context, id uint64) sdk.AccAddress {
+// generates a flow address from id + instanceID
+func (k Keeper) generateFlowFeeAddress(ctx sdk.Context, id uint64) sdk.AccAddress {
 	instanceID := k.autoIncrementID(ctx, types.KeyLastTxAddrID)
-	return actionAddress(id, instanceID)
+	return flowAddress(id, instanceID)
 }
 
-func actionAddress(id, instanceID uint64) sdk.AccAddress {
+func flowAddress(id, instanceID uint64) sdk.AccAddress {
 	// NOTE: It is possible to get a duplicate address if either id or instanceID
 	// overflow 32 bits. This is highly improbable, but something that could be refactored.
-	actionID := id<<32 + instanceID
-	return addrFromUint64(actionID)
+	flowID := id<<32 + instanceID
+	return addrFromUint64(flowID)
 
 }
 

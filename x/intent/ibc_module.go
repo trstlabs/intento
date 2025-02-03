@@ -118,7 +118,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 	}
 	if !ack.Success() {
 		errorString := "error handling packet on host chain: see host chain events for details, error: " + ack.GetError()
-		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, errorString)
+		im.keeper.SetFlowError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, errorString)
 		return nil
 
 	}
@@ -143,14 +143,14 @@ func (im IBCModule) OnAcknowledgementPacket(
 func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, packet channeltypes.Packet) {
 	if len(msgResponses) == 0 {
 		err := errorsmod.Wrapf(types.ErrInvalidType, "no messages in ICS-27 message response: %v", msgResponses)
-		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
+		im.keeper.SetFlowError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 		return
 	}
 
-	// handle response (trigger next messages if response parsing) set result in Action history
-	err := im.keeper.HandleResponseAndSetActionResult(ctx, packet.SourcePort, packet.SourceChannel, relayer, packet.Sequence, msgResponses)
+	// handle response (trigger next messages if response parsing) set result in Flow history
+	err := im.keeper.HandleResponseAndSetFlowResult(ctx, packet.SourcePort, packet.SourceChannel, relayer, packet.Sequence, msgResponses)
 	if err != nil {
-		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
+		im.keeper.SetFlowError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 	}
 }
 
@@ -172,10 +172,10 @@ func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResponses []*cdctypes
 
 // 	}
 
-// 	// set result in Action history
-// 	err := im.keeper.HandleResponseAndSetActionResult(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, nil)
+// 	// set result in Flow history
+// 	err := im.keeper.HandleResponseAndSetFlowResult(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, nil)
 // 	if err != nil {
-// 		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
+// 		im.keeper.SetFlowError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 // 		return err
 // 	}
 
@@ -189,10 +189,10 @@ func (im IBCModule) OnTimeoutPacket(
 	relayer sdk.AccAddress,
 ) error {
 	// fmt.Println("TIMED OUT, FAILED ATTEMPT")
-	//set result in action history
-	err := im.keeper.SetActionOnTimeout(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence)
+	//set result in flow history
+	err := im.keeper.SetFlowOnTimeout(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence)
 	if err != nil {
-		im.keeper.SetActionError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
+		im.keeper.SetFlowError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
 		return err
 	}
 	return nil

@@ -23,50 +23,50 @@ func handleMsgData(msgData *sdk.MsgData) (proto.Message, int, error) {
 	// authz
 	case sdk.MsgTypeURL(&authztypes.MsgExec{}):
 		msgResponse = &authztypes.MsgExecResponse{}
-		rewardType = types.KeyActionIncentiveForAuthzTx
+		rewardType = types.KeyFlowIncentiveForAuthzTx
 
 	// sdk
 	case sdk.MsgTypeURL(&banktypes.MsgSend{}):
 		msgResponse = &banktypes.MsgSendResponse{}
-		rewardType = types.KeyActionIncentiveForSDKTx
+		rewardType = types.KeyFlowIncentiveForSDKTx
 
 	case sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}):
 		msgResponse = &stakingtypes.MsgDelegateResponse{}
-		rewardType = types.KeyActionIncentiveForSDKTx
+		rewardType = types.KeyFlowIncentiveForSDKTx
 
 	case sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}):
 		msgResponse = &stakingtypes.MsgUndelegateResponse{}
-		rewardType = types.KeyActionIncentiveForSDKTx
+		rewardType = types.KeyFlowIncentiveForSDKTx
 
 	case sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}):
 		msgResponse = &distrtypes.MsgWithdrawDelegatorRewardResponse{}
-		rewardType = types.KeyActionIncentiveForSDKTx
+		rewardType = types.KeyFlowIncentiveForSDKTx
 
 	// wasm
 	case sdk.MsgTypeURL(&wasm.MsgExecuteContract{}):
 		msgResponse = &wasm.MsgExecuteContractResponse{}
-		rewardType = types.KeyActionIncentiveForWasmTx
+		rewardType = types.KeyFlowIncentiveForWasmTx
 
 	case sdk.MsgTypeURL(&wasm.MsgInstantiateContract{}):
 		msgResponse = &wasm.MsgInstantiateContractResponse{}
-		rewardType = types.KeyActionIncentiveForWasmTx
+		rewardType = types.KeyFlowIncentiveForWasmTx
 
 	// osmo
 	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountIn{}):
 		msgResponse = &msgregistry.MsgSwapExactAmountInResponse{}
-		rewardType = types.KeyActionIncentiveForOsmoTx
+		rewardType = types.KeyFlowIncentiveForOsmoTx
 
 	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountOut{}):
 		msgResponse = &msgregistry.MsgSwapExactAmountOutResponse{}
-		rewardType = types.KeyActionIncentiveForOsmoTx
+		rewardType = types.KeyFlowIncentiveForOsmoTx
 
 	case sdk.MsgTypeURL(&msgregistry.MsgJoinPool{}):
 		msgResponse = &msgregistry.MsgJoinPoolResponse{}
-		rewardType = types.KeyActionIncentiveForOsmoTx
+		rewardType = types.KeyFlowIncentiveForOsmoTx
 
 	case sdk.MsgTypeURL(&msgregistry.MsgExitPool{}):
 		msgResponse = &msgregistry.MsgExitPoolResponse{}
-		rewardType = types.KeyActionIncentiveForOsmoTx
+		rewardType = types.KeyFlowIncentiveForOsmoTx
 
 	default:
 		return nil, -1, nil
@@ -86,40 +86,40 @@ func getMsgRewardType(typeUrl string) int {
 
 	// authz
 	case sdk.MsgTypeURL(&authztypes.MsgExec{}):
-		rewardType = types.KeyActionIncentiveForAuthzTx
+		rewardType = types.KeyFlowIncentiveForAuthzTx
 
 	// sdk
 	case sdk.MsgTypeURL(&banktypes.MsgSend{}):
-		rewardType = types.KeyActionIncentiveForSDKTx
+		rewardType = types.KeyFlowIncentiveForSDKTx
 
 	case sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}):
-		rewardType = types.KeyActionIncentiveForSDKTx
+		rewardType = types.KeyFlowIncentiveForSDKTx
 
 	case sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}):
-		rewardType = types.KeyActionIncentiveForSDKTx
+		rewardType = types.KeyFlowIncentiveForSDKTx
 
 	case sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}):
-		rewardType = types.KeyActionIncentiveForSDKTx
+		rewardType = types.KeyFlowIncentiveForSDKTx
 
 	// wasm
 	case sdk.MsgTypeURL(&wasm.MsgExecuteContract{}):
-		rewardType = types.KeyActionIncentiveForWasmTx
+		rewardType = types.KeyFlowIncentiveForWasmTx
 
 	case sdk.MsgTypeURL(&wasm.MsgInstantiateContract{}):
-		rewardType = types.KeyActionIncentiveForWasmTx
+		rewardType = types.KeyFlowIncentiveForWasmTx
 
 	// osmo
 	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountIn{}):
-		rewardType = types.KeyActionIncentiveForOsmoTx
+		rewardType = types.KeyFlowIncentiveForOsmoTx
 
 	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountOut{}):
-		rewardType = types.KeyActionIncentiveForOsmoTx
+		rewardType = types.KeyFlowIncentiveForOsmoTx
 
 	case sdk.MsgTypeURL(&msgregistry.MsgJoinPool{}):
-		rewardType = types.KeyActionIncentiveForOsmoTx
+		rewardType = types.KeyFlowIncentiveForOsmoTx
 
 	case sdk.MsgTypeURL(&msgregistry.MsgExitPool{}):
-		rewardType = types.KeyActionIncentiveForOsmoTx
+		rewardType = types.KeyFlowIncentiveForOsmoTx
 
 	default:
 		return -1

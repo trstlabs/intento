@@ -19,16 +19,16 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (k Keeper) SignerOk(ctx sdk.Context, codec codec.Codec, actionInfo types.ActionInfo) error {
-	for _, message := range actionInfo.Msgs {
-		if err := k.validateMessage(ctx, codec, actionInfo, message); err != nil {
+func (k Keeper) SignerOk(ctx sdk.Context, codec codec.Codec, flowInfo types.FlowInfo) error {
+	for _, message := range flowInfo.Msgs {
+		if err := k.validateMessage(ctx, codec, flowInfo, message); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, actionInfo types.ActionInfo, message *codectypes.Any) error {
+func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flowInfo types.FlowInfo, message *codectypes.Any) error {
 	var sdkMsg sdk.Msg
 	if err := codec.UnpackAny(message, &sdkMsg); err != nil {
 		return errorsmod.Wrap(err, "failed to unpack message")
@@ -37,20 +37,20 @@ func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, actionInfo t
 	switch {
 	case isAuthzMsgExec(message):
 		// Validate Authz MsgExec messages.
-		return k.validateAuthzMsg(ctx, codec, actionInfo, message)
+		return k.validateAuthzMsg(ctx, codec, flowInfo, message)
 
-	case isLocalMessage(actionInfo):
+	case isLocalMessage(flowInfo):
 		// Validate local messages to ensure the signer matches the owner.
-		return k.validateSigners(ctx, codec, actionInfo, message)
+		return k.validateSigners(ctx, codec, flowInfo, message)
 
-	case isHostedICAMessage(actionInfo):
+	case isHostedICAMessage(flowInfo):
 		// Restrict Hosted ICA messages to MsgExec for security.
 		if message.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
 			return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Hosted ICA messages")
 		}
 		return nil
 
-	case isSelfHostedICAMessage(actionInfo):
+	case isSelfHostedICAMessage(flowInfo):
 		// Allow Self-hosted ICA messages without additional validation.
 		return nil
 
@@ -64,27 +64,27 @@ func isAuthzMsgExec(message *codectypes.Any) bool {
 	return message.TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{})
 }
 
-func isLocalMessage(actionInfo types.ActionInfo) bool {
-	return (actionInfo.ICAConfig == nil || actionInfo.ICAConfig.ConnectionID == "") && (actionInfo.HostedConfig == nil || actionInfo.HostedConfig.HostedAddress == "")
+func isLocalMessage(flowInfo types.FlowInfo) bool {
+	return (flowInfo.ICAConfig == nil || flowInfo.ICAConfig.ConnectionID == "") && (flowInfo.HostedConfig == nil || flowInfo.HostedConfig.HostedAddress == "")
 }
 
-func isHostedICAMessage(actionInfo types.ActionInfo) bool {
-	return actionInfo.HostedConfig != nil && actionInfo.HostedConfig.HostedAddress != ""
+func isHostedICAMessage(flowInfo types.FlowInfo) bool {
+	return flowInfo.HostedConfig != nil && flowInfo.HostedConfig.HostedAddress != ""
 }
 
-func isSelfHostedICAMessage(actionInfo types.ActionInfo) bool {
-	return actionInfo.ICAConfig != nil && actionInfo.ICAConfig.ConnectionID != ""
+func isSelfHostedICAMessage(flowInfo types.FlowInfo) bool {
+	return flowInfo.ICAConfig != nil && flowInfo.ICAConfig.ConnectionID != ""
 }
 
 // validateAuthzMsg validates an authz MsgExec message.
-func (k Keeper) validateAuthzMsg(ctx sdk.Context, codec codec.Codec, actionInfo types.ActionInfo, message *codectypes.Any) error {
+func (k Keeper) validateAuthzMsg(ctx sdk.Context, codec codec.Codec, flowInfo types.FlowInfo, message *codectypes.Any) error {
 	var authzMsg authztypes.MsgExec
 	if err := cosmosproto.Unmarshal(message.Value, &authzMsg); err != nil {
 		return errorsmod.Wrap(err, "failed to unmarshal MsgExec")
 	}
 
 	for _, innerMessage := range authzMsg.Msgs {
-		if err := k.validateSigners(ctx, codec, actionInfo, innerMessage); err != nil {
+		if err := k.validateSigners(ctx, codec, flowInfo, innerMessage); err != nil {
 			return err
 		}
 	}
@@ -92,7 +92,7 @@ func (k Keeper) validateAuthzMsg(ctx sdk.Context, codec codec.Codec, actionInfo 
 }
 
 // validateSigners checks the signers of a message against the owner, ICA, and hosted accounts.
-func (k Keeper) validateSigners(ctx sdk.Context, codec codec.Codec, actionInfo types.ActionInfo, message *codectypes.Any) error {
+func (k Keeper) validateSigners(ctx sdk.Context, codec codec.Codec, flowInfo types.FlowInfo, message *codectypes.Any) error {
 
 	protoReflectMsg, err := unpackV2Any(codec, message)
 	if err != nil {
@@ -106,7 +106,7 @@ func (k Keeper) validateSigners(ctx sdk.Context, codec codec.Codec, actionInfo t
 	if len(signers) < 1 {
 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "no valid signers found")
 	}
-	ownerAddr, err := sdk.AccAddressFromBech32(actionInfo.Owner)
+	ownerAddr, err := sdk.AccAddressFromBech32(flowInfo.Owner)
 	if err != nil {
 		return errorsmod.Wrap(err, "failed to parse owner address")
 	}
@@ -114,14 +114,14 @@ func (k Keeper) validateSigners(ctx sdk.Context, codec codec.Codec, actionInfo t
 	if err != nil {
 		return errorsmod.Wrap(err, "failed to parse owner address")
 	}
-	// fmt.Printf("Owner %s \n", actionInfo.Owner)
+	// fmt.Printf("Owner %s \n", flowInfo.Owner)
 	// fmt.Printf("Signer %s \n", signers[0])
-	k.Logger(ctx).Debug("Signer validation", "owner", actionInfo.Owner, "signer", signers[0])
+	k.Logger(ctx).Debug("Signer validation", "owner", flowInfo.Owner, "signer", signers[0])
 	if !signer.Equals(ownerAddr) {
 		//if !checkICA {
 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "signer address does not match expected owner address")
 		//}
-		//return k.validateHostedOrICAAccount(ctx, actionInfo, signer)
+		//return k.validateHostedOrICAAccount(ctx, flowInfo, signer)
 	}
 
 	return nil
@@ -197,10 +197,10 @@ func parseAccAddressFromAnyPrefix(bech32str string) (sdk.AccAddress, error) {
 }
 
 // validateHostedOrICAAccount checks if the signer matches a hosted or ICA account.
-// func (k Keeper) validateHostedOrICAAccount(ctx sdk.Context, actionInfo types.ActionInfo, signer sdk.AccAddress) error {
+// func (k Keeper) validateHostedOrICAAccount(ctx sdk.Context, flowInfo types.FlowInfo, signer sdk.AccAddress) error {
 // 	// Check Hosted Config
-// 	if actionInfo.HostedConfig != nil && actionInfo.HostedConfig.HostedAddress != "" {
-// 		ica, err := k.TryGetHostedAccount(ctx, actionInfo.HostedConfig.HostedAddress)
+// 	if flowInfo.HostedConfig != nil && flowInfo.HostedConfig.HostedAddress != "" {
+// 		ica, err := k.TryGetHostedAccount(ctx, flowInfo.HostedConfig.HostedAddress)
 // 		if err != nil {
 // 			return errorsmod.Wrap(err, "failed to get hosted account")
 // 		}
@@ -215,7 +215,7 @@ func parseAccAddressFromAnyPrefix(bech32str string) (sdk.AccAddress, error) {
 // 	}
 
 // 	// Check ICA Account
-// 	icaAddrString, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, actionInfo.ICAConfig.ConnectionID, actionInfo.ICAConfig.PortID)
+// 	icaAddrString, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, flowInfo.ICAConfig.ConnectionID, flowInfo.ICAConfig.PortID)
 // 	if !found {
 // 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ICA account not found")
 // 	}

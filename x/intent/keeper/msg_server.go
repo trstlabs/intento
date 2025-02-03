@@ -60,13 +60,13 @@ func (k msgServer) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*typ
 		return nil, err
 	}
 
-	// //store 0 as action id as a regular submit is not action
-	// k.setTmpActionID(ctx, 0, portID, "", sequence)
+	// //store 0 as flow id as a regular submit is not flow
+	// k.setTmpFlowID(ctx, 0, portID, "", sequence)
 	return &types.MsgSubmitTxResponse{}, nil
 }
 
-// SubmitAction implements the Msg/SubmitAction interface
-func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitAction) (*types.MsgSubmitActionResponse, error) {
+// SubmitFlow implements the Msg/SubmitFlow interface
+func (k msgServer) SubmitFlow(goCtx context.Context, msg *types.MsgSubmitFlow) (*types.MsgSubmitFlowResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	msgOwner, err := sdk.AccAddressFromBech32(msg.Owner)
@@ -74,21 +74,21 @@ func (k msgServer) SubmitAction(goCtx context.Context, msg *types.MsgSubmitActio
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 
-	portID, duration, interval, startTime, configuration, conditions, hostedConfig, err := checkAndParseActionContent(k, msg, err, ctx)
+	portID, duration, interval, startTime, configuration, conditions, hostedConfig, err := checkAndParseFlowContent(k, msg, err, ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, hostedConfig, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
+	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, hostedConfig, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgSubmitActionResponse{}, nil
+	return &types.MsgSubmitFlowResponse{}, nil
 }
 
-// RegisterAccountAndSubmitAction implements the Msg/RegisterAccountAndSubmitAction interface
-func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *types.MsgRegisterAccountAndSubmitAction) (*types.MsgRegisterAccountAndSubmitActionResponse, error) {
+// RegisterAccountAndSubmitFlow implements the Msg/RegisterAccountAndSubmitFlow interface
+func (k msgServer) RegisterAccountAndSubmitFlow(goCtx context.Context, msg *types.MsgRegisterAccountAndSubmitFlow) (*types.MsgRegisterAccountAndSubmitFlowResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	err := k.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.Owner, msg.Version)
@@ -101,43 +101,43 @@ func (k msgServer) RegisterAccountAndSubmitAction(goCtx context.Context, msg *ty
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 
-	portID, duration, interval, startTime, configuration, conditions, _, err := checkAndParseActionContent(k, msg, err, ctx)
+	portID, duration, interval, startTime, configuration, conditions, _, err := checkAndParseFlowContent(k, msg, err, ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.CreateAction(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, types.HostedConfig{}, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
+	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, types.HostedConfig{}, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgRegisterAccountAndSubmitActionResponse{}, nil
+	return &types.MsgRegisterAccountAndSubmitFlowResponse{}, nil
 }
 
-// UpdateAction implements the Msg/UpdateAction interface
-func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateAction) (*types.MsgUpdateActionResponse, error) {
+// UpdateFlow implements the Msg/UpdateFlow interface
+func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (*types.MsgUpdateFlowResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	timeNowWindow := ctx.BlockTime().Add(time.Minute * 2)
-	action, err := k.TryGetActionInfo(ctx, msg.ID)
+	flow, err := k.TryGetFlowInfo(ctx, msg.ID)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
-	if action.Owner != msg.Owner {
+	if flow.Owner != msg.Owner {
 		return nil, types.ErrInvalidAddress
 	}
 
-	if action.Configuration.UpdatingDisabled {
+	if flow.Configuration.UpdatingDisabled {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "updating is disabled")
 	}
 
 	if msg.ConnectionId != "" {
-		action.ICAConfig.PortID, err = icatypes.NewControllerPortID(msg.Owner)
+		flow.ICAConfig.PortID, err = icatypes.NewControllerPortID(msg.Owner)
 		if err != nil {
 			return nil, err
 		}
-		action.ICAConfig.ConnectionID = msg.ConnectionId
+		flow.ICAConfig.ConnectionID = msg.ConnectionId
 	}
-	newExecTime := action.ExecTime
+	newExecTime := flow.ExecTime
 	if msg.EndTime > 0 {
 		endTime := time.Unix(int64(msg.EndTime), 0)
 		if err != nil {
@@ -146,9 +146,9 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 		if endTime.Before(timeNowWindow) {
 			return nil, types.ErrInvalidTime
 		}
-		action.EndTime = endTime
+		flow.EndTime = endTime
 
-		if action.Interval != 0 && msg.Interval != "" {
+		if flow.Interval != 0 && msg.Interval != "" {
 			newExecTime = endTime
 		}
 	}
@@ -160,13 +160,13 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 	if msg.Interval != "" {
 		interval, err := time.ParseDuration(msg.Interval)
 		if err != nil {
-			return nil, errorsmod.Wrap(types.ErrUpdateAction, err.Error())
+			return nil, errorsmod.Wrap(types.ErrUpdateFlow, err.Error())
 		}
 
-		if interval != 0 && interval < p.MinActionInterval || interval > action.EndTime.Sub(action.StartTime) {
-			return nil, errorsmod.Wrapf(types.ErrUpdateAction, "interval: %s  must be longer than minimum interval:  %s, and execution should happen before end time", interval, p.MinActionInterval)
+		if interval != 0 && interval < p.MinFlowInterval || interval > flow.EndTime.Sub(flow.StartTime) {
+			return nil, errorsmod.Wrapf(types.ErrUpdateFlow, "interval: %s  must be longer than minimum interval:  %s, and execution should happen before end time", interval, p.MinFlowInterval)
 		}
-		action.Interval = interval
+		flow.Interval = interval
 	}
 
 	if msg.StartAt > 0 {
@@ -174,55 +174,55 @@ func (k msgServer) UpdateAction(goCtx context.Context, msg *types.MsgUpdateActio
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
 			return nil, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
-		if startTime.After(action.EndTime) {
-			return nil, errorsmod.Wrapf(types.ErrUpdateAction, "start time: %s must be before end time", startTime)
+		if startTime.After(flow.EndTime) {
+			return nil, errorsmod.Wrapf(types.ErrUpdateFlow, "start time: %s must be before end time", startTime)
 		}
-		latestEntry, err := k.GetLatestActionHistoryEntry(ctx, action.ID)
+		latestEntry, err := k.GetLatestFlowHistoryEntry(ctx, flow.ID)
 		if err != nil || latestEntry != nil {
-			return nil, errorsmod.Wrapf(types.ErrUpdateAction, "start time: %s must occur before first execution", startTime)
+			return nil, errorsmod.Wrapf(types.ErrUpdateFlow, "start time: %s must occur before first execution", startTime)
 		}
-		action.StartTime = startTime
+		flow.StartTime = startTime
 		newExecTime = startTime
 	}
 
 	if msg.Label != "" {
-		action.Label = msg.Label
+		flow.Label = msg.Label
 	}
 
 	if msg.Configuration != nil {
-		action.Configuration = msg.Configuration
+		flow.Configuration = msg.Configuration
 	}
 
 	if msg.Conditions != nil {
-		err = updateConditions(action.Conditions, msg.Msgs, action.EndTime.Sub(timeNowWindow), action.Interval)
+		err = updateConditions(flow.Conditions, msg.Msgs, flow.EndTime.Sub(timeNowWindow), flow.Interval)
 		if err != nil {
 			return nil, err
 		}
 
 	}
 	if len(msg.Msgs) != 0 {
-		action.Msgs = msg.Msgs
+		flow.Msgs = msg.Msgs
 	}
 
-	if newExecTime != action.ExecTime {
-		k.RemoveFromActionQueue(ctx, action)
-		action.ExecTime = newExecTime
-		k.InsertActionQueue(ctx, action.ID, newExecTime)
+	if newExecTime != flow.ExecTime {
+		k.RemoveFromFlowQueue(ctx, flow)
+		flow.ExecTime = newExecTime
+		k.InsertFlowQueue(ctx, flow.ID, newExecTime)
 	}
 
-	action.UpdateHistory = append(action.UpdateHistory, ctx.BlockTime())
+	flow.UpdateHistory = append(flow.UpdateHistory, ctx.BlockTime())
 
-	if err := k.SignerOk(ctx, k.cdc, action); err != nil {
+	if err := k.SignerOk(ctx, k.cdc, flow); err != nil {
 		return nil, errorsmod.Wrap(types.ErrSignerNotOk, err.Error())
 	}
 	//set hosted config
 	if msg.HostedConfig != nil {
-		action.HostedConfig = msg.HostedConfig
+		flow.HostedConfig = msg.HostedConfig
 	}
 
-	k.SetActionInfo(ctx, &action)
+	k.SetFlowInfo(ctx, &flow)
 
-	return &types.MsgUpdateActionResponse{}, nil
+	return &types.MsgUpdateFlowResponse{}, nil
 }
 
 // CreateHostedAccount implements the Msg/CreateHostedAccount interface
@@ -308,7 +308,7 @@ func (k msgServer) UpdateHostedAccount(goCtx context.Context, msg *types.MsgUpda
 	return &types.MsgUpdateHostedAccountResponse{}, nil
 }
 
-func checkAndParseActionContent(
+func checkAndParseFlowContent(
 	k msgServer,
 	msg sdk.Msg,
 	err error,
@@ -327,8 +327,8 @@ func checkAndParseActionContent(
 	)
 
 	switch msg := msg.(type) {
-	case *types.MsgSubmitAction:
-		// Existing logic for MsgSubmitAction
+	case *types.MsgSubmitFlow:
+		// Existing logic for MsgSubmitFlow
 		msgOwner = msg.Owner
 		msgDuration = msg.Duration
 		msgConnectionId = msg.ConnectionId
@@ -349,8 +349,8 @@ func checkAndParseActionContent(
 
 		msgMsgs = msg.Msgs
 
-	case *types.MsgRegisterAccountAndSubmitAction:
-		// Handle RegisterAccountAndSubmitAction
+	case *types.MsgRegisterAccountAndSubmitFlow:
+		// Handle RegisterAccountAndSubmitFlow
 		msgOwner = msg.Owner
 		msgDuration = msg.Duration
 		msgConnectionId = msg.ConnectionId
@@ -408,15 +408,15 @@ func checkAndParseActionContent(
 	if err != nil {
 		panic(err)
 	}
-	if interval != 0 && (interval < p.MinActionInterval || interval > duration) {
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinActionInterval, duration)
+	if interval != 0 && (interval < p.MinFlowInterval || interval > duration) {
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinFlowInterval, duration)
 	}
 	if duration != 0 {
-		if duration > p.MaxActionDuration {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxActionDuration)
-		} else if duration < p.MinActionDuration {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinActionDuration)
-		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxActionDuration)) {
+		if duration > p.MaxFlowDuration {
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxFlowDuration)
+		} else if duration < p.MinFlowDuration {
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinFlowDuration)
+		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxFlowDuration)) {
 			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
@@ -459,7 +459,7 @@ func updateConditions(
 			if feedbackLoop.ICQConfig != nil {
 				if feedbackLoop.ICQConfig.TimeoutDuration != 0 {
 					if feedbackLoop.ICQConfig.TimeoutDuration > duration || (interval != 0 && feedbackLoop.ICQConfig.TimeoutDuration > interval) {
-						return errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the action interval or duration")
+						return errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the flow interval or duration")
 					}
 				}
 			}
@@ -476,7 +476,7 @@ func updateConditions(
 			if comparison.ICQConfig != nil {
 				if comparison.ICQConfig.TimeoutDuration != 0 {
 					if comparison.ICQConfig.TimeoutDuration > duration || (interval != 0 && comparison.ICQConfig.TimeoutDuration > interval) {
-						return errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the action interval or duration")
+						return errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the flow interval or duration")
 					}
 				}
 			}

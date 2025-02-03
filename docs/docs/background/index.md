@@ -4,7 +4,7 @@ sidebar_position: 1
 order: 1
 ---
 
-Intento is distributed and decentralized system built with the Cosmos SDK for submitting and executing intent-based actions. TRST Labs's extensive `Intent` Cosmos SDK module, developed using the Cosmos SDK, has been under development since early 2023. The module abstracts transaction complexities and offers chain-agnostic and interdependent orchestration of actions. By simplifying asset control and enabling permissionless automation of actions on connected IBC chains, this module moves value across protocols.
+Intento is distributed and decentralized system built with the Cosmos SDK for submitting and executing intent-based actions via `Flows`. TRST Labs's extensive `Intent` Cosmos SDK module has been under development since early 2023. The module abstracts transaction complexities and offers chain-agnostic and interdependent orchestration of actions. By simplifying asset control and enabling permissionless automation of actions on connected IBC chains, this module moves value across protocols.
 
 ## Cosmos
 

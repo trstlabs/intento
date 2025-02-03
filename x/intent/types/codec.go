@@ -10,9 +10,9 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(MsgRegisterAccount{}, "intent/MsgRegisterAccount", nil)
 	cdc.RegisterConcrete(MsgSubmitTx{}, "intent/MsgSendTx", nil)
-	cdc.RegisterConcrete(MsgSubmitAction{}, "intent/MsgSendAction", nil)
-	cdc.RegisterConcrete(MsgRegisterAccountAndSubmitAction{}, "intent/MsgRegisterAccountAndSubmitAction", nil)
-	cdc.RegisterConcrete(MsgUpdateAction{}, "intent/MsgUpdateAction", nil)
+	cdc.RegisterConcrete(MsgSubmitFlow{}, "intent/MsgSendFlow", nil)
+	cdc.RegisterConcrete(MsgRegisterAccountAndSubmitFlow{}, "intent/MsgRegisterAccountAndSubmitFlow", nil)
+	cdc.RegisterConcrete(MsgUpdateFlow{}, "intent/MsgUpdateFlow", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -21,9 +21,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgRegisterAccount{},
 		&MsgSubmitTx{},
-		&MsgSubmitAction{},
-		&MsgRegisterAccountAndSubmitAction{},
-		&MsgUpdateAction{},
+		&MsgSubmitFlow{},
+		&MsgRegisterAccountAndSubmitFlow{},
+		&MsgUpdateFlow{},
 	)
 
 }

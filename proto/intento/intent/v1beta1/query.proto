@@ -5,11 +5,9 @@ package intento.intent.v1beta1;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "intento/intent/v1beta1/action.proto";
+import "intento/intent/v1beta1/flow.proto";
 import "intento/intent/v1beta1/hostedaccount.proto";
 import "intento/intent/v1beta1/params.proto";
-import "intento/intent/v1beta1/usage.proto";
-
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 option (gogoproto.equal_all) = false;
 option (gogoproto.goproto_getters_all) = false;
@@ -22,26 +20,26 @@ service Query {
       returns (QueryInterchainAccountFromAddressResponse) {
     option (google.api.http).get = "/intento/intent/v1beta1/address-to-ica";
   }
-  // Action returns the auto-executing interchain account tx
-  rpc Action(QueryActionRequest) returns (QueryActionResponse) {
-    option (google.api.http).get = "/intento/intent/v1beta1/action/{id}";
+  // Flow returns the auto-executing interchain account tx
+  rpc Flow(QueryFlowRequest) returns (QueryFlowResponse) {
+    option (google.api.http).get = "/intento/intent/v1beta1/flow/{id}";
   }
-  // ActionHistory returns the auto tx history
-  rpc ActionHistory(QueryActionHistoryRequest)
-      returns (QueryActionHistoryResponse) {
+  // FlowHistory returns the auto tx history
+  rpc FlowHistory(QueryFlowHistoryRequest)
+      returns (QueryFlowHistoryResponse) {
     option (google.api.http).get =
-        "/intento/intent/v1beta1/action-history/{id}";
+        "/intento/intent/v1beta1/flow-history/{id}";
   }
-  // Actions returns the all auto-executing interchain account messages
-  rpc Actions(QueryActionsRequest) returns (QueryActionsResponse) {
-    option (google.api.http).get = "/intento/intent/v1beta1/actions";
+  // Flows returns the all auto-executing interchain account messages
+  rpc Flows(QueryFlowsRequest) returns (QueryFlowsResponse) {
+    option (google.api.http).get = "/intento/intent/v1beta1/flows";
   }
-  // ActionsForOwner returns the auto-executing interchain account messages for
+  // FlowsForOwner returns the auto-executing interchain account messages for
   // given owner
-  rpc ActionsForOwner(QueryActionsForOwnerRequest)
-      returns (QueryActionsForOwnerResponse) {
+  rpc FlowsForOwner(QueryFlowsForOwnerRequest)
+      returns (QueryFlowsForOwnerResponse) {
     option (google.api.http).get =
-        "/intento/intent/v1beta1/actions-for-owner/{owner}";
+        "/intento/intent/v1beta1/flows-for-owner/{owner}";
   }
   rpc HostedAccount(QueryHostedAccountRequest)
       returns (QueryHostedAccountResponse) {
@@ -64,11 +62,6 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/intento/intent/v1beta1/params";
   }
-  // ActionIbcTxUsage returns statistics on usage of IBC transactions
-  rpc ActionIbcTxUsage(QueryActionIbcUsageRequest)
-      returns (QueryActionIbcUsageResponse) {
-    option (google.api.http).get = "/intento/intent/v1beta1/action-ibc-usage";
-  }
 }
 
 // QueryInterchainAccountFromAddressRequest is the request type for the
@@ -85,56 +78,56 @@ message QueryInterchainAccountFromAddressResponse {
       [ (gogoproto.moretags) = "yaml:\"interchain_account_address\"" ];
 }
 
-// QueryActionRequest is the request type for the Query/ActionRequest RPC
-message QueryActionRequest { string id = 1; }
+// QueryFlowRequest is the request type for the Query/FlowRequest RPC
+message QueryFlowRequest { string id = 1; }
 
-// QueryActionResponse the response type for the Query/ActionRequest RPC
-message QueryActionResponse {
-  ActionInfo action_info = 1 [ (gogoproto.nullable) = false ];
+// QueryFlowResponse the response type for the Query/FlowRequest RPC
+message QueryFlowResponse {
+  FlowInfo flow_info = 1 [ (gogoproto.nullable) = false ];
 }
 
-// QueryActionHistoryRequest is the request type for the
-// Query/QueryActionHistoryRequest RPC
-message QueryActionHistoryRequest {
-  // id of the action
+// QueryFlowHistoryRequest is the request type for the
+// Query/QueryFlowHistoryRequest RPC
+message QueryFlowHistoryRequest {
+  // id of the flow
   string id = 1;
   // Pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryActionHistoryResponse the response type for the
-// Query/QueryActionHistoryResponse RPC
-message QueryActionHistoryResponse {
-  repeated ActionHistoryEntry history = 1 [ (gogoproto.nullable) = false ];
+// QueryFlowHistoryResponse the response type for the
+// Query/QueryFlowHistoryResponse RPC
+message QueryFlowHistoryResponse {
+  repeated FlowHistoryEntry history = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryActionsRequest is the request type for the Query/ActionsRequest RPC
-message QueryActionsRequest {
+// QueryFlowsRequest is the request type for the Query/FlowsRequest RPC
+message QueryFlowsRequest {
   // Pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryActionsResponse the response type for the Query/ActionsRequest RPCπ
-message QueryActionsResponse {
-  repeated ActionInfo action_infos = 1 [ (gogoproto.nullable) = false ];
+// QueryFlowsResponse the response type for the Query/FlowsRequest RPCπ
+message QueryFlowsResponse {
+  repeated FlowInfo flow_infos = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryActionsForOwnerRequest is the request type for the
-// Query/ActionsForOwnerRequest RPC
-message QueryActionsForOwnerRequest {
+// QueryFlowsForOwnerRequest is the request type for the
+// Query/FlowsForOwnerRequest RPC
+message QueryFlowsForOwnerRequest {
   string owner = 1;
   // Pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryActionsForOwnerResponse the response type for the
-// Query/ActionsForOwnerRequest RPC
-message QueryActionsForOwnerResponse {
-  repeated ActionInfo action_infos = 1 [ (gogoproto.nullable) = false ];
+// QueryFlowsForOwnerResponse the response type for the
+// Query/FlowsForOwnerRequest RPC
+message QueryFlowsForOwnerResponse {
+  repeated FlowInfo flow_infos = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -186,21 +179,6 @@ message QueryHostedAccountsByAdminRequest {
 message QueryHostedAccountsByAdminResponse {
   // HostedAccounts
   repeated HostedAccount hosted_accounts = 1 [ (gogoproto.nullable) = false ];
-  // Pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryAutoIbcUsageRequest is the request type for the
-// Query/QueryAutoIbcUsageRequest RPC
-message QueryActionIbcUsageRequest {
-  // Pagination defines an optional pagination for the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-// QueryAutoIbcUsageResponse the response type for the
-// Query/QueryAutoIbcUsageResponse RPC
-message QueryActionIbcUsageResponse {
-  repeated ActionIbcUsage action_ibc_usage = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

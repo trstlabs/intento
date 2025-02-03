@@ -3,7 +3,7 @@ title: Differentiation
 sidebar_position: 2
 ---
 
-Currently, building and processing intent-based blockchain actions in a decentralized manner requires a combination of smart contracts and a off-chain bot network.
+Currently, building and processing intent-based blockchain workflows requires a combination of smart contracts and a off-chain bot network.
 
 For both bot networks and privileged smart contracts, developing, testing, and auditing custom smart contracts are crucial. Developers must ensure that their solutions are efficient, fair, and secure, considering factors such as network congestion, centralization risks, and computational costs.
 The development of custom smart contracts can be costly. On average, the cost of developing a smart contract ranges between $5,000 and $25,000, depending on complexity and security requirements. This estimate includes the costs of designing, coding, testing, and auditing the contract. [Source: ConsenSys](https://consensys.net/blog/blockchain-development/the-cost-of-developing-a-smart-contract/) provides detailed insights into these costs. For accurate budgeting and planning, it's essential to factor in the potential expenses for ongoing maintenance and upgrades as well.

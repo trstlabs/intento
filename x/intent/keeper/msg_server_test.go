@@ -164,7 +164,7 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSubmitAction() {
+func (suite *KeeperTestSuite) TestSubmitFlow() {
 
 	types.Denom = sdk.DefaultBondDenom
 	var (
@@ -186,14 +186,14 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 		expPass  bool
 	}{
 		{
-			"success - IBC ICA action", func() {
+			"success - IBC ICA flow", func() {
 				registerInterchainAccount = true
 				connectionId = path.EndpointA.ConnectionID
 				hostConnectionId = path.EndpointB.ConnectionID
 			}, true,
 		},
 		{
-			"success - local action", func() {
+			"success - local flow", func() {
 				registerInterchainAccount = false
 				connectionId = ""
 				hostConnectionId = ""
@@ -267,7 +267,7 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 
 			params := types.DefaultParams()
 			params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
-			params.ActionFlexFeeMul = 1
+			params.FlowFlexFeeMul = 1
 
 			icaAppA := GetICAApp(suite.IntentoChain)
 			icaAppA.IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
@@ -316,12 +316,12 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 				startAt = uint64(ctx.BlockTime().Unix() - 60*60)
 			}
 
-			msg, err := types.NewMsgSubmitAction(owner, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, &conditions)
+			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, &conditions)
 
 			suite.Require().NoError(err)
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			res, err := msgSrv.SubmitAction(suite.IntentoChain.GetContext(), msg)
+			res, err := msgSrv.SubmitFlow(suite.IntentoChain.GetContext(), msg)
 
 			if !tc.expPass {
 				suite.Require().Error(err)
@@ -332,38 +332,38 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 			suite.Require().NoError(err)
 			suite.Require().NotNil(res)
 
-			actionKeeper := icaAppA.IntentKeeper
+			flowKeeper := icaAppA.IntentKeeper
 
 			suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(interval)
-			action := actionKeeper.GetActionInfo(ctx, 1)
+			flow := flowKeeper.GetFlowInfo(ctx, 1)
 
-			if len(action.Conditions.FeedbackLoops) != 0 && action.Conditions.FeedbackLoops[0].ICQConfig != nil {
-				actionKeeper.SubmitInterchainQueries(ctx, action, actionKeeper.Logger(ctx))
+			if len(flow.Conditions.FeedbackLoops) != 0 && flow.Conditions.FeedbackLoops[0].ICQConfig != nil {
+				flowKeeper.SubmitInterchainQueries(ctx, flow, flowKeeper.Logger(ctx))
 			}
-			actionKeeper.HandleAction(ctx, actionKeeper.Logger(ctx), action, ctx.BlockTime(), nil)
+			flowKeeper.HandleFlow(ctx, flowKeeper.Logger(ctx), flow, ctx.BlockTime(), nil)
 			suite.IntentoChain.NextBlock()
-			action = actionKeeper.GetActionInfo(ctx, 1)
-			actionHistory, err := actionKeeper.GetActionHistory(ctx, 1)
+			flow = flowKeeper.GetFlowInfo(ctx, 1)
+			flowHistory, err := flowKeeper.GetFlowHistory(ctx, 1)
 
 			suite.Require().NoError(err)
-			suite.Require().NotEqual(action, types.ActionInfo{})
-			suite.Require().Equal(action.Owner, owner)
-			suite.Require().Equal(action.Label, label)
+			suite.Require().NotEqual(flow, types.FlowInfo{})
+			suite.Require().Equal(flow.Owner, owner)
+			suite.Require().Equal(flow.Label, label)
 
 			//ibc
-			if action.ICAConfig.PortID != "" {
-				suite.Require().Equal(action.ICAConfig.PortID, "icacontroller-"+owner)
+			if flow.ICAConfig.PortID != "" {
+				suite.Require().Equal(flow.ICAConfig.PortID, "icacontroller-"+owner)
 			}
 			if !transferMsg {
 				//icq should return this error
-				if actionHistory[0].Errors != nil {
-					// fmt.Printf("ICQ MSG %v", action.Msgs[0].GetCachedValue())
-					suite.Require().Contains(actionHistory[0].Errors[0], "Error submitting ICQ")
+				if flowHistory[0].Errors != nil {
+					// fmt.Printf("ICQ MSG %v", flow.Msgs[0].GetCachedValue())
+					suite.Require().Contains(flowHistory[0].Errors[0], "Error submitting ICQ")
 				}
 
 			}
-			if len(action.Conditions.FeedbackLoops) != 0 && msg.Conditions.FeedbackLoops[0].ICQConfig != nil {
-				msgQueryResp, _ := suite.SetupMsgSubmitQueryResponse(*msg.Conditions.FeedbackLoops[0].ICQConfig, action.ID)
+			if len(flow.Conditions.FeedbackLoops) != 0 && msg.Conditions.FeedbackLoops[0].ICQConfig != nil {
+				msgQueryResp, _ := suite.SetupMsgSubmitQueryResponse(*msg.Conditions.FeedbackLoops[0].ICQConfig, flow.ID)
 
 				msgSrvICQ := icqkeeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).InterchainQueryKeeper)
 				_, err := msgSrvICQ.SubmitQueryResponse(ctx, &msgQueryResp)
@@ -371,14 +371,14 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 				//as we cannot fully test this, the code should run
 				suite.Require().NoError(err)
 
-				// actionNew := actionKeeper.GetActionInfo(ctx, 1)
-				// suite.Require().Equal(action.Msgs, actionNew.Msgs)
-				// suite.Require().Nil(actionNew.ValidateBasic())
+				// flowNew := flowKeeper.GetFlowInfo(ctx, 1)
+				// suite.Require().Equal(flow.Msgs, flowNew.Msgs)
+				// suite.Require().Nil(flowNew.ValidateBasic())
 
 			}
 			if parseIcaAddress {
 				var txMsg sdk.Msg
-				err = icaAppA.AppCodec().UnpackAny(action.Msgs[0], &txMsg)
+				err = icaAppA.AppCodec().UnpackAny(flow.Msgs[0], &txMsg)
 				suite.Require().NoError(err)
 				index := strings.Index(txMsg.String(), types.ParseICAValue)
 				suite.Require().Equal(-1, index)
@@ -389,7 +389,7 @@ func (suite *KeeperTestSuite) TestSubmitAction() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestSubmitActionSigner() {
+func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 	icaAddrString := "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6"
 	testCases := []struct {
 		name      string
@@ -439,13 +439,13 @@ func (suite *KeeperTestSuite) TestSubmitActionSigner() {
 			intervalTimeText := interval.String()
 			startAt := uint64(0)
 			GetICAApp(suite.IntentoChain).ICAControllerKeeper.SetInterchainAccountAddress(suite.IntentoChain.GetContext(), "", "", icaAddrString)
-			msg, err := types.NewMsgSubmitAction(owner, label, []sdk.Msg{sdkMsg}, "", "", durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
+			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, "", "", durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
 			suite.Require().NoError(err)
 			err = msg.ValidateBasic()
 			suite.Require().NoError(err)
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			res, err := msgSrv.SubmitAction(suite.IntentoChain.GetContext(), msg)
+			res, err := msgSrv.SubmitFlow(suite.IntentoChain.GetContext(), msg)
 
 			if !tc.expPass {
 				suite.Require().Error(err)
@@ -473,7 +473,7 @@ func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 		expPass  bool
 	}{{
 
-		"success - Create hosted account action", func() {
+		"success - Create hosted account flow", func() {
 			connectionId = path.EndpointA.ConnectionID
 			hostConnectionId = path.EndpointB.ConnectionID
 			sdkMsg = &banktypes.MsgSend{
@@ -526,11 +526,11 @@ func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 			if startAtBeforeBlockHeight {
 				startAt = uint64(suite.IntentoChain.GetContext().BlockTime().Unix() - 60*60)
 			}
-			msg, err := types.NewMsgSubmitAction(creator, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())), resHosted.Address, sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()), &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
+			msg, err := types.NewMsgSubmitFlow(creator, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())), resHosted.Address, sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()), &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
 			suite.Require().NoError(err)
 
 			msgSrv = keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			res, err := msgSrv.SubmitAction(suite.IntentoChain.GetContext(), msg)
+			res, err := msgSrv.SubmitFlow(suite.IntentoChain.GetContext(), msg)
 			if !tc.expPass {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)
@@ -540,7 +540,7 @@ func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateAction() {
+func (suite *KeeperTestSuite) TestUpdateFlow() {
 	var (
 		path                      *ibctesting.Path
 		registerInterchainAccount bool
@@ -559,7 +559,7 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 		expPass  bool
 	}{
 		{
-			"success - update action", func() {
+			"success - update flow", func() {
 				registerInterchainAccount = true
 				owner = TestOwnerAddress
 				connectionId = path.EndpointA.ConnectionID
@@ -569,7 +569,7 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 			}, true,
 		},
 		{
-			"success - update local action", func() {
+			"success - update local flow", func() {
 				registerInterchainAccount = false
 				owner = TestOwnerAddress
 				connectionId = ""
@@ -628,35 +628,35 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitAction(owner, "label", []sdk.Msg{sdkMsg}, connectionId, "", "200s", "100s", uint64(suite.IntentoChain.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
+			msg, err := types.NewMsgSubmitFlow(owner, "label", []sdk.Msg{sdkMsg}, connectionId, "", "200s", "100s", uint64(suite.IntentoChain.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
 			suite.Require().NoError(err)
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			_, err = msgSrv.SubmitAction(suite.IntentoChain.GetContext(), msg)
+			_, err = msgSrv.SubmitFlow(suite.IntentoChain.GetContext(), msg)
 			suite.Require().NoError(err)
 
 			if addFakeExecHistory {
-				action := icaAppA.IntentKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
-				fakeEntry := types.ActionHistoryEntry{ScheduledExecTime: action.ExecTime, ActualExecTime: action.ExecTime}
+				flow := icaAppA.IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+				fakeEntry := types.FlowHistoryEntry{ScheduledExecTime: flow.ExecTime, ActualExecTime: flow.ExecTime}
 
-				icaAppA.IntentKeeper.SetActionHistoryEntry(suite.IntentoChain.GetContext(), action.ID, &fakeEntry)
+				icaAppA.IntentKeeper.SetFlowHistoryEntry(suite.IntentoChain.GetContext(), flow.ID, &fakeEntry)
 				suite.IntentoChain.NextBlock()
-				actionHistory := icaAppA.IntentKeeper.MustGetActionHistory(suite.IntentoChain.GetContext(), 1)
-				suite.Require().NotZero(actionHistory[0].ActualExecTime)
+				flowHistory := icaAppA.IntentKeeper.MustGetFlowHistory(suite.IntentoChain.GetContext(), 1)
+				suite.Require().NotZero(flowHistory[0].ActualExecTime)
 			}
-			updateMsg, err := types.NewMsgUpdateAction(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
+			updateMsg, err := types.NewMsgUpdateFlow(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
 			suite.Require().NoError(err)
 			suite.IntentoChain.Coordinator.IncrementTime()
 
 			if addFakeExecHistory {
-				actionHistory := icaAppA.IntentKeeper.MustGetActionHistory(suite.IntentoChain.GetContext(), 1)
-				suite.Require().NotZero(actionHistory[0].ActualExecTime)
-				actionHistoryEntry, err := icaAppA.IntentKeeper.GetLatestActionHistoryEntry(suite.IntentoChain.GetContext(), 1)
+				flowHistory := icaAppA.IntentKeeper.MustGetFlowHistory(suite.IntentoChain.GetContext(), 1)
+				suite.Require().NotZero(flowHistory[0].ActualExecTime)
+				flowHistoryEntry, err := icaAppA.IntentKeeper.GetLatestFlowHistoryEntry(suite.IntentoChain.GetContext(), 1)
 				suite.Require().NoError(err)
-				suite.Require().NotNil(actionHistoryEntry)
+				suite.Require().NotNil(flowHistoryEntry)
 			}
 
-			res, err := msgSrv.UpdateAction(suite.IntentoChain.GetContext(), updateMsg)
+			res, err := msgSrv.UpdateFlow(suite.IntentoChain.GetContext(), updateMsg)
 
 			if !tc.expPass {
 				suite.Require().Error(err)
@@ -665,11 +665,11 @@ func (suite *KeeperTestSuite) TestUpdateAction() {
 				suite.IntentoChain.NextBlock()
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-				action := icaAppA.IntentKeeper.GetActionInfo(suite.IntentoChain.GetContext(), 1)
-				suite.Require().Equal(action.Label, updateMsg.Label)
-				suite.Require().Equal(action.StartTime.Unix(), int64(updateMsg.StartAt))
-				suite.Require().Equal(action.EndTime.Unix(), int64(updateMsg.EndTime))
-				suite.Require().Equal((action.Interval.String()), updateMsg.Interval)
+				flow := icaAppA.IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+				suite.Require().Equal(flow.Label, updateMsg.Label)
+				suite.Require().Equal(flow.StartTime.Unix(), int64(updateMsg.StartAt))
+				suite.Require().Equal(flow.EndTime.Unix(), int64(updateMsg.EndTime))
+				suite.Require().Equal((flow.Interval.String()), updateMsg.Interval)
 
 			}
 

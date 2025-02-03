@@ -1,10 +1,10 @@
 ---
 sidebar_position: 7
-title: Querying actions
-description: How to retreive action data
+title: Querying flows
+description: How to retreive flow data
 ---
 
-Retreiving `Action` -related information can be through the [TriggerPortal](https://triggerportal.zone) interface, a front-end integration through `IntentoJS`, locally through a Command-Line Interface or through a Celestia RPC endpoint.
+Retreiving `Flow` -related information can be through the [TriggerPortal](https://triggerportal.zone) interface, a front-end integration through `IntentoJS`, locally through a Command-Line Interface or through a Celestia RPC endpoint.
 
 <!--
 Here's an RPC endpoint: [openrpc.intento.zone](https://openrpc.intento.zone).
@@ -17,13 +17,13 @@ The available queries are as follows:
 | Query                        | Description                                                                             | Parameter                                | Returns                                   | HTTP Method | Endpoint                                          |
 | ---------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ----------- | ------------------------------------------------- |
 | InterchainAccountFromAddress | Returns the interchain account for a given owner address on a specified connection pair | QueryInterchainAccountFromAddressRequest | QueryInterchainAccountFromAddressResponse | GET         | /intento/intent/v1beta1/address-to-ica            |
-| Action                       | Returns the auto-executing interchain account transaction for a specified ID            | QueryActionRequest                       | QueryActionResponse                       | GET         | /intento/intent/v1beta1/action/{id}               |
-| Actions                      | Returns all action infomration                                                          | QueryActionsRequest                      | QueryActionsResponse                      | GET         | /intento/intent/v1beta1/actions                   |
-| ActionsForOwner              | Returns all action infomration for a given owner                                        | QueryActionsForOwnerRequest              | QueryActionsForOwnerResponse              | GET         | /intento/intent/v1beta1/actions-for-owner/{owner} |
-| ActionHistory                | Returns action execution history for a given action                                     | QueryActionHistoryRequest                | QueryActionHistoryResponse                | GET         | /intento/intent/v1beta1/actions-history           |
+| Flow                       | Returns the auto-executing interchain account transflow for a specified ID            | QueryFlowRequest                       | QueryFlowResponse                       | GET         | /intento/intent/v1beta1/flow/{id}               |
+| Flows                      | Returns all flow infomration                                                          | QueryFlowsRequest                      | QueryFlowsResponse                      | GET         | /intento/intent/v1beta1/flows                   |
+| FlowsForOwner              | Returns all flow infomration for a given owner                                        | QueryFlowsForOwnerRequest              | QueryFlowsForOwnerResponse              | GET         | /intento/intent/v1beta1/flows-for-owner/{owner} |
+| FlowHistory                | Returns flow execution history for a given flow                                     | QueryFlowHistoryRequest                | QueryFlowHistoryResponse                | GET         | /intento/intent/v1beta1/flows-history           |
 | Params                       | Returns the total set of the Intent module parameters                                   | QueryParamsRequest                       | QueryParamsResponse                       | GET         | /intento/intent/v1beta1/params                    |
 
-These proto queries provide a convenient way to interact with the Intent module and access information about automatic interchain transactions.
+These proto queries provide a convenient way to interact with the Intent module and access information about automatic interchain transflows.
 
 You can use pagination fields to narrow down the scope.
 
