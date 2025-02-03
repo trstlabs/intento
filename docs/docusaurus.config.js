@@ -115,10 +115,6 @@ const config = {
               {
                 html: `<a href="https://intento.zone"><img src="/img/intento_text.png" alt="Intento Logo"></a>`,
               },
-              {
-                href: "https://github.com/trstlabs/intento",
-                html: '<i class="fa-fw fa-brands fa-github"></i> Github',
-              },
             ],
           },
           {
