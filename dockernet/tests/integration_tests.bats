@@ -468,7 +468,7 @@ EOF
   $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" --from $HOST_USER -y
   WAIT_FOR_BLOCK $INTO_LOGS 2
   $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.staking.v1beta1.MsgDelegate" --from $HOST_USER -y
-  WAIT_FOR_BLOCK $INTO_LOGS 20
+  WAIT_FOR_BLOCK $INTO_LOGS 2
 
   host_user_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
 
@@ -512,7 +512,7 @@ EOF
   GET_ACTION_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_ACTION_BY_ID
 
-  # sleep 40
+  sleep 40
   # # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
   staking_balance_end=$($HOST_MAIN_CMD 2>&1 q staking delegation $HOST_USER_ADDRESS $validator_address $HOST_DENOM | GETBAL)
   staking_balance_diff=$(($staking_balance_end - $MSGDELEGATE_AMOUNT))
@@ -555,7 +555,7 @@ EOF
 }
 EOF
 
-  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_exec_file" --label "Recurring transfer on host chain from host user" --duration "2880h" --interval "60s" --fee-funds $RECURRING_MSGSEND_AMOUNT_TOTAL$INTO_DENOM --connection-id connection-$CONNECTION_ID --host-connection-id $HOST_CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance --reregister-ica-after-timeout -y)
+  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action "$msg_exec_file" --label "Recurring transfer on host chain from host user" --duration "2880h" --interval "60s" --stop-on-failure --fee-funds $RECURRING_MSGSEND_AMOUNT_TOTAL$INTO_DENOM --connection-id connection-$CONNECTION_ID --host-connection-id $HOST_CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance --reregister-ica-after-timeout -y)
   echo "$msg_submit_action"
 
   GET_ACTION_ID $(INTO_ADDRESS)
@@ -632,7 +632,7 @@ EOF
 }
 EOF
 
-  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action $msg_withdraw $msg_delegate --label "Conditional Autocompound" --duration "168h" --interval "2400s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}' --save-responses -y)
+  msg_submit_action=$($INTO_MAIN_CMD tx intent submit-action $msg_withdraw $msg_delegate --label "Conditional Autocompound" --duration "168h" --interval "2400s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}' --save-responses -y)
   echo "$msg_submit_action"
 
   GET_ACTION_ID $(INTO_ADDRESS)
