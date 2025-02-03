@@ -6,8 +6,9 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
 // const googleTrackingId = 'G-EB7MEE3TJ1';
 const algoliaAppKey = "UTAVANG7NO";
-const algoliaAPIKey = "e828406cee19753665694712b1bf7555";
-const algoliaIndexName = "netlify_7ccb3497-98e3-447a-9141-fb378dc48eb9_main_all";
+const algoliaAPIKey = "4c7b0292f7e73657b409b0bb21036a5b";
+const algoliaIndexName =
+  "netlify_7ccb3497-98e3-447a-9141-fb378dc48eb9_main_all";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -114,6 +115,10 @@ const config = {
               {
                 html: `<a href="https://intento.zone"><img src="/img/intento_text.png" alt="Intento Logo"></a>`,
               },
+              {
+                href: "https://github.com/trstlabs/intento",
+                html: '<i class="fa-fw fa-brands fa-github"></i> Github',
+              },
             ],
           },
           {
@@ -157,7 +162,7 @@ const config = {
                 href: "https://reddit.com/r/cosmosnetwork",
               }, */
             ],
-          }
+          },
         ],
         copyright: `This website is maintained by TRST Labs.`,
       },
