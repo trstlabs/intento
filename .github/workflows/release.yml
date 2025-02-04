@@ -26,7 +26,7 @@ jobs:
       - name: Download Intento Build Artifact
         uses: actions/download-artifact@v4
         with:
-          name: intentod linux amd64  # Change if needed
+          name: intentod_linux_amd64
           path: build/
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
@@ -40,7 +40,7 @@ jobs:
 
   build-image:
     runs-on: ubuntu-latest
-    needs: fetch-artifact  # Ensures we get the binary before building the image
+    needs: fetch-artifact
     steps:
       - name: Get Version
         run: |
