@@ -31,5 +31,5 @@ jobs:
         run: make build
       - uses: actions/upload-artifact@v4
         with:
-          name: intentod ${{ matrix.targetos }} ${{ matrix.arch }}
+          name: intentod_${{ matrix.targetos }}_${{ matrix.arch }}
           path: build/intentod

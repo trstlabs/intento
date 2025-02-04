@@ -28,15 +28,14 @@ jobs:
         with:
           name: intentod linux amd64  # Change if needed
           path: build/
-
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+        uses: actions/upload-release-asset@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: build/intentod
-          asset_name: intentod
+          asset_path: build/intentod_linux_amd64
+          asset_name: intentod_linux_amd64_${{ github.event.release.tag_name }}
           asset_content_type: application/octet-stream
 
   build-image:
