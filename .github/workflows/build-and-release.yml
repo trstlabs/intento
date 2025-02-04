@@ -13,8 +13,36 @@ permissions:
   packages: write  # Required for pushing to GitHub Container Registry (GHCR)
 
 jobs:
-  fetch-artifact:
+  compile-and-release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64]
+        targetos: [darwin, linux]
+        include:
+          - targetos: darwin
+            arch: arm64
+    name: intento ${{ matrix.arch }} for ${{ matrix.targetos }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.22.7"
+        env:
+          GOOS: ${{ matrix.targetos }}
+          GOARCH: ${{ matrix.arch }}
+
+      - name: Compile intento
+        run: make build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: intentod_${{ matrix.targetos }}_${{ matrix.arch }}
+          path: build/intentod
+
+  fetch-artifact-and-release:
+    runs-on: ubuntu-latest
+    needs: compile-and-release
     steps:
       - name: Get Version
         run: |
@@ -26,8 +54,9 @@ jobs:
       - name: Download Intento Build Artifact
         uses: actions/download-artifact@v4
         with:
-          name: intentod_linux_amd64
+          name: intentod_linux_amd64  # Adjust this based on the exact artifact name
           path: build/
+
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
@@ -38,36 +67,11 @@ jobs:
           asset_name: intentod_linux_amd64_${{ github.event.release.tag_name }}
           asset_content_type: application/octet-stream
 
-  build-image:
-    runs-on: ubuntu-latest
-    needs: fetch-artifact
-    steps:
-      - name: Get Version
-        run: |
-          version=${{ github.event.inputs.version || github.ref }}
-          version=${version#refs/tags/}
-          echo "version=$version" >> $GITHUB_ENV
-          echo "Version: $version"
-
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.version }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Build and Push Image
+      - name: Build and Push Docker Image
         env:
           DOCKER_BUILDKIT: 1
         shell: bash
         run: |
-          tag=ghcr.io/trstlabs/intento:${{ env.version }}
+          tag=ghcr.io/trstlabs/intento:${{ github.event.inputs.version || github.ref }}
           docker build -t $tag .
           docker push $tag
