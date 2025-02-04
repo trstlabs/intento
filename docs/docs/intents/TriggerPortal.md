@@ -97,4 +97,4 @@ Using the actions dialog you can specify the interval of the autocompound. Your 
 
 ## Future Improvements
 
-Do you have an interesting feature in mind? Mention it on our [Github](https://github.com/trstlabs/triggerportal-frontend) (Public Access To be announced) or [X/Twitter](https://twitter.com/intentozone) and it may get added to the roadmap.
+Do you have an interesting feature in mind? Mention it on the TriggerPortal [GitHub repository](https://github.com/trstlabs/triggerportal-frontend) or [X/Twitter](https://twitter.com/IntentoZone) and it may get added to the roadmap.

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
-title: Execution Conditions
-pagination_label: Execution Conditions
+title: Conditions
+pagination_label: Conditions
 ---
 
 In this part of the docs we detail how to use `Conditions` such as `Comparisons` and `Feedback Loops` into your Intent-based Flow. With Conditions on Intento you can orchestrate conditional workflows in a structured manner. We will explore these features with examples, including an auto-compounding scenario using `MsgSend`.

@@ -99,12 +99,18 @@ const config = {
           src: "img/intento_text.png",
         },
         items: [
-          // {
-          //   type: 'docsVersionDropdown',
-          //   position: 'left',
-          //   dropdownItemsAfter: [{to: '/versions', label: 'All versions'}],
-          //   dropdownActiveClassDisabled: true,
-          // },
+          {
+            href: "https://github.com/trstlabs/intento",
+            html: '<i class="fa-fw fa-brands fa-github"></i> Github',
+          },
+        /*  {
+            href: "https://x.com/IntentoZone",
+            html: '<i class="fa-fw fa-brands fa-x"></i> Twitter',
+          },
+          {
+           href: "https://discord.gg/teRhcmwu",
+            html: '<i class="fa-fw fa-brands fa-discord"></i> Discord',
+          },  */
         ],
       },
       footer: {
