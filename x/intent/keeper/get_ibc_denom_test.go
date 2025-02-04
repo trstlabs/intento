@@ -2,25 +2,22 @@ package keeper_test
 
 // Note: this is for dockernet
 
-// import (
-// 	"encoding/base64"
-// 	"fmt"
+import (
+	"fmt"
 
-// 	"github.com/cosmos/cosmos-sdk/types/bech32"
-// 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-// 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-// )
+	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+)
 
-// func (s *KeeperTestSuite) TestIBCDenom() {
-// 	chainId := "osmosis-test-5"
-// 	denom := "ibc/DE6792CF9E521F6AD6E9A4BDF6225C9571A3B74ACC0A529F92BC5122A39D2E58"
-// 	for i := 0; i < 4; i++ {
-// 		sourcePrefix := transfertypes.GetDenomPrefix("transfer", fmt.Sprintf("channel-%d", i))
-// 		prefixedDenom := sourcePrefix + denom
+func (s *KeeperTestSuite) TestIBCDenom() {
+	chainId := "provider"
+	denom := "uatom"
+	for i := 0; i < 4; i++ {
+		sourcePrefix := transfertypes.GetDenomPrefix("transfer", fmt.Sprintf("channel-%d", i))
+		prefixedDenom := sourcePrefix + denom
 
-// 		fmt.Printf("IBC_%s_CHANNEL_%d_DENOM='%s'\n", chainId, i, transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom())
-// 	}
-// }
+		fmt.Printf("IBC_%s_CHANNEL_%d_DENOM='%s'\n", chainId, i, transfertypes.ParseDenomTrace(prefixedDenom).IBCDenom())
+	}
+}
 
 // func (s *KeeperTestSuite) TestGetQueryKey() {
 // 	denom := "uosmo"

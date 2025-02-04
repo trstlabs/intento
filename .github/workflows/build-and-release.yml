@@ -45,9 +45,10 @@ jobs:
     needs: compile-and-release
     steps:
       - name: Get Version
+        id: get_version
         run: |
           version=${{ github.event.inputs.version || github.ref }}
-          version=${version#refs/tags/}
+          version=${version#refs/tags/}  # Removes 'refs/tags/' prefix
           echo "version=$version" >> $GITHUB_ENV
           echo "Version: $version"
 
@@ -64,7 +65,7 @@ jobs:
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: build/intentod
-          asset_name: intentod_linux_amd64_${{ github.event.release.tag_name }}
+          asset_name: intentod_linux_amd64_${{ steps.get_version.outputs.version }}
           asset_content_type: application/octet-stream
 
       - name: Build and Push Docker Image
@@ -72,6 +73,6 @@ jobs:
           DOCKER_BUILDKIT: 1
         shell: bash
         run: |
-          tag=ghcr.io/trstlabs/intento:${{ github.event.inputs.version || github.ref }}
+          tag=ghcr.io/trstlabs/intento:${{ env.version }}
           docker build -t $tag .
           docker push $tag
