@@ -10,7 +10,7 @@ on:
 
 permissions:
   contents: write
-  packages: write  # Required for pushing to GitHub Container Registry (GHCR)
+  packages: write
 
 jobs:
   compile-and-release:
@@ -25,12 +25,14 @@ jobs:
     name: intento ${{ matrix.arch }} for ${{ matrix.targetos }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-go@v4
         with:
           go-version: "1.22.7"
-        env:
-          GOOS: ${{ matrix.targetos }}
-          GOARCH: ${{ matrix.arch }}
+      - name: Set GO Environment Variables
+        run: |
+          echo "GOOS=${{ matrix.targetos }}" >> $GITHUB_ENV
+          echo "GOARCH=${{ matrix.arch }}" >> $GITHUB_ENV
 
       - name: Compile intento
         run: make build
@@ -49,13 +51,14 @@ jobs:
         run: |
           version=${{ github.event.inputs.version || github.ref }}
           version=${version#refs/tags/}  # Removes 'refs/tags/' prefix
+          version=${version%_}  # Removes trailing underscore (if any)
           echo "version=$version" >> $GITHUB_ENV
           echo "Version: $version"
 
-      - name: Download Intento Build Artifact
+      - name: Download Intento Build Artifact (Linux AMD64)
         uses: actions/download-artifact@v4
         with:
-          name: intentod_linux_amd64  # Adjust this based on the exact artifact name
+          name: intentod_linux_amd64
           path: build/
 
       - name: Upload Release Asset
@@ -65,7 +68,7 @@ jobs:
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: build/intentod
-          asset_name: intentod_linux_amd64_${{ steps.get_version.outputs.version }}
+          asset_name: intentod_linux_amd64_${{ env.version }}
           asset_content_type: application/octet-stream
 
       - name: Build and Push Docker Image
