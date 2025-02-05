@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1
 
-ARG GO_VERSION="1.22.7"
+ARG GO_VERSION="1.23.3"
 ARG RUNNER_IMAGE_VERSION="3.19"
 
 FROM golang:${GO_VERSION}-alpine${RUNNER_IMAGE_VERSION} AS builder
@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 
 
-ARG WASMVM_VERSION=v2.1.3
+ARG WASMVM_VERSION=v2.1.4
 ADD https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
 ADD https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
     
