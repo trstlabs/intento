@@ -7,6 +7,10 @@ import (
 	"sort"
 
 	"cosmossdk.io/log"
+	confixcmd "cosmossdk.io/tools/confix/cmd"
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmcli "github.com/CosmWasm/wasmd/x/wasm/client/cli"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
@@ -18,9 +22,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -36,13 +40,6 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	confixcmd "cosmossdk.io/tools/confix/cmd"
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmcli "github.com/CosmWasm/wasmd/x/wasm/client/cli"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/trstlabs/intento/app"
 	appparams "github.com/trstlabs/intento/app/params"
 )
@@ -50,13 +47,6 @@ import (
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
 func NewRootCmd() *cobra.Command {
-	// cfg := sdk.GetConfig()
-	// cfg.SetBech32PrefixForAccount(appparams.Bech32PrefixAccAddr, appparams.Bech32PrefixAccPub)
-	// cfg.SetBech32PrefixForValidator(appparams.Bech32PrefixValAddr, appparams.Bech32PrefixValPub)
-	// cfg.SetBech32PrefixForConsensusNode(appparams.Bech32PrefixConsAddr, appparams.Bech32PrefixConsPub)
-	// cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
-	// cfg.Seal()
-
 	tempApp := app.NewIntoApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir()), []wasmkeeper.Option{})
 	encodingConfig := appparams.EncodingConfig{
 		InterfaceRegistry: tempApp.InterfaceRegistry(),
@@ -127,7 +117,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, encodingConfig.TxConfig, encodingConfig.InterfaceRegistry, encodingConfig.Codec, app.ModuleBasics)
+	initRootCmd(rootCmd, encodingConfig.TxConfig, tempApp.BasicModuleManager)
 
 	// add keyring to autocli opts
 	autoCliOpts := tempApp.AutoCliOpts()
@@ -157,13 +147,11 @@ func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, 
 func initRootCmd(
 	rootCmd *cobra.Command,
 	txConfig client.TxConfig,
-	_ codectypes.InterfaceRegistry,
-	_ codec.Codec,
 	basicManager module.BasicManager,
 ) {
 	gentxModule := app.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
+		genutilcli.InitCmd(basicManager, app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, gentxModule.GenTxValidator, txConfig.SigningContext().ValidatorAddressCodec()),
 		genutilcli.GenTxCmd(app.ModuleBasics, txConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, txConfig.SigningContext().ValidatorAddressCodec()),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
@@ -187,7 +175,7 @@ func initRootCmd(
 		server.StatusCommand(),
 		genesisCommand(txConfig, basicManager),
 		queryCommand(),
-		txCommand(),
+		txCommand(basicManager),
 		keys.Commands(),
 		server.ShowValidatorCmd(),
 		server.ShowNodeIDCmd(),
@@ -198,7 +186,6 @@ func initRootCmd(
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
-	//startCmd.PreRunE = chainPreRuns(CheckLibwasmVersion, startCmd.PreRunE)
 }
 
 func queryCommand() *cobra.Command {
@@ -225,7 +212,7 @@ func queryCommand() *cobra.Command {
 	return cmd
 }
 
-func txCommand() *cobra.Command {
+func txCommand(basicManager module.BasicManager) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        "tx",
 		Short:                      "Transactions subcommands",
@@ -246,28 +233,8 @@ func txCommand() *cobra.Command {
 		authcmd.GetSimulateCmd(),
 	)
 
-	AddFilteredTxCommands(cmd, app.ModuleBasics)
-
+	basicManager.AddTxCommands(cmd)
 	return cmd
-}
-
-func AddFilteredTxCommands(rootTxCmd *cobra.Command, moduleBasicManager module.BasicManager) {
-	excludedModules := map[string]bool{
-		"distribution": true,
-		"staking":      true,
-	}
-
-	for moduleName, module := range moduleBasicManager {
-		if !excludedModules[moduleName] {
-			if mod, ok := module.(interface {
-				GetTxCmd() *cobra.Command
-			}); ok {
-				if cmd := mod.GetTxCmd(); cmd != nil {
-					rootTxCmd.AddCommand(cmd)
-				}
-			}
-		}
-	}
 }
 
 func newApp(
