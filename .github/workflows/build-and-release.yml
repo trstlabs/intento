@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         arch: [amd64]
-        targetos: [linux. darwin]
+        targetos: [linux, darwin]
         include:
           - targetos: darwin
             arch: arm64
@@ -33,6 +33,8 @@ jobs:
         run: |
           echo "GOOS=${{ matrix.targetos }}" >> $GITHUB_ENV
           echo "GOARCH=${{ matrix.arch }}" >> $GITHUB_ENV
+          echo "GOOS is set to: ${{ matrix.targetos }}"
+          echo "GOARCH is set to: ${{ matrix.arch }}"
 
       - name: Compile intento
         run: make build
