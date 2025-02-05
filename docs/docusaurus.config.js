@@ -5,10 +5,10 @@ const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
 // const googleTrackingId = 'G-EB7MEE3TJ1';
-const algoliaAppKey = "UTAVANG7NO";
-const algoliaAPIKey = "4c7b0292f7e73657b409b0bb21036a5b";
+const algoliaAppKey = "MLPM5572P7";
+const algoliaAPIKey = "153018e543e060268ab4b74c1d7983dd";
 const algoliaIndexName =
-  "netlify_7ccb3497-98e3-447a-9141-fb378dc48eb9_main_all";
+  "intento";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
