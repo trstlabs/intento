@@ -7,8 +7,7 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 // const googleTrackingId = 'G-EB7MEE3TJ1';
 const algoliaAppKey = "MLPM5572P7";
 const algoliaAPIKey = "153018e543e060268ab4b74c1d7983dd";
-const algoliaIndexName =
-  "intento";
+const algoliaIndexName = "intento";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -101,16 +100,16 @@ const config = {
         items: [
           {
             href: "https://github.com/trstlabs/intento",
-            html: '<i class="fa-fw fa-brands fa-github"></i> Github',
-          },
-        /*  {
-            href: "https://x.com/IntentoZone",
-            html: '<i class="fa-fw fa-brands fa-x"></i> Twitter',
+            html: '<i class="fa-fw fa-brands fa-github"></i>',
           },
           {
-           href: "https://discord.gg/teRhcmwu",
-            html: '<i class="fa-fw fa-brands fa-discord"></i> Discord',
-          },  */
+            href: "https://x.com/IntentoZone",
+            html: '<i class="fa-fw fa-brands fa-x-twitter"></i>',
+          },
+          {
+            href: "https://discord.gg/aj88cwGW",
+            html: '<i class="fa-fw fa-brands fa-discord"></i>',
+          },
         ],
       },
       footer: {
@@ -149,7 +148,7 @@ const config = {
               },
               {
                 label: "Discord",
-                href: "https://discord.gg/teRhcmwu",
+                href: "https://discord.gg/aj88cwGW",
               },
               /*               {
                 label: "Forum",
