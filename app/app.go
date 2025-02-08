@@ -152,7 +152,7 @@ import (
 	minttypes "github.com/trstlabs/intento/x/mint/types"
 )
 
-const Name = "into"
+const Name = "intento"
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -166,8 +166,6 @@ var (
 		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		bank.AppModuleBasic{},
 		capability.AppModuleBasic{},
-		// distr.AppModuleBasic{},
-		// staking.AppModuleBasic{},
 		ccvdistr.AppModuleBasic{},
 		ccvstaking.AppModuleBasic{},
 		mint.AppModuleBasic{},
@@ -583,24 +581,7 @@ func NewIntoApp(
 	if err != nil {
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
-	// wasmdVM, err := wasmvm.NewVM(filepath.Join(wasmDir, "wasm"), wasmkeeper.BuiltInCapabilities(), 32, wasmConfig.ContractDebugMode, wasmConfig.MemoryCacheSize)
-	// if err != nil {
-	// 	panic(fmt.Sprintf("error creating wasmvm: %s", err))
-	// }
 
-	// app.IBCWasmKeeper = ibcwasmkeeper.NewKeeperWithVM(
-	// 	appCodec,
-	// 	runtime.NewKVStoreService(keys[ibcwasmtypes.StoreKey]),
-	// 	app.IBCKeeper.ClientKeeper,
-	// 	authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	// 	wasmdVM,
-	// 	app.GRPCQueryRouter(),
-	// )
-
-	// wasmOpts = append(
-	// 	wasmOpts,
-	// 	wasmkeeper.WithWasmEngine(wasmdVM),
-	// )
 	app.WasmKeeper = wasmkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[wasmtypes.StoreKey]),
@@ -622,15 +603,6 @@ func NewIntoApp(
 		wasmOpts...,
 	)
 	app.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(app.WasmKeeper)
-
-	// app.IBCWasmKeeper = ibcwasmkeeper.NewKeeperWithVM(
-	// 	appCodec,
-	// 	runtime.NewKVStoreService(keys[ibcwasmtypes.StoreKey]),
-	// 	app.IBCKeeper.ClientKeeper,
-	// 	authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	// 	wasmdVM,
-	// 	app.GRPCQueryRouter(),
-	// )
 
 	// Create CCV consumer and modules
 	app.ConsumerKeeper = ccvconsumerkeeper.NewKeeper(

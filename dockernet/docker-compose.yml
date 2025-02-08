@@ -2,21 +2,22 @@ services:
   into1:
     image: intento:into
     volumes:
-      - ./state/into1:/home/intento/.into
+      - ./state/into1:/home/intento/.intento
     ports:
       - "26657:26657"
+      - "26656:26656"
       - "1317:1317"
       - "9090:9090"
 
   into2:
     image: intento:into
     volumes:
-      - ./state/into2:/home/intento/.into
+      - ./state/into2:/home/intento/.intento
 
   into3:
     image: intento:into
     volumes:
-      - ./state/into3:/home/intento/.into
+      - ./state/into3:/home/intento/.intento
 
   gaia1:
     image: intento:gaia
@@ -82,7 +83,7 @@ services:
     image: intento:into
     command: intentod start
     volumes:
-      - ./state/host1:/home/into/.into
+      - ./state/host1:/home/into/.intento
     ports:
       - "26157:26657"
       - "1267:1317"
@@ -92,25 +93,25 @@ services:
     image: intento:into
     command: intentod start
     volumes:
-      - ./state/host2:/home/into/.into
+      - ./state/host2:/home/into/.intento
 
   host3:
     image: intento:into
     command: intentod start
     volumes:
-      - ./state/host3:/home/into/.into
+      - ./state/host3:/home/into/.intento
 
   host4:
     image: intento:into
     command: intentod start
     volumes:
-      - ./state/host4:/home/into/.into
+      - ./state/host4:/home/into/.intento
 
   host5:
     image: intento:into
     command: intentod start
     volumes:
-      - ./state/host5:/home/into/.into
+      - ./state/host5:/home/into/.intento
 
   # Fill in new host zone being tested here
 
