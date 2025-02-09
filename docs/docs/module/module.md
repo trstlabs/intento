@@ -8,13 +8,13 @@ The Intent module enables flows to be highly configurable and conditional, where
 
 ### Gas operations
 
-Based on lines of code, we expect the module to be using 80,000 to 100,000 gas for triggering up to 10 executions. Significantly less than Gelato on EVM chains (1,000,000) and CronCat (700,000) whilst bringing trust assumptions to the minimum. This makes the module highly scalable for any specified intent. To manage network congestion, make the chain scalable, and provide value for token holders, protocol fees can be set and adjusted over time by token holders via chain governance.
+Based on lines of code, we expect the module to be using 80,000 to 100,000 gas for triggering up to 10 executions. Significantly less than via bots and custom smart contracts (700,000-1,000,000) whilst bringing trust assumptions to the minimum. This makes the module highly scalable for any specified intent. To manage network congestion, make the chain scalable, and provide value for token holders, protocol fees can be set and adjusted over time by token holders via chain governance.
 
 ## Flow Governance Proposal Parameters
 
 The Flow Governance Proposal Parameters define the rules and constraints governing the execution of Flows within the network. These parameters are unique as they are set through on-chain governance, ensuring transparency and adaptability over time. By optimizing key economic and operational aspects, these parameters allow the network to scale efficiently without becoming congested.
 
-A notable feature of these parameters is the ability to use multiple tokens beyond the native denomination for transaction fees. This enhances user experience (UX) and aligns incentives with ATOM, promoting broader ecosystem participation and interoperability.
+A notable feature of these parameters is the ability to use multiple tokens beyond the native denomination for transaction fees. This enhances user experience and aligns incentives with ATOM, promoting broader ecosystem participation and interoperability.
 
 | Parameter               | Type                       | Description                                                                                                                                             | Example Value                          |
 | ----------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
