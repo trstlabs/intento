@@ -1,14 +1,10 @@
 ---
 sidebar_position: 1
-title: Governance-based Fees
+title: Parameters
 description: Fee paremeters for Intent-Based Flows
 ---
 
-The Intent module enables flows to be highly configurable and conditional, whereby the flows can depend on execution results. For example, a protocol user could set up a sequence of flows such as swapping ATOM for USDC on Osmosis and then paying for a subscription that is settled on Ethereum using the Axelar bridge with General Message Passing. By enabling these user intents, protocols and their end-users can automate complex workflows in a seamless manner.
-
-### Gas operations
-
-Based on lines of code, we expect the module to be using 80,000 to 100,000 gas for triggering up to 10 executions. Significantly less than via bots and custom smart contracts (700,000-1,000,000) whilst bringing trust assumptions to the minimum. This makes the module highly scalable for any specified intent. To manage network congestion, make the chain scalable, and provide value for token holders, protocol fees can be set and adjusted over time by token holders via chain governance.
+The Intent module for flows enables flows to be highly configurable and actions to be conditional, whereby flows can depend on execution results. The module typically uses just 80,000 to 100,000 gas for triggering up to 10 executions. Significantly less than via bots and custom smart contracts (700,000-1,000,000) whilst bringing trust assumptions to the minimum. This makes the module highly scalable for any specified intent. To manage network congestion, make the chain scalable, and provide value for token holders, protocol fees can be set and adjusted over time by token holders via chain governance.
 
 ## Flow Governance Proposal Parameters
 
