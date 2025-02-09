@@ -297,7 +297,7 @@ func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers, codec.Cod
 	types.Denom = "stake"
 	keepers.IntentKeeper.SetParams(ctx, types.Params{
 		FlowFundsCommission: 2,
-		FlowConstantFee:     1_000_000,                 // 1trst
+		BurnFeePerMsg:       1_000_000,                 // 1trst
 		FlowFlexFeeMul:      3,                         //
 		MaxFlowDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
 		MinFlowDuration:     time.Second * 60,

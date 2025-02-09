@@ -213,7 +213,7 @@ var (
 		alloctypes.ModuleName:                         {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		alloctypes.FairburnPoolName:                   nil,
 		alloctypes.SupplementPoolName:                 nil,
-		intenttypes.ModuleName:                        {authtypes.Minter},
+		intenttypes.ModuleName:                        {authtypes.Burner, authtypes.Minter},
 		interchainquerytypes.ModuleName:               nil,
 		wasmtypes.ModuleName:                          {authtypes.Burner},
 	}

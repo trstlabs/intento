@@ -14,8 +14,8 @@ import (
 var (
 	// FlowFundsCommission percentage to distribute to community pool for leftover balances (rounded up)
 	DefaultFlowFundsCommission int64 = 2 //2%
-	// FlowConstantFee fee to prevent spam of auto messages, to be distributed to community pool
-	DefaultFlowConstantFee int64 = 5_000 // 0.005trst
+	// BurnFeePerMsg fee to prevent spam of auto messages, to be distributed to community pool
+	DefaultBurnFeePerMsg int64 = 5_000 // 0.005trst
 	// FlowFlexFeeMul is the denominator for the gas fee
 	DefaultFlowFlexFeeMul int64 = 10 // in %
 	// GasFeeCoins fee to prevent spam of auto messages, to be distributed to community pool
@@ -35,7 +35,7 @@ var (
 var (
 	KeyFlowFundsCommission = []byte("FlowFundsCommission")
 	KeyFlowFlexFeeMul      = []byte("FlowFlexFeeMul")
-	KeyFlowConstantFee     = []byte("FlowConstantFee")
+	KeyBurnFeePerMsg       = []byte("BurnFeePerMsg")
 	KeyGasFeeCoins         = []byte("GasFeeCoins")
 	KeyMaxFlowDuration     = []byte("MaxFlowDuration")
 	KeyMinFlowDuration     = []byte("MinFlowDuration")
@@ -48,7 +48,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	//fmt.Print("ParamSetPairs..")
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyFlowFundsCommission, &p.FlowFundsCommission, validateFlowFundsCommission),
-		paramtypes.NewParamSetPair(KeyFlowConstantFee, &p.FlowConstantFee, validateFlowConstantFee),
+		paramtypes.NewParamSetPair(KeyBurnFeePerMsg, &p.BurnFeePerMsg, validateBurnFeePerMsg),
 		paramtypes.NewParamSetPair(KeyFlowFlexFeeMul, &p.FlowFlexFeeMul, validateFlowFlexFeeMul),
 		paramtypes.NewParamSetPair(KeyGasFeeCoins, &p.GasFeeCoins, validateGasFeeCoins),
 		paramtypes.NewParamSetPair(KeyMaxFlowDuration, &p.MaxFlowDuration, validateFlowDuration),
@@ -59,15 +59,15 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 // NewParams creates a new Params object
-func NewParams(flowFundsCommission int64, FlowConstantFee int64, FlowFlexFeeMul int64, GasFeeCoins sdk.Coins, maxFlowDuration time.Duration, minFlowDuration time.Duration, minFlowInterval time.Duration, relayerRewards []int64) Params {
+func NewParams(flowFundsCommission int64, BurnFeePerMsg int64, FlowFlexFeeMul int64, GasFeeCoins sdk.Coins, maxFlowDuration time.Duration, minFlowDuration time.Duration, minFlowInterval time.Duration, relayerRewards []int64) Params {
 	//fmt.Printf("default intent params. %v \n", flowFundsCommission)
-	return Params{FlowFundsCommission: flowFundsCommission, FlowConstantFee: FlowConstantFee, FlowFlexFeeMul: FlowFlexFeeMul, GasFeeCoins: GasFeeCoins, MaxFlowDuration: maxFlowDuration, MinFlowDuration: minFlowDuration, MinFlowInterval: minFlowInterval, RelayerRewards: relayerRewards}
+	return Params{FlowFundsCommission: flowFundsCommission, BurnFeePerMsg: BurnFeePerMsg, FlowFlexFeeMul: FlowFlexFeeMul, GasFeeCoins: GasFeeCoins, MaxFlowDuration: maxFlowDuration, MinFlowDuration: minFlowDuration, MinFlowInterval: minFlowInterval, RelayerRewards: relayerRewards}
 }
 
 // DefaultParams default parameters for intent
 func DefaultParams() Params {
 	//fmt.Print("default intent params..")
-	return NewParams(DefaultFlowFundsCommission, DefaultFlowConstantFee, DefaultFlowFlexFeeMul, DefaultGasFeeCoins, DefaultMaxFlowDuration, DefaultMinFlowDuration, DefaultMinFlowInterval, []int64{DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward})
+	return NewParams(DefaultFlowFundsCommission, DefaultBurnFeePerMsg, DefaultFlowFlexFeeMul, DefaultGasFeeCoins, DefaultMaxFlowDuration, DefaultMinFlowDuration, DefaultMinFlowInterval, []int64{DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward})
 }
 
 // Validate validates all params
@@ -84,7 +84,7 @@ func (p Params) Validate() error {
 	if err := validateFlowInterval(p.MinFlowInterval); err != nil {
 		return err
 	}
-	if err := validateFlowConstantFee(p.FlowConstantFee); err != nil {
+	if err := validateBurnFeePerMsg(p.BurnFeePerMsg); err != nil {
 		return err
 	}
 	if err := validateFlowFlexFeeMul(p.FlowFlexFeeMul); err != nil {
@@ -138,17 +138,17 @@ func validateFlowInterval(i interface{}) error {
 	return nil
 }
 
-func validateFlowConstantFee(i interface{}) error {
+func validateBurnFeePerMsg(i interface{}) error {
 	v, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 	//10_000_000 = 10INTO we do not want to go this high
 	if v > 10_000_000 {
-		return fmt.Errorf("FlowConstantFee must be lower: %T", i)
+		return fmt.Errorf("BurnFeePerMsg must be lower: %T", i)
 	}
 	if v < 0 {
-		return fmt.Errorf("FlowConstantFee must be 0 or higher: %d", v)
+		return fmt.Errorf("BurnFeePerMsg must be 0 or higher: %d", v)
 	}
 
 	return nil

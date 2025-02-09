@@ -43,7 +43,7 @@ A number of flow-related governance parameters can be adjusted. Parameters can b
 const (
  FlowFundsCommission int64 = 2 //2%
 
- FlowConstantFee int64 = 0 // e.g. 5_000 in default denom
+ BurnFeePerMsg int64 = 0 // e.g. 5_000 in default denom
 
  GasFeeCoins sdk.Coins = sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(1))) // 1uinto
 

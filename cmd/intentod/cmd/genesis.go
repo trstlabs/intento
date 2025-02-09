@@ -366,14 +366,14 @@ func MainnetGenesisParams() GenesisParams {
 
 	genParams.WasmParams = wasmtypes.DefaultParams()
 
-	//AutoIBCTx
+	//intent flows
 	genParams.IntentParams = intenttypes.DefaultParams()
-	genParams.IntentParams.MaxFlowDuration = time.Hour * 24 * 366 * 10
+	genParams.IntentParams.MaxFlowDuration = time.Hour * 24 * 366 * 3
 	genParams.IntentParams.MinFlowDuration = time.Second * 60
 	genParams.IntentParams.MinFlowInterval = time.Second * 60
 	genParams.IntentParams.FlowFundsCommission = 2
-	genParams.IntentParams.FlowConstantFee = 10_000
-	genParams.IntentParams.FlowFlexFeeMul = 10
+	genParams.IntentParams.BurnFeePerMsg = 10_000
+	genParams.IntentParams.FlowFlexFeeMul = 250
 	genParams.IntentParams.GasFeeCoins = sdk.Coins(sdk.NewCoins(sdk.NewCoin(BaseCoinUnit, math.OneInt())))
 	genParams.IntentParams.RelayerRewards = []int64{10_000, 15_000, 18_000, 22_000}
 
