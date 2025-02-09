@@ -109,7 +109,7 @@ func setupTest(t *testing.T, additionalCoinsInWallets sdk.Coins) (sdk.Context, K
 
 	keeper.SetParams(ctx, intenttypes.Params{
 		FlowFundsCommission: 2,
-		FlowConstantFee:     1_000_000,
+		BurnFeePerMsg:       1_000_000,
 		FlowFlexFeeMul:      100,
 		GasFeeCoins:         sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1))),
 		MaxFlowDuration:     time.Hour * 24 * 366 * 10,
@@ -307,7 +307,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
-		intenttypes.ModuleName:         nil,
+		intenttypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 	}
 

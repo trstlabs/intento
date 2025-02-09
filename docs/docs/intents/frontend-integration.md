@@ -91,7 +91,7 @@ export const getExpectedFlowFee = async (
       (Number(params.FlowFlexFeeMul) / 100) * periodMinutes;
     const FlowFee =
       recurrences * flexFeeForPeriod +
-      recurrences * Number(params.FlowConstantFee) * lenMsgs;
+      recurrences * Number(params.BurnFeePerMsg) * lenMsgs;
     const FlowFeeDenom = convertMicroDenomToDenom(FlowFee, 6);
 
     return FlowFeeDenom;

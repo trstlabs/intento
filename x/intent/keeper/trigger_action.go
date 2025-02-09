@@ -214,7 +214,7 @@ func triggerRemainingMsgs(k Keeper, ctx sdk.Context, flow types.FlowInfo, flowHi
 	if err != nil {
 		errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
 	}
-	fee, err := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom, ctx.BlockHeader().ProposerAddress)
+	fee, err := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
 	if err != nil {
 		errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, err.Error()))
 	}
