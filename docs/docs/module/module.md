@@ -1,208 +1,28 @@
 ---
 sidebar_position: 1
-title: Technical Specification
-description: Intent module for Intent-Based Flows
+title: Governance-based Fees
+description: Fee paremeters for Intent-Based Flows
 ---
 
 The Intent module enables flows to be highly configurable and conditional, whereby the flows can depend on execution results. For example, a protocol user could set up a sequence of flows such as swapping ATOM for USDC on Osmosis and then paying for a subscription that is settled on Ethereum using the Axelar bridge with General Message Passing. By enabling these user intents, protocols and their end-users can automate complex workflows in a seamless manner.
 
-
 ### Gas operations
 
-Based on lines of code, we expect the module to be using 80,000 to 100,000 gas for triggering up to 10 executions. Significantly less than Gelato on EVM chains (1,000,000) and CronCat (700,000) whilst bringing trust assumptions to the minimum. This makes the module highly scalable for any specified intent.
+Based on lines of code, we expect the module to be using 80,000 to 100,000 gas for triggering up to 10 executions. Significantly less than Gelato on EVM chains (1,000,000) and CronCat (700,000) whilst bringing trust assumptions to the minimum. This makes the module highly scalable for any specified intent. To manage network congestion, make the chain scalable, and provide value for token holders, protocol fees can be set and adjusted over time by token holders via chain governance.
 
-## Flows
+## Flow Governance Proposal Parameters
 
-Flows are specified in an flow object that contains data about when to execute, what to execute by an array of registered cosmos messages, where through an optional ICA Configuration, and how through a configuration and conditions.
+The Flow Governance Proposal Parameters define the rules and constraints governing the execution of Flows within the network. These parameters are unique as they are set through on-chain governance, ensuring transparency and adaptability over time. By optimizing key economic and operational aspects, these parameters allow the network to scale efficiently without becoming congested.
 
-### Configuration
+A notable feature of these parameters is the ability to use multiple tokens beyond the native denomination for transaction fees. This enhances user experience (UX) and aligns incentives with ATOM, promoting broader ecosystem participation and interoperability.
 
-```proto
-// ExecutionConfiguration provides the execution-related configuration of the flow
-message ExecutionConfiguration {
-       // if true, the flow outputs are saved and can be used in condition-based logic
-      bool save_responses = 1;
-      // if true, the flow is not updatable
-      bool updating_disabled = 2;
-      // If true, will execute until we get a successful Flow, if false/unset will always execute
-      bool stop_on_success = 3;
-      // If true, will execute until successful Flow, if false/unset will always execute
-      bool stop_on_failure = 4;
-      // If true, owner account balance is used when trigger account funds run out
-      bool fallback_to_owner_balance = 5;
-      // If true, allows the flow to continue execution after an ibc channel times out (recommended)
-      bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];
-}
-```
-
-## Parameters
-
-A number of flow-related governance parameters can be adjusted. Parameters can be adjusted by governance to ensure that fees and rewards are appropriate. The default values are the following:
-
-```golang
-const (
- FlowFundsCommission int64 = 2 //2%
-
- BurnFeePerMsg int64 = 0 // e.g. 5_000 in default denom
-
- GasFeeCoins sdk.Coins = sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(1))) // 1uinto
-
- MinFlowDuration time.Duration = time.Second * 60 //1minute
-
- MinFlowInterval time.Duration = time.Second * 60 //1minute
-
-MaxFlowDuration time.Duration = time.Hour * 24 * 366 * 10 // a little over 10 years
-)
-```
-
-## Execution Conditions
-
-The `ExecutionConditions` message defines a set of rules and dependencies that determine when and how an flow is executed. It includes conditions for using values from previous responses, comparing response values, and controlling execution flow based on the success or failure of dependent intents.
-
-```proto
-message ExecutionConditions {
-  // Replace value with value from message or response from another flow’s latest output
-  UseResponseValue use_response_value = 2;
-  // Comparison with response response value
-  ResponseComparison response_comparison = 1;
-  // Optional array of dependent intents that, when executed successfully, stops execution
-  repeated uint64 stop_on_success_of = 5;
-  // Optional array of dependent intents that, when not executed successfully, stops execution
-  repeated uint64 stop_on_failure_of = 6;
-  // Optional array of dependent intents that should be executed successfully after their latest call before execution is allowed
-  repeated uint64 skip_on_failure_of = 7;
-  // Optional array of dependent intents that should fail after their latest call before execution is allowed
-  repeated uint64 skip_on_success_of = 8;
-}
-```
-
-### Feedback Loops
-
-#### Using a Response Value as Input
-
-The `UseResponseValue` message allows you to replace a value in a message with the latest response value from another flow before execution. This is useful for creating feedback loops where the output of one flow is used as input for another.
-
-```proto
-message UseResponseValue {
-  uint64 flow_id = 1 [(gogoproto.customname) = "FlowID"]; // Flow to get the latest response value from, optional
-  uint32 response_index = 3;  // Index of the response
-  string response_key = 2; // For example, "Amount"
-  uint32 msgs_index = 4; // Index of the message to replace
-  string msg_key = 5; // Key of the message to replace (e.g., Amount[0].Amount, FromAddress)
-  string value_type = 6; // Can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int
-}
-```
-
-For example, consider a response type `/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse`, where the output might look something like this:
-
-```json
-{
-  "amount": [{ "denom": "uatom", "amount": "211816" }]
-}
-```
-
-You can use `UseResponseValue` to take the "amount" field from this response and use it as an input in another flow.
-
-#### Response Comparison
-
-The `ResponseComparison` message allows you to compare a response value with a specified operand before the execution of an flow. This comparison can be used to control whether the flow proceeds based on the outcome of the comparison.
-
-```proto
-message ResponseComparison {
-  uint64 flow_id = 1 [(gogoproto.customname) = "FlowID"]; // Flow to get the latest response value from, optional
-  uint32 response_index = 2;  // Index of the response
-  string response_key = 3; // e.g., Amount[0].Amount, FromAddress
-  string value_type = 4; // Can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int
-  ComparisonOperator comparison_operator = 5;
-  string comparison_operand = 6;
-}
-```
-
-#### Comparison Operators
-
-The `ComparisonOperator` enum defines various operators that can be used to compare values. These operators support different types such as strings, arrays, and numeric types.
-
-```proto
-enum ComparisonOperator {
-  EQUAL = 0; // Equality check (for all types)
-  CONTAINS = 1; // Contains check (for strings, arrays, etc.)
-  NOT_CONTAINS = 2; // Not contains check (for strings, arrays, etc.)
-  SMALLER_THAN = 3; // Less than check (for numeric types)
-  LARGER_THAN = 4; // Greater than check (for numeric types)
-  GREATER_EQUAL = 5; // Greater than or equal to check (for numeric types)
-  LESS_EQUAL = 6; // Less than or equal to check (for numeric types)
-  STARTS_WITH = 7; // Starts with check (for strings)
-  ENDS_WITH = 8; // Ends with check (for strings)
-  NOT_EQUAL = 9; // Not equal check (for all types)
-}
-```
-
-### Example
-
-Let's illustrate the above concepts with an example:
-
-Suppose you have an flow that withdraws rewards and you want to use the withdrawn amount as input for another flow, but only if the amount is greater than 200,000 "uatom".
-
-1. **Using Response Value:**
-
-   ```proto
-   UseResponseValue {
-     flow_id: 12345 // Flow ID of the reward withdrawal
-     response_index: 0 // First response
-     response_key: "amount[0].amount" // Key to extract the amount
-     msgs_index: 0 // Index of the message to replace
-     msg_key: "Amount" // Message key to replace
-     value_type: "sdk.Int" // Value type
-   }
-   ```
-
-2. **Response Comparison:**
-
-   ```proto
-   ResponseComparison {
-     flow_id: 12345 // Flow ID of the reward withdrawal
-     response_index: 0 // First response
-     response_key: "amount[0].amount" // Key to compare the amount
-     value_type: "sdk.Int" // Value type
-     comparison_operator: LARGER_THAN // Operator to check if amount is larger than
-     comparison_operand: "200000" // Operand to compare against
-   }
-   ```
-
-With these conditions, the subsequent flow will only execute if the withdrawn amount is greater than 200,000 "uatom", and the amount will be used as an input for this flow.
-
-<!-- For Interchain Queries we can implement a similar structure. Due to the added complexity, in development and also in testing and auditing, we leave this out of scope but still we are excited to implement this after the grant work has been completed. With interchain queries we can allow comparisons with pool balances and oracle prices. For example Skip’s slinky oracle aggregator deployed on osmosis. With a similar structure we can look 1 level deep which is sufficient. We can retrieve GetPriceResponse, then with a similar attribute_key we can point to price, which points to the price. We can then compare it to a comparison_value. -->
-
-<!--
-### Creating Intents
-
-```proto
-message MsgCreateIntent {
-	//Set of flows
-}
-```
-
-Intents are a collection of flows to be processed. As a prerequisite for submitting intents over IBC, the intent creator should have interchain accounts registered for the host chains.
-
-```proto
-message MsgRegisterICASAndSubmitIntent {
-	//Set of flows
-	//IBC version
-}
-```
-
-### Privileged Host Chain Execution
-
-By using the Cosmos message type MsgExec of the AuthZ module in your intent, you can allow the intent address to execute any message on your behalf. This is needed for most use cases where you want to automate your own balance, such as recurring payments.
-For this it is important that the Intent address gets granted these privileges. These can be given by sending a MsgGrant with the typeUrl of the message to execute on the host chain. Front-end tools like TriggerPortal make this process easy and seamless.  -->
-
-
-## About TRST Labs
-
-"Innovating Today for a Better Tomorrow" is our slogan - We empower Trustless Solutions & Inclusive Access to Blockchain Services.
-
-At our core, we are driven by the pursuit of innovation to create a better future. Through our intent-centric automation solutions, we are building new **trustless** solutions. By building **non-custodial** on-chain and permissionless automation solutions **, we empower users to take full control of their assets and on-chain flows, eliminating the need for intermediaries and enabling** a more secure and transparent ecosystem.
-
-But our mission goes beyond technological advancements. We believe in the power of blockchain technology to **transform lives and uplift communities**. That's why we are committed to building permissionless solutions for all. We recognize that not everyone has equal opportunities or freedom to access and utilize financial services due to oppressive regimes or societal barriers. Our intent-centric automation module opens doors for individuals in these circumstances, allowing them to leverage blockchain technology in a **seamless and empowering** manner. We envision a future where every person, regardless of their background or location, can access and benefit from decentralized finance.
-
-We are dedicated to **building a better tomorrow**, where trustless financial solutions and inclusive access are the norm. Join us on this journey as we work together to shape a future that empowers individuals, strengthens communities, and creates lasting positive change.
+| Parameter               | Type                       | Description                                                                                                                                             | Example Value                          |
+| ----------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `flow_funds_commission` | `int64`                    | Commission rate to return remaining funds in flow fee account after final execution (e.g., 100 = 1X, 250 = 250)                                         | `2` (2%)                               |
+| `flow_flex_fee_mul`     | `int64`                    | Multiplier to the flexible flow gas fee (e.g., 100 = 1X, 250 = 250)                                                                                     | `250` (2.5X)                           |
+| `burn_fee_per_msg`      | `int64`                    | Fixed burn fee per message execution to burn native denom                                                                                               | `10_000` (0.01uinto)                   |
+| `gas_fee_coins`         | `repeated Coin`            | Array of denoms that can be used for fee payment together with an amount                                                                                | `[1uinto, 0.05ibc/chain_channel_hash]` |
+| `max_flow_duration`     | `google.protobuf.Duration` | Maximum period for self-executing Flow                                                                                                                  | `263520h` (a little over 3 years)      |
+| `min_flow_duration`     | `google.protobuf.Duration` | Minimum period for self-executing Flow                                                                                                                  | `1m` (1 minute)                        |
+| `min_flow_interval`     | `google.protobuf.Duration` | Minimum interval for self-executing Flow                                                                                                                | `1m` (1 minute)                        |
+| `relayer_rewards`       | `repeated int64`           | Relayer rewards in uinto for each message type (0 = SDK, 1 = Wasm, 2 = Osmo). Rewards are in uinto and topped up in the module account by alloc module. | `[10_000, 15_000, 18_000, 22_000]`     |
