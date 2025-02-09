@@ -11,7 +11,7 @@ import (
 )
 
 // DistributeCoins distributes Flow fees and handles remaining flow fee balance after last execution
-func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.FlowInfo, feeAddr sdk.AccAddress, feeDenom string, proposer sdk.ConsAddress) (sdk.Coin, error) {
+func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.FlowInfo, feeAddr sdk.AccAddress, feeDenom string) (sdk.Coin, error) {
 	p, err := k.GetParams(ctx)
 	if err != nil {
 		panic(err)
@@ -19,8 +19,12 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.FlowInfo, feeAddr sd
 	k.Logger(ctx).Debug("gas", "consumed", math.NewIntFromUint64(ctx.GasMeter().GasConsumed()), "flowID", flow.ID)
 
 	gasSmall := math.NewIntFromUint64(ctx.GasMeter().GasConsumed() * uint64(p.FlowFlexFeeMul))
-	//fmt.Printf("gasSmall %v\n", gasSmall)
-	gas := gasSmall.Quo(math.NewInt(100))
+
+	gas, err := gasSmall.SafeQuo(math.NewInt(100))
+	if err != nil {
+		return sdk.Coin{}, errorsmod.Wrap(types.ErrUnexpectedFeeCalculation, "could not substract fee")
+	}
+
 	if !gas.IsPositive() {
 		return sdk.Coin{}, types.ErrIntOverflowFlow
 	}
@@ -29,11 +33,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.FlowInfo, feeAddr sd
 		return sdk.Coin{}, errorsmod.Wrap(types.ErrNotFound, "gas fee denom not supported")
 	}
 	gasFeeAmount := coins.Amount.Mul(gas)
-	//fmt.Printf("gasFeeAmount %v\n", gasFeeAmount)
-	//depending if execution is recurring the constant fee may differ (gov param)
 
-	// proposer reward
-	// transfer collected fees to the distribution module account
 	flexFeeCoin := sdk.NewCoin(feeDenom, gasFeeAmount)
 	if flexFeeCoin.Amount.IsZero() {
 		return sdk.Coin{}, errorsmod.Wrap(errorsmod.ErrPanic, "flexFeeCoin was zero, this should never happen")
@@ -42,49 +42,62 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.FlowInfo, feeAddr sd
 	totalFlowFees := flexFeeCoin
 	toCommunityPool := flexFeeCoin
 
-	if p.FlowConstantFee != 0 && feeDenom == types.Denom {
-		fixedFee := math.NewInt(p.FlowConstantFee * int64(len(flow.Msgs)))
+	if p.BurnFeePerMsg != 0 && feeDenom == types.Denom {
+		fixedFee := math.NewInt(p.BurnFeePerMsg * int64(len(flow.Msgs)))
 		fixedFeeCoin := sdk.NewCoin(feeDenom, fixedFee)
 		totalFlowFees = totalFlowFees.Add(fixedFeeCoin)
-		//todo efficient burn
-		// if feeDenom == types.Denom {
-		// 	k.bankKeeper.BurnCoins(ctx, "intent", sdk.NewCoins(fixedFeeCoin))
-		// } else {
-		toCommunityPool = toCommunityPool.Add(fixedFeeCoin)
-		//}
+
+		if feeDenom == types.Denom {
+			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, feeAddr, types.ModuleName, sdk.NewCoins(fixedFeeCoin))
+			if err != nil {
+				return sdk.Coin{}, err
+			}
+
+			err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(fixedFeeCoin))
+			if err != nil {
+				return sdk.Coin{}, errorsmod.Wrap(errorsmod.ErrPanic, "could not burn coins, this should never happen")
+			}
+		}
 	}
-	//fmt.Printf("totalFlowFees %v\n", totalFlowFees)
-	//not recurring
-	//fmt.Printf("ACTION %+v\n", flow)
 	if flow.ExecTime.Equal(flow.EndTime) {
 		if feeAddr.String() != flow.Owner {
 			flowAddrBalance := k.bankKeeper.GetAllBalances(ctx, feeAddr)
 			percentageFlowFundsCommission := math.LegacyNewDecWithPrec(p.FlowFundsCommission, 2)
 			amountFlowFundsCommissionCoin := sdk.NewCoin(feeDenom, percentageFlowFundsCommission.MulInt(flowAddrBalance.AmountOf(feeDenom)).Ceil().TruncateInt())
+
 			totalFlowFees = totalFlowFees.Add(amountFlowFundsCommissionCoin)
-
 			toCommunityPool = toCommunityPool.Add(amountFlowFundsCommissionCoin)
-			toOwnerCoins, negative := flowAddrBalance.Sort().SafeSub(totalFlowFees)
-			if !negative {
-				ownerAddr, err := sdk.AccAddressFromBech32(flow.Owner)
-				if err != nil {
-					return sdk.Coin{}, err
-				}
-				err = k.bankKeeper.SendCoins(ctx, feeAddr, ownerAddr, toOwnerCoins)
-				if err != nil {
-					return sdk.Coin{}, err
-				}
 
+			// Ensure that toCommunityPool does not exceed available flowAddrBalance
+			if flowAddrBalance.IsAllGTE(sdk.Coins{toCommunityPool}) {
+				toOwnerCoins, negative := flowAddrBalance.Sort().SafeSub(toCommunityPool)
+				if !negative {
+					// Continue with your normal logic here
+					ownerAddr, err := sdk.AccAddressFromBech32(flow.Owner)
+					if err != nil {
+						return sdk.Coin{}, err
+					}
+					err = k.bankKeeper.SendCoins(ctx, feeAddr, ownerAddr, toOwnerCoins)
+					if err != nil {
+						return sdk.Coin{}, err
+					}
+				} else {
+					return sdk.Coin{}, errorsmod.Wrap(types.ErrUnexpectedFeeCalculation, "fees exceed available balance")
+				}
+			} else {
+				// If community pool fees exceed available balance
+				return sdk.Coin{}, errorsmod.Wrap(types.ErrUnexpectedFeeCalculation, "total flow fees exceed available balance")
 			}
+
 		}
 	}
-	//fmt.Printf("totalFlowFees %v\n", totalFlowFees)
+
 	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(toCommunityPool), feeAddr)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	//fmt.Printf("totalFlowFees %s\n", totalFlowFees)
-	k.Logger(ctx).Debug("fee", "amount", totalFlowFees, "to", proposer.String())
+
+	k.Logger(ctx).Debug("fee", "amount", totalFlowFees)
 
 	return totalFlowFees, nil
 }

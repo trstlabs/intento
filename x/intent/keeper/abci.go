@@ -45,7 +45,7 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.FlowIn
 	if errorString == "" {
 		executedLocally, errorString = k.handleFlowExecution(cacheCtx, &flow, &msgResponses, errorString)
 
-		fee, err = k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom, ctx.BlockHeader().ProposerAddress)
+		fee, err = k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
 		if err != nil {
 			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, err.Error()))
 		}
