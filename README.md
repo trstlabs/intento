@@ -20,7 +20,7 @@ Intents contain actions and predefined conditions, which determine how actions a
 - Orchestration: Specify complex interchain operations.
 - Scalable and VM Agnostic: Compatibility of executing actions on various VMs.
 - IBC-Native: Coordinated actions across blockchains using Interchain Accounts and IBC-hooks
-- Modular and Secure: Utilizes Cosmos SDK and Celestia DA for security.
+- Modular and Secure: Utilizes Cosmos SDK and Interchain Security (ICS) on the Cosmos Hub for security.
 - Privileged Execution: Execute actions on your account by granting permissions to a fixed and unique trigger address.
 
 ## Why Intento?

@@ -6,13 +6,15 @@ order: 2
 ---
 
 
-Intents contain actions and predefined conditions, which determine how actions are processed. In crypto, we want to process actions with no counterparty risk and in a permissionless and decentralized manner. This has so far only been possible by directly sending transactions to the destination chain. With Intento, you will be able specify your intent to perform any action, anywhere at any moment given any conditions.
+Intents contain actions and predefined conditions, which determine how actions are processed. In crypto, we want to execute actions with no counterparty risk and in a permissionless and decentralized manner. This has so far only been possible by directly sending transactions to the destination chain. With Intento, you will be able specify your intent to perform any action, anywhere at any moment given any conditions.
 
-Intent-based actions are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitFlow`, IBC-specific settings such as the `ConnectionID` or a `HostedAccount`, and conditions such as comparisons and feedback loops.
+Intent-based action flows are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitFlow`, IBC-specific settings such as the `ConnectionID` or a `HostedAccount`, and conditions such as comparisons and feedback loops.
 
-An action in technical terms is an object containing messages that are triggered at a specified time, or recurringly with intervals, with given conditions.
+A flow on Intento in technical terms is an object containing messages that are triggered at a specified time, or recurringly with intervals, with conditions such as feedback loops, stops and comparisons. Flow trigger entries are scheduled, and checked at the beginning of a new block.
 
-Flow entries are scheduled at the beginning of a new block.
+
+In the illustration below you can see several examples of how flows can look like. 
+![Example flows](@site/docs/images/example_flows.png)
 
 Interchain Accounts are a key component of Intento. They allow for the secure management of assets across different IBC-connected chains. This means that Intento's Intents can execute actions on other chains based on custom logic, making them extremely versatile and useful for a wide range of applications. With this, you can execute Cosmos SDK blockchain messages such as:
 
@@ -37,11 +39,7 @@ Intento can execute messages on other chains using several approaches:
    - Full control over the account
    - You have to manage host chain fee balances yourself
 
-To use Self-Hosted Interchain Accounts, you first register an interchain account. This involves creating a port ID and connection ID, which allows you to connect their account to other chains over IBC. You additionaly have to send funds for fees on the host chain.
-
-Using the Authz module on the host chain - the chain you want to execute at - you can grant the trigger on Intento permission to execute a specific message.
-
-![IBC flow](@site/docs/images/ibc_trigger.png)
+To use Self-Hosted Interchain Accounts, you first register an interchain account. This involves creating a port ID and connection ID, which allows you to connect their account to other chains over IBC. You additionaly have to send funds for fees on the host chain. Using the Authz module on the host chain - the chain you want to execute at - you can grant the flow permission to execute a specific message.
 
 ## MsgSubmitFlow
 

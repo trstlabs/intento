@@ -1,6 +1,6 @@
 ---
 title: Differentiation
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 Currently, building and processing intent-based blockchain workflows requires a combination of smart contracts and a off-chain bot network.

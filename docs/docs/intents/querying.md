@@ -4,7 +4,7 @@ title: Querying flows
 description: How to retreive flow data
 ---
 
-Retreiving `Flow` -related information can be through the [TriggerPortal](https://triggerportal.zone) interface, a front-end integration through `IntentoJS`, locally through a Command-Line Interface or through a Celestia RPC endpoint.
+Retrieving `Flow` -related information can be done through the [TriggerPortal](https://triggerportal.zone) user interface, a front-end integration through `IntentoJS`, locally through a Command-Line Interface or through an RPC endpoint.
 
 <!--
 Here's an RPC endpoint: [openrpc.intento.zone](https://openrpc.intento.zone).

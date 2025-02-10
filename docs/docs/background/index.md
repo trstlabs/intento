@@ -19,6 +19,3 @@ Our vision is to enable anyone to integrate blockchain operations in a truly sea
 IBC is an interoperability protocol for communicating all kinds of data between arbitrary state machines.
 It is different than other bridges as enables direct chain to chain communication. Hence, it is often referred to as a trustless bridging solution.
 The IBC application layer can be used to build a wide range of cross-chain applications, including but not limited to token transfers, passing messages between accounts on two chains, NFT transfers and oracle data feeds.
-
-With Intento you can automate smart contracts easily over IBC.
-![IBC flow](@site/docs/images/ibc_trigger.png)
