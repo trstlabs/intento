@@ -210,6 +210,21 @@ proto-update-deps:
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace  --user $(id -u):$(id -g) --workdir /workspace $(containerProtoImage) buf mod update 
 
 ###############################################################################
+###                             Interchaintest                              ###
+###############################################################################
+
+get-heighliner:
+	git clone https://github.com/strangelove-ventures/heighliner.git
+	cd heighliner && go install
+
+local-image:
+ifeq (,$(shell which heighliner))
+	echo 'heighliner' binary not found. Consider running `make get-heighliner`
+else
+	heighliner build -c intento --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/intentod"  --build-env "CGO_ENABLED=1 BUILD_TAGS=muslc"
+endif
+
+###############################################################################
 ###                             LocalIntento                                 ###
 ###############################################################################
 
