@@ -27,14 +27,14 @@ import (
 	ccvtypes "github.com/cosmos/interchain-security/v6/x/ccv/types"
 
 	// "github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
-	"github.com/spf13/cast"
-
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/spf13/cast"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -92,7 +92,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	legacygovtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -133,7 +132,7 @@ import (
 	ccvconsumerkeeper "github.com/cosmos/interchain-security/v6/x/ccv/consumer/keeper"
 	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
 	ccvdistr "github.com/cosmos/interchain-security/v6/x/ccv/democracy/distribution"
-	ccvgov "github.com/cosmos/interchain-security/v6/x/ccv/democracy/governance"
+
 	ccvstaking "github.com/cosmos/interchain-security/v6/x/ccv/democracy/staking"
 	"github.com/trstlabs/intento/x/alloc"
 	allockeeper "github.com/trstlabs/intento/x/alloc/keeper"
@@ -514,8 +513,8 @@ func NewIntoApp(
 	)
 
 	// register the proposal types
-	govRouter := legacygovtypes.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, legacygovtypes.ProposalHandler).
+	govRouter := govv1beta1.NewRouter()
+	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
 
 	govConfig := govtypes.DefaultConfig()
@@ -703,7 +702,6 @@ func NewIntoApp(
 		ibchooks.NewAppModule(app.AccountKeeper),
 		transfer.NewAppModule(app.TransferKeeper),
 		ibcwasm.NewAppModule(app.IBCWasmKeeper),
-		ccvgov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, IsProposalWhitelisted, app.GetSubspace(govtypes.ModuleName), IsModuleWhiteList),
 		ccvdistr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper, authtypes.FeeCollectorName, app.GetSubspace(distrtypes.ModuleName)),
 		ibctm.NewAppModule(),
 	)
