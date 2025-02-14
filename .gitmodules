@@ -17,12 +17,3 @@
 [submodule "dockernet/tests/bats/bats-support"]
 	path = dockernet/tests/bats/bats-support
 	url = https://github.com/bats-core/bats-support.git
-[submodule "deps/osmosis"]
-	path = deps/osmosis
-	url = https://github.com/osmosis-labs/osmosis.git
-[submodule "deps/dymension"]
-	path = deps/dymension
-	url = https://github.com/dymensionxyz/dymension
-[submodule "deps/ntrn"]
-	path = deps/ntrn
-	url = https://github.com/neutron-org/neutron

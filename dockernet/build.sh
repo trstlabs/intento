@@ -89,9 +89,6 @@ while getopts igdosehrn flag; do
          build_local osmosisd deps/osmosis
          build_docker osmo deps/osmosis
          ;;
-      n)
-         build_local neutrond deps/neutron
-         ;;
       n) continue ;; # build_local and build_docker {new-host-zone} deps/{new-host-zone}
       r)
          build_local rly deps/relayer

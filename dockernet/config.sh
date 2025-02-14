@@ -52,11 +52,6 @@ IBC_OSMO_CHANNEL_1_DENOM='ibc/0471F1C4E7AFD3F07702BEF6DC365268D64570F7C1FDC98EA6
 IBC_OSMO_CHANNEL_2_DENOM='ibc/13B2C536BB057AC79D5616B8EA1B9540EC1F2170718CAFF6F0083C966FFFED0B'
 IBC_OSMO_CHANNEL_3_DENOM='ibc/47BD209179859CDE4A2806763D7189B6E6FE13A17880FE2B42DE1E6C1E329E23'
 
-IBC_NTRN_CHANNEL_0_DENOM='ibc/82DBA832457B89E1A344DA51761D92305F7581B7EA6C18D85037910988953C58'
-IBC_NTRN_CHANNEL_1_DENOM='ibc/FB7E2520A1ED6890E1632904A4ACA1B3D2883388F8E2B88F2D6A54AA15E4B49E'
-IBC_NTRN_CHANNEL_2_DENOM='ibc/D664DC1D38648FC4C697D9E9CF2D26369318DFE668B31F81809383A8A88CFCF4'
-IBC_NTRN_CHANNEL_3_DENOM='ibc/FD7AA7EB2C1D5D97A8693CCD71FFE3F5AFF12DB6756066E11E69873DE91A33EA'
-
 IBC_HOST_CHANNEL_0_DENOM='ibc/82DBA832457B89E1A344DA51761D92305F7581B7EA6C18D85037910988953C58'
 IBC_HOST_CHANNEL_1_DENOM='ibc/FB7E2520A1ED6890E1632904A4ACA1B3D2883388F8E2B88F2D6A54AA15E4B49E'
 IBC_HOST_CHANNEL_2_DENOM='ibc/D664DC1D38648FC4C697D9E9CF2D26369318DFE668B31F81809383A8A88CFCF4'
@@ -85,12 +80,18 @@ ADMIN_TOKENS=10000
 FAUCET_TOKENS=1000000
 
 # faucet
+# TEST_FAUCET_ACCT=faucet2
+# TEST_FAUCET_MNEMONIC="wreck valve enroll onion space weasel cherry ketchup edge special certain silver"
+
+
+# # CHAIN MNEMONICS
+VAL_MNEMONIC_1="join secret blind dose prepare atom wrestle funny want memory spare captain empty speak logic wrestle half develop brown economy burden north example slide"
 TEST_FAUCET_ACCT=faucet
 TEST_FAUCET_MNEMONIC="word twist toast cloth movie predict advance crumble escape whale sail such angry muffin balcony keen move employ cook valve hurt glimpse breeze brick"
 
 
 # CHAIN MNEMONICS
-VAL_MNEMONIC_1="close soup mirror crew erode defy knock trigger gather eyebrow tent farm gym gloom base lemon sleep weekend rich forget diagram hurt prize fly"
+# VAL_MNEMONIC_1="close soup mirror crew erode defy knock trigger gather eyebrow tent farm gym gloom base lemon sleep weekend rich forget diagram hurt prize fly"
 VAL_MNEMONIC_2="turkey miss hurry unable embark hospital kangaroo nuclear outside term toy fall buffalo book opinion such moral meadow wing olive camp sad metal banner"
 VAL_MNEMONIC_3="tenant neck ask season exist hill churn rice convince shock modify evidence armor track army street stay light program harvest now settle feed wheat"
 VAL_MNEMONIC_4="tail forward era width glory magnet knock shiver cup broken turkey upgrade cigar story agent lake transfer misery sustain fragile parrot also air document"
@@ -159,20 +160,6 @@ OSMO_DENOM=$OSMO_DENOM
 OSMO_RPC_PORT=26357
 OSMO_MAIN_CMD="$OSMO_BINARY --home $DOCKERNET_HOME/state/${OSMO_NODE_PREFIX}1"
 OSMO_RECEIVER_ADDRESS='osmo1g6qdx6kdhpf000afvvpte7hp0vnpzapuvajh2m'
-
-# NTRN
-NTRN_CHAIN_ID=NTRN
-NTRN_NODE_PREFIX=host
-NTRN_NUM_NODES=1
-NTRN_BINARY="$DOCKERNET_HOME/../build/neutrond"
-NTRN_VAL_PREFIX=nval
-NTRN_ADDRESS_PREFIX=neutron
-NTRN_USER_ACCT=nusr1
-NTRN_USER_ADDRESS='into1wdplq6qjh2xruc7qqagma9ya665q6qhc80zy8t'
-NTRN_DENOM=$COSM_DENOM
-NTRN_RPC_PORT=26157
-NTRN_MAIN_CMD="$NTRN_BINARY --home $DOCKERNET_HOME/state/${NTRN_NODE_PREFIX}1"
-NTRN_RECEIVER_ADDRESS='ntrn1g6qdx6kdhpf000afvvpte7hp0vnpzapumvs33x'
 
 # HOST (Intento running as a host zone)
 HOST_CHAIN_ID=HOST
