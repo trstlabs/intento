@@ -16,4 +16,4 @@ msg_*.json
 /*.sh
 *.json
 dockernet/tests/test_files
-dockernet/config/osmo1
+dockernet/config/*1
