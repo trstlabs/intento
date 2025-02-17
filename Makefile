@@ -224,45 +224,6 @@ else
 	heighliner build -c intento --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/intentod"  --build-env "CGO_ENABLED=1 BUILD_TAGS=muslc"
 endif
 
-###############################################################################
-###                             LocalIntento                                 ###
-###############################################################################
 
-# localnet-keys:
-# 	. $(LOCALINTENTO_HOME)/localnet/add_keys.sh
-
-# localnet-init: localnet-clean localnet-build
-
-# localnet-clean:
-# 	@rm -rfI $(HOME)/.intento/
-
-# localnet-build:
-# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) build
-
-# localnet-start:
-# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) up
-
-# localnet-startd:
-# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) up -d
-
-# localnet-stop:
-# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) down
-
-# localnet-state-export-init: localnet-state-export-clean localnet-state-export-build
-
-# localnet-state-export-build:
-# 	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f $(STATE_EXPORT_COMPOSE_FILE) build
-
-# localnet-state-export-start:
-# 	@docker compose -f $(STATE_EXPORT_COMPOSE_FILE) up
-
-# localnet-state-export-startd:
-# 	@docker compose -f $(STATE_EXPORT_COMPOSE_FILE) up -d
-
-# localnet-state-export-upgrade:
-# 	bash $(LOCALINTENTO_HOME)/state-export/scripts/submit_upgrade.sh
-
-# localnet-state-export-stop:
-# 	@docker compose -f $(STATE_EXPORT_COMPOSE_FILE) down
-
-# localnet-state-export-clean: localnet-clean
+e2e-test:
+	cd e2e && go test -race -v -timeout 30m

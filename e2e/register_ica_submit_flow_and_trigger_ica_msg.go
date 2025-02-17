@@ -1,4 +1,4 @@
-package ibc_test
+package interchaintest
 
 import (
 	"context"
@@ -6,11 +6,9 @@ import (
 	"testing"
 	"time"
 
-	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-
-	"cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	"github.com/strangelove-ventures/interchaintest/v8"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testreporter"
@@ -18,9 +16,8 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// This test is meant to be used as a basic interchaintest tutorial.
-// Code snippets are broken down in ./docs/upAndRunning.md
-func TestLearn(t *testing.T) {
+func TestRegisterICASubmitFlowTriggerICAMsg(t *testing.T) {
+
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
@@ -31,7 +28,7 @@ func TestLearn(t *testing.T) {
 
 	// Chain Factory
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
-		{Name: "gaia", Version: "v7.0.0", ChainConfig: ibc.ChainConfig{
+		{Name: "gaia", Version: "v22.1.0", ChainConfig: ibc.ChainConfig{
 			GasPrices: "0.0uatom",
 		}},
 		{ChainConfig: ibc.ChainConfig{
@@ -47,8 +44,8 @@ func TestLearn(t *testing.T) {
 			},
 			Bin:            "intentod",
 			Bech32Prefix:   "into",
-			Denom:          "ustake",
-			GasPrices:      "0.0ustake",
+			Denom:          "uinto",
+			GasPrices:      "0.0uinto",
 			GasAdjustment:  1.3,
 			TrustingPeriod: "508h",
 			NoHostMount:    false},
@@ -65,7 +62,7 @@ func TestLearn(t *testing.T) {
 		t, client, network)
 
 	// Prep Interchain
-	const ibcPath = "gaia-osmo-demo"
+	const ibcPath = "gaia-intento-demo"
 	ic := interchaintest.NewInterchain().
 		AddChain(gaia).
 		AddChain(intento).
@@ -86,11 +83,9 @@ func TestLearn(t *testing.T) {
 
 	// Build interchain
 	require.NoError(t, ic.Build(ctx, eRep, interchaintest.InterchainBuildOptions{
-		TestName:  t.Name(),
-		Client:    client,
-		NetworkID: network,
-		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
-
+		TestName:         t.Name(),
+		Client:           client,
+		NetworkID:        network,
 		SkipPathCreation: false,
 	},
 	),
@@ -100,60 +95,72 @@ func TestLearn(t *testing.T) {
 	fundAmount := math.NewInt(10_000_000)
 	users := interchaintest.GetAndFundTestUsers(t, ctx, "default", fundAmount, gaia, intento)
 	gaiaUser := users[0]
-	osmosisUser := users[1]
+	//intentoUser := users[1]
+	gaiaUser2 := users[2]
 
 	gaiaUserBalInitial, err := gaia.GetBalance(ctx, gaiaUser.FormattedAddress(), gaia.Config().Denom)
 	require.NoError(t, err)
 	require.True(t, gaiaUserBalInitial.Equal(fundAmount))
 
-	// Get Channel ID
-	gaiaChannelInfo, err := r.GetChannels(ctx, eRep, gaia.Config().ChainID)
-	require.NoError(t, err)
-	gaiaChannelID := gaiaChannelInfo[0].ChannelID
+	// // Get Channel ID
+	// gaiaChannelInfo, err := r.GetChannels(ctx, eRep, gaia.Config().ChainID)
+	// require.NoError(t, err)
+	// gaiaChannelID := gaiaChannelInfo[0].ChannelID
+	// intentoChannelInfo, err := r.GetChannels(ctx, eRep, intento.Config().ChainID)
+	// require.NoError(t, err)
+	// intentoChannelID := intentoChannelInfo[0].ChannelID
 
-	osmoChannelInfo, err := r.GetChannels(ctx, eRep, intento.Config().ChainID)
+	err = r.CreateConnections(ctx, rep.RelayerExecReporter(t), ibcPath)
 	require.NoError(t, err)
-	osmoChannelID := osmoChannelInfo[0].ChannelID
-
 	height, err := intento.Height(ctx)
 	require.NoError(t, err)
 
+	msgSend := fmt.Sprintf(`{
+		"@type":"/cosmos.bank.v1beta1.MsgSend",
+		"amount": [{
+			"amount": "70",
+			"denom": "uatom"
+		}],
+		"from_address": "%s",
+		"to_address": "%s"
+	}`, gaiaUser, gaiaUser2)
+
+	// Submit Flow
+	cmd := []string{"tx", "intent", "register-ica-and-submit-flow", msgSend, "--duration", "60s", "--connection-id", "0" /* or 1 */, "--host-connection-id", "0" /* or 1 */}
+	stdOut, stErr, err := chains[1].Exec(ctx, cmd, nil)
+	require.NoError(t, err)
+	require.Nil(t, stErr)
+	require.NotNil(t, stdOut)
+
 	// Send Transaction
-	amountToSend := math.NewInt(1_000_000)
-	dstAddress := osmosisUser.FormattedAddress()
-	transfer := ibc.WalletAmount{
-		Address: dstAddress,
-		Denom:   gaia.Config().Denom,
-		Amount:  amountToSend,
-	}
-	tx, err := gaia.SendIBCTransfer(ctx, gaiaChannelID, gaiaUser.KeyName(), transfer, ibc.TransferOptions{})
+
+	// ==== VERIFY FLOW EXECUTION ON GAIA ====
+	time.Sleep(5 * time.Second)  // Wait for IBC packet delivery
+	time.Sleep(20 * time.Second) // Wait for Registration ICA
+	time.Sleep(60 * time.Second) // Wait for Action Trigger
+	time.Sleep(5 * time.Second)  // Wait for IBC packet delivery
+
+	// Query  Flow Info
+	query := []string{"q", "intent", "flow", " 1"}
+	stdOut, stErr, err = chains[1].Exec(ctx, query, nil)
 	require.NoError(t, err)
-	require.NoError(t, tx.Validate())
+	require.Nil(t, stErr)
+	require.NotNil(t, stdOut)
+	require.Contains(t, string(stdOut), "1")
 
-	// relay MsgRecvPacket to osmosis, then MsgAcknowledgement back to gaia
-	require.NoError(t, r.Flush(ctx, eRep, ibcPath, gaiaChannelID))
-
-	// test source wallet has decreased funds
-	expectedBal := gaiaUserBalInitial.Sub(amountToSend)
-	gaiaUserBalNew, err := gaia.GetBalance(ctx, gaiaUser.FormattedAddress(), gaia.Config().Denom)
-	require.NoError(t, err)
-	require.True(t, gaiaUserBalNew.Equal(expectedBal))
-
-	// Trace IBC Denom
-	srcDenomTrace := transfertypes.ParseDenomTrace(transfertypes.GetPrefixedDenom("transfer", osmoChannelID, gaia.Config().Denom))
-	dstIbcDenom := srcDenomTrace.IBCDenom()
+	t.Logf("Flow info on Intento: %s", string(stdOut))
 
 	// Test destination wallet has increased funds
-	osmosUserBalNew, err := intento.GetBalance(ctx, osmosisUser.FormattedAddress(), dstIbcDenom)
+	gaiaUser2BalNew, err := gaia.GetBalance(ctx, gaiaUser2.FormattedAddress(), "uatom")
 	require.NoError(t, err)
-	require.True(t, osmosUserBalNew.Equal(amountToSend))
+	require.True(t, gaiaUser2BalNew.Sub(fundAmount).Equal(math.NewInt(70)))
 
-	// Validate light client
 	chain := intento.(*cosmos.CosmosChain)
 	reg := chain.Config().EncodingConfig.InterfaceRegistry
-	msg, err := cosmos.PollForMessage[*clienttypes.MsgUpdateClient](ctx, chain, reg, height, height+10, nil)
+	msgUpdateClient, err := cosmos.PollForMessage[*clienttypes.MsgUpdateClient](ctx, chain, reg, height, height+10, nil)
 	require.NoError(t, err)
 
-	require.Equal(t, "07-tendermint-0", msg.ClientId)
-	require.NotEmpty(t, msg.Signer)
+	require.Equal(t, "07-tendermint-0", msgUpdateClient.ClientId)
+	require.NotEmpty(t, msgUpdateClient.Signer)
+	t.Log("IBC-Hooks E2E test passed!")
 }
