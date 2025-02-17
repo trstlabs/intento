@@ -21,7 +21,7 @@ You can query various data types from the state of other chains. There are two p
 
 Once the queried data is retrieved, it can be used for [**comparisons**](./conditions.md#comparison-operators) or to establish [**feedback loops**](./conditions.md#feedback-loops). For example, if a queried balance exceeds a certain threshold, you can trigger an action to stake the excess funds. Likewise, if a validator’s status on one chain changes, you can automatically adjust delegations or governance votes on another chain.
 
-This capability unlocks numerous possibilities for cross-chain automation, simplifying multi-chain dApp logic and empowering developers to build more dynamic and responsive applications in the interchain ecosystem.
+This capability unlocks numerous possibilities for cross-chain workflows, simplifying multi-chain dApp logic and empowering developers to build more dynamic and responsive applications in the interchain ecosystem.
 
 ## Integrating ICQs
 

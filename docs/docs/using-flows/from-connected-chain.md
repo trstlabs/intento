@@ -25,7 +25,7 @@ This is useful for DAOs and other decentralized organizations on any connected c
 
 ## For DAOs
 
-Setting up an flow on a connected chain can be particularly useful for DAOs. Using this middleware, DAOs can now automate tasks not only on their chain but also on any chain connected to Intento. What can DAO's do with this? DAOs can automate periodic token swaps, payroll, payment in installments amongst other scheduled flows. These flows can be performed in one proposal, which normally require periodically voting on individual proposals. This normally requires manual flow from the proposer and DAO participants.
+Setting up an flow on a connected chain can be particularly useful for DAOs. Using this middleware, DAOs can now automate tasks not only on their chain but also on any chain connected to Intento. What can DAO's do with this? DAOs can orchestrate periodic token swaps, payroll, payment in installments amongst other scheduled flows. These flows can be performed in one proposal, which normally require periodically voting on individual proposals. This normally requires manual flow from the proposer and DAO participants.
 
 ## ICS20 Middleware
 
@@ -110,66 +110,74 @@ An ICS20 packet is formatted correctly for submitting an flow if the following a
 - `memo["flow"]["cid"]`is a valid connection ID on INTO -> Destination chain, omit it for local INTO execution of the message.
 - `memo["flow"]["register_ica"]` can be added, and true to register an ICA.
 
-Fees are paid with a newly generated and flow specific fee account.
+Fees are paid with a newly generated flow fee account.
 
 If an ICS20 packet does not contain a memo containing "flow", a regular MsgTransfer takes place.
 If an ICS20 packet is directed towards flow, and is formated incorrectly, then it returns an error.
+Here’s an improved version of the example with clearer language, structure, and formatting:
+
+---
 
 ## Example: DAO Integration
 
-![icsdao](@site/docs/images/connected_chain/from_connected_chain_flow1.png)
+![ICS DAO](@site/docs/images/connected_chain/from_connected_chain_flow1.png)
 
-Using ICS20 to set up flows is for advanced users that are familiar with terms such as ICS20 transfers and Authz permissions.
+### Overview
 
-Our ICS20 middleware is developped to allow DAOs to perform time-based flows. These can be executed locally on Intento, a destination chain which can also be the source chain.
+Using ICS20 to set up Intent-based flows is for users familiar with ICS20 transfers and Authz permissions. Our ICS20 middleware is designed to allow DAOs to submit flows, which can be done locally on Intento or on a destination chain. This can also be the source chain.
 
-There are several caveats to using ICS20 to set up an flow. When automating on a destination chain for the first time, not one but two flows is required to activate the trigger. One flow is to set the flow and create an Interchain Account at Intento and another is to set permissions/send funds to the Interchain Account on the destination chain.
+There are several caveats when setting up flows with ICS20. When automating on a destination chain for the first time, **two messages** are required to activate the flow. One flow sets up the flow and creates an Interchain Account on Intento, while the other sets permissions and sends funds to the Interchain Account on the destination chain.
 
-To demonstrate how DAOs can integrate with Intento we explain the process using an example.
+In this example, we will demonstrate how a DAO can integrate with Intento by automating the payment process to a service provider.
 
-`DAO` wants to pay `Service provider ABC` for their services that they provide on a monthly basis in `TOKEN1` and holds `TOKEN2` and `NTRN`.
+### Scenario: DAO Payment to Service Provider
 
-_Service provider ABC invoice example_
-![DAODAO](@site/docs/images/ics20/daodao_proposal1.png)
+The `DAO` wishes to pay `Service Provider ABC` monthly for their services in `TOKEN1`. The DAO holds `TOKEN2` and `NTRN`.
 
-In this example a `DAO` on DAODAO triggers a swap of TOKEN2 for TOKEN1 on dex "DEX" on a recurring basis.
-Then it can automatically send these tokens to `Service provider ABC`.
-This is a neat use case for Intento as it requires movement from assets between chains and accounts. The tokens to send can remain in control of the DAO.
-As flow triggers are on-chain, the process can be done completely without trusted third parties.
+_Service Provider ABC invoice example_
 
-The DAO can appoint an owner that can manage the flow or use a placeholder account on Intento to remain in full control.
+![DAODAO](@site/docs/images/connected_chain/daodao_proposal1.png)
 
-For this invoice example we have the following proposal name and description:
+In this case, the DAO triggers a recurring swap of `TOKEN2` for `TOKEN1` on the decentralized exchange "DEX" and automatically sends the tokens to `Service Provider ABC`. 
 
-_Example Proposal name_
+This setup is an ideal use case for Intento, as it involves asset movement between chains and accounts, while the DAO maintains control of the tokens. Since the flows are on-chain, the process is fully decentralized and does not require third-party trust.
 
-```md
-[Trigger] Pay service provider ABC in TOKEN1
-```
+The DAO can appoint an owner to manage the flow or use a placeholder account on Intento to remain in full control.
 
-#### Example Description
+### Proposal Details
+
+In this example, the DAO submits a proposal with the following name and description:
+
+**Proposal Name**:
 
 ```md
-Submit an flow to send TOKEN1 to "service provider ABC"
-
-This will swap on a recurring basis TOKEN2 for TOKEN1 on dex "DEX" on Destination Chain and send these tokens to "service provider ABC"
-This will swap TOKEN1 for TOKEN2 on a recurring basis so that:
-
-- the selling pressure on TOKEN2 is gradual
-- we maintain a positive cash flow
-
-This Trigger on Intento allows us to automate asset workflows. It allows our DAO to maintain positive cashflow and have better liquidity.
+[Trigger] Pay Service Provider ABC in TOKEN1
 ```
 
-Having adequate liquidity is crucial to ensure smooth operations and financial stability. It enables you to fulfill your financial obligations to suppliers, lenders, and other stakeholders, which strengthens your credibility and reputation in the marketplace. With sufficient liquidity, you can easily pay for bills and expenses, invest in growth opportunities, and effectively manage your DAO's resources. Thus, prioritizing and managing liquidity effectively can help you achieve long-term success and sustainable growth.
+**Proposal Description**:
 
-### 1. Submitting Flow
+```md
+Submit a flow to send TOKEN1 to "Service Provider ABC."
 
-![icsdao](@site/docs/images/connected_chain/from_connected_chain_flow2.png)
+This flow will swap TOKEN2 for TOKEN1 on DEX "DEX" on the Destination Chain and automatically send these tokens to "Service Provider ABC." By performing this swap on a recurring basis, we achieve:
 
-Submit a proposal with a custom message to execute. For a CosmWasm-based DAO like [DAO DAO](https://daodao.zone/) DAOs on Neutron, This message contains the ICS20 message`MsgTransfer`. In the `memo` you provide the `Flow` details such as the messages to automate, time parameters and set a custom label.
+- Gradual selling pressure on TOKEN2
+- Maintaining positive cash flow
 
-Below is how the proposal flow message could look like for a CosmWasm-based DAO:
+This trigger on Intento automates asset workflows, ensuring liquidity and financial stability for the DAO.
+```
+
+Having sufficient liquidity ensures smooth operations and financial stability, allowing the DAO to meet its obligations and grow sustainably. Proper liquidity management helps to pay expenses, invest in growth, and strengthen the DAO's reputation in the market.
+
+---
+
+### 1. Submitting the Flow
+
+![ICS DAO Flow Submission](@site/docs/images/connected_chain/from_connected_chain_flow2.png)
+
+To submit the flow, the DAO creates a proposal with a custom message to execute. For a CosmWasm-based DAO like [DAO DAO](https://daodao.zone/) on Neutron, this message contains the ICS20 `MsgTransfer`. In the `memo`, the DAO provides flow details such as automated messages, time parameters, and a custom label.
+
+Here’s an example of how the flow proposal message might look for a CosmWasm-based DAO:
 
 ```json
 [
@@ -179,41 +187,24 @@ Below is how the proposal flow message could look like for a CosmWasm-based DAO:
       "value": {
         "source_port": "transfer",
         "source_channel": "channel-to-intento",
-        //token should be IBC-denominated INTO, which is used to pay for fees
         "token": { "denom": "ibc/....", "amount": "10" },
-        // sender - a bech32 address on source chain
         "sender": "neutron1validbech32address",
-        // the recipient address on Intento
-        // is replaced with a newly generated address when flow["owner"] in memo is blank
         "receiver": "into1address",
-        // Timeout height relative to the current block height.
-        // The timeout is disabled when set to 0.
         "timeout_height": "0",
-        // Timeout timestamp in absolute nanoseconds since unix epoch.
-        // The timeout is disabled when set to 0.
         "timeout_timestamp": "0",
         "memo": {
           "flow": {
-            //owner is optional and should equal recipient
             "owner": "into1address",
             "msgs": [
               {
                 "@type": "/someprefix.somemodule.someversion.sometype"
-                //add message values
-                //in JSON format
               }
             ],
-            //duration from now or from start_at. s=seconds, m=minutes, h=hours
             "duration": "111h",
-            //interval is optional. s=seconds, m=minutes, h=hours
             "interval": "11h",
-            //start_at is optional, in nanoseconds since UNIX epoch
             "start_at": "1677841601",
-            //label is optional
             "label": "my_label",
-            //connection_id is optional, omit or leave blank in case local Intento message.
             "cid": "connection-0",
-            //register_ica is optional, set to true to register interchain account
             "register_ica": "true"
           }
         }
@@ -223,11 +214,12 @@ Below is how the proposal flow message could look like for a CosmWasm-based DAO:
 ]
 ```
 
-Here it is important that the `timeout_timestamp` or `timeout_height` takes into account the proposal's end time. Alternatively both of the timeout values can be set to `0`.
+**Important Notes:**
 
-Further it is important that the field `register_ica` is set to `"true"` the first time you create an flow. This will register an Interchain Account from Intento on the destination chain.
-
-A message in the `flow["msgs"]` array can be like the following MsgSend:
+- Ensure that `timeout_timestamp` or `timeout_height` reflects the proposal's end time, or set both to `0` if no timeout is needed.
+- When creating the flow for the first time, make sure the `register_ica` field is set to `"true"`, which registers an Interchain Account on the destination chain.
+  
+A message within the `flow["msgs"]` array might look like this `MsgSend`:
 
 ```json
 {
@@ -243,7 +235,7 @@ A message in the `flow["msgs"]` array can be like the following MsgSend:
 }
 ```
 
-For the DAO service provider example, we can have a [SwapAndSendTo](https://github.com/Wasmswap/wasmswap-contracts/blob/main/src/msg.rs#:~:text=%7D%2C-,SwapAndSendTo,-%7B) in a [MsgExecuteContract](https://github.com/CosmWasm/wasmd/blob/main/proto/cosmwasm/wasm/v1/tx.proto) message to swap TOKEN2 for TOKEN1 locally on `Neutron`. We can specify the out recipient the recipient's address.
+Alternatively, the DAO can use a custom smart contract message like [SwapAndSendTo](https://github.com/Wasmswap/wasmswap-contracts/blob/main/src/msg.rs#:~:text=%7D%2C-,SwapAndSendTo,-%7B) in a [MsgExecuteContract](https://github.com/CosmWasm/wasmd/blob/main/proto/cosmwasm/wasm/v1/tx.proto) message to swap `TOKEN2` for `TOKEN1`.
 
 ```json
 {
@@ -263,98 +255,42 @@ For the DAO service provider example, we can have a [SwapAndSendTo](https://gith
       "funds": []
     }
   ],
-  "grantee": "ICA_ADDR" 
+  "grantee": "ICA_ADDR"
 }
 ```
 
-:::tip write `ICA_ADDR` as a `grantee` or any other field in the message and Intento will parse the to-be defined Interchain Account address. This is transformed when the first execution happens.
+:::tip 
+Write `ICA_ADDR` as a `grantee` or in other fields within the message, and Intento will parse the to-be-defined Interchain Account address.
 :::
 
-We can also perform [MsgSwapExactAmountOut](https://github.com/osmosis-labs/osmosis/blob/main/proto/osmosis/gamm/v1beta1/tx.proto#:~:text=message-,MsgSwapExactAmountOut,-%7B) to `Osmosis` or `Dymension` given that there are funds on the DAO's Intento-Osmosis Interchain Account on Osmosis. To send funds for execution, the DAO can make a proposal for `MsgTransfer` that funds the Intento Interchain Account. The DAO then controls an flow on Intento that controls the swap.
+You can also use [MsgSwapExactAmountOut](https://github.com/osmosis-labs/osmosis/blob/main/proto/osmosis/gamm/v1beta1/tx.proto#:~:text=message-,MsgSwapExactAmountOut,-%7B) to swap tokens on decentralized exchanges like Osmosis or Dymension.
+
+---
 
 ### 2. Setting Up Permissions and Funds
 
-![example2](@site/docs/images/connected_chain/from_connected_chain_flow3.png)
+![ICS DAO Permissions](@site/docs/images/connected_chain/from_connected_chain_flow3.png)
 
-<!-- ![proposal2](@site/docs/images/ics20/daodao_proposal2.png)
-*Proposal 2 can be the following and should contain the ICA_ADDR, which can found by querying the interchain account address.*  -->
+The Interchain Account (ICA) must be properly funded and authorized before it can execute the flow.
 
-The ICA_ADDR should also have some [funds to execute](#paying-for-fees) and have the proper [permissions](#setting-permissions) set up
+#### Paying for Fees
 
-:::tip write ICA_ADDR as a `sender` or any other field in an flow and Intento will parse the to-be defined Interchain Account address.
+Flow fees on Intento are automatically paid from the funds sent via ICS20. For flows executed on the destination chain, the `Flow Account` on the destination chain should be funded with the destination chain's fee token.
+
+If needed, a separate proposal can be submitted to send tokens (via `MsgSend` or `MsgTransfer`) to the destination chain's ICA address.
+
+:::tip
+If the source and destination chains are the same, you can set up a FeeGrant for the ICA on the destination chain.
 :::
 
-#### Paying for fees
+#### Setting Permissions
 
-Flow fees on Intento are paid from the funds sent in the ICS20 message, so that you do not need to worry about it.
+For flows on Cosmos chains, set up an AuthZ grant using `MsgGrant`. For EVM chains, you can give the flow account `allowance` for ERC20 tokens or `approval` for NFTs.
 
-**Flow on Intento**
+Once funds and permissions are set up, only one flow proposal is required to trigger the flow.
 
-If you want to execute flows locally on Intento, the funds sent with the ICS20 transfer will be used to pay for fees.
-
-**With execution over IBC**
-
-To execute flows on the `destination chain`, the `Flow Account` on the destination chain should be funded with `destination chain`'s fee token.
-The flow can be funded by sending tokens to the account on `destination chain` before the first trigger. <!-- Fees can  granting the ICA to use fees from another account using a Feegrant. -->
-
-Alternatively, you can submit an additional proposal to send tokens ( `MsgSend` or `MsgTransfer`) to `destination_chain` with the `destination_chain_ica_address` as the receiver.
-For this, a message needs to be sent.
-
-<!-- 
-Here's an example:
-
-```json
-[
-  {
-    "stargate": {
-      "typeUrl": "/ibc.applications.transfer.v1.MsgTransfer",
-      "value": {
-        "source_port": "transfer",
-        "source_channel": "channel_source_chain__destination_chain",
-        "token": { "denom": "ibc/....", "amount": "10" },
-        "sender": "dao_address",
-        "receiver": "destination_chain_ica_address",
-        "timeout_height": "0",
-        "timeout_timestamp": "0",
-        "cid": "connection-0123"
-      }
-    }
-  }
-]
-``` 
--->
-
-:::tip Tip: if the destination chain is the same as the source chain, the DAO can create a FeeGrant for the `destination_chain_ica_address`.
-:::
-
-#### Setting permissions
-
-If your flow is on a Cosmos chain, you can set an AuthZ grant through `MsgGrant`. If you flow is going to be on an EVM chain you can give the flow account `allowance` for an ERC20 token or `approval` in case of an NFT.
-
-<!--
-#### Setting permissions
-
-Alternatively, you can create a FeeGrant for the `destination_chain_ica_address` when the DAO is present on destination chain. You can also allow the ICA address to execute flows for the DAO using `AuthZ`. [Here](https://blog.cosmos.network/secret-powers-what-are-the-authz-and-fee-grant-modules-c57d0e808794) is an article explaining the power of both `FeeGrant` and `AuthZ`.
-
-Initiating an flow for the first time locally on Neutron can be done as follows:
-
- 1. Proposal 1 Message 1: IC20 token tranfser: Submit flow on Intento.  In the `flow` memo, `msgs` should contain AuthZ's MsgExec with `MsgExecuteContract`.
- 2. Proposal 2 Message 1: Allow the DAO's NTRN tokens to be used for fees by `destination_chain_ica_address` with a FeeGrant.
-  Proposal 2 Message 2: AuthZ grant to ICA to execute `MsgExecuteContract`.
-
- For a DAO swapping tokens on a recurring basis on Osmosis for the first time, 2 proposals should be made.
-
- 1. Proposal 1 Message 1: IC20 token tranfser: Submit flow on Intento. In the `flow` memo, `msgs` should contain AuthZ's MsgExec with `MsgSwapExactAmountOut`
- 2. Proposal 2 Message 1: Send OSMO tokens to using `MsgTransfer` to `destination_chain_ica_address`.
-  Proposal 2 Message 2: AuthZ grant to ICA to execute `MsgSwapExactAmountOut`.
-
-<!-- FeeGrant typeURL:  `/cosmos.feegrant.v1beta1.Grant`
-AuthZ typeURL: `/cosmos.authz.v1beta1.MsgGrant` -->
-
-when the funds and grants are in place from a previous flow on that particular Interchain Account only one proposal flow containing the `flow` memo has to be specified.
-
-![example4](@site/docs/images/connected_chain/from_connected_chain_flow4.png)
+---
 
 ### 3. Managing Flows
 
-On [TriggerPortal](https://triggerportal.zone/), you can create, view , update and manage your flows.
+You can manage your flows on [TriggerPortal](https://triggerportal.zone/), where you can create, view, update, and control your flows.

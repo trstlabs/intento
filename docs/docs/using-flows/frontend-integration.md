@@ -100,7 +100,6 @@ export const getExpectedFlowFee = (
 };
 
 async function getFlowParams(client: IntentoChainClient) {
-  console.log("getFlowParams");
   try {
     const resp = await client.query.flow.params({});
     return resp.params;

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: Technical overview
-description: A technical overview of the Intento blockchain, including its architecture, consensus mechanism, block structure, network topology, automation solutions, and data availability.
+description: A technical overview of the Intento blockchain, including its architecture, consensus mechanism, block structure, network topology, solutions, and data availability.
 ---
 
 

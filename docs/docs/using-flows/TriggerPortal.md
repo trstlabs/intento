@@ -4,7 +4,7 @@ title: Interacting with TriggerPortal
 pagination_label: How to set and manage actions using TriggerPortal
 ---
 
-TriggerPortal is a powerful dApp designed for developers, and integrators, offering an advanced solution for setting, viewing and updating flows with robust conditions, comparisons, and feedback loops. It streamlines automation, allowing users to define sophisticated workflows for various interactions.
+TriggerPortal is a powerful dApp designed for developers, and integrators, offering an advanced solution for setting, viewing and updating flows with robust conditions, comparisons, and feedback loops. It allows users to define sophisticated workflows for various blockchain actions.
 
 ### Key Features of TriggerPortal
 
