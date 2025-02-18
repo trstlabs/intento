@@ -1,5 +1,5 @@
 ---
-title: Highlight - Autocompounding
+title: Highlight - Autocompound
 order: 2
 description: How Wallets Can Enhance UX By Offer Smart Auto-Compounding
 ---
@@ -8,14 +8,16 @@ Imagine a user, Emma, who stakes her ATOM tokens using her favorite wallet, but 
 
 What if Emma’s wallet could handle this for her intelligently? Instead of just automating restaking at fixed intervals, her wallet could integrate **intent-based auto-compounding**, ensuring that her rewards are reinvested under optimal conditions. For example:
 
-- **Auto-compound only if staking APR is above 10%**
 - **Skip compounding if claimed tokens are below a certain threshold**
-- **Dynamically adjust reinvestment intervals based on reward size**
 - **Withdraw rewards instead of compounding if the token price hits a take-profit target**
+- **Auto-compound only if inflation is below 10%**
+- **Dynamically adjust reinvestment intervals based on reward size**
 
 By offering a smart auto-compounding solution, wallets can provide users with better staking experiences, increase token lock-up rates, and add value to their platforms. Here are different ways this can be implemented:
 
 ### Approach 1 - Conditional Autocompounding via User-Owned Self-Hosted Account
+
+![1](@site/docs/images/designing-flows/auto-compound/1.png)
 
 This approach gives users full control over their auto-compounding while keeping everything within their own wallet.
 
@@ -35,6 +37,8 @@ This approach gives users full control over their auto-compounding while keeping
 
 ### Approach 2 - Conditional Autocompounding via Hosted Account
 
+![2](@site/docs/images/designing-flows/auto-compound/2.png)
+
 A hosted account managed by the wallet provider, making auto-compounding easier while ensuring a seamless staking experience.
 
 **Advantages:**
@@ -53,7 +57,9 @@ A hosted account managed by the wallet provider, making auto-compounding easier 
 
 ### Approach 3 - Autocompounding via One Managed Flow
 
-A fully managed approach where the wallet provider handles bulk execution of compounding actions for all users.
+![3](@site/docs/images/designing-flows/auto-compound/3.png)
+
+For comparison, a fully managed approach where the wallet provider handles bulk execution of compounding actions for all users. This is similar to how auto-compounding is usually done, except for it being on-chain.
 
 **Advantages:**
 
