@@ -6,7 +6,6 @@ info:
 paths:
   /intento/alloc/v1beta1/params:
     get:
-      summary: 'this line is used by starport scaffolding # 2'
       operationId: AllocParams
       responses:
         '200':
@@ -608,7 +607,7 @@ paths:
         - Query
   /intento/intent/v1beta1/flow-history/{id}:
     get:
-      summary: FlowHistory returns the auto tx history
+      summary: FlowHistory returns the flow history
       operationId: FlowHistory
       responses:
         '200':
