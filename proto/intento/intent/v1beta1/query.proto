@@ -24,7 +24,7 @@ service Query {
   rpc Flow(QueryFlowRequest) returns (QueryFlowResponse) {
     option (google.api.http).get = "/intento/intent/v1beta1/flow/{id}";
   }
-  // FlowHistory returns the auto tx history
+  // FlowHistory returns the flow history
   rpc FlowHistory(QueryFlowHistoryRequest)
       returns (QueryFlowHistoryResponse) {
     option (google.api.http).get =

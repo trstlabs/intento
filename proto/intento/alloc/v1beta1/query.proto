@@ -19,7 +19,6 @@ message QueryParamsResponse {
 
 // Query defines the gRPC querier service.
 service Query {
-  // this line is used by starport scaffolding # 2
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/intento/alloc/v1beta1/params";
   }

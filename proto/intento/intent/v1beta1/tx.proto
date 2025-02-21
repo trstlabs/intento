@@ -94,7 +94,7 @@ message MsgSubmitFlow {
   uint64 start_at = 6;
   // interval defines the interval between auto_msg calls
   string interval = 7;
-  // optional fees to be used for auto tx execution limiting the amount of fees
+  // optional fees to be used for flow execution limiting the amount of fees
   // incurred
   repeated cosmos.base.v1beta1.Coin fee_funds = 8 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -134,7 +134,7 @@ message MsgRegisterAccountAndSubmitFlow {
   uint64 start_at = 6;
   // interval defines the interval between auto_msg calls
   string interval = 7;
-  // optional fees to be used for auto tx execution limiting the amount of fees
+  // optional fees to be used for flow execution limiting the amount of fees
   // incurred
   repeated cosmos.base.v1beta1.Coin fee_funds = 8 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -173,8 +173,7 @@ message MsgUpdateFlow {
   uint64 start_at = 7;
   // interval defines the interval between auto_msg calls
   string interval = 8;
-  // optional fees to be used for auto tx execution limiting the amount of fees
-  // incurred
+  // add fees for flow execution, optional
   repeated cosmos.base.v1beta1.Coin fee_funds = 9 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false,
