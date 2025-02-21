@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -11,6 +12,7 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/docs"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -25,6 +27,8 @@ import (
 	ibcwasmkeeper "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/keeper"
 	ibcwasmtypes "github.com/cosmos/ibc-go/modules/light-clients/08-wasm/types"
 	ccvtypes "github.com/cosmos/interchain-security/v6/x/ccv/types"
+	"github.com/gorilla/mux"
+	intentodocs "github.com/trstlabs/intento/client/docs"
 
 	// "github.com/cosmos/cosmos-sdk/testutil/testdata_pulsar"
 	"cosmossdk.io/client/v2/autocli"
@@ -52,6 +56,8 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+
+	"io/fs"
 
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -100,7 +106,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/ibc-go/modules/capability"
@@ -974,9 +979,33 @@ func (app *IntoApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICo
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
-	if err := server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
+	if err := RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
 		panic(err)
 	}
+}
+
+func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router, swaggerEnabled bool) error {
+	if !swaggerEnabled {
+		return nil
+	}
+
+	// Serve Cosmos SDK's default Swagger UI
+	if root, err := fs.Sub(docs.SwaggerUI, "swagger-ui"); err == nil {
+		staticServer := http.FileServer(http.FS(root))
+		rtr.PathPrefix("/swagger/cosmos/").Handler(http.StripPrefix("/swagger/cosmos/", staticServer))
+	} else {
+		return err
+	}
+
+	// Serve Intento's custom Swagger UI from the embedded filesystem
+	if intentoRoot, err := fs.Sub(intentodocs.SwaggerUI, "swagger-ui"); err == nil {
+		staticIntentoServer := http.FileServer(http.FS(intentoRoot))
+		rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticIntentoServer))
+	} else {
+		return err
+	}
+
+	return nil
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.

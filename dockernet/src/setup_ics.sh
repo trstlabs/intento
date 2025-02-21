@@ -37,13 +37,13 @@ tee $PROVIDER_HOME/consumer-create.json<<EOF
 	"genesis_hash": "",
 	"binary_hash": "",
 	"spawn_time": null,
-	"unbonding_period": 1728000000000000,
-	"ccv_timeout_period": 2419200000000000,
-	"transfer_timeout_period": 3600000000000,
-	"consumer_redistribution_fraction": "0.75",
-	"blocks_per_distribution_transmission": 1000,
-	"historical_entries": 10000
-  },
+  "unbonding_period": 3456000000000000,
+  "ccv_timeout_period": 4838400000000000,
+  "transfer_timeout_period": 43200000000000,
+  "consumer_redistribution_fraction": "1.0",
+  "blocks_per_distribution_transmission": 5000,
+  "historical_entries": 10000
+},
   "power_shaping_parameters": {
 	"top_N": 0,
 	"validators_power_cap": 0,
@@ -59,8 +59,8 @@ EOF
 # Step 1: Submit create-consumer transaction
 echo "Submitting create-consumer transaction..."
 TX_RES=$($PROVIDER_CMD tx provider create-consumer $PROVIDER_HOME/consumer-create.json \
-	--chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
-	--from ${GAIA_VAL_PREFIX}1 --keyring-backend test -y --log_format json)
+    --chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
+--from ${GAIA_VAL_PREFIX}1 --keyring-backend test -y --log_format json)
 
 # echo $TX_RES
 sleep 5
@@ -75,14 +75,14 @@ echo "Fetching consumer_id..."
 CONSUMER_ID=$($PROVIDER_CMD_Q provider list-consumer-chains --node tcp://$PROVIDER_RPC_ADDR -o json | jq -r '.chains[-1].consumer_id')
 
 if [[ -z "$CONSUMER_ID" ]]; then
-  echo "Error: Unable to fetch consumer_id."
-  exit 1
+    echo "Error: Unable to fetch consumer_id."
+    exit 1
 fi
 echo "Consumer ID: $CONSUMER_ID"
 sleep 5
 TX_RES=$($PROVIDER_CMD tx provider opt-in $CONSUMER_ID \
-	--chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
-	--from ${GAIA_VAL_PREFIX}1 --keyring-backend test -y --log_format json)
+    --chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
+--from ${GAIA_VAL_PREFIX}1 --keyring-backend test -y --log_format json)
 
 # echo $TX_RES
 sleep 5
@@ -109,13 +109,13 @@ tee ${PROVIDER_HOME}/update-consumer.json <<EOF
     "genesis_hash": "",
     "binary_hash": "",
     "spawn_time": "$LAUNCH_DATE",
-    "unbonding_period": 1728000000000000,
-    "ccv_timeout_period": 2419200000000000,
-    "transfer_timeout_period": 3600000000000,
-    "consumer_redistribution_fraction": "0.75",
-    "blocks_per_distribution_transmission": 1000,
+    "unbonding_period": 3456000000000000,
+    "ccv_timeout_period": 4838400000000000,
+    "transfer_timeout_period": 43200000000000,
+    "consumer_redistribution_fraction": "1.0",
+    "blocks_per_distribution_transmission": 5000,
     "historical_entries": 10000
-  },
+},
   "power_shaping_parameters": {
     "top_N": 0,
     "validators_power_cap": 0,
@@ -129,9 +129,9 @@ tee ${PROVIDER_HOME}/update-consumer.json <<EOF
 EOF
 
 TX_RES=$($PROVIDER_CMD tx provider update-consumer ${PROVIDER_HOME}/update-consumer.json \
-	--chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
-	--from ${GAIA_VAL_PREFIX}1 --keyring-backend test -y --log_format json)
-  
+    --chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
+--from ${GAIA_VAL_PREFIX}1 --keyring-backend test -y --log_format json)
+
 echo $TX_RES
 sleep 10
 # Verify success
@@ -160,7 +160,7 @@ echo "Consumer chain setup complete! ID: $CONSUMER_ID "
 
 #!/bin/bash
 
-set -eu 
+set -eu
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 source ${SCRIPT_DIR}/../config.sh
@@ -186,6 +186,6 @@ echo "Done"
 sleep 5
 
 # Step 7: Create IBC connections and channels
- echo "Creating IBC connections and channels..."
+echo "Creating IBC connections and channels..."
 
 bash $SRC/start_hermes.sh $CONSUMER_ID

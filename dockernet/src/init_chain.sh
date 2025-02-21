@@ -109,7 +109,7 @@ set_host_genesis() {
         jq '.app_state.ibc.channel_genesis.params.upgrade_timeout.timestamp = $newVal' --arg newVal "$UPGRADE_TIMEOUT" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.provider.params.max_provider_consensus_validators = $newVal' --arg newVal "180" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.provider.params.blocks_per_epoch = $newVal' --arg newVal "3" $genesis_config > json.tmp && mv json.tmp $genesis_config
-
+        
         # jq '.app_state.feemarket.params.min_base_gas_price = $newVal' --arg newVal "0.0025" $genesis_config > json.tmp && mv json.tmp $genesis_config
         # jq '.app_state.feemarket.params.fee_denom = $newVal' --arg newVal "uatom" $genesis_config > json.tmp && mv json.tmp $genesis_config
         # jq '.app_state.feemarket.params.enabled = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
@@ -117,7 +117,7 @@ set_host_genesis() {
         jq '.app_state.feemarket.state.base_gas_price = $newVal' --arg newVal "0.002" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.feemarket.state.window = ["1"]' $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.feemarket.state.learning_rate = "0.1"' $genesis_config > json.tmp && mv json.tmp $genesis_config
-       jq '.app_state.feemarket.params = {
+        jq '.app_state.feemarket.params = {
     alpha: "0.1",
     beta: "0.1",
     gamma: "0.1",
@@ -127,10 +127,10 @@ set_host_genesis() {
     max_learning_rate: "0.1",
     max_block_utilization: "10",
     window: "1",
-    enabled: false, 
+    enabled: false,
     fee_denom: "uatom"
-}' $genesis_config > json.tmp && mv json.tmp $genesis_config
-
+        }' $genesis_config > json.tmp && mv json.tmp $genesis_config
+        
         jq "del(.app_state.provider.mature_unbonding_ops)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
         jq "del(.app_state.provider.unbonding_ops)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
         jq "del(.app_state.provider.consumer_addition_proposals)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
@@ -139,7 +139,7 @@ set_host_genesis() {
         
         jq "del(.app_state.provider.params.max_throttled_packets)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
         jq "del(.app_state.provider.params.init_timeout_period)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
-        jq "del(.app_state.provider.params.vsc_timeout_period)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config 
+        jq "del(.app_state.provider.params.vsc_timeout_period)" $genesis_config > genesis.tmp && mv genesis.tmp $genesis_config
     fi
     
     
@@ -317,7 +317,7 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     if [[ "$CHAIN" == "INTO"  ]]; then
         TEST_FILES_DIR=$DOCKERNET_HOME/tests/test_files
         $cmd prepare-genesis testnet $CHAIN_ID
-                if [ -d "$TEST_FILES_DIR" ]; then
+        if [ -d "$TEST_FILES_DIR" ]; then
             $cmd export-snapshot $TEST_FILES_DIR/active-users.csv $TEST_FILES_DIR/nft1.csv $TEST_FILES_DIR/nft2.csv $TEST_FILES_DIR/snapshot_output.json --nft-weight-1 20 --nft-weight 10 --user-weight 5
             $cmd import-genesis-accounts-from-snapshot $TEST_FILES_DIR/snapshot_output.json $TEST_FILES_DIR/non-airdrop-accounts.json --airdrop-amount=90_000_000_000_000
         fi
@@ -327,23 +327,24 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     client_toml="${STATE}/${node_name}/config/client.toml"
     app_toml="${STATE}/${node_name}/config/app.toml"
     genesis_json="${STATE}/${node_name}/config/genesis.json"
-
-
+    
+    
     # sed -i -E "s|cors_allowed_origins = \[\]|cors_allowed_origins = [\"\*\"]|g" $config_toml
     sed -i -E "s|127.0.0.1|0.0.0.0|g" $config_toml
     sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
     sed -i -E "s|timeout_commit = \"2s\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
-    sed -i -E "s|timeout_commit = \"500ms\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml   
+    sed -i -E "s|timeout_commit = \"500ms\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
     sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"${BLOCK_TIME}\"|g" $config_toml
     sed -i -E 's|timeout_propose = "3s"|timeout_propose = "1s"|g' $config_toml
     sed -i -E 's|timeout_propose = "1.8s"|timeout_propose = "1s"|g' $config_toml
-
+    
     sed -i -E "s|timeout_propose = \"2s\"|timeout_propose = \"1s\"|g" $config_toml
     sed -i -E "s|prometheus = false|prometheus = true|g" $config_toml
-
+    
     sed -i -E "s|minimum-gas-prices = \".*\"|minimum-gas-prices = \"0${DENOM}\"|g" $app_toml
     sed -i -E '/\[api\]/,/^enable = .*$/ s/^enable = .*$/enable = true/' $app_toml
     sed -i -E 's|unsafe-cors = .*|unsafe-cors = true|g' $app_toml
+    sed -i -E 's|swagger = .*|swagger = true|g' $app_toml
     sed -i -E "s|snapshot-interval = 0|snapshot-interval = 300|g" $app_toml
     sed -i -E 's|localhost|0.0.0.0|g' $app_toml
     
@@ -365,14 +366,14 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     val_addr=$($cmd keys show $val_acct --keyring-backend test -a | tr -cd '[:alnum:]._-')
     # Add this account to the current node
     if [ "$CHAIN" == "GAIA" ]; then
-    $cmd genesis add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
-    $cmd genesis gentx $val_acct ${STAKE_TOKENS}${DENOM} --chain-id $CHAIN_ID --keyring-backend test &> /dev/null
+        $cmd genesis add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
+        $cmd genesis gentx $val_acct ${STAKE_TOKENS}${DENOM} --chain-id $CHAIN_ID --keyring-backend test &> /dev/null
     else
-    $cmd add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM} 
-    $cmd gentx $val_acct ${STAKE_TOKENS}${DENOM} --chain-id $CHAIN_ID --keyring-backend test &> /dev/null
+        $cmd add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
+        $cmd gentx $val_acct ${STAKE_TOKENS}${DENOM} --chain-id $CHAIN_ID --keyring-backend test &> /dev/null
     fi
     # actually set this account as a validator on the current node
-
+    
     
     # Cleanup from seds
     rm -rf ${client_toml}-E
@@ -432,19 +433,19 @@ else
     USER_ADDRESS=$($MAIN_CMD keys show $USER_ACCT --keyring-backend test -a | tr -cd '[:alnum:]._-')
     echo "USER Address: " $USER_ADDRESS
     if [ "$CHAIN" == "GAIA" ]; then
-     $MAIN_CMD genesis add-genesis-account ${USER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
+        $MAIN_CMD genesis add-genesis-account ${USER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
     else
-     $MAIN_CMD add-genesis-account ${USER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
+        $MAIN_CMD add-genesis-account ${USER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
     fi
     
     echo "$TEST_FAUCET_MNEMONIC" | $MAIN_CMD keys add $TEST_FAUCET_ACCT --recover --keyring-backend=test >> $KEYS_LOGS 2>&1
     TEST_FAUCET_ADDRESS=$($MAIN_CMD keys show $TEST_FAUCET_ACCT --keyring-backend test -a)
     echo "FAUCET Address: " $TEST_FAUCET_ADDRESS
-
+    
     if [ "$CHAIN" == "GAIA" ]; then
-    $MAIN_CMD genesis add-genesis-account ${TEST_FAUCET_ADDRESS} ${FAUCET_TOKENS}${DENOM}
+        $MAIN_CMD genesis add-genesis-account ${TEST_FAUCET_ADDRESS} ${FAUCET_TOKENS}${DENOM}
     else
-    $MAIN_CMD add-genesis-account ${TEST_FAUCET_ADDRESS} ${FAUCET_TOKENS}${DENOM}
+        $MAIN_CMD add-genesis-account ${TEST_FAUCET_ADDRESS} ${FAUCET_TOKENS}${DENOM}
     fi
     # Add a relayer account
     RELAYER_ACCT=$(GET_VAR_VALUE RELAYER_${CHAIN}_ACCT)
@@ -454,9 +455,9 @@ else
     RELAYER_ADDRESS=$($MAIN_CMD keys show $RELAYER_ACCT --keyring-backend test -a | tr -cd '[:alnum:]._-')
     
     if [ "$CHAIN" == "GAIA" ]; then
-    $MAIN_CMD genesis add-genesis-account ${RELAYER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
+        $MAIN_CMD genesis add-genesis-account ${RELAYER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
     else
-    $MAIN_CMD add-genesis-account ${RELAYER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
+        $MAIN_CMD add-genesis-account ${RELAYER_ADDRESS} ${GENESIS_TOKENS}${DENOM}
     fi
 fi
 
@@ -474,7 +475,7 @@ sed -i -E "s|seeds = .*|seeds = \"\"|g" $MAIN_CONFIG
 
 # update chain-specific settings
 if [ "$CHAIN" == "INTO" ]; then
-    sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
+    #sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"500ms\"|g" $MAIN_CONFIG
     sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"1s\"|g" $MAIN_CONFIG
     set_into_genesis $MAIN_GENESIS

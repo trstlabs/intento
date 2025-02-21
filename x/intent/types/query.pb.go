@@ -864,7 +864,7 @@ type QueryClient interface {
 	InterchainAccountFromAddress(ctx context.Context, in *QueryInterchainAccountFromAddressRequest, opts ...grpc.CallOption) (*QueryInterchainAccountFromAddressResponse, error)
 	// Flow returns the auto-executing interchain account tx
 	Flow(ctx context.Context, in *QueryFlowRequest, opts ...grpc.CallOption) (*QueryFlowResponse, error)
-	// FlowHistory returns the auto tx history
+	// FlowHistory returns the flow history
 	FlowHistory(ctx context.Context, in *QueryFlowHistoryRequest, opts ...grpc.CallOption) (*QueryFlowHistoryResponse, error)
 	// Flows returns the all auto-executing interchain account messages
 	Flows(ctx context.Context, in *QueryFlowsRequest, opts ...grpc.CallOption) (*QueryFlowsResponse, error)
@@ -974,7 +974,7 @@ type QueryServer interface {
 	InterchainAccountFromAddress(context.Context, *QueryInterchainAccountFromAddressRequest) (*QueryInterchainAccountFromAddressResponse, error)
 	// Flow returns the auto-executing interchain account tx
 	Flow(context.Context, *QueryFlowRequest) (*QueryFlowResponse, error)
-	// FlowHistory returns the auto tx history
+	// FlowHistory returns the flow history
 	FlowHistory(context.Context, *QueryFlowHistoryRequest) (*QueryFlowHistoryResponse, error)
 	// Flows returns the all auto-executing interchain account messages
 	Flows(context.Context, *QueryFlowsRequest) (*QueryFlowsResponse, error)

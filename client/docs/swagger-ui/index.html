@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <!-- Important: rapi-doc uses utf8 characters -->
+    <script type="module" src="rapidoc-min.js"></script>
+  </head>
+  <body>
+    <rapi-doc id="swagger-doc" spec-url="swagger.yaml"></rapi-doc>
+
+    <script>
+      // Dynamically set the server-url to match the current host
+      const swaggerDoc = document.getElementById("swagger-doc");
+      const currentHost = window.location.origin; // Gets the current base URL
+
+      swaggerDoc.setAttribute("server-url", currentHost);
+    </script>
+  </body>
+</html>

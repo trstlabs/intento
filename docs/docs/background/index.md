@@ -4,7 +4,7 @@ sidebar_position: 1
 order: 1
 ---
 
-Intento is distributed and decentralized system built with the Cosmos SDK for submitting and executing intent-based actions via `Flows`. TRST Labs's extensive `Intent` Cosmos SDK module has been under development since early 2023. The module abstracts transaction complexities and offers chain-agnostic and interdependent orchestration of actions. By simplifying asset control and enabling permissionless automation of actions on connected IBC chains, this module moves value across protocols.
+Intento is distributed and decentralized system built with the Cosmos SDK for submitting and executing intent-based actions via `Flows`. TRST Labs's extensive `Intent` Cosmos SDK module has been under development since early 2023. The module abstracts transaction complexities and offers chain-agnostic and interdependent orchestration of actions. By simplifying asset control and enabling permissionless orchestration of actions on connected IBC chains, this module moves value across protocols.
 
 ## Cosmos
 
@@ -12,7 +12,7 @@ The Cosmos ecosystem is a decentralized network designed to connect various bloc
 
 ## Our Goals
 
-Our vision is to enable anyone to integrate blockchain operations in a truly seamless manner; that is, without the need for intermediary or custom smart contracts. Our intent-centric automation module aims to enable workflows where the user is in control, abstracts away transactions, enhances liquidity and accessibility, and provides novel use cases. By achieving these goals, we can revolutionize transactions, empowering users with greater control and efficiency while fostering a vibrant and differentiated ecosystem.
+Our vision is to enable anyone to integrate blockchain operations in a truly seamless manner; that is, without the need for intermediary or custom smart contracts. Our  module aims to enable workflows where the user is in control, abstracts away transactions, enhances liquidity and accessibility, and provides novel use cases. By achieving these goals, we can revolutionize transactions, empowering users with greater control and efficiency while fostering a vibrant and differentiated ecosystem.
 
 ## IBC - Inter-Blockchain Communication
 

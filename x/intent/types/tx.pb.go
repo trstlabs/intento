@@ -204,7 +204,7 @@ type MsgSubmitFlow struct {
 	StartAt uint64 `protobuf:"varint,6,opt,name=start_at,json=startAt,proto3" json:"start_at,omitempty"`
 	// interval defines the interval between auto_msg calls
 	Interval string `protobuf:"bytes,7,opt,name=interval,proto3" json:"interval,omitempty"`
-	// optional fees to be used for auto tx execution limiting the amount of fees
+	// optional fees to be used for flow execution limiting the amount of fees
 	// incurred
 	FeeFunds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,8,rep,name=fee_funds,json=feeFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fee_funds" yaml:"fee_funds"`
 	// optional configuration parameters
@@ -302,7 +302,7 @@ type MsgRegisterAccountAndSubmitFlow struct {
 	StartAt uint64 `protobuf:"varint,6,opt,name=start_at,json=startAt,proto3" json:"start_at,omitempty"`
 	// interval defines the interval between auto_msg calls
 	Interval string `protobuf:"bytes,7,opt,name=interval,proto3" json:"interval,omitempty"`
-	// optional fees to be used for auto tx execution limiting the amount of fees
+	// optional fees to be used for flow execution limiting the amount of fees
 	// incurred
 	FeeFunds github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,8,rep,name=fee_funds,json=feeFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fee_funds" yaml:"fee_funds"`
 	// optional array of dependent txs that should be executed before execution is
@@ -401,8 +401,7 @@ type MsgUpdateFlow struct {
 	StartAt uint64 `protobuf:"varint,7,opt,name=start_at,json=startAt,proto3" json:"start_at,omitempty"`
 	// interval defines the interval between auto_msg calls
 	Interval string `protobuf:"bytes,8,opt,name=interval,proto3" json:"interval,omitempty"`
-	// optional fees to be used for auto tx execution limiting the amount of fees
-	// incurred
+	// add fees for flow execution, optional
 	FeeFunds      github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,9,rep,name=fee_funds,json=feeFunds,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fee_funds" yaml:"fee_funds"`
 	Configuration *ExecutionConfiguration                  `protobuf:"bytes,10,opt,name=configuration,proto3" json:"configuration,omitempty"`
 	HostedConfig  *HostedConfig                            `protobuf:"bytes,11,opt,name=hosted_config,json=hostedConfig,proto3" json:"hosted_config,omitempty"`
