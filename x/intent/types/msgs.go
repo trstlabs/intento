@@ -218,23 +218,24 @@ func (msg MsgSubmitFlow) ValidateBasic() error {
 }
 
 // NewMsgSend creates a new MsgSend instance
-func NewMsgRegisterAccountAndSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration, version string) (*MsgRegisterAccountAndSubmitFlow, error) {
+func NewMsgRegisterAccountAndSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID string, hostConnectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, configuration *ExecutionConfiguration, version string) (*MsgRegisterAccountAndSubmitFlow, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
 	}
 
 	return &MsgRegisterAccountAndSubmitFlow{
-		Owner:         owner,
-		Label:         label,
-		ConnectionId:  connectionID,
-		Msgs:          anys,
-		Duration:      duration,
-		Interval:      interval,
-		StartAt:       startAt,
-		FeeFunds:      feeFunds,
-		Configuration: configuration,
-		Version:       version,
+		Owner:            owner,
+		Label:            label,
+		ConnectionId:     connectionID,
+		HostConnectionId: hostConnectionID,
+		Msgs:             anys,
+		Duration:         duration,
+		Interval:         interval,
+		StartAt:          startAt,
+		FeeFunds:         feeFunds,
+		Configuration:    configuration,
+		Version:          version,
 	}, nil
 }
 
