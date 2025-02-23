@@ -274,7 +274,7 @@ func getRegisterAccountAndSubmitFlowCmd() *cobra.Command {
 				TxType:                 icatypes.TxTypeSDKMultiMsg,
 			}))
 
-			msg, err := types.NewMsgRegisterAccountAndSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration, version)
+			msg, err := types.NewMsgRegisterAccountAndSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagHostConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, configuration, version)
 			if err != nil {
 				return err
 			}

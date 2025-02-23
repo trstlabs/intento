@@ -449,11 +449,30 @@ func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 
 			if !tc.expPass {
 				suite.Require().Error(err)
-				//suite.Require().Contains(err.Error(), "message signer is not message sender")
+				suite.Require().Contains(err.Error(), "message signer is not message sender")
 				suite.Require().Nil(res)
 				return
 			}
 			suite.Require().NoError(err)
+
+			//test the same for
+			path := NewICAPath(suite.IntentoChain, suite.HostChain)
+			suite.Coordinator.SetupConnections(path)
+			connectionId := path.EndpointA.ConnectionID
+			hostConnectionId := path.EndpointB.ConnectionID
+			msgRegisterAndSubmit, err := types.NewMsgRegisterAccountAndSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, "")
+			suite.Require().NoError(err)
+			err = msg.ValidateBasic()
+			suite.Require().NoError(err)
+
+			msgSrv = keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
+			resRegisterAndSubmit, err := msgSrv.RegisterAccountAndSubmitFlow(suite.IntentoChain.GetContext(), msgRegisterAndSubmit)
+			if !tc.expPass {
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), "message signer is not message sender")
+				suite.Require().Nil(resRegisterAndSubmit)
+				return
+			}
 		})
 	}
 }
