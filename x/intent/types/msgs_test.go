@@ -28,7 +28,7 @@ var (
 
 	TestMessage = &banktypes.MsgSend{
 		FromAddress: "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs",
-		ToAddress:   "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs",
+		ToAddress:   "cosmos1wdplq6qjh2xruc7qqagma9ya665q6qhcwju3ng",
 		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 	}
 )

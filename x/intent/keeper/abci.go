@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"time"
 
 	"cosmossdk.io/log"
@@ -351,6 +352,9 @@ func (k Keeper) recordFlowNotAllowed(ctx sdk.Context, flow *types.FlowInfo, time
 
 // shouldRecur checks whether the flow should be rescheduled based on recurrence rules
 func shouldRecur(flow types.FlowInfo, errorString string) bool {
+	if strings.Contains(errorString, "balance too low to deduct expected fee") {
+		return false
+	}
 	isRecurring := flow.ExecTime.Before(flow.EndTime) && (flow.ExecTime.Add(flow.Interval).Before(flow.EndTime) || flow.ExecTime.Add(flow.Interval).Equal(flow.EndTime))
 	allowedToRecur := (!flow.Configuration.StopOnSuccess && !flow.Configuration.StopOnFailure) ||
 		(flow.Configuration.StopOnSuccess && errorString != "") ||
