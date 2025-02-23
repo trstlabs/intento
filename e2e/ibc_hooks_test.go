@@ -2,6 +2,7 @@ package interchaintest
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -9,72 +10,17 @@ import (
 	math "cosmossdk.io/math"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	"github.com/icza/dyno"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
 
 func TestIBCHooksE2E(t *testing.T) {
-	// ctx := context.Background()
-	// client, network := interchaintest.DockerSetup(t)
-
-	// // Logger instance
-	// logger := zap.NewExample()
-
-	// // Define chains with IBC-Hooks enabled
-	// // chainCfg := ibc.ChainConfig{
-	// // 	Type:         "cosmos",
-	// // 	Name:         "ibc-hooks-test",
-	// // 	ChainID:      "ibc-hooks-1",
-	// // 	Bin:          "./build/intentod",
-	// // 	Bech32Prefix: "cosmos",
-	// // 	GasPrices:    "0.025uinto",
-	// // 	Denom:        "uinto",
-	// // }
-	// // chainCfg2 :=  { Name: "gaia", Version: "v21.0.0", ChainConfig: ibc.ChainConfig{
-	// // 	GasPrices: "0.0uatom",
-	// // }},
-	// cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
-	// 	{Name: "gaia", Version: "v7.0.0", ChainConfig: ibc.ChainConfig{
-	// 		GasPrices: "0.0uatom",
-	// 	}},
-	// 	{ChainConfig: ibc.ChainConfig{
-	// 		Type:    "cosmos",
-	// 		Name:    "intento",
-	// 		ChainID: "intento-1",
-	// 		Images: []ibc.DockerImage{
-	// 			{
-	// 				Repository: "intento", // FOR LOCAL IMAGE USE: Docker Image Name
-	// 				Version:    "local",   // FOR LOCAL IMAGE USE: Docker Image Tag
-	// 				UIDGID:     "1025:1025",
-	// 			},
-	// 		},
-	// 		Bin:            "./build/intentod",
-	// 		Bech32Prefix:   "into",
-	// 		GasPrices:      "0.025uinto",
-	// 		Denom:          "uinto",
-	// 		GasAdjustment:  1.3,
-	// 		TrustingPeriod: "508h",
-	// 		NoHostMount:    false},
-	// 	},
-	// })
-
-	// chainFactory := interchaintest.NewBuiltinChainFactory(logger, []*interchaintest.ChainSpec{
-	// 	{Name: "chainA", ChainConfig: chainCfg2},
-	// 	{Name: "chainB", ChainConfig: chainCfg},
-	// })
-
-	// chains, err := chainFactory.Chains(t.Name())
-	// require.NoError(t, err)
-
-	// // Create RelayerExecReporter
-	// reporter := &testreporter.RelayerExecReporter{}
-
-	// relayer := interchaintest.NewBuiltinRelayerFactory(ibc.CosmosRly, logger).Build(t, client, network)
-
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
@@ -83,10 +29,27 @@ func TestIBCHooksE2E(t *testing.T) {
 
 	ctx := context.Background()
 
+	// Modify the the timeout_commit in the config.toml node files
+	// to reduce the block commit times. This speeds up the tests
+	// by about 35%
+	configFileOverrides := make(map[string]any)
+	configTomlOverrides := make(testutil.Toml)
+	consensus := make(testutil.Toml)
+	consensus["timeout_commit"] = "1s"
+	configTomlOverrides["consensus"] = consensus
+	configFileOverrides["config/config.toml"] = configTomlOverrides
+	genesisKVMods := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.feemarket.params.enabled", false),
+		cosmos.NewGenesisKV("app_state.feemarket.params.min_base_gas_price", "0.001000000000000000"),
+		cosmos.NewGenesisKV("app_state.feemarket.state.base_gas_price", "0.001000000000000000"),
+	}
 	// Chain Factory
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{Name: "gaia", Version: "v22.1.0", ChainConfig: ibc.ChainConfig{
-			GasPrices: "0.0uatom",
+			GasAdjustment:       1.5,
+			GasPrices:           "0.01uatom",
+			ModifyGenesis:       cosmos.ModifyGenesis(genesisKVMods), //SetupGaiaGenesis([]string{"*"}),
+			ConfigFileOverrides: configFileOverrides,
 		}},
 		{ChainConfig: ibc.ChainConfig{
 			Type:    "cosmos",
@@ -103,12 +66,17 @@ func TestIBCHooksE2E(t *testing.T) {
 			Bech32Prefix:   "into",
 			Denom:          "uinto",
 			GasPrices:      "0.0uinto",
-			GasAdjustment:  1.3,
+			GasAdjustment:  1.5,
 			TrustingPeriod: "508h",
 			NoHostMount:    false},
 		},
 	})
 
+	// logger.go:146: 2025-02-22T14:32:29.624+0100 INFO    Exec    {"validator": true, "i": 0, "chain_id": "gaia-1", "test": "TestIBCHooksE2E", "image": "ghcr.io/strangelove-ventures/heighliner/gaia:v22.1.0", "test_name": "TestIBCHooksE2E", "command": "gaiad tx gov submit-legacy-proposal consumer-addition /var/cosmos-chain/gaia-1/proposal_zpen.json --gas auto --gas-prices 0.01uatom --gas-adjustment 1.5 --from proposer --keyring-backend test --output json -y --chain-id gaia-1 --home /var/cosmos-chain/gaia-1 --node tcp://gaia-1-val-0-TestIBCHooksE2E:26657", "hostname": "TestIBCHooksE2E-hsclyn", "container": "TestIBCHooksE2E-hsclyn"}
+	// ibc_hooks_test.go:164:
+	//             Error Trace:    /root/intento/e2e/ibc_hooks_test.go:164
+	//             Error:          Received unexpected error:
+	//                             failed to start chains: failed to start provider chain gaia-1: failed to submit consumer addition proposal: exit code 1:  Error: failed to parse proposal: proposal type is required
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 	gaia, intento := chains[0], chains[1]
@@ -119,11 +87,13 @@ func TestIBCHooksE2E(t *testing.T) {
 		t, client, network)
 
 	// Prep Interchain
+	const gaiaIntentoICSPath = "gaia-intento-ics-path"
 	const ibcPath = "gaia-intento-demo"
 	ic := interchaintest.NewInterchain().
 		AddChain(gaia).
 		AddChain(intento).
 		AddRelayer(r, "relayer").
+		AddProviderConsumerLink(interchaintest.ProviderConsumerLink{Provider: gaia, Consumer: intento, Relayer: r, Path: gaiaIntentoICSPath}).
 		AddLink(interchaintest.InterchainLink{
 			Chain1:  gaia,
 			Chain2:  intento,
@@ -151,9 +121,10 @@ func TestIBCHooksE2E(t *testing.T) {
 	// Create and Fund User Wallets
 	fundAmount := math.NewInt(10_000_000)
 	users := interchaintest.GetAndFundTestUsers(t, ctx, "default", fundAmount, gaia, intento)
+	users2 := interchaintest.GetAndFundTestUsers(t, ctx, "default", fundAmount, gaia, intento)
 	gaiaUser := users[0]
 	intentoUser := users[1]
-	intentoUser2 := users[2]
+	intentoUser2 := users2[1]
 
 	gaiaUserBalInitial, err := gaia.GetBalance(ctx, gaiaUser.FormattedAddress(), gaia.Config().Denom)
 	require.NoError(t, err)
@@ -232,4 +203,31 @@ func TestIBCHooksE2E(t *testing.T) {
 	require.Equal(t, "07-tendermint-0", msgUpdateClient.ClientId)
 	require.NotEmpty(t, msgUpdateClient.Signer)
 	t.Log("IBC-Hooks E2E test passed!")
+}
+
+// Sets custom fields for the Gaia genesis file that interchaintest isn't aware of by default.
+//
+// allowed_messages - explicitly allowed messages to be accepted by the the interchainaccounts section
+func SetupGaiaGenesis(allowed_messages []string) func(ibc.ChainConfig, []byte) ([]byte, error) {
+	return func(chainConfig ibc.ChainConfig, genbz []byte) ([]byte, error) {
+		//g := make(map[string]interface{})
+		g := []cosmos.GenesisKV{
+			cosmos.NewGenesisKV("app_state.feemarket.params.enabled", false),
+			cosmos.NewGenesisKV("app_state.feemarket.params.min_base_gas_price", "0.001000000000000000"),
+			cosmos.NewGenesisKV("app_state.feemarket.state.base_gas_price", "0.001000000000000000"),
+		}
+		if err := json.Unmarshal(genbz, &g); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal genesis file: %w", err)
+		}
+
+		if err := dyno.Set(g, allowed_messages, "app_state", "interchainaccounts", "host_genesis_state", "params", "allow_messages"); err != nil {
+			return nil, fmt.Errorf("failed to set allow_messages for interchainaccount host in genesis json: %w", err)
+		}
+
+		out, err := json.Marshal(g)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal genesis bytes to json: %w", err)
+		}
+		return out, nil
+	}
 }
