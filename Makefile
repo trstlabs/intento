@@ -77,7 +77,7 @@ build-linux:
 	GOOS=linux GOARCH=amd64 $(MAKE) build
 
 install: go.sum
-	go install $(BUILD_FLAGS) ./cmd/intentod
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/intentod
 
 clean:
 	rm -rf $(BUILDDIR)/*
@@ -220,7 +220,7 @@ local-image:
 ifeq (,$(shell which heighliner))
 	echo 'heighliner' binary not found. Consider running `make get-heighliner`
 else
-	heighliner build -c intento --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/intentod"  --build-env "CGO_ENABLED=1 BUILD_TAGS=muslc"
+	heighliner build -c intento --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/intentod" --build-env "LEDGER_ENABLED=false BUILD_TAGS=muslc"
 endif
 
 

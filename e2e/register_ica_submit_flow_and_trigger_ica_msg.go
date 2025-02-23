@@ -28,7 +28,7 @@ func TestRegisterICASubmitFlowTriggerICAMsg(t *testing.T) {
 
 	// Chain Factory
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
-		{Name: "gaia", Version: "v22.1.0", ChainConfig: ibc.ChainConfig{
+		{Name: "gaia", Version: "v7.0.0", ChainConfig: ibc.ChainConfig{
 			GasPrices: "0.0uatom",
 		}},
 		{ChainConfig: ibc.ChainConfig{
@@ -94,9 +94,11 @@ func TestRegisterICASubmitFlowTriggerICAMsg(t *testing.T) {
 	// Create and Fund User Wallets
 	fundAmount := math.NewInt(10_000_000)
 	users := interchaintest.GetAndFundTestUsers(t, ctx, "default", fundAmount, gaia, intento)
+	users2 := interchaintest.GetAndFundTestUsers(t, ctx, "default", fundAmount, gaia, intento)
 	gaiaUser := users[0]
+
 	//intentoUser := users[1]
-	gaiaUser2 := users[2]
+	gaiaUser2 := users2[0]
 
 	gaiaUserBalInitial, err := gaia.GetBalance(ctx, gaiaUser.FormattedAddress(), gaia.Config().Denom)
 	require.NoError(t, err)
