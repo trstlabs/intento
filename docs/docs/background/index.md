@@ -4,18 +4,21 @@ sidebar_position: 1
 order: 1
 ---
 
-Intento is distributed and decentralized system built with the Cosmos SDK for submitting and executing intent-based actions via `Flows`. TRST Labs's extensive `Intent` Cosmos SDK module has been under development since early 2023. The module abstracts transaction complexities and offers chain-agnostic and interdependent orchestration of actions. By simplifying asset control and enabling permissionless orchestration of actions on connected IBC chains, this module moves value across protocols.
+Intento is a decentralized system built with the Cosmos SDK for intent-based execution via flows, enabling orchestration across IBC-connected chains without smart contracts. TRST Labs has been developing the Intent module since early 2023 to abstract transaction complexity and enable permissionless, self-custodial orchestration.  
 
-## Cosmos
+### Why Cosmos?  
 
-The Cosmos ecosystem is a decentralized network designed to connect various blockchains as part of the 'Internet of blockchains' vision. A vast, interconnected system of blockchains, each specifically designed to serve a particular use case. Intento is proud to be part of this decentralized community building key decentralized infrastructure for a more interconnected tomorrow.
+The Cosmos ecosystem is a network of application-specific blockchains connected by IBC (Inter-Blockchain Communication). Intento aligns with Cosmos’s vision of a modular and interoperable blockchain future, enabling secure, cross-chain applications for all. Intento is proud to be part of this decentralized community building key decentralized infrastructure for a more interconnected tomorrow.
 
-## Our Goals
+### Our Mission
 
-Our vision is to enable anyone to integrate blockchain operations in a truly seamless manner; that is, without the need for intermediary or custom smart contracts. Our  module aims to enable workflows where the user is in control, abstracts away transactions, enhances liquidity and accessibility, and provides novel use cases. By achieving these goals, we can revolutionize transactions, empowering users with greater control and efficiency while fostering a vibrant and differentiated ecosystem.
+Intento eliminates the need for intermediary smart contracts, allowing users to orchestrate blockchain actions directly through simple configurations. Our goal is to:  
 
-## IBC - Inter-Blockchain Communication
+1. **Put users in control** – Self-custodial execution without reliance on third parties.  
+2. **Improve efficiency** – Reduce gas costs and simplify multi-chain interactions.  
+3. **Expand accessibility** – Enable new financial workflows with low-friction orchestration.  
+4. **Enhance security** – Remove privileged execution layers and centralized points of failure.  
 
-IBC is an interoperability protocol for communicating all kinds of data between arbitrary state machines.
-It is different than other bridges as enables direct chain to chain communication. Hence, it is often referred to as a trustless bridging solution.
-The IBC application layer can be used to build a wide range of cross-chain applications, including but not limited to token transfers, passing messages between accounts on two chains, NFT transfers and oracle data feeds.
+### IBC – A New Standard for Cross-Chain Execution  
+
+Unlike traditional bridges, IBC provides direct chain-to-chain communication without external validators. Intento leverages IBC, ICA (Interchain Accounts), and ICQ (Interchain Queries) to enable new use cases. By combining intent-based execution with Cosmos’s modular and scalable architecture, Intento sets a new standard for blockchain orchestration.  

@@ -3,43 +3,90 @@ title: Differentiation
 sidebar_position: 3
 ---
 
-Currently, building and processing intent-based blockchain workflows requires a combination of smart contracts and a off-chain bot network.
+Intento enables **intent-based flows without smart contracts**, making automated execution streamlined, self-custodial, and scalable. Unlike traditional automation that depends on bot networks or privileged smart contracts, Intento empowers users to directly own and control execution, removing unnecessary intermediaries and security risks.
 
-For both bot networks and privileged smart contracts, developing, testing, and auditing custom smart contracts are crucial. Developers must ensure that their solutions are efficient, fair, and secure, considering factors such as network congestion, centralization risks, and computational costs.
-The development of custom smart contracts can be costly. On average, the cost of developing a smart contract ranges between $5,000 and $25,000, depending on complexity and security requirements. This estimate includes the costs of designing, coding, testing, and auditing the contract. [Source: ConsenSys](https://consensys.net/blog/blockchain-development/the-cost-of-developing-a-smart-contract/) provides detailed insights into these costs. For accurate budgeting and planning, it's essential to factor in the potential expenses for ongoing maintenance and upgrades as well.
+### The Problem with Existing Approaches  
 
-Intento makes it easy to set any action with given conditions at a fraction of the cost, and in a non-custodial manner.
+#### Bot Networks  
 
-## Bot Networks and Privileged Smart Contracts
+Decentralized execution via bot networks requires tasks to be registered on-chain, with bots competing to claim rewards. However, this approach has inefficiencies:
 
-### Bot Networks
+- **Network Congestion & Gas Costs** – Multiple bots executing the same transaction cause congestion and increase fees.
+- **Centralization Risks** – The first-come-first-served model discourages participation from smaller operators, leading to a race-to-the-bottom effect.
+- **Complex Automation Workflows** – Execution logic requires additional privileged contracts, increasing costs and security risks.
 
-Decentralized scheduled task execution through bot networks addresses challenges associated with server-based setups and central points of failure. In these networks, tasks are registered on an on-chain smart contract, and the first successful bot typically claims a reward. However, there are notable inefficiencies:
+#### Custom Smart Contracts  
 
-- **Network Congestion and Gas Costs:** Multiple bots executing transactions simultaneously can lead to increased congestion and higher gas costs.
-- **Centralization Risks:** The first-come-first-served reward mechanism can lead to centralization, as less profitable agents may exit the network.
-- **Complex Automation Workflows:** Arbitrary trigger addresses and the need for additional smart contract logic for privileged execution add complexity to the automation process.
+Privileged Smart contracts on CosmWasm chains can schedule executions via BeginBlocker/EndBlocker, but this introduces drawbacks:
 
-These issues highlight the need for careful development, testing, and auditing of custom smart contracts. Developers must ensure that their smart contracts are optimized for efficiency and that the network remains decentralized and fair.
+- **Higher Gas Costs** – Scheduled executions require extra computational resources, increasing user fees.
+- **Computational Overhead** – Smart contract-based automation incurs static costs of running inside a VM, regardless of efficiency.
+- **Blockspace Limitations** – Time-based executions compete with general transactions, requiring governance oversight.
+- **Security Risks** – Privileged contracts introduce attack vectors, increasing risks for users.
 
-### Privileged Smart Contracts
+### How Intento Solves This  
 
-In CosmWasm blockchains, privileged smart contracts can use BeginBlocker and EndBlocker functions for scheduling block-based executions. While this feature provides scheduling capabilities, it introduces several challenges:
+Intento eliminates the need for bots and privileged smart contracts, enabling direct, intent-based execution:
 
-- **Increased Computational Resources:** Privileged smart contracts require more computational resources per execution, leading to higher gas costs for users.
-- **Fixed Computational Costs:** Running trigger engines inside smart contracts or virtual machines entails fixed costs and can impact fee revenue.
-- **Balance of Blockspace Usage:** Blockchains need to balance time-based executions with general transactions, necessitating governance measures for blockspace limits and fee settings.
+- **User-Owned Flows** – Intento shifts power to users, enabling self-custodial, automated workflows without intermediaries.
+- **Scalable & Efficient** – Execution logic runs at a fraction of the cost of traditional automation services.
+- **Protocol-Neutral & Interoperable** – Works across different blockchain ecosystems without dependencies on specific contract frameworks.
+- **Orchestration & Composability** – Intento enables composing multiple flows together, allowing users to create complex, automated processes across chains.
+- **Direct IBC, ICA & ICQ Integration** – By integrating Inter-Blockchain Communication (IBC), Interchain Accounts (ICA), and Interchain Queries (ICQ), Intento facilitates secure, automated, and cross-chain workflows without requiring intermediary execution layers.
+- **Conditions, Comparisons & Feedback Loops** – Execution logic can be condition-based, supporting real-time comparisons, iterative feedback loops, and adaptive automation.
+- **Advanced Use Cases** – Supports conditional payments, streaming transactions, auto-compounding, and portfolio optimization, making it a powerful tool for DeFi and beyond.
+- **Single Token Fee Abstraction** – With hosted accounts, users can pay all fees in a single token (e.g., INTO or ATOM), simplifying automation and reducing friction.
 
-Compared to permissioned systems like Intento, which offers a protocol-neutral and permissionless platform with integrated governance parameters, privileged smart contracts may lack flexibility. Intento allows the community to manage the balance between blockchain network usage and fee revenue, providing a more adaptable solution for automated tasks.
+### How Intento Differs from Anoma & Agoric  
 
-## Gas Savings
+#### Anoma (Intent-Matching vs. Intent-Execution)
 
-In crypto, the efficiency and cost of transactions, often expressed through "gas costs" play a significant role in the user experience. Our comparison between various automation services like Gelato on Ethereum, CronCat on Juno and Neutron, and Intento reveal significant enhancements in security, efficiency and cost-effectiveness.
+Commonalities:
 
-Gelato's services on Ethereum come with a protocol logic cost of 940,000 gas, translating to about $41, with an additional 20% protocol fee that elevates the cost per execution to $49. This cost structure is further compounded by risks associated with Gelato's proxy contract. On the other hand, CronCat, operating on Juno and Neutron, offers a more efficient protocol logic, consuming around 720,000 gas for execution, of which 170,000 gas is for the execution itself and about 550,000 gas for protocol logic.
+- **User-Centric & Flexible** – Like Anoma, Intento allows generalized intent-based automation without smart contracts.
+- **Plug-and-Play Automation** – No need for additional specialized infrastructure.
+- **Expands What’s Possible** – Enables applications that cannot be built purely on smart contract VMs.
 
-In comparison, Intento has an estimated logic cost of just about 100,000 gas based on its lines of code. This stark reduction in gas usage not only offers substantial cost savings for users, enabling more frequent automation of transactions but also broadens accessibility.
+Differences:
 
-The scalability unlocked by this efficiency unlocks new use cases and significantly enhances the user experience within crypto.
+- **Intento is focused on execution, not matching** – Anoma facilitates intent discovery and matching, while Intento directly executes user-owned flows.
+- **More deterministic execution** – Intento guarantees predictable execution without relying on intent-matching networks.
 
-Read more on gas cost savings in [our blog post](https://intento.zone/post/gas-cost-in-action-processing-an-analysis/)
+Examples of Anoma applications:
+
+- Fully decentralized order book exchanges
+- Decentralized Slack/Discord alternatives
+- Matchmaking apps (e.g., decentralized Tinder for X)
+
+#### Agoric (Complex vs. Simple, User-Owned Execution)  
+
+Commonalities:
+
+- **Orchestration & Time-Based Actions** – Both Intento and Agoric allow developers to automate and schedule cross-chain actions.
+- **Cross-Chain Interoperability** – Both support multi-chain automation.
+
+Differences:
+
+- **Intento is simple, user-owned, and requires no smart contracts** – Agoric’s Orchestration API is powerful but requires developers to manage remote accounts, multi-block async execution, and timer-based scheduling.
+- **Agoric is better suited for complex custom workflows** that require fine-tuning and for protocols that need to build a complex custom solution or monetize orchestration infrastructure.
+- **Intento enables monetization through hosted accounts** – Protocols and integrators can offer hosted execution while keeping user flows self-custodial.
+
+Agoric Orchestration API features:
+
+- **Remote account control** – Create and manage accounts on remote chains.
+- **Async execution over multiple blocks** – Contracts handle responses across long periods.
+- **On-chain timers** – Enables scheduled execution (e.g., subscriptions).
+
+### **Network Effects**  
+
+- **More Adoption → More Fee Burn → More Security** – Increased usage drives fee burning, reducing token supply and strengthening Intento's security model by making it more expensive to attack.
+- **Governance-Driven Execution Parameters** – The community governs execution scalability and fee burn parameters, ensuring long-term sustainability.
+- **Monetization for Integrators** – Integrators can host interchain accounts, abstracting host chain fees and allowing users to pay fees in a single token (e.g., INTO or ATOM), making automation seamless.
+- **Decentralized Revenue Model** – Execution services can be monetized while maintaining full user control and self-custodial execution.
+- **Permissionless Hosting** – Any integrator can run hosted interchain accounts, monetizing by charging fees while ensuring non-custodial execution for users.
+
+### A New Standard for Intent-Based Execution  
+
+Intento redefines automation by shifting from contract-based execution to direct, user-owned intent-based flows. This approach enhances security, reduces complexity, and ensures scalability without compromising decentralization
+
+Whether for DeFi actions, cross-chain operations, or scheduled transactions, Intento delivers a faster, cheaper, and more flexible alternative. With orchestration capabilities, IBC/ICA/ICQ integration, advanced conditional logic, and monetization mechanisms, Intento unlocks new levels of automation, security, and efficiency across blockchains.
