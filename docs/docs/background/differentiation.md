@@ -68,8 +68,8 @@ Commonalities:
 Differences:
 
 - **Intento is simple, user-owned, and requires no smart contracts** – Agoric’s Orchestration API is powerful but requires developers to manage remote accounts, multi-block async execution, and timer-based scheduling.
-- **Agoric is better suited for complex custom workflows** that require fine-tuning and for protocols that need to build a complex custom solution or monetize orchestration infrastructure.
-- **Intento enables monetization through hosted accounts** – Protocols and integrators can offer hosted execution while keeping user flows self-custodial.
+- **Agoric is better suited for complex custom workflows** that require fine-tuning and for protocols that need to build a complex custom solution or want to manage and monetize orchestration infrastructure.
+- **Intento enables monetization through hosted accounts** – Protocols and integrators can offer hosted execution, which abstracts away host chain fees while keeping user flows self-custodial.
 
 Agoric Orchestration API features:
 
@@ -79,7 +79,7 @@ Agoric Orchestration API features:
 
 ### **Network Effects**  
 
-- **More Adoption → More Fee Burn → More Security** – Increased usage drives fee burning, reducing token supply and strengthening Intento's security model by making it more expensive to attack.
+- **More Adoption → Greater Demand for Execution → Increased Value Capture** – As more users adopt Intento, demand for intent execution grows, driving network utility and token value.
 - **Governance-Driven Execution Parameters** – The community governs execution scalability and fee burn parameters, ensuring long-term sustainability.
 - **Monetization for Integrators** – Integrators can host interchain accounts, abstracting host chain fees and allowing users to pay fees in a single token (e.g., INTO or ATOM), making automation seamless.
 - **Decentralized Revenue Model** – Execution services can be monetized while maintaining full user control and self-custodial execution.
