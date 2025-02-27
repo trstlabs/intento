@@ -36,7 +36,7 @@ You can use the ICQ feature by attaching an `ICQConfig` into [**comparisons**](.
 | `query_type`       | `string`                                   | The type of query to perform (e.g., `store/bank/key`, `store/staking/key`).               |
 | `query_key`        | `string`                                   | The key in the store to query (e.g., `stakingtypes.GetValidatorKey(validatorAddressBz)`). |
 
-For example, the `query_type` can be `store/bank/key` or `store/staking/key`. The `query_key` is the key in the store to query, such as `stakingtypes.GetValidatorKey(validatorAddressBz)`. These queries are abstracted in the TriggerPortal frontend, and examples can be found in `x/interchainquery/types/keys.go`.
+For example, the `query_type` can be `store/bank/key` or `store/staking/key`. The `query_key` is the key in the store to query, such as `stakingtypes.GetValidatorKey(validatorAddressBz)`. The generation of query keys is abstracted in the TriggerPortal frontend.
 
 ```proto
 // Config for using interchain queries
@@ -55,51 +55,228 @@ message ICQConfig {
 
 If SaveResponses in the Flow Configuration is set to true, query responses are added to the Flow History. Check out the [**Supported Types**](./../module/supported_types.md) page or the TriggerPortal Flow Builder for some example queries.
 
-## User Stories
+Here’s a tutorial for integrating `ICQConfig` for querying balances and adding `connectionId`, `hostConnectionId`, and `HostedConfig` in `submitFlow`.
 
-#### 1. Balance Check for Friday Flow
+---
 
-**As a** blockchain participant, I want Intento to check my ATOM balance every Friday and perform a predefined action if my balance exceeds 100.
+## Conditional Transfers with Intent-Based Flows
 
-#### 2. Flow Based on DAO Vote (Negative Outcome)
+In this tutorial, we will explore how to use **Intent-Based Flows** to automate a token transfer, ensuring that it only executes if a certain balance condition is met. This is particularly useful for scenarios where funds should only be moved when a specific threshold is reached.
 
-**As a** DAO member, I want Intento to monitor DAO vote outcomes every Wednesday and trigger a specific action if the result is negative.
+We'll achieve this by:
 
-#### 3. Validator Set Monitoring
+1. Querying the account balance using **Interchain Queries (ICQ)**.
+2. Checking if the balance exceeds `200,000 uatom`.
+3. Only then executing the **MsgSend** message.
 
-**As a** validator, I want Intento to check my validator status daily for one year and automatically unbond my stake if I am removed from the set.
+---
 
-#### 4. Automatic Staking if ATOM Balance is Above Threshold
+### 1: Defining Execution Configuration
 
-**As a** token holder, I want Intento to automatically stake any ATOM balance exceeding 100 every Friday to maximize rewards.
+First, we need to set up the execution behavior of our flow.
 
-#### 5. Alert for Validator Removal After One Year
+```typescript
+import {
+  Coin,
+  msgRegistry,
+  Registry,
+  Conditions,
+  Comparison,
+  ICQConfig,
+  HostedConfig,
+} from "intentojs";
 
-**As a** blockchain participant, I want Intento to monitor my validator status for one year and alert me if my validator is out of the set, triggering an unbonding action.
+const config: ExecutionConfiguration = {
+  saveResponses: false,
+  updatingDisabled: false,
+  stopOnFailure: true,
+  stopOnSuccess: false,
+  fallbackToOwnerBalance: true,
+  reregisterIcaAfterTimeout: true,
+};
+```
 
-#### 6. DAO Vote Rejection and Flow Trigger
+This ensures that if a condition fails, the execution stops, but if it succeeds, it continues.
 
-**As a** project lead in a DAO, I want Intento to trigger a review process if a vote is rejected on Wednesday to adjust the proposal or take alternative steps.
+---
 
-#### 7. Balance-Based Flow Adjustment
+### 2: Setting Up an Interchain Query (ICQ)
 
-**As a** token holder, I want Intento to scale actions based on my ATOM balance, staking or transferring the amount that exceeds 100 ATOM every Friday.
+Before transferring funds, we need to **query the account balance** to determine if it meets the required threshold.
 
-#### 8. Emergency Flow for Validator Removal
+```typescript
+const queryKey = createBankBalanceQueryKey("cosmos1delegatoraddress", "uatom");
 
-**As a** validator, I want Intento to automatically unbond my stake and transfer my funds if I am removed from the validator set after one year to avoid penalties.
+const icqConfig: ICQConfig = {
+  connectionId: "connection-123",
+  chainId: "host-chain-1",
+  timeoutPolicy: 2,
+  timeoutDuration: 50000000000, // 50 seconds
+  queryType: "store/bank/key",
+  queryKey: queryKey,
+  response: new Uint8Array(), // Will be populated with the ICQ response
+};
 
-#### 9. Weekly Balance Check for Alternative Flow
+const createBankBalanceQueryKey = (address: string, denom: string): string => {
+  try {
+    const { words } = bech32.decode(address);
+    const addressBytes = new Uint8Array(bech32.fromWords(words));
 
-**As a** DeFi participant, I want Intento to check my ATOM balance every Friday and trigger borrowing or selling assets if my balance is below 100 ATOM.
+    // Prefix (0x02) and address length
+    const prefix = new Uint8Array([0x02, addressBytes.length]);
 
-#### 10. DAO Vote and Treasury Allocation
+    // Convert denom to bytes
+    const denomBytes = new TextEncoder().encode(denom);
 
-**As a** DAO member, I want Intento to monitor negative vote outcomes every Wednesday and automatically reallocate funds or adjust the treasury in line with governance rules.
+    // Concatenate all parts into a single Uint8Array
+    const queryData = new Uint8Array([
+      ...prefix,
+      ...addressBytes,
+      ...denomBytes,
+    ]);
 
-## x/interchainqueries
+    // Convert Uint8Array to Base64 for the query key
+    return btoa(String.fromCharCode(...queryData));
+  } catch (error) {
+    console.error("Error creating query key:", error);
+    return "";
+  }
+}
+```
 
-SubmitQueryResponse is used to return the query responses. It is used by IBC Relayers.
+This configuration tells the system to query the balance from the **store/bank/key** module and wait up to 50 seconds for a response.
+
+---
+
+### Step 3: Implementing a Feedback Loop
+
+A **feedback loop** will use the queried balance and dynamically insert it into the `MsgSend` message.
+
+```typescript
+const feedbackLoop: FeedbackLoop = {
+  flowId: BigInt(0), // Balance query flow
+  responseIndex: 0, // First response
+  responseKey: "amount.[0].amount", // Extract balance amount
+  valueType: "sdk.Int",
+  msgsIndex: 1, // Index of MsgSend in the array
+  msgKey: "amount", // Replace amount field in MsgSend
+  icqConfig: icqConfig, // Uses ICQConfig for balance query
+};
+```
+
+---
+
+### 4: Adding a Conditional Check
+
+We want to **only send funds if the balance exceeds 200,000 uatom**. We define a `Comparison` object to enforce this rule.
+
+```typescript
+const comparison: Comparison = {
+  flowId: BigInt(0), // Balance query flow
+  responseIndex: 0,
+  responseKey: "amount.[0].amount",
+  valueType: "sdk.Int",
+  operator: 4, // LARGER_THAN
+  operand: "200000uatom",
+  icqConfig: icqConfig, // Uses ICQConfig for validation
+};
+```
+
+---
+
+### 5: Setting Execution Conditions
+
+Now, we define conditions to ensure that:
+
+- The **comparison rule** is met before executing the transfer.
+- The **feedback loop** dynamically updates the `MsgSend` message.
+
+```typescript
+const initConditions: ExecutionConditions = {
+  stopOnSuccessOf: [],
+  stopOnFailureOf: [],
+  skipOnFailureOf: [],
+  skipOnSuccessOf: [],
+  feedbackLoops: [feedbackLoop],
+  comparisons: [comparison],
+  useAndForComparisons: false,
+};
+```
+
+---
+
+### 6: Constructing the Messages
+
+#### Message for Balance Query
+
+The balance query is performed automatically via `ICQConfig`, so we do not need to explicitly add a query message.
+
+#### Message for Conditional Transfer
+
+```typescript
+const msgSend = cosmos.bank.v1beta1.MessageComposer.withTypeUrl.send({
+  fromAddress: "cosmos1delegatoraddress",
+  toAddress: "cosmos1recipientaddress",
+  amount: [{ denom: "uatom", amount: "0" }], // Will be replaced dynamically
+});
+```
+
+---
+
+### 7: Submitting the Intent-Based Flow
+
+To submit the flow, we also include **hosted account configuration** using `HostedConfig`.
+
+```typescript
+const hostedConfig: HostedConfig = {
+  hostedAddress: "cosmos1hostedaddress",
+  feeCoinLimit: { denom: "uatom", amount: "100000" },
+};
+
+const msgSubmitFlow =
+  intento.intent.v1beta1.MessageComposer.withTypeUrl.submitFlow({
+    label: "Balance Query and Send Flow",
+    owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
+    msgs: [msgSend],
+    duration: "1440h",
+    interval: "600s",
+    startAt: "1739781618",
+    feeFunds: [{ denom: "uinto", amount: "5000000" }],
+    configuration: config,
+    hostedConfig: hostedConfig, // Config for hosted account
+  });
+```
+
+---
+
+### 8: Signing and Broadcasting the Transaction
+
+Finally, we sign and send the transaction.
+
+```typescript
+client.signAndBroadcast(owner, [msgSubmitFlow], {
+  amount: [],
+  gas: "300000",
+});
+```
+
+---
+
+Final Thoughts
+
+With this setup, our **Intent-Based Flow** automatically:
+
+✅ Queries the account balance using **ICQ**.  
+✅ Only proceeds with the transfer if the balance **exceeds 200,000 uatom**.  
+✅ Dynamically inserts the correct amount into the `MsgSend` message.
+
+This ensures efficient, automated, and secure fund transfers without requiring manual intervention. 🚀
+
+Would you like to see this example with **dynamic fee handling** or **multi-asset transfers**? Let us know!
+
+## ICQ module details - x/interchainqueries
+
+SubmitQueryResponse is used to return the query responses. It is used by IBC Relayers. As we use the Stride implementation, it is the same as with Stride.
 
 ```protobuf
 message MsgSubmitQueryResponse {

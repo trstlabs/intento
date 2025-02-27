@@ -6,84 +6,80 @@ description: Use cases
 
 import DocusaurusSvg from "./../images/actions.svg";
 
-Intento provides interesting high impact use cases for DeFi protocols, developers, DAOs and end-users. For example, by integrating with Intento, DAOs can use payroll services to pay for salaries, NFT owners can receive new NFTs by subscriptions, and game developers can build exciting in-game NFT battles with time-based winner resolution.
+Intento enables high-value intent-based flows and orchestration for DeFi protocols, developers, DAOs, and end-users. By integrating with Intento, organizations can establish programmable, trust-minimized execution across multiple chains. This allows for adaptive coordination, conditional execution based on real-time data (such as Interchain Queries, or ICQs), and continuous feedback loops to refine processes.
 
 <DocusaurusSvg width="100%" height="100%" />
 
-Intento opens up endless possibilities for developers, DAOs and end-users alike, including but not limited to:
+### Intent-Based Orchestration Across Ecosystems
 
-- Orchestrating assets across chains
-- Scheduled payments and subscriptions
-- Cross-chain portfolio management
-- Auto-rebalancing indexes
-- Trading strategies
-- Autocompound operations
-- Swap streaming
-- Payroll services
-- Scheduling governance proposals, tallying and executing proposals
+By leveraging Intento, users can:
 
-### Example Use Cases For Protocols
+- Seamlessly orchestrate asset movements across chains
+- Enable conditional execution using on-chain and off-chain triggers
+- Implement scheduled payments and dynamic rebalancing
+- Automate liquidity shifts based on predefined thresholds
+- Develop intent-driven governance and treasury operations
+- Create advanced DeFi trading and yield strategies
 
-#### Staking protocols
+### LP and Yield Intent-Based Flows
 
-Staking protocols, such as Lido, Swell and EigenLayer, can integrate Intento to orchestrate restaking of tokens, providing their users with additional yield. Auto compounding is currently done outside of the protocol's DAO control in vault and escrow smart contracts controlled by protocols that essentially hold custody of the users stake, and depend on bot triggers. Stride, a Cosmos liquid staking Appchain, has built auto-compounding into their solution using a time-based function in their chain. By outsourcing auto compounding calls to the Intent module, EVM-based staking protocols can now also initiate auto compounding in a non-custodial and trustless manner. This ensures network security and fosters reliability and confidence in the staking protocol.
+| Use Case                                                           | Challenge                                                                                                                         | Potential Solution                                                                                                                                       | ICQ Condition                                           | Feedback Loop                                                  |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------- |
+| **Orchestrate LP Reward Diversification**                          | LP rewards increase position in the pool, but users may want to convert a portion into another asset without manual intervention. | Track total shares growth (ICQ). Set threshold-based triggers (Comparison). Execute via ICA: swap rewards into another asset.                             | Track total pool shares to monitor reward accumulation. | Adjust thresholds dynamically based on historical performance. |
+| **Dynamic Portfolio Management with ICAs & Conditional Execution** | Users managing multiple pools need dynamic asset rebalancing based on market conditions and yield opportunities.                  | Monitor pool APYs & volatility (ICQs). Compare risk-adjusted returns (Comparison). Execute via User-controlled ICA: shift funds to higher-yielding pools. | Query APYs and total shares across pools.               | Adjust thresholds based on historical yield trends.            |
+| **Feedback Loops for Automated Yield Optimization**                | Users want a self-optimizing strategy that dynamically shifts liquidity based on performance trends.                              | Track historical yield trends (ICQ). Set threshold-based triggers (Comparison). Execute shifts via ICA.                                                   | Monitor liquidity depth and yield patterns over time.   | Adjust allocation frequency based on reward stability.         |
+| **Rebalancing LP Positions Based on Market Changes**               | Market price fluctuations impact LP profitability, requiring frequent rebalancing to mitigate impermanent loss.                   | Monitor asset prices in pools (ICQ). Set rebalance conditions (Comparison). Execute rebalance via ICA.                                                    | Detect price movements and liquidity shifts.            | Adjust rebalancing intervals based on price volatility trends. |
+| **Arbitrage Strategies Using External Price Feeds**                | Price discrepancies between Osmosis and other chains create arbitrage opportunities difficult for DAOs to capture.                | Fetch external price data (ICQ). Identify arbitrage windows (Comparison). Execute via ICA.                                                                | Compare Osmosis prices with external DEX data.          | Adjust arbitrage thresholds based on past execution success.   |
 
-#### Cross-Chain Asset Management and Coordination
+### DeFi Intent-Based Execution
 
-A large digital asset issuer, such as Circle, can integrate Intento to optimize liquidity across fragmented ecosystems so that once tokens are periodically burned on one chain and automatically minted on another chain, using a predictable trigger address. This trust-minimized solution can become a key part of the protocol of asset issuers in that it reduces both smart contract risks and counterparty risks.
+| DeFi Feature                      | Description                                                                                 | ICQ Condition                                          | Feedback Loop                                              |
+| --------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------- |
+| **Dynamic Portfolio Rebalancing** | Orchestrate asset adjustments based on market shifts, ICQ feedback, or governance triggers. | Monitor asset weight deviations and market conditions. | Adjust allocation thresholds dynamically.                  |
+| **Staking Reward Optimization**   | Continuously monitor staking rewards and execute compounding when yield thresholds are met. | Track staking rewards accumulation.                    | Modify auto-compounding logic based on historical returns. |
+| **DCA & Limit Orders**            | Execute trades based on price conditions rather than relying on manual intervention.        | Compare asset price to user-defined conditions.        | Adjust execution timing based on market trends.            |
+| **Loan Management**               | Repay loans when balance conditions are met, preventing liquidation risks.                  | Track loan health factors and interest rates.          | Adapt repayment logic based on changing collateral ratios. |
+| **Liquidity Pool Adjustments**    | Adjust LP positions dynamically based on utilization metrics.                               | Monitor pool utilization and fee structures.           | Modify position rebalancing based on historical trends.    |
+| **Swap Streaming**                | Conduct trades over time to minimize slippage and price impact.                             | Track market depth and volatility.                     | Adjust streaming speed based on execution success.         |
 
-#### Efficient AMM Strategies
+### Payments & Treasury Orchestration
 
-A large EVM-based DEX, such as Uniswap, can integrate Intento so that limit orders and DCA swaps are processed on a reliable basis. Moreover, with the trigger coming from a predictable address coming from Cosmos Hub, Uniswap can allow time-based swaps without the need for intermediate smart contracts such as vaults and escrow contracts, improving the liquidity position of their users. Furthermore, Concentrated LP tokens can be rebalanced periodically to mitigate impermanent loss. As the trigger is a predictable address, tokens do not need to be locked in a custodial rebalancing protocol. These periodic actions can improve liquidity and allow the protocol to be more stable.
+| Payment Flow Type            | Description                                                                                | ICQ Condition                                   | Feedback Loop                                                    |
+| ---------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------- | ---------------------------------------------------------------- |
+| **Scheduled Treasury Flows** | DAOs and businesses can execute payroll or fund transfers based on predefined schedules.   | Verify treasury balance and execution time.     | Adjust schedules dynamically based on cash flow trends.          |
+| **Subscription Models**      | Service providers can distribute NFT-based subscriptions or recurring payments securely.   | Validate NFT ownership and subscription status. | Modify subscription handling based on renewal rates.             |
+| **Escrowed Transactions**    | Funds release based on ICQ-confirmed milestones or conditions, reducing counterparty risk. | Verify escrow conditions before disbursement.   | Adjust escrow triggers based on dispute resolution patterns.     |
+| **Donation Distributions**   | Automatically allocate donations based on real-time funding needs or governance votes.     | Monitor funding needs and DAO vote outcomes.    | Modify allocation strategies based on funding impact assessment. |
 
-In sum, Intento aims to enhance user liquidity and accessibility by enabling instant and secure flows of tokens and assets, eliminating the need for locking them in smart contracts. This improves user experience, increases liquidity, and encourages broader participation. Protocols can now leverage the benefits of Intento, cross-chain liquidity, and expanded possibilities, both within the Cosmos Ecosystem and across EVM chains, fostering a vibrant and interconnected ecosystem.
+### Governance & DAO Intent-Based Actions
 
-### Use Cases by category
+| DAO Orchestration                      | Description                                                                          | ICQ Condition                                         | Feedback Loop                                                       |
+| -------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------- |
+| **Scheduled Voting**                   | Governance proposals can be tallied and executed at predefined intervals.            | Validate voting period completion.                    | Adjust scheduling based on voter participation trends.              |
+| **Treasury Allocation Adjustments**    | Fund reallocations based on DAO votes or market conditions.                          | Track governance vote outcomes and treasury balances. | Modify allocation parameters based on fund utilization efficiency.  |
+| **Token Vesting & Distribution**       | Continuous vesting based on governance-approved schedules.                           | Monitor vesting schedules and claim conditions.       | Adapt vesting parameters based on token distribution impact.        |
+| **Validator Set Monitoring**           | Automatically trigger validator staking/unbonding based on active set participation. | Track validator performance and network conditions.   | Adjust staking strategies based on validator reliability trends.    |
+| **On-Chain Condition-Based Execution** | Proposal outcomes can directly trigger treasury flows or operational changes.        | Verify governance decision finalization.              | Modify execution parameters based on past governance effectiveness. |
 
-#### DeFi
+### Intent-Based Features For Protocols
 
-Using Intento, you can automatically trade dependent on price changes.
+| **DeFi Feature**                                          | **Description**                                                                                                                                                                                                                                                                                                          | **ICQ Condition**                                                                  | **Feedback Loop**                                                                                         |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Wallet Stake Conditional Auto-Compounding**             | Wallet like Keplr and Leap can integrate intent-based auto-compounding, intelligently reinvesting rewards under optimal conditions. For example: skip compounding below a threshold, withdraw if the price hits a target, compound only if inflation is below a threshold, or dynamically adjust reinvestment intervals. | ICQs monitor price targets, inflation, reward size, and thresholds for compounding | Continuous optimization based on ICQ feedback to ensure auto-compounding aligns with optimal conditions.  |
+| **RWA Portfolio Management**                              | Intento enables institutional investors to manage and optimize real-world asset (RWA) portfolios across chains and decentralized exchanges (DEXes). It supports actions like portfolio rebalancing, liquidity optimization, and risk management via Interchain Accounts, Queries, and conditional execution.             | ICQs monitor portfolio performance, market conditions, and rebalancing needs       | Portfolio actions are optimized and executed based on ICQ-driven triggers, ensuring efficient allocation. |
+| **Cross-Chain Asset Coordination for Issuers**            | Digital asset issuers (e.g., Circle) can integrate Intento to trigger token burns or mints based on liquidity conditions, continuously monitored by ICQs, reducing smart contract risk and exposure.                                                                                                                     | ICQs monitor liquidity levels and execute token burns or mints as required         | ICQ feedback ensures coordination across chains and triggers liquidity adjustments only when needed.      |
+| **DEX & AMM Strategies: Enhancing Liquidity Positioning** | DEXes like Uniswap can leverage Intento for intent-based order execution, rebalancing, and swap streaming, eliminating intermediate escrow contracts for better capital efficiency. ICQs ensure periodic rebalancing and adjust liquidity dynamically.                                                                   | ICQs monitor market conditions, trigger orders or rebalancing based on conditions  | User preferences and market conditions drive continuous adjustments to liquidity positions.               |
+| **Staking Protocols: Intent-Based Auto-Compounding**      | Liquid staking protocols (e.g., Lido, Swell, EigenLayer) can leverage Intento for non-custodial auto-compounding and re-staking, triggered by ICQs monitoring reward accrual, governance votes, or validator performance. This keeps compounding aligned with user intent.                                               | ICQ monitors reward accrual, governance votes, or validator performance            | Dynamic re-staking and compounding actions are continuously adjusted based on ICQ feedback.               |
 
-| DeFi                            | Explanation                                                                                                                                                              |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Automated Rebalancing           | Automated portfolio rebalancing based on pre-set criteria, such as market conditions or portfolio weightings, ensuring optimal performance and risk management.          |
-| Autocompounding Staking Rewards | Automated claiming of staking rewards to token holders on a regular basis, such as weekly or monthly. These can be compounded to earn additional yield.                  |
-| Dollar-Cost Averaging (DCA)     | Automated DCA strategies that invest a fixed amount of funds at regular intervals, reducing the impact of market volatility and potentially improving long-term returns. |
-| Automated Loan Repayments       | Repay crypto loans once certain dates or balance thresholds are met.                                                                                                     |
-| Yield Harvesting                | Harvest yield when it exceeds a certain amount or at preset intervals.                                                                                                   |
-| Liquidity Pool Rebalancing      | Automatically rebalance liquidity pool funds based on conditions to maintain composition.                                                                                |
-| Swap streaming                  | Perform swaps over a small period of time to reduce the slippage or price impact of an illiquid token                                                                    |
+### Interchain Queries, Comparisons & Feedback Loops
 
-#### Payments
+Intento’s integration with ICQs enables:
 
-Pay family-members, employees and contractors each day/week/month, without exposing privacy-sensitive data. Recipients can be paid in desired currency and can continuously earn yield
+- **Real-time balance checks** to determine fund availability before executing flows.
+- **Validator status monitoring** to trigger stake adjustments when a validator falls out of the active set.
+- **Cross-chain asset tracking** to rebalance liquidity and token supplies without manual input.
+- **Governance-triggered fund allocations** based on DAO-approved conditions.
 
-With recurring payments on current smart contracts recipients have to claim tokens manually.
-By integrating with Intento end-users receive tokens automatically.
+Intento transforms execution from static automation to **dynamic, intent-driven flows**, adapting to market conditions, governance signals, and interchain state changes. By incorporating comparisons and real-time feedback loops, Intento ensures that actions remain trust-minimized, self-custodial, and aligned with user-defined conditions.
 
-| Payment Type              | Explanation                                                                                                                                                                                     |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Scheduled Payments        | Payment systems can be automated to send payments at specific times, such as weekly or monthly, for billing or payroll.                                                                         |
-| Subscription Renewals     | Payment systems can be automated to renew subscriptions at specific intervals, ensuring that customers continue to have access to a service or product.                                         |
-| Pre-Authorized Payments   | Customers can pre-authorize recurring payments for services or products, ensuring that payments are made on time and without the need for manual intervention.                                  |
-| Reward Distributions      | Automate the distribution of rewards or dividends to stakeholders or customers based on predefined criteria, such as holding certain assets or participation in events.                         |
-| Escrow Services           | Secure transactions between parties by holding funds in escrow until predefined conditions are met, ensuring fairness and trust in transactions, especially in marketplaces or trade platforms. |
-| Donation Collections      | Enable automatic collection of donations at specified intervals or when certain conditions are met, supporting fundraising efforts for charities, non-profits, or crowdfunding campaigns.       |
-| Debt Repayment Scheduling | Automate the repayment of loans or debts in installments, with schedules adjusted according to terms agreed upon by the lender and borrower, including interest calculations.                   |
-| Loyalty Program Rewards   | Automatically issue points, credits, or other rewards as part of loyalty programs, based on customer purchases or activities, which can then be redeemed for services, products, or discounts.  |
-| Utility Bill Payments     | Automate the payment of recurring utility bills such as electricity, water, internet, and more, ensuring timely payments and avoiding service interruptions or late fees.                       |
-
-#### Community Pools and DAOs
-
-| DAOs                                | Explanation                                                                                                                                                                                           |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Scheduled Voting                    | DAOs can schedule votes on proposals to take place at a specific time, ensuring that all members have a fair chance to participate in the decision-making process.                                    |
-| Token Vesting                       | DAOs can automate the vesting of tokens over a period of time, enabling fair distribution of rewards and preventing dumping of tokens on the market.                                                  |
-| Dividend Distribution               | DAOs can automate the distribution of dividends to token holders based on a predetermined schedule, ensuring transparency and fairness in profit-sharing.                                             |
-| Periodic Reporting                  | DAOs can automate the generation and distribution of periodic reports on the performance of the organization, enabling members to make informed decisions about future investments or participation.  |
-| Automatic Proposals                 | DAOs can be programmed to automatically generate proposals based on certain conditions, such as when a certain threshold of tokens is reached or when a specific event occurs.                        |
-| Time-based Smart Contract Execution | DAOs can automate the execution of smart contracts based on a predetermined time or interval, ensuring that transactions take place at the right time without the need for human intervention.        |
-| Staking Rewards                     | DAOs can automate the distribution of staking rewards to members who have staked their tokens for a certain period of time, incentivizing long-term participation and commitment to the organization. |
-| Token Burn                          | DAOs can automate the burning of tokens at a predetermined time or interval, reducing the overall token supply and increasing the value of remaining tokens.                                          |
-| Membership Renewal                  | DAOs can automate the renewal of membership for existing members at a predetermined time or interval, ensuring that members remain active and engaged in the organization.                            |
-| Vesting Periods for Team Members    | DAOs can automate vesting periods for team members, ensuring that incentives are aligned with long-term goals and that team members are motivated to stay with the organization over time.            |
+By leveraging Intento, protocols, DAOs, and users can build resilient, efficient, and interoperable workflows across decentralized ecosystems. Read more about use case examples in the Designing Flows section.

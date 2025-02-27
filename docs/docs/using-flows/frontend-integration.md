@@ -38,6 +38,76 @@ for (const msg of FlowData.msgs) {
 const msgSubmitFlow =
   intento.intent.v1beta1.MessageComposer.withTypeUrl.submitFlow({
     label: "My Flow", // Optional flow label
+    owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
+    msgs: encodedMsgs,
+    duration: "1440h", // Flow duration (24h * 60d)
+    interval: "600s", // Execution interval (10 min)
+    startAt: "1739781618", // UNIX timestamp for start time
+    feeFunds: [{ denom: "uinto", amount: "5000000" }], // Funding for fees, optional when fallbackToOwnerBalance = true
+    connectionId: "connection-12",
+    hostConnectionId: "connection-345",
+  });
+
+/**
+ * Signs and broadcasts the transaction.
+ */
+client.signAndBroadcast(owner, [msgSubmitFlow], {
+  amount: [],
+  gas: "300000",
+});
+```
+
+A more complex flow may look like the following:
+
+```ts
+import { Coin, msgRegistry, Registry, Conditions, Comparison } from "intentojs";
+
+const config: ExecutionConfiguration = {
+  saveResponses: false,
+  updatingDisabled: false,
+  stopOnFailure: true,
+  stopOnSuccess: false,
+  fallbackToOwnerBalance: true,
+  reregisterIcaAfterTimeout: true,
+};
+
+const feedbackLoop: FeedbackLoop = {
+  flowId: BigInt(0), //optionally get response from other flow
+  responseIndex: 0, //index in the mmessage response
+  responseKey: "Amount.[0].Amount", //key in the message or query response
+  valueType: "sdk.Int", //can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string, []sdk.Int
+  msgsIndex: 1, //index in the flow messages array to parse the feedback data into
+  msgKey: "Amount", //key in the message to replace
+  icqConfig: undefined, //optionally attach an ICQ
+};
+
+//similar structure to a feedback loop
+const comparison: Comparison = {
+  flowId: BigInt(0),
+  responseIndex: 0,
+  responseKey: "Amount.[0]",
+  valueType: "sdk.Coin",
+  operator: 4, //LARGER_THAN
+  operand: "11uosmo",
+  icqConfig: undefined,
+};
+
+const initConditions: ExecutionConditions = {
+  stopOnSuccessOf: [],
+  stopOnFailureOf: ["1234", "456"], //array of flow ids
+  skipOnFailureOf: [],
+  skipOnSuccessOf: [],
+  feedbackLoops: [feedbackLoop],
+  comparisons: [comparison],
+  useAndForComparisons: false, //if set to true and there are multiple comparisons they must all return true
+};
+
+/**
+ * Constructs the submitFlow message for Intento.
+ */
+const msgSubmitFlow =
+  intento.intent.v1beta1.MessageComposer.withTypeUrl.submitFlow({
+    label: "My Flow", // Optional flow label
     connectionId: "connection-123",
     owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
     msgs: encodedMsgs,
@@ -45,6 +115,7 @@ const msgSubmitFlow =
     interval: "600s", // Execution interval (10 min)
     startAt: "1739781618", // UNIX timestamp for start time
     feeFunds: [{ denom: "uinto", amount: "5000000" }], // Funding for fees
+    configuration: config,
   });
 
 /**

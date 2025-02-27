@@ -4,11 +4,38 @@ title: Querying Flows
 description: How to retreive flow data
 ---
 
-Retrieving `Flow` -related information can be done through the [TriggerPortal](https://triggerportal.zone) user interface, a front-end integration through `IntentoJS`, locally through a Command-Line Interface or through an RPC endpoint.
+Retrieving `Flow`-related information can be done through multiple methods:
 
-<!--
-Here's an RPC endpoint: [openrpc.intento.zone](https://openrpc.intento.zone).
-A list of RPC endpoints is to-be added. -->
+- **[TriggerPortal](https://triggerportal.zone)** – A user-friendly interface for managing and monitoring Flows.
+- **Front-end Integration via `IntentoJS`** – Enables seamless interaction with Flows in dApps.
+- **Command-Line Interface (CLI)** – Local querying for developers and power users.
+- **API Endpoints (RPC & LCD)** – Directly query `Flow` data through **RPC, LCD, or Swagger** endpoints.
+
+#### **Example LCD Endpoints**
+
+1. **Retrieve Flow Detail**
+
+   ```
+   GET /intento/intent/v1beta1/flow/{flow_id}
+   ```
+
+   Example LCD endpoint:
+
+   ```
+   https://lcd.intento.zone/intento/intent/v1beta1/flow/1
+   ```
+
+   Returns details of the specified Flow.
+
+2. **List All Flows**
+   ```
+   GET /intento/intent/v1beta1/flows
+   ```
+   Example LCD Swagger UI:
+   ```
+   https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/flows
+   ```
+   Fetches all active Flows.
 
 ## Queries
 
