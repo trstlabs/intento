@@ -240,7 +240,6 @@ const msgSubmitFlow =
     msgs: [msgSend],
     duration: "1440h",
     interval: "600s",
-    startAt: "1739781618",
     feeFunds: [{ denom: "uinto", amount: "5000000" }],
     configuration: config,
     hostedConfig: hostedConfig, // Config for hosted account

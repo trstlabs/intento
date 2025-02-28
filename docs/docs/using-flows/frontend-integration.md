@@ -42,7 +42,6 @@ const msgSubmitFlow =
     msgs: encodedMsgs,
     duration: "1440h", // Flow duration (24h * 60d)
     interval: "600s", // Execution interval (10 min)
-    startAt: "1739781618", // UNIX timestamp for start time
     feeFunds: [{ denom: "uinto", amount: "5000000" }], // Funding for fees, optional when fallbackToOwnerBalance = true
     connectionId: "connection-12",
     hostConnectionId: "connection-345",

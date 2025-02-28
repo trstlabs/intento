@@ -114,10 +114,10 @@ The withdrawn amount will be used as input for `MsgSend`:
 const feedbackLoop: FeedbackLoop = {
   flowId: BigInt(0), // Reward withdrawal flow
   responseIndex: 0, // First response index
-  responseKey: "amount.[0].amount", // Extract the withdrawn amount
-  valueType: "sdk.Int", // Value type for replacement
+  responseKey: "amount.[0]", // Extract the withdrawn amount
+  valueType: "sdk.Coin", // Value type for replacement
   msgsIndex: 1, // Message index to modify
-  msgKey: "amount", // Key in MsgSend to replace
+  msgKey: "amount.[0]", // Key in MsgSend to replace
   icqConfig: undefined,
 };
 ```
@@ -135,7 +135,7 @@ const comparison: Comparison = {
   responseKey: "amount.[0].amount", // Extracted amount key
   valueType: "sdk.Int", // Value type
   operator: 4, // LARGER_THAN
-  operand: "200000uatom", // Threshold
+  operand: "200000", // Threshold
   icqConfig: undefined,
 };
 ```
@@ -186,7 +186,6 @@ const msgSubmitFlow =
     msgs: [msgWithdrawReward, msgSend],
     duration: "1440h",
     interval: "600s",
-    startAt: "1739781618",
     feeFunds: [{ denom: "uinto", amount: "5000000" }],
     configuration: config,
     connectionId: "connection-12",
@@ -246,7 +245,7 @@ const feedbackLoopDelegation: FeedbackLoop = {
   responseKey: "amount.[0].amount", // Extract the withdrawn amount
   valueType: "sdk.Int", // Type of value
   msgsIndex: 1, // Index in message array to modify
-  msgKey: "amount", // Key in MsgDelegate to replace
+  msgKey: "amount.amount", // Key in MsgDelegate to replace
   icqConfig: undefined,
 };
 ```
@@ -261,8 +260,8 @@ The threshold for delegation is set to 150,000 `uatom`:
 const comparisonDelegation: Comparison = {
   flowId: BigInt(0), // Reward withdrawal flow
   responseIndex: 0, // First response index
-  responseKey: "amount.[0].amount",
-  valueType: "sdk.Int",
+  responseKey: "amount.[0]",
+  valueType: "sdk.Coin",
   operator: 4, // LARGER_THAN
   operand: "150000uatom", // Threshold
   icqConfig: undefined,
@@ -317,7 +316,6 @@ const msgSubmitFlowDelegation =
     msgs: [msgWithdrawReward, msgDelegate],
     duration: "1440h",
     interval: "600s",
-    startAt: "1739781618",
     feeFunds: [{ denom: "uinto", amount: "5000000" }],
     configuration: config,
     connectionId: "connection-12",

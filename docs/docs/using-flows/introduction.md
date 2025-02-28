@@ -98,7 +98,7 @@ A high level overview of the process from flow submission to triggering messages
 7. IBC transaction is sent and executed to the host chain
 8. If the flow is recurring, a new entry is inserted into the queue
 9. IBC Packet gets acknowledged by a relayer and the flow entry is updated
-10. Remaining funds sent to an actiflowon account are returned to the flow owner
+10. Remaining funds sent to a flow fee account are returned to the flow owner
 
 <!-- _Continue reading on on how intent module works in the [module](@site/docs/module/index.md) section of our documetation._ -->
 
