@@ -1355,9 +1355,29 @@ paths:
                         type: string
                       connection_id:
                         type: string
-                      host_connection_id:
-                        type: string
                     title: config for self-hosted ICA
+                  hosted_ica_config:
+                    type: object
+                    properties:
+                      hosted_address:
+                        type: string
+                      fee_coin_limit:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                    title: config for hosted account
                   configuration:
                     type: object
                     properties:
@@ -1383,43 +1403,19 @@ paths:
                           false/unset will always
 
                           execute
+                      stop_on_timeout:
+                        type: boolean
+                        title: If true, will stop if message times oiut
                       fallback_to_owner_balance:
                         type: boolean
                         title: >-
                           If true, owner account balance is used when trigger
                           account funds run out
-                      reregister_ica_after_timeout:
-                        type: boolean
-                        title: >-
-                          If true, allows the flow to continue execution after
-                          an ibc channel times out (recommended)
                     title: >-
                       ExecutionConfiguration provides the execution-related
                       configuration of the
 
                       flow
-                  hosted_config:
-                    type: object
-                    properties:
-                      hosted_address:
-                        type: string
-                      fee_coin_limit:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
-
-
-                          NOTE: The amount field is an Int which implements the
-                          custom method
-
-                          signatures required by gogoproto.
-                    title: config for hosted account
                   conditions:
                     type: object
                     properties:
@@ -2073,9 +2069,29 @@ paths:
                           type: string
                         connection_id:
                           type: string
-                        host_connection_id:
-                          type: string
                       title: config for self-hosted ICA
+                    hosted_ica_config:
+                      type: object
+                      properties:
+                        hosted_address:
+                          type: string
+                        fee_coin_limit:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an
+                            amount.
+
+
+                            NOTE: The amount field is an Int which implements
+                            the custom method
+
+                            signatures required by gogoproto.
+                      title: config for hosted account
                     configuration:
                       type: object
                       properties:
@@ -2101,43 +2117,19 @@ paths:
                             false/unset will always
 
                             execute
+                        stop_on_timeout:
+                          type: boolean
+                          title: If true, will stop if message times oiut
                         fallback_to_owner_balance:
                           type: boolean
                           title: >-
                             If true, owner account balance is used when trigger
                             account funds run out
-                        reregister_ica_after_timeout:
-                          type: boolean
-                          title: >-
-                            If true, allows the flow to continue execution after
-                            an ibc channel times out (recommended)
                       title: >-
                         ExecutionConfiguration provides the execution-related
                         configuration of the
 
                         flow
-                    hosted_config:
-                      type: object
-                      properties:
-                        hosted_address:
-                          type: string
-                        fee_coin_limit:
-                          type: object
-                          properties:
-                            denom:
-                              type: string
-                            amount:
-                              type: string
-                          description: >-
-                            Coin defines a token with a denomination and an
-                            amount.
-
-
-                            NOTE: The amount field is an Int which implements
-                            the custom method
-
-                            signatures required by gogoproto.
-                      title: config for hosted account
                     conditions:
                       type: object
                       properties:
@@ -2869,9 +2861,29 @@ paths:
                           type: string
                         connection_id:
                           type: string
-                        host_connection_id:
-                          type: string
                       title: config for self-hosted ICA
+                    hosted_ica_config:
+                      type: object
+                      properties:
+                        hosted_address:
+                          type: string
+                        fee_coin_limit:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an
+                            amount.
+
+
+                            NOTE: The amount field is an Int which implements
+                            the custom method
+
+                            signatures required by gogoproto.
+                      title: config for hosted account
                     configuration:
                       type: object
                       properties:
@@ -2897,43 +2909,19 @@ paths:
                             false/unset will always
 
                             execute
+                        stop_on_timeout:
+                          type: boolean
+                          title: If true, will stop if message times oiut
                         fallback_to_owner_balance:
                           type: boolean
                           title: >-
                             If true, owner account balance is used when trigger
                             account funds run out
-                        reregister_ica_after_timeout:
-                          type: boolean
-                          title: >-
-                            If true, allows the flow to continue execution after
-                            an ibc channel times out (recommended)
                       title: >-
                         ExecutionConfiguration provides the execution-related
                         configuration of the
 
                         flow
-                    hosted_config:
-                      type: object
-                      properties:
-                        hosted_address:
-                          type: string
-                        fee_coin_limit:
-                          type: object
-                          properties:
-                            denom:
-                              type: string
-                            amount:
-                              type: string
-                          description: >-
-                            Coin defines a token with a denomination and an
-                            amount.
-
-
-                            NOTE: The amount field is an Int which implements
-                            the custom method
-
-                            signatures required by gogoproto.
-                      title: config for hosted account
                     conditions:
                       type: object
                       properties:
@@ -3459,8 +3447,6 @@ paths:
                         type: string
                       connection_id:
                         type: string
-                      host_connection_id:
-                        type: string
                     title: config for self-hosted ICA
                   host_fee_config:
                     type: object
@@ -3710,8 +3696,6 @@ paths:
                         port_id:
                           type: string
                         connection_id:
-                          type: string
-                        host_connection_id:
                           type: string
                       title: config for self-hosted ICA
                     host_fee_config:
@@ -4034,8 +4018,6 @@ paths:
                         port_id:
                           type: string
                         connection_id:
-                          type: string
-                        host_connection_id:
                           type: string
                       title: config for self-hosted ICA
                     host_fee_config:
@@ -5873,16 +5855,14 @@ definitions:
           always
 
           execute
+      stop_on_timeout:
+        type: boolean
+        title: If true, will stop if message times oiut
       fallback_to_owner_balance:
         type: boolean
         title: >-
           If true, owner account balance is used when trigger account funds run
           out
-      reregister_ica_after_timeout:
-        type: boolean
-        title: >-
-          If true, allows the flow to continue execution after an ibc channel
-          times out (recommended)
     title: |-
       ExecutionConfiguration provides the execution-related configuration of the
       flow
@@ -6362,9 +6342,28 @@ definitions:
             type: string
           connection_id:
             type: string
-          host_connection_id:
-            type: string
         title: config for self-hosted ICA
+      hosted_ica_config:
+        type: object
+        properties:
+          hosted_address:
+            type: string
+          fee_coin_limit:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+        title: config for hosted account
       configuration:
         type: object
         properties:
@@ -6390,42 +6389,19 @@ definitions:
               always
 
               execute
+          stop_on_timeout:
+            type: boolean
+            title: If true, will stop if message times oiut
           fallback_to_owner_balance:
             type: boolean
             title: >-
               If true, owner account balance is used when trigger account funds
               run out
-          reregister_ica_after_timeout:
-            type: boolean
-            title: >-
-              If true, allows the flow to continue execution after an ibc
-              channel times out (recommended)
         title: >-
           ExecutionConfiguration provides the execution-related configuration of
           the
 
           flow
-      hosted_config:
-        type: object
-        properties:
-          hosted_address:
-            type: string
-          fee_coin_limit:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
-        title: config for hosted account
       conditions:
         type: object
         properties:
@@ -6674,8 +6650,6 @@ definitions:
             type: string
           connection_id:
             type: string
-          host_connection_id:
-            type: string
         title: config for self-hosted ICA
       host_fee_config:
         type: object
@@ -6699,7 +6673,7 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-  intento.intent.v1beta1.HostedConfig:
+  intento.intent.v1beta1.HostedICAConfig:
     type: object
     properties:
       hosted_address:
@@ -6723,8 +6697,6 @@ definitions:
       port_id:
         type: string
       connection_id:
-        type: string
-      host_connection_id:
         type: string
     title: config for self-hosted ICA
   intento.intent.v1beta1.ICQConfig:
@@ -7275,9 +7247,28 @@ definitions:
                 type: string
               connection_id:
                 type: string
-              host_connection_id:
-                type: string
             title: config for self-hosted ICA
+          hosted_ica_config:
+            type: object
+            properties:
+              hosted_address:
+                type: string
+              fee_coin_limit:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            title: config for hosted account
           configuration:
             type: object
             properties:
@@ -7303,42 +7294,19 @@ definitions:
                   will always
 
                   execute
+              stop_on_timeout:
+                type: boolean
+                title: If true, will stop if message times oiut
               fallback_to_owner_balance:
                 type: boolean
                 title: >-
                   If true, owner account balance is used when trigger account
                   funds run out
-              reregister_ica_after_timeout:
-                type: boolean
-                title: >-
-                  If true, allows the flow to continue execution after an ibc
-                  channel times out (recommended)
             title: >-
               ExecutionConfiguration provides the execution-related
               configuration of the
 
               flow
-          hosted_config:
-            type: object
-            properties:
-              hosted_address:
-                type: string
-              fee_coin_limit:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-            title: config for hosted account
           conditions:
             type: object
             properties:
@@ -7774,9 +7742,28 @@ definitions:
                   type: string
                 connection_id:
                   type: string
-                host_connection_id:
-                  type: string
               title: config for self-hosted ICA
+            hosted_ica_config:
+              type: object
+              properties:
+                hosted_address:
+                  type: string
+                fee_coin_limit:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+              title: config for hosted account
             configuration:
               type: object
               properties:
@@ -7802,42 +7789,19 @@ definitions:
                     will always
 
                     execute
+                stop_on_timeout:
+                  type: boolean
+                  title: If true, will stop if message times oiut
                 fallback_to_owner_balance:
                   type: boolean
                   title: >-
                     If true, owner account balance is used when trigger account
                     funds run out
-                reregister_ica_after_timeout:
-                  type: boolean
-                  title: >-
-                    If true, allows the flow to continue execution after an ibc
-                    channel times out (recommended)
               title: >-
                 ExecutionConfiguration provides the execution-related
                 configuration of the
 
                 flow
-            hosted_config:
-              type: object
-              properties:
-                hosted_address:
-                  type: string
-                fee_coin_limit:
-                  type: object
-                  properties:
-                    denom:
-                      type: string
-                    amount:
-                      type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
-
-
-                    NOTE: The amount field is an Int which implements the custom
-                    method
-
-                    signatures required by gogoproto.
-              title: config for hosted account
             conditions:
               type: object
               properties:
@@ -8297,9 +8261,28 @@ definitions:
                   type: string
                 connection_id:
                   type: string
-                host_connection_id:
-                  type: string
               title: config for self-hosted ICA
+            hosted_ica_config:
+              type: object
+              properties:
+                hosted_address:
+                  type: string
+                fee_coin_limit:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+              title: config for hosted account
             configuration:
               type: object
               properties:
@@ -8325,42 +8308,19 @@ definitions:
                     will always
 
                     execute
+                stop_on_timeout:
+                  type: boolean
+                  title: If true, will stop if message times oiut
                 fallback_to_owner_balance:
                   type: boolean
                   title: >-
                     If true, owner account balance is used when trigger account
                     funds run out
-                reregister_ica_after_timeout:
-                  type: boolean
-                  title: >-
-                    If true, allows the flow to continue execution after an ibc
-                    channel times out (recommended)
               title: >-
                 ExecutionConfiguration provides the execution-related
                 configuration of the
 
                 flow
-            hosted_config:
-              type: object
-              properties:
-                hosted_address:
-                  type: string
-                fee_coin_limit:
-                  type: object
-                  properties:
-                    denom:
-                      type: string
-                    amount:
-                      type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
-
-
-                    NOTE: The amount field is an Int which implements the custom
-                    method
-
-                    signatures required by gogoproto.
-              title: config for hosted account
             conditions:
               type: object
               properties:
@@ -8617,8 +8577,6 @@ definitions:
                 type: string
               connection_id:
                 type: string
-              host_connection_id:
-                type: string
             title: config for self-hosted ICA
           host_fee_config:
             type: object
@@ -8663,8 +8621,6 @@ definitions:
                 port_id:
                   type: string
                 connection_id:
-                  type: string
-                host_connection_id:
                   type: string
               title: config for self-hosted ICA
             host_fee_config:
@@ -8730,8 +8686,6 @@ definitions:
                 port_id:
                   type: string
                 connection_id:
-                  type: string
-                host_connection_id:
                   type: string
               title: config for self-hosted ICA
             host_fee_config:

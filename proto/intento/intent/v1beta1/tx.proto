@@ -2,15 +2,16 @@ syntax = "proto3";
 
 package intento.intent.v1beta1;
 
+import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
-import "cosmos/msg/v1/msg.proto";
 import "intento/intent/v1beta1/flow.proto";
 import "intento/intent/v1beta1/hostedaccount.proto";
-import "amino/amino.proto";
+
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 
 // Msg defines the ica-authentication Msg service.
@@ -26,23 +27,17 @@ service Msg {
   rpc SubmitFlow(MsgSubmitFlow) returns (MsgSubmitFlowResponse) {
     option (google.api.http).post = "/intento/intent/v1beta1/submit-flow";
   }
-  rpc RegisterAccountAndSubmitFlow(MsgRegisterAccountAndSubmitFlow)
-      returns (MsgRegisterAccountAndSubmitFlowResponse) {
-    option (google.api.http).post =
-        "/intento/intent/v1beta1/register-account-submit-flow";
+  rpc RegisterAccountAndSubmitFlow(MsgRegisterAccountAndSubmitFlow) returns (MsgRegisterAccountAndSubmitFlowResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/register-account-submit-flow";
   }
   rpc UpdateFlow(MsgUpdateFlow) returns (MsgUpdateFlowResponse) {
     option (google.api.http).post = "/intento/intent/v1beta1/update-flow";
   }
-  rpc CreateHostedAccount(MsgCreateHostedAccount)
-      returns (MsgCreateHostedAccountResponse) {
-    option (google.api.http).post =
-        "/intento/intent/v1beta1/create-hosted-account";
+  rpc CreateHostedAccount(MsgCreateHostedAccount) returns (MsgCreateHostedAccountResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/create-hosted-account";
   }
-  rpc UpdateHostedAccount(MsgUpdateHostedAccount)
-      returns (MsgUpdateHostedAccountResponse) {
-    option (google.api.http).post =
-        "/intento/intent/v1beta1/update-hosted-account";
+  rpc UpdateHostedAccount(MsgUpdateHostedAccount) returns (MsgUpdateHostedAccountResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/update-hosted-account";
   }
 }
 
@@ -50,11 +45,11 @@ service Msg {
 // the specified connection pair
 message MsgRegisterAccount {
   option (cosmos.msg.v1.signer) = "owner";
-  option (amino.name)           = "intent/MsgRegisterAccount";
+  option (amino.name) = "intent/MsgRegisterAccount";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
-  string connection_id = 2;
+  string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
   string version = 3;
 }
 
@@ -65,50 +60,48 @@ message MsgRegisterAccountResponse {}
 // locally or using an interchain account
 message MsgSubmitTx {
   option (cosmos.msg.v1.signer) = "owner";
-  option (amino.name)           = "intent/MsgRegisterAccount";
+  option (amino.name) = "intent/MsgRegisterAccount";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
-  string connection_id = 2;
+  string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
   google.protobuf.Any msg = 3;
 }
 
 // MsgSubmitTxResponse defines the MsgSubmitTx response type
 message MsgSubmitTxResponse {}
 
-// MsgSubmitFlow creates, submits and schedules an arbitrary msg
-// to be executed locally or using an interchain account
+// MsgSubmitFlow creates, submits and schedules msgs
+// to be executed locally or over IBC with conditions
 message MsgSubmitFlow {
   option (cosmos.msg.v1.signer) = "owner";
-  option (amino.name)           = "intent/MsgSubmitFlow";
+  option (amino.name) = "intent/MsgSubmitFlow";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
-  string label = 3;
-  repeated google.protobuf.Any msgs = 4
-      [ (cosmos_proto.accepts_interface) = "sdk.Msg" ];
+  string label = 2;
+  repeated google.protobuf.Any msgs = 3 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
   // duration defines the time that the code should run for
-  string duration = 5;
+  string duration = 4;
   // start_at when set as a unix time after block inclusion, creates a custom
   // start time for execution
-  uint64 start_at = 6;
+  uint64 start_at = 5;
   // interval defines the interval between auto_msg calls
-  string interval = 7;
+  string interval = 6;
   // optional fees to be used for flow execution limiting the amount of fees
   // incurred
-  repeated cosmos.base.v1beta1.Coin fee_funds = 8 [
+  repeated cosmos.base.v1beta1.Coin fee_funds = 7 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"fee_funds\""
   ];
   // optional configuration parameters
-  ExecutionConfiguration configuration = 9;
-  // optional for interchain account
-  string connection_id = 10;
-  string host_connection_id = 11;
+  ExecutionConfiguration configuration = 8;
+  // optional connection ID interchain account
+  string connection_id = 9 [(gogoproto.customname) = "ConnectionID"];
   // optional use of a hosted account
-  HostedConfig hosted_config = 12;
-  ExecutionConditions conditions = 14;
+  HostedICAConfig hosted_ica_config = 10 [(gogoproto.customname) = "HostedICAConfig"];
+  ExecutionConditions conditions = 11;
 }
 
 // MsgSubmitTxResponse defines the MsgSubmitTx response type
@@ -119,14 +112,13 @@ message MsgSubmitFlowResponse {}
 // account
 message MsgRegisterAccountAndSubmitFlow {
   option (cosmos.msg.v1.signer) = "owner";
-  option (amino.name)           = "intent/MsgRegisterAccountAndSubmitFlow";
+  option (amino.name) = "intent/MsgRegisterAccountAndSubmitFlow";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
-  string connection_id = 2;
+  string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
   string label = 3;
-  repeated google.protobuf.Any msgs = 4
-      [ (cosmos_proto.accepts_interface) = "sdk.Msg" ];
+  repeated google.protobuf.Any msgs = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
   // duration defines the time that the code should run for
   string duration = 5;
   // start_at when set as a unix time after block inclusion, creates a custom
@@ -145,7 +137,7 @@ message MsgRegisterAccountAndSubmitFlow {
   // allowed
   ExecutionConfiguration configuration = 9;
   string version = 10;
-  string host_connection_id = 11;
+  string host_connection_id = 11 [(gogoproto.customname) = "HostConnectionID"];
   ExecutionConditions conditions = 12;
 }
 
@@ -157,30 +149,29 @@ message MsgRegisterAccountAndSubmitFlowResponse {}
 // or using an interchain account
 message MsgUpdateFlow {
   option (cosmos.msg.v1.signer) = "owner";
-  option (amino.name)           = "intent/MsgUpdateFlow";
+  option (amino.name) = "intent/MsgUpdateFlow";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   string owner = 1;
-  uint64 id = 2 [ (gogoproto.customname) = "ID" ];
-  string connection_id = 3;
-  string label = 4;
-  repeated google.protobuf.Any msgs = 5
-      [ (cosmos_proto.accepts_interface) = "sdk.Msg" ];
+  uint64 id = 2 [(gogoproto.customname) = "ID"];
+  string label = 3;
+  repeated google.protobuf.Any msgs = 4 [(cosmos_proto.accepts_interface) = "sdk.Msg"];
   // end_time when set defines the time that the code should run for
-  uint64 end_time = 6;
+  uint64 end_time = 5;
   // start_at when set as a unix time after block inclusion, creates a custom
   // start time for execution
-  uint64 start_at = 7;
+  uint64 start_at = 6;
   // interval defines the interval between auto_msg calls
-  string interval = 8;
+  string interval = 7;
   // add fees for flow execution, optional
-  repeated cosmos.base.v1beta1.Coin fee_funds = 9 [
+  repeated cosmos.base.v1beta1.Coin fee_funds = 8 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"fee_funds\""
   ];
-  ExecutionConfiguration configuration = 10;
-  HostedConfig hosted_config = 11;
+  ExecutionConfiguration configuration = 9;
+  string connection_id = 10 [(gogoproto.customname) = "ConnectionID"];
+  HostedICAConfig hosted_ica_config = 11 [(gogoproto.customname) = "HostedICAConfig"];
   ExecutionConditions conditions = 12;
 }
 
@@ -189,11 +180,11 @@ message MsgUpdateFlowResponse {}
 
 message MsgCreateHostedAccount {
   option (cosmos.msg.v1.signer) = "creator";
-  option (amino.name)           = "intent/MsgCreateHostedAccount";
+  option (amino.name) = "intent/MsgCreateHostedAccount";
   option (gogoproto.goproto_getters) = false;
   string creator = 1;
-  string connection_id = 2;
-  string host_connection_id = 3;
+  string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
+  string host_connection_id = 3 [(gogoproto.customname) = "HostConnectionID"];
   string version = 4;
   repeated cosmos.base.v1beta1.Coin fee_coins_suported = 5 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -201,17 +192,18 @@ message MsgCreateHostedAccount {
   ];
 }
 
-message MsgCreateHostedAccountResponse { string address = 1; }
+message MsgCreateHostedAccountResponse {
+  string address = 1;
+}
 
 message MsgUpdateHostedAccount {
   option (cosmos.msg.v1.signer) = "admin";
-  option (amino.name)           = "intent/MsgUpdateHostedAccount";
+  option (amino.name) = "intent/MsgUpdateHostedAccount";
   option (gogoproto.goproto_getters) = false;
   string admin = 1;
   string hosted_address = 2;
-  string connection_id = 3;
-  string host_connection_id = 4;
-  HostFeeConfig host_fee_config = 5;
+  //string connection_id = 3 [(gogoproto.customname) = "ConnectionID"];
+  HostFeeConfig host_fee_config = 4;
 }
 
 message MsgUpdateHostedAccountResponse {}

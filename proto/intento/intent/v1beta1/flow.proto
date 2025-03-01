@@ -43,8 +43,8 @@ message FlowInfo {
     (gogoproto.nullable) = false
   ];
   ICAConfig ica_config = 11 [(gogoproto.customname) = "ICAConfig"];
-  ExecutionConfiguration configuration = 12;
-  HostedConfig hosted_config = 14 [(gogoproto.customname) = "HostedConfig"];
+  HostedICAConfig hosted_ica_config = 12 [(gogoproto.customname) = "HostedICAConfig"];
+  ExecutionConfiguration configuration = 14;
   ExecutionConditions conditions = 15;
 }
 
@@ -52,11 +52,10 @@ message FlowInfo {
 message ICAConfig {
   string port_id = 1 [(gogoproto.customname) = "PortID"];
   string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
-  string host_connection_id = 3 [(gogoproto.customname) = "HostConnectionID"];
 }
 
 // config for hosted account
-message HostedConfig {
+message HostedICAConfig {
   string hosted_address = 1;
   cosmos.base.v1beta1.Coin fee_coin_limit = 3 [(gogoproto.nullable) = false];
 }
@@ -74,10 +73,10 @@ message ExecutionConfiguration {
   // If true, will execute until successful Flow, if false/unset will always
   // execute
   bool stop_on_failure = 4;
+  // If true, will stop if message times oiut
+  bool stop_on_timeout = 5;
   // If true, owner account balance is used when trigger account funds run out
-  bool fallback_to_owner_balance = 5;
-  // If true, allows the flow to continue execution after an ibc channel times out (recommended)
-  bool reregister_ica_after_timeout = 6 [(gogoproto.customname) = "ReregisterICAAfterTimeout"];
+  bool fallback_to_owner_balance = 6;
 }
 
 // FlowHistory execution history
