@@ -2,15 +2,19 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sort"
+	"time"
 
 	"cosmossdk.io/log"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmcli "github.com/CosmWasm/wasmd/x/wasm/client/cli"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+
 	cmtcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
@@ -149,9 +153,29 @@ func initRootCmd(
 	txConfig client.TxConfig,
 	basicManager module.BasicManager,
 ) {
+
+	initCmd := genutilcli.InitCmd(basicManager, app.DefaultNodeHome)
+	initCmd.PostRunE = func(cmd *cobra.Command, args []string) error {
+		fmt.Println("Applying custom modifications after InitCmd execution...")
+
+		serverCtx := server.GetServerContextFromCmd(cmd)
+		config := serverCtx.Config
+
+		// Modify consensus timeouts
+		config.Consensus.TimeoutPropose = 1 * time.Second
+		config.Consensus.TimeoutPrevote = 500 * time.Millisecond
+		config.Consensus.TimeoutPrecommit = 500 * time.Millisecond
+		config.Consensus.TimeoutCommit = 1 * time.Second
+
+		// Write back to config file
+		cmtcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+
+		return nil
+	}
+
 	gentxModule := app.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(basicManager, app.DefaultNodeHome),
+		initCmd,
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, gentxModule.GenTxValidator, txConfig.SigningContext().ValidatorAddressCodec()),
 		genutilcli.GenTxCmd(app.ModuleBasics, txConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, txConfig.SigningContext().ValidatorAddressCodec()),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
