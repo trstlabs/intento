@@ -66,8 +66,8 @@ const config: ExecutionConfiguration = {
   updatingDisabled: false,
   stopOnFailure: true,
   stopOnSuccess: false,
+  stopOnTimeout: false,
   fallbackToOwnerBalance: true,
-  reregisterIcaAfterTimeout: true,
 };
 
 const feedbackLoop: FeedbackLoop = {

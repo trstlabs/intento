@@ -90,9 +90,9 @@ const config: ExecutionConfiguration = {
   saveResponses: false,
   updatingDisabled: false,
   stopOnFailure: true,
+  stopOnTimeout: false,
   stopOnSuccess: false,
   fallbackToOwnerBalance: true,
-  reregisterIcaAfterTimeout: true,
 };
 ```
 
