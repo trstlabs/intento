@@ -336,10 +336,17 @@ func ValidateAndParseMemo(memo string, receiver string) (isFlowRouted bool, owne
 		}
 	}
 
-	conditionsString := flow["conditions"].(string)
-	if conditionsString != "" {
-		if err := json.Unmarshal([]byte(conditionsString), &conditions); err != nil {
+	conditionsString, ok := flow["conditions"].(interface{})
+	if ok {
+		conditionsBytes, err := json.Marshal(conditionsString) // Convert interface{} back to JSON bytes
+		if err != nil {
 			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["conditions"]`)
+		}
+
+		if conditionsString != "" {
+			if err := json.Unmarshal(conditionsBytes, &conditions); err != nil {
+				return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["conditions"]`)
+			}
 		}
 	}
 

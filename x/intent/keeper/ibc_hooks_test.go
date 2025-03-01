@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithFlow() {
 	suite.True(flow.Msgs[0].Equal(txMsgAny))
 }
 
-func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultippleFlows() {
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultipleMsgs() {
 	suite.SetupTest()
 
 	params := types.DefaultParams()
@@ -245,4 +245,49 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxWithSentDenomInPar
 	flowHistory, _ := flowKeeper.GetFlowHistory(suite.IntentoChain.GetContext(), flow.ID)
 	suite.Require().NotNil(flowHistory)
 	suite.Require().Empty(flowHistory[0].Errors)
+}
+
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketFlowWithConditions() {
+	suite.SetupTest()
+
+	params := types.DefaultParams()
+	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
+	params.FlowFlexFeeMul = 1
+	GetICAApp(suite.IntentoChain).IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
+
+	addr := suite.IntentoChain.SenderAccount.GetAddress().String()
+	addrTo := suite.TestAccs[0].String()
+	msg := fmt.Sprintf(`{
+		"@type":"/cosmos.bank.v1beta1.MsgSend",
+		"amount": [{
+			"amount": "70",
+			"denom": "stake"
+		}],
+		"from_address": "%s",
+		"to_address": "%s"
+	}`, addr, addrTo)
+
+	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"owner": "%s","label": "my_trigger", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0","conditions":{"stop_on_failure_of": [12345], "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}}}`, addr, msg))
+
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err := json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().NotContains(ack, "error")
+
+	flow := GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+
+	suite.Require().Equal(flow.Owner, addr)
+	suite.Require().Equal(flow.Label, "my_trigger")
+	suite.Require().Equal(flow.ICAConfig.PortID, "")
+	suite.Require().Equal(flow.Interval, time.Second*60)
+	suite.Require().Equal(flow.Conditions.StopOnFailureOf[0], uint64(12345))
+	suite.Require().Equal(flow.Conditions.FeedbackLoops[0].MsgsIndex, uint32(1))
+	suite.Require().Equal(flow.Conditions.Comparisons[0].Operator, types.ComparisonOperator(4))
+
+	var txMsgAny codectypes.Any
+	cdc := codec.NewProtoCodec(GetICAApp(suite.IntentoChain).InterfaceRegistry())
+
+	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
+	suite.Require().NoError(err)
+	suite.True(flow.Msgs[0].Equal(txMsgAny))
 }
