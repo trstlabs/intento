@@ -16,8 +16,9 @@ import (
 // CONTRACT: all types of accounts must have been already initialized/created
 // InitGenesis initializes the intent module state
 func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
-
-	k.SetParams(ctx, types.DefaultParams())
+	if err := k.SetParams(ctx, gs.Params); err != nil {
+		panic(err)
+	}
 	// NOTE: since the Intent module is a module account, the auth module should
 	// take care of importing the amount into the account except for the
 	// genesis block
