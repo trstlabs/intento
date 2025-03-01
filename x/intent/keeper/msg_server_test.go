@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 	var (
 		path         *ibctesting.Path
 		owner        string
-		connectionId string
+		connectionID string
 		sdkMsg       sdk.Msg
 	)
 
@@ -113,13 +113,13 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 		{
 			"success", func() {
 				owner = TestOwnerAddress
-				connectionId = path.EndpointA.ConnectionID
+				connectionID = path.EndpointA.ConnectionID
 			}, true,
 		},
 		{
 			"failure - active channel does not exist for connection ID", func() {
 				owner = TestOwnerAddress
-				connectionId = "connection-100"
+				connectionID = "connection-100"
 
 			}, false,
 		},
@@ -148,7 +148,7 @@ func (suite *KeeperTestSuite) TestSubmitTx() {
 			}
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			msg, err := types.NewMsgSubmitTx(owner, sdkMsg, connectionId)
+			msg, err := types.NewMsgSubmitTx(owner, sdkMsg, connectionID)
 			suite.Require().NoError(err)
 
 			res, err := msgSrv.SubmitTx(suite.IntentoChain.GetContext(), msg)
@@ -171,8 +171,7 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 		path                      *ibctesting.Path
 		registerInterchainAccount bool
 		noOwner                   bool
-		connectionId              string
-		hostConnectionId          string
+		connectionID              string
 		sdkMsg                    sdk.Msg
 		parseIcaAddress           bool
 		startAtBeforeBlockHeight  bool
@@ -188,15 +187,13 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 		{
 			"success - IBC ICA flow", func() {
 				registerInterchainAccount = true
-				connectionId = path.EndpointA.ConnectionID
-				hostConnectionId = path.EndpointB.ConnectionID
+				connectionID = path.EndpointA.ConnectionID
 			}, true,
 		},
 		{
 			"success - local flow", func() {
 				registerInterchainAccount = false
-				connectionId = ""
-				hostConnectionId = ""
+				connectionID = ""
 				sdkMsg = &banktypes.MsgSend{
 					FromAddress: suite.IntentoChain.SenderAccount.GetAddress().String(),
 					ToAddress:   TestOwnerAddress,
@@ -207,16 +204,14 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 		{
 			"success - IBC transfer", func() {
 				registerInterchainAccount = false
-				connectionId = ""
-				hostConnectionId = ""
+				connectionID = ""
 				transferMsg = true
 			}, true,
 		},
 		{
 			"success - ICQ transfer", func() {
 				registerInterchainAccount = false
-				connectionId = ""
-				hostConnectionId = ""
+				connectionID = ""
 				transferMsg = false
 				sdkMsg = &banktypes.MsgSend{
 					FromAddress: suite.IntentoChain.SenderAccount.GetAddress().String(),
@@ -229,8 +224,7 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 		{
 			"success - parse ICA address", func() {
 				registerInterchainAccount = true
-				connectionId = path.EndpointA.ConnectionID
-				hostConnectionId = path.EndpointB.ConnectionID
+				connectionID = path.EndpointA.ConnectionID
 				parseIcaAddress = true
 				transferMsg = false
 				conditions = types.ExecutionConditions{}
@@ -240,8 +234,7 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 			"failure - start before block height", func() {
 				registerInterchainAccount = true
 				noOwner = false
-				connectionId = path.EndpointA.ConnectionID
-				hostConnectionId = path.EndpointB.ConnectionID
+				connectionID = path.EndpointA.ConnectionID
 				startAtBeforeBlockHeight = true
 			}, false,
 		},
@@ -249,8 +242,7 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 			"failure - owner address is empty", func() {
 				registerInterchainAccount = false
 				noOwner = true
-				connectionId = path.EndpointA.ConnectionID
-				hostConnectionId = path.EndpointB.ConnectionID
+				connectionID = path.EndpointA.ConnectionID
 				parseIcaAddress = false
 			}, false,
 		},
@@ -316,7 +308,7 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 				startAt = uint64(ctx.BlockTime().Unix() - 60*60)
 			}
 
-			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, &conditions)
+			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionID, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, &conditions)
 
 			suite.Require().NoError(err)
 
@@ -439,7 +431,7 @@ func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 			intervalTimeText := interval.String()
 			startAt := uint64(0)
 			GetICAApp(suite.IntentoChain).ICAControllerKeeper.SetInterchainAccountAddress(suite.IntentoChain.GetContext(), "", "", icaAddrString)
-			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, "", "", durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
+			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, "", durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
 			suite.Require().NoError(err)
 			err = msg.ValidateBasic()
 			suite.Require().NoError(err)
@@ -458,9 +450,9 @@ func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 			//test the same for
 			path := NewICAPath(suite.IntentoChain, suite.HostChain)
 			suite.Coordinator.SetupConnections(path)
-			connectionId := path.EndpointA.ConnectionID
-			hostConnectionId := path.EndpointB.ConnectionID
-			msgRegisterAndSubmit, err := types.NewMsgRegisterAccountAndSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, "")
+			connectionID := path.EndpointA.ConnectionID
+			hostConnectionID := path.EndpointB.ConnectionID
+			msgRegisterAndSubmit, err := types.NewMsgRegisterAccountAndSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionID, hostConnectionID, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, "")
 			suite.Require().NoError(err)
 			err = msg.ValidateBasic()
 			suite.Require().NoError(err)
@@ -480,8 +472,7 @@ func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 	var (
 		path                     *ibctesting.Path
-		connectionId             string
-		hostConnectionId         string
+		connectionID             string
 		sdkMsg                   sdk.Msg
 		startAtBeforeBlockHeight bool
 	)
@@ -493,8 +484,7 @@ func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 	}{{
 
 		"success - Create hosted account flow", func() {
-			connectionId = path.EndpointA.ConnectionID
-			hostConnectionId = path.EndpointB.ConnectionID
+			connectionID = path.EndpointA.ConnectionID
 			sdkMsg = &banktypes.MsgSend{
 				FromAddress: TestOwnerAddress,
 				ToAddress:   suite.TestAccs[0].String(),
@@ -545,7 +535,7 @@ func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 			if startAtBeforeBlockHeight {
 				startAt = uint64(suite.IntentoChain.GetContext().BlockTime().Unix() - 60*60)
 			}
-			msg, err := types.NewMsgSubmitFlow(creator, label, []sdk.Msg{sdkMsg}, connectionId, hostConnectionId, durationTimeText, intervalTimeText, startAt, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())), resHosted.Address, sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()), &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
+			msg, err := types.NewMsgSubmitFlow(creator, label, []sdk.Msg{sdkMsg}, connectionID, durationTimeText, intervalTimeText, startAt, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())), resHosted.Address, sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()), &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
 			suite.Require().NoError(err)
 
 			msgSrv = keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
@@ -564,7 +554,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 		path                      *ibctesting.Path
 		registerInterchainAccount bool
 		owner                     string
-		connectionId              string
+		connectionID              string
 		sdkMsg                    sdk.Msg
 		newEndTime                uint64
 		newStartAt                uint64
@@ -581,7 +571,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 			"success - update flow", func() {
 				registerInterchainAccount = true
 				owner = TestOwnerAddress
-				connectionId = path.EndpointA.ConnectionID
+				connectionID = path.EndpointA.ConnectionID
 				newStartAt = uint64(time.Now().Unix())
 				newEndTime = uint64(time.Now().Add(time.Hour).Unix())
 				newInterval = "8m20s"
@@ -591,7 +581,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 			"success - update local flow", func() {
 				registerInterchainAccount = false
 				owner = TestOwnerAddress
-				connectionId = ""
+				connectionID = ""
 				sdkMsg = &banktypes.MsgSend{
 					FromAddress: TestOwnerAddress,
 					ToAddress:   suite.HostChain.SenderAccount.GetAddress().String(),
@@ -603,7 +593,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 			"failure - interval shorter than min duration", func() {
 				registerInterchainAccount = true
 				owner = TestOwnerAddress
-				connectionId = path.EndpointA.ConnectionID
+				connectionID = path.EndpointA.ConnectionID
 				newInterval = "1s"
 			}, false,
 		},
@@ -611,7 +601,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 			"failure - start time can not be changed after execution entry", func() {
 				registerInterchainAccount = true
 				owner = TestOwnerAddress
-				connectionId = path.EndpointA.ConnectionID
+				connectionID = path.EndpointA.ConnectionID
 				newStartAt = uint64(time.Date(2020, time.April, 22, 12, 0, 0, 0, time.UTC).Unix())
 				newInterval = "8m20s"
 				addFakeExecHistory = true
@@ -647,7 +637,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitFlow(owner, "label", []sdk.Msg{sdkMsg}, connectionId, "", "200s", "100s", uint64(suite.IntentoChain.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
+			msg, err := types.NewMsgSubmitFlow(owner, "label", []sdk.Msg{sdkMsg}, connectionID, "200s", "100s", uint64(suite.IntentoChain.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
 			suite.Require().NoError(err)
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
@@ -663,7 +653,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 				flowHistory := icaAppA.IntentKeeper.MustGetFlowHistory(suite.IntentoChain.GetContext(), 1)
 				suite.Require().NotZero(flowHistory[0].ActualExecTime)
 			}
-			updateMsg, err := types.NewMsgUpdateFlow(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionId, newEndTime, newInterval, newStartAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
+			updateMsg, err := types.NewMsgUpdateFlow(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionID, newEndTime, newInterval, newStartAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
 			suite.Require().NoError(err)
 			suite.IntentoChain.Coordinator.IncrementTime()
 
@@ -698,12 +688,10 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 
 func (suite *KeeperTestSuite) TestUpdateHostedAccount() {
 	var (
-		path            *ibctesting.Path
-		newConnectionId string
-		newAdmin        string
-		newFeeAmount    uint64
-		newDenom        string
-		newVersion      string
+		path         *ibctesting.Path
+		newAdmin     string
+		newFeeAmount uint64
+		newDenom     string
 	)
 
 	testCases := []struct {
@@ -713,11 +701,9 @@ func (suite *KeeperTestSuite) TestUpdateHostedAccount() {
 	}{
 		{
 			"success - update hosted", func() {
-				newConnectionId = "connection-123"
 				newAdmin = "cosmos1wdplq6qjh2xruc7qqagma9ya665q6qhcwju3ng"
 				newFeeAmount = 32434554
 				newDenom = "utrst"
-				newVersion = "v123"
 
 			}, true,
 		},
@@ -744,7 +730,7 @@ func (suite *KeeperTestSuite) TestUpdateHostedAccount() {
 
 			hosted := GetICAApp(suite.IntentoChain).IntentKeeper.GetHostedAccount(suite.IntentoChain.GetContext(), resHosted.Address)
 
-			msg := types.NewMsgUpdateHostedAccount(admin, resHosted.Address, newConnectionId, newVersion, newAdmin, sdk.NewCoins(sdk.NewCoin(newDenom, math.NewIntFromUint64(newFeeAmount))))
+			msg := types.NewMsgUpdateHostedAccount(admin, resHosted.Address, newAdmin, sdk.NewCoins(sdk.NewCoin(newDenom, math.NewIntFromUint64(newFeeAmount))))
 			suite.Require().NoError(err)
 
 			msgSrv = keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)

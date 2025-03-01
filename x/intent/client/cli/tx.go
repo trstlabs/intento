@@ -169,9 +169,9 @@ func getSubmitFlowCmd() *cobra.Command {
 			}
 
 			conditions := types.ExecutionConditions{}
-			coditionsString := viper.GetString(flagConditions)
-			if coditionsString != "" {
-				if err := json.Unmarshal([]byte(coditionsString), &conditions); err != nil {
+			conditionsString := viper.GetString(flagConditions)
+			if conditionsString != "" {
+				if err := json.Unmarshal([]byte(conditionsString), &conditions); err != nil {
 					return errors.Wrap(err, "error unmarshalling conditions")
 				}
 			}
@@ -196,7 +196,7 @@ func getSubmitFlowCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagHostConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration, &conditions)
+			msg, err := types.NewMsgSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}
@@ -342,9 +342,9 @@ func getUpdateFlowCmd() *cobra.Command {
 			}
 
 			conditions := types.ExecutionConditions{}
-			coditionsString := viper.GetString(flagConditions)
-			if coditionsString != "" {
-				if err := json.Unmarshal([]byte(coditionsString), &conditions); err != nil {
+			conditionsString := viper.GetString(flagConditions)
+			if conditionsString != "" {
+				if err := json.Unmarshal([]byte(conditionsString), &conditions); err != nil {
 					return errors.Wrap(err, "error unmarshalling conditions")
 				}
 			}
@@ -392,17 +392,16 @@ func getExecutionConfiguration() *types.ExecutionConfiguration {
 	updatingDisabled := viper.GetBool(flagUpdatingDisabled)
 	SaveResponses := viper.GetBool(flagSaveResponses)
 	fallbackToOwnerBalance := viper.GetBool(flagFallbackToOwnerBalance)
-	reregisterICAAfterTimeout := viper.GetBool(flagReregisterICAAfterTimeout)
 	stopOnSuccess := viper.GetBool(flagStopOnSuccess)
 	stopOnFailure := viper.GetBool(flagStopOnFailure)
-
+	stopOnTimeout := viper.GetBool(flagStopOnTimeout)
 	configuration := types.ExecutionConfiguration{
-		UpdatingDisabled:          updatingDisabled,
-		SaveResponses:             SaveResponses,
-		StopOnSuccess:             stopOnSuccess,
-		StopOnFailure:             stopOnFailure,
-		FallbackToOwnerBalance:    fallbackToOwnerBalance,
-		ReregisterICAAfterTimeout: reregisterICAAfterTimeout,
+		UpdatingDisabled:       updatingDisabled,
+		SaveResponses:          SaveResponses,
+		StopOnSuccess:          stopOnSuccess,
+		StopOnFailure:          stopOnFailure,
+		StopOnTimeout:          stopOnTimeout,
+		FallbackToOwnerBalance: fallbackToOwnerBalance,
 	}
 
 	return &configuration
@@ -480,8 +479,6 @@ func getUpdateHostedAccountCmd() *cobra.Command {
 			msg := types.NewMsgUpdateHostedAccount(
 				clientCtx.GetFromAddress().String(),
 				viper.GetString(flagHostedAccount),
-				viper.GetString(flagConnectionID),
-				viper.GetString(flagHostConnectionID),
 				viper.GetString(flagNewAdmin),
 				feeCoinsSuported,
 			)
