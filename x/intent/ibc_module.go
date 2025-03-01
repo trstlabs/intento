@@ -154,34 +154,6 @@ func (im IBCModule) handleMsgResponses(ctx sdk.Context, msgResponses []*cdctypes
 	}
 }
 
-// func (im IBCModule) handleDeprecatedMsgResponses(ctx sdk.Context, txMsgData sdk.TxMsgData, relayer sdk.AccAddress, packet channeltypes.Packet) error {
-// 	//msgClass is used for Relayer Reward and Airdrop Reward
-
-// 	for index, msgData := range txMsgData.Data {
-// 		response, rewardClass, err := handleMsgData(ctx, msgData)
-// 		if err != nil {
-// 			im.keeper.Logger(ctx).Debug("message response error in ICS-27 packet response", "error", err)
-// 			return err
-// 		}
-
-// 		im.keeper.Logger(ctx).Debug("message response in ICS-27 packet response", "response", response.String())
-// 		if index == 0 && rewardClass > 0 {
-
-// 			im.keeper.HandleRelayerReward(ctx, relayer, rewardClass)
-// 		}
-
-// 	}
-
-// 	// set result in Flow history
-// 	err := im.keeper.HandleResponseAndSetFlowResult(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, nil)
-// 	if err != nil {
-// 		im.keeper.SetFlowError(ctx, packet.SourcePort, packet.SourceChannel, packet.Sequence, err.Error())
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
 // OnTimeoutPacket implements the IBCModule interface.
 func (im IBCModule) OnTimeoutPacket(
 	ctx sdk.Context,

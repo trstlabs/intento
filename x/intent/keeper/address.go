@@ -138,12 +138,12 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 
 // simplied from https://github.com/cosmos/ibc-go/blob/main/modules/apps/27-interchain-accounts/types/account.go#L46
 // to diferentiate between hosted icas
-func DeriveHostedAddress(addressString string, connectionID /* , portID  */ string) (sdk.AccAddress, error) {
+func DeriveHostedAddress(addressString string, connectionID string) (sdk.AccAddress, error) {
 	addr, err := sdk.AccAddressFromBech32(addressString)
 	if err != nil {
 		return nil, err
 	}
-	buf := []byte(connectionID /* + portID */)
+	buf := []byte(connectionID)
 	return sdkaddress.Derive(addr, buf), nil
 
 }

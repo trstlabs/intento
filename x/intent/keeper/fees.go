@@ -112,12 +112,12 @@ func (k Keeper) SendFeesToHosted(ctx sdk.Context, flow types.FlowInfo, hostedAcc
 	if err != nil {
 		return err
 	}
-	found, feeCoin := hostedAccount.HostFeeConfig.FeeCoinsSuported.Sort().Find(flow.HostedConfig.FeeCoinLimit.Denom)
+	found, feeCoin := hostedAccount.HostFeeConfig.FeeCoinsSuported.Sort().Find(flow.HostedICAConfig.FeeCoinLimit.Denom)
 	if !found {
 		return errorsmod.Wrap(types.ErrNotFound, "coin not in hosted config")
 	}
 
-	if feeCoin.Amount.GT(flow.HostedConfig.FeeCoinLimit.Amount) {
+	if feeCoin.Amount.GT(flow.HostedICAConfig.FeeCoinLimit.Amount) {
 		return types.ErrHostedFeeLimit
 	}
 
