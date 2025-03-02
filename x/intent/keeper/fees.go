@@ -20,7 +20,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.FlowInfo, feeAddr sd
 
 	gasSmall := math.NewIntFromUint64(ctx.GasMeter().GasConsumed() * uint64(p.FlowFlexFeeMul))
 
-	gas, err := gasSmall.SafeQuo(math.NewInt(100))
+	gas, err := gasSmall.SafeQuo(math.NewInt(1000))
 	if err != nil {
 		return sdk.Coin{}, errorsmod.Wrap(types.ErrUnexpectedFeeCalculation, "could not substract fee")
 	}
@@ -159,7 +159,10 @@ func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, flow types.FlowInfo, ex
 	minFee := sdk.NewCoins()
 	for _, coin := range p.GasFeeCoins {
 		amountSmall := coin.Amount.Mul(math.NewInt(p.FlowFlexFeeMul * int64(expectedGas)))
-		amount := amountSmall.Quo(math.NewInt(100))
+		amount, err := amountSmall.SafeQuo(math.NewInt(1000))
+		if err != nil {
+			return nil, "", errorsmod.Wrap(types.ErrIntOverflowFlow, "could not calculated expected fee")
+		}
 		minFee = minFee.Add(sdk.NewCoin(coin.Denom, amount))
 	}
 	denom = GetDenomIfAnyGTE(flowAddrBalances, minFee)
