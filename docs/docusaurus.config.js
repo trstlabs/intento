@@ -107,7 +107,7 @@ const config = {
             html: '<i class="fa-fw fa-brands fa-x-twitter"></i>',
           },
           {
-            href: "https://discord.gg/aj88cwGW",
+            href: "https://discord.gg/mJcAKKG78J",
             html: '<i class="fa-fw fa-brands fa-discord"></i>',
           },
         ],
@@ -148,7 +148,7 @@ const config = {
               },
               {
                 label: "Discord",
-                href: "https://discord.gg/aj88cwGW",
+                href: "https://discord.gg/mJcAKKG78J",
               },
               /*               {
                 label: "Forum",
