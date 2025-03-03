@@ -29,7 +29,7 @@ var (
 func NewMsgRegisterAccount(owner, connectionID string, version string) *MsgRegisterAccount {
 	return &MsgRegisterAccount{
 		Owner:        owner,
-		ConnectionId: connectionID,
+		ConnectionID: connectionID,
 		Version:      version,
 	}
 }
@@ -64,7 +64,7 @@ func NewMsgSubmitTx(owner string, sdkMsg sdk.Msg, connectionID string) (*MsgSubm
 
 	return &MsgSubmitTx{
 		Owner:        owner,
-		ConnectionId: connectionID,
+		ConnectionID: connectionID,
 		Msg:          anys[0],
 	}, nil
 }
@@ -119,7 +119,7 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 		return fmt.Errorf("cannot execute an empty msg")
 	}
 
-	if msg.ConnectionId == "" {
+	if msg.ConnectionID == "" {
 		return fmt.Errorf("cannot execute an empty ConnectionId")
 	}
 
@@ -127,24 +127,23 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 }
 
 // NewMsgSubmitFlow creates a new NewMsgSubmitFlow instance
-func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID string, hostConnectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgSubmitFlow, error) {
+func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgSubmitFlow, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
 	}
 
 	return &MsgSubmitFlow{
-		Owner:            owner,
-		Label:            label,
-		Msgs:             anys,
-		Duration:         duration,
-		Interval:         interval,
-		StartAt:          startAt,
-		FeeFunds:         feeFunds,
-		Configuration:    configuration,
-		ConnectionId:     connectionID,
-		HostConnectionId: hostConnectionID,
-		HostedConfig: &HostedConfig{HostedAddress: hostedAddress,
+		Owner:         owner,
+		Label:         label,
+		Msgs:          anys,
+		Duration:      duration,
+		Interval:      interval,
+		StartAt:       startAt,
+		FeeFunds:      feeFunds,
+		Configuration: configuration,
+		ConnectionID:  connectionID,
+		HostedICAConfig: &HostedICAConfig{HostedAddress: hostedAddress,
 			FeeCoinLimit: hostedFeeLimit},
 		Conditions: conditions,
 	}, nil
@@ -227,8 +226,8 @@ func NewMsgRegisterAccountAndSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, 
 	return &MsgRegisterAccountAndSubmitFlow{
 		Owner:            owner,
 		Label:            label,
-		ConnectionId:     connectionID,
-		HostConnectionId: hostConnectionID,
+		ConnectionID:     connectionID,
+		HostConnectionID: hostConnectionID,
 		Msgs:             anys,
 		Duration:         duration,
 		Interval:         interval,
@@ -353,14 +352,14 @@ func NewMsgUpdateFlow(owner string, id uint64, label string, sdkMsgs []sdk.Msg, 
 		Owner:         owner,
 		ID:            id,
 		Label:         label,
-		ConnectionId:  connectionID,
+		ConnectionID:  connectionID,
 		Msgs:          anys,
 		EndTime:       endTime,
 		StartAt:       startAt,
 		Interval:      interval,
 		Configuration: configuration,
 		FeeFunds:      feeFunds,
-		HostedConfig: &HostedConfig{HostedAddress: hostedAddress,
+		HostedICAConfig: &HostedICAConfig{HostedAddress: hostedAddress,
 			FeeCoinLimit: hostedFeeLimit},
 		Conditions: conditions,
 	}, nil
@@ -434,7 +433,7 @@ func (msg MsgUpdateFlow) ValidateBasic() error {
 func NewMsgCreateHostedAccount(creator, connectionID, version string, feeFundsSupported sdk.Coins) *MsgCreateHostedAccount {
 	return &MsgCreateHostedAccount{
 		Creator:          creator,
-		ConnectionId:     connectionID,
+		ConnectionID:     connectionID,
 		Version:          version,
 		FeeCoinsSuported: feeFundsSupported,
 	}
@@ -462,14 +461,12 @@ func (msg MsgCreateHostedAccount) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgUpdateHostedAccount creates a new NewMsgUpdateHostedAccount instance
-func NewMsgUpdateHostedAccount(admin, hostedAddress, connectionID, hostConnectionID, newAdmin string, feeFundsSupported sdk.Coins) *MsgUpdateHostedAccount {
+func NewMsgUpdateHostedAccount(admin, hostedAddress, newAdmin string, feeFundsSupported sdk.Coins) *MsgUpdateHostedAccount {
 
 	return &MsgUpdateHostedAccount{
-		Admin:            admin,
-		HostedAddress:    hostedAddress,
-		ConnectionId:     connectionID,
-		HostConnectionId: hostConnectionID,
-		HostFeeConfig:    &HostFeeConfig{FeeCoinsSuported: feeFundsSupported, Admin: newAdmin},
+		Admin:         admin,
+		HostedAddress: hostedAddress,
+		HostFeeConfig: &HostFeeConfig{FeeCoinsSuported: feeFundsSupported, Admin: newAdmin},
 	}
 }
 

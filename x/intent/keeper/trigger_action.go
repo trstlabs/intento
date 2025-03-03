@@ -19,7 +19,7 @@ import (
 
 func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdctypes.Any, error) {
 	// local flow
-	if (flow.ICAConfig == nil || flow.ICAConfig.ConnectionID == "") && (flow.HostedConfig == nil || flow.HostedConfig.HostedAddress == "") {
+	if (flow.ICAConfig == nil || flow.ICAConfig.ConnectionID == "") && (flow.HostedICAConfig == nil || flow.HostedICAConfig.HostedAddress == "") {
 		txMsgs := flow.GetTxMsgs(k.cdc)
 		msgResponses, err := handleLocalFlow(k, ctx, txMsgs, *flow)
 		return err == nil, msgResponses, errorsmod.Wrap(err, "could execute local flow")
@@ -29,8 +29,8 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 	portID := flow.ICAConfig.PortID
 	triggerAddress := flow.Owner
 	//get hosted account from hosted config
-	if flow.HostedConfig != nil && flow.HostedConfig.HostedAddress != "" {
-		hostedAccount := k.GetHostedAccount(ctx, flow.HostedConfig.HostedAddress)
+	if flow.HostedICAConfig != nil && flow.HostedICAConfig.HostedAddress != "" {
+		hostedAccount := k.GetHostedAccount(ctx, flow.HostedICAConfig.HostedAddress)
 		connectionID = hostedAccount.ICAConfig.ConnectionID
 		portID = hostedAccount.ICAConfig.PortID
 		triggerAddress = hostedAccount.HostedAddress
@@ -306,14 +306,7 @@ func (k Keeper) SetFlowOnTimeout(ctx sdk.Context, sourcePort string, channelID s
 		return nil
 	}
 	flow := k.GetFlowInfo(ctx, id)
-	if flow.Configuration.ReregisterICAAfterTimeout {
-		flow := k.GetFlowInfo(ctx, id)
-		metadataString := icatypes.NewDefaultMetadataString(flow.ICAConfig.ConnectionID, flow.ICAConfig.HostConnectionID)
-		err := k.RegisterInterchainAccount(ctx, flow.ICAConfig.ConnectionID, flow.Owner, metadataString)
-		if err != nil {
-			return err
-		}
-	} else {
+	if flow.Configuration.StopOnTimeout {
 		k.RemoveFromFlowQueue(ctx, flow)
 	}
 	k.Logger(ctx).Debug("flow packet timed out", "flow_id", id)

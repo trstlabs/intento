@@ -30,7 +30,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 // RegisterAccount implements the Msg/RegisterAccount interface
 func (k msgServer) RegisterAccount(goCtx context.Context, msg *types.MsgRegisterAccount) (*types.MsgRegisterAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := k.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.Owner, msg.Version)
+	err := k.RegisterInterchainAccount(ctx, msg.ConnectionID, msg.Owner, msg.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -53,15 +53,13 @@ func (k msgServer) SubmitTx(goCtx context.Context, msg *types.MsgSubmitTx) (*typ
 
 	relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
 	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.icaControllerKeeper)
-	icaMsg := icacontrollertypes.NewMsgSendTx(msg.Owner, msg.ConnectionId, relativeTimeoutTimestamp, packetData)
+	icaMsg := icacontrollertypes.NewMsgSendTx(msg.Owner, msg.ConnectionID, relativeTimeoutTimestamp, packetData)
 
 	_, err = msgServer.SendTx(ctx, icaMsg)
 	if err != nil {
 		return nil, err
 	}
 
-	// //store 0 as flow id as a regular submit is not flow
-	// k.setTmpFlowID(ctx, 0, portID, "", sequence)
 	return &types.MsgSubmitTxResponse{}, nil
 }
 
@@ -74,12 +72,12 @@ func (k msgServer) SubmitFlow(goCtx context.Context, msg *types.MsgSubmitFlow) (
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 
-	portID, duration, interval, startTime, configuration, conditions, hostedConfig, err := checkAndParseFlowContent(k, msg, err, ctx)
+	portID, duration, interval, startTime, configuration, conditions, HostedICAConfig, err := checkAndParseFlowContent(k, msg, err, ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, hostedConfig, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
+	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, HostedICAConfig, portID, msg.ConnectionID, conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +89,7 @@ func (k msgServer) SubmitFlow(goCtx context.Context, msg *types.MsgSubmitFlow) (
 func (k msgServer) RegisterAccountAndSubmitFlow(goCtx context.Context, msg *types.MsgRegisterAccountAndSubmitFlow) (*types.MsgRegisterAccountAndSubmitFlowResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := k.RegisterInterchainAccount(ctx, msg.ConnectionId, msg.Owner, msg.Version)
+	err := k.RegisterInterchainAccount(ctx, msg.ConnectionID, msg.Owner, msg.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +104,7 @@ func (k msgServer) RegisterAccountAndSubmitFlow(goCtx context.Context, msg *type
 		return nil, err
 	}
 
-	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, types.HostedConfig{}, portID, msg.ConnectionId, msg.HostConnectionId, conditions)
+	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, types.HostedICAConfig{}, portID, msg.ConnectionID, conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -130,12 +128,12 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, "updating is disabled")
 	}
 
-	if msg.ConnectionId != "" {
+	if msg.ConnectionID != "" {
 		flow.ICAConfig.PortID, err = icatypes.NewControllerPortID(msg.Owner)
 		if err != nil {
 			return nil, err
 		}
-		flow.ICAConfig.ConnectionID = msg.ConnectionId
+		flow.ICAConfig.ConnectionID = msg.ConnectionID
 	}
 	newExecTime := flow.ExecTime
 	if msg.EndTime > 0 {
@@ -216,8 +214,8 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 		return nil, errorsmod.Wrap(types.ErrSignerNotOk, err.Error())
 	}
 	//set hosted config
-	if msg.HostedConfig != nil {
-		flow.HostedConfig = msg.HostedConfig
+	if msg.HostedICAConfig != nil {
+		flow.HostedICAConfig = msg.HostedICAConfig
 	}
 
 	k.SetFlowInfo(ctx, &flow)
@@ -229,12 +227,12 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 func (k msgServer) CreateHostedAccount(goCtx context.Context, msg *types.MsgCreateHostedAccount) (*types.MsgCreateHostedAccountResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	hostedAddress, err := DeriveHostedAddress(msg.Creator, msg.ConnectionId)
+	hostedAddress, err := DeriveHostedAddress(msg.Creator, msg.ConnectionID)
 	if err != nil {
 		return nil, err
 	}
 	//register ICA
-	err = k.RegisterInterchainAccount(ctx, msg.ConnectionId, hostedAddress.String(), msg.Version)
+	err = k.RegisterInterchainAccount(ctx, msg.ConnectionID, hostedAddress.String(), msg.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +245,7 @@ func (k msgServer) CreateHostedAccount(goCtx context.Context, msg *types.MsgCrea
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 	//store hosted config by address on hosted key prefix
-	k.SetHostedAccount(ctx, &types.HostedAccount{HostedAddress: hostedAddress.String(), HostFeeConfig: &types.HostFeeConfig{Admin: msg.Creator, FeeCoinsSuported: msg.FeeCoinsSuported}, ICAConfig: &types.ICAConfig{ConnectionID: msg.ConnectionId, HostConnectionID: msg.HostConnectionId, PortID: portID}})
+	k.SetHostedAccount(ctx, &types.HostedAccount{HostedAddress: hostedAddress.String(), HostFeeConfig: &types.HostFeeConfig{Admin: msg.Creator, FeeCoinsSuported: msg.FeeCoinsSuported}, ICAConfig: &types.ICAConfig{ConnectionID: msg.ConnectionID, PortID: portID}})
 	k.addToHostedAccountAdminIndex(ctx, creator, hostedAddress.String())
 	return &types.MsgCreateHostedAccountResponse{Address: hostedAddress.String()}, nil
 }
@@ -267,21 +265,6 @@ func (k msgServer) UpdateHostedAccount(goCtx context.Context, msg *types.MsgUpda
 	}
 
 	hostedAddress := hostedAccount.HostedAddress
-	connectionID := hostedAccount.ICAConfig.ConnectionID
-	hostConnectionID := hostedAccount.ICAConfig.HostConnectionID
-	if msg.ConnectionId != "" && msg.HostConnectionId != "" {
-		// hostedAddressAcc, err := DeriveHostedAddress(hostedAccount.HostedAddress, msg.ConnectionId)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// hostedAddress = hostedAddressAcc.String()
-		// portID, err := icatypes.NewControllerPortID(hostedAddress)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		connectionID = msg.ConnectionId
-		hostConnectionID = msg.HostConnectionId
-	}
 
 	admin := hostedAccount.HostFeeConfig.Admin
 	if msg.HostFeeConfig.Admin != "" {
@@ -302,7 +285,7 @@ func (k msgServer) UpdateHostedAccount(goCtx context.Context, msg *types.MsgUpda
 		feeCoinsSupported = msg.HostFeeConfig.FeeCoinsSuported
 	}
 
-	k.SetHostedAccount(ctx, &types.HostedAccount{HostedAddress: hostedAddress, HostFeeConfig: &types.HostFeeConfig{Admin: admin, FeeCoinsSuported: feeCoinsSupported}, ICAConfig: &types.ICAConfig{ConnectionID: connectionID, HostConnectionID: hostConnectionID, PortID: hostedAccount.ICAConfig.PortID}})
+	k.SetHostedAccount(ctx, &types.HostedAccount{HostedAddress: hostedAddress, HostFeeConfig: &types.HostFeeConfig{Admin: admin, FeeCoinsSuported: feeCoinsSupported}, ICAConfig: hostedAccount.ICAConfig})
 
 	//set hosted config by address on hosted key prefix
 	return &types.MsgUpdateHostedAccountResponse{}, nil
@@ -313,16 +296,16 @@ func checkAndParseFlowContent(
 	msg sdk.Msg,
 	err error,
 	ctx sdk.Context,
-) (string, time.Duration, time.Duration, time.Time, types.ExecutionConfiguration, types.ExecutionConditions, types.HostedConfig, error) {
+) (string, time.Duration, time.Duration, time.Time, types.ExecutionConfiguration, types.ExecutionConditions, types.HostedICAConfig, error) {
 	var (
 		msgOwner         string
-		msgConnectionId  string
+		msgConnectionID  string
 		msgDuration      string
 		msgInterval      string
 		msgStartAt       uint64
 		msgConfiguration *types.ExecutionConfiguration = &types.ExecutionConfiguration{}
 		msgConditions    *types.ExecutionConditions    = &types.ExecutionConditions{}
-		hostedConfig     *types.HostedConfig           = &types.HostedConfig{}
+		HostedICAConfig  *types.HostedICAConfig        = &types.HostedICAConfig{}
 		msgMsgs          []*cdctypes.Any               = []*cdctypes.Any{}
 	)
 
@@ -331,12 +314,12 @@ func checkAndParseFlowContent(
 		// Existing logic for MsgSubmitFlow
 		msgOwner = msg.Owner
 		msgDuration = msg.Duration
-		msgConnectionId = msg.ConnectionId
+		msgConnectionID = msg.ConnectionID
 		msgStartAt = msg.StartAt
 		msgInterval = msg.Interval
-		// Use fallback if hostedConfig is nil
-		if msg.HostedConfig != nil {
-			hostedConfig = msg.HostedConfig
+		// Use fallback if HostedICAConfig is nil
+		if msg.HostedICAConfig != nil {
+			HostedICAConfig = msg.HostedICAConfig
 		}
 		// Use fallback if msgConfiguration is nil
 		if msg.Configuration != nil {
@@ -353,7 +336,7 @@ func checkAndParseFlowContent(
 		// Handle RegisterAccountAndSubmitFlow
 		msgOwner = msg.Owner
 		msgDuration = msg.Duration
-		msgConnectionId = msg.ConnectionId
+		msgConnectionID = msg.ConnectionID
 		msgStartAt = msg.StartAt
 		msgInterval = msg.Interval
 		if msg.Configuration != nil {
@@ -366,14 +349,14 @@ func checkAndParseFlowContent(
 		msgMsgs = msg.Msgs
 
 	default:
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, fmt.Errorf("unsupported message type: %T", msg)
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, fmt.Errorf("unsupported message type: %T", msg)
 	}
 
 	portID := ""
-	if msgConnectionId != "" {
+	if msgConnectionID != "" {
 		portID, err = icatypes.NewControllerPortID(msgOwner)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, err
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, err
 		}
 	}
 
@@ -381,7 +364,7 @@ func checkAndParseFlowContent(
 	if msgDuration != "" {
 		duration, err = time.ParseDuration(msgDuration)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, err
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, err
 		}
 	}
 
@@ -389,7 +372,7 @@ func checkAndParseFlowContent(
 	if msgInterval != "" {
 		interval, err = time.ParseDuration(msgInterval)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 		}
 	}
 
@@ -397,10 +380,10 @@ func checkAndParseFlowContent(
 	if msgStartAt != 0 {
 		startTime = time.Unix(int64(msgStartAt), 0)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, err
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, err
 		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
 	}
 
@@ -409,27 +392,27 @@ func checkAndParseFlowContent(
 		panic(err)
 	}
 	if interval != 0 && (interval < p.MinFlowInterval || interval > duration) {
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinFlowInterval, duration)
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinFlowInterval, duration)
 	}
 	if duration != 0 {
 		if duration > p.MaxFlowDuration {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxFlowDuration)
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxFlowDuration)
 		} else if duration < p.MinFlowDuration {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinFlowDuration)
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinFlowDuration)
 		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxFlowDuration)) {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
 
 	err = updateConditions(msgConditions, msgMsgs, duration, interval)
 	if err != nil {
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedConfig{}, err
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, err
 	}
 
 	return portID, duration, interval, startTime,
 		*msgConfiguration,
 		*msgConditions,
-		*hostedConfig,
+		*HostedICAConfig,
 		nil
 }
 

@@ -45,7 +45,7 @@ func (k Keeper) SetFlowInfo(ctx sdk.Context, flow *types.FlowInfo) {
 	store.Set(types.GetFlowKey(flow.ID), k.cdc.MustMarshal(flow))
 }
 
-func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, msgs []*cdctypes.Any, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, configuration types.ExecutionConfiguration, hostedConfig types.HostedConfig, portID string, connectionId string, hostConnectionId string, conditions types.ExecutionConditions) error {
+func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, msgs []*cdctypes.Any, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, configuration types.ExecutionConfiguration, HostedICAConfig types.HostedICAConfig, portID string, connectionId string, conditions types.ExecutionConditions) error {
 
 	id := k.autoIncrementID(ctx, types.KeyLastID)
 	flowAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
@@ -56,25 +56,24 @@ func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, 
 	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, id, interval)
 
 	icaConfig := types.ICAConfig{
-		PortID:           portID,
-		ConnectionID:     connectionId,
-		HostConnectionID: hostConnectionId,
+		PortID:       portID,
+		ConnectionID: connectionId,
 	}
 
 	flow := types.FlowInfo{
-		ID:            id,
-		Owner:         owner.String(),
-		Label:         label,
-		FeeAddress:    flowAddress.String(),
-		Msgs:          msgs,
-		Interval:      interval,
-		StartTime:     startAt,
-		ExecTime:      execTime,
-		EndTime:       endTime,
-		ICAConfig:     &icaConfig,
-		Configuration: &configuration,
-		HostedConfig:  &hostedConfig,
-		Conditions:    &conditions,
+		ID:              id,
+		Owner:           owner.String(),
+		Label:           label,
+		FeeAddress:      flowAddress.String(),
+		Msgs:            msgs,
+		Interval:        interval,
+		StartTime:       startAt,
+		ExecTime:        execTime,
+		EndTime:         endTime,
+		ICAConfig:       &icaConfig,
+		Configuration:   &configuration,
+		HostedICAConfig: &HostedICAConfig,
+		Conditions:      &conditions,
 	}
 
 	if err := k.SignerOk(ctx, k.cdc, flow); err != nil {

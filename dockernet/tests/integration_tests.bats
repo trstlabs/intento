@@ -167,8 +167,8 @@ EOF
 
   # get token balance user on INTO
   user_into_balance_start=$($INTO_MAIN_CMD q bank balance $(INTO_ADDRESS) $INTO_DENOM | GETBAL)
-  WAIT_FOR_BLOCK $INTO_LOGS 2
-  #  build MsgRegisterAccount and retrieve trigger ICA account
+  WAIT_FOR_BLOCK $INTO_LOGS 3
+  # build MsgRegisterAccount and retrieve trigger ICA account
   msg_register_account=$($INTO_MAIN_CMD tx intent register --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --from $INTO_USER -y)
   echo $msg_register_account
   sleep 120
@@ -198,7 +198,7 @@ EOF
 }
 EOF
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_send_file" --label "Send from Interchain Account" --duration "60s" --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_send_file" --label "Send from Interchain Account" --duration "60s" --connection-id connection-$CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance -y)
   echo "$msg_submit_flow"
 
   GET_FLOW_ID $(INTO_ADDRESS)
@@ -227,7 +227,7 @@ EOF
   ica_address=$(echo "$ica_address" | awk '{print $2}')
 
   $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.bank.v1beta1.MsgSend" --from $HOST_USER -y
-  WAIT_FOR_BLOCK $INTO_LOGS 2
+  WAIT_FOR_BLOCK $INTO_LOGS 3
   $HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ica_address $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y
 
   # Define the file path
@@ -254,7 +254,7 @@ EOF
 }
 EOF
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "Send from user on host chain using AuthZ" --duration "60s" --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "Send from user on host chain using AuthZ" --duration "60s" --connection-id connection-$CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance -y)
   echo "$msg_submit_flow"
 
   GET_FLOW_ID $(INTO_ADDRESS)
@@ -335,10 +335,10 @@ EOF
   fi
 
   $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.bank.v1beta1.MsgSend" --from $HOST_USER -y
-  WAIT_FOR_BLOCK $INTO_LOGS 2
+  WAIT_FOR_BLOCK $INTO_LOGS 3
   fund_ica_hosted=$($HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ica_address $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
 
-  WAIT_FOR_BLOCK $INTO_LOGS 2
+  WAIT_FOR_BLOCK $INTO_LOGS 4
 
   # Define the file path
   msg_exec_file="msg_exec.json"
@@ -404,7 +404,7 @@ EOF
 
   # fund_ica_hosted=$($HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ica_address $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
 
-  WAIT_FOR_BLOCK $INTO_LOGS 2
+  WAIT_FOR_BLOCK $INTO_LOGS 3
 
   # Define the file path
   msg_exec_file="msg_exec.json"
@@ -432,7 +432,7 @@ EOF
   #query_key='AhRGgNNqzbhS97+pYwK8+uF7JhF0PGliYy81MjRDNjUyMUI0NDQ4Mjc3QTBFOTgzQTVCN0U2NTZGMDREQ0UzQTZGOTAyRUZGQUM3RDMxMDBFQjQyMEYwREZF'
   query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+GliYy81MjRDNjUyMUI0NDQ4Mjc3QTBFOTgzQTVCN0U2NTZGMDREQ0UzQTZGOTAyRUZGQUM3RDMxMDBFQjQyMEYwREZF'
   # echo "Query Key: $query_key"
-  # msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Hosted ICA" --interval "60s" --duration "120s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "", "msgs_index":0, "msg_key":"Amount.[0].Amount","value_type": "sdk.Int", "from_icq": true, "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Hosted ICA" --interval "60s" --duration "120s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "", "msgs_index":0, "msg_key":"Amount.[0].Amount","value_type": "sdk.Int", "from_icq": true, "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
   # echo "$msg_submit_flow"
 
   GET_FLOW_ID $(INTO_ADDRESS)
@@ -450,7 +450,7 @@ EOF
   # call MsgDelegate
   validator_address=$(GET_VAL_ADDR $HOST_CHAIN_ID 1)
   delegate=$($HOST_MAIN_CMD_TX staking delegate $validator_address $MSGDELEGATE_AMOUNT$HOST_DENOM --from $HOST_USER -y)
-  WAIT_FOR_BLOCK $INTO_LOGS 2
+  WAIT_FOR_BLOCK $INTO_LOGS 3
 
   hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
   # Use jq to filter the hosted_address based on the connection ID
@@ -466,9 +466,9 @@ EOF
   fi
 
   $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" --from $HOST_USER -y
-  WAIT_FOR_BLOCK $INTO_LOGS 2
+  WAIT_FOR_BLOCK $INTO_LOGS 3
   $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.staking.v1beta1.MsgDelegate" --from $HOST_USER -y
-  WAIT_FOR_BLOCK $INTO_LOGS 2
+  WAIT_FOR_BLOCK $INTO_LOGS 3
 
   host_user_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
 
@@ -555,7 +555,7 @@ EOF
 }
 EOF
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "Recurring transfer on host chain from host user" --duration "2880h" --interval "60s" --stop-on-failure --fee-funds $RECURRING_MSGSEND_AMOUNT_TOTAL$INTO_DENOM --connection-id connection-$CONNECTION_ID --host-connection-id $HOST_CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance --reregister-ica-after-timeout -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "Recurring transfer on host chain from host user" --duration "2880h" --interval "60s" --stop-on-failure --fee-funds $RECURRING_MSGSEND_AMOUNT_TOTAL$INTO_DENOM --connection-id connection-$CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance --stop-on-timeout -y)
   echo "$msg_submit_flow"
 
   GET_FLOW_ID $(INTO_ADDRESS)
@@ -575,12 +575,11 @@ EOF
   assert_equal "$receiver_diff" $MSGSEND_AMOUNT
 }
 
-
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Conditional Autocompound on host" {
   # call MsgDelegate
   validator_address=$(GET_VAL_ADDR $HOST_CHAIN_ID 1)
   delegate=$($HOST_MAIN_CMD_TX staking delegate $validator_address $MSGDELEGATE_AMOUNT$HOST_DENOM --from $HOST_USER -y)
-  WAIT_FOR_BLOCK $INTO_LOGS 2
+  WAIT_FOR_BLOCK $INTO_LOGS 3
 
   hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
   # Use jq to filter the hosted_address based on the connection ID
@@ -594,7 +593,6 @@ EOF
   else
     echo "No hosted address found for connection ID: $CONNECTION_ID"
   fi
-
 
   host_user_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
 

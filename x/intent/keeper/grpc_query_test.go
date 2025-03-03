@@ -445,7 +445,7 @@ func CreateFakeHostedAcc(k Keeper, ctx sdk.Context, creator, portID, connectionI
 	if err != nil {
 		return types.HostedAccount{}, err
 	}
-	hostedAcc := types.HostedAccount{HostedAddress: hostedAddress.String(), HostFeeConfig: &types.HostFeeConfig{Admin: creator, FeeCoinsSuported: sdk.NewCoins(sdk.NewCoin(types.Denom, math.NewInt(1)))}, ICAConfig: &types.ICAConfig{ConnectionID: connectionId, HostConnectionID: hostConnectionId, PortID: portID}}
+	hostedAcc := types.HostedAccount{HostedAddress: hostedAddress.String(), HostFeeConfig: &types.HostFeeConfig{Admin: creator, FeeCoinsSuported: sdk.NewCoins(sdk.NewCoin(types.Denom, math.NewInt(1)))}, ICAConfig: &types.ICAConfig{ConnectionID: connectionId, PortID: portID}}
 	//store hosted config by address on hosted key prefix
 	k.SetHostedAccount(ctx, &hostedAcc)
 	k.addToHostedAccountAdminIndex(ctx, creatorAddr, hostedAddress.String())

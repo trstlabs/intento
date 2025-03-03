@@ -19,16 +19,16 @@ const (
 	flagHostedAccountFeeLimit = "hosted-account-fee-limit"
 
 	//Execution conditions
-	flagUpdatingDisabled          = "updating-disabled"
-	flagSaveResponses             = "save-responses"
-	flagFallbackToOwnerBalance    = "fallback-to-owner-balance"
-	flagStopOnSuccess             = "stop-on-success"
-	flagStopOnFailure             = "stop-on-failure"
-	flagStopOnSuccessOf           = "stop-on-success-of"
-	flagStopOnFailureOf           = "stop-on-failure-of"
-	flagSkipOnSuccessOf           = "skip-on-success-of"
-	flagSkipOnFailureOf           = "skip-on-failure-of"
-	flagReregisterICAAfterTimeout = "reregister-ica-after-timeout"
+	flagUpdatingDisabled       = "updating-disabled"
+	flagSaveResponses          = "save-responses"
+	flagFallbackToOwnerBalance = "fallback-to-owner-balance"
+	flagStopOnSuccess          = "stop-on-success"
+	flagStopOnFailure          = "stop-on-failure"
+	flagStopOnTimeout          = "stop-on-timeout"
+	flagStopOnSuccessOf        = "stop-on-success-of"
+	flagStopOnFailureOf        = "stop-on-failure-of"
+	flagSkipOnSuccessOf        = "skip-on-success-of"
+	flagSkipOnFailureOf        = "skip-on-failure-of"
 
 	flagFeeCoinsSupported = "fee-coins-suported"
 	flagNewAdmin          = "new-admin"
@@ -59,8 +59,8 @@ func init() {
 	fsFlow.Bool(flagSaveResponses, true, "save message and query responses to tx history (Cosmos SDK v0.46+ chains only), true on default'")
 	fsFlow.Bool(flagStopOnSuccess, false, "stop execution after success'")
 	fsFlow.Bool(flagStopOnFailure, false, "stop execution after failure'")
+	fsFlow.Bool(flagStopOnTimeout, false, " If true, allows the flow to continue execution after an ibc channel times out'")
 	fsFlow.Bool(flagFallbackToOwnerBalance, false, "fallback to owner balance'")
-	fsFlow.Bool(flagReregisterICAAfterTimeout, true, " If true, allows the flow to continue execution after an ibc channel times out, true on default'")
 
 	fsIBC.String(flagConnectionID, "", "Connection ID from this chain to the host chain, optional")
 	fsIBC.String(flagHostConnectionID, "", "Connection ID from host chain to this chain, optional")

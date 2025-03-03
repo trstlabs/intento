@@ -13,9 +13,9 @@ option (gogoproto.goproto_getters_all) = false;
 // Params defines the params for activeness of Flows on governance proposals.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  // Commision rate to retun remaining funds in flow fee account after final execution, e.g. 100 = 1X, 250 = 250
+  // Commision rate percentage for returning remaining funds in flow fee account after final execution, e.g. 100 = 1X, 250 = 250
   int64 flow_funds_commission = 1;
-  // Multiplier to the flexible flow gas fee, e.g. 100 = 1X, 250 = 250
+  // Multiplier to the flexible flow gas fee in promille, e.g. 1000 = 1X, 2500 = 2,5x
   int64 flow_flex_fee_mul = 2;
   // Fixed burn fee per message execution to burn native denom
   int64 burn_fee_per_msg = 3;
@@ -25,19 +25,19 @@ message Params {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"gas_fee_coins\""
   ];
-  //  Maximum period for self-executing Flow
+  //  Maximum period for a flow
   google.protobuf.Duration max_flow_duration = 5 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag) = "max_flow_duration,omitempty"
   ];
-  //  Minimum period for self-executing Flow
+  //  Minimum period for a flow
   google.protobuf.Duration min_flow_duration = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag) = "min_flow_duration,omitempty"
   ];
-  //  Minimum period for self-executing Flow
+  //  Minimum period for a flow
   google.protobuf.Duration min_flow_interval = 8 [
     (gogoproto.nullable) = false,
     (gogoproto.stdduration) = true,

@@ -31,7 +31,7 @@ func TestCreateFlow(t *testing.T) {
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 
 	// Verify that the flow was created correctly
@@ -68,7 +68,7 @@ func TestCreateFlowWithZeroFeeFundsWorks(t *testing.T) {
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 
 	// Verify that the flow was created correctly
@@ -106,10 +106,10 @@ func TestGetFlowsForBlock(t *testing.T) {
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedConfig{}, "", "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 	flows := keepers.IntentKeeper.GetFlowsForBlock(ctx.WithBlockTime(startTime.Add(interval)))
 	require.Equal(t, len(flows), 2)

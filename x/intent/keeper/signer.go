@@ -65,11 +65,11 @@ func isAuthzMsgExec(message *codectypes.Any) bool {
 }
 
 func isLocalMessage(flowInfo types.FlowInfo) bool {
-	return (flowInfo.ICAConfig == nil || flowInfo.ICAConfig.ConnectionID == "") && (flowInfo.HostedConfig == nil || flowInfo.HostedConfig.HostedAddress == "")
+	return (flowInfo.ICAConfig == nil || flowInfo.ICAConfig.ConnectionID == "") && (flowInfo.HostedICAConfig == nil || flowInfo.HostedICAConfig.HostedAddress == "")
 }
 
 func isHostedICAMessage(flowInfo types.FlowInfo) bool {
-	return flowInfo.HostedConfig != nil && flowInfo.HostedConfig.HostedAddress != ""
+	return flowInfo.HostedICAConfig != nil && flowInfo.HostedICAConfig.HostedAddress != ""
 }
 
 func isSelfHostedICAMessage(flowInfo types.FlowInfo) bool {
@@ -199,8 +199,8 @@ func parseAccAddressFromAnyPrefix(bech32str string) (sdk.AccAddress, error) {
 // validateHostedOrICAAccount checks if the signer matches a hosted or ICA account.
 // func (k Keeper) validateHostedOrICAAccount(ctx sdk.Context, flowInfo types.FlowInfo, signer sdk.AccAddress) error {
 // 	// Check Hosted Config
-// 	if flowInfo.HostedConfig != nil && flowInfo.HostedConfig.HostedAddress != "" {
-// 		ica, err := k.TryGetHostedAccount(ctx, flowInfo.HostedConfig.HostedAddress)
+// 	if flowInfo.HostedICAConfig != nil && flowInfo.HostedICAConfig.HostedAddress != "" {
+// 		ica, err := k.TryGetHostedAccount(ctx, flowInfo.HostedICAConfig.HostedAddress)
 // 		if err != nil {
 // 			return errorsmod.Wrap(err, "failed to get hosted account")
 // 		}
