@@ -29,7 +29,6 @@ Intento is a comprehensive solution designed to make blockchain operations effor
 
 Intento leverages a combination of the Cosmos stack and IBC to provide a seamless experience for workflows. Users, developers and organisations can orchestrate complex sets of actions, ranging from simple automated payments to sophisticated interchain operations, all composed and executed from the Intento processing chain. By integrating with the IBC protocol on a deep level, Intento not only automates from within a single blockchain but also from and to different blockchains, offering a general purpose solution.
 
-
 1. **Self-Custodial**
    By utilizing programmed accounts on a flow level, Intento enables fully self-custodial execution in a secure manner. This ensures a completely sovereign processing of your actions and conditions. By unlocking self-custody, we enhance security, transparency, and trust, allowing users to execute their intentions confidently and autonomously. With Intento, your blockchain experience is not just about participation, it's about freedom and sovereignty.
 2. **Secure on-chain**
@@ -44,6 +43,7 @@ Intento leverages a combination of the Cosmos stack and IBC to provide a seamles
 Other useful links
 
 - [Intento website](https://intento.zone/)
-- [TriggerPortal - one stop tool to interact with Intento Flows](https://triggerportal.zone/)
+- [TriggerPortal - one-stop tool for flows](https://triggerportal.zone/)
 - [Block Explorer](https://explorer.intento.zone/)
+- [Networks repository](https://github.com/trstlabs/networks)
 - [TRST Labs website](https://trstlabs.xyz/)
