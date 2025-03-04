@@ -37,6 +37,8 @@ set_into_genesis() {
     jq '.app_state.claim.claim_records[0].status[0].action_completed = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].status[0].vesting_periods_completed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].status[0].vesting_periods_claimed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
+
+    jq '.app_state.intent.params.gas_fee_coins = [{"amount":"80","denom":"uinto"},{"amount":"20","denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"}]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     
     jq '.app_state.claim.params.duration_vesting_periods = ["40s","50s","60s","70s"]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     

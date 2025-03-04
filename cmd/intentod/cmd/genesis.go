@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -49,7 +48,7 @@ const (
 )
 
 type GenesisParams struct {
-	AirdropSupply            sdkmath.Int
+	AirdropSupply            math.Int
 	StrategicReserveAccounts []banktypes.Balance
 	DistributedAccounts      []banktypes.Balance
 	ConsensusParams          *tmtypes.ConsensusParams
@@ -373,7 +372,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.IntentParams.MinFlowInterval = time.Second * 60
 	genParams.IntentParams.FlowFundsCommission = 2
 	genParams.IntentParams.BurnFeePerMsg = 10_000
-	genParams.IntentParams.FlowFlexFeeMul = 250
+	genParams.IntentParams.FlowFlexFeeMul = 2
 	genParams.IntentParams.GasFeeCoins = sdk.Coins(sdk.NewCoins(sdk.NewCoin(BaseCoinUnit, math.OneInt())))
 	genParams.IntentParams.RelayerRewards = []int64{10_000, 15_000, 18_000, 22_000}
 
@@ -387,9 +386,9 @@ func MainnetGenesisParams() GenesisParams {
 
 	//consensus
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
-	genParams.ConsensusParams.Block.MaxBytes = 5 * 1024 * 1024
-	genParams.ConsensusParams.Block.MaxGas = 6_000_000
-	genParams.ConsensusParams.Evidence.MaxAgeDuration = genParams.StakingParams.UnbondingTime
+	genParams.ConsensusParams.Block.MaxBytes = 22020096
+	genParams.ConsensusParams.Block.MaxGas = -1
+	genParams.ConsensusParams.Evidence.MaxAgeDuration = time.Second * 120
 	genParams.ConsensusParams.Evidence.MaxAgeNumBlocks = int64(genParams.StakingParams.UnbondingTime.Seconds()) / 3
 	genParams.ConsensusParams.Version.App = 1
 	genParams.DistributedAccounts = []banktypes.Balance{}
@@ -423,15 +422,17 @@ func TestnetGenesisParams() GenesisParams {
 	//flow
 	genParams.IntentParams.MinFlowDuration = time.Second * 40
 	genParams.IntentParams.MinFlowInterval = time.Second * 40
+	//genParams.IntentParams.MaxFlowDuration = time.Hour * 8
 
+	//slasing window
 	//claim
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime
 	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 5 // 5 days
 	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 5    // 5 days
 	genParams.ClaimParams.DurationVestingPeriods = []time.Duration{time.Minute, time.Minute * 2, time.Minute * 5, time.Minute}
 
-	//31,536,000 seconds a year and estimated 4s block times
-	genParams.MintParams.BlocksPerYear = uint64(31540000 / 4)
+	//31,536,000 seconds a year and estimated 2s block times
+	genParams.MintParams.BlocksPerYear = uint64(31540000 / 2)
 
 	genParams.WasmParams.CodeUploadAccess = wasmtypes.AllowEverybody
 	genParams.WasmParams.InstantiateDefaultPermission = wasmtypes.AccessTypeEverybody
