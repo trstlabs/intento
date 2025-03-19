@@ -1,15 +1,14 @@
-
 #!/bin/bash
 
 set -eu
-
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 source ${SCRIPT_DIR}/../config.sh
 
 # Paths and constants
 PROVIDER_HOME="$DOCKERNET_HOME/state/${GAIA_NODE_PREFIX}1"
 CONSUMER_HOME_PREFIX="$DOCKERNET_HOME/state/${INTO_NODE_PREFIX}"
-CONSUMER_HOME="${CONSUMER_HOME_PREFIX}1"
+
 PROVIDER_BINARY=$GAIA_BINARY
 PROVIDER_CHAIN_ID=$GAIA_CHAIN_ID
 PROVIDER_RPC_ADDR="localhost:$GAIA_RPC_PORT"
@@ -18,7 +17,6 @@ PROVIDER_CMD="$PROVIDER_BINARY --home $PROVIDER_HOME --fees 200000uatom"
 PROVIDER_CMD_Q="$PROVIDER_BINARY --home $PROVIDER_HOME q"
 SOVEREIGN_CHAIN_ID=$INTO_CHAIN_ID
 SOVEREIGN_HOME="$DOCKERNET_HOME/state/sovereign"
-
 
 # Build consumer chain proposal file
 tee $PROVIDER_HOME/consumer-create.json<<EOF
@@ -61,14 +59,8 @@ echo "Submitting create-consumer transaction..."
 TX_RES=$($PROVIDER_CMD tx provider create-consumer $PROVIDER_HOME/consumer-create.json \
     --chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
 --from ${GAIA_VAL_PREFIX}1 --keyring-backend test -y --log_format json)
-
-# echo $TX_RES
 sleep 5
-# # Verify success
-# if [[ $(echo $TX_RES | jq -r '.code') -ne 0 ]]; then
-#   echo "Error: Failed to submit create-consumer transaction."
-#   exit 1
-# fi
+VERIFY_SUCCESS  "$TX_RES"
 
 # Step 2: Fetch the consumer_id
 echo "Fetching consumer_id..."
@@ -80,15 +72,22 @@ if [[ -z "$CONSUMER_ID" ]]; then
 fi
 echo "Consumer ID: $CONSUMER_ID"
 sleep 5
-TX_RES=$($PROVIDER_CMD tx provider opt-in $CONSUMER_ID \
-    --chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
---from ${GAIA_VAL_PREFIX}1 --keyring-backend test -y --log_format json)
 
-# echo $TX_RES
-sleep 5
+# Opt-in for all INTO_NUM_NODES
+for i in $(seq 1 $INTO_NUM_NODES); do
+    CONSUMER_HOME="$CONSUMER_HOME_PREFIX$i"
+    VALIDATOR_PUB_KEY=$(jq -r '.pub_key.value' ${CONSUMER_HOME}/config/priv_validator_key.json)
+    VALIDATOR_PUB_KEY="{\"@type\": \"/cosmos.crypto.ed25519.PubKey\", \"key\": \"$VALIDATOR_PUB_KEY\"}"
+    
+    TX_RES=$($PROVIDER_CMD tx provider opt-in $CONSUMER_ID "$VALIDATOR_PUB_KEY" \
+        --chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
+        --from ${GAIA_VAL_PREFIX}$i --keyring-backend test -y --log_format json)
+    sleep 5
+    VERIFY_SUCCESS  "$TX_RES"
+done
 
-# Get current local time in the correct format (local timezone with the required Z07:00 format)
-LAUNCH_DATE=$(date +"%Y-%m-%dT%H:%M:%S.000000%:z")
+# Get current local time in the correct format
+LAUNCH_DATE="2025-03-13T15:41:00.529913Z" 
 
 # Step 3: Submit update-consumer transaction
 echo "Submitting update-consumer transaction..."
@@ -131,61 +130,41 @@ EOF
 TX_RES=$($PROVIDER_CMD tx provider update-consumer ${PROVIDER_HOME}/update-consumer.json \
     --chain-id $PROVIDER_CHAIN_ID --node tcp://$PROVIDER_RPC_ADDR \
 --from ${GAIA_VAL_PREFIX}1 --keyring-backend test -y --log_format json)
+sleep 5
+VERIFY_SUCCESS  "$TX_RES"
 
-echo $TX_RES
-sleep 10
-# Verify success
-# if [[ $(echo $TX_RES | jq -r '.code') -ne 0 ]]; then
-#   echo "Error: Failed to submit update-consumer transaction."
-#   exit 1
-# fi
-# echo "Successfully updated consumer chain."
-#sleep 5
-# Step 4: Announce launch
-# echo "Announce the launch on Discord and submit a PR to the Cosmos testnets repository."
-
+echo "Successfully updated consumer chain."
+sleep 5
 # Step 5: Update genesis file after chain launch
 echo "Updating genesis file with CCV state..."
 
+# Fetch the consumer genesis state from the provider
 $PROVIDER_CMD_Q provider consumer-genesis $CONSUMER_ID -o json --node tcp://$PROVIDER_RPC_ADDR > ccv-state.json
+
+# Modify the reward denominations
 jq '.params.reward_denoms |= ["'$INTO_DENOM'"]' ccv-state.json > ccv-denom.json
 jq '.params.provider_reward_denoms |= ["'$GAIA_DENOM'"]' ccv-denom.json > ccv-provider-denom.json
-jq -s '.[0].app_state.ccvconsumer = .[1] | .[0]' ccv-state.json ccv-provider-denom.json > consumer-genesis-updated.json
-echo "Genesis file updated."
 
+# Merge the updated ccvconsumer state into the consumer's genesis file
+for i in $(seq 1 $INTO_NUM_NODES); do
+    CONSUMER_HOME="$CONSUMER_HOME_PREFIX$i"
+    jq -s '.[0].app_state.ccvconsumer = .[1] | .[0]' "${CONSUMER_HOME}/config/genesis.json" ccv-provider-denom.json > "${CONSUMER_HOME}/config/genesis-updated.json"
+    mv "${CONSUMER_HOME}/config/genesis-updated.json" "${CONSUMER_HOME}/config/genesis.json"
+    echo "Genesis file updated at ${CONSUMER_HOME}/config/genesis.json."
+done
 
-
-echo "Consumer chain setup complete! ID: $CONSUMER_ID "
-
-
-#!/bin/bash
-
-set -eu
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
-source ${SCRIPT_DIR}/../config.sh
-
-
-log_file=$DOCKERNET_HOME/logs/${INTO_NODE_PREFIX}.log
-
-# Step 6: Starting INTO chain
+# Step 6: Start INTO chain
 echo "Starting $SOVEREIGN_CHAIN_ID chain"
 nodes_names=$(i=1; while [ $i -le $INTO_NUM_NODES ]; do printf "%s " ${INTO_NODE_PREFIX}${i}; i=$(($i + 1)); done;)
 $DOCKER_COMPOSE up -d $nodes_names
 
+log_file=$DOCKERNET_HOME/logs/${INTO_NODE_PREFIX}.log
 $DOCKER_COMPOSE logs -f ${INTO_NODE_PREFIX}1 | sed -r -u "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g" > $log_file 2>&1 &
 
 printf "Waiting for $SOVEREIGN_CHAIN_ID to start..."
-
-
-log_file=$DOCKERNET_HOME/logs/${INTO_NODE_PREFIX}.log
-
 ( tail -f -n0 $log_file & ) | grep -q "finalizing commit of block"
 echo "Done"
 
-sleep 5
-
 # Step 7: Create IBC connections and channels
 echo "Creating IBC connections and channels..."
-
 bash $SRC/start_hermes.sh $CONSUMER_ID

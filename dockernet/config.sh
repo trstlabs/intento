@@ -26,11 +26,11 @@ HOST_CHAINS=()
 #  - OSMO
 #  - HOST (our chain enabled as a host zone)
 if [[ "${ALL_HOST_CHAINS:-false}" == "true" ]]; then
-  HOST_CHAINS=(GAIA) #all
-  RLY_HOST_CHAINS=(GAIA)
+  HOST_CHAINS=(GAIA OSMO) #all
+  RLY_HOST_CHAINS=(GAIA OSMO)
 elif [[ "${#HOST_CHAINS[@]}" == "0" ]]; then
-  HOST_CHAINS=(GAIA OSMO)
-  RLY_HOST_CHAINS=(GAIA OSMO) #you can add a testnet chain here (if configured)
+  HOST_CHAINS=(GAIA )
+  RLY_HOST_CHAINS=(GAIA) #you can add a testnet chain here (if configured)
 fi
 
 # DENOMS
@@ -109,7 +109,7 @@ USER_MNEMONIC="tonight bonus finish chaos orchard plastic view nurse salad regre
 # Intento
 INTO_CHAIN_ID=intento-test-1
 INTO_NODE_PREFIX=into
-INTO_NUM_NODES=1
+INTO_NUM_NODES=3 #must be greater or equal GAIA_NUM_NODES
 INTO_VAL_PREFIX=val
 INTO_USER_ACCT=usr1
 INTO_USER_ADDRESS=into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6
@@ -136,7 +136,7 @@ INTO_MAIN_CMD="$INTO_BINARY --home $DOCKERNET_HOME/state/${INTO_NODE_PREFIX}1"
 # GAIA
 GAIA_CHAIN_ID=GAIA
 GAIA_NODE_PREFIX=gaia
-GAIA_NUM_NODES=1
+GAIA_NUM_NODES=3
 GAIA_BINARY="$DOCKERNET_HOME/../build/gaiad"
 GAIA_VAL_PREFIX=gval
 GAIA_USER_ACCT=gusr1
@@ -286,7 +286,7 @@ GET_FLOW_ID() {
 }
 
 WAIT_FOR_EXECUTED_FLOW_BY_ID() {
-  max_blocks=${2:-60} # Default if not specified
+  max_blocks=${2:-100} # Default if not specified
 
   for i in $(seq $max_blocks); do
     # Fetch transaction info for the specified id
@@ -300,7 +300,7 @@ WAIT_FOR_EXECUTED_FLOW_BY_ID() {
 
    if [[ "$executed_count" -gt 0 ]] && [[ "$executed_count" -eq "$executed_true_count" ]]; then
       echo "All 'executed' instances for flow ID $FLOW_ID are true."
-      sleep 20
+      sleep 40
       return 0
     fi
 
@@ -364,4 +364,16 @@ GET_ICA_ADDR() {
 
 TRIM_TX() {
   grep -E "code:|txhash:" | sed 's/^/  /'
+}
+
+VERIFY_SUCCESS() {
+  TX_RES="$1"
+  
+  if [[ $(echo "$TX_RES" | grep -oE "code: [0-9]+" | awk '{print $2}') -ne 0 ]]; then
+    echo "Error: Failed to submit create-consumer transaction."
+    exit 1
+  fi
+  
+  echo "Transaction submitted successfully:"
+  echo "$TX_RES" | grep -E "code:|txhash:" | sed 's/^/  /'
 }

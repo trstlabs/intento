@@ -32,10 +32,10 @@ port = 3001
 
 [[chains]]
 id = 'intento-test-1'
+ccv_consumer_chain = true
 rpc_addr = 'http://into1:26657'
 grpc_addr = 'http://into1:9090'
 event_source = { mode = 'push', url = 'ws://into1:26657/websocket', batch_delay = '500ms' }
-# websocket_addr = 'ws://into1:26657/websocket'
 rpc_timeout = '30s'
 account_prefix = 'into'
 key_name = 'rly1'
@@ -61,27 +61,27 @@ gas_price = { price = 0.02, denom = 'uatom' }
 default_gas = 100000
 max_gas = 5000000
 gas_multiplier = 1.7
-#clock_drift = '10s'
+trusted_node = true
 max_block_time = '30s'
 #trusting_period = '119s'
 trust_threshold = { numerator = '1', denominator = '3' }
 address_type = { derivation = 'cosmos' }
 
-[[chains]]
-id = 'OSMO'
-rpc_addr = 'http://osmo1:26657'
-grpc_addr = 'http://osmo1:9090'
-event_source = { mode = 'push', url = 'ws://osmo1:26657/websocket', batch_delay = '500ms' }
-rpc_timeout = '30s'
-account_prefix = 'osmo'
-key_name = 'rly4'
-store_prefix = 'ibc'
-gas_price = { price = 0.02, denom = 'uosmo' }
-default_gas = 100000
-max_gas = 5000000
-gas_multiplier = 1.7
-#clock_drift = '30s'
-max_block_time = '30s'
-#trusting_period = '119s'
-trust_threshold = { numerator = '1', denominator = '3' }
-address_type = { derivation = 'cosmos' }
+#[[chains]]
+#id = 'OSMO'
+#rpc_addr = 'http://osmo1:26657'
+#grpc_addr = 'http://osmo1:9090'
+#event_source = { mode = 'push', url = 'ws://osmo1:26657/websocket', batch_delay = '500ms' }
+#rpc_timeout = '30s'
+#account_prefix = 'osmo'
+#key_name = 'rly4'
+#store_prefix = 'ibc'
+#gas_price = { price = 0.02, denom = 'uosmo' }
+#default_gas = 100000
+#max_gas = 5000000
+#gas_multiplier = 1.7
+##clock_drift = '30s'
+#max_block_time = '30s'
+##trusting_period = '119s'
+#trust_threshold = { numerator = '1', denominator = '3' }
+#address_type = { derivation = 'cosmos' }

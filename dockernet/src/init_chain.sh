@@ -53,9 +53,6 @@ set_into_genesis() {
     
 }
 
-
-
-#MIN_ATOM_AMOUNT="[{"denom":"uatom","amount":"0"}]"
 set_host_genesis() {
     genesis_config=$1
     #epoch
@@ -111,11 +108,7 @@ set_host_genesis() {
         jq '.app_state.ibc.channel_genesis.params.upgrade_timeout.timestamp = $newVal' --arg newVal "$UPGRADE_TIMEOUT" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.provider.params.max_provider_consensus_validators = $newVal' --arg newVal "180" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.provider.params.blocks_per_epoch = $newVal' --arg newVal "3" $genesis_config > json.tmp && mv json.tmp $genesis_config
-        
-        # jq '.app_state.feemarket.params.min_base_gas_price = $newVal' --arg newVal "0.0025" $genesis_config > json.tmp && mv json.tmp $genesis_config
-        # jq '.app_state.feemarket.params.fee_denom = $newVal' --arg newVal "uatom" $genesis_config > json.tmp && mv json.tmp $genesis_config
-        # jq '.app_state.feemarket.params.enabled = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
-        #  jq '.app_state.feemarket.params.window = 1' $genesis_config > json.tmp && mv json.tmp $genesis_config
+
         jq '.app_state.feemarket.state.base_gas_price = $newVal' --arg newVal "0.002" $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.feemarket.state.window = ["1"]' $genesis_config > json.tmp && mv json.tmp $genesis_config
         jq '.app_state.feemarket.state.learning_rate = "0.1"' $genesis_config > json.tmp && mv json.tmp $genesis_config
@@ -275,26 +268,13 @@ set_host_genesis() {
 }
 
 
-# set_consumer_genesis() {
-#     genesis_config=$1
-
-#     # add consumer genesis
-#     home_directories=""
-#     for (( i=1; i <= $NUM_NODES; i++ )); do
-#         home_directories+="${STATE}/${NODE_PREFIX}${i},"
-#     done
-
-#     $MAIN_CMD add-consumer-section --validator-home-directories $home_directories
-#     jq '.app_state.ccvconsumer.params.unbonding_period = $newVal' --arg newVal "$UNBONDING_TIME" $genesis_config > json.tmp && mv json.tmp $genesis_config
-# }
-
 
 MAIN_ID=1 # Node responsible for genesis and persistent_peers
 MAIN_NODE_NAME=""
 MAIN_NODE_ID=""
 MAIN_CONFIG=""
 MAIN_GENESIS=""
-echo "Initializing $CHAIN chain..."
+
 for (( i=1; i <= $NUM_NODES; i++ )); do
     # Node names will be of the form: "trst1"
     node_name="${NODE_PREFIX}${i}"
@@ -370,12 +350,12 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     if [ "$CHAIN" == "GAIA" ]; then
         $cmd genesis add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
         $cmd genesis gentx $val_acct ${STAKE_TOKENS}${DENOM} --chain-id $CHAIN_ID --keyring-backend test &> /dev/null
+    elif [ "$CHAIN" == "INTO" ]; then
+        $cmd add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
     else
         $cmd add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
         $cmd gentx $val_acct ${STAKE_TOKENS}${DENOM} --chain-id $CHAIN_ID --keyring-backend test &> /dev/null
-    fi
-    # actually set this account as a validator on the current node
-    
+    fi    
     
     # Cleanup from seds
     rm -rf ${client_toml}-E
@@ -387,9 +367,15 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
         MAIN_NODE_ID=$node_id
         MAIN_CONFIG=$config_toml
         MAIN_GENESIS=$genesis_json
-    else
+    elif [ "$CHAIN" != "INTO" ] && [ "$CHAIN" != "GAIA" ]; then
         # also add this account and it's genesis tx to the main node
         $MAIN_CMD add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
+        cp ${STATE}/${node_name}/config/gentx/*.json ${STATE}/${MAIN_NODE_NAME}/config/gentx/
+        
+        # and add each validator's keys to the first state directory
+        echo "$val_mnemonic" | $MAIN_CMD keys add $val_acct --recover --keyring-backend=test &> /dev/null
+    elif [ "$CHAIN" == "GAIA" ]; then
+         $MAIN_CMD genesis add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
         cp ${STATE}/${node_name}/config/gentx/*.json ${STATE}/${MAIN_NODE_NAME}/config/gentx/
         
         # and add each validator's keys to the first state directory
@@ -467,7 +453,7 @@ fi
 
 if [ "$CHAIN" == "GAIA" ]; then
     $MAIN_CMD genesis collect-gentxs &> /dev/null
-else
+elif [ "$CHAIN" != "INTO" ]; then
     # now we process gentx txs on the main node
     $MAIN_CMD collect-gentxs &> /dev/null
 fi
@@ -478,19 +464,12 @@ sed -i -E "s|seeds = .*|seeds = \"\"|g" $MAIN_CONFIG
 # update chain-specific settings
 if [ "$CHAIN" == "INTO" ]; then
     #sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
-    sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"500ms\"|g" $MAIN_CONFIG
-    sed -i -E "s|timeout_propose = \"3s\"|timeout_propose = \"1s\"|g" $MAIN_CONFIG
     set_into_genesis $MAIN_GENESIS
 else
     #sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     set_host_genesis $MAIN_GENESIS
 fi
 
-
-# update consumer genesis for binary chains
-# if [[ "$CHAIN" == "INTO" || "$CHAIN" == "HOST" ]]; then
-#     set_consumer_genesis $MAIN_GENESIS
-# fi
 
 
 # for all peer nodes....
@@ -500,7 +479,8 @@ for (( i=2; i <= $NUM_NODES; i++ )); do
     genesis_json="${STATE}/${node_name}/config/genesis.json"
     
     # add the main node as a persistent peer
-    sed -i -E "s|persistent_peers = .*|persistent_peers = \"${MAIN_NODE_ID}\"|g" $config_toml
+    sed -i -E "/^persistent_peers = /s|persistent_peers = .*|persistent_peers = \"${MAIN_NODE_ID}\"|g" $config_toml
+
     # copy the main node's genesis to the peer nodes to ensure they all have the same genesis
     cp $MAIN_GENESIS $genesis_json
     
