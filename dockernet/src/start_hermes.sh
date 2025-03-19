@@ -32,7 +32,6 @@ for chain in ${RLY_HOST_CHAINS[@]}; do
     mkdir -p $hermes_config
     chmod -R 777 $STATE/hermes
     cp ${DOCKERNET_HOME}/config/hermes_config.toml $hermes_config/config.toml
-
     echo "$(date '+%Y-%m-%d %H:%M:%S') - Adding Hermes keys for $INTO_CHAIN_ID and $chain_id..." >>$hermes_logs
     echo $mnemonic | $hermes_exec hermes keys add --chain ${INTO_CHAIN_ID} --overwrite --mnemonic-file /dev/stdin >>$hermes_logs 2>&1
     echo $mnemonic | $hermes_exec hermes keys add --chain ${chain_id} --mnemonic-file /dev/stdin >>$hermes_logs 2>&1
@@ -40,24 +39,34 @@ for chain in ${RLY_HOST_CHAINS[@]}; do
     echo "$(date '+%Y-%m-%d %H:%M:%S') - Verifying balances for $chain_id..." >>$hermes_logs
     $hermes_exec hermes keys balance --chain ${chain_id} >>$hermes_logs 2>&1
 
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - Creating IBC transfer channel between $CONSUMER_ID and $chain_id..." >>$hermes_logs
-    if ! $hermes_exec hermes create channel --a-chain ${INTO_CHAIN_ID} --b-chain ${chain_id} \
-      --a-port transfer --b-port transfer --new-client-connection --yes >>$hermes_logs 2>&1; then
-          echo "Error: Failed to create transfer channel between ${INTO_CHAIN_ID} and ${chain_id}" >>$hermes_logs
-          exit 1
+    # echo $hermes_exec hermes --json query clients --host-chain ${INTO_CHAIN_ID}
+    # Check if client already exists
+    existing_client=$($hermes_exec hermes --json query clients --host-chain ${INTO_CHAIN_ID} | jq -r '.clients[] | select(.client_id.client_id == "07-tendermint-0") | .client_id.client_id' 2>/dev/null || true)
+
+    if [ -n "$existing_client" ]; then
+        echo $existing_client
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Reusing existing client: $existing_client" >>$hermes_logs
+        client_id=$existing_client
+    else
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - Creating a new client..." >>$hermes_logs
+        client_id="07-tendermint-0"
+        #client_id=$($hermes_exec hermes --json create client --host-chain ${INTO_CHAIN_ID} --reference-chain ${chain_id} | jq -r '.result.client_id' 2>/dev/null || echo "fallback-client-id")
     fi
-
+    #echo $client_id
     echo "$(date '+%Y-%m-%d %H:%M:%S') - Creating IBC connection between $INTO_CHAIN_ID and $chain_id..." >>$hermes_logs
-    $hermes_exec hermes create connection --a-chain ${INTO_CHAIN_ID} --b-chain ${chain_id} >>$hermes_logs 2>&1
-done
+    connection_output=$($hermes_exec hermes --json create connection --a-chain ${INTO_CHAIN_ID} --a-client ${client_id} --b-client ${client_id})
 
-# Special case: Create the CCV channel to GAIA
-echo "$(date '+%Y-%m-%d %H:%M:%S') - Creating CCV channel to GAIA..." >>$hermes_logs
-if ! $hermes_exec hermes create channel --a-chain ${INTO_CHAIN_ID} --b-chain GAIA_CHAIN_ID \
-  --a-port consumer --b-port provider --order ordered --new-client-connection --channel-version 1 >>$hermes_logs 2>&1; then
-      echo "Error: Failed to create CCV channel between ${INTO_CHAIN_ID} and GAIA." >>$hermes_logs
-      exit 1
-fi
+    echo "$connection_output" >>$hermes_logs
+    a_side_connection_id=$(echo "$connection_output" | jq -r '.result.a_side.connection_id' | grep -v '^null$' | tail -n 1)
+    if [ -z "$a_side_connection_id" ]; then
+        echo "Error: Connection ID is empty or null" >>$hermes_logs
+        exit 1
+    fi
+    echo $a_side_connection_id
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - Creating IBC channel with connection ID: $a_side_connection_id..." >>$hermes_logs
+    channel_output=$($hermes_exec hermes create channel --a-chain ${INTO_CHAIN_ID} --a-connection $a_side_connection_id --a-port consumer --b-port provider --order ordered --channel-version 1)
+    echo "$channel_output" >>$hermes_logs
+done
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') - Starting Hermes relayer process..." >>$hermes_logs
 $hermes_exec hermes start >>$hermes_logs 2>&1 &

@@ -5,22 +5,15 @@ WORKDIR /opt
 RUN apt update && apt install git -y
 
 ENV COMMIT_HASH=v1.10.4
-RUN git clone https://github.com/informalsystems/ibc-rs \
-    && cd ibc-rs \
+RUN git clone https://github.com/informalsystems/hermes \
+    && cd hermes \
     && git checkout $COMMIT_HASH \
     && cargo build --release
 
 FROM debian:bullseye-slim
 
-COPY --from=builder /opt/ibc-rs/target/release/hermes /usr/local/bin/hermes
-# RUN apt-get update
-# RUN addgroup -gid 1000 hermes
-# RUN adduser --system --home /home/hermes --disabled-password --disabled-login hermes -u 1000
+COPY --from=builder /opt/hermes/target/release/hermes /usr/local/bin/hermes
 
-# USER 1000
-# WORKDIR /home/hermes
-
-# CMD ["hermes", "start"]
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
     && adduser --system --home /home/hermes --disabled-password --disabled-login hermes -u 1000
 RUN update-ca-certificates
