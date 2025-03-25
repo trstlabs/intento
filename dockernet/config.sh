@@ -40,7 +40,7 @@ OSMO_DENOM="uosmo"
 COSM_DENOM="ucosm"
 
 
-IBC_INTO_DENOM='ibc/524C6521B4448277A0E983A5B7E656F04DCE3A6F902EFFAC7D3100EB420F0DFE'
+IBC_INTO_DENOM='ibc/F1B5C3489F881CC56ECC12EA903EFCF5D200B4D8123852C191A88A31AC79A8E4'
 
 IBC_GAIA_CHANNEL_0_DENOM='ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2'
 IBC_GAIA_CHANNEL_1_DENOM='ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9'
@@ -109,7 +109,7 @@ USER_MNEMONIC="tonight bonus finish chaos orchard plastic view nurse salad regre
 # Intento
 INTO_CHAIN_ID=intento-test-1
 INTO_NODE_PREFIX=into
-INTO_NUM_NODES=3 #must be greater or equal GAIA_NUM_NODES
+INTO_NUM_NODES=1 #must be greater or equal GAIA_NUM_NODES
 INTO_VAL_PREFIX=val
 INTO_USER_ACCT=usr1
 INTO_USER_ADDRESS=into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6
@@ -136,7 +136,7 @@ INTO_MAIN_CMD="$INTO_BINARY --home $DOCKERNET_HOME/state/${INTO_NODE_PREFIX}1"
 # GAIA
 GAIA_CHAIN_ID=GAIA
 GAIA_NODE_PREFIX=gaia
-GAIA_NUM_NODES=3
+GAIA_NUM_NODES=1
 GAIA_BINARY="$DOCKERNET_HOME/../build/gaiad"
 GAIA_VAL_PREFIX=gval
 GAIA_USER_ACCT=gusr1
@@ -286,7 +286,7 @@ GET_FLOW_ID() {
 }
 
 WAIT_FOR_EXECUTED_FLOW_BY_ID() {
-  max_blocks=${2:-100} # Default if not specified
+  max_blocks=${1:-100} # Default if not specified
 
   for i in $(seq $max_blocks); do
     # Fetch transaction info for the specified id
@@ -300,7 +300,7 @@ WAIT_FOR_EXECUTED_FLOW_BY_ID() {
 
    if [[ "$executed_count" -gt 0 ]] && [[ "$executed_count" -eq "$executed_true_count" ]]; then
       echo "All 'executed' instances for flow ID $FLOW_ID are true."
-      sleep 40
+      sleep 5
       return 0
     fi
 
@@ -315,6 +315,37 @@ WAIT_FOR_EXECUTED_FLOW_BY_ID() {
     fi
   done
 }
+
+WAIT_FOR_MSG_RESPONSES_LENGTH() {
+  expected_length=$1
+  max_blocks=${2:-100} # Default max_blocks if not specified
+
+  for i in $(seq $max_blocks); do
+    # Fetch transaction info for the specified flow ID
+    echo "Querying flow history for ID: $FLOW_ID"
+    FLOW_ID=$(echo $FLOW_ID | xargs)
+    history=$($INTO_MAIN_CMD q intent flow-history $FLOW_ID)
+
+    # Count the number of occurrences of 'msg_responses'
+    responses_count=$(echo "$history" | grep -o 'msg_responses:' | wc -l)
+
+    if [[ "$responses_count" -eq "$expected_length" ]]; then
+      echo "msg_responses length is $expected_length for flow ID $FLOW_ID."
+      sleep 5
+      return 0
+    fi
+
+    # Wait for the next blocks
+    WAIT_FOR_BLOCK $INTO_LOGS
+
+    # Handle case where the length condition is not met after max_blocks
+    if [[ $i -eq $max_blocks ]]; then
+      echo "msg_responses length did not reach $expected_length after $max_blocks blocks."
+      return -1
+    fi
+  done
+}
+
 
 WAIT_FOR_UPDATING_DISABLED() {
   max_blocks=${2:-10} # Default to 10 if not specified
