@@ -158,21 +158,22 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	}
 
 	if len(flow.Conditions.FeedbackLoops) != 0 {
+
 		for _, feedbackLoop := range flow.Conditions.FeedbackLoops {
+			k.Logger(ctx).Debug("triggering messages for feedback loop flow", "id", flow.ID)
 			// Validate MsgsIndex and FlowID
 			if feedbackLoop.MsgsIndex == 0 || feedbackLoop.FlowID != 0 {
 				continue // Skip invalid FeedbackLoops or if FlowID is set to non-default
 			}
 
 			// Ensure MsgsIndex is within bounds
-			if len(flowHistoryEntry.MsgResponses)-1 < int(feedbackLoop.MsgsIndex) {
-				continue // Skip if MsgsIndex exceeds available responses
+			if len(flowHistoryEntry.MsgResponses)-1 != int(feedbackLoop.ResponseIndex) {
+				continue // Skip if ResponseIndex does not equal responses
 			}
 
 			// Trigger remaining execution for the valid FeedbackLoop
 			tmpFlow := flow
 			tmpFlow.Msgs = flow.Msgs[feedbackLoop.MsgsIndex:]
-
 			if err := triggerRemainingMsgs(k, ctx, tmpFlow, flowHistoryEntry); err != nil {
 				return err // Return on the first encountered error
 			}
@@ -209,7 +210,7 @@ func triggerRemainingMsgs(k Keeper, ctx sdk.Context, flow types.FlowInfo, flowHi
 		return errorsmod.Wrap(err, fmt.Sprintf(types.ErrSettingFlowResult, err))
 	}
 
-	k.Logger(ctx).Debug("triggering msgs", "id", flow.ID, "msgs", len(flow.Msgs))
+	k.Logger(ctx).Debug("triggering remaining msgs", "id", flow.ID, "msgs", len(flow.Msgs))
 	_, _, err = k.TriggerFlow(cacheCtx, &flow)
 	if err != nil {
 		errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
