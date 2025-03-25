@@ -81,12 +81,21 @@ func TestSendLocalTxAutocompound(t *testing.T) {
 	flowInfo.Conditions = &types.ExecutionConditions{FeedbackLoops: []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "sdk.Int"}}}
 	delegations, _ := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
 	require.Equal(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
-	executedLocally, _, err := keeper.TriggerFlow(ctx, &flowInfo)
-	require.NoError(t, err)
-	require.True(t, executedLocally)
+	keeper.HandleFlow(ctx, ctx.Logger(), flowInfo, time.Now(), nil)
+
+	history, _ := keeper.GetFlowHistory(ctx, flowInfo.ID)
 
 	delegations, _ = keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
 	require.Greater(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
+
+	require.Equal(t, len(history[0].MsgResponses), 2)
+
+	///also test feedbackloop response via IBC handling
+	keeper.setTmpFlowID(ctx, flowInfo.ID, "port-1", "channel-1", 0)
+	err := keeper.HandleResponseAndSetFlowResult(ctx, "port-1", "channel-1", delAddr, 0, history[0].MsgResponses)
+	require.NoError(t, err)
+	history, _ = keeper.GetFlowHistory(ctx, flowInfo.ID)
+	require.Equal(t, len(history[0].MsgResponses), 4)
 }
 
 func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.AccAddress) (stakingtypes.Validator, sdk.Context) {
