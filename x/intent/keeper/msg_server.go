@@ -146,9 +146,6 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 		}
 		flow.EndTime = endTime
 
-		if flow.Interval != 0 && msg.Interval != "" {
-			newExecTime = endTime
-		}
 	}
 	p, err := k.GetParams(ctx)
 	if err != nil {
