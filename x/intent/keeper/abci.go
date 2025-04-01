@@ -388,7 +388,7 @@ func shouldRecur(flow types.FlowInfo, errorString string) bool {
 func emitFlowEvent(ctx sdk.Context, flow types.FlowInfo) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeFlow,
+			types.EventTypeFlowTriggered,
 			sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(flow.ID)),
 			sdk.NewAttribute(types.AttributeKeyFlowOwner, flow.Owner),
 		),

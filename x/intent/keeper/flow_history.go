@@ -134,9 +134,6 @@ func (k Keeper) addFlowHistoryEntry(ctx sdk.Context, flow *types.FlowInfo, actua
 	}
 	if executedLocally {
 		historyEntry.Executed = true
-		// if flow.Configuration.SaveResponses {
-		// 	historyEntry.MsgResponses = msgResponses
-		// }
 	}
 
 	k.SetFlowHistoryEntry(ctx, flow.ID, &historyEntry)

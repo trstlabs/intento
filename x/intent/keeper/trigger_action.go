@@ -318,8 +318,15 @@ func (k Keeper) SetFlowOnTimeout(ctx sdk.Context, sourcePort string, channelID s
 	}
 
 	flowHistoryEntry.TimedOut = true
+	flowHistoryEntry.Executed = false
 	k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
-
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeFlowTimedOut,
+			sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(flow.ID)),
+			sdk.NewAttribute(types.AttributeKeyFlowOwner, flow.Owner),
+		),
+	)
 	return nil
 }
 
@@ -335,8 +342,15 @@ func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort string, channelID strin
 	flowHistoryEntry, newErr := k.GetLatestFlowHistoryEntry(ctx, id)
 	if newErr != nil {
 		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, newErr.Error())
+		flowHistoryEntry.Executed = false
+		k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeFlowError,
+				sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(id)),
+				sdk.NewAttribute(types.AttributeKeyError, newErr.Error()),
+			),
+		)
 	}
 
-	flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, err)
-	k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
 }
