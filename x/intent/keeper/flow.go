@@ -84,7 +84,7 @@ func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, 
 	k.addToFlowOwnerIndex(ctx, owner, id)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeFlow,
+			types.EventTypeFlowCreated,
 			sdk.NewAttribute(types.AttributeKeyFlowID, strconv.FormatUint(id, 10)),
 		))
 	return nil

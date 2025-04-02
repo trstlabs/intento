@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -216,6 +217,12 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 	}
 
 	k.SetFlowInfo(ctx, &flow)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeFlowUpdated,
+			sdk.NewAttribute(types.AttributeKeyFlowID, strconv.FormatUint(flow.ID, 10)),
+		))
 
 	return &types.MsgUpdateFlowResponse{}, nil
 }
