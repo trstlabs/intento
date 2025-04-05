@@ -169,11 +169,12 @@ func (am AppModule) BeginBlock(ctx sdk.Context) {
 
 }
 
-// EndBlock returns the end blocker for the compute module. It returns no validator
-// updates.
-
-func (am AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+// EndBlock executes all ABCI EndBlock logic respective to the capability module. It
+// returns no validator updates.
+func (am AppModule) EndBlock(context context.Context) error {
+	ctx := sdk.UnwrapSDKContext(context)
+	am.keeper.EndBlocker(ctx)
+	return nil
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
