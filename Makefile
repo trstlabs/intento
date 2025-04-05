@@ -8,10 +8,6 @@ DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bu
 INTENTO_HOME=./
 DOCKERNET_HOME=./dockernet
 DOCKERNET_COMPOSE_FILE=$(DOCKERNET_HOME)/docker-compose.yml
-LOCALINTENTO_HOME=./testutil/localintento
-LOCALNET_COMPOSE_FILE=$(LOCALINTENTO_HOME)/localnet/docker-compose.yml
-STATE_EXPORT_COMPOSE_FILE=$(LOCALINTENTO_HOME)/state-export/docker-compose.yml
-LOCAL_TO_MAIN_COMPOSE_FILE=./scripts/local-to-mainnet/docker-compose.yml
 
 # process build tags
 LEDGER_ENABLED ?= true
@@ -57,7 +53,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=intento \
 ifeq ($(LINK_STATICALLY),true)
 	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
 endif
-ldflags += $(LDFLAGS)
+
 ldflags := $(strip $(ldflags))
 
 BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
@@ -67,11 +63,11 @@ BUILD_FLAGS := -tags "$(build_tags)" -ldflags '$(ldflags)'
 ###############################################################################
 ###                            Build & Clean                                ###
 ###############################################################################
-
 build:
 	which go
 	mkdir -p $(BUILDDIR)/
 	go build -mod=readonly $(BUILD_FLAGS) -trimpath -o $(BUILDDIR) ./...;
+
 
 build-linux:
 	GOOS=linux GOARCH=amd64 $(MAKE) build
@@ -125,7 +121,7 @@ build-docker:
 start-docker: stop-docker
 	@bash $(DOCKERNET_HOME)/start_network.sh
 
-start-docker-all: stop-docker build-docker
+start-docker-all:  stop-docker
 	@ALL_HOST_CHAINS=true bash $(DOCKERNET_HOME)/start_network.sh
 
 clean-docker:
@@ -135,8 +131,9 @@ clean-docker:
 	docker image prune -a
 
 stop-docker:
-	@bash $(DOCKERNET_HOME)/pkill.sh
 	docker compose -f $(DOCKERNET_COMPOSE_FILE) down
+	docker compose -f $(DOCKERNET_COMPOSE_FILE) kill
+	@bash $(DOCKERNET_HOME)/pkill.sh
 
 upgrade-build-old-binary:
 	@DOCKERNET_HOME=$(DOCKERNET_HOME) BUILDDIR=$(BUILDDIR) bash $(DOCKERNET_HOME)/upgrades/build_old_binary.sh
@@ -209,44 +206,24 @@ proto-update-deps:
 	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace  --user $(id -u):$(id -g) --workdir /workspace $(containerProtoImage) buf mod update 
 
 ###############################################################################
-###                             LocalIntento                                 ###
+###                             libwasmvm                                   ###
 ###############################################################################
 
-# localnet-keys:
-# 	. $(LOCALINTENTO_HOME)/localnet/add_keys.sh
+WASMVM_VERSION=v2.1.5
+LIBWASM_PATH=$(HOME)/.local/lib
 
-# localnet-init: localnet-clean localnet-build
+# Detect architecture
+ARCH := $(shell uname -m)
+ifeq ($(ARCH),arm64)
+    ARCH := aarch64
+endif
 
-# localnet-clean:
-# 	@rm -rfI $(HOME)/.intento/
+build-libwasm:
+	@echo "Downloading and setting up libwasmvm..."
+	mkdir -p $(LIBWASM_PATH)
+	curl -L -o $(LIBWASM_PATH)/libwasmvm_muslc.aarch64.a \
+		https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.aarch64.a
+	curl -L -o $(LIBWASM_PATH)/libwasmvm_muslc.x86_64.a \
+		https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.x86_64.a
+	cp "$(LIBWASM_PATH)/libwasmvm_muslc.$(ARCH).a" $(LIBWASM_PATH)/libwasmvm_muslc.a
 
-# localnet-build:
-# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) build
-
-# localnet-start:
-# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) up
-
-# localnet-startd:
-# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) up -d
-
-# localnet-stop:
-# 	@docker compose -f $(LOCALNET_COMPOSE_FILE) down
-
-# localnet-state-export-init: localnet-state-export-clean localnet-state-export-build
-
-# localnet-state-export-build:
-# 	@DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f $(STATE_EXPORT_COMPOSE_FILE) build
-
-# localnet-state-export-start:
-# 	@docker compose -f $(STATE_EXPORT_COMPOSE_FILE) up
-
-# localnet-state-export-startd:
-# 	@docker compose -f $(STATE_EXPORT_COMPOSE_FILE) up -d
-
-# localnet-state-export-upgrade:
-# 	bash $(LOCALINTENTO_HOME)/state-export/scripts/submit_upgrade.sh
-
-# localnet-state-export-stop:
-# 	@docker compose -f $(STATE_EXPORT_COMPOSE_FILE) down
-
-# localnet-state-export-clean: localnet-clean
