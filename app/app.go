@@ -1184,10 +1184,28 @@ func (app *IntoApp) AutoCliOpts() autocli.AppOptions {
 		}
 	}
 
-	return autocli.AppOptions{
+	appOptions := autocli.AppOptions{
 		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
 		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	}
+
+	// Disable the autocli command for ICQ SubmitQueryResponse which has a conflict
+	// with the chain-id flag and also doesn't need a CLI function
+	moduleOptions, exists := appOptions.ModuleOptions[interchainquerytypes.ModuleName]
+	if !exists {
+		moduleOptions = &autocliv1.ModuleOptions{}
+		appOptions.ModuleOptions[interchainquerytypes.ModuleName] = moduleOptions
+	}
+	if moduleOptions.Tx == nil {
+		moduleOptions.Tx = &autocliv1.ServiceCommandDescriptor{}
+	}
+	moduleOptions.Tx.RpcCommandOptions = append(moduleOptions.Tx.RpcCommandOptions, &autocliv1.RpcCommandOptions{
+		RpcMethod: "SubmitQueryResponse",
+		Skip:      true,
+	})
+
+	return appOptions
 }
