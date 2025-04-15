@@ -3,7 +3,7 @@ package osmosis.poolmanager.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/trstlabs/intento/x/intent/msg_registry";
+option go_package = "github.com/trstlabs/intento/x/intent/msg_registry/osmosis/gamm/v1beta1";
 
 message SwapAmountInRoute {
   uint64 pool_id = 1 [ (gogoproto.moretags) = "yaml:\"pool_id\"" ];
