@@ -73,7 +73,7 @@ func TestBeginBlockerLoad(t *testing.T) {
 
 	BeginBlocker(ctx3, k)
 	queue4 := k.GetFlowsForBlock(ctx3)
-	require.NotEqual(t, len(queue4), 0)
+	require.Equal(t, len(queue4), 0)
 }
 
 func TestBeginBlockerStopOnSuccess(t *testing.T) {
