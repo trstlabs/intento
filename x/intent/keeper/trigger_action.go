@@ -34,7 +34,7 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 		connectionID = hostedAccount.ICAConfig.ConnectionID
 		portID = hostedAccount.ICAConfig.PortID
 		triggerAddress = hostedAccount.HostedAddress
-		err := k.SendFeesToHosted(ctx, *flow, hostedAccount)
+		err := k.SendFeesToHostedAdmin(ctx, *flow, hostedAccount)
 		if err != nil {
 			return false, nil, errorsmod.Wrap(err, "could not pay hosted account")
 		}
