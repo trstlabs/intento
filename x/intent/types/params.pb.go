@@ -31,19 +31,19 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params defines the params for activeness of Flows on governance proposals.
 type Params struct {
-	// Commision rate to retun remaining funds in flow fee account after final execution, e.g. 100 = 1X, 250 = 250
+	// Commision rate percentage for returning remaining funds in flow fee account after final execution, e.g. 100 = 1X, 250 = 250
 	FlowFundsCommission int64 `protobuf:"varint,1,opt,name=flow_funds_commission,json=flowFundsCommission,proto3" json:"flow_funds_commission,omitempty"`
-	// Multiplier to the flexible flow gas fee, e.g. 100 = 1X, 250 = 250
+	// Multiplier to the flexible flow gas fee in promille, e.g. 1000 = 1X, 2500 = 2,5x
 	FlowFlexFeeMul int64 `protobuf:"varint,2,opt,name=flow_flex_fee_mul,json=flowFlexFeeMul,proto3" json:"flow_flex_fee_mul,omitempty"`
 	// Fixed burn fee per message execution to burn native denom
 	BurnFeePerMsg int64 `protobuf:"varint,3,opt,name=burn_fee_per_msg,json=burnFeePerMsg,proto3" json:"burn_fee_per_msg,omitempty"`
 	// Array of denoms that can be used for fee payment together with an amount
 	GasFeeCoins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=gas_fee_coins,json=gasFeeCoins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"gas_fee_coins" yaml:"gas_fee_coins"`
-	//  Maximum period for self-executing Flow
+	//  Maximum period for a flow
 	MaxFlowDuration time.Duration `protobuf:"bytes,5,opt,name=max_flow_duration,json=maxFlowDuration,proto3,stdduration" json:"max_flow_duration,omitempty"`
-	//  Minimum period for self-executing Flow
+	//  Minimum period for a flow
 	MinFlowDuration time.Duration `protobuf:"bytes,6,opt,name=min_flow_duration,json=minFlowDuration,proto3,stdduration" json:"min_flow_duration,omitempty"`
-	//  Minimum period for self-executing Flow
+	//  Minimum period for a flow
 	MinFlowInterval time.Duration `protobuf:"bytes,8,opt,name=min_flow_interval,json=minFlowInterval,proto3,stdduration" json:"min_flow_interval,omitempty"`
 	// relayer rewards in uinto for each message type 0=SDK,1=Wasm, 2=Osmo.
 	// Rewards are in uinto and topped up in the module account by alloc module.

@@ -102,13 +102,13 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.FlowInfo, feeAddr sd
 	return totalFlowFees, nil
 }
 
-func (k Keeper) SendFeesToHosted(ctx sdk.Context, flow types.FlowInfo, hostedAccount types.HostedAccount) error {
+func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.FlowInfo, hostedAccount types.HostedAccount) error {
 	feeAddr, err := sdk.AccAddressFromBech32(flow.FeeAddress)
 	if err != nil {
 		return err
 	}
 
-	hostedAddr, err := sdk.AccAddressFromBech32(hostedAccount.HostedAddress)
+	hostedAccAdminAddr, err := sdk.AccAddressFromBech32(hostedAccount.HostFeeConfig.Admin)
 	if err != nil {
 		return err
 	}
@@ -121,14 +121,14 @@ func (k Keeper) SendFeesToHosted(ctx sdk.Context, flow types.FlowInfo, hostedAcc
 		return types.ErrHostedFeeLimit
 	}
 
-	err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAddr, sdk.Coins{feeCoin})
+	err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAccAdminAddr, sdk.Coins{feeCoin})
 	if err != nil {
 		if flow.Configuration.FallbackToOwnerBalance {
 			feeAddr, err = sdk.AccAddressFromBech32(flow.Owner)
 			if err != nil {
 				return err
 			}
-			err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAddr, sdk.Coins{feeCoin})
+			err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAccAdminAddr, sdk.Coins{feeCoin})
 			if err != nil {
 				return err
 			}
@@ -138,8 +138,6 @@ func (k Keeper) SendFeesToHosted(ctx sdk.Context, flow types.FlowInfo, hostedAcc
 
 	}
 	return nil
-
-	//nice to have: ics20 transfer to destination (needed: channelID)
 }
 
 // CheckBalanceForGasFee checks if the address has enough balance to cover the gas fee.

@@ -9,7 +9,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	proto "github.com/cosmos/gogoproto/proto"
-	msgregistry "github.com/trstlabs/intento/x/intent/msg_registry"
+	osmosisgammv1beta1 "github.com/trstlabs/intento/x/intent/msg_registry/osmosis/gamm/v1beta1"
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -52,20 +52,20 @@ func handleMsgData(msgData *sdk.MsgData) (proto.Message, int, error) {
 		rewardType = types.KeyFlowIncentiveForWasmTx
 
 	// osmo
-	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountIn{}):
-		msgResponse = &msgregistry.MsgSwapExactAmountInResponse{}
+	case sdk.MsgTypeURL(&osmosisgammv1beta1.MsgSwapExactAmountIn{}):
+		msgResponse = &osmosisgammv1beta1.MsgSwapExactAmountInResponse{}
 		rewardType = types.KeyFlowIncentiveForOsmoTx
 
-	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountOut{}):
-		msgResponse = &msgregistry.MsgSwapExactAmountOutResponse{}
+	case sdk.MsgTypeURL(&osmosisgammv1beta1.MsgSwapExactAmountOut{}):
+		msgResponse = &osmosisgammv1beta1.MsgSwapExactAmountOutResponse{}
 		rewardType = types.KeyFlowIncentiveForOsmoTx
 
-	case sdk.MsgTypeURL(&msgregistry.MsgJoinPool{}):
-		msgResponse = &msgregistry.MsgJoinPoolResponse{}
+	case sdk.MsgTypeURL(&osmosisgammv1beta1.MsgJoinPool{}):
+		msgResponse = &osmosisgammv1beta1.MsgJoinPoolResponse{}
 		rewardType = types.KeyFlowIncentiveForOsmoTx
 
-	case sdk.MsgTypeURL(&msgregistry.MsgExitPool{}):
-		msgResponse = &msgregistry.MsgExitPoolResponse{}
+	case sdk.MsgTypeURL(&osmosisgammv1beta1.MsgExitPool{}):
+		msgResponse = &osmosisgammv1beta1.MsgExitPoolResponse{}
 		rewardType = types.KeyFlowIncentiveForOsmoTx
 
 	default:
@@ -109,16 +109,16 @@ func getMsgRewardType(typeUrl string) int {
 		rewardType = types.KeyFlowIncentiveForWasmTx
 
 	// osmo
-	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountIn{}):
+	case sdk.MsgTypeURL(&osmosisgammv1beta1.MsgSwapExactAmountIn{}):
 		rewardType = types.KeyFlowIncentiveForOsmoTx
 
-	case sdk.MsgTypeURL(&msgregistry.MsgSwapExactAmountOut{}):
+	case sdk.MsgTypeURL(&osmosisgammv1beta1.MsgSwapExactAmountOut{}):
 		rewardType = types.KeyFlowIncentiveForOsmoTx
 
-	case sdk.MsgTypeURL(&msgregistry.MsgJoinPool{}):
+	case sdk.MsgTypeURL(&osmosisgammv1beta1.MsgJoinPool{}):
 		rewardType = types.KeyFlowIncentiveForOsmoTx
 
-	case sdk.MsgTypeURL(&msgregistry.MsgExitPool{}):
+	case sdk.MsgTypeURL(&osmosisgammv1beta1.MsgExitPool{}):
 		rewardType = types.KeyFlowIncentiveForOsmoTx
 
 	default:

@@ -3,6 +3,7 @@ package intent
 import (
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/trstlabs/intento/x/intent/keeper"
@@ -17,9 +18,20 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	logger := k.Logger(ctx)
 	flows := k.GetFlowsForBlock(ctx)
+	if len(flows) == 0 {
+		return
+	}
 
-	timeOfBlock := ctx.BlockHeader().Time
+	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(types.MaxGasTotal))
+
 	for _, flow := range flows {
+		// Estimate a gas cost before actually running it
+		estimatedGas := uint64(100_000)
+		if ctx.GasMeter().Limit()-ctx.GasMeter().GasConsumed() < estimatedGas {
+			logger.Info("Skipping remaining flows due to block gas limit")
+			break
+		}
+
 		// Check if ICQConfig is present and submit an interchain query if applicable
 		if (flow.Conditions.FeedbackLoops != nil && flow.Conditions.FeedbackLoops[0].ICQConfig != nil) || (flow.Conditions.Comparisons != nil && flow.Conditions.Comparisons[0].ICQConfig != nil) {
 			k.SubmitInterchainQueries(ctx, flow, logger)
@@ -28,7 +40,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 			continue
 
 		}
-		k.HandleFlow(ctx, logger, flow, timeOfBlock, nil)
+		k.HandleFlow(ctx, logger, flow, ctx.BlockHeader().Time, nil)
 	}
 }
 

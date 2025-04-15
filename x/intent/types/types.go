@@ -12,6 +12,7 @@ import (
 var Denom = "uinto"
 var ParseICAValue = "ICA_ADDR"
 var MaxGas uint64 = 1_000_000
+var MaxGasTotal uint64 = 500_000_000
 
 // GetTxMsgs unpacks sdk messages from any messages
 func (flowInfo FlowInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sdk.Msg) {
