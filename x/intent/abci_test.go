@@ -15,6 +15,7 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
+
 	ctx, keepers, _ := createTestContext(t)
 	configuration := types.ExecutionConfiguration{SaveResponses: true}
 	flow, sendToAddr := createTestFlow(ctx, configuration, keepers)
@@ -47,6 +48,32 @@ func TestBeginBlocker(t *testing.T) {
 
 	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx3, sendToAddr)[0].Amount, math.NewInt(100))
 
+}
+
+func TestBeginBlockerLoad(t *testing.T) {
+	ctx, keepers, _ := createTestContext(t)
+	types.MaxGasTotal = 200_000
+	configuration := types.ExecutionConfiguration{SaveResponses: true}
+	k := keepers.IntentKeeper
+	flow, _ := createTestFlow(ctx, configuration, keepers)
+	for i := range 10 {
+		flow, _ := createTestFlow(ctx, configuration, keepers)
+		flow.ID = uint64(i)
+		k.SetFlowInfo(ctx, &flow)
+		k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
+	}
+	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
+	queue := k.GetFlowsForBlock(ctx2)
+	BeginBlocker(ctx2, k)
+	queue2 := k.GetFlowsForBlock(ctx2)
+	ctx3 := createNextExecutionContext(ctx2, ctx2.BlockTime().Add(time.Minute))
+	queue3 := k.GetFlowsForBlock(ctx3)
+	require.NotEqual(t, len(queue), len(queue2))
+	require.Equal(t, len(queue2), len(queue3)) //should be the same in later block if not executed
+
+	BeginBlocker(ctx3, k)
+	queue4 := k.GetFlowsForBlock(ctx3)
+	require.NotEqual(t, len(queue4), 0)
 }
 
 func TestBeginBlockerStopOnSuccess(t *testing.T) {
