@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	"github.com/stretchr/testify/require"
 	keeper "github.com/trstlabs/intento/x/intent/keeper"
 	"github.com/trstlabs/intento/x/intent/types"
@@ -48,6 +50,39 @@ func TestBeginBlocker(t *testing.T) {
 
 	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx3, sendToAddr)[0].Amount, math.NewInt(100))
 
+}
+
+func TestBeginBlockerTransfer(t *testing.T) {
+	ctx, keepers, _ := createTestContext(t)
+	configuration := types.ExecutionConfiguration{SaveResponses: true}
+	flow, _ := createInvalidTestFlowTransfer(ctx, configuration, keepers)
+	err := flow.ValidateBasic()
+	require.NoError(t, err)
+	k := keepers.IntentKeeper
+
+	k.SetFlowInfo(ctx, &flow)
+	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
+
+	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
+	// test that flow was added to the queue
+	queue := k.GetFlowsForBlock(ctx2)
+	require.Equal(t, 1, len(queue))
+	require.Equal(t, uint64(123), queue[0].ID)
+
+	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime(), nil)
+	flow = k.GetFlowInfo(ctx2, flow.ID)
+	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime)
+
+	//queue in BeginBocker
+	queue = k.GetFlowsForBlock(ctx3)
+	flowHistory := k.MustGetFlowHistory(ctx3, queue[0].ID)
+	// test that flow history was updated
+	require.Equal(t, ctx3.BlockHeader().Time, queue[0].ExecTime)
+	require.Equal(t, 1, len(flowHistory))
+	require.Equal(t, ctx2.BlockHeader().Time, flowHistory[0].ScheduledExecTime)
+	require.Equal(t, ctx2.BlockHeader().Time, flowHistory[0].ActualExecTime)
+	require.NotNil(t, flowHistory[0].Errors)
+	require.Equal(t, flowHistory[0].Errors[0], "msg handling error: could execute local flow: 10010: invalid coins")
 }
 
 func TestBeginBlockerLoad(t *testing.T) {
@@ -362,6 +397,7 @@ func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers, codec.Cod
 		MinFlowInterval:     time.Second * 20,
 		GasFeeCoins:         sdk.NewCoins(sdk.NewCoin(types.Denom, math.OneInt())),
 	})
+
 	return ctx, keepers, cdc
 }
 
@@ -377,6 +413,45 @@ func createTestFlow(ctx sdk.Context, configuration types.ExecutionConfiguration,
 		ToAddress:   emptyBalanceAcc.String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
 	}
+	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
+
+	flow := types.FlowInfo{
+		ID:            123,
+		Owner:         flowOwnerAddr.String(),
+		FeeAddress:    fundedFeeAddr.String(),
+		ExecTime:      execTime,
+		EndTime:       endTime,
+		Interval:      time.Hour,
+		StartTime:     startTime,
+		Msgs:          anys,
+		Configuration: &configuration,
+		ICAConfig:     &types.ICAConfig{},
+		Conditions:    &types.ExecutionConditions{},
+	}
+	return flow, emptyBalanceAcc
+}
+
+func createInvalidTestFlowTransfer(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.FlowInfo, sdk.AccAddress) {
+	flowOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
+	fundedFeeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
+	emptyBalanceAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
+	startTime := ctx.BlockHeader().Time
+	execTime := ctx.BlockHeader().Time.Add(time.Hour)
+	endTime := ctx.BlockHeader().Time.Add(time.Hour * 2)
+	localMsg := &ibctransfertypes.MsgTransfer{
+		SourcePort:    "transfer",
+		SourceChannel: "channel-0",
+		Token: sdk.Coin{
+			Amount: math.NewInt(100),
+			Denom:  "10",
+		},
+		Sender:           flowOwnerAddr.String(),
+		Receiver:         "",
+		TimeoutHeight:    clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0},
+		TimeoutTimestamp: 0,
+		Memo:             "hello",
+	}
+
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
 	flow := types.FlowInfo{

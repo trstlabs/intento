@@ -464,6 +464,10 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		ibcKeeper.ChannelKeeper, ibcKeeper.ChannelKeeper, ibcKeeper.PortKeeper,
 		accountKeeper, bankKeeper, scopedTransferKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
+	ibctransferKeeper.SetParams(ctx, ibctransfertypes.Params{
+		SendEnabled: true,
+	})
+
 	govConfig := govtypes.DefaultConfig()
 
 	claimKeeper := claimkeeper.NewKeeper(
