@@ -70,8 +70,8 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithFlow() {
 		"from_address": "%s",
 		"to_address": "%s"
 	}`, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String(), addrTo)
-	path := NewTransferPath(suite.IntentoChain, suite.HostChain)
-	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"owner": "%s","label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String(), msg), path)
+
+	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"owner": "%s","label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String(), msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultipleMsgs() {
 
 	//fix in test as we do not have the channels over the same connectionID in testing
 	path.EndpointA.ConnectionID = "connection-1"
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"flow": {"owner": "%s","label": "my flow", "cid":"%s", "host_cid":"%s","msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0", "fallback": "true" } }`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg), path)
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"flow": {"owner": "%s","label": "my flow", "cid":"%s", "host_cid":"%s","msgs": [%s, %s], "duration": "500s", "interval": "60s", "start_at": "0", "fallback": "true" } }`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
@@ -168,7 +168,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 	suite.Require().NoError(err)
 
 	path.EndpointA.ConnectionID = "connection-1"
-	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"flow": {"owner": "%s","label": "my flow", "cid":"%s","host_cid":"%s","msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0", "fallback":"true" }}`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg), path)
+	ackBytes := suite.receiveTransferPacket(addr.String(), fmt.Sprintf(`{"flow": {"owner": "%s","label": "my flow", "cid":"%s","host_cid":"%s","msgs": [%s, %s], "duration": "120s", "interval": "60s", "start_at": "0", "fallback":"true" }}`, addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg))
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err = json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
@@ -213,9 +213,8 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketFlowWithConditionsAndDeriv
 		"from_address": "%s",
 		"to_address": "%s"
 	}`, derivePlaceholderSender(ibctesting.FirstChannelID, addr), addrTo)
-	path := NewTransferPath(suite.IntentoChain, suite.HostChain)
 
-	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0","conditions":{"stop_on_failure_of": [12345], "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}}}`, msg), path)
+	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0","conditions":{"stop_on_failure_of": [12345], "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}}}`, msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
@@ -287,7 +286,6 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 			`{"flow":{"owner":"%s","label":"my flow","cid":"%s","host_cid":"%s","msgs":[%s,%s],"duration":"120s","interval":"60s","start_at":"0","fallback":"true"}}`,
 			addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, msg, msg,
 		),
-		path,
 	)
 	var ack map[string]string
 	suite.Require().NoError(json.Unmarshal(ackBytes, &ack))

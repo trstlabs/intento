@@ -104,3 +104,8 @@ type MessageRouter interface {
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }
+
+func (k Keeper) GetConnectionID(ctx sdk.Context, portID, channelID string) (string, error) {
+
+	return k.icaControllerKeeper.GetConnectionID(ctx, portID, channelID)
+}

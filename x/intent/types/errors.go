@@ -41,5 +41,5 @@ var (
 	ErrFlowMsgHandling      = "msg handling error: %s"
 	ErrFlowResponseUseValue = "msg handling error using response value: %s"
 	ErrSettingFlowResult    = "setting flow result:  %s"
-	ErrBalanceTooLow        = "balance too low to deduct expected fee; denom: %s"
+	ErrBalanceTooLow        = "balance too low to deduct expected fee"
 )
