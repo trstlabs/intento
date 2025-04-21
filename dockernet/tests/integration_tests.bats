@@ -428,22 +428,22 @@ EOF
 }
 EOF
 
-  #query INTO IBC balance
-  #query_key='AhRGgNNqzbhS97+pYwK8+uF7JhF0PGliYy81MjRDNjUyMUI0NDQ4Mjc3QTBFOTgzQTVCN0U2NTZGMDREQ0UzQTZGOTAyRUZGQUM3RDMxMDBFQjQyMEYwREZF'
-  query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+GliYy81MjRDNjUyMUI0NDQ4Mjc3QTBFOTgzQTVCN0U2NTZGMDREQ0UzQTZGOTAyRUZGQUM3RDMxMDBFQjQyMEYwREZF'
-  # echo "Query Key: $query_key"
+  #query INTO IBC balance (can be generated via TriggerPortal)
+  #query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+GliYy9GMUI1QzM0ODlGODgxQ0M1NkVDQzEyRUE5MDNFRkNGNUQyMDBCNEQ4MTIzODUyQzE5MUE4OEEzMUFDNzlBOEU0'
+  query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+HVhdG9t' #ATOM DENOM
+
   msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Hosted ICA" --interval "60s" --duration "120s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "", "msgs_index":0, "msg_key":"Amount.[0].Amount","value_type": "sdk.Int", "from_icq": true, "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
   # echo "$msg_submit_flow"
 
   GET_FLOW_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_FLOW_BY_ID
 
-  #sleep 40
+  sleep 40
 
   # # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
   host_receiver_balance_end=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
   receiver_diff=$(($host_receiver_balance_start - $host_receiver_balance_end))
-  # assert_equal "$receiver_diff" $MSGSEND_AMOUNT #from MsgSend
+  assert_equal "$receiver_diff" $MSGSEND_AMOUNT #from MsgSend
 }
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Autocompound on host" {
