@@ -161,6 +161,41 @@ func extractSigners(protoReflectMsg protoreflect.Message) ([]string, error) {
 	return addresses, nil
 }
 
+func (k Keeper) FlowIsToSourceChain(ctx sdk.Context, destinationChannelID, portID, flowConnectionID string, txMsgsAnys []*codectypes.Any, hostedAddress string) bool {
+	if flowConnectionID == "" {
+		return false
+	}
+
+	ics20ConnectionID, _ := k.GetConnectionID(ctx, portID, destinationChannelID)
+
+	//check if the message is using a hosted ICA to the same connection
+	if hostedAddress != "" {
+		hosted, err := k.TryGetHostedAccount(ctx, hostedAddress)
+		if err != nil {
+			return false
+		}
+		if hosted.ICAConfig.ConnectionID != ics20ConnectionID {
+			return false
+		}
+	}
+
+	//check if the messages are a transfer message
+	for _, msg := range txMsgsAnys {
+		if msg.TypeUrl != "/ibc.applications.transfer.v1.MsgTransfer" {
+			return ics20ConnectionID == flowConnectionID
+		}
+		transferMsg, err := types.GetTransferMsg(k.cdc, msg)
+		if err != nil {
+			return false
+		}
+		if transferMsg.SourcePort != portID || transferMsg.SourceChannel != destinationChannelID {
+			return false
+		}
+	}
+
+	return ics20ConnectionID == flowConnectionID
+}
+
 func getSignerFieldNames(descriptor protoreflect.MessageDescriptor) ([]string, error) {
 	// Retrieve the signer fields directly from the extension
 	signersFields, ok := proto.GetExtension(descriptor.Options(), msgv1.E_Signer).([]string)
@@ -195,38 +230,3 @@ func parseAccAddressFromAnyPrefix(bech32str string) (sdk.AccAddress, error) {
 
 	return sdk.AccAddress(bz), nil
 }
-
-// validateHostedOrICAAccount checks if the signer matches a hosted or ICA account.
-// func (k Keeper) validateHostedOrICAAccount(ctx sdk.Context, flowInfo types.FlowInfo, signer sdk.AccAddress) error {
-// 	// Check Hosted Config
-// 	if flowInfo.HostedICAConfig != nil && flowInfo.HostedICAConfig.HostedAddress != "" {
-// 		ica, err := k.TryGetHostedAccount(ctx, flowInfo.HostedICAConfig.HostedAddress)
-// 		if err != nil {
-// 			return errorsmod.Wrap(err, "failed to get hosted account")
-// 		}
-
-// 		hostedAccAddr, err := parseAccAddressFromAnyPrefix(ica.HostedAddress)
-// 		if err != nil {
-// 			return errorsmod.Wrap(err, "failed to parse hosted address")
-// 		}
-// 		if signer.Equals(hostedAccAddr) {
-// 			return nil
-// 		}
-// 	}
-
-// 	// Check ICA Account
-// 	icaAddrString, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, flowInfo.ICAConfig.ConnectionID, flowInfo.ICAConfig.PortID)
-// 	if !found {
-// 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ICA account not found")
-// 	}
-// 	icaAddr, err := parseAccAddressFromAnyPrefix(icaAddrString)
-// 	if err != nil {
-// 		return errorsmod.Wrap(err, "failed to parse ica address")
-// 	}
-// 	if !signer.Equals(icaAddr) {
-// 		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "signer does not match any authorized account")
-
-// 	}
-
-// 	return nil
-// }

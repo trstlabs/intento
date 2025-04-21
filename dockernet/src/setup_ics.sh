@@ -38,7 +38,7 @@ tee $PROVIDER_HOME/consumer-create.json<<EOF
   "unbonding_period": 3456000000000000,
   "ccv_timeout_period": 4838400000000000,
   "transfer_timeout_period": 43200000000000,
-  "consumer_redistribution_fraction": "1.0",
+  "consumer_redistribution_fraction": "0.5",
   "blocks_per_distribution_transmission": 5000,
   "historical_entries": 10000
 },
@@ -111,7 +111,7 @@ tee ${PROVIDER_HOME}/update-consumer.json <<EOF
     "unbonding_period": 3456000000000000,
     "ccv_timeout_period": 4838400000000000,
     "transfer_timeout_period": 43200000000000,
-    "consumer_redistribution_fraction": "1.0",
+    "consumer_redistribution_fraction": "0.5",
     "blocks_per_distribution_transmission": 5000,
     "historical_entries": 10000
 },

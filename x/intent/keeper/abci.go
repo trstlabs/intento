@@ -40,7 +40,7 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.FlowIn
 	if err != nil {
 		errorString = appendError(errorString, err.Error())
 	} else if feeAddr == nil || feeDenom == "" {
-		errorString = appendError(errorString, (types.ErrBalanceTooLow + feeDenom))
+		errorString = appendError(errorString, types.ErrBalanceTooLow)
 	}
 
 	if errorString == "" {

@@ -33,12 +33,13 @@ var GasFeeCoinsSupported sdk.Coins = sdk.Coins{sdk.NewCoin(Denom, math.NewInt(10
 // GetTxMsgs unpacks sdk messages from any messages
 func GetTransferMsg(cdc codec.Codec, anyTransfer *types.Any) (transferMsg ibctransfertypes.MsgTransfer, err error) {
 
+	if err := proto.Unmarshal(anyTransfer.Value, &transferMsg); err != nil {
+		return ibctransfertypes.MsgTransfer{}, err
+	}
+
 	if err := transferMsg.ValidateBasic(); err != nil {
 		return ibctransfertypes.MsgTransfer{}, err
 	}
 
-	if err := proto.Unmarshal(anyTransfer.Value, &transferMsg); err != nil {
-		return ibctransfertypes.MsgTransfer{}, err
-	}
 	return transferMsg, nil
 }

@@ -4,61 +4,75 @@ title: From a connected chain
 description: How to setup flows from a connected chain
 ---
 
-## Setting up Flows
+## Setting up Flows from Other Chains
 
-In the previous step we showed how the flow process looks like by submitting an flow on Intento. You can do this with the [TriggerPortal](https://triggerportal.zone) interface, a IntentoJS front-end integration or locally through the CLI.
+Intento makes it easy to create flows—not just locally, but also from any chain connected via IBC. You can submit flows using:
 
-In addition, you can also submit an flow from another chain using the [ICS20 standard](https://github.com/cosmos/ibc-go/blob/main/docs/apps/transfer/messages.md).
+- [TriggerPortal](https://triggerportal.zone)
+- The IntentoJS front-end library
+- The CLI
+- Or directly from another chain using the ICS20 interchain token transfer standard. 
 
-### Interchain Accounts
+### Creating Flows with ICS20 Transfers
 
-Users and entities on Cosmos SDK chains may be able set up [interchain account](https://tutorials.cosmos.network/academy/3-ibc/8-ica.html) to Intento and submit the flows using `MsgSubmitFlow`. It is also easy to deploy using the ICS20 standard.
+With Intento's custom IBC middleware, flows can be triggered by sending a regular ICS20 token transfer with a JSON memo. No new message types or protobuf encoding is required. This makes integration simple—even from a TypeScript frontend.
+
+Instead of just transferring tokens, the ICS20 packet can include a flow definition in its `memo` field. Intento’s middleware will detect this and convert it into a `MsgSubmitFlow` or `MsgRegisterAccountAndSubmitFlow`.
+
+This makes it possible to trigger complex intent-based actions—such as executing smart contracts, querying data (via ICQ), setting conditions, or running feedback loops—without ever leaving the originating chain.
+
+### A Note on Ownership and Security
+
+One challenge is **ownership**. Normally, the ICS20 sender is considered the owner of the flow. But because IBC packets can be spoofed by malicious or misconfigured chains, trusting the sender blindly isn’t safe.
+
+**Intento solves this with a secure design:**
+
+- If the flow contains actions that execute **on the same connection it came from**, then the chain is treated as trusted, and the sender address is accepted as the owner.
+- If not, a placeholder owner is created by hashing the sender and connection info, and the flow is still valid but restricted in terms of what it can control.
+
+This ensures both **trust** and **flexibility**, without sacrificing **user experience**.
+
+## Why This Matters
+
+This system unlocks powerful use cases across any chain connected to Intento:
+
+- Automate token swaps, vesting, or payroll
+- Call smart contracts cross-chain
+- Perform ICQ and conditional flows
+- Create advanced flows with feedback loops
+- Delegate control to interchain accounts without needing governance votes for every step
+
+Whether you're building wallets, automation tools, or interchain dApps—flows can now be triggered from anywhere, securely and easily.
+
 
 ### ICS20 Standard
 
-With Intento’s ICS20 transfer middleware, you send a transfer token memo on a chain, and Intento will convert the token transfer to an flow submission.
-ICS20 is an interchain standard that enables the transfer of fungible tokens between independent blockchains. It is a protocol that defines a standard interface for token transfers across different blockchains that implement the Inter-Blockchain Communication (IBC) protocol.
+With **Intento’s ICS20 middleware**, you can submit flows directly from another chain by simply sending a token transfer with a memo field. The middleware interprets the `memo` and converts it into a `MsgSubmitFlow`.
 
-Using ICS20, accounts on connected chains can create flows. This can be done by specifying flow details in the memo field of an ICS20 transfer message. Upon receiving this message, Intento's IBC hooks transforms this into a submit flow message.
-
-This is useful for DAOs and other decentralized organizations on any connected chain. They can safely and reliably execute on Intento's connected chains. For DAOs, this gives certainty to stakeholders, whilst also reducing manual work on governance proposals.
-
-## For DAOs
-
-Setting up an flow on a connected chain can be particularly useful for DAOs. Using this middleware, DAOs can now automate tasks not only on their chain but also on any chain connected to Intento. What can DAO's do with this? DAOs can orchestrate periodic token swaps, payroll, payment in installments amongst other scheduled flows. These flows can be performed in one proposal, which normally require periodically voting on individual proposals. This normally requires manual flow from the proposer and DAO participants.
-
-## ICS20 Middleware
-
-A MsgRegisterAccountAndSubmitFlow or a MsgSubmitFlow can be derrived from the memo field in the ICS20 transfer message.
+ICS20 is an interchain standard for transferring fungible tokens via IBC. Using this standard, flows can be initiated just by including JSON-encoded flow metadata in the memo field of the ICS20 transfer message. This avoids the need for new message types or protobuf encoding – it's a fully compatible, low-friction integration.
 
 ![ics20](@site/docs/images/connected_chain/from_connected_chain.png)
 
-Our custom middleware is based on the wasmhooks implementation on [Osmosis](https://github.com/osmosis-labs/osmosis/tree/main/x/ibc-hooks).
+### Under the Hood
 
-The mechanism enabling this is a `memo` field on every ICS20 transfer packet as of [IBC v3.4.0](https://medium.com/the-interchain-foundation/moving-beyond-simple-token-transfers-d42b2b1dc29b).
-
-ics_middleware.go is IBC middleware that parses an ICS20 transfer, and if the `memo` field is of a particular form, it creates an flow by parsing and handling a SubmitFlow message.
-
-These are the fields for `flow` that are derived from the ICS20 message:
-
-- **Owner**: This field is directly obtained from the ICS20 packet metadata and equals the ICS20 recipient. If unspecified, a placeholder is made from the ICS20 sender and channel.
-- **Msg**: This field should be directly obtained from the ICS20 packet metadata.
-- **FeeFunds**: This field is set to the amount of funds being sent over in the ICS20 packet. One detail here is that the denom in the packet is the source chains representation of the denom, this will be translated into INTO on Intento.
-
-The constructed message for MsgSubmitFlow under the hood will look like:
+Example structure derived from an ICS20 memo:
 
 ```go
 msg := MsgSubmitFlow{
- // If let unspecified, owner is the actor that submitted the ICS20 message and a placeholder only
- Owner: "into1-hash-of-channel-and-sender" OR packet.data.memo["flow"]["owner"],
- // Array of Msg json encoded, then transformed into a proto.message
- Msgs: packet.data.memo["flow"]["msgs"],
- // Funds coins that are transferred to the owner
- FeeFunds: sdk.NewCoin{Denom: ibc.ConvertSenderDenomToLocalDenom(packet.data.Denom), Amount: packet.data.Amount}
+  Owner: "into1-hash-of-channel-and-sender" OR packet.data.memo["flow"]["owner"],
 
- // other fields
+  Msgs: packet.data.memo["flow"]["msgs"],
+
+  FeeFunds: sdk.NewCoin{
+    Denom: ibc.ConvertSenderDenomToLocalDenom(packet.data.Denom),
+    Amount: packet.data.Amount,
+  },
+
+  // Additional metadata fields...
 }
 ```
+
+This enables secure, easy-to-integrate, and fully interchain-compatible flow orchestration – all while preserving a smooth developer experience.
 
 ### ICS20 packet structure
 
@@ -75,7 +89,6 @@ ICS20 is JSON native, so we use JSON for the memo format.
     "receiver": "A INTO addr prefixed with into1",
     "memo": {
       "flow": {
-        "owner": "into1address", //owner is optional
         "msgs": [
           {
             "@type": "/cosmos.somemodule.v1beta1.sometype"
@@ -84,8 +97,9 @@ ICS20 is JSON native, so we use JSON for the memo format.
         ],
         "duration": "111h",
         "start_at": "11h",
-        "label": "my_label",
         "interval": "11h", //optional
+        "label": "my_label", //optional
+        "owner": "into1address", //owner can be specified for flows to the same IBC connection
         "cid": "connection-0", //connection ID is optional, omit or leave blank in case local INTO message.
         "cp_cid": "connection-0", //counterparty connection ID is optional and is only needed to register ICA.
         "register_ica": "false", //optional, set to true to register interchain account
@@ -106,7 +120,7 @@ An ICS20 packet is formatted correctly for submitting an flow if the following a
 - `memo` is valid JSON
 - `memo` has at least one key, `"flow"`
 - `memo["flow"]["msgs"]` is an array with valid JSON SDK message objects with a key "@type" and sdk message values
-- `receiver == memo["flow"]["owner"]`. Optional, an owner can be specifed and is the address that receives remaining fee balance after execution ends.
+- `sender == memo["flow"]["owner"]`. Optional, an owner can be specified for flows to the same IBC connection.
 - `memo["flow"]["cid"]`is a valid connection ID on INTO -> Destination chain, omit it for local INTO execution of the message.
 - `memo["flow"]["register_ica"]` can be added, and true to register an ICA.
 

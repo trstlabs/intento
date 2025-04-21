@@ -1,11 +1,15 @@
 package keeper
 
 import (
+	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,9 +23,7 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, flow *types.FlowInfo, connectio
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	if store.Has(types.GetFlowHistoryKey(flow.ID)) {
 		txMsgs := flow.GetTxMsgs(k.cdc)
-
 		protoMsgs = append(protoMsgs, txMsgs...)
-
 		return protoMsgs, nil
 	}
 
@@ -34,38 +36,84 @@ func (k Keeper) parseAndSetMsgs(ctx sdk.Context, flow *types.FlowInfo, connectio
 		if err != nil {
 			return nil, err
 		}
-		// Marshal the message into a JSON string
+		ica, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, connectionID, portID)
+		if !found {
+			return nil, errorsmod.Wrapf(types.ErrNotFound, "ICA address not found")
+		}
+		switch exec := txMsg.(type) {
+		case *wasmtypes.MsgExecuteContract:
+			if len(exec.Msg) > 0 {
+				// 1) get it as a Go string
+				msgStr := string(exec.Msg)
+				// 2) if it's a quoted JSON string, unquote it
+				if len(msgStr) > 1 && msgStr[0] == '"' && msgStr[len(msgStr)-1] == '"' {
+					if unq, err := strconv.Unquote(msgStr); err == nil {
+						msgStr = unq
+					}
+				}
+
+				// 3) base64 → JSON map
+				var inner map[string]interface{}
+				if decoded, err := base64.StdEncoding.DecodeString(msgStr); err == nil {
+					if err := json.Unmarshal(decoded, &inner); err != nil {
+						return nil, fmt.Errorf("unmarshal base64-decoded contract msg: %w", err)
+					}
+				} else {
+					// fallback: maybe it really was raw JSON
+					if err := json.Unmarshal([]byte(msgStr), &inner); err != nil {
+						return nil, fmt.Errorf("unmarshal raw contract msg: %w (msg=%s)", err, msgStr)
+					}
+				}
+
+				// 4) ICA‑address replacement
+				replaceICAAddr(inner, types.ParseICAValue, ica)
+
+				// 5) JSON‑marshal the modified map
+				modifiedJSON, err := json.Marshal(inner)
+				if err != nil {
+					return nil, fmt.Errorf("failed to re-marshal contract msg: %w", err)
+				}
+
+				// 6) base64‑encode *that*
+				b64 := base64.StdEncoding.EncodeToString(modifiedJSON)
+
+				// 7) JSON‑marshal the base64 string so it ends up quoted
+				exec.Msg, err = json.Marshal(b64)
+				if err != nil {
+					return nil, fmt.Errorf("failed to JSON-marshal base64 contract msg: %w", err)
+				}
+			}
+
+			// 8) append and skip the generic fallback
+			protoMsgs = append(protoMsgs, exec)
+			txMsgs = append(txMsgs, exec)
+			parsedIcaAddr = true
+			continue
+		}
+
+		// General fallback for other message types
 		msgJSON, err := k.cdc.MarshalInterfaceJSON(txMsg)
 		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal %s message", msg)
+			return nil, fmt.Errorf("failed to marshal %T: %w", txMsg, err)
 		}
-		msgJSONString := string(msgJSON)
 
-		index := strings.Index(msgJSONString, types.ParseICAValue)
-		if index == -1 {
+		if !strings.Contains(string(msgJSON), types.ParseICAValue) {
 			protoMsgs = append(protoMsgs, txMsg)
 			txMsgs = append(txMsgs, txMsg)
 			continue
 		}
 
-		ica, found := k.icaControllerKeeper.GetInterchainAccountAddress(ctx, connectionID, portID)
-		if !found {
-			return nil, errorsmod.Wrapf(types.ErrNotFound, "ICA address not found")
-		}
+		modifiedJSON := strings.ReplaceAll(string(msgJSON), types.ParseICAValue, ica)
 
-		// Replace the text "ICA_ADDR" in the JSON string
-		msgJSONString = strings.ReplaceAll(msgJSONString, types.ParseICAValue, ica)
-		// Unmarshal the modified JSON string back into a proto message
 		var updatedMsg sdk.Msg
-		err = k.cdc.UnmarshalInterfaceJSON([]byte(msgJSONString), &updatedMsg)
+		err = k.cdc.UnmarshalInterfaceJSON([]byte(modifiedJSON), &updatedMsg)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal updated message: %w", err)
 		}
-		protoMsgs = append(protoMsgs, updatedMsg)
 
+		protoMsgs = append(protoMsgs, updatedMsg)
 		txMsgs = append(txMsgs, updatedMsg)
 		parsedIcaAddr = true
-
 	}
 
 	if parsedIcaAddr {
@@ -146,4 +194,24 @@ func DeriveHostedAddress(addressString string, connectionID string) (sdk.AccAddr
 	buf := []byte(connectionID)
 	return sdkaddress.Derive(addr, buf), nil
 
+}
+
+func replaceICAAddr(m map[string]interface{}, placeholder, actual string) {
+	for k, v := range m {
+		switch val := v.(type) {
+		case string:
+			m[k] = strings.ReplaceAll(val, placeholder, actual)
+		case map[string]interface{}:
+			replaceICAAddr(val, placeholder, actual)
+		case []interface{}:
+			for i, item := range val {
+				switch itemVal := item.(type) {
+				case string:
+					val[i] = strings.ReplaceAll(itemVal, placeholder, actual)
+				case map[string]interface{}:
+					replaceICAAddr(itemVal, placeholder, actual)
+				}
+			}
+		}
+	}
 }

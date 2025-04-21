@@ -83,6 +83,17 @@ func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flo
 
 	cacheCtx, writeCache := ctx.CacheContext()
 	for index, msg := range txMsgs {
+
+		signers, _, err := k.cdc.GetMsgV1Signers(msg)
+		if err != nil {
+			return nil, err
+		}
+		for _, acct := range signers {
+			if sdk.AccAddress(acct).String() != flow.Owner {
+				return nil, errorsmod.Wrap(types.ErrUnauthorized, "owner doesn't have permission to send this message")
+			}
+		}
+
 		if flow.Msgs[index].TypeUrl == "/ibc.applications.transfer.v1.MsgTransfer" {
 			transferMsg, err := types.GetTransferMsg(k.cdc, flow.Msgs[index])
 			if err != nil {
@@ -96,17 +107,6 @@ func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flo
 		}
 
 		handler := k.msgRouter.Handler(msg)
-
-		signers, _, err := k.cdc.GetMsgV1Signers(msg)
-		if err != nil {
-			return nil, err
-		}
-		for _, acct := range signers {
-			if sdk.AccAddress(acct).String() != flow.Owner {
-				return nil, errorsmod.Wrap(types.ErrUnauthorized, "owner doesn't have permission to send this message")
-			}
-		}
-
 		res, err := handler(cacheCtx, msg)
 		if err != nil {
 			return nil, err
@@ -202,7 +202,7 @@ func triggerRemainingMsgs(k Keeper, ctx sdk.Context, flow types.FlowInfo, flowHi
 	if err != nil {
 		errorString = appendError(errorString, err.Error())
 	} else if feeAddr == nil || feeDenom == "" {
-		errorString = appendError(errorString, (types.ErrBalanceTooLow + feeDenom))
+		errorString = appendError(errorString, types.ErrBalanceTooLow)
 	}
 
 	err = k.RunFeedbackLoops(cacheCtx, flow.ID, &flow.Msgs, flow.Conditions)
