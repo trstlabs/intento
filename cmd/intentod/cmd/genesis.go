@@ -225,6 +225,7 @@ func PrepareGenesis(
 
 	// slashing module genesis
 	slashingGenState := slashingtypes.DefaultGenesisState()
+	slashingGenState.Params.SignedBlocksWindow = 30000 //similar to elys (30000) and comdex (25,920)
 	slashingGenState.Params = genesisParams.SlashingParams
 	slashingGenStateBz, err := cdc.MarshalJSON(slashingGenState)
 	if err != nil {
@@ -425,7 +426,8 @@ func TestnetGenesisParams() GenesisParams {
 	//genParams.IntentParams.MaxFlowDuration = time.Hour * 8
 
 	//slasing window
-	//claim
+	genParams.SlashingParams.SignedBlocksWindow = 10000 //shorter for testnet
+
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime
 	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 5 // 5 days
 	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 5    // 5 days
