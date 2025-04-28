@@ -94,9 +94,13 @@ func (suite *KeeperTestSuite) receiveTransferPacket(receiver, memo string) []byt
 }
 
 func (suite *KeeperTestSuite) receiveTransferPacketWithSequence(receiver, memo string, prevSequence uint64) []byte {
-	path := NewTransferPath(suite.IntentoChain, suite.HostChain)
+	if suite.TransferPath == nil {
+		path := NewTransferPath(suite.IntentoChain, suite.HostChain)
+		suite.Coordinator.Setup(path)
+		suite.TransferPath = path
+	}
 
-	suite.Coordinator.Setup(path)
+	path := suite.TransferPath
 	channelCap := suite.HostChain.GetChannelCapability(
 		path.EndpointB.ChannelConfig.PortID,
 		path.EndpointB.ChannelID)
@@ -110,11 +114,11 @@ func (suite *KeeperTestSuite) receiveTransferPacketWithSequence(receiver, memo s
 	// recv in chain a
 	// get the ack from the chain a's response
 	// manually send the acknowledgement to chain b
-	ack := receivePacket(path, suite, packet)
+	ack := suite.receivePacket(path, packet)
 	return ack
 }
 
-func receivePacket(path *ibctesting.Path, suite *KeeperTestSuite, packet channeltypes.Packet) []byte {
+func (suite *KeeperTestSuite) receivePacket(path *ibctesting.Path, packet channeltypes.Packet) []byte {
 	err := path.EndpointB.UpdateClient()
 	suite.Require().NoError(err)
 	err = path.EndpointA.UpdateClient()

@@ -86,6 +86,7 @@ func (s *AppTestHelper) Setup() {
 	s.IbcEnabled = false
 	s.IcaAddresses = make(map[string]string)
 	s.SetupIBCChains(HostChainId)
+	s.TransferPath = nil
 
 }
 
