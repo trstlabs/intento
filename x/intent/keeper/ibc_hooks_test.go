@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacket() {
 
 }
 
-func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithFlow() {
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithSubmitFlow() {
 	suite.SetupTest()
 
 	addr := suite.HostChain.SenderAccount.GetAddress().String()
@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithFlow() {
 		"to_address": "%s"
 	}`, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String(), addrTo)
 
-	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"owner": "%s","label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String(), msg))
+	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"owner": "%s","label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
@@ -79,6 +79,49 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithFlow() {
 	suite.Require().NotContains(ack, "error")
 
 	flow := GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+
+	suite.Require().Equal(flow.Label, "my flow")
+	suite.Require().Equal(flow.ICAConfig.PortID, "")
+	suite.Require().Equal(flow.Interval, time.Second*60)
+
+	var txMsgAny codectypes.Any
+	cdc := codec.NewProtoCodec(GetICAApp(suite.IntentoChain).InterfaceRegistry())
+
+	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
+	suite.Require().NoError(err)
+	suite.True(flow.Msgs[0].Equal(txMsgAny))
+}
+
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithUpdateFlow() {
+	suite.SetupTest()
+
+	addr := suite.HostChain.SenderAccount.GetAddress().String()
+	addrTo := suite.TestAccs[0].String()
+	msg := fmt.Sprintf(`{
+		"@type":"/cosmos.bank.v1beta1.MsgSend",
+		"amount": [{
+			"amount": "70",
+			"denom": "stake"
+		}],
+		"from_address": "%s",
+		"to_address": "%s"
+	}`, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String(), addrTo)
+
+	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"owner": "%s","label": "my flowwwwww", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
+
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err := json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().NotContains(ack, "error")
+	flow := GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	suite.Require().Equal(flow.Owner, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String())
+	ackBytes = suite.receiveTransferPacketWithSequence(addr, fmt.Sprintf(`{"flow": {"owner": "%s","id": "1","label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String(), msg), 1)
+
+	err = json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().NotContains(ack, "error")
+
+	flow = GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
 
 	suite.Require().Equal(flow.Label, "my flow")
 	suite.Require().Equal(flow.ICAConfig.PortID, "")

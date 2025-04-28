@@ -88,7 +88,7 @@ func (k Keeper) SubmitInterchainQueries(ctx sdk.Context, flow types.FlowInfo, lo
 		if comparison.ICQConfig == nil {
 			continue
 		}
-		icqID := fmt.Sprintf("%s:%d:%d", types.FlowFeedbackLoopQueryKeyPrefix, flow.ID, i)
+		icqID := fmt.Sprintf("%s:%d:%d", types.FlowComparisonQueryKeyPrefix, flow.ID, i)
 		_, found := k.interchainQueryKeeper.GetQuery(ctx, icqID)
 		if found {
 			return

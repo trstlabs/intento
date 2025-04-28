@@ -222,6 +222,7 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 		sdk.NewEvent(
 			types.EventTypeFlowUpdated,
 			sdk.NewAttribute(types.AttributeKeyFlowID, strconv.FormatUint(flow.ID, 10)),
+			sdk.NewAttribute(types.AttributeKeyFlowOwner, flow.Owner),
 		))
 
 	return &types.MsgUpdateFlowResponse{}, nil
