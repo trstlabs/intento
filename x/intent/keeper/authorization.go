@@ -114,14 +114,12 @@ func (k Keeper) validateSigners(ctx sdk.Context, codec codec.Codec, flowInfo typ
 	if err != nil {
 		return errorsmod.Wrap(err, "failed to parse owner address")
 	}
-	// fmt.Printf("Owner %s \n", flowInfo.Owner)
-	// fmt.Printf("Signer %s \n", signers[0])
+
 	k.Logger(ctx).Debug("Signer validation", "owner", flowInfo.Owner, "signer", signers[0])
 	if !signer.Equals(ownerAddr) {
-		//if !checkICA {
-		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "signer address does not match expected owner address")
-		//}
-		//return k.validateHostedOrICAAccount(ctx, flowInfo, signer)
+		errorString := fmt.Sprintf("signer address %s does not match expected owner address %s", signer.String(), ownerAddr.String())
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, errorString)
+
 	}
 
 	return nil
@@ -162,33 +160,40 @@ func extractSigners(protoReflectMsg protoreflect.Message) ([]string, error) {
 }
 
 func (k Keeper) FlowIsToSourceChain(ctx sdk.Context, destinationChannelID, portID, flowConnectionID string, txMsgsAnys []*codectypes.Any, hostedAddress string) bool {
+	ics20ConnectionID, _ := k.GetConnectionID(ctx, portID, destinationChannelID)
+
+	// Case 1: All messages are MsgTransfer and match port/channel
+	allTransfers := true
+	for _, msg := range txMsgsAnys {
+		if msg.TypeUrl != "/ibc.applications.transfer.v1.MsgTransfer" {
+			allTransfers = false
+			break
+		}
+		transferMsg, err := types.GetTransferMsg(k.cdc, msg)
+		if err != nil {
+			return false
+		}
+
+		if transferMsg.SourcePort != portID || transferMsg.SourceChannel != destinationChannelID {
+			return false
+		}
+	}
+
+	if allTransfers {
+		return true
+	}
+
+	// Case 2: ICA flow, validate connection ID
 	if flowConnectionID == "" {
 		return false
 	}
 
-	ics20ConnectionID, _ := k.GetConnectionID(ctx, portID, destinationChannelID)
-
-	//check if the message is using a hosted ICA to the same connection
 	if hostedAddress != "" {
 		hosted, err := k.TryGetHostedAccount(ctx, hostedAddress)
 		if err != nil {
 			return false
 		}
 		if hosted.ICAConfig.ConnectionID != ics20ConnectionID {
-			return false
-		}
-	}
-
-	//check if the messages are a transfer message
-	for _, msg := range txMsgsAnys {
-		if msg.TypeUrl != "/ibc.applications.transfer.v1.MsgTransfer" {
-			return ics20ConnectionID == flowConnectionID
-		}
-		transferMsg, err := types.GetTransferMsg(k.cdc, msg)
-		if err != nil {
-			return false
-		}
-		if transferMsg.SourcePort != portID || transferMsg.SourceChannel != destinationChannelID {
 			return false
 		}
 	}
