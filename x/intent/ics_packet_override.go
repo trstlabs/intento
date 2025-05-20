@@ -62,21 +62,28 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		return errAck
 	}
 	// Execute the receive of funds
+
 	ack := im.app.OnRecvPacket(ctx, packet, relayer)
 	if !ack.Success() {
 		return ack
 	}
 
-	amount, ok := math.NewIntFromString(data.GetAmount())
-	if !ok {
-		// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
-		// but returning here for completeness
-		return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrInvalidPacket, "Amount is not an int"))
-	}
+	funds := sdk.Coins{}
 
-	// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
-	denom := MustExtractDenomFromPacketOnRecv(packet)
-	funds := sdk.NewCoins(sdk.NewCoin(denom, amount))
+	// tokens are send to the owner unless the fallback is not used
+	if !configuration.FallbackToOwnerBalance {
+
+		amount, ok := math.NewIntFromString(data.GetAmount())
+		if !ok {
+			// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
+			// but returning here for completeness
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrInvalidPacket, "Amount is not an int"))
+		}
+
+		// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
+		denom := MustExtractDenomFromPacketOnRecv(packet)
+		funds = sdk.NewCoins(sdk.NewCoin(denom, amount))
+	}
 
 	// Build the message to handle
 	if registerICA {
@@ -150,6 +157,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		}
 		response, err := submitFlow(im.keeper, ctx, &msg)
 		if err != nil {
+			//fmt.Printf("error handling ICS20 packet flow submission %v", err.Error())
 			im.keeper.Logger(ctx).Debug("error handling ICS20 packet flow submission", err.Error())
 			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
 		}
@@ -185,6 +193,15 @@ func makeOwnerForChannelSender(ownerAddr sdk.AccAddress, isToSourceChain bool, p
 				),
 			)
 		}
+		data.Receiver = ownerAddr.String()
+
+		bz, err := json.Marshal(data)
+		if err != nil {
+			return nil, channeltypes.NewErrorAcknowledgement(
+				errorsmod.Wrapf(types.ErrMarshaling, err.Error()),
+			)
+		}
+		packet.Data = bz
 
 		// Validated successfully
 		return ownerAddr, nil
@@ -283,7 +300,7 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 		owner = ""
 	}
 
-	// Owner is optional and the owner and the receiver should be the same for the packet to be valid
+	// Owner is optional and the owner and the sender should be the same for the packet to be valid
 	if ok && owner != "" {
 		ownerAddr, err = sdk.AccAddressFromBech32(owner)
 		if err != nil {

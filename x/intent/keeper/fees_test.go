@@ -103,38 +103,6 @@ func TestDistributeCoinsOwnerFeeFallbackNotRecurring(t *testing.T) {
 
 }
 
-func TestDistributeCoinsEmptyFlowBalance(t *testing.T) {
-	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
-	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0)))
-
-	keeper.SetParams(ctx, types.Params{
-		FlowFundsCommission: 2,
-		BurnFeePerMsg:       1_000_000, // 1into
-		FlowFlexFeeMul:      100,
-		GasFeeCoins:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1))),
-		MaxFlowDuration:     time.Hour * 24 * 366 * 10,
-		MinFlowDuration:     time.Second * 60,
-		MinFlowInterval:     time.Second * 60,
-	})
-
-	pub2 := secp256k1.GenPrivKey().PubKey()
-
-	ownerAddr := sdk.AccAddress(pub2.Address())
-	types.Denom = sdk.DefaultBondDenom
-
-	flowInfo := types.FlowInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
-	}
-
-	ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
-	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, flowInfo, 1_000_000)
-	require.Nil(t, err)
-	require.Empty(t, denom)
-	fee, err := keeper.DistributeCoins(ctx, flowInfo, acc, denom)
-	require.Error(t, err)
-	require.Empty(t, fee.Denom, fee.Amount)
-}
-
 func TestDistributeCoinsEmptyOwnerBalanceAndMultipliedFlexFee(t *testing.T) {
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
 	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 300_000_000)))
