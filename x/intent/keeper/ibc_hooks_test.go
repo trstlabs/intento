@@ -71,7 +71,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithSubmitFlow() {
 		"to_address": "%s"
 	}`, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String(), addrTo)
 
-	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"owner": "%s","label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, addr, msg))
+	ackBytes := suite.receiveTransferPacket("intento-flow", fmt.Sprintf(`{"flow": {"label": "my flow", "msgs": [%s], "duration": "60s", "interval": "60s", "start_at": "1746627053"} }`, msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
@@ -83,6 +83,54 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithSubmitFlow() {
 	suite.Require().Equal(flow.Label, "my flow")
 	suite.Require().Equal(flow.ICAConfig.PortID, "")
 	suite.Require().Equal(flow.Interval, time.Second*60)
+
+	var txMsgAny codectypes.Any
+	cdc := codec.NewProtoCodec(GetICAApp(suite.IntentoChain).InterfaceRegistry())
+
+	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
+	suite.Require().NoError(err)
+	suite.True(flow.Msgs[0].Equal(txMsgAny))
+}
+
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithSubmitFlowTransferToSourceChain() {
+	suite.SetupTest()
+
+	addr := suite.HostChain.SenderAccount.GetAddress().String()
+	addrTo := suite.TestAccs[0].String()
+	msg := fmt.Sprintf(`{
+		"@type": "/ibc.applications.transfer.v1.MsgTransfer",
+		"source_port": "transfer",
+		"source_channel": "channel-0",
+		"token": {
+		"amount": "1000",
+		"denom": "abc"
+		},
+		"sender":  "%s",
+		"receiver": "%s",
+		"timeout_height": {
+		"revision_number": "0",
+		"revision_height": "0"
+		},
+		"timeout_timestamp": 2526374086000000000,
+		"memo": "hello"
+}`, addr, addrTo)
+
+	ackBytes := suite.receiveTransferPacket("intento-flow", fmt.Sprintf(`{"flow": {"label": "my flow", "msgs": [%s], "duration": "60s", "interval": "60s", "start_at": "1746627053", "owner":"%s", "fallback":"true" } }`, msg, addr))
+
+	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
+	err := json.Unmarshal(ackBytes, &ack)
+	suite.Require().NoError(err)
+	suite.Require().NotContains(ack, "error")
+
+	balance := GetICAApp(suite.IntentoChain).BankKeeper.GetAllBalances(suite.IntentoChain.GetContext(), suite.HostChain.SenderAccount.GetAddress())
+	suite.Require().Equal(balance[0].Amount.String(), "1000000")
+	suite.Require().Contains(balance[0].Denom, "ibc")
+	flow := GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+
+	suite.Require().Equal(flow.Label, "my flow")
+	suite.Require().Equal(flow.ICAConfig.PortID, "")
+	suite.Require().Equal(flow.Interval, time.Second*60)
+	suite.Require().Equal(flow.Owner, addr)
 
 	var txMsgAny codectypes.Any
 	cdc := codec.NewProtoCodec(GetICAApp(suite.IntentoChain).InterfaceRegistry())

@@ -185,6 +185,8 @@ func TestBeginBlockerAlwaysStopOnLowBalance(t *testing.T) {
 	flow = k.GetFlowInfo(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
 	flow = k.GetFlowInfo(ctx3, flow.ID)
+	flowHistory := k.MustGetFlowHistory(ctx3, flow.ID)
+	require.NotNil(t, flowHistory[0].Errors)
 	//exec time is not updated
 	require.True(t, flow.ExecTime.Before(ctx3.BlockTime()))
 	//flow also not in queue
