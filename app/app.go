@@ -304,6 +304,7 @@ type IntoApp struct {
 	sm *module.SimulationManager
 
 	// the configurator
+	Configurator module.Configurator
 }
 
 // NewIntoApp returns a reference to an initialized Into App.
@@ -779,8 +780,8 @@ func NewIntoApp(
 
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 	configurator := module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-
-	if err = app.ModuleManager.RegisterServices(configurator); err != nil {
+	app.Configurator = configurator
+	if err = app.ModuleManager.RegisterServices(app.Configurator); err != nil {
 		panic(err)
 	}
 
@@ -836,7 +837,12 @@ func NewIntoApp(
 	//app.RegisterUpgradeHandlers(configurator)
 	app.SetEndBlocker(app.EndBlocker)
 
-	// app.setupUpgradeHandlers()
+	app.RegisterUpgradeHandlers(app.Configurator)
+	// app.UpgradeKeeper.SetUpgradeHandler("v0.9.4-r1", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	// 	// If you have store migrations or keeper updates, do them here
+	// 	return app.mm.RunMigrations(ctx, configurator, vm)
+	// })
+
 	// if manager := app.SnapshotManager(); manager != nil {
 	// 	err := manager.RegisterExtensions(
 	// 		wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), &app.WasmKeeper),
