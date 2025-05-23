@@ -13,7 +13,7 @@ import (
 )
 
 // next upgrade name
-const UpgradeName = "v094r1"
+const UpgradeName = "v0.9.4-r1"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: UpgradeName,
