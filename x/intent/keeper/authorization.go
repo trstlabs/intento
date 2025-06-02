@@ -183,11 +183,7 @@ func (k Keeper) FlowIsToSourceChain(ctx sdk.Context, destinationChannelID, portI
 		return true
 	}
 
-	// Case 2: ICA flow, validate connection ID
-	if flowConnectionID == "" {
-		return false
-	}
-
+	// Case 2: Hosted account, validate connection ID
 	if hostedAddress != "" {
 		hosted, err := k.TryGetHostedAccount(ctx, hostedAddress)
 		if err != nil {
@@ -196,6 +192,11 @@ func (k Keeper) FlowIsToSourceChain(ctx sdk.Context, destinationChannelID, portI
 		if hosted.ICAConfig.ConnectionID != ics20ConnectionID {
 			return false
 		}
+	}
+
+	// Case 3: ICA flow, validate connection ID
+	if flowConnectionID == "" {
+		return false
 	}
 
 	return ics20ConnectionID == flowConnectionID
