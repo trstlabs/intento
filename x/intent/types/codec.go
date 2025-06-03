@@ -13,6 +13,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(MsgSubmitFlow{}, "intent/MsgSendFlow", nil)
 	cdc.RegisterConcrete(MsgRegisterAccountAndSubmitFlow{}, "intent/MsgRegisterAccountAndSubmitFlow", nil)
 	cdc.RegisterConcrete(MsgUpdateFlow{}, "intent/MsgUpdateFlow", nil)
+	cdc.RegisterConcrete(MsgUpdateParams{}, "intent/MsgUpdateParams", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -24,6 +25,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSubmitFlow{},
 		&MsgRegisterAccountAndSubmitFlow{},
 		&MsgUpdateFlow{},
+		&MsgUpdateParams{},
 	)
 
 }

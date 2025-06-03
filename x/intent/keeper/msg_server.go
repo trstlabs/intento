@@ -9,6 +9,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/gogoproto/proto"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
@@ -294,6 +295,31 @@ func (k msgServer) UpdateHostedAccount(goCtx context.Context, msg *types.MsgUpda
 
 	//set hosted config by address on hosted key prefix
 	return &types.MsgUpdateHostedAccountResponse{}, nil
+}
+
+// UpdateParams implements the Msg/UpdateParams interface
+func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Validate the authority
+	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid authority address: %s", err)
+	}
+
+	// Verify that the authority matches the module's authority
+	if msg.Authority != k.Keeper.GetAuthority() {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "expected %s, got %s", k.Keeper.GetAuthority(), msg.Authority)
+	}
+
+	// Validate the parameters
+	if err := msg.Params.Validate(); err != nil {
+		return nil, err
+	}
+
+	// Set the new parameters
+	k.Keeper.SetParams(ctx, msg.Params)
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }
 
 func checkAndParseFlowContent(

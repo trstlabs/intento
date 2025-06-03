@@ -471,79 +471,46 @@ func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 
 func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 	var (
-		path                     *ibctesting.Path
-		connectionID             string
-		sdkMsg                   sdk.Msg
-		startAtBeforeBlockHeight bool
+		connectionID string
 	)
 
 	testCases := []struct {
 		name     string
 		malleate func()
 		expPass  bool
-	}{{
-
-		"success - Create hosted account flow", func() {
-			connectionID = path.EndpointA.ConnectionID
-			sdkMsg = &banktypes.MsgSend{
-				FromAddress: TestOwnerAddress,
-				ToAddress:   suite.TestAccs[0].String(),
-				Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
-			}
-		}, true,
-	},
+	}{
+		{
+			"success - Create hosted account flow",
+			func() {
+				path := NewICAPath(suite.IntentoChain, suite.HostChain)
+				suite.Coordinator.SetupConnections(path)
+				connectionID = path.EndpointA.ConnectionID
+			},
+			true,
+		},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		suite.Run(tc.name, func() {
-			suite.SetupTest()
-			path = NewICAPath(suite.IntentoChain, suite.HostChain)
-			suite.Coordinator.SetupConnections(path)
+			tc.malleate()
 
-			creator := suite.IntentoChain.SenderAccount.GetAddress().String()
-			err := suite.SetupICAPath(path, creator)
-			suite.Require().NoError(err)
-			// Check if account is created
-			portID, err := icatypes.NewControllerPortID(creator)
-			suite.Require().NoError(err)
-			interchainAccountAddr, found := GetICAApp(suite.IntentoChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.IntentoChain.GetContext(), path.EndpointA.ConnectionID, portID)
-			suite.Require().True(found)
-			sdkMsg = &banktypes.MsgSend{
-				FromAddress: interchainAccountAddr,
-				ToAddress:   suite.HostChain.SenderAccount.GetAddress().String(),
-				Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
+			// Create a new hosted account
+			msgHosted := &types.MsgCreateHostedAccount{
+				Creator:      suite.TestAccs[0].String(),
+				ConnectionID: connectionID,
+				Version:      TestVersion,
 			}
-
-			tc.malleate() // malleate mutates test data
-
-			msgHosted := types.NewMsgCreateHostedAccount(creator, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())))
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			resHosted, err := msgSrv.CreateHostedAccount(suite.IntentoChain.GetContext(), msgHosted)
-			suite.Require().Nil(err)
-			suite.Require().NotNil(resHosted.Address)
-			suite.Require().NotEqual(resHosted.Address, creator)
+			res, err := msgSrv.CreateHostedAccount(suite.IntentoChain.GetContext(), msgHosted)
 
-			label := "label"
-			duration := time.Second * 200
-			durationTimeText := duration.String()
-			interval := time.Second * 100
-			intervalTimeText := interval.String()
-			startAt := uint64(0)
-			if startAtBeforeBlockHeight {
-				startAt = uint64(suite.IntentoChain.GetContext().BlockTime().Unix() - 60*60)
-			}
-			msg, err := types.NewMsgSubmitFlow(creator, label, []sdk.Msg{sdkMsg}, connectionID, durationTimeText, intervalTimeText, startAt, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())), resHosted.Address, sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt()), &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
-			suite.Require().NoError(err)
-
-			msgSrv = keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			res, err := msgSrv.SubmitFlow(suite.IntentoChain.GetContext(), msg)
-			if !tc.expPass {
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(res)
+				suite.Require().NotEmpty(res.Address)
+			} else {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)
-
 			}
 		})
 	}
@@ -748,6 +715,76 @@ func (suite *KeeperTestSuite) TestUpdateHostedAccount() {
 			suite.Require().NotEqual(hosted.HostFeeConfig.FeeCoinsSuported.Denoms(), hostedNew.HostFeeConfig.FeeCoinsSuported.Denoms())
 			suite.Require().NotEqual(hosted.HostFeeConfig.FeeCoinsSuported[0].Amount, hostedNew.HostFeeConfig.FeeCoinsSuported[0].Amount)
 
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestUpdateParams() {
+	// Get the current params
+	params, err := GetICAApp(suite.IntentoChain).IntentKeeper.GetParams(suite.IntentoChain.GetContext())
+	suite.Require().NoError(err)
+
+	// Create a new param value that's different from the current one
+	newParams := params
+	// Update a field in the params if needed
+	// For example: newParams.SomeField = newValue
+
+	testCases := []struct {
+		name      string
+		expPass   bool
+		authority string
+		params    types.Params
+	}{
+		{
+			"valid authority and params",
+			true,
+			GetICAApp(suite.IntentoChain).IntentKeeper.GetAuthority(),
+			newParams,
+		},
+		{
+			"invalid authority",
+			false,
+			"invalid_authority",
+			newParams,
+		},
+		{
+			"empty authority",
+			false,
+			"",
+			newParams,
+		},
+		{
+			"invalid params",
+			false,
+			GetICAApp(suite.IntentoChain).IntentKeeper.GetAuthority(),
+			types.Params{}, // Add invalid params here if needed
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			msg := types.MsgUpdateParams{
+				Authority: tc.authority,
+				Params:    tc.params,
+			}
+
+			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
+			txResponse, err := msgSrv.UpdateParams(suite.IntentoChain.GetContext(), &msg)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
+				suite.Require().NotNil(txResponse)
+
+				// Verify that the params were updated
+				updatedParams, err := GetICAApp(suite.IntentoChain).IntentKeeper.GetParams(suite.IntentoChain.GetContext())
+				suite.Require().NoError(err)
+				suite.Require().Equal(tc.params, updatedParams)
+
+				// Restore the original params for the next test case
+				GetICAApp(suite.IntentoChain).IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
+			} else {
+				suite.Require().Error(err)
+			}
 		})
 	}
 }

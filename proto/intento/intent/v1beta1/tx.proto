@@ -10,6 +10,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "intento/intent/v1beta1/flow.proto";
+import "intento/intent/v1beta1/params.proto";
 import "intento/intent/v1beta1/hostedaccount.proto";
 
 option go_package = "github.com/trstlabs/intento/x/intent/types";
@@ -38,6 +39,11 @@ service Msg {
   }
   rpc UpdateHostedAccount(MsgUpdateHostedAccount) returns (MsgUpdateHostedAccountResponse) {
     option (google.api.http).post = "/intento/intent/v1beta1/update-hosted-account";
+  }
+  // UpdateParams defines a governance operation for updating the x/intent module
+  // parameters. The authority is hard-coded to the x/gov module account.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/params";
   }
 }
 
@@ -206,4 +212,23 @@ message MsgUpdateHostedAccount {
   HostFeeConfig host_fee_config = 4;
 }
 
-message MsgUpdateHostedAccountResponse {}
+message MsgUpdateHostedAccountResponse {
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "intent/MsgUpdateParams";
+  
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  
+  // params defines the x/intent parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
