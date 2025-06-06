@@ -4,6 +4,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	elysamm "github.com/trstlabs/intento/x/intent/msg_registry/elys/amm"
+	elyscommitment "github.com/trstlabs/intento/x/intent/msg_registry/elys/commitment"
 	elysestaking "github.com/trstlabs/intento/x/intent/msg_registry/elys/estaking"
 	elysleveragelp "github.com/trstlabs/intento/x/intent/msg_registry/elys/leveragelp"
 	elysmasterchef "github.com/trstlabs/intento/x/intent/msg_registry/elys/masterchef"
@@ -35,8 +36,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&elysamm.MsgSwapExactAmountOut{},
 		&elysamm.MsgSwapByDenom{},
 		&elysamm.MsgFeedMultipleExternalLiquidity{},
-		&elysamm.MsgUpdatePoolParams{},
-		&elysamm.MsgUpdateParams{},
 
 		&elystradeshield.MsgCreateSpotOrder{},
 		&elystradeshield.MsgUpdateSpotOrder{},
@@ -47,7 +46,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&elystradeshield.MsgUpdatePerpetualOrder{},
 		&elystradeshield.MsgCancelPerpetualOrder{},
 		&elystradeshield.MsgCancelPerpetualOrders{},
-		&elystradeshield.MsgUpdateParams{},
 		&elystradeshield.MsgExecuteOrders{},
 
 		&elysperpetual.MsgOpen{},
@@ -61,7 +59,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&elysperpetual.MsgUpdateMaxLeverageForPool{},
 		&elysperpetual.MsgUpdateEnabledPools{},
 
-		&elysestaking.MsgUpdateParams{},
 		&elysestaking.MsgWithdrawReward{},
 		&elysestaking.MsgWithdrawElysStakingRewards{},
 		&elysestaking.MsgWithdrawAllRewards{},
@@ -81,16 +78,27 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 		&elysmasterchef.MsgAddExternalRewardDenom{},
 		&elysmasterchef.MsgAddExternalIncentive{},
-		&elysmasterchef.MsgUpdateParams{},
 		&elysmasterchef.MsgUpdatePoolMultipliers{},
 		&elysmasterchef.MsgClaimRewards{},
 		&elysmasterchef.MsgTogglePoolEdenRewards{},
 
 		&elysstablestake.MsgBond{},
 		&elysstablestake.MsgUnbond{},
-		&elysstablestake.MsgUpdateParams{},
 		&elysstablestake.MsgAddPool{},
 		&elysstablestake.MsgUpdatePool{},
+
+		&elyscommitment.MsgCommitClaimedRewards{},
+		&elyscommitment.MsgUncommitTokens{},
+		&elyscommitment.MsgVest{},
+		&elyscommitment.MsgCancelVest{},
+		&elyscommitment.MsgClaimVesting{},
+		&elyscommitment.MsgUpdateEnableVestNow{},
+		&elyscommitment.MsgVestNow{},
+		&elyscommitment.MsgVestLiquid{},
+		&elyscommitment.MsgStake{},
+		&elyscommitment.MsgUnstake{},
+		&elyscommitment.MsgClaimKol{},
+		&elyscommitment.MsgClaimRewardProgram{},
 	)
 }
 
