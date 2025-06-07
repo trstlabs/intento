@@ -316,7 +316,7 @@ EOF
   user_into_balance_start=$($INTO_MAIN_CMD q bank balance $(INTO_ADDRESS) $INTO_DENOM | GETBAL)
 
   # build ICA and retrieve ICA account
-  msg_create_hosted_account=$($INTO_MAIN_CMD tx intent create-hosted-account --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-suported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
+  msg_create_hosted_account=$($INTO_MAIN_CMD tx intent create-hosted-account --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-supported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
   echo $msg_create_hosted_account
   sleep 120
 
@@ -381,6 +381,87 @@ EOF
   assert_equal "$receiver_diff" $MSGSEND_AMOUNT #from MsgSend
 }
 
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc ics20 transfer, trigger hosted ICA MsgExecuteContract via memo hook" {
+  # Get hosted account for connection
+  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
+  hosted_address=$(echo "$hosted_accounts" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.hosted_accounts[] | select(.ica_config.connection_id == $conn_id) | .hosted_address')
+  if [ -z "$hosted_address" ]; then
+    echo "❌ No hosted account found for connection-$CONNECTION_ID"
+    exit 1
+  fi
+
+  # Get ICA address linked to hosted account
+  ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$hosted_address" connection-$CONNECTION_ID | awk '{print $2}')
+  echo "📌 ICA Address: $ica_address"
+
+
+  # Build memo for ICS20 transfer to trigger ICA MsgSend
+  memo='{"flow": {"msgs": [{"@type": "/cosmos.authz.v1beta1.MsgExec","grantee":"'"$ica_address"'","msgs":[{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract","funds":[{"amount":"'"$MSGSEND_AMOUNT"'","denom":"'"$HOST_DENOM"'"}],"msg": "ewogICJzdWJzY3JpYmUiOiB7CiAgICAic3RyZWFtX2lkIjogIjQ1IiwKICAgICJvcGVyYXRvcl90YXJnZXQiOiAib3NtbzE4YWp1ajZkcnlsZmR2dDRkMzdwZWV4bGU0N2xqeHFhNXQ3NHdxOCIsCiAgICAib3BlcmF0b3IiOiAib3NtbzF2Y2E1cGtrZGd0NDJoajVtamtjbHFxZmxhOWRna3JoZGpleXEzYW04YTY5czRhNzc0bnpxdmdzanBuIgogIH0KfQo=","sender":"'"$HOST_USER_ADDRESS"'","contract":"'"$HOST_RECEIVER_ADDRESS"'"}]}],"label":"ICS20 Hook Hosted ICA MsgSend","duration":"60s","hosted_account":"'$hosted_address'","owner": "'$(INTO_ADDRESS)'","fallback":"true"}}'
+
+  echo "📦 Memo: $memo"
+
+  # Send ICS20 transfer with memo to trigger the hosted flow
+  ics20_transfer=$($HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL "$hosted_address" ${ICS20_AMOUNT_FOR_LOCAL_GAS}${IBC_INTO_DENOM} --memo "$memo" --from $HOST_USER -y)
+  echo "🚀 ICS20 Transfer Sent: $ics20_transfer"
+
+  GET_FLOW_ID $(INTO_ADDRESS)
+
+  # Wait for flow execution and assert success
+  run WAIT_FOR_EXECUTED_FLOW_BY_ID
+  assert_success
+  sleep 10
+}
+
+
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc ics20 transfer, trigger hosted ICA MsgSend via memo hook" {
+  # 1️⃣ Initial balances
+  host_user_balance_start=$($HOST_MAIN_CMD q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
+  host_receiver_balance_start=$($HOST_MAIN_CMD q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
+
+  # 2️⃣ Get hosted account for connection
+  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
+  hosted_address=$(echo "$hosted_accounts" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.hosted_accounts[] | select(.ica_config.connection_id == $conn_id) | .hosted_address')
+  if [ -z "$hosted_address" ]; then
+    echo "❌ No hosted account found for connection-$CONNECTION_ID"
+    exit 1
+  fi
+
+  # 3️⃣ Get ICA address linked to hosted account
+  ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$hosted_address" connection-$CONNECTION_ID | awk '{print $2}')
+  echo "📌 ICA Address: $ica_address"
+
+  # 4️⃣ Grant MsgSend authz from host user to ICA (via hosted account)
+  $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.bank.v1beta1.MsgSend" --from $HOST_USER -y
+  WAIT_FOR_BLOCK $INTO_LOGS 3
+
+  # 5️⃣ Build memo for ICS20 transfer to trigger ICA MsgSend
+  memo='{"flow": {"msgs": [{"@type": "/cosmos.authz.v1beta1.MsgExec","grantee":"'"$ica_address"'","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"amount":"'"$MSGSEND_AMOUNT"'","denom":"'"$HOST_DENOM"'"}],"from_address":"'"$HOST_USER_ADDRESS"'","to_address":"'"$HOST_RECEIVER_ADDRESS"'"}]}],"label":"ICS20 Hook Hosted ICA MsgSend","duration":"60s","cid":"connection-'$CONNECTION_ID'","hosted_account":"'$hosted_address'","owner": "'$(INTO_ADDRESS)'","fallback":"true"}}'
+
+  echo "📦 Memo: $memo"
+
+  # 6️⃣ Send ICS20 transfer with memo to trigger the hosted flow
+  ics20_transfer=$($HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL "$hosted_address" ${ICS20_AMOUNT_FOR_LOCAL_GAS}${IBC_INTO_DENOM} --memo "$memo" --from $HOST_USER -y)
+  echo "🚀 ICS20 Transfer Sent: $ics20_transfer"
+
+  GET_FLOW_ID $(INTO_ADDRESS)
+
+  # 7️⃣ Wait for flow execution
+  WAIT_FOR_EXECUTED_FLOW_BY_ID
+  sleep 10
+
+  # 8️⃣ Final balances
+  host_user_balance_end=$($HOST_MAIN_CMD q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
+  host_receiver_balance_end=$($HOST_MAIN_CMD q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
+
+  # 9️⃣ Assertions
+  user_diff=$(($host_user_balance_start - $host_user_balance_end))
+  expected_user_diff=$(($MSGSEND_AMOUNT + $EXPECTED_FEE + $EXPECTED_FEE)) # ICS20 + host fee + ICA exec fee
+
+  receiver_diff=$(($host_receiver_balance_end - $host_receiver_balance_start))
+
+  assert_equal "$receiver_diff" "$MSGSEND_AMOUNT"
+  assert_equal "$user_diff" "$expected_user_diff"
+}
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow MsgSend using Hosted ICA with ICQ query balance as input" {
   # get initial balances on host account
