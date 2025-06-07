@@ -1,0 +1,7 @@
+[build]
+  base = "docs"
+  publish = "build"
+  command = "npm install && npm run build"
+
+[build.environment]
+  GIT_SUBMODULE_STRATEGY = "none"
