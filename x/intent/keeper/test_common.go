@@ -353,32 +353,11 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	stakingKeeper.SetValidatorByConsAddr(ctx, val)
 
 	stakingKeeper.Hooks().AfterValidatorCreated(ctx, sdk.ValAddress(val.GetOperator()))
-	//val, _ = val.AddTokensFromDel(sdk.TokensFromConsensusPower(1, sdk.DefaultPowerReduction))
-	// mintSubsp, _ := paramsKeeper.GetSubspace(minttypes.ModuleName)
-
-	// mintKeeper := mintkeeper.NewKeeper(encodingConfig.Codec,
-	//	keyBank,
-	//	mintSubsp,
-	//	stakingKeeper,
-	//	authKeeper,
-	//	bankKeeper,
-	//	authtypes.FeeCollectorName,
-	//	)
-	//
-	// bankkeeper.SetSupply(ctx, banktypes.NewSupply(sdk.NewCoins((sdk.NewInt64Coin("stake", 1)))))
 
 	distKeeper := distrkeeper.NewKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	// // set some baseline - this seems to be needed
-	// distKeeper.SetValidatorHistoricalRewards(ctx, val.GetOperator(), 2, distrtypes.ValidatorHistoricalRewards{
-	// 	CumulativeRewardRatio: sdk.DecCoins{},
-	// 	ReferenceCount:        2,
-	// })
-	// distKeeper.SetValidatorCurrentRewards(ctx, val.GetOperator(), distrtypes.ValidatorCurrentRewards{
-	// 	Rewards: sdk.DecCoins{},
-	// 	Period:  3,
-	// })
+
 	// set genesis items required for distribution
 	distKeeper.Params.Set(ctx, distrtypes.DefaultParams())
 	distKeeper.FeePool.Set(ctx, distrtypes.InitialFeePool())
@@ -394,26 +373,6 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	require.NoError(t, err)
 	err = bankKeeper.MintCoins(ctx, (distrtypes.ModuleName), testAccsSupply.Add(testIntentSupply[0]))
 	require.NoError(t, err)
-
-	// err = bankKeeper.SendCoinsFromModuleToAccount(ctx, faucetAccountName, distrAcc.GetAddress(), totalSupply)
-	// require.NoError(t, err)
-	// distrAcc := authtypes.NewEmptyModuleAccount(distrtypes.ModuleName, authtypes.Minter)
-
-	// notBondedPool := authtypes.NewEmptyModuleAccount(stakingtypes.NotBondedPoolName, authtypes.Burner, authtypes.Staking)
-	// bondPool := authtypes.NewEmptyModuleAccount(stakingtypes.BondedPoolName, authtypes.Burner, authtypes.Staking)
-	// feeCollectorAcc := authtypes.NewEmptyModuleAccount(authtypes.FeeCollectorName)
-	// intentAcc := authtypes.NewEmptyModuleAccount(intenttypes.ModuleName)
-
-	// fmt.Printf("MOD %s \n", accountKeeper.GetModuleAccount(ctx, distrtypes.ModuleName))
-	// fmt.Printf("MOD %s \n", accountKeeper.GetModuleAccount(ctx, stakingtypes.NotBondedPoolName))
-	// fmt.Printf("MOD %s \n", accountKeeper.GetModuleAccount(ctx, stakingtypes.BondedPoolName))
-	// fmt.Printf("MOD %s \n", accountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName))
-	// fmt.Printf("MOD %s \n", accountKeeper.GetModuleAccount(ctx, intenttypes.ModuleName))
-	// accountKeeper.SetModuleAccount(ctx, distrAcc)
-	// accountKeeper.SetModuleAccount(ctx, bondPool)
-	// accountKeeper.SetModuleAccount(ctx, notBondedPool)
-	// accountKeeper.SetModuleAccount(ctx, feeCollectorAcc)
-	// accountKeeper.SetModuleAccount(ctx, intentAcc)
 
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, testAccsSupply)
 	require.NoError(t, err)
@@ -455,7 +414,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	)
 	ibcControllerSubSp, _ := paramsKeeper.GetSubspace(icacontrollertypes.SubModuleName)
 	icacontrollerKeeper := icacontrollerkeeper.NewKeeper(encodingConfig.Codec, keys[icacontrollertypes.StoreKey], ibcControllerSubSp, ibcKeeper.ChannelKeeper, ibcKeeper.ChannelKeeper, ibcKeeper.PortKeeper, scopedIBCControllerKeeper, baseapp.NewMsgServiceRouter(), authtypes.NewModuleAddress(govtypes.ModuleName).String())
-
+	icacontrollerKeeper.SetParams(ctx, icacontrollertypes.DefaultParams())
 	// add keepers
 
 	ibctransferSubSp, _ := paramsKeeper.GetSubspace(ibctransfertypes.ModuleName)
@@ -516,8 +475,6 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		gov.NewAppModule(encodingConfig.Codec, govKeeper, accountKeeper, bankKeeper, GetSubspace(govtypes.ModuleName, paramsKeeper)),
 	)
 	am.RegisterServices(module.NewConfigurator(encodingConfig.Codec, msgServiceRouter, queryRouter))
-	// intenttypes.RegisterMsgServer(msgServiceRouter, NewMsgServerImpl(keeper))
-	// intenttypes.RegisterQueryServer(queryRouter, intenttypes.QueryServer(keeper))
 
 	keepers := TestKeepers{
 		AccountKeeper:             accountKeeper,

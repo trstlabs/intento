@@ -204,7 +204,7 @@ func (k Keeper) getTmpFlowID(ctx sdk.Context, portID string, channelID string, s
 	return types.GetIDFromBytes(flowIDBz)
 }
 
-func (k Keeper) setTmpFlowID(ctx sdk.Context, flowID uint64, portID string, channelID string, seq uint64) {
+func (k Keeper) SetTmpFlowID(ctx sdk.Context, flowID uint64, portID string, channelID string, seq uint64) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	// Append both portID and channelID to the key
 	key := append(types.TmpFlowIDLatestTX, []byte(portID)...)

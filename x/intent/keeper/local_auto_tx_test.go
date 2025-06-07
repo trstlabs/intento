@@ -91,7 +91,7 @@ func TestSendLocalTxAutocompound(t *testing.T) {
 	require.Equal(t, len(history[0].MsgResponses), 2)
 
 	///also test feedbackloop response via IBC handling
-	keeper.setTmpFlowID(ctx, flowInfo.ID, "port-1", "channel-1", 0)
+	keeper.SetTmpFlowID(ctx, flowInfo.ID, "port-1", "channel-1", 0)
 	err := keeper.HandleResponseAndSetFlowResult(ctx, "port-1", "channel-1", delAddr, 0, history[0].MsgResponses)
 	require.NoError(t, err)
 	history, _ = keeper.GetFlowHistory(ctx, flowInfo.ID)
