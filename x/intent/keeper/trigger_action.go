@@ -14,6 +14,7 @@ import (
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	"github.com/trstlabs/intento/x/intent/msg_registry"
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -72,7 +73,7 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 	}
 
 	k.Logger(ctx).Debug("flow", "ibc_sequence", res.Sequence)
-	k.setTmpFlowID(ctx, flow.ID, portID, channelID, res.Sequence)
+	k.SetTmpFlowID(ctx, flow.ID, portID, channelID, res.Sequence)
 	return false, nil, nil
 }
 
@@ -237,10 +238,11 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 	for index, anyResp := range msgResponses {
 		k.Logger(ctx).Debug("msg response in ICS-27 packet", "response", anyResp.GoString(), "typeURL", anyResp.GetTypeUrl())
 
-		rewardClass := getMsgRewardType(anyResp.GetTypeUrl())
-		if index == 0 && rewardClass > 0 {
-			msgClass = rewardClass
-			k.HandleRelayerReward(ctx, relayer, msgClass)
+		if entry, ok := msg_registry.MsgRegistry[anyResp.GetTypeUrl()]; ok {
+			if index == 0 && entry.RewardType > 0 {
+				msgClass = entry.RewardType
+				k.HandleRelayerReward(ctx, relayer, msgClass)
+			}
 		}
 		if anyResp.GetTypeUrl() == "/cosmos.authz.v1beta1.MsgExecResponse" {
 
@@ -250,49 +252,52 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 				k.Logger(ctx).Debug("handling deep flow response unmarshalling", "err", err)
 				return nil, 0, err
 			}
-
 			flowIndex := index + previousMsgsExecuted
 			if flowIndex >= len(flow.Msgs) {
 				return nil, 0, errorsmod.Wrapf(types.ErrMsgResponsesHandling, "expected more message responses")
 			}
 			msgExec := &authztypes.MsgExec{}
 			if err := proto.Unmarshal(flow.Msgs[flowIndex].Value, msgExec); err != nil {
-				return nil, 0, err
+				return nil, 0, errorsmod.Wrapf(types.ErrMsgResponsesHandling, "failed to unmarshal MsgExec: %s", err.Error())
 			}
 
 			msgResponses = []*cdctypes.Any{}
 
 			for _, resultBytes := range msgExecResponse.Results {
+				if len(resultBytes) == 0 {
+					continue // Skip empty results
+				}
+
 				var msgResponse = cdctypes.Any{}
 				if err := proto.Unmarshal(resultBytes, &msgResponse); err == nil {
 					typeUrl := msgResponse.GetTypeUrl()
 
 					if typeUrl != "" && strings.Contains(typeUrl, "Msg") {
-						// _, err := k.interfaceRegistry.Resolve(typeUrl)
-						// if err == nil {
-						k.Logger(ctx).Debug("parsing response authz v0.52+", "msgResponse", msgResponse)
-						msgResponses = append(msgResponses, &msgResponse)
-						continue
-						//}
+						_, err := k.interfaceRegistry.Resolve(typeUrl)
+						if err == nil {
+							k.Logger(ctx).Debug("parsing response authz v0.52+", "msgResponse", msgResponse)
+							msgResponses = append(msgResponses, &msgResponse)
+							continue
+						}
 					}
 
 				}
 				// in v0.50.8 we were writing msgResponse.Data in that [][]byte and no marshalled anys
 				// https://github.com/cosmos/cosmos-sdk/blob/v0.50.8/x/authz/keeper/keeper.go#L166-L186
 				//	k.Logger(ctx).Debug("flow result", "resultBytes", resultBytes)
-
 				//as we do not get typeURL (until cosmos 0.52 and is not possible in 51) we have to rely in this, MsgExec is the only regisrered message that should return results
 				msgRespProto, _, err := handleMsgData(&sdk.MsgData{Data: resultBytes, MsgType: msgExec.Msgs[0].TypeUrl})
 				if err != nil {
 					return nil, 0, err
 				}
-				respAny, err := cdctypes.NewAnyWithValue(msgRespProto)
-				if err != nil {
-					return nil, 0, err
+				// Only create Any if we have a non-nil response
+				if msgRespProto != nil {
+					respAny, err := cdctypes.NewAnyWithValue(msgRespProto)
+					if err != nil {
+						return nil, 0, err
+					}
+					msgResponses = append(msgResponses, respAny)
 				}
-
-				msgResponses = append(msgResponses, respAny)
-
 			}
 		}
 	}
@@ -330,27 +335,31 @@ func (k Keeper) SetFlowOnTimeout(ctx sdk.Context, sourcePort string, channelID s
 	return nil
 }
 
-// SetFlowOnTimeout sets the flow timeout result to the flow
-func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort string, channelID string, seq uint64, err string) {
+// SetFlowError sets the flow error result and emits an error event
+func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq uint64, errStr string) {
 	id := k.getTmpFlowID(ctx, sourcePort, channelID, seq)
-	if id <= 0 {
+	if id == 0 {
 		return
 	}
 
-	k.Logger(ctx).Debug("flow", "id", id, "error", err)
+	k.Logger(ctx).Debug("flow", "id", id, "error", errStr)
 
 	flowHistoryEntry, newErr := k.GetLatestFlowHistoryEntry(ctx, id)
 	if newErr != nil {
-		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, newErr.Error())
+		flowHistoryEntry = &types.FlowHistoryEntry{Errors: []string{newErr.Error()}}
+	}
+
+	if errStr != "" {
+		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, errStr)
 		flowHistoryEntry.Executed = false
 		k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
+
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
 				types.EventTypeFlowError,
 				sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(id)),
-				sdk.NewAttribute(types.AttributeKeyError, newErr.Error()),
+				sdk.NewAttribute(types.AttributeKeyError, errStr),
 			),
 		)
 	}
-
 }
