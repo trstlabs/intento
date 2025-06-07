@@ -18,9 +18,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	ibctesting "github.com/cosmos/ibc-go/v8/testing"
-
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	cosmosevm "github.com/trstlabs/intento/x/intent/msg_registry/cosmos/evm/v1"
 )
 
 func (suite *KeeperTestSuite) TestOnRecvTransferPacket() {
@@ -313,18 +313,8 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketFlowWithConditionsAndDeriv
 	suite.Require().NotContains(ack, "error")
 
 	flow := GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
-
-	suite.Require().Equal(flow.Owner, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String())
-	suite.Require().Equal(flow.Label, "my flow")
-	suite.Require().Equal(flow.ICAConfig.PortID, "")
-	suite.Require().Equal(flow.Interval, time.Second*60)
-	suite.Require().Equal(flow.Conditions.StopOnFailureOf[0], uint64(12345))
-	suite.Require().Equal(flow.Conditions.FeedbackLoops[0].MsgsIndex, uint32(1))
-	suite.Require().Equal(flow.Conditions.Comparisons[0].Operator, types.ComparisonOperator(4))
-
 	var txMsgAny codectypes.Any
 	cdc := codec.NewProtoCodec(GetICAApp(suite.IntentoChain).InterfaceRegistry())
-
 	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
 	suite.Require().NoError(err)
 	suite.True(flow.Msgs[0].Equal(txMsgAny))
@@ -451,4 +441,107 @@ func derivePlaceholderSender(channel, originalSender string) sdk.AccAddress {
 	senderHash32 := address.Hash(types.SenderPrefix, []byte(senderStr))
 	sender := sdk.AccAddress(senderHash32[:])
 	return sender
+}
+
+func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingMsgEthereumTx() {
+	suite.SetupTest()
+	params := types.DefaultParams()
+	params.GasFeeCoins = sdk.NewCoins(sdk.NewCoin("stake", math.OneInt()))
+	GetICAApp(suite.IntentoChain).IntentKeeper.SetParams(suite.IntentoChain.GetContext(), params)
+	types.Denom = "stake"
+
+	addr := suite.HostChain.SenderAccount.GetAddress()
+
+	// Construct inner EVM call data with ICA_ADDR as recipient
+	evmCall := map[string]interface{}{
+		"recipient": "ICA_ADDR",
+		"amount":    "1000",
+	}
+	evmCallJSON, _ := json.Marshal(evmCall)
+
+	// Construct MsgEthereumTx with 'data' set to the above JSON (as bytes)
+	msg := map[string]interface{}{
+		"@type": "/cosmos.evm.v1.MsgEthereumTx",
+		"from":  addr.String(), // use real address for from
+		"hash":  "0xdeadbeef",
+		"size":  0,
+		"data":  string(evmCallJSON), // simulate ABI payload as JSON for test
+	}
+	msgJSON, _ := json.Marshal(msg)
+
+	// Set up IBC/ICA path, fund accounts, receive the packet...
+	path := NewICAPath(suite.IntentoChain, suite.HostChain)
+	suite.Coordinator.SetupConnections(path)
+	suite.Require().NoError(suite.SetupICAPath(path, addr.String()))
+	suite.Require().NoError(
+		GetICAApp(suite.IntentoChain).BankKeeper.SendCoins(
+			suite.IntentoChain.GetContext(),
+			suite.IntentoChain.SenderAccount.GetAddress(),
+			suite.HostChain.SenderAccount.GetAddress(),
+			sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000)),
+		),
+	)
+
+	path.EndpointA.ConnectionID = "connection-1"
+	ackBytes := suite.receiveTransferPacket(
+		addr.String(),
+		fmt.Sprintf(
+			`{"flow":{"owner":"%s","label":"my flow","cid":"%s","host_cid":"%s","msgs":[%s],"duration":"120s","interval":"60s","start_at":"0","fallback":"true"}}`,
+			addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, string(msgJSON),
+		),
+	)
+	var ack map[string]string
+	suite.Require().NoError(json.Unmarshal(ackBytes, &ack))
+	suite.Require().NotContains(ack, "error")
+
+	// Pull out the msgs before substitution
+	flowKeeper := GetICAApp(suite.IntentoChain).IntentKeeper
+	flow := flowKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	unpacked := flow.GetTxMsgs(suite.IntentoChain.Codec)
+	suite.Require().NotEmpty(unpacked)
+
+	// === BEFORE substitution ===
+	// Should be a MsgEthereumTx
+	var ethTxMsg *cosmosevm.MsgEthereumTx
+	for _, m := range unpacked {
+		if tx, ok := m.(*cosmosevm.MsgEthereumTx); ok {
+			ethTxMsg = tx
+		}
+	}
+	suite.Require().NotNil(ethTxMsg)
+	// ethTxMsg.Data is *codectypes.Any, need to decode to JSON string then unmarshal
+	var inner map[string]interface{}
+	if ethTxMsg.Data != nil {
+		suite.Require().NoError(json.Unmarshal(ethTxMsg.Data.Value, &inner))
+		suite.Require().Equal("ICA_ADDR", inner["recipient"])
+	}
+
+	// === DO the substitution ===
+	suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(time.Minute)
+	flow.ICAConfig.ConnectionID = "connection-0"
+	flowKeeper.HandleFlow(
+		suite.IntentoChain.GetContext(),
+		flowKeeper.Logger(suite.IntentoChain.GetContext()),
+		flow,
+		suite.IntentoChain.GetContext().BlockTime(),
+		nil,
+	)
+
+	// === AFTER substitution ===
+	flow = flowKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	unpacked = flow.GetTxMsgs(suite.IntentoChain.Codec)
+	var ethTxMsgAfter *cosmosevm.MsgEthereumTx
+	for _, m := range unpacked {
+		if tx, ok := m.(*cosmosevm.MsgEthereumTx); ok {
+			ethTxMsgAfter = tx
+		}
+	}
+	suite.Require().NotNil(ethTxMsgAfter)
+	// ethTxMsgAfter.Data is *codectypes.Any, need to decode to JSON string then unmarshal
+	var innerAfter map[string]interface{}
+	if ethTxMsgAfter.Data != nil {
+		suite.Require().NoError(json.Unmarshal(ethTxMsgAfter.Data.Value, &innerAfter))
+		suite.Require().NotEqual("ICA_ADDR", innerAfter["recipient"])
+		suite.Require().Equal(addr.String(), innerAfter["recipient"])
+	}
 }

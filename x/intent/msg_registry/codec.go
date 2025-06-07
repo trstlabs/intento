@@ -4,6 +4,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	proto "github.com/cosmos/gogoproto/proto"
+	cosmosevm "github.com/trstlabs/intento/x/intent/msg_registry/cosmos/evm/v1"
 	elysamm "github.com/trstlabs/intento/x/intent/msg_registry/elys/amm"
 	elyscommitment "github.com/trstlabs/intento/x/intent/msg_registry/elys/commitment"
 	elysestaking "github.com/trstlabs/intento/x/intent/msg_registry/elys/estaking"
@@ -101,6 +102,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&elyscommitment.MsgUnstake{},
 		&elyscommitment.MsgClaimKol{},
 		&elyscommitment.MsgClaimRewardProgram{},
+
+		// EVM
+		&cosmosevm.MsgEthereumTx{},
 	)
 }
 
@@ -199,4 +203,7 @@ var MsgRegistry = map[string]struct {
 	sdk.MsgTypeURL(&elyscommitment.MsgUnstake{}):              {func() proto.Message { return &elyscommitment.MsgUnstakeResponse{} }, -1},
 	sdk.MsgTypeURL(&elyscommitment.MsgClaimKol{}):             {func() proto.Message { return &elyscommitment.MsgClaimKolResponse{} }, -1},
 	sdk.MsgTypeURL(&elyscommitment.MsgClaimRewardProgram{}):   {func() proto.Message { return &elyscommitment.MsgClaimRewardProgramResponse{} }, -1},
+
+	// EVM
+	sdk.MsgTypeURL(&cosmosevm.MsgEthereumTx{}): {func() proto.Message { return &cosmosevm.MsgEthereumTxResponse{} }, -1},
 }
