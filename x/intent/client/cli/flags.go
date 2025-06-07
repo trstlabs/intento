@@ -30,7 +30,7 @@ const (
 	flagSkipOnSuccessOf        = "skip-on-success-of"
 	flagSkipOnFailureOf        = "skip-on-failure-of"
 
-	flagFeeCoinsSupported = "fee-coins-suported"
+	flagFeeCoinsSupported = "fee-coins-supported"
 	flagNewAdmin          = "new-admin"
 	flagConditions        = "conditions"
 	flagICQConfig         = "icq-config"
