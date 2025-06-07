@@ -1,5 +1,5 @@
 ---
-order: 5
+sidebar_position: 8
 title: Interacting with CLI
 description: How to set up flows using the Command Line Interface
 ---
