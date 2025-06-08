@@ -10,6 +10,7 @@ import "cosmos/msg/v1/msg.proto";
 option go_package = "github.com/trstlabs/intento/x/intent/msg_registry/osmosis/gamm/v1beta1";
 
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
   rpc ExitPool(MsgExitPool) returns (MsgExitPoolResponse);
   rpc SwapExactAmountIn(MsgSwapExactAmountIn)

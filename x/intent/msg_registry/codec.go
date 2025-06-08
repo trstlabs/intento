@@ -19,6 +19,14 @@ import (
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
+	registry.RegisterInterface(
+		"cosmos.evm.vm.v1.TxData",
+		(*cosmosevm.TxData)(nil),
+		&cosmosevm.DynamicFeeTx{},
+		&cosmosevm.AccessListTx{},
+		&cosmosevm.LegacyTx{},
+	)
+
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		//osmosis
@@ -106,6 +114,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		// EVM
 		&cosmosevm.MsgEthereumTx{},
 	)
+
 }
 
 type RawContractMessage []byte

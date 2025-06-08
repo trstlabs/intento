@@ -452,22 +452,17 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 
 	addr := suite.HostChain.SenderAccount.GetAddress()
 
-	// Construct inner EVM call data with ICA_ADDR as recipient
 	evmCall := map[string]interface{}{
-		"recipient": "ICA_ADDR",
-		"amount":    "1000",
+		"@type": "/cosmos.evm.vm.v1.LegacyTx",
+		"to":    "ICA_ADDR",
+		"value": "1000",
 	}
-	evmCallJSON, _ := json.Marshal(evmCall)
 
-	// Construct MsgEthereumTx with 'data' set to the above JSON (as bytes)
 	msg := map[string]interface{}{
-		"@type": "/cosmos.evm.v1.MsgEthereumTx",
-		"from":  addr.String(), // use real address for from
-		"hash":  "0xdeadbeef",
-		"size":  0,
-		"data":  string(evmCallJSON), // simulate ABI payload as JSON for test
+		"@type": "/cosmos.evm.vm.v1.MsgEthereumTx",
+		"from":  addr.String(),
+		"data":  evmCall,
 	}
-	msgJSON, _ := json.Marshal(msg)
 
 	// Set up IBC/ICA path, fund accounts, receive the packet...
 	path := NewICAPath(suite.IntentoChain, suite.HostChain)
@@ -483,15 +478,25 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 	)
 
 	path.EndpointA.ConnectionID = "connection-1"
-	ackBytes := suite.receiveTransferPacket(
-		addr.String(),
-		fmt.Sprintf(
-			`{"flow":{"owner":"%s","label":"my flow","cid":"%s","host_cid":"%s","msgs":[%s],"duration":"120s","interval":"60s","start_at":"0","fallback":"true"}}`,
-			addr.String(), path.EndpointA.ConnectionID, path.EndpointB.ConnectionID, string(msgJSON),
-		),
-	)
+	flowPayload := map[string]interface{}{
+		"flow": map[string]interface{}{
+			"owner":    addr.String(),
+			"label":    "my flow",
+			"cid":      path.EndpointA.ConnectionID,
+			"msgs":     []interface{}{msg}, // already a Go map
+			"duration": "120s",
+			"interval": "60s",
+			"start_at": "0",
+			"fallback": "true",
+		},
+	}
+	jsonData, _ := json.Marshal(flowPayload)
+
+	ackBytes := suite.receiveTransferPacket(addr.String(), string(jsonData))
+
 	var ack map[string]string
 	suite.Require().NoError(json.Unmarshal(ackBytes, &ack))
+	suite.T().Logf("ACK: %+v", ack)
 	suite.Require().NotContains(ack, "error")
 
 	// Pull out the msgs before substitution
@@ -510,11 +515,10 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 	}
 	suite.Require().NotNil(ethTxMsg)
 	// ethTxMsg.Data is *codectypes.Any, need to decode to JSON string then unmarshal
-	var inner map[string]interface{}
-	if ethTxMsg.Data != nil {
-		suite.Require().NoError(json.Unmarshal(ethTxMsg.Data.Value, &inner))
-		suite.Require().Equal("ICA_ADDR", inner["recipient"])
-	}
+	var legacyTx cosmosevm.TxData
+	suite.Require().NoError(suite.IntentoChain.Codec.UnpackAny(ethTxMsg.Data, &legacyTx))
+	to := legacyTx.(*cosmosevm.LegacyTx).To
+	suite.Require().Equal("ICA_ADDR", to)
 
 	// === DO the substitution ===
 	suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(time.Minute)
@@ -538,10 +542,11 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 	}
 	suite.Require().NotNil(ethTxMsgAfter)
 	// ethTxMsgAfter.Data is *codectypes.Any, need to decode to JSON string then unmarshal
-	var innerAfter map[string]interface{}
-	if ethTxMsgAfter.Data != nil {
-		suite.Require().NoError(json.Unmarshal(ethTxMsgAfter.Data.Value, &innerAfter))
-		suite.Require().NotEqual("ICA_ADDR", innerAfter["recipient"])
-		suite.Require().Equal(addr.String(), innerAfter["recipient"])
-	}
+	var legacyTxAfter cosmosevm.TxData
+	suite.Require().NoError(suite.IntentoChain.Codec.UnpackAny(ethTxMsgAfter.Data, &legacyTxAfter))
+	toAfter := legacyTxAfter.(*cosmosevm.LegacyTx).To
+	suite.Require().NotEqual("ICA_ADDR", toAfter)
+	icaAddr, _ := GetICAApp(suite.IntentoChain).ICAControllerKeeper.GetInterchainAccountAddress(suite.IntentoChain.GetContext(), "connection-0", "icacontroller-"+addr.String())
+
+	suite.Require().Equal(icaAddr, toAfter)
 }
