@@ -48,8 +48,9 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		var txMsgAny codectypes.Any
 		cdc := codec.NewProtoCodec(im.registry)
 		if err := cdc.UnmarshalJSON(msgBytes, &txMsgAny); err != nil {
+			//fmt.Printf("ICS20 packet unmarshalling flow message in msg array %v", err.Error())
 			im.keeper.Logger(ctx).Debug("ICS20 packet unmarshalling flow message in msg array", "error", err.Error())
-			return channeltypes.NewErrorAcknowledgement(types.ErrMsgValidation)
+			return channeltypes.NewErrorAcknowledgement(types.ErrMsgMsgsValidation)
 		}
 		txMsgsAnys = append(txMsgsAnys, &txMsgAny)
 	}
