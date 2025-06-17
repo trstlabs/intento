@@ -43,7 +43,7 @@ Intento leverages a combination of the Cosmos stack and IBC to provide a seamles
 Other useful links
 
 - [Intento website](https://intento.zone/)
-- [TriggerPortal - one-stop tool for flows](https://triggerportal.zone/)
+- [Intento Portal - one-stop tool for interacting with Intento flows](https://portal.intento.zone/)
 - [Block Explorer](https://explorer.intento.zone/)
 - [Networks repository](https://github.com/trstlabs/networks)
 - [TRST Labs website](https://trstlabs.xyz/)
