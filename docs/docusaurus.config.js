@@ -126,8 +126,8 @@ const config = {
             title: "Ecosystem",
             items: [
               {
-                label: "TriggerPortal",
-                href: "https://triggerportal.zone/",
+                label: "Intento Portal",
+                href: "https://portal.intento.zone/",
               },
               {
                 label: "TRST Labs",

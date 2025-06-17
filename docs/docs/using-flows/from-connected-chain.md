@@ -8,7 +8,7 @@ description: How to setup flows from a connected chain
 
 Intento makes it easy to create flows—not just locally, but also from any chain connected via IBC. You can submit flows using:
 
-- [TriggerPortal](https://triggerportal.zone)
+- [Intento Portal](https://portal.intento.zone)
 - The IntentoJS front-end library
 - The CLI
 - Or directly from another chain using the ICS20 interchain token transfer standard. 
@@ -307,4 +307,4 @@ Once funds and permissions are set up, only one flow proposal is required to tri
 
 ### 3. Managing Flows
 
-You can manage your flows on [TriggerPortal](https://triggerportal.zone/), where you can create, view, update, and control your flows.
+You can manage your flows on [Intento Portal](https://portal.intento.zone/), where you can create, view, update, and control your flows.

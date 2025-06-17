@@ -6,7 +6,7 @@ description: How to integrate intent-based flows into your interchain dApp
 
 ## IntentoJS
 
-We've built a JS framework called [IntentoJS](https://npmjs.com/package/intentojs) to submit flows to the chain. It contains a message registry that you can use to encode and decode protobuf messages that Intento supports, including CosmWasm and Osmosis messages. An implementation is [TriggerPortal](https://triggerportal.zone).
+We've built a JS framework called [IntentoJS](https://npmjs.com/package/intentojs) to submit flows to the chain. It contains a message registry that you can use to encode and decode protobuf messages that Intento supports, including CosmWasm and Osmosis messages. An implementation is [Intento Portal](https://portal.intento.zone).
 
 An example of submitting an MsgSubmitFlow in typescript. A label is optional but recommended to keep track an overview of the flows.
 
@@ -128,7 +128,7 @@ client.signAndBroadcast(owner, [msgSubmitFlow], {
 
 ## Example FlowFee calculation
 
-The following is used in TriggerPortal to estimate fees.
+The following is used in Intento Portal to estimate fees.
 
 ```js
 /**

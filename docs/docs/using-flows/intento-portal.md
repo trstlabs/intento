@@ -1,19 +1,19 @@
 ---
 sidebar_position: 3
-title: Interacting with TriggerPortal
-pagination_label: How to set and manage actions using TriggerPortal
+title: Interacting with Intento Portal
+pagination_label: How to set and manage actions using Intento Portal
 ---
 
-TriggerPortal is a powerful dApp designed for developers, and integrators, offering an advanced solution for setting, viewing and updating flows with robust conditions, comparisons, and feedback loops. It allows users to define sophisticated workflows for various blockchain actions.
+Intento Portal is a powerful dApp designed for developers, and integrators, offering an advanced solution for setting, viewing and updating flows with robust conditions, comparisons, and feedback loops. It allows users to define sophisticated workflows for various blockchain actions.
 
-### Key Features of TriggerPortal
+### Key Features of Intento Portal
 
 - **Conditional Automated Token Transfers**
 
-  Effortlessly set up token transfers with conditional logic to multiple recipients at regular intervals. Ideal for organisations or individuals managing recurring payments, TriggerPortal ensures precise control over the distribution process based on predefined conditions.
+  Effortlessly set up token transfers with conditional logic to multiple recipients at regular intervals. Ideal for organisations or individuals managing recurring payments, Intento Portal ensures precise control over the distribution process based on predefined conditions.
 
 - **Sophisticated On-Chain Time-Based Flows**
-  TriggerPortal allows users to set up flows incorporating feedback loops and comparisons to ensure actions are performed under specific conditions. This capability supports intricate workflows that react dynamically to on-chain events.
+  Intento Portal allows users to set up flows incorporating feedback loops and comparisons to ensure actions are performed under specific conditions. This capability supports intricate workflows that react dynamically to on-chain events.
 
 ### Benefits for Developers and Integrators
 
@@ -26,7 +26,7 @@ TriggerPortal is a powerful dApp designed for developers, and integrators, offer
 - **Dynamic Workflow Management**
   - Create sophisticated, buildd workflows that respond to real-time on-chain data and conditions, enhancing operational efficiency.
 
-TriggerPortal is your comprehensive tool for automating and managing blockchain interactions with advanced flows. Whether you are sending recurring payments, scheduling cross-chain messages, or optimizing token compounding, TriggerPortal equips you with the tools to execute with precision and reliability.
+Intento Portal is your comprehensive tool for automating and managing blockchain interactions with advanced flows. Whether you are sending recurring payments, scheduling cross-chain messages, or optimizing token compounding, Intento Portal equips you with the tools to execute with precision and reliability.
 
 ## Build Flows
 
@@ -35,7 +35,7 @@ TriggerPortal is your comprehensive tool for automating and managing blockchain 
 1. Head to the `Flow Builder` page in the menu to start building flows.
    First, specify on what chain to execute on.
    ![1](@site/docs/images/triggerportal/build/1.png)
-   Hosted accounts that are available for you to use are displayed here, with relevant information such as the address that will execute on the host chain and the fee coins supported and the current fees. Hosted accounts by TriggerPortal will be subsidized.
+   Hosted accounts that are available for you to use are displayed here, with relevant information such as the address that will execute on the host chain and the fee coins supported and the current fees. Hosted accounts by Intento Portal will be subsidized.
    When you have an interchain account address registered, it will pop up here too. The interchain account should be funded on host chain. You can set this in the flows dialog.
    You can register an interchain account by clicking `Set ICA`.
 2. Second, build messages.
@@ -65,7 +65,7 @@ You can now click on `Submit` . An alert will pop up which you can use to naviga
 
 Cosmos SDK messages contain `values` and a `typeUrl`. Message `values` are what you send, the `typeUrl` specifies what module and what version to send it to, along with the proper function.
 
-AuthZ grants are permissions you can grant to an external address to execute messages on your behalf. This can possibly be dangerous when given to a third party. However, with Intento the permission is given to an address that can only execute flows where you were the signer from. There are multiple checks in place for this. This eliminates the risks that arise when granting another account approval. You can grant an ICA with `MsgGrant` with the type of message that is allowed and an `expiration`, and allow the ICA to execute using `MsgExec`. The default expiration on TriggerPortal is 1 year.
+AuthZ grants are permissions you can grant to an external address to execute messages on your behalf. This can possibly be dangerous when given to a third party. However, with Intento the permission is given to an address that can only execute flows where you were the signer from. There are multiple checks in place for this. This eliminates the risks that arise when granting another account approval. You can grant an ICA with `MsgGrant` with the type of message that is allowed and an `expiration`, and allow the ICA to execute using `MsgExec`. The default expiration on Intento Portal is 1 year.
 
 :::info Double check what you are doing and it is recommended to test first if you are doing it for the first time.
 :::
@@ -91,10 +91,10 @@ There are several terms used in autocompounding staked tokens.
 
 Using the actions dialog you can specify the interval of the autocompound. Your strategy should take into account execution fees which are estimated under `Execution Settings`. -->
 
-## Demo (April 2024)
+## Demo (June 2025)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/z5hG0GsD_tg?si=oTdi9EgmlEQCqtsR" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/q1D9uLIh9GE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Future Improvements
 
-Do you have an interesting feature in mind? Mention it on the TriggerPortal [GitHub repository](https://github.com/trstlabs/triggerportal-frontend) or [X/Twitter](https://twitter.com/IntentoZone) and it may get added to the roadmap.
+Do you have an interesting feature in mind? Mention it on the Intento Portal [GitHub repository](https://github.com/trstlabs/intento-portal) or [X/Twitter](https://twitter.com/IntentoZone) and it may get added to the roadmap.

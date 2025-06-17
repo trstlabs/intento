@@ -36,7 +36,7 @@ You can use the ICQ feature by attaching an `ICQConfig` into [**comparisons**](.
 | `query_type`       | `string`                                   | The type of query to perform (e.g., `store/bank/key`, `store/staking/key`).               |
 | `query_key`        | `string`                                   | The key in the store to query (e.g., `stakingtypes.GetValidatorKey(validatorAddressBz)`). |
 
-For example, the `query_type` can be `store/bank/key` or `store/staking/key`. The `query_key` is the key in the store to query, such as `stakingtypes.GetValidatorKey(validatorAddressBz)`. The generation of query keys is abstracted in the TriggerPortal frontend.
+For example, the `query_type` can be `store/bank/key` or `store/staking/key`. The `query_key` is the key in the store to query, such as `stakingtypes.GetValidatorKey(validatorAddressBz)`. The generation of query keys is abstracted in the Intento Portal frontend.
 
 ```proto
 // Config for using interchain queries
@@ -53,7 +53,7 @@ message ICQConfig {
 }
 ```
 
-If SaveResponses in the Flow Configuration is set to true, query responses are added to the Flow History. Check out the [**Supported Types**](./../module/supported_types.md) page or the TriggerPortal Flow Builder for some example queries.
+If SaveResponses in the Flow Configuration is set to true, query responses are added to the Flow History. Check out the [**Supported Types**](./../module/supported_types.md) page or the Intento Portal Flow Builder for some example queries.
 
 Here’s a tutorial for integrating `ICQConfig` for querying balances and adding `connectionId`, `hostConnectionId`, and `HostedConfig` in `submitFlow`.
 

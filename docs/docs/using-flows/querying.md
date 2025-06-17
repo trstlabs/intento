@@ -6,7 +6,7 @@ description: How to retreive flow data
 
 Retrieving `Flow`-related information can be done through multiple methods:
 
-- **[TriggerPortal](https://triggerportal.zone)** – A user-friendly interface for managing and monitoring Flows.
+- **[Intento Portal](https://portal.intento.zone)** – A user-friendly interface for managing and monitoring Flows.
 - **Front-end Integration via `IntentoJS`** – Enables seamless interaction with Flows in dApps.
 - **Command-Line Interface (CLI)** – Local querying for developers and power users.
 - **API Endpoints (RPC & LCD)** – Directly query `Flow` data through **RPC, LCD, or Swagger** endpoints.
