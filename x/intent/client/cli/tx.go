@@ -491,7 +491,6 @@ func getUpdateHostedAccountCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(fsIBC)
 	cmd.Flags().String(flagFeeCoinsSupported, "", "Coins supported as fees for hosted, optional")
 	cmd.Flags().String(flagNewAdmin, "", "A new admin, optional")
 	cmd.Flags().String(flagHostedAccount, "", "A hosted account to execute actions on a host")
