@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
@@ -26,6 +25,7 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	claimkeeper "github.com/trstlabs/intento/x/claim/keeper"
 	claimtypes "github.com/trstlabs/intento/x/claim/types"
+	"github.com/trstlabs/intento/x/intent/msg_registry"
 	interchainquerykeeper "github.com/trstlabs/intento/x/interchainquery/keeper"
 	interchainquerytypes "github.com/trstlabs/intento/x/interchainquery/types"
 
@@ -95,7 +95,6 @@ import (
 	"cosmossdk.io/x/upgrade"
 
 	"github.com/trstlabs/intento/x/intent/types"
-	intenttypes "github.com/trstlabs/intento/x/intent/types"
 	// "github.com/trstlabs/intento/x/registration"
 )
 
@@ -107,7 +106,7 @@ func setupTest(t *testing.T, additionalCoinsInWallets sdk.Coins) (sdk.Context, K
 	walletA, privKeyA := CreateFakeFundedAccount(ctx, accKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 200000)).Add(additionalCoinsInWallets...))
 	walletB, privKeyB := CreateFakeFundedAccount(ctx, accKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("denom", 5000)).Add(additionalCoinsInWallets...))
 
-	keeper.SetParams(ctx, intenttypes.Params{
+	keeper.SetParams(ctx, types.Params{
 		FlowFundsCommission: 2,
 		BurnFeePerMsg:       1_000_000,
 		FlowFlexFeeMul:      100,
@@ -133,7 +132,7 @@ var TestContractPaths = map[string]string{
 	ibcContract: filepath.Join(".", contractPath, ibcContract),
 }
 
-func CreateValidator(pk crypto.PubKey, stake sdkmath.Int) (stakingtypes.Validator, error) {
+func CreateValidator(pk crypto.PubKey, stake math.Int) (stakingtypes.Validator, error) {
 	valConsAddr := sdk.GetConsAddress(pk)
 
 	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr).String(), pk, stakingtypes.Description{})
@@ -189,7 +188,7 @@ func MakeEncodingConfig() simappparams.EncodingConfig {
 
 		ModuleBasics.RegisterInterfaces(interfaceRegistry)
 
-		intenttypes.RegisterInterfaces(interfaceRegistry)
+		types.RegisterInterfaces(interfaceRegistry)
 
 		return simappparams.EncodingConfig{
 			InterfaceRegistry: interfaceRegistry,
@@ -239,7 +238,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey, feegrant.StoreKey, authzkeeper.StoreKey,
-		intenttypes.StoreKey, icacontrollertypes.StoreKey,
+		types.StoreKey, icacontrollertypes.StoreKey,
 	)
 
 	db := dbm.NewMemDB()
@@ -273,8 +272,6 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(sdk.Bech32MainPrefix, sdk.PrefixPublic)
-	// config.SetBech32PrefixForValidator(sdk.Bech32MainPrefix, sdk.PrefixPublic)
-	// config.SetBech32PrefixForConsensusNode(sdk.Bech32MainPrefix, sdk.PrefixPublic)
 
 	encodingConfig := MakeEncodingConfig()
 	paramsKeeper := paramskeeper.NewKeeper(
@@ -284,8 +281,6 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		tkeys[paramstypes.TStoreKey],
 	)
 
-	//TrstApp := app.NewTrstApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, app.EmptyAppOptions{})
-
 	paramsKeeper.Subspace(authtypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)
 	paramsKeeper.Subspace(stakingtypes.ModuleName)
@@ -294,7 +289,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 	paramsKeeper.Subspace(ibcexported.ModuleName)
-	paramsKeeper.Subspace(intenttypes.ModuleName)
+	paramsKeeper.Subspace(types.ModuleName)
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 
@@ -307,7 +302,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
-		intenttypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
+		types.ModuleName:               {authtypes.Minter, authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 	}
 
@@ -377,7 +372,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, stakingtypes.NotBondedPoolName, testAccsSupply)
 	require.NoError(t, err)
 
-	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, intenttypes.ModuleName, testIntentSupply)
+	err = bankKeeper.SendCoinsFromModuleToModule(ctx, faucetAccountName, types.ModuleName, testIntentSupply)
 	require.NoError(t, err)
 
 	mintKeeper := mintkeeper.NewKeeper(encodingConfig.Codec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), accountKeeper, bankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
@@ -399,7 +394,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 
 	scopedIBCKeeper := capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedIBCControllerKeeper := capabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
-	scopedintentKeeper := capabilityKeeper.ScopeToModule(intenttypes.ModuleName)
+	scopedintentKeeper := capabilityKeeper.ScopeToModule(types.ModuleName)
 	scopedTransferKeeper := capabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 
 	ibchostSubSp, _ := paramsKeeper.GetSubspace(ibcexported.ModuleName)
@@ -466,7 +461,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		encodingConfig.InterfaceRegistry,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	intentKeeper.SetParams(ctx, intenttypes.DefaultParams())
+	intentKeeper.SetParams(ctx, types.DefaultParams())
 
 	am := module.NewManager( // minimal module set that we use for message/ query tests
 		bank.NewAppModule(encodingConfig.Codec, bankKeeper, accountKeeper, GetSubspace(banktypes.ModuleName, paramsKeeper)),
@@ -543,9 +538,12 @@ func MakeEncodingConfig() moduletestutil.TestEncodingConfig {
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	ModuleBasics.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	//ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	// add  types
+	// add types
 	types.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	types.RegisterLegacyAminoCodec(encodingConfig.Amino)
+
+	// Register message registry interfaces for all custom message types
+	msg_registry.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 
 	return encodingConfig
 }
