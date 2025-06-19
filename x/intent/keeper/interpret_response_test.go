@@ -7,7 +7,9 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
+
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -356,6 +358,96 @@ func TestParseAmountICQ(t *testing.T) {
 	err = keeper.cdc.UnpackAny(flowInfo.Msgs[0], &msgDelegate)
 	require.NoError(t, err)
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(39999999999)))
+}
+
+func TestFeedbackLoopNoDuplicates(t *testing.T) {
+	// Setup test environment
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+	flowAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	types.Denom = "stake"
+	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+
+	// Create a flow with three messages and two feedback loops
+	flowInfo := createBaseFlowInfo(delAddr, flowAddr)
+
+	// Create three test messages
+	msg1 := newFakeMsgWithdrawDelegatorReward(delAddr, val)
+	msg2 := newFakeMsgDelegate(delAddr, val)
+	msg3 := newFakeMsgDelegate(delAddr, val)
+
+	// Set initial amounts
+	msg2.Amount = sdk.NewCoin("stake", math.NewInt(1000))
+	msg3.Amount = sdk.NewCoin("stake", math.NewInt(2000))
+
+	// Pack all messages
+	flowInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msg1, msg2, msg3})
+
+	// Set up feedback loops that will cause potential duplicates
+	flowInfo.Conditions = &types.ExecutionConditions{
+		FeedbackLoops: []*types.FeedbackLoop{
+			{
+				// First feedback loop after first message
+				ResponseIndex: 0,
+				ResponseKey:   "Amount.[0].Amount",
+				MsgsIndex:     1,
+				MsgKey:        "Amount.Amount",
+				ValueType:     "sdk.Int",
+			},
+			{
+				// Second feedback loop after first message (same point as first)
+				ResponseIndex: 0,
+				ResponseKey:   "Amount.[0].Amount",
+				MsgsIndex:     2,
+				MsgKey:        "Amount.Amount",
+				ValueType:     "sdk.Int",
+			},
+		},
+	}
+
+	// Execute the flow
+	executedLocally, responses, err := keeper.TriggerFlow(ctx, &flowInfo)
+	require.NoError(t, err)
+	require.True(t, executedLocally)
+
+	// Verify we have the expected number of responses (3 messages)
+	require.Len(t, responses, 3, "expected 3 message responses")
+
+	// Create a flow history entry with the actual responses
+	historyEntry := &types.FlowHistoryEntry{
+		ScheduledExecTime: flowInfo.ExecTime,
+		ActualExecTime:    flowInfo.ExecTime,
+		ExecFee:           sdk.NewCoin("stake", math.NewInt(0)),
+		Executed:          true,
+		TimedOut:          false,
+		MsgResponses:      responses, // Use the actual responses from TriggerFlow
+		Errors:            []string{},
+	}
+	keeper.SetFlowHistoryEntry(ctx, flowInfo.ID, historyEntry)
+	history, _ := keeper.GetFlowHistory(ctx, flowInfo.ID)
+
+	// Manually run the feedback loops to ensure they're processed
+	err = keeper.RunFeedbackLoops(ctx, flowInfo.ID, &flowInfo.Msgs, flowInfo.Conditions)
+	require.NoError(t, err)
+
+	// Verify we have exactly one history entry
+	require.Len(t, history, 1, "expected exactly one history entry")
+
+	// Verify the history entry has the correct number of message responses
+	require.Len(t, history[0].MsgResponses, 3, "expected exactly 3 message responses in history")
+	require.Empty(t, history[0].Errors, "expected no errors in history entry")
+
+	// Verify the messages were modified by the feedback loops
+	// Unpack the messages from the flow to check if they were modified
+
+	var modifiedMsg2, modifiedMsg3 *stakingtypes.MsgDelegate
+	err = keeper.cdc.UnpackAny(flowInfo.Msgs[1], &modifiedMsg2)
+	require.NoError(t, err)
+	err = keeper.cdc.UnpackAny(flowInfo.Msgs[2], &modifiedMsg3)
+	require.NoError(t, err)
+
+	// Verify the amounts were modified (not equal to original)
+	require.NotEqual(t, msg2.Amount, modifiedMsg2.Amount, "second message should be modified by feedback loop")
+	require.NotEqual(t, msg3.Amount, modifiedMsg3.Amount, "third message should be modified by feedback loop")
 }
 
 func TestParseCoinICQ(t *testing.T) {

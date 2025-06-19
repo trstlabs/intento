@@ -125,9 +125,10 @@ func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flo
 
 // HandleResponseAndSetFlowResult sets the result of the last executed ID set at SendFlow.
 func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, channelID string, relayer sdk.AccAddress, seq uint64, msgResponses []*cdctypes.Any) error {
+	k.Logger(ctx).Debug("HandleResponseAndSetFlowResult: portID=%s, channelID=%s, seq=%d\n", portID, channelID, seq)
 	id := k.getTmpFlowID(ctx, portID, channelID, seq)
 	if id <= 0 {
-		return nil
+		return fmt.Errorf("flow not found")
 	}
 	flow := k.GetFlowInfo(ctx, id)
 
@@ -157,78 +158,126 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	if flow.Configuration.SaveResponses {
 		flowHistoryEntry.MsgResponses = append(flowHistoryEntry.MsgResponses, msgResponses...)
 	}
-
+	k.SetCurrentFlowHistoryEntry(ctx, flow.ID, flowHistoryEntry)
 	if len(flow.Conditions.FeedbackLoops) != 0 {
+		// Only process feedback loops that match the current response index
+		for i, feedbackLoop := range flow.Conditions.FeedbackLoops {
+			k.Logger(ctx).Debug("checking feedback loop",
+				"index", i,
+				"responseIndex", feedbackLoop.ResponseIndex,
+				"msgIndex", feedbackLoop.MsgsIndex,
+			)
 
-		for _, feedbackLoop := range flow.Conditions.FeedbackLoops {
-			k.Logger(ctx).Debug("triggering messages for feedback loop flow", "id", flow.ID)
+			// Skip if this isn't a feedback loop for the current response
+			if int(feedbackLoop.ResponseIndex) != len(flowHistoryEntry.MsgResponses)-1 {
+				k.Logger(ctx).Debug("skipping feedback loop - wrong response index",
+					"expected", len(flowHistoryEntry.MsgResponses)-1,
+					"got", feedbackLoop.ResponseIndex,
+				)
+				continue
+			}
+
 			// Validate MsgsIndex and FlowID
 			if feedbackLoop.MsgsIndex == 0 || feedbackLoop.FlowID != 0 {
+				k.Logger(ctx).Debug("skipping feedback loop - invalid MsgsIndex or FlowID")
 				continue // Skip invalid FeedbackLoops or if FlowID is set to non-default
 			}
 
-			// Ensure MsgsIndex is within bounds
-			if len(flowHistoryEntry.MsgResponses)-1 != int(feedbackLoop.ResponseIndex) {
-				continue // Skip if ResponseIndex does not equal responses
+			// Only process messages that come after the current message
+			if int(feedbackLoop.MsgsIndex) >= len(flow.Msgs) {
+				k.Logger(ctx).Debug("skipping feedback loop - MsgsIndex out of bounds")
+				continue // Skip if MsgsIndex is out of bounds
 			}
 
-			// Trigger remaining execution for the valid FeedbackLoop
-			tmpFlow := flow
-			tmpFlow.Msgs = flow.Msgs[feedbackLoop.MsgsIndex:]
-			if err := triggerRemainingMsgs(k, ctx, tmpFlow, flowHistoryEntry); err != nil {
+			// Only include messages from the target message index onwards
+			// tmpFlowMsgs := make([]*cdctypes.Any, len(flow.Msgs[feedbackLoop.MsgsIndex:]))
+			// Find the next message that needs a response for subsequent feedback
+			nextStopIndex := len(flow.Msgs)
+			for _, nextLoop := range flow.Conditions.FeedbackLoops {
+				if int(nextLoop.MsgsIndex) > int(feedbackLoop.MsgsIndex) &&
+					int(nextLoop.MsgsIndex) < nextStopIndex {
+					nextStopIndex = int(nextLoop.MsgsIndex)
+				}
+			}
+
+			// Execute only up to the next feedback point
+			messagesToExecute := flow.Msgs[feedbackLoop.MsgsIndex:nextStopIndex]
+
+			k.Logger(ctx).Debug("processing feedback loop",
+				"responseIndex", feedbackLoop.ResponseIndex,
+				"msgIndex", feedbackLoop.MsgsIndex,
+				"nextMsgs", len(messagesToExecute),
+			)
+
+			if err := executeMessageBatch(k, ctx, flow, messagesToExecute, flowHistoryEntry); err != nil {
 				return err // Return on the first encountered error
 			}
 		}
 	}
 
-	k.SetCurrentFlowHistoryEntry(ctx, flow.ID, flowHistoryEntry)
 	return nil
 
 }
 
-func triggerRemainingMsgs(k Keeper, ctx sdk.Context, flow types.FlowInfo, flowHistoryEntry *types.FlowHistoryEntry) error {
+func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsgs []*cdctypes.Any, flowHistoryEntry *types.FlowHistoryEntry) error {
 	var errorString = ""
 
 	allowed, err := k.allowedToExecute(ctx, flow)
 	if !allowed {
 		k.recordFlowNotAllowed(ctx, &flow, ctx.BlockTime(), err)
-
 	}
 
 	flowCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.MaxGas))
 	cacheCtx, writeCtx := flowCtx.CacheContext()
-	k.Logger(ctx).Debug("continuing msg execution", "id", flow.ID)
+	k.Logger(ctx).Debug("continuing msg execution", "id", flow.ID, "next_msgs", len(nextMsgs))
 
-	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, flow, types.MaxGas)
-	if err != nil {
-		errorString = appendError(errorString, err.Error())
-	} else if feeAddr == nil || feeDenom == "" {
-		errorString = appendError(errorString, types.ErrBalanceTooLow)
+	// Only run feedback loops if we have conditions and messages to process
+	if flow.Conditions != nil && len(nextMsgs) > 0 {
+		err = k.RunFeedbackLoops(cacheCtx, flow.ID, &flow.Msgs, flow.Conditions)
+		if err != nil {
+			k.Logger(ctx).Error("error running feedback loops", "error", err)
+			return errorsmod.Wrap(err, fmt.Sprintf(types.ErrSettingFlowResult, err))
+		}
+
+		// After running feedback loops, check if we still have messages to process
+		if len(nextMsgs) == 0 {
+			k.Logger(ctx).Debug("no messages to process after feedback loops")
+			return nil
+		}
+
+		k.Logger(ctx).Debug("triggering next msgs", "id", flow.ID, "msgs", len(nextMsgs))
+		_, _, err = k.TriggerFlow(cacheCtx, &flow)
+		if err != nil {
+			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
+		}
+
+		// Only try to distribute fees if we have a valid fee address and denom
+		feeAddr, feeDenom, feeErr := k.GetFeeAccountForMinFees(cacheCtx, flow, types.MaxGas)
+		if feeErr != nil {
+			errorString = appendError(errorString, feeErr.Error())
+		} else if feeAddr == nil || feeDenom == "" || flowHistoryEntry.ExecFee.IsZero() || flowHistoryEntry.ExecFee.Denom != feeDenom {
+			fmt.Print("feeDenom", feeDenom, "flowHistoryEntry.ExecFee", flowHistoryEntry.ExecFee)
+			errorString = appendError(errorString, types.ErrBalanceTooLow)
+		} else {
+			k.Logger(ctx).Debug("feeDenom", feeDenom, "flowHistoryEntry.ExecFee", flowHistoryEntry.ExecFee)
+			fee, distErr := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
+			if distErr != nil {
+				errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, distErr.Error()))
+			} else {
+				flowHistoryEntry.ExecFee = flowHistoryEntry.ExecFee.Add(fee)
+			}
+		}
+
+		if errorString != "" {
+			flowHistoryEntry.Executed = false
+			flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, errorString)
+		}
+
+		k.SetCurrentFlowHistoryEntry(cacheCtx, flow.ID, flowHistoryEntry)
+		k.SetFlowInfo(ctx, &flow)
+		writeCtx()
 	}
 
-	err = k.RunFeedbackLoops(cacheCtx, flow.ID, &flow.Msgs, flow.Conditions)
-	if err != nil {
-		return errorsmod.Wrap(err, fmt.Sprintf(types.ErrSettingFlowResult, err))
-	}
-
-	k.Logger(ctx).Debug("triggering remaining msgs", "id", flow.ID, "msgs", len(flow.Msgs))
-	_, _, err = k.TriggerFlow(cacheCtx, &flow)
-	if err != nil {
-		errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
-	}
-	fee, err := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
-	if err != nil {
-		errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, err.Error()))
-	}
-	flowHistoryEntry.ExecFee = flowHistoryEntry.ExecFee.Add(fee)
-
-	if errorString != "" {
-		flowHistoryEntry.Executed = false
-		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, types.ErrFlowMsgHandling+err.Error())
-
-	}
-	k.SetCurrentFlowHistoryEntry(cacheCtx, flow.ID, flowHistoryEntry)
-	writeCtx()
 	return nil
 }
 

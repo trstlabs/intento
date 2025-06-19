@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+
 	"reflect"
 	"strings"
 
@@ -109,10 +110,32 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 
 // FeedbackLoop replaces the value in a message with the value from a response
 func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctypes.Any, conditions *types.ExecutionConditions) error {
-	if conditions == nil || len(conditions.FeedbackLoops) == 0 || conditions.FeedbackLoops[0].ValueType == "" {
+	k.Logger(ctx).Debug("\n=== Starting RunFeedbackLoops ===")
+	k.Logger(ctx).Debug("Total messages in flow: %d\n", len(*msgs))
+
+	if conditions == nil || len(conditions.FeedbackLoops) == 0 {
+		k.Logger(ctx).Debug("No feedback loops to process")
 		return nil
 	}
+
+	// Process each feedback loop
 	for _, feedbackLoop := range conditions.FeedbackLoops {
+		k.Logger(ctx).Debug("\n--- Processing feedback loop ---")
+		k.Logger(ctx).Debug("Message index: %d\n", feedbackLoop.MsgsIndex)
+		if int(feedbackLoop.MsgsIndex) < len(*msgs) {
+			k.Logger(ctx).Debug("Message type URL: %s\n", (*msgs)[feedbackLoop.MsgsIndex].TypeUrl)
+		}
+		k.Logger(ctx).Debug("Response index: %d\n", feedbackLoop.ResponseIndex)
+		k.Logger(ctx).Debug("Response key: %s\n", feedbackLoop.ResponseKey)
+		k.Logger(ctx).Debug("Message key: %s\n", feedbackLoop.MsgKey)
+
+		// Skip if the message index is out of range
+		if int(feedbackLoop.MsgsIndex) >= len(*msgs) {
+			k.Logger(ctx).Debug("Skipping feedback loop - message index %d out of range (max: %d)\n",
+				feedbackLoop.MsgsIndex, len(*msgs)-1)
+			continue
+		}
+
 		var queryCallback []byte = nil
 		if feedbackLoop.ICQConfig != nil {
 			queryCallback = feedbackLoop.ICQConfig.Response
@@ -167,8 +190,8 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 			if len(responsesAnys) == 0 {
 				return nil
 			}
-			if int(feedbackLoop.ResponseIndex+1) < len(responsesAnys) {
-				return fmt.Errorf("response index out of range")
+			if int(feedbackLoop.ResponseIndex) >= len(responsesAnys) || int(feedbackLoop.ResponseIndex) < 0 {
+				continue
 			}
 
 			protoMsg, err := k.interfaceRegistry.Resolve(responsesAnys[feedbackLoop.ResponseIndex].TypeUrl)
@@ -180,79 +203,165 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 			if err != nil {
 				return err
 			}
-
-			//k.Logger(ctx).Debug("use response value", "protoMsg", protoMsg.String(), "TypeUrl", responsesAnys[feedbackLoop.ResponseIndex].TypeUrl)
 			valueFromResponse, err = parseResponseValue(protoMsg, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
 			if err != nil {
 				return err
 			}
 		}
 
+		// Get the message to modify
+		msgIndex := feedbackLoop.MsgsIndex
+
+		// Debug log to verify correct index
+		k.Logger(ctx).Debug("Processing feedback loop with MsgsIndex=%d (original=%d)\n",
+			msgIndex, feedbackLoop.MsgsIndex)
+
+		if int(msgIndex) >= len(*msgs) {
+			return fmt.Errorf("message index %d out of range", msgIndex)
+		}
+
+		msgAny := (*msgs)[msgIndex]
+
+		// Create a new Any message with the same type and value
+		msgCopy := &cdctypes.Any{
+			TypeUrl: msgAny.TypeUrl,
+			Value:   append([]byte(nil), msgAny.Value...), // Safe copy of the value
+		}
+
+		k.Logger(ctx).Debug("Running feedback loop", "msgIndex", msgIndex, "typeUrl", msgAny.TypeUrl, "responseIndex", feedbackLoop.ResponseIndex, "responseKey", feedbackLoop.ResponseKey, "msgKey", feedbackLoop.MsgKey)
+
+		// Handle authz wrapped messages
 		var msgToInterface sdk.Msg
-		msgAny := (*msgs)[feedbackLoop.MsgsIndex]
-		if msgAny.TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+		var isWrapped bool
+		k.Logger(ctx).Debug("Checking if message is wrapped (type: %s)...\n", msgCopy.TypeUrl)
+
+		if msgCopy.TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+			k.Logger(ctx).Debug("Message is wrapped in MsgExec, unwrapping...")
 			msgExec := &authztypes.MsgExec{}
-			if err := proto.Unmarshal(msgAny.Value, msgExec); err != nil {
-				return err
+			if err := proto.Unmarshal(msgCopy.Value, msgExec); err != nil {
+				return fmt.Errorf("failed to unmarshal MsgExec: %w", err)
 			}
-			msgAny = msgExec.Msgs[0]
+			if len(msgExec.Msgs) == 0 {
+				return fmt.Errorf("no messages in MsgExec")
+			}
+
+			innerMsgCopy := &cdctypes.Any{
+				TypeUrl: msgExec.Msgs[0].TypeUrl,
+				Value:   append([]byte(nil), msgExec.Msgs[0].Value...),
+			}
+
+			var innerMsg sdk.Msg
+			if err := k.cdc.UnpackAny(innerMsgCopy, &innerMsg); err != nil {
+				return fmt.Errorf("failed to unpack inner message: %w", err)
+			}
+
+			msgToInterface = innerMsg
+			isWrapped = true
+
+		} else {
+			k.Logger(ctx).Debug("Message is not wrapped, unpacking directly...")
+			// For non-wrapped messages, unpack directly
+			if err := k.cdc.UnpackAny(msgCopy, &msgToInterface); err != nil {
+				return fmt.Errorf("failed to unpack message: %w", err)
+			}
+			k.Logger(ctx).Debug("Successfully unpacked message of type: %T\n", msgToInterface)
 		}
 
-		err = k.cdc.UnpackAny(msgAny, &msgToInterface)
-		if err != nil {
-			return err
+		// Log the message type and value for debugging
+		msgType := fmt.Sprintf("%T", msgToInterface)
+		k.Logger(ctx).Debug("Processing message",
+			"typeUrl", msgCopy.TypeUrl,
+			"isWrapped", isWrapped,
+			"msgType", msgType)
+
+		// Get the reflect value of the message
+		msgValue := reflect.ValueOf(msgToInterface)
+		if msgValue.Kind() == reflect.Ptr {
+			msgValue = msgValue.Elem()
 		}
-
-		k.Logger(ctx).Debug("use response value", "interface", msgToInterface, "valueFromResponse", valueFromResponse)
-
-		msgTo := reflect.ValueOf(msgToInterface)
-
-		// If the value is a pointer, get the element it points to
-		if msgTo.Kind() == reflect.Ptr {
-			msgTo = msgTo.Elem()
-		}
+		k.Logger(ctx).Debug("Message value kind: %v, type: %v\n", msgValue.Kind(), msgValue.Type())
 
 		// Ensure we're dealing with a struct
-		if msgTo.Kind() != reflect.Struct {
-			// k.Logger(ctx).Debug("use response value", "msgTo.Kind", msgTo.Kind())
-			return fmt.Errorf("expected a struct, got %v", msgTo.Kind())
+		if msgValue.Kind() != reflect.Struct {
+			return fmt.Errorf("expected a struct, got %v", msgValue.Kind())
 		}
-
+		// Traverse the fields to find the one we need to update
+		k.Logger(ctx).Debug("Looking for field: %s in message type: %T\n", feedbackLoop.MsgKey, msgToInterface)
 		fieldToReplace, err := traverseFields(msgToInterface, feedbackLoop.MsgKey)
 		if err != nil {
-			return err
-		}
-		//k.Logger(ctx).Debug("use response value", "fieldToReplace", fieldToReplace)
-
-		// Set the new value
-		if fieldToReplace.CanSet() && reflect.ValueOf(valueFromResponse).Type().ConvertibleTo(fieldToReplace.Type()) && fieldToReplace.Type().AssignableTo(reflect.ValueOf(valueFromResponse).Type()) {
-			fieldToReplace.Set(reflect.ValueOf(valueFromResponse))
-		} else {
-			return fmt.Errorf("field %v cannot be set by value %v", fieldToReplace, valueFromResponse)
+			k.Logger(ctx).Debug("Error traversing fields: %v\n", err)
+			return fmt.Errorf("failed to traverse fields: %w", err)
 		}
 
-		newMsgAny, err := cdctypes.NewAnyWithValue(msgToInterface)
-		if err != nil {
-			// k.Logger(ctx).Debug("use response value", "err", err, "newMsgAny", newMsgAny)
-			return err
+		k.Logger(ctx).Debug("Found field to replace",
+			"field", fieldToReplace,
+			"canSet", fieldToReplace.CanSet(),
+			"currentValue", fieldToReplace.Interface(),
+			"newValue", valueFromResponse)
+
+		// Set the new value with proper type checking
+		if !fieldToReplace.CanSet() {
+			return fmt.Errorf("field %s cannot be set", feedbackLoop.MsgKey)
 		}
 
-		if (*msgs)[feedbackLoop.MsgsIndex].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
-			msgExec := &authztypes.MsgExec{}
-			if err := proto.Unmarshal((*msgs)[feedbackLoop.MsgsIndex].Value, msgExec); err != nil {
-				return err
+		// Convert the value to the target type
+		targetValue := reflect.ValueOf(valueFromResponse)
+		if !targetValue.Type().AssignableTo(fieldToReplace.Type()) {
+			// Try to convert the value if it's not directly assignable
+			if targetValue.Type().ConvertibleTo(fieldToReplace.Type()) {
+				targetValue = targetValue.Convert(fieldToReplace.Type())
+			} else {
+				return fmt.Errorf("cannot assign %s to %s",
+					targetValue.Type(), fieldToReplace.Type())
 			}
-			msgExec.Msgs[0] = newMsgAny
-			k.Logger(ctx).Debug("use response value", "msgExec", msgExec.String())
-			msgExecAnys, err := types.PackTxMsgAnys([]sdk.Msg{msgExec})
+		}
+
+		// Set the field value
+		fieldToReplace.Set(targetValue)
+		k.Logger(ctx).Debug("Successfully updated field '%s' to value: %v\n", feedbackLoop.MsgKey, fieldToReplace.Interface())
+		k.Logger(ctx).Debug("Updated field value",
+			"field", feedbackLoop.MsgKey,
+			"newValue", fieldToReplace.Interface())
+
+		// Repack the message based on whether it was wrapped or not
+		k.Logger(ctx).Debug("Repacking message (isWrapped: %v)...\n", isWrapped)
+
+		if isWrapped {
+			// For wrapped messages, we need to update the inner message in the MsgExec
+			// Get the original MsgExec
+			var msgExec authztypes.MsgExec
+			if err := k.cdc.UnpackAny((*msgs)[feedbackLoop.MsgsIndex], &msgExec); err != nil {
+				return fmt.Errorf("failed to unpack MsgExec: %w", err)
+			}
+
+			// Update the inner message in the MsgExec
+			msgExec.Msgs[0], err = cdctypes.NewAnyWithValue(msgToInterface)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to create new Any for inner message: %w", err)
 			}
-			newMsgAny = msgExecAnys[0]
-		}
-		//k.Logger(ctx).Debug("use response value", "newMsgAny", newMsgAny.TypeUrl)
 
-		(*msgs)[feedbackLoop.MsgsIndex] = newMsgAny
+			// Pack the updated MsgExec back to Any
+			updatedMsgAny, err := cdctypes.NewAnyWithValue(&msgExec)
+			if err != nil {
+				return fmt.Errorf("failed to create new Any for MsgExec: %w", err)
+			}
+
+			// Replace the message in the slice
+			(*msgs)[feedbackLoop.MsgsIndex] = updatedMsgAny
+		} else {
+			// For non-wrapped messages, create a new Any with the updated message
+			updatedMsgAny, err := cdctypes.NewAnyWithValue(msgToInterface)
+			if err != nil {
+				return fmt.Errorf("failed to create new Any for message: %w", err)
+			}
+			(*msgs)[feedbackLoop.MsgsIndex] = updatedMsgAny
+		}
+
+		// Log the updated message for debugging
+		k.Logger(ctx).Debug("Updated message %d: TypeURL=%s, Value=%x\n",
+			feedbackLoop.MsgsIndex,
+			(*msgs)[feedbackLoop.MsgsIndex].TypeUrl,
+			(*msgs)[feedbackLoop.MsgsIndex].Value)
 	}
 	return nil
 }
@@ -509,7 +618,7 @@ func traverseFields(msgInterface interface{}, inputKey string) (reflect.Value, e
 
 				val = val.FieldByName(key)
 				if !val.IsValid() {
-					return reflect.Value{}, fmt.Errorf("field %s not found", key)
+					return reflect.Value{}, fmt.Errorf("field %s not found in interface %v", key, msgInterface)
 				}
 			}
 		}
