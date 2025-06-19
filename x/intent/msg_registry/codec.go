@@ -115,6 +115,25 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&cosmosevm.MsgEthereumTx{},
 	)
 
+	// For comparison and feedback Loop logic
+	registry.RegisterImplementations(
+		(*proto.Message)(nil),
+		&cosmosevm.MsgEthereumTxResponse{},
+		&elysestaking.MsgWithdrawElysStakingRewardsResponse{},
+		&elysestaking.MsgWithdrawAllRewardsResponse{},
+		&elysestaking.MsgWithdrawRewardResponse{},
+		&elysamm.MsgSwapExactAmountInResponse{},
+		&elysamm.MsgSwapExactAmountOutResponse{},
+		&elysamm.MsgFeedMultipleExternalLiquidityResponse{},
+		&elysamm.MsgFeedMultipleExternalLiquidityResponse{},
+		&elysamm.MsgSwapByDenomResponse{},
+		&elyscommitment.MsgStakeResponse{},
+		&osmosisgammv1beta1.MsgSwapExactAmountInResponse{},
+		&osmosisgammv1beta1.MsgSwapExactAmountOutResponse{},
+		&osmosisgammv1beta1.MsgJoinPoolResponse{},
+		&osmosisgammv1beta1.MsgExitPoolResponse{},
+	)
+
 }
 
 type RawContractMessage []byte
