@@ -189,8 +189,8 @@ func (k Keeper) FlowIsToSourceChain(ctx sdk.Context, destinationChannelID, portI
 		if err != nil {
 			return false
 		}
-		if hosted.ICAConfig.ConnectionID != ics20ConnectionID {
-			return false
+		if hosted.ICAConfig.ConnectionID == ics20ConnectionID {
+			return true
 		}
 	}
 
