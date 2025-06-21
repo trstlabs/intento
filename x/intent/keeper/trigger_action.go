@@ -393,9 +393,14 @@ func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq 
 
 	k.Logger(ctx).Debug("flow", "id", id, "error", errStr)
 
-	flowHistoryEntry, newErr := k.GetLatestFlowHistoryEntry(ctx, id)
-	if newErr != nil {
-		flowHistoryEntry = &types.FlowHistoryEntry{Errors: []string{newErr.Error()}}
+	flowHistoryEntry, err := k.GetLatestFlowHistoryEntry(ctx, id)
+	if err != nil {
+		flowHistoryEntry = &types.FlowHistoryEntry{Errors: []string{err.Error()}}
+	}
+
+	flow, err := k.TryGetFlowInfo(ctx, id)
+	if err != nil {
+		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, err.Error())
 	}
 
 	if errStr != "" {
@@ -407,6 +412,7 @@ func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq 
 			sdk.NewEvent(
 				types.EventTypeFlowError,
 				sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(id)),
+				sdk.NewAttribute(types.AttributeKeyFlowOwner, flow.Owner),
 				sdk.NewAttribute(types.AttributeKeyError, errStr),
 			),
 		)
