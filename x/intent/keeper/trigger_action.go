@@ -32,6 +32,9 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 	//get hosted account from hosted config
 	if flow.HostedICAConfig != nil && flow.HostedICAConfig.HostedAddress != "" {
 		hostedAccount := k.GetHostedAccount(ctx, flow.HostedICAConfig.HostedAddress)
+		if hostedAccount.HostedAddress == "" || hostedAccount.ICAConfig == nil {
+			return false, nil, errorsmod.Wrapf(types.ErrInvalidHostedAccount, "hosted account or ICAConfig is nil for address %s", flow.HostedICAConfig.HostedAddress)
+		}
 		connectionID = hostedAccount.ICAConfig.ConnectionID
 		portID = hostedAccount.ICAConfig.PortID
 		triggerAddress = hostedAccount.HostedAddress

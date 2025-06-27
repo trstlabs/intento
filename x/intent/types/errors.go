@@ -21,6 +21,8 @@ var (
 	ErrInvalidAddress           = errorsmod.Register(ModuleName, 5, "invalid address")
 	ErrJSONUnmarshal            = errorsmod.Register(ModuleName, 15, "failed unmarshal json")
 	ErrMsgResponsesHandling     = errorsmod.Register(ModuleName, 18, "error handling msg responses")
+	ErrInvalidHostedAccount     = errorsmod.Register(ModuleName, 34, "invalid msg response")
+
 	//ics20 hooks
 	ErrMsgValidation     = errorsmod.Register("ics20-hooks", 20, "error in ics20 hook message validation")
 	ErrMsgMsgsValidation = errorsmod.Register("ics20-hooks", 26, "error in ics20 hook message validation for a message inside the flow")
