@@ -121,13 +121,13 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 	// Process each feedback loop
 	for _, feedbackLoop := range conditions.FeedbackLoops {
 		k.Logger(ctx).Debug("\n--- Processing feedback loop ---")
-		k.Logger(ctx).Debug("Message index: %d\n", feedbackLoop.MsgsIndex)
+		k.Logger(ctx).Debug("Message index", feedbackLoop.MsgsIndex)
 		if int(feedbackLoop.MsgsIndex) < len(*msgs) {
-			k.Logger(ctx).Debug("Message type URL: %s\n", (*msgs)[feedbackLoop.MsgsIndex].TypeUrl)
+			k.Logger(ctx).Debug("Message type URL", (*msgs)[feedbackLoop.MsgsIndex].TypeUrl)
 		}
-		k.Logger(ctx).Debug("Response index: %d\n", feedbackLoop.ResponseIndex)
-		k.Logger(ctx).Debug("Response key: %s\n", feedbackLoop.ResponseKey)
-		k.Logger(ctx).Debug("Message key: %s\n", feedbackLoop.MsgKey)
+		k.Logger(ctx).Debug("Response index", feedbackLoop.ResponseIndex)
+		k.Logger(ctx).Debug("Response key", feedbackLoop.ResponseKey)
+		k.Logger(ctx).Debug("Message key", feedbackLoop.MsgKey)
 
 		// Skip if the message index is out of range
 		if int(feedbackLoop.MsgsIndex) >= len(*msgs) {
@@ -318,19 +318,19 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 
 		// Set the field value
 		fieldToReplace.Set(targetValue)
-		k.Logger(ctx).Debug("Successfully updated field '%s' to value: %v\n", feedbackLoop.MsgKey, fieldToReplace.Interface())
+		k.Logger(ctx).Debug("Successfully updated field", feedbackLoop.MsgKey, " to value", fieldToReplace.Interface())
 		k.Logger(ctx).Debug("Updated field value",
 			"field", feedbackLoop.MsgKey,
 			"newValue", fieldToReplace.Interface())
 
 		// Repack the message based on whether it was wrapped or not
-		k.Logger(ctx).Debug("Repacking message (isWrapped: %v)...\n", isWrapped)
+		k.Logger(ctx).Debug("Repacking message", "isWrapped", isWrapped)
 
 		if isWrapped {
 			// For wrapped messages, we need to update the inner message in the MsgExec
 			// Get the original MsgExec
 			var msgExec authztypes.MsgExec
-			if err := k.cdc.UnpackAny((*msgs)[feedbackLoop.MsgsIndex], &msgExec); err != nil {
+			if err := proto.Unmarshal(msgAny.Value, &msgExec); err != nil {
 				return fmt.Errorf("failed to unpack MsgExec: %w", err)
 			}
 
@@ -358,10 +358,7 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 		}
 
 		// Log the updated message for debugging
-		k.Logger(ctx).Debug("Updated message %d: TypeURL=%s, Value=%x\n",
-			feedbackLoop.MsgsIndex,
-			(*msgs)[feedbackLoop.MsgsIndex].TypeUrl,
-			(*msgs)[feedbackLoop.MsgsIndex].Value)
+		k.Logger(ctx).Debug("Updated message", feedbackLoop.MsgsIndex, "TypeURL", (*msgs)[feedbackLoop.MsgsIndex].TypeUrl, "Value", (*msgs)[feedbackLoop.MsgsIndex].Value)
 	}
 	return nil
 }

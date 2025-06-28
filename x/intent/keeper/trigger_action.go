@@ -75,7 +75,7 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 		return false, nil, errorsmod.Wrap(err, "could not send ICA message")
 	}
 
-	k.Logger(ctx).Debug("flow", "ibc_sequence", res.Sequence)
+	k.Logger(ctx).Debug("flow", "ibc_sequence", res.Sequence, "message", flow.GetTxMsgs(k.cdc)[0].String())
 	k.SetTmpFlowID(ctx, flow.ID, portID, channelID, res.Sequence)
 	return false, nil, nil
 }
@@ -126,9 +126,9 @@ func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flo
 	return msgResponses, nil
 }
 
-// HandleResponseAndSetFlowResult sets the result of the last executed ID set at SendFlow.
+// HandleResponseAndSetFlowResult sets the result of the initiated interchain flow.
 func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, channelID string, relayer sdk.AccAddress, seq uint64, msgResponses []*cdctypes.Any) error {
-	k.Logger(ctx).Debug("HandleResponseAndSetFlowResult: portID=%s, channelID=%s, seq=%d\n", portID, channelID, seq)
+	k.Logger(ctx).Debug("HandleResponseAndSetFlowResult:", "portID", portID, "channelID", channelID, "seq", seq)
 	id := k.getTmpFlowID(ctx, portID, channelID, seq)
 	if id <= 0 {
 		return fmt.Errorf("flow not found")
@@ -138,6 +138,11 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	flowHistoryEntry, newErr := k.GetLatestFlowHistoryEntry(ctx, id)
 	if newErr != nil {
 		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, newErr.Error())
+	}
+
+	if len(flowHistoryEntry.MsgResponses) == len(flow.Msgs) {
+		k.Logger(ctx).Debug("all messages executed, skipping deep response handling")
+		return nil
 	}
 
 	msgResponses, msgClass, err := k.HandleDeepResponses(ctx, msgResponses, relayer, flow, len(flowHistoryEntry.MsgResponses))
@@ -170,9 +175,17 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 				"responseIndex", feedbackLoop.ResponseIndex,
 				"msgIndex", feedbackLoop.MsgsIndex,
 			)
+			flowHistoryEntryCheck := flowHistoryEntry
+			if feedbackLoop.FlowID != 0 {
+				flowHistoryEntryCheck, err = k.GetLatestFlowHistoryEntry(ctx, feedbackLoop.FlowID)
+				if err != nil {
+					k.Logger(ctx).Debug("error getting latest flow history entry", "error", err)
 
+					return errorsmod.Wrapf(err, "error getting latest flow history entry for flow ID %d", feedbackLoop.FlowID)
+				}
+			}
 			// Skip if this isn't a feedback loop for the current response
-			if int(feedbackLoop.ResponseIndex) != len(flowHistoryEntry.MsgResponses)-1 {
+			if int(feedbackLoop.ResponseIndex) != len(flowHistoryEntryCheck.MsgResponses)-1 {
 				k.Logger(ctx).Debug("skipping feedback loop - wrong response index",
 					"expected", len(flowHistoryEntry.MsgResponses)-1,
 					"got", feedbackLoop.ResponseIndex,
@@ -181,13 +194,13 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 			}
 
 			// Validate MsgsIndex and FlowID
-			if feedbackLoop.MsgsIndex == 0 || feedbackLoop.FlowID != 0 {
+			if feedbackLoop.MsgsIndex == 0 && feedbackLoop.FlowID == 0 {
 				k.Logger(ctx).Debug("skipping feedback loop - invalid MsgsIndex or FlowID")
 				continue // Skip invalid FeedbackLoops or if FlowID is set to non-default
 			}
 
 			// Only process messages that come after the current message
-			if int(feedbackLoop.MsgsIndex) >= len(flow.Msgs) {
+			if feedbackLoop.FlowID == 0 && int(feedbackLoop.MsgsIndex) >= len(flow.Msgs) {
 				k.Logger(ctx).Debug("skipping feedback loop - MsgsIndex out of bounds")
 				continue // Skip if MsgsIndex is out of bounds
 			}
@@ -206,7 +219,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 			// Execute only up to the next feedback point
 			messagesToExecute := flow.Msgs[feedbackLoop.MsgsIndex:nextStopIndex]
 
-			k.Logger(ctx).Debug("processing feedback loop",
+			k.Logger(ctx).Debug("execute batch of messages",
 				"responseIndex", feedbackLoop.ResponseIndex,
 				"msgIndex", feedbackLoop.MsgsIndex,
 				"nextMsgs", len(messagesToExecute),
@@ -226,8 +239,13 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 	var errorString = ""
 
 	allowed, err := k.allowedToExecute(ctx, flow)
+	if err != nil {
+		k.Logger(ctx).Error("error allow execution at batch execution of flow", "error", err, "id", flow.ID)
+		return errorsmod.Wrap(err, fmt.Sprintf(types.ErrSettingFlowResult, err))
+	}
 	if !allowed {
-		k.recordFlowNotAllowed(ctx, &flow, ctx.BlockTime(), err)
+		k.Logger(ctx).Debug("flow not allowed to execute", "id", flow.ID)
+		return nil
 	}
 
 	flowCtx := ctx.WithGasMeter(storetypes.NewGasMeter(types.MaxGas))
@@ -249,7 +267,9 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 		}
 
 		k.Logger(ctx).Debug("triggering next msgs", "id", flow.ID, "msgs", len(nextMsgs))
-		_, _, err = k.TriggerFlow(cacheCtx, &flow)
+		flowCopy := flow
+		flowCopy.Msgs = nextMsgs
+		_, _, err = k.TriggerFlow(cacheCtx, &flowCopy)
 		if err != nil {
 			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
 		}
@@ -284,9 +304,13 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 	return nil
 }
 
+// HandleDeepResponses checks responses and unwraps authz responses from the IBC packet
 func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, flow types.FlowInfo, previousMsgsExecuted int) ([]*cdctypes.Any, int, error) {
 	var msgClass int
 
+	if previousMsgsExecuted == len(flow.Msgs) {
+		return nil, 0, errorsmod.Wrapf(types.ErrMsgResponsesHandling, "no more messages to execute for flow %d, got %d responses for flow messages %d", flow.ID, len(msgResponses), len(flow.Msgs))
+	}
 	for index, anyResp := range msgResponses {
 		k.Logger(ctx).Debug("msg response in ICS-27 packet", "response", anyResp.GoString(), "typeURL", anyResp.GetTypeUrl())
 
@@ -304,41 +328,41 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 				k.Logger(ctx).Debug("handling deep flow response unmarshalling", "err", err)
 				return nil, 0, err
 			}
+
 			flowIndex := index + previousMsgsExecuted
 			if flowIndex >= len(flow.Msgs) {
-				return nil, 0, errorsmod.Wrapf(types.ErrMsgResponsesHandling, "expected more message responses")
+				return nil, 0, errorsmod.Wrapf(types.ErrMsgResponsesHandling, "expected more message responses for flow %d, got %d responses for flow messages %d", flow.ID, len(msgExecResponse.Results), len(flow.Msgs))
 			}
 			msgExec := &authztypes.MsgExec{}
 			if err := proto.Unmarshal(flow.Msgs[flowIndex].Value, msgExec); err != nil {
 				return nil, 0, errorsmod.Wrapf(types.ErrMsgResponsesHandling, "failed to unmarshal MsgExec: %s", err.Error())
 			}
 
-			msgResponses = []*cdctypes.Any{}
+			// Instead of resetting msgResponses, collect inner responses
+			var innerResponses []*cdctypes.Any
 
-			for _, resultBytes := range msgExecResponse.Results {
-				if len(resultBytes) == 0 {
-					continue // Skip empty results
-				}
+			if len(msgExecResponse.Results) != len(msgExec.Msgs) {
+				return nil, 0, errorsmod.Wrapf(types.ErrMsgResponsesHandling, "number of results (%d) does not match number of messages (%d) in MsgExec", len(msgExecResponse.Results), len(msgExec.Msgs))
+			}
+
+			for i, resultBytes := range msgExecResponse.Results {
 
 				var msgResponse = cdctypes.Any{}
 				if err := proto.Unmarshal(resultBytes, &msgResponse); err == nil {
 					typeUrl := msgResponse.GetTypeUrl()
-
 					if typeUrl != "" && strings.Contains(typeUrl, "Msg") {
 						_, err := k.interfaceRegistry.Resolve(typeUrl)
 						if err == nil {
-							k.Logger(ctx).Debug("parsing response authz v0.52+", "msgResponse", msgResponse)
-							msgResponses = append(msgResponses, &msgResponse)
+							k.Logger(ctx).Debug("parsing response authz v0.52+", "response", msgResponse.GoString(), "typeURL", msgResponse.GetTypeUrl())
+							innerResponses = append(innerResponses, &msgResponse)
 							continue
 						}
 					}
-
 				}
-				// in v0.50.8 we were writing msgResponse.Data in that [][]byte and no marshalled anys
-				// https://github.com/cosmos/cosmos-sdk/blob/v0.50.8/x/authz/keeper/keeper.go#L166-L186
-				//	k.Logger(ctx).Debug("flow result", "resultBytes", resultBytes)
-				//as we do not get typeURL (until cosmos 0.52 and is not possible in 51) we have to rely in this, MsgExec is the only regisrered message that should return results
-				msgRespProto, _, err := handleMsgData(&sdk.MsgData{Data: resultBytes, MsgType: msgExec.Msgs[0].TypeUrl})
+				k.Logger(ctx).Debug("parsing response authz v0.52-", "response", msgResponse.GoString(), "typeURL", msgResponse.GetTypeUrl())
+
+				// fallback: handle as MsgData
+				msgRespProto, _, err := handleMsgData(&sdk.MsgData{Data: resultBytes, MsgType: msgExec.Msgs[i].TypeUrl})
 				if err != nil {
 					return nil, 0, err
 				}
@@ -348,9 +372,12 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 					if err != nil {
 						return nil, 0, err
 					}
-					msgResponses = append(msgResponses, respAny)
+					innerResponses = append(innerResponses, respAny)
 				}
 			}
+
+			// Replace the MsgExecResponse with its inner responses
+			msgResponses = append(msgResponses[:index], append(innerResponses, msgResponses[index+1:]...)...)
 		}
 	}
 	return msgResponses, msgClass, nil
@@ -388,13 +415,13 @@ func (k Keeper) SetFlowOnTimeout(ctx sdk.Context, sourcePort string, channelID s
 }
 
 // SetFlowError sets the flow error result and emits an error event
-func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq uint64, errStr string) {
+func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq uint64, errString string) {
 	id := k.getTmpFlowID(ctx, sourcePort, channelID, seq)
 	if id == 0 {
 		return
 	}
 
-	k.Logger(ctx).Debug("flow", "id", id, "error", errStr)
+	k.Logger(ctx).Debug("flow", "id", id, "error", errString)
 
 	flowHistoryEntry, err := k.GetLatestFlowHistoryEntry(ctx, id)
 	if err != nil {
@@ -406,8 +433,18 @@ func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq 
 		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, err.Error())
 	}
 
-	if errStr != "" {
-		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, errStr)
+	if errString != "" {
+		//only append error if it is not already in the list
+		alreadyExists := false
+		for _, e := range flowHistoryEntry.Errors {
+			if e == errString {
+				alreadyExists = true
+				break
+			}
+		}
+		if flowHistoryEntry.Errors == nil || !alreadyExists {
+			flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, errString)
+		}
 		flowHistoryEntry.Executed = false
 		k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
 
@@ -416,7 +453,7 @@ func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq 
 				types.EventTypeFlowError,
 				sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(id)),
 				sdk.NewAttribute(types.AttributeKeyFlowOwner, flow.Owner),
-				sdk.NewAttribute(types.AttributeKeyError, errStr),
+				sdk.NewAttribute(types.AttributeKeyError, errString),
 			),
 		)
 	}

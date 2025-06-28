@@ -146,42 +146,39 @@ func (k Keeper) handleFlowExecution(ctx sdk.Context, flow *types.FlowInfo, msgRe
 	return executedLocally, errorString
 }
 
-// handleRunFeedbackLoops processes the FeedbackLoops logic when it's set
 func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.FlowInfo, msgResponses *[]*cdctypes.Any, errorString string) (bool, string) {
 	executedLocally := false
-
-	// If no feedback loops, execute all messages normally
-	if flow.Conditions == nil || len(flow.Conditions.FeedbackLoops) == 0 {
-		localExec, responses, err := k.TriggerFlow(ctx, flow)
-		if err != nil {
-			return false, appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
-		}
-		*msgResponses = append(*msgResponses, responses...)
-		return localExec, errorString
-	}
 
 	// Group feedback loops by MsgsIndex to process them together
 	feedbackGroups := make(map[uint32][]*types.FeedbackLoop)
 	for _, loop := range flow.Conditions.FeedbackLoops {
+		targetFlow := flow
+		if loop.FlowID != 0 && loop.FlowID != flow.ID {
+			otherFlow, err := k.TryGetFlowInfo(ctx, loop.FlowID)
+			if err != nil {
+				errorString = appendError(errorString, fmt.Sprintf("invalid feedback loop FlowID: %d (not found)", loop.FlowID))
+				continue
+			}
+			targetFlow = &otherFlow
+		}
+		if int(loop.MsgsIndex) >= len(targetFlow.Msgs) {
+			errorString = appendError(errorString, fmt.Sprintf("invalid feedback loop MsgsIndex: %d (only %d messages in flow %d)", loop.MsgsIndex, len(targetFlow.Msgs), targetFlow.ID))
+			continue
+		}
 		feedbackGroups[loop.MsgsIndex] = append(feedbackGroups[loop.MsgsIndex], loop)
 	}
 
-	// Process messages in order, applying feedback loops at each step
-	var allResponses []*cdctypes.Any
-	currentMsgs := make([]*cdctypes.Any, 0, len(flow.Msgs))
+	allResponses := []*cdctypes.Any{}
 
-	for i := 0; i <= len(flow.Msgs); i++ {
-		// Execute messages up to the next feedback point or end
-		if i < len(flow.Msgs) {
-			currentMsgs = append(currentMsgs, flow.Msgs[i])
-		}
+	for i := 0; i < len(flow.Msgs); {
+		loops, hasFeedback := feedbackGroups[uint32(i)]
 
-		// Check if we have feedback loops for this index or if we're at the end
-		if _, hasFeedback := feedbackGroups[uint32(i)]; hasFeedback || i == len(flow.Msgs) {
-			if len(currentMsgs) > 0 {
-				// Execute the current batch of messages
+		if hasFeedback {
+			preFeedbackMsgs := flow.Msgs[:i]
+
+			if len(preFeedbackMsgs) > 0 {
 				flowCopy := *flow
-				flowCopy.Msgs = currentMsgs
+				flowCopy.Msgs = preFeedbackMsgs
 
 				localExec, responses, err := k.TriggerFlow(ctx, &flowCopy)
 				if err != nil {
@@ -190,45 +187,63 @@ func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.FlowInfo, ms
 				executedLocally = executedLocally || localExec
 				allResponses = append(allResponses, responses...)
 				*msgResponses = append(*msgResponses, responses...)
-
-				// Clear current messages for next batch
-				currentMsgs = currentMsgs[:0]
 			}
 
-			// Apply feedback loops for this index
-			if loops, ok := feedbackGroups[uint32(i)]; ok && i < len(flow.Msgs) {
-				// Create a copy of the remaining messages
-				remainingMsgs := make([]*cdctypes.Any, len(flow.Msgs[i:]))
-				copy(remainingMsgs, flow.Msgs[i:])
+			remainingMsgs := make([]*cdctypes.Any, len(flow.Msgs[i:]))
+			copy(remainingMsgs, flow.Msgs[i:])
 
-				// Apply all feedback loops for this index
-				for _, loop := range loops {
-					if int(loop.ResponseIndex) < len(allResponses) {
-						// Create a copy of the messages to modify
-						modifiedMsgs := make([]*cdctypes.Any, len(remainingMsgs))
-						copy(modifiedMsgs, remainingMsgs)
+			for _, loop := range loops {
+				if int(loop.ResponseIndex) < len(allResponses) {
+					modifiedMsgs := make([]*cdctypes.Any, len(remainingMsgs))
+					copy(modifiedMsgs, remainingMsgs)
 
-						// Apply the feedback loop to the modified messages
-						err := k.RunFeedbackLoops(ctx, flow.ID, &modifiedMsgs, &types.ExecutionConditions{
-							FeedbackLoops: []*types.FeedbackLoop{loop},
-						})
-						if err != nil {
-							return false, appendError(errorString, fmt.Sprintf(types.ErrSettingFlowResult, err.Error()))
-						}
+					err := k.RunFeedbackLoops(ctx, flow.ID, &modifiedMsgs, &types.ExecutionConditions{
+						FeedbackLoops: []*types.FeedbackLoop{loop},
+					})
+					if err != nil {
+						return false, appendError(errorString, fmt.Sprintf(types.ErrSettingFlowResult, err.Error()))
+					}
 
-						// Update the remaining messages with the modified ones
+					if !msgsEqual(remainingMsgs, modifiedMsgs) {
+
 						remainingMsgs = modifiedMsgs
 					}
-				}
 
-				// Update the original flow messages with the modified ones
-				copy(flow.Msgs[i:], remainingMsgs)
+				}
 			}
+
+			// If there are remaining messages after processing feedback loops, execute them if they are local
+			if len(remainingMsgs) > 0 && executedLocally {
+				flowCopy := *flow
+				flowCopy.Msgs = remainingMsgs
+				localExec, responses, err := k.TriggerFlow(ctx, &flowCopy)
+				if err != nil {
+					return false, appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
+				}
+				executedLocally = executedLocally || localExec
+				*msgResponses = append(*msgResponses, responses...)
+			}
+			break
 		}
+
+		i++
 	}
 
 	return executedLocally, errorString
 }
+
+func msgsEqual(a, b []*cdctypes.Any) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if !a[i].Equal(b[i]) {
+			return false
+		}
+	}
+	return true
+}
+
 func (k Keeper) allowedToExecute(ctx sdk.Context, flow types.FlowInfo) (bool, error) {
 	shouldRecur := flow.ExecTime.Before(flow.EndTime) && flow.ExecTime.Add(flow.Interval).Before(flow.EndTime)
 	conditions := flow.Conditions

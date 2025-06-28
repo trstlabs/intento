@@ -3,6 +3,10 @@ package msg_registry
 import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	proto "github.com/cosmos/gogoproto/proto"
 	cosmosevm "github.com/trstlabs/intento/x/intent/msg_registry/cosmos/evm/v1"
 	elysamm "github.com/trstlabs/intento/x/intent/msg_registry/elys/amm"
@@ -142,6 +146,34 @@ var MsgRegistry = map[string]struct {
 	NewResponse func() proto.Message
 	RewardType  int
 }{
+	// Cosmos SDK bank and staking messages
+	sdk.MsgTypeURL(&banktypes.MsgSend{}): {
+		func() proto.Message { return &banktypes.MsgSendResponse{} },
+		types.KeyFlowIncentiveForSDKTx,
+	},
+	sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}): {
+		func() proto.Message { return &stakingtypes.MsgDelegateResponse{} },
+		types.KeyFlowIncentiveForSDKTx,
+	},
+	sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}): {
+		func() proto.Message { return &stakingtypes.MsgUndelegateResponse{} },
+		types.KeyFlowIncentiveForSDKTx,
+	},
+	sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}): {
+		func() proto.Message { return &stakingtypes.MsgBeginRedelegateResponse{} },
+		types.KeyFlowIncentiveForSDKTx,
+	},
+
+	sdk.MsgTypeURL(&distributiontypes.MsgWithdrawDelegatorReward{}): {
+		func() proto.Message { return &distributiontypes.MsgWithdrawDelegatorRewardResponse{} },
+		types.KeyFlowIncentiveForSDKTx,
+	},
+
+	sdk.MsgTypeURL(&authztypes.MsgExec{}): {
+		func() proto.Message { return &authztypes.MsgExecResponse{} },
+		types.KeyFlowIncentiveForAuthzTx,
+	},
+
 	// Osmosis Gamm
 	sdk.MsgTypeURL(&osmosisgammv1beta1.MsgExitPool{}):                {func() proto.Message { return &osmosisgammv1beta1.MsgExitPoolResponse{} }, types.KeyFlowIncentiveForOsmoTx},
 	sdk.MsgTypeURL(&osmosisgammv1beta1.MsgExitSwapExternAmountOut{}): {func() proto.Message { return &osmosisgammv1beta1.MsgExitSwapExternAmountOutResponse{} }, types.KeyFlowIncentiveForOsmoTx},
