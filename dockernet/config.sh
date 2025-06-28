@@ -258,12 +258,10 @@ GET_FLOW_ID() {
 
   # Fetch initial flow IDs
   initial_flows=($($INTO_MAIN_CMD q intent list-flows-by-owner $address | awk -v RS='  ' '$1 == "id:" {print $2}'))
-  echo "Initial Flows: ${initial_flows[*]}"
 
   for i in $(seq $max_blocks); do
     # Fetch new IDs
    new_flows=($($INTO_MAIN_CMD q intent list-flows-by-owner $address | awk -v RS='  ' '$1 == "id:" {print $2}'))
-    echo "New Flows: ${new_flows[*]}"
     # Find new ID by comparing initial and new lists
     for flow_id in "${new_flows[@]}"; do
       if [[ ! " ${initial_flows[*]} " =~ " ${flow_id} " ]]; then
@@ -318,32 +316,37 @@ WAIT_FOR_EXECUTED_FLOW_BY_ID() {
 
 WAIT_FOR_MSG_RESPONSES_LENGTH() {
   expected_length=$1
-  max_blocks=${2:-100} # Default max_blocks if not specified
+  max_blocks=${2:-100}
+
+  echo "Waiting for msg_responses length to be $expected_length, max blocks: $max_blocks"
 
   for i in $(seq $max_blocks); do
-    # Fetch transaction info for the specified flow ID
+    echo "Block attempt $i/$max_blocks"
     echo "Querying flow history for ID: $FLOW_ID"
-    FLOW_ID=$(echo $FLOW_ID | xargs)
-    history=$($INTO_MAIN_CMD q intent flow-history $FLOW_ID)
+    FLOW_ID=$(echo "$FLOW_ID" | xargs)
 
-    # Count the number of occurrences of 'msg_responses'
-    responses_count=$(echo "$history" | grep -o 'msg_responses:' | wc -l)
+    history=$($INTO_MAIN_CMD q intent flow-history "$FLOW_ID" 2>/dev/null)
+    if [[ -z "$history" ]]; then
+      echo "No flow history found for flow ID: $FLOW_ID"
+      WAIT_FOR_BLOCK "$INTO_LOGS"
+      continue
+    fi
+
+    # Count number of '@type' lines in msg_responses
+    responses_count=$(echo "$history" | grep -o '@type' | wc -l)
+    echo "Current msg_responses count: $responses_count (target: $expected_length)"
 
     if [[ "$responses_count" -eq "$expected_length" ]]; then
-      echo "msg_responses length is $expected_length for flow ID $FLOW_ID."
+      echo "msg_responses length reached expected $expected_length."
       sleep 5
       return 0
     fi
 
-    # Wait for the next blocks
-    WAIT_FOR_BLOCK $INTO_LOGS
-
-    # Handle case where the length condition is not met after max_blocks
-    if [[ $i -eq $max_blocks ]]; then
-      echo "msg_responses length did not reach $expected_length after $max_blocks blocks."
-      return -1
-    fi
+    WAIT_FOR_BLOCK "$INTO_LOGS"
   done
+
+  echo "Timeout: msg_responses length did not reach $expected_length after $max_blocks blocks."
+  return 1
 }
 
 

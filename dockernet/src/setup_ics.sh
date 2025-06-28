@@ -35,7 +35,7 @@ tee $PROVIDER_HOME/consumer-create.json<<EOF
 	"genesis_hash": "",
 	"binary_hash": "",
 	"spawn_time": null,
-  "unbonding_period": 3456000000000000,
+  "unbonding_period": 1209600000000000,
   "ccv_timeout_period": 4838400000000000,
   "transfer_timeout_period": 43200000000000,
   "consumer_redistribution_fraction": "0.5",
@@ -108,7 +108,7 @@ tee ${PROVIDER_HOME}/update-consumer.json <<EOF
     "genesis_hash": "",
     "binary_hash": "",
     "spawn_time": "$LAUNCH_DATE",
-    "unbonding_period": 3456000000000000,
+    "unbonding_period": 1209600000000000,
     "ccv_timeout_period": 4838400000000000,
     "transfer_timeout_period": 43200000000000,
     "consumer_redistribution_fraction": "0.5",
@@ -168,3 +168,5 @@ echo "Done"
 # Step 7: Create IBC connections and channels
 echo "Creating IBC connections and channels..."
 bash $SRC/start_hermes.sh $CONSUMER_ID
+
+sleep 20 # wait for IBC connections and channels to be established

@@ -50,7 +50,6 @@ build_docker() {
    set +e
 
    module="$1"
-   folder="$2"
    title=$(printf "$module" | awk '{ print toupper($0) }')
 
    echo "Building $title Docker... "
