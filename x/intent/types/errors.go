@@ -19,7 +19,7 @@ var (
 	ErrHostedFeeLimit           = errorsmod.Register(ModuleName, 17, "fee limit reached for hosted account")
 	ErrInvalidType              = errorsmod.Register(ModuleName, 12, "invalid type")
 	ErrInvalidAddress           = errorsmod.Register(ModuleName, 5, "invalid address")
-	ErrJSONUnmarshal            = errorsmod.Register(ModuleName, 15, "failed unmarshal json")
+	ErrAnyUnmarshal             = errorsmod.Register(ModuleName, 15, "failed unmarshal proto any")
 	ErrMsgResponsesHandling     = errorsmod.Register(ModuleName, 18, "error handling msg responses")
 	ErrInvalidHostedAccount     = errorsmod.Register(ModuleName, 34, "invalid msg response")
 

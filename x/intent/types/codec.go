@@ -10,7 +10,7 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(MsgRegisterAccount{}, "intent/MsgRegisterAccount", nil)
 	cdc.RegisterConcrete(MsgSubmitTx{}, "intent/MsgSendTx", nil)
-	cdc.RegisterConcrete(MsgSubmitFlow{}, "intent/MsgSendFlow", nil)
+	cdc.RegisterConcrete(MsgSubmitFlow{}, "intent/MsgSubmitFlow", nil)
 	cdc.RegisterConcrete(MsgRegisterAccountAndSubmitFlow{}, "intent/MsgRegisterAccountAndSubmitFlow", nil)
 	cdc.RegisterConcrete(MsgUpdateFlow{}, "intent/MsgUpdateFlow", nil)
 	cdc.RegisterConcrete(MsgUpdateParams{}, "intent/MsgUpdateParams", nil)
