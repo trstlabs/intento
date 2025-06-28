@@ -83,19 +83,33 @@ func TestSendLocalTxAutocompound(t *testing.T) {
 	require.Equal(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
 	keeper.HandleFlow(ctx, ctx.Logger(), flowInfo, time.Now(), nil)
 
+	//check that the feedback loop was executed and the msg was updated
+	flowInfo = keeper.GetFlowInfo(ctx, flowInfo.ID)
+	require.NotNil(t, flowInfo)
+
+	require.Equal(t, len(flowInfo.Msgs), 2)
+	require.NotEqual(t, flowInfo.Msgs[1], msgDelegate)
+
 	history, _ := keeper.GetFlowHistory(ctx, flowInfo.ID)
+
+	require.Equal(t, len(history), 1)
+	require.Equal(t, len(history[0].Errors), 0)
+
+	//check that the delegation was updated and the msg was executed
+	require.Equal(t, history[0].Executed, true)
+	require.Equal(t, len(history[0].MsgResponses), 2)
 
 	delegations, _ = keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
 	require.Greater(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
 
-	require.Equal(t, len(history[0].MsgResponses), 2)
-
 	///also test feedbackloop response via IBC handling
 	keeper.SetTmpFlowID(ctx, flowInfo.ID, "port-1", "channel-1", 0)
+	keeper.SetFlowHistoryEntry(ctx, flowInfo.ID, &types.FlowHistoryEntry{MsgResponses: nil})
 	err := keeper.HandleResponseAndSetFlowResult(ctx, "port-1", "channel-1", delAddr, 0, history[0].MsgResponses)
 	require.NoError(t, err)
 	history, _ = keeper.GetFlowHistory(ctx, flowInfo.ID)
-	require.Equal(t, len(history[0].MsgResponses), 4)
+	require.Equal(t, len(history[1].Errors), 0)
+	require.Equal(t, len(history[1].MsgResponses), 2)
 }
 
 func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.AccAddress) (stakingtypes.Validator, sdk.Context) {

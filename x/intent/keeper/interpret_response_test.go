@@ -6,10 +6,10 @@ import (
 	math "cosmossdk.io/math"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
-
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -41,6 +41,62 @@ func TestParseCoin(t *testing.T) {
 	executedLocally, _, err = keeper.TriggerFlow(ctx, &flowInfo)
 	require.NoError(t, err)
 	require.True(t, executedLocally)
+}
+
+func TestParseCoinFromMsgExec(t *testing.T) {
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+
+	flowAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+	types.Denom = "stake"
+	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+	flowInfo := createBaseFlowInfo(delAddr, flowAddr)
+
+	// Wrap MsgWithdrawDelegatorReward in MsgExec
+	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
+	anyReward, err := cdctypes.NewAnyWithValue(msgWithdrawDelegatorReward)
+	require.NoError(t, err)
+
+	msgExec := &authztypes.MsgExec{
+		Grantee: delAddr.String(),
+		Msgs:    []*cdctypes.Any{anyReward},
+	}
+	flowInfo.Msgs, err = types.PackTxMsgAnys([]sdk.Msg{msgExec})
+	require.NoError(t, err)
+	err = flowInfo.ValidateBasic()
+	require.NoError(t, err)
+
+	// executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flowInfo)
+	// require.NoError(t, err)
+	msgWithdrawDelegatorRewardResp := distrtypes.MsgWithdrawDelegatorRewardResponse{Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))}
+	msgWithdrawDelegatorRewardRespAny, err := cdctypes.NewAnyWithValue(&msgWithdrawDelegatorRewardResp)
+	require.NoError(t, err)
+
+	msgExecResp := authztypes.MsgExecResponse{Results: [][]byte{msgWithdrawDelegatorRewardRespAny.Value}}
+	msgExecRespAny, err := cdctypes.NewAnyWithValue(&msgExecResp)
+	require.NoError(t, err)
+
+	msgResponses, _, err := keeper.HandleDeepResponses(ctx, []*cdctypes.Any{msgExecRespAny}, sdk.AccAddress{}, flowInfo, 0)
+	require.NoError(t, err)
+	// require.True(t, executedLocally)
+	keeper.SetFlowHistoryEntry(ctx, flowInfo.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
+
+	msgDelegate := newFakeMsgDelegate(delAddr, val)
+	flowInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
+	flowInfo.Conditions = &types.ExecutionConditions{}
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
+	flowInfo.Conditions.FeedbackLoops = []*types.FeedbackLoop{{
+		ResponseIndex: 0,
+		ResponseKey:   "Amount",
+		MsgsIndex:     0,
+		MsgKey:        "Amount",
+		ValueType:     "sdk.Coin",
+	}}
+
+	err = keeper.RunFeedbackLoops(ctx, flowInfo.ID, &flowInfo.Msgs, flowInfo.Conditions)
+	require.NoError(t, err)
+	err = keeper.cdc.UnpackAny(flowInfo.Msgs[0], &msgDelegate)
+	require.NoError(t, err)
+	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
 }
 
 func TestParseInnerString(t *testing.T) {

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	"github.com/stretchr/testify/require"
@@ -544,4 +545,209 @@ func createNextExecutionContext(ctx sdk.Context, nextExecTime time.Time) sdk.Con
 		ChainID:         ctx.ChainID(),
 		ProposerAddress: ctx.BlockHeader().ProposerAddress,
 	}, false, ctx.Logger())
+}
+
+func TestHandleFlow_WithFalseFeedbackLoopIndex(t *testing.T) {
+	ctx, keepers, _ := createTestContext(t)
+	k := keepers.IntentKeeper
+
+	// Create valid funded accounts for all addresses
+	ownerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000)))
+	addr1, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000)))
+	addr2, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000)))
+	addr3, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000)))
+
+	// Create a simple flow with 2 messages using valid addresses
+	msg1 := &banktypes.MsgSend{
+		FromAddress: addr1.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin("stake", 10)),
+	}
+	anyMsg1, err := types.PackTxMsgAnys([]sdk.Msg{msg1})
+	require.NoError(t, err)
+	msg2 := &banktypes.MsgSend{
+		FromAddress: addr2.String(),
+		ToAddress:   addr3.String(),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin("stake", 20)),
+	}
+	anyMsg2, err := types.PackTxMsgAnys([]sdk.Msg{msg2})
+	require.NoError(t, err)
+
+	flow := types.FlowInfo{
+		ID:         999,
+		Owner:      ownerAddr.String(),
+		FeeAddress: ownerAddr.String(),
+		ExecTime:   ctx.BlockHeader().Time,
+		Interval:   time.Hour,
+		EndTime:    ctx.BlockHeader().Time.Add(time.Hour * 2),
+		Conditions: &types.ExecutionConditions{
+			FeedbackLoops: []*types.FeedbackLoop{
+				{
+					// Intentionally invalid index (out of bounds)
+					MsgsIndex: 5,
+					FlowID:    0, //999
+				},
+			},
+		},
+		Configuration: &types.ExecutionConfiguration{
+			SaveResponses: true,
+		},
+	}
+	flow.Msgs = append(anyMsg1, anyMsg2...) // Add both messages to the flow
+
+	require.NoError(t, flow.ValidateBasic())
+
+	k.SetFlowInfo(ctx, &flow)
+	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
+
+	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
+
+	// Run HandleFlow, which internally calls handleRunFeedbackLoops
+	// We expect this to handle the invalid MsgsIndex and not panic
+	// but possibly to log or return an error related to slicing.
+	// Let's capture any panic for test safety.
+	var panicked bool
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				panicked = true
+			}
+		}()
+		k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime(), nil)
+	}()
+
+	require.False(t, panicked, "Expected no panic despite invalid MsgsIndex")
+
+	// Now check flow history for errors related to feedback loop execution
+	flowHistory := k.MustGetFlowHistory(ctx2, flow.ID)
+	require.NotEmpty(t, flowHistory)
+
+	for _, h := range flowHistory {
+		for _, errStr := range h.Errors {
+			if errStr != "" {
+				require.Contains(t, errStr, "invalid feedback loop MsgsIndex: 5 (only 2 messages in flow 999)")
+
+				t.Logf("Found flow history error: %s", errStr)
+			}
+		}
+	}
+
+	require.Equal(t, len(flowHistory), 1, "Expected one flow history entry for flow 999")
+	require.Equal(t, len(flowHistory[0].MsgResponses), 0, "Expected zero message responses in flow history due to invalid feedback loop")
+
+	ctx3 := createNextExecutionContext(ctx, flow.ExecTime.Add(time.Hour))
+
+	// Also check flow queue state after execution
+	queue := k.GetFlowsForBlock(ctx3)
+	require.NotNil(t, queue)
+	t.Logf("Flows queued after HandleFlow: %d", len(queue))
+}
+
+func TestHandleFlow_WithGoodFeedbackLoopIndex(t *testing.T) {
+	ctx, keepers, _ := createTestContext(t)
+	k := keepers.IntentKeeper
+
+	// Create valid funded accounts for all addresses
+	ownerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000)))
+	addr2, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 10_000_000)))
+
+	// Create a simple flow with 2 messages using valid addresses
+	msg1 := &banktypes.MsgSend{
+		FromAddress: ownerAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin("stake", 10)),
+	}
+	anyMsg1, err := types.PackTxMsgAnys([]sdk.Msg{msg1})
+	require.NoError(t, err)
+	msg2 := &banktypes.MsgSend{
+		FromAddress: ownerAddr.String(),
+		ToAddress:   addr2.String(),
+		Amount:      sdk.NewCoins(sdk.NewInt64Coin("stake", 20)),
+	}
+	anyMsg2, err := types.PackTxMsgAnys([]sdk.Msg{msg2})
+	require.NoError(t, err)
+
+	flow := types.FlowInfo{
+		ID:         999,
+		Owner:      ownerAddr.String(),
+		FeeAddress: ownerAddr.String(),
+		ExecTime:   ctx.BlockHeader().Time,
+		Interval:   time.Hour,
+		EndTime:    ctx.BlockHeader().Time.Add(time.Hour * 2),
+		Conditions: &types.ExecutionConditions{
+			FeedbackLoops: []*types.FeedbackLoop{
+				{
+					MsgsIndex:     1,
+					FlowID:        11,
+					MsgKey:        "Amount",
+					ValueType:     "sdk.Coin",
+					ResponseIndex: 0, // Use the first response from the flow history entry
+					ResponseKey:   "Amount.[0].Amount",
+				},
+			},
+		},
+		Configuration: &types.ExecutionConfiguration{
+			SaveResponses: true,
+		},
+	}
+	flow.Msgs = append(anyMsg1, anyMsg2...) // Add both messages to the flow
+
+	require.NoError(t, flow.ValidateBasic())
+
+	k.SetFlowInfo(ctx, &flow)
+	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
+
+	resp := distributiontypes.MsgWithdrawDelegatorRewardResponse{Amount: sdk.NewCoins(sdk.NewInt64Coin("stake", 100))}
+	respAny, err := types.PackTxMsgAnys([]sdk.Msg{&resp})
+	require.NoError(t, err)
+	k.SetFlowHistoryEntry(ctx, 11, &types.FlowHistoryEntry{MsgResponses: respAny})
+	flow11 := flow
+	flow11.ID = 11
+	k.SetFlowInfo(ctx, &flow11)
+
+	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
+
+	// Run HandleFlow, which internally calls handleRunFeedbackLoops
+	// We expect this to handle the invalid MsgsIndex and not panic
+	// but possibly to log or return an error related to slicing.
+	// Let's capture any panic for test safety.
+	var panicked bool
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				panicked = true
+			}
+		}()
+		k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime(), nil)
+	}()
+
+	require.False(t, panicked, "Expected no panic despite invalid MsgsIndex")
+
+	// Now check flow history for errors related to feedback loop execution
+	flowHistory := k.MustGetFlowHistory(ctx2, flow.ID)
+	require.NotEmpty(t, flowHistory)
+
+	for _, h := range flowHistory {
+		for _, errStr := range h.Errors {
+			if errStr != "" {
+				require.Contains(t, errStr, "invalid feedback loop MsgsIndex: 5 (only 2 messages in flow 999)")
+
+				t.Logf("Found flow history error: %s", errStr)
+			}
+		}
+	}
+
+	require.Equal(t, len(flowHistory), 1, "Expected one flow history entry for flow 999")
+	require.Equal(t, len(flowHistory[0].Errors), 0, "Expected no errors in flow history")
+	require.Equal(t, len(flowHistory[0].MsgResponses), 2, "Expected 2 message responses")
+
+	flowUpdated := k.GetFlowInfo(ctx2, flow.ID)
+	require.NotEqual(t, flow.Msgs[1], flowUpdated.Msgs[1], "Expected flow messages to be updated after HandleFlow execution")
+
+	ctx3 := createNextExecutionContext(ctx, flow.ExecTime.Add(time.Hour))
+
+	// Also check flow queue state after execution
+	queue := k.GetFlowsForBlock(ctx3)
+	require.NotNil(t, queue)
+	t.Logf("Flows queued after HandleFlow: %d", len(queue))
 }
