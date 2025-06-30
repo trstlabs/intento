@@ -4,21 +4,55 @@ title: Flow Fees
 description: How Flow fees are calculated and examples
 ---
 
-# Flow Fees: Calculation and Examples
+## Fees & Execution Costs
 
-## Overview
+Flow fees consist of two components:
 
-Flow fees are made up of two components:
+### 1. Gas Fee (always charged)
 
-1. **Gas Fee**:
-   A dynamic fee based on gas usage (`gasUsed`) and the multiplier `flowFlexFeeMul`. The gas fee is scaled based on the selected **denom** in `gasFeeCoins`.
+A dynamic fee calculated as:
 
-2. **Burn Fee**:
-   A fixed fee per message (`burnFeePerMsg`), applied only when using `INTO` as the payment denom.
+```
+gasUsed * flowFlexFeeMul
+```
 
-By default, **INTO** is the standard denom for paying Flow fees. If you select another gas denom (e.g., `ATOM`, `OSMO`), no burn fee applies. Only the gas fee.
+* The **denom** used to pay this fee is selected in the `gasFeeCoins` field.
+* The actual cost depends on gas usage and is scaled based on the selected token.
+
+### 2. Burn Fee (only when paying in $INTO)
+
+If the selected `gasFeeCoins` includes **INTO**, a **fixed burn fee** per message is added:
+
+```
+burnFee = burnFeePerMsg * messageCount
+```
+
+* This burn is **only** applied when using `INTO` as the gas token.
+* It is not charged if you're paying fees in ATOM, OSMO, or other tokens.
+
+> TL;DR:
+>
+> * Pay in INTO → gas fee + burn fee
+> * Pay in ATOM/OSMO → only gas fee
 
 ---
+
+## Hosted Account Fee (extra)
+
+When using a **hosted interchain account**, there's an additional fee charged **per execution**. This is set by the fee admin of the hosted account.
+
+In Intento Portal, we **automatically add a fee coin limit** during flow submission to cover this hosted fee — including a buffer to avoid underfunded execution errors.
+
+To check the latest hosted fee programmatically:
+
+```
+GET /intento/intent/v1beta1/hosted-account/{address}
+```
+
+**LCD URL:**
+[https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/hosted-account/-address-](https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/hosted-account/-address-)
+
+This endpoint returns the `fee_coins_supported` array of supported fee coins for that specific hosted account.
 
 ## Payment Source
 
