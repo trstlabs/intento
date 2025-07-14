@@ -196,6 +196,45 @@ func TestDistributeCoinsDifferentDenom(t *testing.T) {
 	require.Equal(t, sdk.NewInt64Coin(denom, 30_000_000), keeper.bankKeeper.GetBalance(ctx, ownerAddr, "uabcd").Add(fee))
 }
 
+func TestGetFeeAccountForMinFees_WithMultipleBalanceDenoms(t *testing.T) {
+	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
+
+	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(
+		sdk.NewInt64Coin("ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9", 9970),
+		sdk.NewInt64Coin("ibc/17409F270CB2FE874D5E3F339E958752DEC39319E5A44AD0399D2D1284AD499C", 38180),
+		sdk.NewInt64Coin("ibc/92E0120F15D037353CFB73C14651FC8930ADC05B93100FD7754D3A689E53B333", 39290),
+		sdk.NewInt64Coin("uinto", 983262761587),
+	))
+	ownerAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins())
+
+	params := types.DefaultParams()
+	params.BurnFeePerMsg = 10000
+	params.GasFeeCoins = sdk.NewCoins(
+		sdk.NewInt64Coin("ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9", 100),
+		sdk.NewInt64Coin("ibc/17409F270CB2FE874D5E3F339E958752DEC39319E5A44AD0399D2D1284AD499C", 1),
+		sdk.NewInt64Coin("ibc/92E0120F15D037353CFB73C14651FC8930ADC05B93100FD7754D3A689E53B333", 10),
+		sdk.NewInt64Coin("uinto", 10),
+	)
+
+	params.FlowFlexFeeMul = 10
+	_ = keeper.SetParams(ctx, params)
+	msg, _ := sdktypes.NewAnyWithValue(&types.MsgSubmitTx{})
+	flow := types.FlowInfo{
+		ID:         1,
+		FeeAddress: feeAddr.String(),
+		Owner:      ownerAddr.String(),
+		Msgs:       []*sdktypes.Any{msg, msg, msg, msg, msg, msg, msg, msg, msg, msg},
+	}
+
+	expectedGas := uint64(1000000)
+	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, flow, expectedGas)
+	require.NoError(t, err)
+	require.NotNil(t, acc)
+	require.NotEmpty(t, denom)
+	require.Equal(t, feeAddr.String(), acc.String())
+	require.Equal(t, "ibc/17409F270CB2FE874D5E3F339E958752DEC39319E5A44AD0399D2D1284AD499C", denom)
+}
+
 func NewMsg() []*sdktypes.Any {
 	msg, _ := sdktypes.NewAnyWithValue(&types.MsgSubmitTx{})
 	return []*sdktypes.Any{msg}
