@@ -265,6 +265,13 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 			k.Logger(ctx).Debug("no messages to process after feedback loops")
 			return nil
 		}
+		// Only try to distribute fees if we have a valid fee address and denom
+		feeAddr, feeDenom, feeErr := k.GetFeeAccountForMinFees(cacheCtx, flow, types.MaxGas)
+		if feeErr != nil {
+			errorString = appendError(errorString, feeErr.Error())
+		} else if feeAddr == nil || feeDenom == "" {
+			errorString = appendError(errorString, types.ErrBalanceTooLow)
+		}
 
 		k.Logger(ctx).Debug("triggering next msgs", "id", flow.ID, "msgs", len(nextMsgs))
 		flowCopy := flow
@@ -274,23 +281,17 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
 		}
 
-		// Only try to distribute fees if we have a valid fee address and denom
-		feeAddr, feeDenom, feeErr := k.GetFeeAccountForMinFees(cacheCtx, flow, types.MaxGas)
-		if feeErr != nil {
-			errorString = appendError(errorString, feeErr.Error())
-		} else if feeAddr == nil || feeDenom == "" || flowHistoryEntry.ExecFee.IsZero() || flowHistoryEntry.ExecFee.Denom != feeDenom {
-			fmt.Print("feeDenom", feeDenom, "flowHistoryEntry.ExecFee", flowHistoryEntry.ExecFee)
-			errorString = appendError(errorString, types.ErrBalanceTooLow)
+		fee, distErr := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
+		if distErr != nil {
+			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, distErr.Error()))
+		} else if feeDenom != flowHistoryEntry.ExecFee.Denom {
+			// If the fee denom is different, reset the exec fee to the new fee. TODO: Use Coins for ExecFee to handle this better
+			flowHistoryEntry.ExecFee = sdk.NewCoin(feeDenom, fee.Amount)
+			k.Logger(ctx).Debug("execFee reset to new denom")
 		} else {
-			k.Logger(ctx).Debug("feeDenom", feeDenom, "flowHistoryEntry.ExecFee", flowHistoryEntry.ExecFee)
-			fee, distErr := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
-			if distErr != nil {
-				errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, distErr.Error()))
-			} else {
-				flowHistoryEntry.ExecFee = flowHistoryEntry.ExecFee.Add(fee)
-			}
+			flowHistoryEntry.ExecFee = flowHistoryEntry.ExecFee.Add(fee)
 		}
-
+		k.Logger(ctx).Debug("execFee", flowHistoryEntry.ExecFee)
 		if errorString != "" {
 			flowHistoryEntry.Executed = false
 			flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, errorString)
