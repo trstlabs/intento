@@ -298,7 +298,12 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 				}
 
 				airdropShare := math.LegacyNewDecFromInt(account.Weight).Mul(normalizationFactor).TruncateInt()
+				// Cap liquid amount at 2,000,000 uinto (2 INTO)
+				maxLiquid := math.NewInt(2_000_000)
 				liquidAmount := airdropShare.MulRaw(2).QuoRaw(10) // 20% liquid
+				if liquidAmount.GT(maxLiquid) {
+					liquidAmount = maxLiquid
+				}
 				claimableAmount := airdropShare.Sub(liquidAmount)
 
 				liquidBalances = append(liquidBalances, banktypes.Balance{
