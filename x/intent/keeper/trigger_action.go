@@ -108,6 +108,12 @@ func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flo
 				return nil, err
 			}
 			continue
+		} else {
+			flowOwnerAddr, err := sdk.AccAddressFromBech32(flow.Owner)
+			if err != nil {
+				return nil, err
+			}
+			k.hooks.AfterActionLocal(cacheCtx, flowOwnerAddr)
 		}
 
 		handler := k.msgRouter.Handler(msg)
@@ -154,10 +160,8 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	if err != nil {
 		return err
 	}
-	// reward hooks
-	if msgClass == 3 {
-		k.hooks.AfterActionLocal(ctx, owner)
-	} else if msgClass == 1 {
+	// reward hook
+	if msgClass == 1 {
 		k.hooks.AfterActionICA(ctx, owner)
 	}
 
