@@ -28,13 +28,9 @@ func (k Keeper) AfterGovernanceVoted(ctx sdk.Context, recipient sdk.AccAddress) 
 
 func (k Keeper) AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) {
 	err := k.ClaimInitialCoinsForAction(ctx, delAddr, types.ACTION_DELEGATE_STAKE)
-	//fmt.Printf("ClaimInitialCoinsForAction  \n")
 	k.Logger(ctx).Debug("ClaimInitialCoinsForAction", "error", err, "for", delAddr)
 }
 
-// ________________________________________________________________________________________
-
-// Hooks wrapper struct for claims keeper
 type Hooks struct {
 	k Keeper
 }
@@ -113,39 +109,3 @@ func (h Hooks) AfterActionLocal(ctx sdk.Context, recipientAddr sdk.AccAddress) {
 func (h Hooks) AfterActionICA(ctx sdk.Context, recipientAddr sdk.AccAddress) {
 	h.k.AfterActionICA(ctx, recipientAddr)
 }
-
-func (h Hooks) AfterAutoSwap(ctx sdk.Context, recipientAddr sdk.AccAddress) {
-	//h.k.AfterAutoSwap(ctx, recipientAddr)
-}
-func (h Hooks) AfterRecurringSend(ctx sdk.Context, recipientAddr sdk.AccAddress) {
-	// h.k.AfterRecurringSend(ctx, recipientAddr)
-}
-
-// ________________________________________________________________________________________
-
-// for future reference
-/*
-
-// Compute hooks
-
-
-func (k Keeper) AfterItemTokenized(ctx context.Context, creator sdk.AccAddress) {
-    _, err := k.ClaimInitialCoinsForAction(ctx, creator, types.ActionItemTokenized)
-    if err != nil {
-        panic(err.Error())
-    }
-}*/
-
-//var _ itemtypes.ItemHooks = Hooks{}
-
-/*
-// item hooks
-
-func (h Hooks) AfterItemTokenized(ctx context.Context, recipientAddr sdk.AccAddress) {
-	//h.k.AfterItemTokenized(ctx, recipientAddr)
-}
-func (h Hooks) AfterItemBought(ctx context.Context, recipientAddr sdk.AccAddress) {
-	//h.k.AfterItemBought(ctx, recipientAddr)
-}
-//func (h Hooks) AfterItemEstimated(ctx context.Context, proposalID uint64) {}
-*/
