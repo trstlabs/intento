@@ -4,9 +4,9 @@ import sdk "github.com/cosmos/cosmos-sdk/types"
 
 type IntentHooks interface {
 
-	// AfterActionLocal is called after an action on behalf using authz
+	// AfterActionLocal is called after an action on the local chain
 	AfterActionLocal(ctx sdk.Context, sender sdk.AccAddress)
-	// AfterActionICA is called after a MsgExecuteContract or MsgInstantiateContract
+	// AfterActionICA is called after an action on the ICA chain
 	AfterActionICA(ctx sdk.Context, sender sdk.AccAddress)
 }
 

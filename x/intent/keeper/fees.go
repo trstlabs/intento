@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -64,11 +66,19 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.FlowInfo, feeAddr sd
 		if err != nil {
 			return sdk.Coin{}, err
 		}
-
 		err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(fixedFeeCoin))
 		if err != nil {
 			return sdk.Coin{}, errorsmod.Wrap(errorsmod.ErrPanic, "could not burn coins, this should never happen")
 		}
+		k.Logger(ctx).Debug("flow fee burn", "amount", fixedFeeCoin)
+
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				types.EventTypeFlowFeeBurn,
+				sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprintf("%d", flow.ID)),
+				sdk.NewAttribute(types.AttributeKeyFlowFeeBurnAmount, fixedFeeCoin.Amount.String()),
+			),
+		})
 
 	}
 
