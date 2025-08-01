@@ -542,7 +542,7 @@ func NewIntoApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			app.ClaimKeeper.Hooks(),
 		),
 	)
 
