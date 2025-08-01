@@ -1,6 +1,7 @@
 package msg_registry
 
 import (
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
@@ -8,6 +9,7 @@ import (
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	proto "github.com/cosmos/gogoproto/proto"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	cosmosevm "github.com/trstlabs/intento/x/intent/msg_registry/cosmos/evm/v1"
 	elysamm "github.com/trstlabs/intento/x/intent/msg_registry/elys/amm"
 	elyscommitment "github.com/trstlabs/intento/x/intent/msg_registry/elys/commitment"
@@ -172,6 +174,21 @@ var MsgRegistry = map[string]struct {
 	sdk.MsgTypeURL(&authztypes.MsgExec{}): {
 		func() proto.Message { return &authztypes.MsgExecResponse{} },
 		types.KeyFlowIncentiveForAuthzTx,
+	},
+
+	sdk.MsgTypeURL(&wasmtypes.MsgExecuteContract{}): {
+		func() proto.Message { return &wasmtypes.MsgExecuteContractResponse{} },
+		types.KeyFlowIncentiveForWasmTx,
+	},
+
+	sdk.MsgTypeURL(&wasmtypes.MsgInstantiateContract{}): {
+		func() proto.Message { return &wasmtypes.MsgInstantiateContractResponse{} },
+		types.KeyFlowIncentiveForWasmTx,
+	},
+
+	sdk.MsgTypeURL(&ibctransfertypes.MsgTransfer{}): {
+		func() proto.Message { return &ibctransfertypes.MsgTransferResponse{} },
+		types.KeyFlowIncentiveForSDKTx,
 	},
 
 	// Osmosis Gamm
