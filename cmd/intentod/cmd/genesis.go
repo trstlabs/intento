@@ -225,8 +225,9 @@ func PrepareGenesis(
 
 	// slashing module genesis
 	slashingGenState := slashingtypes.DefaultGenesisState()
-	slashingGenState.Params.SignedBlocksWindow = 30000 //similar to elys (30000) and comdex (25,920)
+	slashingGenState.Params.SignedBlocksWindow = 48000 // equal to 16 hours @ 1.3s block time
 	slashingGenState.Params = genesisParams.SlashingParams
+	genesisParams.SlashingParams.SlashFractionDowntime = math.LegacyNewDecWithPrec(0, 4) // 0% liveness slashing, as missing out rewards is enough penalty
 	slashingGenStateBz, err := cdc.MarshalJSON(slashingGenState)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal slashing genesis state: %w", err)
@@ -327,10 +328,10 @@ func MainnetGenesisParams() GenesisParams {
 
 	genParams.MintParams.ReductionFactor = math.LegacyNewDec(3).QuoInt64(4)
 	//31,536,000 seconds a year
-	genParams.MintParams.BlocksPerYear = uint64(31540000 / 2) //assuming 2s average block times, param to be updated periodically
+	genParams.MintParams.BlocksPerYear = uint64(24261538) //assuming 1.3s average block times, param to be updated periodically
 	// staking
 	genParams.StakingParams = stakingtypes.DefaultParams()
-	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 21 //3 weeks
+	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 14 //2 weeks
 	genParams.StakingParams.MaxValidators = 50
 	genParams.StakingParams.BondDenom = genParams.NativeCoinMetadatas[0].Base
 
@@ -432,9 +433,6 @@ func TestnetGenesisParams() GenesisParams {
 	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 5 // 5 days
 	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 5    // 5 days
 	genParams.ClaimParams.DurationVestingPeriods = []time.Duration{time.Minute, time.Minute * 2, time.Minute * 5, time.Minute}
-
-	//31,536,000 seconds a year and estimated 2s block times
-	genParams.MintParams.BlocksPerYear = uint64(31540000 / 2)
 
 	genParams.WasmParams.CodeUploadAccess = wasmtypes.AllowEverybody
 	genParams.WasmParams.InstantiateDefaultPermission = wasmtypes.AccessTypeEverybody
