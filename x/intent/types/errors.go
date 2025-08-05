@@ -32,7 +32,7 @@ var (
 	ErrIcs20Error        = errorsmod.Register("ics20-hooks", 24, "ics20 hook error")
 	ErrBadSender         = errorsmod.Register("ics20-hooks", 25, "bad sender")
 
-	ErrInvalidTime            = errorsmod.Register(ModuleName, 30, "time must be longer than 2 minutes from now")
+	ErrInvalidTime            = errorsmod.Register(ModuleName, 30, "time must be more than 1 minute from now")
 	ErrUpdateFlow             = errorsmod.Register(ModuleName, 31, "cannot update flow parameter")
 	ErrValidateMsgRegistryMsg = errorsmod.Register(ModuleName, 32, "could not validate Flow message")
 

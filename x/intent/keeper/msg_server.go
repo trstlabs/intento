@@ -117,7 +117,7 @@ func (k msgServer) RegisterAccountAndSubmitFlow(goCtx context.Context, msg *type
 // UpdateFlow implements the Msg/UpdateFlow interface
 func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (*types.MsgUpdateFlowResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	timeNowWindow := ctx.BlockTime().Add(time.Minute * 2)
+	timeNowWindow := ctx.BlockTime().Add(time.Minute * 1)
 	flow, err := k.TryGetFlowInfo(ctx, msg.ID)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
@@ -193,6 +193,7 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 	if msg.Conditions != nil {
 		err = updateConditions(flow.Conditions, msg.Msgs, flow.EndTime.Sub(timeNowWindow), flow.Interval)
 		if err != nil {
+			fmt.Printf("Error updating conditions: %v\n", err)
 			return nil, err
 		}
 
@@ -446,56 +447,91 @@ func checkAndParseFlowContent(
 		*HostedICAConfig,
 		nil
 }
-
 func updateConditions(
 	msgConditions *types.ExecutionConditions,
 	msgMsgs []*cdctypes.Any,
 	duration, interval time.Duration,
 ) error {
-	if msgConditions != nil && msgConditions.FeedbackLoops != nil {
-		for _, feedbackLoop := range msgConditions.FeedbackLoops {
-			// Validate MsgsIndex for FeedbackLoops
-			if int(feedbackLoop.MsgsIndex) >= len(msgMsgs) {
-				if msgMsgs[0].TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
-					msgExec := &authztypes.MsgExec{}
-					if err := proto.Unmarshal(msgMsgs[0].Value, msgExec); err != nil {
-						return errorsmod.Wrapf(types.ErrInvalidRequest, "msg exec could not unmarshal, cannot check conditions")
-					}
+	if msgConditions == nil {
+		return nil
+	}
 
-					if int(feedbackLoop.MsgsIndex) >= len(msgExec.Msgs) {
-						return errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgExec msgs array: %s", feedbackLoop.MsgsIndex, msgExec.Msgs)
-					} else {
-						return errorsmod.Wrapf(types.ErrInvalidRequest, "msgs index: %v must be shorter than length msgs array: %s", feedbackLoop.MsgsIndex, msgMsgs)
-					}
-				}
+	// --- FeedbackLoops validation ---
+	if msgConditions.FeedbackLoops != nil {
+		for _, loop := range msgConditions.FeedbackLoops {
+			if err := validateFeedbackLoop(loop, msgMsgs); err != nil {
+				return err
 			}
-			// Validate ICQConfig TimeoutDuration for FeedbackLoops
-			if feedbackLoop.ICQConfig != nil {
-				if feedbackLoop.ICQConfig.TimeoutDuration != 0 {
-					if feedbackLoop.ICQConfig.TimeoutDuration > duration || (interval != 0 && feedbackLoop.ICQConfig.TimeoutDuration > interval) {
-						return errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the flow interval or duration")
-					}
-				}
+			if err := validateTimeout("FeedbackLoop", loop.ICQConfig, duration, interval); err != nil {
+				return err
 			}
 		}
 	}
 
-	if msgConditions != nil && msgConditions.Comparisons != nil {
-		for _, comparison := range msgConditions.Comparisons {
-			// Validate ResponseIndex for Comparisons
-			if int(comparison.ResponseIndex) >= len(msgMsgs) {
-				return errorsmod.Wrapf(types.ErrInvalidRequest, "response index: %v must be shorter than length msgs array: %s", comparison.ResponseIndex, msgMsgs)
+	// --- Comparisons validation ---
+	if msgConditions.Comparisons != nil {
+		for _, cmp := range msgConditions.Comparisons {
+			if int(cmp.ResponseIndex) < 0 || int(cmp.ResponseIndex) >= len(msgMsgs) {
+				return errorsmod.Wrapf(
+					types.ErrInvalidRequest,
+					"Comparisons: response index %d out of bounds (len: %d)",
+					cmp.ResponseIndex, len(msgMsgs),
+				)
 			}
-			// Validate ICQConfig TimeoutDuration for Comparisons
-			if comparison.ICQConfig != nil {
-				if comparison.ICQConfig.TimeoutDuration != 0 {
-					if comparison.ICQConfig.TimeoutDuration > duration || (interval != 0 && comparison.ICQConfig.TimeoutDuration > interval) {
-						return errorsmod.Wrapf(types.ErrInvalidRequest, "TimeoutDuration must be shorter than the flow interval or duration")
-					}
-				}
+			if err := validateTimeout("Comparison", cmp.ICQConfig, duration, interval); err != nil {
+				return err
 			}
 		}
 	}
 
+	return nil
+}
+
+// --- Helper: FeedbackLoop validation ---
+func validateFeedbackLoop(loop *types.FeedbackLoop, msgMsgs []*cdctypes.Any) error {
+	if len(msgMsgs) == 0 || int(loop.MsgsIndex) < 0 {
+		return errorsmod.Wrapf(types.ErrInvalidRequest, "FeedbackLoop: empty msgMsgs or negative MsgsIndex")
+	}
+
+	if int(loop.MsgsIndex) >= len(msgMsgs) {
+		msg := msgMsgs[0]
+		if msg.TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
+			msgExec := &authztypes.MsgExec{}
+			if err := proto.Unmarshal(msg.Value, msgExec); err != nil {
+				return errorsmod.Wrapf(types.ErrInvalidRequest, "could not unmarshal MsgExec to validate FeedbackLoop MsgsIndex")
+			}
+			if int(loop.MsgsIndex) >= len(msgExec.Msgs) {
+				return errorsmod.Wrapf(types.ErrInvalidRequest,
+					"FeedbackLoop MsgsIndex %d out of bounds for MsgExec (len: %d)",
+					loop.MsgsIndex, len(msgExec.Msgs),
+				)
+			}
+			return errorsmod.Wrapf(types.ErrInvalidRequest,
+				"FeedbackLoop MsgsIndex %d out of bounds for msgMsgs (len: %d)",
+				loop.MsgsIndex, len(msgMsgs),
+			)
+		}
+
+		return errorsmod.Wrapf(types.ErrInvalidRequest,
+			"FeedbackLoop MsgsIndex %d out of bounds for msgMsgs (len: %d)",
+			loop.MsgsIndex, len(msgMsgs),
+		)
+	}
+	return nil
+}
+
+// --- Helper: Timeout validation ---
+func validateTimeout(label string, icq *types.ICQConfig, duration, interval time.Duration) error {
+	if icq == nil || icq.TimeoutDuration == 0 {
+		return nil
+	}
+	if icq.TimeoutDuration > duration {
+		return errorsmod.Wrapf(types.ErrInvalidRequest,
+			"%s TimeoutDuration (%s) exceeds flow duration (%s)", label, icq.TimeoutDuration, duration)
+	}
+	if interval != 0 && icq.TimeoutDuration > interval {
+		return errorsmod.Wrapf(types.ErrInvalidRequest,
+			"%s TimeoutDuration (%s) exceeds flow interval (%s)", label, icq.TimeoutDuration, interval)
+	}
 	return nil
 }
