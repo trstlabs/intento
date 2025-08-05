@@ -238,7 +238,7 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		govtypes.StoreKey, paramstypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey, feegrant.StoreKey, authzkeeper.StoreKey,
-		types.StoreKey, icacontrollertypes.StoreKey,
+		types.StoreKey, icacontrollertypes.StoreKey, claimtypes.StoreKey,
 	)
 
 	db := dbm.NewMemDB()
@@ -433,7 +433,19 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 		distKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
+	claimKeeper.SetParams(ctx, claimtypes.Params{
+		DurationUntilDecay:     time.Hour,
+		DurationOfDecay:        time.Hour * 5,
+		DurationVestingPeriods: []time.Duration{time.Hour, time.Hour, time.Hour, time.Hour},
+		ClaimDenom:             "uinto",
+	})
+	// Set initial claim records
+	claimKeeper.SetClaimRecords(ctx, []claimtypes.ClaimRecord{
+		{
+			Address: authtypes.NewModuleAddress(claimtypes.ModuleName).String(),
+			Status:  []claimtypes.Status{},
+		},
+	})
 	queryRouter := baseapp.NewGRPCQueryRouter()
 	queryRouter.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	msgServiceRouter := baseapp.NewMsgServiceRouter()
@@ -442,6 +454,11 @@ func CreateTestInput(t *testing.T, isCheckTx bool) (sdk.Context, TestKeepers, co
 	govKeeper := govkeeper.NewKeeper(
 		encodingConfig.Codec, runtime.NewKVStoreService(keys[govtypes.StoreKey]), accountKeeper, bankKeeper,
 		stakingKeeper, distKeeper, msgServiceRouter, govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	govKeeper.SetHooks(
+		govtypes.NewMultiGovHooks(
+			claimKeeper.Hooks(),
+		),
 	)
 	interchainQueryKeeper := interchainquerykeeper.NewKeeper(encodingConfig.Codec, runtime.NewKVStoreService(keys[interchainquerytypes.StoreKey]), ibcKeeper)
 

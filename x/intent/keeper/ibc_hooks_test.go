@@ -305,7 +305,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketFlowWithConditionsAndDeriv
 		"to_address": "%s"
 	}`, derivePlaceholderSender(ibctesting.FirstChannelID, addr), addrTo)
 
-	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0","conditions":{"stop_on_failure_of": [12345], "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}}}`, msg))
+	ackBytes := suite.receiveTransferPacket(addr, fmt.Sprintf(`{"flow": {"label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0","conditions":{"stop_on_failure_of": [12345], "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":0, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}}}`, msg))
 
 	var ack map[string]string // This can't be unmarshalled to Acknowledgement because it's fetched from the events
 	err := json.Unmarshal(ackBytes, &ack)
