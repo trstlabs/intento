@@ -511,23 +511,23 @@ func (m *QueryParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryParamsResponse proto.InternalMessageInfo
 
-// QueryHostedAccount is the request type for the Query/Params RPC method.
-type QueryHostedAccountRequest struct {
-	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+// QueryTrustlessExecutionAgent is the request type for the Query/Params RPC method.
+type QueryTrustlessExecutionAgentRequest struct {
+	AgentAddress string `protobuf:"bytes,1,opt,name=agent_address,json=agentAddress,proto3" json:"agent_address,omitempty"`
 }
 
-func (m *QueryHostedAccountRequest) Reset()         { *m = QueryHostedAccountRequest{} }
-func (m *QueryHostedAccountRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryHostedAccountRequest) ProtoMessage()    {}
-func (*QueryHostedAccountRequest) Descriptor() ([]byte, []int) {
+func (m *QueryTrustlessExecutionAgentRequest) Reset()         { *m = QueryTrustlessExecutionAgentRequest{} }
+func (m *QueryTrustlessExecutionAgentRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTrustlessExecutionAgentRequest) ProtoMessage()    {}
+func (*QueryTrustlessExecutionAgentRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_dc9802ab908297d2, []int{12}
 }
-func (m *QueryHostedAccountRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryTrustlessExecutionAgentRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryHostedAccountRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryTrustlessExecutionAgentRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryHostedAccountRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryTrustlessExecutionAgentRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -537,37 +537,37 @@ func (m *QueryHostedAccountRequest) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *QueryHostedAccountRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryHostedAccountRequest.Merge(m, src)
+func (m *QueryTrustlessExecutionAgentRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTrustlessExecutionAgentRequest.Merge(m, src)
 }
-func (m *QueryHostedAccountRequest) XXX_Size() int {
+func (m *QueryTrustlessExecutionAgentRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryHostedAccountRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryHostedAccountRequest.DiscardUnknown(m)
+func (m *QueryTrustlessExecutionAgentRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTrustlessExecutionAgentRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryHostedAccountRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryTrustlessExecutionAgentRequest proto.InternalMessageInfo
 
-// QueryHostedAccountResponse is the response type for the Query/HostedAccount
+// QueryTrustlessExecutionAgentResponse is the response type for the Query/TrustlessExecutionAgent
 // RPC method.
-type QueryHostedAccountResponse struct {
-	// HostedAccount
-	HostedAccount HostedAccount `protobuf:"bytes,1,opt,name=hosted_account,json=hostedAccount,proto3" json:"hosted_account"`
+type QueryTrustlessExecutionAgentResponse struct {
+	// TrustlessExecutionAgent
+	TrustlessExecutionAgent TrustlessExecutionAgent `protobuf:"bytes,1,opt,name=trustless_execution_agent,json=trustlessExecutionAgent,proto3" json:"trustless_execution_agent"`
 }
 
-func (m *QueryHostedAccountResponse) Reset()         { *m = QueryHostedAccountResponse{} }
-func (m *QueryHostedAccountResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryHostedAccountResponse) ProtoMessage()    {}
-func (*QueryHostedAccountResponse) Descriptor() ([]byte, []int) {
+func (m *QueryTrustlessExecutionAgentResponse) Reset()         { *m = QueryTrustlessExecutionAgentResponse{} }
+func (m *QueryTrustlessExecutionAgentResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTrustlessExecutionAgentResponse) ProtoMessage()    {}
+func (*QueryTrustlessExecutionAgentResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_dc9802ab908297d2, []int{13}
 }
-func (m *QueryHostedAccountResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryTrustlessExecutionAgentResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryHostedAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryTrustlessExecutionAgentResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryHostedAccountResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryTrustlessExecutionAgentResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -577,37 +577,37 @@ func (m *QueryHostedAccountResponse) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *QueryHostedAccountResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryHostedAccountResponse.Merge(m, src)
+func (m *QueryTrustlessExecutionAgentResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTrustlessExecutionAgentResponse.Merge(m, src)
 }
-func (m *QueryHostedAccountResponse) XXX_Size() int {
+func (m *QueryTrustlessExecutionAgentResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryHostedAccountResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryHostedAccountResponse.DiscardUnknown(m)
+func (m *QueryTrustlessExecutionAgentResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTrustlessExecutionAgentResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryHostedAccountResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryTrustlessExecutionAgentResponse proto.InternalMessageInfo
 
-// QueryHostedAccounts is the request type for the Query/HostedAccount RPC
+// QueryTrustlessExecutionAgents is the request type for the Query/TrustlessExecutionAgent RPC
 // method.
-type QueryHostedAccountsRequest struct {
+type QueryTrustlessExecutionAgentsRequest struct {
 	// Pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryHostedAccountsRequest) Reset()         { *m = QueryHostedAccountsRequest{} }
-func (m *QueryHostedAccountsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryHostedAccountsRequest) ProtoMessage()    {}
-func (*QueryHostedAccountsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryTrustlessExecutionAgentsRequest) Reset()         { *m = QueryTrustlessExecutionAgentsRequest{} }
+func (m *QueryTrustlessExecutionAgentsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTrustlessExecutionAgentsRequest) ProtoMessage()    {}
+func (*QueryTrustlessExecutionAgentsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_dc9802ab908297d2, []int{14}
 }
-func (m *QueryHostedAccountsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryTrustlessExecutionAgentsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryHostedAccountsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryTrustlessExecutionAgentsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryHostedAccountsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryTrustlessExecutionAgentsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -617,39 +617,39 @@ func (m *QueryHostedAccountsRequest) XXX_Marshal(b []byte, deterministic bool) (
 		return b[:n], nil
 	}
 }
-func (m *QueryHostedAccountsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryHostedAccountsRequest.Merge(m, src)
+func (m *QueryTrustlessExecutionAgentsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTrustlessExecutionAgentsRequest.Merge(m, src)
 }
-func (m *QueryHostedAccountsRequest) XXX_Size() int {
+func (m *QueryTrustlessExecutionAgentsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryHostedAccountsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryHostedAccountsRequest.DiscardUnknown(m)
+func (m *QueryTrustlessExecutionAgentsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTrustlessExecutionAgentsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryHostedAccountsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryTrustlessExecutionAgentsRequest proto.InternalMessageInfo
 
-// QueryHostedAccountsResponse is the response type for the Query/HostedAccount
+// QueryTrustlessExecutionAgentsResponse is the response type for the Query/TrustlessExecutionAgent
 // RPC method.
-type QueryHostedAccountsResponse struct {
-	// HostedAccounts
-	HostedAccounts []HostedAccount `protobuf:"bytes,1,rep,name=hosted_accounts,json=hostedAccounts,proto3" json:"hosted_accounts"`
+type QueryTrustlessExecutionAgentsResponse struct {
+	// TrustlessExecutionAgents
+	TrustlessExecutionAgents []TrustlessExecutionAgent `protobuf:"bytes,1,rep,name=trustless_execution_agents,json=trustlessExecutionAgents,proto3" json:"trustless_execution_agents"`
 	// Pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryHostedAccountsResponse) Reset()         { *m = QueryHostedAccountsResponse{} }
-func (m *QueryHostedAccountsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryHostedAccountsResponse) ProtoMessage()    {}
-func (*QueryHostedAccountsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryTrustlessExecutionAgentsResponse) Reset()         { *m = QueryTrustlessExecutionAgentsResponse{} }
+func (m *QueryTrustlessExecutionAgentsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTrustlessExecutionAgentsResponse) ProtoMessage()    {}
+func (*QueryTrustlessExecutionAgentsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_dc9802ab908297d2, []int{15}
 }
-func (m *QueryHostedAccountsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryTrustlessExecutionAgentsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryHostedAccountsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryTrustlessExecutionAgentsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryHostedAccountsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryTrustlessExecutionAgentsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -659,37 +659,41 @@ func (m *QueryHostedAccountsResponse) XXX_Marshal(b []byte, deterministic bool) 
 		return b[:n], nil
 	}
 }
-func (m *QueryHostedAccountsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryHostedAccountsResponse.Merge(m, src)
+func (m *QueryTrustlessExecutionAgentsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTrustlessExecutionAgentsResponse.Merge(m, src)
 }
-func (m *QueryHostedAccountsResponse) XXX_Size() int {
+func (m *QueryTrustlessExecutionAgentsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryHostedAccountsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryHostedAccountsResponse.DiscardUnknown(m)
+func (m *QueryTrustlessExecutionAgentsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTrustlessExecutionAgentsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryHostedAccountsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryTrustlessExecutionAgentsResponse proto.InternalMessageInfo
 
-// QueryHostedAccountsByAdminRequest
-type QueryHostedAccountsByAdminRequest struct {
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+// QueryTrustlessExecutionAgentsByFeeAdminRequest
+type QueryTrustlessExecutionAgentsByFeeAdminRequest struct {
+	FeeAdmin string `protobuf:"bytes,1,opt,name=fee_admin,json=feeAdmin,proto3" json:"fee_admin,omitempty"`
 	// Pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryHostedAccountsByAdminRequest) Reset()         { *m = QueryHostedAccountsByAdminRequest{} }
-func (m *QueryHostedAccountsByAdminRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryHostedAccountsByAdminRequest) ProtoMessage()    {}
-func (*QueryHostedAccountsByAdminRequest) Descriptor() ([]byte, []int) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) Reset() {
+	*m = QueryTrustlessExecutionAgentsByFeeAdminRequest{}
+}
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryTrustlessExecutionAgentsByFeeAdminRequest) ProtoMessage() {}
+func (*QueryTrustlessExecutionAgentsByFeeAdminRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_dc9802ab908297d2, []int{16}
 }
-func (m *QueryHostedAccountsByAdminRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryHostedAccountsByAdminRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryHostedAccountsByAdminRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryTrustlessExecutionAgentsByFeeAdminRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -699,39 +703,43 @@ func (m *QueryHostedAccountsByAdminRequest) XXX_Marshal(b []byte, deterministic 
 		return b[:n], nil
 	}
 }
-func (m *QueryHostedAccountsByAdminRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryHostedAccountsByAdminRequest.Merge(m, src)
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTrustlessExecutionAgentsByFeeAdminRequest.Merge(m, src)
 }
-func (m *QueryHostedAccountsByAdminRequest) XXX_Size() int {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryHostedAccountsByAdminRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryHostedAccountsByAdminRequest.DiscardUnknown(m)
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTrustlessExecutionAgentsByFeeAdminRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryHostedAccountsByAdminRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryTrustlessExecutionAgentsByFeeAdminRequest proto.InternalMessageInfo
 
-// QueryHostedAccountResponse is the response type for the Query/HostedAccount
+// QueryTrustlessExecutionAgentResponse is the response type for the Query/TrustlessExecutionAgent
 // RPC method.
-type QueryHostedAccountsByAdminResponse struct {
-	// HostedAccounts
-	HostedAccounts []HostedAccount `protobuf:"bytes,1,rep,name=hosted_accounts,json=hostedAccounts,proto3" json:"hosted_accounts"`
+type QueryTrustlessExecutionAgentsByFeeAdminResponse struct {
+	// TrustlessExecutionAgents
+	TrustlessExecutionAgents []TrustlessExecutionAgent `protobuf:"bytes,1,rep,name=trustless_execution_agents,json=trustlessExecutionAgents,proto3" json:"trustless_execution_agents"`
 	// Pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryHostedAccountsByAdminResponse) Reset()         { *m = QueryHostedAccountsByAdminResponse{} }
-func (m *QueryHostedAccountsByAdminResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryHostedAccountsByAdminResponse) ProtoMessage()    {}
-func (*QueryHostedAccountsByAdminResponse) Descriptor() ([]byte, []int) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) Reset() {
+	*m = QueryTrustlessExecutionAgentsByFeeAdminResponse{}
+}
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryTrustlessExecutionAgentsByFeeAdminResponse) ProtoMessage() {}
+func (*QueryTrustlessExecutionAgentsByFeeAdminResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_dc9802ab908297d2, []int{17}
 }
-func (m *QueryHostedAccountsByAdminResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryHostedAccountsByAdminResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryHostedAccountsByAdminResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryTrustlessExecutionAgentsByFeeAdminResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -741,17 +749,17 @@ func (m *QueryHostedAccountsByAdminResponse) XXX_Marshal(b []byte, deterministic
 		return b[:n], nil
 	}
 }
-func (m *QueryHostedAccountsByAdminResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryHostedAccountsByAdminResponse.Merge(m, src)
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTrustlessExecutionAgentsByFeeAdminResponse.Merge(m, src)
 }
-func (m *QueryHostedAccountsByAdminResponse) XXX_Size() int {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryHostedAccountsByAdminResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryHostedAccountsByAdminResponse.DiscardUnknown(m)
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTrustlessExecutionAgentsByFeeAdminResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryHostedAccountsByAdminResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryTrustlessExecutionAgentsByFeeAdminResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*QueryInterchainAccountFromAddressRequest)(nil), "intento.intent.v1beta1.QueryInterchainAccountFromAddressRequest")
@@ -766,12 +774,12 @@ func init() {
 	proto.RegisterType((*QueryFlowsForOwnerResponse)(nil), "intento.intent.v1beta1.QueryFlowsForOwnerResponse")
 	proto.RegisterType((*QueryParamsRequest)(nil), "intento.intent.v1beta1.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "intento.intent.v1beta1.QueryParamsResponse")
-	proto.RegisterType((*QueryHostedAccountRequest)(nil), "intento.intent.v1beta1.QueryHostedAccountRequest")
-	proto.RegisterType((*QueryHostedAccountResponse)(nil), "intento.intent.v1beta1.QueryHostedAccountResponse")
-	proto.RegisterType((*QueryHostedAccountsRequest)(nil), "intento.intent.v1beta1.QueryHostedAccountsRequest")
-	proto.RegisterType((*QueryHostedAccountsResponse)(nil), "intento.intent.v1beta1.QueryHostedAccountsResponse")
-	proto.RegisterType((*QueryHostedAccountsByAdminRequest)(nil), "intento.intent.v1beta1.QueryHostedAccountsByAdminRequest")
-	proto.RegisterType((*QueryHostedAccountsByAdminResponse)(nil), "intento.intent.v1beta1.QueryHostedAccountsByAdminResponse")
+	proto.RegisterType((*QueryTrustlessExecutionAgentRequest)(nil), "intento.intent.v1beta1.QueryTrustlessExecutionAgentRequest")
+	proto.RegisterType((*QueryTrustlessExecutionAgentResponse)(nil), "intento.intent.v1beta1.QueryTrustlessExecutionAgentResponse")
+	proto.RegisterType((*QueryTrustlessExecutionAgentsRequest)(nil), "intento.intent.v1beta1.QueryTrustlessExecutionAgentsRequest")
+	proto.RegisterType((*QueryTrustlessExecutionAgentsResponse)(nil), "intento.intent.v1beta1.QueryTrustlessExecutionAgentsResponse")
+	proto.RegisterType((*QueryTrustlessExecutionAgentsByFeeAdminRequest)(nil), "intento.intent.v1beta1.QueryTrustlessExecutionAgentsByFeeAdminRequest")
+	proto.RegisterType((*QueryTrustlessExecutionAgentsByFeeAdminResponse)(nil), "intento.intent.v1beta1.QueryTrustlessExecutionAgentsByFeeAdminResponse")
 }
 
 func init() {
@@ -779,72 +787,74 @@ func init() {
 }
 
 var fileDescriptor_dc9802ab908297d2 = []byte{
-	// 1036 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x97, 0xcf, 0x6f, 0xe3, 0xc4,
-	0x17, 0xc0, 0x33, 0xfd, 0x6e, 0xbb, 0xdf, 0xbe, 0xd0, 0x02, 0x43, 0x81, 0x60, 0x16, 0xb7, 0x75,
-	0xd5, 0x6e, 0xd2, 0x55, 0x3c, 0x9b, 0xac, 0x10, 0xb0, 0xe2, 0x40, 0x8b, 0xb6, 0xb4, 0x12, 0x12,
-	0x4b, 0xe0, 0x80, 0xe0, 0x50, 0x39, 0xb1, 0x93, 0x58, 0x4a, 0x66, 0x52, 0x8f, 0x4b, 0x89, 0xaa,
-	0x1e, 0x40, 0x02, 0x89, 0xdb, 0x4a, 0xfc, 0x09, 0x70, 0x40, 0x08, 0x04, 0x7f, 0x00, 0x37, 0x0e,
-	0xf4, 0xb8, 0xd2, 0x5e, 0x38, 0xad, 0xa0, 0xe5, 0x2f, 0xe0, 0xcc, 0x01, 0x79, 0xe6, 0x39, 0x8d,
-	0x4b, 0xe2, 0x24, 0x4b, 0x0e, 0x70, 0x72, 0x3c, 0x79, 0x6f, 0xde, 0xe7, 0xbd, 0x79, 0x3f, 0xc6,
-	0x60, 0xf9, 0x3c, 0xf4, 0x78, 0x28, 0x98, 0x7e, 0xb2, 0x0f, 0x4b, 0x55, 0x2f, 0x74, 0x4a, 0xec,
-	0xe0, 0xd0, 0x0b, 0xba, 0x76, 0x27, 0x10, 0xa1, 0xa0, 0xcf, 0xa0, 0x8c, 0xad, 0x9f, 0x36, 0xca,
-	0x18, 0x9b, 0x35, 0x21, 0xdb, 0x42, 0xb2, 0xaa, 0x23, 0x3d, 0xad, 0xd0, 0x53, 0xef, 0x38, 0x0d,
-	0x9f, 0x3b, 0xa1, 0x2f, 0xb8, 0xde, 0xc3, 0x58, 0x6a, 0x88, 0x86, 0x50, 0x3f, 0x59, 0xf4, 0x0b,
-	0x57, 0xaf, 0x35, 0x84, 0x68, 0xb4, 0x3c, 0xe6, 0x74, 0x7c, 0xe6, 0x70, 0x2e, 0x42, 0xa5, 0x22,
-	0xf1, 0xdf, 0xd5, 0x21, 0x6c, 0xf5, 0x96, 0x38, 0x42, 0x91, 0xcd, 0x21, 0x22, 0x4d, 0x21, 0x43,
-	0xcf, 0x75, 0x6a, 0x35, 0x71, 0xc8, 0x43, 0x94, 0x5d, 0x1b, 0x22, 0xdb, 0x71, 0x02, 0xa7, 0x8d,
-	0x36, 0x2d, 0x0f, 0xf2, 0x6f, 0x47, 0x9e, 0xec, 0xf1, 0xd0, 0x0b, 0x6a, 0x4d, 0xc7, 0xe7, 0x5b,
-	0x7a, 0x93, 0x9d, 0x40, 0xb4, 0xb7, 0x5c, 0x37, 0xf0, 0xa4, 0xac, 0x78, 0x07, 0x87, 0x9e, 0x0c,
-	0xe9, 0x12, 0xcc, 0x8a, 0x23, 0xee, 0x05, 0x39, 0xb2, 0x42, 0xf2, 0xf3, 0x15, 0xfd, 0x42, 0xd7,
-	0x60, 0xa1, 0x26, 0x38, 0xf7, 0x6a, 0x91, 0x2b, 0xfb, 0xbe, 0x9b, 0x9b, 0x51, 0xff, 0x3e, 0x76,
-	0xb1, 0xb8, 0xe7, 0x5a, 0xf7, 0x08, 0x14, 0xc6, 0xb0, 0x23, 0x3b, 0x82, 0x4b, 0x8f, 0xd6, 0xc0,
-	0xf0, 0x7b, 0x72, 0xfb, 0xe8, 0xd5, 0xbe, 0xa3, 0xa5, 0xb4, 0xf5, 0xed, 0xf5, 0x3f, 0x1e, 0x2e,
-	0xaf, 0x76, 0x9d, 0x76, 0xeb, 0xb6, 0x35, 0x5c, 0xd6, 0xaa, 0xe4, 0xfc, 0xcb, 0x06, 0xd1, 0x98,
-	0x65, 0xc1, 0x13, 0x8a, 0x68, 0xa7, 0x25, 0x8e, 0x62, 0x0f, 0x17, 0x61, 0xc6, 0x77, 0xd1, 0xbd,
-	0x19, 0xdf, 0xb5, 0xde, 0x83, 0x27, 0xfb, 0x64, 0x90, 0xee, 0x75, 0x98, 0x8f, 0x4e, 0x64, 0xdf,
-	0xe7, 0x75, 0xa1, 0x64, 0xb3, 0xe5, 0x15, 0x7b, 0x70, 0xca, 0xd8, 0x91, 0xe2, 0x1e, 0xaf, 0x8b,
-	0xed, 0x2b, 0xa7, 0x0f, 0x97, 0x33, 0x95, 0xff, 0xd7, 0xf1, 0xdd, 0x3a, 0x80, 0x67, 0x7b, 0x3b,
-	0xef, 0xfa, 0x32, 0x14, 0x41, 0x77, 0x08, 0x04, 0xdd, 0x01, 0xb8, 0x48, 0x2f, 0x15, 0xdd, 0x6c,
-	0x79, 0xc3, 0xd6, 0xb9, 0x68, 0x47, 0xb9, 0x68, 0xeb, 0xe4, 0x8d, 0x6d, 0xde, 0x75, 0x1a, 0x1e,
-	0xee, 0x55, 0xe9, 0xd3, 0xb4, 0xbe, 0x23, 0x90, 0xfb, 0xbb, 0x4d, 0x74, 0x6a, 0x17, 0xae, 0x36,
-	0xf5, 0x52, 0x8e, 0xac, 0xfc, 0x2f, 0x9f, 0x2d, 0xe7, 0xd3, 0x5c, 0x42, 0xed, 0x3b, 0x3c, 0x0c,
-	0xba, 0xe8, 0x5a, 0xac, 0x4e, 0xdf, 0x18, 0x80, 0x7b, 0x7d, 0x24, 0xae, 0xc6, 0x48, 0xf0, 0x7e,
-	0xd0, 0x17, 0xfc, 0x5e, 0x0e, 0x26, 0x83, 0x41, 0x1e, 0x39, 0x18, 0x5f, 0x11, 0xa0, 0xfd, 0xbb,
-	0x63, 0x18, 0xee, 0x00, 0xf4, 0xce, 0x56, 0x62, 0x24, 0xc6, 0x3d, 0xdc, 0xf9, 0xf8, 0x70, 0xe5,
-	0xf4, 0x62, 0xd0, 0x85, 0xe7, 0x2e, 0x28, 0x77, 0x44, 0xf0, 0x56, 0x54, 0x72, 0xe9, 0xf5, 0x38,
-	0xad, 0x74, 0xf9, 0x96, 0x80, 0x31, 0xc8, 0xf6, 0xbf, 0x34, 0x52, 0x4b, 0x78, 0x9e, 0x77, 0x55,
-	0x77, 0x43, 0x87, 0xac, 0x77, 0xe0, 0xa9, 0xc4, 0x2a, 0xc2, 0xbf, 0x0a, 0x73, 0xba, 0x0b, 0x62,
-	0x06, 0x99, 0xc3, 0xc0, 0xb5, 0x1e, 0x62, 0xa3, 0x8e, 0xf5, 0x22, 0x1e, 0xca, 0xae, 0x6a, 0xba,
-	0xd8, 0x56, 0xe2, 0x43, 0xc9, 0xc1, 0xd5, 0x44, 0xa3, 0xaa, 0xc4, 0xaf, 0x56, 0x07, 0xe3, 0x79,
-	0x49, 0x0d, 0x91, 0x2a, 0xb0, 0xa8, 0x9b, 0x78, 0xdc, 0xc3, 0x10, 0x6d, 0x7d, 0x18, 0x5a, 0x62,
-	0x1b, 0x24, 0x5c, 0x68, 0xf6, 0x2f, 0x5a, 0xee, 0x20, 0x8b, 0x53, 0x2f, 0xa5, 0x1f, 0x09, 0x3c,
-	0x3f, 0xd0, 0x0c, 0x7a, 0xf6, 0x2e, 0x3c, 0x9e, 0xf4, 0x2c, 0x4e, 0x97, 0x89, 0x5c, 0x5b, 0x4c,
-	0xb8, 0x36, 0xc5, 0xc4, 0xf9, 0x98, 0xc0, 0xea, 0x00, 0xfc, 0xed, 0xee, 0x96, 0xdb, 0xf6, 0x79,
-	0x5f, 0xad, 0x39, 0xd1, 0x7b, 0x5c, 0x6b, 0xea, 0x65, 0x6a, 0xb5, 0xf6, 0x13, 0x01, 0x2b, 0x8d,
-	0xe1, 0x3f, 0x11, 0xc9, 0xf2, 0x9f, 0x59, 0x98, 0x55, 0x5e, 0xd0, 0x07, 0x04, 0xae, 0xa5, 0x4d,
-	0x7a, 0xfa, 0xda, 0x30, 0xe0, 0x71, 0x2f, 0x23, 0xc6, 0xd6, 0x3f, 0xd8, 0x41, 0xb3, 0x5b, 0xf6,
-	0x27, 0x0f, 0x7e, 0xff, 0x62, 0x26, 0x4f, 0x37, 0xd8, 0x90, 0x9b, 0x12, 0x56, 0x6e, 0x31, 0x14,
-	0x45, 0xbf, 0xe6, 0xd0, 0xcf, 0x08, 0x5c, 0x89, 0x3a, 0x19, 0xcd, 0xa7, 0xda, 0xee, 0xbb, 0x50,
-	0x18, 0x85, 0x31, 0x24, 0x91, 0xa6, 0xa0, 0x68, 0xd6, 0xe8, 0x2a, 0x4b, 0xb9, 0x06, 0xb2, 0x63,
-	0xdf, 0x3d, 0xa1, 0x5f, 0x12, 0xc8, 0xf6, 0x8d, 0x61, 0xca, 0x46, 0x5a, 0x49, 0x5e, 0x31, 0x8c,
-	0x9b, 0xe3, 0x2b, 0x20, 0x5d, 0x49, 0xd1, 0xdd, 0xa0, 0x85, 0x34, 0xba, 0x22, 0xde, 0x01, 0x34,
-	0xe5, 0xa7, 0x04, 0x66, 0xd5, 0xec, 0xa0, 0xa3, 0xa3, 0xd0, 0x3b, 0xd6, 0xcd, 0x71, 0x44, 0x91,
-	0x69, 0x5d, 0x31, 0x2d, 0xd3, 0x17, 0xd2, 0x98, 0x24, 0xfd, 0x9e, 0xc0, 0x42, 0x62, 0x86, 0xd1,
-	0xd2, 0x68, 0x23, 0x97, 0x66, 0xad, 0x51, 0x9e, 0x44, 0x05, 0xf9, 0x5e, 0x52, 0x7c, 0x25, 0xca,
-	0x52, 0xf9, 0x8a, 0x75, 0x11, 0x14, 0xd5, 0xe8, 0x66, 0xc7, 0xea, 0x71, 0x42, 0x7f, 0x20, 0xb0,
-	0x90, 0xa8, 0xdc, 0x11, 0xc4, 0x83, 0x06, 0xd1, 0x08, 0xe2, 0x81, 0x43, 0xc8, 0x7a, 0x59, 0x11,
-	0x97, 0xe9, 0x4d, 0x96, 0xfa, 0x9d, 0x51, 0xc4, 0xf6, 0xc3, 0x8e, 0xb1, 0x42, 0x4e, 0xe8, 0x37,
-	0x04, 0x16, 0x93, 0xcd, 0x8b, 0x4e, 0x00, 0xd0, 0x3b, 0xfe, 0x5b, 0x13, 0xe9, 0x20, 0x35, 0x53,
-	0xd4, 0x05, 0x7a, 0x7d, 0x3c, 0x6a, 0x49, 0x7f, 0x26, 0xf0, 0xf4, 0xc0, 0x4e, 0x4b, 0x5f, 0x99,
-	0xc0, 0x7e, 0x72, 0x42, 0x18, 0xb7, 0x1f, 0x45, 0x75, 0xdc, 0x4c, 0xb9, 0xe4, 0x41, 0x14, 0xf8,
-	0xb6, 0xcf, 0x4f, 0xe8, 0xe7, 0x04, 0xe6, 0xf4, 0x1d, 0x85, 0xa6, 0x57, 0x4e, 0xe2, 0x5a, 0x64,
-	0xdc, 0x18, 0x4b, 0x16, 0xe1, 0x36, 0x14, 0xdc, 0x0a, 0x35, 0x59, 0xea, 0x07, 0xe5, 0xf6, 0x9b,
-	0xa7, 0xbf, 0x99, 0x99, 0xaf, 0xcf, 0xcc, 0xcc, 0xe9, 0x99, 0x49, 0xee, 0x9f, 0x99, 0xe4, 0xd7,
-	0x33, 0x93, 0xdc, 0x3b, 0x37, 0x33, 0xf7, 0xcf, 0xcd, 0xcc, 0x2f, 0xe7, 0x66, 0xe6, 0xfd, 0xcd,
-	0x86, 0x1f, 0x36, 0x0f, 0xab, 0x76, 0x4d, 0xb4, 0x59, 0x18, 0xc8, 0xb0, 0xe5, 0x54, 0x65, 0x6f,
-	0xd3, 0x8f, 0xe2, 0x6d, 0xc3, 0x6e, 0xc7, 0x93, 0xd5, 0x39, 0xf5, 0x7d, 0x7a, 0xeb, 0xaf, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0xe0, 0xbc, 0x72, 0x1d, 0xb1, 0x0f, 0x00, 0x00,
+	// 1070 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x57, 0xcf, 0x6f, 0x1b, 0xc5,
+	0x17, 0xf7, 0xe4, 0xdb, 0xe4, 0xdb, 0xbc, 0x34, 0x08, 0x86, 0x88, 0xb8, 0x4b, 0xd9, 0x24, 0x6b,
+	0x92, 0x3a, 0xa9, 0xbc, 0x4b, 0x0c, 0xe2, 0x50, 0x0a, 0xaa, 0x53, 0xc5, 0x6d, 0x10, 0x12, 0xc5,
+	0x70, 0x40, 0x70, 0xb0, 0xd6, 0xeb, 0xb1, 0xb3, 0x92, 0xbd, 0xe3, 0xec, 0x8c, 0x49, 0xad, 0x28,
+	0x12, 0x42, 0x02, 0x89, 0x5b, 0x25, 0xc4, 0x81, 0x33, 0x20, 0x71, 0x80, 0xff, 0x23, 0xc7, 0x4a,
+	0xbd, 0x70, 0x2a, 0x90, 0xc0, 0x19, 0x89, 0x3b, 0x12, 0xda, 0xd9, 0xb7, 0x1b, 0xbb, 0xcd, 0xae,
+	0x1d, 0xd7, 0x07, 0xc4, 0xc9, 0xde, 0xd9, 0xf7, 0xe3, 0xf3, 0x79, 0xf3, 0xe6, 0x33, 0x6f, 0xc1,
+	0x70, 0x3d, 0xc9, 0x3c, 0xc9, 0xad, 0xf0, 0xd7, 0xfa, 0x64, 0xb3, 0xc6, 0xa4, 0xbd, 0x69, 0xed,
+	0x75, 0x99, 0xdf, 0x33, 0x3b, 0x3e, 0x97, 0x9c, 0xbe, 0x80, 0x36, 0x66, 0xf8, 0x6b, 0xa2, 0x8d,
+	0xb6, 0xe1, 0x70, 0xd1, 0xe6, 0xc2, 0xaa, 0xd9, 0x82, 0x85, 0x0e, 0xb1, 0x7b, 0xc7, 0x6e, 0xba,
+	0x9e, 0x2d, 0x5d, 0xee, 0x85, 0x31, 0xb4, 0x85, 0x26, 0x6f, 0x72, 0xf5, 0xd7, 0x0a, 0xfe, 0xe1,
+	0xea, 0x95, 0x26, 0xe7, 0xcd, 0x16, 0xb3, 0xec, 0x8e, 0x6b, 0xd9, 0x9e, 0xc7, 0xa5, 0x72, 0x11,
+	0xf8, 0x76, 0x25, 0x01, 0x5b, 0xa3, 0xc5, 0xf7, 0xd1, 0xe4, 0xf5, 0x04, 0x13, 0xe9, 0x77, 0x85,
+	0x6c, 0x31, 0x21, 0xaa, 0xec, 0x1e, 0x73, 0xba, 0x41, 0xd4, 0xaa, 0xdd, 0x0c, 0xc0, 0x87, 0x7e,
+	0xb9, 0x04, 0xbf, 0x8e, 0xed, 0xdb, 0x6d, 0xcc, 0x6f, 0x30, 0xc8, 0xbf, 0x17, 0xb0, 0xda, 0xf1,
+	0x24, 0xf3, 0x9d, 0x5d, 0xdb, 0xf5, 0x4a, 0x8e, 0xc3, 0xbb, 0x9e, 0x2c, 0xfb, 0xbc, 0x5d, 0xaa,
+	0xd7, 0x7d, 0x26, 0x44, 0x85, 0xed, 0x75, 0x99, 0x90, 0x74, 0x01, 0xa6, 0xf9, 0xbe, 0xc7, 0xfc,
+	0x2c, 0x59, 0x26, 0xf9, 0xd9, 0x4a, 0xf8, 0x40, 0x73, 0x30, 0xef, 0x70, 0xcf, 0x63, 0x8e, 0x02,
+	0xe0, 0xd6, 0xb3, 0x53, 0xea, 0xed, 0xa5, 0xd3, 0xc5, 0x9d, 0xba, 0x71, 0x9f, 0xc0, 0xfa, 0x08,
+	0x79, 0x44, 0x87, 0x7b, 0x82, 0x51, 0x07, 0x34, 0x37, 0xb6, 0xab, 0xda, 0xa1, 0x61, 0xd5, 0x0e,
+	0xad, 0xc2, 0xec, 0x5b, 0xab, 0x7f, 0x3d, 0x5a, 0x5a, 0xe9, 0xd9, 0xed, 0xd6, 0x75, 0x23, 0xd9,
+	0xd6, 0xa8, 0x64, 0xdd, 0xc7, 0x13, 0x62, 0x32, 0xc3, 0x80, 0x67, 0x15, 0xa2, 0x72, 0x8b, 0xef,
+	0x47, 0x0c, 0x9f, 0x81, 0x29, 0xb7, 0x8e, 0xf4, 0xa6, 0xdc, 0xba, 0xf1, 0x21, 0x3c, 0xd7, 0x67,
+	0x83, 0xe8, 0x6e, 0xc1, 0x6c, 0xb0, 0x3b, 0x55, 0xd7, 0x6b, 0x70, 0x65, 0x3b, 0x57, 0x5c, 0x36,
+	0xcf, 0x6e, 0x1f, 0x33, 0x70, 0xdc, 0xf1, 0x1a, 0x7c, 0xeb, 0xc2, 0xd1, 0xa3, 0xa5, 0x4c, 0xe5,
+	0x62, 0x03, 0x9f, 0x8d, 0x3d, 0x58, 0x8c, 0x23, 0xdf, 0x71, 0x85, 0xe4, 0x7e, 0x2f, 0x01, 0x04,
+	0x2d, 0x03, 0x9c, 0xb6, 0x9a, 0xaa, 0xee, 0x5c, 0x71, 0xcd, 0x0c, 0xfb, 0xd2, 0x0c, 0xfa, 0xd2,
+	0x0c, 0x1b, 0x39, 0xca, 0x79, 0xd7, 0x6e, 0x32, 0x8c, 0x55, 0xe9, 0xf3, 0x34, 0x7e, 0x22, 0x90,
+	0x7d, 0x32, 0x27, 0x92, 0xba, 0x03, 0xff, 0xdf, 0x0d, 0x97, 0xb2, 0x64, 0xf9, 0x7f, 0xf9, 0xb9,
+	0x62, 0x3e, 0x8d, 0x12, 0x7a, 0x6f, 0x7b, 0xd2, 0xef, 0x21, 0xb5, 0xc8, 0x9d, 0xde, 0x3e, 0x03,
+	0xee, 0xd5, 0xa1, 0x70, 0x43, 0x18, 0x03, 0x78, 0x3f, 0xee, 0x2b, 0x7e, 0xdc, 0x83, 0x83, 0xc5,
+	0x20, 0x63, 0x17, 0xe3, 0x3b, 0x02, 0xb4, 0x3f, 0x3a, 0x96, 0x61, 0x1b, 0x20, 0xde, 0x5b, 0x81,
+	0x95, 0x18, 0x75, 0x73, 0x67, 0xa3, 0xcd, 0x15, 0x93, 0xab, 0x41, 0x0f, 0x2e, 0x9f, 0xa2, 0x2c,
+	0x73, 0xff, 0xdd, 0xe0, 0xc8, 0xa5, 0x9f, 0xc7, 0x49, 0xb5, 0xcb, 0x8f, 0x04, 0xb4, 0xb3, 0x72,
+	0xff, 0x4b, 0x2b, 0xb5, 0x80, 0xfb, 0x79, 0x57, 0xa9, 0x1b, 0x12, 0x32, 0xde, 0x87, 0xe7, 0x07,
+	0x56, 0x11, 0xfc, 0x0d, 0x98, 0x09, 0x55, 0x10, 0x3b, 0x48, 0x4f, 0x02, 0x1e, 0xfa, 0x21, 0x6c,
+	0xf4, 0x31, 0xde, 0x86, 0x9c, 0x0a, 0xfa, 0x41, 0x24, 0xc0, 0xdb, 0x91, 0xfe, 0x96, 0x02, 0xf9,
+	0x8d, 0xb6, 0x27, 0x07, 0xf3, 0x4a, 0x8e, 0x07, 0x85, 0xab, 0x72, 0x49, 0x2d, 0x46, 0x2a, 0xf4,
+	0x0d, 0x81, 0x97, 0xd3, 0x83, 0x21, 0xe4, 0x3d, 0xb8, 0x9c, 0x28, 0xf8, 0xc8, 0xc2, 0x4a, 0x62,
+	0x91, 0x10, 0x1b, 0x69, 0x2d, 0xca, 0xb3, 0x5f, 0x1b, 0x5e, 0x3a, 0xb4, 0x89, 0x9f, 0xc9, 0x3f,
+	0x08, 0xac, 0x0e, 0x49, 0x88, 0xc5, 0x10, 0xa0, 0x25, 0x16, 0x23, 0x6a, 0xc6, 0x31, 0xab, 0x91,
+	0x4d, 0xa8, 0xc6, 0x04, 0x5b, 0xf5, 0x6b, 0x02, 0x66, 0x2a, 0xcf, 0xad, 0x5e, 0x99, 0xb1, 0x52,
+	0xbd, 0xed, 0x7a, 0x51, 0x89, 0x5f, 0x84, 0xd9, 0x06, 0x63, 0x55, 0x3b, 0x58, 0xc3, 0x3e, 0xba,
+	0xd8, 0x40, 0x9b, 0x89, 0x9d, 0xf8, 0x3f, 0x09, 0x58, 0x23, 0xe3, 0xfa, 0x2f, 0xec, 0x44, 0xf1,
+	0xd3, 0x79, 0x98, 0x56, 0x8c, 0xe9, 0x43, 0x02, 0x57, 0xd2, 0x66, 0x13, 0x7a, 0x33, 0x89, 0xc4,
+	0xa8, 0xe3, 0x93, 0x56, 0x7a, 0x8a, 0x08, 0x21, 0x76, 0xc3, 0xfc, 0xec, 0xe1, 0xef, 0x5f, 0x4d,
+	0xe5, 0xe9, 0x9a, 0x95, 0x30, 0xdb, 0xa1, 0xd4, 0x14, 0x24, 0x2f, 0xb8, 0x8e, 0x4d, 0xbf, 0x20,
+	0x70, 0x21, 0xd0, 0x5e, 0x9a, 0x4f, 0xcd, 0xdd, 0x37, 0x02, 0x69, 0xeb, 0x23, 0x58, 0x22, 0x9a,
+	0x75, 0x85, 0x26, 0x47, 0x57, 0xac, 0x94, 0x21, 0xd6, 0x3a, 0x70, 0xeb, 0x87, 0xf4, 0x5b, 0x02,
+	0x73, 0x7d, 0x83, 0x03, 0xb5, 0x86, 0x66, 0x19, 0x1c, 0x8a, 0xb4, 0x57, 0x46, 0x77, 0x40, 0x74,
+	0x9b, 0x0a, 0xdd, 0x35, 0xba, 0x9e, 0x86, 0xae, 0x80, 0x53, 0x4b, 0x88, 0xf2, 0x73, 0x02, 0xd3,
+	0xea, 0xb6, 0xa3, 0xc3, 0xab, 0x10, 0x6f, 0xeb, 0xc6, 0x28, 0xa6, 0x88, 0x69, 0x55, 0x61, 0x5a,
+	0xa2, 0x2f, 0xa5, 0x61, 0x12, 0xf4, 0x7b, 0x02, 0xf3, 0x03, 0xb7, 0x2e, 0xdd, 0x1c, 0x9e, 0xe4,
+	0xb1, 0xe9, 0x40, 0x2b, 0x9e, 0xc7, 0x05, 0xf1, 0x15, 0x14, 0xbe, 0xab, 0x74, 0x35, 0x15, 0x9f,
+	0x75, 0xa0, 0x26, 0x8d, 0x43, 0xfa, 0x0b, 0x81, 0xc5, 0x84, 0x33, 0x4c, 0xdf, 0x48, 0x4d, 0x9f,
+	0x7e, 0x75, 0x6a, 0x37, 0xc6, 0x73, 0x46, 0x16, 0x3b, 0x8a, 0xc5, 0x2d, 0x5a, 0xb2, 0x86, 0x7d,
+	0x39, 0x15, 0x62, 0xc5, 0x2a, 0x28, 0xc5, 0xb2, 0x0e, 0x06, 0x6e, 0xec, 0xc3, 0x40, 0x16, 0xb2,
+	0x49, 0x6a, 0x48, 0xc7, 0x42, 0x19, 0xf7, 0xcd, 0x9b, 0x63, 0x7a, 0x23, 0xc9, 0xeb, 0x8a, 0xe4,
+	0x6b, 0xb4, 0x78, 0x6e, 0x92, 0x82, 0xfe, 0x4d, 0xc0, 0x18, 0xae, 0xf1, 0xb4, 0x3c, 0x16, 0xc2,
+	0x27, 0x2e, 0x2f, 0xed, 0xf6, 0x53, 0xc7, 0x41, 0xce, 0x65, 0xc5, 0xf9, 0x26, 0x7d, 0xeb, 0xfc,
+	0x9c, 0xad, 0x83, 0xf8, 0xfe, 0x3c, 0xa4, 0x5f, 0x12, 0x98, 0x09, 0x27, 0x3b, 0x9a, 0x7e, 0x7a,
+	0x07, 0x86, 0x49, 0xed, 0xda, 0x48, 0xb6, 0x88, 0x75, 0x4d, 0x61, 0x5d, 0xa6, 0xba, 0x95, 0xfa,
+	0x19, 0xbe, 0xf5, 0xce, 0xd1, 0x6f, 0x7a, 0xe6, 0x87, 0x63, 0x3d, 0x73, 0x74, 0xac, 0x93, 0x07,
+	0xc7, 0x3a, 0xf9, 0xf5, 0x58, 0x27, 0xf7, 0x4f, 0xf4, 0xcc, 0x83, 0x13, 0x3d, 0xf3, 0xf3, 0x89,
+	0x9e, 0xf9, 0x68, 0xa3, 0xe9, 0xca, 0xdd, 0x6e, 0xcd, 0x74, 0x78, 0xdb, 0x92, 0xbe, 0x90, 0x2d,
+	0xbb, 0x26, 0xe2, 0xa0, 0xf7, 0xa2, 0xb0, 0xb2, 0xd7, 0x61, 0xa2, 0x36, 0xa3, 0xbe, 0xea, 0x5f,
+	0xfd, 0x27, 0x00, 0x00, 0xff, 0xff, 0xf1, 0x75, 0xbd, 0xdc, 0xf3, 0x10, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -866,14 +876,16 @@ type QueryClient interface {
 	Flow(ctx context.Context, in *QueryFlowRequest, opts ...grpc.CallOption) (*QueryFlowResponse, error)
 	// FlowHistory returns the flow history
 	FlowHistory(ctx context.Context, in *QueryFlowHistoryRequest, opts ...grpc.CallOption) (*QueryFlowHistoryResponse, error)
-	// Flows returns the all auto-executing interchain account messages
+	// Flows returns the all flows
 	Flows(ctx context.Context, in *QueryFlowsRequest, opts ...grpc.CallOption) (*QueryFlowsResponse, error)
-	// FlowsForOwner returns the auto-executing interchain account messages for
-	// given owner
+	// FlowsForOwner returns all flows for a given owner
 	FlowsForOwner(ctx context.Context, in *QueryFlowsForOwnerRequest, opts ...grpc.CallOption) (*QueryFlowsForOwnerResponse, error)
-	HostedAccount(ctx context.Context, in *QueryHostedAccountRequest, opts ...grpc.CallOption) (*QueryHostedAccountResponse, error)
-	HostedAccounts(ctx context.Context, in *QueryHostedAccountsRequest, opts ...grpc.CallOption) (*QueryHostedAccountsResponse, error)
-	HostedAccountsByAdmin(ctx context.Context, in *QueryHostedAccountsByAdminRequest, opts ...grpc.CallOption) (*QueryHostedAccountsByAdminResponse, error)
+	// TrustlessExecutionAgent returns the trustless excution agent information for a given hosted address
+	TrustlessExecutionAgent(ctx context.Context, in *QueryTrustlessExecutionAgentRequest, opts ...grpc.CallOption) (*QueryTrustlessExecutionAgentResponse, error)
+	// TrustlessExecutionAgents returns all trustless excution agents
+	TrustlessExecutionAgents(ctx context.Context, in *QueryTrustlessExecutionAgentsRequest, opts ...grpc.CallOption) (*QueryTrustlessExecutionAgentsResponse, error)
+	// TrustlessExecutionAgentsByFeeAdmin returns all trustless excution agents for a given fee admin address
+	TrustlessExecutionAgentsByFeeAdmin(ctx context.Context, in *QueryTrustlessExecutionAgentsByFeeAdminRequest, opts ...grpc.CallOption) (*QueryTrustlessExecutionAgentsByFeeAdminResponse, error)
 	// Params returns the total set of Intent parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
@@ -931,27 +943,27 @@ func (c *queryClient) FlowsForOwner(ctx context.Context, in *QueryFlowsForOwnerR
 	return out, nil
 }
 
-func (c *queryClient) HostedAccount(ctx context.Context, in *QueryHostedAccountRequest, opts ...grpc.CallOption) (*QueryHostedAccountResponse, error) {
-	out := new(QueryHostedAccountResponse)
-	err := c.cc.Invoke(ctx, "/intento.intent.v1beta1.Query/HostedAccount", in, out, opts...)
+func (c *queryClient) TrustlessExecutionAgent(ctx context.Context, in *QueryTrustlessExecutionAgentRequest, opts ...grpc.CallOption) (*QueryTrustlessExecutionAgentResponse, error) {
+	out := new(QueryTrustlessExecutionAgentResponse)
+	err := c.cc.Invoke(ctx, "/intento.intent.v1beta1.Query/TrustlessExecutionAgent", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) HostedAccounts(ctx context.Context, in *QueryHostedAccountsRequest, opts ...grpc.CallOption) (*QueryHostedAccountsResponse, error) {
-	out := new(QueryHostedAccountsResponse)
-	err := c.cc.Invoke(ctx, "/intento.intent.v1beta1.Query/HostedAccounts", in, out, opts...)
+func (c *queryClient) TrustlessExecutionAgents(ctx context.Context, in *QueryTrustlessExecutionAgentsRequest, opts ...grpc.CallOption) (*QueryTrustlessExecutionAgentsResponse, error) {
+	out := new(QueryTrustlessExecutionAgentsResponse)
+	err := c.cc.Invoke(ctx, "/intento.intent.v1beta1.Query/TrustlessExecutionAgents", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *queryClient) HostedAccountsByAdmin(ctx context.Context, in *QueryHostedAccountsByAdminRequest, opts ...grpc.CallOption) (*QueryHostedAccountsByAdminResponse, error) {
-	out := new(QueryHostedAccountsByAdminResponse)
-	err := c.cc.Invoke(ctx, "/intento.intent.v1beta1.Query/HostedAccountsByAdmin", in, out, opts...)
+func (c *queryClient) TrustlessExecutionAgentsByFeeAdmin(ctx context.Context, in *QueryTrustlessExecutionAgentsByFeeAdminRequest, opts ...grpc.CallOption) (*QueryTrustlessExecutionAgentsByFeeAdminResponse, error) {
+	out := new(QueryTrustlessExecutionAgentsByFeeAdminResponse)
+	err := c.cc.Invoke(ctx, "/intento.intent.v1beta1.Query/TrustlessExecutionAgentsByFeeAdmin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -976,14 +988,16 @@ type QueryServer interface {
 	Flow(context.Context, *QueryFlowRequest) (*QueryFlowResponse, error)
 	// FlowHistory returns the flow history
 	FlowHistory(context.Context, *QueryFlowHistoryRequest) (*QueryFlowHistoryResponse, error)
-	// Flows returns the all auto-executing interchain account messages
+	// Flows returns the all flows
 	Flows(context.Context, *QueryFlowsRequest) (*QueryFlowsResponse, error)
-	// FlowsForOwner returns the auto-executing interchain account messages for
-	// given owner
+	// FlowsForOwner returns all flows for a given owner
 	FlowsForOwner(context.Context, *QueryFlowsForOwnerRequest) (*QueryFlowsForOwnerResponse, error)
-	HostedAccount(context.Context, *QueryHostedAccountRequest) (*QueryHostedAccountResponse, error)
-	HostedAccounts(context.Context, *QueryHostedAccountsRequest) (*QueryHostedAccountsResponse, error)
-	HostedAccountsByAdmin(context.Context, *QueryHostedAccountsByAdminRequest) (*QueryHostedAccountsByAdminResponse, error)
+	// TrustlessExecutionAgent returns the trustless excution agent information for a given hosted address
+	TrustlessExecutionAgent(context.Context, *QueryTrustlessExecutionAgentRequest) (*QueryTrustlessExecutionAgentResponse, error)
+	// TrustlessExecutionAgents returns all trustless excution agents
+	TrustlessExecutionAgents(context.Context, *QueryTrustlessExecutionAgentsRequest) (*QueryTrustlessExecutionAgentsResponse, error)
+	// TrustlessExecutionAgentsByFeeAdmin returns all trustless excution agents for a given fee admin address
+	TrustlessExecutionAgentsByFeeAdmin(context.Context, *QueryTrustlessExecutionAgentsByFeeAdminRequest) (*QueryTrustlessExecutionAgentsByFeeAdminResponse, error)
 	// Params returns the total set of Intent parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 }
@@ -1007,14 +1021,14 @@ func (*UnimplementedQueryServer) Flows(ctx context.Context, req *QueryFlowsReque
 func (*UnimplementedQueryServer) FlowsForOwner(ctx context.Context, req *QueryFlowsForOwnerRequest) (*QueryFlowsForOwnerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FlowsForOwner not implemented")
 }
-func (*UnimplementedQueryServer) HostedAccount(ctx context.Context, req *QueryHostedAccountRequest) (*QueryHostedAccountResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HostedAccount not implemented")
+func (*UnimplementedQueryServer) TrustlessExecutionAgent(ctx context.Context, req *QueryTrustlessExecutionAgentRequest) (*QueryTrustlessExecutionAgentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TrustlessExecutionAgent not implemented")
 }
-func (*UnimplementedQueryServer) HostedAccounts(ctx context.Context, req *QueryHostedAccountsRequest) (*QueryHostedAccountsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HostedAccounts not implemented")
+func (*UnimplementedQueryServer) TrustlessExecutionAgents(ctx context.Context, req *QueryTrustlessExecutionAgentsRequest) (*QueryTrustlessExecutionAgentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TrustlessExecutionAgents not implemented")
 }
-func (*UnimplementedQueryServer) HostedAccountsByAdmin(ctx context.Context, req *QueryHostedAccountsByAdminRequest) (*QueryHostedAccountsByAdminResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HostedAccountsByAdmin not implemented")
+func (*UnimplementedQueryServer) TrustlessExecutionAgentsByFeeAdmin(ctx context.Context, req *QueryTrustlessExecutionAgentsByFeeAdminRequest) (*QueryTrustlessExecutionAgentsByFeeAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TrustlessExecutionAgentsByFeeAdmin not implemented")
 }
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
@@ -1114,56 +1128,56 @@ func _Query_FlowsForOwner_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_HostedAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryHostedAccountRequest)
+func _Query_TrustlessExecutionAgent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTrustlessExecutionAgentRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).HostedAccount(ctx, in)
+		return srv.(QueryServer).TrustlessExecutionAgent(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/intento.intent.v1beta1.Query/HostedAccount",
+		FullMethod: "/intento.intent.v1beta1.Query/TrustlessExecutionAgent",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).HostedAccount(ctx, req.(*QueryHostedAccountRequest))
+		return srv.(QueryServer).TrustlessExecutionAgent(ctx, req.(*QueryTrustlessExecutionAgentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_HostedAccounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryHostedAccountsRequest)
+func _Query_TrustlessExecutionAgents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTrustlessExecutionAgentsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).HostedAccounts(ctx, in)
+		return srv.(QueryServer).TrustlessExecutionAgents(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/intento.intent.v1beta1.Query/HostedAccounts",
+		FullMethod: "/intento.intent.v1beta1.Query/TrustlessExecutionAgents",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).HostedAccounts(ctx, req.(*QueryHostedAccountsRequest))
+		return srv.(QueryServer).TrustlessExecutionAgents(ctx, req.(*QueryTrustlessExecutionAgentsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_HostedAccountsByAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryHostedAccountsByAdminRequest)
+func _Query_TrustlessExecutionAgentsByFeeAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTrustlessExecutionAgentsByFeeAdminRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).HostedAccountsByAdmin(ctx, in)
+		return srv.(QueryServer).TrustlessExecutionAgentsByFeeAdmin(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/intento.intent.v1beta1.Query/HostedAccountsByAdmin",
+		FullMethod: "/intento.intent.v1beta1.Query/TrustlessExecutionAgentsByFeeAdmin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).HostedAccountsByAdmin(ctx, req.(*QueryHostedAccountsByAdminRequest))
+		return srv.(QueryServer).TrustlessExecutionAgentsByFeeAdmin(ctx, req.(*QueryTrustlessExecutionAgentsByFeeAdminRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1212,16 +1226,16 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_FlowsForOwner_Handler,
 		},
 		{
-			MethodName: "HostedAccount",
-			Handler:    _Query_HostedAccount_Handler,
+			MethodName: "TrustlessExecutionAgent",
+			Handler:    _Query_TrustlessExecutionAgent_Handler,
 		},
 		{
-			MethodName: "HostedAccounts",
-			Handler:    _Query_HostedAccounts_Handler,
+			MethodName: "TrustlessExecutionAgents",
+			Handler:    _Query_TrustlessExecutionAgents_Handler,
 		},
 		{
-			MethodName: "HostedAccountsByAdmin",
-			Handler:    _Query_HostedAccountsByAdmin_Handler,
+			MethodName: "TrustlessExecutionAgentsByFeeAdmin",
+			Handler:    _Query_TrustlessExecutionAgentsByFeeAdmin_Handler,
 		},
 		{
 			MethodName: "Params",
@@ -1684,7 +1698,7 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryHostedAccountRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryTrustlessExecutionAgentRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1694,27 +1708,27 @@ func (m *QueryHostedAccountRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryHostedAccountRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryHostedAccountRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Address) > 0 {
-		i -= len(m.Address)
-		copy(dAtA[i:], m.Address)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+	if len(m.AgentAddress) > 0 {
+		i -= len(m.AgentAddress)
+		copy(dAtA[i:], m.AgentAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.AgentAddress)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryHostedAccountResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryTrustlessExecutionAgentResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1724,18 +1738,18 @@ func (m *QueryHostedAccountResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryHostedAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryHostedAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size, err := m.HostedAccount.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.TrustlessExecutionAgent.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -1747,7 +1761,7 @@ func (m *QueryHostedAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryHostedAccountsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryTrustlessExecutionAgentsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1757,12 +1771,12 @@ func (m *QueryHostedAccountsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryHostedAccountsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryHostedAccountsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1782,7 +1796,7 @@ func (m *QueryHostedAccountsRequest) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryHostedAccountsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryTrustlessExecutionAgentsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1792,12 +1806,12 @@ func (m *QueryHostedAccountsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryHostedAccountsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryHostedAccountsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1814,10 +1828,10 @@ func (m *QueryHostedAccountsResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.HostedAccounts) > 0 {
-		for iNdEx := len(m.HostedAccounts) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.TrustlessExecutionAgents) > 0 {
+		for iNdEx := len(m.TrustlessExecutionAgents) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.HostedAccounts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.TrustlessExecutionAgents[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1831,7 +1845,7 @@ func (m *QueryHostedAccountsResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryHostedAccountsByAdminRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1841,12 +1855,12 @@ func (m *QueryHostedAccountsByAdminRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryHostedAccountsByAdminRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryHostedAccountsByAdminRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1863,17 +1877,17 @@ func (m *QueryHostedAccountsByAdminRequest) MarshalToSizedBuffer(dAtA []byte) (i
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.Admin)))
+	if len(m.FeeAdmin) > 0 {
+		i -= len(m.FeeAdmin)
+		copy(dAtA[i:], m.FeeAdmin)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.FeeAdmin)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryHostedAccountsByAdminResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1883,12 +1897,12 @@ func (m *QueryHostedAccountsByAdminResponse) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *QueryHostedAccountsByAdminResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryHostedAccountsByAdminResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1905,10 +1919,10 @@ func (m *QueryHostedAccountsByAdminResponse) MarshalToSizedBuffer(dAtA []byte) (
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.HostedAccounts) > 0 {
-		for iNdEx := len(m.HostedAccounts) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.TrustlessExecutionAgents) > 0 {
+		for iNdEx := len(m.TrustlessExecutionAgents) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.HostedAccounts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.TrustlessExecutionAgents[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -2111,31 +2125,31 @@ func (m *QueryParamsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryHostedAccountRequest) Size() (n int) {
+func (m *QueryTrustlessExecutionAgentRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Address)
+	l = len(m.AgentAddress)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
 
-func (m *QueryHostedAccountResponse) Size() (n int) {
+func (m *QueryTrustlessExecutionAgentResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.HostedAccount.Size()
+	l = m.TrustlessExecutionAgent.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
-func (m *QueryHostedAccountsRequest) Size() (n int) {
+func (m *QueryTrustlessExecutionAgentsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2148,14 +2162,14 @@ func (m *QueryHostedAccountsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryHostedAccountsResponse) Size() (n int) {
+func (m *QueryTrustlessExecutionAgentsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.HostedAccounts) > 0 {
-		for _, e := range m.HostedAccounts {
+	if len(m.TrustlessExecutionAgents) > 0 {
+		for _, e := range m.TrustlessExecutionAgents {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -2167,13 +2181,13 @@ func (m *QueryHostedAccountsResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryHostedAccountsByAdminRequest) Size() (n int) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Admin)
+	l = len(m.FeeAdmin)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -2184,14 +2198,14 @@ func (m *QueryHostedAccountsByAdminRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryHostedAccountsByAdminResponse) Size() (n int) {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.HostedAccounts) > 0 {
-		for _, e := range m.HostedAccounts {
+	if len(m.TrustlessExecutionAgents) > 0 {
+		for _, e := range m.TrustlessExecutionAgents {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -3385,7 +3399,7 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryHostedAccountRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryTrustlessExecutionAgentRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3408,15 +3422,15 @@ func (m *QueryHostedAccountRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryHostedAccountRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryHostedAccountRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field AgentAddress", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3444,7 +3458,7 @@ func (m *QueryHostedAccountRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Address = string(dAtA[iNdEx:postIndex])
+			m.AgentAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3467,7 +3481,7 @@ func (m *QueryHostedAccountRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryHostedAccountResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryTrustlessExecutionAgentResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3490,15 +3504,15 @@ func (m *QueryHostedAccountResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryHostedAccountResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryHostedAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field HostedAccount", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustlessExecutionAgent", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3525,7 +3539,7 @@ func (m *QueryHostedAccountResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.HostedAccount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.TrustlessExecutionAgent.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3550,7 +3564,7 @@ func (m *QueryHostedAccountResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryHostedAccountsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryTrustlessExecutionAgentsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3573,10 +3587,10 @@ func (m *QueryHostedAccountsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryHostedAccountsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryHostedAccountsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3636,7 +3650,7 @@ func (m *QueryHostedAccountsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryHostedAccountsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryTrustlessExecutionAgentsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3659,15 +3673,15 @@ func (m *QueryHostedAccountsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryHostedAccountsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryHostedAccountsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field HostedAccounts", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustlessExecutionAgents", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3694,8 +3708,8 @@ func (m *QueryHostedAccountsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.HostedAccounts = append(m.HostedAccounts, HostedAccount{})
-			if err := m.HostedAccounts[len(m.HostedAccounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.TrustlessExecutionAgents = append(m.TrustlessExecutionAgents, TrustlessExecutionAgent{})
+			if err := m.TrustlessExecutionAgents[len(m.TrustlessExecutionAgents)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3756,7 +3770,7 @@ func (m *QueryHostedAccountsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryHostedAccountsByAdminRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3779,15 +3793,15 @@ func (m *QueryHostedAccountsByAdminRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryHostedAccountsByAdminRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentsByFeeAdminRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryHostedAccountsByAdminRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentsByFeeAdminRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeAdmin", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3815,7 +3829,7 @@ func (m *QueryHostedAccountsByAdminRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
+			m.FeeAdmin = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -3874,7 +3888,7 @@ func (m *QueryHostedAccountsByAdminRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryHostedAccountsByAdminResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryTrustlessExecutionAgentsByFeeAdminResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3897,15 +3911,15 @@ func (m *QueryHostedAccountsByAdminResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryHostedAccountsByAdminResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentsByFeeAdminResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryHostedAccountsByAdminResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryTrustlessExecutionAgentsByFeeAdminResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field HostedAccounts", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TrustlessExecutionAgents", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3932,8 +3946,8 @@ func (m *QueryHostedAccountsByAdminResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.HostedAccounts = append(m.HostedAccounts, HostedAccount{})
-			if err := m.HostedAccounts[len(m.HostedAccounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.TrustlessExecutionAgents = append(m.TrustlessExecutionAgents, TrustlessExecutionAgent{})
+			if err := m.TrustlessExecutionAgents[len(m.TrustlessExecutionAgents)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

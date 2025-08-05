@@ -37,7 +37,7 @@ func TestCreateFlow(t *testing.T) {
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.TrustlessExecutionAgentExecutionConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 
 	// Verify that the flow was created correctly
@@ -74,7 +74,7 @@ func TestCreateFlowWithZeroFeeFundsWorks(t *testing.T) {
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.TrustlessExecutionAgentExecutionConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 
 	// Verify that the flow was created correctly
@@ -112,10 +112,10 @@ func TestGetFlowsForBlock(t *testing.T) {
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.TrustlessExecutionAgentExecutionConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.TrustlessExecutionAgentExecutionConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 	flows := keepers.IntentKeeper.GetFlowsForBlock(ctx.WithBlockTime(startTime.Add(interval)))
 	require.Equal(t, len(flows), 2)
@@ -140,7 +140,7 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 	connectionID := "connection-1"
 
 	// Call the CreateFlow function
-	err := keepers.IntentKeeper.CreateFlow(ctx, owner, "label", []*cdctypes.Any{}, duration, interval, startTime, sdk.Coins{}, configuration, types.HostedICAConfig{}, portID, connectionID, types.ExecutionConditions{})
+	err := keepers.IntentKeeper.CreateFlow(ctx, owner, "label", []*cdctypes.Any{}, duration, interval, startTime, sdk.Coins{}, configuration, types.TrustlessExecutionAgentExecutionConfig{}, portID, connectionID, types.ExecutionConditions{})
 	require.NoError(t, err)
 	flow := keepers.IntentKeeper.GetFlowInfo(ctx, 1)
 	require.NotNil(t, flow.FeeAddress)
@@ -171,7 +171,7 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 		newStakeMsg(),    // Index 5 - Second stake (updated by feedback)
 	}
 
-	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil, ExecFee: sdk.NewCoin("stake", math.NewInt(100))})
+	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil, ExecFee: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))})
 
 	// Setup feedback loops
 	flow.Conditions = &types.ExecutionConditions{

@@ -35,7 +35,7 @@ Intento eliminates the need for bots and privileged smart contracts, enabling di
 - **Direct IBC, ICA & ICQ Integration** – By integrating Inter-Blockchain Communication (IBC), Interchain Accounts (ICA), and Interchain Queries (ICQ), Intento facilitates secure, automated, and cross-chain workflows without requiring intermediary execution layers.
 - **Conditions, Comparisons & Feedback Loops** – Execution logic can be condition-based, supporting real-time comparisons, iterative feedback loops, and adaptive automation.
 - **Advanced Use Cases** – Supports conditional payments, streaming transactions, auto-compounding, and portfolio optimization, making it a powerful tool for DeFi and beyond.
-- **Single Token Fee Abstraction** – With hosted accounts, users can pay all fees in a single token (e.g., INTO or ATOM), simplifying automation and reducing friction.
+- **Single Token Fee Abstraction** – With trustless excution agents, users can pay all fees in a single token (e.g., INTO or ATOM), simplifying automation and reducing friction.
 
 ### How Intento Differs from Anoma & Agoric  
 
@@ -69,7 +69,7 @@ Differences:
 
 - **Intento is simple, user-owned, and requires no smart contracts** – Agoric’s Orchestration API is powerful but requires developers to manage remote accounts, multi-block async execution, and timer-based scheduling.
 - **Agoric is better suited for complex custom workflows** that require fine-tuning and for protocols that need to build a complex custom solution or want to manage and monetize orchestration infrastructure.
-- **Intento enables monetization through hosted accounts** – Protocols and integrators can offer hosted execution, which abstracts away host chain fees while keeping user flows self-custodial.
+- **Intento enables monetization through trustless excution agents** – Protocols and integrators can offer hosted execution, which abstracts away host chain fees while keeping user flows self-custodial.
 
 Agoric Orchestration API features:
 
@@ -83,7 +83,7 @@ Agoric Orchestration API features:
 - **Governance-Driven Execution Parameters** – The community governs execution scalability and fee burn parameters, ensuring long-term sustainability.
 - **Monetization for Integrators** – Integrators can host interchain accounts, abstracting host chain fees and allowing users to pay fees in a single token (e.g., INTO or ATOM), making automation seamless.
 - **Decentralized Revenue Model** – Execution services can be monetized while maintaining full user control and self-custodial execution.
-- **Permissionless Hosting** – Any integrator can run hosted interchain accounts, monetizing by charging fees while ensuring non-custodial execution for users.
+- **Permissionless Hosting** – Any integrator can run trustless excution agent, monetizing by charging fees while ensuring non-custodial execution for users.
 
 ### A New Standard for Intent-Based Execution  
 

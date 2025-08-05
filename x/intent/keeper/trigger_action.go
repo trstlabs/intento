@@ -20,27 +20,27 @@ import (
 
 func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdctypes.Any, error) {
 	// local flow
-	if (flow.ICAConfig == nil || flow.ICAConfig.ConnectionID == "") && (flow.HostedICAConfig == nil || flow.HostedICAConfig.HostedAddress == "") {
+	if (flow.SelfHostedICAConfig == nil || flow.SelfHostedICAConfig.ConnectionID == "") && (flow.TrustlessExecutionAgentExecutionConfig == nil || flow.TrustlessExecutionAgentExecutionConfig.AgentAddress == "") {
 		txMsgs := flow.GetTxMsgs(k.cdc)
 		msgResponses, err := handleLocalFlow(k, ctx, txMsgs, *flow)
 		return err == nil, msgResponses, errorsmod.Wrap(err, "could execute local flow")
 	}
 
-	connectionID := flow.ICAConfig.ConnectionID
-	portID := flow.ICAConfig.PortID
+	connectionID := flow.SelfHostedICAConfig.ConnectionID
+	portID := flow.SelfHostedICAConfig.PortID
 	triggerAddress := flow.Owner
-	//get hosted account from hosted config
-	if flow.HostedICAConfig != nil && flow.HostedICAConfig.HostedAddress != "" {
-		hostedAccount := k.GetHostedAccount(ctx, flow.HostedICAConfig.HostedAddress)
-		if hostedAccount.HostedAddress == "" || hostedAccount.ICAConfig == nil {
-			return false, nil, errorsmod.Wrapf(types.ErrInvalidHostedAccount, "hosted account or ICAConfig is nil for address %s", flow.HostedICAConfig.HostedAddress)
+	//get trustless excution agent from hosted config
+	if flow.TrustlessExecutionAgentExecutionConfig != nil && flow.TrustlessExecutionAgentExecutionConfig.AgentAddress != "" {
+		trustlessExecutionAgent := k.GetTrustlessExecutionAgent(ctx, flow.TrustlessExecutionAgentExecutionConfig.AgentAddress)
+		if trustlessExecutionAgent.AgentAddress == "" || trustlessExecutionAgent.ICAConfig == nil {
+			return false, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessExecutionAgent, "trustless excution agent or ICAConfig is nil for address %s", flow.TrustlessExecutionAgentExecutionConfig.AgentAddress)
 		}
-		connectionID = hostedAccount.ICAConfig.ConnectionID
-		portID = hostedAccount.ICAConfig.PortID
-		triggerAddress = hostedAccount.HostedAddress
-		err := k.SendFeesToHostedAdmin(ctx, *flow, hostedAccount)
+		connectionID = trustlessExecutionAgent.ICAConfig.ConnectionID
+		portID = trustlessExecutionAgent.ICAConfig.PortID
+		triggerAddress = trustlessExecutionAgent.AgentAddress
+		err := k.SendFeesToHostedAdmin(ctx, *flow, trustlessExecutionAgent)
 		if err != nil {
-			return false, nil, errorsmod.Wrap(err, "could not pay hosted account")
+			return false, nil, errorsmod.Wrap(err, "could not pay trustless excution agent")
 		}
 
 	}
@@ -166,6 +166,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	}
 
 	flowHistoryEntry.Executed = true
+	flowHistoryEntry.PacketSequence = seq
 
 	if flow.Configuration.SaveResponses {
 		flowHistoryEntry.MsgResponses = append(flowHistoryEntry.MsgResponses, msgResponses...)
@@ -288,12 +289,12 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 		fee, distErr := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
 		if distErr != nil {
 			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, distErr.Error()))
-		} else if feeDenom != flowHistoryEntry.ExecFee.Denom {
+		} else if len(flowHistoryEntry.ExecFee) == 0 || feeDenom != flowHistoryEntry.ExecFee[0].Denom {
 			// If the fee denom is different, reset the exec fee to the new fee. TODO: Use Coins for ExecFee to handle this better
-			flowHistoryEntry.ExecFee = sdk.NewCoin(feeDenom, fee.Amount)
+			flowHistoryEntry.ExecFee = sdk.NewCoins(sdk.NewCoin(feeDenom, fee.Amount))
 			k.Logger(ctx).Debug("execFee reset to new denom")
 		} else {
-			flowHistoryEntry.ExecFee = flowHistoryEntry.ExecFee.Add(fee)
+			flowHistoryEntry.ExecFee = sdk.NewCoins(flowHistoryEntry.ExecFee[0].Add(fee))
 		}
 		k.Logger(ctx).Debug("execFee", flowHistoryEntry.ExecFee)
 		if errorString != "" {

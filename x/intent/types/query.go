@@ -56,28 +56,28 @@ func NewQueryFlowHistoryRequest(id string) *QueryFlowHistoryRequest {
 	return &QueryFlowHistoryRequest{Id: id}
 }
 
-// NewQueryHostedAccountRequest creates and returns a new QueryHostedAccountsRequest
-func NewQueryHostedAccountRequest(address string) *QueryHostedAccountRequest {
-	return &QueryHostedAccountRequest{Address: address}
+// NewQueryTrustlessExecutionAgentRequest creates and returns a new QueryTrustlessExecutionAgentsRequest
+func NewQueryTrustlessExecutionAgentRequest(agentAddress string) *QueryTrustlessExecutionAgentRequest {
+	return &QueryTrustlessExecutionAgentRequest{AgentAddress: agentAddress}
 }
 
-// NewQueryHostedAccountResponse creates and returns a new QueryHostedAccountsResponse
-func NewQueryHostedAccountResponse(hostedAccount HostedAccount) *QueryHostedAccountResponse {
-	return &QueryHostedAccountResponse{
-		HostedAccount: hostedAccount,
+// NewQueryTrustlessExecutionAgentResponse creates and returns a new QueryTrustlessExecutionAgentsResponse
+func NewQueryTrustlessExecutionAgentResponse(trustlessExecutionAgent TrustlessExecutionAgent) *QueryTrustlessExecutionAgentResponse {
+	return &QueryTrustlessExecutionAgentResponse{
+		TrustlessExecutionAgent: trustlessExecutionAgent,
 	}
 }
 
-// NewQueryHostedAccountRequest creates and returns a new QueryHostedAccountsRequest
-func NewQueryHostedAccountsRequest(pagination *query.PageRequest) *QueryHostedAccountsRequest {
-	return &QueryHostedAccountsRequest{
+// NewQueryTrustlessExecutionAgentRequest creates and returns a new QueryTrustlessExecutionAgentsRequest
+func NewQueryTrustlessExecutionAgentsRequest(pagination *query.PageRequest) *QueryTrustlessExecutionAgentsRequest {
+	return &QueryTrustlessExecutionAgentsRequest{
 		Pagination: pagination,
 	}
 }
 
-// NewQueryHostedAccountResponse creates and returns a new QueryHostedAccountsResponse
-func NewQueryHostedAccountsResponse(hostedAccounts []HostedAccount) *QueryHostedAccountsResponse {
-	return &QueryHostedAccountsResponse{
-		HostedAccounts: hostedAccounts,
+// NewQueryTrustlessExecutionAgentResponse creates and returns a new QueryTrustlessExecutionAgentsResponse
+func NewQueryTrustlessExecutionAgentsResponse(trustlessExecutionAgents []TrustlessExecutionAgent) *QueryTrustlessExecutionAgentsResponse {
+	return &QueryTrustlessExecutionAgentsResponse{
+		TrustlessExecutionAgents: trustlessExecutionAgents,
 	}
 }

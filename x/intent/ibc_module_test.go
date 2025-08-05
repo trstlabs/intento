@@ -124,7 +124,7 @@ func TestFeedbackLoopWithdrawSwapStake(t *testing.T) {
 
 	historyEntry := &types.FlowHistoryEntry{
 		MsgResponses: []*cdctypes.Any{},
-		ExecFee:      sdk.NewCoin("stake", math.NewInt(100)),
+		ExecFee:      sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 	}
 	k.SetCurrentFlowHistoryEntry(ctx, flow.ID, historyEntry)
 
@@ -244,7 +244,7 @@ func TestFeedbackLoopWithdrawSwapStakeTwice(t *testing.T) {
 
 	historyEntry := &types.FlowHistoryEntry{
 		MsgResponses: []*cdctypes.Any{},
-		ExecFee:      sdk.NewCoin("stake", math.NewInt(100)),
+		ExecFee:      sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 	}
 	k.SetCurrentFlowHistoryEntry(ctx, flow.ID, historyEntry)
 

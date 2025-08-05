@@ -31,7 +31,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 	}
 
 	// Validate the memo
-	isFlowRouted, ownerAddr, msgsBytes, label, connectionID, hostConnectionID, duration, interval, startAt, endTime, registerICA, id, hostedAddress, hostedFeeLimit, configuration, conditions, version, err := ValidateAndParseMemo(data.GetMemo())
+	isFlowRouted, ownerAddr, msgsBytes, label, connectionID, hostConnectionID, duration, interval, startAt, endTime, registerICA, id, agentAddress, hostedFeeLimit, configuration, conditions, version, err := ValidateAndParseMemo(data.GetMemo())
 	if !isFlowRouted {
 		im.keeper.Logger(ctx).Debug("ics20 packet not routed")
 		return im.app.OnRecvPacket(ctx, packet, relayer)
@@ -56,7 +56,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 	}
 
 	// check to ensure the owner is creating the flow from the same chain as the destination. Only then we trust the sender
-	isToSourceChain := im.keeper.FlowIsToSourceChain(ctx, packet.GetDestChannel(), packet.GetDestPort(), connectionID, txMsgsAnys, hostedAddress)
+	isToSourceChain := im.keeper.FlowIsToSourceChain(ctx, packet.GetDestChannel(), packet.GetDestPort(), connectionID, txMsgsAnys, agentAddress)
 
 	ownerAddr, errAck := makeOwnerForChannelSender(ownerAddr, isToSourceChain, &packet, data)
 	if errAck != nil {
@@ -127,7 +127,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 			StartAt:       startAt,
 			Configuration: &configuration,
 			Conditions:    &conditions,
-			HostedICAConfig: &types.HostedICAConfig{HostedAddress: hostedAddress,
+			TrustlessExecutionAgentExecutionConfig: &types.TrustlessExecutionAgentExecutionConfig{AgentAddress: agentAddress,
 				FeeCoinLimit: hostedFeeLimit},
 		}
 		response, err := updateFlow(im.keeper, ctx, &msg)
@@ -153,7 +153,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 			Configuration: &configuration,
 			Conditions:    &conditions,
 			ConnectionID:  connectionID,
-			HostedICAConfig: &types.HostedICAConfig{HostedAddress: hostedAddress,
+			TrustlessExecutionAgentExecutionConfig: &types.TrustlessExecutionAgentExecutionConfig{AgentAddress: agentAddress,
 				FeeCoinLimit: hostedFeeLimit},
 		}
 		response, err := submitFlow(im.keeper, ctx, &msg)
@@ -281,7 +281,7 @@ func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]inter
 	return true, jsonObject
 }
 
-func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddress, msgsBytes [][]byte, label, connectionID, hostConnectionID, duration, interval string, startAt uint64, endTime uint64, registerICA bool, id uint64, hostedAddress string, hostedFeeLimit sdk.Coin, configuration types.ExecutionConfiguration, conditions types.ExecutionConditions, version string, err error) {
+func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddress, msgsBytes [][]byte, label, connectionID, hostConnectionID, duration, interval string, startAt uint64, endTime uint64, registerICA bool, id uint64, agentAddress string, hostedFeeLimit sdk.Coin, configuration types.ExecutionConfiguration, conditions types.ExecutionConditions, version string, err error) {
 	isFlowRouted, metadata := jsonStringHasKey(memo, "flow")
 	if !isFlowRouted {
 		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", nil
@@ -384,18 +384,18 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 		}
 	}
 
-	//optional hosted account
-	hostedAddress, ok = flow["hosted_account"].(string)
+	//optional trustless excution agent
+	agentAddress, ok = flow["trustless_execution_agent"].(string)
 	if !ok {
-		hostedAddress = ""
+		agentAddress = ""
 	}
 
-	hostedFeeLimitString, ok := flow["hosted_fee_limit"].(string)
+	hostedFeeLimitString, ok := flow["host_fee_limit"].(string)
 	if ok {
-		// return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0 , "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["hosted_fee_limit"]`)
+		// return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0 , "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["host_fee_limit"]`)
 		hostedFeeLimit, err = sdk.ParseCoinNormalized(hostedFeeLimitString)
 		if err != nil {
-			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["hosted_fee_limit"]`)
+			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["host_fee_limit"]`)
 		}
 	}
 
@@ -479,7 +479,7 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 		msgsBytes = append(msgsBytes, msgBytes)
 	}
 
-	return isFlowRouted, ownerAddr, msgsBytes, label, connectionID, hostConnectionID, duration, interval, startAt, endTime, registerICA, id, hostedAddress, hostedFeeLimit, configuration, conditions, version, nil
+	return isFlowRouted, ownerAddr, msgsBytes, label, connectionID, hostConnectionID, duration, interval, startAt, endTime, registerICA, id, agentAddress, hostedFeeLimit, configuration, conditions, version, nil
 }
 
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the

@@ -472,7 +472,7 @@ func TestFeedbackLoopNoDuplicates(t *testing.T) {
 	historyEntry := &types.FlowHistoryEntry{
 		ScheduledExecTime: flowInfo.ExecTime,
 		ActualExecTime:    flowInfo.ExecTime,
-		ExecFee:           sdk.NewCoin("stake", math.NewInt(0)),
+		ExecFee:           sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0))),
 		Executed:          true,
 		TimedOut:          false,
 		MsgResponses:      responses, // Use the actual responses from TriggerFlow

@@ -166,15 +166,15 @@ func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.A
 
 func createBaseFlowInfo(ownerAddr sdk.AccAddress, flowAddr sdk.AccAddress) types.FlowInfo {
 	flowInfo := types.FlowInfo{
-		ID:            1,
-		Owner:         ownerAddr.String(),
-		FeeAddress:    flowAddr.String(),
-		Msgs:          []*cdctypes.Any{},
-		Interval:      time.Second * 20,
-		StartTime:     time.Now().Add(time.Hour * -1),
-		EndTime:       time.Now().Add(time.Second * 20),
-		ICAConfig:     &types.ICAConfig{},
-		Configuration: &types.ExecutionConfiguration{SaveResponses: true},
+		ID:                  1,
+		Owner:               ownerAddr.String(),
+		FeeAddress:          flowAddr.String(),
+		Msgs:                []*cdctypes.Any{},
+		Interval:            time.Second * 20,
+		StartTime:           time.Now().Add(time.Hour * -1),
+		EndTime:             time.Now().Add(time.Second * 20),
+		SelfHostedICAConfig: &types.ICAConfig{},
+		Configuration:       &types.ExecutionConfiguration{SaveResponses: true},
 	}
 	return flowInfo
 }

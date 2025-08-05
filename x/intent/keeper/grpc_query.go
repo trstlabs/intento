@@ -182,38 +182,38 @@ func (q QueryServer) FlowsForOwner(c context.Context, req *types.QueryFlowsForOw
 	}, nil
 }
 
-// HostedAccount implements the Query/HostedAccount gRPC method
-func (q QueryServer) HostedAccount(c context.Context, req *types.QueryHostedAccountRequest) (*types.QueryHostedAccountResponse, error) {
+// TrustlessExecutionAgent implements the Query/TrustlessExecutionAgent gRPC method
+func (q QueryServer) TrustlessExecutionAgent(c context.Context, req *types.QueryTrustlessExecutionAgentRequest) (*types.QueryTrustlessExecutionAgentResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	hosted, err := q.keeper.TryGetHostedAccount(ctx, req.Address)
+	hosted, err := q.keeper.TryGetTrustlessExecutionAgent(ctx, req.AgentAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryHostedAccountResponse{
-		HostedAccount: hosted,
+	return &types.QueryTrustlessExecutionAgentResponse{
+		TrustlessExecutionAgent: hosted,
 	}, nil
 }
 
-// HostedAccounts implements the Query/HostedAccounts gRPC method
-func (q QueryServer) HostedAccounts(c context.Context, req *types.QueryHostedAccountsRequest) (*types.QueryHostedAccountsResponse, error) {
+// TrustlessExecutionAgents implements the Query/TrustlessExecutionAgents gRPC method
+func (q QueryServer) TrustlessExecutionAgents(c context.Context, req *types.QueryTrustlessExecutionAgentsRequest) (*types.QueryTrustlessExecutionAgentsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	hostedAccounts := make([]types.HostedAccount, 0)
+	trustlessExecutionAgents := make([]types.TrustlessExecutionAgent, 0)
 	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.HostedAccountKeyPrefix)
+	prefixStore := prefix.NewStore(store, types.TrustlessExecutionAgentKeyPrefix)
 
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		if accumulate {
-			var c types.HostedAccount
+			var c types.TrustlessExecutionAgent
 			q.keeper.cdc.MustUnmarshal(value, &c)
-			hostedAccounts = append(hostedAccounts, c)
+			trustlessExecutionAgents = append(trustlessExecutionAgents, c)
 
 		}
 		return true, nil
@@ -223,32 +223,32 @@ func (q QueryServer) HostedAccounts(c context.Context, req *types.QueryHostedAcc
 		return nil, err
 	}
 
-	return &types.QueryHostedAccountsResponse{
-		HostedAccounts: hostedAccounts,
-		Pagination:     pageRes,
+	return &types.QueryTrustlessExecutionAgentsResponse{
+		TrustlessExecutionAgents: trustlessExecutionAgents,
+		Pagination:               pageRes,
 	}, nil
 }
 
-// HostedAccountsByAdmin implements the Query/HostedAccountsByAdmin gRPC method
-func (q QueryServer) HostedAccountsByAdmin(c context.Context, req *types.QueryHostedAccountsByAdminRequest) (*types.QueryHostedAccountsByAdminResponse, error) {
+// TrustlessExecutionAgentsByFeeAdmin implements the Query/TrustlessExTrustlessExecutionAgentsByFeeAdminecutionAgentsByAdmin gRPC method
+func (q QueryServer) TrustlessExecutionAgentsByFeeAdmin(c context.Context, req *types.QueryTrustlessExecutionAgentsByFeeAdminRequest) (*types.QueryTrustlessExecutionAgentsByFeeAdminResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	hostedAccounts := make([]types.HostedAccount, 0)
+	trustlessExecutionAgents := make([]types.TrustlessExecutionAgent, 0)
 
-	admin, err := sdk.AccAddressFromBech32(req.Admin)
+	admin, err := sdk.AccAddressFromBech32(req.FeeAdmin)
 	if err != nil {
 		return nil, err
 	}
 	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.GetHostedAccountsByAdminPrefix(admin))
+	prefixStore := prefix.NewStore(store, types.GetTrustlessExecutionAgentsByAdminPrefix(admin))
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
-			hostedAccountAddress := string(key)
-			flowInfo := q.keeper.GetHostedAccount(ctx, hostedAccountAddress)
+			trustlessExecutionAgentAddress := string(key)
+			flowInfo := q.keeper.GetTrustlessExecutionAgent(ctx, trustlessExecutionAgentAddress)
 
-			hostedAccounts = append(hostedAccounts, flowInfo)
+			trustlessExecutionAgents = append(trustlessExecutionAgents, flowInfo)
 
 		}
 		return true, nil
@@ -257,8 +257,8 @@ func (q QueryServer) HostedAccountsByAdmin(c context.Context, req *types.QueryHo
 		return nil, err
 	}
 
-	return &types.QueryHostedAccountsByAdminResponse{
-		HostedAccounts: hostedAccounts,
-		Pagination:     pageRes,
+	return &types.QueryTrustlessExecutionAgentsByFeeAdminResponse{
+		TrustlessExecutionAgents: trustlessExecutionAgents,
+		Pagination:               pageRes,
 	}, nil
 }

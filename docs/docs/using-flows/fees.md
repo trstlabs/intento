@@ -37,22 +37,22 @@ burnFee = burnFeePerMsg * messageCount
 
 ---
 
-## Hosted Account Fee (extra)
+## Trustless Excution Agent Fee (extra)
 
-When using a **hosted interchain account**, there's an additional fee charged **per execution**. This is set by the fee admin of the hosted account.
+When using a **hosted interchain account**, there's an additional fee charged **per execution**. This is set by the fee admin of the Trustless Excution Agent.
 
 In Intento Portal, we **automatically add a fee coin limit** during flow submission to cover this hosted fee — including a buffer to avoid underfunded execution errors.
 
 To check the latest hosted fee programmatically:
 
 ```
-GET /intento/intent/v1beta1/hosted-account/{address}
+GET /intento/intent/v1beta1/trustless-execution-agent/{address}
 ```
 
 **LCD URL:**
-[https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/hosted-account/-address-](https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/hosted-account/-address-)
+[https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/trustless-execution-agent/-address-](https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/trustless-execution-agent/-address-)
 
-This endpoint returns the `fee_coins_supported` array of supported fee coins for that specific hosted account.
+This endpoint returns the `fee_coins_supported` array of supported fee coins for that specific Trustless Excution Agent.
 
 ## Payment Source
 

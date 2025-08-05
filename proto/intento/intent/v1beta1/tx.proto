@@ -11,7 +11,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
 import "intento/intent/v1beta1/flow.proto";
 import "intento/intent/v1beta1/params.proto";
-import "intento/intent/v1beta1/hostedaccount.proto";
+import "intento/intent/v1beta1/trustless_execution_agent.proto";
 
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 
@@ -34,11 +34,11 @@ service Msg {
   rpc UpdateFlow(MsgUpdateFlow) returns (MsgUpdateFlowResponse) {
     option (google.api.http).post = "/intento/intent/v1beta1/update-flow";
   }
-  rpc CreateHostedAccount(MsgCreateHostedAccount) returns (MsgCreateHostedAccountResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/create-hosted-account";
+  rpc CreateTrustlessExecutionAgent(MsgCreateTrustlessExecutionAgent) returns (MsgCreateTrustlessExecutionAgentResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/create-trustless-execution-agent";
   }
-  rpc UpdateHostedAccount(MsgUpdateHostedAccount) returns (MsgUpdateHostedAccountResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/update-hosted-account";
+  rpc UpdateTrustlessExecutionAgentFeeConfig(MsgUpdateTrustlessExecutionAgentFeeConfig) returns (MsgUpdateTrustlessExecutionAgentFeeConfigResponse) {
+    option (google.api.http).post = "/intento/intent/v1beta1/update-trustless-execution-agent-fee-config";
   }
   // UpdateParams defines a governance operation for updating the x/intent module
   // parameters. The authority is hard-coded to the x/gov module account.
@@ -105,8 +105,8 @@ message MsgSubmitFlow {
   ExecutionConfiguration configuration = 8;
   // optional connection ID interchain account
   string connection_id = 9 [(gogoproto.customname) = "ConnectionID"];
-  // optional use of a hosted account
-  HostedICAConfig hosted_ica_config = 10 [(gogoproto.customname) = "HostedICAConfig"];
+  // optional use of a trustless excution agent
+  TrustlessExecutionAgentExecutionConfig trustless_execution_agent_config = 10 [(gogoproto.customname) = "TrustlessExecutionAgentExecutionConfig"];
   ExecutionConditions conditions = 11;
 }
 
@@ -177,42 +177,41 @@ message MsgUpdateFlow {
   ];
   ExecutionConfiguration configuration = 9;
   string connection_id = 10 [(gogoproto.customname) = "ConnectionID"];
-  HostedICAConfig hosted_ica_config = 11 [(gogoproto.customname) = "HostedICAConfig"];
+  TrustlessExecutionAgentExecutionConfig trustless_execution_agent_config = 11 [(gogoproto.customname) = "TrustlessExecutionAgentExecutionConfig"];
   ExecutionConditions conditions = 12;
 }
 
 // MsgUpdateTxResponse defines the MsgUpdateTx response type
 message MsgUpdateFlowResponse {}
 
-message MsgCreateHostedAccount {
+message MsgCreateTrustlessExecutionAgent {
   option (cosmos.msg.v1.signer) = "creator";
-  option (amino.name) = "intent/MsgCreateHostedAccount";
+  option (amino.name) = "intent/MsgCreateTrustlessExecutionAgent";
   option (gogoproto.goproto_getters) = false;
   string creator = 1;
   string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
   string host_connection_id = 3 [(gogoproto.customname) = "HostConnectionID"];
   string version = 4;
-  repeated cosmos.base.v1beta1.Coin fee_coins_suported = 5 [
+  repeated cosmos.base.v1beta1.Coin fee_coins_supported = 5 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
 }
 
-message MsgCreateHostedAccountResponse {
+message MsgCreateTrustlessExecutionAgentResponse {
   string address = 1;
 }
 
-message MsgUpdateHostedAccount {
-  option (cosmos.msg.v1.signer) = "admin";
-  option (amino.name) = "intent/MsgUpdateHostedAccount";
+message MsgUpdateTrustlessExecutionAgentFeeConfig {
+  option (cosmos.msg.v1.signer) = "fee_admin";
+  option (amino.name) = "intent/MsgUpdateTrustlessExecutionAgentFeeConfig";
   option (gogoproto.goproto_getters) = false;
-  string admin = 1;
-  string hosted_address = 2;
-  //string connection_id = 3 [(gogoproto.customname) = "ConnectionID"];
-  HostFeeConfig host_fee_config = 4;
+  string fee_admin = 1;
+  string agent_address = 2;
+  TrustlessExecutionAgentFeeConfig fee_config = 4;
 }
 
-message MsgUpdateHostedAccountResponse {
+message MsgUpdateTrustlessExecutionAgentFeeConfigResponse {
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.

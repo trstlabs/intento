@@ -33,7 +33,7 @@ Intento Portal is a powerful dApp designed for developers and integrators. It en
 
 ### 1. Choose Chain and Execution Account
 
-Go to the `Flow Builder`. First, choose the target chain for execution. Available hosted accounts will be listed — these are ICA addresses hosted by Intento which subsidizes fees.
+Go to the `Flow Builder`. First, choose the target chain for execution. Available trustless excution agents will be listed — these are ICA addresses hosted by Intento which subsidizes fees.
 
 ![1](@site/docs/images/portal/build/1.png)
 

@@ -44,9 +44,9 @@ If the flow is recurring, `duration` will be the time execution will be unavaila
 ## With Interchain Accounts (ICA)
 
 The message will be similar to the above.
-You can choose a self-hosted ICA or a hosted ICA that takes care of the fees for you. Learn about the difference [here].
+You can choose a self-hosted ICA or a Trustless Execution Agent that takes care of the fees for you. Learn about the difference [here].
 For both accounts a _connection_id_ flag should be specified. You can find all available connections with `intentod q ibc connection connections`.
-For a hosted account the `--hosted-account` and the `--hosted-account-fee-limit` flags should be specified. See examples below. You can find all available host accounts with `intentod q intent list-host-accounts`.
+For a trustless excution agent the `--trustless-execution-agent` and the `--trustless-execution-agent-fee-limit` flags should be specified. See examples below. You can find all available host accounts with `intentod q intent list-host-accounts`.
 
 ### What is a connection and how does it differ from a channel?
 
@@ -126,25 +126,25 @@ intentod tx intent submit-flow  '{
 
 You can specify the following flags:
 
-| Flag                        | Description                                                                             | Example Value                                                                     |
-| --------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `connection-id`             | Identifier for the connection end on the controller chain.                              | `connnection-123`                                                                 |
-| `host-connection-id`        | Identifier for the controller chain channel version.                                    | `connnection-456`                                                                 |
-| `label`                     | Custom label for the flow, such as message type or operation name. Optional.            | `AutoTransfer`                                                                    |
-| `duration`                  | Duration for which the flow remains active. Optional.                                   | `48h`                                                                             |
-| `interval`                  | Custom interval between Flow executions. Optional.                                      | `2h`                                                                              |
-| `start-at`                  | Custom start time for the flow in UNIX time format. Optional.                           | `1625097600`                                                                      |
-| `fee-funds`                 | Coins sent to limit the fees incurred during flow execution. Optional.                  | `100atom`                                                                         |
-| `end-at`                    | Custom end time for the flow in UNIX time format. Optional.                             | `1625184000`                                                                      |
-| `updating-disabled`         | Disables future updates to the flow configuration.                                      | `false`                                                                           |
-| `save-responses`            | Saves message and ICQ responses to flow history, for Cosmos SDK v0.46+ chains only.     | `true`                                                                            |
-| `fallback-to-owner-balance` | Uses owner's balance as fallback for flow fees if `fee-funds` are insufficient.         | `true`                                                                            |
-| `stop-on-success`           | Stops execution of the flow after a successful message.                                 | `true`                                                                            |
-| `stop-on-failure`           | Stops execution of the flow after a failed message.                                     | `true`                                                                            |
-| `stop-on-timeout`           | Stops execution of the flow after an IBC message timeout.                               | `false`                                                                           |
-| `stop-on-success-of`        | Stops execution if a specified flow succeeds. Optional and requires custom logic.       | `23,58`                                                                           |
-| `stop-on-failure-of`        | Stops execution if a specified flow fails. Optional and requires custom logic.          | `4536,234`                                                                        |
-| `skip-on-success-of`        | Skips the next execution if a specified flow succeeds. Optional, requires custom logic. | `234,234`                                                                         |
-| `skip-on-failure-of`        | Skips the next execution if a specified flow fails. Optional, requires custom logic.    | ``3456,12`                                                                        |
-| `hosted-account`            | A hosted account to execute flows on a host, optional                                   | `into13f5dq5pqtwxe4dvr30m70tqcr47n95sc07uj25z5xrngvppkp52qncvzvw`                 |
-| `hosted-account-fee-limit`  | Coin to set to limit the hosted fees, optional                                          | `10uinto,100ibc/9117A26BA81E29FA4F78F57DC2BD90CD3D26848101BA880445F119B22A1E254E` |
+| Flag                                  | Description                                                                             | Example Value                                                                     |
+| ------------------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `connection-id`                       | Identifier for the connection end on the controller chain.                              | `connnection-123`                                                                 |
+| `host-connection-id`                  | Identifier for the controller chain channel version.                                    | `connnection-456`                                                                 |
+| `label`                               | Custom label for the flow, such as message type or operation name. Optional.            | `AutoTransfer`                                                                    |
+| `duration`                            | Duration for which the flow remains active. Optional.                                   | `48h`                                                                             |
+| `interval`                            | Custom interval between Flow executions. Optional.                                      | `2h`                                                                              |
+| `start-at`                            | Custom start time for the flow in UNIX time format. Optional.                           | `1625097600`                                                                      |
+| `fee-funds`                           | Coins sent to limit the fees incurred during flow execution. Optional.                  | `100atom`                                                                         |
+| `end-at`                              | Custom end time for the flow in UNIX time format. Optional.                             | `1625184000`                                                                      |
+| `updating-disabled`                   | Disables future updates to the flow configuration.                                      | `false`                                                                           |
+| `save-responses`                      | Saves message and ICQ responses to flow history, for Cosmos SDK v0.46+ chains only.     | `true`                                                                            |
+| `fallback-to-owner-balance`           | Uses owner's balance as fallback for flow fees if `fee-funds` are insufficient.         | `true`                                                                            |
+| `stop-on-success`                     | Stops execution of the flow after a successful message.                                 | `true`                                                                            |
+| `stop-on-failure`                     | Stops execution of the flow after a failed message.                                     | `true`                                                                            |
+| `stop-on-timeout`                     | Stops execution of the flow after an IBC message timeout.                               | `false`                                                                           |
+| `stop-on-success-of`                  | Stops execution if a specified flow succeeds. Optional and requires custom logic.       | `23,58`                                                                           |
+| `stop-on-failure-of`                  | Stops execution if a specified flow fails. Optional and requires custom logic.          | `4536,234`                                                                        |
+| `skip-on-success-of`                  | Skips the next execution if a specified flow succeeds. Optional, requires custom logic. | `234,234`                                                                         |
+| `skip-on-failure-of`                  | Skips the next execution if a specified flow fails. Optional, requires custom logic.    | ``3456,12`                                                                        |
+| `trustless-execution-agent`           | A local address of a trustless excution agent to execute actions on a host. Optional.   | `into13f5dq5pqtwxe4dvr30m70tqcr47n95sc07uj25z5xrngvppkp52qncvzvw`                 |
+| `trustless-execution-agent-fee-limit` | Coin to set to limit the hosted fees, optional                                          | `10uinto,100ibc/9117A26BA81E29FA4F78F57DC2BD90CD3D26848101BA880445F119B22A1E254E` |

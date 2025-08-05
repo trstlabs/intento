@@ -343,8 +343,8 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 			suite.Require().Equal(flow.Label, label)
 
 			//ibc
-			if flow.ICAConfig.PortID != "" {
-				suite.Require().Equal(flow.ICAConfig.PortID, "icacontroller-"+owner)
+			if flow.SelfHostedICAConfig.PortID != "" {
+				suite.Require().Equal(flow.SelfHostedICAConfig.PortID, "icacontroller-"+owner)
 			}
 			if !transferMsg {
 				//icq should return this error
@@ -469,7 +469,7 @@ func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCreateHostedAccount() {
+func (suite *KeeperTestSuite) TestCreateTrustlessExecutionAgent() {
 	var (
 		connectionID string
 	)
@@ -480,7 +480,7 @@ func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 		expPass  bool
 	}{
 		{
-			"success - Create hosted account flow",
+			"success - Create trustless excution agent flow",
 			func() {
 				path := NewICAPath(suite.IntentoChain, suite.HostChain)
 				suite.Coordinator.SetupConnections(path)
@@ -494,15 +494,15 @@ func (suite *KeeperTestSuite) TestCreateHostedAccount() {
 		suite.Run(tc.name, func() {
 			tc.malleate()
 
-			// Create a new hosted account
-			msgHosted := &types.MsgCreateHostedAccount{
+			// Create a new trustless excution agent
+			msgHosted := &types.MsgCreateTrustlessExecutionAgent{
 				Creator:      suite.TestAccs[0].String(),
 				ConnectionID: connectionID,
 				Version:      TestVersion,
 			}
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			res, err := msgSrv.CreateHostedAccount(suite.IntentoChain.GetContext(), msgHosted)
+			res, err := msgSrv.CreateTrustlessExecutionAgent(suite.IntentoChain.GetContext(), msgHosted)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -653,7 +653,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateHostedAccount() {
+func (suite *KeeperTestSuite) TestUpdateTrustlessExecutionAgent() {
 	var (
 		path         *ibctesting.Path
 		newAdmin     string
@@ -688,32 +688,32 @@ func (suite *KeeperTestSuite) TestUpdateHostedAccount() {
 
 			admin := suite.IntentoChain.SenderAccount.GetAddress().String()
 
-			msgHosted := types.NewMsgCreateHostedAccount(admin, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())))
+			msgHosted := types.NewMsgCreateTrustlessExecutionAgent(admin, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())))
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			resHosted, err := msgSrv.CreateHostedAccount(suite.IntentoChain.GetContext(), msgHosted)
+			resHosted, err := msgSrv.CreateTrustlessExecutionAgent(suite.IntentoChain.GetContext(), msgHosted)
 			suite.Require().Nil(err)
 			suite.Require().NotNil(resHosted.Address)
 
-			hosted := GetICAApp(suite.IntentoChain).IntentKeeper.GetHostedAccount(suite.IntentoChain.GetContext(), resHosted.Address)
+			hosted := GetICAApp(suite.IntentoChain).IntentKeeper.GetTrustlessExecutionAgent(suite.IntentoChain.GetContext(), resHosted.Address)
 
-			msg := types.NewMsgUpdateHostedAccount(admin, resHosted.Address, newAdmin, sdk.NewCoins(sdk.NewCoin(newDenom, math.NewIntFromUint64(newFeeAmount))))
+			msg := types.NewMsgUpdateTrustlessExecutionAgent(admin, resHosted.Address, newAdmin, sdk.NewCoins(sdk.NewCoin(newDenom, math.NewIntFromUint64(newFeeAmount))))
 			suite.Require().NoError(err)
 
 			msgSrv = keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			res, err := msgSrv.UpdateHostedAccount(suite.IntentoChain.GetContext(), msg)
+			res, err := msgSrv.UpdateTrustlessExecutionAgentFeeConfig(suite.IntentoChain.GetContext(), msg)
 			suite.IntentoChain.NextBlock()
-			hostedNew := GetICAApp(suite.IntentoChain).IntentKeeper.GetHostedAccount(suite.IntentoChain.GetContext(), resHosted.Address)
+			hostedNew := GetICAApp(suite.IntentoChain).IntentKeeper.GetTrustlessExecutionAgent(suite.IntentoChain.GetContext(), resHosted.Address)
 			if !tc.expPass {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)
 				return
 			}
 
-			suite.Require().Equal(hosted.HostedAddress, hostedNew.HostedAddress)
-			suite.Require().NotEqual(hosted.HostFeeConfig.Admin, hostedNew.HostFeeConfig.Admin)
-			suite.Require().NotEqual(hosted.HostFeeConfig.FeeCoinsSuported.Denoms(), hostedNew.HostFeeConfig.FeeCoinsSuported.Denoms())
-			suite.Require().NotEqual(hosted.HostFeeConfig.FeeCoinsSuported[0].Amount, hostedNew.HostFeeConfig.FeeCoinsSuported[0].Amount)
+			suite.Require().Equal(hosted.AgentAddress, hostedNew.AgentAddress)
+			suite.Require().NotEqual(hosted.FeeConfig.FeeAdmin, hostedNew.FeeConfig.FeeAdmin)
+			suite.Require().NotEqual(hosted.FeeConfig.FeeCoinsSupported.Denoms(), hostedNew.FeeConfig.FeeCoinsSupported.Denoms())
+			suite.Require().NotEqual(hosted.FeeConfig.FeeCoinsSupported[0].Amount, hostedNew.FeeConfig.FeeCoinsSupported[0].Amount)
 
 		})
 	}

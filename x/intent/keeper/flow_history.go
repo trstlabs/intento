@@ -107,7 +107,7 @@ func (k Keeper) IterateFlowHistorys(ctx sdk.Context, cb func(uint64, types.FlowH
 	}
 }
 
-func (k Keeper) addFlowHistoryEntry(ctx sdk.Context, flow *types.FlowInfo, actualExecTime time.Time, execFee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, errorString string) {
+func (k Keeper) addFlowHistoryEntry(ctx sdk.Context, flow *types.FlowInfo, actualExecTime time.Time, execFee sdk.Coins, executedLocally bool, msgResponses []*cdctypes.Any, errorString string) {
 	historyEntry := types.FlowHistoryEntry{
 		ScheduledExecTime: flow.ExecTime,
 		ActualExecTime:    actualExecTime,

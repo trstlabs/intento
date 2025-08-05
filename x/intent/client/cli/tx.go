@@ -34,8 +34,8 @@ func GetTxCmd() *cobra.Command {
 		getSubmitFlowCmd(),
 		getRegisterAccountAndSubmitFlowCmd(),
 		getUpdateFlowCmd(),
-		getCreateHostedAccount(),
-		getUpdateHostedAccountCmd(),
+		getCreateTrustlessExecutionAgent(),
+		getUpdateTrustlessExecutionAgentCmd(),
 	)
 
 	return cmd
@@ -188,7 +188,7 @@ func getSubmitFlowCmd() *cobra.Command {
 			}
 
 			hostedFeeLimit := sdk.Coin{}
-			hostedFeeLimitString := viper.GetString(flagHostedAccountFeeLimit)
+			hostedFeeLimitString := viper.GetString(flagTrustlessExecutionAgentFeeLimit)
 			if hostedFeeLimitString != "" {
 				hostedFeeLimit, err = sdk.ParseCoinNormalized(hostedFeeLimitString)
 				if err != nil {
@@ -196,7 +196,7 @@ func getSubmitFlowCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration, &conditions)
+			msg, err := types.NewMsgSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagTrustlessExecutionAgent), hostedFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}
@@ -360,14 +360,14 @@ func getUpdateFlowCmd() *cobra.Command {
 				}
 			}
 			hostedFeeLimit := sdk.Coin{}
-			hostedFeeLimitString := viper.GetString(flagHostedAccountFeeLimit)
+			hostedFeeLimitString := viper.GetString(flagTrustlessExecutionAgentFeeLimit)
 			if hostedFeeLimitString != "" {
 				hostedFeeLimit, err = sdk.ParseCoinNormalized(hostedFeeLimitString)
 				if err != nil {
 					return err
 				}
 			}
-			msg, err := types.NewMsgUpdateFlow(clientCtx.GetFromAddress().String(), id, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagHostedAccount), hostedFeeLimit, configuration, &conditions)
+			msg, err := types.NewMsgUpdateFlow(clientCtx.GetFromAddress().String(), id, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagTrustlessExecutionAgent), hostedFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}
@@ -407,18 +407,18 @@ func getExecutionConfiguration() *types.ExecutionConfiguration {
 	return &configuration
 }
 
-func getCreateHostedAccount() *cobra.Command {
+func getCreateTrustlessExecutionAgent() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create-hosted-account",
+		Use: "create-trustless-execution-agent",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			feeCoinsSuported := sdk.Coins{} //e.g. 54utrst,56uinto,57ucosm
+			feeCoinsSupported := sdk.Coins{} //e.g. 54utrst,56uinto,57ucosm
 			amount := viper.GetString(flagFeeCoinsSupported)
 			if amount != "" {
-				feeCoinsSuported, err = sdk.ParseCoinsNormalized(amount)
+				feeCoinsSupported, err = sdk.ParseCoinsNormalized(amount)
 				if err != nil {
 					return err
 				}
@@ -433,11 +433,11 @@ func getCreateHostedAccount() *cobra.Command {
 				TxType:                 icatypes.TxTypeSDKMultiMsg,
 			}))
 
-			msg := types.NewMsgCreateHostedAccount(
+			msg := types.NewMsgCreateTrustlessExecutionAgent(
 				clientCtx.GetFromAddress().String(),
 				viper.GetString(flagConnectionID),
 				version,
-				feeCoinsSuported,
+				feeCoinsSupported,
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -459,28 +459,28 @@ func getCreateHostedAccount() *cobra.Command {
 	return cmd
 }
 
-func getUpdateHostedAccountCmd() *cobra.Command {
+func getUpdateTrustlessExecutionAgentCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "update-hosted-account",
+		Use: "update-trustless-execution-agent",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			feeCoinsSuported := sdk.Coins{} //e.g. 54utrst,56uinto,57ucosm
+			feeCoinsSupported := sdk.Coins{} //e.g. 54utrst,56uinto,57ucosm
 			amount := viper.GetString(flagFeeCoinsSupported)
 			if amount != "" {
-				feeCoinsSuported, err = sdk.ParseCoinsNormalized(amount)
+				feeCoinsSupported, err = sdk.ParseCoinsNormalized(amount)
 				if err != nil {
 					return err
 				}
 			}
 
-			msg := types.NewMsgUpdateHostedAccount(
+			msg := types.NewMsgUpdateTrustlessExecutionAgent(
 				clientCtx.GetFromAddress().String(),
-				viper.GetString(flagHostedAccount),
+				viper.GetString(flagTrustlessExecutionAgent),
 				viper.GetString(flagNewAdmin),
-				feeCoinsSuported,
+				feeCoinsSupported,
 			)
 
 			if err := msg.ValidateBasic(); err != nil {
@@ -493,8 +493,8 @@ func getUpdateHostedAccountCmd() *cobra.Command {
 
 	cmd.Flags().String(flagFeeCoinsSupported, "", "Coins supported as fees for hosted, optional")
 	cmd.Flags().String(flagNewAdmin, "", "A new admin, optional")
-	cmd.Flags().String(flagHostedAccount, "", "A hosted account to execute actions on a host")
-	_ = cmd.MarkFlagRequired(flagHostedAccount)
+	cmd.Flags().String(flagTrustlessExecutionAgent, "", "A trustless excution agent to execute actions on a host")
+	_ = cmd.MarkFlagRequired(flagTrustlessExecutionAgent)
 
 	flags.AddTxFlagsToCmd(cmd)
 

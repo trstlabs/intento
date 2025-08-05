@@ -10,52 +10,52 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-// GetHostedAccount
-func (k Keeper) GetHostedAccount(ctx sdk.Context, address string) types.HostedAccount {
+// GetTrustlessExecutionAgent
+func (k Keeper) GetTrustlessExecutionAgent(ctx sdk.Context, address string) types.TrustlessExecutionAgent {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	var hostedAccount types.HostedAccount
-	hostedAccountBz := store.Get(types.GetHostedAccountKey(address))
+	var trustlessExecutionAgent types.TrustlessExecutionAgent
+	trustlessExecutionAgentBz := store.Get(types.GetTrustlessExecutionAgentKey(address))
 
-	k.cdc.MustUnmarshal(hostedAccountBz, &hostedAccount)
-	return hostedAccount
+	k.cdc.MustUnmarshal(trustlessExecutionAgentBz, &trustlessExecutionAgent)
+	return trustlessExecutionAgent
 }
 
-// TryGetHostedAccount
-func (k Keeper) TryGetHostedAccount(ctx sdk.Context, address string) (types.HostedAccount, error) {
+// TryGetTrustlessExecutionAgent
+func (k Keeper) TryGetTrustlessExecutionAgent(ctx sdk.Context, address string) (types.TrustlessExecutionAgent, error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	var hostedAccount types.HostedAccount
-	hostedAccountBz := store.Get(types.GetHostedAccountKey(address))
+	var trustlessExecutionAgent types.TrustlessExecutionAgent
+	trustlessExecutionAgentBz := store.Get(types.GetTrustlessExecutionAgentKey(address))
 
-	err := k.cdc.Unmarshal(hostedAccountBz, &hostedAccount)
+	err := k.cdc.Unmarshal(trustlessExecutionAgentBz, &trustlessExecutionAgent)
 	if err != nil {
-		return types.HostedAccount{}, err
+		return types.TrustlessExecutionAgent{}, err
 	}
-	return hostedAccount, nil
+	return trustlessExecutionAgent, nil
 }
 
-func (k Keeper) SetHostedAccount(ctx sdk.Context, hostedAccount *types.HostedAccount) {
+func (k Keeper) SetTrustlessExecutionAgent(ctx sdk.Context, trustlessExecutionAgent *types.TrustlessExecutionAgent) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	store.Set(types.GetHostedAccountKey(hostedAccount.HostedAddress), k.cdc.MustMarshal(hostedAccount))
+	store.Set(types.GetTrustlessExecutionAgentKey(trustlessExecutionAgent.AgentAddress), k.cdc.MustMarshal(trustlessExecutionAgent))
 }
 
-// func (k Keeper) importHostedAccount(ctx sdk.Context, address string, hostedAccount types.HostedAccount) error {
+// func (k Keeper) importTrustlessExecutionAgent(ctx sdk.Context, address string, trustlessExecutionAgent types.TrustlessExecutionAgent) error {
 
 // 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-// 	key := types.GetHostedAccountKey(address)
+// 	key := types.GetTrustlessExecutionAgentKey(address)
 // 	if store.Has(key) {
 // 		return errorsmod.Wrapf(types.ErrDuplicate, "duplicate address: %s", address)
 // 	}
-// 	// 0x01 | address (uint64) -> hostedAccount
-// 	store.Set(key, k.cdc.MustMarshal(&hostedAccount))
+// 	// 0x01 | address (uint64) -> trustlessExecutionAgent
+// 	store.Set(key, k.cdc.MustMarshal(&trustlessExecutionAgent))
 // 	return nil
 // }
 
-func (k Keeper) IterateHostedAccounts(ctx sdk.Context, cb func(uint64, types.HostedAccount) bool) {
+func (k Keeper) IterateTrustlessExecutionAgents(ctx sdk.Context, cb func(uint64, types.TrustlessExecutionAgent) bool) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.HostedAccountKeyPrefix)
+	prefixStore := prefix.NewStore(store, types.TrustlessExecutionAgentKeyPrefix)
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
-		var c types.HostedAccount
+		var c types.TrustlessExecutionAgent
 		k.cdc.MustUnmarshal(iter.Value(), &c)
 		// cb returns true to stop early
 		if cb(binary.BigEndian.Uint64(iter.Key()), c) {
@@ -64,24 +64,24 @@ func (k Keeper) IterateHostedAccounts(ctx sdk.Context, cb func(uint64, types.Hos
 	}
 }
 
-// addToHostedAccountAdminIndex adds element to the index for hostedAccounts-by-creator queries
-func (k Keeper) addToHostedAccountAdminIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, hostedAccountAddress string) {
+// addToTrustlessExecutionAgentAdminIndex adds element to the index for trustlessExecutionAgents-by-creator queries
+func (k Keeper) addToTrustlessExecutionAgentAdminIndex(ctx sdk.Context, ownerAddress sdk.AccAddress, trustlessExecutionAgentAddress string) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	store.Set(types.GetHostedAccountsByAdminIndexKey(ownerAddress, hostedAccountAddress), []byte{})
+	store.Set(types.GetTrustlessExecutionAgentsByAdminIndexKey(ownerAddress, trustlessExecutionAgentAddress), []byte{})
 }
 
-// changeHostedAccountAdminIndex changes element to the index for hostedAccounts-by-creator queries
-func (k Keeper) changeHostedAccountAdminIndex(ctx sdk.Context, ownerAddress, newAdminAddress sdk.AccAddress, hostedAccountAddress string) {
+// changeTrustlessExecutionAgentAdminIndex changes element to the index for trustlessExecutionAgents-by-creator queries
+func (k Keeper) changeTrustlessExecutionAgentAdminIndex(ctx sdk.Context, ownerAddress, newAdminAddress sdk.AccAddress, trustlessExecutionAgentAddress string) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
-	store.Set(types.GetHostedAccountsByAdminIndexKey(newAdminAddress, hostedAccountAddress), []byte{})
-	store.Delete(types.GetHostedAccountsByAdminIndexKey(ownerAddress, hostedAccountAddress))
+	store.Set(types.GetTrustlessExecutionAgentsByAdminIndexKey(newAdminAddress, trustlessExecutionAgentAddress), []byte{})
+	store.Delete(types.GetTrustlessExecutionAgentsByAdminIndexKey(ownerAddress, trustlessExecutionAgentAddress))
 }
 
-// IterateHostedAccountsByAdmin iterates over all hostedAccounts with given creator address in order of creation time asc.
-func (k Keeper) IterateHostedAccountsByAdmin(ctx sdk.Context, owner sdk.AccAddress, cb func(address sdk.AccAddress) bool) {
+// IterateTrustlessExecutionAgentsByAdmin iterates over all trustlessExecutionAgents with given creator address in order of creation time asc.
+func (k Keeper) IterateTrustlessExecutionAgentsByAdmin(ctx sdk.Context, owner sdk.AccAddress, cb func(address sdk.AccAddress) bool) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.GetHostedAccountsByAdminPrefix(owner))
+	prefixStore := prefix.NewStore(store, types.GetTrustlessExecutionAgentsByAdminPrefix(owner))
 
 	for iter := prefixStore.Iterator(nil, nil); iter.Valid(); iter.Next() {
 		key := iter.Key()

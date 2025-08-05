@@ -303,8 +303,8 @@ func local_request_Query_FlowsForOwner_0(ctx context.Context, marshaler runtime.
 
 }
 
-func request_Query_HostedAccount_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryHostedAccountRequest
+func request_Query_TrustlessExecutionAgent_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryTrustlessExecutionAgentRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -314,24 +314,24 @@ func request_Query_HostedAccount_0(ctx context.Context, marshaler runtime.Marsha
 		_   = err
 	)
 
-	val, ok = pathParams["address"]
+	val, ok = pathParams["agent_address"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "address")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "agent_address")
 	}
 
-	protoReq.Address, err = runtime.String(val)
+	protoReq.AgentAddress, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "address", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "agent_address", err)
 	}
 
-	msg, err := client.HostedAccount(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.TrustlessExecutionAgent(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Query_HostedAccount_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryHostedAccountRequest
+func local_request_Query_TrustlessExecutionAgent_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryTrustlessExecutionAgentRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -341,64 +341,64 @@ func local_request_Query_HostedAccount_0(ctx context.Context, marshaler runtime.
 		_   = err
 	)
 
-	val, ok = pathParams["address"]
+	val, ok = pathParams["agent_address"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "address")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "agent_address")
 	}
 
-	protoReq.Address, err = runtime.String(val)
+	protoReq.AgentAddress, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "address", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "agent_address", err)
 	}
 
-	msg, err := server.HostedAccount(ctx, &protoReq)
+	msg, err := server.TrustlessExecutionAgent(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Query_HostedAccounts_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_Query_TrustlessExecutionAgents_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_Query_HostedAccounts_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryHostedAccountsRequest
+func request_Query_TrustlessExecutionAgents_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryTrustlessExecutionAgentsRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_HostedAccounts_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_TrustlessExecutionAgents_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.HostedAccounts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.TrustlessExecutionAgents(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Query_HostedAccounts_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryHostedAccountsRequest
+func local_request_Query_TrustlessExecutionAgents_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryTrustlessExecutionAgentsRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_HostedAccounts_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_TrustlessExecutionAgents_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.HostedAccounts(ctx, &protoReq)
+	msg, err := server.TrustlessExecutionAgents(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Query_HostedAccountsByAdmin_0 = &utilities.DoubleArray{Encoding: map[string]int{"admin": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+	filter_Query_TrustlessExecutionAgentsByFeeAdmin_0 = &utilities.DoubleArray{Encoding: map[string]int{"fee_admin": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
-func request_Query_HostedAccountsByAdmin_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryHostedAccountsByAdminRequest
+func request_Query_TrustlessExecutionAgentsByFeeAdmin_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryTrustlessExecutionAgentsByFeeAdminRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -408,31 +408,31 @@ func request_Query_HostedAccountsByAdmin_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["admin"]
+	val, ok = pathParams["fee_admin"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "admin")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "fee_admin")
 	}
 
-	protoReq.Admin, err = runtime.String(val)
+	protoReq.FeeAdmin, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "admin", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "fee_admin", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_HostedAccountsByAdmin_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_TrustlessExecutionAgentsByFeeAdmin_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.HostedAccountsByAdmin(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.TrustlessExecutionAgentsByFeeAdmin(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Query_HostedAccountsByAdmin_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryHostedAccountsByAdminRequest
+func local_request_Query_TrustlessExecutionAgentsByFeeAdmin_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryTrustlessExecutionAgentsByFeeAdminRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -442,25 +442,25 @@ func local_request_Query_HostedAccountsByAdmin_0(ctx context.Context, marshaler 
 		_   = err
 	)
 
-	val, ok = pathParams["admin"]
+	val, ok = pathParams["fee_admin"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "admin")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "fee_admin")
 	}
 
-	protoReq.Admin, err = runtime.String(val)
+	protoReq.FeeAdmin, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "admin", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "fee_admin", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_HostedAccountsByAdmin_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_TrustlessExecutionAgentsByFeeAdmin_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.HostedAccountsByAdmin(ctx, &protoReq)
+	msg, err := server.TrustlessExecutionAgentsByFeeAdmin(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -604,7 +604,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
-	mux.Handle("GET", pattern_Query_HostedAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_TrustlessExecutionAgent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -615,7 +615,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_HostedAccount_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Query_TrustlessExecutionAgent_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -623,11 +623,11 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
-		forward_Query_HostedAccount_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_TrustlessExecutionAgent_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Query_HostedAccounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_TrustlessExecutionAgents_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -638,7 +638,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_HostedAccounts_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Query_TrustlessExecutionAgents_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -646,11 +646,11 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
-		forward_Query_HostedAccounts_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_TrustlessExecutionAgents_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Query_HostedAccountsByAdmin_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_TrustlessExecutionAgentsByFeeAdmin_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -661,7 +661,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_HostedAccountsByAdmin_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Query_TrustlessExecutionAgentsByFeeAdmin_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -669,7 +669,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
-		forward_Query_HostedAccountsByAdmin_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_TrustlessExecutionAgentsByFeeAdmin_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -837,7 +837,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
-	mux.Handle("GET", pattern_Query_HostedAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_TrustlessExecutionAgent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -846,18 +846,18 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Query_HostedAccount_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Query_TrustlessExecutionAgent_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Query_HostedAccount_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_TrustlessExecutionAgent_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Query_HostedAccounts_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_TrustlessExecutionAgents_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -866,18 +866,18 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Query_HostedAccounts_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Query_TrustlessExecutionAgents_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Query_HostedAccounts_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_TrustlessExecutionAgents_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("GET", pattern_Query_HostedAccountsByAdmin_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_TrustlessExecutionAgentsByFeeAdmin_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -886,14 +886,14 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Query_HostedAccountsByAdmin_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Query_TrustlessExecutionAgentsByFeeAdmin_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Query_HostedAccountsByAdmin_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_TrustlessExecutionAgentsByFeeAdmin_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -929,13 +929,13 @@ var (
 
 	pattern_Query_Flows_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "flows"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_FlowsForOwner_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "flows-for-owner", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_FlowsForOwner_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "flows", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_HostedAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "hosted-account", "address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TrustlessExecutionAgent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "trustless-execution-agent", "agent_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_HostedAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "hosted-accounts"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TrustlessExecutionAgents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "trustless-execution-agents"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_HostedAccountsByAdmin_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "hosted-accounts", "admin"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TrustlessExecutionAgentsByFeeAdmin_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1beta1", "trustless-execution-agents", "fee_admin"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 )
@@ -951,11 +951,11 @@ var (
 
 	forward_Query_FlowsForOwner_0 = runtime.ForwardResponseMessage
 
-	forward_Query_HostedAccount_0 = runtime.ForwardResponseMessage
+	forward_Query_TrustlessExecutionAgent_0 = runtime.ForwardResponseMessage
 
-	forward_Query_HostedAccounts_0 = runtime.ForwardResponseMessage
+	forward_Query_TrustlessExecutionAgents_0 = runtime.ForwardResponseMessage
 
-	forward_Query_HostedAccountsByAdmin_0 = runtime.ForwardResponseMessage
+	forward_Query_TrustlessExecutionAgentsByFeeAdmin_0 = runtime.ForwardResponseMessage
 
 	forward_Query_Params_0 = runtime.ForwardResponseMessage
 )

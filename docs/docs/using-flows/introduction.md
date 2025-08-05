@@ -8,7 +8,7 @@ order: 2
 
 Intents contain actions and predefined conditions, which determine how actions are processed. In crypto, we want to execute actions with no counterparty risk and in a permissionless and decentralized manner. This has so far only been possible by directly sending transactions to the destination chain. With Intento, you will be able specify your intent to perform any action, anywhere at any moment given any conditions.
 
-Intent-based action flows are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitFlow`, IBC-specific settings such as the `ConnectionID` or a `HostedAccount`, and conditions such as comparisons and feedback loops.
+Intent-based action flows are submitted by providing an interval, duration, end time, and optional start time in a `MsgSubmitFlow`, IBC-specific settings such as the `ConnectionID` or a `TrustlessExecutionAgent`, and conditions such as comparisons and feedback loops.
 
 A flow on Intento in technical terms is an object containing messages that are triggered at a specified time, or recurringly with intervals, with conditions such as feedback loops, stops and comparisons. Flow trigger entries are scheduled, and checked at the beginning of a new block.
 
@@ -31,7 +31,7 @@ Intento can execute messages on other chains using several approaches:
 1. **ICS20 Transfers with a Memo**
    - Easy to set up on available chains by using packet forwarding
    - Memo field actions have limited support by chains
-2. **Hosted Interchain Accounts**
+2. **Trustless Excution Agent**
    - Easy to set up and manage
    - Host chain fees are managed by an admin
    - You configure a fee limit
@@ -56,8 +56,8 @@ Submitting an flow with MsgSubmitFlow can be done with the following input:
 | `FeeFunds`              | `repeated cosmos.base.v1beta1.Coin` | Optional funds to be used for transaction fees, limiting the amount of fees incurred             | ✔️       |
 | `ConnectionID`          | `string`                            | The ID of the connection to use for a self-hosted ICA                                            | ✔️       |
 | `HostConnectionID`      | `string`                            | The ID of the host chain connection to use for a self-hosted ICA                                 | ✔️       |
-| `HostedAccount`         | `string`                            | Hosted ICA account that executes on a host chain on your behalf                                  | ✔️       |
-| `HostedAccountFeeLimit` | `cosmos.base.v1beta1.Coin`          | A limit of the fees a hosted account can charge per execution                                    | ✔️       |
+| `TrustlessExecutionAgent`         | `string`                            | Hosted ICA account that executes on a host chain on your behalf                                  | ✔️       |
+| `TrustlessExecutionAgentFeeLimit` | `cosmos.base.v1beta1.Coin`          | A limit of the fees a trustless excution agent can charge per execution                                    | ✔️       |
 | `Configuration`         | `ExecutionConfiguration`            | Optional set of basic conditions and settings                                                    | ✔️       |
 | `Conditions`            | `repeated Condition`                | Powerful set of conditions such as comparisons and feedback loops                                | ✔️       |
 
@@ -65,8 +65,8 @@ Submitting an flow with MsgSubmitFlow can be done with the following input:
 
 - When `Interval` is not provided, the end of the duration will be the time the flow executes.
 - When `FeeFunds` are not provided, fees can be deducted from the Owner account by setting `FallbackToOwnerBalance` to true in `Configuration`.
-- When `ConnectionID`,`HostConnectionID` and `HostedAccount` are not provided, it is assumed that `Msgs` are local messages to be executed on Intento.
-- `HostedAccount` requires `HostedAccountFeeLimit`
+- When `ConnectionID`,`HostConnectionID` and `TrustlessExecutionAgent` are not provided, it is assumed that `Msgs` are local messages to be executed on Intento.
+- `TrustlessExecutionAgent` requires `TrustlessExecutionAgentFeeLimit`
 
 ## Flow History
 

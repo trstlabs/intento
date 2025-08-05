@@ -121,7 +121,7 @@ func TestDistributeCoinsEmptyOwnerBalanceAndMultipliedFlexFee(t *testing.T) {
 	ownerAddr := sdk.AccAddress(pub2.Address())
 
 	flowInfo := types.FlowInfo{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), ICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), SelfHostedICAConfig: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
 	ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())

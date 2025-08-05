@@ -14,15 +14,15 @@ option go_package = "github.com/trstlabs/intento/x/intent/types";
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = true;
 
-message HostedAccount {
-  string hosted_address = 1;
+message TrustlessExecutionAgent {
+  string agent_address = 1;
   ICAConfig ica_config = 2 [ (gogoproto.customname) = "ICAConfig" ];
-  HostFeeConfig host_fee_config = 3;
+  TrustlessExecutionAgentFeeConfig fee_config = 3;
 }
 
-message HostFeeConfig {
-  string admin = 1;
-  repeated cosmos.base.v1beta1.Coin fee_coins_suported = 9 [
+message TrustlessExecutionAgentFeeConfig {
+  string fee_admin = 1;
+  repeated cosmos.base.v1beta1.Coin fee_coins_supported = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];

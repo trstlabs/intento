@@ -419,17 +419,17 @@ func createTestFlow(ctx sdk.Context, configuration types.ExecutionConfiguration,
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
 	flow := types.FlowInfo{
-		ID:            123,
-		Owner:         flowOwnerAddr.String(),
-		FeeAddress:    fundedFeeAddr.String(),
-		ExecTime:      execTime,
-		EndTime:       endTime,
-		Interval:      time.Hour,
-		StartTime:     startTime,
-		Msgs:          anys,
-		Configuration: &configuration,
-		ICAConfig:     &types.ICAConfig{},
-		Conditions:    &types.ExecutionConditions{},
+		ID:                  123,
+		Owner:               flowOwnerAddr.String(),
+		FeeAddress:          fundedFeeAddr.String(),
+		ExecTime:            execTime,
+		EndTime:             endTime,
+		Interval:            time.Hour,
+		StartTime:           startTime,
+		Msgs:                anys,
+		Configuration:       &configuration,
+		SelfHostedICAConfig: &types.ICAConfig{},
+		Conditions:          &types.ExecutionConditions{},
 	}
 	return flow, emptyBalanceAcc
 }
@@ -458,17 +458,17 @@ func createInvalidTestFlowTransfer(ctx sdk.Context, configuration types.Executio
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
 	flow := types.FlowInfo{
-		ID:            123,
-		Owner:         flowOwnerAddr.String(),
-		FeeAddress:    fundedFeeAddr.String(),
-		ExecTime:      execTime,
-		EndTime:       endTime,
-		Interval:      time.Hour,
-		StartTime:     startTime,
-		Msgs:          anys,
-		Configuration: &configuration,
-		ICAConfig:     &types.ICAConfig{},
-		Conditions:    &types.ExecutionConditions{},
+		ID:                  123,
+		Owner:               flowOwnerAddr.String(),
+		FeeAddress:          fundedFeeAddr.String(),
+		ExecTime:            execTime,
+		EndTime:             endTime,
+		Interval:            time.Hour,
+		StartTime:           startTime,
+		Msgs:                anys,
+		Configuration:       &configuration,
+		SelfHostedICAConfig: &types.ICAConfig{},
+		Conditions:          &types.ExecutionConditions{},
 	}
 	return flow, emptyBalanceAcc
 }
@@ -488,17 +488,17 @@ func createNoFeeFlow(ctx sdk.Context, configuration types.ExecutionConfiguration
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
 	flow := types.FlowInfo{
-		ID:            123,
-		Owner:         flowOwnerAddr.String(),
-		FeeAddress:    fundedFeeAddr.String(),
-		ExecTime:      execTime,
-		EndTime:       endTime,
-		Interval:      time.Hour,
-		StartTime:     startTime,
-		Msgs:          anys,
-		Configuration: &configuration,
-		ICAConfig:     &types.ICAConfig{},
-		Conditions:    &types.ExecutionConditions{},
+		ID:                  123,
+		Owner:               flowOwnerAddr.String(),
+		FeeAddress:          fundedFeeAddr.String(),
+		ExecTime:            execTime,
+		EndTime:             endTime,
+		Interval:            time.Hour,
+		StartTime:           startTime,
+		Msgs:                anys,
+		Configuration:       &configuration,
+		SelfHostedICAConfig: &types.ICAConfig{},
+		Conditions:          &types.ExecutionConditions{},
 	}
 	return flow, emptyBalanceAcc
 }

@@ -18,7 +18,7 @@ import (
 func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.FlowInfo, timeOfBlock time.Time, queryCallback []byte) {
 	var (
 		errorString     = ""
-		fee             = sdk.Coin{}
+		fee             = sdk.Coins{}
 		executedLocally = false
 		msgResponses    = []*cdctypes.Any{}
 	)
@@ -46,7 +46,8 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.FlowIn
 	if errorString == "" {
 		executedLocally, errorString = k.handleFlowExecution(cacheCtx, &flow, &msgResponses, errorString)
 
-		fee, err = k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
+		feeCoin, err := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
+		fee = sdk.NewCoins(feeCoin)
 		if err != nil {
 			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, err.Error()))
 		}
@@ -401,10 +402,10 @@ func (k Keeper) scheduleNextExecution(ctx sdk.Context, flow types.FlowInfo) {
 func (k Keeper) recordFlowNotAllowed(ctx sdk.Context, flow *types.FlowInfo, timeOfBlock time.Time, errorMsg error) {
 	k.Logger(ctx).Debug("flow not allowed to execute", "id", flow.ID)
 	if errorMsg != nil {
-		k.addFlowHistoryEntry(ctx, flow, timeOfBlock, sdk.Coin{}, false, nil, fmt.Sprintf(types.ErrFlowConditions, errorMsg.Error()))
+		k.addFlowHistoryEntry(ctx, flow, timeOfBlock, sdk.Coins{}, false, nil, fmt.Sprintf(types.ErrFlowConditions, errorMsg.Error()))
 		return
 	}
-	k.addFlowHistoryEntry(ctx, flow, timeOfBlock, sdk.Coin{}, false, nil, "")
+	k.addFlowHistoryEntry(ctx, flow, timeOfBlock, sdk.Coins{}, false, nil, "")
 }
 
 // shouldRecur checks whether the flow should be rescheduled based on recurrence rules

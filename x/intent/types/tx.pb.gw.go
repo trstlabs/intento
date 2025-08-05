@@ -214,73 +214,73 @@ func local_request_Msg_UpdateFlow_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 var (
-	filter_Msg_CreateHostedAccount_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_Msg_CreateTrustlessExecutionAgent_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_Msg_CreateHostedAccount_0(ctx context.Context, marshaler runtime.Marshaler, client MsgClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq MsgCreateHostedAccount
+func request_Msg_CreateTrustlessExecutionAgent_0(ctx context.Context, marshaler runtime.Marshaler, client MsgClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq MsgCreateTrustlessExecutionAgent
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Msg_CreateHostedAccount_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Msg_CreateTrustlessExecutionAgent_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateHostedAccount(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.CreateTrustlessExecutionAgent(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Msg_CreateHostedAccount_0(ctx context.Context, marshaler runtime.Marshaler, server MsgServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq MsgCreateHostedAccount
+func local_request_Msg_CreateTrustlessExecutionAgent_0(ctx context.Context, marshaler runtime.Marshaler, server MsgServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq MsgCreateTrustlessExecutionAgent
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Msg_CreateHostedAccount_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Msg_CreateTrustlessExecutionAgent_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.CreateHostedAccount(ctx, &protoReq)
+	msg, err := server.CreateTrustlessExecutionAgent(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 var (
-	filter_Msg_UpdateHostedAccount_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_Msg_UpdateTrustlessExecutionAgentFeeConfig_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_Msg_UpdateHostedAccount_0(ctx context.Context, marshaler runtime.Marshaler, client MsgClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq MsgUpdateHostedAccount
+func request_Msg_UpdateTrustlessExecutionAgentFeeConfig_0(ctx context.Context, marshaler runtime.Marshaler, client MsgClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq MsgUpdateTrustlessExecutionAgentFeeConfig
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Msg_UpdateHostedAccount_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Msg_UpdateTrustlessExecutionAgentFeeConfig_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.UpdateHostedAccount(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.UpdateTrustlessExecutionAgentFeeConfig(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Msg_UpdateHostedAccount_0(ctx context.Context, marshaler runtime.Marshaler, server MsgServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq MsgUpdateHostedAccount
+func local_request_Msg_UpdateTrustlessExecutionAgentFeeConfig_0(ctx context.Context, marshaler runtime.Marshaler, server MsgServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq MsgUpdateTrustlessExecutionAgentFeeConfig
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Msg_UpdateHostedAccount_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Msg_UpdateTrustlessExecutionAgentFeeConfig_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.UpdateHostedAccount(ctx, &protoReq)
+	msg, err := server.UpdateTrustlessExecutionAgentFeeConfig(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -442,7 +442,7 @@ func RegisterMsgHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 
 	})
 
-	mux.Handle("POST", pattern_Msg_CreateHostedAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Msg_CreateTrustlessExecutionAgent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -453,7 +453,7 @@ func RegisterMsgHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Msg_CreateHostedAccount_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Msg_CreateTrustlessExecutionAgent_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -461,11 +461,11 @@ func RegisterMsgHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			return
 		}
 
-		forward_Msg_CreateHostedAccount_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Msg_CreateTrustlessExecutionAgent_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Msg_UpdateHostedAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Msg_UpdateTrustlessExecutionAgentFeeConfig_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -476,7 +476,7 @@ func RegisterMsgHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Msg_UpdateHostedAccount_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Msg_UpdateTrustlessExecutionAgentFeeConfig_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -484,7 +484,7 @@ func RegisterMsgHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 			return
 		}
 
-		forward_Msg_UpdateHostedAccount_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Msg_UpdateTrustlessExecutionAgentFeeConfig_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -652,7 +652,7 @@ func RegisterMsgHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 
 	})
 
-	mux.Handle("POST", pattern_Msg_CreateHostedAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Msg_CreateTrustlessExecutionAgent_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -661,18 +661,18 @@ func RegisterMsgHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Msg_CreateHostedAccount_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Msg_CreateTrustlessExecutionAgent_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Msg_CreateHostedAccount_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Msg_CreateTrustlessExecutionAgent_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("POST", pattern_Msg_UpdateHostedAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_Msg_UpdateTrustlessExecutionAgentFeeConfig_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -681,14 +681,14 @@ func RegisterMsgHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Msg_UpdateHostedAccount_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Msg_UpdateTrustlessExecutionAgentFeeConfig_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Msg_UpdateHostedAccount_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Msg_UpdateTrustlessExecutionAgentFeeConfig_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -726,9 +726,9 @@ var (
 
 	pattern_Msg_UpdateFlow_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "update-flow"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_CreateHostedAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "create-hosted-account"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_CreateTrustlessExecutionAgent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "create-trustless-execution-agent"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_UpdateHostedAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "update-hosted-account"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_UpdateTrustlessExecutionAgentFeeConfig_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "update-trustless-execution-agent-fee-config"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Msg_UpdateParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1beta1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 )
@@ -744,9 +744,9 @@ var (
 
 	forward_Msg_UpdateFlow_0 = runtime.ForwardResponseMessage
 
-	forward_Msg_CreateHostedAccount_0 = runtime.ForwardResponseMessage
+	forward_Msg_CreateTrustlessExecutionAgent_0 = runtime.ForwardResponseMessage
 
-	forward_Msg_UpdateHostedAccount_0 = runtime.ForwardResponseMessage
+	forward_Msg_UpdateTrustlessExecutionAgentFeeConfig_0 = runtime.ForwardResponseMessage
 
 	forward_Msg_UpdateParams_0 = runtime.ForwardResponseMessage
 )

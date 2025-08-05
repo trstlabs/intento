@@ -6,7 +6,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "intento/intent/v1beta1/flow.proto";
-import "intento/intent/v1beta1/hostedaccount.proto";
+import "intento/intent/v1beta1/trustless_execution_agent.proto";
 import "intento/intent/v1beta1/params.proto";
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 option (gogoproto.equal_all) = false;
@@ -30,32 +30,35 @@ service Query {
     option (google.api.http).get =
         "/intento/intent/v1beta1/flow-history/{id}";
   }
-  // Flows returns the all auto-executing interchain account messages
+  // Flows returns the all flows
   rpc Flows(QueryFlowsRequest) returns (QueryFlowsResponse) {
     option (google.api.http).get = "/intento/intent/v1beta1/flows";
   }
-  // FlowsForOwner returns the auto-executing interchain account messages for
-  // given owner
+  // FlowsForOwner returns all flows for a given owner
   rpc FlowsForOwner(QueryFlowsForOwnerRequest)
       returns (QueryFlowsForOwnerResponse) {
     option (google.api.http).get =
-        "/intento/intent/v1beta1/flows-for-owner/{owner}";
-  }
-  rpc HostedAccount(QueryHostedAccountRequest)
-      returns (QueryHostedAccountResponse) {
-    option (google.api.http).get =
-        "/intento/intent/v1beta1/hosted-account/{address}";
+        "/intento/intent/v1beta1/flows/{owner}";
   }
 
-  rpc HostedAccounts(QueryHostedAccountsRequest)
-      returns (QueryHostedAccountsResponse) {
-    option (google.api.http).get = "/intento/intent/v1beta1/hosted-accounts";
+  // TrustlessExecutionAgent returns the trustless excution agent information for a given hosted address
+  rpc TrustlessExecutionAgent(QueryTrustlessExecutionAgentRequest)
+      returns (QueryTrustlessExecutionAgentResponse) {
+    option (google.api.http).get =
+        "/intento/intent/v1beta1/trustless-execution-agent/{agent_address}";
   }
 
-  rpc HostedAccountsByAdmin(QueryHostedAccountsByAdminRequest)
-      returns (QueryHostedAccountsByAdminResponse) {
+  // TrustlessExecutionAgents returns all trustless excution agents
+  rpc TrustlessExecutionAgents(QueryTrustlessExecutionAgentsRequest)
+      returns (QueryTrustlessExecutionAgentsResponse) {
+    option (google.api.http).get = "/intento/intent/v1beta1/trustless-execution-agents";
+  }
+
+  // TrustlessExecutionAgentsByFeeAdmin returns all trustless excution agents for a given fee admin address
+  rpc TrustlessExecutionAgentsByFeeAdmin(QueryTrustlessExecutionAgentsByFeeAdminRequest)
+      returns (QueryTrustlessExecutionAgentsByFeeAdminResponse) {
     option (google.api.http).get =
-        "/intento/intent/v1beta1/hosted-accounts/{admin}";
+        "/intento/intent/v1beta1/trustless-execution-agents/{fee_admin}";
   }
 
   // Params returns the total set of Intent parameters.
@@ -141,44 +144,44 @@ message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
-// QueryHostedAccount is the request type for the Query/Params RPC method.
-message QueryHostedAccountRequest { string address = 1; }
+// QueryTrustlessExecutionAgent is the request type for the Query/Params RPC method.
+message QueryTrustlessExecutionAgentRequest { string agent_address = 1; }
 
-// QueryHostedAccountResponse is the response type for the Query/HostedAccount
+// QueryTrustlessExecutionAgentResponse is the response type for the Query/TrustlessExecutionAgent
 // RPC method.
-message QueryHostedAccountResponse {
-  // HostedAccount
-  HostedAccount hosted_account = 1 [ (gogoproto.nullable) = false ];
+message QueryTrustlessExecutionAgentResponse {
+  // TrustlessExecutionAgent
+  TrustlessExecutionAgent trustless_execution_agent = 1 [ (gogoproto.nullable) = false ];
 }
 
-// QueryHostedAccounts is the request type for the Query/HostedAccount RPC
+// QueryTrustlessExecutionAgents is the request type for the Query/TrustlessExecutionAgent RPC
 // method.
-message QueryHostedAccountsRequest {
+message QueryTrustlessExecutionAgentsRequest {
   // Pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryHostedAccountsResponse is the response type for the Query/HostedAccount
+// QueryTrustlessExecutionAgentsResponse is the response type for the Query/TrustlessExecutionAgent
 // RPC method.
-message QueryHostedAccountsResponse {
-  // HostedAccounts
-  repeated HostedAccount hosted_accounts = 1 [ (gogoproto.nullable) = false ];
+message QueryTrustlessExecutionAgentsResponse {
+  // TrustlessExecutionAgents
+  repeated TrustlessExecutionAgent trustless_execution_agents = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryHostedAccountsByAdminRequest
-message QueryHostedAccountsByAdminRequest {
-  string admin = 1;
+// QueryTrustlessExecutionAgentsByFeeAdminRequest
+message QueryTrustlessExecutionAgentsByFeeAdminRequest {
+  string fee_admin = 1;
   // Pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryHostedAccountResponse is the response type for the Query/HostedAccount
+// QueryTrustlessExecutionAgentResponse is the response type for the Query/TrustlessExecutionAgent
 // RPC method.
-message QueryHostedAccountsByAdminResponse {
-  // HostedAccounts
-  repeated HostedAccount hosted_accounts = 1 [ (gogoproto.nullable) = false ];
+message QueryTrustlessExecutionAgentsByFeeAdminResponse {
+  // TrustlessExecutionAgents
+  repeated TrustlessExecutionAgent trustless_execution_agents = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
