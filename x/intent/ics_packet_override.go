@@ -370,14 +370,14 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 		}
 	}
 
-	conditionsString, ok := flow["conditions"].(interface{})
+	conditionsMap, ok := flow["conditions"]
 	if ok {
-		conditionsBytes, err := json.Marshal(conditionsString) // Convert interface{} back to JSON bytes
+		conditionsBytes, err := json.Marshal(conditionsMap)
 		if err != nil {
 			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["conditions"]`)
 		}
 
-		if conditionsString != "" {
+		if conditionsMap != nil {
 			if err := json.Unmarshal(conditionsBytes, &conditions); err != nil {
 				return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["conditions"]`)
 			}
