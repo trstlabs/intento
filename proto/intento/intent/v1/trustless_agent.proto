@@ -1,26 +1,26 @@
 
 syntax = "proto3";
 
-package intento.intent.v1beta1;
+package intento.intent.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
-import "intento/intent/v1beta1/flow.proto";
+import "intento/intent/v1/flow.proto";
 
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 
 option (gogoproto.goproto_getters_all) = false;
 option (gogoproto.equal_all) = true;
 
-message TrustlessExecutionAgent {
+message TrustlessAgent {
   string agent_address = 1;
   ICAConfig ica_config = 2 [ (gogoproto.customname) = "ICAConfig" ];
-  TrustlessExecutionAgentFeeConfig fee_config = 3;
+  TrustlessAgentFeeConfig fee_config = 3;
 }
 
-message TrustlessExecutionAgentFeeConfig {
+message TrustlessAgentFeeConfig {
   string fee_admin = 1;
   repeated cosmos.base.v1beta1.Coin fee_coins_supported = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",

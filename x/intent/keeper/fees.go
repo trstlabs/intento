@@ -187,7 +187,7 @@ func GetDenomIfAnyGTE(coins sdk.Coins, coinsB sdk.Coins) string {
 	return ""
 }
 
-func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.FlowInfo, trustlessExecutionAgent types.TrustlessExecutionAgent) error {
+func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.FlowInfo, trustlessExecutionAgent types.TrustlessAgent) error {
 	feeAddr, err := sdk.AccAddressFromBech32(flow.FeeAddress)
 	if err != nil {
 		return err
@@ -197,13 +197,13 @@ func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.FlowInfo, trus
 	if err != nil {
 		return err
 	}
-	found, feeCoin := trustlessExecutionAgent.FeeConfig.FeeCoinsSupported.Sort().Find(flow.TrustlessExecutionAgentExecutionConfig.FeeCoinLimit.Denom)
+	found, feeCoin := trustlessExecutionAgent.FeeConfig.FeeCoinsSupported.Sort().Find(flow.TrustlessAgentExecutionConfig.FeeCoinLimit.Denom)
 	if !found {
 		return errorsmod.Wrap(types.ErrNotFound, "coin not in hosted config")
 	}
 
-	if feeCoin.Amount.GT(flow.TrustlessExecutionAgentExecutionConfig.FeeCoinLimit.Amount) {
-		return types.ErrHostedFeeLimit
+	if feeCoin.Amount.GT(flow.TrustlessAgentExecutionConfig.FeeCoinLimit.Amount) {
+		return types.ErrTrustlessAgentFeeLimit
 	}
 
 	err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAccAdminAddr, sdk.Coins{feeCoin})

@@ -20,7 +20,7 @@ import (
 
 func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdctypes.Any, error) {
 	// local flow
-	if (flow.SelfHostedICAConfig == nil || flow.SelfHostedICAConfig.ConnectionID == "") && (flow.TrustlessExecutionAgentExecutionConfig == nil || flow.TrustlessExecutionAgentExecutionConfig.AgentAddress == "") {
+	if (flow.SelfHostedICAConfig == nil || flow.SelfHostedICAConfig.ConnectionID == "") && (flow.TrustlessAgentExecutionConfig == nil || flow.TrustlessAgentExecutionConfig.AgentAddress == "") {
 		txMsgs := flow.GetTxMsgs(k.cdc)
 		msgResponses, err := handleLocalFlow(k, ctx, txMsgs, *flow)
 		return err == nil, msgResponses, errorsmod.Wrap(err, "could execute local flow")
@@ -29,18 +29,18 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 	connectionID := flow.SelfHostedICAConfig.ConnectionID
 	portID := flow.SelfHostedICAConfig.PortID
 	triggerAddress := flow.Owner
-	//get trustless excution agent from hosted config
-	if flow.TrustlessExecutionAgentExecutionConfig != nil && flow.TrustlessExecutionAgentExecutionConfig.AgentAddress != "" {
-		trustlessExecutionAgent := k.GetTrustlessExecutionAgent(ctx, flow.TrustlessExecutionAgentExecutionConfig.AgentAddress)
+	//get trustless agent from hosted config
+	if flow.TrustlessAgentExecutionConfig != nil && flow.TrustlessAgentExecutionConfig.AgentAddress != "" {
+		trustlessExecutionAgent := k.GetTrustlessAgent(ctx, flow.TrustlessAgentExecutionConfig.AgentAddress)
 		if trustlessExecutionAgent.AgentAddress == "" || trustlessExecutionAgent.ICAConfig == nil {
-			return false, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessExecutionAgent, "trustless excution agent or ICAConfig is nil for address %s", flow.TrustlessExecutionAgentExecutionConfig.AgentAddress)
+			return false, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessAgent, "trustless agent or ICAConfig is nil for address %s", flow.TrustlessAgentExecutionConfig.AgentAddress)
 		}
 		connectionID = trustlessExecutionAgent.ICAConfig.ConnectionID
 		portID = trustlessExecutionAgent.ICAConfig.PortID
 		triggerAddress = trustlessExecutionAgent.AgentAddress
 		err := k.SendFeesToHostedAdmin(ctx, *flow, trustlessExecutionAgent)
 		if err != nil {
-			return false, nil, errorsmod.Wrap(err, "could not pay trustless excution agent")
+			return false, nil, errorsmod.Wrap(err, "could not pay trustless agent")
 		}
 
 	}

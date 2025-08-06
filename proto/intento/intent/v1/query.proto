@@ -1,13 +1,13 @@
 syntax = "proto3";
 
-package intento.intent.v1beta1;
+package intento.intent.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "intento/intent/v1beta1/flow.proto";
-import "intento/intent/v1beta1/trustless_execution_agent.proto";
-import "intento/intent/v1beta1/params.proto";
+import "intento/intent/v1/flow.proto";
+import "intento/intent/v1/trustless_agent.proto";
+import "intento/intent/v1/params.proto";
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 option (gogoproto.equal_all) = false;
 option (gogoproto.goproto_getters_all) = false;
@@ -18,52 +18,52 @@ service Query {
   // owner address on a given connection pair
   rpc InterchainAccountFromAddress(QueryInterchainAccountFromAddressRequest)
       returns (QueryInterchainAccountFromAddressResponse) {
-    option (google.api.http).get = "/intento/intent/v1beta1/address-to-ica";
+    option (google.api.http).get = "/intento/intent/v1/address-to-ica";
   }
   // Flow returns the auto-executing interchain account tx
   rpc Flow(QueryFlowRequest) returns (QueryFlowResponse) {
-    option (google.api.http).get = "/intento/intent/v1beta1/flow/{id}";
+    option (google.api.http).get = "/intento/intent/v1/flow/{id}";
   }
   // FlowHistory returns the flow history
   rpc FlowHistory(QueryFlowHistoryRequest)
       returns (QueryFlowHistoryResponse) {
     option (google.api.http).get =
-        "/intento/intent/v1beta1/flow-history/{id}";
+        "/intento/intent/v1/flow-history/{id}";
   }
   // Flows returns the all flows
   rpc Flows(QueryFlowsRequest) returns (QueryFlowsResponse) {
-    option (google.api.http).get = "/intento/intent/v1beta1/flows";
+    option (google.api.http).get = "/intento/intent/v1/flows";
   }
   // FlowsForOwner returns all flows for a given owner
   rpc FlowsForOwner(QueryFlowsForOwnerRequest)
       returns (QueryFlowsForOwnerResponse) {
     option (google.api.http).get =
-        "/intento/intent/v1beta1/flows/{owner}";
+        "/intento/intent/v1/flows/{owner}";
   }
 
-  // TrustlessExecutionAgent returns the trustless excution agent information for a given hosted address
-  rpc TrustlessExecutionAgent(QueryTrustlessExecutionAgentRequest)
-      returns (QueryTrustlessExecutionAgentResponse) {
+  // TrustlessAgent returns the trustless excution agent information for a given hosted address
+  rpc TrustlessAgent(QueryTrustlessAgentRequest)
+      returns (QueryTrustlessAgentResponse) {
     option (google.api.http).get =
-        "/intento/intent/v1beta1/trustless-execution-agent/{agent_address}";
+        "/intento/intent/v1/trustless-execution-agent/{agent_address}";
   }
 
-  // TrustlessExecutionAgents returns all trustless excution agents
-  rpc TrustlessExecutionAgents(QueryTrustlessExecutionAgentsRequest)
-      returns (QueryTrustlessExecutionAgentsResponse) {
-    option (google.api.http).get = "/intento/intent/v1beta1/trustless-execution-agents";
+  // TrustlessAgents returns all trustless excution agents
+  rpc TrustlessAgents(QueryTrustlessAgentsRequest)
+      returns (QueryTrustlessAgentsResponse) {
+    option (google.api.http).get = "/intento/intent/v1/trustless-execution-agents";
   }
 
-  // TrustlessExecutionAgentsByFeeAdmin returns all trustless excution agents for a given fee admin address
-  rpc TrustlessExecutionAgentsByFeeAdmin(QueryTrustlessExecutionAgentsByFeeAdminRequest)
-      returns (QueryTrustlessExecutionAgentsByFeeAdminResponse) {
+  // TrustlessAgentsByFeeAdmin returns all trustless excution agents for a given fee admin address
+  rpc TrustlessAgentsByFeeAdmin(QueryTrustlessAgentsByFeeAdminRequest)
+      returns (QueryTrustlessAgentsByFeeAdminResponse) {
     option (google.api.http).get =
-        "/intento/intent/v1beta1/trustless-execution-agents/{fee_admin}";
+        "/intento/intent/v1/trustless-execution-agents/{fee_admin}";
   }
 
   // Params returns the total set of Intent parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/intento/intent/v1beta1/params";
+    option (google.api.http).get = "/intento/intent/v1/params";
   }
 }
 
@@ -144,44 +144,44 @@ message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
-// QueryTrustlessExecutionAgent is the request type for the Query/Params RPC method.
-message QueryTrustlessExecutionAgentRequest { string agent_address = 1; }
+// QueryTrustlessAgent is the request type for the Query/Params RPC method.
+message QueryTrustlessAgentRequest { string agent_address = 1; }
 
-// QueryTrustlessExecutionAgentResponse is the response type for the Query/TrustlessExecutionAgent
+// QueryTrustlessAgentResponse is the response type for the Query/TrustlessAgent
 // RPC method.
-message QueryTrustlessExecutionAgentResponse {
-  // TrustlessExecutionAgent
-  TrustlessExecutionAgent trustless_execution_agent = 1 [ (gogoproto.nullable) = false ];
+message QueryTrustlessAgentResponse {
+  // TrustlessAgent
+  TrustlessAgent trustless_agent = 1 [ (gogoproto.nullable) = false ];
 }
 
-// QueryTrustlessExecutionAgents is the request type for the Query/TrustlessExecutionAgent RPC
+// QueryTrustlessAgents is the request type for the Query/TrustlessAgent RPC
 // method.
-message QueryTrustlessExecutionAgentsRequest {
+message QueryTrustlessAgentsRequest {
   // Pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryTrustlessExecutionAgentsResponse is the response type for the Query/TrustlessExecutionAgent
+// QueryTrustlessAgentsResponse is the response type for the Query/TrustlessAgent
 // RPC method.
-message QueryTrustlessExecutionAgentsResponse {
-  // TrustlessExecutionAgents
-  repeated TrustlessExecutionAgent trustless_execution_agents = 1 [ (gogoproto.nullable) = false ];
+message QueryTrustlessAgentsResponse {
+  // TrustlessAgents
+  repeated TrustlessAgent trustless_agents = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryTrustlessExecutionAgentsByFeeAdminRequest
-message QueryTrustlessExecutionAgentsByFeeAdminRequest {
+// QueryTrustlessAgentsByFeeAdminRequest
+message QueryTrustlessAgentsByFeeAdminRequest {
   string fee_admin = 1;
   // Pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryTrustlessExecutionAgentResponse is the response type for the Query/TrustlessExecutionAgent
+// QueryTrustlessAgentResponse is the response type for the Query/TrustlessAgent
 // RPC method.
-message QueryTrustlessExecutionAgentsByFeeAdminResponse {
-  // TrustlessExecutionAgents
-  repeated TrustlessExecutionAgent trustless_execution_agents = 1 [ (gogoproto.nullable) = false ];
+message QueryTrustlessAgentsByFeeAdminResponse {
+  // TrustlessAgents
+  repeated TrustlessAgent trustless_agents = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

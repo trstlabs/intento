@@ -34,8 +34,8 @@ func GetTxCmd() *cobra.Command {
 		getSubmitFlowCmd(),
 		getRegisterAccountAndSubmitFlowCmd(),
 		getUpdateFlowCmd(),
-		getCreateTrustlessExecutionAgent(),
-		getUpdateTrustlessExecutionAgentCmd(),
+		getCreateTrustlessAgent(),
+		getUpdateTrustlessAgentCmd(),
 	)
 
 	return cmd
@@ -188,7 +188,7 @@ func getSubmitFlowCmd() *cobra.Command {
 			}
 
 			hostedFeeLimit := sdk.Coin{}
-			hostedFeeLimitString := viper.GetString(flagTrustlessExecutionAgentFeeLimit)
+			hostedFeeLimitString := viper.GetString(flagTrustlessAgentFeeLimit)
 			if hostedFeeLimitString != "" {
 				hostedFeeLimit, err = sdk.ParseCoinNormalized(hostedFeeLimitString)
 				if err != nil {
@@ -196,7 +196,7 @@ func getSubmitFlowCmd() *cobra.Command {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagTrustlessExecutionAgent), hostedFeeLimit, configuration, &conditions)
+			msg, err := types.NewMsgSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagTrustlessAgent), hostedFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}
@@ -360,14 +360,14 @@ func getUpdateFlowCmd() *cobra.Command {
 				}
 			}
 			hostedFeeLimit := sdk.Coin{}
-			hostedFeeLimitString := viper.GetString(flagTrustlessExecutionAgentFeeLimit)
+			hostedFeeLimitString := viper.GetString(flagTrustlessAgentFeeLimit)
 			if hostedFeeLimitString != "" {
 				hostedFeeLimit, err = sdk.ParseCoinNormalized(hostedFeeLimitString)
 				if err != nil {
 					return err
 				}
 			}
-			msg, err := types.NewMsgUpdateFlow(clientCtx.GetFromAddress().String(), id, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagTrustlessExecutionAgent), hostedFeeLimit, configuration, &conditions)
+			msg, err := types.NewMsgUpdateFlow(clientCtx.GetFromAddress().String(), id, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagTrustlessAgent), hostedFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}
@@ -407,7 +407,7 @@ func getExecutionConfiguration() *types.ExecutionConfiguration {
 	return &configuration
 }
 
-func getCreateTrustlessExecutionAgent() *cobra.Command {
+func getCreateTrustlessAgent() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "create-trustless-execution-agent",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -433,7 +433,7 @@ func getCreateTrustlessExecutionAgent() *cobra.Command {
 				TxType:                 icatypes.TxTypeSDKMultiMsg,
 			}))
 
-			msg := types.NewMsgCreateTrustlessExecutionAgent(
+			msg := types.NewMsgCreateTrustlessAgent(
 				clientCtx.GetFromAddress().String(),
 				viper.GetString(flagConnectionID),
 				version,
@@ -459,7 +459,7 @@ func getCreateTrustlessExecutionAgent() *cobra.Command {
 	return cmd
 }
 
-func getUpdateTrustlessExecutionAgentCmd() *cobra.Command {
+func getUpdateTrustlessAgentCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "update-trustless-execution-agent",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -476,9 +476,9 @@ func getUpdateTrustlessExecutionAgentCmd() *cobra.Command {
 				}
 			}
 
-			msg := types.NewMsgUpdateTrustlessExecutionAgent(
+			msg := types.NewMsgUpdateTrustlessAgent(
 				clientCtx.GetFromAddress().String(),
-				viper.GetString(flagTrustlessExecutionAgent),
+				viper.GetString(flagTrustlessAgent),
 				viper.GetString(flagNewAdmin),
 				feeCoinsSupported,
 			)
@@ -493,8 +493,8 @@ func getUpdateTrustlessExecutionAgentCmd() *cobra.Command {
 
 	cmd.Flags().String(flagFeeCoinsSupported, "", "Coins supported as fees for hosted, optional")
 	cmd.Flags().String(flagNewAdmin, "", "A new admin, optional")
-	cmd.Flags().String(flagTrustlessExecutionAgent, "", "A trustless excution agent to execute actions on a host")
-	_ = cmd.MarkFlagRequired(flagTrustlessExecutionAgent)
+	cmd.Flags().String(flagTrustlessAgent, "", "A trustless agent to execute actions on a host")
+	_ = cmd.MarkFlagRequired(flagTrustlessAgent)
 
 	flags.AddTxFlagsToCmd(cmd)
 

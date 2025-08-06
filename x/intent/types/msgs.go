@@ -16,8 +16,8 @@ var (
 	_ sdk.Msg = &MsgSubmitFlow{}
 	_ sdk.Msg = &MsgRegisterAccountAndSubmitFlow{}
 	_ sdk.Msg = &MsgUpdateFlow{}
-	_ sdk.Msg = &MsgCreateTrustlessExecutionAgent{}
-	_ sdk.Msg = &MsgUpdateTrustlessExecutionAgentFeeConfig{}
+	_ sdk.Msg = &MsgCreateTrustlessAgent{}
+	_ sdk.Msg = &MsgUpdateTrustlessAgentFeeConfig{}
 
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitTx{}
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitFlow{}
@@ -143,7 +143,7 @@ func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID strin
 		FeeFunds:      feeFunds,
 		Configuration: configuration,
 		ConnectionID:  connectionID,
-		TrustlessExecutionAgentExecutionConfig: &TrustlessExecutionAgentExecutionConfig{AgentAddress: agentAddress,
+		TrustlessAgentExecutionConfig: &TrustlessAgentExecutionConfig{AgentAddress: agentAddress,
 			FeeCoinLimit: hostedFeeLimit},
 		Conditions: conditions,
 	}, nil
@@ -359,7 +359,7 @@ func NewMsgUpdateFlow(owner string, id uint64, label string, sdkMsgs []sdk.Msg, 
 		Interval:      interval,
 		Configuration: configuration,
 		FeeFunds:      feeFunds,
-		TrustlessExecutionAgentExecutionConfig: &TrustlessExecutionAgentExecutionConfig{AgentAddress: agentAddress,
+		TrustlessAgentExecutionConfig: &TrustlessAgentExecutionConfig{AgentAddress: agentAddress,
 			FeeCoinLimit: hostedFeeLimit},
 		Conditions: conditions,
 	}, nil
@@ -429,9 +429,9 @@ func (msg MsgUpdateFlow) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgCreateTrustlessExecutionAgent creates a new MsgCreateTrustlessExecutionAgent instance
-func NewMsgCreateTrustlessExecutionAgent(creator, connectionID, version string, feeFundsSupported sdk.Coins) *MsgCreateTrustlessExecutionAgent {
-	return &MsgCreateTrustlessExecutionAgent{
+// NewMsgCreateTrustlessAgent creates a new MsgCreateTrustlessAgent instance
+func NewMsgCreateTrustlessAgent(creator, connectionID, version string, feeFundsSupported sdk.Coins) *MsgCreateTrustlessAgent {
+	return &MsgCreateTrustlessAgent{
 		Creator:           creator,
 		ConnectionID:      connectionID,
 		Version:           version,
@@ -440,7 +440,7 @@ func NewMsgCreateTrustlessExecutionAgent(creator, connectionID, version string, 
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgCreateTrustlessExecutionAgent) ValidateBasic() error {
+func (msg MsgCreateTrustlessAgent) ValidateBasic() error {
 	if strings.TrimSpace(msg.Creator) == "" {
 		return errorsmod.Wrap(ErrInvalidAddress, "missing creator address")
 	}
@@ -451,7 +451,7 @@ func (msg MsgCreateTrustlessExecutionAgent) ValidateBasic() error {
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgCreateTrustlessExecutionAgent) GetSigners() []sdk.AccAddress {
+func (msg MsgCreateTrustlessAgent) GetSigners() []sdk.AccAddress {
 	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -460,18 +460,18 @@ func (msg MsgCreateTrustlessExecutionAgent) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{accAddr}
 }
 
-// NewMsgUpdateTrustlessExecutionAgent creates a new NewMsgUpdateTrustlessExecutionAgent instance
-func NewMsgUpdateTrustlessExecutionAgent(admin, agentAddress, newAdmin string, feeFundsSupported sdk.Coins) *MsgUpdateTrustlessExecutionAgentFeeConfig {
+// NewMsgUpdateTrustlessAgent creates a new NewMsgUpdateTrustlessAgent instance
+func NewMsgUpdateTrustlessAgent(admin, agentAddress, newAdmin string, feeFundsSupported sdk.Coins) *MsgUpdateTrustlessAgentFeeConfig {
 
-	return &MsgUpdateTrustlessExecutionAgentFeeConfig{
+	return &MsgUpdateTrustlessAgentFeeConfig{
 		FeeAdmin:     admin,
 		AgentAddress: agentAddress,
-		FeeConfig:    &TrustlessExecutionAgentFeeConfig{FeeCoinsSupported: feeFundsSupported, FeeAdmin: newAdmin},
+		FeeConfig:    &TrustlessAgentFeeConfig{FeeCoinsSupported: feeFundsSupported, FeeAdmin: newAdmin},
 	}
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgUpdateTrustlessExecutionAgentFeeConfig) ValidateBasic() error {
+func (msg MsgUpdateTrustlessAgentFeeConfig) ValidateBasic() error {
 	if strings.TrimSpace(msg.FeeAdmin) == "" {
 		return errorsmod.Wrap(ErrInvalidAddress, "missing creator address")
 	}
@@ -482,7 +482,7 @@ func (msg MsgUpdateTrustlessExecutionAgentFeeConfig) ValidateBasic() error {
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgUpdateTrustlessExecutionAgentFeeConfig) GetSigners() []sdk.AccAddress {
+func (msg MsgUpdateTrustlessAgentFeeConfig) GetSigners() []sdk.AccAddress {
 	admin, err := sdk.AccAddressFromBech32(msg.FeeAdmin)
 	if err != nil {
 		panic(err)

@@ -65,11 +65,11 @@ func isAuthzMsgExec(message *codectypes.Any) bool {
 }
 
 func isLocalMessage(flowInfo types.FlowInfo) bool {
-	return (flowInfo.SelfHostedICAConfig == nil || flowInfo.SelfHostedICAConfig.ConnectionID == "") && (flowInfo.TrustlessExecutionAgentExecutionConfig == nil || flowInfo.TrustlessExecutionAgentExecutionConfig.AgentAddress == "")
+	return (flowInfo.SelfHostedICAConfig == nil || flowInfo.SelfHostedICAConfig.ConnectionID == "") && (flowInfo.TrustlessAgentExecutionConfig == nil || flowInfo.TrustlessAgentExecutionConfig.AgentAddress == "")
 }
 
 func isHostedICAMessage(flowInfo types.FlowInfo) bool {
-	return flowInfo.TrustlessExecutionAgentExecutionConfig != nil && flowInfo.TrustlessExecutionAgentExecutionConfig.AgentAddress != ""
+	return flowInfo.TrustlessAgentExecutionConfig != nil && flowInfo.TrustlessAgentExecutionConfig.AgentAddress != ""
 }
 
 func isSelfHostedICAMessage(flowInfo types.FlowInfo) bool {
@@ -91,7 +91,7 @@ func (k Keeper) validateAuthzMsg(ctx sdk.Context, codec codec.Codec, flowInfo ty
 	return nil
 }
 
-// validateSigners checks the signers of a message against the owner, ICA, and trustless excution agents.
+// validateSigners checks the signers of a message against the owner, ICA, and trustless agents.
 func (k Keeper) validateSigners(ctx sdk.Context, codec codec.Codec, flowInfo types.FlowInfo, message *codectypes.Any) error {
 
 	protoReflectMsg, err := unpackV2Any(codec, message)
@@ -183,13 +183,13 @@ func (k Keeper) FlowIsToSourceChain(ctx sdk.Context, destinationChannelID, portI
 		return true
 	}
 
-	// Case 2: Trustless excution agent, validate connection ID
+	// Case 2: Trustless agent, validate connection ID
 	if agentAddress != "" {
-		tea, err := k.TryGetTrustlessExecutionAgent(ctx, agentAddress)
+		ta, err := k.TryGetTrustlessAgent(ctx, agentAddress)
 		if err != nil {
 			return false
 		}
-		if tea.ICAConfig.ConnectionID == ics20ConnectionID {
+		if ta.ICAConfig.ConnectionID == ics20ConnectionID {
 			return true
 		}
 	}

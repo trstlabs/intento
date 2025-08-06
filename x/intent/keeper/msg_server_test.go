@@ -469,7 +469,7 @@ func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestCreateTrustlessExecutionAgent() {
+func (suite *KeeperTestSuite) TestCreateTrustlessAgent() {
 	var (
 		connectionID string
 	)
@@ -480,7 +480,7 @@ func (suite *KeeperTestSuite) TestCreateTrustlessExecutionAgent() {
 		expPass  bool
 	}{
 		{
-			"success - Create trustless excution agent flow",
+			"success - Create trustless agent flow",
 			func() {
 				path := NewICAPath(suite.IntentoChain, suite.HostChain)
 				suite.Coordinator.SetupConnections(path)
@@ -494,15 +494,15 @@ func (suite *KeeperTestSuite) TestCreateTrustlessExecutionAgent() {
 		suite.Run(tc.name, func() {
 			tc.malleate()
 
-			// Create a new trustless excution agent
-			msgHosted := &types.MsgCreateTrustlessExecutionAgent{
+			// Create a new trustless agent
+			msgHosted := &types.MsgCreateTrustlessAgent{
 				Creator:      suite.TestAccs[0].String(),
 				ConnectionID: connectionID,
 				Version:      TestVersion,
 			}
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			res, err := msgSrv.CreateTrustlessExecutionAgent(suite.IntentoChain.GetContext(), msgHosted)
+			res, err := msgSrv.CreateTrustlessAgent(suite.IntentoChain.GetContext(), msgHosted)
 
 			if tc.expPass {
 				suite.Require().NoError(err)
@@ -653,7 +653,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestUpdateTrustlessExecutionAgent() {
+func (suite *KeeperTestSuite) TestUpdateTrustlessAgent() {
 	var (
 		path         *ibctesting.Path
 		newAdmin     string
@@ -688,22 +688,22 @@ func (suite *KeeperTestSuite) TestUpdateTrustlessExecutionAgent() {
 
 			admin := suite.IntentoChain.SenderAccount.GetAddress().String()
 
-			msgHosted := types.NewMsgCreateTrustlessExecutionAgent(admin, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())))
+			msgHosted := types.NewMsgCreateTrustlessAgent(admin, path.EndpointA.ConnectionID, path.EndpointA.ChannelConfig.Version, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.OneInt())))
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			resHosted, err := msgSrv.CreateTrustlessExecutionAgent(suite.IntentoChain.GetContext(), msgHosted)
+			resHosted, err := msgSrv.CreateTrustlessAgent(suite.IntentoChain.GetContext(), msgHosted)
 			suite.Require().Nil(err)
 			suite.Require().NotNil(resHosted.Address)
 
-			hosted := GetICAApp(suite.IntentoChain).IntentKeeper.GetTrustlessExecutionAgent(suite.IntentoChain.GetContext(), resHosted.Address)
+			hosted := GetICAApp(suite.IntentoChain).IntentKeeper.GetTrustlessAgent(suite.IntentoChain.GetContext(), resHosted.Address)
 
-			msg := types.NewMsgUpdateTrustlessExecutionAgent(admin, resHosted.Address, newAdmin, sdk.NewCoins(sdk.NewCoin(newDenom, math.NewIntFromUint64(newFeeAmount))))
+			msg := types.NewMsgUpdateTrustlessAgent(admin, resHosted.Address, newAdmin, sdk.NewCoins(sdk.NewCoin(newDenom, math.NewIntFromUint64(newFeeAmount))))
 			suite.Require().NoError(err)
 
 			msgSrv = keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
-			res, err := msgSrv.UpdateTrustlessExecutionAgentFeeConfig(suite.IntentoChain.GetContext(), msg)
+			res, err := msgSrv.UpdateTrustlessAgentFeeConfig(suite.IntentoChain.GetContext(), msg)
 			suite.IntentoChain.NextBlock()
-			hostedNew := GetICAApp(suite.IntentoChain).IntentKeeper.GetTrustlessExecutionAgent(suite.IntentoChain.GetContext(), resHosted.Address)
+			hostedNew := GetICAApp(suite.IntentoChain).IntentKeeper.GetTrustlessAgent(suite.IntentoChain.GetContext(), resHosted.Address)
 			if !tc.expPass {
 				suite.Require().Error(err)
 				suite.Require().Nil(res)

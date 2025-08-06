@@ -127,7 +127,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 			StartAt:       startAt,
 			Configuration: &configuration,
 			Conditions:    &conditions,
-			TrustlessExecutionAgentExecutionConfig: &types.TrustlessExecutionAgentExecutionConfig{AgentAddress: agentAddress,
+			TrustlessAgentExecutionConfig: &types.TrustlessAgentExecutionConfig{AgentAddress: agentAddress,
 				FeeCoinLimit: hostedFeeLimit},
 		}
 		response, err := updateFlow(im.keeper, ctx, &msg)
@@ -153,7 +153,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 			Configuration: &configuration,
 			Conditions:    &conditions,
 			ConnectionID:  connectionID,
-			TrustlessExecutionAgentExecutionConfig: &types.TrustlessExecutionAgentExecutionConfig{AgentAddress: agentAddress,
+			TrustlessAgentExecutionConfig: &types.TrustlessAgentExecutionConfig{AgentAddress: agentAddress,
 				FeeCoinLimit: hostedFeeLimit},
 		}
 		response, err := submitFlow(im.keeper, ctx, &msg)
@@ -384,8 +384,8 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 		}
 	}
 
-	//optional trustless excution agent
-	agentAddress, ok = flow["trustless_execution_agent"].(string)
+	//optional trustless agent
+	agentAddress, ok = flow["trustless_agent"].(string)
 	if !ok {
 		agentAddress = ""
 	}

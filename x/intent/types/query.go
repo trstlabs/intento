@@ -56,28 +56,28 @@ func NewQueryFlowHistoryRequest(id string) *QueryFlowHistoryRequest {
 	return &QueryFlowHistoryRequest{Id: id}
 }
 
-// NewQueryTrustlessExecutionAgentRequest creates and returns a new QueryTrustlessExecutionAgentsRequest
-func NewQueryTrustlessExecutionAgentRequest(agentAddress string) *QueryTrustlessExecutionAgentRequest {
-	return &QueryTrustlessExecutionAgentRequest{AgentAddress: agentAddress}
+// NewQueryTrustlessAgentRequest creates and returns a new QueryTrustlessAgentsRequest
+func NewQueryTrustlessAgentRequest(agentAddress string) *QueryTrustlessAgentRequest {
+	return &QueryTrustlessAgentRequest{AgentAddress: agentAddress}
 }
 
-// NewQueryTrustlessExecutionAgentResponse creates and returns a new QueryTrustlessExecutionAgentsResponse
-func NewQueryTrustlessExecutionAgentResponse(trustlessExecutionAgent TrustlessExecutionAgent) *QueryTrustlessExecutionAgentResponse {
-	return &QueryTrustlessExecutionAgentResponse{
-		TrustlessExecutionAgent: trustlessExecutionAgent,
+// NewQueryTrustlessAgentResponse creates and returns a new QueryTrustlessAgentsResponse
+func NewQueryTrustlessAgentResponse(trustlessExecutionAgent TrustlessAgent) *QueryTrustlessAgentResponse {
+	return &QueryTrustlessAgentResponse{
+		TrustlessAgent: trustlessExecutionAgent,
 	}
 }
 
-// NewQueryTrustlessExecutionAgentRequest creates and returns a new QueryTrustlessExecutionAgentsRequest
-func NewQueryTrustlessExecutionAgentsRequest(pagination *query.PageRequest) *QueryTrustlessExecutionAgentsRequest {
-	return &QueryTrustlessExecutionAgentsRequest{
+// NewQueryTrustlessAgentRequest creates and returns a new QueryTrustlessAgentsRequest
+func NewQueryTrustlessAgentsRequest(pagination *query.PageRequest) *QueryTrustlessAgentsRequest {
+	return &QueryTrustlessAgentsRequest{
 		Pagination: pagination,
 	}
 }
 
-// NewQueryTrustlessExecutionAgentResponse creates and returns a new QueryTrustlessExecutionAgentsResponse
-func NewQueryTrustlessExecutionAgentsResponse(trustlessExecutionAgents []TrustlessExecutionAgent) *QueryTrustlessExecutionAgentsResponse {
-	return &QueryTrustlessExecutionAgentsResponse{
-		TrustlessExecutionAgents: trustlessExecutionAgents,
+// NewQueryTrustlessAgentResponse creates and returns a new QueryTrustlessAgentsResponse
+func NewQueryTrustlessAgentsResponse(trustlessExecutionAgents []TrustlessAgent) *QueryTrustlessAgentsResponse {
+	return &QueryTrustlessAgentsResponse{
+		TrustlessAgents: trustlessExecutionAgents,
 	}
 }

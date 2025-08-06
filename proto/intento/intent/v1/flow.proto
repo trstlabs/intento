@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package intento.intent.v1beta1; // TODO: Change to v1
+package intento.intent.v1; // TODO: Change to v1
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
@@ -43,7 +43,7 @@ message FlowInfo {
     (gogoproto.nullable) = false
   ];
   ICAConfig self_hosted_ica_config = 11 [(gogoproto.customname) = "SelfHostedICAConfig"];
-  TrustlessExecutionAgentExecutionConfig trustless_execution_agent_config = 12 [(gogoproto.customname) = "TrustlessExecutionAgentExecutionConfig"];
+  TrustlessAgentExecutionConfig trustless_agent_config = 12 [(gogoproto.customname) = "TrustlessAgentExecutionConfig"];
   ExecutionConfiguration configuration = 14;
   ExecutionConditions conditions = 15;
 }
@@ -55,7 +55,7 @@ message ICAConfig {
 }
 
 // config for trustless excution agent
-message TrustlessExecutionAgentExecutionConfig {
+message TrustlessAgentExecutionConfig {
   string agent_address = 1;
   cosmos.base.v1beta1.Coin fee_coin_limit = 3 [(gogoproto.nullable) = false];
 }

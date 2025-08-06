@@ -1,5 +1,5 @@
 syntax = "proto3";
-package intento.mint.v1beta1;
+package intento.mint.v1;
 
 option go_package = "github.com/trstlabs/intento/x/mint/types";
 

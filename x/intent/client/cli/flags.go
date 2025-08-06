@@ -8,15 +8,15 @@ const (
 	// The connection end identifier on the controller chain
 	flagConnectionID = "connection-id"
 	// The controller chain channel version
-	flagHostConnectionID                = "host-connection-id"
-	flagLabel                           = "label"
-	flagDuration                        = "duration"
-	flagInterval                        = "interval"
-	flagStartAt                         = "start-at"
-	flagFeeFunds                        = "fee-funds"
-	flagEndTime                         = "end-at"
-	flagTrustlessExecutionAgent         = "trustless-execution-agent"
-	flagTrustlessExecutionAgentFeeLimit = "trustless-execution-agent-fee-limit"
+	flagHostConnectionID       = "host-connection-id"
+	flagLabel                  = "label"
+	flagDuration               = "duration"
+	flagInterval               = "interval"
+	flagStartAt                = "start-at"
+	flagFeeFunds               = "fee-funds"
+	flagEndTime                = "end-at"
+	flagTrustlessAgent         = "trustless-execution-agent"
+	flagTrustlessAgentFeeLimit = "trustless-execution-agent-fee-limit"
 
 	//Execution conditions
 	flagUpdatingDisabled       = "updating-disabled"
@@ -50,9 +50,9 @@ func init() {
 	fsFlow.String(flagFeeFunds, "", "Coin to attach to the flow, optional")
 	fsFlow.String(flagConnectionID, "", "Connection ID from this chain to the host chain, optional")
 	fsFlow.String(flagHostConnectionID, "", "Connection ID from host chain to this chain, optional")
-	fsFlow.String(flagTrustlessExecutionAgent, "", "A trustless excution agent to execute actions on a host, optional")
+	fsFlow.String(flagTrustlessAgent, "", "A trustless agent to execute actions on a host, optional")
 	fsFlow.String(flagConditions, "", "intent conditions in JSON format, optional")
-	fsFlow.String(flagTrustlessExecutionAgentFeeLimit, "", "Coin to sent to limit the hosted fees, optional")
+	fsFlow.String(flagTrustlessAgentFeeLimit, "", "Coin to sent to limit the hosted fees, optional")
 	fsFlow.String(flagICQConfig, "", "A config to query keyvalue store on a host, optional")
 
 	fsFlow.Bool(flagUpdatingDisabled, false, "disable future updates to the configuration'")

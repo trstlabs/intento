@@ -21,21 +21,21 @@ const (
 // nolint
 var (
 	// ParamsKey stores the module params
-	ParamsKey                             = []byte{0x01}
-	FlowKeyPrefix                         = []byte{0x02}
-	FlowHistoryPrefix                     = []byte{0x03}
-	FlowQueuePrefix                       = []byte{0x04}
-	SequenceKeyPrefix                     = []byte{0x05}
-	FlowsByOwnerPrefix                    = []byte{0x06}
-	TmpFlowIDLatestTX                     = []byte{0x07}
-	KeyRelayerRewardsAvailability         = []byte{0x08}
-	FlowHistorySequencePrefix             = []byte{0x10}
-	TrustlessExecutionAgentKeyPrefix      = []byte{0x11}
-	TrustlessExecutionAgentsByAdminPrefix = []byte{0x12}
-	FlowFeedbackLoopQueryKeyPrefix        = []byte{0x14}
-	FlowComparisonQueryKeyPrefix          = []byte{0x15}
-	KeyLastID                             = append(SequenceKeyPrefix, []byte("lastId")...)
-	KeyLastTxAddrID                       = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
+	ParamsKey                      = []byte{0x01}
+	FlowKeyPrefix                  = []byte{0x02}
+	FlowHistoryPrefix              = []byte{0x03}
+	FlowQueuePrefix                = []byte{0x04}
+	SequenceKeyPrefix              = []byte{0x05}
+	FlowsByOwnerPrefix             = []byte{0x06}
+	TmpFlowIDLatestTX              = []byte{0x07}
+	KeyRelayerRewardsAvailability  = []byte{0x08}
+	FlowHistorySequencePrefix      = []byte{0x10}
+	TrustlessAgentKeyPrefix        = []byte{0x11}
+	TrustlessAgentsByAdminPrefix   = []byte{0x12}
+	FlowFeedbackLoopQueryKeyPrefix = []byte{0x14}
+	FlowComparisonQueryKeyPrefix   = []byte{0x15}
+	KeyLastID                      = append(SequenceKeyPrefix, []byte("lastId")...)
+	KeyLastTxAddrID                = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
 )
 
 // ics 20 hook
@@ -64,15 +64,15 @@ func GetFlowsByOwnerPrefix(addr sdk.AccAddress) []byte {
 	return append(FlowsByOwnerPrefix, bz...)
 }
 
-// GetTrustlessExecutionAgentKey returns the key for the trustless excution agent
-func GetTrustlessExecutionAgentKey(address string) []byte {
-	return append(TrustlessExecutionAgentKeyPrefix, []byte(address)...)
+// GetTrustlessAgentKey returns the key for the trustless agent
+func GetTrustlessAgentKey(address string) []byte {
+	return append(TrustlessAgentKeyPrefix, []byte(address)...)
 }
 
-// GetTrustlessExecutionAgentsByAdminPrefix returns the flows by creator prefix
-func GetTrustlessExecutionAgentsByAdminPrefix(addr sdk.AccAddress) []byte {
+// GetTrustlessAgentsByAdminPrefix returns the flows by creator prefix
+func GetTrustlessAgentsByAdminPrefix(addr sdk.AccAddress) []byte {
 	bz := address.MustLengthPrefix(addr)
-	return append(TrustlessExecutionAgentsByAdminPrefix, bz...)
+	return append(TrustlessAgentsByAdminPrefix, bz...)
 }
 
 ////queue types
@@ -131,8 +131,8 @@ func GetFlowByOwnerIndexKey(bz []byte, flowID uint64) []byte {
 	return r
 }
 
-// GetTrustlessExecutionAgentsByAdminIndexKey returns the id: `<prefix><adminAddress length><adminAddress><trustlessexecutionagentID>`
-func GetTrustlessExecutionAgentsByAdminIndexKey(bz []byte, trustlessExecutionAgentAddress string) []byte {
-	prefixBytes := GetTrustlessExecutionAgentsByAdminPrefix(bz)
+// GetTrustlessAgentsByAdminIndexKey returns the id: `<prefix><adminAddress length><adminAddress><trustlessexecutionagentID>`
+func GetTrustlessAgentsByAdminIndexKey(bz []byte, trustlessExecutionAgentAddress string) []byte {
+	prefixBytes := GetTrustlessAgentsByAdminPrefix(bz)
 	return append(prefixBytes, []byte(trustlessExecutionAgentAddress)...)
 }

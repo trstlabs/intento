@@ -182,36 +182,36 @@ func (q QueryServer) FlowsForOwner(c context.Context, req *types.QueryFlowsForOw
 	}, nil
 }
 
-// TrustlessExecutionAgent implements the Query/TrustlessExecutionAgent gRPC method
-func (q QueryServer) TrustlessExecutionAgent(c context.Context, req *types.QueryTrustlessExecutionAgentRequest) (*types.QueryTrustlessExecutionAgentResponse, error) {
+// TrustlessAgent implements the Query/TrustlessAgent gRPC method
+func (q QueryServer) TrustlessAgent(c context.Context, req *types.QueryTrustlessAgentRequest) (*types.QueryTrustlessAgentResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	hosted, err := q.keeper.TryGetTrustlessExecutionAgent(ctx, req.AgentAddress)
+	hosted, err := q.keeper.TryGetTrustlessAgent(ctx, req.AgentAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryTrustlessExecutionAgentResponse{
-		TrustlessExecutionAgent: hosted,
+	return &types.QueryTrustlessAgentResponse{
+		TrustlessAgent: hosted,
 	}, nil
 }
 
-// TrustlessExecutionAgents implements the Query/TrustlessExecutionAgents gRPC method
-func (q QueryServer) TrustlessExecutionAgents(c context.Context, req *types.QueryTrustlessExecutionAgentsRequest) (*types.QueryTrustlessExecutionAgentsResponse, error) {
+// TrustlessAgents implements the Query/TrustlessAgents gRPC method
+func (q QueryServer) TrustlessAgents(c context.Context, req *types.QueryTrustlessAgentsRequest) (*types.QueryTrustlessAgentsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	trustlessExecutionAgents := make([]types.TrustlessExecutionAgent, 0)
+	trustlessExecutionAgents := make([]types.TrustlessAgent, 0)
 	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.TrustlessExecutionAgentKeyPrefix)
+	prefixStore := prefix.NewStore(store, types.TrustlessAgentKeyPrefix)
 
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		if accumulate {
-			var c types.TrustlessExecutionAgent
+			var c types.TrustlessAgent
 			q.keeper.cdc.MustUnmarshal(value, &c)
 			trustlessExecutionAgents = append(trustlessExecutionAgents, c)
 
@@ -223,30 +223,30 @@ func (q QueryServer) TrustlessExecutionAgents(c context.Context, req *types.Quer
 		return nil, err
 	}
 
-	return &types.QueryTrustlessExecutionAgentsResponse{
-		TrustlessExecutionAgents: trustlessExecutionAgents,
-		Pagination:               pageRes,
+	return &types.QueryTrustlessAgentsResponse{
+		TrustlessAgents: trustlessExecutionAgents,
+		Pagination:      pageRes,
 	}, nil
 }
 
-// TrustlessExecutionAgentsByFeeAdmin implements the Query/TrustlessExTrustlessExecutionAgentsByFeeAdminecutionAgentsByAdmin gRPC method
-func (q QueryServer) TrustlessExecutionAgentsByFeeAdmin(c context.Context, req *types.QueryTrustlessExecutionAgentsByFeeAdminRequest) (*types.QueryTrustlessExecutionAgentsByFeeAdminResponse, error) {
+// TrustlessAgentsByFeeAdmin implements the Query/TrustlessExTrustlessAgentsByFeeAdminecutionAgentsByAdmin gRPC method
+func (q QueryServer) TrustlessAgentsByFeeAdmin(c context.Context, req *types.QueryTrustlessAgentsByFeeAdminRequest) (*types.QueryTrustlessAgentsByFeeAdminResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	trustlessExecutionAgents := make([]types.TrustlessExecutionAgent, 0)
+	trustlessExecutionAgents := make([]types.TrustlessAgent, 0)
 
 	admin, err := sdk.AccAddressFromBech32(req.FeeAdmin)
 	if err != nil {
 		return nil, err
 	}
 	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
-	prefixStore := prefix.NewStore(store, types.GetTrustlessExecutionAgentsByAdminPrefix(admin))
+	prefixStore := prefix.NewStore(store, types.GetTrustlessAgentsByAdminPrefix(admin))
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			trustlessExecutionAgentAddress := string(key)
-			flowInfo := q.keeper.GetTrustlessExecutionAgent(ctx, trustlessExecutionAgentAddress)
+			flowInfo := q.keeper.GetTrustlessAgent(ctx, trustlessExecutionAgentAddress)
 
 			trustlessExecutionAgents = append(trustlessExecutionAgents, flowInfo)
 
@@ -257,8 +257,8 @@ func (q QueryServer) TrustlessExecutionAgentsByFeeAdmin(c context.Context, req *
 		return nil, err
 	}
 
-	return &types.QueryTrustlessExecutionAgentsByFeeAdminResponse{
-		TrustlessExecutionAgents: trustlessExecutionAgents,
-		Pagination:               pageRes,
+	return &types.QueryTrustlessAgentsByFeeAdminResponse{
+		TrustlessAgents: trustlessExecutionAgents,
+		Pagination:      pageRes,
 	}, nil
 }

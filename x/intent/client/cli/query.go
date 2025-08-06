@@ -20,7 +20,7 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(getInterchainAccountCmd(), getFlowCmd(), getFlowHistoryCmd(), getFlowsForOwnerCmd(), getFlowsCmd(), getTrustlessExecutionAgentsCmd(), getTrustlessExecutionAgentCmd())
+	cmd.AddCommand(getInterchainAccountCmd(), getFlowCmd(), getFlowHistoryCmd(), getFlowsForOwnerCmd(), getFlowsCmd(), getTrustlessAgentsCmd(), getTrustlessAgentCmd())
 
 	return cmd
 }
@@ -177,7 +177,7 @@ func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 	return flagSet
 }
 
-func getTrustlessExecutionAgentCmd() *cobra.Command {
+func getTrustlessAgentCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "trustless-execution-agent [hosted address]",
 		Args: cobra.ExactArgs(1),
@@ -188,7 +188,7 @@ func getTrustlessExecutionAgentCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.TrustlessExecutionAgent(cmd.Context(), types.NewQueryTrustlessExecutionAgentRequest(args[0]))
+			res, err := queryClient.TrustlessAgent(cmd.Context(), types.NewQueryTrustlessAgentRequest(args[0]))
 			if err != nil {
 				return err
 			}
@@ -202,7 +202,7 @@ func getTrustlessExecutionAgentCmd() *cobra.Command {
 	return cmd
 }
 
-func getTrustlessExecutionAgentsCmd() *cobra.Command {
+func getTrustlessAgentsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "list-trustless-execution-agents",
 		Args: cobra.ExactArgs(0),
@@ -217,7 +217,7 @@ func getTrustlessExecutionAgentsCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.TrustlessExecutionAgents(cmd.Context(), types.NewQueryTrustlessExecutionAgentsRequest(pageReq))
+			res, err := queryClient.TrustlessAgents(cmd.Context(), types.NewQueryTrustlessAgentsRequest(pageReq))
 			if err != nil {
 				return err
 			}

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package intento.intent.v1beta1;
+package intento.intent.v1;
 
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
@@ -9,9 +9,9 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/any.proto";
-import "intento/intent/v1beta1/flow.proto";
-import "intento/intent/v1beta1/params.proto";
-import "intento/intent/v1beta1/trustless_execution_agent.proto";
+import "intento/intent/v1/flow.proto";
+import "intento/intent/v1/params.proto";
+import "intento/intent/v1/trustless_agent.proto";
 
 option go_package = "github.com/trstlabs/intento/x/intent/types";
 
@@ -20,30 +20,30 @@ service Msg {
   option (cosmos.msg.v1.service) = true;
   // Register defines a rpc handler for MsgRegisterAccount
   rpc RegisterAccount(MsgRegisterAccount) returns (MsgRegisterAccountResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/register-account";
+    option (google.api.http).post = "/intento/intent/v1/register-account";
   }
   rpc SubmitTx(MsgSubmitTx) returns (MsgSubmitTxResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/submit-tx";
+    option (google.api.http).post = "/intento/intent/v1/submit-tx";
   }
   rpc SubmitFlow(MsgSubmitFlow) returns (MsgSubmitFlowResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/submit-flow";
+    option (google.api.http).post = "/intento/intent/v1/submit-flow";
   }
   rpc RegisterAccountAndSubmitFlow(MsgRegisterAccountAndSubmitFlow) returns (MsgRegisterAccountAndSubmitFlowResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/register-account-submit-flow";
+    option (google.api.http).post = "/intento/intent/v1/register-account-submit-flow";
   }
   rpc UpdateFlow(MsgUpdateFlow) returns (MsgUpdateFlowResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/update-flow";
+    option (google.api.http).post = "/intento/intent/v1/update-flow";
   }
-  rpc CreateTrustlessExecutionAgent(MsgCreateTrustlessExecutionAgent) returns (MsgCreateTrustlessExecutionAgentResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/create-trustless-execution-agent";
+  rpc CreateTrustlessAgent(MsgCreateTrustlessAgent) returns (MsgCreateTrustlessAgentResponse) {
+    option (google.api.http).post = "/intento/intent/v1/create-trustless-execution-agent";
   }
-  rpc UpdateTrustlessExecutionAgentFeeConfig(MsgUpdateTrustlessExecutionAgentFeeConfig) returns (MsgUpdateTrustlessExecutionAgentFeeConfigResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/update-trustless-execution-agent-fee-config";
+  rpc UpdateTrustlessAgentFeeConfig(MsgUpdateTrustlessAgentFeeConfig) returns (MsgUpdateTrustlessAgentFeeConfigResponse) {
+    option (google.api.http).post = "/intento/intent/v1/update-trustless-execution-agent-fee-config";
   }
   // UpdateParams defines a governance operation for updating the x/intent module
   // parameters. The authority is hard-coded to the x/gov module account.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse) {
-    option (google.api.http).post = "/intento/intent/v1beta1/params";
+    option (google.api.http).post = "/intento/intent/v1/params";
   }
 }
 
@@ -106,7 +106,7 @@ message MsgSubmitFlow {
   // optional connection ID interchain account
   string connection_id = 9 [(gogoproto.customname) = "ConnectionID"];
   // optional use of a trustless excution agent
-  TrustlessExecutionAgentExecutionConfig trustless_execution_agent_config = 10 [(gogoproto.customname) = "TrustlessExecutionAgentExecutionConfig"];
+  TrustlessAgentExecutionConfig trustless_agent_config = 10 [(gogoproto.customname) = "TrustlessAgentExecutionConfig"];
   ExecutionConditions conditions = 11;
 }
 
@@ -177,16 +177,16 @@ message MsgUpdateFlow {
   ];
   ExecutionConfiguration configuration = 9;
   string connection_id = 10 [(gogoproto.customname) = "ConnectionID"];
-  TrustlessExecutionAgentExecutionConfig trustless_execution_agent_config = 11 [(gogoproto.customname) = "TrustlessExecutionAgentExecutionConfig"];
+  TrustlessAgentExecutionConfig trustless_agent_config = 11 [(gogoproto.customname) = "TrustlessAgentExecutionConfig"];
   ExecutionConditions conditions = 12;
 }
 
 // MsgUpdateTxResponse defines the MsgUpdateTx response type
 message MsgUpdateFlowResponse {}
 
-message MsgCreateTrustlessExecutionAgent {
+message MsgCreateTrustlessAgent {
   option (cosmos.msg.v1.signer) = "creator";
-  option (amino.name) = "intent/MsgCreateTrustlessExecutionAgent";
+  option (amino.name) = "intent/MsgCreateTrustlessAgent";
   option (gogoproto.goproto_getters) = false;
   string creator = 1;
   string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
@@ -198,20 +198,20 @@ message MsgCreateTrustlessExecutionAgent {
   ];
 }
 
-message MsgCreateTrustlessExecutionAgentResponse {
+message MsgCreateTrustlessAgentResponse {
   string address = 1;
 }
 
-message MsgUpdateTrustlessExecutionAgentFeeConfig {
+message MsgUpdateTrustlessAgentFeeConfig {
   option (cosmos.msg.v1.signer) = "fee_admin";
-  option (amino.name) = "intent/MsgUpdateTrustlessExecutionAgentFeeConfig";
+  option (amino.name) = "intent/MsgUpdateTrustlessAgentFeeConfig";
   option (gogoproto.goproto_getters) = false;
   string fee_admin = 1;
   string agent_address = 2;
-  TrustlessExecutionAgentFeeConfig fee_config = 4;
+  TrustlessAgentFeeConfig fee_config = 4;
 }
 
-message MsgUpdateTrustlessExecutionAgentFeeConfigResponse {
+message MsgUpdateTrustlessAgentFeeConfigResponse {
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.

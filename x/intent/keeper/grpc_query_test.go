@@ -246,7 +246,7 @@ func NewICA(t *testing.T) (*ibctesting.Coordinator, *ibctesting.Path) {
 	return coordinator, path
 }
 
-func TestQueryTrustlessExecutionAgentsByFeeAdmin(t *testing.T) {
+func TestQueryTrustlessAgentsByFeeAdmin(t *testing.T) {
 	ctx, keepers, _ := CreateTestInput(t, false)
 
 	qs := NewQueryServer(keepers.IntentKeeper)
@@ -254,7 +254,7 @@ func TestQueryTrustlessExecutionAgentsByFeeAdmin(t *testing.T) {
 	deposit := sdk.NewCoins(sdk.NewInt64Coin("denom", 1000000))
 
 	creator, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, deposit)
-	var expectedTrustlessExecutionAgents []types.TrustlessExecutionAgent
+	var expectedTrustlessAgents []types.TrustlessAgent
 	portID, err := icatypes.NewControllerPortID(creator.String())
 	require.NoError(t, err)
 
@@ -263,66 +263,66 @@ func TestQueryTrustlessExecutionAgentsByFeeAdmin(t *testing.T) {
 		hostAcc, err := CreateFakeHostedAcc(keepers.IntentKeeper, ctx, creator.String(), portID, ibctesting.FirstConnectionID+(fmt.Sprint(i)), ibctesting.FirstConnectionID)
 		require.NoError(t, err)
 
-		expectedTrustlessExecutionAgents = append(expectedTrustlessExecutionAgents, hostAcc)
+		expectedTrustlessAgents = append(expectedTrustlessAgents, hostAcc)
 	}
 
 	specs := map[string]struct {
-		srcQuery                    *types.QueryTrustlessExecutionAgentsByFeeAdminRequest
-		expTrustlessExecutionAgents []types.TrustlessExecutionAgent
-		expErr                      error
+		srcQuery           *types.QueryTrustlessAgentsByFeeAdminRequest
+		expTrustlessAgents []types.TrustlessAgent
+		expErr             error
 	}{
 		"query all": {
-			srcQuery: &types.QueryTrustlessExecutionAgentsByFeeAdminRequest{
+			srcQuery: &types.QueryTrustlessAgentsByFeeAdminRequest{
 				FeeAdmin: creator.String(),
 			},
-			expTrustlessExecutionAgents: expectedTrustlessExecutionAgents,
-			expErr:                      nil,
+			expTrustlessAgents: expectedTrustlessAgents,
+			expErr:             nil,
 		},
 		"with pagination offset": {
-			srcQuery: &types.QueryTrustlessExecutionAgentsByFeeAdminRequest{
+			srcQuery: &types.QueryTrustlessAgentsByFeeAdminRequest{
 				FeeAdmin: creator.String(),
 				Pagination: &query.PageRequest{
 					Offset: 1,
 				},
 			},
-			expTrustlessExecutionAgents: expectedTrustlessExecutionAgents[1:],
-			expErr:                      nil,
+			expTrustlessAgents: expectedTrustlessAgents[1:],
+			expErr:             nil,
 		},
 		"with pagination limit": {
-			srcQuery: &types.QueryTrustlessExecutionAgentsByFeeAdminRequest{
+			srcQuery: &types.QueryTrustlessAgentsByFeeAdminRequest{
 				FeeAdmin: creator.String(),
 				Pagination: &query.PageRequest{
 					Limit: 1,
 				},
 			},
-			expTrustlessExecutionAgents: expectedTrustlessExecutionAgents[0:1],
-			expErr:                      nil,
+			expTrustlessAgents: expectedTrustlessAgents[0:1],
+			expErr:             nil,
 		},
 		"nil admin": {
-			srcQuery: &types.QueryTrustlessExecutionAgentsByFeeAdminRequest{
+			srcQuery: &types.QueryTrustlessAgentsByFeeAdminRequest{
 				Pagination: &query.PageRequest{},
 			},
-			expTrustlessExecutionAgents: expectedTrustlessExecutionAgents,
-			expErr:                      errors.New("empty address string is not allowed"),
+			expTrustlessAgents: expectedTrustlessAgents,
+			expErr:             errors.New("empty address string is not allowed"),
 		},
 		"nil req": {
-			srcQuery:                    nil,
-			expTrustlessExecutionAgents: expectedTrustlessExecutionAgents,
-			expErr:                      status.Error(codes.InvalidArgument, "empty request"),
+			srcQuery:           nil,
+			expTrustlessAgents: expectedTrustlessAgents,
+			expErr:             status.Error(codes.InvalidArgument, "empty request"),
 		},
 	}
 
 	for msg, spec := range specs {
 		t.Run(msg, func(t *testing.T) {
-			got, err := qs.TrustlessExecutionAgentsByFeeAdmin(ctx, spec.srcQuery)
+			got, err := qs.TrustlessAgentsByFeeAdmin(ctx, spec.srcQuery)
 			if spec.expErr != nil {
 				require.Equal(t, spec.expErr, err)
 				return
 			}
 			require.NoError(t, err)
 			require.NotNil(t, got)
-			for i, trustlessExecutionAgent := range spec.expTrustlessExecutionAgents {
-				assert.Equal(t, trustlessExecutionAgent.FeeConfig.FeeAdmin, got.TrustlessExecutionAgents[i].FeeConfig.FeeAdmin)
+			for i, trustlessExecutionAgent := range spec.expTrustlessAgents {
+				assert.Equal(t, trustlessExecutionAgent.FeeConfig.FeeAdmin, got.TrustlessAgents[i].FeeConfig.FeeAdmin)
 
 			}
 		})
@@ -435,20 +435,20 @@ func CreateFakeAuthZFlow(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID
 	return newFlow, nil
 }
 
-func CreateFakeHostedAcc(k Keeper, ctx sdk.Context, creator, portID, connectionId, hostConnectionId string) (types.TrustlessExecutionAgent, error) {
+func CreateFakeHostedAcc(k Keeper, ctx sdk.Context, creator, portID, connectionId, hostConnectionId string) (types.TrustlessAgent, error) {
 	agentAddress, err := DeriveAgentAddress(creator, connectionId)
 	if err != nil {
-		return types.TrustlessExecutionAgent{}, err
+		return types.TrustlessAgent{}, err
 	}
 
 	creatorAddr, err := sdk.AccAddressFromBech32(creator)
 	if err != nil {
-		return types.TrustlessExecutionAgent{}, err
+		return types.TrustlessAgent{}, err
 	}
-	hostedAcc := types.TrustlessExecutionAgent{AgentAddress: agentAddress.String(), FeeConfig: &types.TrustlessExecutionAgentFeeConfig{FeeAdmin: creator, FeeCoinsSupported: sdk.NewCoins(sdk.NewCoin(types.Denom, math.NewInt(1)))}, ICAConfig: &types.ICAConfig{ConnectionID: connectionId, PortID: portID}}
+	hostedAcc := types.TrustlessAgent{AgentAddress: agentAddress.String(), FeeConfig: &types.TrustlessAgentFeeConfig{FeeAdmin: creator, FeeCoinsSupported: sdk.NewCoins(sdk.NewCoin(types.Denom, math.NewInt(1)))}, ICAConfig: &types.ICAConfig{ConnectionID: connectionId, PortID: portID}}
 	//store hosted config by address on hosted key prefix
-	k.SetTrustlessExecutionAgent(ctx, &hostedAcc)
-	k.addToTrustlessExecutionAgentAdminIndex(ctx, creatorAddr, agentAddress.String())
+	k.SetTrustlessAgent(ctx, &hostedAcc)
+	k.addToTrustlessAgentAdminIndex(ctx, creatorAddr, agentAddress.String())
 
 	return hostedAcc, nil
 }
