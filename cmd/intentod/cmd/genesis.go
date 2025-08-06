@@ -311,14 +311,12 @@ func MainnetGenesisParams() GenesisParams {
 
 	// alloc
 	genParams.AllocParams = alloctypes.DefaultParams()
-	// genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
-	// 	Staking:                     sdk.MustNewDecFromStr("0.45"),
-	// 	CommunityPool:               sdk.MustNewDecFromStr("0.45"),
-	// 	TrustlessContractIncentives: sdk.MustNewDecFromStr("0.00"),
-	// 	RelayerIncentives:           sdk.MustNewDecFromStr("0.10"),
-	// 	DeveloperRewards: sdk.MustNewDecFromStr("0.00"),
-	// }
-	//genParams.AllocParams.WeightedContributorRewardsReceivers = []alloctypes.WeightedAddress{}
+	genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
+		CommunityPool:     math.LegacyNewDecWithPrec(70, 2),
+		DeveloperRewards:  math.LegacyNewDecWithPrec(0, 2),
+		RelayerIncentives: math.LegacyNewDecWithPrec(5, 2),
+	}
+	genParams.AllocParams.WeightedDeveloperRewardsReceivers = []alloctypes.WeightedAddress{}
 
 	// mint
 	genParams.MintParams = minttypes.DefaultParams()
