@@ -35,42 +35,40 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 	var err error
 
 	if queryCallback != nil {
-		// Special handling for JSON valueType and ResponseKey
-		if comparison.ValueType == "json" {
-			var jsonObj map[string]interface{}
-			if err := json.Unmarshal(queryCallback, &jsonObj); err != nil {
-				return false, fmt.Errorf("failed to unmarshal JSON queryCallback: %w", err)
-			}
-			if comparison.ResponseKey != "" {
-				valueFromResponse, err = extractJSONField(jsonObj, comparison.ResponseKey)
-				if err != nil {
-					return false, fmt.Errorf("failed to extract field '%s' from JSON: %w", comparison.ResponseKey, err)
-				}
-			} else {
-				valueFromResponse = jsonObj
-			}
-		} else {
-			valueFromResponse, err = parseICQResponse(queryCallback, comparison.ValueType)
-			fmt.Println("valueFromResponse", valueFromResponse)
+
+		valueFromResponse, err = parseICQResponse(queryCallback, comparison.ValueType)
+		fmt.Println("valueFromResponse", valueFromResponse)
+		if err != nil {
+			var respAny cdctypes.Any
+			err := k.cdc.Unmarshal(queryCallback, &respAny)
 			if err != nil {
-				var respAny cdctypes.Any
-				err := k.cdc.Unmarshal(queryCallback, &respAny)
-				if err != nil {
+
+				var jsonObj map[string]interface{}
+				if err := json.Unmarshal(queryCallback, &jsonObj); err != nil {
 					k.Logger(ctx).Debug("response comparison: could not parse query callback data", "CallbackData", queryCallback)
 					return false, fmt.Errorf("response comparison: error parsing query callback data: %v", queryCallback)
 				}
-				if respAny.Value != nil {
-					var resp interface{}
-					err = k.cdc.UnpackAny(&respAny, &resp)
+				if comparison.ResponseKey != "" {
+					valueFromResponse, err = extractJSONField(jsonObj, comparison.ResponseKey)
 					if err != nil {
-						return false, fmt.Errorf("response comparison: error unpacking: %v", err)
+						return false, fmt.Errorf("failed to extract field '%s' from JSON: %w", comparison.ResponseKey, err)
 					}
-					valueFromResponse, err = parseResponseValue(queryCallback, comparison.ResponseKey, comparison.ValueType)
-					if err != nil {
-						return false, err
-					}
+				} else {
+					valueFromResponse = jsonObj
 				}
 			}
+			if respAny.Value != nil {
+				var resp interface{}
+				err = k.cdc.UnpackAny(&respAny, &resp)
+				if err != nil {
+					return false, fmt.Errorf("response comparison: error unpacking: %v", err)
+				}
+				valueFromResponse, err = parseResponseValue(queryCallback, comparison.ResponseKey, comparison.ValueType)
+				if err != nil {
+					return false, err
+				}
+			}
+
 		}
 	} else {
 
@@ -95,37 +93,66 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 		}
 	}
 
-	operand, err := parseOperand(comparison.Operand, comparison.ValueType)
-	if err != nil {
-		return false, fmt.Errorf("error parsing operand: %v", err)
-	}
-	// Normalize types for JSON value extraction
-	valueFromResponse, operand = normalizeJSONTypes(valueFromResponse, operand)
-	fmt.Printf("Comparing value: %v with operand: %v using operator: %s\n", valueFromResponse, operand, comparison.Operator)
-	switch comparison.Operator {
-	case types.ComparisonOperator_EQUAL:
-		return reflect.DeepEqual(valueFromResponse, operand), nil
-	case types.ComparisonOperator_NOT_EQUAL:
-		return !reflect.DeepEqual(valueFromResponse, operand), nil
-	case types.ComparisonOperator_CONTAINS:
-		return contains(valueFromResponse, operand), nil
-	case types.ComparisonOperator_NOT_CONTAINS:
-		return !contains(valueFromResponse, operand), nil
-	case types.ComparisonOperator_SMALLER_THAN:
-		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a < b })
-	case types.ComparisonOperator_LARGER_THAN:
-		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a > b })
-	case types.ComparisonOperator_GREATER_EQUAL:
-		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a >= b })
-	case types.ComparisonOperator_LESS_EQUAL:
-		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a <= b })
-	case types.ComparisonOperator_STARTS_WITH:
-		return strings.HasPrefix(fmt.Sprintf("%v", valueFromResponse), fmt.Sprintf("%v", operand)), nil
-	case types.ComparisonOperator_ENDS_WITH:
-		return strings.HasSuffix(fmt.Sprintf("%v", valueFromResponse), fmt.Sprintf("%v", operand)), nil
-	default:
-		return false, fmt.Errorf("unsupported comparison operator: %v", comparison.Operator)
-	}
+	   operand, err := parseOperand(comparison.Operand, comparison.ValueType)
+	   if err != nil {
+			   return false, fmt.Errorf("error parsing operand: %v", err)
+	   }
+
+	   // Special handling: if ValueType is sdk.Int, convert string/float64 to math.Int for valueFromResponse
+	   if comparison.ValueType == "sdk.Int" {
+			   switch v := valueFromResponse.(type) {
+			   case string:
+					   intVal, ok := math.NewIntFromString(v)
+					   if !ok {
+							   return false, fmt.Errorf("failed to parse string '%s' as sdk.Int", v)
+					   }
+					   valueFromResponse = intVal
+			   case float64:
+					   valueFromResponse = math.NewInt(int64(v))
+			   case int64:
+					   valueFromResponse = math.NewInt(v)
+			   case int:
+					   valueFromResponse = math.NewInt(int64(v))
+			   case math.Int:
+					   // already correct
+			   default:
+					   // fallback: try string conversion
+					   str := fmt.Sprintf("%v", v)
+					   intVal, ok := math.NewIntFromString(str)
+					   if !ok {
+							   return false, fmt.Errorf("failed to parse '%v' as sdk.Int", v)
+					   }
+					   valueFromResponse = intVal
+			   }
+	   }
+
+	   // Normalize types for JSON value extraction
+	   valueFromResponse, operand = normalizeJSONTypes(valueFromResponse, operand)
+	   fmt.Printf("Comparing value: %v with operand: %v using operator: %s\n", valueFromResponse, operand, comparison.Operator)
+	   switch comparison.Operator {
+	   case types.ComparisonOperator_EQUAL:
+			   return reflect.DeepEqual(valueFromResponse, operand), nil
+	   case types.ComparisonOperator_NOT_EQUAL:
+			   return !reflect.DeepEqual(valueFromResponse, operand), nil
+	   case types.ComparisonOperator_CONTAINS:
+			   return contains(valueFromResponse, operand), nil
+	   case types.ComparisonOperator_NOT_CONTAINS:
+			   return !contains(valueFromResponse, operand), nil
+	   case types.ComparisonOperator_SMALLER_THAN:
+			   return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a < b })
+	   case types.ComparisonOperator_LARGER_THAN:
+			   return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a > b })
+	   case types.ComparisonOperator_GREATER_EQUAL:
+			   return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a >= b })
+	   case types.ComparisonOperator_LESS_EQUAL:
+			   return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a <= b })
+	   case types.ComparisonOperator_STARTS_WITH:
+			   return strings.HasPrefix(fmt.Sprintf("%v", valueFromResponse), fmt.Sprintf("%v", operand)), nil
+	   case types.ComparisonOperator_ENDS_WITH:
+			   return strings.HasSuffix(fmt.Sprintf("%v", valueFromResponse), fmt.Sprintf("%v", operand)), nil
+	   default:
+			   return false, fmt.Errorf("unsupported comparison operator: %v", comparison.Operator)
+	   }
 }
 
 // FeedbackLoop replaces the value in a message with the value from a response
@@ -176,27 +203,24 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 		var err error
 		if queryCallback != nil {
 			// Special handling for JSON valueType and ResponseKey
-			if feedbackLoop.ValueType == "json" {
-				var jsonObj map[string]interface{}
-				if err := json.Unmarshal(queryCallback, &jsonObj); err != nil {
-					return fmt.Errorf("failed to unmarshal JSON queryCallback: %w", err)
-				}
-				if feedbackLoop.ResponseKey != "" {
-					valueFromResponse, err = extractJSONField(jsonObj, feedbackLoop.ResponseKey)
-					if err != nil {
-						return fmt.Errorf("failed to extract field '%s' from JSON: %w", feedbackLoop.ResponseKey, err)
-					}
-				} else {
-					valueFromResponse = jsonObj
-				}
-			} else {
-				valueFromResponse, err = parseICQResponse(queryCallback, feedbackLoop.ValueType)
+			valueFromResponse, err = parseICQResponse(queryCallback, feedbackLoop.ValueType)
+			if err != nil {
+				var respAny cdctypes.Any
+				err := k.cdc.Unmarshal(queryCallback, &respAny)
 				if err != nil {
-					var respAny cdctypes.Any
-					err := k.cdc.Unmarshal(queryCallback, &respAny)
-					if err != nil {
+					var jsonObj map[string]interface{}
+					if err := json.Unmarshal(queryCallback, &jsonObj); err != nil {
 						k.Logger(ctx).Debug("use value: could not parse query callback data", "CallbackData", queryCallback)
 						return fmt.Errorf("use value: error parsing query callback data: %v", queryCallback)
+					}
+					if feedbackLoop.ResponseKey != "" {
+						valueFromResponse, err = extractJSONField(jsonObj, feedbackLoop.ResponseKey)
+						if err != nil {
+							return fmt.Errorf("failed to extract field '%s' from JSON: %w", feedbackLoop.ResponseKey, err)
+						}
+					} else {
+						valueFromResponse = jsonObj
+
 					}
 					if respAny.Value != nil {
 						var resp interface{}
@@ -232,7 +256,14 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 				return fmt.Errorf("failed to resolve type URL %s: %w", responsesAnys[feedbackLoop.ResponseIndex].TypeUrl, err)
 			}
 
-			err = proto.Unmarshal(responsesAnys[feedbackLoop.ResponseIndex].Value, protoMsg)
+			k.Logger(ctx).Debug("\n--- Processing feedback loop ---")
+			k.Logger(ctx).Debug("Message index", feedbackLoop.MsgsIndex)
+			if int(feedbackLoop.MsgsIndex) < len(*msgs) {
+				k.Logger(ctx).Debug("Message type URL", (*msgs)[feedbackLoop.MsgsIndex].TypeUrl)
+			}
+			k.Logger(ctx).Debug("Response index", feedbackLoop.ResponseIndex)
+			k.Logger(ctx).Debug("Response key", feedbackLoop.ResponseKey)
+			k.Logger(ctx).Debug("Message key", feedbackLoop.MsgKey)
 			if err != nil {
 				return err
 			}
@@ -332,52 +363,51 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 			"currentValue", fieldToReplace.Interface(),
 			"newValue", valueFromResponse)
 
+		// Special handling: if ValueType is sdk.Int, convert string/float64 to math.Int
+		newValue := valueFromResponse
+		if feedbackLoop.ValueType == "sdk.Int" {
+			switch v := valueFromResponse.(type) {
+			case string:
+				intVal, ok := math.NewIntFromString(v)
+				if !ok {
+					return fmt.Errorf("failed to parse string '%s' as sdk.Int", v)
+				}
+				newValue = intVal
+			case float64:
+				newValue = math.NewInt(int64(v))
+			case int64:
+				newValue = math.NewInt(v)
+			case int:
+				newValue = math.NewInt(int64(v))
+			case math.Int:
+				newValue = v
+			default:
+				// fallback: try string conversion
+				str := fmt.Sprintf("%v", v)
+				intVal, ok := math.NewIntFromString(str)
+				if !ok {
+					return fmt.Errorf("failed to parse '%v' as sdk.Int", v)
+				}
+				newValue = intVal
+			}
+		}
 
-			   // Special handling: if ValueType is sdk.Int, convert string/float64 to math.Int
-			   newValue := valueFromResponse
-			   if feedbackLoop.ValueType == "sdk.Int" {
-					   switch v := valueFromResponse.(type) {
-					   case string:
-							   intVal, ok := math.NewIntFromString(v)
-							   if !ok {
-									   return fmt.Errorf("failed to parse string '%s' as sdk.Int", v)
-							   }
-							   newValue = intVal
-					   case float64:
-							   newValue = math.NewInt(int64(v))
-					   case int64:
-							   newValue = math.NewInt(v)
-					   case int:
-							   newValue = math.NewInt(int64(v))
-					   case math.Int:
-							   newValue = v
-					   default:
-							   // fallback: try string conversion
-							   str := fmt.Sprintf("%v", v)
-							   intVal, ok := math.NewIntFromString(str)
-							   if !ok {
-									   return fmt.Errorf("failed to parse '%v' as sdk.Int", v)
-							   }
-							   newValue = intVal
-					   }
-			   }
+		if !fieldToReplace.CanSet() {
+			return fmt.Errorf("field %s cannot be set", feedbackLoop.MsgKey)
+		}
 
-			   if !fieldToReplace.CanSet() {
-					   return fmt.Errorf("field %s cannot be set", feedbackLoop.MsgKey)
-			   }
+		targetValue := reflect.ValueOf(newValue)
+		if !targetValue.Type().AssignableTo(fieldToReplace.Type()) {
+			if targetValue.Type().ConvertibleTo(fieldToReplace.Type()) {
+				targetValue = targetValue.Convert(fieldToReplace.Type())
+			} else {
+				return fmt.Errorf("cannot assign %s to %s", targetValue.Type(), fieldToReplace.Type())
+			}
+		}
 
-			   targetValue := reflect.ValueOf(newValue)
-			   if !targetValue.Type().AssignableTo(fieldToReplace.Type()) {
-					   if targetValue.Type().ConvertibleTo(fieldToReplace.Type()) {
-							   targetValue = targetValue.Convert(fieldToReplace.Type())
-					   } else {
-							   return fmt.Errorf("cannot assign %s to %s", targetValue.Type(), fieldToReplace.Type())
-					   }
-			   }
-
-			   fieldToReplace.Set(targetValue)
-			   k.Logger(ctx).Debug("Successfully updated field", feedbackLoop.MsgKey, " to value", fieldToReplace.Interface())
-			   k.Logger(ctx).Debug("Updated field value", "field", feedbackLoop.MsgKey, "newValue", fieldToReplace.Interface())
+		fieldToReplace.Set(targetValue)
+		k.Logger(ctx).Debug("Successfully updated field", feedbackLoop.MsgKey, " to value", fieldToReplace.Interface())
+		k.Logger(ctx).Debug("Updated field value", "field", feedbackLoop.MsgKey, "newValue", fieldToReplace.Interface())
 
 		// Repack the message based on whether it was wrapped or not
 		k.Logger(ctx).Debug("Repacking message", "isWrapped", isWrapped)

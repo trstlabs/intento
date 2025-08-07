@@ -599,7 +599,7 @@ func TestCompareFromWasmResponse(t *testing.T) {
 		ResponseKey:   queryKey,
 		Operand:       compareValue,
 		Operator:      types.ComparisonOperator_EQUAL,
-		ValueType:     "json",
+		ValueType:     "sdk.Int",
 		ICQConfig:     &types.ICQConfig{Response: decoded},
 	}
 
