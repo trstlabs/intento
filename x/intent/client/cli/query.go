@@ -179,7 +179,7 @@ func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 
 func getTrustlessAgentCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "trustless-execution-agent [hosted address]",
+		Use:  "trustless-agent [hosted address]",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -204,7 +204,7 @@ func getTrustlessAgentCmd() *cobra.Command {
 
 func getTrustlessAgentsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "list-trustless-execution-agents",
+		Use:  "list-trustless-agents",
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -227,7 +227,7 @@ func getTrustlessAgentsCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "trustless-execution-agents")
+	flags.AddPaginationFlagsToCmd(cmd, "trustless-agents")
 
 	return cmd
 }

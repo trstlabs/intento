@@ -35,10 +35,10 @@ service Msg {
     option (google.api.http).post = "/intento/intent/v1/update-flow";
   }
   rpc CreateTrustlessAgent(MsgCreateTrustlessAgent) returns (MsgCreateTrustlessAgentResponse) {
-    option (google.api.http).post = "/intento/intent/v1/create-trustless-execution-agent";
+    option (google.api.http).post = "/intento/intent/v1/create-trustless-agent";
   }
   rpc UpdateTrustlessAgentFeeConfig(MsgUpdateTrustlessAgentFeeConfig) returns (MsgUpdateTrustlessAgentFeeConfigResponse) {
-    option (google.api.http).post = "/intento/intent/v1/update-trustless-execution-agent-fee-config";
+    option (google.api.http).post = "/intento/intent/v1/update-trustless-agent-fee-config";
   }
   // UpdateParams defines a governance operation for updating the x/intent module
   // parameters. The authority is hard-coded to the x/gov module account.

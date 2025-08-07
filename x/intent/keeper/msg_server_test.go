@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 				startAt = uint64(ctx.BlockTime().Unix() - 60*60)
 			}
 
-			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionID, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, &conditions)
+			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionID, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coins{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, &conditions)
 
 			suite.Require().NoError(err)
 
@@ -431,7 +431,7 @@ func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 			intervalTimeText := interval.String()
 			startAt := uint64(0)
 			GetICAApp(suite.IntentoChain).ICAControllerKeeper.SetInterchainAccountAddress(suite.IntentoChain.GetContext(), "", "", icaAddrString)
-			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, "", durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
+			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, "", durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coins{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
 			suite.Require().NoError(err)
 			err = msg.ValidateBasic()
 			suite.Require().NoError(err)
@@ -604,7 +604,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 				}
 			}
 
-			msg, err := types.NewMsgSubmitFlow(owner, "label", []sdk.Msg{sdkMsg}, connectionID, "200s", "100s", uint64(suite.IntentoChain.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
+			msg, err := types.NewMsgSubmitFlow(owner, "label", []sdk.Msg{sdkMsg}, connectionID, "200s", "100s", uint64(suite.IntentoChain.GetContext().BlockTime().Add(time.Hour).Unix()), sdk.Coins{}, "", sdk.Coins{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
 			suite.Require().NoError(err)
 
 			msgSrv := keeper.NewMsgServerImpl(GetICAApp(suite.IntentoChain).IntentKeeper)
@@ -620,7 +620,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 				flowHistory := icaAppA.IntentKeeper.MustGetFlowHistory(suite.IntentoChain.GetContext(), 1)
 				suite.Require().NotZero(flowHistory[0].ActualExecTime)
 			}
-			updateMsg, err := types.NewMsgUpdateFlow(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionID, newEndTime, newInterval, newStartAt, sdk.Coins{}, "", sdk.Coin{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
+			updateMsg, err := types.NewMsgUpdateFlow(owner, 1, "new_label", []sdk.Msg{sdkMsg}, connectionID, newEndTime, newInterval, newStartAt, sdk.Coins{}, "", sdk.Coins{}, &types.ExecutionConfiguration{SaveResponses: false}, nil)
 			suite.Require().NoError(err)
 			suite.IntentoChain.Coordinator.IncrementTime()
 

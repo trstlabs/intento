@@ -726,9 +726,9 @@ var (
 
 	pattern_Msg_UpdateFlow_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1", "update-flow"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_CreateTrustlessAgent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1", "create-trustless-execution-agent"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_CreateTrustlessAgent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1", "create-trustless-agent"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_UpdateTrustlessAgentFeeConfig_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1", "update-trustless-execution-agent-fee-config"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_UpdateTrustlessAgentFeeConfig_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1", "update-trustless-agent-fee-config"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Msg_UpdateParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 )

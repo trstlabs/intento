@@ -45,20 +45,20 @@ service Query {
   rpc TrustlessAgent(QueryTrustlessAgentRequest)
       returns (QueryTrustlessAgentResponse) {
     option (google.api.http).get =
-        "/intento/intent/v1/trustless-execution-agent/{agent_address}";
+        "/intento/intent/v1/trustless-agent/{agent_address}";
   }
 
   // TrustlessAgents returns all trustless agents
   rpc TrustlessAgents(QueryTrustlessAgentsRequest)
       returns (QueryTrustlessAgentsResponse) {
-    option (google.api.http).get = "/intento/intent/v1/trustless-execution-agents";
+    option (google.api.http).get = "/intento/intent/v1/trustless-agents";
   }
 
   // TrustlessAgentsByFeeAdmin returns all trustless agents for a given fee admin address
   rpc TrustlessAgentsByFeeAdmin(QueryTrustlessAgentsByFeeAdminRequest)
       returns (QueryTrustlessAgentsByFeeAdminResponse) {
     option (google.api.http).get =
-        "/intento/intent/v1/trustless-execution-agents/{fee_admin}";
+        "/intento/intent/v1/trustless-agents/{fee_admin}";
   }
 
   // Params returns the total set of Intent parameters.

@@ -46,11 +46,11 @@ In Intento Portal, we **automatically add a fee coin limit** during flow submiss
 To check the latest hosted fee programmatically:
 
 ```
-GET /intento/intent/v1beta1/trustless-execution-agent/{address}
+GET /intento/intent/v1beta1/trustless-agent/{address}
 ```
 
 **LCD URL:**
-[https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/trustless-execution-agent/-address-](https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/trustless-execution-agent/-address-)
+[https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/trustless-agent/-address-](https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/trustless-agent/-address-)
 
 This endpoint returns the `fee_coins_supported` array of supported fee coins for that specific Trustless Agent.
 

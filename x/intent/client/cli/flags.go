@@ -15,8 +15,8 @@ const (
 	flagStartAt                = "start-at"
 	flagFeeFunds               = "fee-funds"
 	flagEndTime                = "end-at"
-	flagTrustlessAgent         = "trustless-execution-agent"
-	flagTrustlessAgentFeeLimit = "trustless-execution-agent-fee-limit"
+	flagTrustlessAgent         = "trustless-agent"
+	flagTrustlessAgentFeeLimit = "trustless-agent-fee-limit"
 
 	//Execution conditions
 	flagUpdatingDisabled       = "updating-disabled"

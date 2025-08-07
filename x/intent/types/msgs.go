@@ -127,7 +127,7 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 }
 
 // NewMsgSubmitFlow creates a new NewMsgSubmitFlow instance
-func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, agentAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgSubmitFlow, error) {
+func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, agentAddress string, feeLimit sdk.Coins, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgSubmitFlow, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -144,7 +144,7 @@ func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID strin
 		Configuration: configuration,
 		ConnectionID:  connectionID,
 		TrustlessAgentConfig: &TrustlessAgentConfig{AgentAddress: agentAddress,
-			FeeCoinLimit: hostedFeeLimit},
+			FeeLimit: feeLimit},
 		Conditions: conditions,
 	}, nil
 }
@@ -342,7 +342,7 @@ func checkConditions(conditions ExecutionConditions, lenMsgMsgs int) error {
 }
 
 // NewMsgUpdateFlow creates a new NewMsgUpdateFlow instance
-func NewMsgUpdateFlow(owner string, id uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, agentAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgUpdateFlow, error) {
+func NewMsgUpdateFlow(owner string, id uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, agentAddress string, feeLimit sdk.Coins, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgUpdateFlow, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -360,7 +360,7 @@ func NewMsgUpdateFlow(owner string, id uint64, label string, sdkMsgs []sdk.Msg, 
 		Configuration: configuration,
 		FeeFunds:      feeFunds,
 		TrustlessAgentConfig: &TrustlessAgentConfig{AgentAddress: agentAddress,
-			FeeCoinLimit: hostedFeeLimit},
+			FeeLimit: feeLimit},
 		Conditions: conditions,
 	}, nil
 }

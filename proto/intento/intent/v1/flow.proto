@@ -57,7 +57,7 @@ message ICAConfig {
 // config for trustless agent
 message TrustlessAgentConfig {
   string agent_address = 1;
-  cosmos.base.v1beta1.Coin fee_coin_limit = 3 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin fee_limit = 3 [(gogoproto.nullable) = false];
 }
 
 // ExecutionConfiguration provides the execution-related configuration of the

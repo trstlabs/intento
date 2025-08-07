@@ -55,7 +55,7 @@ message ICQConfig {
 
 If SaveResponses in the Flow Configuration is set to true, query responses are added to the Flow History. Check out the [**Supported Types**](./../module/supported_types.md) page or the Intento Portal Flow Builder for some example queries.
 
-Here’s a tutorial for integrating `ICQConfig` for querying balances and adding `connectionId`, `hostConnectionId`, and `HostedConfig` in `submitFlow`.
+Here’s a tutorial for integrating`ICQConfig` for querying balances and adding `connectionId`, `hostConnectionId`, as well as a `TrustlessAgentConfig` in a new `submitFlow`.
 
 ---
 
@@ -83,7 +83,7 @@ import {
   Conditions,
   Comparison,
   ICQConfig,
-  HostedConfig,
+  TrustlessAgentConfig,
 } from "intentojs";
 
 const config: ExecutionConfiguration = {
@@ -225,12 +225,12 @@ const msgSend = cosmos.bank.v1beta1.MessageComposer.withTypeUrl.send({
 
 ### 7: Submitting the Intent-Based Flow
 
-To submit the flow, we also include **Trustless Agent configuration** using `HostedConfig`.
+To submit the flow, we also include **Trustless Agent configuration** using a `TrustlessAgentConfig`.
 
 ```typescript
-const hostedConfig: HostedConfig = {
+const trustlessAgentConfig: TrustlessAgentConfig = {
   agentAddress: "cosmos1teaaddress",
-  feeCoinLimit: { denom: "uatom", amount: "100000" },
+  feeLimit: [{ denom: "uatom", amount: "100000" }],
 };
 
 const msgSubmitFlow =
@@ -242,7 +242,7 @@ const msgSubmitFlow =
     interval: "600s",
     feeFunds: [{ denom: "uinto", amount: "5000000" }],
     configuration: config,
-    hostedConfig: hostedConfig, // Config for Trustless Agent
+    trustlessAgentConfig: trustlessAgentConfig, // Config for Trustless Agent
   });
 ```
 

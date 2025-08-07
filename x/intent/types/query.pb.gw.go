@@ -931,11 +931,11 @@ var (
 
 	pattern_Query_FlowsForOwner_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1", "flows", "owner"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TrustlessAgent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1", "trustless-execution-agent", "agent_address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TrustlessAgent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1", "trustless-agent", "agent_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TrustlessAgents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1", "trustless-execution-agents"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TrustlessAgents_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1", "trustless-agents"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_TrustlessAgentsByFeeAdmin_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1", "trustless-execution-agents", "fee_admin"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_TrustlessAgentsByFeeAdmin_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"intento", "intent", "v1", "trustless-agents", "fee_admin"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"intento", "intent", "v1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 )

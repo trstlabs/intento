@@ -187,16 +187,16 @@ func getSubmitFlowCmd() *cobra.Command {
 				}
 			}
 
-			hostedFeeLimit := sdk.Coin{}
-			hostedFeeLimitString := viper.GetString(flagTrustlessAgentFeeLimit)
-			if hostedFeeLimitString != "" {
-				hostedFeeLimit, err = sdk.ParseCoinNormalized(hostedFeeLimitString)
+			trustlessAgentFeeLimit := sdk.Coins{}
+			trustlessAgentFeeLimitString := viper.GetString(flagTrustlessAgentFeeLimit)
+			if trustlessAgentFeeLimitString != "" {
+				trustlessAgentFeeLimit, err = sdk.ParseCoinsNormalized(trustlessAgentFeeLimitString)
 				if err != nil {
 					return err
 				}
 			}
 
-			msg, err := types.NewMsgSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagTrustlessAgent), hostedFeeLimit, configuration, &conditions)
+			msg, err := types.NewMsgSubmitFlow(clientCtx.GetFromAddress().String(), viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetString(flagDuration), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagTrustlessAgent), trustlessAgentFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}
@@ -359,15 +359,15 @@ func getUpdateFlowCmd() *cobra.Command {
 					return err
 				}
 			}
-			hostedFeeLimit := sdk.Coin{}
-			hostedFeeLimitString := viper.GetString(flagTrustlessAgentFeeLimit)
-			if hostedFeeLimitString != "" {
-				hostedFeeLimit, err = sdk.ParseCoinNormalized(hostedFeeLimitString)
+			trustlessAgentFeeLimit := sdk.Coins{}
+			trustlessAgentFeeLimitString := viper.GetString(flagTrustlessAgentFeeLimit)
+			if trustlessAgentFeeLimitString != "" {
+				trustlessAgentFeeLimit, err = sdk.ParseCoinsNormalized(trustlessAgentFeeLimitString)
 				if err != nil {
 					return err
 				}
 			}
-			msg, err := types.NewMsgUpdateFlow(clientCtx.GetFromAddress().String(), id, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagTrustlessAgent), hostedFeeLimit, configuration, &conditions)
+			msg, err := types.NewMsgUpdateFlow(clientCtx.GetFromAddress().String(), id, viper.GetString(flagLabel), txMsgs, viper.GetString(flagConnectionID), viper.GetUint64(flagEndTime), viper.GetString(flagInterval), viper.GetUint64(flagStartAt), funds, viper.GetString(flagTrustlessAgent), trustlessAgentFeeLimit, configuration, &conditions)
 			if err != nil {
 				return err
 			}
@@ -409,7 +409,7 @@ func getExecutionConfiguration() *types.ExecutionConfiguration {
 
 func getCreateTrustlessAgent() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "create-trustless-execution-agent",
+		Use: "create-trustless-agent",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -461,7 +461,7 @@ func getCreateTrustlessAgent() *cobra.Command {
 
 func getUpdateTrustlessAgentCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "update-trustless-execution-agent",
+		Use: "update-trustless-agent",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
