@@ -1368,23 +1368,25 @@ paths:
                     properties:
                       agent_address:
                         type: string
-                      fee_coin_limit:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
+                      fee_limit:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an
+                            amount.
 
 
-                          NOTE: The amount field is an Int which implements the
-                          custom method
+                            NOTE: The amount field is an Int which implements
+                            the custom method
 
-                          signatures required by gogoproto.
-                    title: config for trustless excution agent
+                            signatures required by gogoproto.
+                    title: config for trustless agent
                   configuration:
                     type: object
                     properties:
@@ -2082,23 +2084,25 @@ paths:
                       properties:
                         agent_address:
                           type: string
-                        fee_coin_limit:
-                          type: object
-                          properties:
-                            denom:
-                              type: string
-                            amount:
-                              type: string
-                          description: >-
-                            Coin defines a token with a denomination and an
-                            amount.
+                        fee_limit:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
 
 
-                            NOTE: The amount field is an Int which implements
-                            the custom method
+                              NOTE: The amount field is an Int which implements
+                              the custom method
 
-                            signatures required by gogoproto.
-                      title: config for trustless excution agent
+                              signatures required by gogoproto.
+                      title: config for trustless agent
                     configuration:
                       type: object
                       properties:
@@ -2872,23 +2876,25 @@ paths:
                       properties:
                         agent_address:
                           type: string
-                        fee_coin_limit:
-                          type: object
-                          properties:
-                            denom:
-                              type: string
-                            amount:
-                              type: string
-                          description: >-
-                            Coin defines a token with a denomination and an
-                            amount.
+                        fee_limit:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
 
 
-                            NOTE: The amount field is an Int which implements
-                            the custom method
+                              NOTE: The amount field is an Int which implements
+                              the custom method
 
-                            signatures required by gogoproto.
-                      title: config for trustless excution agent
+                              signatures required by gogoproto.
+                      title: config for trustless agent
                     configuration:
                       type: object
                       properties:
@@ -3697,11 +3703,11 @@ paths:
                         }
       tags:
         - Query
-  /intento/intent/v1/trustless-execution-agent/{agent_address}:
+  /intento/intent/v1/trustless-agent/{agent_address}:
     get:
       summary: >-
-        TrustlessAgent returns the trustless excution agent information for a
-        given hosted address
+        TrustlessAgent returns the trustless agent information for a given
+        hosted address
       operationId: TrustlessAgent
       responses:
         '200':
@@ -3949,9 +3955,9 @@ paths:
           type: string
       tags:
         - Query
-  /intento/intent/v1/trustless-execution-agents:
+  /intento/intent/v1/trustless-agents:
     get:
-      summary: TrustlessAgents returns all trustless excution agents
+      summary: TrustlessAgents returns all trustless agents
       operationId: TrustlessAgents
       responses:
         '200':
@@ -4272,11 +4278,11 @@ paths:
           type: boolean
       tags:
         - Query
-  /intento/intent/v1/trustless-execution-agents/{fee_admin}:
+  /intento/intent/v1/trustless-agents/{fee_admin}:
     get:
       summary: >-
-        TrustlessAgentsByFeeAdmin returns all trustless excution agents for a
-        given fee admin address
+        TrustlessAgentsByFeeAdmin returns all trustless agents for a given fee
+        admin address
       operationId: TrustlessAgentsByFeeAdmin
       responses:
         '200':
@@ -6367,22 +6373,24 @@ definitions:
         properties:
           agent_address:
             type: string
-          fee_coin_limit:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
+          fee_limit:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
 
 
-              NOTE: The amount field is an Int which implements the custom
-              method
+                NOTE: The amount field is an Int which implements the custom
+                method
 
-              signatures required by gogoproto.
-        title: config for trustless excution agent
+                signatures required by gogoproto.
+        title: config for trustless agent
       configuration:
         type: object
         properties:
@@ -7208,22 +7216,24 @@ definitions:
             properties:
               agent_address:
                 type: string
-              fee_coin_limit:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
+              fee_limit:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
 
 
-                  NOTE: The amount field is an Int which implements the custom
-                  method
+                    NOTE: The amount field is an Int which implements the custom
+                    method
 
-                  signatures required by gogoproto.
-            title: config for trustless excution agent
+                    signatures required by gogoproto.
+            title: config for trustless agent
           configuration:
             type: object
             properties:
@@ -7703,22 +7713,24 @@ definitions:
               properties:
                 agent_address:
                   type: string
-                fee_coin_limit:
-                  type: object
-                  properties:
-                    denom:
-                      type: string
-                    amount:
-                      type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
+                fee_limit:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
 
 
-                    NOTE: The amount field is an Int which implements the custom
-                    method
+                      NOTE: The amount field is an Int which implements the
+                      custom method
 
-                    signatures required by gogoproto.
-              title: config for trustless excution agent
+                      signatures required by gogoproto.
+              title: config for trustless agent
             configuration:
               type: object
               properties:
@@ -8222,22 +8234,24 @@ definitions:
               properties:
                 agent_address:
                   type: string
-                fee_coin_limit:
-                  type: object
-                  properties:
-                    denom:
-                      type: string
-                    amount:
-                      type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
+                fee_limit:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
 
 
-                    NOTE: The amount field is an Int which implements the custom
-                    method
+                      NOTE: The amount field is an Int which implements the
+                      custom method
 
-                    signatures required by gogoproto.
-              title: config for trustless excution agent
+                      signatures required by gogoproto.
+              title: config for trustless agent
             configuration:
               type: object
               properties:
@@ -8797,24 +8811,26 @@ definitions:
                 method
 
                 signatures required by gogoproto.
-  intento.intent.v1.TrustlessAgentExecutionConfig:
+  intento.intent.v1.TrustlessAgentConfig:
     type: object
     properties:
       agent_address:
         type: string
-      fee_coin_limit:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
+      fee_limit:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
 
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-    title: config for trustless excution agent
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    title: config for trustless agent
   intento.intent.v1.TrustlessAgentFeeConfig:
     type: object
     properties:
