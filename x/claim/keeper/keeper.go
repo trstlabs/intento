@@ -26,7 +26,7 @@ type Keeper struct {
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	distrKeeper   types.DistrKeeper
-	params        collections.Item[types.Params]
+	Params        collections.Item[types.Params]
 	authority     string
 }
 
@@ -49,7 +49,7 @@ func NewKeeper(
 		stakingKeeper: sk,
 		distrKeeper:   dk,
 		authority:     authority,
-		params: collections.NewItem(
+		Params: collections.NewItem(
 			sb,
 			types.ParamsKey,
 			"params",
@@ -160,4 +160,9 @@ func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
 		key := iterator.Key()
 		store.Delete(key)
 	}
+}
+
+// GetAuthority returns the x/alloc module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }

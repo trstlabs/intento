@@ -10,11 +10,13 @@ import (
 //nolint:staticcheck
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgClaimClaimable{}, "claim/MsgClaimClaimable", nil)
+	cdc.RegisterConcrete(&MsgUpdateParams{}, "claim/MsgUpdateParams", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgClaimClaimable{},
+		&MsgUpdateParams{},
 	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
