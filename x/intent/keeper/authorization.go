@@ -65,11 +65,11 @@ func isAuthzMsgExec(message *codectypes.Any) bool {
 }
 
 func isLocalMessage(flowInfo types.FlowInfo) bool {
-	return (flowInfo.SelfHostedICAConfig == nil || flowInfo.SelfHostedICAConfig.ConnectionID == "") && (flowInfo.TrustlessAgentExecutionConfig == nil || flowInfo.TrustlessAgentExecutionConfig.AgentAddress == "")
+	return (flowInfo.SelfHostedICAConfig == nil || flowInfo.SelfHostedICAConfig.ConnectionID == "") && (flowInfo.TrustlessAgentConfig == nil || flowInfo.TrustlessAgentConfig.AgentAddress == "")
 }
 
 func isHostedICAMessage(flowInfo types.FlowInfo) bool {
-	return flowInfo.TrustlessAgentExecutionConfig != nil && flowInfo.TrustlessAgentExecutionConfig.AgentAddress != ""
+	return flowInfo.TrustlessAgentConfig != nil && flowInfo.TrustlessAgentConfig.AgentAddress != ""
 }
 
 func isSelfHostedICAMessage(flowInfo types.FlowInfo) bool {

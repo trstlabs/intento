@@ -20,7 +20,7 @@ import (
 
 func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdctypes.Any, error) {
 	// local flow
-	if (flow.SelfHostedICAConfig == nil || flow.SelfHostedICAConfig.ConnectionID == "") && (flow.TrustlessAgentExecutionConfig == nil || flow.TrustlessAgentExecutionConfig.AgentAddress == "") {
+	if (flow.SelfHostedICAConfig == nil || flow.SelfHostedICAConfig.ConnectionID == "") && (flow.TrustlessAgentConfig == nil || flow.TrustlessAgentConfig.AgentAddress == "") {
 		txMsgs := flow.GetTxMsgs(k.cdc)
 		msgResponses, err := handleLocalFlow(k, ctx, txMsgs, *flow)
 		return err == nil, msgResponses, errorsmod.Wrap(err, "could execute local flow")
@@ -30,10 +30,10 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 	portID := flow.SelfHostedICAConfig.PortID
 	triggerAddress := flow.Owner
 	//get trustless agent from hosted config
-	if flow.TrustlessAgentExecutionConfig != nil && flow.TrustlessAgentExecutionConfig.AgentAddress != "" {
-		trustlessExecutionAgent := k.GetTrustlessAgent(ctx, flow.TrustlessAgentExecutionConfig.AgentAddress)
+	if flow.TrustlessAgentConfig != nil && flow.TrustlessAgentConfig.AgentAddress != "" {
+		trustlessExecutionAgent := k.GetTrustlessAgent(ctx, flow.TrustlessAgentConfig.AgentAddress)
 		if trustlessExecutionAgent.AgentAddress == "" || trustlessExecutionAgent.ICAConfig == nil {
-			return false, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessAgent, "trustless agent or ICAConfig is nil for address %s", flow.TrustlessAgentExecutionConfig.AgentAddress)
+			return false, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessAgent, "trustless agent or ICAConfig is nil for address %s", flow.TrustlessAgentConfig.AgentAddress)
 		}
 		connectionID = trustlessExecutionAgent.ICAConfig.ConnectionID
 		portID = trustlessExecutionAgent.ICAConfig.PortID

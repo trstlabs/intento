@@ -127,7 +127,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 			StartAt:       startAt,
 			Configuration: &configuration,
 			Conditions:    &conditions,
-			TrustlessAgentExecutionConfig: &types.TrustlessAgentExecutionConfig{AgentAddress: agentAddress,
+			TrustlessAgentConfig: &types.TrustlessAgentConfig{AgentAddress: agentAddress,
 				FeeCoinLimit: hostedFeeLimit},
 		}
 		response, err := updateFlow(im.keeper, ctx, &msg)
@@ -153,7 +153,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 			Configuration: &configuration,
 			Conditions:    &conditions,
 			ConnectionID:  connectionID,
-			TrustlessAgentExecutionConfig: &types.TrustlessAgentExecutionConfig{AgentAddress: agentAddress,
+			TrustlessAgentConfig: &types.TrustlessAgentConfig{AgentAddress: agentAddress,
 				FeeCoinLimit: hostedFeeLimit},
 		}
 		response, err := submitFlow(im.keeper, ctx, &msg)

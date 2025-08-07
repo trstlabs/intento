@@ -143,7 +143,7 @@ func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID strin
 		FeeFunds:      feeFunds,
 		Configuration: configuration,
 		ConnectionID:  connectionID,
-		TrustlessAgentExecutionConfig: &TrustlessAgentExecutionConfig{AgentAddress: agentAddress,
+		TrustlessAgentConfig: &TrustlessAgentConfig{AgentAddress: agentAddress,
 			FeeCoinLimit: hostedFeeLimit},
 		Conditions: conditions,
 	}, nil
@@ -359,7 +359,7 @@ func NewMsgUpdateFlow(owner string, id uint64, label string, sdkMsgs []sdk.Msg, 
 		Interval:      interval,
 		Configuration: configuration,
 		FeeFunds:      feeFunds,
-		TrustlessAgentExecutionConfig: &TrustlessAgentExecutionConfig{AgentAddress: agentAddress,
+		TrustlessAgentConfig: &TrustlessAgentConfig{AgentAddress: agentAddress,
 			FeeCoinLimit: hostedFeeLimit},
 		Conditions: conditions,
 	}, nil

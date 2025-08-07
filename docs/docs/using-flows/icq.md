@@ -225,7 +225,7 @@ const msgSend = cosmos.bank.v1beta1.MessageComposer.withTypeUrl.send({
 
 ### 7: Submitting the Intent-Based Flow
 
-To submit the flow, we also include **trustless excution agent configuration** using `HostedConfig`.
+To submit the flow, we also include **Trustless Agent configuration** using `HostedConfig`.
 
 ```typescript
 const hostedConfig: HostedConfig = {
@@ -242,7 +242,7 @@ const msgSubmitFlow =
     interval: "600s",
     feeFunds: [{ denom: "uinto", amount: "5000000" }],
     configuration: config,
-    hostedConfig: hostedConfig, // Config for trustless excution agent
+    hostedConfig: hostedConfig, // Config for Trustless Agent
   });
 ```
 

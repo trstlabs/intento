@@ -46,7 +46,7 @@ If the flow is recurring, `duration` will be the time execution will be unavaila
 The message will be similar to the above.
 You can choose a self-hosted ICA or a Trustless Execution Agent that takes care of the fees for you. Learn about the difference [here].
 For both accounts a _connection_id_ flag should be specified. You can find all available connections with `intentod q ibc connection connections`.
-For a trustless excution agent the `--trustless-execution-agent` and the `--trustless-execution-agent-fee-limit` flags should be specified. See examples below. You can find all available host accounts with `intentod q intent list-host-accounts`.
+For a Trustless Agent the `--trustless-execution-agent` and the `--trustless-execution-agent-fee-limit` flags should be specified. See examples below. You can find all available host accounts with `intentod q intent list-host-accounts`.
 
 ### What is a connection and how does it differ from a channel?
 
@@ -146,5 +146,5 @@ You can specify the following flags:
 | `stop-on-failure-of`                  | Stops execution if a specified flow fails. Optional and requires custom logic.          | `4536,234`                                                                        |
 | `skip-on-success-of`                  | Skips the next execution if a specified flow succeeds. Optional, requires custom logic. | `234,234`                                                                         |
 | `skip-on-failure-of`                  | Skips the next execution if a specified flow fails. Optional, requires custom logic.    | ``3456,12`                                                                        |
-| `trustless-execution-agent`           | A local address of a trustless excution agent to execute actions on a host. Optional.   | `into13f5dq5pqtwxe4dvr30m70tqcr47n95sc07uj25z5xrngvppkp52qncvzvw`                 |
+| `trustless-execution-agent`           | A local address of a Trustless Agent to execute actions on a host. Optional.   | `into13f5dq5pqtwxe4dvr30m70tqcr47n95sc07uj25z5xrngvppkp52qncvzvw`                 |
 | `trustless-execution-agent-fee-limit` | Coin to set to limit the hosted fees, optional                                          | `10uinto,100ibc/9117A26BA81E29FA4F78F57DC2BD90CD3D26848101BA880445F119B22A1E254E` |

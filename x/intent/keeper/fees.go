@@ -197,12 +197,12 @@ func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.FlowInfo, trus
 	if err != nil {
 		return err
 	}
-	found, feeCoin := trustlessExecutionAgent.FeeConfig.FeeCoinsSupported.Sort().Find(flow.TrustlessAgentExecutionConfig.FeeCoinLimit.Denom)
+	found, feeCoin := trustlessExecutionAgent.FeeConfig.FeeCoinsSupported.Sort().Find(flow.TrustlessAgentConfig.FeeCoinLimit.Denom)
 	if !found {
 		return errorsmod.Wrap(types.ErrNotFound, "coin not in hosted config")
 	}
 
-	if feeCoin.Amount.GT(flow.TrustlessAgentExecutionConfig.FeeCoinLimit.Amount) {
+	if feeCoin.Amount.GT(flow.TrustlessAgentConfig.FeeCoinLimit.Amount) {
 		return types.ErrTrustlessAgentFeeLimit
 	}
 

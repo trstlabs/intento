@@ -41,20 +41,20 @@ service Query {
         "/intento/intent/v1/flows/{owner}";
   }
 
-  // TrustlessAgent returns the trustless excution agent information for a given hosted address
+  // TrustlessAgent returns the trustless agent information for a given hosted address
   rpc TrustlessAgent(QueryTrustlessAgentRequest)
       returns (QueryTrustlessAgentResponse) {
     option (google.api.http).get =
         "/intento/intent/v1/trustless-execution-agent/{agent_address}";
   }
 
-  // TrustlessAgents returns all trustless excution agents
+  // TrustlessAgents returns all trustless agents
   rpc TrustlessAgents(QueryTrustlessAgentsRequest)
       returns (QueryTrustlessAgentsResponse) {
     option (google.api.http).get = "/intento/intent/v1/trustless-execution-agents";
   }
 
-  // TrustlessAgentsByFeeAdmin returns all trustless excution agents for a given fee admin address
+  // TrustlessAgentsByFeeAdmin returns all trustless agents for a given fee admin address
   rpc TrustlessAgentsByFeeAdmin(QueryTrustlessAgentsByFeeAdminRequest)
       returns (QueryTrustlessAgentsByFeeAdminResponse) {
     option (google.api.http).get =

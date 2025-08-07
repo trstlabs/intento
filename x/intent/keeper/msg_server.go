@@ -106,7 +106,7 @@ func (k msgServer) RegisterAccountAndSubmitFlow(goCtx context.Context, msg *type
 		return nil, err
 	}
 
-	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, types.TrustlessAgentExecutionConfig{}, portID, msg.ConnectionID, conditions)
+	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, types.TrustlessAgentConfig{}, portID, msg.ConnectionID, conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -214,8 +214,8 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 		return nil, errorsmod.Wrap(types.ErrSignerNotOk, err.Error())
 	}
 	//set hosted config
-	if msg.TrustlessAgentExecutionConfig != nil {
-		flow.TrustlessAgentExecutionConfig = msg.TrustlessAgentExecutionConfig
+	if msg.TrustlessAgentConfig != nil {
+		flow.TrustlessAgentConfig = msg.TrustlessAgentConfig
 	}
 
 	k.SetFlowInfo(ctx, &flow)
@@ -328,17 +328,17 @@ func checkAndParseFlowContent(
 	msg sdk.Msg,
 	err error,
 	ctx sdk.Context,
-) (string, time.Duration, time.Duration, time.Time, types.ExecutionConfiguration, types.ExecutionConditions, types.TrustlessAgentExecutionConfig, error) {
+) (string, time.Duration, time.Duration, time.Time, types.ExecutionConfiguration, types.ExecutionConditions, types.TrustlessAgentConfig, error) {
 	var (
 		msgOwner         string
 		msgConnectionID  string
 		msgDuration      string
 		msgInterval      string
 		msgStartAt       uint64
-		msgConfiguration *types.ExecutionConfiguration        = &types.ExecutionConfiguration{}
-		msgConditions    *types.ExecutionConditions           = &types.ExecutionConditions{}
-		HostedICAConfig  *types.TrustlessAgentExecutionConfig = &types.TrustlessAgentExecutionConfig{}
-		msgMsgs          []*cdctypes.Any                      = []*cdctypes.Any{}
+		msgConfiguration *types.ExecutionConfiguration = &types.ExecutionConfiguration{}
+		msgConditions    *types.ExecutionConditions    = &types.ExecutionConditions{}
+		HostedICAConfig  *types.TrustlessAgentConfig   = &types.TrustlessAgentConfig{}
+		msgMsgs          []*cdctypes.Any               = []*cdctypes.Any{}
 	)
 
 	switch msg := msg.(type) {
@@ -350,8 +350,8 @@ func checkAndParseFlowContent(
 		msgStartAt = msg.StartAt
 		msgInterval = msg.Interval
 		// Use fallback if HostedICAConfig is nil
-		if msg.TrustlessAgentExecutionConfig != nil {
-			HostedICAConfig = msg.TrustlessAgentExecutionConfig
+		if msg.TrustlessAgentConfig != nil {
+			HostedICAConfig = msg.TrustlessAgentConfig
 		}
 		// Use fallback if msgConfiguration is nil
 		if msg.Configuration != nil {
@@ -381,14 +381,14 @@ func checkAndParseFlowContent(
 		msgMsgs = msg.Msgs
 
 	default:
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, fmt.Errorf("unsupported message type: %T", msg)
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, fmt.Errorf("unsupported message type: %T", msg)
 	}
 
 	portID := ""
 	if msgConnectionID != "" {
 		portID, err = icatypes.NewControllerPortID(msgOwner)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, err
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, err
 		}
 	}
 
@@ -396,7 +396,7 @@ func checkAndParseFlowContent(
 	if msgDuration != "" {
 		duration, err = time.ParseDuration(msgDuration)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, err
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, err
 		}
 	}
 
@@ -404,7 +404,7 @@ func checkAndParseFlowContent(
 	if msgInterval != "" {
 		interval, err = time.ParseDuration(msgInterval)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 		}
 	}
 
@@ -412,10 +412,10 @@ func checkAndParseFlowContent(
 	if msgStartAt != 0 {
 		startTime = time.Unix(int64(msgStartAt), 0)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, err
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, err
 		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
 	}
 
@@ -424,21 +424,21 @@ func checkAndParseFlowContent(
 		panic(err)
 	}
 	if interval != 0 && (interval < p.MinFlowInterval || interval > duration) {
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinFlowInterval, duration)
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinFlowInterval, duration)
 	}
 	if duration != 0 {
 		if duration > p.MaxFlowDuration {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxFlowDuration)
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxFlowDuration)
 		} else if duration < p.MinFlowDuration {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinFlowDuration)
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinFlowDuration)
 		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxFlowDuration)) {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
 
 	err = updateConditions(msgConditions, msgMsgs, duration, interval)
 	if err != nil {
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentExecutionConfig{}, err
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, err
 	}
 
 	return portID, duration, interval, startTime,

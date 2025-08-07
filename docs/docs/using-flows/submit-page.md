@@ -79,7 +79,7 @@ No need to worry about decoding — just send URL-encoded JSON for `flowInput` a
   *Optional.* Conditions that must be met before the flow executes. For example, chain state conditions like a minimum block height or price threshold.
 
 * **`hostedIcaConfig?: HostedICAConfig`**
-  *Optional.* Configurations for Trustless Excution Agent, like the target chain, controller address, or permissions. Imported from `intentojs`.
+  *Optional.* Configurations for Trustless Agent, like the target chain, controller address, or permissions. Imported from `intentojs`.
 
 * **`icaAddressForAuthZ?: string`**
   *Optional.* If using Authz-based flows, this specifies the address holding authorization rights (likely an ICA address).

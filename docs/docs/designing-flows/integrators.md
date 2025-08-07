@@ -14,7 +14,7 @@ By designing smart execution flows, you empower your users with flows that enhan
 Integrators can choose from multiple interchain execution options based on their requirements:
 
 - **Self-Hosted Interchain Accounts:** Fully self-custodial approach where integrators maintain complete execution control.
-- **Trustless Excution Agent:** Allows execution of interchain actions while managing fees.
+- **Trustless Agent:** Allows execution of interchain actions while managing fees.
 - **Scalable Managed Solution:** A streamlined, managed approach for executing interchain actions at scale.
 
 #### Message Types

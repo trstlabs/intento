@@ -43,7 +43,7 @@ message FlowInfo {
     (gogoproto.nullable) = false
   ];
   ICAConfig self_hosted_ica_config = 11 [(gogoproto.customname) = "SelfHostedICAConfig"];
-  TrustlessAgentExecutionConfig trustless_agent_config = 12 [(gogoproto.customname) = "TrustlessAgentExecutionConfig"];
+  TrustlessAgentConfig trustless_agent_config = 12 [(gogoproto.customname) = "TrustlessAgentConfig"];
   ExecutionConfiguration configuration = 14;
   ExecutionConditions conditions = 15;
 }
@@ -54,8 +54,8 @@ message ICAConfig {
   string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
 }
 
-// config for trustless excution agent
-message TrustlessAgentExecutionConfig {
+// config for trustless agent
+message TrustlessAgentConfig {
   string agent_address = 1;
   cosmos.base.v1beta1.Coin fee_coin_limit = 3 [(gogoproto.nullable) = false];
 }

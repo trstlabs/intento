@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/base64"
 	"testing"
 
 	math "cosmossdk.io/math"
@@ -581,4 +582,76 @@ func TestCompareCoinTrueICQ(t *testing.T) {
 	require.NoError(t, err)
 
 	require.True(t, boolean)
+}
+
+func TestCompareFromWasmResponse(t *testing.T) {
+	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+
+	b64 := "eyJtaW5fc3RyZWFtX3NlY29uZHMiOiIxMjAiLCJtaW5fc2Vjb25kc191bnRpbF9zdGFydF90aW1lIjoiMTIwIiwiYWNjZXB0ZWRfaW5fZGVub20iOiJmYWN0b3J5L29zbW8xbno3cWRwN2VnMzBzcjk1OXd2cnduOWo5MzcwaDR4dDZ0dG0waDMvdXNzb3NtbyIsInN0cmVhbV9jcmVhdGlvbl9kZW5vbSI6InVvc21vIiwic3RyZWFtX2NyZWF0aW9uX2ZlZSI6IjEwMDAwMDAwIiwiZXhpdF9mZWVfcGVyY2VudCI6IjAuMSIsImZlZV9jb2xsZWN0b3IiOiJvc21vMW56N3FkcDdlZzMwc3I5NTl3dnJ3bjlqOTM3MGg0eHQ2dHRtMGgzIiwicHJvdG9jb2xfYWRtaW4iOiJvc21vMW56N3FkcDdlZzMwc3I5NTl3dnJ3bjlqOTM3MGg0eHQ2dHRtMGgzIn0="
+	queryKey := "stream_creation_fee"
+	compareValue := "10000000"
+
+	decoded, err := base64.StdEncoding.DecodeString(b64)
+	require.NoError(t, err)
+
+	comparison := types.Comparison{
+		ResponseIndex: 0,
+		ResponseKey:   queryKey,
+		Operand:       compareValue,
+		Operator:      types.ComparisonOperator_EQUAL,
+		ValueType:     "json",
+		ICQConfig:     &types.ICQConfig{Response: decoded},
+	}
+
+	ok, err := keeper.CompareResponseValue(ctx, 1, nil, comparison)
+	require.NoError(t, err)
+	require.True(t, ok, "comparison should succeed for equality")
+
+	// Change operator to NOT_EQUAL and check
+	comparison.Operator = types.ComparisonOperator_NOT_EQUAL
+	ok, err = keeper.CompareResponseValue(ctx, 1, nil, comparison)
+	require.NoError(t, err)
+	require.False(t, ok, "comparison should fail for not equal")
+
+	compareValue = "20000000"
+	comparison.Operator = types.ComparisonOperator_SMALLER_THAN
+	ok, err = keeper.CompareResponseValue(ctx, 1, nil, comparison)
+	require.NoError(t, err)
+	require.False(t, ok, "comparison should not succeed for smaller than")
+}
+
+func TestFeedbackLoopFromWasmResponse(t *testing.T) {
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+	b64 := "eyJtaW5fc3RyZWFtX3NlY29uZHMiOiIxMjAiLCJtaW5fc2Vjb25kc191bnRpbF9zdGFydF90aW1lIjoiMTIwIiwiYWNjZXB0ZWRfaW5fZGVub20iOiJmYWN0b3J5L29zbW8xbno3cWRwN2VnMzBzcjk1OXd2cnduOWo5MzcwaDR4dDZ0dG0waDMvdXNzb3NtbyIsInN0cmVhbV9jcmVhdGlvbl9kZW5vbSI6InVvc21vIiwic3RyZWFtX2NyZWF0aW9uX2ZlZSI6IjEwMDAwMDAwIiwiZXhpdF9mZWVfcGVyY2VudCI6IjAuMSIsImZlZV9jb2xsZWN0b3IiOiJvc21vMW56N3FkcDdlZzMwc3I5NTl3dnJ3bjlqOTM3MGg0eHQ2dHRtMGgzIiwicHJvdG9jb2xfYWRtaW4iOiJvc21vMW56N3FkcDdlZzMwc3I5NTl3dnJ3bjlqOTM3MGg0eHQ2dHRtMGgzIn0="
+	responseKey := "stream_creation_fee"
+
+	decoded, err := base64.StdEncoding.DecodeString(b64)
+	require.NoError(t, err)
+
+	conditions := &types.ExecutionConditions{
+		FeedbackLoops: []*types.FeedbackLoop{{
+			MsgsIndex:     0,
+			ResponseIndex: 0,
+			ResponseKey:   responseKey,
+			ValueType:     "sdk.Int",
+			ICQConfig:     &types.ICQConfig{Response: decoded},
+			MsgKey:        "Amount.Amount", // Example, adjust as needed
+		}},
+	}
+
+	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+
+	msgDelegate := newFakeMsgDelegate(sdk.AccAddress("test"), val)
+	msgDelegate.Amount = sdk.NewCoin("stake", math.NewInt(1000))
+	msgs, err := types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
+	require.NoError(t, err)
+
+	err = keeper.RunFeedbackLoops(ctx, 1, &msgs, conditions)
+	require.NoError(t, err)
+
+	err = keeper.cdc.UnpackAny(msgs[0], &msgDelegate)
+	require.NoError(t, err)
+
+	expectedAmount := sdk.NewCoin("stake", math.NewInt(10000000))
+	require.Equal(t, expectedAmount, msgDelegate.Amount, "amount should be updated by feedback loop")
 }

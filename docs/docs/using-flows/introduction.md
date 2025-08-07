@@ -31,7 +31,7 @@ Intento can execute messages on other chains using several approaches:
 1. **ICS20 Transfers with a Memo**
    - Easy to set up on available chains by using packet forwarding
    - Memo field actions have limited support by chains
-2. **Trustless Excution Agent**
+2. **Trustless Agent**
    - Easy to set up and manage
    - Host chain fees are managed by an admin
    - You configure a fee limit
@@ -57,7 +57,7 @@ Submitting an flow with MsgSubmitFlow can be done with the following input:
 | `ConnectionID`          | `string`                            | The ID of the connection to use for a self-hosted ICA                                            | ✔️       |
 | `HostConnectionID`      | `string`                            | The ID of the host chain connection to use for a self-hosted ICA                                 | ✔️       |
 | `TrustlessAgent`         | `string`                            | Hosted ICA account that executes on a host chain on your behalf                                  | ✔️       |
-| `TrustlessAgentFeeLimit` | `cosmos.base.v1beta1.Coin`          | A limit of the fees a trustless excution agent can charge per execution                                    | ✔️       |
+| `TrustlessAgentFeeLimit` | `cosmos.base.v1beta1.Coin`          | A limit of the fees a Trustless Agent can charge per execution                                    | ✔️       |
 | `Configuration`         | `ExecutionConfiguration`            | Optional set of basic conditions and settings                                                    | ✔️       |
 | `Conditions`            | `repeated Condition`                | Powerful set of conditions such as comparisons and feedback loops                                | ✔️       |
 
