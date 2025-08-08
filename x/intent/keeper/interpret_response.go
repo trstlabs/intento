@@ -58,7 +58,7 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 
 				valueFromResponse, err = parseResponseValue(valueFromResponse, comparison.ResponseKey, comparison.ValueType)
 				if err != nil {
-					return false, err
+					return false, fmt.Errorf("error parsing value: %v", err)
 
 				}
 			}
@@ -70,7 +70,7 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 				}
 				valueFromResponse, err = parseResponseValue(queryCallback, comparison.ResponseKey, comparison.ValueType)
 				if err != nil {
-					return false, err
+					return false, fmt.Errorf("error parsing value: %v", err)
 				}
 			}
 
@@ -90,7 +90,7 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 
 		err = proto.Unmarshal(respAny.Value, protoMsg)
 		if err != nil {
-			return false, err
+			return false, fmt.Errorf("error unmarshalling response: %v", err)
 		}
 		valueFromResponse, err = parseResponseValue(protoMsg, comparison.ResponseKey, comparison.ValueType)
 		if err != nil {
@@ -200,6 +200,9 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 
 					}
 					valueFromResponse, err = parseResponseValue(valueFromResponse, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
+					if err != nil {
+						return fmt.Errorf("use value: error parsing value: %v", err)
+					}
 				}
 				if respAny.Value != nil {
 					var resp interface{}
@@ -209,7 +212,7 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 					}
 					valueFromResponse, err = parseResponseValue(queryCallback, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
 					if err != nil {
-						return err
+						return fmt.Errorf("use value: error unpacking: %v", err)
 					}
 				}
 			}
