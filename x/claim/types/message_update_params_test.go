@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/trstlabs/intento/x/claim/types"
 )
@@ -15,7 +16,8 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 		DurationOfDecay:        time.Hour * 2,
 		DurationVestingPeriods: []time.Duration{time.Hour, time.Hour},
 	}
-	msg := types.NewMsgUpdateParams("cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe36h6r4", validParams)
+	acc, _ := sdk.AccAddressFromHexUnsafe("91e17c2a0c4d8c1b0d3d7d0a7f5c8a1c0b1a09")
+	msg := types.NewMsgUpdateParams(acc.String(), validParams)
 	require.NoError(t, msg.ValidateBasic())
 
 	msgBad := types.NewMsgUpdateParams("badaddress", validParams)
@@ -23,6 +25,6 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 
 	invalidParams := validParams
 	invalidParams.ClaimDenom = ""
-	msg2 := types.NewMsgUpdateParams("cosmos1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqe36h6r4", invalidParams)
+	msg2 := types.NewMsgUpdateParams(acc.String(), invalidParams)
 	require.Error(t, msg2.ValidateBasic())
 }
