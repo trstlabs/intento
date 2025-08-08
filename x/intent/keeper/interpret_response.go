@@ -27,7 +27,6 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 	if comparison.ResponseKey == "" && queryCallback == nil {
 		return true, nil
 	}
-	fmt.Println("response comparison", "queryCallback", queryCallback)
 	if len(responses) <= int(comparison.ResponseIndex) && queryCallback == nil {
 		return false, fmt.Errorf("not enough message responses to compare to, number of responses: %v", len(responses))
 	}
@@ -55,6 +54,12 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 					}
 				} else {
 					valueFromResponse = jsonObj
+				}
+
+				valueFromResponse, err = parseResponseValue(valueFromResponse, comparison.ResponseKey, comparison.ValueType)
+				if err != nil {
+					return false, err
+
 				}
 			}
 			if respAny.Value != nil {
@@ -93,66 +98,38 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 		}
 	}
 
-	   operand, err := parseOperand(comparison.Operand, comparison.ValueType)
-	   if err != nil {
-			   return false, fmt.Errorf("error parsing operand: %v", err)
-	   }
+	operand, err := parseOperand(comparison.Operand, comparison.ValueType)
+	if err != nil {
+		return false, fmt.Errorf("error parsing operand: %v", err)
+	}
 
-	   // Special handling: if ValueType is sdk.Int, convert string/float64 to math.Int for valueFromResponse
-	   if comparison.ValueType == "sdk.Int" {
-			   switch v := valueFromResponse.(type) {
-			   case string:
-					   intVal, ok := math.NewIntFromString(v)
-					   if !ok {
-							   return false, fmt.Errorf("failed to parse string '%s' as sdk.Int", v)
-					   }
-					   valueFromResponse = intVal
-			   case float64:
-					   valueFromResponse = math.NewInt(int64(v))
-			   case int64:
-					   valueFromResponse = math.NewInt(v)
-			   case int:
-					   valueFromResponse = math.NewInt(int64(v))
-			   case math.Int:
-					   // already correct
-			   default:
-					   // fallback: try string conversion
-					   str := fmt.Sprintf("%v", v)
-					   intVal, ok := math.NewIntFromString(str)
-					   if !ok {
-							   return false, fmt.Errorf("failed to parse '%v' as sdk.Int", v)
-					   }
-					   valueFromResponse = intVal
-			   }
-	   }
-
-	   // Normalize types for JSON value extraction
-	   valueFromResponse, operand = normalizeJSONTypes(valueFromResponse, operand)
-	   fmt.Printf("Comparing value: %v with operand: %v using operator: %s\n", valueFromResponse, operand, comparison.Operator)
-	   switch comparison.Operator {
-	   case types.ComparisonOperator_EQUAL:
-			   return reflect.DeepEqual(valueFromResponse, operand), nil
-	   case types.ComparisonOperator_NOT_EQUAL:
-			   return !reflect.DeepEqual(valueFromResponse, operand), nil
-	   case types.ComparisonOperator_CONTAINS:
-			   return contains(valueFromResponse, operand), nil
-	   case types.ComparisonOperator_NOT_CONTAINS:
-			   return !contains(valueFromResponse, operand), nil
-	   case types.ComparisonOperator_SMALLER_THAN:
-			   return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a < b })
-	   case types.ComparisonOperator_LARGER_THAN:
-			   return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a > b })
-	   case types.ComparisonOperator_GREATER_EQUAL:
-			   return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a >= b })
-	   case types.ComparisonOperator_LESS_EQUAL:
-			   return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a <= b })
-	   case types.ComparisonOperator_STARTS_WITH:
-			   return strings.HasPrefix(fmt.Sprintf("%v", valueFromResponse), fmt.Sprintf("%v", operand)), nil
-	   case types.ComparisonOperator_ENDS_WITH:
-			   return strings.HasSuffix(fmt.Sprintf("%v", valueFromResponse), fmt.Sprintf("%v", operand)), nil
-	   default:
-			   return false, fmt.Errorf("unsupported comparison operator: %v", comparison.Operator)
-	   }
+	// Normalize types for JSON value extraction
+	valueFromResponse, operand = normalizeJSONTypes(valueFromResponse, operand)
+	fmt.Printf("Comparing value: %v with operand: %v using operator: %s\n", valueFromResponse, operand, comparison.Operator)
+	switch comparison.Operator {
+	case types.ComparisonOperator_EQUAL:
+		return reflect.DeepEqual(valueFromResponse, operand), nil
+	case types.ComparisonOperator_NOT_EQUAL:
+		return !reflect.DeepEqual(valueFromResponse, operand), nil
+	case types.ComparisonOperator_CONTAINS:
+		return contains(valueFromResponse, operand), nil
+	case types.ComparisonOperator_NOT_CONTAINS:
+		return !contains(valueFromResponse, operand), nil
+	case types.ComparisonOperator_SMALLER_THAN:
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a < b })
+	case types.ComparisonOperator_LARGER_THAN:
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a > b })
+	case types.ComparisonOperator_GREATER_EQUAL:
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a >= b })
+	case types.ComparisonOperator_LESS_EQUAL:
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a <= b })
+	case types.ComparisonOperator_STARTS_WITH:
+		return strings.HasPrefix(fmt.Sprintf("%v", valueFromResponse), fmt.Sprintf("%v", operand)), nil
+	case types.ComparisonOperator_ENDS_WITH:
+		return strings.HasSuffix(fmt.Sprintf("%v", valueFromResponse), fmt.Sprintf("%v", operand)), nil
+	default:
+		return false, fmt.Errorf("unsupported comparison operator: %v", comparison.Operator)
+	}
 }
 
 // FeedbackLoop replaces the value in a message with the value from a response
@@ -222,16 +199,17 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 						valueFromResponse = jsonObj
 
 					}
-					if respAny.Value != nil {
-						var resp interface{}
-						err = k.cdc.UnpackAny(&respAny, &resp)
-						if err != nil {
-							return fmt.Errorf("use value: error unpacking: %v", err)
-						}
-						valueFromResponse, err = parseResponseValue(queryCallback, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
-						if err != nil {
-							return err
-						}
+					valueFromResponse, err = parseResponseValue(valueFromResponse, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
+				}
+				if respAny.Value != nil {
+					var resp interface{}
+					err = k.cdc.UnpackAny(&respAny, &resp)
+					if err != nil {
+						return fmt.Errorf("use value: error unpacking: %v", err)
+					}
+					valueFromResponse, err = parseResponseValue(queryCallback, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
+					if err != nil {
+						return err
 					}
 				}
 			}
@@ -256,14 +234,7 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 				return fmt.Errorf("failed to resolve type URL %s: %w", responsesAnys[feedbackLoop.ResponseIndex].TypeUrl, err)
 			}
 
-			k.Logger(ctx).Debug("\n--- Processing feedback loop ---")
-			k.Logger(ctx).Debug("Message index", feedbackLoop.MsgsIndex)
-			if int(feedbackLoop.MsgsIndex) < len(*msgs) {
-				k.Logger(ctx).Debug("Message type URL", (*msgs)[feedbackLoop.MsgsIndex].TypeUrl)
-			}
-			k.Logger(ctx).Debug("Response index", feedbackLoop.ResponseIndex)
-			k.Logger(ctx).Debug("Response key", feedbackLoop.ResponseKey)
-			k.Logger(ctx).Debug("Message key", feedbackLoop.MsgKey)
+			err = proto.Unmarshal(responsesAnys[feedbackLoop.ResponseIndex].Value, protoMsg)
 			if err != nil {
 				return err
 			}
@@ -272,7 +243,6 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 				return err
 			}
 		}
-
 		// Get the message to modify
 		msgIndex := feedbackLoop.MsgsIndex
 
@@ -363,51 +333,29 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 			"currentValue", fieldToReplace.Interface(),
 			"newValue", valueFromResponse)
 
-		// Special handling: if ValueType is sdk.Int, convert string/float64 to math.Int
-		newValue := valueFromResponse
-		if feedbackLoop.ValueType == "sdk.Int" {
-			switch v := valueFromResponse.(type) {
-			case string:
-				intVal, ok := math.NewIntFromString(v)
-				if !ok {
-					return fmt.Errorf("failed to parse string '%s' as sdk.Int", v)
-				}
-				newValue = intVal
-			case float64:
-				newValue = math.NewInt(int64(v))
-			case int64:
-				newValue = math.NewInt(v)
-			case int:
-				newValue = math.NewInt(int64(v))
-			case math.Int:
-				newValue = v
-			default:
-				// fallback: try string conversion
-				str := fmt.Sprintf("%v", v)
-				intVal, ok := math.NewIntFromString(str)
-				if !ok {
-					return fmt.Errorf("failed to parse '%v' as sdk.Int", v)
-				}
-				newValue = intVal
-			}
-		}
-
+		// Set the new value with proper type checking
 		if !fieldToReplace.CanSet() {
 			return fmt.Errorf("field %s cannot be set", feedbackLoop.MsgKey)
 		}
 
-		targetValue := reflect.ValueOf(newValue)
+		// Convert the value to the target type
+		targetValue := reflect.ValueOf(valueFromResponse)
 		if !targetValue.Type().AssignableTo(fieldToReplace.Type()) {
+			// Try to convert the value if it's not directly assignable
 			if targetValue.Type().ConvertibleTo(fieldToReplace.Type()) {
 				targetValue = targetValue.Convert(fieldToReplace.Type())
 			} else {
-				return fmt.Errorf("cannot assign %s to %s", targetValue.Type(), fieldToReplace.Type())
+				return fmt.Errorf("cannot assign %s to %s",
+					targetValue.Type(), fieldToReplace.Type())
 			}
 		}
 
+		// Set the field value
 		fieldToReplace.Set(targetValue)
 		k.Logger(ctx).Debug("Successfully updated field", feedbackLoop.MsgKey, " to value", fieldToReplace.Interface())
-		k.Logger(ctx).Debug("Updated field value", "field", feedbackLoop.MsgKey, "newValue", fieldToReplace.Interface())
+		k.Logger(ctx).Debug("Updated field value",
+			"field", feedbackLoop.MsgKey,
+			"newValue", fieldToReplace.Interface())
 
 		// Repack the message based on whether it was wrapped or not
 		k.Logger(ctx).Debug("Repacking message", "isWrapped", isWrapped)
@@ -451,12 +399,12 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 
 // parseResponseValue retrieves and parses the value of a response key to the specified response type
 func parseResponseValue(response interface{}, responseKey, responseType string) (interface{}, error) {
+	// If responseKey is empty and response is a primitive, just return it
+	fmt.Printf("Parsing response value: %v with key: %s and type: %s\n", response, responseKey, responseType)
 
 	val, err := traverseFields(response, responseKey)
+	fmt.Println("traverseFields responseKey", responseKey, "val", val, "err", err)
 	if err != nil {
-		// if responseKey == ""{
-		// 	val =
-		// }
 		return nil, err
 	}
 
@@ -487,8 +435,32 @@ func parseResponseValue(response interface{}, responseKey, responseType string) 
 			return coins, nil
 		}
 	case "sdk.Int":
-		if val.Kind() == reflect.Struct && val.Type().Name() == "Int" {
-			return val.Interface().(math.Int), nil
+		fmt.Println("parsing sdk.Int from response", val)
+		if val.Kind() == reflect.Struct {
+
+			if val.Type().Name() == "Int" {
+				return val.Interface().(math.Int), nil
+			}
+
+		}
+		if val.Kind() == reflect.String {
+			intVal, ok := math.NewIntFromString(val.String())
+			if !ok {
+				return nil, fmt.Errorf("failed to parse sdk.Int from string: %v", val.String())
+			}
+			return intVal, nil
+		}
+		if val.Kind() == reflect.Float64 {
+			intVal := math.NewInt(int64(val.Float()))
+			return intVal, nil
+			// return val.Interface().(math.Int), nil
+		}
+		if val.Kind() == reflect.Int || val.Kind() == reflect.Int64 {
+			intVal := math.NewInt(reflect.ValueOf(val.Interface()).Int())
+			return intVal, nil
+			// return val.Interface().(math.Int), nil
+		} else {
+			fmt.Println("parsing sdk.Int from response failed", val)
 		}
 	case "[]string":
 		if val.Kind() == reflect.Slice && val.Type().Elem().Kind() == reflect.String {
@@ -540,21 +512,6 @@ func parseOperand(operand string, responseType string) (interface{}, error) {
 			return nil, fmt.Errorf("failed to parse int operand: %w", err)
 		}
 		return intVal, nil
-	case "json":
-		var jsonObj map[string]interface{}
-		err := json.Unmarshal([]byte(operand), &jsonObj)
-		if err != nil {
-			response, err := parseOperand(operand, "int")
-			if err != nil {
-				response, err := parseOperand(operand, "string")
-				if err != nil {
-					return nil, fmt.Errorf("failed to parse JSON operand: %w", err)
-				}
-				return response, nil
-			}
-			return response, nil
-		}
-		return jsonObj, err
 		// Add more cases for other response types as needed
 		// For example, if you have a custom proto type, you can handle it here
 		// case "customProtoType":
@@ -705,9 +662,14 @@ func compareNumbers(value, operand interface{}, compareFunc func(int64, int64) b
 func traverseFields(msgInterface interface{}, inputKey string) (reflect.Value, error) {
 	keys := strings.Split(inputKey, ".")
 	val := reflect.ValueOf(msgInterface)
+
+	// If input is a primitive and key is empty or single, return directly
+	if len(keys) == 1 && (val.Kind() != reflect.Struct && val.Kind() != reflect.Slice && val.Kind() != reflect.Ptr) {
+		return val, nil
+	}
+
 	if inputKey != "" {
 		for _, key := range keys {
-
 			// Handle slices
 			if val.Kind() == reflect.Slice {
 				index, err := parseIndex(key)
