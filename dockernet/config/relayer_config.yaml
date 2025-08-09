@@ -8,7 +8,7 @@ chains:
     type: cosmos
     value:
       key: rly1
-      chain-id: intento-test-1
+      chain-id: intento-dev-1
       rpc-addr: http://into1:26657
       account-prefix: into
       keyring-backend: test
@@ -83,7 +83,7 @@ chains:
 paths:
   into-gaia:
     src:
-      chain-id: intento-test-1
+      chain-id: intento-dev-1
       client-id: 07-tendermint-0
       connection-id: connection-1
     dst:
@@ -95,7 +95,7 @@ paths:
       channel-list: []
   into-osmo:
     src:
-      chain-id: intento-test-1
+      chain-id: intento-dev-1
       client-id: 07-tendermint-0
       connection-id: connection-3
     dst:
@@ -107,7 +107,7 @@ paths:
       channel-list: []
   into-host:
     src:
-      chain-id: intento-test-1
+      chain-id: intento-dev-1
     dst:
       chain-id: HOST
     src-channel-filter:
@@ -115,7 +115,7 @@ paths:
       channel-list: []
   # into-{new-host-zone}:
   #   src:
-  #     chain-id: intento-test-1
+  #     chain-id: intento-dev-1
   #   dst:
   #     chain-id: {CHAIN_ID}
   #   src-channel-filter:
