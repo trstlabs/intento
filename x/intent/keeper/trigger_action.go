@@ -64,9 +64,13 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
 	}
+	const maxTimeout = time.Hour
 
-	relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
-
+	timeout := maxTimeout
+	if flow.Interval > 0 && flow.Interval < maxTimeout {
+		timeout = flow.Interval
+	}
+	relativeTimeoutTimestamp := uint64(timeout.Nanoseconds())
 	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.icaControllerKeeper)
 	icaMsg := icacontrollertypes.NewMsgSendTx(triggerAddress, connectionID, relativeTimeoutTimestamp, packetData)
 
