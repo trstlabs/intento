@@ -205,7 +205,7 @@ func (q QueryServer) TrustlessAgents(c context.Context, req *types.QueryTrustles
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	trustlessExecutionAgents := make([]types.TrustlessAgent, 0)
+	trustlessAgents := make([]types.TrustlessAgent, 0)
 	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
 	prefixStore := prefix.NewStore(store, types.TrustlessAgentKeyPrefix)
 
@@ -213,7 +213,7 @@ func (q QueryServer) TrustlessAgents(c context.Context, req *types.QueryTrustles
 		if accumulate {
 			var c types.TrustlessAgent
 			q.keeper.cdc.MustUnmarshal(value, &c)
-			trustlessExecutionAgents = append(trustlessExecutionAgents, c)
+			trustlessAgents = append(trustlessAgents, c)
 
 		}
 		return true, nil
@@ -224,7 +224,7 @@ func (q QueryServer) TrustlessAgents(c context.Context, req *types.QueryTrustles
 	}
 
 	return &types.QueryTrustlessAgentsResponse{
-		TrustlessAgents: trustlessExecutionAgents,
+		TrustlessAgents: trustlessAgents,
 		Pagination:      pageRes,
 	}, nil
 }
@@ -235,7 +235,7 @@ func (q QueryServer) TrustlessAgentsByFeeAdmin(c context.Context, req *types.Que
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	trustlessExecutionAgents := make([]types.TrustlessAgent, 0)
+	trustlessAgents := make([]types.TrustlessAgent, 0)
 
 	admin, err := sdk.AccAddressFromBech32(req.FeeAdmin)
 	if err != nil {
@@ -245,10 +245,10 @@ func (q QueryServer) TrustlessAgentsByFeeAdmin(c context.Context, req *types.Que
 	prefixStore := prefix.NewStore(store, types.GetTrustlessAgentsByAdminPrefix(admin))
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
-			trustlessExecutionAgentAddress := string(key)
-			flowInfo := q.keeper.GetTrustlessAgent(ctx, trustlessExecutionAgentAddress)
+			trustlessAgentAddress := string(key)
+			flowInfo := q.keeper.GetTrustlessAgent(ctx, trustlessAgentAddress)
 
-			trustlessExecutionAgents = append(trustlessExecutionAgents, flowInfo)
+			trustlessAgents = append(trustlessAgents, flowInfo)
 
 		}
 		return true, nil
@@ -258,7 +258,7 @@ func (q QueryServer) TrustlessAgentsByFeeAdmin(c context.Context, req *types.Que
 	}
 
 	return &types.QueryTrustlessAgentsByFeeAdminResponse{
-		TrustlessAgents: trustlessExecutionAgents,
+		TrustlessAgents: trustlessAgents,
 		Pagination:      pageRes,
 	}, nil
 }

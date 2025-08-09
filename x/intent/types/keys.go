@@ -131,8 +131,8 @@ func GetFlowByOwnerIndexKey(bz []byte, flowID uint64) []byte {
 	return r
 }
 
-// GetTrustlessAgentsByAdminIndexKey returns the id: `<prefix><adminAddress length><adminAddress><trustlessexecutionagentID>`
-func GetTrustlessAgentsByAdminIndexKey(bz []byte, trustlessExecutionAgentAddress string) []byte {
+// GetTrustlessAgentsByAdminIndexKey returns the id: `<prefix><adminAddress length><adminAddress><trustlessAgentID>`
+func GetTrustlessAgentsByAdminIndexKey(bz []byte, trustlessAgentAddress string) []byte {
 	prefixBytes := GetTrustlessAgentsByAdminPrefix(bz)
-	return append(prefixBytes, []byte(trustlessExecutionAgentAddress)...)
+	return append(prefixBytes, []byte(trustlessAgentAddress)...)
 }

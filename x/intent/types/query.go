@@ -62,9 +62,9 @@ func NewQueryTrustlessAgentRequest(agentAddress string) *QueryTrustlessAgentRequ
 }
 
 // NewQueryTrustlessAgentResponse creates and returns a new QueryTrustlessAgentsResponse
-func NewQueryTrustlessAgentResponse(trustlessExecutionAgent TrustlessAgent) *QueryTrustlessAgentResponse {
+func NewQueryTrustlessAgentResponse(trustlessAgent TrustlessAgent) *QueryTrustlessAgentResponse {
 	return &QueryTrustlessAgentResponse{
-		TrustlessAgent: trustlessExecutionAgent,
+		TrustlessAgent: trustlessAgent,
 	}
 }
 
@@ -76,8 +76,8 @@ func NewQueryTrustlessAgentsRequest(pagination *query.PageRequest) *QueryTrustle
 }
 
 // NewQueryTrustlessAgentResponse creates and returns a new QueryTrustlessAgentsResponse
-func NewQueryTrustlessAgentsResponse(trustlessExecutionAgents []TrustlessAgent) *QueryTrustlessAgentsResponse {
+func NewQueryTrustlessAgentsResponse(trustlessAgents []TrustlessAgent) *QueryTrustlessAgentsResponse {
 	return &QueryTrustlessAgentsResponse{
-		TrustlessAgents: trustlessExecutionAgents,
+		TrustlessAgents: trustlessAgents,
 	}
 }

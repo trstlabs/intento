@@ -45,7 +45,7 @@ func (k Keeper) SetFlowInfo(ctx sdk.Context, flow *types.FlowInfo) {
 	store.Set(types.GetFlowKey(flow.ID), k.cdc.MustMarshal(flow))
 }
 
-func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, msgs []*cdctypes.Any, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, configuration types.ExecutionConfiguration, trustlessExecutionAgentExecutionConfig types.TrustlessAgentConfig, portID string, connectionId string, conditions types.ExecutionConditions) error {
+func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, msgs []*cdctypes.Any, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins, configuration types.ExecutionConfiguration, trustlessAgentExecutionConfig types.TrustlessAgentConfig, portID string, connectionId string, conditions types.ExecutionConditions) error {
 
 	id := k.autoIncrementID(ctx, types.KeyLastID)
 	flowAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
@@ -72,7 +72,7 @@ func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, 
 		EndTime:              endTime,
 		SelfHostedICAConfig:  &selfHostedIcaConfig,
 		Configuration:        &configuration,
-		TrustlessAgentConfig: &trustlessExecutionAgentExecutionConfig,
+		TrustlessAgentConfig: &trustlessAgentExecutionConfig,
 		Conditions:           &conditions,
 	}
 

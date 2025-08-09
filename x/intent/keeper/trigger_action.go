@@ -31,14 +31,14 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 	triggerAddress := flow.Owner
 	//get trustless agent from hosted config
 	if flow.TrustlessAgentConfig != nil && flow.TrustlessAgentConfig.AgentAddress != "" {
-		trustlessExecutionAgent := k.GetTrustlessAgent(ctx, flow.TrustlessAgentConfig.AgentAddress)
-		if trustlessExecutionAgent.AgentAddress == "" || trustlessExecutionAgent.ICAConfig == nil {
+		trustlessAgent := k.GetTrustlessAgent(ctx, flow.TrustlessAgentConfig.AgentAddress)
+		if trustlessAgent.AgentAddress == "" || trustlessAgent.ICAConfig == nil {
 			return false, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessAgent, "trustless agent or ICAConfig is nil for address %s", flow.TrustlessAgentConfig.AgentAddress)
 		}
-		connectionID = trustlessExecutionAgent.ICAConfig.ConnectionID
-		portID = trustlessExecutionAgent.ICAConfig.PortID
-		triggerAddress = trustlessExecutionAgent.AgentAddress
-		err := k.SendFeesToHostedAdmin(ctx, *flow, trustlessExecutionAgent)
+		connectionID = trustlessAgent.ICAConfig.ConnectionID
+		portID = trustlessAgent.ICAConfig.PortID
+		triggerAddress = trustlessAgent.AgentAddress
+		err := k.SendFeesToHostedAdmin(ctx, *flow, trustlessAgent)
 		if err != nil {
 			return false, nil, errorsmod.Wrap(err, "could not pay trustless agent")
 		}

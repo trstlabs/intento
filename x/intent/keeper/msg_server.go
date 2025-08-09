@@ -262,37 +262,37 @@ func (k msgServer) UpdateTrustlessAgentFeeConfig(goCtx context.Context, msg *typ
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	//get hosted config by address on hosted key prefix
-	trustlessExecutionAgent, err := k.TryGetTrustlessAgent(ctx, msg.AgentAddress)
+	trustlessAgent, err := k.TryGetTrustlessAgent(ctx, msg.AgentAddress)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 	//check admin address
-	if trustlessExecutionAgent.FeeConfig.FeeAdmin != msg.FeeAdmin {
+	if trustlessAgent.FeeConfig.FeeAdmin != msg.FeeAdmin {
 		return nil, types.ErrInvalidAddress
 	}
 
-	agentAddress := trustlessExecutionAgent.AgentAddress
+	agentAddress := trustlessAgent.AgentAddress
 
-	admin := trustlessExecutionAgent.FeeConfig.FeeAdmin
+	admin := trustlessAgent.FeeConfig.FeeAdmin
 	if msg.FeeConfig.FeeAdmin != "" {
 		newAdminAddr, err := sdk.AccAddressFromBech32(msg.FeeConfig.FeeAdmin)
 		if err != nil {
 			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 		}
-		currentAdminAddr, err := sdk.AccAddressFromBech32(trustlessExecutionAgent.FeeConfig.FeeAdmin)
+		currentAdminAddr, err := sdk.AccAddressFromBech32(trustlessAgent.FeeConfig.FeeAdmin)
 		if err != nil {
 			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 		}
 		admin = msg.FeeConfig.FeeAdmin
-		k.changeTrustlessAgentAdminIndex(ctx, currentAdminAddr, newAdminAddr, trustlessExecutionAgent.AgentAddress)
+		k.changeTrustlessAgentAdminIndex(ctx, currentAdminAddr, newAdminAddr, trustlessAgent.AgentAddress)
 	}
 
-	feeCoinsSupported := trustlessExecutionAgent.FeeConfig.FeeCoinsSupported
+	feeCoinsSupported := trustlessAgent.FeeConfig.FeeCoinsSupported
 	if msg.FeeConfig.FeeCoinsSupported != nil {
 		feeCoinsSupported = msg.FeeConfig.FeeCoinsSupported
 	}
 
-	k.SetTrustlessAgent(ctx, &types.TrustlessAgent{AgentAddress: agentAddress, FeeConfig: &types.TrustlessAgentFeeConfig{FeeAdmin: admin, FeeCoinsSupported: feeCoinsSupported}, ICAConfig: trustlessExecutionAgent.ICAConfig})
+	k.SetTrustlessAgent(ctx, &types.TrustlessAgent{AgentAddress: agentAddress, FeeConfig: &types.TrustlessAgentFeeConfig{FeeAdmin: admin, FeeCoinsSupported: feeCoinsSupported}, ICAConfig: trustlessAgent.ICAConfig})
 
 	//set hosted config by address on hosted key prefix
 	return &types.MsgUpdateTrustlessAgentFeeConfigResponse{}, nil

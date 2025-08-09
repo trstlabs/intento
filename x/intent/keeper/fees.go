@@ -187,18 +187,18 @@ func GetDenomIfAnyGTE(coins sdk.Coins, coinsB sdk.Coins) string {
 	return ""
 }
 
-func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.FlowInfo, trustlessExecutionAgent types.TrustlessAgent) error {
+func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.FlowInfo, trustlessAgent types.TrustlessAgent) error {
 	// Parse addresses
 	feeAddr, err := sdk.AccAddressFromBech32(flow.FeeAddress)
 	if err != nil {
 		return err
 	}
-	hostedAccAdminAddr, err := sdk.AccAddressFromBech32(trustlessExecutionAgent.FeeConfig.FeeAdmin)
+	hostedAccAdminAddr, err := sdk.AccAddressFromBech32(trustlessAgent.FeeConfig.FeeAdmin)
 	if err != nil {
 		return err
 	}
 
-	supportedCoins := trustlessExecutionAgent.FeeConfig.FeeCoinsSupported.Sort()
+	supportedCoins := trustlessAgent.FeeConfig.FeeCoinsSupported.Sort()
 
 	// Find the cheapest valid matching coin (first one that matches)
 	for _, feeLimit := range flow.TrustlessAgentConfig.FeeLimit {

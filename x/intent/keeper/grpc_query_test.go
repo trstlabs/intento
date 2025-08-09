@@ -321,8 +321,8 @@ func TestQueryTrustlessAgentsByFeeAdmin(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.NotNil(t, got)
-			for i, trustlessExecutionAgent := range spec.expTrustlessAgents {
-				assert.Equal(t, trustlessExecutionAgent.FeeConfig.FeeAdmin, got.TrustlessAgents[i].FeeConfig.FeeAdmin)
+			for i, trustlessAgent := range spec.expTrustlessAgents {
+				assert.Equal(t, trustlessAgent.FeeConfig.FeeAdmin, got.TrustlessAgents[i].FeeConfig.FeeAdmin)
 
 			}
 		})
