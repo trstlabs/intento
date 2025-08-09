@@ -115,13 +115,10 @@ setup_file() {
 }
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow MsgTransfer" {
-  host_receiver_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_RECEIVER_ADDRESS $IBC_INTO_DENOM | GETBAL)
-  user_into_balance_start=$($INTO_MAIN_CMD q bank balance $(INTO_ADDRESS) $INTO_DENOM | GETBAL)
-
+  host_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $IBC_INTO_DENOM | GETBAL)
+  
   # Define the file path
   msg_transfer_file="msg_transfer.json"
-
- TRANSFER_AMOUNT=500
 
   # build MsgSend with MSGSEND_AMOUNT
   cat <<EOF >"./$msg_transfer_file"
@@ -130,11 +127,11 @@ setup_file() {
     "source_port": "transfer",
     "source_channel": "$INTO_TRANFER_CHANNEL",
     "token": {
-      "amount": "500",
+      "amount": "$MSGSEND_AMOUNT",
       "denom": "$INTO_DENOM"
     },
     "sender":  "$(INTO_ADDRESS)",
-    "receiver": "$HOST_RECEIVER_ADDRESS",
+    "receiver": "$HOST_USER_ADDRESS",
     "timeout_height": {
       "revision_number": "0",
       "revision_height": "0"
@@ -151,9 +148,9 @@ EOF
   WAIT_FOR_EXECUTED_FLOW_BY_ID
 
   # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
-  host_receiver_balance_end=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_RECEIVER_ADDRESS $IBC_INTO_DENOM | GETBAL)
-  receiver_diff=$(($host_receiver_balance_end - $host_receiver_balance_start))
-  assert_equal "$receiver_diff" $TRANSFER_AMOUNT
+  host_balance_end=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $IBC_INTO_DENOM | GETBAL)
+  receiver_diff=$(($host_balance_end - $host_balance_start))
+  assert_equal "$receiver_diff" $MSGSEND_AMOUNT
 }
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Update MsgTransfer" {
@@ -318,17 +315,17 @@ EOF
   user_into_balance_start=$($INTO_MAIN_CMD q bank balance $(INTO_ADDRESS) $INTO_DENOM | GETBAL)
 
   # build ICA and retrieve ICA account
-  msg_create_hosted_account=$($INTO_MAIN_CMD tx intent create-hosted-account --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-supported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
-  echo $msg_create_hosted_account
+  msg_create_trustless_agent=$($INTO_MAIN_CMD tx intent create-trustless-agent --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-supported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
+  echo $msg_create_trustless_agent
   sleep 120
 
-  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
+  trustless_agents=$($INTO_MAIN_CMD q intent list-trustless-agents --output json)
 
-  # Use jq to filter the hosted_address based on the connection ID
-  hosted_address=$(echo "$hosted_accounts" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.hosted_accounts[] | select(.ica_config.connection_id == $conn_id) | .hosted_address')
-  if [ -n "$hosted_address" ]; then
+  # Use jq to filter the agent_address based on the connection ID
+  agent_address=$(echo "$trustless_agents" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.trustless_agents[] | select(.ica_config.connection_id == $conn_id) | .agent_address')
+  if [ -n "$agent_address" ]; then
     # Get the interchain account address
-    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$hosted_address" connection-$CONNECTION_ID)
+    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$agent_address" connection-$CONNECTION_ID)
     ica_address=$(echo "$ica_address" | awk '{print $2}')
 
     echo "Interchain Account Address: $ica_address"
@@ -364,7 +361,7 @@ EOF
 }
 EOF
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "MsgSend using Hosted ICA and AuthZ" --duration "60s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "MsgSend using Hosted ICA and AuthZ" --duration "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance -y)
   echo "$msg_submit_flow"
 
   GET_FLOW_ID $(INTO_ADDRESS)
@@ -384,26 +381,26 @@ EOF
 }
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc ics20 transfer, trigger hosted ICA MsgExecuteContract via memo hook" {
-  # Get hosted account for connection
-  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
-  hosted_address=$(echo "$hosted_accounts" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.hosted_accounts[] | select(.ica_config.connection_id == $conn_id) | .hosted_address')
-  if [ -z "$hosted_address" ]; then
-    echo "❌ No hosted account found for connection-$CONNECTION_ID"
+  # Get trustless agent for connection
+  trustless_agents=$($INTO_MAIN_CMD q intent list-trustless-agents --output json)
+  agent_address=$(echo "$trustless_agents" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.trustless_agents[] | select(.ica_config.connection_id == $conn_id) | .agent_address')
+  if [ -z "$agent_address" ]; then
+    echo "❌ No trustless agent found for connection-$CONNECTION_ID"
     exit 1
   fi
 
-  # Get ICA address linked to hosted account
-  ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$hosted_address" connection-$CONNECTION_ID | awk '{print $2}')
+  # Get ICA address linked to trustless agent
+  ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$agent_address" connection-$CONNECTION_ID | awk '{print $2}')
   echo "📌 ICA Address: $ica_address"
 
 
   # Build memo for ICS20 transfer to trigger ICA MsgSend
-  memo='{"flow": {"msgs": [{"@type": "/cosmos.authz.v1beta1.MsgExec","grantee":"'"$ica_address"'","msgs":[{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract","funds":[{"amount":"'"$MSGSEND_AMOUNT"'","denom":"'"$HOST_DENOM"'"}],"msg": "ewogICJzdWJzY3JpYmUiOiB7CiAgICAic3RyZWFtX2lkIjogIjQ1IiwKICAgICJvcGVyYXRvcl90YXJnZXQiOiAib3NtbzE4YWp1ajZkcnlsZmR2dDRkMzdwZWV4bGU0N2xqeHFhNXQ3NHdxOCIsCiAgICAib3BlcmF0b3IiOiAib3NtbzF2Y2E1cGtrZGd0NDJoajVtamtjbHFxZmxhOWRna3JoZGpleXEzYW04YTY5czRhNzc0bnpxdmdzanBuIgogIH0KfQo=","sender":"'"$HOST_USER_ADDRESS"'","contract":"'"$HOST_RECEIVER_ADDRESS"'"}]}],"label":"ICS20 Hook Hosted ICA MsgSend","duration":"60s","hosted_account":"'$hosted_address'","owner": "'$(INTO_ADDRESS)'","fallback":"true"}}'
+  memo='{"flow": {"msgs": [{"@type": "/cosmos.authz.v1beta1.MsgExec","grantee":"'"$ica_address"'","msgs":[{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract","funds":[{"amount":"'"$MSGSEND_AMOUNT"'","denom":"'"$HOST_DENOM"'"}],"msg": "ewogICJzdWJzY3JpYmUiOiB7CiAgICAic3RyZWFtX2lkIjogIjQ1IiwKICAgICJvcGVyYXRvcl90YXJnZXQiOiAib3NtbzE4YWp1ajZkcnlsZmR2dDRkMzdwZWV4bGU0N2xqeHFhNXQ3NHdxOCIsCiAgICAib3BlcmF0b3IiOiAib3NtbzF2Y2E1cGtrZGd0NDJoajVtamtjbHFxZmxhOWRna3JoZGpleXEzYW04YTY5czRhNzc0bnpxdmdzanBuIgogIH0KfQo=","sender":"'"$HOST_USER_ADDRESS"'","contract":"'"$HOST_RECEIVER_ADDRESS"'"}]}],"label":"ICS20 Hook Hosted ICA MsgSend","duration":"60s","trustless_agent":"'$agent_address'","owner": "'$(INTO_ADDRESS)'","fallback":"true"}}'
 
   echo "📦 Memo: $memo"
 
   # Send ICS20 transfer with memo to trigger the hosted flow
-  ics20_transfer=$($HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL "$hosted_address" ${ICS20_AMOUNT_FOR_LOCAL_GAS}${IBC_INTO_DENOM} --memo "$memo" --from $HOST_USER -y)
+  ics20_transfer=$($HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL "$agent_address" ${ICS20_AMOUNT_FOR_LOCAL_GAS}${IBC_INTO_DENOM} --memo "$memo" --from $HOST_USER -y)
   echo "🚀 ICS20 Transfer Sent: $ics20_transfer"
 
   GET_FLOW_ID $(INTO_ADDRESS)
@@ -420,36 +417,36 @@ EOF
   host_user_balance_start=$($HOST_MAIN_CMD q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
   host_receiver_balance_start=$($HOST_MAIN_CMD q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
 
-  # 2️⃣ Get hosted account for connection
-  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
-  hosted_address=$(echo "$hosted_accounts" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.hosted_accounts[] | select(.ica_config.connection_id == $conn_id) | .hosted_address')
-  if [ -z "$hosted_address" ]; then
-    echo "❌ No hosted account found for connection-$CONNECTION_ID"
+  # 2️⃣ Get trustless agent for connection
+  trustless_agents=$($INTO_MAIN_CMD q intent list-trustless-agents --output json)
+  agent_address=$(echo "$trustless_agents" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.trustless_agents[] | select(.ica_config.connection_id == $conn_id) | .agent_address')
+  if [ -z "$agent_address" ]; then
+    echo "❌ No trustless agent found for connection-$CONNECTION_ID"
     exit 1
   fi
 
-  # 3️⃣ Get ICA address linked to hosted account
-  ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$hosted_address" connection-$CONNECTION_ID | awk '{print $2}')
+  # 3️⃣ Get ICA address linked to trustless agent
+  ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$agent_address" connection-$CONNECTION_ID | awk '{print $2}')
   echo "📌 ICA Address: $ica_address"
 
-  # 4️⃣ Grant MsgSend authz from host user to ICA (via hosted account)
+  # 4️⃣ Grant MsgSend authz from host user to ICA (via trustless agent)
   $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.bank.v1beta1.MsgSend" --from $HOST_USER -y
   WAIT_FOR_BLOCK $INTO_LOGS 3
 
   # 5️⃣ Build memo for ICS20 transfer to trigger ICA MsgSend
-  memo='{"flow": {"msgs": [{"@type": "/cosmos.authz.v1beta1.MsgExec","grantee":"'"$ica_address"'","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"amount":"'"$MSGSEND_AMOUNT"'","denom":"'"$HOST_DENOM"'"}],"from_address":"'"$HOST_USER_ADDRESS"'","to_address":"'"$HOST_RECEIVER_ADDRESS"'"}]}],"label":"ICS20 Hook Hosted ICA MsgSend","duration":"60s","cid":"connection-'$CONNECTION_ID'","hosted_account":"'$hosted_address'","owner": "'$(INTO_ADDRESS)'","fallback":"true"}}'
+  memo='{"flow": {"msgs": [{"@type": "/cosmos.authz.v1beta1.MsgExec","grantee":"'"$ica_address"'","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"amount":"'"$MSGSEND_AMOUNT"'","denom":"'"$HOST_DENOM"'"}],"from_address":"'"$HOST_USER_ADDRESS"'","to_address":"'"$HOST_RECEIVER_ADDRESS"'"}]}],"label":"ICS20 Hook Hosted ICA MsgSend","duration":"60s","cid":"connection-'$CONNECTION_ID'","trustless_agent":"'$agent_address'","owner": "'$(INTO_ADDRESS)'","fallback":"true"}}'
 
   echo "📦 Memo: $memo"
 
   # 6️⃣ Send ICS20 transfer with memo to trigger the hosted flow
-  ics20_transfer=$($HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL "$hosted_address" ${ICS20_AMOUNT_FOR_LOCAL_GAS}${IBC_INTO_DENOM} --memo "$memo" --from $HOST_USER -y)
+  ics20_transfer=$($HOST_MAIN_CMD_TX ibc-transfer transfer transfer $HOST_TRANSFER_CHANNEL "$agent_address" ${ICS20_AMOUNT_FOR_LOCAL_GAS}${IBC_INTO_DENOM} --memo "$memo" --from $HOST_USER -y)
   echo "🚀 ICS20 Transfer Sent: $ics20_transfer"
 
   GET_FLOW_ID $(INTO_ADDRESS)
 
   # 7️⃣ Wait for flow execution
   WAIT_FOR_EXECUTED_FLOW_BY_ID
-  sleep 10
+  sleep 25
 
   # 8️⃣ Final balances
   host_user_balance_end=$($HOST_MAIN_CMD q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
@@ -473,12 +470,12 @@ EOF
   # get token balance user on INTO
   user_into_balance_start=$($INTO_MAIN_CMD q bank balance $(INTO_ADDRESS) $INTO_DENOM | GETBAL)
 
-  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
-  # Use jq to filter the hosted_address based on the connection ID
-  hosted_address=$(echo "$hosted_accounts" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.hosted_accounts[] | select(.ica_config.connection_id == $conn_id) | .hosted_address')
-  if [ -n "$hosted_address" ]; then
+  trustless_agents=$($INTO_MAIN_CMD q intent list-trustless-agents --output json)
+  # Use jq to filter the agent_address based on the connection ID
+  agent_address=$(echo "$trustless_agents" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.trustless_agents[] | select(.ica_config.connection_id == $conn_id) | .agent_address')
+  if [ -n "$agent_address" ]; then
     # Get the interchain account address
-    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$hosted_address" connection-$CONNECTION_ID)
+    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$agent_address" connection-$CONNECTION_ID)
     ica_address=$(echo "$ica_address" | awk '{print $2}')
 
     echo "Interchain Account Address: $ica_address"
@@ -516,7 +513,7 @@ EOF
   query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+GliYy9GMUI1QzM0ODlGODgxQ0M1NkVDQzEyRUE5MDNFRkNGNUQyMDBCNEQ4MTIzODUyQzE5MUE4OEEzMUFDNzlBOEU0'
   #query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+HVhdG9t' #ATOM DENOM
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Hosted ICA" --duration "120s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "comparisons": [{"response_index":0,"response_key": "", "operand":"111", "operator":4,"value_type": "sdk.Int", "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Hosted ICA" --duration "120s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "comparisons": [{"response_index":0,"response_key": "", "operand":"111", "operator":4,"value_type": "sdk.Int", "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
 
   GET_FLOW_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_FLOW_BY_ID
@@ -531,20 +528,20 @@ EOF
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Autocompound on host" {
   #   # build ICA and retrieve ICA account
-  msg_create_hosted_account=$($INTO_MAIN_CMD tx intent create-hosted-account --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-supported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
-  echo $msg_create_hosted_account
+  msg_create_trustless_agent=$($INTO_MAIN_CMD tx intent create-trustless-agent --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-supported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
+  echo $msg_create_trustless_agent
   sleep 120
   # call MsgDelegate
   validator_address=$(GET_VAL_ADDR $HOST_CHAIN_ID 1)
   delegate=$($HOST_MAIN_CMD_TX staking delegate $validator_address $MSGDELEGATE_AMOUNT$HOST_DENOM --from $HOST_USER -y)
   WAIT_FOR_BLOCK $INTO_LOGS 3
 
-  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
-  # Use jq to filter the hosted_address based on the connection ID
-  hosted_address=$(echo "$hosted_accounts" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.hosted_accounts[] | select(.ica_config.connection_id == $conn_id) | .hosted_address')
-  if [ -n "$hosted_address" ]; then
+  trustless_agents=$($INTO_MAIN_CMD q intent list-trustless-agents --output json)
+  # Use jq to filter the agent_address based on the connection ID
+  agent_address=$(echo "$trustless_agents" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.trustless_agents[] | select(.ica_config.connection_id == $conn_id) | .agent_address')
+  if [ -n "$agent_address" ]; then
     # Get the interchain account address
-    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$hosted_address" connection-$CONNECTION_ID)
+    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$agent_address" connection-$CONNECTION_ID)
     ica_address=$(echo "$ica_address" | awk '{print $2}')
 
     echo "Interchain Account Address: $ica_address"
@@ -598,7 +595,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   start_at=$(date -u -d "+2 minutes" +"%s")  # Linux version
 fi
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Autocompound on host chain" --duration "60s" --interval "60s" --start-at $start_at --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Autocompound on host chain" --duration "60s" --interval "60s" --start-at $start_at --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
 
   echo "$msg_submit_flow"
 
@@ -616,20 +613,20 @@ fi
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Autocompound on host twice" {
   #   # build ICA and retrieve ICA account
-  msg_create_hosted_account=$($INTO_MAIN_CMD tx intent create-hosted-account --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-supported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
-  echo $msg_create_hosted_account
+  msg_create_trustless_agent=$($INTO_MAIN_CMD tx intent create-trustless-agent --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-supported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
+  echo $msg_create_trustless_agent
   sleep 120
   # call MsgDelegate
   validator_address=$(GET_VAL_ADDR $HOST_CHAIN_ID 1)
   delegate=$($HOST_MAIN_CMD_TX staking delegate $validator_address $MSGDELEGATE_AMOUNT$HOST_DENOM --from $HOST_USER -y)
   WAIT_FOR_BLOCK $INTO_LOGS 3
 
-  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
-  # Use jq to filter the hosted_address based on the connection ID
-  hosted_address=$(echo "$hosted_accounts" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.hosted_accounts[] | select(.ica_config.connection_id == $conn_id) | .hosted_address')
-  if [ -n "$hosted_address" ]; then
+  trustless_agents=$($INTO_MAIN_CMD q intent list-trustless-agents --output json)
+  # Use jq to filter the agent_address based on the connection ID
+  agent_address=$(echo "$trustless_agents" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.trustless_agents[] | select(.ica_config.connection_id == $conn_id) | .agent_address')
+  if [ -n "$agent_address" ]; then
     # Get the interchain account address
-    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$hosted_address" connection-$CONNECTION_ID)
+    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$agent_address" connection-$CONNECTION_ID)
     ica_address=$(echo "$ica_address" | awk '{print $2}')
 
     echo "Interchain Account Address: $ica_address"
@@ -683,7 +680,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   start_at=$(date -u -d "+2 minutes" +"%s")  # Linux version
 fi
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate $msg_withdraw $msg_delegate --label "Autocompound Twice" --duration "120s" --interval "60s" --start-at $start_at --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}, {"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate $msg_withdraw $msg_delegate --label "Autocompound Twice" --duration "120s" --interval "60s" --start-at $start_at --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}, {"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
 
   echo "$msg_submit_flow"
 
@@ -761,12 +758,12 @@ EOF
   delegate=$($HOST_MAIN_CMD_TX staking delegate $validator_address $MSGDELEGATE_AMOUNT$HOST_DENOM --from $HOST_USER -y)
   WAIT_FOR_BLOCK $INTO_LOGS 3
 
-  hosted_accounts=$($INTO_MAIN_CMD q intent list-hosted-accounts --output json)
-  # Use jq to filter the hosted_address based on the connection ID
-  hosted_address=$(echo "$hosted_accounts" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.hosted_accounts[] | select(.ica_config.connection_id == $conn_id) | .hosted_address')
-  if [ -n "$hosted_address" ]; then
+  trustless_agents=$($INTO_MAIN_CMD q intent list-trustless-agents --output json)
+  # Use jq to filter the agent_address based on the connection ID
+  agent_address=$(echo "$trustless_agents" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.trustless_agents[] | select(.ica_config.connection_id == $conn_id) | .agent_address')
+  if [ -n "$agent_address" ]; then
     # Get the interchain account address
-    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$hosted_address" connection-$CONNECTION_ID)
+    ica_address=$($INTO_MAIN_CMD q intent interchainaccounts "$agent_address" connection-$CONNECTION_ID)
     ica_address=$(echo "$ica_address" | awk '{print $2}')
 
     echo "Interchain Account Address: $ica_address"
@@ -810,7 +807,7 @@ EOF
 }
 EOF
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Conditional Autocompound" --duration "60s" --interval "60s" --hosted-account $hosted_address --hosted-account-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}' --save-responses -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Conditional Autocompound" --duration "120s" --interval "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}' --save-responses -y)
   echo "$msg_submit_flow"
 
   GET_FLOW_ID $(INTO_ADDRESS)
