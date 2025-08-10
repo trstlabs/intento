@@ -14,8 +14,8 @@ option go_package = "github.com/trstlabs/intento/x/intent/types";
 option (gogoproto.equal_all) = true;
 option (gogoproto.goproto_getters_all) = false;
 
-// flow stores the info for the flow
-message flow {
+// Flow stores the info for the flow
+message Flow {
   uint64 id = 1 [(gogoproto.customname) = "ID"];
   string owner = 2;
   string label = 3;
