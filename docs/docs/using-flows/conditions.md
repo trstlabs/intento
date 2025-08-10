@@ -180,16 +180,27 @@ The Intent-based Flow includes both withdrawal and transfer actions:
 
 ```ts
 const msgSubmitFlow =
-  intento.intent.v1beta1.MessageComposer.withTypeUrl.submitFlow({
+  intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
     label: "Reward Claim and Send Flow",
     owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
     msgs: [msgWithdrawReward, msgSend],
     duration: "1440h",
     interval: "600s",
     feeFunds: [{ denom: "uinto", amount: "5000000" }],
-    configuration: config,
-    connectionId: "connection-12",
-    hostConnectionId: "connection-345",
+    configuration: executionConfig,
+    trustless_agent: {
+      agent_address: "into1xyz...",
+      fee_limit: [
+        {
+          denom: "uinto",
+          amount: "100",
+        },
+        {
+          denom: "ibc/hash",
+          amount: "50",
+        },
+      ],
+    },
   });
 ```
 
@@ -310,16 +321,27 @@ This step mirrors the submission process from the first tutorial, with `MsgDeleg
 
 ```ts
 const msgSubmitFlowDelegation =
-  intento.intent.v1beta1.MessageComposer.withTypeUrl.submitFlow({
+  intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
     label: "Reward Claim and Delegate Flow",
     owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
     msgs: [msgWithdrawReward, msgDelegate],
     duration: "1440h",
     interval: "600s",
     feeFunds: [{ denom: "uinto", amount: "5000000" }],
-    configuration: config,
-    connectionId: "connection-12",
-    hostConnectionId: "connection-345",
+    configuration: optionalExecutionConfig,
+    trustless_agent: {
+      agent_address: "into1xyz...",
+      fee_limit: [
+        {
+          denom: "uinto",
+          amount: "100",
+        },
+        {
+          denom: "ibc/hash",
+          amount: "50",
+        },
+      ],
+    },
   });
 ```
 

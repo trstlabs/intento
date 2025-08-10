@@ -228,13 +228,13 @@ const msgSend = cosmos.bank.v1beta1.MessageComposer.withTypeUrl.send({
 To submit the flow, we also include **Trustless Agent configuration** using a `TrustlessAgentConfig`.
 
 ```typescript
-const trustlessAgentConfig: TrustlessAgentConfig = {
+const TrustlessAgent: TrustlessAgentConfig = {
   agentAddress: "cosmos1teaaddress",
   feeLimit: [{ denom: "uatom", amount: "100000" }],
 };
 
 const msgSubmitFlow =
-  intento.intent.v1beta1.MessageComposer.withTypeUrl.submitFlow({
+  intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
     label: "Balance Query and Send Flow",
     owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
     msgs: [msgSend],
@@ -242,7 +242,7 @@ const msgSubmitFlow =
     interval: "600s",
     feeFunds: [{ denom: "uinto", amount: "5000000" }],
     configuration: config,
-    trustlessAgentConfig: trustlessAgentConfig, // Config for Trustless Agent
+    TrustlessAgent: trustlessAgentConfig, // Config for Trustless Agent
   });
 ```
 

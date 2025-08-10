@@ -31,8 +31,8 @@ The module processes three primary message types:
 Local messages require a direct match between the signer and the flow owner. The module validates this relationship explicitly:
 
 ```go
-if isLocalMessage(flowInfo) {
-    return k.validateSigners(ctx, codec, flowInfo, message)
+if isLocalMessage(flow) {
+    return k.validateSigners(ctx, codec, flow, message)
 }
 ```
 
@@ -42,7 +42,7 @@ For `MsgExec` messages, authentication is applied to each inner message:
 
 ```go
 if isAuthzMsgExec(message) {
-    return k.validateAuthzMsg(ctx, codec, flowInfo, message)
+    return k.validateAuthzMsg(ctx, codec, flow, message)
 }
 ```
 
@@ -53,7 +53,7 @@ This ensures that delegation rules are respected and all flows performed on beha
 Trustless Execution Agent messages are authenticated differently. Since ICA operates via IBC, the packet sender is already verified by the IBC protocol. Additionally, our module controls which Trustless Execution Agent to use through the configuration provided by the user. Because of this controlled environment, further signer validation is unnecessary for Trustless Execution Agent messages. However, Trustless Execution Agent messages are restricted to `MsgExec` only for added security:
 
 ```go
-if isHostedICAMessage(flowInfo) {
+if isHostedICAMessage(flow) {
     if message.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
         return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Trustless Execution Agent messages")
     }
@@ -66,7 +66,7 @@ if isHostedICAMessage(flowInfo) {
 Self-hosted ICA messages do not require additional restrictions. They are trusted based on the direct control of the owner. These messages are allowed without further validation:
 
 ```go
-if isSelfHostedICAMessage(flowInfo) {
+if isSelfHostedICAMessage(flow) {
     return nil
 }
 ```
@@ -92,7 +92,7 @@ if isSelfHostedICAMessage(flowInfo) {
 The following code demonstrates how the module handles authentication for different message types:
 
 ```go
-func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flowInfo types.FlowInfo, message *codectypes.Any) error {
+func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flow types.Flow, message *codectypes.Any) error {
     var sdkMsg sdk.Msg
     if err := codec.UnpackAny(message, &sdkMsg); err != nil {
         return errorsmod.Wrap(err, "failed to unpack message")
@@ -101,20 +101,20 @@ func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flowInfo typ
     switch {
     case isAuthzMsgExec(message):
         // Validate Authz MsgExec messages.
-        return k.validateAuthzMsg(ctx, codec, flowInfo, message)
+        return k.validateAuthzMsg(ctx, codec, flow, message)
 
-    case isLocalMessage(flowInfo):
+    case isLocalMessage(flow):
         // Validate local messages to ensure the signer matches the owner.
-        return k.validateSigners(ctx, codec, flowInfo, message)
+        return k.validateSigners(ctx, codec, flow, message)
 
-    case isHostedICAMessage(flowInfo):
+    case isHostedICAMessage(flow):
         // Restrict Hosted ICA messages to MsgExec for security.
         if message.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
             return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Hosted ICA messages")
         }
         return nil
 
-    case isSelfHostedICAMessage(flowInfo):
+    case isSelfHostedICAMessage(flow):
         // Allow Self-hosted ICA messages without additional validation.
         return nil
 
