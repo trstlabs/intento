@@ -62,7 +62,7 @@ func HandleFlowCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return fmt.Errorf("failed to parse flow ID: %w", err)
 	}
 
-	flow, err := k.TryGetFlowInfo(ctx, flowID)
+	flow, err := k.TryGetflow(ctx, flowID)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func HandleFlowCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return fmt.Errorf("unknown prefix in query ID: %s", prefix)
 	}
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 
 	// Only if all responses are present (and thus it is the last one), handle the flow
 	for _, comparison := range flow.Conditions.Comparisons {

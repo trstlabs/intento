@@ -14,8 +14,8 @@ option go_package = "github.com/trstlabs/intento/x/intent/types";
 option (gogoproto.equal_all) = true;
 option (gogoproto.goproto_getters_all) = false;
 
-// FlowInfo stores the info for the flow
-message FlowInfo {
+// flow stores the info for the flow
+message flow {
   uint64 id = 1 [(gogoproto.customname) = "ID"];
   string owner = 2;
   string label = 3;
@@ -42,8 +42,8 @@ message FlowInfo {
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false
   ];
-  ICAConfig self_hosted_ica_config = 11 [(gogoproto.customname) = "SelfHostedICAConfig"];
-  TrustlessAgentConfig trustless_agent_config = 12 [(gogoproto.customname) = "TrustlessAgentConfig"];
+  ICAConfig self_hosted_ica = 11 [(gogoproto.customname) = "SelfHostedICA"];
+  TrustlessAgentConfig trustless_agent = 12 [(gogoproto.customname) = "TrustlessAgent"];
   ExecutionConfiguration configuration = 14;
   ExecutionConditions conditions = 15;
 }
@@ -54,7 +54,7 @@ message ICAConfig {
   string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
 }
 
-// config for trustless agent
+// config for a trustless agent for flow execution on host chain
 message TrustlessAgentConfig {
   string agent_address = 1;
   repeated cosmos.base.v1beta1.Coin fee_limit = 3 [(gogoproto.nullable) = false];

@@ -67,16 +67,16 @@ func (q QueryServer) Flow(c context.Context, req *types.QueryFlowRequest) (*type
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	flowInfo, err := q.keeper.TryGetFlowInfo(ctx, id)
+	flow, err := q.keeper.TryGetflow(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	// for msg := range flowInfo.Msgs{
-	// 	makeReadableMsgData(&flowInfo, msg)
+	// for msg := range flow.Msgs{
+	// 	makeReadableMsgData(&flow, msg)
 	// }
 
 	return &types.QueryFlowResponse{
-		FlowInfo: flowInfo,
+		Flow: flow,
 	}, nil
 }
 
@@ -123,13 +123,13 @@ func (q QueryServer) Flows(c context.Context, req *types.QueryFlowsRequest) (*ty
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	flows := make([]types.FlowInfo, 0)
+	flows := make([]types.Flow, 0)
 	store := runtime.KVStoreAdapter(q.keeper.storeService.OpenKVStore(ctx))
 	prefixStore := prefix.NewStore(store, types.FlowKeyPrefix)
 
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(_ []byte, value []byte, accumulate bool) (bool, error) {
 		if accumulate {
-			var c types.FlowInfo
+			var c types.Flow
 			q.keeper.cdc.MustUnmarshal(value, &c)
 			flows = append(flows, c)
 
@@ -142,7 +142,7 @@ func (q QueryServer) Flows(c context.Context, req *types.QueryFlowsRequest) (*ty
 	}
 
 	return &types.QueryFlowsResponse{
-		FlowInfos:  flows,
+		Flows:      flows,
 		Pagination: pageRes,
 	}, nil
 }
@@ -153,7 +153,7 @@ func (q QueryServer) FlowsForOwner(c context.Context, req *types.QueryFlowsForOw
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	flows := make([]types.FlowInfo, 0)
+	flows := make([]types.Flow, 0)
 
 	ownerAddress, err := sdk.AccAddressFromBech32(req.Owner)
 	if err != nil {
@@ -165,9 +165,9 @@ func (q QueryServer) FlowsForOwner(c context.Context, req *types.QueryFlowsForOw
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			flowID := types.GetIDFromBytes(key)
-			flowInfo := q.keeper.GetFlowInfo(ctx, flowID)
+			flow := q.keeper.Getflow(ctx, flowID)
 
-			flows = append(flows, flowInfo)
+			flows = append(flows, flow)
 
 		}
 		return true, nil
@@ -177,7 +177,7 @@ func (q QueryServer) FlowsForOwner(c context.Context, req *types.QueryFlowsForOw
 	}
 
 	return &types.QueryFlowsForOwnerResponse{
-		FlowInfos:  flows,
+		Flows:      flows,
 		Pagination: pageRes,
 	}, nil
 }
@@ -246,9 +246,9 @@ func (q QueryServer) TrustlessAgentsByFeeAdmin(c context.Context, req *types.Que
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			trustlessAgentAddress := string(key)
-			flowInfo := q.keeper.GetTrustlessAgent(ctx, trustlessAgentAddress)
+			flow := q.keeper.GetTrustlessAgent(ctx, trustlessAgentAddress)
 
-			trustlessAgents = append(trustlessAgents, flowInfo)
+			trustlessAgents = append(trustlessAgents, flow)
 
 		}
 		return true, nil

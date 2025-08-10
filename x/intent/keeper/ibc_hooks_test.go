@@ -78,10 +78,10 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithSubmitFlow() {
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	flow := GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow := GetICAApp(suite.IntentoChain).IntentKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 
 	suite.Require().Equal(flow.Label, "my flow")
-	suite.Require().Equal(flow.SelfHostedICAConfig.PortID, "")
+	suite.Require().Equal(flow.SelfHostedICA.PortID, "")
 	suite.Require().Equal(flow.Interval, time.Second*60)
 
 	var txMsgAny codectypes.Any
@@ -125,10 +125,10 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithSubmitFlowTransferToSo
 	balance := GetICAApp(suite.IntentoChain).BankKeeper.GetAllBalances(suite.IntentoChain.GetContext(), suite.HostChain.SenderAccount.GetAddress())
 	suite.Require().Equal(balance[0].Amount.String(), "1000000")
 	suite.Require().Contains(balance[0].Denom, "ibc")
-	flow := GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow := GetICAApp(suite.IntentoChain).IntentKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 
 	suite.Require().Equal(flow.Label, "my flow")
-	suite.Require().Equal(flow.SelfHostedICAConfig.PortID, "")
+	suite.Require().Equal(flow.SelfHostedICA.PortID, "")
 	suite.Require().Equal(flow.Interval, time.Second*60)
 	suite.Require().Equal(flow.Owner, addr)
 
@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithUpdateFlow() {
 	err := json.Unmarshal(ackBytes, &ack)
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
-	flow := GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow := GetICAApp(suite.IntentoChain).IntentKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 	suite.Require().Equal(flow.Owner, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String())
 	ackBytes = suite.receiveTransferPacketWithSequence(addr, fmt.Sprintf(`{"flow": {"owner": "%s","id": "1","label": "my flow", "msgs": [%s], "duration": "500s", "interval": "60s", "start_at": "0"} }`, derivePlaceholderSender(ibctesting.FirstChannelID, addr).String(), msg), 1)
 
@@ -169,10 +169,10 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketWithUpdateFlow() {
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	flow = GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow = GetICAApp(suite.IntentoChain).IntentKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 
 	suite.Require().Equal(flow.Label, "my flow")
-	suite.Require().Equal(flow.SelfHostedICAConfig.PortID, "")
+	suite.Require().Equal(flow.SelfHostedICA.PortID, "")
 	suite.Require().Equal(flow.Interval, time.Second*60)
 
 	var txMsgAny codectypes.Any
@@ -214,13 +214,13 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultipleMsgs() {
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	flow := GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow := GetICAApp(suite.IntentoChain).IntentKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 
 	suite.Require().Equal(flow.Owner, addr.String())
 	suite.Require().Equal(flow.Label, "my flow")
 	suite.Require().Equal(flow.Configuration.FallbackToOwnerBalance, true)
-	suite.Require().Equal(flow.SelfHostedICAConfig.PortID, "icacontroller-"+addr.String())
-	suite.Require().Equal(flow.SelfHostedICAConfig.ConnectionID, path.EndpointA.ConnectionID)
+	suite.Require().Equal(flow.SelfHostedICA.PortID, "icacontroller-"+addr.String())
+	suite.Require().Equal(flow.SelfHostedICA.ConnectionID, path.EndpointA.ConnectionID)
 
 	suite.Require().Equal(flow.Interval, time.Second*60)
 
@@ -266,7 +266,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 	suite.Require().NotContains(ack, "error")
 
 	flowKeeper := GetICAApp(suite.IntentoChain).IntentKeeper
-	flow := flowKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow := flowKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 	unpacker := suite.IntentoChain.Codec
 	unpackedMsgs := flow.GetTxMsgs(unpacker)
 	suite.Require().True(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
@@ -274,16 +274,16 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 	suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(time.Minute)
 
 	//fix as we do not have the channels over the same connectionID in testing
-	flow.SelfHostedICAConfig.ConnectionID = "connection-0"
+	flow.SelfHostedICA.ConnectionID = "connection-0"
 	flowKeeper.HandleFlow(suite.IntentoChain.GetContext(), flowKeeper.Logger(suite.IntentoChain.GetContext()), flow, suite.IntentoChain.GetContext().BlockTime(), nil)
 
-	flow = flowKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow = flowKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 	flowHistory, _ := flowKeeper.GetFlowHistory(suite.IntentoChain.GetContext(), flow.ID)
 	suite.Require().NotNil(flowHistory)
 	suite.Require().Empty(flowHistory[0].Errors)
 	suite.Require().Equal(flow.Owner, addr.String())
 	suite.Require().Equal(flow.Label, "my flow")
-	suite.Require().Equal(flow.SelfHostedICAConfig.PortID, "icacontroller-"+addr.String())
+	suite.Require().Equal(flow.SelfHostedICA.PortID, "icacontroller-"+addr.String())
 
 	unpackedMsgs = flow.GetTxMsgs(unpacker)
 	suite.Require().False(strings.Contains(unpackedMsgs[0].String(), types.ParseICAValue))
@@ -312,7 +312,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketFlowWithConditionsAndDeriv
 	suite.Require().NoError(err)
 	suite.Require().NotContains(ack, "error")
 
-	flow := GetICAApp(suite.IntentoChain).IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow := GetICAApp(suite.IntentoChain).IntentKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 	var txMsgAny codectypes.Any
 	cdc := codec.NewProtoCodec(GetICAApp(suite.IntentoChain).InterfaceRegistry())
 	err = cdc.UnmarshalJSON([]byte(msg), &txMsgAny)
@@ -374,7 +374,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 
 	// Pull out the msgs before substitution
 	flowKeeper := GetICAApp(suite.IntentoChain).IntentKeeper
-	flow := flowKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow := flowKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 	unpacked := flow.GetTxMsgs(suite.IntentoChain.Codec)
 	suite.Require().NotEmpty(unpacked)
 
@@ -402,7 +402,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 
 	// === DO the substitution ===
 	suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(time.Minute)
-	flow.SelfHostedICAConfig.ConnectionID = "connection-0"
+	flow.SelfHostedICA.ConnectionID = "connection-0"
 	flowKeeper.HandleFlow(
 		suite.IntentoChain.GetContext(),
 		flowKeeper.Logger(suite.IntentoChain.GetContext()),
@@ -412,7 +412,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 	)
 
 	// === AFTER substitution ===
-	flow = flowKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow = flowKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 	unpacked = flow.GetTxMsgs(suite.IntentoChain.Codec)
 	suite.Require().NotEmpty(unpacked)
 
@@ -501,7 +501,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 
 	// Pull out the msgs before substitution
 	flowKeeper := GetICAApp(suite.IntentoChain).IntentKeeper
-	flow := flowKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow := flowKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 	unpacked := flow.GetTxMsgs(suite.IntentoChain.Codec)
 	suite.Require().NotEmpty(unpacked)
 
@@ -522,7 +522,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 
 	// === DO the substitution ===
 	suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(time.Minute)
-	flow.SelfHostedICAConfig.ConnectionID = "connection-0"
+	flow.SelfHostedICA.ConnectionID = "connection-0"
 	flowKeeper.HandleFlow(
 		suite.IntentoChain.GetContext(),
 		flowKeeper.Logger(suite.IntentoChain.GetContext()),
@@ -532,7 +532,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 	)
 
 	// === AFTER substitution ===
-	flow = flowKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+	flow = flowKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 	unpacked = flow.GetTxMsgs(suite.IntentoChain.Codec)
 	var ethTxMsgAfter *cosmosevm.MsgEthereumTx
 	for _, m := range unpacked {

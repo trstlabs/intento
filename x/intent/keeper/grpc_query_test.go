@@ -32,7 +32,7 @@ func TestQueryFlowsByOwnerList(t *testing.T) {
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
 
 	creator, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, deposit)
-	var expectedFlows []types.FlowInfo
+	var expectedFlows []types.Flow
 	portID, err := icatypes.NewControllerPortID(creator.String())
 	require.NoError(t, err)
 
@@ -45,16 +45,16 @@ func TestQueryFlowsByOwnerList(t *testing.T) {
 	}
 
 	specs := map[string]struct {
-		srcQuery     *types.QueryFlowsForOwnerRequest
-		expFlowInfos []types.FlowInfo
-		expErr       error
+		srcQuery *types.QueryFlowsForOwnerRequest
+		expflows []types.Flow
+		expErr   error
 	}{
 		"query all": {
 			srcQuery: &types.QueryFlowsForOwnerRequest{
 				Owner: creator.String(),
 			},
-			expFlowInfos: expectedFlows,
-			expErr:       nil,
+			expflows: expectedFlows,
+			expErr:   nil,
 		},
 		"with pagination offset": {
 			srcQuery: &types.QueryFlowsForOwnerRequest{
@@ -63,8 +63,8 @@ func TestQueryFlowsByOwnerList(t *testing.T) {
 					Offset: 1,
 				},
 			},
-			expFlowInfos: expectedFlows[1:],
-			expErr:       nil,
+			expflows: expectedFlows[1:],
+			expErr:   nil,
 		},
 		"with pagination limit": {
 			srcQuery: &types.QueryFlowsForOwnerRequest{
@@ -73,20 +73,20 @@ func TestQueryFlowsByOwnerList(t *testing.T) {
 					Limit: 1,
 				},
 			},
-			expFlowInfos: expectedFlows[0:1],
-			expErr:       nil,
+			expflows: expectedFlows[0:1],
+			expErr:   nil,
 		},
 		"nil creator": {
 			srcQuery: &types.QueryFlowsForOwnerRequest{
 				Pagination: &query.PageRequest{},
 			},
-			expFlowInfos: expectedFlows,
-			expErr:       errors.New("empty address string is not allowed"),
+			expflows: expectedFlows,
+			expErr:   errors.New("empty address string is not allowed"),
 		},
 		"nil req": {
-			srcQuery:     nil,
-			expFlowInfos: expectedFlows,
-			expErr:       status.Error(codes.InvalidArgument, "empty request"),
+			srcQuery: nil,
+			expflows: expectedFlows,
+			expErr:   status.Error(codes.InvalidArgument, "empty request"),
 		},
 	}
 
@@ -100,14 +100,14 @@ func TestQueryFlowsByOwnerList(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.NotNil(t, got)
-			for i, expectedFlow := range spec.expFlowInfos {
-				assert.Equal(t, expectedFlow.GetTxMsgs(keepers.IntentKeeper.cdc), got.FlowInfos[i].GetTxMsgs(keepers.IntentKeeper.cdc))
-				assert.Equal(t, expectedFlow.SelfHostedICAConfig.PortID, got.FlowInfos[i].SelfHostedICAConfig.PortID)
-				assert.Equal(t, expectedFlow.Owner, got.FlowInfos[i].Owner)
-				assert.Equal(t, expectedFlow.SelfHostedICAConfig.ConnectionID, got.FlowInfos[i].SelfHostedICAConfig.ConnectionID)
-				assert.Equal(t, expectedFlow.Interval, got.FlowInfos[i].Interval)
-				assert.Equal(t, expectedFlow.EndTime, got.FlowInfos[i].EndTime)
-				assert.Equal(t, expectedFlow.Configuration, got.FlowInfos[i].Configuration)
+			for i, expectedFlow := range spec.expflows {
+				assert.Equal(t, expectedFlow.GetTxMsgs(keepers.IntentKeeper.cdc), got.Flows[i].GetTxMsgs(keepers.IntentKeeper.cdc))
+				assert.Equal(t, expectedFlow.SelfHostedICA.PortID, got.Flows[i].SelfHostedICA.PortID)
+				assert.Equal(t, expectedFlow.Owner, got.Flows[i].Owner)
+				assert.Equal(t, expectedFlow.SelfHostedICA.ConnectionID, got.Flows[i].SelfHostedICA.ConnectionID)
+				assert.Equal(t, expectedFlow.Interval, got.Flows[i].Interval)
+				assert.Equal(t, expectedFlow.EndTime, got.Flows[i].EndTime)
+				assert.Equal(t, expectedFlow.Configuration, got.Flows[i].Configuration)
 			}
 		})
 	}
@@ -155,7 +155,7 @@ func TestQueryFlowsList(t *testing.T) {
 	topUp := sdk.NewCoins(sdk.NewInt64Coin("denom", 500))
 
 	creator, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, deposit)
-	var expectedFlows []types.FlowInfo
+	var expectedFlows []types.Flow
 	portID, err := icatypes.NewControllerPortID(creator.String())
 	require.NoError(t, err)
 
@@ -173,14 +173,14 @@ func TestQueryFlowsList(t *testing.T) {
 	require.NotNil(t, got)
 	for i, expectedFlow := range expectedFlows {
 
-		assert.Equal(t, expectedFlow.GetTxMsgs(keepers.IntentKeeper.cdc), got.FlowInfos[i].GetTxMsgs(keepers.IntentKeeper.cdc))
-		assert.Equal(t, expectedFlow.SelfHostedICAConfig.PortID, got.FlowInfos[i].SelfHostedICAConfig.PortID)
-		assert.Equal(t, expectedFlow.Owner, got.FlowInfos[i].Owner)
-		assert.Equal(t, expectedFlow.SelfHostedICAConfig.ConnectionID, got.FlowInfos[i].SelfHostedICAConfig.ConnectionID)
-		assert.Equal(t, expectedFlow.Interval, got.FlowInfos[i].Interval)
-		assert.Equal(t, expectedFlow.EndTime, got.FlowInfos[i].EndTime)
-		assert.Equal(t, expectedFlow.Configuration, got.FlowInfos[i].Configuration)
-		assert.Equal(t, expectedFlow.UpdateHistory, got.FlowInfos[i].UpdateHistory)
+		assert.Equal(t, expectedFlow.GetTxMsgs(keepers.IntentKeeper.cdc), got.Flows[i].GetTxMsgs(keepers.IntentKeeper.cdc))
+		assert.Equal(t, expectedFlow.SelfHostedICA.PortID, got.Flows[i].SelfHostedICA.PortID)
+		assert.Equal(t, expectedFlow.Owner, got.Flows[i].Owner)
+		assert.Equal(t, expectedFlow.SelfHostedICA.ConnectionID, got.Flows[i].SelfHostedICA.ConnectionID)
+		assert.Equal(t, expectedFlow.Interval, got.Flows[i].Interval)
+		assert.Equal(t, expectedFlow.EndTime, got.Flows[i].EndTime)
+		assert.Equal(t, expectedFlow.Configuration, got.Flows[i].Configuration)
+		assert.Equal(t, expectedFlow.UpdateHistory, got.Flows[i].UpdateHistory)
 	}
 }
 
@@ -207,17 +207,17 @@ func TestQueryFlowsListWithAuthZMsg(t *testing.T) {
 	_ = keepers.IntentKeeper.cdc.UnpackAny(expectedFlow.Msgs[0], &txMsg)
 
 	var gotMsg sdk.Msg
-	_ = keepers.IntentKeeper.cdc.UnpackAny(got.FlowInfos[0].Msgs[0], &gotMsg)
+	_ = keepers.IntentKeeper.cdc.UnpackAny(got.Flows[0].Msgs[0], &gotMsg)
 
-	assert.Equal(t, expectedFlow.Msgs, got.FlowInfos[0].Msgs)
+	assert.Equal(t, expectedFlow.Msgs, got.Flows[0].Msgs)
 	//	assert.Equal(t, txMsg, gotMsg)
-	assert.Equal(t, expectedFlow.SelfHostedICAConfig.PortID, got.FlowInfos[0].SelfHostedICAConfig.PortID)
-	assert.Equal(t, expectedFlow.Owner, got.FlowInfos[0].Owner)
-	assert.Equal(t, expectedFlow.SelfHostedICAConfig.ConnectionID, got.FlowInfos[0].SelfHostedICAConfig.ConnectionID)
-	assert.Equal(t, expectedFlow.Interval, got.FlowInfos[0].Interval)
-	assert.Equal(t, expectedFlow.EndTime, got.FlowInfos[0].EndTime)
-	assert.Equal(t, expectedFlow.Configuration, got.FlowInfos[0].Configuration)
-	assert.Equal(t, expectedFlow.UpdateHistory, got.FlowInfos[0].UpdateHistory)
+	assert.Equal(t, expectedFlow.SelfHostedICA.PortID, got.Flows[0].SelfHostedICA.PortID)
+	assert.Equal(t, expectedFlow.Owner, got.Flows[0].Owner)
+	assert.Equal(t, expectedFlow.SelfHostedICA.ConnectionID, got.Flows[0].SelfHostedICA.ConnectionID)
+	assert.Equal(t, expectedFlow.Interval, got.Flows[0].Interval)
+	assert.Equal(t, expectedFlow.EndTime, got.Flows[0].EndTime)
+	assert.Equal(t, expectedFlow.Configuration, got.Flows[0].Configuration)
+	assert.Equal(t, expectedFlow.UpdateHistory, got.Flows[0].UpdateHistory)
 
 }
 
@@ -329,23 +329,23 @@ func TestQueryTrustlessAgentsByFeeAdmin(t *testing.T) {
 	}
 }
 
-func CreateFakeFlow(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) (types.FlowInfo, error) {
+func CreateFakeFlow(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) (types.Flow, error) {
 
 	id := k.autoIncrementID(ctx, types.KeyLastID)
 	flowAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
 	if err != nil {
-		return types.FlowInfo{}, err
+		return types.Flow{}, err
 	}
 	fakeMsg := banktypes.NewMsgSend(owner, flowAddress, feeFunds)
 
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{fakeMsg})
 	if err != nil {
-		return types.FlowInfo{}, err
+		return types.Flow{}, err
 	}
 
 	// fakeData, _ := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{fakeMsg})
 	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, id, interval)
-	flow := types.FlowInfo{
+	flow := types.Flow{
 		ID:         id,
 		FeeAddress: flowAddress.String(),
 		Owner:      owner.String(),
@@ -353,17 +353,17 @@ func CreateFakeFlow(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, con
 		Msgs:     anys,
 		Interval: interval,
 
-		StartTime:           startAt,
-		ExecTime:            execTime,
-		EndTime:             endTime,
-		SelfHostedICAConfig: &types.ICAConfig{PortID: portID},
-		Configuration:       &types.ExecutionConfiguration{SaveResponses: true},
+		StartTime:     startAt,
+		ExecTime:      execTime,
+		EndTime:       endTime,
+		SelfHostedICA: &types.ICAConfig{PortID: portID},
+		Configuration: &types.ExecutionConfiguration{SaveResponses: true},
 	}
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.addToFlowOwnerIndex(ctx, owner, id)
 
-	var newFlow types.FlowInfo
+	var newFlow types.Flow
 	flowBz := k.cdc.MustMarshal(&flow)
 	k.cdc.MustUnmarshal(flowBz, &newFlow)
 	return newFlow, nil
@@ -392,45 +392,45 @@ func CreateFakeFlowHistory(k Keeper, ctx sdk.Context, startAt time.Time) (types.
 	return flowHistory, nil
 }
 
-func CreateFakeAuthZFlow(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) (types.FlowInfo, error) {
+func CreateFakeAuthZFlow(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, connectionId string, duration time.Duration, interval time.Duration, startAt time.Time, feeFunds sdk.Coins) (types.Flow, error) {
 
 	id := k.autoIncrementID(ctx, types.KeyLastID)
 	flowAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
 	if err != nil {
-		return types.FlowInfo{}, err
+		return types.Flow{}, err
 	}
 	fakeMsg := banktypes.NewMsgSend(owner, flowAddress, feeFunds)
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{fakeMsg})
 	if err != nil {
-		return types.FlowInfo{}, err
+		return types.Flow{}, err
 	}
 	fakeAuthZMsg := authztypes.MsgExec{Grantee: "ICA_ADDR", Msgs: anys}
 
 	//fakeAuthZMsg := feegranttypes.Se{Grantee: "ICA_ADDR", Msgs: anys}
 	anys, err = types.PackTxMsgAnys([]sdk.Msg{&fakeAuthZMsg})
 	if err != nil {
-		return types.FlowInfo{}, err
+		return types.Flow{}, err
 	}
 
 	// fakeData, _ := icatypes.SerializeCosmosTx(k.cdc, []sdk.Msg{fakeMsg})
 	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, id, interval)
-	flow := types.FlowInfo{
+	flow := types.Flow{
 		ID:         id,
 		FeeAddress: flowAddress.String(),
 		Owner:      owner.String(),
 		// Data:       fakeData,
-		Msgs:                anys,
-		Interval:            interval,
-		UpdateHistory:       nil,
-		StartTime:           startAt,
-		ExecTime:            execTime,
-		EndTime:             endTime,
-		SelfHostedICAConfig: &types.ICAConfig{PortID: portID},
+		Msgs:          anys,
+		Interval:      interval,
+		UpdateHistory: nil,
+		StartTime:     startAt,
+		ExecTime:      execTime,
+		EndTime:       endTime,
+		SelfHostedICA: &types.ICAConfig{PortID: portID},
 	}
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.addToFlowOwnerIndex(ctx, owner, id)
 	flowBz := k.cdc.MustMarshal(&flow)
-	var newFlow types.FlowInfo
+	var newFlow types.Flow
 	k.cdc.MustUnmarshal(flowBz, &newFlow)
 	return newFlow, nil
 }

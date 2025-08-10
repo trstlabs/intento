@@ -11,7 +11,7 @@ import (
 
 // IterateFlowsQueue iterates over the items in the inactive flow queue
 // and performs a callback function
-func (k Keeper) IterateFlowQueue(ctx sdk.Context, execTime time.Time, cb func(flow types.FlowInfo) (stop bool)) {
+func (k Keeper) IterateFlowQueue(ctx sdk.Context, execTime time.Time, cb func(flow types.Flow) (stop bool)) {
 	iterator := k.FlowQueueIterator(ctx, execTime)
 
 	defer iterator.Close()
@@ -19,7 +19,7 @@ func (k Keeper) IterateFlowQueue(ctx sdk.Context, execTime time.Time, cb func(fl
 
 		flowID, _ := types.SplitFlowQueueKey(iterator.Key())
 
-		flow := k.GetFlowInfo(ctx, flowID)
+		flow := k.Getflow(ctx, flowID)
 		if cb(flow) {
 			break
 		}
@@ -27,8 +27,8 @@ func (k Keeper) IterateFlowQueue(ctx sdk.Context, execTime time.Time, cb func(fl
 }
 
 // GetFlowsForBlock returns all expiring flows for a block
-func (k Keeper) GetFlowsForBlock(ctx sdk.Context) (flows []types.FlowInfo) {
-	k.IterateFlowQueue(ctx, ctx.BlockHeader().Time, func(flow types.FlowInfo) bool {
+func (k Keeper) GetFlowsForBlock(ctx sdk.Context) (flows []types.Flow) {
+	k.IterateFlowQueue(ctx, ctx.BlockHeader().Time, func(flow types.Flow) bool {
 		flows = append(flows, flow)
 		return false
 	})
@@ -51,7 +51,7 @@ func (k Keeper) InsertFlowQueue(ctx sdk.Context, flowID uint64, execTime time.Ti
 }
 
 // RemoveFromFlowQueue removes a flow from the Inactive flow queue
-func (k Keeper) RemoveFromFlowQueue(ctx sdk.Context, flow types.FlowInfo) {
+func (k Keeper) RemoveFromFlowQueue(ctx sdk.Context, flow types.Flow) {
 
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store.Delete(types.FlowQueueKey(flow.ID, flow.ExecTime))

@@ -15,7 +15,7 @@ import (
 )
 
 // HandleFlow processes a single flow during the block
-func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.FlowInfo, timeOfBlock time.Time, queryCallback []byte) {
+func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, timeOfBlock time.Time, queryCallback []byte) {
 	var (
 		errorString     = ""
 		fee             = sdk.Coins{}
@@ -64,11 +64,11 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.FlowIn
 	}
 
 	emitFlowEvent(ctx, flow)
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 }
 
 // submitInterchainQuery submits an interchain query when ICQConfig is present
-func (k Keeper) SubmitInterchainQueries(ctx sdk.Context, flow types.FlowInfo, logger log.Logger) {
+func (k Keeper) SubmitInterchainQueries(ctx sdk.Context, flow types.Flow, logger log.Logger) {
 	for i, feedbackLoop := range flow.Conditions.FeedbackLoops {
 		if feedbackLoop.ICQConfig == nil {
 			continue
@@ -128,7 +128,7 @@ func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, icqConfig types.ICQConfig
 }
 
 // handleFlowExecution handles the core logic of triggering an flow and processing responses
-func (k Keeper) handleFlowExecution(ctx sdk.Context, flow *types.FlowInfo, msgResponses *[]*cdctypes.Any, errorString string) (bool, string) {
+func (k Keeper) handleFlowExecution(ctx sdk.Context, flow *types.Flow, msgResponses *[]*cdctypes.Any, errorString string) (bool, string) {
 	var executedLocally bool
 	// Safe check to ensure conditions exist before proceeding
 	if flow.Conditions == nil || flow.Conditions.FeedbackLoops == nil {
@@ -147,7 +147,7 @@ func (k Keeper) handleFlowExecution(ctx sdk.Context, flow *types.FlowInfo, msgRe
 	return executedLocally, errorString
 }
 
-func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.FlowInfo, msgResponses *[]*cdctypes.Any, errorString string) (bool, string) {
+func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.Flow, msgResponses *[]*cdctypes.Any, errorString string) (bool, string) {
 	executedLocally := false
 
 	// Group feedback loops by MsgsIndex to process them together
@@ -155,7 +155,7 @@ func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.FlowInfo, ms
 	for _, loop := range flow.Conditions.FeedbackLoops {
 		targetFlow := flow
 		if loop.FlowID != 0 && loop.FlowID != flow.ID {
-			otherFlow, err := k.TryGetFlowInfo(ctx, loop.FlowID)
+			otherFlow, err := k.TryGetflow(ctx, loop.FlowID)
 			if err != nil {
 				errorString = appendError(errorString, fmt.Sprintf("invalid feedback loop FlowID: %d (not found)", loop.FlowID))
 				continue
@@ -245,7 +245,7 @@ func msgsEqual(a, b []*cdctypes.Any) bool {
 	return true
 }
 
-func (k Keeper) allowedToExecute(ctx sdk.Context, flow types.FlowInfo) (bool, error) {
+func (k Keeper) allowedToExecute(ctx sdk.Context, flow types.Flow) (bool, error) {
 	shouldRecur := flow.ExecTime.Before(flow.EndTime) && flow.ExecTime.Add(flow.Interval).Before(flow.EndTime)
 	conditions := flow.Conditions
 	if conditions == nil {
@@ -276,7 +276,7 @@ func (k Keeper) allowedToExecute(ctx sdk.Context, flow types.FlowInfo) (bool, er
 }
 
 // checkComparisons evaluates the conditions.Comparisons based on AND/OR logic.
-func (k Keeper) checkComparisons(ctx sdk.Context, flow types.FlowInfo, conditions *types.ExecutionConditions) (bool, error) {
+func (k Keeper) checkComparisons(ctx sdk.Context, flow types.Flow, conditions *types.ExecutionConditions) (bool, error) {
 	var err error = nil
 
 	if conditions.Comparisons == nil {
@@ -306,7 +306,7 @@ func (k Keeper) checkComparisons(ctx sdk.Context, flow types.FlowInfo, condition
 }
 
 // evaluateComparison checks a single comparison against the flow history.
-func (k Keeper) evaluateComparison(ctx sdk.Context, flow types.FlowInfo, comparison types.Comparison) (bool, error) {
+func (k Keeper) evaluateComparison(ctx sdk.Context, flow types.Flow, comparison types.Comparison) (bool, error) {
 	flowID := flow.ID
 	if comparison.FlowID != 0 {
 		flowID = comparison.FlowID
@@ -391,15 +391,15 @@ func (k Keeper) checkDependentFlows(ctx sdk.Context, conditions *types.Execution
 }
 
 // scheduleNextExecution schedules the next execution for recurring flows.
-func (k Keeper) scheduleNextExecution(ctx sdk.Context, flow types.FlowInfo) {
+func (k Keeper) scheduleNextExecution(ctx sdk.Context, flow types.Flow) {
 	nextExecTime := flow.ExecTime.Add(flow.Interval)
 	k.InsertFlowQueue(ctx, flow.ID, nextExecTime)
 	flow.ExecTime = nextExecTime
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 }
 
 // recordFlowNotAllowed adds an flow entry to the flow history
-func (k Keeper) recordFlowNotAllowed(ctx sdk.Context, flow *types.FlowInfo, timeOfBlock time.Time, errorMsg error) {
+func (k Keeper) recordFlowNotAllowed(ctx sdk.Context, flow *types.Flow, timeOfBlock time.Time, errorMsg error) {
 	k.Logger(ctx).Debug("flow not allowed to execute", "id", flow.ID)
 	if errorMsg != nil {
 		k.addFlowHistoryEntry(ctx, flow, timeOfBlock, sdk.Coins{}, false, nil, fmt.Sprintf(types.ErrFlowConditions, errorMsg.Error()))
@@ -409,7 +409,7 @@ func (k Keeper) recordFlowNotAllowed(ctx sdk.Context, flow *types.FlowInfo, time
 }
 
 // shouldRecur checks whether the flow should be rescheduled based on recurrence rules
-func (k Keeper) shouldRecur(ctx sdk.Context, flow types.FlowInfo, errorString string) bool {
+func (k Keeper) shouldRecur(ctx sdk.Context, flow types.Flow, errorString string) bool {
 	if strings.Contains(errorString, types.ErrBalanceTooLow) {
 		return false
 	}
@@ -438,7 +438,7 @@ func (k Keeper) shouldRecur(ctx sdk.Context, flow types.FlowInfo, errorString st
 }
 
 // // appendToPriorFlowHistory appends results to the prior history entry for the flow
-// func (k Keeper) appendToPriorFlowHistory(ctx sdk.Context, flow *types.FlowInfo, fee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, queryResponse string, errorString string) {
+// func (k Keeper) appendToPriorFlowHistory(ctx sdk.Context, flow *types.Flow, fee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, queryResponse string, errorString string) {
 // 	// Fetch the last recorded flow history for the flow
 // 	entry, found := k.getCurrentFlowHistoryEntry(ctx, flow.ID)
 // 	if !found {
@@ -459,7 +459,7 @@ func (k Keeper) shouldRecur(ctx sdk.Context, flow types.FlowInfo, errorString st
 // }
 
 // emitFlowEvent creates an event for the flow execution
-func emitFlowEvent(ctx sdk.Context, flow types.FlowInfo) {
+func emitFlowEvent(ctx sdk.Context, flow types.Flow) {
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeFlowTriggered,

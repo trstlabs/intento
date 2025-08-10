@@ -19,7 +19,7 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-func (k Keeper) parseAndSetMsgs(ctx sdk.Context, flow *types.FlowInfo, connectionID, portID string) (protoMsgs []proto.Message, err error) {
+func (k Keeper) parseAndSetMsgs(ctx sdk.Context, flow *types.Flow, connectionID, portID string) (protoMsgs []proto.Message, err error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	if store.Has(types.GetFlowHistoryKey(flow.ID)) {
 		txMsgs := flow.GetTxMsgs(k.cdc)

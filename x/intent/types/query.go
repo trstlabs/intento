@@ -26,9 +26,9 @@ func NewQueryFlowsForOwnerRequest(owner string, pagination *query.PageRequest) *
 }
 
 // NewQueryFlowsForOwnerResponse creates and returns a new QueryFlowsForOwnerFromAddressResponse
-func NewQueryFlowsForOwnerResponse(flowInfos []FlowInfo) *QueryFlowsForOwnerResponse {
+func NewQueryFlowsForOwnerResponse(flows []Flow) *QueryFlowsForOwnerResponse {
 	return &QueryFlowsForOwnerResponse{
-		FlowInfos: flowInfos,
+		Flows: flows,
 	}
 }
 
@@ -40,9 +40,9 @@ func NewQueryFlowsRequest(pagination *query.PageRequest) *QueryFlowsRequest {
 }
 
 // NewQueryFlowsForOwnerResponse creates and returns a new QueryFlowsForOwnerFromAddressResponse
-func NewQueryFlowsResponse(flowInfos []FlowInfo) *QueryFlowsResponse {
+func NewQueryFlowsResponse(flows []Flow) *QueryFlowsResponse {
 	return &QueryFlowsResponse{
-		FlowInfos: flowInfos,
+		Flows: flows,
 	}
 }
 

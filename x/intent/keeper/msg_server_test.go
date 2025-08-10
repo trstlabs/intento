@@ -327,24 +327,24 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 			flowKeeper := icaAppA.IntentKeeper
 
 			suite.IntentoChain.CurrentHeader.Time = suite.IntentoChain.CurrentHeader.Time.Add(interval)
-			flow := flowKeeper.GetFlowInfo(ctx, 1)
+			flow := flowKeeper.Getflow(ctx, 1)
 
 			if len(flow.Conditions.FeedbackLoops) != 0 && flow.Conditions.FeedbackLoops[0].ICQConfig != nil {
 				flowKeeper.SubmitInterchainQueries(ctx, flow, flowKeeper.Logger(ctx))
 			}
 			flowKeeper.HandleFlow(ctx, flowKeeper.Logger(ctx), flow, ctx.BlockTime(), nil)
 			suite.IntentoChain.NextBlock()
-			flow = flowKeeper.GetFlowInfo(ctx, 1)
+			flow = flowKeeper.Getflow(ctx, 1)
 			flowHistory, err := flowKeeper.GetFlowHistory(ctx, 1)
 
 			suite.Require().NoError(err)
-			suite.Require().NotEqual(flow, types.FlowInfo{})
+			suite.Require().NotEqual(flow, types.Flow{})
 			suite.Require().Equal(flow.Owner, owner)
 			suite.Require().Equal(flow.Label, label)
 
 			//ibc
-			if flow.SelfHostedICAConfig.PortID != "" {
-				suite.Require().Equal(flow.SelfHostedICAConfig.PortID, "icacontroller-"+owner)
+			if flow.SelfHostedICA.PortID != "" {
+				suite.Require().Equal(flow.SelfHostedICA.PortID, "icacontroller-"+owner)
 			}
 			if !transferMsg {
 				//icq should return this error
@@ -363,7 +363,7 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 				//as we cannot fully test this, the code should run
 				suite.Require().NoError(err)
 
-				// flowNew := flowKeeper.GetFlowInfo(ctx, 1)
+				// flowNew := flowKeeper.Getflow(ctx, 1)
 				// suite.Require().Equal(flow.Msgs, flowNew.Msgs)
 				// suite.Require().Nil(flowNew.ValidateBasic())
 
@@ -612,7 +612,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 			suite.Require().NoError(err)
 
 			if addFakeExecHistory {
-				flow := icaAppA.IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+				flow := icaAppA.IntentKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 				fakeEntry := types.FlowHistoryEntry{ScheduledExecTime: flow.ExecTime, ActualExecTime: flow.ExecTime}
 
 				icaAppA.IntentKeeper.SetFlowHistoryEntry(suite.IntentoChain.GetContext(), flow.ID, &fakeEntry)
@@ -641,7 +641,7 @@ func (suite *KeeperTestSuite) TestUpdateFlow() {
 				suite.IntentoChain.NextBlock()
 				suite.Require().NoError(err)
 				suite.Require().NotNil(res)
-				flow := icaAppA.IntentKeeper.GetFlowInfo(suite.IntentoChain.GetContext(), 1)
+				flow := icaAppA.IntentKeeper.Getflow(suite.IntentoChain.GetContext(), 1)
 				suite.Require().Equal(flow.Label, updateMsg.Label)
 				suite.Require().Equal(flow.StartTime.Unix(), int64(updateMsg.StartAt))
 				suite.Require().Equal(flow.EndTime.Unix(), int64(updateMsg.EndTime))

@@ -26,7 +26,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.NoError(t, err)
 	k := keepers.IntentKeeper
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
@@ -36,7 +36,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.Equal(t, uint64(123), queue[0].ID)
 
 	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime(), nil)
-	flow = k.GetFlowInfo(ctx2, flow.ID)
+	flow = k.Getflow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime)
 
 	//queue in BeginBocker
@@ -61,7 +61,7 @@ func TestBeginBlockerTransfer(t *testing.T) {
 	require.NoError(t, err)
 	k := keepers.IntentKeeper
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
@@ -71,7 +71,7 @@ func TestBeginBlockerTransfer(t *testing.T) {
 	require.Equal(t, uint64(123), queue[0].ID)
 
 	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime(), nil)
-	flow = k.GetFlowInfo(ctx2, flow.ID)
+	flow = k.Getflow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime)
 
 	//queue in BeginBocker
@@ -95,7 +95,7 @@ func TestBeginBlockerLoad(t *testing.T) {
 	for i := range 10 {
 		flow, _ := createTestFlow(ctx, configuration, keepers)
 		flow.ID = uint64(i)
-		k.SetFlowInfo(ctx, &flow)
+		k.Setflow(ctx, &flow)
 		k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
 	}
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
@@ -120,7 +120,7 @@ func TestBeginBlockerStopOnSuccess(t *testing.T) {
 	require.NoError(t, err)
 	k := keepers.IntentKeeper
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
@@ -130,9 +130,9 @@ func TestBeginBlockerStopOnSuccess(t *testing.T) {
 	require.Equal(t, uint64(123), queue[0].ID)
 	// BeginBlocker logic
 	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime(), nil)
-	flow = k.GetFlowInfo(ctx2, flow.ID)
+	flow = k.Getflow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
-	flow = k.GetFlowInfo(ctx3, flow.ID)
+	flow = k.Getflow(ctx3, flow.ID)
 	require.True(t, flow.ExecTime.Before(ctx3.BlockTime()))
 
 }
@@ -145,7 +145,7 @@ func TestBeginBlockerStopOnFailure(t *testing.T) {
 	require.NoError(t, err)
 	k := keepers.IntentKeeper
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
@@ -155,9 +155,9 @@ func TestBeginBlockerStopOnFailure(t *testing.T) {
 	require.Equal(t, uint64(123), queue[0].ID)
 
 	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime(), nil)
-	flow = k.GetFlowInfo(ctx2, flow.ID)
+	flow = k.Getflow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
-	flow = k.GetFlowInfo(ctx3, flow.ID)
+	flow = k.Getflow(ctx3, flow.ID)
 	//exec time is not updated
 	require.True(t, flow.ExecTime.Before(ctx3.BlockTime()))
 	//flow also not in queue
@@ -173,7 +173,7 @@ func TestBeginBlockerAlwaysStopOnLowBalance(t *testing.T) {
 	require.NoError(t, err)
 	k := keepers.IntentKeeper
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
@@ -183,9 +183,9 @@ func TestBeginBlockerAlwaysStopOnLowBalance(t *testing.T) {
 	require.Equal(t, uint64(123), queue[0].ID)
 
 	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime(), nil)
-	flow = k.GetFlowInfo(ctx2, flow.ID)
+	flow = k.Getflow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
-	flow = k.GetFlowInfo(ctx3, flow.ID)
+	flow = k.Getflow(ctx3, flow.ID)
 	flowHistory := k.MustGetFlowHistory(ctx3, flow.ID)
 	require.NotNil(t, flowHistory[0].Errors)
 	//exec time is not updated
@@ -196,7 +196,7 @@ func TestBeginBlockerAlwaysStopOnLowBalance(t *testing.T) {
 
 }
 
-func TestErrorIsSavedToFlowInfo(t *testing.T) {
+func TestErrorIsSavedToflow(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
 	configuration := types.ExecutionConfiguration{StopOnFailure: true}
 	flow, emptyBalanceAcc := createTestFlow(ctx, configuration, keepers)
@@ -205,7 +205,7 @@ func TestErrorIsSavedToFlowInfo(t *testing.T) {
 	require.NoError(t, err)
 	k := keepers.IntentKeeper
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
@@ -219,9 +219,9 @@ func TestErrorIsSavedToFlowInfo(t *testing.T) {
 	require.NoError(t, err)
 	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime(), nil)
 
-	flow = k.GetFlowInfo(ctx2, flow.ID)
+	flow = k.Getflow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
-	flow = k.GetFlowInfo(ctx3, flow.ID)
+	flow = k.Getflow(ctx3, flow.ID)
 	flowHistory := k.MustGetFlowHistory(ctx3, queue[0].ID)
 
 	require.True(t, flow.ExecTime.Before(ctx3.BlockTime()))
@@ -244,7 +244,7 @@ func TestOwnerMustBeSignerForLocalFlow(t *testing.T) {
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
-	flow := types.FlowInfo{
+	flow := types.Flow{
 		ID:         123,
 		Owner:      flowOwnerAddr.String(),
 		FeeAddress: feeAddr.String(),
@@ -272,7 +272,7 @@ func TestNotExecutingWithWrongSigner(t *testing.T) {
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
-	flow := types.FlowInfo{
+	flow := types.Flow{
 		ID:         123,
 		Owner:      feeAddr.String(),
 		FeeAddress: flowOwnerAddr.String(),
@@ -302,7 +302,7 @@ func TestAllowedToExecuteWithNoStopOnFailure(t *testing.T) {
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
-	flow := types.FlowInfo{
+	flow := types.Flow{
 		ID:         123,
 		Owner:      flowOwnerAddr.String(),
 		FeeAddress: feeAddr.String(),
@@ -335,7 +335,7 @@ func TestNotAllowedToExecuteWithStopOnFailure(t *testing.T) {
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
-	flow := types.FlowInfo{
+	flow := types.Flow{
 		ID:         123,
 		Owner:      flowOwnerAddr.String(),
 		FeeAddress: feeAddr.String(),
@@ -368,7 +368,7 @@ func TestAllowedToExecuteWithNoStopOnFailureAndUseAndForComparisons(t *testing.T
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
-	flow := types.FlowInfo{
+	flow := types.Flow{
 		ID:         123,
 		Owner:      flowOwnerAddr.String(),
 		FeeAddress: feeAddr.String(),
@@ -404,7 +404,7 @@ func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers, codec.Cod
 	return ctx, keepers, cdc
 }
 
-func createTestFlow(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.FlowInfo, sdk.AccAddress) {
+func createTestFlow(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.Flow, sdk.AccAddress) {
 	flowOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	fundedFeeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	emptyBalanceAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
@@ -418,23 +418,23 @@ func createTestFlow(ctx sdk.Context, configuration types.ExecutionConfiguration,
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
-	flow := types.FlowInfo{
-		ID:                  123,
-		Owner:               flowOwnerAddr.String(),
-		FeeAddress:          fundedFeeAddr.String(),
-		ExecTime:            execTime,
-		EndTime:             endTime,
-		Interval:            time.Hour,
-		StartTime:           startTime,
-		Msgs:                anys,
-		Configuration:       &configuration,
-		SelfHostedICAConfig: &types.ICAConfig{},
-		Conditions:          &types.ExecutionConditions{},
+	flow := types.Flow{
+		ID:            123,
+		Owner:         flowOwnerAddr.String(),
+		FeeAddress:    fundedFeeAddr.String(),
+		ExecTime:      execTime,
+		EndTime:       endTime,
+		Interval:      time.Hour,
+		StartTime:     startTime,
+		Msgs:          anys,
+		Configuration: &configuration,
+		SelfHostedICA: &types.ICAConfig{},
+		Conditions:    &types.ExecutionConditions{},
 	}
 	return flow, emptyBalanceAcc
 }
 
-func createInvalidTestFlowTransfer(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.FlowInfo, sdk.AccAddress) {
+func createInvalidTestFlowTransfer(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.Flow, sdk.AccAddress) {
 	flowOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	fundedFeeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	emptyBalanceAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
@@ -457,23 +457,23 @@ func createInvalidTestFlowTransfer(ctx sdk.Context, configuration types.Executio
 
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
-	flow := types.FlowInfo{
-		ID:                  123,
-		Owner:               flowOwnerAddr.String(),
-		FeeAddress:          fundedFeeAddr.String(),
-		ExecTime:            execTime,
-		EndTime:             endTime,
-		Interval:            time.Hour,
-		StartTime:           startTime,
-		Msgs:                anys,
-		Configuration:       &configuration,
-		SelfHostedICAConfig: &types.ICAConfig{},
-		Conditions:          &types.ExecutionConditions{},
+	flow := types.Flow{
+		ID:            123,
+		Owner:         flowOwnerAddr.String(),
+		FeeAddress:    fundedFeeAddr.String(),
+		ExecTime:      execTime,
+		EndTime:       endTime,
+		Interval:      time.Hour,
+		StartTime:     startTime,
+		Msgs:          anys,
+		Configuration: &configuration,
+		SelfHostedICA: &types.ICAConfig{},
+		Conditions:    &types.ExecutionConditions{},
 	}
 	return flow, emptyBalanceAcc
 }
 
-func createNoFeeFlow(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.FlowInfo, sdk.AccAddress) {
+func createNoFeeFlow(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.Flow, sdk.AccAddress) {
 	flowOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	fundedFeeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
 	emptyBalanceAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
@@ -487,18 +487,18 @@ func createNoFeeFlow(ctx sdk.Context, configuration types.ExecutionConfiguration
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
-	flow := types.FlowInfo{
-		ID:                  123,
-		Owner:               flowOwnerAddr.String(),
-		FeeAddress:          fundedFeeAddr.String(),
-		ExecTime:            execTime,
-		EndTime:             endTime,
-		Interval:            time.Hour,
-		StartTime:           startTime,
-		Msgs:                anys,
-		Configuration:       &configuration,
-		SelfHostedICAConfig: &types.ICAConfig{},
-		Conditions:          &types.ExecutionConditions{},
+	flow := types.Flow{
+		ID:            123,
+		Owner:         flowOwnerAddr.String(),
+		FeeAddress:    fundedFeeAddr.String(),
+		ExecTime:      execTime,
+		EndTime:       endTime,
+		Interval:      time.Hour,
+		StartTime:     startTime,
+		Msgs:          anys,
+		Configuration: &configuration,
+		SelfHostedICA: &types.ICAConfig{},
+		Conditions:    &types.ExecutionConditions{},
 	}
 	return flow, emptyBalanceAcc
 }
@@ -510,7 +510,7 @@ func sendTokens(ctx sdk.Context, keepers keeper.TestKeepers, from string, toAddr
 	return err
 }
 
-func createBadFlow(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.FlowInfo, sdk.AccAddress) {
+func createBadFlow(ctx sdk.Context, configuration types.ExecutionConfiguration, keepers keeper.TestKeepers) (types.Flow, sdk.AccAddress) {
 	flowOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
 	feeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	toSendAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
@@ -524,7 +524,7 @@ func createBadFlow(ctx sdk.Context, configuration types.ExecutionConfiguration, 
 	}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 
-	flow := types.FlowInfo{
+	flow := types.Flow{
 		ID:            123,
 		Owner:         flowOwnerAddr.String(),
 		FeeAddress:    feeAddr.String(),
@@ -573,7 +573,7 @@ func TestHandleFlow_WithFalseFeedbackLoopIndex(t *testing.T) {
 	anyMsg2, err := types.PackTxMsgAnys([]sdk.Msg{msg2})
 	require.NoError(t, err)
 
-	flow := types.FlowInfo{
+	flow := types.Flow{
 		ID:         999,
 		Owner:      ownerAddr.String(),
 		FeeAddress: ownerAddr.String(),
@@ -597,7 +597,7 @@ func TestHandleFlow_WithFalseFeedbackLoopIndex(t *testing.T) {
 
 	require.NoError(t, flow.ValidateBasic())
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
@@ -667,7 +667,7 @@ func TestHandleFlow_WithGoodFeedbackLoopIndex(t *testing.T) {
 	anyMsg2, err := types.PackTxMsgAnys([]sdk.Msg{msg2})
 	require.NoError(t, err)
 
-	flow := types.FlowInfo{
+	flow := types.Flow{
 		ID:         999,
 		Owner:      ownerAddr.String(),
 		FeeAddress: ownerAddr.String(),
@@ -694,7 +694,7 @@ func TestHandleFlow_WithGoodFeedbackLoopIndex(t *testing.T) {
 
 	require.NoError(t, flow.ValidateBasic())
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
 
 	resp := distributiontypes.MsgWithdrawDelegatorRewardResponse{Amount: sdk.NewCoins(sdk.NewInt64Coin("stake", 100))}
@@ -703,7 +703,7 @@ func TestHandleFlow_WithGoodFeedbackLoopIndex(t *testing.T) {
 	k.SetFlowHistoryEntry(ctx, 11, &types.FlowHistoryEntry{MsgResponses: respAny})
 	flow11 := flow
 	flow11.ID = 11
-	k.SetFlowInfo(ctx, &flow11)
+	k.Setflow(ctx, &flow11)
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
 
@@ -741,7 +741,7 @@ func TestHandleFlow_WithGoodFeedbackLoopIndex(t *testing.T) {
 	require.Equal(t, len(flowHistory[0].Errors), 0, "Expected no errors in flow history")
 	require.Equal(t, len(flowHistory[0].MsgResponses), 2, "Expected 2 message responses")
 
-	flowUpdated := k.GetFlowInfo(ctx2, flow.ID)
+	flowUpdated := k.Getflow(ctx2, flow.ID)
 	require.NotEqual(t, flow.Msgs[1], flowUpdated.Msgs[1], "Expected flow messages to be updated after HandleFlow execution")
 
 	ctx3 := createNextExecutionContext(ctx, flow.ExecTime.Add(time.Hour))

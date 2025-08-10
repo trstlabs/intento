@@ -18,22 +18,22 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdctypes.Any, error) {
+func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctypes.Any, error) {
 	// local flow
-	if (flow.SelfHostedICAConfig == nil || flow.SelfHostedICAConfig.ConnectionID == "") && (flow.TrustlessAgentConfig == nil || flow.TrustlessAgentConfig.AgentAddress == "") {
+	if (flow.SelfHostedICA == nil || flow.SelfHostedICA.ConnectionID == "") && (flow.TrustlessAgent == nil || flow.TrustlessAgent.AgentAddress == "") {
 		txMsgs := flow.GetTxMsgs(k.cdc)
 		msgResponses, err := handleLocalFlow(k, ctx, txMsgs, *flow)
 		return err == nil, msgResponses, errorsmod.Wrap(err, "could execute local flow")
 	}
 
-	connectionID := flow.SelfHostedICAConfig.ConnectionID
-	portID := flow.SelfHostedICAConfig.PortID
+	connectionID := flow.SelfHostedICA.ConnectionID
+	portID := flow.SelfHostedICA.PortID
 	triggerAddress := flow.Owner
 	//get trustless agent from hosted config
-	if flow.TrustlessAgentConfig != nil && flow.TrustlessAgentConfig.AgentAddress != "" {
-		trustlessAgent := k.GetTrustlessAgent(ctx, flow.TrustlessAgentConfig.AgentAddress)
+	if flow.TrustlessAgent != nil && flow.TrustlessAgent.AgentAddress != "" {
+		trustlessAgent := k.GetTrustlessAgent(ctx, flow.TrustlessAgent.AgentAddress)
 		if trustlessAgent.AgentAddress == "" || trustlessAgent.ICAConfig == nil {
-			return false, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessAgent, "trustless agent or ICAConfig is nil for address %s", flow.TrustlessAgentConfig.AgentAddress)
+			return false, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessAgent, "trustless agent or ICAConfig is nil for address %s", flow.TrustlessAgent.AgentAddress)
 		}
 		connectionID = trustlessAgent.ICAConfig.ConnectionID
 		portID = trustlessAgent.ICAConfig.PortID
@@ -84,7 +84,7 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 	return false, nil, nil
 }
 
-func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.FlowInfo) ([]*cdctypes.Any, error) {
+func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flow) ([]*cdctypes.Any, error) {
 	// CacheContext returns a new context with the multi-store branched into a cached storage object
 	// writeCache is called only if all msgs succeed, performing state transitions atomically
 	var msgResponses []*cdctypes.Any
@@ -143,7 +143,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	if id <= 0 {
 		return fmt.Errorf("flow not found")
 	}
-	flow := k.GetFlowInfo(ctx, id)
+	flow := k.Getflow(ctx, id)
 
 	flowHistoryEntry, newErr := k.GetLatestFlowHistoryEntry(ctx, id)
 	if newErr != nil {
@@ -244,7 +244,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 
 }
 
-func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsgs []*cdctypes.Any, flowHistoryEntry *types.FlowHistoryEntry) error {
+func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.Flow, nextMsgs []*cdctypes.Any, flowHistoryEntry *types.FlowHistoryEntry) error {
 	var errorString = ""
 
 	allowed, err := k.allowedToExecute(ctx, flow)
@@ -307,7 +307,7 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 		}
 
 		k.SetCurrentFlowHistoryEntry(cacheCtx, flow.ID, flowHistoryEntry)
-		k.SetFlowInfo(ctx, &flow)
+		k.Setflow(ctx, &flow)
 		writeCtx()
 	}
 
@@ -315,7 +315,7 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 }
 
 // HandleDeepResponses checks responses and unwraps authz responses from the IBC packet
-func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, flow types.FlowInfo, previousMsgsExecuted int) ([]*cdctypes.Any, int, error) {
+func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, flow types.Flow, previousMsgsExecuted int) ([]*cdctypes.Any, int, error) {
 	var msgClass int
 
 	if previousMsgsExecuted == len(flow.Msgs) {
@@ -400,7 +400,7 @@ func (k Keeper) SetFlowOnTimeout(ctx sdk.Context, sourcePort string, channelID s
 	if id <= 0 {
 		return nil
 	}
-	flow := k.GetFlowInfo(ctx, id)
+	flow := k.Getflow(ctx, id)
 	if flow.Configuration.StopOnTimeout {
 		k.RemoveFromFlowQueue(ctx, flow)
 	}
@@ -438,7 +438,7 @@ func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq 
 		flowHistoryEntry = &types.FlowHistoryEntry{Errors: []string{err.Error()}}
 	}
 
-	flow, err := k.TryGetFlowInfo(ctx, id)
+	flow, err := k.TryGetflow(ctx, id)
 	if err != nil {
 		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, err.Error())
 	}

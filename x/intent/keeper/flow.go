@@ -14,33 +14,33 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-// GetFlowInfo
-func (k Keeper) GetFlowInfo(ctx sdk.Context, flowID uint64) types.FlowInfo {
+// Getflow
+func (k Keeper) Getflow(ctx sdk.Context, flowID uint64) types.Flow {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	var flow types.FlowInfo
+	var flow types.Flow
 	flowBz := store.Get(types.GetFlowKey(flowID))
 
 	k.cdc.MustUnmarshal(flowBz, &flow)
 	return flow
 }
 
-// TryGetFlowInfo
-func (k Keeper) TryGetFlowInfo(ctx sdk.Context, flowID uint64) (types.FlowInfo, error) {
+// TryGetflow
+func (k Keeper) TryGetflow(ctx sdk.Context, flowID uint64) (types.Flow, error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	var flow types.FlowInfo
+	var flow types.Flow
 	flowBz := store.Get(types.GetFlowKey(flowID))
 	if flowBz == nil {
-		return types.FlowInfo{}, errorsmod.Wrapf(types.ErrNotFound, "flow")
+		return types.Flow{}, errorsmod.Wrapf(types.ErrNotFound, "flow")
 	}
 	err := k.cdc.Unmarshal(flowBz, &flow)
 	if err != nil {
-		return types.FlowInfo{}, err
+		return types.Flow{}, err
 	}
 
 	return flow, nil
 }
 
-func (k Keeper) SetFlowInfo(ctx sdk.Context, flow *types.FlowInfo) {
+func (k Keeper) Setflow(ctx sdk.Context, flow *types.Flow) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store.Set(types.GetFlowKey(flow.ID), k.cdc.MustMarshal(flow))
 }
@@ -55,32 +55,32 @@ func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, 
 
 	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, id, interval)
 
-	selfHostedIcaConfig := types.ICAConfig{
+	SelfHostedICA := types.ICAConfig{
 		PortID:       portID,
 		ConnectionID: connectionId,
 	}
 
-	flow := types.FlowInfo{
-		ID:                   id,
-		Owner:                owner.String(),
-		Label:                label,
-		FeeAddress:           flowAddress.String(),
-		Msgs:                 msgs,
-		Interval:             interval,
-		StartTime:            startAt,
-		ExecTime:             execTime,
-		EndTime:              endTime,
-		SelfHostedICAConfig:  &selfHostedIcaConfig,
-		Configuration:        &configuration,
-		TrustlessAgentConfig: &trustlessAgentExecutionConfig,
-		Conditions:           &conditions,
+	flow := types.Flow{
+		ID:             id,
+		Owner:          owner.String(),
+		Label:          label,
+		FeeAddress:     flowAddress.String(),
+		Msgs:           msgs,
+		Interval:       interval,
+		StartTime:      startAt,
+		ExecTime:       execTime,
+		EndTime:        endTime,
+		SelfHostedICA:  &SelfHostedICA,
+		Configuration:  &configuration,
+		TrustlessAgent: &trustlessAgentExecutionConfig,
+		Conditions:     &conditions,
 	}
 
 	if err := k.SignerOk(ctx, k.cdc, flow); err != nil {
 		return errorsmod.Wrap(types.ErrSignerNotOk, err.Error())
 	}
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	k.addToFlowOwnerIndex(ctx, owner, id)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -137,7 +137,7 @@ func (k Keeper) importAutoIncrementID(ctx sdk.Context, lastIDKey []byte, val uin
 	return nil
 }
 
-func (k Keeper) importFlowInfo(ctx sdk.Context, flowId uint64, flow types.FlowInfo) error {
+func (k Keeper) importflow(ctx sdk.Context, flowId uint64, flow types.Flow) error {
 
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	key := types.GetFlowKey(flowId)
@@ -149,13 +149,13 @@ func (k Keeper) importFlowInfo(ctx sdk.Context, flowId uint64, flow types.FlowIn
 	return nil
 }
 
-func (k Keeper) IterateFlowInfos(ctx sdk.Context, cb func(uint64, types.FlowInfo) bool) {
+func (k Keeper) Iterateflows(ctx sdk.Context, cb func(uint64, types.Flow) bool) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	prefixStore := prefix.NewStore(store, types.FlowKeyPrefix)
 
 	iter := prefixStore.Iterator(nil, nil)
 	for ; iter.Valid(); iter.Next() {
-		var c types.FlowInfo
+		var c types.Flow
 		k.cdc.MustUnmarshal(iter.Value(), &c)
 		// cb returns true to stop early
 		if cb(binary.BigEndian.Uint64(iter.Key()), c) {

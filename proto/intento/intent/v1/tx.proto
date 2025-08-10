@@ -106,7 +106,7 @@ message MsgSubmitFlow {
   // optional connection ID interchain account
   string connection_id = 9 [(gogoproto.customname) = "ConnectionID"];
   // optional use of a trustless agent
-  TrustlessAgentConfig trustless_agent_config = 10 [(gogoproto.customname) = "TrustlessAgentConfig"];
+  TrustlessAgentConfig trustless_agent = 10 [(gogoproto.customname) = "TrustlessAgent"];
   ExecutionConditions conditions = 11;
 }
 
@@ -177,7 +177,7 @@ message MsgUpdateFlow {
   ];
   ExecutionConfiguration configuration = 9;
   string connection_id = 10 [(gogoproto.customname) = "ConnectionID"];
-  TrustlessAgentConfig trustless_agent_config = 11 [(gogoproto.customname) = "TrustlessAgentConfig"];
+  TrustlessAgentConfig trustless_agent = 11 [(gogoproto.customname) = "TrustlessAgent"];
   ExecutionConditions conditions = 12;
 }
 

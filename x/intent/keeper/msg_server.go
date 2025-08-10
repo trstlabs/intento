@@ -74,12 +74,12 @@ func (k msgServer) SubmitFlow(goCtx context.Context, msg *types.MsgSubmitFlow) (
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 
-	portID, duration, interval, startTime, configuration, conditions, HostedICAConfig, err := checkAndParseFlowContent(k, msg, err, ctx)
+	portID, duration, interval, startTime, configuration, conditions, trustlessAgent, err := checkAndParseFlowContent(k, msg, err, ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, HostedICAConfig, portID, msg.ConnectionID, conditions)
+	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, trustlessAgent, portID, msg.ConnectionID, conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (k msgServer) RegisterAccountAndSubmitFlow(goCtx context.Context, msg *type
 func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (*types.MsgUpdateFlowResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	timeNowWindow := ctx.BlockTime().Add(time.Minute * 1)
-	flow, err := k.TryGetFlowInfo(ctx, msg.ID)
+	flow, err := k.TryGetflow(ctx, msg.ID)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
@@ -131,11 +131,11 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 	}
 
 	if msg.ConnectionID != "" {
-		flow.SelfHostedICAConfig.PortID, err = icatypes.NewControllerPortID(msg.Owner)
+		flow.SelfHostedICA.PortID, err = icatypes.NewControllerPortID(msg.Owner)
 		if err != nil {
 			return nil, err
 		}
-		flow.SelfHostedICAConfig.ConnectionID = msg.ConnectionID
+		flow.SelfHostedICA.ConnectionID = msg.ConnectionID
 	}
 	newExecTime := flow.ExecTime
 	if msg.EndTime > 0 {
@@ -214,11 +214,11 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 		return nil, errorsmod.Wrap(types.ErrSignerNotOk, err.Error())
 	}
 	//set hosted config
-	if msg.TrustlessAgentConfig != nil {
-		flow.TrustlessAgentConfig = msg.TrustlessAgentConfig
+	if msg.TrustlessAgent != nil {
+		flow.TrustlessAgent = msg.TrustlessAgent
 	}
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -337,7 +337,7 @@ func checkAndParseFlowContent(
 		msgStartAt       uint64
 		msgConfiguration *types.ExecutionConfiguration = &types.ExecutionConfiguration{}
 		msgConditions    *types.ExecutionConditions    = &types.ExecutionConditions{}
-		HostedICAConfig  *types.TrustlessAgentConfig   = &types.TrustlessAgentConfig{}
+		TrustlessAgent   *types.TrustlessAgentConfig   = &types.TrustlessAgentConfig{}
 		msgMsgs          []*cdctypes.Any               = []*cdctypes.Any{}
 	)
 
@@ -349,9 +349,9 @@ func checkAndParseFlowContent(
 		msgConnectionID = msg.ConnectionID
 		msgStartAt = msg.StartAt
 		msgInterval = msg.Interval
-		// Use fallback if HostedICAConfig is nil
-		if msg.TrustlessAgentConfig != nil {
-			HostedICAConfig = msg.TrustlessAgentConfig
+		// Use fallback if TrustlessAgent is nil
+		if msg.TrustlessAgent != nil {
+			TrustlessAgent = msg.TrustlessAgent
 		}
 		// Use fallback if msgConfiguration is nil
 		if msg.Configuration != nil {
@@ -444,7 +444,7 @@ func checkAndParseFlowContent(
 	return portID, duration, interval, startTime,
 		*msgConfiguration,
 		*msgConditions,
-		*HostedICAConfig,
+		*TrustlessAgent,
 		nil
 }
 func updateConditions(

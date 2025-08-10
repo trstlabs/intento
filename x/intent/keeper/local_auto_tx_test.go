@@ -55,10 +55,10 @@ func TestSendLocalTx(t *testing.T) {
 	anys, err := types.PackTxMsgAnys([]sdk.Msg{localMsg})
 	require.NoError(t, err)
 
-	flowInfo := createBaseFlowInfo(addr1, flowAddr)
-	flowInfo.Msgs = anys
+	flow := createBaseflow(addr1, flowAddr)
+	flow.Msgs = anys
 
-	executedLocally, msgResponses, err := keepers.TriggerFlow(ctx, &flowInfo)
+	executedLocally, msgResponses, err := keepers.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
 	require.NotNil(t, msgResponses)
 	require.True(t, executedLocally)
@@ -74,23 +74,23 @@ func TestSendLocalTxAutocompound(t *testing.T) {
 	// Set baseline
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
 
-	flowInfo := createBaseFlowInfo(delAddr, flowAddr)
+	flow := createBaseflow(delAddr, flowAddr)
 	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
-	flowInfo.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward, msgDelegate})
-	flowInfo.Conditions = &types.ExecutionConditions{FeedbackLoops: []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "sdk.Int"}}}
+	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward, msgDelegate})
+	flow.Conditions = &types.ExecutionConditions{FeedbackLoops: []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "sdk.Int"}}}
 	delegations, _ := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
 	require.Equal(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
-	keeper.HandleFlow(ctx, ctx.Logger(), flowInfo, time.Now(), nil)
+	keeper.HandleFlow(ctx, ctx.Logger(), flow, time.Now(), nil)
 
 	//check that the feedback loop was executed and the msg was updated
-	flowInfo = keeper.GetFlowInfo(ctx, flowInfo.ID)
-	require.NotNil(t, flowInfo)
+	flow = keeper.Getflow(ctx, flow.ID)
+	require.NotNil(t, flow)
 
-	require.Equal(t, len(flowInfo.Msgs), 2)
-	require.NotEqual(t, flowInfo.Msgs[1], msgDelegate)
+	require.Equal(t, len(flow.Msgs), 2)
+	require.NotEqual(t, flow.Msgs[1], msgDelegate)
 
-	history, _ := keeper.GetFlowHistory(ctx, flowInfo.ID)
+	history, _ := keeper.GetFlowHistory(ctx, flow.ID)
 
 	require.Equal(t, len(history), 1)
 	require.Equal(t, len(history[0].Errors), 0)
@@ -103,11 +103,11 @@ func TestSendLocalTxAutocompound(t *testing.T) {
 	require.Greater(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
 
 	///also test feedbackloop response via IBC handling
-	keeper.SetTmpFlowID(ctx, flowInfo.ID, "port-1", "channel-1", 0)
-	keeper.SetFlowHistoryEntry(ctx, flowInfo.ID, &types.FlowHistoryEntry{MsgResponses: nil})
+	keeper.SetTmpFlowID(ctx, flow.ID, "port-1", "channel-1", 0)
+	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil})
 	err := keeper.HandleResponseAndSetFlowResult(ctx, "port-1", "channel-1", delAddr, 0, history[0].MsgResponses)
 	require.NoError(t, err)
-	history, _ = keeper.GetFlowHistory(ctx, flowInfo.ID)
+	history, _ = keeper.GetFlowHistory(ctx, flow.ID)
 	require.Equal(t, len(history[1].Errors), 0)
 	require.Equal(t, len(history[1].MsgResponses), 2)
 }
@@ -164,19 +164,19 @@ func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.A
 	return val, ctx
 }
 
-func createBaseFlowInfo(ownerAddr sdk.AccAddress, flowAddr sdk.AccAddress) types.FlowInfo {
-	flowInfo := types.FlowInfo{
-		ID:                  1,
-		Owner:               ownerAddr.String(),
-		FeeAddress:          flowAddr.String(),
-		Msgs:                []*cdctypes.Any{},
-		Interval:            time.Second * 20,
-		StartTime:           time.Now().Add(time.Hour * -1),
-		EndTime:             time.Now().Add(time.Second * 20),
-		SelfHostedICAConfig: &types.ICAConfig{},
-		Configuration:       &types.ExecutionConfiguration{SaveResponses: true},
+func createBaseflow(ownerAddr sdk.AccAddress, flowAddr sdk.AccAddress) types.Flow {
+	flow := types.Flow{
+		ID:            1,
+		Owner:         ownerAddr.String(),
+		FeeAddress:    flowAddr.String(),
+		Msgs:          []*cdctypes.Any{},
+		Interval:      time.Second * 20,
+		StartTime:     time.Now().Add(time.Hour * -1),
+		EndTime:       time.Now().Add(time.Second * 20),
+		SelfHostedICA: &types.ICAConfig{},
+		Configuration: &types.ExecutionConfiguration{SaveResponses: true},
 	}
-	return flowInfo
+	return flow
 }
 
 // This will commit the current set, update the block height, and set historic info

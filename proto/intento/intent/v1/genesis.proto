@@ -12,9 +12,9 @@ message GenesisState {
   Params params = 1 [ (gogoproto.nullable) = false ];
   repeated string interchain_account_addresses = 2
       [ (gogoproto.jsontag) = "interchain_account_addresses,omitempty" ];
-  repeated FlowInfo flow_infos = 3 [
+  repeated flow flows = 3 [
     (gogoproto.nullable) = false,
-    (gogoproto.jsontag) = "flow_infos,omitempty"
+    (gogoproto.jsontag) = "flows,omitempty"
   ];
   repeated Sequence sequences = 4 [
     (gogoproto.nullable) = false,

@@ -86,7 +86,7 @@ message QueryFlowRequest { string id = 1; }
 
 // QueryFlowResponse the response type for the Query/FlowRequest RPC
 message QueryFlowResponse {
-  FlowInfo flow_info = 1 [ (gogoproto.nullable) = false ];
+  flow flow = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryFlowHistoryRequest is the request type for the
@@ -114,7 +114,7 @@ message QueryFlowsRequest {
 
 // QueryFlowsResponse the response type for the Query/FlowsRequest RPCπ
 message QueryFlowsResponse {
-  repeated FlowInfo flow_infos = 1 [ (gogoproto.nullable) = false ];
+  repeated flow flows = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -130,7 +130,7 @@ message QueryFlowsForOwnerRequest {
 // QueryFlowsForOwnerResponse the response type for the
 // Query/FlowsForOwnerRequest RPC
 message QueryFlowsForOwnerResponse {
-  repeated FlowInfo flow_infos = 1 [ (gogoproto.nullable) = false ];
+  repeated flow flows = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
