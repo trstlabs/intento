@@ -73,12 +73,7 @@ func NewMsgSubmitTx(owner string, sdkMsg sdk.Msg, connectionID string) (*MsgSubm
 func PackTxMsgAnys(sdkMsgs []sdk.Msg) ([]*codectypes.Any, error) {
 	var anys []*codectypes.Any
 	for _, message := range sdkMsgs {
-		msg, ok := message.(proto.Message)
-		if !ok {
-			return nil, fmt.Errorf("cannot proto marshal %T", message)
-		}
-
-		any, err := codectypes.NewAnyWithValue(msg)
+		any, err := codectypes.NewAnyWithValue(message)
 		if err != nil {
 			return nil, err
 		}
