@@ -1,4 +1,4 @@
-FROM rust:1.79-buster as builder
+FROM rust:1.79-buster AS builder
 
 WORKDIR /opt
 
