@@ -226,7 +226,7 @@ func makeOwnerForChannelSender(ownerAddr sdk.AccAddress, isToSourceChain bool, p
 
 func registerAndSubmitTx(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgRegisterAccountAndSubmitFlow) (*types.MsgRegisterAccountAndSubmitFlowResponse, error) {
 	if err := ics20ParsedMsg.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf(types.ErrBadFlowMsg, err.Error())
+		return nil, err
 	}
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
 	return ics20MsgServer.RegisterAccountAndSubmitFlow(ctx, ics20ParsedMsg)
@@ -234,7 +234,7 @@ func registerAndSubmitTx(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types
 
 func submitFlow(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgSubmitFlow) (*types.MsgSubmitFlowResponse, error) {
 	if err := ics20ParsedMsg.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf(types.ErrBadFlowMsg, err.Error())
+		return nil, err
 	}
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
 	return ics20MsgServer.SubmitFlow(ctx, ics20ParsedMsg)
@@ -242,7 +242,7 @@ func submitFlow(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgSubmi
 
 func updateFlow(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgUpdateFlow) (*types.MsgUpdateFlowResponse, error) {
 	if err := ics20ParsedMsg.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf(types.ErrBadFlowMsg, err.Error())
+		return nil, err
 	}
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
 	return ics20MsgServer.UpdateFlow(ctx, ics20ParsedMsg)
