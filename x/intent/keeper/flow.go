@@ -50,7 +50,7 @@ func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, 
 	id := k.autoIncrementID(ctx, types.KeyLastID)
 	flowAddress, err := k.createFeeAccount(ctx, id, owner, feeFunds)
 	if err != nil {
-		return err
+		return errorsmod.Wrap(types.ErrAccountExists, err.Error())
 	}
 
 	endTime, execTime := k.calculateTimeAndInsertQueue(ctx, startAt, duration, id, interval)

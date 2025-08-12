@@ -22,6 +22,9 @@ var (
 	ErrAnyUnmarshal             = errorsmod.Register(ModuleName, 15, "failed unmarshal proto any")
 	ErrMsgResponsesHandling     = errorsmod.Register(ModuleName, 18, "error handling msg responses")
 	ErrInvalidTrustlessAgent    = errorsmod.Register(ModuleName, 34, "invalid msg response")
+	ErrInvalidFeedbackLoop      = errorsmod.Register(ModuleName, 35, "invalid feedback loop")
+	ErrInvalidICQTimeout        = errorsmod.Register(ModuleName, 36, "invalid icq timeout")
+	ErrInvalidScheduling        = errorsmod.Register(ModuleName, 37, "invalid scheduling")
 
 	//ics20 hooks
 	ErrMsgValidation     = errorsmod.Register("ics20-hooks", 20, "error in ics20 hook message validation")

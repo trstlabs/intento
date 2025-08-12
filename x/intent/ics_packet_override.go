@@ -78,7 +78,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		if !ok {
 			// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
 			// but returning here for completeness
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrInvalidPacket, "Amount is not an int"))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrInvalidPacket, "amount %s is not an int", data.GetAmount()))
 		}
 
 		// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
@@ -105,11 +105,11 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		response, err := registerAndSubmitTx(im.keeper, ctx, &msg)
 		if err != nil {
 			im.keeper.Logger(ctx).Debug("error handling ICS20 packet flow", err.Error())
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(err)
 		}
 		bz, err := json.Marshal(response)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, "error marshaling response: %s", err.Error()))
 		}
 
 		return channeltypes.NewResultAcknowledgement(bz)
@@ -133,11 +133,12 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		response, err := updateFlow(im.keeper, ctx, &msg)
 		if err != nil {
 			im.keeper.Logger(ctx).Debug("error handling ICS20 packet flow update", err.Error())
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
+			//return non-wrapped error for detailed error debugging via error code
+			return channeltypes.NewErrorAcknowledgement(err)
 		}
 		bz, err := json.Marshal(response)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, "error marshaling response: %s", err.Error()))
 		}
 
 		return channeltypes.NewResultAcknowledgement(bz)
@@ -160,11 +161,11 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		if err != nil {
 			//fmt.Printf("error handling ICS20 packet flow submission %v", err.Error())
 			im.keeper.Logger(ctx).Debug("error handling ICS20 packet flow submission", err.Error())
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(err)
 		}
 		bz, err := json.Marshal(response)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, "error marshaling response: %s", err.Error()))
 		}
 		im.keeper.Logger(ctx).Debug("flow via ics20 submitted sucesssfully")
 		return channeltypes.NewResultAcknowledgement(bz)
@@ -199,7 +200,7 @@ func makeOwnerForChannelSender(ownerAddr sdk.AccAddress, isToSourceChain bool, p
 		bz, err := json.Marshal(data)
 		if err != nil {
 			return nil, channeltypes.NewErrorAcknowledgement(
-				errorsmod.Wrapf(types.ErrMarshaling, err.Error()),
+				errorsmod.Wrapf(types.ErrMarshaling, "%s", err.Error()),
 			)
 		}
 		packet.Data = bz
@@ -215,7 +216,7 @@ func makeOwnerForChannelSender(ownerAddr sdk.AccAddress, isToSourceChain bool, p
 	bz, err := json.Marshal(data)
 	if err != nil {
 		return nil, channeltypes.NewErrorAcknowledgement(
-			errorsmod.Wrapf(types.ErrMarshaling, err.Error()),
+			errorsmod.Wrapf(types.ErrMarshaling, "marshaling error: %s", err.Error()),
 		)
 	}
 	packet.Data = bz

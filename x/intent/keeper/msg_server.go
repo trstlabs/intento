@@ -381,7 +381,7 @@ func checkAndParseFlowContent(
 		msgMsgs = msg.Msgs
 
 	default:
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, fmt.Errorf("unsupported message type: %T", msg)
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "unsupported intento module message type: %T", msg)
 	}
 
 	portID := ""
@@ -404,7 +404,7 @@ func checkAndParseFlowContent(
 	if msgInterval != "" {
 		interval, err = time.ParseDuration(msgInterval)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrap(types.ErrInvalidScheduling, err.Error())
 		}
 	}
 
@@ -415,7 +415,7 @@ func checkAndParseFlowContent(
 			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, err
 		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidScheduling, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
 	}
 
@@ -424,15 +424,15 @@ func checkAndParseFlowContent(
 		panic(err)
 	}
 	if interval != 0 && (interval < p.MinFlowInterval || interval > duration) {
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinFlowInterval, duration)
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidScheduling, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinFlowInterval, duration)
 	}
 	if duration != 0 {
 		if duration > p.MaxFlowDuration {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxFlowDuration)
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidScheduling, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxFlowDuration)
 		} else if duration < p.MinFlowDuration {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinFlowDuration)
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidScheduling, "duration: %s must be longer than minimum duration: %s", duration, p.MinFlowDuration)
 		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxFlowDuration)) {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidScheduling, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
 
@@ -490,7 +490,7 @@ func updateConditions(
 // --- Helper: FeedbackLoop validation ---
 func validateFeedbackLoop(loop *types.FeedbackLoop, msgMsgs []*cdctypes.Any) error {
 	if len(msgMsgs) == 0 || int(loop.MsgsIndex) < 0 {
-		return errorsmod.Wrapf(types.ErrInvalidRequest, "FeedbackLoop: empty msgMsgs or negative MsgsIndex")
+		return errorsmod.Wrapf(types.ErrInvalidFeedbackLoop, "FeedbackLoop: empty msgMsgs or negative MsgsIndex")
 	}
 
 	if int(loop.MsgsIndex) >= len(msgMsgs) {
@@ -498,21 +498,21 @@ func validateFeedbackLoop(loop *types.FeedbackLoop, msgMsgs []*cdctypes.Any) err
 		if msg.TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
 			msgExec := &authztypes.MsgExec{}
 			if err := proto.Unmarshal(msg.Value, msgExec); err != nil {
-				return errorsmod.Wrapf(types.ErrInvalidRequest, "could not unmarshal MsgExec to validate FeedbackLoop MsgsIndex")
+				return errorsmod.Wrapf(types.ErrInvalidFeedbackLoop, "could not unmarshal MsgExec to validate FeedbackLoop MsgsIndex")
 			}
 			if int(loop.MsgsIndex) >= len(msgExec.Msgs) {
-				return errorsmod.Wrapf(types.ErrInvalidRequest,
+				return errorsmod.Wrapf(types.ErrInvalidFeedbackLoop,
 					"FeedbackLoop MsgsIndex %d out of bounds for MsgExec (len: %d)",
 					loop.MsgsIndex, len(msgExec.Msgs),
 				)
 			}
-			return errorsmod.Wrapf(types.ErrInvalidRequest,
+			return errorsmod.Wrapf(types.ErrInvalidFeedbackLoop,
 				"FeedbackLoop MsgsIndex %d out of bounds for msgMsgs (len: %d)",
 				loop.MsgsIndex, len(msgMsgs),
 			)
 		}
 
-		return errorsmod.Wrapf(types.ErrInvalidRequest,
+		return errorsmod.Wrapf(types.ErrInvalidFeedbackLoop,
 			"FeedbackLoop MsgsIndex %d out of bounds for msgMsgs (len: %d)",
 			loop.MsgsIndex, len(msgMsgs),
 		)
@@ -526,11 +526,11 @@ func validateTimeout(label string, icq *types.ICQConfig, duration, interval time
 		return nil
 	}
 	if icq.TimeoutDuration > duration {
-		return errorsmod.Wrapf(types.ErrInvalidRequest,
+		return errorsmod.Wrapf(types.ErrInvalidICQTimeout,
 			"%s TimeoutDuration (%s) exceeds flow duration (%s)", label, icq.TimeoutDuration, duration)
 	}
 	if interval != 0 && icq.TimeoutDuration > interval {
-		return errorsmod.Wrapf(types.ErrInvalidRequest,
+		return errorsmod.Wrapf(types.ErrInvalidICQTimeout,
 			"%s TimeoutDuration (%s) exceeds flow interval (%s)", label, icq.TimeoutDuration, interval)
 	}
 	return nil
