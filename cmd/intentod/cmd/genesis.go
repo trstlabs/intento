@@ -225,9 +225,9 @@ func PrepareGenesis(
 
 	// slashing module genesis
 	slashingGenState := slashingtypes.DefaultGenesisState()
-	slashingGenState.Params.SignedBlocksWindow = 48000 // equal to 16 hours @ 1.3s block time
 	slashingGenState.Params = genesisParams.SlashingParams
-	genesisParams.SlashingParams.SlashFractionDowntime = math.LegacyNewDecWithPrec(0, 4) // 0% liveness slashing, as missing out rewards is enough penalty
+	slashingGenState.Params.SignedBlocksWindow = 48000                              // equal to 16 hours @ 1.3s block time
+	slashingGenState.Params.SlashFractionDowntime = math.LegacyNewDecWithPrec(0, 4) // 0% liveness slashing, as missing out rewards is enough penalty
 	slashingGenStateBz, err := cdc.MarshalJSON(slashingGenState)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal slashing genesis state: %w", err)
@@ -237,6 +237,10 @@ func PrepareGenesis(
 	// claim module genesis
 	claimGenState := claimtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 	claimGenState.Params = genesisParams.ClaimParams
+	claimGenState.Params.AirdropStartTime = genesisParams.GenesisTime.Add(time.Hour * 24 * 365) // will be adjusted by governance
+	claimGenState.Params.DurationUntilDecay = time.Hour * 24 * 28                               // 28 days or 4 weeks
+	claimGenState.Params.DurationOfDecay = time.Hour * 24 * 56                                  // 56 days or 8 weeks
+	claimGenState.Params.DurationVestingPeriods = []time.Duration{time.Minute, time.Minute * 2, time.Minute * 5, time.Minute}
 	claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal claim genesis state: %w", err)
