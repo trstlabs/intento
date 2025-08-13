@@ -30,13 +30,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, gs types.GenesisState) error {
 		}
 	}
 	var maxID uint64
-	for i, flowInfo := range gs.FlowInfos {
-		err := k.importFlowInfo(ctx, flowInfo.ID, flowInfo)
+	for i, flow := range gs.Flows {
+		err := k.importflow(ctx, flow.ID, flow)
 		if err != nil {
-			return errorsmod.Wrapf(err, "flowInfo %d with id: %d", i, flowInfo.ID)
+			return errorsmod.Wrapf(err, "flow %d with id: %d", i, flow.ID)
 		}
-		if flowInfo.ID > maxID {
-			maxID = flowInfo.ID
+		if flow.ID > maxID {
+			maxID = flow.ID
 		}
 	}
 
@@ -65,8 +65,8 @@ func ExportGenesis(ctx sdk.Context, keeper Keeper) *types.GenesisState {
 		panic(err)
 	}
 	genState.Params = genStateParams
-	keeper.IterateFlowInfos(ctx, func(id uint64, info types.FlowInfo) bool {
-		genState.FlowInfos = append(genState.FlowInfos, info)
+	keeper.Iterateflows(ctx, func(id uint64, info types.Flow) bool {
+		genState.Flows = append(genState.Flows, info)
 		return false
 	})
 

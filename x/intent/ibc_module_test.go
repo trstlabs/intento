@@ -30,7 +30,7 @@ func TestHandleWithdrawElysStakingRewardsPacket(t *testing.T) {
 	msg := authztypes.MsgExec{Msgs: []*cdctypes.Any{any}}
 	anys, _ := types.PackTxMsgAnys([]sdk.Msg{&msg})
 	flow.Msgs = anys
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 	relayer, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
 
 	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil})
@@ -114,7 +114,7 @@ func TestFeedbackLoopWithdrawSwapStake(t *testing.T) {
 		},
 	}
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 
 	// Simulate withdraw response
 	withdrawResp := &elysestaking.MsgWithdrawElysStakingRewardsResponse{
@@ -124,7 +124,7 @@ func TestFeedbackLoopWithdrawSwapStake(t *testing.T) {
 
 	historyEntry := &types.FlowHistoryEntry{
 		MsgResponses: []*cdctypes.Any{},
-		ExecFee:      sdk.NewCoin("stake", math.NewInt(100)),
+		ExecFee:      sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 	}
 	k.SetCurrentFlowHistoryEntry(ctx, flow.ID, historyEntry)
 
@@ -139,7 +139,7 @@ func TestFeedbackLoopWithdrawSwapStake(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify swap message was updated
-	updatedFlow := k.GetFlowInfo(ctx, flow.ID)
+	updatedFlow := k.Getflow(ctx, flow.ID)
 	var updatedSwapMsg elysamm.MsgSwapExactAmountIn
 	updatedSwapMsg.Unmarshal(updatedFlow.Msgs[1].Value)
 
@@ -228,7 +228,7 @@ func TestFeedbackLoopWithdrawSwapStakeTwice(t *testing.T) {
 		},
 	}
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 
 	// Simulate first withdraw response (100 tokens)
 	withdrawResp1 := &elysestaking.MsgWithdrawElysStakingRewardsResponse{
@@ -244,7 +244,7 @@ func TestFeedbackLoopWithdrawSwapStakeTwice(t *testing.T) {
 
 	historyEntry := &types.FlowHistoryEntry{
 		MsgResponses: []*cdctypes.Any{},
-		ExecFee:      sdk.NewCoin("stake", math.NewInt(100)),
+		ExecFee:      sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100))),
 	}
 	k.SetCurrentFlowHistoryEntry(ctx, flow.ID, historyEntry)
 
@@ -253,7 +253,7 @@ func TestFeedbackLoopWithdrawSwapStakeTwice(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify first swap message was updated
-	updatedFlow := k.GetFlowInfo(ctx, flow.ID)
+	updatedFlow := k.Getflow(ctx, flow.ID)
 
 	var updatedSwapMsg1 elysamm.MsgSwapExactAmountIn
 	updatedSwapMsg1.Unmarshal(updatedFlow.Msgs[1].Value)
@@ -274,7 +274,7 @@ func TestFeedbackLoopWithdrawSwapStakeTwice(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify first stake message was updated
-	updatedFlow = k.GetFlowInfo(ctx, flow.ID)
+	updatedFlow = k.Getflow(ctx, flow.ID)
 	var updatedStakeMsg1 elyscommitment.MsgStake
 	require.NoError(t, updatedStakeMsg1.Unmarshal(updatedFlow.Msgs[2].Value))
 	require.Equal(t, math.NewInt(80), updatedStakeMsg1.Amount)
@@ -294,7 +294,7 @@ func TestFeedbackLoopWithdrawSwapStakeTwice(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify second swap message was updated
-	updatedFlow = k.GetFlowInfo(ctx, flow.ID)
+	updatedFlow = k.Getflow(ctx, flow.ID)
 	var updatedSwapMsg2 elysamm.MsgSwapExactAmountIn
 	require.NoError(t, updatedSwapMsg2.Unmarshal(updatedFlow.Msgs[4].Value))
 	require.Equal(t, math.NewInt(200), updatedSwapMsg2.TokenIn.Amount)
@@ -314,7 +314,7 @@ func TestFeedbackLoopWithdrawSwapStakeTwice(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify second stake message was updated
-	updatedFlow = k.GetFlowInfo(ctx, flow.ID)
+	updatedFlow = k.Getflow(ctx, flow.ID)
 	var updatedStakeMsg2 elyscommitment.MsgStake
 	require.NoError(t, updatedStakeMsg2.Unmarshal(updatedFlow.Msgs[5].Value))
 	require.Equal(t, math.NewInt(180), updatedStakeMsg2.Amount)

@@ -1,16 +1,18 @@
 syntax = "proto3";
-package intento.claim.v1beta1;
+package intento.claim.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
+import "intento/claim/v1/params.proto";
 option go_package = "github.com/trstlabs/intento/x/claim/types";
 
 // Msg defines the Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
   rpc ClaimClaimable(MsgClaimClaimable) returns (MsgClaimClaimableResponse);
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 enum Action {
@@ -67,3 +69,17 @@ message MsgClaimClaimableResponse {
     (gogoproto.moretags) = "yaml:\"claimed_amount\""
   ];
 }
+
+
+// MsgUpdateParams is the request type for updating claim module's params.
+message MsgUpdateParams {
+  string authority = 1;
+   Params params = 2 [
+      (gogoproto.jsontag) = "params",
+      (gogoproto.nullable) = false,
+      (amino.dont_omitempty) = true
+    ];
+}
+
+// MsgUpdateParamsResponse is the response type for executing MsgUpdateParams.
+message MsgUpdateParamsResponse {}

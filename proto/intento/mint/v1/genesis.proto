@@ -1,8 +1,8 @@
 syntax = "proto3";
-package intento.mint.v1beta1;
+package intento.mint.v1;
 
 import "gogoproto/gogo.proto";
-import "intento/mint/v1beta1/mint.proto";
+import "intento/mint/v1/mint.proto";
 
 option go_package = "github.com/trstlabs/intento/x/mint/types";
 

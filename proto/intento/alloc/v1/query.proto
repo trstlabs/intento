@@ -1,9 +1,9 @@
 syntax = "proto3";
-package intento.alloc.v1beta1;
+package intento.alloc.v1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "intento/alloc/v1beta1/params.proto";
+import "intento/alloc/v1/params.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/trstlabs/intento/x/alloc/types";
@@ -20,7 +20,7 @@ message QueryParamsResponse {
 // Query defines the gRPC querier service.
 service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/intento/alloc/v1beta1/params";
+    option (google.api.http).get = "/intento/alloc/v1/params";
   }
 }
 

@@ -17,7 +17,7 @@ func TestShouldRecur(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		setupFlow      func() types.FlowInfo
+		setupFlow      func() types.Flow
 		errorString    string
 		hasHistory     bool
 		hasHistoryErr  bool
@@ -25,8 +25,8 @@ func TestShouldRecur(t *testing.T) {
 	}{
 		{
 			name: "balance too low - should not recur",
-			setupFlow: func() types.FlowInfo {
-				return types.FlowInfo{
+			setupFlow: func() types.Flow {
+				return types.Flow{
 					ID:       4,
 					ExecTime: now,
 					EndTime:  now.Add(1 * time.Hour),
@@ -42,8 +42,8 @@ func TestShouldRecur(t *testing.T) {
 		},
 		{
 			name: "no conditions - should recur",
-			setupFlow: func() types.FlowInfo {
-				return types.FlowInfo{
+			setupFlow: func() types.Flow {
+				return types.Flow{
 					ID:       5,
 					ExecTime: now,
 					EndTime:  now.Add(1 * time.Hour),
@@ -59,8 +59,8 @@ func TestShouldRecur(t *testing.T) {
 		},
 		{
 			name: "stop on success - with error - should recur",
-			setupFlow: func() types.FlowInfo {
-				return types.FlowInfo{
+			setupFlow: func() types.Flow {
+				return types.Flow{
 					ExecTime: now,
 					EndTime:  now.Add(1 * time.Hour),
 					Interval: interval,
@@ -77,8 +77,8 @@ func TestShouldRecur(t *testing.T) {
 		},
 		{
 			name: "stop on success - no error - should not recur",
-			setupFlow: func() types.FlowInfo {
-				return types.FlowInfo{
+			setupFlow: func() types.Flow {
+				return types.Flow{
 					ID:       1,
 					ExecTime: now,
 					EndTime:  now.Add(1 * time.Hour),
@@ -92,12 +92,12 @@ func TestShouldRecur(t *testing.T) {
 			errorString:    "",
 			hasHistory:     false,
 			hasHistoryErr:  false,
-			expectedResult: false,  // Should not recur because there's no error and StopOnSuccess is true
+			expectedResult: false, // Should not recur because there's no error and StopOnSuccess is true
 		},
 		{
 			name: "stop on failure - with error - should not recur",
-			setupFlow: func() types.FlowInfo {
-				return types.FlowInfo{
+			setupFlow: func() types.Flow {
+				return types.Flow{
 					ExecTime: now,
 					EndTime:  now.Add(1 * time.Hour),
 					Interval: interval,
@@ -114,8 +114,8 @@ func TestShouldRecur(t *testing.T) {
 		},
 		{
 			name: "stop on failure - no error - should recur",
-			setupFlow: func() types.FlowInfo {
-				return types.FlowInfo{
+			setupFlow: func() types.Flow {
+				return types.Flow{
 					ID:       2,
 					ExecTime: now,
 					EndTime:  now.Add(1 * time.Hour),
@@ -129,14 +129,14 @@ func TestShouldRecur(t *testing.T) {
 			errorString:    "",
 			hasHistory:     false,
 			hasHistoryErr:  false,
-			expectedResult: true,  // Should recur because there's no error and StopOnFailure is true
+			expectedResult: true, // Should recur because there's no error and StopOnFailure is true
 		},
 		{
 			name: "end time reached - should not recur",
-			setupFlow: func() types.FlowInfo {
+			setupFlow: func() types.Flow {
 				// Set ExecTime and EndTime so that the next execution would be after EndTime
 				nearEndTime := now.Add(-1 * time.Minute)
-				return types.FlowInfo{
+				return types.Flow{
 					ID:       3,
 					ExecTime: nearEndTime,
 					EndTime:  now,
@@ -148,7 +148,7 @@ func TestShouldRecur(t *testing.T) {
 				}
 			},
 			errorString:    "",
-			expectedResult: false,  // Should not recur because next execution would be after EndTime
+			expectedResult: false, // Should not recur because next execution would be after EndTime
 		},
 	}
 

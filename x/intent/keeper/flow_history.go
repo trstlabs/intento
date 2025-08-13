@@ -107,7 +107,7 @@ func (k Keeper) IterateFlowHistorys(ctx sdk.Context, cb func(uint64, types.FlowH
 	}
 }
 
-func (k Keeper) addFlowHistoryEntry(ctx sdk.Context, flow *types.FlowInfo, actualExecTime time.Time, execFee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, errorString string) {
+func (k Keeper) addFlowHistoryEntry(ctx sdk.Context, flow *types.Flow, actualExecTime time.Time, execFee sdk.Coins, executedLocally bool, msgResponses []*cdctypes.Any, errorString string) {
 	historyEntry := types.FlowHistoryEntry{
 		ScheduledExecTime: flow.ExecTime,
 		ActualExecTime:    actualExecTime,
@@ -192,7 +192,7 @@ func (k Keeper) HasFlowHistoryEntry(ctx sdk.Context, flowId uint64) bool {
 // }
 
 // we may reimplement this as a configuration-based gas fee
-func (k Keeper) CalculateTimeBasedFlexFee(ctx sdk.Context, flow types.FlowInfo) math.Int {
+func (k Keeper) CalculateTimeBasedFlexFee(ctx sdk.Context, flow types.Flow) math.Int {
 	historyEntry, _ := k.GetLatestFlowHistoryEntry(ctx, flow.ID)
 
 	if historyEntry != nil {

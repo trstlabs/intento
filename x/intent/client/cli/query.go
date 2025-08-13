@@ -20,7 +20,7 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(getInterchainAccountCmd(), getFlowCmd(), getFlowHistoryCmd(), getFlowsForOwnerCmd(), getFlowsCmd(), getHostedAccountsCmd(), getHostedAccountCmd())
+	cmd.AddCommand(getInterchainAccountCmd(), getFlowCmd(), getFlowHistoryCmd(), getFlowsForOwnerCmd(), getFlowsCmd(), getTrustlessAgentsCmd(), getTrustlessAgentCmd())
 
 	return cmd
 }
@@ -177,9 +177,9 @@ func withPageKeyDecoded(flagSet *flag.FlagSet) *flag.FlagSet {
 	return flagSet
 }
 
-func getHostedAccountCmd() *cobra.Command {
+func getTrustlessAgentCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "hosted-account [hosted address]",
+		Use:  "trustless-agent [hosted address]",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -188,7 +188,7 @@ func getHostedAccountCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.HostedAccount(cmd.Context(), types.NewQueryHostedAccountRequest(args[0]))
+			res, err := queryClient.TrustlessAgent(cmd.Context(), types.NewQueryTrustlessAgentRequest(args[0]))
 			if err != nil {
 				return err
 			}
@@ -202,9 +202,9 @@ func getHostedAccountCmd() *cobra.Command {
 	return cmd
 }
 
-func getHostedAccountsCmd() *cobra.Command {
+func getTrustlessAgentsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "list-hosted-accounts",
+		Use:  "list-trustless-agents",
 		Args: cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -217,7 +217,7 @@ func getHostedAccountsCmd() *cobra.Command {
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.HostedAccounts(cmd.Context(), types.NewQueryHostedAccountsRequest(pageReq))
+			res, err := queryClient.TrustlessAgents(cmd.Context(), types.NewQueryTrustlessAgentsRequest(pageReq))
 			if err != nil {
 				return err
 			}
@@ -227,7 +227,7 @@ func getHostedAccountsCmd() *cobra.Command {
 	}
 
 	flags.AddQueryFlagsToCmd(cmd)
-	flags.AddPaginationFlagsToCmd(cmd, "hosted-accounts")
+	flags.AddPaginationFlagsToCmd(cmd, "trustless-agents")
 
 	return cmd
 }

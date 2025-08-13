@@ -15,7 +15,7 @@ What if Emma’s wallet could handle this for her intelligently? Instead of just
 
 By offering a smart auto-compounding solution, wallets can provide users with better staking experiences, increase token lock-up rates, and add value to their platforms. Here are different ways this can be implemented:
 
-### Approach 1 - Conditional Autocompounding via User-Owned Self-Hosted Account
+### Approach 1 - Conditional Autocompounding via User-Owned Self-Trustless agent
 
 ![1](@site/docs/images/designing-flows/auto-compound/1.png)
 
@@ -35,24 +35,24 @@ This approach gives users full control over their auto-compounding while keeping
 - Users pay host chain fees directly.
 - Requires technical knowledge to maintain.
 
-### Approach 2 - Conditional Autocompounding via Hosted Account
+### Approach 2 - Conditional Autocompounding via Trustless agent
 
 ![2](@site/docs/images/designing-flows/auto-compound/2.png)
 
-A hosted account managed by the wallet provider, making auto-compounding easier while ensuring a seamless staking experience.
+A Trustless Agent with fees managed by the wallet provider, making auto-compounding easier while ensuring a seamless staking experience.
 
 **Advantages:**
 
 - Users can choose any validator.
 - Simplifies auto-compounding by removing the need for self-management.
 - Fees can be paid in a single token (INTO, ATOM).
-- Wallet providers can generate revenue from managing hosted accounts.
+- Wallet providers can generate revenue from managing Trustless Agents.
 - Predefined smart conditions ensure efficient auto-compounding.
 
 **Disadvantages:**
 
 - Users must trust the wallet provider for execution.
-- Some flexibility is lost compared to self-hosted accounts.
+- Some flexibility is lost compared to self-hosted interchain accounts.
 - Still requires fees, but they are abstracted.
 
 ### Approach 3 - Autocompounding via One Managed Flow

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package intento.alloc.v1beta1;
+package intento.alloc.v1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";

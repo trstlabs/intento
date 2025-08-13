@@ -1,5 +1,5 @@
-ARG GO_VERSION="1.23.6"
-ARG RUNNER_IMAGE_VERSION="3.21"
+ARG GO_VERSION="1.24.6"
+ARG RUNNER_IMAGE_VERSION="3.22"
 
 FROM golang:${GO_VERSION}-alpine${RUNNER_IMAGE_VERSION} AS builder
 
@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 
 
-ARG WASMVM_VERSION=v2.1.5
+ARG WASMVM_VERSION=v2.2.4
 ADD https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
 ADD https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
     

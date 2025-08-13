@@ -36,15 +36,26 @@ for (const msg of FlowData.msgs) {
  * Constructs the submitFlow message for Intento.
  */
 const msgSubmitFlow =
-  intento.intent.v1beta1.MessageComposer.withTypeUrl.submitFlow({
+  intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
     label: "My Flow", // Optional flow label
     owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
     msgs: encodedMsgs,
     duration: "1440h", // Flow duration (24h * 60d)
     interval: "600s", // Execution interval (10 min)
     feeFunds: [{ denom: "uinto", amount: "5000000" }], // Funding for fees, optional when fallbackToOwnerBalance = true
-    connectionId: "connection-12",
-    hostConnectionId: "connection-345",
+    trustless_agent: {
+      agent_address: "into1xyz...",
+      fee_limit: [
+        {
+          denom: "uinto",
+          amount: "100",
+        },
+        {
+          denom: "ibc/hash",
+          amount: "50",
+        },
+      ],
+    },
   });
 
 /**
@@ -105,7 +116,7 @@ const initConditions: ExecutionConditions = {
  * Constructs the submitFlow message for Intento.
  */
 const msgSubmitFlow =
-  intento.intent.v1beta1.MessageComposer.withTypeUrl.submitFlow({
+  intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
     label: "My Flow", // Optional flow label
     connectionId: "connection-123",
     owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",

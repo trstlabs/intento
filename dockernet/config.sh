@@ -107,7 +107,7 @@ VAL_MNEMONICS=(
 USER_MNEMONIC="tonight bonus finish chaos orchard plastic view nurse salad regret pause awake link bacon process core talent whale million hope luggage sauce card weasel"
 
 # Intento
-INTO_CHAIN_ID=intento-test-1
+INTO_CHAIN_ID=intento-dev-1
 INTO_NODE_PREFIX=into
 INTO_NUM_NODES=1 #must be greater or equal GAIA_NUM_NODES
 INTO_VAL_PREFIX=val

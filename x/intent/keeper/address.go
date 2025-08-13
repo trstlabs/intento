@@ -19,7 +19,7 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-func (k Keeper) parseAndSetMsgs(ctx sdk.Context, flow *types.FlowInfo, connectionID, portID string) (protoMsgs []proto.Message, err error) {
+func (k Keeper) parseAndSetMsgs(ctx sdk.Context, flow *types.Flow, connectionID, portID string) (protoMsgs []proto.Message, err error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	if store.Has(types.GetFlowHistoryKey(flow.ID)) {
 		txMsgs := flow.GetTxMsgs(k.cdc)
@@ -186,7 +186,7 @@ func addrFromUint64(id uint64) sdk.AccAddress {
 
 // simplied from https://github.com/cosmos/ibc-go/blob/main/modules/apps/27-interchain-accounts/types/account.go#L46
 // to diferentiate between hosted icas
-func DeriveHostedAddress(addressString string, connectionID string) (sdk.AccAddress, error) {
+func DeriveAgentAddress(addressString string, connectionID string) (sdk.AccAddress, error) {
 	addr, err := sdk.AccAddressFromBech32(addressString)
 	if err != nil {
 		return nil, err

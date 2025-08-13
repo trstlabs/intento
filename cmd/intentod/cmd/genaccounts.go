@@ -224,7 +224,6 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			serverCtx := server.GetServerContextFromCmd(cmd)
-
 			config := serverCtx.Config
 			config.SetRoot(clientCtx.HomeDir)
 
@@ -235,13 +234,11 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 			}
 
 			authGenState := authtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
-
 			accs, err := authtypes.UnpackAccounts(authGenState.Accounts)
 			if err != nil {
 				return fmt.Errorf("failed to get accounts from genesis state: %w", err)
 			}
 
-			// Parse command flag
 			airdropAmountFlag, err := cmd.Flags().GetInt64("airdrop-amount")
 			if err != nil || airdropAmountFlag <= 0 {
 				return fmt.Errorf("invalid or missing --airdrop-amount flag")
@@ -277,48 +274,89 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 				return fmt.Errorf("failed to parse non-airdrop accounts file: %w", err)
 			}
 
-			// Calculate total weight and normalization factor
-			var totalWeight math.LegacyDec = math.LegacyNewDec(0)
+			// Deduplicate snapshot first
+			addressToWeight := make(map[string]math.Int)
+			addressToEntry := make(map[string]SnapshotEntry)
 			for _, account := range snapshot {
+				if prevWeight, exists := addressToWeight[account.Address]; exists {
+					if account.Weight.GT(prevWeight) {
+						addressToWeight[account.Address] = account.Weight
+						addressToEntry[account.Address] = account
+					}
+				} else {
+					addressToWeight[account.Address] = account.Weight
+					addressToEntry[account.Address] = account
+				}
+			}
+			dedupedSnapshot := make([]SnapshotEntry, 0, len(addressToEntry))
+			for _, entry := range addressToEntry {
+				dedupedSnapshot = append(dedupedSnapshot, entry)
+			}
+			// Now calculate totalWeight and normalizationFactor using dedupedSnapshot
+			var totalWeight math.LegacyDec = math.LegacyNewDec(0)
+			for _, account := range dedupedSnapshot {
 				totalWeight = totalWeight.Add(math.LegacyNewDecFromInt(account.Weight))
 			}
 			normalizationFactor := math.LegacyNewDecFromInt(airdropAmount).Quo(totalWeight)
 
-			// Prepare balances and claim records
 			bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 			liquidBalances := bankGenState.Balances
 			claimRecords := []claimtypes.ClaimRecord{}
 			claimModuleBalance := math.NewInt(0)
+			// ...existing code...
+			accountMap := make(map[string]bool)
+			totalDistributed := math.NewInt(0)
 
-			// Distribute airdrop
-			for _, account := range snapshot {
+			// Track largest claimable
+
+			largestClaimable := math.NewInt(0)
+			claimableAmounts := make([]math.Int, len(dedupedSnapshot))
+			addresses := make([]string, len(dedupedSnapshot))
+			for i, account := range dedupedSnapshot {
 				address, err := ConvertBech32(account.Address)
 				if err != nil {
 					return fmt.Errorf("invalid address in snapshot: %w", err)
 				}
 
+				if accountMap[address] {
+					// Should not happen after deduplication
+					continue
+				}
+				accountMap[address] = true
+
 				airdropShare := math.LegacyNewDecFromInt(account.Weight).Mul(normalizationFactor).TruncateInt()
-				// Cap liquid amount at 2,000,000 uinto (2 INTO)
+
+				liquidAmount := airdropShare.MulRaw(2).QuoRaw(10) // 20%
 				maxLiquid := math.NewInt(2_000_000)
-				liquidAmount := airdropShare.MulRaw(2).QuoRaw(10) // 20% liquid
 				if liquidAmount.GT(maxLiquid) {
 					liquidAmount = maxLiquid
 				}
+
 				claimableAmount := airdropShare.Sub(liquidAmount)
+				claimableAmounts[i] = claimableAmount
+				addresses[i] = address
+				if claimableAmount.GT(largestClaimable) {
+					largestClaimable = claimableAmount
+
+				}
+				if !airdropShare.Equal(liquidAmount.Add(claimableAmount)) {
+					return fmt.Errorf("math error: liquid + claimable ≠ airdropShare for %s", address)
+				}
 
 				liquidBalances = append(liquidBalances, banktypes.Balance{
 					Address: address,
 					Coins:   sdk.NewCoins(sdk.NewCoin("uinto", liquidAmount)),
 				})
 				claimModuleBalance = claimModuleBalance.Add(claimableAmount)
+				totalDistributed = totalDistributed.Add(airdropShare)
 
 				accAddr, err := sdk.AccAddressFromBech32(address)
 				if err != nil {
-					return fmt.Errorf("failed to create new genesis account: %w", err)
+					return fmt.Errorf("bad address: %w", err)
 				}
 				baseAccount := authtypes.NewBaseAccount(accAddr, nil, 0, 0)
 				if err := baseAccount.Validate(); err != nil {
-					return fmt.Errorf("failed to validate new genesis account: %w", err)
+					return fmt.Errorf("invalid base account: %w", err)
 				}
 				accs = append(accs, baseAccount)
 
@@ -330,20 +368,45 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 				})
 			}
 
+			// Handle airdrop remainder
+			remainder := airdropAmount.Sub(totalDistributed)
+			if remainder.GT(math.NewInt(0)) {
+				// Option 2: Send to burner address
+				burnerAddress, err := sdk.AccAddressFromHexUnsafe("7C4954EAE77FF15A4C67C5F821C5241008ED966D") // Cosmos random address with no keypair
+				if err != nil {
+					panic(err)
+				}
+				fmt.Printf("Burner address: %s\n", burnerAddress.String())
+				status := claimtypes.Status{ActionCompleted: false, VestingPeriodsCompleted: []bool{false, false, false, false}, VestingPeriodsClaimed: []bool{false, false, false, false}}
+				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
+					Address:                burnerAddress.String(),
+					MaximumClaimableAmount: sdk.NewCoin("uinto", remainder),
+					Status:                 []claimtypes.Status{status, status, status, status},
+				})
+				claimModuleBalance = claimModuleBalance.Add(remainder)
+				fmt.Printf("Airdrop remainder %s uinto sent to burner address %s\n", remainder.String(), burnerAddress)
+			}
+
 			// Add non-airdrop accounts
 			for _, info := range nonAirdropAccounts {
 				if info.Address == "" {
 					return fmt.Errorf("missing address for non-airdrop account: %s", info.Name)
 				}
 
+				if accountMap[info.Address] {
+					fmt.Printf("Skipping duplicate non-airdrop address: %s\n", info.Address)
+					continue
+				}
+				accountMap[info.Address] = true
+
 				address, err := sdk.AccAddressFromBech32(info.Address)
 				if err != nil {
-					return fmt.Errorf("invalid address in non-airdrop accounts: %w", err)
+					return fmt.Errorf("invalid non-airdrop address: %w", err)
 				}
 
 				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
 				if err := baseAccount.Validate(); err != nil {
-					return fmt.Errorf("failed to validate new genesis account: %w", err)
+					return fmt.Errorf("failed to validate non-airdrop account: %w", err)
 				}
 				accs = append(accs, baseAccount)
 				liquidBalances = append(liquidBalances, banktypes.Balance{
@@ -353,7 +416,7 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 				fmt.Printf("Non-airdrop account added: %s (%s) with %d uinto\n", info.Address, info.Name, info.Amount)
 			}
 
-			// Final output
+			// Totals check
 			totalLiquid := math.NewInt(0)
 			for _, balance := range liquidBalances {
 				totalLiquid = totalLiquid.Add(balance.Coins.AmountOf("uinto"))
@@ -361,6 +424,12 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 			fmt.Printf("Total Airdrop: %s uinto\n", airdropAmount)
 			fmt.Printf("Total Liquid: %s uinto\n", totalLiquid)
 			fmt.Printf("Total Claimable: %s uinto\n", claimModuleBalance)
+			fmt.Printf("Sum of Distributed Airdrop Shares: %s uinto\n", totalDistributed)
+
+			// After handling remainder, totalDistributed + remainder should equal airdropAmount
+			if !totalDistributed.Add(remainder).Equal(airdropAmount) {
+				return fmt.Errorf("mismatch: totalDistributed + remainder (%s) ≠ airdropAmount (%s)", totalDistributed.Add(remainder), airdropAmount)
+			}
 
 			// Update genesis state
 			authGenState.Accounts, err = authtypes.PackAccounts(accs)
@@ -373,7 +442,6 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 			}
 			appState[authtypes.ModuleName] = authGenStateBz
 
-			//bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 			bankGenState.Balances = banktypes.SanitizeGenesisBalances(liquidBalances)
 			bankGenStateBz, err := clientCtx.Codec.MarshalJSON(bankGenState)
 			if err != nil {

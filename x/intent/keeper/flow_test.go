@@ -37,11 +37,11 @@ func TestCreateFlow(t *testing.T) {
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.TrustlessAgentConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 
 	// Verify that the flow was created correctly
-	flow := keepers.IntentKeeper.GetFlowInfo(ctx, 1)
+	flow := keepers.IntentKeeper.Getflow(ctx, 1)
 
 	require.Equal(t, uint64(1), flow.ID)
 	require.Equal(t, owner.String(), flow.Owner)
@@ -74,11 +74,11 @@ func TestCreateFlowWithZeroFeeFundsWorks(t *testing.T) {
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.TrustlessAgentConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 
 	// Verify that the flow was created correctly
-	flow := keepers.IntentKeeper.GetFlowInfo(ctx, 1)
+	flow := keepers.IntentKeeper.Getflow(ctx, 1)
 
 	require.Equal(t, uint64(1), flow.ID)
 	require.Equal(t, owner.String(), flow.Owner)
@@ -112,10 +112,10 @@ func TestGetFlowsForBlock(t *testing.T) {
 	configuration := types.ExecutionConfiguration{SaveResponses: false}
 
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.TrustlessAgentConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 	// Call the CreateFlow function
-	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.HostedICAConfig{}, "", "", types.ExecutionConditions{})
+	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.TrustlessAgentConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
 	flows := keepers.IntentKeeper.GetFlowsForBlock(ctx.WithBlockTime(startTime.Add(interval)))
 	require.Equal(t, len(flows), 2)
@@ -140,9 +140,9 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 	connectionID := "connection-1"
 
 	// Call the CreateFlow function
-	err := keepers.IntentKeeper.CreateFlow(ctx, owner, "label", []*cdctypes.Any{}, duration, interval, startTime, sdk.Coins{}, configuration, types.HostedICAConfig{}, portID, connectionID, types.ExecutionConditions{})
+	err := keepers.IntentKeeper.CreateFlow(ctx, owner, "label", []*cdctypes.Any{}, duration, interval, startTime, sdk.Coins{}, configuration, types.TrustlessAgentConfig{}, portID, connectionID, types.ExecutionConditions{})
 	require.NoError(t, err)
-	flow := keepers.IntentKeeper.GetFlowInfo(ctx, 1)
+	flow := keepers.IntentKeeper.Getflow(ctx, 1)
 	require.NotNil(t, flow.FeeAddress)
 	// Message creation helpers
 	newWithdrawMsg := func() *cdctypes.Any {
@@ -171,7 +171,7 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 		newStakeMsg(),    // Index 5 - Second stake (updated by feedback)
 	}
 
-	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil, ExecFee: sdk.NewCoin("stake", math.NewInt(100))})
+	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil, ExecFee: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(100)))})
 
 	// Setup feedback loops
 	flow.Conditions = &types.ExecutionConditions{
@@ -209,7 +209,7 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 		},
 	}
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 
 	// Test cases in execution order
 	tests := []struct {
@@ -304,7 +304,7 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 			}
 
 			// Verify target message was updated
-			updatedFlow := k.GetFlowInfo(ctx, flow.ID)
+			updatedFlow := k.Getflow(ctx, flow.ID)
 			var updatedMsg proto.Message
 			if tc.validateIndex >= 0 {
 				var updatedMsg proto.Message

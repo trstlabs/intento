@@ -1,11 +1,11 @@
 syntax = "proto3";
-package intento.claim.v1beta1;
+package intento.claim.v1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "intento/claim/v1beta1/claim.proto";
-import "intento/claim/v1beta1/params.proto";
+import "intento/claim/v1/claim.proto";
+import "intento/claim/v1/params.proto";
 
 option go_package = "github.com/trstlabs/intento/x/claim/types";
 
@@ -14,24 +14,24 @@ service Query {
   rpc ModuleAccountBalance(QueryModuleAccountBalanceRequest)
       returns (QueryModuleAccountBalanceResponse) {
     option (google.api.http).get =
-        "/intento/claim/v1beta1/module_account_balance";
+        "/intento/claim/v1/module_account_balance";
   }
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/intento/claim/v1beta1/params";
+    option (google.api.http).get = "/intento/claim/v1/params";
   }
   rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
     option (google.api.http).get =
-        "/intento/claim/v1beta1/claim_record/{address}";
+        "/intento/claim/v1/claim_record/{address}";
   }
   rpc ClaimableForAction(QueryClaimableForActionRequest)
       returns (QueryClaimableForActionResponse) {
     option (google.api.http).get =
-        "/intento/claim/v1beta1/claimable_for_action/{address}/{action}";
+        "/intento/claim/v1/claimable_for_action/{address}/{action}";
   }
   rpc TotalClaimable(QueryTotalClaimableRequest)
       returns (QueryTotalClaimableResponse) {
     option (google.api.http).get =
-        "/intento/claim/v1beta1/total_claimable/{address}";
+        "/intento/claim/v1/total_claimable/{address}";
   }
 }
 

@@ -4,7 +4,7 @@ info:
   description: A REST interface for queries and transactions
   version: ''
 paths:
-  /intento/alloc/v1beta1/params:
+  /intento/alloc/v1/params:
     get:
       operationId: AllocParams
       responses:
@@ -88,7 +88,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /intento/claim/v1beta1/claim_record/{address}:
+  /intento/claim/v1/claim_record/{address}:
     get:
       operationId: ClaimRecord
       responses:
@@ -175,7 +175,7 @@ paths:
           type: string
       tags:
         - Query
-  /intento/claim/v1beta1/claimable_for_action/{address}/{action}:
+  /intento/claim/v1/claimable_for_action/{address}/{action}:
     get:
       operationId: ClaimableForAction
       responses:
@@ -233,7 +233,7 @@ paths:
             - ACTION_DELEGATE_STAKE
       tags:
         - Query
-  /intento/claim/v1beta1/module_account_balance:
+  /intento/claim/v1/module_account_balance:
     get:
       operationId: ModuleAccountBalance
       responses:
@@ -283,7 +283,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /intento/claim/v1beta1/params:
+  /intento/claim/v1/params:
     get:
       operationId: ClaimParams
       responses:
@@ -333,7 +333,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /intento/claim/v1beta1/total_claimable/{address}:
+  /intento/claim/v1/total_claimable/{address}:
     get:
       operationId: TotalClaimable
       responses:
@@ -382,7 +382,7 @@ paths:
           type: string
       tags:
         - Query
-  /intento/intent/v1beta1/address-to-ica:
+  /intento/intent/v1/address-to-ica:
     get:
       summary: >-
         QueryInterchainAccountFromAddress returns the interchain account for
@@ -605,7 +605,7 @@ paths:
           type: string
       tags:
         - Query
-  /intento/intent/v1beta1/flow-history/{id}:
+  /intento/intent/v1/flow-history/{id}:
     get:
       summary: FlowHistory returns the flow history
       operationId: FlowHistory
@@ -627,20 +627,23 @@ paths:
                       type: string
                       format: date-time
                     exec_fee:
-                      type: object
-                      properties:
-                        denom:
-                          type: string
-                        amount:
-                          type: string
-                      description: >-
-                        Coin defines a token with a denomination and an amount.
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
 
 
-                        NOTE: The amount field is an Int which implements the
-                        custom method
+                          NOTE: The amount field is an Int which implements the
+                          custom method
 
-                        signatures required by gogoproto.
+                          signatures required by gogoproto.
                     executed:
                       type: boolean
                       title: >-
@@ -847,6 +850,12 @@ paths:
                       items:
                         type: string
                       title: will be empty when save_responses is false
+                    packet_sequences:
+                      type: array
+                      items:
+                        type: string
+                        format: uint64
+                      title: packet sequences of the flow execution on the host chain
                   title: >-
                     FlowHistoryEntry provides a the history of flow interchain
                     tx call
@@ -1127,7 +1136,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /intento/intent/v1beta1/flow/{id}:
+  /intento/intent/v1/flow/{id}:
     get:
       summary: Flow returns the auto-executing interchain account tx
       operationId: Flow
@@ -1137,7 +1146,7 @@ paths:
           schema:
             type: object
             properties:
-              flow_info:
+              flow:
                 type: object
                 properties:
                   id:
@@ -1348,36 +1357,43 @@ paths:
                     items:
                       type: string
                       format: date-time
-                  ica_config:
+                  self_hosted_ica:
                     type: object
                     properties:
                       port_id:
                         type: string
                       connection_id:
                         type: string
-                    title: config for self-hosted ICA
-                  hosted_ica_config:
+                    title: base config for ICA
+                  trustless_agent:
                     type: object
                     properties:
-                      hosted_address:
+                      agent_address:
                         type: string
-                      fee_coin_limit:
-                        type: object
-                        properties:
-                          denom:
-                            type: string
-                          amount:
-                            type: string
-                        description: >-
-                          Coin defines a token with a denomination and an
-                          amount.
+                      fee_limit:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an
+                            amount.
 
 
-                          NOTE: The amount field is an Int which implements the
-                          custom method
+                            NOTE: The amount field is an Int which implements
+                            the custom method
 
-                          signatures required by gogoproto.
-                    title: config for hosted account
+                            signatures required by gogoproto.
+                      connection_id:
+                        type: string
+                        title: optional
+                    title: >-
+                      config for a trustless agent for flow execution on host
+                      chain
                   configuration:
                     type: object
                     properties:
@@ -1639,7 +1655,7 @@ paths:
                     title: >-
                       ExecutionConditions provides execution conditions for the
                       flow
-                title: FlowInfo stores the info for the flow
+                title: Flow stores the info for the flow
             title: QueryFlowResponse the response type for the Query/FlowRequest RPC
         default:
           description: An unexpected error response.
@@ -1839,9 +1855,9 @@ paths:
           type: string
       tags:
         - Query
-  /intento/intent/v1beta1/flows:
+  /intento/intent/v1/flows:
     get:
-      summary: Flows returns the all auto-executing interchain account messages
+      summary: Flows returns the all flows
       operationId: Flows
       responses:
         '200':
@@ -1849,7 +1865,7 @@ paths:
           schema:
             type: object
             properties:
-              flow_infos:
+              flows:
                 type: array
                 items:
                   type: object
@@ -2062,36 +2078,43 @@ paths:
                       items:
                         type: string
                         format: date-time
-                    ica_config:
+                    self_hosted_ica:
                       type: object
                       properties:
                         port_id:
                           type: string
                         connection_id:
                           type: string
-                      title: config for self-hosted ICA
-                    hosted_ica_config:
+                      title: base config for ICA
+                    trustless_agent:
                       type: object
                       properties:
-                        hosted_address:
+                        agent_address:
                           type: string
-                        fee_coin_limit:
-                          type: object
-                          properties:
-                            denom:
-                              type: string
-                            amount:
-                              type: string
-                          description: >-
-                            Coin defines a token with a denomination and an
-                            amount.
+                        fee_limit:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
 
 
-                            NOTE: The amount field is an Int which implements
-                            the custom method
+                              NOTE: The amount field is an Int which implements
+                              the custom method
 
-                            signatures required by gogoproto.
-                      title: config for hosted account
+                              signatures required by gogoproto.
+                        connection_id:
+                          type: string
+                          title: optional
+                      title: >-
+                        config for a trustless agent for flow execution on host
+                        chain
                     configuration:
                       type: object
                       properties:
@@ -2356,7 +2379,7 @@ paths:
                       title: >-
                         ExecutionConditions provides execution conditions for
                         the flow
-                  title: FlowInfo stores the info for the flow
+                  title: Flow stores the info for the flow
               pagination:
                 description: Pagination defines the pagination in the response.
                 type: object
@@ -2629,11 +2652,9 @@ paths:
           type: boolean
       tags:
         - Query
-  /intento/intent/v1beta1/flows-for-owner/{owner}:
+  /intento/intent/v1/flows/{owner}:
     get:
-      summary: |-
-        FlowsForOwner returns the auto-executing interchain account messages for
-        given owner
+      summary: FlowsForOwner returns all flows for a given owner
       operationId: FlowsForOwner
       responses:
         '200':
@@ -2641,7 +2662,7 @@ paths:
           schema:
             type: object
             properties:
-              flow_infos:
+              flows:
                 type: array
                 items:
                   type: object
@@ -2854,36 +2875,43 @@ paths:
                       items:
                         type: string
                         format: date-time
-                    ica_config:
+                    self_hosted_ica:
                       type: object
                       properties:
                         port_id:
                           type: string
                         connection_id:
                           type: string
-                      title: config for self-hosted ICA
-                    hosted_ica_config:
+                      title: base config for ICA
+                    trustless_agent:
                       type: object
                       properties:
-                        hosted_address:
+                        agent_address:
                           type: string
-                        fee_coin_limit:
-                          type: object
-                          properties:
-                            denom:
-                              type: string
-                            amount:
-                              type: string
-                          description: >-
-                            Coin defines a token with a denomination and an
-                            amount.
+                        fee_limit:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
 
 
-                            NOTE: The amount field is an Int which implements
-                            the custom method
+                              NOTE: The amount field is an Int which implements
+                              the custom method
 
-                            signatures required by gogoproto.
-                      title: config for hosted account
+                              signatures required by gogoproto.
+                        connection_id:
+                          type: string
+                          title: optional
+                      title: >-
+                        config for a trustless agent for flow execution on host
+                        chain
                     configuration:
                       type: object
                       properties:
@@ -3148,7 +3176,7 @@ paths:
                       title: >-
                         ExecutionConditions provides execution conditions for
                         the flow
-                  title: FlowInfo stores the info for the flow
+                  title: Flow stores the info for the flow
               pagination:
                 description: Pagination defines the pagination in the response.
                 type: object
@@ -3425,904 +3453,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /intento/intent/v1beta1/hosted-account/{address}:
-    get:
-      operationId: HostedAccount
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              hosted_account:
-                title: HostedAccount
-                type: object
-                properties:
-                  hosted_address:
-                    type: string
-                  ica_config:
-                    type: object
-                    properties:
-                      port_id:
-                        type: string
-                      connection_id:
-                        type: string
-                    title: config for self-hosted ICA
-                  host_fee_config:
-                    type: object
-                    properties:
-                      admin:
-                        type: string
-                      fee_coins_suported:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            denom:
-                              type: string
-                            amount:
-                              type: string
-                          description: >-
-                            Coin defines a token with a denomination and an
-                            amount.
-
-
-                            NOTE: The amount field is an Int which implements
-                            the custom method
-
-                            signatures required by gogoproto.
-            description: >-
-              QueryHostedAccountResponse is the response type for the
-              Query/HostedAccount
-
-              RPC method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
-                  additionalProperties: {}
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := anypb.New(foo)
-                         if err != nil {
-                           ...
-                         }
-                         ...
-                         foo := &pb.Foo{}
-                         if err := any.UnmarshalTo(foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
-      parameters:
-        - name: address
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /intento/intent/v1beta1/hosted-accounts:
-    get:
-      operationId: HostedAccounts
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              hosted_accounts:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    hosted_address:
-                      type: string
-                    ica_config:
-                      type: object
-                      properties:
-                        port_id:
-                          type: string
-                        connection_id:
-                          type: string
-                      title: config for self-hosted ICA
-                    host_fee_config:
-                      type: object
-                      properties:
-                        admin:
-                          type: string
-                        fee_coins_suported:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              denom:
-                                type: string
-                              amount:
-                                type: string
-                            description: >-
-                              Coin defines a token with a denomination and an
-                              amount.
-
-
-                              NOTE: The amount field is an Int which implements
-                              the custom method
-
-                              signatures required by gogoproto.
-                title: HostedAccounts
-              pagination:
-                description: Pagination defines the pagination in the response.
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    description: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-            description: >-
-              QueryHostedAccountsResponse is the response type for the
-              Query/HostedAccount
-
-              RPC method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
-                  additionalProperties: {}
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := anypb.New(foo)
-                         if err != nil {
-                           ...
-                         }
-                         ...
-                         foo := &pb.Foo{}
-                         if err := any.UnmarshalTo(foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  /intento/intent/v1beta1/hosted-accounts/{admin}:
-    get:
-      operationId: HostedAccountsByAdmin
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              hosted_accounts:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    hosted_address:
-                      type: string
-                    ica_config:
-                      type: object
-                      properties:
-                        port_id:
-                          type: string
-                        connection_id:
-                          type: string
-                      title: config for self-hosted ICA
-                    host_fee_config:
-                      type: object
-                      properties:
-                        admin:
-                          type: string
-                        fee_coins_suported:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              denom:
-                                type: string
-                              amount:
-                                type: string
-                            description: >-
-                              Coin defines a token with a denomination and an
-                              amount.
-
-
-                              NOTE: The amount field is an Int which implements
-                              the custom method
-
-                              signatures required by gogoproto.
-                title: HostedAccounts
-              pagination:
-                description: Pagination defines the pagination in the response.
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    description: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-            description: >-
-              QueryHostedAccountResponse is the response type for the
-              Query/HostedAccount
-
-              RPC method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                      description: >-
-                        A URL/resource name that uniquely identifies the type of
-                        the serialized
-
-                        protocol buffer message. This string must contain at
-                        least
-
-                        one "/" character. The last segment of the URL's path
-                        must represent
-
-                        the fully qualified name of the type (as in
-
-                        `path/google.protobuf.Duration`). The name should be in
-                        a canonical form
-
-                        (e.g., leading "." is not accepted).
-
-
-                        In practice, teams usually precompile into the binary
-                        all types that they
-
-                        expect it to use in the context of Any. However, for
-                        URLs which use the
-
-                        scheme `http`, `https`, or no scheme, one can optionally
-                        set up a type
-
-                        server that maps type URLs to message definitions as
-                        follows:
-
-
-                        * If no scheme is provided, `https` is assumed.
-
-                        * An HTTP GET on the URL must yield a
-                        [google.protobuf.Type][]
-                          value in binary format, or produce an error.
-                        * Applications are allowed to cache lookup results based
-                        on the
-                          URL, or have them precompiled into a binary to avoid any
-                          lookup. Therefore, binary compatibility needs to be preserved
-                          on changes to types. (Use versioned type names to manage
-                          breaking changes.)
-
-                        Note: this functionality is not currently available in
-                        the official
-
-                        protobuf release, and it is not used for type URLs
-                        beginning with
-
-                        type.googleapis.com. As of May 2023, there are no widely
-                        used type server
-
-                        implementations and no plans to implement one.
-
-
-                        Schemes other than `http`, `https` (or the empty scheme)
-                        might be
-
-                        used with implementation specific semantics.
-                  additionalProperties: {}
-                  description: >-
-                    `Any` contains an arbitrary serialized protocol buffer
-                    message along with a
-
-                    URL that describes the type of the serialized message.
-
-
-                    Protobuf library provides support to pack/unpack Any values
-                    in the form
-
-                    of utility functions or additional generated methods of the
-                    Any type.
-
-
-                    Example 1: Pack and unpack a message in C++.
-
-                        Foo foo = ...;
-                        Any any;
-                        any.PackFrom(foo);
-                        ...
-                        if (any.UnpackTo(&foo)) {
-                          ...
-                        }
-
-                    Example 2: Pack and unpack a message in Java.
-
-                        Foo foo = ...;
-                        Any any = Any.pack(foo);
-                        ...
-                        if (any.is(Foo.class)) {
-                          foo = any.unpack(Foo.class);
-                        }
-                        // or ...
-                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                          foo = any.unpack(Foo.getDefaultInstance());
-                        }
-
-                     Example 3: Pack and unpack a message in Python.
-
-                        foo = Foo(...)
-                        any = Any()
-                        any.Pack(foo)
-                        ...
-                        if any.Is(Foo.DESCRIPTOR):
-                          any.Unpack(foo)
-                          ...
-
-                     Example 4: Pack and unpack a message in Go
-
-                         foo := &pb.Foo{...}
-                         any, err := anypb.New(foo)
-                         if err != nil {
-                           ...
-                         }
-                         ...
-                         foo := &pb.Foo{}
-                         if err := any.UnmarshalTo(foo); err != nil {
-                           ...
-                         }
-
-                    The pack methods provided by protobuf library will by
-                    default use
-
-                    'type.googleapis.com/full.type.name' as the type URL and the
-                    unpack
-
-                    methods only use the fully qualified type name after the
-                    last '/'
-
-                    in the type URL, for example "foo.bar.com/x/y.z" will yield
-                    type
-
-                    name "y.z".
-
-
-                    JSON
-
-                    ====
-
-                    The JSON representation of an `Any` value uses the regular
-
-                    representation of the deserialized, embedded message, with
-                    an
-
-                    additional field `@type` which contains the type URL.
-                    Example:
-
-                        package google.profile;
-                        message Person {
-                          string first_name = 1;
-                          string last_name = 2;
-                        }
-
-                        {
-                          "@type": "type.googleapis.com/google.profile.Person",
-                          "firstName": <string>,
-                          "lastName": <string>
-                        }
-
-                    If the embedded message type is well-known and has a custom
-                    JSON
-
-                    representation, that representation will be embedded adding
-                    a field
-
-                    `value` which holds the custom JSON in addition to the
-                    `@type`
-
-                    field. Example (for message [google.protobuf.Duration][]):
-
-                        {
-                          "@type": "type.googleapis.com/google.protobuf.Duration",
-                          "value": "1.212s"
-                        }
-      parameters:
-        - name: admin
-          in: path
-          required: true
-          type: string
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  /intento/intent/v1beta1/params:
+  /intento/intent/v1/params:
     get:
       summary: Params returns the total set of Intent parameters.
       operationId: IntentParams
@@ -4340,14 +3471,15 @@ paths:
                     type: string
                     format: int64
                     title: >-
-                      Commision rate to retun remaining funds in flow fee
-                      account after final execution, e.g. 100 = 1X, 250 = 250
+                      Commision rate percentage for returning remaining funds in
+                      flow fee account after final execution, e.g. 100 = 1X, 250
+                      = 250
                   flow_flex_fee_mul:
                     type: string
                     format: int64
                     title: >-
-                      Multiplier to the flexible flow gas fee, e.g. 100 = 1X,
-                      250 = 250
+                      Multiplier to the flexible flow gas fee in promille, e.g.
+                      1000 = 1X, 2500 = 2,5x
                   burn_fee_per_msg:
                     type: string
                     format: int64
@@ -4374,13 +3506,13 @@ paths:
                       with an amount
                   max_flow_duration:
                     type: string
-                    title: Maximum period for self-executing Flow
+                    title: Maximum period for a flow
                   min_flow_duration:
                     type: string
-                    title: Minimum period for self-executing Flow
+                    title: Minimum period for a flow
                   min_flow_interval:
                     type: string
-                    title: Minimum period for self-executing Flow
+                    title: Minimum period for a flow
                   relayer_rewards:
                     type: array
                     items:
@@ -4588,6 +3720,910 @@ paths:
                         }
       tags:
         - Query
+  /intento/intent/v1/trustless-agent/{agent_address}:
+    get:
+      summary: >-
+        TrustlessAgent returns the trustless agent information for a given
+        hosted address
+      operationId: TrustlessAgent
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              trustless_agent:
+                title: TrustlessAgent
+                type: object
+                properties:
+                  agent_address:
+                    type: string
+                  ica_config:
+                    type: object
+                    properties:
+                      port_id:
+                        type: string
+                      connection_id:
+                        type: string
+                    title: base config for ICA
+                  fee_config:
+                    type: object
+                    properties:
+                      fee_admin:
+                        type: string
+                      fee_coins_supported:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            denom:
+                              type: string
+                            amount:
+                              type: string
+                          description: >-
+                            Coin defines a token with a denomination and an
+                            amount.
+
+
+                            NOTE: The amount field is an Int which implements
+                            the custom method
+
+                            signatures required by gogoproto.
+            description: >-
+              QueryTrustlessAgentResponse is the response type for the
+              Query/TrustlessAgent
+
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: agent_address
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /intento/intent/v1/trustless-agents:
+    get:
+      summary: TrustlessAgents returns all trustless agents
+      operationId: TrustlessAgents
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              trustless_agents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    agent_address:
+                      type: string
+                    ica_config:
+                      type: object
+                      properties:
+                        port_id:
+                          type: string
+                        connection_id:
+                          type: string
+                      title: base config for ICA
+                    fee_config:
+                      type: object
+                      properties:
+                        fee_admin:
+                          type: string
+                        fee_coins_supported:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements
+                              the custom method
+
+                              signatures required by gogoproto.
+                title: TrustlessAgents
+              pagination:
+                description: Pagination defines the pagination in the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryTrustlessAgentsResponse is the response type for the
+              Query/TrustlessAgent
+
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /intento/intent/v1/trustless-agents/{fee_admin}:
+    get:
+      summary: >-
+        TrustlessAgentsByFeeAdmin returns all trustless agents for a given fee
+        admin address
+      operationId: TrustlessAgentsByFeeAdmin
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              trustless_agents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    agent_address:
+                      type: string
+                    ica_config:
+                      type: object
+                      properties:
+                        port_id:
+                          type: string
+                        connection_id:
+                          type: string
+                      title: base config for ICA
+                    fee_config:
+                      type: object
+                      properties:
+                        fee_admin:
+                          type: string
+                        fee_coins_supported:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              denom:
+                                type: string
+                              amount:
+                                type: string
+                            description: >-
+                              Coin defines a token with a denomination and an
+                              amount.
+
+
+                              NOTE: The amount field is an Int which implements
+                              the custom method
+
+                              signatures required by gogoproto.
+                title: TrustlessAgents
+              pagination:
+                description: Pagination defines the pagination in the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryTrustlessAgentResponse is the response type for the
+              Query/TrustlessAgent
+
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: fee_admin
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
   /intento/interchainquery/pending_queries:
     get:
       operationId: PendingQueries
@@ -4657,7 +4693,7 @@ paths:
                   additionalProperties: {}
       tags:
         - QueryService
-  /mint/v1beta1/annual_provisions:
+  /mint/v1/annual_provisions:
     get:
       summary: AnnualProvisions current minting annual provision value.
       operationId: AnnualProvisions
@@ -4696,7 +4732,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /mint/v1beta1/params:
+  /mint/v1/params:
     get:
       summary: Params returns the total set of minting parameters.
       operationId: MintParams
@@ -5098,7 +5134,7 @@ definitions:
                   "@type": "type.googleapis.com/google.protobuf.Duration",
                   "value": "1.212s"
                 }
-  intento.alloc.v1beta1.DistributionProportions:
+  intento.alloc.v1.DistributionProportions:
     type: object
     properties:
       developer_rewards:
@@ -5108,7 +5144,7 @@ definitions:
       relayer_incentives:
         type: string
     description: DistributionProportions defines the proportion that each bucket  receives.
-  intento.alloc.v1beta1.Params:
+  intento.alloc.v1.Params:
     type: object
     properties:
       distribution_proportions:
@@ -5155,7 +5191,7 @@ definitions:
 
           newly minted coins.
     description: Params defines the parameters for the alloc module.
-  intento.alloc.v1beta1.QueryParamsResponse:
+  intento.alloc.v1.QueryParamsResponse:
     type: object
     properties:
       params:
@@ -5211,7 +5247,7 @@ definitions:
 
               newly minted coins.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  intento.alloc.v1beta1.WeightedAddress:
+  intento.alloc.v1.WeightedAddress:
     type: object
     properties:
       address:
@@ -5219,7 +5255,7 @@ definitions:
       weight:
         type: string
     description: WeightedAddress defines an address with a weight.
-  intento.claim.v1beta1.Action:
+  intento.claim.v1.Action:
     type: string
     enum:
       - ACTION_ACTION_LOCAL
@@ -5227,7 +5263,7 @@ definitions:
       - ACTION_GOVERNANCE_VOTE
       - ACTION_DELEGATE_STAKE
     default: ACTION_ACTION_LOCAL
-  intento.claim.v1beta1.ClaimRecord:
+  intento.claim.v1.ClaimRecord:
     type: object
     properties:
       address:
@@ -5271,7 +5307,7 @@ definitions:
           title: Status contains for an action if it is completed and claimed
         title: 'index of status array refers to action enum #'
     title: A Claim Records is the metadata of claim data per address
-  intento.claim.v1beta1.Params:
+  intento.claim.v1.Params:
     type: object
     properties:
       airdrop_start_time:
@@ -5289,7 +5325,7 @@ definitions:
         items:
           type: string
     description: Params defines the claim module's parameters.
-  intento.claim.v1beta1.QueryClaimRecordResponse:
+  intento.claim.v1.QueryClaimRecordResponse:
     type: object
     properties:
       claim_record:
@@ -5339,7 +5375,7 @@ definitions:
               title: Status contains for an action if it is completed and claimed
             title: 'index of status array refers to action enum #'
         title: A Claim Records is the metadata of claim data per address
-  intento.claim.v1beta1.QueryClaimableForActionResponse:
+  intento.claim.v1.QueryClaimableForActionResponse:
     type: object
     properties:
       total:
@@ -5354,7 +5390,7 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-  intento.claim.v1beta1.QueryModuleAccountBalanceResponse:
+  intento.claim.v1.QueryModuleAccountBalanceResponse:
     type: object
     properties:
       moduleAccountBalance:
@@ -5373,7 +5409,7 @@ definitions:
             signatures required by gogoproto.
         description: params defines the parameters of the module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  intento.claim.v1beta1.QueryParamsResponse:
+  intento.claim.v1.QueryParamsResponse:
     type: object
     properties:
       params:
@@ -5395,7 +5431,7 @@ definitions:
             items:
               type: string
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
-  intento.claim.v1beta1.QueryTotalClaimableResponse:
+  intento.claim.v1.QueryTotalClaimableResponse:
     type: object
     properties:
       total:
@@ -5410,7 +5446,7 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-  intento.claim.v1beta1.Status:
+  intento.claim.v1.Status:
     type: object
     properties:
       action_completed:
@@ -5508,7 +5544,7 @@ definitions:
                repeated Bar results = 1;
                PageResponse page = 2;
        }
-  intento.intent.v1beta1.Comparison:
+  intento.intent.v1.Comparison:
     type: object
     properties:
       flow_id:
@@ -5594,7 +5630,7 @@ definitions:
     title: |-
       Comparison is checked on the response in JSON before execution of
       flow and outputs true or false
-  intento.intent.v1beta1.ComparisonOperator:
+  intento.intent.v1.ComparisonOperator:
     type: string
     enum:
       - EQUAL
@@ -5621,7 +5657,7 @@ definitions:
        - STARTS_WITH: Starts with check (for strings)
        - ENDS_WITH: Ends with check (for strings)
        - NOT_EQUAL: Not equal check (for all types)
-  intento.intent.v1beta1.ExecutionConditions:
+  intento.intent.v1.ExecutionConditions:
     type: object
     properties:
       feedback_loops:
@@ -5832,7 +5868,7 @@ definitions:
           True: Use AND for combining comparisons. False: Use OR for combining
           comparisons.
     title: ExecutionConditions provides execution conditions for the flow
-  intento.intent.v1beta1.ExecutionConfiguration:
+  intento.intent.v1.ExecutionConfiguration:
     type: object
     properties:
       save_responses:
@@ -5866,7 +5902,7 @@ definitions:
     title: |-
       ExecutionConfiguration provides the execution-related configuration of the
       flow
-  intento.intent.v1beta1.FeedbackLoop:
+  intento.intent.v1.FeedbackLoop:
     type: object
     properties:
       flow_id:
@@ -5930,216 +5966,7 @@ definitions:
     title: |-
       Replace value with value from message or response from another flow’s
       latest output before execution
-  intento.intent.v1beta1.FlowHistoryEntry:
-    type: object
-    properties:
-      scheduled_exec_time:
-        type: string
-        format: date-time
-      actual_exec_time:
-        type: string
-        format: date-time
-      exec_fee:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-      executed:
-        type: boolean
-        title: whether all messages are executed, independent of succesfull result
-      timed_out:
-        type: boolean
-        title: timed out from execution over IBC
-      errors:
-        type: array
-        items:
-          type: string
-        title: |-
-          errors from execution, if executed and no error the execution was
-          succesfull
-      msg_responses:
-        type: array
-        items:
-          type: object
-          properties:
-            '@type':
-              type: string
-              description: >-
-                A URL/resource name that uniquely identifies the type of the
-                serialized
-
-                protocol buffer message. This string must contain at least
-
-                one "/" character. The last segment of the URL's path must
-                represent
-
-                the fully qualified name of the type (as in
-
-                `path/google.protobuf.Duration`). The name should be in a
-                canonical form
-
-                (e.g., leading "." is not accepted).
-
-
-                In practice, teams usually precompile into the binary all types
-                that they
-
-                expect it to use in the context of Any. However, for URLs which
-                use the
-
-                scheme `http`, `https`, or no scheme, one can optionally set up
-                a type
-
-                server that maps type URLs to message definitions as follows:
-
-
-                * If no scheme is provided, `https` is assumed.
-
-                * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                  value in binary format, or produce an error.
-                * Applications are allowed to cache lookup results based on the
-                  URL, or have them precompiled into a binary to avoid any
-                  lookup. Therefore, binary compatibility needs to be preserved
-                  on changes to types. (Use versioned type names to manage
-                  breaking changes.)
-
-                Note: this functionality is not currently available in the
-                official
-
-                protobuf release, and it is not used for type URLs beginning
-                with
-
-                type.googleapis.com. As of May 2023, there are no widely used
-                type server
-
-                implementations and no plans to implement one.
-
-
-                Schemes other than `http`, `https` (or the empty scheme) might
-                be
-
-                used with implementation specific semantics.
-          additionalProperties: {}
-          description: >-
-            `Any` contains an arbitrary serialized protocol buffer message along
-            with a
-
-            URL that describes the type of the serialized message.
-
-
-            Protobuf library provides support to pack/unpack Any values in the
-            form
-
-            of utility functions or additional generated methods of the Any
-            type.
-
-
-            Example 1: Pack and unpack a message in C++.
-
-                Foo foo = ...;
-                Any any;
-                any.PackFrom(foo);
-                ...
-                if (any.UnpackTo(&foo)) {
-                  ...
-                }
-
-            Example 2: Pack and unpack a message in Java.
-
-                Foo foo = ...;
-                Any any = Any.pack(foo);
-                ...
-                if (any.is(Foo.class)) {
-                  foo = any.unpack(Foo.class);
-                }
-                // or ...
-                if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                  foo = any.unpack(Foo.getDefaultInstance());
-                }
-
-             Example 3: Pack and unpack a message in Python.
-
-                foo = Foo(...)
-                any = Any()
-                any.Pack(foo)
-                ...
-                if any.Is(Foo.DESCRIPTOR):
-                  any.Unpack(foo)
-                  ...
-
-             Example 4: Pack and unpack a message in Go
-
-                 foo := &pb.Foo{...}
-                 any, err := anypb.New(foo)
-                 if err != nil {
-                   ...
-                 }
-                 ...
-                 foo := &pb.Foo{}
-                 if err := any.UnmarshalTo(foo); err != nil {
-                   ...
-                 }
-
-            The pack methods provided by protobuf library will by default use
-
-            'type.googleapis.com/full.type.name' as the type URL and the unpack
-
-            methods only use the fully qualified type name after the last '/'
-
-            in the type URL, for example "foo.bar.com/x/y.z" will yield type
-
-            name "y.z".
-
-
-            JSON
-
-            ====
-
-            The JSON representation of an `Any` value uses the regular
-
-            representation of the deserialized, embedded message, with an
-
-            additional field `@type` which contains the type URL. Example:
-
-                package google.profile;
-                message Person {
-                  string first_name = 1;
-                  string last_name = 2;
-                }
-
-                {
-                  "@type": "type.googleapis.com/google.profile.Person",
-                  "firstName": <string>,
-                  "lastName": <string>
-                }
-
-            If the embedded message type is well-known and has a custom JSON
-
-            representation, that representation will be embedded adding a field
-
-            `value` which holds the custom JSON in addition to the `@type`
-
-            field. Example (for message [google.protobuf.Duration][]):
-
-                {
-                  "@type": "type.googleapis.com/google.protobuf.Duration",
-                  "value": "1.212s"
-                }
-        title: will be empty when save_responses is false
-      query_responses:
-        type: array
-        items:
-          type: string
-        title: will be empty when save_responses is false
-    title: FlowHistoryEntry provides a the history of flow interchain tx call
-  intento.intent.v1beta1.FlowInfo:
+  intento.intent.v1.Flow:
     type: object
     properties:
       id:
@@ -6335,35 +6162,40 @@ definitions:
         items:
           type: string
           format: date-time
-      ica_config:
+      self_hosted_ica:
         type: object
         properties:
           port_id:
             type: string
           connection_id:
             type: string
-        title: config for self-hosted ICA
-      hosted_ica_config:
+        title: base config for ICA
+      trustless_agent:
         type: object
         properties:
-          hosted_address:
+          agent_address:
             type: string
-          fee_coin_limit:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
+          fee_limit:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
 
 
-              NOTE: The amount field is an Int which implements the custom
-              method
+                NOTE: The amount field is an Int which implements the custom
+                method
 
-              signatures required by gogoproto.
-        title: config for hosted account
+                signatures required by gogoproto.
+          connection_id:
+            type: string
+            title: optional
+        title: config for a trustless agent for flow execution on host chain
       configuration:
         type: object
         properties:
@@ -6618,13 +6450,17 @@ definitions:
               True: Use AND for combining comparisons. False: Use OR for
               combining comparisons.
         title: ExecutionConditions provides execution conditions for the flow
-    title: FlowInfo stores the info for the flow
-  intento.intent.v1beta1.HostFeeConfig:
+    title: Flow stores the info for the flow
+  intento.intent.v1.FlowHistoryEntry:
     type: object
     properties:
-      admin:
+      scheduled_exec_time:
         type: string
-      fee_coins_suported:
+        format: date-time
+      actual_exec_time:
+        type: string
+        format: date-time
+      exec_fee:
         type: array
         items:
           type: object
@@ -6638,68 +6474,209 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-  intento.intent.v1beta1.HostedAccount:
-    type: object
-    properties:
-      hosted_address:
-        type: string
-      ica_config:
-        type: object
-        properties:
-          port_id:
-            type: string
-          connection_id:
-            type: string
-        title: config for self-hosted ICA
-      host_fee_config:
-        type: object
-        properties:
-          admin:
-            type: string
-          fee_coins_suported:
-            type: array
-            items:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
+      executed:
+        type: boolean
+        title: whether all messages are executed, independent of succesfull result
+      timed_out:
+        type: boolean
+        title: timed out from execution over IBC
+      errors:
+        type: array
+        items:
+          type: string
+        title: |-
+          errors from execution, if executed and no error the execution was
+          succesfull
+      msg_responses:
+        type: array
+        items:
+          type: object
+          properties:
+            '@type':
+              type: string
               description: >-
-                Coin defines a token with a denomination and an amount.
+                A URL/resource name that uniquely identifies the type of the
+                serialized
+
+                protocol buffer message. This string must contain at least
+
+                one "/" character. The last segment of the URL's path must
+                represent
+
+                the fully qualified name of the type (as in
+
+                `path/google.protobuf.Duration`). The name should be in a
+                canonical form
+
+                (e.g., leading "." is not accepted).
 
 
-                NOTE: The amount field is an Int which implements the custom
-                method
+                In practice, teams usually precompile into the binary all types
+                that they
 
-                signatures required by gogoproto.
-  intento.intent.v1beta1.HostedICAConfig:
-    type: object
-    properties:
-      hosted_address:
-        type: string
-      fee_coin_limit:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
+                expect it to use in the context of Any. However, for URLs which
+                use the
 
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-    title: config for hosted account
-  intento.intent.v1beta1.ICAConfig:
+                scheme `http`, `https`, or no scheme, one can optionally set up
+                a type
+
+                server that maps type URLs to message definitions as follows:
+
+
+                * If no scheme is provided, `https` is assumed.
+
+                * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                  value in binary format, or produce an error.
+                * Applications are allowed to cache lookup results based on the
+                  URL, or have them precompiled into a binary to avoid any
+                  lookup. Therefore, binary compatibility needs to be preserved
+                  on changes to types. (Use versioned type names to manage
+                  breaking changes.)
+
+                Note: this functionality is not currently available in the
+                official
+
+                protobuf release, and it is not used for type URLs beginning
+                with
+
+                type.googleapis.com. As of May 2023, there are no widely used
+                type server
+
+                implementations and no plans to implement one.
+
+
+                Schemes other than `http`, `https` (or the empty scheme) might
+                be
+
+                used with implementation specific semantics.
+          additionalProperties: {}
+          description: >-
+            `Any` contains an arbitrary serialized protocol buffer message along
+            with a
+
+            URL that describes the type of the serialized message.
+
+
+            Protobuf library provides support to pack/unpack Any values in the
+            form
+
+            of utility functions or additional generated methods of the Any
+            type.
+
+
+            Example 1: Pack and unpack a message in C++.
+
+                Foo foo = ...;
+                Any any;
+                any.PackFrom(foo);
+                ...
+                if (any.UnpackTo(&foo)) {
+                  ...
+                }
+
+            Example 2: Pack and unpack a message in Java.
+
+                Foo foo = ...;
+                Any any = Any.pack(foo);
+                ...
+                if (any.is(Foo.class)) {
+                  foo = any.unpack(Foo.class);
+                }
+                // or ...
+                if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                  foo = any.unpack(Foo.getDefaultInstance());
+                }
+
+             Example 3: Pack and unpack a message in Python.
+
+                foo = Foo(...)
+                any = Any()
+                any.Pack(foo)
+                ...
+                if any.Is(Foo.DESCRIPTOR):
+                  any.Unpack(foo)
+                  ...
+
+             Example 4: Pack and unpack a message in Go
+
+                 foo := &pb.Foo{...}
+                 any, err := anypb.New(foo)
+                 if err != nil {
+                   ...
+                 }
+                 ...
+                 foo := &pb.Foo{}
+                 if err := any.UnmarshalTo(foo); err != nil {
+                   ...
+                 }
+
+            The pack methods provided by protobuf library will by default use
+
+            'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+            methods only use the fully qualified type name after the last '/'
+
+            in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+            name "y.z".
+
+
+            JSON
+
+            ====
+
+            The JSON representation of an `Any` value uses the regular
+
+            representation of the deserialized, embedded message, with an
+
+            additional field `@type` which contains the type URL. Example:
+
+                package google.profile;
+                message Person {
+                  string first_name = 1;
+                  string last_name = 2;
+                }
+
+                {
+                  "@type": "type.googleapis.com/google.profile.Person",
+                  "firstName": <string>,
+                  "lastName": <string>
+                }
+
+            If the embedded message type is well-known and has a custom JSON
+
+            representation, that representation will be embedded adding a field
+
+            `value` which holds the custom JSON in addition to the `@type`
+
+            field. Example (for message [google.protobuf.Duration][]):
+
+                {
+                  "@type": "type.googleapis.com/google.protobuf.Duration",
+                  "value": "1.212s"
+                }
+        title: will be empty when save_responses is false
+      query_responses:
+        type: array
+        items:
+          type: string
+        title: will be empty when save_responses is false
+      packet_sequences:
+        type: array
+        items:
+          type: string
+          format: uint64
+        title: packet sequences of the flow execution on the host chain
+    title: FlowHistoryEntry provides a the history of flow interchain tx call
+  intento.intent.v1.ICAConfig:
     type: object
     properties:
       port_id:
         type: string
       connection_id:
         type: string
-    title: config for self-hosted ICA
-  intento.intent.v1beta1.ICQConfig:
+    title: base config for ICA
+  intento.intent.v1.ICQConfig:
     type: object
     properties:
       connection_id:
@@ -6728,19 +6705,21 @@ definitions:
         format: byte
         title: should be reset after execution
     title: config for using interchain queries
-  intento.intent.v1beta1.Params:
+  intento.intent.v1.Params:
     type: object
     properties:
       flow_funds_commission:
         type: string
         format: int64
         title: >-
-          Commision rate to retun remaining funds in flow fee account after
-          final execution, e.g. 100 = 1X, 250 = 250
+          Commision rate percentage for returning remaining funds in flow fee
+          account after final execution, e.g. 100 = 1X, 250 = 250
       flow_flex_fee_mul:
         type: string
         format: int64
-        title: Multiplier to the flexible flow gas fee, e.g. 100 = 1X, 250 = 250
+        title: >-
+          Multiplier to the flexible flow gas fee in promille, e.g. 1000 = 1X,
+          2500 = 2,5x
       burn_fee_per_msg:
         type: string
         format: int64
@@ -6764,13 +6743,13 @@ definitions:
           amount
       max_flow_duration:
         type: string
-        title: Maximum period for self-executing Flow
+        title: Maximum period for a flow
       min_flow_duration:
         type: string
-        title: Minimum period for self-executing Flow
+        title: Minimum period for a flow
       min_flow_interval:
         type: string
-        title: Minimum period for self-executing Flow
+        title: Minimum period for a flow
       relayer_rewards:
         type: array
         items:
@@ -6782,7 +6761,7 @@ definitions:
           Rewards are in uinto and topped up in the module account by alloc
           module.
     description: Params defines the params for activeness of Flows on governance proposals.
-  intento.intent.v1beta1.QueryFlowHistoryResponse:
+  intento.intent.v1.QueryFlowHistoryResponse:
     type: object
     properties:
       history:
@@ -6797,20 +6776,22 @@ definitions:
               type: string
               format: date-time
             exec_fee:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
 
 
-                NOTE: The amount field is an Int which implements the custom
-                method
+                  NOTE: The amount field is an Int which implements the custom
+                  method
 
-                signatures required by gogoproto.
+                  signatures required by gogoproto.
             executed:
               type: boolean
               title: >-
@@ -7011,6 +6992,12 @@ definitions:
               items:
                 type: string
               title: will be empty when save_responses is false
+            packet_sequences:
+              type: array
+              items:
+                type: string
+                format: uint64
+              title: packet sequences of the flow execution on the host chain
           title: FlowHistoryEntry provides a the history of flow interchain tx call
       pagination:
         description: Pagination defines the pagination in the response.
@@ -7034,10 +7021,10 @@ definitions:
     title: |-
       QueryFlowHistoryResponse the response type for the
       Query/QueryFlowHistoryResponse RPC
-  intento.intent.v1beta1.QueryFlowResponse:
+  intento.intent.v1.QueryFlowResponse:
     type: object
     properties:
-      flow_info:
+      flow:
         type: object
         properties:
           id:
@@ -7240,35 +7227,40 @@ definitions:
             items:
               type: string
               format: date-time
-          ica_config:
+          self_hosted_ica:
             type: object
             properties:
               port_id:
                 type: string
               connection_id:
                 type: string
-            title: config for self-hosted ICA
-          hosted_ica_config:
+            title: base config for ICA
+          trustless_agent:
             type: object
             properties:
-              hosted_address:
+              agent_address:
                 type: string
-              fee_coin_limit:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
+              fee_limit:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
 
 
-                  NOTE: The amount field is an Int which implements the custom
-                  method
+                    NOTE: The amount field is an Int which implements the custom
+                    method
 
-                  signatures required by gogoproto.
-            title: config for hosted account
+                    signatures required by gogoproto.
+              connection_id:
+                type: string
+                title: optional
+            title: config for a trustless agent for flow execution on host chain
           configuration:
             type: object
             properties:
@@ -7523,12 +7515,12 @@ definitions:
                   True: Use AND for combining comparisons. False: Use OR for
                   combining comparisons.
             title: ExecutionConditions provides execution conditions for the flow
-        title: FlowInfo stores the info for the flow
+        title: Flow stores the info for the flow
     title: QueryFlowResponse the response type for the Query/FlowRequest RPC
-  intento.intent.v1beta1.QueryFlowsForOwnerResponse:
+  intento.intent.v1.QueryFlowsForOwnerResponse:
     type: object
     properties:
-      flow_infos:
+      flows:
         type: array
         items:
           type: object
@@ -7735,35 +7727,40 @@ definitions:
               items:
                 type: string
                 format: date-time
-            ica_config:
+            self_hosted_ica:
               type: object
               properties:
                 port_id:
                   type: string
                 connection_id:
                   type: string
-              title: config for self-hosted ICA
-            hosted_ica_config:
+              title: base config for ICA
+            trustless_agent:
               type: object
               properties:
-                hosted_address:
+                agent_address:
                   type: string
-                fee_coin_limit:
-                  type: object
-                  properties:
-                    denom:
-                      type: string
-                    amount:
-                      type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
+                fee_limit:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
 
 
-                    NOTE: The amount field is an Int which implements the custom
-                    method
+                      NOTE: The amount field is an Int which implements the
+                      custom method
 
-                    signatures required by gogoproto.
-              title: config for hosted account
+                      signatures required by gogoproto.
+                connection_id:
+                  type: string
+                  title: optional
+              title: config for a trustless agent for flow execution on host chain
             configuration:
               type: object
               properties:
@@ -8021,7 +8018,7 @@ definitions:
                     True: Use AND for combining comparisons. False: Use OR for
                     combining comparisons.
               title: ExecutionConditions provides execution conditions for the flow
-          title: FlowInfo stores the info for the flow
+          title: Flow stores the info for the flow
       pagination:
         description: Pagination defines the pagination in the response.
         type: object
@@ -8044,10 +8041,10 @@ definitions:
     title: |-
       QueryFlowsForOwnerResponse the response type for the
       Query/FlowsForOwnerRequest RPC
-  intento.intent.v1beta1.QueryFlowsResponse:
+  intento.intent.v1.QueryFlowsResponse:
     type: object
     properties:
-      flow_infos:
+      flows:
         type: array
         items:
           type: object
@@ -8254,35 +8251,40 @@ definitions:
               items:
                 type: string
                 format: date-time
-            ica_config:
+            self_hosted_ica:
               type: object
               properties:
                 port_id:
                   type: string
                 connection_id:
                   type: string
-              title: config for self-hosted ICA
-            hosted_ica_config:
+              title: base config for ICA
+            trustless_agent:
               type: object
               properties:
-                hosted_address:
+                agent_address:
                   type: string
-                fee_coin_limit:
-                  type: object
-                  properties:
-                    denom:
-                      type: string
-                    amount:
-                      type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
+                fee_limit:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
 
 
-                    NOTE: The amount field is an Int which implements the custom
-                    method
+                      NOTE: The amount field is an Int which implements the
+                      custom method
 
-                    signatures required by gogoproto.
-              title: config for hosted account
+                      signatures required by gogoproto.
+                connection_id:
+                  type: string
+                  title: optional
+              title: config for a trustless agent for flow execution on host chain
             configuration:
               type: object
               properties:
@@ -8540,7 +8542,7 @@ definitions:
                     True: Use AND for combining comparisons. False: Use OR for
                     combining comparisons.
               title: ExecutionConditions provides execution conditions for the flow
-          title: FlowInfo stores the info for the flow
+          title: Flow stores the info for the flow
       pagination:
         description: Pagination defines the pagination in the response.
         type: object
@@ -8561,181 +8563,7 @@ definitions:
 
               was set, its value is undefined otherwise
     title: QueryFlowsResponse the response type for the Query/FlowsRequest RPCπ
-  intento.intent.v1beta1.QueryHostedAccountResponse:
-    type: object
-    properties:
-      hosted_account:
-        title: HostedAccount
-        type: object
-        properties:
-          hosted_address:
-            type: string
-          ica_config:
-            type: object
-            properties:
-              port_id:
-                type: string
-              connection_id:
-                type: string
-            title: config for self-hosted ICA
-          host_fee_config:
-            type: object
-            properties:
-              admin:
-                type: string
-              fee_coins_suported:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    denom:
-                      type: string
-                    amount:
-                      type: string
-                  description: >-
-                    Coin defines a token with a denomination and an amount.
-
-
-                    NOTE: The amount field is an Int which implements the custom
-                    method
-
-                    signatures required by gogoproto.
-    description: >-
-      QueryHostedAccountResponse is the response type for the
-      Query/HostedAccount
-
-      RPC method.
-  intento.intent.v1beta1.QueryHostedAccountsByAdminResponse:
-    type: object
-    properties:
-      hosted_accounts:
-        type: array
-        items:
-          type: object
-          properties:
-            hosted_address:
-              type: string
-            ica_config:
-              type: object
-              properties:
-                port_id:
-                  type: string
-                connection_id:
-                  type: string
-              title: config for self-hosted ICA
-            host_fee_config:
-              type: object
-              properties:
-                admin:
-                  type: string
-                fee_coins_suported:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      denom:
-                        type: string
-                      amount:
-                        type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
-        title: HostedAccounts
-      pagination:
-        description: Pagination defines the pagination in the response.
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            description: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently. It will be empty if
-              there are no more results.
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-    description: >-
-      QueryHostedAccountResponse is the response type for the
-      Query/HostedAccount
-
-      RPC method.
-  intento.intent.v1beta1.QueryHostedAccountsResponse:
-    type: object
-    properties:
-      hosted_accounts:
-        type: array
-        items:
-          type: object
-          properties:
-            hosted_address:
-              type: string
-            ica_config:
-              type: object
-              properties:
-                port_id:
-                  type: string
-                connection_id:
-                  type: string
-              title: config for self-hosted ICA
-            host_fee_config:
-              type: object
-              properties:
-                admin:
-                  type: string
-                fee_coins_suported:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      denom:
-                        type: string
-                      amount:
-                        type: string
-                    description: >-
-                      Coin defines a token with a denomination and an amount.
-
-
-                      NOTE: The amount field is an Int which implements the
-                      custom method
-
-                      signatures required by gogoproto.
-        title: HostedAccounts
-      pagination:
-        description: Pagination defines the pagination in the response.
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            description: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently. It will be empty if
-              there are no more results.
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-    description: >-
-      QueryHostedAccountsResponse is the response type for the
-      Query/HostedAccount
-
-      RPC method.
-  intento.intent.v1beta1.QueryInterchainAccountFromAddressResponse:
+  intento.intent.v1.QueryInterchainAccountFromAddressResponse:
     type: object
     properties:
       interchain_account_address:
@@ -8743,7 +8571,7 @@ definitions:
     title: |-
       QueryInterchainAccountFromAddressResponse the response type for the
       Query/InterchainAccountAddress RPC
-  intento.intent.v1beta1.QueryParamsResponse:
+  intento.intent.v1.QueryParamsResponse:
     type: object
     properties:
       params:
@@ -8754,12 +8582,14 @@ definitions:
             type: string
             format: int64
             title: >-
-              Commision rate to retun remaining funds in flow fee account after
-              final execution, e.g. 100 = 1X, 250 = 250
+              Commision rate percentage for returning remaining funds in flow
+              fee account after final execution, e.g. 100 = 1X, 250 = 250
           flow_flex_fee_mul:
             type: string
             format: int64
-            title: Multiplier to the flexible flow gas fee, e.g. 100 = 1X, 250 = 250
+            title: >-
+              Multiplier to the flexible flow gas fee in promille, e.g. 1000 =
+              1X, 2500 = 2,5x
           burn_fee_per_msg:
             type: string
             format: int64
@@ -8786,13 +8616,13 @@ definitions:
               amount
           max_flow_duration:
             type: string
-            title: Maximum period for self-executing Flow
+            title: Maximum period for a flow
           min_flow_duration:
             type: string
-            title: Minimum period for self-executing Flow
+            title: Minimum period for a flow
           min_flow_interval:
             type: string
-            title: Minimum period for self-executing Flow
+            title: Minimum period for a flow
           relayer_rewards:
             type: array
             items:
@@ -8805,6 +8635,257 @@ definitions:
               Rewards are in uinto and topped up in the module account by alloc
               module.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  intento.intent.v1.QueryTrustlessAgentResponse:
+    type: object
+    properties:
+      trustless_agent:
+        title: TrustlessAgent
+        type: object
+        properties:
+          agent_address:
+            type: string
+          ica_config:
+            type: object
+            properties:
+              port_id:
+                type: string
+              connection_id:
+                type: string
+            title: base config for ICA
+          fee_config:
+            type: object
+            properties:
+              fee_admin:
+                type: string
+              fee_coins_supported:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+    description: >-
+      QueryTrustlessAgentResponse is the response type for the
+      Query/TrustlessAgent
+
+      RPC method.
+  intento.intent.v1.QueryTrustlessAgentsByFeeAdminResponse:
+    type: object
+    properties:
+      trustless_agents:
+        type: array
+        items:
+          type: object
+          properties:
+            agent_address:
+              type: string
+            ica_config:
+              type: object
+              properties:
+                port_id:
+                  type: string
+                connection_id:
+                  type: string
+              title: base config for ICA
+            fee_config:
+              type: object
+              properties:
+                fee_admin:
+                  type: string
+                fee_coins_supported:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+        title: TrustlessAgents
+      pagination:
+        description: Pagination defines the pagination in the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    description: >-
+      QueryTrustlessAgentResponse is the response type for the
+      Query/TrustlessAgent
+
+      RPC method.
+  intento.intent.v1.QueryTrustlessAgentsResponse:
+    type: object
+    properties:
+      trustless_agents:
+        type: array
+        items:
+          type: object
+          properties:
+            agent_address:
+              type: string
+            ica_config:
+              type: object
+              properties:
+                port_id:
+                  type: string
+                connection_id:
+                  type: string
+              title: base config for ICA
+            fee_config:
+              type: object
+              properties:
+                fee_admin:
+                  type: string
+                fee_coins_supported:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+        title: TrustlessAgents
+      pagination:
+        description: Pagination defines the pagination in the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    description: >-
+      QueryTrustlessAgentsResponse is the response type for the
+      Query/TrustlessAgent
+
+      RPC method.
+  intento.intent.v1.TrustlessAgent:
+    type: object
+    properties:
+      agent_address:
+        type: string
+      ica_config:
+        type: object
+        properties:
+          port_id:
+            type: string
+          connection_id:
+            type: string
+        title: base config for ICA
+      fee_config:
+        type: object
+        properties:
+          fee_admin:
+            type: string
+          fee_coins_supported:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+  intento.intent.v1.TrustlessAgentConfig:
+    type: object
+    properties:
+      agent_address:
+        type: string
+      fee_limit:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+      connection_id:
+        type: string
+        title: optional
+    title: config for a trustless agent for flow execution on host chain
+  intento.intent.v1.TrustlessAgentFeeConfig:
+    type: object
+    properties:
+      fee_admin:
+        type: string
+      fee_coins_supported:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
   stride.interchainquery.v1.TimeoutPolicy:
     type: string
     enum:
@@ -8893,7 +8974,7 @@ definitions:
             submission_height:
               type: string
               format: uint64
-  intento.mint.v1beta1.Params:
+  intento.mint.v1.Params:
     type: object
     properties:
       mint_denom:
@@ -8914,7 +8995,7 @@ definitions:
         format: uint64
         title: expected blocks per year
     description: Params holds parameters for the mint module.
-  intento.mint.v1beta1.QueryAnnualProvisionsResponse:
+  intento.mint.v1.QueryAnnualProvisionsResponse:
     type: object
     properties:
       annual_provisions:
@@ -8924,7 +9005,7 @@ definitions:
     description: |-
       QueryAnnualProvisionsResponse is the response type for the
       Query/AnnualProvisions RPC method.
-  intento.mint.v1beta1.QueryParamsResponse:
+  intento.mint.v1.QueryParamsResponse:
     type: object
     properties:
       params:

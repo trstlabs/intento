@@ -20,7 +20,7 @@ The module processes three primary message types:
 
 3. **ICA (Interchain Account) Messages**:
    - These are messages sent via IBC (Inter-Blockchain Communication) through an interchain account.
-   - Hosted ICA messages can only call `MsgExec` for security reasons, while Self-hosted ICA messages are allowed without restrictions.
+   - Trustless Execution Agent messages can only call `MsgExec` for security reasons, while Self-Hosted ICA messages are allowed without restrictions.
 
 ---
 
@@ -31,8 +31,8 @@ The module processes three primary message types:
 Local messages require a direct match between the signer and the flow owner. The module validates this relationship explicitly:
 
 ```go
-if isLocalMessage(flowInfo) {
-    return k.validateSigners(ctx, codec, flowInfo, message)
+if isLocalMessage(flow) {
+    return k.validateSigners(ctx, codec, flow, message)
 }
 ```
 
@@ -42,20 +42,20 @@ For `MsgExec` messages, authentication is applied to each inner message:
 
 ```go
 if isAuthzMsgExec(message) {
-    return k.validateAuthzMsg(ctx, codec, flowInfo, message)
+    return k.validateAuthzMsg(ctx, codec, flow, message)
 }
 ```
 
 This ensures that delegation rules are respected and all flows performed on behalf of another account are authorized.
 
-### Hosted ICA Messages
+### Trustless Execution Agent Messages
 
-Hosted ICA messages are authenticated differently. Since ICA operates via IBC, the packet sender is already verified by the IBC protocol. Additionally, our module controls which Hosted ICA to use through the configuration provided by the user. Because of this controlled environment, further signer validation is unnecessary for Hosted ICA messages. However, Hosted ICA messages are restricted to `MsgExec` only for added security:
+Trustless Execution Agent messages are authenticated differently. Since ICA operates via IBC, the packet sender is already verified by the IBC protocol. Additionally, our module controls which Trustless Execution Agent to use through the configuration provided by the user. Because of this controlled environment, further signer validation is unnecessary for Trustless Execution Agent messages. However, Trustless Execution Agent messages are restricted to `MsgExec` only for added security:
 
 ```go
-if isHostedICAMessage(flowInfo) {
+if isHostedICAMessage(flow) {
     if message.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
-        return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Hosted ICA messages")
+        return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Trustless Execution Agent messages")
     }
     return nil
 }
@@ -66,7 +66,7 @@ if isHostedICAMessage(flowInfo) {
 Self-hosted ICA messages do not require additional restrictions. They are trusted based on the direct control of the owner. These messages are allowed without further validation:
 
 ```go
-if isSelfHostedICAMessage(flowInfo) {
+if isSelfHostedICAMessage(flow) {
     return nil
 }
 ```
@@ -80,10 +80,10 @@ if isSelfHostedICAMessage(flowInfo) {
    - This removes the need for additional signer checks within the Intent module.
 
 2. **Controlled Configuration**:
-   - The user specifies which Hosted ICA is used, and this configuration is already expected and verified during setup.
+   - The flow submission from the user specifies which Trustless Execution Agent (and the fee configuration thereof) is used, and this configuration is already expected and verified during setup.
 
 3. **Security for `MsgExec`**:
-   - Restricting Hosted ICA messages to `MsgExec` ensures that only delegated flows are performed, maintaining the security model.
+   - Restricting Trustless Execution Agent messages to `MsgExec` ensures that only delegated flows are performed, maintaining the security model.
   
 ---
 
@@ -92,7 +92,7 @@ if isSelfHostedICAMessage(flowInfo) {
 The following code demonstrates how the module handles authentication for different message types:
 
 ```go
-func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flowInfo types.FlowInfo, message *codectypes.Any) error {
+func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flow types.Flow, message *codectypes.Any) error {
     var sdkMsg sdk.Msg
     if err := codec.UnpackAny(message, &sdkMsg); err != nil {
         return errorsmod.Wrap(err, "failed to unpack message")
@@ -101,20 +101,20 @@ func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flowInfo typ
     switch {
     case isAuthzMsgExec(message):
         // Validate Authz MsgExec messages.
-        return k.validateAuthzMsg(ctx, codec, flowInfo, message)
+        return k.validateAuthzMsg(ctx, codec, flow, message)
 
-    case isLocalMessage(flowInfo):
+    case isLocalMessage(flow):
         // Validate local messages to ensure the signer matches the owner.
-        return k.validateSigners(ctx, codec, flowInfo, message)
+        return k.validateSigners(ctx, codec, flow, message)
 
-    case isHostedICAMessage(flowInfo):
+    case isHostedICAMessage(flow):
         // Restrict Hosted ICA messages to MsgExec for security.
         if message.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
             return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Hosted ICA messages")
         }
         return nil
 
-    case isSelfHostedICAMessage(flowInfo):
+    case isSelfHostedICAMessage(flow):
         // Allow Self-hosted ICA messages without additional validation.
         return nil
 
@@ -129,4 +129,4 @@ func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flowInfo typ
 
 ## Conclusion
 
-Message authentication is handled carefully within the Intent module to ensure security and correctness. While local and `MsgExec` messages require explicit validation, ICA messages rely on IBC’s inherent authentication mechanisms and user-controlled configurations. Restricting Hosted ICA messages to `MsgExec` adds an additional layer of security, while Self-hosted ICAs are trusted based on owner control. This approach balances security with efficiency, adhering to the principles of our module’s design.
+Message authentication is handled carefully within the Intent module to ensure security and correctness. While local and `MsgExec` messages require explicit validation, ICA messages rely on IBC’s inherent authentication mechanisms and user-controlled configurations. Restricting Trustless Execution Agent messages to `MsgExec` adds an additional layer of security, while Self-hosted ICAs are trusted based on owner control. This approach balances security with efficiency, adhering to the principles of our module’s design.

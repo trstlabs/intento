@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package intento.intent.v1beta1;
+package intento.intent.v1; // TODO: Change to v1
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
@@ -14,8 +14,8 @@ option go_package = "github.com/trstlabs/intento/x/intent/types";
 option (gogoproto.equal_all) = true;
 option (gogoproto.goproto_getters_all) = false;
 
-// FlowInfo stores the info for the flow
-message FlowInfo {
+// Flow stores the info for the flow
+message Flow {
   uint64 id = 1 [(gogoproto.customname) = "ID"];
   string owner = 2;
   string label = 3;
@@ -42,22 +42,23 @@ message FlowInfo {
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false
   ];
-  ICAConfig ica_config = 11 [(gogoproto.customname) = "ICAConfig"];
-  HostedICAConfig hosted_ica_config = 12 [(gogoproto.customname) = "HostedICAConfig"];
+  ICAConfig self_hosted_ica = 11 [(gogoproto.customname) = "SelfHostedICA"];
+  TrustlessAgentConfig trustless_agent = 12 [(gogoproto.customname) = "TrustlessAgent"];
   ExecutionConfiguration configuration = 14;
   ExecutionConditions conditions = 15;
 }
 
-// config for self-hosted ICA
+// base config for ICA
 message ICAConfig {
   string port_id = 1 [(gogoproto.customname) = "PortID"];
   string connection_id = 2 [(gogoproto.customname) = "ConnectionID"];
 }
 
-// config for hosted account
-message HostedICAConfig {
-  string hosted_address = 1;
-  cosmos.base.v1beta1.Coin fee_coin_limit = 3 [(gogoproto.nullable) = false];
+// config for a trustless agent for flow execution on host chain
+message TrustlessAgentConfig {
+  string agent_address = 1;
+  repeated cosmos.base.v1beta1.Coin fee_limit = 2 [(gogoproto.nullable) = false];
+  string connection_id = 3; //optional
 }
 
 // ExecutionConfiguration provides the execution-related configuration of the
@@ -94,7 +95,7 @@ message FlowHistoryEntry {
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false
   ];
-  cosmos.base.v1beta1.Coin exec_fee = 3 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin exec_fee = 3 [(gogoproto.nullable) = false];
   // whether all messages are executed, independent of succesfull result
   bool executed = 4;
   // timed out from execution over IBC
@@ -106,6 +107,8 @@ message FlowHistoryEntry {
   repeated google.protobuf.Any msg_responses = 7;
   // will be empty when save_responses is false
   repeated string query_responses = 8;
+  // packet sequences of the flow execution on the host chain
+  repeated uint64 packet_sequences = 9;
 }
 
 // ExecutionConditions provides execution conditions for the flow

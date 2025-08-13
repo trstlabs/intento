@@ -31,7 +31,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 	}
 
 	// Validate the memo
-	isFlowRouted, ownerAddr, msgsBytes, label, connectionID, hostConnectionID, duration, interval, startAt, endTime, registerICA, id, hostedAddress, hostedFeeLimit, configuration, conditions, version, err := ValidateAndParseMemo(data.GetMemo())
+	isFlowRouted, ownerAddr, msgsBytes, label, connectionID, hostConnectionID, duration, interval, startAt, endTime, registerICA, id, agentAddress, trustlessAgentFeeLimit, configuration, conditions, version, err := ValidateAndParseMemo(data.GetMemo())
 	if !isFlowRouted {
 		im.keeper.Logger(ctx).Debug("ics20 packet not routed")
 		return im.app.OnRecvPacket(ctx, packet, relayer)
@@ -56,7 +56,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 	}
 
 	// check to ensure the owner is creating the flow from the same chain as the destination. Only then we trust the sender
-	isToSourceChain := im.keeper.FlowIsToSourceChain(ctx, packet.GetDestChannel(), packet.GetDestPort(), connectionID, txMsgsAnys, hostedAddress)
+	isToSourceChain := im.keeper.FlowIsToSourceChain(ctx, packet.GetDestChannel(), packet.GetDestPort(), connectionID, txMsgsAnys, agentAddress)
 
 	ownerAddr, errAck := makeOwnerForChannelSender(ownerAddr, isToSourceChain, &packet, data)
 	if errAck != nil {
@@ -78,7 +78,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		if !ok {
 			// This should never happen, as it should've been caught in the underlaying call to OnRecvPacket,
 			// but returning here for completeness
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrInvalidPacket, "Amount is not an int"))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrInvalidPacket, "amount %s is not an int", data.GetAmount()))
 		}
 
 		// The packet's denom is the denom in the sender chain. This needs to be converted to the local denom.
@@ -105,11 +105,11 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 		response, err := registerAndSubmitTx(im.keeper, ctx, &msg)
 		if err != nil {
 			im.keeper.Logger(ctx).Debug("error handling ICS20 packet flow", err.Error())
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(err)
 		}
 		bz, err := json.Marshal(response)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, "error marshaling response: %s", err.Error()))
 		}
 
 		return channeltypes.NewResultAcknowledgement(bz)
@@ -127,17 +127,18 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 			StartAt:       startAt,
 			Configuration: &configuration,
 			Conditions:    &conditions,
-			HostedICAConfig: &types.HostedICAConfig{HostedAddress: hostedAddress,
-				FeeCoinLimit: hostedFeeLimit},
+			TrustlessAgent: &types.TrustlessAgentConfig{AgentAddress: agentAddress,
+				FeeLimit: trustlessAgentFeeLimit},
 		}
 		response, err := updateFlow(im.keeper, ctx, &msg)
 		if err != nil {
 			im.keeper.Logger(ctx).Debug("error handling ICS20 packet flow update", err.Error())
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
+			//return non-wrapped error for detailed error debugging via error code
+			return channeltypes.NewErrorAcknowledgement(err)
 		}
 		bz, err := json.Marshal(response)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, "error marshaling response: %s", err.Error()))
 		}
 
 		return channeltypes.NewResultAcknowledgement(bz)
@@ -153,18 +154,18 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 			Configuration: &configuration,
 			Conditions:    &conditions,
 			ConnectionID:  connectionID,
-			HostedICAConfig: &types.HostedICAConfig{HostedAddress: hostedAddress,
-				FeeCoinLimit: hostedFeeLimit},
+			TrustlessAgent: &types.TrustlessAgentConfig{AgentAddress: agentAddress,
+				FeeLimit: trustlessAgentFeeLimit},
 		}
 		response, err := submitFlow(im.keeper, ctx, &msg)
 		if err != nil {
 			//fmt.Printf("error handling ICS20 packet flow submission %v", err.Error())
 			im.keeper.Logger(ctx).Debug("error handling ICS20 packet flow submission", err.Error())
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrIcs20Error, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(err)
 		}
 		bz, err := json.Marshal(response)
 		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, err.Error()))
+			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(types.ErrBadResponse, "error marshaling response: %s", err.Error()))
 		}
 		im.keeper.Logger(ctx).Debug("flow via ics20 submitted sucesssfully")
 		return channeltypes.NewResultAcknowledgement(bz)
@@ -199,7 +200,7 @@ func makeOwnerForChannelSender(ownerAddr sdk.AccAddress, isToSourceChain bool, p
 		bz, err := json.Marshal(data)
 		if err != nil {
 			return nil, channeltypes.NewErrorAcknowledgement(
-				errorsmod.Wrapf(types.ErrMarshaling, err.Error()),
+				errorsmod.Wrapf(types.ErrMarshaling, "%s", err.Error()),
 			)
 		}
 		packet.Data = bz
@@ -215,7 +216,7 @@ func makeOwnerForChannelSender(ownerAddr sdk.AccAddress, isToSourceChain bool, p
 	bz, err := json.Marshal(data)
 	if err != nil {
 		return nil, channeltypes.NewErrorAcknowledgement(
-			errorsmod.Wrapf(types.ErrMarshaling, err.Error()),
+			errorsmod.Wrapf(types.ErrMarshaling, "marshaling error: %s", err.Error()),
 		)
 	}
 	packet.Data = bz
@@ -225,7 +226,7 @@ func makeOwnerForChannelSender(ownerAddr sdk.AccAddress, isToSourceChain bool, p
 
 func registerAndSubmitTx(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgRegisterAccountAndSubmitFlow) (*types.MsgRegisterAccountAndSubmitFlowResponse, error) {
 	if err := ics20ParsedMsg.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf(types.ErrBadFlowMsg, err.Error())
+		return nil, err
 	}
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
 	return ics20MsgServer.RegisterAccountAndSubmitFlow(ctx, ics20ParsedMsg)
@@ -233,7 +234,7 @@ func registerAndSubmitTx(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types
 
 func submitFlow(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgSubmitFlow) (*types.MsgSubmitFlowResponse, error) {
 	if err := ics20ParsedMsg.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf(types.ErrBadFlowMsg, err.Error())
+		return nil, err
 	}
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
 	return ics20MsgServer.SubmitFlow(ctx, ics20ParsedMsg)
@@ -241,7 +242,7 @@ func submitFlow(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgSubmi
 
 func updateFlow(k keeper.Keeper, ctx sdk.Context, ics20ParsedMsg *types.MsgUpdateFlow) (*types.MsgUpdateFlowResponse, error) {
 	if err := ics20ParsedMsg.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf(types.ErrBadFlowMsg, err.Error())
+		return nil, err
 	}
 	ics20MsgServer := keeper.NewMsgServerImpl(k)
 	return ics20MsgServer.UpdateFlow(ctx, ics20ParsedMsg)
@@ -281,17 +282,17 @@ func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]inter
 	return true, jsonObject
 }
 
-func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddress, msgsBytes [][]byte, label, connectionID, hostConnectionID, duration, interval string, startAt uint64, endTime uint64, registerICA bool, id uint64, hostedAddress string, hostedFeeLimit sdk.Coin, configuration types.ExecutionConfiguration, conditions types.ExecutionConditions, version string, err error) {
+func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddress, msgsBytes [][]byte, label, connectionID, hostConnectionID, duration, interval string, startAt uint64, endTime uint64, registerICA bool, id uint64, agentAddress string, trustlessAgentFeeLimit sdk.Coins, configuration types.ExecutionConfiguration, conditions types.ExecutionConditions, version string, err error) {
 	isFlowRouted, metadata := jsonStringHasKey(memo, "flow")
 	if !isFlowRouted {
-		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", nil
+		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", nil
 	}
 	ics20Raw := metadata["flow"]
 
 	// Make sure the ics20 key is a map. If it isn't, ignore this packet
 	flow, ok := ics20Raw.(map[string]interface{})
 	if !ok {
-		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
+		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, "flow metadata is not a valid JSON map object")
 	}
 
@@ -305,7 +306,7 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 	if ok && owner != "" {
 		ownerAddr, err = sdk.AccAddressFromBech32(owner)
 		if err != nil {
-			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
+			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
 				fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["owner"] is not a valid bech32 address`)
 		}
 
@@ -313,14 +314,14 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 
 	// Ensure the message key is provided
 	if flow["msgs"] == nil {
-		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
+		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["msgs"]`)
 	}
 
 	// Make sure the msg key is an array of maps. If it isn't, return an error
 	msgs, ok := flow["msgs"].([]interface{})
 	if !ok {
-		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
+		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["msgs"] is not an array of interfaces`)
 	}
 
@@ -328,7 +329,7 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 	label, ok = flow["label"].(string)
 	if !ok {
 		// The tokens will be returned
-		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
+		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["label"]`)
 	}
 
@@ -343,7 +344,7 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 	if ok {
 		endTime, err = strconv.ParseUint(endTimeString, 10, 64)
 		if err != nil {
-			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
+			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
 				fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["end_time"]`)
 		}
 	}
@@ -353,7 +354,7 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 	// A sumbitFlow should have a duration key, an updateFlow should have an endTime key
 	if !ok && endTime == 0 {
 		// The tokens will be returned
-		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
+		return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
 			fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["duration"]`)
 	}
 	// Get the interval,optional
@@ -365,7 +366,7 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 		startAt, err = strconv.ParseUint(startAtString, 10, 64)
 
 		if err != nil {
-			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
+			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
 				fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["start_at"]`)
 		}
 	}
@@ -374,28 +375,28 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 	if ok {
 		conditionsBytes, err := json.Marshal(conditionsMap)
 		if err != nil {
-			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["conditions"]`)
+			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["conditions"]`)
 		}
 
 		if conditionsMap != nil {
 			if err := json.Unmarshal(conditionsBytes, &conditions); err != nil {
-				return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["conditions"]`)
+				return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["conditions"]`)
 			}
 		}
 	}
 
-	//optional hosted account
-	hostedAddress, ok = flow["hosted_account"].(string)
+	//optional trustless agent
+	agentAddress, ok = flow["trustless_agent"].(string)
 	if !ok {
-		hostedAddress = ""
+		agentAddress = ""
 	}
 
-	hostedFeeLimitString, ok := flow["hosted_fee_limit"].(string)
+	trustlessAgentFeeLimitString, ok := flow["fee_limit"].(string)
 	if ok {
-		// return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0 , "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["hosted_fee_limit"]`)
-		hostedFeeLimit, err = sdk.ParseCoinNormalized(hostedFeeLimitString)
+		// return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0 , "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["fee_limit"]`)
+		trustlessAgentFeeLimit, err = sdk.ParseCoinsNormalized(trustlessAgentFeeLimitString)
 		if err != nil {
-			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["hosted_fee_limit"]`)
+			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "", fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["fee_limit"]`)
 		}
 	}
 
@@ -410,7 +411,7 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 		id, err = strconv.ParseUint(idString, 10, 64)
 
 		if err != nil {
-			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
+			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
 				fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, `flow["id"]`)
 		}
 	}
@@ -473,13 +474,13 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 		msgBytes, err := json.Marshal(msg)
 		if err != nil {
 			// The tokens will be returned
-			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coin{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
+			return isFlowRouted, sdk.AccAddress{}, nil, "", "", "", "", "", 0, 0, false, 0, "", sdk.Coins{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, "",
 				fmt.Errorf(types.ErrBadMetadataFormatMsg, memo, err.Error())
 		}
 		msgsBytes = append(msgsBytes, msgBytes)
 	}
 
-	return isFlowRouted, ownerAddr, msgsBytes, label, connectionID, hostConnectionID, duration, interval, startAt, endTime, registerICA, id, hostedAddress, hostedFeeLimit, configuration, conditions, version, nil
+	return isFlowRouted, ownerAddr, msgsBytes, label, connectionID, hostConnectionID, duration, interval, startAt, endTime, registerICA, id, agentAddress, trustlessAgentFeeLimit, configuration, conditions, version, nil
 }
 
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the

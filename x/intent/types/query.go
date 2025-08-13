@@ -26,9 +26,9 @@ func NewQueryFlowsForOwnerRequest(owner string, pagination *query.PageRequest) *
 }
 
 // NewQueryFlowsForOwnerResponse creates and returns a new QueryFlowsForOwnerFromAddressResponse
-func NewQueryFlowsForOwnerResponse(flowInfos []FlowInfo) *QueryFlowsForOwnerResponse {
+func NewQueryFlowsForOwnerResponse(flows []Flow) *QueryFlowsForOwnerResponse {
 	return &QueryFlowsForOwnerResponse{
-		FlowInfos: flowInfos,
+		Flows: flows,
 	}
 }
 
@@ -40,9 +40,9 @@ func NewQueryFlowsRequest(pagination *query.PageRequest) *QueryFlowsRequest {
 }
 
 // NewQueryFlowsForOwnerResponse creates and returns a new QueryFlowsForOwnerFromAddressResponse
-func NewQueryFlowsResponse(flowInfos []FlowInfo) *QueryFlowsResponse {
+func NewQueryFlowsResponse(flows []Flow) *QueryFlowsResponse {
 	return &QueryFlowsResponse{
-		FlowInfos: flowInfos,
+		Flows: flows,
 	}
 }
 
@@ -56,28 +56,28 @@ func NewQueryFlowHistoryRequest(id string) *QueryFlowHistoryRequest {
 	return &QueryFlowHistoryRequest{Id: id}
 }
 
-// NewQueryHostedAccountRequest creates and returns a new QueryHostedAccountsRequest
-func NewQueryHostedAccountRequest(address string) *QueryHostedAccountRequest {
-	return &QueryHostedAccountRequest{Address: address}
+// NewQueryTrustlessAgentRequest creates and returns a new QueryTrustlessAgentsRequest
+func NewQueryTrustlessAgentRequest(agentAddress string) *QueryTrustlessAgentRequest {
+	return &QueryTrustlessAgentRequest{AgentAddress: agentAddress}
 }
 
-// NewQueryHostedAccountResponse creates and returns a new QueryHostedAccountsResponse
-func NewQueryHostedAccountResponse(hostedAccount HostedAccount) *QueryHostedAccountResponse {
-	return &QueryHostedAccountResponse{
-		HostedAccount: hostedAccount,
+// NewQueryTrustlessAgentResponse creates and returns a new QueryTrustlessAgentsResponse
+func NewQueryTrustlessAgentResponse(trustlessAgent TrustlessAgent) *QueryTrustlessAgentResponse {
+	return &QueryTrustlessAgentResponse{
+		TrustlessAgent: trustlessAgent,
 	}
 }
 
-// NewQueryHostedAccountRequest creates and returns a new QueryHostedAccountsRequest
-func NewQueryHostedAccountsRequest(pagination *query.PageRequest) *QueryHostedAccountsRequest {
-	return &QueryHostedAccountsRequest{
+// NewQueryTrustlessAgentRequest creates and returns a new QueryTrustlessAgentsRequest
+func NewQueryTrustlessAgentsRequest(pagination *query.PageRequest) *QueryTrustlessAgentsRequest {
+	return &QueryTrustlessAgentsRequest{
 		Pagination: pagination,
 	}
 }
 
-// NewQueryHostedAccountResponse creates and returns a new QueryHostedAccountsResponse
-func NewQueryHostedAccountsResponse(hostedAccounts []HostedAccount) *QueryHostedAccountsResponse {
-	return &QueryHostedAccountsResponse{
-		HostedAccounts: hostedAccounts,
+// NewQueryTrustlessAgentResponse creates and returns a new QueryTrustlessAgentsResponse
+func NewQueryTrustlessAgentsResponse(trustlessAgents []TrustlessAgent) *QueryTrustlessAgentsResponse {
+	return &QueryTrustlessAgentsResponse{
+		TrustlessAgents: trustlessAgents,
 	}
 }

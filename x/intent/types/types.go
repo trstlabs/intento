@@ -15,9 +15,9 @@ var MaxGas uint64 = 1_000_000
 var MaxGasTotal uint64 = 500_000_000
 
 // GetTxMsgs unpacks sdk messages from any messages
-func (flowInfo FlowInfo) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sdk.Msg) {
+func (flow Flow) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sdk.Msg) {
 
-	for _, message := range flowInfo.Msgs {
+	for _, message := range flow.Msgs {
 		var sdkMsg sdk.Msg
 		err := unpacker.UnpackAny(message, &sdkMsg)
 		if err != nil {

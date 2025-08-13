@@ -11,7 +11,7 @@ import (
 )
 
 // calculateFee calculates the fee based on the given gas consumption and other fee parameters.
-func (k Keeper) calculateFee(feeDenom string, gasConsumed uint64, flow types.FlowInfo, p types.Params) (sdk.Coin, sdk.Coin, error) {
+func (k Keeper) calculateFee(feeDenom string, gasConsumed uint64, flow types.Flow, p types.Params) (sdk.Coin, sdk.Coin, error) {
 	// Calculate base gas fee based on the consumed gas
 	gasSmall := math.NewIntFromUint64(gasConsumed * uint64(p.FlowFlexFeeMul))
 	gasFeeAmount, err := gasSmall.SafeQuo(math.NewInt(1000))
@@ -45,7 +45,7 @@ func (k Keeper) calculateFee(feeDenom string, gasConsumed uint64, flow types.Flo
 }
 
 // DistributeCoins distributes Flow fees and handles remaining flow fee balance after last execution
-func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.FlowInfo, feeAddr sdk.AccAddress, feeDenom string) (sdk.Coin, error) {
+func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.Flow, feeAddr sdk.AccAddress, feeDenom string) (sdk.Coin, error) {
 	p, err := k.GetParams(ctx)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -125,7 +125,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.FlowInfo, feeAddr sd
 
 // GetFeeAccountForMinFees checks if the flow fee address (or optionally the owner address)
 // has enough balance to cover the minimum gas fee for any configured gas fee denom.
-func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, flow types.FlowInfo, expectedGas uint64) (sdk.AccAddress, string, error) {
+func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, flow types.Flow, expectedGas uint64) (sdk.AccAddress, string, error) {
 	p, err := k.GetParams(ctx)
 	if err != nil {
 		return nil, "", err
@@ -187,40 +187,47 @@ func GetDenomIfAnyGTE(coins sdk.Coins, coinsB sdk.Coins) string {
 	return ""
 }
 
-func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.FlowInfo, hostedAccount types.HostedAccount) error {
+func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.Flow, trustlessAgent types.TrustlessAgent) error {
+	// Parse addresses
 	feeAddr, err := sdk.AccAddressFromBech32(flow.FeeAddress)
 	if err != nil {
 		return err
 	}
-
-	hostedAccAdminAddr, err := sdk.AccAddressFromBech32(hostedAccount.HostFeeConfig.Admin)
+	trustlessAgentAdminAddr, err := sdk.AccAddressFromBech32(trustlessAgent.FeeConfig.FeeAdmin)
 	if err != nil {
 		return err
 	}
-	found, feeCoin := hostedAccount.HostFeeConfig.FeeCoinsSuported.Sort().Find(flow.HostedICAConfig.FeeCoinLimit.Denom)
-	if !found {
-		return errorsmod.Wrap(types.ErrNotFound, "coin not in hosted config")
-	}
 
-	if feeCoin.Amount.GT(flow.HostedICAConfig.FeeCoinLimit.Amount) {
-		return types.ErrHostedFeeLimit
-	}
+	supportedCoins := trustlessAgent.FeeConfig.FeeCoinsSupported.Sort()
 
-	err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAccAdminAddr, sdk.Coins{feeCoin})
-	if err != nil {
-		if flow.Configuration.FallbackToOwnerBalance {
-			feeAddr, err = sdk.AccAddressFromBech32(flow.Owner)
-			if err != nil {
-				return err
-			}
-			err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAccAdminAddr, sdk.Coins{feeCoin})
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
+	// Find the cheapest valid matching coin (first one that matches)
+	for _, feeLimit := range flow.TrustlessAgent.FeeLimit {
+		found, feeCoin := supportedCoins.Find(feeLimit.Denom)
+		if supportedCoins.Len() != 0 && !found {
+			continue // skip unsupported denom
+		}
+		if feeCoin.Amount.GT(feeLimit.Amount) {
+			continue // skip if over the configured limit
 		}
 
+		// Try to send this coin
+		err = k.bankKeeper.SendCoins(ctx, feeAddr, trustlessAgentAdminAddr, sdk.Coins{feeCoin})
+		if err == nil {
+			return nil // success
+		}
+
+		// Try fallback to owner if enabled
+		if flow.Configuration.FallbackToOwnerBalance {
+			fallbackAddr, err := sdk.AccAddressFromBech32(flow.Owner)
+			if err != nil {
+				return err
+			}
+			return k.bankKeeper.SendCoins(ctx, fallbackAddr, trustlessAgentAdminAddr, sdk.Coins{feeCoin})
+		}
+
+		return err // no fallback or fallback failed
 	}
-	return nil
+
+	// No matching coins found within limit
+	return errorsmod.Wrap(types.ErrNotFound, "no valid fee coin matched within limit")
 }

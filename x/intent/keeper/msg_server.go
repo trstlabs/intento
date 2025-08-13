@@ -74,12 +74,12 @@ func (k msgServer) SubmitFlow(goCtx context.Context, msg *types.MsgSubmitFlow) (
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 
-	portID, duration, interval, startTime, configuration, conditions, HostedICAConfig, err := checkAndParseFlowContent(k, msg, err, ctx)
+	portID, duration, interval, startTime, configuration, conditions, trustlessAgent, err := checkAndParseFlowContent(k, msg, err, ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, HostedICAConfig, portID, msg.ConnectionID, conditions)
+	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, trustlessAgent, portID, msg.ConnectionID, conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (k msgServer) RegisterAccountAndSubmitFlow(goCtx context.Context, msg *type
 		return nil, err
 	}
 
-	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, types.HostedICAConfig{}, portID, msg.ConnectionID, conditions)
+	err = k.CreateFlow(ctx, msgOwner, msg.Label, msg.Msgs, duration, interval, startTime, msg.FeeFunds, configuration, types.TrustlessAgentConfig{}, portID, msg.ConnectionID, conditions)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (k msgServer) RegisterAccountAndSubmitFlow(goCtx context.Context, msg *type
 func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (*types.MsgUpdateFlowResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	timeNowWindow := ctx.BlockTime().Add(time.Minute * 1)
-	flow, err := k.TryGetFlowInfo(ctx, msg.ID)
+	flow, err := k.TryGetflow(ctx, msg.ID)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
@@ -131,11 +131,11 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 	}
 
 	if msg.ConnectionID != "" {
-		flow.ICAConfig.PortID, err = icatypes.NewControllerPortID(msg.Owner)
+		flow.SelfHostedICA.PortID, err = icatypes.NewControllerPortID(msg.Owner)
 		if err != nil {
 			return nil, err
 		}
-		flow.ICAConfig.ConnectionID = msg.ConnectionID
+		flow.SelfHostedICA.ConnectionID = msg.ConnectionID
 	}
 	newExecTime := flow.ExecTime
 	if msg.EndTime > 0 {
@@ -214,11 +214,11 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 		return nil, errorsmod.Wrap(types.ErrSignerNotOk, err.Error())
 	}
 	//set hosted config
-	if msg.HostedICAConfig != nil {
-		flow.HostedICAConfig = msg.HostedICAConfig
+	if msg.TrustlessAgent != nil {
+		flow.TrustlessAgent = msg.TrustlessAgent
 	}
 
-	k.SetFlowInfo(ctx, &flow)
+	k.Setflow(ctx, &flow)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -230,20 +230,20 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 	return &types.MsgUpdateFlowResponse{}, nil
 }
 
-// CreateHostedAccount implements the Msg/CreateHostedAccount interface
-func (k msgServer) CreateHostedAccount(goCtx context.Context, msg *types.MsgCreateHostedAccount) (*types.MsgCreateHostedAccountResponse, error) {
+// CreateTrustlessAgent implements the Msg/CreateTrustlessAgent interface
+func (k msgServer) CreateTrustlessAgent(goCtx context.Context, msg *types.MsgCreateTrustlessAgent) (*types.MsgCreateTrustlessAgentResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	hostedAddress, err := DeriveHostedAddress(msg.Creator, msg.ConnectionID)
+	agentAddress, err := DeriveAgentAddress(msg.Creator, msg.ConnectionID)
 	if err != nil {
 		return nil, err
 	}
 	//register ICA
-	err = k.RegisterInterchainAccount(ctx, msg.ConnectionID, hostedAddress.String(), msg.Version)
+	err = k.RegisterInterchainAccount(ctx, msg.ConnectionID, agentAddress.String(), msg.Version)
 	if err != nil {
 		return nil, err
 	}
-	portID, err := icatypes.NewControllerPortID(hostedAddress.String())
+	portID, err := icatypes.NewControllerPortID(agentAddress.String())
 	if err != nil {
 		return nil, err
 	}
@@ -252,50 +252,50 @@ func (k msgServer) CreateHostedAccount(goCtx context.Context, msg *types.MsgCrea
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 	//store hosted config by address on hosted key prefix
-	k.SetHostedAccount(ctx, &types.HostedAccount{HostedAddress: hostedAddress.String(), HostFeeConfig: &types.HostFeeConfig{Admin: msg.Creator, FeeCoinsSuported: msg.FeeCoinsSuported}, ICAConfig: &types.ICAConfig{ConnectionID: msg.ConnectionID, PortID: portID}})
-	k.addToHostedAccountAdminIndex(ctx, creator, hostedAddress.String())
-	return &types.MsgCreateHostedAccountResponse{Address: hostedAddress.String()}, nil
+	k.SetTrustlessAgent(ctx, &types.TrustlessAgent{AgentAddress: agentAddress.String(), FeeConfig: &types.TrustlessAgentFeeConfig{FeeAdmin: msg.Creator, FeeCoinsSupported: msg.FeeCoinsSupported}, ICAConfig: &types.ICAConfig{ConnectionID: msg.ConnectionID, PortID: portID}})
+	k.addToTrustlessAgentAdminIndex(ctx, creator, agentAddress.String())
+	return &types.MsgCreateTrustlessAgentResponse{Address: agentAddress.String()}, nil
 }
 
 // UpdateHosted implements the Msg/UpdateHosted interface
-func (k msgServer) UpdateHostedAccount(goCtx context.Context, msg *types.MsgUpdateHostedAccount) (*types.MsgUpdateHostedAccountResponse, error) {
+func (k msgServer) UpdateTrustlessAgentFeeConfig(goCtx context.Context, msg *types.MsgUpdateTrustlessAgentFeeConfig) (*types.MsgUpdateTrustlessAgentFeeConfigResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	//get hosted config by address on hosted key prefix
-	hostedAccount, err := k.TryGetHostedAccount(ctx, msg.HostedAddress)
+	trustlessAgent, err := k.TryGetTrustlessAgent(ctx, msg.AgentAddress)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
 	//check admin address
-	if hostedAccount.HostFeeConfig.Admin != msg.Admin {
+	if trustlessAgent.FeeConfig.FeeAdmin != msg.FeeAdmin {
 		return nil, types.ErrInvalidAddress
 	}
 
-	hostedAddress := hostedAccount.HostedAddress
+	agentAddress := trustlessAgent.AgentAddress
 
-	admin := hostedAccount.HostFeeConfig.Admin
-	if msg.HostFeeConfig.Admin != "" {
-		newAdminAddr, err := sdk.AccAddressFromBech32(msg.HostFeeConfig.Admin)
+	admin := trustlessAgent.FeeConfig.FeeAdmin
+	if msg.FeeConfig.FeeAdmin != "" {
+		newAdminAddr, err := sdk.AccAddressFromBech32(msg.FeeConfig.FeeAdmin)
 		if err != nil {
 			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 		}
-		currentAdminAddr, err := sdk.AccAddressFromBech32(hostedAccount.HostFeeConfig.Admin)
+		currentAdminAddr, err := sdk.AccAddressFromBech32(trustlessAgent.FeeConfig.FeeAdmin)
 		if err != nil {
 			return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 		}
-		admin = msg.HostFeeConfig.Admin
-		k.changeHostedAccountAdminIndex(ctx, currentAdminAddr, newAdminAddr, hostedAccount.HostedAddress)
+		admin = msg.FeeConfig.FeeAdmin
+		k.changeTrustlessAgentAdminIndex(ctx, currentAdminAddr, newAdminAddr, trustlessAgent.AgentAddress)
 	}
 
-	feeCoinsSupported := hostedAccount.HostFeeConfig.FeeCoinsSuported
-	if msg.HostFeeConfig.FeeCoinsSuported != nil {
-		feeCoinsSupported = msg.HostFeeConfig.FeeCoinsSuported
+	feeCoinsSupported := trustlessAgent.FeeConfig.FeeCoinsSupported
+	if msg.FeeConfig.FeeCoinsSupported != nil {
+		feeCoinsSupported = msg.FeeConfig.FeeCoinsSupported
 	}
 
-	k.SetHostedAccount(ctx, &types.HostedAccount{HostedAddress: hostedAddress, HostFeeConfig: &types.HostFeeConfig{Admin: admin, FeeCoinsSuported: feeCoinsSupported}, ICAConfig: hostedAccount.ICAConfig})
+	k.SetTrustlessAgent(ctx, &types.TrustlessAgent{AgentAddress: agentAddress, FeeConfig: &types.TrustlessAgentFeeConfig{FeeAdmin: admin, FeeCoinsSupported: feeCoinsSupported}, ICAConfig: trustlessAgent.ICAConfig})
 
 	//set hosted config by address on hosted key prefix
-	return &types.MsgUpdateHostedAccountResponse{}, nil
+	return &types.MsgUpdateTrustlessAgentFeeConfigResponse{}, nil
 }
 
 // UpdateParams implements the Msg/UpdateParams interface
@@ -328,7 +328,7 @@ func checkAndParseFlowContent(
 	msg sdk.Msg,
 	err error,
 	ctx sdk.Context,
-) (string, time.Duration, time.Duration, time.Time, types.ExecutionConfiguration, types.ExecutionConditions, types.HostedICAConfig, error) {
+) (string, time.Duration, time.Duration, time.Time, types.ExecutionConfiguration, types.ExecutionConditions, types.TrustlessAgentConfig, error) {
 	var (
 		msgOwner         string
 		msgConnectionID  string
@@ -337,7 +337,7 @@ func checkAndParseFlowContent(
 		msgStartAt       uint64
 		msgConfiguration *types.ExecutionConfiguration = &types.ExecutionConfiguration{}
 		msgConditions    *types.ExecutionConditions    = &types.ExecutionConditions{}
-		HostedICAConfig  *types.HostedICAConfig        = &types.HostedICAConfig{}
+		TrustlessAgent   *types.TrustlessAgentConfig   = &types.TrustlessAgentConfig{}
 		msgMsgs          []*cdctypes.Any               = []*cdctypes.Any{}
 	)
 
@@ -349,9 +349,9 @@ func checkAndParseFlowContent(
 		msgConnectionID = msg.ConnectionID
 		msgStartAt = msg.StartAt
 		msgInterval = msg.Interval
-		// Use fallback if HostedICAConfig is nil
-		if msg.HostedICAConfig != nil {
-			HostedICAConfig = msg.HostedICAConfig
+		// Use fallback if TrustlessAgent is nil
+		if msg.TrustlessAgent != nil {
+			TrustlessAgent = msg.TrustlessAgent
 		}
 		// Use fallback if msgConfiguration is nil
 		if msg.Configuration != nil {
@@ -381,14 +381,14 @@ func checkAndParseFlowContent(
 		msgMsgs = msg.Msgs
 
 	default:
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, fmt.Errorf("unsupported message type: %T", msg)
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "unsupported intento module message type: %T", msg)
 	}
 
 	portID := ""
 	if msgConnectionID != "" {
 		portID, err = icatypes.NewControllerPortID(msgOwner)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, err
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, err
 		}
 	}
 
@@ -396,7 +396,7 @@ func checkAndParseFlowContent(
 	if msgDuration != "" {
 		duration, err = time.ParseDuration(msgDuration)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, err
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, err
 		}
 	}
 
@@ -404,7 +404,7 @@ func checkAndParseFlowContent(
 	if msgInterval != "" {
 		interval, err = time.ParseDuration(msgInterval)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrap(types.ErrInvalidScheduling, err.Error())
 		}
 	}
 
@@ -412,10 +412,10 @@ func checkAndParseFlowContent(
 	if msgStartAt != 0 {
 		startTime = time.Unix(int64(msgStartAt), 0)
 		if err != nil {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, err
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, err
 		}
 		if startTime.Before(ctx.BlockHeader().Time.Add(time.Minute)) {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidScheduling, "custom start time: %s must be at least a minute into the future upon block submission: %s", startTime, ctx.BlockHeader().Time.Add(time.Minute))
 		}
 	}
 
@@ -424,27 +424,27 @@ func checkAndParseFlowContent(
 		panic(err)
 	}
 	if interval != 0 && (interval < p.MinFlowInterval || interval > duration) {
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinFlowInterval, duration)
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidScheduling, "interval: %s  must be longer than minimum interval:  %s, and longer than duration: %s", interval, p.MinFlowInterval, duration)
 	}
 	if duration != 0 {
 		if duration > p.MaxFlowDuration {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxFlowDuration)
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidScheduling, "duration: %s must be shorter than maximum duration: %s", duration, p.MaxFlowDuration)
 		} else if duration < p.MinFlowDuration {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "duration: %s must be longer than minimum duration: %s", duration, p.MinFlowDuration)
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidScheduling, "duration: %s must be longer than minimum duration: %s", duration, p.MinFlowDuration)
 		} else if startTime.After(ctx.BlockHeader().Time.Add(p.MaxFlowDuration)) {
-			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, errorsmod.Wrapf(types.ErrInvalidRequest, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
+			return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, errorsmod.Wrapf(types.ErrInvalidScheduling, "start time: %s must be before current time and max duration: %s", startTime, ctx.BlockHeader().Time.Add(duration))
 		}
 	}
 
 	err = updateConditions(msgConditions, msgMsgs, duration, interval)
 	if err != nil {
-		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.HostedICAConfig{}, err
+		return "", 0, 0, time.Time{}, types.ExecutionConfiguration{}, types.ExecutionConditions{}, types.TrustlessAgentConfig{}, err
 	}
 
 	return portID, duration, interval, startTime,
 		*msgConfiguration,
 		*msgConditions,
-		*HostedICAConfig,
+		*TrustlessAgent,
 		nil
 }
 func updateConditions(
@@ -490,7 +490,7 @@ func updateConditions(
 // --- Helper: FeedbackLoop validation ---
 func validateFeedbackLoop(loop *types.FeedbackLoop, msgMsgs []*cdctypes.Any) error {
 	if len(msgMsgs) == 0 || int(loop.MsgsIndex) < 0 {
-		return errorsmod.Wrapf(types.ErrInvalidRequest, "FeedbackLoop: empty msgMsgs or negative MsgsIndex")
+		return errorsmod.Wrapf(types.ErrInvalidFeedbackLoop, "FeedbackLoop: empty msgMsgs or negative MsgsIndex")
 	}
 
 	if int(loop.MsgsIndex) >= len(msgMsgs) {
@@ -498,21 +498,21 @@ func validateFeedbackLoop(loop *types.FeedbackLoop, msgMsgs []*cdctypes.Any) err
 		if msg.TypeUrl == sdk.MsgTypeURL(&authztypes.MsgExec{}) {
 			msgExec := &authztypes.MsgExec{}
 			if err := proto.Unmarshal(msg.Value, msgExec); err != nil {
-				return errorsmod.Wrapf(types.ErrInvalidRequest, "could not unmarshal MsgExec to validate FeedbackLoop MsgsIndex")
+				return errorsmod.Wrapf(types.ErrInvalidFeedbackLoop, "could not unmarshal MsgExec to validate FeedbackLoop MsgsIndex")
 			}
 			if int(loop.MsgsIndex) >= len(msgExec.Msgs) {
-				return errorsmod.Wrapf(types.ErrInvalidRequest,
+				return errorsmod.Wrapf(types.ErrInvalidFeedbackLoop,
 					"FeedbackLoop MsgsIndex %d out of bounds for MsgExec (len: %d)",
 					loop.MsgsIndex, len(msgExec.Msgs),
 				)
 			}
-			return errorsmod.Wrapf(types.ErrInvalidRequest,
+			return errorsmod.Wrapf(types.ErrInvalidFeedbackLoop,
 				"FeedbackLoop MsgsIndex %d out of bounds for msgMsgs (len: %d)",
 				loop.MsgsIndex, len(msgMsgs),
 			)
 		}
 
-		return errorsmod.Wrapf(types.ErrInvalidRequest,
+		return errorsmod.Wrapf(types.ErrInvalidFeedbackLoop,
 			"FeedbackLoop MsgsIndex %d out of bounds for msgMsgs (len: %d)",
 			loop.MsgsIndex, len(msgMsgs),
 		)
@@ -526,11 +526,11 @@ func validateTimeout(label string, icq *types.ICQConfig, duration, interval time
 		return nil
 	}
 	if icq.TimeoutDuration > duration {
-		return errorsmod.Wrapf(types.ErrInvalidRequest,
+		return errorsmod.Wrapf(types.ErrInvalidICQTimeout,
 			"%s TimeoutDuration (%s) exceeds flow duration (%s)", label, icq.TimeoutDuration, duration)
 	}
 	if interval != 0 && icq.TimeoutDuration > interval {
-		return errorsmod.Wrapf(types.ErrInvalidRequest,
+		return errorsmod.Wrapf(types.ErrInvalidICQTimeout,
 			"%s TimeoutDuration (%s) exceeds flow interval (%s)", label, icq.TimeoutDuration, interval)
 	}
 	return nil

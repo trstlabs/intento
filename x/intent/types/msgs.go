@@ -16,8 +16,8 @@ var (
 	_ sdk.Msg = &MsgSubmitFlow{}
 	_ sdk.Msg = &MsgRegisterAccountAndSubmitFlow{}
 	_ sdk.Msg = &MsgUpdateFlow{}
-	_ sdk.Msg = &MsgCreateHostedAccount{}
-	_ sdk.Msg = &MsgUpdateHostedAccount{}
+	_ sdk.Msg = &MsgCreateTrustlessAgent{}
+	_ sdk.Msg = &MsgUpdateTrustlessAgentFeeConfig{}
 
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitTx{}
 	_ codectypes.UnpackInterfacesMessage = MsgSubmitFlow{}
@@ -73,12 +73,7 @@ func NewMsgSubmitTx(owner string, sdkMsg sdk.Msg, connectionID string) (*MsgSubm
 func PackTxMsgAnys(sdkMsgs []sdk.Msg) ([]*codectypes.Any, error) {
 	var anys []*codectypes.Any
 	for _, message := range sdkMsgs {
-		msg, ok := message.(proto.Message)
-		if !ok {
-			return nil, fmt.Errorf("cannot proto marshal %T", message)
-		}
-
-		any, err := codectypes.NewAnyWithValue(msg)
+		any, err := codectypes.NewAnyWithValue(message)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +122,7 @@ func (msg MsgSubmitTx) ValidateBasic() error {
 }
 
 // NewMsgSubmitFlow creates a new NewMsgSubmitFlow instance
-func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgSubmitFlow, error) {
+func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID string, duration string, interval string, startAt uint64, feeFunds sdk.Coins, agentAddress string, feeLimit sdk.Coins, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgSubmitFlow, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -143,8 +138,8 @@ func NewMsgSubmitFlow(owner, label string, sdkMsgs []sdk.Msg, connectionID strin
 		FeeFunds:      feeFunds,
 		Configuration: configuration,
 		ConnectionID:  connectionID,
-		HostedICAConfig: &HostedICAConfig{HostedAddress: hostedAddress,
-			FeeCoinLimit: hostedFeeLimit},
+		TrustlessAgent: &TrustlessAgentConfig{AgentAddress: agentAddress,
+			FeeLimit: feeLimit},
 		Conditions: conditions,
 	}, nil
 }
@@ -342,7 +337,7 @@ func checkConditions(conditions ExecutionConditions, lenMsgMsgs int) error {
 }
 
 // NewMsgUpdateFlow creates a new NewMsgUpdateFlow instance
-func NewMsgUpdateFlow(owner string, id uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, hostedAddress string, hostedFeeLimit sdk.Coin, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgUpdateFlow, error) {
+func NewMsgUpdateFlow(owner string, id uint64, label string, sdkMsgs []sdk.Msg, connectionID string, endTime uint64, interval string, startAt uint64, feeFunds sdk.Coins, agentAddress string, feeLimit sdk.Coins, configuration *ExecutionConfiguration, conditions *ExecutionConditions) (*MsgUpdateFlow, error) {
 	anys, err := PackTxMsgAnys(sdkMsgs)
 	if err != nil {
 		return nil, err
@@ -359,8 +354,8 @@ func NewMsgUpdateFlow(owner string, id uint64, label string, sdkMsgs []sdk.Msg, 
 		Interval:      interval,
 		Configuration: configuration,
 		FeeFunds:      feeFunds,
-		HostedICAConfig: &HostedICAConfig{HostedAddress: hostedAddress,
-			FeeCoinLimit: hostedFeeLimit},
+		TrustlessAgent: &TrustlessAgentConfig{AgentAddress: agentAddress,
+			FeeLimit: feeLimit},
 		Conditions: conditions,
 	}, nil
 }
@@ -429,18 +424,18 @@ func (msg MsgUpdateFlow) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgCreateHostedAccount creates a new MsgCreateHostedAccount instance
-func NewMsgCreateHostedAccount(creator, connectionID, version string, feeFundsSupported sdk.Coins) *MsgCreateHostedAccount {
-	return &MsgCreateHostedAccount{
-		Creator:          creator,
-		ConnectionID:     connectionID,
-		Version:          version,
-		FeeCoinsSuported: feeFundsSupported,
+// NewMsgCreateTrustlessAgent creates a new MsgCreateTrustlessAgent instance
+func NewMsgCreateTrustlessAgent(creator, connectionID, version string, feeFundsSupported sdk.Coins) *MsgCreateTrustlessAgent {
+	return &MsgCreateTrustlessAgent{
+		Creator:           creator,
+		ConnectionID:      connectionID,
+		Version:           version,
+		FeeCoinsSupported: feeFundsSupported,
 	}
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgCreateHostedAccount) ValidateBasic() error {
+func (msg MsgCreateTrustlessAgent) ValidateBasic() error {
 	if strings.TrimSpace(msg.Creator) == "" {
 		return errorsmod.Wrap(ErrInvalidAddress, "missing creator address")
 	}
@@ -451,7 +446,7 @@ func (msg MsgCreateHostedAccount) ValidateBasic() error {
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgCreateHostedAccount) GetSigners() []sdk.AccAddress {
+func (msg MsgCreateTrustlessAgent) GetSigners() []sdk.AccAddress {
 	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -460,30 +455,30 @@ func (msg MsgCreateHostedAccount) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{accAddr}
 }
 
-// NewMsgUpdateHostedAccount creates a new NewMsgUpdateHostedAccount instance
-func NewMsgUpdateHostedAccount(admin, hostedAddress, newAdmin string, feeFundsSupported sdk.Coins) *MsgUpdateHostedAccount {
+// NewMsgUpdateTrustlessAgent creates a new NewMsgUpdateTrustlessAgent instance
+func NewMsgUpdateTrustlessAgent(admin, agentAddress, newAdmin string, feeFundsSupported sdk.Coins) *MsgUpdateTrustlessAgentFeeConfig {
 
-	return &MsgUpdateHostedAccount{
-		Admin:         admin,
-		HostedAddress: hostedAddress,
-		HostFeeConfig: &HostFeeConfig{FeeCoinsSuported: feeFundsSupported, Admin: newAdmin},
+	return &MsgUpdateTrustlessAgentFeeConfig{
+		FeeAdmin:     admin,
+		AgentAddress: agentAddress,
+		FeeConfig:    &TrustlessAgentFeeConfig{FeeCoinsSupported: feeFundsSupported, FeeAdmin: newAdmin},
 	}
 }
 
 // ValidateBasic implements sdk.Msg
-func (msg MsgUpdateHostedAccount) ValidateBasic() error {
-	if strings.TrimSpace(msg.Admin) == "" {
+func (msg MsgUpdateTrustlessAgentFeeConfig) ValidateBasic() error {
+	if strings.TrimSpace(msg.FeeAdmin) == "" {
 		return errorsmod.Wrap(ErrInvalidAddress, "missing creator address")
 	}
-	if _, err := sdk.AccAddressFromBech32(msg.Admin); err != nil {
-		return errorsmod.Wrapf(ErrInvalidAddress, "failed to parse address: %s", msg.Admin)
+	if _, err := sdk.AccAddressFromBech32(msg.FeeAdmin); err != nil {
+		return errorsmod.Wrapf(ErrInvalidAddress, "failed to parse address: %s", msg.FeeAdmin)
 	}
 	return nil
 }
 
 // GetSigners implements sdk.Msg
-func (msg MsgUpdateHostedAccount) GetSigners() []sdk.AccAddress {
-	admin, err := sdk.AccAddressFromBech32(msg.Admin)
+func (msg MsgUpdateTrustlessAgentFeeConfig) GetSigners() []sdk.AccAddress {
+	admin, err := sdk.AccAddressFromBech32(msg.FeeAdmin)
 	if err != nil {
 		panic(err)
 	}

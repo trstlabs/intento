@@ -1,27 +1,16 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/trstlabs/intento/x/claim/types"
 )
 
-// GetParams get params
-func (k Keeper) GetParams(ctx sdk.Context) (types.Params, error) {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	bz := store.Get([]byte(types.ParamsKey))
-	params := types.Params{}
-	err := k.cdc.UnmarshalJSON(bz, &params)
-	return params, err
+// GetParams returns the total set of alloc module parameters.
+func (k Keeper) GetParams(ctx sdk.Context) (params types.Params, err error) {
+	return k.Params.Get(ctx)
 }
 
-// SetParams set params
+// SetParams sets the total set of alloc module parameters.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	bz, err := k.cdc.MarshalJSON(&params)
-	if err != nil {
-		return err
-	}
-	store.Set([]byte(types.ParamsKey), bz)
-	return nil
+	return k.Params.Set(ctx, params)
 }

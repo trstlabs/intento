@@ -7,7 +7,7 @@
   },
   "apis": [
     {
-      "url": "./tmp-swagger-gen/intento/alloc/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/intento/alloc/v1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "AllocParams"
@@ -15,7 +15,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/intento/claim/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/intento/claim/v1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "ClaimParams"
@@ -23,7 +23,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/intento/intent/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/intento/intent/v1/query.swagger.json",
       "operationIds": {
         "rename": {
           "Params": "IntentParams"
@@ -37,7 +37,7 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/intento/mint/v1beta1/query.swagger.json",
+      "url": "./tmp-swagger-gen/intento/mint/v1/query.swagger.json",
       "operationIds": {
         "rename": {
              "Params": "MintParams"

@@ -18,29 +18,29 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdctypes.Any, error) {
+func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctypes.Any, error) {
 	// local flow
-	if (flow.ICAConfig == nil || flow.ICAConfig.ConnectionID == "") && (flow.HostedICAConfig == nil || flow.HostedICAConfig.HostedAddress == "") {
+	if (flow.SelfHostedICA == nil || flow.SelfHostedICA.ConnectionID == "") && (flow.TrustlessAgent == nil || flow.TrustlessAgent.AgentAddress == "") {
 		txMsgs := flow.GetTxMsgs(k.cdc)
 		msgResponses, err := handleLocalFlow(k, ctx, txMsgs, *flow)
 		return err == nil, msgResponses, errorsmod.Wrap(err, "could execute local flow")
 	}
 
-	connectionID := flow.ICAConfig.ConnectionID
-	portID := flow.ICAConfig.PortID
+	connectionID := flow.SelfHostedICA.ConnectionID
+	portID := flow.SelfHostedICA.PortID
 	triggerAddress := flow.Owner
-	//get hosted account from hosted config
-	if flow.HostedICAConfig != nil && flow.HostedICAConfig.HostedAddress != "" {
-		hostedAccount := k.GetHostedAccount(ctx, flow.HostedICAConfig.HostedAddress)
-		if hostedAccount.HostedAddress == "" || hostedAccount.ICAConfig == nil {
-			return false, nil, errorsmod.Wrapf(types.ErrInvalidHostedAccount, "hosted account or ICAConfig is nil for address %s", flow.HostedICAConfig.HostedAddress)
+	//get trustless agent from hosted config
+	if flow.TrustlessAgent != nil && flow.TrustlessAgent.AgentAddress != "" {
+		trustlessAgent := k.GetTrustlessAgent(ctx, flow.TrustlessAgent.AgentAddress)
+		if trustlessAgent.AgentAddress == "" || trustlessAgent.ICAConfig == nil {
+			return false, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessAgent, "trustless agent or ICAConfig is nil for address %s", flow.TrustlessAgent.AgentAddress)
 		}
-		connectionID = hostedAccount.ICAConfig.ConnectionID
-		portID = hostedAccount.ICAConfig.PortID
-		triggerAddress = hostedAccount.HostedAddress
-		err := k.SendFeesToHostedAdmin(ctx, *flow, hostedAccount)
+		connectionID = trustlessAgent.ICAConfig.ConnectionID
+		portID = trustlessAgent.ICAConfig.PortID
+		triggerAddress = trustlessAgent.AgentAddress
+		err := k.SendFeesToHostedAdmin(ctx, *flow, trustlessAgent)
 		if err != nil {
-			return false, nil, errorsmod.Wrap(err, "could not pay hosted account")
+			return false, nil, errorsmod.Wrap(err, "could not pay trustless agent")
 		}
 
 	}
@@ -64,9 +64,13 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
 	}
+	const maxTimeout = time.Hour
 
-	relativeTimeoutTimestamp := uint64(time.Minute.Nanoseconds())
-
+	timeout := maxTimeout
+	if flow.Interval > 0 && flow.Interval < maxTimeout {
+		timeout = flow.Interval
+	}
+	relativeTimeoutTimestamp := uint64(timeout.Nanoseconds())
 	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.icaControllerKeeper)
 	icaMsg := icacontrollertypes.NewMsgSendTx(triggerAddress, connectionID, relativeTimeoutTimestamp, packetData)
 
@@ -80,7 +84,7 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.FlowInfo) (bool, []*cdc
 	return false, nil, nil
 }
 
-func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.FlowInfo) ([]*cdctypes.Any, error) {
+func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flow) ([]*cdctypes.Any, error) {
 	// CacheContext returns a new context with the multi-store branched into a cached storage object
 	// writeCache is called only if all msgs succeed, performing state transitions atomically
 	var msgResponses []*cdctypes.Any
@@ -139,7 +143,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	if id <= 0 {
 		return fmt.Errorf("flow not found")
 	}
-	flow := k.GetFlowInfo(ctx, id)
+	flow := k.Getflow(ctx, id)
 
 	flowHistoryEntry, newErr := k.GetLatestFlowHistoryEntry(ctx, id)
 	if newErr != nil {
@@ -166,6 +170,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	}
 
 	flowHistoryEntry.Executed = true
+	flowHistoryEntry.PacketSequences = append(flowHistoryEntry.PacketSequences, seq)
 
 	if flow.Configuration.SaveResponses {
 		flowHistoryEntry.MsgResponses = append(flowHistoryEntry.MsgResponses, msgResponses...)
@@ -239,7 +244,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 
 }
 
-func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsgs []*cdctypes.Any, flowHistoryEntry *types.FlowHistoryEntry) error {
+func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.Flow, nextMsgs []*cdctypes.Any, flowHistoryEntry *types.FlowHistoryEntry) error {
 	var errorString = ""
 
 	allowed, err := k.allowedToExecute(ctx, flow)
@@ -288,12 +293,12 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 		fee, distErr := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
 		if distErr != nil {
 			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, distErr.Error()))
-		} else if feeDenom != flowHistoryEntry.ExecFee.Denom {
+		} else if len(flowHistoryEntry.ExecFee) == 0 || feeDenom != flowHistoryEntry.ExecFee[0].Denom {
 			// If the fee denom is different, reset the exec fee to the new fee. TODO: Use Coins for ExecFee to handle this better
-			flowHistoryEntry.ExecFee = sdk.NewCoin(feeDenom, fee.Amount)
+			flowHistoryEntry.ExecFee = sdk.NewCoins(sdk.NewCoin(feeDenom, fee.Amount))
 			k.Logger(ctx).Debug("execFee reset to new denom")
 		} else {
-			flowHistoryEntry.ExecFee = flowHistoryEntry.ExecFee.Add(fee)
+			flowHistoryEntry.ExecFee = sdk.NewCoins(flowHistoryEntry.ExecFee[0].Add(fee))
 		}
 		k.Logger(ctx).Debug("execFee", flowHistoryEntry.ExecFee)
 		if errorString != "" {
@@ -302,7 +307,7 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 		}
 
 		k.SetCurrentFlowHistoryEntry(cacheCtx, flow.ID, flowHistoryEntry)
-		k.SetFlowInfo(ctx, &flow)
+		k.Setflow(ctx, &flow)
 		writeCtx()
 	}
 
@@ -310,7 +315,7 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.FlowInfo, nextMsg
 }
 
 // HandleDeepResponses checks responses and unwraps authz responses from the IBC packet
-func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, flow types.FlowInfo, previousMsgsExecuted int) ([]*cdctypes.Any, int, error) {
+func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.Any, relayer sdk.AccAddress, flow types.Flow, previousMsgsExecuted int) ([]*cdctypes.Any, int, error) {
 	var msgClass int
 
 	if previousMsgsExecuted == len(flow.Msgs) {
@@ -395,7 +400,7 @@ func (k Keeper) SetFlowOnTimeout(ctx sdk.Context, sourcePort string, channelID s
 	if id <= 0 {
 		return nil
 	}
-	flow := k.GetFlowInfo(ctx, id)
+	flow := k.Getflow(ctx, id)
 	if flow.Configuration.StopOnTimeout {
 		k.RemoveFromFlowQueue(ctx, flow)
 	}
@@ -433,7 +438,7 @@ func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq 
 		flowHistoryEntry = &types.FlowHistoryEntry{Errors: []string{err.Error()}}
 	}
 
-	flow, err := k.TryGetFlowInfo(ctx, id)
+	flow, err := k.TryGetflow(ctx, id)
 	if err != nil {
 		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, err.Error())
 	}
