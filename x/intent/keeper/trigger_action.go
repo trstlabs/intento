@@ -81,6 +81,14 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctype
 
 	k.Logger(ctx).Debug("flow", "ibc_sequence", res.Sequence, "message", flow.GetTxMsgs(k.cdc)[0].String())
 	k.SetTmpFlowID(ctx, flow.ID, portID, channelID, res.Sequence)
+
+	flowHistoryEntry, err := k.GetLatestFlowHistoryEntry(ctx, flow.ID)
+	if err != nil {
+		return false, nil, errorsmod.Wrap(err, "could not get latest flow history entry")
+	}
+	flowHistoryEntry.PacketSequences = append(flowHistoryEntry.PacketSequences, res.Sequence)
+	k.SetCurrentFlowHistoryEntry(ctx, flow.ID, flowHistoryEntry)
+
 	return false, nil, nil
 }
 
@@ -170,7 +178,6 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	}
 
 	flowHistoryEntry.Executed = true
-	flowHistoryEntry.PacketSequences = append(flowHistoryEntry.PacketSequences, seq)
 
 	if flow.Configuration.SaveResponses {
 		flowHistoryEntry.MsgResponses = append(flowHistoryEntry.MsgResponses, msgResponses...)
