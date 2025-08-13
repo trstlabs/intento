@@ -193,7 +193,7 @@ func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.Flow, trustles
 	if err != nil {
 		return err
 	}
-	hostedAccAdminAddr, err := sdk.AccAddressFromBech32(trustlessAgent.FeeConfig.FeeAdmin)
+	trustlessAgentAdminAddr, err := sdk.AccAddressFromBech32(trustlessAgent.FeeConfig.FeeAdmin)
 	if err != nil {
 		return err
 	}
@@ -203,7 +203,7 @@ func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.Flow, trustles
 	// Find the cheapest valid matching coin (first one that matches)
 	for _, feeLimit := range flow.TrustlessAgent.FeeLimit {
 		found, feeCoin := supportedCoins.Find(feeLimit.Denom)
-		if !found {
+		if supportedCoins.Len() != 0 && !found {
 			continue // skip unsupported denom
 		}
 		if feeCoin.Amount.GT(feeLimit.Amount) {
@@ -211,7 +211,7 @@ func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.Flow, trustles
 		}
 
 		// Try to send this coin
-		err = k.bankKeeper.SendCoins(ctx, feeAddr, hostedAccAdminAddr, sdk.Coins{feeCoin})
+		err = k.bankKeeper.SendCoins(ctx, feeAddr, trustlessAgentAdminAddr, sdk.Coins{feeCoin})
 		if err == nil {
 			return nil // success
 		}
@@ -222,7 +222,7 @@ func (k Keeper) SendFeesToHostedAdmin(ctx sdk.Context, flow types.Flow, trustles
 			if err != nil {
 				return err
 			}
-			return k.bankKeeper.SendCoins(ctx, fallbackAddr, hostedAccAdminAddr, sdk.Coins{feeCoin})
+			return k.bankKeeper.SendCoins(ctx, fallbackAddr, trustlessAgentAdminAddr, sdk.Coins{feeCoin})
 		}
 
 		return err // no fallback or fallback failed
