@@ -260,7 +260,7 @@ func TestQueryTrustlessAgentsByFeeAdmin(t *testing.T) {
 
 	// create 10
 	for i := 0; i < 10; i++ {
-		hostAcc, err := CreateFakeHostedAcc(keepers.IntentKeeper, ctx, creator.String(), portID, ibctesting.FirstConnectionID+(fmt.Sprint(i)), ibctesting.FirstConnectionID)
+		hostAcc, err := CreateFakeTrustlessAgent(keepers.IntentKeeper, ctx, creator.String(), portID, ibctesting.FirstConnectionID+(fmt.Sprint(i)), ibctesting.FirstConnectionID)
 		require.NoError(t, err)
 
 		expectedTrustlessAgents = append(expectedTrustlessAgents, hostAcc)
@@ -435,7 +435,7 @@ func CreateFakeAuthZFlow(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID
 	return newFlow, nil
 }
 
-func CreateFakeHostedAcc(k Keeper, ctx sdk.Context, creator, portID, connectionId, hostConnectionId string) (types.TrustlessAgent, error) {
+func CreateFakeTrustlessAgent(k Keeper, ctx sdk.Context, creator, portID, connectionId, hostConnectionId string) (types.TrustlessAgent, error) {
 	agentAddress, err := DeriveAgentAddress(creator, connectionId)
 	if err != nil {
 		return types.TrustlessAgent{}, err
@@ -445,10 +445,10 @@ func CreateFakeHostedAcc(k Keeper, ctx sdk.Context, creator, portID, connectionI
 	if err != nil {
 		return types.TrustlessAgent{}, err
 	}
-	hostedAcc := types.TrustlessAgent{AgentAddress: agentAddress.String(), FeeConfig: &types.TrustlessAgentFeeConfig{FeeAdmin: creator, FeeCoinsSupported: sdk.NewCoins(sdk.NewCoin(types.Denom, math.NewInt(1)))}, ICAConfig: &types.ICAConfig{ConnectionID: connectionId, PortID: portID}}
+	trustlessAgent := types.TrustlessAgent{AgentAddress: agentAddress.String(), FeeConfig: &types.TrustlessAgentFeeConfig{FeeAdmin: creator, FeeCoinsSupported: sdk.NewCoins(sdk.NewCoin(types.Denom, math.NewInt(1)))}, ICAConfig: &types.ICAConfig{ConnectionID: connectionId, PortID: portID}}
 	//store hosted config by address on hosted key prefix
-	k.SetTrustlessAgent(ctx, &hostedAcc)
+	k.SetTrustlessAgent(ctx, &trustlessAgent)
 	k.addToTrustlessAgentAdminIndex(ctx, creatorAddr, agentAddress.String())
 
-	return hostedAcc, nil
+	return trustlessAgent, nil
 }
