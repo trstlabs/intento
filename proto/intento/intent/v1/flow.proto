@@ -57,7 +57,8 @@ message ICAConfig {
 // config for a trustless agent for flow execution on host chain
 message TrustlessAgentConfig {
   string agent_address = 1;
-  repeated cosmos.base.v1beta1.Coin fee_limit = 3 [(gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin fee_limit = 2 [(gogoproto.nullable) = false];
+  string connection_id = 3; //optional
 }
 
 // ExecutionConfiguration provides the execution-related configuration of the
@@ -106,8 +107,8 @@ message FlowHistoryEntry {
   repeated google.protobuf.Any msg_responses = 7;
   // will be empty when save_responses is false
   repeated string query_responses = 8;
-  // packet sequence of the flow execution on the host chain
-  uint64 packet_sequence = 9;
+  // packet sequences of the flow execution on the host chain
+  repeated uint64 packet_sequences = 9;
 }
 
 // ExecutionConditions provides execution conditions for the flow

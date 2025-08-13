@@ -170,7 +170,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	}
 
 	flowHistoryEntry.Executed = true
-	flowHistoryEntry.PacketSequence = seq
+	flowHistoryEntry.PacketSequences = append(flowHistoryEntry.PacketSequences, seq)
 
 	if flow.Configuration.SaveResponses {
 		flowHistoryEntry.MsgResponses = append(flowHistoryEntry.MsgResponses, msgResponses...)

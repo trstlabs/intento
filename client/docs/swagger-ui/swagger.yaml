@@ -850,10 +850,12 @@ paths:
                       items:
                         type: string
                       title: will be empty when save_responses is false
-                    packet_sequence:
-                      type: string
-                      format: uint64
-                      title: packet sequence of the flow execution on the host chain
+                    packet_sequences:
+                      type: array
+                      items:
+                        type: string
+                        format: uint64
+                      title: packet sequences of the flow execution on the host chain
                   title: >-
                     FlowHistoryEntry provides a the history of flow interchain
                     tx call
@@ -1386,6 +1388,9 @@ paths:
                             the custom method
 
                             signatures required by gogoproto.
+                      connection_id:
+                        type: string
+                        title: optional
                     title: >-
                       config for a trustless agent for flow execution on host
                       chain
@@ -1650,7 +1655,7 @@ paths:
                     title: >-
                       ExecutionConditions provides execution conditions for the
                       flow
-                title: flow stores the info for the flow
+                title: Flow stores the info for the flow
             title: QueryFlowResponse the response type for the Query/FlowRequest RPC
         default:
           description: An unexpected error response.
@@ -2104,6 +2109,9 @@ paths:
                               the custom method
 
                               signatures required by gogoproto.
+                        connection_id:
+                          type: string
+                          title: optional
                       title: >-
                         config for a trustless agent for flow execution on host
                         chain
@@ -2371,7 +2379,7 @@ paths:
                       title: >-
                         ExecutionConditions provides execution conditions for
                         the flow
-                  title: flow stores the info for the flow
+                  title: Flow stores the info for the flow
               pagination:
                 description: Pagination defines the pagination in the response.
                 type: object
@@ -2898,6 +2906,9 @@ paths:
                               the custom method
 
                               signatures required by gogoproto.
+                        connection_id:
+                          type: string
+                          title: optional
                       title: >-
                         config for a trustless agent for flow execution on host
                         chain
@@ -3165,7 +3176,7 @@ paths:
                       title: >-
                         ExecutionConditions provides execution conditions for
                         the flow
-                  title: flow stores the info for the flow
+                  title: Flow stores the info for the flow
               pagination:
                 description: Pagination defines the pagination in the response.
                 type: object
@@ -5955,6 +5966,491 @@ definitions:
     title: |-
       Replace value with value from message or response from another flow’s
       latest output before execution
+  intento.intent.v1.Flow:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uint64
+      owner:
+        type: string
+      label:
+        type: string
+      fee_address:
+        type: string
+      msgs:
+        type: array
+        items:
+          type: object
+          properties:
+            '@type':
+              type: string
+              description: >-
+                A URL/resource name that uniquely identifies the type of the
+                serialized
+
+                protocol buffer message. This string must contain at least
+
+                one "/" character. The last segment of the URL's path must
+                represent
+
+                the fully qualified name of the type (as in
+
+                `path/google.protobuf.Duration`). The name should be in a
+                canonical form
+
+                (e.g., leading "." is not accepted).
+
+
+                In practice, teams usually precompile into the binary all types
+                that they
+
+                expect it to use in the context of Any. However, for URLs which
+                use the
+
+                scheme `http`, `https`, or no scheme, one can optionally set up
+                a type
+
+                server that maps type URLs to message definitions as follows:
+
+
+                * If no scheme is provided, `https` is assumed.
+
+                * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                  value in binary format, or produce an error.
+                * Applications are allowed to cache lookup results based on the
+                  URL, or have them precompiled into a binary to avoid any
+                  lookup. Therefore, binary compatibility needs to be preserved
+                  on changes to types. (Use versioned type names to manage
+                  breaking changes.)
+
+                Note: this functionality is not currently available in the
+                official
+
+                protobuf release, and it is not used for type URLs beginning
+                with
+
+                type.googleapis.com. As of May 2023, there are no widely used
+                type server
+
+                implementations and no plans to implement one.
+
+
+                Schemes other than `http`, `https` (or the empty scheme) might
+                be
+
+                used with implementation specific semantics.
+          additionalProperties: {}
+          description: >-
+            `Any` contains an arbitrary serialized protocol buffer message along
+            with a
+
+            URL that describes the type of the serialized message.
+
+
+            Protobuf library provides support to pack/unpack Any values in the
+            form
+
+            of utility functions or additional generated methods of the Any
+            type.
+
+
+            Example 1: Pack and unpack a message in C++.
+
+                Foo foo = ...;
+                Any any;
+                any.PackFrom(foo);
+                ...
+                if (any.UnpackTo(&foo)) {
+                  ...
+                }
+
+            Example 2: Pack and unpack a message in Java.
+
+                Foo foo = ...;
+                Any any = Any.pack(foo);
+                ...
+                if (any.is(Foo.class)) {
+                  foo = any.unpack(Foo.class);
+                }
+                // or ...
+                if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                  foo = any.unpack(Foo.getDefaultInstance());
+                }
+
+             Example 3: Pack and unpack a message in Python.
+
+                foo = Foo(...)
+                any = Any()
+                any.Pack(foo)
+                ...
+                if any.Is(Foo.DESCRIPTOR):
+                  any.Unpack(foo)
+                  ...
+
+             Example 4: Pack and unpack a message in Go
+
+                 foo := &pb.Foo{...}
+                 any, err := anypb.New(foo)
+                 if err != nil {
+                   ...
+                 }
+                 ...
+                 foo := &pb.Foo{}
+                 if err := any.UnmarshalTo(foo); err != nil {
+                   ...
+                 }
+
+            The pack methods provided by protobuf library will by default use
+
+            'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+            methods only use the fully qualified type name after the last '/'
+
+            in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+            name "y.z".
+
+
+            JSON
+
+            ====
+
+            The JSON representation of an `Any` value uses the regular
+
+            representation of the deserialized, embedded message, with an
+
+            additional field `@type` which contains the type URL. Example:
+
+                package google.profile;
+                message Person {
+                  string first_name = 1;
+                  string last_name = 2;
+                }
+
+                {
+                  "@type": "type.googleapis.com/google.profile.Person",
+                  "firstName": <string>,
+                  "lastName": <string>
+                }
+
+            If the embedded message type is well-known and has a custom JSON
+
+            representation, that representation will be embedded adding a field
+
+            `value` which holds the custom JSON in addition to the `@type`
+
+            field. Example (for message [google.protobuf.Duration][]):
+
+                {
+                  "@type": "type.googleapis.com/google.protobuf.Duration",
+                  "value": "1.212s"
+                }
+      interval:
+        type: string
+      start_time:
+        type: string
+        format: date-time
+      exec_time:
+        type: string
+        format: date-time
+      end_time:
+        type: string
+        format: date-time
+      update_history:
+        type: array
+        items:
+          type: string
+          format: date-time
+      self_hosted_ica:
+        type: object
+        properties:
+          port_id:
+            type: string
+          connection_id:
+            type: string
+        title: base config for ICA
+      trustless_agent:
+        type: object
+        properties:
+          agent_address:
+            type: string
+          fee_limit:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+          connection_id:
+            type: string
+            title: optional
+        title: config for a trustless agent for flow execution on host chain
+      configuration:
+        type: object
+        properties:
+          save_responses:
+            type: boolean
+            title: >-
+              if true, the flow response outputs are saved and can be used in
+              logic
+          updating_disabled:
+            type: boolean
+            title: if true, the flow is not updatable
+          stop_on_success:
+            type: boolean
+            title: >-
+              If true, will execute until we get a successful Flow, if
+              false/unset will
+
+              always execute
+          stop_on_failure:
+            type: boolean
+            title: >-
+              If true, will execute until successful Flow, if false/unset will
+              always
+
+              execute
+          stop_on_timeout:
+            type: boolean
+            title: If true, will stop if message times oiut
+          fallback_to_owner_balance:
+            type: boolean
+            title: >-
+              If true, owner account balance is used when trigger account funds
+              run out
+        title: >-
+          ExecutionConfiguration provides the execution-related configuration of
+          the
+
+          flow
+      conditions:
+        type: object
+        properties:
+          feedback_loops:
+            type: array
+            items:
+              type: object
+              properties:
+                flow_id:
+                  type: string
+                  format: uint64
+                  title: flow to get the latest response value from, optional
+                response_index:
+                  type: integer
+                  format: int64
+                  title: index of the responses
+                response_key:
+                  type: string
+                  title: for example "Amount"
+                msgs_index:
+                  type: integer
+                  format: int64
+                  title: index of the msg to replace
+                msg_key:
+                  type: string
+                  title: >-
+                    key of the message to replace (e.g. Amount[0].Amount,
+                    FromAddress)
+                value_type:
+                  type: string
+                  title: >-
+                    can be anything from sdk.Int, sdk.Coin, sdk.Coins, string,
+                    []string, []sdk.Int
+                icq_config:
+                  description: >-
+                    bool calculate_difference = 7; //True: calculate the
+                    difference with the previous value instead of using the
+                    value directly.
+
+
+                    config of ICQ to perform
+                  type: object
+                  properties:
+                    connection_id:
+                      type: string
+                    chain_id:
+                      type: string
+                    timeout_policy:
+                      type: string
+                      enum:
+                        - REJECT_QUERY_RESPONSE
+                        - RETRY_QUERY_REQUEST
+                        - EXECUTE_QUERY_CALLBACK
+                      default: REJECT_QUERY_RESPONSE
+                    timeout_duration:
+                      type: string
+                    query_type:
+                      type: string
+                      title: e.g. store/bank/key store/staking/key
+                    query_key:
+                      type: string
+                      title: >-
+                        key in the store that stores the query e.g.
+                        stakingtypes.GetValidatorKey(validatorAddressBz)
+                    response:
+                      type: string
+                      format: byte
+                      title: should be reset after execution
+                  title: config for using interchain queries
+              title: >-
+                Replace value with value from message or response from another
+                flow’s
+
+                latest output before execution
+            title: >-
+              Replace value with value from message or response from another
+              flow’s
+
+              latest output
+          comparisons:
+            type: array
+            items:
+              type: object
+              properties:
+                flow_id:
+                  type: string
+                  format: uint64
+                  title: get the latest response value from other flow, optional
+                response_index:
+                  type: integer
+                  format: int64
+                  title: index of the message response, optional
+                response_key:
+                  type: string
+                  title: e.g. Amount[0].Amount, FromAddress, optional
+                value_type:
+                  type: string
+                  title: >-
+                    can be anything from sdk.Int, sdk.Coin, sdk.Coins, string,
+                    []string, []sdk.Int
+                operator:
+                  type: string
+                  enum:
+                    - EQUAL
+                    - CONTAINS
+                    - NOT_CONTAINS
+                    - SMALLER_THAN
+                    - LARGER_THAN
+                    - GREATER_EQUAL
+                    - LESS_EQUAL
+                    - STARTS_WITH
+                    - ENDS_WITH
+                    - NOT_EQUAL
+                  default: EQUAL
+                  description: |-
+                    Comparison operators that can be used for various types.
+
+                     - EQUAL: Equality check (for all types)
+                     - CONTAINS: Contains check (for strings, arrays, etc.)
+                     - NOT_CONTAINS: Not contains check (for strings, arrays, etc.)
+                     - SMALLER_THAN: Less than check (for numeric types)
+                     - LARGER_THAN: Greater than check (for numeric types)
+                     - GREATER_EQUAL: Greater than or equal to check (for numeric types)
+                     - LESS_EQUAL: Less than or equal to check (for numeric types)
+                     - STARTS_WITH: Starts with check (for strings)
+                     - ENDS_WITH: Ends with check (for strings)
+                     - NOT_EQUAL: Not equal check (for all types)
+                operand:
+                  type: string
+                icq_config:
+                  description: >-
+                    bool calculate_difference = 7; //True: Calculate the
+                    difference with the previous value.
+
+
+                    config of ICQ to perform
+                  type: object
+                  properties:
+                    connection_id:
+                      type: string
+                    chain_id:
+                      type: string
+                    timeout_policy:
+                      type: string
+                      enum:
+                        - REJECT_QUERY_RESPONSE
+                        - RETRY_QUERY_REQUEST
+                        - EXECUTE_QUERY_CALLBACK
+                      default: REJECT_QUERY_RESPONSE
+                    timeout_duration:
+                      type: string
+                    query_type:
+                      type: string
+                      title: e.g. store/bank/key store/staking/key
+                    query_key:
+                      type: string
+                      title: >-
+                        key in the store that stores the query e.g.
+                        stakingtypes.GetValidatorKey(validatorAddressBz)
+                    response:
+                      type: string
+                      format: byte
+                      title: should be reset after execution
+                  title: config for using interchain queries
+              title: >-
+                Comparison is checked on the response in JSON before execution
+                of
+
+                flow and outputs true or false
+            title: Comparison with response response value
+          stop_on_success_of:
+            type: array
+            items:
+              type: string
+              format: uint64
+            title: >-
+              optional array of dependent intents that when executing
+              succesfully, stops
+
+              execution
+          stop_on_failure_of:
+            type: array
+            items:
+              type: string
+              format: uint64
+            title: >-
+              optional array of dependent intents that when not executing
+              succesfully,
+
+              stops execution
+          skip_on_failure_of:
+            type: array
+            items:
+              type: string
+              format: uint64
+            title: >-
+              optional array of dependent intents that should be executed
+              succesfully
+
+              after their latest call before execution is allowed
+          skip_on_success_of:
+            type: array
+            items:
+              type: string
+              format: uint64
+            title: >-
+              optional array of dependent intents that should fail after their
+              latest
+
+              call before execution is allowed
+          use_and_for_comparisons:
+            type: boolean
+            description: >-
+              True: Use AND for combining comparisons. False: Use OR for
+              combining comparisons.
+        title: ExecutionConditions provides execution conditions for the flow
+    title: Flow stores the info for the flow
   intento.intent.v1.FlowHistoryEntry:
     type: object
     properties:
@@ -6165,10 +6661,12 @@ definitions:
         items:
           type: string
         title: will be empty when save_responses is false
-      packet_sequence:
-        type: string
-        format: uint64
-        title: packet sequence of the flow execution on the host chain
+      packet_sequences:
+        type: array
+        items:
+          type: string
+          format: uint64
+        title: packet sequences of the flow execution on the host chain
     title: FlowHistoryEntry provides a the history of flow interchain tx call
   intento.intent.v1.ICAConfig:
     type: object
@@ -6494,10 +6992,12 @@ definitions:
               items:
                 type: string
               title: will be empty when save_responses is false
-            packet_sequence:
-              type: string
-              format: uint64
-              title: packet sequence of the flow execution on the host chain
+            packet_sequences:
+              type: array
+              items:
+                type: string
+                format: uint64
+              title: packet sequences of the flow execution on the host chain
           title: FlowHistoryEntry provides a the history of flow interchain tx call
       pagination:
         description: Pagination defines the pagination in the response.
@@ -6757,6 +7257,9 @@ definitions:
                     method
 
                     signatures required by gogoproto.
+              connection_id:
+                type: string
+                title: optional
             title: config for a trustless agent for flow execution on host chain
           configuration:
             type: object
@@ -7012,7 +7515,7 @@ definitions:
                   True: Use AND for combining comparisons. False: Use OR for
                   combining comparisons.
             title: ExecutionConditions provides execution conditions for the flow
-        title: flow stores the info for the flow
+        title: Flow stores the info for the flow
     title: QueryFlowResponse the response type for the Query/FlowRequest RPC
   intento.intent.v1.QueryFlowsForOwnerResponse:
     type: object
@@ -7254,6 +7757,9 @@ definitions:
                       custom method
 
                       signatures required by gogoproto.
+                connection_id:
+                  type: string
+                  title: optional
               title: config for a trustless agent for flow execution on host chain
             configuration:
               type: object
@@ -7512,7 +8018,7 @@ definitions:
                     True: Use AND for combining comparisons. False: Use OR for
                     combining comparisons.
               title: ExecutionConditions provides execution conditions for the flow
-          title: flow stores the info for the flow
+          title: Flow stores the info for the flow
       pagination:
         description: Pagination defines the pagination in the response.
         type: object
@@ -7775,6 +8281,9 @@ definitions:
                       custom method
 
                       signatures required by gogoproto.
+                connection_id:
+                  type: string
+                  title: optional
               title: config for a trustless agent for flow execution on host chain
             configuration:
               type: object
@@ -8033,7 +8542,7 @@ definitions:
                     True: Use AND for combining comparisons. False: Use OR for
                     combining comparisons.
               title: ExecutionConditions provides execution conditions for the flow
-          title: flow stores the info for the flow
+          title: Flow stores the info for the flow
       pagination:
         description: Pagination defines the pagination in the response.
         type: object
@@ -8354,6 +8863,9 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+      connection_id:
+        type: string
+        title: optional
     title: config for a trustless agent for flow execution on host chain
   intento.intent.v1.TrustlessAgentFeeConfig:
     type: object
@@ -8374,488 +8886,6 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
-  intento.intent.v1.flow:
-    type: object
-    properties:
-      id:
-        type: string
-        format: uint64
-      owner:
-        type: string
-      label:
-        type: string
-      fee_address:
-        type: string
-      msgs:
-        type: array
-        items:
-          type: object
-          properties:
-            '@type':
-              type: string
-              description: >-
-                A URL/resource name that uniquely identifies the type of the
-                serialized
-
-                protocol buffer message. This string must contain at least
-
-                one "/" character. The last segment of the URL's path must
-                represent
-
-                the fully qualified name of the type (as in
-
-                `path/google.protobuf.Duration`). The name should be in a
-                canonical form
-
-                (e.g., leading "." is not accepted).
-
-
-                In practice, teams usually precompile into the binary all types
-                that they
-
-                expect it to use in the context of Any. However, for URLs which
-                use the
-
-                scheme `http`, `https`, or no scheme, one can optionally set up
-                a type
-
-                server that maps type URLs to message definitions as follows:
-
-
-                * If no scheme is provided, `https` is assumed.
-
-                * An HTTP GET on the URL must yield a [google.protobuf.Type][]
-                  value in binary format, or produce an error.
-                * Applications are allowed to cache lookup results based on the
-                  URL, or have them precompiled into a binary to avoid any
-                  lookup. Therefore, binary compatibility needs to be preserved
-                  on changes to types. (Use versioned type names to manage
-                  breaking changes.)
-
-                Note: this functionality is not currently available in the
-                official
-
-                protobuf release, and it is not used for type URLs beginning
-                with
-
-                type.googleapis.com. As of May 2023, there are no widely used
-                type server
-
-                implementations and no plans to implement one.
-
-
-                Schemes other than `http`, `https` (or the empty scheme) might
-                be
-
-                used with implementation specific semantics.
-          additionalProperties: {}
-          description: >-
-            `Any` contains an arbitrary serialized protocol buffer message along
-            with a
-
-            URL that describes the type of the serialized message.
-
-
-            Protobuf library provides support to pack/unpack Any values in the
-            form
-
-            of utility functions or additional generated methods of the Any
-            type.
-
-
-            Example 1: Pack and unpack a message in C++.
-
-                Foo foo = ...;
-                Any any;
-                any.PackFrom(foo);
-                ...
-                if (any.UnpackTo(&foo)) {
-                  ...
-                }
-
-            Example 2: Pack and unpack a message in Java.
-
-                Foo foo = ...;
-                Any any = Any.pack(foo);
-                ...
-                if (any.is(Foo.class)) {
-                  foo = any.unpack(Foo.class);
-                }
-                // or ...
-                if (any.isSameTypeAs(Foo.getDefaultInstance())) {
-                  foo = any.unpack(Foo.getDefaultInstance());
-                }
-
-             Example 3: Pack and unpack a message in Python.
-
-                foo = Foo(...)
-                any = Any()
-                any.Pack(foo)
-                ...
-                if any.Is(Foo.DESCRIPTOR):
-                  any.Unpack(foo)
-                  ...
-
-             Example 4: Pack and unpack a message in Go
-
-                 foo := &pb.Foo{...}
-                 any, err := anypb.New(foo)
-                 if err != nil {
-                   ...
-                 }
-                 ...
-                 foo := &pb.Foo{}
-                 if err := any.UnmarshalTo(foo); err != nil {
-                   ...
-                 }
-
-            The pack methods provided by protobuf library will by default use
-
-            'type.googleapis.com/full.type.name' as the type URL and the unpack
-
-            methods only use the fully qualified type name after the last '/'
-
-            in the type URL, for example "foo.bar.com/x/y.z" will yield type
-
-            name "y.z".
-
-
-            JSON
-
-            ====
-
-            The JSON representation of an `Any` value uses the regular
-
-            representation of the deserialized, embedded message, with an
-
-            additional field `@type` which contains the type URL. Example:
-
-                package google.profile;
-                message Person {
-                  string first_name = 1;
-                  string last_name = 2;
-                }
-
-                {
-                  "@type": "type.googleapis.com/google.profile.Person",
-                  "firstName": <string>,
-                  "lastName": <string>
-                }
-
-            If the embedded message type is well-known and has a custom JSON
-
-            representation, that representation will be embedded adding a field
-
-            `value` which holds the custom JSON in addition to the `@type`
-
-            field. Example (for message [google.protobuf.Duration][]):
-
-                {
-                  "@type": "type.googleapis.com/google.protobuf.Duration",
-                  "value": "1.212s"
-                }
-      interval:
-        type: string
-      start_time:
-        type: string
-        format: date-time
-      exec_time:
-        type: string
-        format: date-time
-      end_time:
-        type: string
-        format: date-time
-      update_history:
-        type: array
-        items:
-          type: string
-          format: date-time
-      self_hosted_ica:
-        type: object
-        properties:
-          port_id:
-            type: string
-          connection_id:
-            type: string
-        title: base config for ICA
-      trustless_agent:
-        type: object
-        properties:
-          agent_address:
-            type: string
-          fee_limit:
-            type: array
-            items:
-              type: object
-              properties:
-                denom:
-                  type: string
-                amount:
-                  type: string
-              description: >-
-                Coin defines a token with a denomination and an amount.
-
-
-                NOTE: The amount field is an Int which implements the custom
-                method
-
-                signatures required by gogoproto.
-        title: config for a trustless agent for flow execution on host chain
-      configuration:
-        type: object
-        properties:
-          save_responses:
-            type: boolean
-            title: >-
-              if true, the flow response outputs are saved and can be used in
-              logic
-          updating_disabled:
-            type: boolean
-            title: if true, the flow is not updatable
-          stop_on_success:
-            type: boolean
-            title: >-
-              If true, will execute until we get a successful Flow, if
-              false/unset will
-
-              always execute
-          stop_on_failure:
-            type: boolean
-            title: >-
-              If true, will execute until successful Flow, if false/unset will
-              always
-
-              execute
-          stop_on_timeout:
-            type: boolean
-            title: If true, will stop if message times oiut
-          fallback_to_owner_balance:
-            type: boolean
-            title: >-
-              If true, owner account balance is used when trigger account funds
-              run out
-        title: >-
-          ExecutionConfiguration provides the execution-related configuration of
-          the
-
-          flow
-      conditions:
-        type: object
-        properties:
-          feedback_loops:
-            type: array
-            items:
-              type: object
-              properties:
-                flow_id:
-                  type: string
-                  format: uint64
-                  title: flow to get the latest response value from, optional
-                response_index:
-                  type: integer
-                  format: int64
-                  title: index of the responses
-                response_key:
-                  type: string
-                  title: for example "Amount"
-                msgs_index:
-                  type: integer
-                  format: int64
-                  title: index of the msg to replace
-                msg_key:
-                  type: string
-                  title: >-
-                    key of the message to replace (e.g. Amount[0].Amount,
-                    FromAddress)
-                value_type:
-                  type: string
-                  title: >-
-                    can be anything from sdk.Int, sdk.Coin, sdk.Coins, string,
-                    []string, []sdk.Int
-                icq_config:
-                  description: >-
-                    bool calculate_difference = 7; //True: calculate the
-                    difference with the previous value instead of using the
-                    value directly.
-
-
-                    config of ICQ to perform
-                  type: object
-                  properties:
-                    connection_id:
-                      type: string
-                    chain_id:
-                      type: string
-                    timeout_policy:
-                      type: string
-                      enum:
-                        - REJECT_QUERY_RESPONSE
-                        - RETRY_QUERY_REQUEST
-                        - EXECUTE_QUERY_CALLBACK
-                      default: REJECT_QUERY_RESPONSE
-                    timeout_duration:
-                      type: string
-                    query_type:
-                      type: string
-                      title: e.g. store/bank/key store/staking/key
-                    query_key:
-                      type: string
-                      title: >-
-                        key in the store that stores the query e.g.
-                        stakingtypes.GetValidatorKey(validatorAddressBz)
-                    response:
-                      type: string
-                      format: byte
-                      title: should be reset after execution
-                  title: config for using interchain queries
-              title: >-
-                Replace value with value from message or response from another
-                flow’s
-
-                latest output before execution
-            title: >-
-              Replace value with value from message or response from another
-              flow’s
-
-              latest output
-          comparisons:
-            type: array
-            items:
-              type: object
-              properties:
-                flow_id:
-                  type: string
-                  format: uint64
-                  title: get the latest response value from other flow, optional
-                response_index:
-                  type: integer
-                  format: int64
-                  title: index of the message response, optional
-                response_key:
-                  type: string
-                  title: e.g. Amount[0].Amount, FromAddress, optional
-                value_type:
-                  type: string
-                  title: >-
-                    can be anything from sdk.Int, sdk.Coin, sdk.Coins, string,
-                    []string, []sdk.Int
-                operator:
-                  type: string
-                  enum:
-                    - EQUAL
-                    - CONTAINS
-                    - NOT_CONTAINS
-                    - SMALLER_THAN
-                    - LARGER_THAN
-                    - GREATER_EQUAL
-                    - LESS_EQUAL
-                    - STARTS_WITH
-                    - ENDS_WITH
-                    - NOT_EQUAL
-                  default: EQUAL
-                  description: |-
-                    Comparison operators that can be used for various types.
-
-                     - EQUAL: Equality check (for all types)
-                     - CONTAINS: Contains check (for strings, arrays, etc.)
-                     - NOT_CONTAINS: Not contains check (for strings, arrays, etc.)
-                     - SMALLER_THAN: Less than check (for numeric types)
-                     - LARGER_THAN: Greater than check (for numeric types)
-                     - GREATER_EQUAL: Greater than or equal to check (for numeric types)
-                     - LESS_EQUAL: Less than or equal to check (for numeric types)
-                     - STARTS_WITH: Starts with check (for strings)
-                     - ENDS_WITH: Ends with check (for strings)
-                     - NOT_EQUAL: Not equal check (for all types)
-                operand:
-                  type: string
-                icq_config:
-                  description: >-
-                    bool calculate_difference = 7; //True: Calculate the
-                    difference with the previous value.
-
-
-                    config of ICQ to perform
-                  type: object
-                  properties:
-                    connection_id:
-                      type: string
-                    chain_id:
-                      type: string
-                    timeout_policy:
-                      type: string
-                      enum:
-                        - REJECT_QUERY_RESPONSE
-                        - RETRY_QUERY_REQUEST
-                        - EXECUTE_QUERY_CALLBACK
-                      default: REJECT_QUERY_RESPONSE
-                    timeout_duration:
-                      type: string
-                    query_type:
-                      type: string
-                      title: e.g. store/bank/key store/staking/key
-                    query_key:
-                      type: string
-                      title: >-
-                        key in the store that stores the query e.g.
-                        stakingtypes.GetValidatorKey(validatorAddressBz)
-                    response:
-                      type: string
-                      format: byte
-                      title: should be reset after execution
-                  title: config for using interchain queries
-              title: >-
-                Comparison is checked on the response in JSON before execution
-                of
-
-                flow and outputs true or false
-            title: Comparison with response response value
-          stop_on_success_of:
-            type: array
-            items:
-              type: string
-              format: uint64
-            title: >-
-              optional array of dependent intents that when executing
-              succesfully, stops
-
-              execution
-          stop_on_failure_of:
-            type: array
-            items:
-              type: string
-              format: uint64
-            title: >-
-              optional array of dependent intents that when not executing
-              succesfully,
-
-              stops execution
-          skip_on_failure_of:
-            type: array
-            items:
-              type: string
-              format: uint64
-            title: >-
-              optional array of dependent intents that should be executed
-              succesfully
-
-              after their latest call before execution is allowed
-          skip_on_success_of:
-            type: array
-            items:
-              type: string
-              format: uint64
-            title: >-
-              optional array of dependent intents that should fail after their
-              latest
-
-              call before execution is allowed
-          use_and_for_comparisons:
-            type: boolean
-            description: >-
-              True: Use AND for combining comparisons. False: Use OR for
-              combining comparisons.
-        title: ExecutionConditions provides execution conditions for the flow
-    title: flow stores the info for the flow
   stride.interchainquery.v1.TimeoutPolicy:
     type: string
     enum:
