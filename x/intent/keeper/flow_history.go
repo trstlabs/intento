@@ -5,8 +5,6 @@ import (
 
 	"time"
 
-	"cosmossdk.io/math"
-
 	"cosmossdk.io/store/prefix"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -160,51 +158,4 @@ func (k Keeper) HasFlowHistoryEntry(ctx sdk.Context, flowId uint64) bool {
 	sequenceKey := append(types.FlowHistorySequencePrefix, sdk.Uint64ToBigEndian(flowId)...)
 	return store.Has(sequenceKey)
 
-}
-
-// func (k Keeper) getCurrentFlowHistoryEntry(ctx sdk.Context, flowId uint64) (*types.FlowHistoryEntry, bool) {
-// 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-
-// 	// Retrieve the current sequence for the flowId
-// 	sequenceKey := append(types.FlowHistorySequencePrefix, sdk.Uint64ToBigEndian(flowId)...)
-// 	sequenceBytes := store.Get(sequenceKey)
-// 	if sequenceBytes == nil {
-// 		// No sequence found, so no entry exists
-// 		return nil, false
-// 	}
-
-// 	// Decode the current sequence
-// 	sequence := sdk.BigEndianToUint64(sequenceBytes)
-
-// 	// Composite key: FlowHistoryKey + FlowID + Sequence (latest entry)
-// 	key := append(types.GetFlowHistoryKey(flowId), sdk.Uint64ToBigEndian(sequence)...)
-
-// 	// Fetch the current entry
-// 	entryBytes := store.Get(key)
-// 	if entryBytes == nil {
-// 		// No entry exists at the latest sequence
-// 		return nil, false
-// 	}
-// 	var entry types.FlowHistoryEntry
-// 	k.cdc.MustUnmarshal(entryBytes, &entry)
-
-// 	return &entry, true
-// }
-
-// we may reimplement this as a configuration-based gas fee
-func (k Keeper) CalculateTimeBasedFlexFee(ctx sdk.Context, flow types.Flow) math.Int {
-	historyEntry, _ := k.GetLatestFlowHistoryEntry(ctx, flow.ID)
-
-	if historyEntry != nil {
-		prevEntryTime := historyEntry.ActualExecTime
-		period := (flow.ExecTime.Sub(prevEntryTime))
-		return math.NewInt(int64(period.Milliseconds()))
-	}
-
-	period := flow.ExecTime.Sub(flow.StartTime)
-	if period.Seconds() <= 60 {
-		//base fee so we do not have a zero fee
-		return math.NewInt(6_000)
-	}
-	return math.NewInt(int64(period.Seconds() * 10))
 }
