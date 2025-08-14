@@ -136,7 +136,15 @@ func (k Keeper) GetClaimRecord(ctx sdk.Context, addr sdk.AccAddress) (types.Clai
 func (k Keeper) SetClaimRecord(ctx sdk.Context, claimRecord types.ClaimRecord) error {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimRecordsStorePrefix))
-
+	if len(claimRecord.Status) == 0 {
+		// Initialize status for all 4 action types
+		status := types.Status{
+			ActionCompleted:         false,
+			VestingPeriodsCompleted: []bool{false, false, false, false},
+			VestingPeriodsClaimed:   []bool{false, false, false, false},
+		}
+		claimRecord.Status = []types.Status{status, status, status, status}
+	}
 	bz, err := proto.Marshal(&claimRecord)
 	if err != nil {
 		return err

@@ -360,11 +360,9 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 				}
 				accs = append(accs, baseAccount)
 
-				status := claimtypes.Status{ActionCompleted: false, VestingPeriodsCompleted: []bool{false, false, false, false}, VestingPeriodsClaimed: []bool{false, false, false, false}}
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
 					Address:                address,
 					MaximumClaimableAmount: sdk.NewCoin("uinto", claimableAmount),
-					Status:                 []claimtypes.Status{status, status, status, status},
 				})
 			}
 
@@ -377,11 +375,9 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 					panic(err)
 				}
 				fmt.Printf("Burner address: %s\n", burnerAddress.String())
-				status := claimtypes.Status{ActionCompleted: false, VestingPeriodsCompleted: []bool{false, false, false, false}, VestingPeriodsClaimed: []bool{false, false, false, false}}
 				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
 					Address:                burnerAddress.String(),
 					MaximumClaimableAmount: sdk.NewCoin("uinto", remainder),
-					Status:                 []claimtypes.Status{status, status, status, status},
 				})
 				claimModuleBalance = claimModuleBalance.Add(remainder)
 				fmt.Printf("Airdrop remainder %s uinto sent to burner address %s\n", remainder.String(), burnerAddress)
