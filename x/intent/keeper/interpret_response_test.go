@@ -25,7 +25,7 @@ func TestParseCoin(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
@@ -41,7 +41,7 @@ func TestParseCoin(t *testing.T) {
 
 	executedLocally, _, err = keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 }
 
 func TestParseCoinFromMsgExec(t *testing.T) {
@@ -78,7 +78,7 @@ func TestParseCoinFromMsgExec(t *testing.T) {
 
 	msgResponses, _, err := keeper.HandleDeepResponses(ctx, []*cdctypes.Any{msgExecRespAny}, sdk.AccAddress{}, flow, 0)
 	require.NoError(t, err)
-	// require.True(t, executedLocally)
+	// require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
@@ -111,7 +111,7 @@ func TestParseInnerString(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
@@ -128,7 +128,7 @@ func TestParseInnerString(t *testing.T) {
 
 	executedLocally, _, err = keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 }
 
 func TestParseInnerStringFail(t *testing.T) {
@@ -142,7 +142,7 @@ func TestParseInnerStringFail(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
@@ -167,7 +167,7 @@ func TestParseInnerInt(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
@@ -183,7 +183,7 @@ func TestParseInnerInt(t *testing.T) {
 
 	executedLocally, _, err = keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 }
 
 func TestCompareInnerIntTrue(t *testing.T) {
@@ -197,7 +197,7 @@ func TestCompareInnerIntTrue(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	flow.Conditions = &types.ExecutionConditions{}
@@ -219,7 +219,7 @@ func TestCompareCoinTrue(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 	flow.Conditions = &types.ExecutionConditions{}
 	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0]", ValueType: "sdk.Coin", Operator: 0, Operand: "101stake"}}
@@ -240,7 +240,7 @@ func TestCompareCoinLargerThanTrue(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	flow.Conditions = &types.ExecutionConditions{}
@@ -267,7 +267,7 @@ func TestCompareIntFalse(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	flow.Conditions = &types.ExecutionConditions{}
@@ -289,7 +289,7 @@ func TestCompareDenomString(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	flow.Conditions = &types.ExecutionConditions{}
@@ -311,7 +311,7 @@ func TestInvalidResponseIndex(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	flow.Conditions = &types.ExecutionConditions{}
@@ -333,7 +333,7 @@ func TestCompareDenomStringContains(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	flow.Conditions = &types.ExecutionConditions{}
@@ -355,7 +355,7 @@ func TestCompareArrayCoinsContainsTrue(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	flow.Conditions = &types.ExecutionConditions{}
@@ -464,7 +464,7 @@ func TestFeedbackLoopNoDuplicates(t *testing.T) {
 	// Execute the flow
 	executedLocally, responses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 
 	// Verify we have the expected number of responses (3 messages)
 	require.Len(t, responses, 3, "expected 3 message responses")
@@ -568,7 +568,7 @@ func TestCompareCoinTrueICQ(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward})
 	executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	flow.Conditions = &types.ExecutionConditions{}

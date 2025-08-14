@@ -18,12 +18,16 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctypes.Any, error) {
+func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (int64, []*cdctypes.Any, error) {
 	// local flow
 	if (flow.SelfHostedICA == nil || flow.SelfHostedICA.ConnectionID == "") && (flow.TrustlessAgent == nil || flow.TrustlessAgent.AgentAddress == "") {
 		txMsgs := flow.GetTxMsgs(k.cdc)
 		msgResponses, err := handleLocalFlow(k, ctx, txMsgs, *flow)
-		return err == nil, msgResponses, errorsmod.Wrap(err, "could execute local flow")
+		if err != nil {
+			return 0, msgResponses, errorsmod.Wrap(err, "could execute local flow")
+		}
+		//indicates flow was executed locally
+		return -1, msgResponses, nil
 	}
 
 	connectionID := flow.SelfHostedICA.ConnectionID
@@ -33,7 +37,7 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctype
 	if flow.TrustlessAgent != nil && flow.TrustlessAgent.AgentAddress != "" {
 		trustlessAgent := k.GetTrustlessAgent(ctx, flow.TrustlessAgent.AgentAddress)
 		if trustlessAgent.AgentAddress == "" || trustlessAgent.ICAConfig == nil {
-			return false, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessAgent, "trustless agent or ICAConfig is nil for address %s", flow.TrustlessAgent.AgentAddress)
+			return 0, nil, errorsmod.Wrapf(types.ErrInvalidTrustlessAgent, "trustless agent or ICAConfig is nil for address %s", flow.TrustlessAgent.AgentAddress)
 		}
 		connectionID = trustlessAgent.ICAConfig.ConnectionID
 		portID = trustlessAgent.ICAConfig.PortID
@@ -41,7 +45,7 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctype
 		if trustlessAgent.FeeConfig != nil && trustlessAgent.FeeConfig.FeeCoinsSupported != nil {
 			err := k.SendFeesToTrustlessAgentFeeAdmin(ctx, *flow, trustlessAgent)
 			if err != nil {
-				return false, nil, errorsmod.Wrap(err, "could not pay trustless agent")
+				return 0, nil, errorsmod.Wrap(err, "could not pay trustless agent")
 			}
 		}
 
@@ -50,17 +54,17 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctype
 	//check channel is active
 	channelID, found := k.icaControllerKeeper.GetActiveChannelID(ctx, connectionID, portID)
 	if !found {
-		return false, nil, icatypes.ErrActiveChannelNotFound
+		return 0, nil, icatypes.ErrActiveChannelNotFound
 	}
 
 	//if a message contains "ICA_ADDR" string, the ICA address for the flow is retrieved and parsed
 	txMsgs, err := k.parseAndSetMsgs(ctx, flow, connectionID, portID)
 	if err != nil {
-		return false, nil, errorsmod.Wrap(err, "could parse and set messages")
+		return 0, nil, errorsmod.Wrap(err, "could parse and set messages")
 	}
 	data, err := icatypes.SerializeCosmosTx(k.cdc, txMsgs, icatypes.EncodingProtobuf)
 	if err != nil {
-		return false, nil, err
+		return 0, nil, err
 	}
 	packetData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
@@ -78,29 +82,13 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctype
 
 	res, err := msgServer.SendTx(ctx, icaMsg)
 	if err != nil {
-		return false, nil, errorsmod.Wrap(err, "could not send ICA message")
+		return 0, nil, errorsmod.Wrap(err, "could not send ICA message")
 	}
 
 	k.Logger(ctx).Debug("flow", "ibc_sequence", res.Sequence, "message", flow.GetTxMsgs(k.cdc)[0].String())
 	k.SetTmpFlowID(ctx, flow.ID, portID, channelID, res.Sequence)
 
-	flowHistoryEntry, err := k.GetLatestFlowHistoryEntry(ctx, flow.ID)
-	if err != nil {
-		return false, nil, errorsmod.Wrap(err, "could not get latest flow history entry")
-	}
-
-	if flowHistoryEntry == nil {
-		flowHistoryEntry = &types.FlowHistoryEntry{
-			PacketSequences: []uint64{res.Sequence},
-		}
-	} else if flowHistoryEntry.PacketSequences == nil {
-		flowHistoryEntry.PacketSequences = []uint64{res.Sequence}
-	} else {
-		flowHistoryEntry.PacketSequences = append(flowHistoryEntry.PacketSequences, res.Sequence)
-	}
-	k.SetFlowHistoryEntry(ctx, flow.ID, flowHistoryEntry)
-
-	return false, nil, nil
+	return int64(res.Sequence), nil, nil
 }
 
 func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flow) ([]*cdctypes.Any, error) {

@@ -17,10 +17,10 @@ import (
 // HandleFlow processes a single flow during the block
 func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, timeOfBlock time.Time, queryCallback []byte) {
 	var (
-		errorString     = ""
-		fee             = sdk.Coins{}
-		executedLocally = false
-		msgResponses    = []*cdctypes.Any{}
+		errorString  = ""
+		fee          = sdk.Coins{}
+		ibcSequences = []int64{}
+		msgResponses = []*cdctypes.Any{}
 	)
 
 	k.RemoveFromFlowQueue(ctx, flow)
@@ -44,17 +44,17 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, 
 	}
 
 	if errorString == "" {
-		executedLocally, errorString = k.handleFlowExecution(cacheCtx, &flow, &msgResponses, errorString)
+		ibcSequences, errorString = k.handleFlowExecution(cacheCtx, &flow, &msgResponses, errorString)
+		fmt.Printf("handleFlowExecution %v %v\n", ibcSequences, errorString)
 
 		feeCoin, err := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
 		fee = sdk.NewCoins(feeCoin)
 		if err != nil {
 			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, err.Error()))
 		}
-
 	}
 
-	k.addFlowHistoryEntry(cacheCtx, &flow, timeOfBlock, fee, executedLocally, msgResponses, errorString)
+	k.addFlowHistoryEntry(cacheCtx, &flow, timeOfBlock, fee, ibcSequences, msgResponses, errorString)
 
 	writeCtx()
 
@@ -128,28 +128,30 @@ func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, icqConfig types.ICQConfig
 }
 
 // handleFlowExecution handles the core logic of triggering an flow and processing responses
-func (k Keeper) handleFlowExecution(ctx sdk.Context, flow *types.Flow, msgResponses *[]*cdctypes.Any, errorString string) (bool, string) {
+func (k Keeper) handleFlowExecution(ctx sdk.Context, flow *types.Flow, msgResponses *[]*cdctypes.Any, errorString string) ([]int64, string) {
 	var executedLocally bool
 	// Safe check to ensure conditions exist before proceeding
 	if flow.Conditions == nil || flow.Conditions.FeedbackLoops == nil {
 		// If no FeedbackLoops conditions are present, just execute all Msgs normally
-		executedLocally, responses, err := k.TriggerFlow(ctx, flow)
+		ibcSequence, responses, err := k.TriggerFlow(ctx, flow)
 		if err != nil {
-			return false, appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
+			return []int64{}, appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
 		}
 		*msgResponses = append(*msgResponses, responses...)
-		return executedLocally, errorString
+		return []int64{ibcSequence}, errorString
 	}
 
 	// FeedbackLoops is set, handle accordingly
-	executedLocally, errorString = k.handleRunFeedbackLoops(ctx, flow, msgResponses, errorString)
-
-	return executedLocally, errorString
+	executedLocally, errorString, sequences := k.handleRunFeedbackLoops(ctx, flow, msgResponses, errorString)
+	if executedLocally {
+		return []int64{-1}, errorString
+	}
+	return sequences, errorString
 }
 
-func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.Flow, msgResponses *[]*cdctypes.Any, errorString string) (bool, string) {
+func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.Flow, msgResponses *[]*cdctypes.Any, errorString string) (bool, string, []int64) {
 	executedLocally := false
-
+	ibcSequences := []int64{}
 	// Group feedback loops by MsgsIndex to process them together
 	feedbackGroups := make(map[uint32][]*types.FeedbackLoop)
 	for _, loop := range flow.Conditions.FeedbackLoops {
@@ -181,11 +183,12 @@ func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.Flow, msgRes
 				flowCopy := *flow
 				flowCopy.Msgs = preFeedbackMsgs
 
-				localExec, responses, err := k.TriggerFlow(ctx, &flowCopy)
+				sequence, responses, err := k.TriggerFlow(ctx, &flowCopy)
 				if err != nil {
-					return false, appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
+					return false, appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error())), ibcSequences
 				}
-				executedLocally = executedLocally || localExec
+				ibcSequences = append(ibcSequences, sequence)
+				executedLocally = executedLocally || sequence == -1
 				allResponses = append(allResponses, responses...)
 				*msgResponses = append(*msgResponses, responses...)
 			}
@@ -202,7 +205,7 @@ func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.Flow, msgRes
 						FeedbackLoops: []*types.FeedbackLoop{loop},
 					})
 					if err != nil {
-						return false, appendError(errorString, fmt.Sprintf(types.ErrSettingFlowResult, err.Error()))
+						return false, appendError(errorString, fmt.Sprintf(types.ErrSettingFlowResult, err.Error())), ibcSequences
 					}
 
 					if !msgsEqual(remainingMsgs, modifiedMsgs) {
@@ -217,11 +220,12 @@ func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.Flow, msgRes
 			if len(remainingMsgs) > 0 && executedLocally {
 				flowCopy := *flow
 				flowCopy.Msgs = remainingMsgs
-				localExec, responses, err := k.TriggerFlow(ctx, &flowCopy)
+				sequence, responses, err := k.TriggerFlow(ctx, &flowCopy)
 				if err != nil {
-					return false, appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
+					return false, appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error())), ibcSequences
 				}
-				executedLocally = executedLocally || localExec
+				ibcSequences = append(ibcSequences, sequence)
+				executedLocally = executedLocally || sequence == -1
 				*msgResponses = append(*msgResponses, responses...)
 			}
 			break
@@ -230,7 +234,7 @@ func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.Flow, msgRes
 		i++
 	}
 
-	return executedLocally, errorString
+	return executedLocally, errorString, ibcSequences
 }
 
 func msgsEqual(a, b []*cdctypes.Any) bool {
@@ -402,10 +406,10 @@ func (k Keeper) scheduleNextExecution(ctx sdk.Context, flow types.Flow) {
 func (k Keeper) recordFlowNotAllowed(ctx sdk.Context, flow *types.Flow, timeOfBlock time.Time, errorMsg error) {
 	k.Logger(ctx).Debug("flow not allowed to execute", "id", flow.ID)
 	if errorMsg != nil {
-		k.addFlowHistoryEntry(ctx, flow, timeOfBlock, sdk.Coins{}, false, nil, fmt.Sprintf(types.ErrFlowConditions, errorMsg.Error()))
+		k.addFlowHistoryEntry(ctx, flow, timeOfBlock, sdk.Coins{}, []int64{}, nil, fmt.Sprintf(types.ErrFlowConditions, errorMsg.Error()))
 		return
 	}
-	k.addFlowHistoryEntry(ctx, flow, timeOfBlock, sdk.Coins{}, false, nil, "")
+	k.addFlowHistoryEntry(ctx, flow, timeOfBlock, sdk.Coins{}, []int64{}, nil, "")
 }
 
 // shouldRecur checks whether the flow should be rescheduled based on recurrence rules

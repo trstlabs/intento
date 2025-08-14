@@ -61,7 +61,7 @@ func TestSendLocalTx(t *testing.T) {
 	executedLocally, msgResponses, err := keepers.TriggerFlow(ctx, &flow)
 	require.NoError(t, err)
 	require.NotNil(t, msgResponses)
-	require.True(t, executedLocally)
+	require.Equal(t, int64(-1), executedLocally)
 }
 
 func TestSendLocalTxAutocompound(t *testing.T) {

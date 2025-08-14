@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 
 	"time"
 
@@ -105,7 +106,8 @@ func (k Keeper) IterateFlowHistorys(ctx sdk.Context, cb func(uint64, types.FlowH
 	}
 }
 
-func (k Keeper) addFlowHistoryEntry(ctx sdk.Context, flow *types.Flow, actualExecTime time.Time, execFee sdk.Coins, executedLocally bool, msgResponses []*cdctypes.Any, errorString string) {
+func (k Keeper) addFlowHistoryEntry(ctx sdk.Context, flow *types.Flow, actualExecTime time.Time, execFee sdk.Coins, sequences []int64, msgResponses []*cdctypes.Any, errorString string) {
+	fmt.Printf("addFlowHistoryEntry %v %s\n", flow.ID, errorString)
 	historyEntry := types.FlowHistoryEntry{
 		ScheduledExecTime: flow.ExecTime,
 		ActualExecTime:    actualExecTime,
@@ -130,8 +132,19 @@ func (k Keeper) addFlowHistoryEntry(ctx sdk.Context, flow *types.Flow, actualExe
 	if errorString != "" {
 		historyEntry.Errors = append(historyEntry.Errors, errorString)
 	}
-	if executedLocally {
+
+	//if first sequence is -1, flow was executed locally. If 0 there was an error so its not executed
+	if len(sequences) != 0 && sequences[0] == -1 {
 		historyEntry.Executed = true
+	} else if len(sequences) != 0 {
+		var uintSequences []uint64
+		for _, sequence := range sequences {
+			if sequence == 0 || sequence == -1 {
+				continue
+			}
+			uintSequences = append(uintSequences, uint64(sequence))
+		}
+		historyEntry.PacketSequences = uintSequences
 	}
 
 	k.SetFlowHistoryEntry(ctx, flow.ID, &historyEntry)

@@ -254,7 +254,7 @@ func TestOwnerMustBeSignerForLocalFlow(t *testing.T) {
 
 	executedLocally, _, err := k.TriggerFlow(ctx, &flow)
 	require.Contains(t, err.Error(), "owner doesn't have permission to send this message: unauthorized")
-	require.False(t, executedLocally)
+	require.NotEqual(t, int64(-1), executedLocally)
 
 }
 
