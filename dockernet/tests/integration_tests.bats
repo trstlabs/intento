@@ -315,7 +315,7 @@ EOF
   user_into_balance_start=$($INTO_MAIN_CMD q bank balance $(INTO_ADDRESS) $INTO_DENOM | GETBAL)
 
   # build ICA and retrieve ICA account
-  msg_create_trustless_agent=$($INTO_MAIN_CMD tx intent create-trustless-agent --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-supported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
+  msg_create_trustless_agent=$($INTO_MAIN_CMD tx intent create-trustless-agent --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --from $INTO_USER --gas 250000 -y)
   echo $msg_create_trustless_agent
   sleep 120
 
@@ -483,8 +483,6 @@ EOF
     echo "No hosted address found for connection ID: $CONNECTION_ID"
   fi
 
-  # fund_ica_hosted=$($HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ica_address $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
-
   WAIT_FOR_BLOCK $INTO_LOGS 3
 
   # Define the file path
@@ -527,8 +525,7 @@ EOF
 }
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Autocompound on host" {
-  #   # build ICA and retrieve ICA account
-  msg_create_trustless_agent=$($INTO_MAIN_CMD tx intent create-trustless-agent --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-supported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
+  msg_create_trustless_agent=$($INTO_MAIN_CMD tx intent create-trustless-agent --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --from $INTO_USER --gas 250000 -y)
   echo $msg_create_trustless_agent
   sleep 120
   # call MsgDelegate
@@ -595,7 +592,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   start_at=$(date -u -d "+2 minutes" +"%s")  # Linux version
 fi
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Autocompound on host chain" --duration "60s" --interval "60s" --start-at $start_at --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Autocompound on host chain" --duration "60s" --interval "60s" --start-at $start_at --trustless-agent $agent_address --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
 
   echo "$msg_submit_flow"
 
@@ -612,7 +609,6 @@ fi
 }
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Autocompound on host twice" {
-  #   # build ICA and retrieve ICA account
   msg_create_trustless_agent=$($INTO_MAIN_CMD tx intent create-trustless-agent --connection-id connection-$CONNECTION_ID --host-connection-id connection-$HOST_CONNECTION_ID --fee-coins-supported "10"$INTO_DENOM --from $INTO_USER --gas 250000 -y)
   echo $msg_create_trustless_agent
   sleep 120
@@ -818,6 +814,58 @@ EOF
   # sleep 40
   # # calculate difference between token balance of user before and after, should equal MSGSEND_AMOUNT
   staking_balance_end=$($HOST_MAIN_CMD 2>&1 q staking delegation $HOST_USER_ADDRESS $validator_address $HOST_DENOM | GETBAL)
+  staking_balance_diff=$(($staking_balance_end - $MSGDELEGATE_AMOUNT))
+
+  assert_not_equal "$staking_balance_diff" 0
+}
+
+
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Autocompound on Intento" {
+
+  validator_address=$(GET_VAL_ADDR INTO 1)
+  echo "Validator address: $validator_address"
+  delegate=$($INTO_MAIN_CMD tx staking delegate $validator_address $MSGDELEGATE_AMOUNT$INTO_DENOM --from $INTO_USER -y)
+  WAIT_FOR_BLOCK $INTO_LOGS 3
+
+  into_user_balance_start=$($INTO_MAIN_CMD 2>&1 q bank balance $INTO_USER_ADDRESS $INTO_DENOM | GETBAL)
+
+  msg_withdraw="MsgWithdrawDelegatorReward.json"
+  cat <<EOF >"$msg_withdraw"
+    {
+      "@type": "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+      "delegator_address": "$INTO_USER_ADDRESS",
+      "validator_address": "$validator_address"
+    }
+EOF
+
+  msg_delegate="MsgDelegate.json"
+  cat <<EOF >"$msg_delegate"
+{
+  "@type": "/cosmos.staking.v1beta1.MsgDelegate",
+      "delegator_address": "$INTO_USER_ADDRESS",
+      "validator_address": "$validator_address",
+      "amount": {
+          "amount": "10",
+          "denom": "$INTO_DENOM"
+      }
+    }
+EOF
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  start_at=$(date -v+2M +"%s")  # macOS version
+else
+  start_at=$(date -u -d "+2 minutes" +"%s")  # Linux version
+fi
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Autocompound on Intento chain" --duration "60s" --interval "60s" --start-at $start_at --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
+
+  echo "$msg_submit_flow"
+
+  GET_FLOW_ID $(INTO_ADDRESS)
+  WAIT_FOR_EXECUTED_FLOW_BY_ID
+
+  WAIT_FOR_MSG_RESPONSES_LENGTH 2
+
+  staking_balance_end=$($INTO_MAIN_CMD 2>&1 q staking delegation $INTO_USER_ADDRESS $validator_address $INTO_DENOM | GETBAL)
   staking_balance_diff=$(($staking_balance_end - $MSGDELEGATE_AMOUNT))
 
   assert_not_equal "$staking_balance_diff" 0
