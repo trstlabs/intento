@@ -291,11 +291,13 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.Flow, nextMsgs []
 		k.Logger(ctx).Debug("triggering next msgs", "id", flow.ID, "msgs", len(nextMsgs))
 		flowCopy := flow
 		flowCopy.Msgs = nextMsgs
-		_, _, err = k.TriggerFlow(cacheCtx, &flowCopy)
+		ibcSequence, _, err := k.TriggerFlow(cacheCtx, &flowCopy)
 		if err != nil {
 			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowMsgHandling, err.Error()))
 		}
-
+		if ibcSequence > 0 {
+			flowHistoryEntry.PacketSequences = append(flowHistoryEntry.PacketSequences, uint64(ibcSequence))
+		}
 		fee, distErr := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
 		if distErr != nil {
 			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, distErr.Error()))
