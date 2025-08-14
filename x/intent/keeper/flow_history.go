@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/binary"
-	"fmt"
 
 	"time"
 
@@ -107,7 +106,6 @@ func (k Keeper) IterateFlowHistorys(ctx sdk.Context, cb func(uint64, types.FlowH
 }
 
 func (k Keeper) addFlowHistoryEntry(ctx sdk.Context, flow *types.Flow, actualExecTime time.Time, execFee sdk.Coins, sequences []int64, msgResponses []*cdctypes.Any, errorString string) {
-	fmt.Printf("addFlowHistoryEntry %v %s\n", flow.ID, errorString)
 	historyEntry := types.FlowHistoryEntry{
 		ScheduledExecTime: flow.ExecTime,
 		ActualExecTime:    actualExecTime,

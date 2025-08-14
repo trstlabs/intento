@@ -45,7 +45,6 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, 
 
 	if errorString == "" {
 		ibcSequences, errorString = k.handleFlowExecution(cacheCtx, &flow, &msgResponses, errorString)
-		fmt.Printf("handleFlowExecution %v %v\n", ibcSequences, errorString)
 
 		feeCoin, err := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
 		fee = sdk.NewCoins(feeCoin)
@@ -440,27 +439,6 @@ func (k Keeper) shouldRecur(ctx sdk.Context, flow types.Flow, errorString string
 
 	return isRecurring && allowedToRecur
 }
-
-// // appendToPriorFlowHistory appends results to the prior history entry for the flow
-// func (k Keeper) appendToPriorFlowHistory(ctx sdk.Context, flow *types.Flow, fee sdk.Coin, executedLocally bool, msgResponses []*cdctypes.Any, queryResponse string, errorString string) {
-// 	// Fetch the last recorded flow history for the flow
-// 	entry, found := k.getCurrentFlowHistoryEntry(ctx, flow.ID)
-// 	if !found {
-// 		return
-// 	}
-// 	// Append the new data to the existing history entry
-// 	entry.ExecFee = entry.ExecFee.Add(fee)
-// 	entry.Executed = entry.Executed || executedLocally
-// 	if flow.Configuration.SaveResponses {
-// 		entry.MsgResponses = append(entry.MsgResponses, msgResponses...)
-// 		entry.QueryResponse = queryResponse
-// 		if errorString != "" {
-// 			entry.Errors = append(entry.Errors, errorString)
-// 		}
-// 	}
-// 	// Update the flow history with the new appended data
-// 	k.SetCurrentFlowHistoryEntry(ctx, flow.ID, entry)
-// }
 
 // emitFlowEvent creates an event for the flow execution
 func emitFlowEvent(ctx sdk.Context, flow types.Flow) {
