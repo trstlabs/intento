@@ -1411,24 +1411,26 @@ paths:
                       stop_on_success:
                         type: boolean
                         title: >-
-                          If true, will execute until we get a successful Flow,
-                          if false/unset will
+                          If true, will execute until we get a successful flow
+                          execution, if false/unset will
 
                           always execute
                       stop_on_failure:
                         type: boolean
                         title: >-
-                          If true, will execute until successful Flow, if
-                          false/unset will always
+                          If true, will execute until flow execution is
+                          successful, if false/unset will always
 
                           execute
                       stop_on_timeout:
                         type: boolean
-                        title: If true, will stop if message times oiut
+                        title: >-
+                          If true, will stop if flow execution on the host chain
+                          times out
                       wallet_fallback:
                         type: boolean
                         title: >-
-                          If true, owner account balance is used when trigger
+                          If true, will use the owner account balance when flow
                           account funds run out
                     title: >-
                       ExecutionConfiguration provides the execution-related
@@ -2135,25 +2137,27 @@ paths:
                         stop_on_success:
                           type: boolean
                           title: >-
-                            If true, will execute until we get a successful
-                            Flow, if false/unset will
+                            If true, will execute until we get a successful flow
+                            execution, if false/unset will
 
                             always execute
                         stop_on_failure:
                           type: boolean
                           title: >-
-                            If true, will execute until successful Flow, if
-                            false/unset will always
+                            If true, will execute until flow execution is
+                            successful, if false/unset will always
 
                             execute
                         stop_on_timeout:
                           type: boolean
-                          title: If true, will stop if message times oiut
+                          title: >-
+                            If true, will stop if flow execution on the host
+                            chain times out
                         wallet_fallback:
                           type: boolean
                           title: >-
-                            If true, owner account balance is used when trigger
-                            account funds run out
+                            If true, will use the owner account balance when
+                            flow account funds run out
                       title: >-
                         ExecutionConfiguration provides the execution-related
                         configuration of the
@@ -2935,25 +2939,27 @@ paths:
                         stop_on_success:
                           type: boolean
                           title: >-
-                            If true, will execute until we get a successful
-                            Flow, if false/unset will
+                            If true, will execute until we get a successful flow
+                            execution, if false/unset will
 
                             always execute
                         stop_on_failure:
                           type: boolean
                           title: >-
-                            If true, will execute until successful Flow, if
-                            false/unset will always
+                            If true, will execute until flow execution is
+                            successful, if false/unset will always
 
                             execute
                         stop_on_timeout:
                           type: boolean
-                          title: If true, will stop if message times oiut
+                          title: >-
+                            If true, will stop if flow execution on the host
+                            chain times out
                         wallet_fallback:
                           type: boolean
                           title: >-
-                            If true, owner account balance is used when trigger
-                            account funds run out
+                            If true, will use the owner account balance when
+                            flow account funds run out
                       title: >-
                         ExecutionConfiguration provides the execution-related
                         configuration of the
@@ -5924,25 +5930,25 @@ definitions:
       stop_on_success:
         type: boolean
         title: >-
-          If true, will execute until we get a successful Flow, if false/unset
-          will
+          If true, will execute until we get a successful flow execution, if
+          false/unset will
 
           always execute
       stop_on_failure:
         type: boolean
         title: >-
-          If true, will execute until successful Flow, if false/unset will
-          always
+          If true, will execute until flow execution is successful, if
+          false/unset will always
 
           execute
       stop_on_timeout:
         type: boolean
-        title: If true, will stop if message times oiut
+        title: If true, will stop if flow execution on the host chain times out
       wallet_fallback:
         type: boolean
         title: >-
-          If true, owner account balance is used when trigger account funds run
-          out
+          If true, will use the owner account balance when flow account funds
+          run out
     title: |-
       ExecutionConfiguration provides the execution-related configuration of the
       flow
@@ -6257,25 +6263,25 @@ definitions:
           stop_on_success:
             type: boolean
             title: >-
-              If true, will execute until we get a successful Flow, if
+              If true, will execute until we get a successful flow execution, if
               false/unset will
 
               always execute
           stop_on_failure:
             type: boolean
             title: >-
-              If true, will execute until successful Flow, if false/unset will
-              always
+              If true, will execute until flow execution is successful, if
+              false/unset will always
 
               execute
           stop_on_timeout:
             type: boolean
-            title: If true, will stop if message times oiut
+            title: If true, will stop if flow execution on the host chain times out
           wallet_fallback:
             type: boolean
             title: >-
-              If true, owner account balance is used when trigger account funds
-              run out
+              If true, will use the owner account balance when flow account
+              funds run out
         title: >-
           ExecutionConfiguration provides the execution-related configuration of
           the
@@ -7335,24 +7341,26 @@ definitions:
               stop_on_success:
                 type: boolean
                 title: >-
-                  If true, will execute until we get a successful Flow, if
-                  false/unset will
+                  If true, will execute until we get a successful flow
+                  execution, if false/unset will
 
                   always execute
               stop_on_failure:
                 type: boolean
                 title: >-
-                  If true, will execute until successful Flow, if false/unset
-                  will always
+                  If true, will execute until flow execution is successful, if
+                  false/unset will always
 
                   execute
               stop_on_timeout:
                 type: boolean
-                title: If true, will stop if message times oiut
+                title: >-
+                  If true, will stop if flow execution on the host chain times
+                  out
               wallet_fallback:
                 type: boolean
                 title: >-
-                  If true, owner account balance is used when trigger account
+                  If true, will use the owner account balance when flow account
                   funds run out
             title: >-
               ExecutionConfiguration provides the execution-related
@@ -7838,25 +7846,27 @@ definitions:
                 stop_on_success:
                   type: boolean
                   title: >-
-                    If true, will execute until we get a successful Flow, if
-                    false/unset will
+                    If true, will execute until we get a successful flow
+                    execution, if false/unset will
 
                     always execute
                 stop_on_failure:
                   type: boolean
                   title: >-
-                    If true, will execute until successful Flow, if false/unset
-                    will always
+                    If true, will execute until flow execution is successful, if
+                    false/unset will always
 
                     execute
                 stop_on_timeout:
                   type: boolean
-                  title: If true, will stop if message times oiut
+                  title: >-
+                    If true, will stop if flow execution on the host chain times
+                    out
                 wallet_fallback:
                   type: boolean
                   title: >-
-                    If true, owner account balance is used when trigger account
-                    funds run out
+                    If true, will use the owner account balance when flow
+                    account funds run out
               title: >-
                 ExecutionConfiguration provides the execution-related
                 configuration of the
@@ -8365,25 +8375,27 @@ definitions:
                 stop_on_success:
                   type: boolean
                   title: >-
-                    If true, will execute until we get a successful Flow, if
-                    false/unset will
+                    If true, will execute until we get a successful flow
+                    execution, if false/unset will
 
                     always execute
                 stop_on_failure:
                   type: boolean
                   title: >-
-                    If true, will execute until successful Flow, if false/unset
-                    will always
+                    If true, will execute until flow execution is successful, if
+                    false/unset will always
 
                     execute
                 stop_on_timeout:
                   type: boolean
-                  title: If true, will stop if message times oiut
+                  title: >-
+                    If true, will stop if flow execution on the host chain times
+                    out
                 wallet_fallback:
                   type: boolean
                   title: >-
-                    If true, owner account balance is used when trigger account
-                    funds run out
+                    If true, will use the owner account balance when flow
+                    account funds run out
               title: >-
                 ExecutionConfiguration provides the execution-related
                 configuration of the
