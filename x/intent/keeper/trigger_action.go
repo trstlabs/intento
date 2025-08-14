@@ -87,7 +87,6 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctype
 		return false, nil, errorsmod.Wrap(err, "could not get latest flow history entry")
 	}
 
-	// Create a new history entry if one doesn't exist
 	if flowHistoryEntry == nil {
 		flowHistoryEntry = &types.FlowHistoryEntry{
 			PacketSequences: []uint64{res.Sequence},

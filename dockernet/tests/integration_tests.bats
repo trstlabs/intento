@@ -306,7 +306,7 @@ EOF
 
 }
 
-@test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow MsgSend using Hosted ICA" {
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow MsgSend using Trustless Agent" {
   # get initial balances on host account
   host_user_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
   host_receiver_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
@@ -335,7 +335,7 @@ EOF
 
   $HOST_MAIN_CMD_TX authz grant $ica_address generic --msg-type "/cosmos.bank.v1beta1.MsgSend" --from $HOST_USER -y
   WAIT_FOR_BLOCK $INTO_LOGS 3
-  fund_ica_hosted=$($HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ica_address $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
+  #fund_ica_hosted=$($HOST_MAIN_CMD_TX bank send $HOST_USER_ADDRESS $ica_address $MSGSEND_AMOUNT$HOST_DENOM --from $HOST_USER -y)
 
   WAIT_FOR_BLOCK $INTO_LOGS 4
 
@@ -361,7 +361,7 @@ EOF
 }
 EOF
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "MsgSend using Hosted ICA and AuthZ" --duration "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "MsgSend using Trustless Agent" --duration "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance -y)
   echo "$msg_submit_flow"
 
   GET_FLOW_ID $(INTO_ADDRESS)
@@ -380,7 +380,7 @@ EOF
   assert_equal "$receiver_diff" $MSGSEND_AMOUNT #from MsgSend
 }
 
-@test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc ics20 transfer, trigger hosted ICA MsgExecuteContract via memo hook" {
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc ics20 transfer, trigger Trustless Agent MsgExecuteContract via memo hook" {
   # Get trustless agent for connection
   trustless_agents=$($INTO_MAIN_CMD q intent list-trustless-agents --output json)
   agent_address=$(echo "$trustless_agents" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.trustless_agents[] | select(.ica_config.connection_id == $conn_id) | .agent_address')
@@ -395,7 +395,7 @@ EOF
 
 
   # Build memo for ICS20 transfer to trigger ICA MsgSend
-  memo='{"flow": {"msgs": [{"@type": "/cosmos.authz.v1beta1.MsgExec","grantee":"'"$ica_address"'","msgs":[{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract","funds":[{"amount":"'"$MSGSEND_AMOUNT"'","denom":"'"$HOST_DENOM"'"}],"msg": "ewogICJzdWJzY3JpYmUiOiB7CiAgICAic3RyZWFtX2lkIjogIjQ1IiwKICAgICJvcGVyYXRvcl90YXJnZXQiOiAib3NtbzE4YWp1ajZkcnlsZmR2dDRkMzdwZWV4bGU0N2xqeHFhNXQ3NHdxOCIsCiAgICAib3BlcmF0b3IiOiAib3NtbzF2Y2E1cGtrZGd0NDJoajVtamtjbHFxZmxhOWRna3JoZGpleXEzYW04YTY5czRhNzc0bnpxdmdzanBuIgogIH0KfQo=","sender":"'"$HOST_USER_ADDRESS"'","contract":"'"$HOST_RECEIVER_ADDRESS"'"}]}],"label":"ICS20 Hook Hosted ICA MsgSend","duration":"60s","trustless_agent":"'$agent_address'","owner": "'$(INTO_ADDRESS)'","fallback":"true"}}'
+  memo='{"flow": {"msgs": [{"@type": "/cosmos.authz.v1beta1.MsgExec","grantee":"'"$ica_address"'","msgs":[{"@type":"/cosmwasm.wasm.v1.MsgExecuteContract","funds":[{"amount":"'"$MSGSEND_AMOUNT"'","denom":"'"$HOST_DENOM"'"}],"msg": "ewogICJzdWJzY3JpYmUiOiB7CiAgICAic3RyZWFtX2lkIjogIjQ1IiwKICAgICJvcGVyYXRvcl90YXJnZXQiOiAib3NtbzE4YWp1ajZkcnlsZmR2dDRkMzdwZWV4bGU0N2xqeHFhNXQ3NHdxOCIsCiAgICAib3BlcmF0b3IiOiAib3NtbzF2Y2E1cGtrZGd0NDJoajVtamtjbHFxZmxhOWRna3JoZGpleXEzYW04YTY5czRhNzc0bnpxdmdzanBuIgogIH0KfQo=","sender":"'"$HOST_USER_ADDRESS"'","contract":"'"$HOST_RECEIVER_ADDRESS"'"}]}],"label":"ICS20 Hook Trustless Agent MsgSend","duration":"60s","trustless_agent":"'$agent_address'","owner": "'$(INTO_ADDRESS)'","fallback":"true"}}'
 
   echo "📦 Memo: $memo"
 
@@ -412,7 +412,7 @@ EOF
 }
 
 
-@test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc ics20 transfer, trigger hosted ICA MsgSend via memo hook" {
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] ibc ics20 transfer, trigger Trustless Agent MsgSend via memo hook" {
   # 1️⃣ Initial balances
   host_user_balance_start=$($HOST_MAIN_CMD q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
   host_receiver_balance_start=$($HOST_MAIN_CMD q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
@@ -434,7 +434,7 @@ EOF
   WAIT_FOR_BLOCK $INTO_LOGS 3
 
   # 5️⃣ Build memo for ICS20 transfer to trigger ICA MsgSend
-  memo='{"flow": {"msgs": [{"@type": "/cosmos.authz.v1beta1.MsgExec","grantee":"'"$ica_address"'","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"amount":"'"$MSGSEND_AMOUNT"'","denom":"'"$HOST_DENOM"'"}],"from_address":"'"$HOST_USER_ADDRESS"'","to_address":"'"$HOST_RECEIVER_ADDRESS"'"}]}],"label":"ICS20 Hook Hosted ICA MsgSend","duration":"60s","cid":"connection-'$CONNECTION_ID'","trustless_agent":"'$agent_address'","owner": "'$(INTO_ADDRESS)'","fallback":"true"}}'
+  memo='{"flow": {"msgs": [{"@type": "/cosmos.authz.v1beta1.MsgExec","grantee":"'"$ica_address"'","msgs":[{"@type":"/cosmos.bank.v1beta1.MsgSend","amount":[{"amount":"'"$MSGSEND_AMOUNT"'","denom":"'"$HOST_DENOM"'"}],"from_address":"'"$HOST_USER_ADDRESS"'","to_address":"'"$HOST_RECEIVER_ADDRESS"'"}]}],"label":"ICS20 Hook Trustless Agent MsgSend","duration":"60s","cid":"connection-'$CONNECTION_ID'","trustless_agent":"'$agent_address'","owner": "'$(INTO_ADDRESS)'","fallback":"true"}}'
 
   echo "📦 Memo: $memo"
 
@@ -462,7 +462,7 @@ EOF
   assert_equal "$user_diff" "$expected_user_diff"
 }
 
-@test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow MsgSend using Hosted ICA with ICQ query balance as input" {
+@test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow MsgSend using Trustless Agent with ICQ query balance as input" {
   # get initial balances on host account
   host_user_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
   host_receiver_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
@@ -513,7 +513,7 @@ EOF
   query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+GliYy9GMUI1QzM0ODlGODgxQ0M1NkVDQzEyRUE5MDNFRkNGNUQyMDBCNEQ4MTIzODUyQzE5MUE4OEEzMUFDNzlBOEU0'
   #query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+HVhdG9t' #ATOM DENOM
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Hosted ICA" --duration "120s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "comparisons": [{"response_index":0,"response_key": "", "operand":"111", "operator":4,"value_type": "sdk.Int", "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Trustless Agent" --duration "120s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "comparisons": [{"response_index":0,"response_key": "", "operand":"111", "operator":4,"value_type": "sdk.Int", "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
 
   GET_FLOW_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_FLOW_BY_ID

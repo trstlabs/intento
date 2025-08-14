@@ -1388,9 +1388,12 @@ paths:
                             the custom method
 
                             signatures required by gogoproto.
+                        title: >-
+                          optional, if set to empty array, no fee limit is set
+                          and no fees are charged
                       connection_id:
                         type: string
-                        title: optional
+                        title: optional for display
                     title: >-
                       config for a trustless agent for flow execution on host
                       chain
@@ -2109,9 +2112,12 @@ paths:
                               the custom method
 
                               signatures required by gogoproto.
+                          title: >-
+                            optional, if set to empty array, no fee limit is set
+                            and no fees are charged
                         connection_id:
                           type: string
-                          title: optional
+                          title: optional for display
                       title: >-
                         config for a trustless agent for flow execution on host
                         chain
@@ -2906,9 +2912,12 @@ paths:
                               the custom method
 
                               signatures required by gogoproto.
+                          title: >-
+                            optional, if set to empty array, no fee limit is set
+                            and no fees are charged
                         connection_id:
                           type: string
-                          title: optional
+                          title: optional for display
                       title: >-
                         config for a trustless agent for flow execution on host
                         chain
@@ -3513,14 +3522,23 @@ paths:
                   min_flow_interval:
                     type: string
                     title: Minimum period for a flow
-                  relayer_rewards:
+                  connection_rewards:
                     type: array
                     items:
-                      type: string
-                      format: int64
+                      type: object
+                      properties:
+                        connection_id:
+                          type: string
+                          title: e.g. "connection-12"
+                        relayer_rewards:
+                          type: array
+                          items:
+                            type: string
+                            format: int64
+                          title: 'same format: 0=Low, 1=Medium, 2=High'
                     description: >-
-                      relayer rewards in uinto for each message type
-                      0=SDK,1=Wasm, 2=Osmo.
+                      relayer rewards in uinto for each message class
+                      0=Low,1=Medium, 2=High.
 
                       Rewards are in uinto and topped up in the module account
                       by alloc module.
@@ -3751,6 +3769,9 @@ paths:
                     properties:
                       fee_admin:
                         type: string
+                        title: >-
+                          can set fee coins supported, which can be charged per
+                          message executed if a fee limit is set in the flow
                       fee_coins_supported:
                         type: array
                         items:
@@ -3769,6 +3790,7 @@ paths:
                             the custom method
 
                             signatures required by gogoproto.
+                        title: can be empty
             description: >-
               QueryTrustlessAgentResponse is the response type for the
               Query/TrustlessAgent
@@ -4002,6 +4024,10 @@ paths:
                       properties:
                         fee_admin:
                           type: string
+                          title: >-
+                            can set fee coins supported, which can be charged
+                            per message executed if a fee limit is set in the
+                            flow
                         fee_coins_supported:
                           type: array
                           items:
@@ -4020,6 +4046,7 @@ paths:
                               the custom method
 
                               signatures required by gogoproto.
+                          title: can be empty
                 title: TrustlessAgents
               pagination:
                 description: Pagination defines the pagination in the response.
@@ -4327,6 +4354,10 @@ paths:
                       properties:
                         fee_admin:
                           type: string
+                          title: >-
+                            can set fee coins supported, which can be charged
+                            per message executed if a fee limit is set in the
+                            flow
                         fee_coins_supported:
                           type: array
                           items:
@@ -4345,6 +4376,7 @@ paths:
                               the custom method
 
                               signatures required by gogoproto.
+                          title: can be empty
                 title: TrustlessAgents
               pagination:
                 description: Pagination defines the pagination in the response.
@@ -5657,6 +5689,18 @@ definitions:
        - STARTS_WITH: Starts with check (for strings)
        - ENDS_WITH: Ends with check (for strings)
        - NOT_EQUAL: Not equal check (for all types)
+  intento.intent.v1.ConnectionRelayerReward:
+    type: object
+    properties:
+      connection_id:
+        type: string
+        title: e.g. "connection-12"
+      relayer_rewards:
+        type: array
+        items:
+          type: string
+          format: int64
+        title: 'same format: 0=Low, 1=Medium, 2=High'
   intento.intent.v1.ExecutionConditions:
     type: object
     properties:
@@ -6192,9 +6236,12 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+            title: >-
+              optional, if set to empty array, no fee limit is set and no fees
+              are charged
           connection_id:
             type: string
-            title: optional
+            title: optional for display
         title: config for a trustless agent for flow execution on host chain
       configuration:
         type: object
@@ -6750,13 +6797,23 @@ definitions:
       min_flow_interval:
         type: string
         title: Minimum period for a flow
-      relayer_rewards:
+      connection_rewards:
         type: array
         items:
-          type: string
-          format: int64
+          type: object
+          properties:
+            connection_id:
+              type: string
+              title: e.g. "connection-12"
+            relayer_rewards:
+              type: array
+              items:
+                type: string
+                format: int64
+              title: 'same format: 0=Low, 1=Medium, 2=High'
         description: >-
-          relayer rewards in uinto for each message type 0=SDK,1=Wasm, 2=Osmo.
+          relayer rewards in uinto for each message class 0=Low,1=Medium,
+          2=High.
 
           Rewards are in uinto and topped up in the module account by alloc
           module.
@@ -7257,9 +7314,12 @@ definitions:
                     method
 
                     signatures required by gogoproto.
+                title: >-
+                  optional, if set to empty array, no fee limit is set and no
+                  fees are charged
               connection_id:
                 type: string
-                title: optional
+                title: optional for display
             title: config for a trustless agent for flow execution on host chain
           configuration:
             type: object
@@ -7757,9 +7817,12 @@ definitions:
                       custom method
 
                       signatures required by gogoproto.
+                  title: >-
+                    optional, if set to empty array, no fee limit is set and no
+                    fees are charged
                 connection_id:
                   type: string
-                  title: optional
+                  title: optional for display
               title: config for a trustless agent for flow execution on host chain
             configuration:
               type: object
@@ -8281,9 +8344,12 @@ definitions:
                       custom method
 
                       signatures required by gogoproto.
+                  title: >-
+                    optional, if set to empty array, no fee limit is set and no
+                    fees are charged
                 connection_id:
                   type: string
-                  title: optional
+                  title: optional for display
               title: config for a trustless agent for flow execution on host chain
             configuration:
               type: object
@@ -8623,14 +8689,23 @@ definitions:
           min_flow_interval:
             type: string
             title: Minimum period for a flow
-          relayer_rewards:
+          connection_rewards:
             type: array
             items:
-              type: string
-              format: int64
+              type: object
+              properties:
+                connection_id:
+                  type: string
+                  title: e.g. "connection-12"
+                relayer_rewards:
+                  type: array
+                  items:
+                    type: string
+                    format: int64
+                  title: 'same format: 0=Low, 1=Medium, 2=High'
             description: >-
-              relayer rewards in uinto for each message type 0=SDK,1=Wasm,
-              2=Osmo.
+              relayer rewards in uinto for each message class 0=Low,1=Medium,
+              2=High.
 
               Rewards are in uinto and topped up in the module account by alloc
               module.
@@ -8657,6 +8732,9 @@ definitions:
             properties:
               fee_admin:
                 type: string
+                title: >-
+                  can set fee coins supported, which can be charged per message
+                  executed if a fee limit is set in the flow
               fee_coins_supported:
                 type: array
                 items:
@@ -8674,6 +8752,7 @@ definitions:
                     method
 
                     signatures required by gogoproto.
+                title: can be empty
     description: >-
       QueryTrustlessAgentResponse is the response type for the
       Query/TrustlessAgent
@@ -8702,6 +8781,9 @@ definitions:
               properties:
                 fee_admin:
                   type: string
+                  title: >-
+                    can set fee coins supported, which can be charged per
+                    message executed if a fee limit is set in the flow
                 fee_coins_supported:
                   type: array
                   items:
@@ -8719,6 +8801,7 @@ definitions:
                       custom method
 
                       signatures required by gogoproto.
+                  title: can be empty
         title: TrustlessAgents
       pagination:
         description: Pagination defines the pagination in the response.
@@ -8767,6 +8850,9 @@ definitions:
               properties:
                 fee_admin:
                   type: string
+                  title: >-
+                    can set fee coins supported, which can be charged per
+                    message executed if a fee limit is set in the flow
                 fee_coins_supported:
                   type: array
                   items:
@@ -8784,6 +8870,7 @@ definitions:
                       custom method
 
                       signatures required by gogoproto.
+                  title: can be empty
         title: TrustlessAgents
       pagination:
         description: Pagination defines the pagination in the response.
@@ -8827,6 +8914,9 @@ definitions:
         properties:
           fee_admin:
             type: string
+            title: >-
+              can set fee coins supported, which can be charged per message
+              executed if a fee limit is set in the flow
           fee_coins_supported:
             type: array
             items:
@@ -8844,6 +8934,7 @@ definitions:
                 method
 
                 signatures required by gogoproto.
+            title: can be empty
   intento.intent.v1.TrustlessAgentConfig:
     type: object
     properties:
@@ -8863,15 +8954,21 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+        title: >-
+          optional, if set to empty array, no fee limit is set and no fees are
+          charged
       connection_id:
         type: string
-        title: optional
+        title: optional for display
     title: config for a trustless agent for flow execution on host chain
   intento.intent.v1.TrustlessAgentFeeConfig:
     type: object
     properties:
       fee_admin:
         type: string
+        title: >-
+          can set fee coins supported, which can be charged per message executed
+          if a fee limit is set in the flow
       fee_coins_supported:
         type: array
         items:
@@ -8886,6 +8983,7 @@ definitions:
 
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
+        title: can be empty
   stride.interchainquery.v1.TimeoutPolicy:
     type: string
     enum:

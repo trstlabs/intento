@@ -43,10 +43,10 @@ func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flow types.F
 		// Validate local messages to ensure the signer matches the owner.
 		return k.validateSigners(ctx, codec, flow, message)
 
-	case isHostedICAMessage(flow):
-		// Restrict Hosted ICA messages to MsgExec for security.
+	case isTrustlessAgentMessage(flow):
+		// Restrict Trustless Agent messages to MsgExec for security.
 		if message.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
-			return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Hosted ICA messages")
+			return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Trustless Agent messages")
 		}
 		return nil
 
@@ -68,7 +68,7 @@ func isLocalMessage(flow types.Flow) bool {
 	return (flow.SelfHostedICA == nil || flow.SelfHostedICA.ConnectionID == "") && (flow.TrustlessAgent == nil || flow.TrustlessAgent.AgentAddress == "")
 }
 
-func isHostedICAMessage(flow types.Flow) bool {
+func isTrustlessAgentMessage(flow types.Flow) bool {
 	return flow.TrustlessAgent != nil && flow.TrustlessAgent.AgentAddress != ""
 }
 

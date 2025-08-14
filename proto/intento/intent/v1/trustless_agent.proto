@@ -21,7 +21,9 @@ message TrustlessAgent {
 }
 
 message TrustlessAgentFeeConfig {
+  //can set fee coins supported, which can be charged per message executed if a fee limit is set in the flow
   string fee_admin = 1;
+  //can be empty
   repeated cosmos.base.v1beta1.Coin fee_coins_supported = 2 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
