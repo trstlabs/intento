@@ -63,8 +63,9 @@ bash $SRC/start_chain.sh
 echo "Setting up ICS..."
 bash $SRC/setup_ics.sh 
 
-#echo "Start relayers and the transfer channels..."
-#bash $SRC/start_relayers.sh 
-#bash $SRC/start_hermes.sh 
-
-
+# Create governors for chains running the stride binary
+for chain in INTO ${HOST_CHAINS[@]:-}; do
+    if [[ "$chain" == "INTO" ]]; then
+        bash $SRC/create_governors.sh $chain
+    fi
+done
