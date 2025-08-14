@@ -18,6 +18,7 @@ STAKE_TOKENS=${STAKE_TOKENS}000000
 echo "Creating $CHAIN_ID governors.."
 for (( i=1; i <= $NUM_NODES; i++ )); do
   node_name="${NODE_PREFIX}${i}"
+  moniker=$(printf "${NODE_PREFIX}_${i}" | awk '{ print toupper($0) }')
   cmd="$BINARY --home ${STATE}/$node_name"
   val_acct="${VAL_PREFIX}${i}"
   pub_key=$($cmd tendermint show-validator)
