@@ -24,12 +24,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibctypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	"github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
-	ibctmtypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
-	ccvprovidertypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
-	ccvtypes "github.com/cosmos/interchain-security/v6/x/ccv/types"
 	"github.com/spf13/cobra"
 	"github.com/trstlabs/intento/app"
 	alloctypes "github.com/trstlabs/intento/x/alloc/types"
@@ -272,8 +267,8 @@ func PrepareGenesis(
 func MainnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
-	genParams.AirdropSupply = math.NewInt(100_000_000_000_000)            // (100M INTO)
-	genParams.GenesisTime = time.Date(2023, 02, 1, 17, 0, 0, 0, time.UTC) // 2023 2 Feb - 17:00 UTC
+	genParams.AirdropSupply = math.NewInt(90_000_000_000_000)                       // (90M INTO)
+	genParams.GenesisTime = time.Date(2025, time.August, 27, 14, 0, 0, 0, time.UTC) // 2025 27 Aug - 14:00 UTC
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{
 			Description: "The native token of INTO",
@@ -294,25 +289,6 @@ func MainnetGenesisParams() GenesisParams {
 		},
 	}
 
-	//minimal ccv
-	genesisState := ccvtypes.DefaultConsumerGenesisState()
-	genesisState.Params.Enabled = true
-	genesisState.NewChain = true
-	genesisState.Provider.ClientState = ccvprovidertypes.DefaultParams().TemplateClient
-	//genesisState.Provider.ClientState.ChainId = ChainID
-	genesisState.Provider.ClientState.LatestHeight = ibctypes.Height{RevisionNumber: 0, RevisionHeight: 1}
-	trustPeriod, err := ccvtypes.CalculateTrustPeriod(genesisState.Params.UnbondingPeriod, ccvprovidertypes.DefaultTrustingPeriodFraction)
-	if err != nil {
-		panic("provider client trusting period error")
-	}
-	genesisState.Provider.ClientState.TrustingPeriod = trustPeriod
-	genesisState.Provider.ClientState.UnbondingPeriod = genesisState.Params.UnbondingPeriod
-	genesisState.Provider.ClientState.MaxClockDrift = ccvprovidertypes.DefaultMaxClockDrift
-	genesisState.Provider.ConsensusState = &ibctmtypes.ConsensusState{
-		Timestamp: time.Now().UTC(),
-		Root:      types.MerkleRoot{Hash: []byte("dummy")},
-	}
-
 	// alloc
 	genParams.AllocParams = alloctypes.DefaultParams()
 	genParams.AllocParams.DistributionProportions = alloctypes.DistributionProportions{
@@ -329,20 +305,19 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams.InitialAnnualProvisions = math.LegacyNewDec(150_000_000_000_000)
 
 	genParams.MintParams.ReductionFactor = math.LegacyNewDec(3).QuoInt64(4)
-	//31,536,000 seconds a year
 	genParams.MintParams.BlocksPerYear = uint64(24261538) //assuming 1.3s average block times, param to be updated periodically
+
 	// staking
 	genParams.StakingParams = stakingtypes.DefaultParams()
 	genParams.StakingParams.UnbondingTime = time.Hour * 24 * 14 //2 weeks
 	genParams.StakingParams.MaxValidators = 50
 	genParams.StakingParams.BondDenom = genParams.NativeCoinMetadatas[0].Base
 
-	// genParams.StakingParams.MinCommissionRate = sdk.MustNewDecFromStr("0.05")
 	// distr
 	genParams.DistributionParams = distributiontypes.DefaultParams()
-
 	genParams.DistributionParams.CommunityTax = math.LegacyNewDecWithPrec(5, 2)
 	genParams.DistributionParams.WithdrawAddrEnabled = true
+
 	// gov
 	genParams.GovParams = govtypesv1.DefaultParams()
 	maxDepositPeriod := time.Hour * 24 * 14 // 2 weeks
@@ -354,6 +329,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.GovParams.Quorum = "0.200000000000000000" // 20%
 	votingPeriod := time.Hour * 24 * 3                  // 3 days
 	genParams.GovParams.VotingPeriod = &votingPeriod
+
 	// crisis
 	genParams.CrisisConstantFee = sdk.NewCoin(
 		genParams.NativeCoinMetadatas[0].Base,
@@ -367,21 +343,24 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.SlashingParams.SlashFractionDoubleSign = math.LegacyNewDecWithPrec(5, 2) // 5% double sign slashing
 	genParams.SlashingParams.SlashFractionDowntime = math.LegacyNewDecWithPrec(1, 4)   // 0.01% liveness slashing               // 0% liveness slashing
 
+	//wasm included for future integrations
 	genParams.WasmParams = wasmtypes.DefaultParams()
+	genParams.WasmParams.CodeUploadAccess = wasmtypes.AllowNobody
+	genParams.WasmParams.InstantiateDefaultPermission = wasmtypes.AccessTypeNobody
 
-	//intent flows
+	//intent
 	genParams.IntentParams = intenttypes.DefaultParams()
 	genParams.IntentParams.MaxFlowDuration = time.Hour * 24 * 366 * 3
-	genParams.IntentParams.MinFlowDuration = time.Second * 60
-	genParams.IntentParams.MinFlowInterval = time.Second * 60
+	genParams.IntentParams.MinFlowDuration = time.Second * 600 // 10 minutes
+	genParams.IntentParams.MinFlowInterval = time.Second * 300 // 5 minutes
 	genParams.IntentParams.FlowFundsCommission = 2
 	genParams.IntentParams.BurnFeePerMsg = 10_000
-	genParams.IntentParams.FlowFlexFeeMul = 2
-	genParams.IntentParams.GasFeeCoins = sdk.Coins(sdk.NewCoins(sdk.NewCoin(BaseCoinUnit, math.OneInt())))
+	genParams.IntentParams.FlowFlexFeeMul = 5
+	genParams.IntentParams.GasFeeCoins = sdk.Coins(sdk.NewCoins(sdk.NewCoin(BaseCoinUnit, math.NewInt(80)), sdk.NewCoin("ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9", math.NewInt(20))))
 	genParams.IntentParams.ConnectionRewards = []*intenttypes.ConnectionRelayerReward{
 		{
 			ConnectionID:   "connection-0",
-			RelayerRewards: []int64{10_000, 15_000, 18_000, 22_000},
+			RelayerRewards: []int64{20_000, 30_000, 40_000, 50_000},
 		},
 	}
 
