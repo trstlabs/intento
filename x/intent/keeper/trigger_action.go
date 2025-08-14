@@ -38,9 +38,11 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctype
 		connectionID = trustlessAgent.ICAConfig.ConnectionID
 		portID = trustlessAgent.ICAConfig.PortID
 		triggerAddress = trustlessAgent.AgentAddress
-		err := k.SendFeesToHostedAdmin(ctx, *flow, trustlessAgent)
-		if err != nil {
-			return false, nil, errorsmod.Wrap(err, "could not pay trustless agent")
+		if trustlessAgent.FeeConfig != nil && trustlessAgent.FeeConfig.FeeCoinsSupported != nil {
+			err := k.SendFeesToTrustlessAgentFeeAdmin(ctx, *flow, trustlessAgent)
+			if err != nil {
+				return false, nil, errorsmod.Wrap(err, "could not pay trustless agent")
+			}
 		}
 
 	}
@@ -96,7 +98,7 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (bool, []*cdctype
 	} else {
 		flowHistoryEntry.PacketSequences = append(flowHistoryEntry.PacketSequences, res.Sequence)
 	}
-	k.SetCurrentFlowHistoryEntry(ctx, flow.ID, flowHistoryEntry)
+	k.SetFlowHistoryEntry(ctx, flow.ID, flowHistoryEntry)
 
 	return false, nil, nil
 }
@@ -342,8 +344,14 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 
 		if entry, ok := msg_registry.MsgRegistry[anyResp.GetTypeUrl()]; ok {
 			if index == 0 && entry.RewardType > 0 {
+				connectionID := flow.SelfHostedICA.ConnectionID
+				if flow.TrustlessAgent != nil {
+					if flow.TrustlessAgent.AgentAddress != "" {
+						connectionID = k.GetTrustlessAgent(ctx, flow.TrustlessAgent.AgentAddress).ICAConfig.ConnectionID
+					}
+				}
 				msgClass = entry.RewardType
-				k.HandleRelayerReward(ctx, relayer, msgClass)
+				k.HandleRelayerReward(ctx, relayer, msgClass, connectionID)
 			}
 		}
 		if anyResp.GetTypeUrl() == "/cosmos.authz.v1beta1.MsgExecResponse" {
