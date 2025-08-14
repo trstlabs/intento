@@ -378,7 +378,12 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.IntentParams.BurnFeePerMsg = 10_000
 	genParams.IntentParams.FlowFlexFeeMul = 2
 	genParams.IntentParams.GasFeeCoins = sdk.Coins(sdk.NewCoins(sdk.NewCoin(BaseCoinUnit, math.OneInt())))
-	genParams.IntentParams.RelayerRewards = []int64{10_000, 15_000, 18_000, 22_000}
+	genParams.IntentParams.ConnectionRewards = []*intenttypes.ConnectionRelayerReward{
+		{
+			ConnectionID:   "connection-0",
+			RelayerRewards: []int64{10_000, 15_000, 18_000, 22_000},
+		},
+	}
 
 	//claim
 	genParams.ClaimParams = claimtypes.DefaultGenesis().Params

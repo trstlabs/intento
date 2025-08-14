@@ -66,7 +66,9 @@ func (m *TrustlessAgent) XXX_DiscardUnknown() {
 var xxx_messageInfo_TrustlessAgent proto.InternalMessageInfo
 
 type TrustlessAgentFeeConfig struct {
-	FeeAdmin          string                                   `protobuf:"bytes,1,opt,name=fee_admin,json=feeAdmin,proto3" json:"fee_admin,omitempty"`
+	//can set fee coins supported, which can be charged per message executed if a fee limit is set in the flow
+	FeeAdmin string `protobuf:"bytes,1,opt,name=fee_admin,json=feeAdmin,proto3" json:"fee_admin,omitempty"`
+	//can be empty
 	FeeCoinsSupported github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=fee_coins_supported,json=feeCoinsSupported,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"fee_coins_supported"`
 }
 

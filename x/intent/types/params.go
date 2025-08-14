@@ -27,7 +27,7 @@ var (
 	// MinFlowInterval sets the minimum interval self-execution
 	DefaultMinFlowInterval time.Duration = time.Second * 60
 	// DefaultRelayerReward for a given flow type
-	DefaultRelayerReward int64 = 10_000 //0.01trst
+	DefaultConnectionReward int64 = 10_000 //0.01INTO
 
 )
 
@@ -40,7 +40,7 @@ var (
 	KeyMaxFlowDuration     = []byte("MaxFlowDuration")
 	KeyMinFlowDuration     = []byte("MinFlowDuration")
 	KeyMinFlowInterval     = []byte("MinFlowInterval")
-	KeyRelayerRewards      = []byte("RelayerRewards")
+	KeyConnectionRewards   = []byte("ConnectionRewards")
 )
 
 // ParamSetPairs - Implements params.ParamSet
@@ -54,20 +54,20 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxFlowDuration, &p.MaxFlowDuration, validateFlowDuration),
 		paramtypes.NewParamSetPair(KeyMinFlowDuration, &p.MinFlowDuration, validateFlowDuration),
 		paramtypes.NewParamSetPair(KeyMinFlowInterval, &p.MinFlowInterval, validateFlowInterval),
-		paramtypes.NewParamSetPair(KeyRelayerRewards, &p.RelayerRewards, validateRelayerRewards),
+		paramtypes.NewParamSetPair(KeyConnectionRewards, &p.ConnectionRewards, validateConnectionRewards),
 	}
 }
 
 // NewParams creates a new Params object
-func NewParams(flowFundsCommission int64, BurnFeePerMsg int64, FlowFlexFeeMul int64, GasFeeCoins sdk.Coins, maxFlowDuration time.Duration, minFlowDuration time.Duration, minFlowInterval time.Duration, relayerRewards []int64) Params {
+func NewParams(flowFundsCommission int64, BurnFeePerMsg int64, FlowFlexFeeMul int64, GasFeeCoins sdk.Coins, maxFlowDuration time.Duration, minFlowDuration time.Duration, minFlowInterval time.Duration, connectionRewards []*ConnectionRelayerReward) Params {
 	//fmt.Printf("default intent params. %v \n", flowFundsCommission)
-	return Params{FlowFundsCommission: flowFundsCommission, BurnFeePerMsg: BurnFeePerMsg, FlowFlexFeeMul: FlowFlexFeeMul, GasFeeCoins: GasFeeCoins, MaxFlowDuration: maxFlowDuration, MinFlowDuration: minFlowDuration, MinFlowInterval: minFlowInterval, RelayerRewards: relayerRewards}
+	return Params{FlowFundsCommission: flowFundsCommission, BurnFeePerMsg: BurnFeePerMsg, FlowFlexFeeMul: FlowFlexFeeMul, GasFeeCoins: GasFeeCoins, MaxFlowDuration: maxFlowDuration, MinFlowDuration: minFlowDuration, MinFlowInterval: minFlowInterval, ConnectionRewards: connectionRewards}
 }
 
 // DefaultParams default parameters for intent
 func DefaultParams() Params {
 	//fmt.Print("default intent params..")
-	return NewParams(DefaultFlowFundsCommission, DefaultBurnFeePerMsg, DefaultFlowFlexFeeMul, DefaultGasFeeCoins, DefaultMaxFlowDuration, DefaultMinFlowDuration, DefaultMinFlowInterval, []int64{DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward, DefaultRelayerReward})
+	return NewParams(DefaultFlowFundsCommission, DefaultBurnFeePerMsg, DefaultFlowFlexFeeMul, DefaultGasFeeCoins, DefaultMaxFlowDuration, DefaultMinFlowDuration, DefaultMinFlowInterval, []*ConnectionRelayerReward{{ConnectionID: "connection-0", RelayerRewards: []int64{DefaultConnectionReward, DefaultConnectionReward, DefaultConnectionReward, DefaultConnectionReward}}})
 }
 
 // Validate validates all params
@@ -93,7 +93,7 @@ func (p Params) Validate() error {
 	if err := validateGasFeeCoins(p.GasFeeCoins); err != nil {
 		return err
 	}
-	if err := validateRelayerRewards(p.RelayerRewards); err != nil {
+	if err := validateConnectionRewards(p.ConnectionRewards); err != nil {
 		return err
 	}
 
@@ -176,22 +176,21 @@ func validateGasFeeCoins(i interface{}) error {
 	return v.Validate()
 }
 
-func validateRelayerRewards(i interface{}) error {
-	list, ok := i.([]int64)
+func validateConnectionRewards(i interface{}) error {
+	list, ok := i.([]*ConnectionRelayerReward)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	for i, v := range list {
-		// 10_000_000 = 10INTO we do not want to go this high
-		if v > 10_000_000 {
-			return fmt.Errorf("RelayerReward for message must be lower: %T", i)
-		}
-
-		if i > 3 {
-			return fmt.Errorf("only 4 types of incentives supported for now: %d", v)
+	for _, v := range list {
+		for _, r := range v.RelayerRewards {
+			if r < 0 {
+				return fmt.Errorf("RelayerReward must be 0 or higher: %d", r)
+			}
+			if len(v.RelayerRewards) > 4 {
+				return fmt.Errorf("only 4 types of incentives supported for now: %v", v)
+			}
 		}
 	}
-
 	return nil
 }
 

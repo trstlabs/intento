@@ -7,7 +7,7 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-func (k Keeper) HandleRelayerReward(ctx sdk.Context, relayer sdk.AccAddress, rewardType int) {
+func (k Keeper) HandleRelayerReward(ctx sdk.Context, relayer sdk.AccAddress, rewardType int, connectionID string) {
 	if !k.GetRelayerRewardsAvailability(ctx) {
 		return
 	}
@@ -16,14 +16,16 @@ func (k Keeper) HandleRelayerReward(ctx sdk.Context, relayer sdk.AccAddress, rew
 		panic(err)
 	}
 
-	// fmt.Printf("p.RelayerRewards %v\n", p.RelayerRewards)
-	incentiveCoin := sdk.NewCoin(types.Denom, math.NewInt(p.RelayerRewards[rewardType]))
-
-	// fmt.Printf("relayer %v\n", relayer.String())
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, relayer, sdk.NewCoins(incentiveCoin))
-	if err != nil {
-		//set incentives unavailable
-		k.SetRelayerRewardsAvailability(ctx, false)
+	for _, connectionReward := range p.ConnectionRewards {
+		if connectionReward.ConnectionID == connectionID {
+			incentiveCoin := sdk.NewCoin(types.Denom, math.NewInt(connectionReward.RelayerRewards[rewardType]))
+			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, relayer, sdk.NewCoins(incentiveCoin))
+			if err != nil {
+				//set incentives unavailable
+				k.SetRelayerRewardsAvailability(ctx, false)
+			}
+			break
+		}
 	}
 
 }

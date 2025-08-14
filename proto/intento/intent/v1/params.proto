@@ -43,7 +43,12 @@ message Params {
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag) = "min_flow_interval,omitempty"
   ];
-  // relayer rewards in uinto for each message type 0=SDK,1=Wasm, 2=Osmo.
+  // relayer rewards in uinto for each message class 0=Low,1=Medium, 2=High, 3=AuthZExec
   // Rewards are in uinto and topped up in the module account by alloc module.
-  repeated int64 relayer_rewards = 9;
+  repeated ConnectionRelayerReward connection_rewards = 9;
+}
+
+message ConnectionRelayerReward {
+  string connection_id = 1 [(gogoproto.customname) = "ConnectionID"]; // e.g. "connection-12"
+  repeated int64 relayer_rewards = 2; // same format: 0=Low, 1=Medium, 2=High
 }

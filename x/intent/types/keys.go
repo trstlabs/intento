@@ -42,10 +42,10 @@ var (
 var SenderPrefix = "ibc-flow-hook-intermediary"
 
 var (
-	KeyFlowIncentiveForSDKTx   = 0
-	KeyFlowIncentiveForWasmTx  = 1
-	KeyFlowIncentiveForOsmoTx  = 2
-	KeyFlowIncentiveForAuthzTx = 3
+	KeyFlowIncentiveForLowGas    = 0
+	KeyFlowIncentiveForMediumGas = 1
+	KeyFlowIncentiveForHighGas   = 2
+	KeyFlowIncentiveForAuthzExec = 3
 )
 
 // GetFlowKey returns the key for the flow

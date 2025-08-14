@@ -114,7 +114,16 @@ func setupTest(t *testing.T, additionalCoinsInWallets sdk.Coins) (sdk.Context, K
 		MaxFlowDuration:     time.Hour * 24 * 366 * 10,
 		MinFlowDuration:     time.Second * 60,
 		MinFlowInterval:     time.Second * 20,
-		RelayerRewards:      []int64{10_000, 10_000, 10_000, 10_000},
+		ConnectionRewards: []*types.ConnectionRelayerReward{
+			{
+				ConnectionID:   "connection-1",
+				RelayerRewards: []int64{10_000, 10_000, 10_000, 10_000},
+			},
+			{
+				ConnectionID:   "connection-2",
+				RelayerRewards: []int64{10_000, 10_000, 10_000, 10_000},
+			},
+		},
 	})
 	return ctx, keeper, walletA, privKeyA, walletB, privKeyB
 }
