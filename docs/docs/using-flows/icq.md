@@ -92,7 +92,7 @@ const config: ExecutionConfiguration = {
   stopOnFailure: true,
   stopOnTimeout: false,
   stopOnSuccess: false,
-  fallbackToOwnerBalance: true,
+  walletFallback: true,
 };
 ```
 

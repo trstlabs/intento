@@ -74,7 +74,7 @@ func TestDistributeCoinsOwnerFeeFallbackNotRecurring(t *testing.T) {
 	types.Denom = sdk.DefaultBondDenom
 	lastTime := time.Now().Add(time.Second * 20)
 	flow := types.Flow{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime, Configuration: &types.ExecutionConfiguration{FallbackToOwnerBalance: true},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime, Configuration: &types.ExecutionConfiguration{WalletFallback: true},
 	}
 
 	//tokens from the owner will be used

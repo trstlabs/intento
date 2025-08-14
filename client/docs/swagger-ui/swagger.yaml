@@ -1425,7 +1425,7 @@ paths:
                       stop_on_timeout:
                         type: boolean
                         title: If true, will stop if message times oiut
-                      fallback_to_owner_balance:
+                      wallet_fallback:
                         type: boolean
                         title: >-
                           If true, owner account balance is used when trigger
@@ -2149,7 +2149,7 @@ paths:
                         stop_on_timeout:
                           type: boolean
                           title: If true, will stop if message times oiut
-                        fallback_to_owner_balance:
+                        wallet_fallback:
                           type: boolean
                           title: >-
                             If true, owner account balance is used when trigger
@@ -2949,7 +2949,7 @@ paths:
                         stop_on_timeout:
                           type: boolean
                           title: If true, will stop if message times oiut
-                        fallback_to_owner_balance:
+                        wallet_fallback:
                           type: boolean
                           title: >-
                             If true, owner account balance is used when trigger
@@ -3538,7 +3538,7 @@ paths:
                           title: 'same format: 0=Low, 1=Medium, 2=High'
                     description: >-
                       relayer rewards in uinto for each message class
-                      0=Low,1=Medium, 2=High.
+                      0=Low,1=Medium, 2=High, 3=AuthZExec
 
                       Rewards are in uinto and topped up in the module account
                       by alloc module.
@@ -5938,7 +5938,7 @@ definitions:
       stop_on_timeout:
         type: boolean
         title: If true, will stop if message times oiut
-      fallback_to_owner_balance:
+      wallet_fallback:
         type: boolean
         title: >-
           If true, owner account balance is used when trigger account funds run
@@ -6271,7 +6271,7 @@ definitions:
           stop_on_timeout:
             type: boolean
             title: If true, will stop if message times oiut
-          fallback_to_owner_balance:
+          wallet_fallback:
             type: boolean
             title: >-
               If true, owner account balance is used when trigger account funds
@@ -6813,7 +6813,7 @@ definitions:
               title: 'same format: 0=Low, 1=Medium, 2=High'
         description: >-
           relayer rewards in uinto for each message class 0=Low,1=Medium,
-          2=High.
+          2=High, 3=AuthZExec
 
           Rewards are in uinto and topped up in the module account by alloc
           module.
@@ -7349,7 +7349,7 @@ definitions:
               stop_on_timeout:
                 type: boolean
                 title: If true, will stop if message times oiut
-              fallback_to_owner_balance:
+              wallet_fallback:
                 type: boolean
                 title: >-
                   If true, owner account balance is used when trigger account
@@ -7852,7 +7852,7 @@ definitions:
                 stop_on_timeout:
                   type: boolean
                   title: If true, will stop if message times oiut
-                fallback_to_owner_balance:
+                wallet_fallback:
                   type: boolean
                   title: >-
                     If true, owner account balance is used when trigger account
@@ -8379,7 +8379,7 @@ definitions:
                 stop_on_timeout:
                   type: boolean
                   title: If true, will stop if message times oiut
-                fallback_to_owner_balance:
+                wallet_fallback:
                   type: boolean
                   title: >-
                     If true, owner account balance is used when trigger account
@@ -8705,7 +8705,7 @@ definitions:
                   title: 'same format: 0=Low, 1=Medium, 2=High'
             description: >-
               relayer rewards in uinto for each message class 0=Low,1=Medium,
-              2=High.
+              2=High, 3=AuthZExec
 
               Rewards are in uinto and topped up in the module account by alloc
               module.

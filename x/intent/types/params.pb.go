@@ -5,17 +5,16 @@ package types
 
 import (
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-	time "time"
-
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "google.golang.org/protobuf/types/known/durationpb"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -46,7 +45,7 @@ type Params struct {
 	MinFlowDuration time.Duration `protobuf:"bytes,6,opt,name=min_flow_duration,json=minFlowDuration,proto3,stdduration" json:"min_flow_duration,omitempty"`
 	//  Minimum period for a flow
 	MinFlowInterval time.Duration `protobuf:"bytes,8,opt,name=min_flow_interval,json=minFlowInterval,proto3,stdduration" json:"min_flow_interval,omitempty"`
-	// relayer rewards in uinto for each message class 0=Low,1=Medium, 2=High, 3=AuthZExec.
+	// relayer rewards in uinto for each message class 0=Low,1=Medium, 2=High, 3=AuthZExec
 	// Rewards are in uinto and topped up in the module account by alloc module.
 	ConnectionRewards []*ConnectionRelayerReward `protobuf:"bytes,9,rep,name=connection_rewards,json=connectionRewards,proto3" json:"connection_rewards,omitempty"`
 }

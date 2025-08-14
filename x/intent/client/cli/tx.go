@@ -391,17 +391,17 @@ func getExecutionConfiguration() *types.ExecutionConfiguration {
 
 	updatingDisabled := viper.GetBool(flagUpdatingDisabled)
 	SaveResponses := viper.GetBool(flagSaveResponses)
-	fallbackToOwnerBalance := viper.GetBool(flagFallbackToOwnerBalance)
+	walletFallback := viper.GetBool(flagWalletFallback)
 	stopOnSuccess := viper.GetBool(flagStopOnSuccess)
 	stopOnFailure := viper.GetBool(flagStopOnFailure)
 	stopOnTimeout := viper.GetBool(flagStopOnTimeout)
 	configuration := types.ExecutionConfiguration{
-		UpdatingDisabled:       updatingDisabled,
-		SaveResponses:          SaveResponses,
-		StopOnSuccess:          stopOnSuccess,
-		StopOnFailure:          stopOnFailure,
-		StopOnTimeout:          stopOnTimeout,
-		FallbackToOwnerBalance: fallbackToOwnerBalance,
+		UpdatingDisabled: updatingDisabled,
+		SaveResponses:    SaveResponses,
+		StopOnSuccess:    stopOnSuccess,
+		StopOnFailure:    stopOnFailure,
+		StopOnTimeout:    stopOnTimeout,
+		WalletFallback:   walletFallback,
 	}
 
 	return &configuration

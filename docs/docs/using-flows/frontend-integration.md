@@ -42,7 +42,7 @@ const msgSubmitFlow =
     msgs: encodedMsgs,
     duration: "1440h", // Flow duration (24h * 60d)
     interval: "600s", // Execution interval (10 min)
-    feeFunds: [{ denom: "uinto", amount: "5000000" }], // Funding for fees, optional when fallbackToOwnerBalance = true
+    feeFunds: [{ denom: "uinto", amount: "5000000" }], // Funding for fees, optional when walletFallback = true
     trustless_agent: {
       agent_address: "into1xyz...",
       fee_limit: [
@@ -78,7 +78,7 @@ const config: ExecutionConfiguration = {
   stopOnFailure: true,
   stopOnSuccess: false,
   stopOnTimeout: false,
-  fallbackToOwnerBalance: true,
+  walletFallback: true,
 };
 
 const feedbackLoop: FeedbackLoop = {

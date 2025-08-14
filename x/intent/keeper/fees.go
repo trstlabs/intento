@@ -150,7 +150,7 @@ func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, flow types.Flow, expect
 	}
 
 	// Fallback to owner balance if allowed
-	if flow.Configuration != nil && flow.Configuration.FallbackToOwnerBalance {
+	if flow.Configuration != nil && flow.Configuration.WalletFallback {
 		ownerAddr, err := sdk.AccAddressFromBech32(flow.Owner)
 		if err != nil {
 			return nil, "", err
@@ -218,7 +218,7 @@ func (k Keeper) SendFeesToTrustlessAgentFeeAdmin(ctx sdk.Context, flow types.Flo
 		}
 
 		// Try fallback to owner if enabled
-		if flow.Configuration.FallbackToOwnerBalance {
+		if flow.Configuration.WalletFallback {
 			fallbackAddr, err := sdk.AccAddressFromBech32(flow.Owner)
 			if err != nil {
 				return err

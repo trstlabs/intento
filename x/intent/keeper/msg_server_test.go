@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 				startAt = uint64(ctx.BlockTime().Unix() - 60*60)
 			}
 
-			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionID, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coins{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, &conditions)
+			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionID, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coins{}, &types.ExecutionConfiguration{WalletFallback: true}, &conditions)
 
 			suite.Require().NoError(err)
 
@@ -431,7 +431,7 @@ func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 			intervalTimeText := interval.String()
 			startAt := uint64(0)
 			GetICAApp(suite.IntentoChain).ICAControllerKeeper.SetInterchainAccountAddress(suite.IntentoChain.GetContext(), "", "", icaAddrString)
-			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, "", durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coins{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, nil)
+			msg, err := types.NewMsgSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, "", durationTimeText, intervalTimeText, startAt, sdk.Coins{}, "", sdk.Coins{}, &types.ExecutionConfiguration{WalletFallback: true}, nil)
 			suite.Require().NoError(err)
 			err = msg.ValidateBasic()
 			suite.Require().NoError(err)
@@ -452,7 +452,7 @@ func (suite *KeeperTestSuite) TestSubmitFlowSigner() {
 			suite.Coordinator.SetupConnections(path)
 			connectionID := path.EndpointA.ConnectionID
 			hostConnectionID := path.EndpointB.ConnectionID
-			msgRegisterAndSubmit, err := types.NewMsgRegisterAccountAndSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionID, hostConnectionID, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, &types.ExecutionConfiguration{FallbackToOwnerBalance: true}, "")
+			msgRegisterAndSubmit, err := types.NewMsgRegisterAccountAndSubmitFlow(owner, label, []sdk.Msg{sdkMsg}, connectionID, hostConnectionID, durationTimeText, intervalTimeText, startAt, sdk.Coins{}, &types.ExecutionConfiguration{WalletFallback: true}, "")
 			suite.Require().NoError(err)
 			err = msg.ValidateBasic()
 			suite.Require().NoError(err)

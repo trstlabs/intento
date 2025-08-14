@@ -70,16 +70,16 @@ message ExecutionConfiguration {
   bool save_responses = 1;
   // if true, the flow is not updatable
   bool updating_disabled = 2;
-  // If true, will execute until we get a successful Flow, if false/unset will
+  // If true, will execute until we get a successful flow execution, if false/unset will
   // always execute
   bool stop_on_success = 3;
-  // If true, will execute until successful Flow, if false/unset will always
+  // If true, will execute until flow execution is successful, if false/unset will always
   // execute
   bool stop_on_failure = 4;
-  // If true, will stop if message times oiut
+  // If true, will stop if flow execution on the host chain times out
   bool stop_on_timeout = 5;
-  // If true, owner account balance is used when trigger account funds run out
-  bool fallback_to_owner_balance = 6;
+  // If true, will use the owner account balance when flow account funds run out
+  bool wallet_fallback = 6;
 }
 
 // FlowHistory execution history

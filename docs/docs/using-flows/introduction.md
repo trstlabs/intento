@@ -64,7 +64,7 @@ Submitting an flow with MsgSubmitFlow can be done with the following input:
 #### Notes
 
 - When `Interval` is not provided, the end of the duration will be the time the flow executes.
-- When `FeeFunds` are not provided, fees can be deducted from the Owner account by setting `FallbackToOwnerBalance` to true in `Configuration`.
+- When `FeeFunds` are not provided, fees can be deducted from the Owner account by setting `WalletFallback` to true in `Configuration`.
 - When `ConnectionID`,`HostConnectionID` and `TrustlessAgent` are not provided, it is assumed that `Msgs` are local messages to be executed on Intento.
 - `TrustlessAgent` requires `TrustlessAgentFeeLimit`
 

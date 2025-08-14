@@ -72,7 +72,7 @@ func onRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes
 	funds := sdk.Coins{}
 
 	// tokens are send to the owner unless the fallback is not used
-	if !configuration.FallbackToOwnerBalance {
+	if !configuration.WalletFallback {
 
 		amount, ok := math.NewIntFromString(data.GetAmount())
 		if !ok {
@@ -446,19 +446,19 @@ func ValidateAndParseMemo(memo string) (isFlowRouted bool, ownerAddr sdk.AccAddr
 		stopOnTimeout = true
 	}
 
-	fallbackOwner := false
-	fallbackOwnerString, ok := flow["fallback"].(string)
-	if ok && fallbackOwnerString == "true" {
-		fallbackOwner = true
+	fallbackOwnerWallet := false
+	fallbackOwnerWalletString, ok := flow["fallback"].(string)
+	if ok && fallbackOwnerWalletString == "true" {
+		fallbackOwnerWallet = true
 	}
 
 	configuration = types.ExecutionConfiguration{
-		SaveResponses:          SaveResponses,
-		UpdatingDisabled:       updateDisabled,
-		StopOnSuccess:          stopOnSuccess,
-		StopOnFailure:          stopOnFailure,
-		StopOnTimeout:          stopOnTimeout,
-		FallbackToOwnerBalance: fallbackOwner,
+		SaveResponses:    SaveResponses,
+		UpdatingDisabled: updateDisabled,
+		StopOnSuccess:    stopOnSuccess,
+		StopOnFailure:    stopOnFailure,
+		StopOnTimeout:    stopOnTimeout,
+		WalletFallback:   fallbackOwnerWallet,
 	}
 
 	version = string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{

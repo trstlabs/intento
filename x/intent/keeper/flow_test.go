@@ -131,7 +131,7 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 	duration := 10 * time.Minute
 	interval := 1 * time.Minute
 	startTime := time.Now().UTC()
-	configuration := types.ExecutionConfiguration{SaveResponses: true, FallbackToOwnerBalance: true}
+	configuration := types.ExecutionConfiguration{SaveResponses: true, WalletFallback: true}
 	owner, _ := CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
 	types.Denom = "stake"
 

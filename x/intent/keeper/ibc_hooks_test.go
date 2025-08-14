@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketAndMultipleMsgs() {
 
 	suite.Require().Equal(flow.Owner, addr.String())
 	suite.Require().Equal(flow.Label, "my flow")
-	suite.Require().Equal(flow.Configuration.FallbackToOwnerBalance, true)
+	suite.Require().Equal(flow.Configuration.WalletFallback, true)
 	suite.Require().Equal(flow.SelfHostedICA.PortID, "icacontroller-"+addr.String())
 	suite.Require().Equal(flow.SelfHostedICA.ConnectionID, path.EndpointA.ConnectionID)
 
