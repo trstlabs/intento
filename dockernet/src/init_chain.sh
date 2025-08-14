@@ -34,9 +34,6 @@ set_into_genesis() {
     # update params
     jq '.app_state.claim.claim_records[0].address = "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6"' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.claim.claim_records[0].maximum_claimable_amount = {"amount":"10000","denom":"uinto"}' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    jq '.app_state.claim.claim_records[0].status[0].action_completed = false' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    jq '.app_state.claim.claim_records[0].status[0].vesting_periods_completed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    jq '.app_state.claim.claim_records[0].status[0].vesting_periods_claimed = [false,false,false,false]' $genesis_config > json.tmp && mv json.tmp $genesis_config
 
     jq '.app_state.intent.params.gas_fee_coins = [{"amount":"80","denom":"uinto"},{"amount":"20","denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"}]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     
@@ -276,7 +273,7 @@ MAIN_CONFIG=""
 MAIN_GENESIS=""
 
 for (( i=1; i <= $NUM_NODES; i++ )); do
-    # Node names will be of the form: "trst1"
+    # Node names will be of the form: "into1"
     node_name="${NODE_PREFIX}${i}"
     # Moniker is of the form: INTO_1
     moniker=$(printf "${NODE_PREFIX}_${i}" | awk '{ print toupper($0) }')
