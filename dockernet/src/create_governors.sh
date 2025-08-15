@@ -30,7 +30,7 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
 {
   "pubkey": $pub_key,
   "amount": "${STAKE_TOKENS}${DENOM}",
-  "moniker": "$node_name",
+  "moniker": "$moniker",
   "identity": "",
   "website": "",
   "security_contact": "",
