@@ -118,7 +118,6 @@ Example:
 			}
 			genDoc.GenesisTime = genesisParams.GenesisTime
 			genDoc.ChainID = chainID
-			// genDoc.ConsensusParams = genesisParams.ConsensusParams
 
 			// validate genesis state
 			if err = mbm.ValidateGenesis(cdc, clientCtx.TxConfig, appState); err != nil {
@@ -221,8 +220,6 @@ func PrepareGenesis(
 	// slashing module genesis
 	slashingGenState := slashingtypes.DefaultGenesisState()
 	slashingGenState.Params = genesisParams.SlashingParams
-	slashingGenState.Params.SignedBlocksWindow = 48000                              // equal to 16 hours @ 1.3s block time
-	slashingGenState.Params.SlashFractionDowntime = math.LegacyNewDecWithPrec(0, 4) // 0% liveness slashing, as missing out rewards is enough penalty
 	slashingGenStateBz, err := cdc.MarshalJSON(slashingGenState)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal slashing genesis state: %w", err)
@@ -232,10 +229,6 @@ func PrepareGenesis(
 	// claim module genesis
 	claimGenState := claimtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 	claimGenState.Params = genesisParams.ClaimParams
-	claimGenState.Params.AirdropStartTime = genesisParams.GenesisTime.Add(time.Hour * 24 * 365) // will be adjusted by governance
-	claimGenState.Params.DurationUntilDecay = time.Hour * 24 * 28                               // 28 days or 4 weeks
-	claimGenState.Params.DurationOfDecay = time.Hour * 24 * 56                                  // 56 days or 8 weeks
-	claimGenState.Params.DurationVestingPeriods = []time.Duration{time.Minute, time.Minute * 2, time.Minute * 5, time.Minute}
 	claimGenStateBz, err := cdc.MarshalJSON(claimGenState)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal claim genesis state: %w", err)
@@ -267,7 +260,6 @@ func PrepareGenesis(
 func MainnetGenesisParams() GenesisParams {
 	genParams := GenesisParams{}
 
-	genParams.AirdropSupply = math.NewInt(90_000_000_000_000)                       // (90M INTO)
 	genParams.GenesisTime = time.Date(2025, time.August, 27, 14, 0, 0, 0, time.UTC) // 2025 27 Aug - 14:00 UTC
 	genParams.NativeCoinMetadatas = []banktypes.Metadata{
 		{
@@ -301,7 +293,7 @@ func MainnetGenesisParams() GenesisParams {
 	// mint
 	genParams.MintParams = minttypes.DefaultParams()
 	genParams.MintParams.MintDenom = BaseCoinUnit
-	genParams.MintParams.StartTime = genParams.GenesisTime.AddDate(0, 6, 0)
+	genParams.MintParams.StartTime = genParams.GenesisTime.Add(time.Hour * 24 * 365) // 1 year (will be changed through gov)
 	genParams.MintParams.InitialAnnualProvisions = math.LegacyNewDec(150_000_000_000_000)
 
 	genParams.MintParams.ReductionFactor = math.LegacyNewDec(3).QuoInt64(4)
@@ -337,11 +329,11 @@ func MainnetGenesisParams() GenesisParams {
 	)
 	// slash
 	genParams.SlashingParams = slashingtypes.DefaultParams()
-	genParams.SlashingParams.SignedBlocksWindow = int64(25000)                         // ~41 hr at 6 second blocks
+	genParams.SlashingParams.SignedBlocksWindow = 48000                                // equal to 16 hours @ 1.3s block time
 	genParams.SlashingParams.MinSignedPerWindow = math.LegacyNewDecWithPrec(5, 2)      // 5% minimum liveness
 	genParams.SlashingParams.DowntimeJailDuration = time.Minute                        // 1 minute jail period
 	genParams.SlashingParams.SlashFractionDoubleSign = math.LegacyNewDecWithPrec(5, 2) // 5% double sign slashing
-	genParams.SlashingParams.SlashFractionDowntime = math.LegacyNewDecWithPrec(1, 4)   // 0.01% liveness slashing               // 0% liveness slashing
+	genParams.SlashingParams.SlashFractionDowntime = math.LegacyNewDecWithPrec(0, 4)   // 0% liveness slashing, as missing out rewards is enough penalty
 
 	//wasm included for future integrations
 	genParams.WasmParams = wasmtypes.DefaultParams()
@@ -367,10 +359,10 @@ func MainnetGenesisParams() GenesisParams {
 	//claim
 	genParams.ClaimParams = claimtypes.DefaultGenesis().Params
 	genParams.ClaimParams.AirdropStartTime = genParams.GenesisTime.Add(time.Hour * 24 * 365) // 1 year (will be changed through gov)
-	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 60                           // 60 days = ~2 months
-	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 120                             // 120 days = ~4 months
+	genParams.ClaimParams.DurationUntilDecay = time.Hour * 24 * 28                           // 28 days or 4 weeks
+	genParams.ClaimParams.DurationOfDecay = time.Hour * 24 * 56                              // 56 days or 8 weeks
 	genParams.ClaimParams.ClaimDenom = genParams.NativeCoinMetadatas[0].Base
-	genParams.ClaimParams.DurationVestingPeriods = []time.Duration{time.Hour * 24 * 7, time.Hour * 24 * 7 * 6, time.Hour * 24 * 3, time.Hour * 24 * 7 * 4}
+	genParams.ClaimParams.DurationVestingPeriods = []time.Duration{time.Hour * 24 * 7, time.Hour * 24 * 14, time.Hour * 24 * 3, time.Hour * 24 * 7 * 4} // 7 days, 14 days, 3 days, 4 weeks
 
 	//consensus
 	genParams.ConsensusParams = tmtypes.DefaultConsensusParams()
