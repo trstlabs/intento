@@ -35,7 +35,7 @@ message ClaimRecord {
   ];
   // index of status array refers to action enum #
   repeated Status status = 3 [
-    (gogoproto.moretags) = "yaml:\"status\"",
+    (gogoproto.jsontag) = "status,omitempty",
     (gogoproto.nullable) = false
   ];
 }

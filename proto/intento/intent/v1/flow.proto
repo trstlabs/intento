@@ -58,9 +58,9 @@ message ICAConfig {
 message TrustlessAgentConfig {
   string agent_address = 1;
   // optional, if set to empty array, no fee limit is set and no fees are charged
-  repeated cosmos.base.v1beta1.Coin fee_limit = 2 [(gogoproto.nullable) = false]; 
+  repeated cosmos.base.v1beta1.Coin fee_limit = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "fee_limit,omitempty"];
   // optional for display
-  string connection_id = 3;
+  string connection_id = 3 [(gogoproto.jsontag) = "connection_id,omitempty"];
 }
 
 // ExecutionConfiguration provides the execution-related configuration of the
