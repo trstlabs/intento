@@ -84,7 +84,7 @@ func TestSendLocalTxAutocompound(t *testing.T) {
 	keeper.HandleFlow(ctx, ctx.Logger(), flow, time.Now(), nil)
 
 	//check that the feedback loop was executed and the msg was updated
-	flow = keeper.Getflow(ctx, flow.ID)
+	flow = keeper.GetFlow(ctx, flow.ID)
 	require.NotNil(t, flow)
 
 	require.Equal(t, len(flow.Msgs), 2)

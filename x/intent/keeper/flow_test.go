@@ -41,7 +41,7 @@ func TestCreateFlow(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the flow was created correctly
-	flow := keepers.IntentKeeper.Getflow(ctx, 1)
+	flow := keepers.IntentKeeper.GetFlow(ctx, 1)
 
 	require.Equal(t, uint64(1), flow.ID)
 	require.Equal(t, owner.String(), flow.Owner)
@@ -78,7 +78,7 @@ func TestCreateFlowWithZeroFeeFundsWorks(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify that the flow was created correctly
-	flow := keepers.IntentKeeper.Getflow(ctx, 1)
+	flow := keepers.IntentKeeper.GetFlow(ctx, 1)
 
 	require.Equal(t, uint64(1), flow.ID)
 	require.Equal(t, owner.String(), flow.Owner)
@@ -142,7 +142,7 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 	// Call the CreateFlow function
 	err := keepers.IntentKeeper.CreateFlow(ctx, owner, "label", []*cdctypes.Any{}, duration, interval, startTime, sdk.Coins{}, configuration, types.TrustlessAgentConfig{}, portID, connectionID, types.ExecutionConditions{})
 	require.NoError(t, err)
-	flow := keepers.IntentKeeper.Getflow(ctx, 1)
+	flow := keepers.IntentKeeper.GetFlow(ctx, 1)
 	require.NotNil(t, flow.FeeAddress)
 	// Message creation helpers
 	newWithdrawMsg := func() *cdctypes.Any {
@@ -209,7 +209,7 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 		},
 	}
 
-	k.Setflow(ctx, &flow)
+	k.SetFlow(ctx, &flow)
 
 	// Test cases in execution order
 	tests := []struct {
@@ -304,7 +304,7 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 			}
 
 			// Verify target message was updated
-			updatedFlow := k.Getflow(ctx, flow.ID)
+			updatedFlow := k.GetFlow(ctx, flow.ID)
 			var updatedMsg proto.Message
 			if tc.validateIndex >= 0 {
 				var updatedMsg proto.Message

@@ -14,8 +14,8 @@ import (
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
-// Getflow
-func (k Keeper) Getflow(ctx sdk.Context, flowID uint64) types.Flow {
+// GetFlow
+func (k Keeper) GetFlow(ctx sdk.Context, flowID uint64) types.Flow {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	var flow types.Flow
 	flowBz := store.Get(types.GetFlowKey(flowID))
@@ -24,8 +24,8 @@ func (k Keeper) Getflow(ctx sdk.Context, flowID uint64) types.Flow {
 	return flow
 }
 
-// TryGetflow
-func (k Keeper) TryGetflow(ctx sdk.Context, flowID uint64) (types.Flow, error) {
+// TryGetFlow
+func (k Keeper) TryGetFlow(ctx sdk.Context, flowID uint64) (types.Flow, error) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	var flow types.Flow
 	flowBz := store.Get(types.GetFlowKey(flowID))
@@ -40,7 +40,7 @@ func (k Keeper) TryGetflow(ctx sdk.Context, flowID uint64) (types.Flow, error) {
 	return flow, nil
 }
 
-func (k Keeper) Setflow(ctx sdk.Context, flow *types.Flow) {
+func (k Keeper) SetFlow(ctx sdk.Context, flow *types.Flow) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	store.Set(types.GetFlowKey(flow.ID), k.cdc.MustMarshal(flow))
 }
@@ -80,7 +80,7 @@ func (k Keeper) CreateFlow(ctx sdk.Context, owner sdk.AccAddress, label string, 
 		return errorsmod.Wrap(types.ErrSignerNotOk, err.Error())
 	}
 
-	k.Setflow(ctx, &flow)
+	k.SetFlow(ctx, &flow)
 	k.addToFlowOwnerIndex(ctx, owner, id)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

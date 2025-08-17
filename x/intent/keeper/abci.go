@@ -63,7 +63,7 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, 
 	}
 
 	emitFlowEvent(ctx, flow)
-	k.Setflow(ctx, &flow)
+	k.SetFlow(ctx, &flow)
 }
 
 // submitInterchainQuery submits an interchain query when ICQConfig is present
@@ -156,7 +156,7 @@ func (k Keeper) handleRunFeedbackLoops(ctx sdk.Context, flow *types.Flow, msgRes
 	for _, loop := range flow.Conditions.FeedbackLoops {
 		targetFlow := flow
 		if loop.FlowID != 0 && loop.FlowID != flow.ID {
-			otherFlow, err := k.TryGetflow(ctx, loop.FlowID)
+			otherFlow, err := k.TryGetFlow(ctx, loop.FlowID)
 			if err != nil {
 				errorString = appendError(errorString, fmt.Sprintf("invalid feedback loop FlowID: %d (not found)", loop.FlowID))
 				continue
@@ -398,7 +398,7 @@ func (k Keeper) scheduleNextExecution(ctx sdk.Context, flow types.Flow) {
 	nextExecTime := flow.ExecTime.Add(flow.Interval)
 	k.InsertFlowQueue(ctx, flow.ID, nextExecTime)
 	flow.ExecTime = nextExecTime
-	k.Setflow(ctx, &flow)
+	k.SetFlow(ctx, &flow)
 }
 
 // recordFlowNotAllowed adds an flow entry to the flow history

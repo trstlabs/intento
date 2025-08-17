@@ -118,7 +118,7 @@ func (k msgServer) RegisterAccountAndSubmitFlow(goCtx context.Context, msg *type
 func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (*types.MsgUpdateFlowResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	timeNowWindow := ctx.BlockTime().Add(time.Minute * 1)
-	flow, err := k.TryGetflow(ctx, msg.ID)
+	flow, err := k.TryGetFlow(ctx, msg.ID)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidRequest, err.Error())
 	}
@@ -218,7 +218,7 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 		flow.TrustlessAgent = msg.TrustlessAgent
 	}
 
-	k.Setflow(ctx, &flow)
+	k.SetFlow(ctx, &flow)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(

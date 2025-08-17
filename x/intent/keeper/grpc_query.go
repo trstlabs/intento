@@ -67,7 +67,7 @@ func (q QueryServer) Flow(c context.Context, req *types.QueryFlowRequest) (*type
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	flow, err := q.keeper.TryGetflow(ctx, id)
+	flow, err := q.keeper.TryGetFlow(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (q QueryServer) FlowsForOwner(c context.Context, req *types.QueryFlowsForOw
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			flowID := types.GetIDFromBytes(key)
-			flow := q.keeper.Getflow(ctx, flowID)
+			flow := q.keeper.GetFlow(ctx, flowID)
 
 			flows = append(flows, flow)
 

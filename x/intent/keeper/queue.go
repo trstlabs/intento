@@ -19,7 +19,7 @@ func (k Keeper) IterateFlowQueue(ctx sdk.Context, execTime time.Time, cb func(fl
 
 		flowID, _ := types.SplitFlowQueueKey(iterator.Key())
 
-		flow := k.Getflow(ctx, flowID)
+		flow := k.GetFlow(ctx, flowID)
 		if cb(flow) {
 			break
 		}

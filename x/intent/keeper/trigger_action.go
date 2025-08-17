@@ -150,7 +150,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	if id <= 0 {
 		return fmt.Errorf("flow not found")
 	}
-	flow := k.Getflow(ctx, id)
+	flow := k.GetFlow(ctx, id)
 
 	flowHistoryEntry, newErr := k.GetLatestFlowHistoryEntry(ctx, id)
 	if newErr != nil {
@@ -315,7 +315,7 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.Flow, nextMsgs []
 		}
 
 		k.SetCurrentFlowHistoryEntry(cacheCtx, flow.ID, flowHistoryEntry)
-		k.Setflow(ctx, &flow)
+		k.SetFlow(ctx, &flow)
 		writeCtx()
 	}
 
@@ -414,7 +414,7 @@ func (k Keeper) SetFlowOnTimeout(ctx sdk.Context, sourcePort string, channelID s
 	if id <= 0 {
 		return nil
 	}
-	flow := k.Getflow(ctx, id)
+	flow := k.GetFlow(ctx, id)
 	if flow.Configuration.StopOnTimeout {
 		k.RemoveFromFlowQueue(ctx, flow)
 	}
@@ -452,7 +452,7 @@ func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq 
 		flowHistoryEntry = &types.FlowHistoryEntry{Errors: []string{err.Error()}}
 	}
 
-	flow, err := k.TryGetflow(ctx, id)
+	flow, err := k.TryGetFlow(ctx, id)
 	if err != nil {
 		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, err.Error())
 	}

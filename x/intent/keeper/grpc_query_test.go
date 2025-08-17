@@ -360,7 +360,7 @@ func CreateFakeFlow(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID, con
 		Configuration: &types.ExecutionConfiguration{SaveResponses: true},
 	}
 
-	k.Setflow(ctx, &flow)
+	k.SetFlow(ctx, &flow)
 	k.addToFlowOwnerIndex(ctx, owner, id)
 
 	var newFlow types.Flow
@@ -427,7 +427,7 @@ func CreateFakeAuthZFlow(k Keeper, ctx sdk.Context, owner sdk.AccAddress, portID
 		EndTime:       endTime,
 		SelfHostedICA: &types.ICAConfig{PortID: portID},
 	}
-	k.Setflow(ctx, &flow)
+	k.SetFlow(ctx, &flow)
 	k.addToFlowOwnerIndex(ctx, owner, id)
 	flowBz := k.cdc.MustMarshal(&flow)
 	var newFlow types.Flow
