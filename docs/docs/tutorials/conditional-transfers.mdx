@@ -1,0 +1,141 @@
+---
+title: Conditional Transfers with MsgSend
+sidebar_position: 2
+description: Learn how to create a flow that transfers staking rewards only when they exceed a threshold
+---
+
+This tutorial demonstrates how to create an intent-based flow that automatically transfers staking rewards to another account, but only if the withdrawn amount exceeds a specified threshold.
+
+## Prerequisites
+
+- Basic understanding of Cosmos SDK messages
+- A wallet with staked tokens that generate rewards
+- The recipient's address for the transfer
+
+## Scenario
+
+1. Withdraw staking rewards using `MsgWithdrawDelegatorReward`
+2. Check if the withdrawn amount is greater than 200,000 `uatom`
+3. If the condition is met, transfer the amount to another account using `MsgSend`
+
+## 1. Define the Withdrawal Rewards Message
+
+The withdrawal message is structured as follows:
+
+```typescript
+const msgWithdrawReward =
+  cosmos.distribution.v1beta1.MessageComposer.withTypeUrl.withdrawDelegatorReward(
+    {
+      delegatorAddress: "cosmos1delegatoraddress",
+      validatorAddress: "cosmos1validatoraddress",
+    }
+  );
+```
+
+## 2. Define Feedback Loop to Use Withdrawn Amount
+
+The withdrawn amount will be used as input for `MsgSend`:
+
+```typescript
+const feedbackLoop: FeedbackLoop = {
+  flowId: BigInt(0), // Reward withdrawal flow
+  responseIndex: 0, // First response index
+  responseKey: "amount.[0]", // Extract the withdrawn amount
+  valueType: "sdk.Coin", // Value type for replacement
+  msgsIndex: 1, // Message index to modify
+  msgKey: "amount.[0]", // Key in MsgSend to replace
+  icqConfig: undefined,
+};
+```
+
+## 3. Compare the Withdrawn Amount
+
+A `Comparison` condition ensures the withdrawn amount is above the threshold:
+
+```typescript
+const comparison: Comparison = {
+  flowId: BigInt(0), // Reward withdrawal flow
+  responseIndex: 0, // First response index
+  responseKey: "amount.[0].amount", // Extracted amount key
+  valueType: "sdk.Int", // Value type
+  operator: 4, // LARGER_THAN
+  operand: "200000", // Threshold
+  icqConfig: undefined,
+};
+```
+
+## 4. Define the Transfer Flow (MsgSend)
+
+If the condition is met, the amount is transferred:
+
+```typescript
+const msgSend = cosmos.bank.v1beta1.MessageComposer.withTypeUrl.send({
+  fromAddress: "cosmos1delegatoraddress",
+  toAddress: "cosmos1recipientaddress",
+  amount: [{ denom: "uatom", amount: "0" }], // Replaced by feedback loop
+});
+```
+
+## 5. Set Execution Conditions
+
+Execution conditions ensure that the transfer occurs only if the withdrawn amount meets the criteria:
+
+```typescript
+const initConditions: ExecutionConditions = {
+  stopOnSuccessOf: [],
+  stopOnFailureOf: [],
+  skipOnFailureOf: [],
+  skipOnSuccessOf: [],
+  feedbackLoops: [feedbackLoop],
+  comparisons: [comparison],
+  useAndForComparisons: false,
+};
+```
+
+## 6. Submit the Intent-Based Flow
+
+The Intent-based Flow includes both withdrawal and transfer actions:
+
+```typescript
+const msgSubmitFlow =
+  intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
+    label: "Reward Claim and Send Flow",
+    owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
+    msgs: [msgWithdrawReward, msgSend],
+    duration: "1440h",
+    interval: "600s",
+    feeFunds: [{ denom: "uinto", amount: "5000000" }],
+    configuration: executionConfig,
+    trustless_agent: {
+      agent_address: "into1xyz...",
+      fee_limit: [
+        {
+          denom: "uinto",
+          amount: "100",
+        },
+        {
+          denom: "ibc/hash",
+          amount: "50",
+        },
+      ],
+    },
+  });
+```
+
+You can set a fee limit, but it may not be required. If omitted, no fee can be charged by the trustless agent fee admin.
+
+## 7. Sign and Broadcast the Transaction
+
+Finally, the transaction is signed and broadcasted:
+
+```typescript
+client.signAndBroadcast(owner, [msgSubmitFlow], {
+  amount: [],
+  gas: "300000",
+});
+```
+
+## Next Steps
+
+- Learn how to [automate delegation of staking rewards](../tutorials/auto-delegation)
+- Explore more [tutorials on intent-based flows](../tutorials)

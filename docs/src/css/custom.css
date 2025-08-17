@@ -10,20 +10,21 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #5064fb;
-  --ifm-color-primary-dark: theme(colors.gray.1000);
-  --ifm-color-primary-darker: theme(colors.gray.1000);
-  --ifm-color-primary-darkest: theme(colors.gray.1000);
-  --ifm-color-primary-light: theme(colors.gray.1000);
-  --ifm-color-primary-lighter: theme(colors.gray.1000);
-  --ifm-color-primary-lightest: theme(colors.gray.1000);
+  --ifm-color-primary: #2e8555;
+  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary-darker: #277148;
+  --ifm-color-primary-darkest: #205d3b;
+  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-lighter: #359962;
+  --ifm-color-primary-lightest: #3cad6e;
   --ifm-code-font-size: 95%;
-  --ifm-breadcrumb-item-background-active: transparent;
-  --ifm-breadcrumb-padding-horizontal: 0;
-  --ifm-list-paragraph-margin: 0;
-  --ifm-spacing-horizontal: theme(spacing.7);
-  --ifm-blockquote-border-color: theme(colors.gray.1000);
-  --ifm-menu-link-padding-vertical: 0.6rem;
+  --ifm-menu-link-padding-vertical: 0.4rem;
+  --ifm-menu-link-padding-horizontal: 0.8rem;
+  --ifm-menu-color: var(--ifm-color-gray-900);
+  --ifm-menu-color-active: var(--ifm-color-primary);
+  --ifm-menu-color-background-active: rgba(46, 133, 85, 0.1);
+  --ifm-menu-color-background-hover: rgba(46, 133, 85, 0.05);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
   --ifm-background-color: theme(colors.gray.0);
   --ifm-footer-link-color: var(--ifm-font-color-base);
   --ifm-menu-link-sublist-icon: url("~/img/ico-chevron.svg");

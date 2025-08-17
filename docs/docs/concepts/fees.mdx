@@ -1,7 +1,8 @@
 ---
-sidebar_position: 7
-title: Flow Fees
-description: How Flow fees are calculated and examples
+sidebar_position: 4
+sidebar_class_name: sidebar-item-concept
+title: Fee Structure
+description: Understanding the fee model and cost structure for Intento transactions
 ---
 
 ## Fees & Execution Costs
@@ -46,11 +47,11 @@ In Intento Portal, we **automatically add a fee coin limit** during flow submiss
 To check the latest hosted fee programmatically:
 
 ```
-GET /intento/intent/v1beta1/trustless-agent/{address}
+GET /intento/intent/v1/trustless-agent/{address}
 ```
 
 **LCD URL:**
-[https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/trustless-agent/-address-](https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/trustless-agent/-address-)
+[https://lcd.intento.zone/swagger/#get-/intento/intent/v1/trustless-agent/-address-](https://lcd.intento.zone/swagger/#get-/intento/intent/v1/trustless-agent/-address-)
 
 This endpoint returns the `fee_coins_supported` array of supported fee coins for that specific Trustless Agent.
 

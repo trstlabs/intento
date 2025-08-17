@@ -1,7 +1,8 @@
 ---
-sidebar_position: 7
 title: Querying Flows
-description: How to retreive flow data
+description: Learn how to query and retrieve flow data using the Intento API
+sidebar_position: 2
+sidebar_class_name: sidebar-item-reference
 ---
 
 Retrieving `Flow`-related information can be done through multiple methods:
@@ -16,41 +17,42 @@ Retrieving `Flow`-related information can be done through multiple methods:
 1. **Retrieve Flow Detail**
 
    ```
-   GET /intento/intent/v1beta1/flow/{flow_id}
+   GET /intento/intent/v1/flow/{flow_id}
    ```
 
    Example LCD endpoint:
 
    ```
-   https://lcd.intento.zone/intento/intent/v1beta1/flow/1
+   https://lcd.intento.zone/intento/intent/v1/flow/1
    ```
 
    Returns details of the specified Flow.
 
 2. **List All Flows**
    ```
-   GET /intento/intent/v1beta1/flows
+   GET /intento/intent/v1/flows
    ```
    Example LCD Swagger UI:
    ```
-   https://lcd.intento.zone/swagger/#get-/intento/intent/v1beta1/flows
+   https://lcd.intento.zone/swagger/#get-/intento/intent/v1/flows
    ```
    Fetches all active Flows.
 
 ## Queries
 
-The available queries are as follows:
+Some of the available queries for the Intent engine
+ are as follows:
 
 | Query                        | Description                                                                             | Parameter                                | Returns                                   | HTTP Method | Endpoint                                        |
 | ---------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ----------- | ----------------------------------------------- |
-| InterchainAccountFromAddress | Returns the interchain account for a given owner address on a specified connection pair | QueryInterchainAccountFromAddressRequest | QueryInterchainAccountFromAddressResponse | GET         | /intento/intent/v1beta1/address-to-ica          |
-| Flow                         | Returns the auto-executing interchain account flow for a specified ID                   | QueryFlowRequest                         | QueryFlowResponse                         | GET         | /intento/intent/v1beta1/flow/{id}               |
-| Flows                        | Returns all flow infomration                                                            | QueryFlowsRequest                        | QueryFlowsResponse                        | GET         | /intento/intent/v1beta1/flows                   |
-| FlowsForOwner                | Returns all flow infomration for a given owner                                          | QueryFlowsForOwnerRequest                | QueryFlowsForOwnerResponse                | GET         | /intento/intent/v1beta1/flows/{owner} |
-| FlowHistory                  | Returns flow execution history for a given flow                                         | QueryFlowHistoryRequest                  | QueryFlowHistoryResponse                  | GET         | /intento/intent/v1beta1/flows-history           |
-| Params                       | Returns the total set of the Intent module parameters                                   | QueryParamsRequest                       | QueryParamsResponse                       | GET         | /intento/intent/v1beta1/params                  |
+| InterchainAccountFromAddress | Returns the interchain account for a given owner address on a specified connection pair | QueryInterchainAccountFromAddressRequest | QueryInterchainAccountFromAddressResponse | GET         | /intento/intent/v1/address-to-ica          |
+| Flow                         | Returns the auto-executing interchain account flow for a specified ID                   | QueryFlowRequest                         | QueryFlowResponse                         | GET         | /intento/intent/v1/flow/{id}               |
+| Flows                        | Returns all flow infomration                                                            | QueryFlowsRequest                        | QueryFlowsResponse                        | GET         | /intento/intent/v1/flows                   |
+| FlowsForOwner                | Returns all flow infomration for a given owner                                          | QueryFlowsForOwnerRequest                | QueryFlowsForOwnerResponse                | GET         | /intento/intent/v1/flows/{owner} |
+| FlowHistory                  | Returns flow execution history for a given flow                                         | QueryFlowHistoryRequest                  | QueryFlowHistoryResponse                  | GET         | /intento/intent/v1/flows-history           |
+| Params                       | Returns the total set of the Intent engine parameters                                   | QueryParamsRequest                       | QueryParamsResponse                       | GET         | /intento/intent/v1/params                  |
 
-These proto queries provide a convenient way to interact with the Intent module and access information about automatic interchain flows.
+These proto queries provide a convenient way to interact with the Intent engine and access information about automatic interchain flows.
 
 You can use pagination fields to narrow down the scope.
 

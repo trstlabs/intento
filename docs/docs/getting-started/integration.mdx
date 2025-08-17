@@ -1,5 +1,5 @@
 ---
-title: Integrators
+title: Integration
 sidebar_position: 1
 description: Empower your users with smart flows that enhance security, efficiency, and flexibility
 ---
@@ -9,26 +9,23 @@ Imagine a world where your blockchain actions are seamless, automated, and entir
 This guide is for integrators who want to leverage interchain execution to bring efficiency and innovation to their users.
 By designing smart execution flows, you empower your users with flows that enhance security, efficiency, and flexibility while keeping them in control.
 
-#### Differences in Interchain Execution
-
-Integrators can choose from multiple interchain execution options based on their requirements:
-
-- **Self-Hosted Interchain Accounts:** Fully self-custodial approach where integrators maintain complete execution control.
-- **Trustless Agent:** Allows execution of interchain actions while managing fees.
-- **Scalable Managed Solution:** A streamlined, managed approach for executing interchain actions at scale.
+Flows can be created either directly on the Intento chain or through an IBC transfer channel with flow submission details in the memo.
 
 #### Message Types
 
 Understanding message types is crucial for designing effective execution flows:
 
-- **Local Messages:** Standard messages sent directly by users.
+- **Local Messages:** Messages sent directly by users on the Intento chain, this includes MsgTransfer, which can perform actions like swaps on selected chains through an IBC transfer channel. With packet forwarding 50+ chains are supported. 
 - **Authz MsgExec Messages:** Enables one account to execute messages on behalf of another.
 - **ICA (Interchain Accounts) Messages:** Messages sent via IBC (Inter-Blockchain Communication) through an interchain account.
 
-##### Hosted vs. Self-Hosted ICA Messages
+##### Trustless Agents vs Self-Hosted Interchain Accounts
 
-- **Hosted ICA Messages** can only call `MsgExec`.
-- **Self-Hosted ICA Messages** provide full execution control.
+Both are trust-minimized solutions, but they have different use cases. Trustless Agents are uncontrollable interchain accounts that abstract away fees while keeping user flows fully self-custodial.
+Self-hosted Interchain Accounts are controllable interchain accounts by the creator.
+
+- **Trustless Agents** are only allowed to call `MsgExec` so they can execute actions on behalf of the flow submitter (typically end users) when they have an active grant via `MsgGrant` of the Authz Cosmos SDK module on the host chain.
+- **Self-Hosted Interchain Accounts** provide full execution control, which can be useful for high-level protocol actions.
 
 #### Using Conditions in Flows
 

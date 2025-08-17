@@ -1,10 +1,9 @@
 ---
+title: Intents
+description: Understand how intents enable permissionless, cross-chain actions with predefined conditions
 sidebar_position: 1
-title: Introduction
-pagination_label: Interchain actions. Any action, anywhere
-order: 2
+sidebar_class_name: sidebar-item-concept
 ---
-
 
 Intents contain actions and predefined conditions, which determine how actions are processed. In crypto, we want to execute actions with no counterparty risk and in a permissionless and decentralized manner. This has so far only been possible by directly sending transactions to the destination chain. With Intento, you will be able specify your intent to perform any action, anywhere at any moment given any conditions.
 
@@ -12,8 +11,7 @@ Intent-based action flows are submitted by providing an interval, duration, end 
 
 A flow on Intento in technical terms is an object containing messages that are triggered at a specified time, or recurringly with intervals, with conditions such as feedback loops, stops and comparisons. Flow trigger entries are scheduled, and checked at the beginning of a new block.
 
-
-In the illustration below you can see several examples of how flows can look like. 
+In the illustration below you can see several examples of how flows can look like.
 ![Example flows](@site/docs/images/example_flows.png)
 
 Interchain Accounts are a key component of Intento. They allow for the secure management of assets across different IBC-connected chains. This means that Intento's Intents can execute actions on other chains based on custom logic, making them extremely versatile and useful for a wide range of applications. With this, you can execute Cosmos SDK blockchain messages such as:
@@ -45,21 +43,21 @@ To use Self-Hosted Interchain Accounts, you first register an interchain account
 
 Submitting an flow with MsgSubmitFlow can be done with the following input:
 
-| Field Name              | Data Type                           | Description                                                                                      | optional |
-| ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------ | -------- |
-| `Owner`                 | `string`                            | The owner of the flow                                                                            |          |
-| `Msgs`                  | `repeated google.protobuf.Any`      | A list of arbitrary messages to include in the flow                                              |          |
-| `Duration`              | `string`                            | The amount of time that the flow should run for                                                  |          |
-| `Label`                 | `string`                            | A label for the flow                                                                             | ✔️       |
-| `StartAt`               | `uint64`                            | A Unix timestamp representing the custom start time for execution (if set after block inclusion) | ✔️       |
-| `Interval`              | `string`                            | The interval between automatic message calls                                                     | ✔️       |
-| `FeeFunds`              | `repeated cosmos.base.v1beta1.Coin` | Optional funds to be used for transaction fees, limiting the amount of fees incurred             | ✔️       |
-| `ConnectionID`          | `string`                            | The ID of the connection to use for a self-hosted ICA                                            | ✔️       |
-| `HostConnectionID`      | `string`                            | The ID of the host chain connection to use for a self-hosted ICA                                 | ✔️       |
-| `TrustlessAgent`         | `string`                            | Hosted ICA account that executes on a host chain on your behalf                                  | ✔️       |
-| `TrustlessAgentFeeLimit` | `cosmos.base.v1beta1.Coin`          | A limit of the fees a Trustless Agent can charge per execution                                    | ✔️       |
-| `Configuration`         | `ExecutionConfiguration`            | Optional set of basic conditions and settings                                                    | ✔️       |
-| `Conditions`            | `repeated Condition`                | Powerful set of conditions such as comparisons and feedback loops                                | ✔️       |
+| Field Name               | Data Type                           | Description                                                                                      | optional |
+| ------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------ | -------- |
+| `Owner`                  | `string`                            | The owner of the flow                                                                            |          |
+| `Msgs`                   | `repeated google.protobuf.Any`      | A list of arbitrary messages to include in the flow                                              |          |
+| `Duration`               | `string`                            | The amount of time that the flow should run for                                                  |          |
+| `Label`                  | `string`                            | A label for the flow                                                                             | ✔️       |
+| `StartAt`                | `uint64`                            | A Unix timestamp representing the custom start time for execution (if set after block inclusion) | ✔️       |
+| `Interval`               | `string`                            | The interval between automatic message calls                                                     | ✔️       |
+| `FeeFunds`               | `repeated cosmos.base.v1beta1.Coin` | Optional funds to be used for transaction fees, limiting the amount of fees incurred             | ✔️       |
+| `ConnectionID`           | `string`                            | The ID of the connection to use for a self-hosted ICA                                            | ✔️       |
+| `HostConnectionID`       | `string`                            | The ID of the host chain connection to use for a self-hosted ICA                                 | ✔️       |
+| `TrustlessAgent`         | `string`                            | Uncontrollable account that executes on a host chain on your behalf                              | ✔️       |
+| `TrustlessAgentFeeLimit` | `cosmos.base.v1beta1.Coin`          | A limit of the fees a Trustless Agent can charge per execution, if set by creator                | ✔️       |
+| `Configuration`          | `ExecutionConfiguration`            | Optional set of basic conditions and settings                                                    | ✔️       |
+| `Conditions`             | `repeated Condition`                | Powerful set of conditions such as comparisons and feedback loops                                | ✔️       |
 
 #### Notes
 
@@ -76,11 +74,11 @@ The `Flow History` captures the timeline and details of every executed flow and 
 
 | **Field**             | **Description**                                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `scheduled_exec_time` | Specifies the time at which the flow was originally scheduled for execution.                                     |
-| `actual_exec_time`    | The time at which the flow was actually triggered. This provides insight into delays or on-time performance.     |
-| `exec_fee`            | The fee incurred for executing the flow. This is represented as a `Coin` object and is non-nullable.             |
-| `executed`            | A boolean flag indicating whether all messages within the flow were executed, regardless of the outcome.         |
-| `timed_out`           | A boolean flag that specifies if the flow timed out during execution over IBC.                                   |
+| `scheduled_exec_time` | Specifies the time at which the flow was originally scheduled for execution.                                       |
+| `actual_exec_time`    | The time at which the flow was actually triggered. This provides insight into delays or on-time performance.       |
+| `exec_fee`            | The fee incurred for executing the flow. This is represented as a `Coin` object and is non-nullable.               |
+| `executed`            | A boolean flag indicating whether all messages within the flow were executed, regardless of the outcome.           |
+| `timed_out`           | A boolean flag that specifies if the flow timed out during execution over IBC.                                     |
 | `errors`              | A list of error messages encountered during the execution. If empty, the execution was successful.                 |
 | `msg_responses`       | A collection of responses for the executed messages. This field remains empty if `save_responses` is set to false. |
 | `query_responses`     | Contains responses to any queries performed. This field is also empty if `save_responses` is false.                |
@@ -100,7 +98,7 @@ A high level overview of the process from flow submission to triggering messages
 9. IBC Packet gets acknowledged by a relayer and the flow entry is updated
 10. Remaining funds sent to a flow fee account are returned to the flow owner
 
-<!-- _Continue reading on on how intent module works in the [module](@site/docs/module/index.md) section of our documetation._ -->
+<!-- _Continue reading on on how intent engine works in the [engine](@site/docs/engine/index.md) section of our documetation._ -->
 
 <!-- ## Considerations
 

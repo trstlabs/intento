@@ -4,7 +4,7 @@ title: Message Authentication
 description: Message Authentication in the Intent Module
 ---
 
-In the Intent module, message authentication is a critical part of ensuring that flows are authorized and executed by the correct entities. This document explains the authentication process for various message types, with a focus on local messages, `MsgExec` messages, and ICA messages.
+In the Intent engine, message authentication is a critical part of ensuring that flows are authorized and executed by the correct entities. This document explains the authentication process for various message types, with a focus on local messages, `MsgExec` messages, and ICA messages.
 
 ## Authentication Overview
 
@@ -77,7 +77,7 @@ if isSelfHostedICAMessage(flow) {
 
 1. **ICA Authentication**:
    - IBC ensures that the packet sender is authenticated via AuthenticateTx as part of its [protocol](https://tutorials.cosmos.network/academy/3-ibc/8-ica.html#authentication).
-   - This removes the need for additional signer checks within the Intent module.
+   - This removes the need for additional signer checks within the Intent engine.
 
 2. **Controlled Configuration**:
    - The flow submission from the user specifies which Trustless Execution Agent (and the fee configuration thereof) is used, and this configuration is already expected and verified during setup.
@@ -129,4 +129,4 @@ func (k Keeper) validateMessage(ctx sdk.Context, codec codec.Codec, flow types.F
 
 ## Conclusion
 
-Message authentication is handled carefully within the Intent module to ensure security and correctness. While local and `MsgExec` messages require explicit validation, ICA messages rely on IBC’s inherent authentication mechanisms and user-controlled configurations. Restricting Trustless Execution Agent messages to `MsgExec` adds an additional layer of security, while Self-hosted ICAs are trusted based on owner control. This approach balances security with efficiency, adhering to the principles of our module’s design.
+Message authentication is handled carefully within the Intent engine to ensure security and correctness. While local and `MsgExec` messages require explicit validation, ICA messages rely on IBC’s inherent authentication mechanisms and user-controlled configurations. Restricting Trustless Execution Agent messages to `MsgExec` adds an additional layer of security, while Self-hosted ICAs are trusted based on owner control. This approach balances security with efficiency, adhering to the principles of our module’s design.

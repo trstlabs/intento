@@ -1,14 +1,15 @@
 ---
+title: Engine Parameters
+description: Configuration parameters and fee settings for the Intent Engine
 sidebar_position: 1
-title: Parameters
-description: Fee paremeters for Intent-Based Flows
+sidebar_class_name: sidebar-item-reference
 ---
 
-The Intent module for flows enables flows to be highly configurable and actions to be conditional, whereby flows can depend on execution results. The module typically uses just 80,000 to 100,000 gas for triggering up to 10 executions. Significantly less than via bots and custom smart contracts (700,000-1,000,000) whilst bringing trust assumptions to the minimum. This makes the module highly scalable for any specified intent. To manage network congestion, make the chain scalable, and provide value for token holders, protocol fees can be set and adjusted over time by token holders via chain governance.
+The Intent engine enables highly configurable intent-based flows. Conditional, whereby flows can depend on execution results. The module typically uses just 80,000 to 100,000 gas for triggering up to 10 executions. Significantly less than via bots and custom smart contracts (700,000-1,000,000) whilst bringing trust assumptions to the minimum. This makes the engine highly scalable, capable of handling millions of flows per hour. To manage network congestion, ensure the chain stays scalable, and provide value for token holders, fees are set and adjusted over time by token holders via chain governance.
 
-## Flow Governance Proposal Parameters
+## Flow Governance Parameters
 
-The Flow Governance Proposal Parameters define the rules and constraints governing the execution of Flows within the network. These parameters are unique as they are set through on-chain governance, ensuring transparency and adaptability over time. By optimizing key economic and operational aspects, these parameters allow the network to scale efficiently without becoming congested.
+The Flow Governance Parameters define the rules and constraints governing the execution of Flows within the network. These parameters are unique as they are set through on-chain governance, ensuring transparency and adaptability over time. By optimizing key economic and operational aspects, these parameters allow the network to scale efficiently without becoming congested.
 
 A notable feature of these parameters is the ability to use multiple tokens beyond the native denomination for transaction fees. This enhances user experience and aligns incentives with ATOM, promoting broader ecosystem participation and interoperability.
 
@@ -21,4 +22,4 @@ A notable feature of these parameters is the ability to use multiple tokens beyo
 | `max_flow_duration`     | `google.protobuf.Duration` | Maximum period for self-executing Flow                                                                                                                  | `263520h` (a little over 3 years)      |
 | `min_flow_duration`     | `google.protobuf.Duration` | Minimum period for self-executing Flow                                                                                                                  | `1m` (1 minute)                        |
 | `min_flow_interval`     | `google.protobuf.Duration` | Minimum interval for self-executing Flow                                                                                                                | `1m` (1 minute)                        |
-| `relayer_rewards`       | `repeated int64`           | Relayer rewards in uinto for each message type (0 = SDK, 1 = Wasm, 2 = Osmo). Rewards are in uinto and topped up in the module account by alloc module. | `[10_000, 15_000, 18_000, 22_000]`     |
+| `connection_relayer_rewards`       | `repeated ConnectionRelayerReward`           | 'Per connection, relayer rewards in uinto for each message type (0 = Low Gas, 1 = Medium Gas, 2 = High Gas, 3 = Authz). Rewards are in uinto and topped up in the module account by alloc module. | `[{connection_id: "connection-1", relayer_rewards: [10_000, 15_000, 18_000, 22_000]}]`     |

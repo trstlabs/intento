@@ -1,0 +1,159 @@
+---
+sidebar_position: 6
+title: Frontend Integration
+description: Learn how to integrate intent-based flows into your interchain dApp using IntentoJS
+---
+
+# Frontend Integration with IntentoJS
+
+IntentoJS is our TypeScript/JavaScript library that simplifies the process of creating and managing intent-based flows in your dApp. This guide will walk you through the key concepts and provide practical examples.
+
+## Prerequisites
+
+- Basic knowledge of TypeScript/JavaScript
+- Node.js (v14 or later)
+- An Intento-compatible wallet (E.g. through Cosmos Kit)
+- [IntentoJS](https://npmjs.com/package/intentojs) installed in your project.  
+
+Integration withouth IntentoJS is also possible. tokenstream.fun uses CosmJS to create and submit flows from host chains. Hence, no IntentoJS is required.
+
+## Getting Started
+
+### Installation
+
+```bash
+npm install intentojs
+# or
+yarn add intentojs
+```
+
+### Basic Flow Submission
+
+Here's how to create a simple flow that executes a token transfer:
+
+```typescript
+import { Registry, msgRegistry } from "intentojs";
+
+// 1. Prepare your message
+const transferMsg = {
+  typeUrl: "/cosmos.bank.v1beta1.MsgSend",
+  value: {
+    fromAddress: "cosmos1senderaddress",
+    toAddress: "cosmos1recipientaddress",
+    amount: [{ denom: "uatom", amount: "1000000" }]
+  }
+};
+
+// 2. Encode the message
+const registry = new Registry(msgRegistry);
+const encodedMsg = registry.encodeAsAny({
+  typeUrl: transferMsg.typeUrl,
+  value: transferMsg.value
+});
+
+// 3. Submit the flow
+const msgSubmitFlow = intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
+  label: "Simple Transfer Flow",
+  owner: "your-into-address",
+  msgs: [encodedMsg],
+  duration: "720h", // 30 days
+  interval: "0",   // Execute once
+  feeFunds: [{ denom: "uinto", amount: "1000000" }] // E.g. 1 INTO. Required in case wallet fallback is not set. Refundable
+});
+
+// 4. Sign and broadcast
+const result = await client.signAndBroadcast(signerAddress, [msgSubmitFlow], {
+  amount: [],
+  gas: "300000"
+});
+```
+
+## Advanced Features
+
+### Conditional Flows
+
+Create flows that execute based on specific conditions. For example, transfer tokens only if a certain token output threshold is met:
+
+```typescript
+// See full example in the Conditional Transfers tutorial
+const comparison: Comparison = {
+  flowId: BigInt(0),
+  responseIndex: 0,
+  responseKey: "amount.[0].amount",
+  valueType: "sdk.Int",
+  operator: 4, // GREATER_THAN
+  operand: "200000000" // 200 ATOM (in uatom)
+};
+```
+
+> **Tutorial**: Learn more in our [Conditional Transfers with ICQ](/tutorials/conditional-transfers-icq) tutorial.
+
+### Feedback Loops
+
+Dynamically update flow input based on previous executions:
+
+```typescript
+const feedbackLoop: FeedbackLoop = {
+  flowId: BigInt(0),
+  responseIndex: 0,
+  responseKey: "amount.[0].amount",
+  valueType: "sdk.Int",
+  msgsIndex: 0,
+  msgKey: "amount"
+};
+```
+
+### Trustless Agents
+
+Integrate with Trustless Agents to handle flow execution:
+
+```typescript
+const trustlessAgentConfig = {
+  agentAddress: "into1agentaddress",
+  feeLimit: [{ denom: "uinto", amount: "100000" }]
+};
+
+// Include in your submitFlow message
+const msgSubmitFlow = {
+  // ... other flow config
+  trustlessAgent: trustlessAgentConfig
+};
+```
+
+> **Guide**: Learn more about [setting up Trustless Agents](/tutorials/trustless-agent).
+
+## Fee Calculation
+
+Estimate the cost of your flows before submission:
+
+```typescript
+import { calculateFlowFee } from "intentojs";
+
+const feeEstimate = await calculateFlowFee({
+  messages: [msg1, msg2],
+  duration: 86400, // 1 day in seconds
+  interval: 3600,  // 1 hour interval
+  client: yourIntentoClient
+});
+
+console.log(`Estimated fee: ${feeEstimate.amount} ${feeEstimate.denom}`);
+```
+
+## Best Practices
+
+1. **Error Handling**: Always wrap flow submissions in try-catch blocks
+2. **Gas Estimation**: Use the `simulate` method to estimate gas before submission
+3. **Flow Management**: Store flow IDs for future reference and management
+4. **Testing**: Test flows on testnet (Chain ID: intento-dev-1) before deploying to mainnet
+
+## Example Implementations
+
+- [Conditional Transfers](/tutorials/conditional-transfers)
+- [Auto-Delegation](/tutorials/auto-delegation)
+- [Cross-Chain Swaps](/tutorials/cross-chain)
+
+## Next Steps
+
+- Explore the [IntentoJS API Reference](../reference/api/querying)
+- Check out the [Intento Portal](https://portal.intento.zone) for a complete implementation
+- Join our [Discord](https://discord.gg/hsVf9sYyZW) for support and updates

@@ -1,0 +1,198 @@
+---
+title: ICQ Balance Check
+description: Learn how to automate token transfers based on interchain balance queries
+sidebar_position: 3
+sidebar_class_name: sidebar-item-tutorial
+---
+
+# Conditional Transfers with Intent-Based Flows using ICQ Balance Check
+
+In this tutorial, we'll explore how to use **Intent-Based Flows** with **Interchain Queries (ICQ)** to automate a token transfer that only executes when a specific balance condition is met. This is particularly useful for scenarios like automatically moving funds when a threshold is reached.
+
+## Prerequisites
+- Basic understanding of Cosmos SDK and IBC
+- Familiarity with JavaScript/TypeScript
+- Access to an Intento node
+
+## What We'll Build
+We'll create a flow that:
+1. Queries an account's balance using ICQ
+2. Checks if the balance exceeds 200,000 uatom
+3. Only if the condition is met, executes a token transfer
+
+## Step 1: Setting Up the Execution Configuration
+
+First, let's define how our flow should behave:
+
+```typescript
+import {
+  Coin,
+  msgRegistry,
+  Registry,
+  Conditions,
+  Comparison,
+  ICQConfig,
+  TrustlessAgentConfig,
+} from "intentojs";
+
+const config: ExecutionConfiguration = {
+  saveResponses: false,    // Don't save query responses
+  updatingDisabled: false, // Allow flow updates
+  stopOnFailure: true,     // Stop if any condition fails
+  stopOnTimeout: false,    // Continue on ICQ timeout
+  stopOnSuccess: false,    // Continue after success
+  walletFallback: true,    // Use wallet fallback if needed
+};
+```
+
+## Step 2: Creating the ICQ Configuration
+
+We'll query the account balance using an Interchain Query. First, we need to create a helper function to generate the proper query key:
+
+```typescript
+function createBankBalanceQueryKey(address: string, denom: string): string {
+  try {
+    const { words } = bech32.decode(address);
+    const addressBytes = new Uint8Array(bech32.fromWords(words));
+    const prefix = new Uint8Array([0x02, addressBytes.length]);
+    const denomBytes = new TextEncoder().encode(denom);
+    const queryData = new Uint8Array([...prefix, ...addressBytes, ...denomBytes]);
+    return btoa(String.fromCharCode(...queryData));
+  } catch (error) {
+    console.error("Error creating query key:", error);
+    return "";
+  }
+}
+
+const queryKey = createBankBalanceQueryKey("cosmos1delegatoraddress", "uatom");
+
+const icqConfig: ICQConfig = {
+  connectionId: "connection-123",  // Your IBC connection ID
+  chainId: "host-chain-1",         // Chain ID to query
+  timeoutPolicy: 2,                // Policy for timeouts (2 = FAIL_FLOW)
+  timeoutDuration: 50000000000,    // 50 seconds timeout
+  queryType: "store/bank/key",     // Type of query
+  queryKey: queryKey,              // Generated query key
+  response: new Uint8Array(),      // Will be populated with response
+};
+```
+
+## Step 3: Setting Up the Feedback Loop
+
+We'll use a feedback loop to dynamically update the transfer amount based on the queried balance:
+
+```typescript
+const feedbackLoop: FeedbackLoop = {
+  flowId: BigInt(0),               // Reference to the balance query flow
+  responseIndex: 0,                // First response in the flow
+  responseKey: "amount.[0].amount", // Path to balance amount in response
+  valueType: "sdk.Int",            // Type of the value
+  msgsIndex: 1,                    // Index of MsgSend in messages array
+  msgKey: "amount",                // Field to update in MsgSend
+  icqConfig: icqConfig,            // Our ICQ config
+};
+```
+
+## Step 4: Defining the Balance Condition
+
+We'll only want to execute the transfer if the balance exceeds 200,000 uatom:
+
+```typescript
+const comparison: Comparison = {
+  flowId: BigInt(0),               // Reference to the balance query flow
+  responseIndex: 0,                // First response in the flow
+  responseKey: "amount.[0].amount", // Path to balance amount
+  valueType: "sdk.Int",            // Type of the value
+  operator: 4,                     // LARGER_THAN operator
+  operand: "200000uatom",          // Threshold amount
+  icqConfig: icqConfig,            // Our ICQ config
+};
+```
+
+## Step 5: Configuring Execution Conditions
+
+Now, let's set up the conditions for our flow:
+
+```typescript
+const initConditions: ExecutionConditions = {
+  stopOnSuccessOf: [],
+  stopOnFailureOf: [],
+  skipOnFailureOf: [],
+  skipOnSuccessOf: [],
+  feedbackLoops: [feedbackLoop],   // Our feedback loop
+  comparisons: [comparison],       // Our balance condition
+  useAndForComparisons: false,     // Use OR for multiple comparisons
+};
+```
+
+## Step 6: Creating the Transfer Message
+
+Let's create the message that will execute the transfer:
+
+```typescript
+const msgSend = cosmos.bank.v1beta1.MessageComposer.withTypeUrl.send({
+  fromAddress: "cosmos1delegatoraddress",
+  toAddress: "cosmos1recipientaddress",
+  amount: [{ denom: "uatom", amount: "0" }], // Will be updated by feedback loop
+});
+```
+
+## Step 7: Configuring the Trustless Agent
+
+We'll set up a trustless agent to handle the execution:
+
+```typescript
+const trustlessAgentConfig: TrustlessAgentConfig = {
+  agentAddress: "cosmos1teaaddress",  // Address of the trustless agent
+  feeLimit: [{ denom: "uatom", amount: "100000" }], // Fee limit per message execution (optional)
+};
+```
+
+## Step 8: Submitting the Flow
+
+Finally, let's submit our flow to the blockchain:
+
+```typescript
+const msgSubmitFlow = intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
+  label: "ICQ Balance Check and Transfer",
+  owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6", // Your address
+  msgs: [msgSend],
+  duration: "1440h",  // 60 days
+  interval: "600s",   // Check every 10 minutes
+  feeFunds: [{ denom: "uinto", amount: "5000000" }],
+  configuration: config,
+  TrustlessAgent: trustlessAgentConfig,
+  conditions: initConditions,
+});
+
+// Sign and broadcast the transaction
+const result = await client.signAndBroadcast(owner, [msgSubmitFlow], {
+  amount: [],
+  gas: "300000",
+});
+
+console.log("Flow submitted successfully:", result);
+```
+
+## How It Works
+
+1. The flow starts and executes the ICQ to get the account balance
+2. The response is checked against our condition (balance > 200,000 uatom)
+3. If the condition is met:
+   - The feedback loop updates the transfer amount
+   - The MsgSend is executed with the correct amount
+4. If the condition isn't met, the transfer is skipped
+
+## Next Steps
+
+- Try modifying the condition to check for different thresholds
+- Add multiple conditions using `useAndForComparisons`
+- Implement error handling for ICQ timeouts 
+- Add logging to track flow execution
+
+## Troubleshooting
+
+- Ensure the connection ID is correct and the IBC channel is established
+- Verify the account addresses are valid and have sufficient funds
+- Check the chain ID matches the target chain
+- Monitor the flow's execution status using the flow ID returned in the transaction result

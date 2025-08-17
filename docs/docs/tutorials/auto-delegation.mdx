@@ -1,0 +1,129 @@
+---
+title: Automated Delegation of Staking Rewards
+sidebar_position: 3
+description: Learn how to automatically delegate staking rewards when they exceed a threshold
+---
+
+This tutorial demonstrates how to create an intent-based flow that automatically delegates staking rewards when they exceed a specified threshold, helping you compound your staking returns.
+
+## Prerequisites
+
+- Basic understanding of Cosmos SDK staking operations
+- A wallet with staked tokens that generate rewards
+- The validator address you want to delegate to
+
+## Scenario
+
+1. Withdraw staking rewards using `MsgWithdrawDelegatorReward`
+2. Check if the withdrawn amount is greater than 150,000 `uatom`
+3. If the condition is met, automatically delegate the rewards to a validator using `MsgDelegate`
+
+## 1. Define Withdrawal Message
+
+Create a message to withdraw staking rewards:
+
+```typescript
+const msgWithdrawReward =
+  cosmos.distribution.v1beta1.MessageComposer.withTypeUrl.withdrawDelegatorReward(
+    {
+      delegatorAddress: "cosmos1delegatoraddress",
+      validatorAddress: "cosmos1validatoraddress",
+    }
+  );
+```
+
+## 2. Define Feedback Loop for Delegation
+
+Set up a feedback loop to use the withdrawn amount for delegation:
+
+```typescript
+const feedbackLoopDelegation: FeedbackLoop = {
+  flowId: BigInt(0), // Reward withdrawal flow
+  responseIndex: 0, // First response index
+  responseKey: "amount.[0].amount", // Extract the withdrawn amount
+  valueType: "sdk.Int", // Type of value
+  msgsIndex: 1, // Index in message array to modify
+  msgKey: "amount.amount", // Key in MsgDelegate to replace
+  icqConfig: undefined,
+};
+```
+
+## 3. Define Comparison for Delegation Threshold
+
+Set a threshold of 150,000 `uatom` for automatic delegation:
+
+```typescript
+const comparisonDelegation: Comparison = {
+  flowId: BigInt(0), // Reward withdrawal flow
+  responseIndex: 0, // First response index
+  responseKey: "amount.[0]",
+  valueType: "sdk.Coin",
+  operator: 4, // LARGER_THAN
+  operand: "150000uatom", // Threshold
+  icqConfig: undefined,
+};
+```
+
+## 4. Define MsgDelegate for Automated Staking
+
+Create the delegation message that will use the withdrawn rewards:
+
+```typescript
+const msgDelegate = cosmos.staking.v1beta1.MessageComposer.withTypeUrl.delegate(
+  {
+    delegatorAddress: "cosmos1delegatoraddress",
+    validatorAddress: "cosmos1validatoraddress",
+    amount: { denom: "uatom", amount: "0" }, // Will be replaced by feedback loop
+  }
+);
+```
+
+## 5. Set Up Execution Conditions
+
+Configure the conditions for execution:
+
+```typescript
+const executionConfig: ExecutionConditions = {
+  stopOnSuccessOf: [],
+  stopOnFailureOf: [],
+  skipOnFailureOf: [],
+  skipOnSuccessOf: [],
+  feedbackLoops: [feedbackLoopDelegation],
+  comparisons: [comparisonDelegation],
+  useAndForComparisons: false,
+};
+```
+
+## 6. Submit the Intent-Based Flow
+
+Create and submit the flow with both withdrawal and delegation messages:
+
+```typescript
+const msgSubmitFlowDelegation =
+  intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
+    label: "Reward Claim and Delegate Flow",
+    owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
+    msgs: [msgWithdrawReward, msgDelegate],
+    duration: "1440h",
+    interval: "600s",
+    feeFunds: [{ denom: "uinto", amount: "5000000" }],
+    configuration: executionConfig,
+  });
+```
+
+## 7. Sign and Broadcast the Transaction
+
+Finally, sign and broadcast the transaction:
+
+```typescript
+client.signAndBroadcast(owner, [msgSubmitFlowDelegation], {
+  amount: [],
+  gas: "300000",
+});
+```
+
+## Next Steps
+
+- Learn how to [set up conditional transfers](../tutorials/conditional-transfers) of staking rewards
+- Explore more [tutorials on intent-based flows](../tutorials)
+- Read about [conditions and loops](../concepts/conditions) for more advanced flow control

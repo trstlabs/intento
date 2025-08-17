@@ -69,7 +69,7 @@ Differences:
 
 - **Intento is simple, user-owned, and requires no smart contracts** – Agoric’s Orchestration API is powerful but requires developers to manage remote accounts, multi-block async execution, and timer-based scheduling.
 - **Agoric is better suited for complex custom workflows** that require fine-tuning and for protocols that need to build a complex custom solution or want to manage and monetize orchestration infrastructure.
-- **Intento enables monetization through Trustless Agents** – Protocols and integrators can offer hosted execution, which abstracts away host chain fees while keeping user flows self-custodial.
+- **Intento enables monetization through Trustless Agents** – Protocols and integrators implement Trustless Agents, uncontrollable interchain accounts that abstract away fees while keeping user flows fully self-custodial.
 
 Agoric Orchestration API features:
 

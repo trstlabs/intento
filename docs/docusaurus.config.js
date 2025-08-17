@@ -84,6 +84,67 @@ const config = {
           hideable: true,
         },
       },
+      navbar: {
+        title: 'Intento',
+        logo: {
+          alt: 'Intento Logo',
+          src: 'img/logo.svg',
+        },
+        items: [
+          {
+            type: 'doc',
+            docId: 'index',
+            position: 'left',
+            label: 'Home',
+          },
+          {
+            to: '/getting-started',
+            position: 'left',
+            label: 'Getting Started',
+            className: 'navbar__link--getting-started',
+          },
+          {
+            to: '/tutorials',
+            position: 'left',
+            label: 'Tutorials',
+            className: 'navbar__link--tutorials',
+          },
+          {
+            to: '/concepts/intent',
+            position: 'left',
+            label: 'Concepts',
+            className: 'navbar__link--concepts',
+          },
+          {
+            to: '/guides/portal/overview',
+            position: 'left',
+            label: 'Guides',
+            className: 'navbar__link--guides',
+          },
+          {
+            to: '/reference/intent-engine',
+            position: 'left',
+            label: 'Reference',
+            className: 'navbar__link--reference',
+          },
+          // Right-aligned social links
+          {
+            type: 'html',
+            position: 'right',
+            value: '<a href="https://github.com/trstlabs/intento" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link"><i class="fa-fw fa-brands fa-github"></i></a>',
+          },
+          {
+            type: 'html',
+            position: 'right',
+            value: '<a href="https://x.com/IntentoZone" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link"><i class="fa-fw fa-brands fa-x-twitter"></i></a>',
+          },
+          {
+            type: 'html',
+            position: 'right',
+            value: '<a href="https://discord.gg/hsVf9sYyZW" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link"><i class="fa-fw fa-brands fa-discord"></i></a>',
+          },
+        ],
+      },
       // announcementBar: {
       //   id: "support_us",
       //   content: "ddd",
@@ -91,27 +152,6 @@ const config = {
       //   textColor: "#091E42",
       //   isCloseable: false,
       // },
-      navbar: {
-        // title: 'INTENTO',
-        logo: {
-          alt: "Intento Logo",
-          src: "img/intento_text.png",
-        },
-        items: [
-          {
-            href: "https://github.com/trstlabs/intento",
-            html: '<i class="fa-fw fa-brands fa-github"></i>',
-          },
-          {
-            href: "https://x.com/IntentoZone",
-            html: '<i class="fa-fw fa-brands fa-x-twitter"></i>',
-          },
-          {
-            href: "https://discord.gg/hsVf9sYyZW",
-            html: '<i class="fa-fw fa-brands fa-discord"></i>',
-          },
-        ],
-      },
       footer: {
         style: "dark",
         links: [

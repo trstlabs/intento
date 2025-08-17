@@ -1,0 +1,58 @@
+---
+title: Trustless Agent For Integrators
+description: Learn how to run a trustless agent and how to configure fee admin for your integration
+sidebar_position: 3
+sidebar_class_name: sidebar-item-tutorial
+---
+
+Integrators can leverage one of the Trustless Agents that are available on [Intento](https://api-mainnet.intento.zone/intento/intent/v1/trustless-agents), or run their own.
+Trustless Agents improve UX and reduce gas costs for users, while also providing a way to monitize an Intento integration by a third party. 
+On default, no fee is paid to the Trustless Agent, but it can be configured to earn INTO / ATOM rewards or any token. Flow submitters must set a fee limit and add your Trustless Agent explicitly in order to activate fee payment.
+
+**Trustless Agents** allow anyone to **execute flows** on behalf of users. Trustless Agents always execute via **authz** and always route through proper authentication in the intent engine to ensure users stay in full control of their assets in the most secure way.
+
+### Why Run a Trustless Agent?
+
+- You are running a relayer or incentivizing relayers and want to **cover gas fees that are paid by the relayers**
+- You can **earn token rewards** and monitize your integration
+
+### Quick Start
+
+#### 1. Create a Trustless Agent
+
+```bash
+intentod tx intent create-trustless-agent \
+  --connection-id connection-INTO-TO-ELYS \
+  --fee-coins-suported "1uinto,10ibc/F1B5C3489F881CC56ECC12EA903EFCF5D200B4D8123852C191A88A31AC79A8E4" \
+  --from your-into-addr
+```
+
+- `--connection-id`: the **Intento** IBC connection ID (e.g., to Elys)
+- `--fee-coins-suported`: Coins supported as fees for Trustless Agent
+
+Fee coins supported are an amount per execution and a denom. An execution is a transaction that is submitted to the host chain by the relayer. This can contain one or several messages.
+
+#### 2. Update or Rotate Fee Admin
+
+If you need another ICA address or want to change the fee admin:
+
+```bash
+intentod tx intent update-trustless-agent \
+  --connection-id connection-INTO-TO-ELYS \
+  --trustless-agent into1hostedaccount \
+  --new-admin your-new-into-admin-addr \
+  --from your-into-admin-addr
+```
+
+- `--fee-coins-suported`: Coins supported as fees for Trustless Agent, optional here
+- `--trustless-agent`: the address created on Intento via create-trustless-agent.
+- You can retrieve this from the swagger docs: https://lcd.intento.zone/swagger/#get-/intento/intent/v1/trustless-agents/-admin-
+
+### 🔐 Security & Permissions
+
+- Trustless Agents **never get access to user funds**.
+- Our [authentication module](../reference/intent-engine/authentication) enforces that:
+  - All flow actions must originate from the flow **owner’s wallet**.
+  - You must have an **authz grant** for any MsgExec submitted.
+
+In other words: users **retain full control** over their funds, and Trustless Agents are only permitted to submit on their behalf if granted through the AuthZ module on the host chain.
