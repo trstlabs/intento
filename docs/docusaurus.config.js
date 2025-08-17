@@ -85,10 +85,9 @@ const config = {
         },
       },
       navbar: {
-        title: 'Intento',
         logo: {
-          alt: 'Intento Logo',
-          src: 'img/logo.svg',
+          alt: "Intento Logo",
+          src: "img/intento_text.png",
         },
         items: [
           {
