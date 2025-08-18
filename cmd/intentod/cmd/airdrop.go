@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/spf13/cobra"
@@ -12,41 +15,39 @@ import (
 
 func ExportSnapshotCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "export-snapshot [user-list.csv] [nft-list1.csv] [nft-list2.csv] ... [output-file] --nft-weight <nft-weight> --user-weight <user-weight>",
-		Short: "Export a snapshot from user and NFT lists with specified weights",
-		Long: `Export a snapshot combining addresses from user and multiple NFT lists, assigning fixed weights.
-- User list: A CSV file with user addresses.
+		Use:   "export-snapshot [nft-list1.csv] [nft-list2.csv] ... [output-file] --nft-weights <weight1>,<weight2>,...",
+		Short: "Export a snapshot from NFT lists with specified weights",
+		Long: `Export a snapshot combining addresses from multiple NFT lists, assigning specified weights.
 - NFT lists: One or more CSV files with NFT addresses.
 - Output file: The resulting snapshot JSON file.
 
-Addresses from the user list will receive the weight specified by --user-weight.
-Addresses from the NFT lists will receive the weight specified by --nft-weight.
-If an address exists in both, it will receive the maximum of the two weights.
+Each NFT list will be assigned a weight from the --nft-weights flag in order.
+If an address appears in multiple lists, it will receive the maximum weight from all lists.
 
 Example:
-intentod export-snapshot user_list.csv nft_list1.csv nft_list2.csv snapshot_output.json --nft-weight 10 --user-weight 5`,
-		Args: cobra.MinimumNArgs(3), // At least user list, one NFT list, and the output file
+intentod export-snapshot nft_list1.csv nft_list2.csv nft_list3.csv snapshot_output.json --nft-weights 10,20,30`,
+		Args: cobra.MinimumNArgs(2), // At least one NFT list and the output file
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Parse input arguments
-			userListFile := args[0]
 			outputFile := args[len(args)-1]
-			nftListFiles := args[1 : len(args)-1]
+			nftListFiles := args[:len(args)-1]
 
-			// Parse weights from flags
-			nftWeight, err := cmd.Flags().GetInt("nft-weight")
+			// Parse NFT weights flag
+			nftWeightsStr, err := cmd.Flags().GetString("nft-weights")
 			if err != nil {
-				return fmt.Errorf("failed to get nft-weight flag: %w", err)
+				return fmt.Errorf("failed to get nft-weights flag: %w", err)
 			}
 
-			// Parse weights from flags
-			nftWeight1, err := cmd.Flags().GetInt("nft-weight-1")
+			// Parse weights from comma-separated string
+			nftWeights, err := parseWeights(nftWeightsStr)
 			if err != nil {
-				return fmt.Errorf("failed to get nft-weight 2 flag: %w", err)
+				return fmt.Errorf("failed to parse nft-weights: %w", err)
 			}
 
-			userWeight, err := cmd.Flags().GetInt("user-weight")
-			if err != nil {
-				return fmt.Errorf("failed to get user-weight flag: %w", err)
+			// Ensure we have enough weights for all NFT lists
+			if len(nftWeights) < len(nftListFiles) {
+				return fmt.Errorf("not enough weights provided: got %d weights for %d NFT lists",
+					len(nftWeights), len(nftListFiles))
 			}
 
 			// Initialize a map to store the maximum weight per address
@@ -77,12 +78,16 @@ intentod export-snapshot user_list.csv nft_list1.csv nft_list2.csv snapshot_outp
 				}
 
 				// Process each record
-				for _, record := range records {
+				for i, record := range records {
 					if len(record) < 1 {
 						return fmt.Errorf("invalid record in %s: %v", filePath, record)
 					}
-					address := record[0]
-
+					//address := record[0]
+					address, err := ConvertBech32(record[0])
+					if err != nil {
+						fmt.Printf("Invalid address in snapshot: %s %d\n", record[0], i)
+						continue
+					}
 					if existingWeight, exists := addressWeights[address]; exists {
 						// Use the maximum weight
 						if weight.GT(existingWeight) {
@@ -96,23 +101,14 @@ intentod export-snapshot user_list.csv nft_list1.csv nft_list2.csv snapshot_outp
 
 				return nil
 			}
-			// Convert weights to sdkmath.Int
-			nftWeightInt := sdkmath.NewInt(int64(nftWeight))
-			nftWeight1Int := sdkmath.NewInt(int64(nftWeight1))
-			userWeightInt := sdkmath.NewInt(int64(userWeight))
-
-			// Process user list with userWeight
-			if err := processCSV(userListFile, userWeightInt); err != nil {
-				return fmt.Errorf("error processing user list: %w", err)
-			}
-
-			// Process each NFT list with nftWeight
+			// Process each NFT list with its corresponding weight
 			for i, nftListFile := range nftListFiles {
-				if i == 0 {
-					if err := processCSV(nftListFile, nftWeight1Int); err != nil {
-						return fmt.Errorf("error processing NFT list 2 %s: %w", nftListFile, err)
-					}
-				} else if err := processCSV(nftListFile, nftWeightInt); err != nil {
+				weight := sdkmath.NewInt(int64(nftWeights[i]))
+				filename := filepath.Base(nftListFile)
+				fmt.Printf("Processing NFT list: %s with weight %s\n", filename, weight.String())
+				
+				// Process the file with the actual weight
+				if err := processCSV(nftListFile, weight); err != nil {
 					return fmt.Errorf("error processing NFT list %s: %w", nftListFile, err)
 				}
 			}
@@ -136,13 +132,44 @@ intentod export-snapshot user_list.csv nft_list1.csv nft_list2.csv snapshot_outp
 				return fmt.Errorf("failed to write snapshot to %s: %w", outputFile, err)
 			}
 
+			// Print final statistics
+			fmt.Println("\n=== Airdrop Distribution Summary ===")
+			for i, nftListFile := range nftListFiles {
+				weight := sdkmath.NewInt(int64(nftWeights[i]))
+				fmt.Printf("List %d: %-30s Weight: %s\n", 
+					i+1, 
+					filepath.Base(nftListFile), 
+					weight.String())
+			}
+
 			fmt.Printf("Snapshot exported successfully to %s\n", outputFile)
 			return nil
 		},
 	}
 
-	cmd.Flags().Int("nft-weight-1", 1, "Weight assigned to NFT list addresses")
-	cmd.Flags().Int("user-weight", 1, "Weight assigned to user list addresses")
-	cmd.Flags().Int("nft-weight", 1, "Weight assigned to NFT list addresses")
+	cmd.Flags().String("nft-weights", "1,2,3,4,5,6", "Comma-separated list of weights for NFT lists (must have at least as many weights as NFT lists)")
 	return cmd
+}
+
+// parseWeights parses a comma-separated string of integers into a slice of ints
+func parseWeights(weightsStr string) ([]int, error) {
+	if weightsStr == "" {
+		return nil, fmt.Errorf("empty weights string")
+	}
+
+	parts := strings.Split(weightsStr, ",")
+	weights := make([]int, 0, len(parts))
+
+	for i, part := range parts {
+		weight, err := strconv.Atoi(strings.TrimSpace(part))
+		if err != nil {
+			return nil, fmt.Errorf("invalid weight at position %d: %w", i, err)
+		}
+		if weight <= 0 {
+			return nil, fmt.Errorf("weight at position %d must be positive, got %d", i, weight)
+		}
+		weights = append(weights, weight)
+	}
+
+	return weights, nil
 }
