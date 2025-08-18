@@ -209,6 +209,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 
 	return cmd
 }
+
 func ImportGenesisAccountsFromSnapshotCmd(defaultNodeHome string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import-genesis-accounts-from-snapshot [input-snapshot-file] [input-non-airdrop-accounts-file]",
@@ -368,20 +369,18 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 
 			// Handle airdrop remainder
 			remainder := airdropAmount.Sub(totalDistributed)
-			if remainder.GT(math.NewInt(0)) {
-				// Option 2: Send to burner address
-				burnerAddress, err := sdk.AccAddressFromHexUnsafe("7C4954EAE77FF15A4C67C5F821C5241008ED966D") // Cosmos random address with no keypair
-				if err != nil {
-					panic(err)
-				}
-				fmt.Printf("Burner address: %s\n", burnerAddress.String())
-				claimRecords = append(claimRecords, claimtypes.ClaimRecord{
-					Address:                burnerAddress.String(),
-					MaximumClaimableAmount: sdk.NewCoin("uinto", remainder),
-				})
-				claimModuleBalance = claimModuleBalance.Add(remainder)
-				fmt.Printf("Airdrop remainder %s uinto sent to burner address %s\n", remainder.String(), burnerAddress)
+
+			fmt.Printf("Total Airdrop: %s uinto\n", airdropAmount)
+
+			totalLiquidAirdrop := math.NewInt(0)
+			for _, balance := range liquidBalances {
+				totalLiquidAirdrop = totalLiquidAirdrop.Add(balance.Coins.AmountOf("uinto"))
 			}
+			fmt.Printf("Total Liquid Aidrop: %s uinto\n", totalLiquidAirdrop)
+			fmt.Printf("Total Claimable: %s uinto\n", claimModuleBalance)
+			fmt.Printf("Sum of Distributed Airdrop Shares: %s uinto\n", totalDistributed)
+			fmt.Printf("liquid Balance Accounts: %v\n", len(liquidBalances))
+			fmt.Printf("claimModuleBalance: %v\n", claimModuleBalance)
 
 			// Add non-airdrop accounts
 			for _, info := range nonAirdropAccounts {
@@ -389,38 +388,75 @@ intentod import-genesis-accounts-from-snapshot ../snapshot.json ../non-airdrop-a
 					return fmt.Errorf("missing address for non-airdrop account: %s", info.Name)
 				}
 
-				if accountMap[info.Address] {
-					fmt.Printf("Skipping duplicate non-airdrop address: %s\n", info.Address)
-					continue
-				}
-				accountMap[info.Address] = true
-
 				address, err := sdk.AccAddressFromBech32(info.Address)
 				if err != nil {
-					return fmt.Errorf("invalid non-airdrop address: %w", err)
+					return fmt.Errorf("invalid non-airdrop address %s (%s): %w", info.Address, info.Name, err)
 				}
 
 				baseAccount := authtypes.NewBaseAccount(address, nil, 0, 0)
 				if err := baseAccount.Validate(); err != nil {
 					return fmt.Errorf("failed to validate non-airdrop account: %w", err)
 				}
-				accs = append(accs, baseAccount)
-				liquidBalances = append(liquidBalances, banktypes.Balance{
-					Address: address.String(),
-					Coins:   sdk.NewCoins(sdk.NewCoin("uinto", math.NewInt(info.Amount))),
-				})
-				fmt.Printf("Non-airdrop account added: %s (%s) with %d uinto\n", info.Address, info.Name, info.Amount)
+
+				found := false
+				for i, balance := range liquidBalances {
+					if balance.Address == info.Address {
+						found = true
+						// enforce expected state (airdropped 2M cap check)
+						if !liquidBalances[i].Coins.Equal(sdk.NewCoins(sdk.NewCoin("uinto", math.NewInt(2000000)))) {
+							return fmt.Errorf("non-airdrop account %s has unexpected balance %s",
+								info.Address, liquidBalances[i].Coins)
+						}
+						// update
+						liquidBalances[i].Coins = sdk.NewCoins(
+							sdk.NewCoin("uinto", balance.Coins.AmountOf("uinto").Add(math.NewInt(info.Amount))),
+						)
+						fmt.Printf("Non-airdrop account updated: %s (%s) with %d uinto\n",
+							info.Address, info.Name, info.Amount)
+						break
+					}
+				}
+
+				if !found {
+					accs = append(accs, baseAccount)
+					liquidBalances = append(liquidBalances, banktypes.Balance{
+						Address: address.String(),
+						Coins:   sdk.NewCoins(sdk.NewCoin("uinto", math.NewInt(info.Amount))),
+					})
+					fmt.Printf("Non-airdrop account added: %s (%s) with %d uinto\n",
+						info.Address, info.Name, info.Amount)
+				}
+
+				// now mark it as processed
+				accountMap[info.Address] = true
 			}
+
+			if !remainder.GT(math.NewInt(0)) {
+				fmt.Printf("No remainder to distribute\n")
+				return nil
+			}
+			funderAddress, err := sdk.AccAddressFromHexUnsafe("7C4954EAE77FF15A4C67C5F821C5241008ED966F") // Random address funding community pool
+			if err != nil {
+				panic(err)
+			}
+			fmt.Printf("Random address: %s\n", funderAddress.String())
+
+			//Fund community pool with remainder + Community Pool allocation via funder account (see FundCommunityPool implementation in x/alloc InitGenesis)
+			liquidBalances = append(liquidBalances, banktypes.Balance{
+				Address: funderAddress.String(),
+				Coins:   sdk.NewCoins(sdk.NewCoin("uinto", remainder.Add(math.NewInt(82000000000000)))),
+			})
+
+			fmt.Printf("Community pool + remainder %s uinto sent to community funder address %s\n", remainder.Add(math.NewInt(82000000000000)), funderAddress)
 
 			// Totals check
 			totalLiquid := math.NewInt(0)
 			for _, balance := range liquidBalances {
 				totalLiquid = totalLiquid.Add(balance.Coins.AmountOf("uinto"))
 			}
-			fmt.Printf("Total Airdrop: %s uinto\n", airdropAmount)
 			fmt.Printf("Total Liquid: %s uinto\n", totalLiquid)
 			fmt.Printf("Total Claimable: %s uinto\n", claimModuleBalance)
-			fmt.Printf("Sum of Distributed Airdrop Shares: %s uinto\n", totalDistributed)
+			fmt.Printf("liquid Balance Accounts: %v\n", len(liquidBalances))
 
 			// After handling remainder, totalDistributed + remainder should equal airdropAmount
 			if !totalDistributed.Add(remainder).Equal(airdropAmount) {
@@ -475,7 +511,6 @@ func ConvertBech32(address string) (string, error) {
 	_, bz, err := bech32.DecodeAndConvert(address)
 	if err != nil {
 		panic(err)
-		//return "", err
 	}
 
 	bech32Addr, err := bech32.ConvertAndEncode("into", bz)
