@@ -30,6 +30,7 @@ const sidebars = {
         'getting-started/use-cases',
         'getting-started/differentiation',
         'getting-started/integration',
+        'getting-started/into-token'
       ],
       className: 'sidebar-item-getting-started',
     },
@@ -55,8 +56,13 @@ const sidebars = {
           items: [
             'guides/portal/overview',
             'guides/portal/submit-flows',
-            'guides/portal/notifications'
+            'guides/portal/notifications',
           ],
+        },
+        {
+          type: 'category',
+          label: 'tokenstream.fun',
+          items: ['guides/tokenstream/index'],
         },
         {
           type: 'category',
