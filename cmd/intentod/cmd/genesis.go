@@ -253,6 +253,18 @@ func PrepareGenesis(
 	}
 	appState[intenttypes.ModuleName] = intentGenStateBz
 
+	wasmGenState := wasmtypes.GenesisState{
+		Params:    genesisParams.WasmParams,
+		Codes:     []wasmtypes.Code{},
+		Contracts: []wasmtypes.Contract{},
+		Sequences: []wasmtypes.Sequence{},
+	}
+	wasmGenStateBz, err := cdc.MarshalJSON(&wasmGenState)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal wasm genesis state: %w", err)
+	}
+	appState[wasmtypes.ModuleName] = wasmGenStateBz
+
 	// return appState and genDoc
 	return appState, nil
 }
@@ -297,7 +309,7 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.MintParams.InitialAnnualProvisions = math.LegacyNewDec(150_000_000_000_000)
 
 	genParams.MintParams.ReductionFactor = math.LegacyNewDec(3).QuoInt64(4)
-	genParams.MintParams.BlocksPerYear = uint64(24261538) //assuming 1.3s average block times, param to be updated periodically
+	genParams.MintParams.BlocksPerYear = uint64(31556952) //assuming 1s average block times, param to be updated periodically
 
 	// staking
 	genParams.StakingParams = stakingtypes.DefaultParams()
@@ -329,7 +341,7 @@ func MainnetGenesisParams() GenesisParams {
 	)
 	// slash
 	genParams.SlashingParams = slashingtypes.DefaultParams()
-	genParams.SlashingParams.SignedBlocksWindow = 48000                                // equal to 16 hours @ 1.3s block time
+	genParams.SlashingParams.SignedBlocksWindow = 57600                                // equal to 16 hours @ 1s block time
 	genParams.SlashingParams.MinSignedPerWindow = math.LegacyNewDecWithPrec(5, 2)      // 5% minimum liveness
 	genParams.SlashingParams.DowntimeJailDuration = time.Minute                        // 1 minute jail period
 	genParams.SlashingParams.SlashFractionDoubleSign = math.LegacyNewDecWithPrec(5, 2) // 5% double sign slashing

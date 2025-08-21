@@ -165,7 +165,7 @@ func initRootCmd(
 		config.Consensus.TimeoutPropose = 1 * time.Second
 		config.Consensus.TimeoutPrevote = 500 * time.Millisecond
 		config.Consensus.TimeoutPrecommit = 500 * time.Millisecond
-		config.Consensus.TimeoutCommit = 1 * time.Second
+		config.Consensus.TimeoutCommit = 500 * time.Millisecond
 
 		// Write back to config file
 		cmtcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
