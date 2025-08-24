@@ -62,9 +62,7 @@ const config = {
           },
         },
         blog: false,
-        theme: {
-          customCss: require.resolve("./src/css/custom.css"),
-        },
+
         // gtag: {
         //   trackingID: googleTrackingId,
         //   anonymizeIP: true,
@@ -91,62 +89,65 @@ const config = {
         },
         items: [
           {
-            type: 'doc',
-            docId: 'index',
-            position: 'left',
-            label: 'Home',
+            type: "doc",
+            docId: "index",
+            position: "left",
+            label: "Home",
           },
           {
-            to: '/getting-started',
-            position: 'left',
-            label: 'Getting Started',
-            className: 'navbar__link--getting-started',
+            to: "/getting-started",
+            position: "left",
+            label: "Getting Started",
+            className: "navbar__link--getting-started",
           },
           {
-            to: '/tutorials',
-            position: 'left',
-            label: 'Tutorials',
-            className: 'navbar__link--tutorials',
+            to: "/tutorials",
+            position: "left",
+            label: "Tutorials",
+            className: "navbar__link--tutorials",
           },
           {
-            to: '/concepts/intent',
-            position: 'left',
-            label: 'Concepts',
-            className: 'navbar__link--concepts',
+            to: "/concepts/intent",
+            position: "left",
+            label: "Concepts",
+            className: "navbar__link--concepts",
           },
           {
-            to: '/guides/portal/overview',
-            position: 'left',
-            label: 'Guides',
-            className: 'navbar__link--guides',
+            to: "/guides/portal/overview",
+            position: "left",
+            label: "Guides",
+            className: "navbar__link--guides",
           },
           {
-            to: '/reference/intent-engine',
-            position: 'left',
-            label: 'Reference',
-            className: 'navbar__link--reference',
+            to: "/reference/intent-engine",
+            position: "left",
+            label: "Reference",
+            className: "navbar__link--reference",
           },
           // Right-aligned social links
           {
-            type: 'html',
-            position: 'right',
-            value: '<a href="https://github.com/trstlabs/intento" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link"><i class="fa-fw fa-brands fa-github"></i></a>',
+            type: "html",
+            position: "right",
+            value:
+              '<a href="https://github.com/trstlabs/intento" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link"><i class="fa-fw fa-brands fa-github"></i></a>',
           },
           {
-            type: 'html',
-            position: 'right',
-            value: '<a href="https://x.com/IntentoZone" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link"><i class="fa-fw fa-brands fa-x-twitter"></i></a>',
+            type: "html",
+            position: "right",
+            value:
+              '<a href="https://x.com/IntentoZone" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link"><i class="fa-fw fa-brands fa-x-twitter"></i></a>',
           },
           {
-            type: 'html',
-            position: 'right',
-            value: '<a href="https://discord.gg/hsVf9sYyZW" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link"><i class="fa-fw fa-brands fa-discord"></i></a>',
+            type: "html",
+            position: "right",
+            value:
+              '<a href="https://discord.gg/hsVf9sYyZW" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link"><i class="fa-fw fa-brands fa-discord"></i></a>',
           },
         ],
       },
       // announcementBar: {
       //   id: "support_us",
-      //   content: "ddd",
+      //   content: "Mainnet live on Wednesday August 27!",
       //   backgroundColor: "#fafbfc",
       //   textColor: "#091E42",
       //   isCloseable: false,
@@ -167,6 +168,10 @@ const config = {
               {
                 label: "Intento Portal",
                 href: "https://portal.intento.zone/",
+              },
+              {
+                label: "tokenstream.fun",
+                href: "https://tokenstream.fun/",
               },
               {
                 label: "TRST Labs",
@@ -192,10 +197,6 @@ const config = {
               /*               {
                 label: "Forum",
                 href: "https://forum.cosmos.network/",
-              },
-              {
-                label: "Discord",
-                href: "https://discord.gg/cosmosnetwork",
               },
               {
                 label: "Reddit",
