@@ -108,25 +108,87 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 	fmt.Printf("Comparing value: %v with operand: %v using operator: %s\n", valueFromResponse, operand, comparison.Operator)
 	switch comparison.Operator {
 	case types.ComparisonOperator_EQUAL:
+		if valDec, ok := valueFromResponse.(math.Dec); ok {
+			operandDec, ok := operand.(math.Dec)
+			if !ok {
+				return false, fmt.Errorf("operand is not of type math.Dec")
+			}
+			return valDec.Equal(operandDec), nil
+		}
 		return reflect.DeepEqual(valueFromResponse, operand), nil
 	case types.ComparisonOperator_NOT_EQUAL:
+		if valDec, ok := valueFromResponse.(math.Dec); ok {
+			operandDec, ok := operand.(math.Dec)
+			if !ok {
+				return false, fmt.Errorf("operand is not of type math.Dec")
+			}
+			return !valDec.Equal(operandDec), nil
+		}
 		return !reflect.DeepEqual(valueFromResponse, operand), nil
+	case types.ComparisonOperator_SMALLER_THAN:
+		if valDec, ok := valueFromResponse.(math.Dec); ok {
+			operandDec, ok := operand.(math.Dec)
+			if !ok {
+				return false, fmt.Errorf("operand is not of type math.Dec")
+			}
+			subAmount, err := valDec.Sub(operandDec)
+			if err != nil {
+				return false, fmt.Errorf("error subtracting operand from value: %v", err)
+			}
+			return subAmount.IsNegative(), nil
+		}
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a < b })
+
+	case types.ComparisonOperator_LARGER_THAN:
+		if valDec, ok := valueFromResponse.(math.Dec); ok {
+			operandDec, ok := operand.(math.Dec)
+			if !ok {
+				return false, fmt.Errorf("operand is not of type math.Dec")
+			}
+			subAmount, err := valDec.Sub(operandDec)
+			if err != nil {
+				return false, fmt.Errorf("error subtracting operand from value: %v", err)
+			}
+			return subAmount.IsPositive(), nil
+		}
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a > b })
+
+	case types.ComparisonOperator_GREATER_EQUAL:
+		if valDec, ok := valueFromResponse.(math.Dec); ok {
+			operandDec, ok := operand.(math.Dec)
+			if !ok {
+				return false, fmt.Errorf("operand is not of type math.Dec")
+			}
+			subAmount, err := valDec.Sub(operandDec)
+			if err != nil {
+				return false, fmt.Errorf("error subtracting operand from value: %v", err)
+			}
+			return !subAmount.IsNegative(), nil
+		}
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a >= b })
+
+	case types.ComparisonOperator_LESS_EQUAL:
+		if valDec, ok := valueFromResponse.(math.Dec); ok {
+			operandDec, ok := operand.(math.Dec)
+			if !ok {
+				return false, fmt.Errorf("operand is not of type math.Dec")
+			}
+			subAmount, err := valDec.Sub(operandDec)
+			if err != nil {
+				return false, fmt.Errorf("error subtracting operand from value: %v", err)
+			}
+			return !subAmount.IsPositive(), nil
+		}
+		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a <= b })
 	case types.ComparisonOperator_CONTAINS:
 		return contains(valueFromResponse, operand), nil
 	case types.ComparisonOperator_NOT_CONTAINS:
 		return !contains(valueFromResponse, operand), nil
-	case types.ComparisonOperator_SMALLER_THAN:
-		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a < b })
-	case types.ComparisonOperator_LARGER_THAN:
-		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a > b })
-	case types.ComparisonOperator_GREATER_EQUAL:
-		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a >= b })
-	case types.ComparisonOperator_LESS_EQUAL:
-		return compareNumbers(valueFromResponse, operand, func(a, b int64) bool { return a <= b })
 	case types.ComparisonOperator_STARTS_WITH:
 		return strings.HasPrefix(fmt.Sprintf("%v", valueFromResponse), fmt.Sprintf("%v", operand)), nil
 	case types.ComparisonOperator_ENDS_WITH:
 		return strings.HasSuffix(fmt.Sprintf("%v", valueFromResponse), fmt.Sprintf("%v", operand)), nil
+
 	default:
 		return false, fmt.Errorf("unsupported comparison operator: %v", comparison.Operator)
 	}
@@ -465,6 +527,15 @@ func parseResponseValue(response interface{}, responseKey, responseType string) 
 		} else {
 			fmt.Println("parsing sdk.Int from response failed", val)
 		}
+	case "math.Dec":
+		if val.Kind() == reflect.String {
+			decVal, err := math.NewDecFromString(val.Interface().(string))
+			if err != nil {
+				return nil, err
+			}
+			fmt.Print("parsed math.Dec from string", decVal)
+			return decVal, nil
+		}
 	case "[]string":
 		if val.Kind() == reflect.Slice && val.Type().Elem().Kind() == reflect.String {
 			return val.Interface().([]string), nil
@@ -500,6 +571,14 @@ func parseOperand(operand string, responseType string) (interface{}, error) {
 			return nil, fmt.Errorf("unsupported int operand")
 		}
 		return sdkInt, nil
+	case "math.Dec":
+		dec, err := math.NewDecFromString(operand)
+		fmt.Print("parsed math.Dec from string", dec)
+		if err != nil {
+			return nil, err
+		}
+		return dec, nil
+
 	case "[]string":
 		var strArr []string
 		err := json.Unmarshal([]byte(operand), &strArr)
@@ -556,6 +635,17 @@ func parseICQResponse(response []byte, valueType string) (interface{}, error) {
 		var sdkInt math.Int
 		err := sdkInt.Unmarshal(response)
 		return sdkInt, err
+	case "math.Dec":
+		var decStr string
+		err := json.Unmarshal(response, &decStr)
+		if err != nil {
+			return nil, err
+		}
+		dec, err := math.NewDecFromString(decStr)
+		if err != nil {
+			return nil, err
+		}
+		return dec, nil
 	case "[]string":
 		var strings []string
 		err := json.Unmarshal(response, &strings)
