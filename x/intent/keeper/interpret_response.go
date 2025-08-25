@@ -499,8 +499,8 @@ func parseResponseValue(response interface{}, responseKey, responseType string) 
 			coins := val.Interface().(sdk.Coins)
 			return coins, nil
 		}
-	case "sdk.Int":
-		fmt.Println("parsing sdk.Int from response", val)
+	case "math.Int":
+		fmt.Println("parsing math.Int from response", val)
 		if val.Kind() == reflect.Struct {
 
 			if val.Type().Name() == "Int" {
@@ -511,7 +511,7 @@ func parseResponseValue(response interface{}, responseKey, responseType string) 
 		if val.Kind() == reflect.String {
 			intVal, ok := math.NewIntFromString(val.String())
 			if !ok {
-				return nil, fmt.Errorf("failed to parse sdk.Int from string: %v", val.String())
+				return nil, fmt.Errorf("failed to parse math.Int from string: %v", val.String())
 			}
 			return intVal, nil
 		}
@@ -525,7 +525,7 @@ func parseResponseValue(response interface{}, responseKey, responseType string) 
 			return intVal, nil
 			// return val.Interface().(math.Int), nil
 		} else {
-			fmt.Println("parsing sdk.Int from response failed", val)
+			fmt.Println("parsing math.Int from response failed", val)
 		}
 	case "math.Dec":
 		if val.Kind() == reflect.String {
@@ -540,7 +540,7 @@ func parseResponseValue(response interface{}, responseKey, responseType string) 
 		if val.Kind() == reflect.Slice && val.Type().Elem().Kind() == reflect.String {
 			return val.Interface().([]string), nil
 		}
-	case "[]sdk.Int":
+	case "[]math.Int":
 		if val.Kind() == reflect.Slice && val.Type().Elem().Name() == "Int" {
 			return val.Interface().([]math.Int), nil
 		}
@@ -564,7 +564,7 @@ func parseOperand(operand string, responseType string) (interface{}, error) {
 	case "sdk.Coins":
 		coins, err := sdk.ParseCoinsNormalized(operand)
 		return coins, err
-	case "sdk.Int":
+	case "math.Int":
 		var sdkInt math.Int
 		sdkInt, ok := math.NewIntFromString(operand)
 		if !ok {
@@ -583,7 +583,7 @@ func parseOperand(operand string, responseType string) (interface{}, error) {
 		var strArr []string
 		err := json.Unmarshal([]byte(operand), &strArr)
 		return strArr, err
-	case "[]sdk.Int":
+	case "[]math.Int":
 		var intArr []math.Int
 		err := json.Unmarshal([]byte(operand), &intArr)
 		return intArr, err
@@ -631,7 +631,7 @@ func parseICQResponse(response []byte, valueType string) (interface{}, error) {
 			response = remaining
 		}
 		return coins, nil
-	case "sdk.Int":
+	case "math.Int":
 		var sdkInt math.Int
 		err := sdkInt.Unmarshal(response)
 		return sdkInt, err
@@ -650,7 +650,7 @@ func parseICQResponse(response []byte, valueType string) (interface{}, error) {
 		var strings []string
 		err := json.Unmarshal(response, &strings)
 		return strings, err
-	case "[]sdk.Int":
+	case "[]math.Int":
 		var ints []math.Int
 		for len(response) > 0 {
 			var intVal math.Int
@@ -716,7 +716,7 @@ func compareNumbers(value, operand interface{}, compareFunc func(int64, int64) b
 		return compareFunc(valInt64, operandInt64), nil
 	case reflect.Struct:
 		if val.Type().Name() == "Int" {
-			// Use the `Int64` method for sdk.Int
+			// Use the `Int64` method for math.Int
 			return compareFunc(
 				val.MethodByName("Int64").Call(nil)[0].Int(),
 				operandVal.MethodByName("Int64").Call(nil)[0].Int(),

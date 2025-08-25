@@ -174,7 +174,7 @@ func TestParseInnerInt(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	flow.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
-	flow.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "sdk.Int"}}
+	flow.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "math.Int"}}
 	err = keeper.RunFeedbackLoops(ctx, flow.ID, &flow.Msgs, flow.Conditions)
 	require.NoError(t, err)
 	err = keeper.cdc.UnpackAny(flow.Msgs[0], &msgDelegate)
@@ -201,7 +201,7 @@ func TestCompareInnerIntTrue(t *testing.T) {
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	flow.Conditions = &types.ExecutionConditions{}
-	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", Operator: 0, Operand: "101"}}
+	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "101"}}
 	boolean, err := keeper.CompareResponseValue(ctx, flow.ID, msgResponses, *flow.Conditions.Comparisons[0])
 	require.NoError(t, err)
 
@@ -271,7 +271,7 @@ func TestCompareIntFalse(t *testing.T) {
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: msgResponses})
 
 	flow.Conditions = &types.ExecutionConditions{}
-	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", Operator: 0, Operand: "100000000000"}}
+	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "100000000000"}}
 	boolean, err := keeper.CompareResponseValue(ctx, flow.ID, msgResponses, *flow.Conditions.Comparisons[0])
 	require.NoError(t, err)
 
@@ -406,7 +406,7 @@ func TestParseAmountICQ(t *testing.T) {
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
 	flow.Conditions = &types.ExecutionConditions{}
 	require.Equal(t, msgDelegate.Amount, sdk.NewCoin("stake", math.NewInt(1000)))
-	flow.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "sdk.Int"}}
+	flow.Conditions.FeedbackLoops = []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "", MsgsIndex: 0, MsgKey: "Amount.Amount", ValueType: "math.Int"}}
 	queryCallback, err := math.NewInt(39999999999).Marshal()
 	require.NoError(t, err)
 	flow.Conditions.FeedbackLoops[0].ICQConfig = &types.ICQConfig{Response: queryCallback}
@@ -448,7 +448,7 @@ func TestFeedbackLoopNoDuplicates(t *testing.T) {
 				ResponseKey:   "Amount.[0].Amount",
 				MsgsIndex:     1,
 				MsgKey:        "Amount.Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 			{
 				// Second feedback loop after first message (same point as first)
@@ -456,7 +456,7 @@ func TestFeedbackLoopNoDuplicates(t *testing.T) {
 				ResponseKey:   "Amount.[0].Amount",
 				MsgsIndex:     2,
 				MsgKey:        "Amount.Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 		},
 	}
@@ -646,7 +646,7 @@ func TestFeedbackLoopFromWasmResponse(t *testing.T) {
 			MsgsIndex:     0,
 			ResponseIndex: 0,
 			ResponseKey:   responseKey,
-			ValueType:     "sdk.Int",
+			ValueType:     "math.Int",
 			ICQConfig:     &types.ICQConfig{Response: decoded},
 			MsgKey:        "Amount.Amount", // Example, adjust as needed
 		}},

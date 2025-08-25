@@ -1470,8 +1470,8 @@ paths:
                             value_type:
                               type: string
                               title: >-
-                                can be anything from sdk.Int, sdk.Coin,
-                                sdk.Coins, string, []string, []sdk.Int
+                                can be anything from math.Int, sdk.Coin,
+                                sdk.Coins, string, []string, []math.Int
                             icq_config:
                               description: >-
                                 bool calculate_difference = 7; //True: calculate
@@ -1539,8 +1539,8 @@ paths:
                             value_type:
                               type: string
                               title: >-
-                                can be anything from sdk.Int, sdk.Coin,
-                                sdk.Coins, string, []string, []sdk.Int
+                                can be anything from math.Int, sdk.Coin,
+                                sdk.Coins, string, []string, []math.Int
                             operator:
                               type: string
                               enum:
@@ -2196,8 +2196,8 @@ paths:
                               value_type:
                                 type: string
                                 title: >-
-                                  can be anything from sdk.Int, sdk.Coin,
-                                  sdk.Coins, string, []string, []sdk.Int
+                                  can be anything from math.Int, sdk.Coin,
+                                  sdk.Coins, string, []string, []math.Int
                               icq_config:
                                 description: >-
                                   bool calculate_difference = 7; //True:
@@ -2266,8 +2266,8 @@ paths:
                               value_type:
                                 type: string
                                 title: >-
-                                  can be anything from sdk.Int, sdk.Coin,
-                                  sdk.Coins, string, []string, []sdk.Int
+                                  can be anything from math.Int, sdk.Coin,
+                                  sdk.Coins, string, []string, []math.Int
                               operator:
                                 type: string
                                 enum:
@@ -2998,8 +2998,8 @@ paths:
                               value_type:
                                 type: string
                                 title: >-
-                                  can be anything from sdk.Int, sdk.Coin,
-                                  sdk.Coins, string, []string, []sdk.Int
+                                  can be anything from math.Int, sdk.Coin,
+                                  sdk.Coins, string, []string, []math.Int
                               icq_config:
                                 description: >-
                                   bool calculate_difference = 7; //True:
@@ -3068,8 +3068,8 @@ paths:
                               value_type:
                                 type: string
                                 title: >-
-                                  can be anything from sdk.Int, sdk.Coin,
-                                  sdk.Coins, string, []string, []sdk.Int
+                                  can be anything from math.Int, sdk.Coin,
+                                  sdk.Coins, string, []string, []math.Int
                               operator:
                                 type: string
                                 enum:
@@ -5599,8 +5599,8 @@ definitions:
       value_type:
         type: string
         title: >-
-          can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string,
-          []sdk.Int
+          can be anything from math.Int, sdk.Coin, sdk.Coins, string, []string,
+          []math.Int
       operator:
         type: string
         enum:
@@ -5738,8 +5738,8 @@ definitions:
             value_type:
               type: string
               title: >-
-                can be anything from sdk.Int, sdk.Coin, sdk.Coins, string,
-                []string, []sdk.Int
+                can be anything from math.Int, sdk.Coin, sdk.Coins, string,
+                []string, []math.Int
             icq_config:
               description: >-
                 bool calculate_difference = 7; //True: calculate the difference
@@ -5802,8 +5802,8 @@ definitions:
             value_type:
               type: string
               title: >-
-                can be anything from sdk.Int, sdk.Coin, sdk.Coins, string,
-                []string, []sdk.Int
+                can be anything from math.Int, sdk.Coin, sdk.Coins, string,
+                []string, []math.Int
             operator:
               type: string
               enum:
@@ -5976,8 +5976,8 @@ definitions:
       value_type:
         type: string
         title: >-
-          can be anything from sdk.Int, sdk.Coin, sdk.Coins, string, []string,
-          []sdk.Int
+          can be anything from math.Int, sdk.Coin, sdk.Coins, string, []string,
+          []math.Int
       icq_config:
         description: >-
           bool calculate_difference = 7; //True: calculate the difference with
@@ -6318,8 +6318,8 @@ definitions:
                 value_type:
                   type: string
                   title: >-
-                    can be anything from sdk.Int, sdk.Coin, sdk.Coins, string,
-                    []string, []sdk.Int
+                    can be anything from math.Int, sdk.Coin, sdk.Coins, string,
+                    []string, []math.Int
                 icq_config:
                   description: >-
                     bool calculate_difference = 7; //True: calculate the
@@ -6385,8 +6385,8 @@ definitions:
                 value_type:
                   type: string
                   title: >-
-                    can be anything from sdk.Int, sdk.Coin, sdk.Coins, string,
-                    []string, []sdk.Int
+                    can be anything from math.Int, sdk.Coin, sdk.Coins, string,
+                    []string, []math.Int
                 operator:
                   type: string
                   enum:
@@ -7398,8 +7398,8 @@ definitions:
                     value_type:
                       type: string
                       title: >-
-                        can be anything from sdk.Int, sdk.Coin, sdk.Coins,
-                        string, []string, []sdk.Int
+                        can be anything from math.Int, sdk.Coin, sdk.Coins,
+                        string, []string, []math.Int
                     icq_config:
                       description: >-
                         bool calculate_difference = 7; //True: calculate the
@@ -7465,8 +7465,8 @@ definitions:
                     value_type:
                       type: string
                       title: >-
-                        can be anything from sdk.Int, sdk.Coin, sdk.Coins,
-                        string, []string, []sdk.Int
+                        can be anything from math.Int, sdk.Coin, sdk.Coins,
+                        string, []string, []math.Int
                     operator:
                       type: string
                       enum:
@@ -7903,8 +7903,8 @@ definitions:
                       value_type:
                         type: string
                         title: >-
-                          can be anything from sdk.Int, sdk.Coin, sdk.Coins,
-                          string, []string, []sdk.Int
+                          can be anything from math.Int, sdk.Coin, sdk.Coins,
+                          string, []string, []math.Int
                       icq_config:
                         description: >-
                           bool calculate_difference = 7; //True: calculate the
@@ -7972,8 +7972,8 @@ definitions:
                       value_type:
                         type: string
                         title: >-
-                          can be anything from sdk.Int, sdk.Coin, sdk.Coins,
-                          string, []string, []sdk.Int
+                          can be anything from math.Int, sdk.Coin, sdk.Coins,
+                          string, []string, []math.Int
                       operator:
                         type: string
                         enum:
@@ -8432,8 +8432,8 @@ definitions:
                       value_type:
                         type: string
                         title: >-
-                          can be anything from sdk.Int, sdk.Coin, sdk.Coins,
-                          string, []string, []sdk.Int
+                          can be anything from math.Int, sdk.Coin, sdk.Coins,
+                          string, []string, []math.Int
                       icq_config:
                         description: >-
                           bool calculate_difference = 7; //True: calculate the
@@ -8501,8 +8501,8 @@ definitions:
                       value_type:
                         type: string
                         title: >-
-                          can be anything from sdk.Int, sdk.Coin, sdk.Coins,
-                          string, []string, []sdk.Int
+                          can be anything from math.Int, sdk.Coin, sdk.Coins,
+                          string, []string, []math.Int
                       operator:
                         type: string
                         enum:

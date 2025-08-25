@@ -78,7 +78,7 @@ func TestSendLocalTxAutocompound(t *testing.T) {
 	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
 	msgDelegate := newFakeMsgDelegate(delAddr, val)
 	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgWithdrawDelegatorReward, msgDelegate})
-	flow.Conditions = &types.ExecutionConditions{FeedbackLoops: []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "sdk.Int"}}}
+	flow.Conditions = &types.ExecutionConditions{FeedbackLoops: []*types.FeedbackLoop{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", MsgsIndex: 1, MsgKey: "Amount", ValueType: "math.Int"}}}
 	delegations, _ := keeper.stakingKeeper.GetAllDelegatorDelegations(ctx, delAddr)
 	require.Equal(t, delegations[0].Shares.TruncateInt64(), math.LegacyNewDec(77).TruncateInt64())
 	keeper.HandleFlow(ctx, ctx.Logger(), flow, time.Now(), nil)

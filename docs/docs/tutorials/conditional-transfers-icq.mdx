@@ -86,7 +86,7 @@ const feedbackLoop: FeedbackLoop = {
   flowId: BigInt(0),               // Reference to the balance query flow
   responseIndex: 0,                // First response in the flow
   responseKey: "amount.[0].amount", // Path to balance amount in response
-  valueType: "sdk.Int",            // Type of the value
+  valueType: "math.Int",            // Type of the value
   msgsIndex: 1,                    // Index of MsgSend in messages array
   msgKey: "amount",                // Field to update in MsgSend
   icqConfig: icqConfig,            // Our ICQ config
@@ -102,7 +102,7 @@ const comparison: Comparison = {
   flowId: BigInt(0),               // Reference to the balance query flow
   responseIndex: 0,                // First response in the flow
   responseKey: "amount.[0].amount", // Path to balance amount
-  valueType: "sdk.Int",            // Type of the value
+  valueType: "math.Int",            // Type of the value
   operator: 4,                     // LARGER_THAN operator
   operand: "200000uatom",          // Threshold amount
   icqConfig: icqConfig,            // Our ICQ config

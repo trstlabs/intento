@@ -314,7 +314,7 @@ func TestAllowedToExecuteWithNoStopOnFailure(t *testing.T) {
 
 	flow.Configuration = &types.ExecutionConfiguration{}
 	flow.Conditions = &types.ExecutionConditions{}
-	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", Operator: 0, Operand: "101"}}
+	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "101"}}
 	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time, nil)
 	history, err := k.GetFlowHistory(ctx, flow.ID)
 	require.Nil(t, err)
@@ -347,7 +347,7 @@ func TestNotAllowedToExecuteWithStopOnFailure(t *testing.T) {
 
 	flow.Configuration = &types.ExecutionConfiguration{StopOnFailure: true}
 	flow.Conditions = &types.ExecutionConditions{}
-	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", Operator: 0, Operand: "101"}}
+	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "101"}}
 	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time, nil)
 	history, err := k.GetFlowHistory(ctx, flow.ID)
 	require.Nil(t, err)
@@ -380,7 +380,7 @@ func TestAllowedToExecuteWithNoStopOnFailureAndUseAndForComparisons(t *testing.T
 
 	flow.Configuration = &types.ExecutionConfiguration{}
 	flow.Conditions = &types.ExecutionConditions{UseAndForComparisons: true}
-	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "sdk.Int", Operator: 0, Operand: "101"}}
+	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "101"}}
 	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time, nil)
 	history, err := k.GetFlowHistory(ctx, flow.ID)
 	require.Nil(t, err)

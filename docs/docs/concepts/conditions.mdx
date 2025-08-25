@@ -35,7 +35,7 @@ The `Comparison` feature allows you to compare a response value with a specified
 | `flow_id`        | `uint64`             | The ID of the action to fetch the latest response value from (optional).                         |
 | `response_index` | `uint32`             | The index of the message response to use (optional).                                             |
 | `response_key`   | `string`             | The specific response key to use (e.g., `Amount[0].Amount`, `FromAddress`, optional).            |
-| `value_type`     | `string`             | The value type, such as `sdk.Int`, `sdk.Coin`, `sdk.Coins`, `string`, or other compatible types. |
+| `value_type`     | `string`             | The value type, such as `math.Int`, `sdk.Coin`, `sdk.Coins`, `string`, or other compatible types. |
 | `operator`       | `ComparisonOperator` | The operator used for comparison (e.g., `==`, `!=`, `<`, `>`).                                   |
 | `operand`        | `string`             | The value to compare against.                                                                    |
 | `icq_config`     | `ICQConfig`          | The configuration of the Interchain Queryto perform.                                             |
@@ -75,7 +75,7 @@ The `Feedback Loops` feature enables you to replace a value in a message with th
 | `response_key`   | `string`    | The specific response key to use (e.g., "Amount").                                               |
 | `msgs_index`     | `uint32`    | The index of the message to replace.                                                             |
 | `msg_key`        | `string`    | The key of the message to replace (e.g., `Amount[0].Amount`, `FromAddress`).                     |
-| `value_type`     | `string`    | The value type, such as `sdk.Int`, `sdk.Coin`, `sdk.Coins`, `string`, or other compatible types. |
+| `value_type`     | `string`    | The value type, such as `math.Int`, `sdk.Coin`, `sdk.Coins`, `string`, or other compatible types. |
 | `icq_config`     | `ICQConfig` | The configuration of the Interchain Queryto perform.                                             |
 
 ---
@@ -135,7 +135,7 @@ const comparison: Comparison = {
   flowId: BigInt(0), // Reward withdrawal flow
   responseIndex: 0, // First response index
   responseKey: "amount.[0].amount", // Extracted amount key
-  valueType: "sdk.Int", // Value type
+  valueType: "math.Int", // Value type
   operator: 4, // LARGER_THAN
   operand: "200000", // Threshold
   icqConfig: undefined,

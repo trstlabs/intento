@@ -101,7 +101,7 @@ func TestFeedbackLoopWithdrawSwapStake(t *testing.T) {
 				ResponseKey:   "Amount.[0].Amount",
 				MsgsIndex:     1,
 				MsgKey:        "TokenIn.Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 			// Update stake amount from swap response
 			{
@@ -109,7 +109,7 @@ func TestFeedbackLoopWithdrawSwapStake(t *testing.T) {
 				ResponseKey:   "TokenOutAmount",
 				MsgsIndex:     2,
 				MsgKey:        "Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 		},
 	}
@@ -201,14 +201,14 @@ func TestFeedbackLoopWithdrawSwapStakeTwice(t *testing.T) {
 				ResponseKey:   "Amount.[0].Amount",
 				MsgsIndex:     1, // First swap
 				MsgKey:        "TokenIn.Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 			{
 				ResponseIndex: 1, // First swap response
 				ResponseKey:   "TokenOutAmount",
 				MsgsIndex:     2, // First stake
 				MsgKey:        "Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 			// Second sequence
 			{
@@ -216,14 +216,14 @@ func TestFeedbackLoopWithdrawSwapStakeTwice(t *testing.T) {
 				ResponseKey:   "Amount.[0].Amount",
 				MsgsIndex:     4, // Second swap
 				MsgKey:        "TokenIn.Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 			{
 				ResponseIndex: 3, // Second swap response
 				ResponseKey:   "TokenOutAmount",
 				MsgsIndex:     5, // Second stake
 				MsgKey:        "Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 		},
 	}

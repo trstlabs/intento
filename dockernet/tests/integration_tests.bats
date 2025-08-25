@@ -511,7 +511,7 @@ EOF
   query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+GliYy9GMUI1QzM0ODlGODgxQ0M1NkVDQzEyRUE5MDNFRkNGNUQyMDBCNEQ4MTIzODUyQzE5MUE4OEEzMUFDNzlBOEU0'
   #query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+HVhdG9t' #ATOM DENOM
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Trustless Agent" --duration "120s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "comparisons": [{"response_index":0,"response_key": "", "operand":"111", "operator":4,"value_type": "sdk.Int", "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Trustless Agent" --duration "120s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "comparisons": [{"response_index":0,"response_key": "", "operand":"111", "operator":4,"value_type": "math.Int", "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
 
   GET_FLOW_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_FLOW_BY_ID

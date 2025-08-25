@@ -182,14 +182,14 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 				ResponseKey:   "Amount.[0].Amount",
 				MsgsIndex:     1, // Swap#1
 				MsgKey:        "TokenIn.Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 			{
 				ResponseIndex: 1, // Swap#1
 				ResponseKey:   "TokenOutAmount",
 				MsgsIndex:     2, // Stake#2
 				MsgKey:        "Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 			// Second sequence
 			{
@@ -197,14 +197,14 @@ func TestIncrementalExecutionWithFeedbackLoops(t *testing.T) {
 				ResponseKey:   "Amount.[0].Amount",
 				MsgsIndex:     4, // Swap#4
 				MsgKey:        "TokenIn.Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 			{
 				ResponseIndex: 4, // Swap#4
 				ResponseKey:   "TokenOutAmount",
 				MsgsIndex:     5, // Stake#5
 				MsgKey:        "Amount",
-				ValueType:     "sdk.Int",
+				ValueType:     "math.Int",
 			},
 		},
 	}

@@ -41,7 +41,7 @@ const feedbackLoopDelegation: FeedbackLoop = {
   flowId: BigInt(0), // Reward withdrawal flow
   responseIndex: 0, // First response index
   responseKey: "amount.[0].amount", // Extract the withdrawn amount
-  valueType: "sdk.Int", // Type of value
+  valueType: "math.Int", // Type of value
   msgsIndex: 1, // Index in message array to modify
   msgKey: "amount.amount", // Key in MsgDelegate to replace
   icqConfig: undefined,
