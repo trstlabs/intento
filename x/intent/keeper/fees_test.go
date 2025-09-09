@@ -196,6 +196,230 @@ func TestDistributeCoinsDifferentDenom(t *testing.T) {
 	require.Equal(t, sdk.NewInt64Coin(denom, 30_000_000), keeper.bankKeeper.GetBalance(ctx, ownerAddr, "uabcd").Add(fee))
 }
 
+func TestSendFeesToTrustlessAgentFeeAdmin(t *testing.T) {
+	denom := "ibc/17409F270CB2FE874D5E3F339E958752DEC39319E5A44AD0399D2D1284AD499C"
+	feeAmount := sdk.NewInt64Coin(denom, 5000)
+	fullBalance := sdk.NewCoins(sdk.NewInt64Coin(denom, 10000))
+
+	tests := []struct {
+		name            string
+		setup           func(*testing.T) (sdk.Context, Keeper, sdk.AccAddress, sdk.AccAddress, types.Flow, types.TrustlessAgent)
+		expectErr       bool
+		expectedBalance sdk.Coins
+		expectFallback  bool
+	}{
+		{
+			name: "fee address pays successfully",
+			setup: func(t *testing.T) (sdk.Context, Keeper, sdk.AccAddress, sdk.AccAddress, types.Flow, types.TrustlessAgent) {
+				ctx, keeper, _, _, _, _ := setupTest(t, nil)
+
+				feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, fullBalance)
+				ownerAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+				adminAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+				flow := types.Flow{
+					Owner:      ownerAddr.String(),
+					FeeAddress: feeAddr.String(),
+					TrustlessAgent: &types.TrustlessAgentConfig{
+						FeeLimit: sdk.NewCoins(feeAmount),
+					},
+					Configuration: &types.ExecutionConfiguration{WalletFallback: false},
+				}
+
+				agent := types.TrustlessAgent{
+					FeeConfig: &types.TrustlessAgentFeeConfig{
+						FeeCoinsSupported: sdk.NewCoins(feeAmount),
+						FeeAdmin:          adminAddr.String(),
+					},
+				}
+
+				return ctx, keeper, feeAddr, adminAddr, flow, agent
+			},
+			expectErr:       false,
+			expectedBalance: sdk.NewCoins(feeAmount),
+			expectFallback:  false,
+		},
+		{
+			name: "fallback to owner",
+			setup: func(t *testing.T) (sdk.Context, Keeper, sdk.AccAddress, sdk.AccAddress, types.Flow, types.TrustlessAgent) {
+				ctx, keeper, _, _, _, _ := setupTest(t, nil)
+
+				feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins()) // empty
+				ownerAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+				adminAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+				// fund owner
+				require.NoError(t, keeper.bankKeeper.MintCoins(ctx, types.ModuleName, fullBalance))
+				require.NoError(t, keeper.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, ownerAddr, fullBalance))
+
+				flow := types.Flow{
+					Owner:      ownerAddr.String(),
+					FeeAddress: feeAddr.String(),
+					TrustlessAgent: &types.TrustlessAgentConfig{
+						FeeLimit: sdk.NewCoins(feeAmount),
+					},
+					Configuration: &types.ExecutionConfiguration{WalletFallback: true},
+				}
+
+				agent := types.TrustlessAgent{
+					FeeConfig: &types.TrustlessAgentFeeConfig{
+						FeeCoinsSupported: sdk.NewCoins(feeAmount),
+						FeeAdmin:          adminAddr.String(),
+					},
+				}
+
+				return ctx, keeper, feeAddr, adminAddr, flow, agent
+			},
+			expectErr:       false,
+			expectedBalance: sdk.NewCoins(feeAmount),
+			expectFallback:  true,
+		},
+		{
+			name: "insufficient funds and no fallback",
+			setup: func(t *testing.T) (sdk.Context, Keeper, sdk.AccAddress, sdk.AccAddress, types.Flow, types.TrustlessAgent) {
+				ctx, keeper, _, _, _, _ := setupTest(t, nil)
+
+				// fee addr has less than required
+				feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper,
+					sdk.NewCoins(sdk.NewInt64Coin(denom, 1000)),
+				)
+				ownerAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+				adminAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+				flow := types.Flow{
+					Owner:      ownerAddr.String(),
+					FeeAddress: feeAddr.String(),
+					TrustlessAgent: &types.TrustlessAgentConfig{
+						FeeLimit: sdk.NewCoins(feeAmount),
+					},
+					Configuration: &types.ExecutionConfiguration{WalletFallback: false},
+				}
+
+				agent := types.TrustlessAgent{
+					FeeConfig: &types.TrustlessAgentFeeConfig{
+						FeeCoinsSupported: sdk.NewCoins(feeAmount),
+						FeeAdmin:          adminAddr.String(),
+					},
+				}
+
+				return ctx, keeper, feeAddr, adminAddr, flow, agent
+			},
+			expectErr:       true,
+			expectedBalance: sdk.NewCoins(),
+			expectFallback:  false,
+		},
+		{
+			name: "multiple fee denoms paid from fee address",
+			setup: func(t *testing.T) (sdk.Context, Keeper, sdk.AccAddress, sdk.AccAddress, types.Flow, types.TrustlessAgent) {
+				ctx, keeper, _, _, _, _ := setupTest(t, nil)
+
+				denomA := "ibc/AAA..."
+				denomB := "ibc/BBB..."
+				feeCoins := sdk.NewCoins(
+					sdk.NewInt64Coin(denomA, 5000),
+					sdk.NewInt64Coin(denomB, 2000),
+				)
+
+				// Fund fee address with both
+				feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, feeCoins)
+				ownerAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+				adminAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+				flow := types.Flow{
+					Owner:      ownerAddr.String(),
+					FeeAddress: feeAddr.String(),
+					TrustlessAgent: &types.TrustlessAgentConfig{
+						FeeLimit: feeCoins,
+					},
+					Configuration: &types.ExecutionConfiguration{WalletFallback: false},
+				}
+
+				agent := types.TrustlessAgent{
+					FeeConfig: &types.TrustlessAgentFeeConfig{
+						FeeCoinsSupported: feeCoins,
+						FeeAdmin:          adminAddr.String(),
+					},
+				}
+
+				return ctx, keeper, feeAddr, adminAddr, flow, agent
+			},
+			expectErr: false,
+			expectedBalance: sdk.NewCoins(
+				sdk.NewInt64Coin("ibc/AAA...", 5000),
+			),
+			expectFallback: false,
+		},
+		{
+			name: "uinto set first and used first",
+			setup: func(t *testing.T) (sdk.Context, Keeper, sdk.AccAddress, sdk.AccAddress, types.Flow, types.TrustlessAgent) {
+				ctx, keeper, _, _, _, _ := setupTest(t, nil)
+
+				denomA := "uinto"
+				denomB := "ibc/BBB..."
+				denomC := "ibc/CCC..."
+				feeCoinsSupported := sdk.NewCoins(
+					sdk.NewInt64Coin(denomA, 3456),
+					sdk.NewInt64Coin(denomB, 1455),
+					sdk.NewInt64Coin(denomC, 234),
+				)
+
+				// Fund fee address with both
+				feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, feeCoinsSupported)
+				ownerAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+				adminAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+				flow := types.Flow{
+					Owner:      ownerAddr.String(),
+					FeeAddress: feeAddr.String(),
+					TrustlessAgent: &types.TrustlessAgentConfig{
+						FeeLimit: sdk.NewCoins(
+							sdk.NewInt64Coin(denomA, 5000),
+							sdk.NewInt64Coin(denomB, 2000),
+							sdk.NewInt64Coin(denomC, 1000),
+						),
+					},
+					Configuration: &types.ExecutionConfiguration{WalletFallback: false},
+				}
+
+				agent := types.TrustlessAgent{
+					FeeConfig: &types.TrustlessAgentFeeConfig{
+						FeeCoinsSupported: feeCoinsSupported,
+						FeeAdmin:          adminAddr.String(),
+					},
+				}
+
+				return ctx, keeper, feeAddr, adminAddr, flow, agent
+			},
+			expectErr: false,
+			expectedBalance: sdk.NewCoins(
+				sdk.NewInt64Coin("uinto", 3456),
+			),
+			expectFallback: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, keeper, feeAddr, adminAddr, flow, agent := tc.setup(t)
+
+			err := keeper.SendFeesToTrustlessAgentFeeAdmin(ctx, flow, agent)
+			if tc.expectErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+
+			adminBal := keeper.bankKeeper.GetAllBalances(ctx, adminAddr)
+			require.Equal(t, adminBal, tc.expectedBalance)
+
+			if tc.expectFallback {
+				feeBal := keeper.bankKeeper.GetAllBalances(ctx, feeAddr)
+				require.True(t, feeBal.IsZero(), "fee address should not have been used in fallback")
+			}
+		})
+	}
+}
+
 func TestGetFeeAccountForMinFees_WithMultipleBalanceDenoms(t *testing.T) {
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins())
 

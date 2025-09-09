@@ -191,6 +191,7 @@ func (k Keeper) SendFeesToTrustlessAgentFeeAdmin(ctx sdk.Context, flow types.Flo
 	if flow.TrustlessAgent.FeeLimit == nil {
 		return nil
 	}
+
 	feeAddr, err := sdk.AccAddressFromBech32(flow.FeeAddress)
 	if err != nil {
 		return err
@@ -199,10 +200,19 @@ func (k Keeper) SendFeesToTrustlessAgentFeeAdmin(ctx sdk.Context, flow types.Flo
 	if err != nil {
 		return err
 	}
-	supportedCoins := trustlessAgent.FeeConfig.FeeCoinsSupported.Sort()
+	supportedCoins := trustlessAgent.FeeConfig.FeeCoinsSupported
 
-	// Find the cheapest valid matching coin (first one that matches)
-	for _, feeLimit := range flow.TrustlessAgent.FeeLimit {
+	// Reorder FeeLimit so "uinto" comes first if available
+	feeLimits := flow.TrustlessAgent.FeeLimit
+	for i, coin := range feeLimits {
+		if coin.Denom == "uinto" {
+			feeLimits[0], feeLimits[i] = feeLimits[i], feeLimits[0]
+			break
+		}
+	}
+
+	// Try each fee coin in order
+	for _, feeLimit := range feeLimits {
 		found, feeCoin := supportedCoins.Find(feeLimit.Denom)
 		if supportedCoins.Len() != 0 && !found {
 			continue // skip unsupported denom
@@ -211,24 +221,29 @@ func (k Keeper) SendFeesToTrustlessAgentFeeAdmin(ctx sdk.Context, flow types.Flo
 			continue // skip if over the configured limit
 		}
 
-		// Try to send this coin
+		// Check balance before attempting transfer
+		balance := k.bankKeeper.GetBalance(ctx, feeAddr, feeCoin.Denom)
+		if balance.IsLT(feeCoin) {
+			// Try fallback address if enabled and insufficient balance
+			if flow.Configuration.WalletFallback {
+				fallbackAddr, err := sdk.AccAddressFromBech32(flow.Owner)
+				if err == nil {
+					fallbackBalance := k.bankKeeper.GetBalance(ctx, fallbackAddr, feeCoin.Denom)
+					if fallbackBalance.IsGTE(feeCoin) {
+						return k.bankKeeper.SendCoins(ctx, fallbackAddr, trustlessAgentAdminAddr, sdk.Coins{feeCoin})
+					}
+				}
+			}
+			continue // try next fee option
+		}
+
+		// If we get here, we have sufficient balance to make the transfer
 		err = k.bankKeeper.SendCoins(ctx, feeAddr, trustlessAgentAdminAddr, sdk.Coins{feeCoin})
 		if err == nil {
 			return nil // success
 		}
-
-		// Try fallback to owner if enabled
-		if flow.Configuration.WalletFallback {
-			fallbackAddr, err := sdk.AccAddressFromBech32(flow.Owner)
-			if err != nil {
-				return err
-			}
-			return k.bankKeeper.SendCoins(ctx, fallbackAddr, trustlessAgentAdminAddr, sdk.Coins{feeCoin})
-		}
-
-		return err // no fallback or fallback failed
 	}
 
-	// No matching coins found within limit
-	return errorsmod.Wrap(types.ErrNotFound, "no valid fee coin matched within limit")
+	// No matching coins found with sufficient balance within limit
+	return errorsmod.Wrap(types.ErrNotFound, "no valid fee coin with sufficient balance found within limit")
 }
