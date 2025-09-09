@@ -491,7 +491,7 @@ func getUpdateTrustlessAgentCmd() *cobra.Command {
 		},
 	}
 
-	// cmd.Flags().String(flagFeeCoinsSupported, "", "Coins supported as fees for hosted, optional")
+	cmd.Flags().String(flagFeeCoinsSupported, "", "Coins supported as fees for hosted, optional")
 	cmd.Flags().String(flagNewAdmin, "", "A new admin, optional")
 	cmd.Flags().String(flagTrustlessAgent, "", "A trustless agent to execute actions on a host")
 	_ = cmd.MarkFlagRequired(flagTrustlessAgent)
