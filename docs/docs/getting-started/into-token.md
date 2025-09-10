@@ -1,15 +1,17 @@
 ---
-title: $INTO Token
+title: The INTO Token
 sidebar_position: 6
-description: $INTO Token - Documentation & Whitepaper
+description: The INTO Token - Documentation & Whitepaper
 ---
-# $INTO Token - Documentation & Whitepaper
+# INTO Token - Documentation & Whitepaper
 
 ## Overview
 
-$INTO is the native token of the **Intento Network**, a Cosmos-based Layer 1 designed for **intent-based orchestration** across the interchain. It enables secure, programmable flows that let users and agents execute complex, self-custodial actions across chains.
+INTO is the native token of the **Intento Network**, a Cosmos-based Layer 1 designed for **intent-based orchestration** across the interchain. It enables secure, programmable flows that let users and agents execute complex, self-custodial actions across chains.
 
-$INTO is not just a fee token. It is the **coordination layer** that aligns validators, relayers, builders, and users through staking, governance, and a deflationary execution model.
+INTO is not just a fee token. It is the **coordination layer** that aligns validators, relayers, builders, and users through staking, governance, and a deflationary execution model.
+
+> For full details about the INTO token, see our [Introducing INTO: The Token Powering Interchain Flows](https://intento.zone/post/introducing-into-the-token-powering-interchain-flows/) blog post.
 
 
 ## Network Requirements
