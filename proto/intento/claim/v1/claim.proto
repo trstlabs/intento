@@ -73,6 +73,7 @@ message MsgClaimClaimableResponse {
 
 // MsgUpdateParams is the request type for updating claim module's params.
 message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
   string authority = 1;
    Params params = 2 [
       (gogoproto.jsontag) = "params",
