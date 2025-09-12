@@ -104,6 +104,6 @@ func HandleFlowCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		}
 	}
 
-	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockTime(), args)
+	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockTime())
 	return nil
 }

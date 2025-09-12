@@ -15,7 +15,7 @@ import (
 )
 
 // HandleFlow processes a single flow during the block
-func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, timeOfBlock time.Time, queryCallback []byte) {
+func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, timeOfBlock time.Time) {
 	var (
 		errorString  = ""
 		fee          = sdk.Coins{}

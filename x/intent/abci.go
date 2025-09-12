@@ -40,7 +40,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 			continue
 
 		}
-		k.HandleFlow(ctx, logger, flow, ctx.BlockHeader().Time, nil)
+		k.HandleFlow(ctx, logger, flow, ctx.BlockHeader().Time)
 	}
 }
 

@@ -35,7 +35,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 
-	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime(), nil)
+	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime())
 	flow = k.GetFlow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime)
 
@@ -70,7 +70,7 @@ func TestBeginBlockerTransfer(t *testing.T) {
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 
-	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime(), nil)
+	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime())
 	flow = k.GetFlow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime)
 
@@ -129,7 +129,7 @@ func TestBeginBlockerStopOnSuccess(t *testing.T) {
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 	// BeginBlocker logic
-	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime(), nil)
+	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime())
 	flow = k.GetFlow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
 	flow = k.GetFlow(ctx3, flow.ID)
@@ -154,7 +154,7 @@ func TestBeginBlockerStopOnFailure(t *testing.T) {
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 
-	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime(), nil)
+	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime())
 	flow = k.GetFlow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
 	flow = k.GetFlow(ctx3, flow.ID)
@@ -182,7 +182,7 @@ func TestBeginBlockerAlwaysStopOnLowBalance(t *testing.T) {
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 
-	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime(), nil)
+	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime())
 	flow = k.GetFlow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
 	flow = k.GetFlow(ctx3, flow.ID)
@@ -217,7 +217,7 @@ func TestErrorIsSavedToflow(t *testing.T) {
 	require.NoError(t, err)
 	err = sendTokens(ctx, keepers, flow.FeeAddress, emptyBalanceAcc, sdk.NewInt64Coin("stake", 3_000_000_000_000))
 	require.NoError(t, err)
-	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime(), nil)
+	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime())
 
 	flow = k.GetFlow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
@@ -281,7 +281,7 @@ func TestNotExecutingWithWrongSigner(t *testing.T) {
 	k := keepers.IntentKeeper
 
 	flow.Configuration = &types.ExecutionConfiguration{}
-	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time, nil)
+	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time)
 	history, err := k.GetFlowHistory(ctx, flow.ID)
 	require.Nil(t, err)
 
@@ -315,7 +315,7 @@ func TestAllowedToExecuteWithNoStopOnFailure(t *testing.T) {
 	flow.Configuration = &types.ExecutionConfiguration{}
 	flow.Conditions = &types.ExecutionConditions{}
 	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "101"}}
-	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time, nil)
+	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time)
 	history, err := k.GetFlowHistory(ctx, flow.ID)
 	require.Nil(t, err)
 	require.True(t, history[len(history)-1].Executed)
@@ -348,7 +348,7 @@ func TestNotAllowedToExecuteWithStopOnFailure(t *testing.T) {
 	flow.Configuration = &types.ExecutionConfiguration{StopOnFailure: true}
 	flow.Conditions = &types.ExecutionConditions{}
 	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "101"}}
-	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time, nil)
+	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time)
 	history, err := k.GetFlowHistory(ctx, flow.ID)
 	require.Nil(t, err)
 	require.False(t, history[len(history)-1].Executed)
@@ -381,7 +381,7 @@ func TestAllowedToExecuteWithNoStopOnFailureAndUseAndForComparisons(t *testing.T
 	flow.Configuration = &types.ExecutionConfiguration{}
 	flow.Conditions = &types.ExecutionConditions{UseAndForComparisons: true}
 	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "101"}}
-	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time, nil)
+	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time)
 	history, err := k.GetFlowHistory(ctx, flow.ID)
 	require.Nil(t, err)
 	require.False(t, history[len(history)-1].Executed)
@@ -613,7 +613,7 @@ func TestHandleFlow_WithFalseFeedbackLoopIndex(t *testing.T) {
 				panicked = true
 			}
 		}()
-		k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime(), nil)
+		k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime())
 	}()
 
 	require.False(t, panicked, "Expected no panic despite invalid MsgsIndex")
@@ -718,7 +718,7 @@ func TestHandleFlow_WithGoodFeedbackLoopIndex(t *testing.T) {
 				panicked = true
 			}
 		}()
-		k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime(), nil)
+		k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime())
 	}()
 
 	require.False(t, panicked, "Expected no panic despite invalid MsgsIndex")
