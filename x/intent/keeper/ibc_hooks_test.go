@@ -275,7 +275,7 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsing(
 
 	//fix as we do not have the channels over the same connectionID in testing
 	flow.SelfHostedICA.ConnectionID = "connection-0"
-	flowKeeper.HandleFlow(suite.IntentoChain.GetContext(), flowKeeper.Logger(suite.IntentoChain.GetContext()), flow, suite.IntentoChain.GetContext().BlockTime(), nil)
+	flowKeeper.HandleFlow(suite.IntentoChain.GetContext(), flowKeeper.Logger(suite.IntentoChain.GetContext()), flow, suite.IntentoChain.GetContext().BlockTime())
 
 	flow = flowKeeper.GetFlow(suite.IntentoChain.GetContext(), 1)
 	flowHistory, _ := flowKeeper.GetFlowHistory(suite.IntentoChain.GetContext(), flow.ID)
@@ -408,7 +408,6 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 		flowKeeper.Logger(suite.IntentoChain.GetContext()),
 		flow,
 		suite.IntentoChain.GetContext().BlockTime(),
-		nil,
 	)
 
 	// === AFTER substitution ===
@@ -528,7 +527,6 @@ func (suite *KeeperTestSuite) TestOnRecvTransferPacketSubmitTxAndAddressParsingM
 		flowKeeper.Logger(suite.IntentoChain.GetContext()),
 		flow,
 		suite.IntentoChain.GetContext().BlockTime(),
-		nil,
 	)
 
 	// === AFTER substitution ===

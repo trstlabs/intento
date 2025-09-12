@@ -332,7 +332,7 @@ func (suite *KeeperTestSuite) TestSubmitFlow() {
 			if len(flow.Conditions.FeedbackLoops) != 0 && flow.Conditions.FeedbackLoops[0].ICQConfig != nil {
 				flowKeeper.SubmitInterchainQueries(ctx, flow, flowKeeper.Logger(ctx))
 			}
-			flowKeeper.HandleFlow(ctx, flowKeeper.Logger(ctx), flow, ctx.BlockTime(), nil)
+			flowKeeper.HandleFlow(ctx, flowKeeper.Logger(ctx), flow, ctx.BlockTime())
 			suite.IntentoChain.NextBlock()
 			flow = flowKeeper.GetFlow(ctx, 1)
 			flowHistory, err := flowKeeper.GetFlowHistory(ctx, 1)
