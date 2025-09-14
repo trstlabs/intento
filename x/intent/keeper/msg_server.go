@@ -174,8 +174,8 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 		if startTime.After(flow.EndTime) {
 			return nil, errorsmod.Wrapf(types.ErrUpdateFlow, "start time: %s must be before end time", startTime)
 		}
-		latestEntry, err := k.GetLatestFlowHistoryEntry(ctx, flow.ID)
-		if err != nil || latestEntry != nil {
+		latestEntry, _ := k.GetLatestFlowHistoryEntry(ctx, flow.ID)
+		if latestEntry != nil {
 			return nil, errorsmod.Wrapf(types.ErrUpdateFlow, "start time: %s must occur before first execution", startTime)
 		}
 		flow.StartTime = startTime
