@@ -19,7 +19,6 @@ import (
 // CompareResponseValue compares the value of a response key based on the ResponseComparison
 func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses []*cdctypes.Any, comparison types.Comparison) (bool, error) {
 	k.Logger(ctx).Debug("response comparison", "flowID", flowID)
-	fmt.Println("response comparison", "flowID", flowID, responses, comparison)
 	var queryCallback []byte = nil
 	if comparison.ICQConfig != nil {
 		queryCallback = comparison.ICQConfig.Response
@@ -56,7 +55,7 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 	operand, err := parseOperand(comparison.Operand, comparison.ValueType)
 	if err != nil {
 		valueType := comparison.Operand
-		fmt.Println("operand is not a number, trying to get value from response", "operand", comparison.Operand, "valueType", comparison.ValueType)
+		k.Logger(ctx).Debug("operand is not a number, trying to get value from response", "operand", comparison.Operand, "valueType", comparison.ValueType)
 		// try to use operand field to get value from response
 		operand, err = k.getValueFromResponse(
 			ctx,
@@ -73,7 +72,6 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 
 	if comparison.DifferenceMode {
 		k.Logger(ctx).Debug("difference mode enabled", "valueFromResponse", valueFromResponse, "previousValue", previousValue)
-		fmt.Println("difference mode enabled", "valueFromResponse", valueFromResponse, "previousValue", previousValue)
 		diffValue, err := k.calculateDifference(ctx, valueFromResponse, previousValue)
 		if err != nil {
 			return false, fmt.Errorf("error calculating difference: %w", err)
@@ -84,7 +82,7 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 	// Normalize types for comparison
 	valueFromResponse, operand = normalizeJSONTypes(valueFromResponse, operand)
 
-	fmt.Printf("Comparing value: %v with operand: %v using operator: %s\n", valueFromResponse, operand, comparison.Operator)
+	k.Logger(ctx).Debug("Comparing value", "valueFromResponse", valueFromResponse, "operand", operand, "operator", comparison.Operator)
 	switch comparison.Operator {
 	case types.ComparisonOperator_EQUAL:
 		switch val := valueFromResponse.(type) {
@@ -279,7 +277,6 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 			if err != nil {
 				return fmt.Errorf("error calculating difference: %w", err)
 			}
-			fmt.Println("calculated difference", "current", valueFromResponse, "previous", previousValue, "difference", diffValue)
 			valueFromResponse = diffValue
 		}
 
@@ -527,18 +524,13 @@ func (k Keeper) getPreviousResponseValue(ctx sdk.Context, flowID uint64, respons
 
 	k.Logger(ctx).Debug("getPreviousResponseValue", "history_length", len(flowHistory))
 
-	fmt.Println("getPreviousResponseValue", "history", flowHistory)
 	// Look for the most recent successful execution
 	for i := len(flowHistory) - 1; i >= 0; i-- {
 		history := flowHistory[i]
 
-		fmt.Println("getPreviousResponseValue index", i)
-
 		// Handle ICQ query responses
 		if isICQ && len(history.QueryResponses) > 0 {
-			fmt.Println("getPreviousResponseValue", "query_responses", history.QueryResponses)
 			if int(responseIndex) < len(history.QueryResponses) {
-				fmt.Println("getPreviousResponseValue", "query_responses", history.QueryResponses[responseIndex])
 				k.Logger(ctx).Debug("Found ICQ query response", "index", i, "response", history.QueryResponses[responseIndex])
 				return k.getValueFromResponse(
 					ctx,
@@ -561,9 +553,7 @@ func (k Keeper) getPreviousResponseValue(ctx sdk.Context, flowID uint64, respons
 		}
 		// Handle regular message responses
 		if len(history.MsgResponses) > 0 && int(responseIndex) < len(history.MsgResponses) {
-			fmt.Println("getPreviousResponseValue", "msg_responses", history.MsgResponses)
 			k.Logger(ctx).Debug("Found message response", "index", i)
-			fmt.Println("getPreviousResponseValue", "msg_responses", history.MsgResponses[responseIndex])
 			return k.getValueFromResponse(
 				ctx,
 				responseIndex,
@@ -580,11 +570,8 @@ func (k Keeper) getPreviousResponseValue(ctx sdk.Context, flowID uint64, respons
 
 // parseResponseValue retrieves and parses the value of a response key to the specified response type
 func parseResponseValue(response interface{}, responseKey, responseType string) (interface{}, error) {
-	// If responseKey is empty and response is a primitive, just return it
-	fmt.Printf("Parsing response value: %v with key: %s and type: %s\n", response, responseKey, responseType)
 
 	val, err := traverseFields(response, responseKey)
-	fmt.Println("traverseFields responseKey", responseKey, "val", val, "err", err)
 	if err != nil {
 		return nil, err
 	}
@@ -716,7 +703,6 @@ func parseOperand(operand string, responseType string) (interface{}, error) {
 
 // parseICQResponse parses the ICQ response
 func parseICQResponse(response []byte, valueType *string) (interface{}, error) {
-	fmt.Println("parsing ICQ response", "valueType", *valueType)
 	switch *valueType {
 	case "string":
 		return string(response), nil
@@ -787,7 +773,6 @@ func parseICQResponse(response []byte, valueType *string) (interface{}, error) {
 	}
 
 	if strings.Contains(*valueType, "osmosistwapv1beta1.TwapRecord") {
-		fmt.Println("Parsing osmosistwapv1beta1.TwapRecord")
 		var twapRecord osmosistwapv1beta1.TwapRecord
 		if err := twapRecord.Unmarshal(response); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal osmosistwapv1beta1.TwapRecord: %w", err)
@@ -798,7 +783,6 @@ func parseICQResponse(response []byte, valueType *string) (interface{}, error) {
 		if len(parts) > 2 {
 			fieldName := parts[2]
 			*valueType = "math.Dec"
-			fmt.Println("Parsing osmosistwapv1beta1.TwapRecord field", "fieldName", fieldName)
 			rv := reflect.ValueOf(twapRecord)
 			field := rv.FieldByName(fieldName)
 			if !field.IsValid() {
@@ -1113,7 +1097,6 @@ func (k Keeper) calculateDifference(ctx sdk.Context, currentValue, previousValue
 				return nil, fmt.Errorf("math.Dec subtraction failed: %w", err)
 			}
 		}
-		fmt.Println("calculated difference", "current", current, "previous", prevDec, "difference", diff)
 		k.Logger(ctx).Debug("calculated difference", "current", current, "previous", prevDec, "difference", diff)
 		return diff, nil
 
@@ -1129,7 +1112,6 @@ func (k Keeper) calculateDifference(ctx sdk.Context, currentValue, previousValue
 				return nil, fmt.Errorf("math.Int subtraction failed: %w", err)
 			}
 		}
-		fmt.Println("calculated difference", "current", current, "previous", prevInt, "difference", diff)
 		k.Logger(ctx).Debug("calculated difference", "current", current, "previous", prevInt, "difference", diff)
 		return diff, nil
 
@@ -1150,7 +1132,6 @@ func (k Keeper) calculateDifference(ctx sdk.Context, currentValue, previousValue
 				return nil, fmt.Errorf("sdk.Coin subtraction failed: %w", err)
 			}
 		}
-		fmt.Println("calculated difference", "current", current, "previous", prevCoin, "difference", diff)
 		k.Logger(ctx).Debug("calculated difference", "current", current, "previous", prevCoin, "difference", diff)
 		return diff, nil
 
