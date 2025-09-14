@@ -322,7 +322,7 @@ func checkConditions(conditions ExecutionConditions, lenMsgMsgs int) error {
 			if len(conditions.Comparisons) > 5 {
 				return fmt.Errorf("cannot create more than 5 Comparisons")
 			}
-			if comparison.Operator <= 0 || comparison.ValueType == "" {
+			if comparison.Operator < 0 || comparison.Operator > 9 || comparison.ValueType == "" {
 				return errorsmod.Wrapf(ErrUnknownRequest, "condition Comparision fields are not complete: %+v", conditions)
 			}
 			if comparison.ICQConfig != nil {
