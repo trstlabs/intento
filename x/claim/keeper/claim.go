@@ -10,7 +10,6 @@ import (
 	"github.com/trstlabs/intento/x/claim/types"
 )
 
-// ClaimClaimableForAddr refactored for improved clarity, edge case handling, and atomicity.
 func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) error {
 	record, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
@@ -24,7 +23,7 @@ func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) erro
 
 	moduleAccountBalance := k.GetModuleAccountBalance(ctx)
 
-	// Local copy for mutation, updated atomically
+	// Local copy for atomic update
 	updatedRecord := record
 
 	totalClaimableAmountForAction, err := k.GetTotalClaimableAmountPerAction(ctx, addr)
@@ -39,65 +38,88 @@ func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) erro
 	claimedCoin := sdk.NewCoin(p.ClaimDenom, math.ZeroInt())
 	var toClaimPeriods int64 = 0
 	var claimedPeriods int64 = 0
+
+	// Track the amount claimed after the first 1/5 portion
+	claimedAfterFirstPeriod := math.ZeroInt()
+
 	for action, status := range updatedRecord.Status {
 		if !status.ActionCompleted {
 			continue
 		}
 
 		var toClaimPeriodsForAction int64 = 0
-		var claimedPeriodsForAction int64 = 1
+		var claimedPeriodsForAction int64 = 0
+
 		for period, completed := range status.VestingPeriodsCompleted {
-			//fmt.Printf("period %v ; completed: %v\n", period, completed)
 			if completed && !status.VestingPeriodsClaimed[period] {
 				toClaimPeriodsForAction++
 				updatedRecord.Status[action].VestingPeriodsClaimed[period] = true
 			} else if completed && status.VestingPeriodsClaimed[period] {
 				claimedPeriodsForAction++
-			}
 
+				// Only count periods after the first for staking requirement
+				if period != 0 {
+					portion := math.LegacyNewDecFromInt(totalClaimableAmountForAction).Quo(math.LegacyNewDec(5))
+					claimedAfterFirstPeriod = claimedAfterFirstPeriod.Add(portion.TruncateInt())
+				}
+			}
 		}
 
+		// Calculate claimable for this action
 		if toClaimPeriodsForAction != 0 {
 			toClaimPercent := math.LegacyNewDec(toClaimPeriodsForAction).Quo(math.LegacyNewDec(5))
-			claimableTotalDec := math.LegacyNewDecFromInt(totalClaimableAmountForAction)
-			claimableDec := claimableTotalDec.Mul(toClaimPercent)
+			claimableDec := math.LegacyNewDecFromInt(totalClaimableAmountForAction).Mul(toClaimPercent)
 			claimableCoin = claimableCoin.AddAmount(claimableDec.TruncateInt())
-			toClaimPeriods = toClaimPeriods + toClaimPeriodsForAction
+			toClaimPeriods += toClaimPeriodsForAction
 		}
+
+		// Track total claimed (for reporting, not staking check)
 		claimedPart := math.LegacyNewDec(claimedPeriodsForAction).Quo(math.LegacyNewDec(5))
 		claimedCoin = claimedCoin.AddAmount(math.LegacyNewDecFromInt(totalClaimableAmountForAction).Mul(claimedPart).TruncateInt())
-		claimedPeriods = claimedPeriods + claimedPeriodsForAction
-
+		claimedPeriods += claimedPeriodsForAction
 	}
 
-	if toClaimPeriods == 0 || claimedCoin.Amount == math.ZeroInt() {
+	if toClaimPeriods == 0 || claimableCoin.Amount.IsZero() {
 		return errorsmod.Wrap(sdkerrors.ErrNotFound, "address does not have claimable tokens right now")
 	}
-	// Perform staking check before transferring
-	delegationInfo, err := k.stakingKeeper.GetAllDelegatorDelegations(ctx, addr)
-	if err != nil {
+
+	// Compute total staked tokens
+	totalStaked := math.ZeroInt()
+	delegations, _ := k.stakingKeeper.GetAllDelegatorDelegations(ctx, addr)
+	for _, del := range delegations {
+		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
+		if err != nil {
+			continue
+		}
+		val, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			continue
+		}
+		tokens := val.TokensFromShares(del.Shares)
+		totalStaked = totalStaked.Add(tokens.TruncateInt())
+	}
+
+	// Apply staking minimum only for claims after the first 1/5
+	if !claimedAfterFirstPeriod.IsZero() {
+		minRequired := claimedAfterFirstPeriod.MulRaw(67).QuoRaw(100)
+		if totalStaked.LT(minRequired) {
+			return errorsmod.Wrapf(
+				sdkerrors.ErrInsufficientFunds,
+				"address does not have enough tokens staked to claim: staked: %s, required: %s",
+				totalStaked.String(), minRequired.String(),
+			)
+		}
+	}
+
+	// Transfer claimable tokens to the user
+	if err := k.TransferToUser(ctx, addr, claimableCoin, moduleAccountBalance.Amount, p.ClaimDenom); err != nil {
 		return err
 	}
 
-	totalDelegations := math.LegacyZeroDec()
-	for _, delegation := range delegationInfo {
-		totalDelegations = totalDelegations.Add(delegation.Shares)
-	}
-
-	minBonded := math.LegacyNewDecWithPrec(67, 2).MulInt(claimableCoin.Amount)
-	if totalDelegations.Sub(minBonded).IsNegative() {
-		return errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, "address does not have enough tokens staked to claim: staked "+totalDelegations.BigInt().String()+"required: "+minBonded.BigInt().String()+"claimable :"+claimableCoin.Amount.String())
-	}
-
-	// Transfer claimable amount to the user
-	err = k.TransferToUser(ctx, addr, claimableCoin, moduleAccountBalance.Amount, p.ClaimDenom)
-	if err != nil {
-		return err
-	}
-
-	// Update the record atomically
+	// Atomically update claim record
 	k.SetClaimRecord(ctx, updatedRecord)
 
+	// Emit claim event
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeClaim,

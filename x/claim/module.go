@@ -17,13 +17,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/trstlabs/intento/x/claim/client/cli"
 
+	"cosmossdk.io/core/appmodule"
 	"github.com/trstlabs/intento/x/claim/keeper"
 	"github.com/trstlabs/intento/x/claim/types"
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModule        = AppModule{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
+	_ appmodule.HasEndBlocker = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -158,9 +160,9 @@ func (am AppModule) BeginBlock(_ sdk.Context) {}
 
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(ctx sdk.Context) []abci.ValidatorUpdate {
-	EndBlocker(ctx, am.keeper)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) error {
+	EndBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	return nil
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.

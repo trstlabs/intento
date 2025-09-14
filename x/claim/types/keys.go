@@ -39,42 +39,39 @@ var (
 	VestingQueuePrefix = []byte{0x02}
 )
 
-// GetVestingStorePrefixKey returns the store prefix for the WASM contract instance
-func GetVestingStorePrefixKey(addr sdk.AccAddress) []byte {
-	return append(VestingStorePrefix, addr...)
-}
-
-////queue types
-
 var lenTime = len(sdk.FormatTimeBytes(time.Now()))
 
-// SplitVestingQueueKey split the listed key and returns the id and endTime
-func SplitVestingQueueKey(key []byte) (vestingAddr string, endTime time.Time) {
-	return splitKeyWithTime(key)
-}
-
-// VestingByTimeKey gets the listed claim queue key by endTime
+// VestingByTimeKey = prefix | time
 func VestingByTimeKey(endTime time.Time) []byte {
 	return append(VestingQueuePrefix, sdk.FormatTimeBytes(endTime)...)
 }
 
-// from the key we get the claim and end time
-func splitKeyWithTime(key []byte) (vestingAddr string, endTime time.Time) {
-
-	/*if len(key[1:]) != 8+lenTime {
-		panic(fmt.Sprintf("unexpected key length (%d ≠ %d)", len(key[1:]), lenTime+8))
-	}*/
-
-	endTime, _ = sdk.ParseTimeBytes(key[1 : 1+lenTime])
-	//fmt.Printf("time %s \n", endTime)
-	//returns an id from bytes
-	vestingAddr = string(key[1+lenTime:])
-
-	//	fmt.Printf("vestingAddr key is %s ", vestingAddr)
-	return
+// VestingQueueKey = prefix | time | addr | action | period
+func VestingQueueKey(addr string, endTime time.Time, action byte, period byte) []byte {
+	key := VestingByTimeKey(endTime)
+	key = append(key, []byte(addr)...) // store Bech32 string
+	key = append(key, action)
+	key = append(key, period)
+	return key
 }
 
-// VestingQueueKey returns the key with prefix for an contract in the Listed claim Queue
-func VestingQueueKey(vestingAddr string, endTime time.Time) []byte {
-	return append(VestingByTimeKey(endTime), []byte(vestingAddr)...)
+// SplitVestingQueueKey reverses VestingQueueKey
+func SplitVestingQueueKey(key []byte) (addr string, action int32, period int32, endTime time.Time) {
+	// strip prefix
+	key = key[1:]
+
+	// time part
+	endTime, _ = sdk.ParseTimeBytes(key[:len(sdk.FormatTimeBytes(time.Now()))])
+	rest := key[len(sdk.FormatTimeBytes(time.Now())):]
+
+	// last two bytes are action + period
+	if len(rest) < 2 {
+		panic("invalid vesting queue key: too short")
+	}
+	action = int32(rest[len(rest)-2])
+	period = int32(rest[len(rest)-1])
+
+	// everything else is the address string
+	addr = string(rest[:len(rest)-2])
+	return
 }

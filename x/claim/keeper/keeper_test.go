@@ -443,3 +443,70 @@ func (s *KeeperTestSuite) getClaimRecord(addr sdk.AccAddress) types.ClaimRecord 
 	s.Require().NoError(err)
 	return claim
 }
+func (s *KeeperTestSuite) TestVestingQueue() {
+	addr1 := s.createAccount()
+	action := types.ACTION_ACTION_LOCAL
+
+	// Create initial claim record
+	status := types.Status{
+		ActionCompleted:         true,
+		VestingPeriodsCompleted: []bool{false, false, false, false},
+		VestingPeriodsClaimed:   []bool{false, false, false, false},
+	}
+	record := types.ClaimRecord{
+		Address: addr1.String(),
+		Status:  []types.Status{status, status, status, status},
+	}
+	s.Require().NoError(s.app.ClaimKeeper.SetClaimRecord(s.ctx, record))
+
+	// Insert 4 vesting periods
+	s.Require().NoError(s.app.ClaimKeeper.InsertEntriesIntoVestingQueue(s.ctx, addr1.String(), byte(action), s.ctx.BlockTime()))
+
+	params, _ := s.app.ClaimKeeper.GetParams(s.ctx)
+	vestDuration := params.DurationVestingPeriods[byte(action)]
+
+	// Process all periods
+	for period := 0; period < 4; period++ {
+		// advance block time to after vesting period
+		s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(vestDuration))
+
+		s.app.ClaimKeeper.IterateVestingQueue(s.ctx, s.ctx.BlockHeader().Time, func(recipientAddr sdk.AccAddress, a int32, p int32, endTime time.Time) bool {
+			claimRecord, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, recipientAddr)
+			if err != nil {
+				panic("Failed to get claim record")
+			}
+
+			// mark vesting period completed
+			if int(action) < len(claimRecord.Status) &&
+				int(period) < len(claimRecord.Status[action].VestingPeriodsCompleted) {
+				claimRecord.Status[action].VestingPeriodsCompleted[period] = true
+			}
+
+			// persist record
+			if err := s.app.ClaimKeeper.SetClaimRecord(s.ctx, claimRecord); err != nil {
+				panic("Failed to set claim record")
+			}
+
+			// remove from queue
+			s.app.ClaimKeeper.RemoveEntryFromVestingQueue(s.ctx, recipientAddr.String(), endTime, byte(action), byte(period))
+
+			return false // keep iterating
+		})
+
+		// Verify completion
+		updated, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
+		s.Require().NoError(err)
+		s.Require().True(updated.Status[action].VestingPeriodsCompleted[period], "Period %d not completed", period)
+
+		// Verify queue removal
+		found := false
+		s.app.ClaimKeeper.IterateVestingQueue(s.ctx, s.ctx.BlockTime(), func(addr sdk.AccAddress, a int32, p int32, endTime time.Time) bool {
+			if a == int32(action) && p == int32(period) {
+				found = true
+				return true
+			}
+			return false
+		})
+		s.Require().False(found, "Queue entry for period %d not removed", period)
+	}
+}
