@@ -271,8 +271,14 @@ func (k Keeper) allowedToExecute(ctx sdk.Context, flow types.Flow) (bool, error)
 	allowedToExecute := comparisonsResult && dependenciesResult
 
 	// Step 3: Handle recurring flows if not allowed to execute
-	if !allowedToExecute && shouldRecur {
-		k.scheduleNextExecution(ctx, flow)
+	if !allowedToExecute {
+		if flow.Configuration.StopOnFailure {
+			k.RemoveFromFlowQueue(ctx, flow)
+			k.Logger(ctx).Info("Flow stopped due to StopOnFailure", "flowID", flow.ID)
+		} else if shouldRecur {
+			k.scheduleNextExecution(ctx, flow)
+		}
+		return allowedToExecute, nil
 	}
 
 	return allowedToExecute, nil
