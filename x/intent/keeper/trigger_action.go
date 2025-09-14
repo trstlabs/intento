@@ -162,7 +162,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 		return nil
 	}
 
-	msgResponses, msgClass, err := k.HandleDeepResponses(ctx, msgResponses, relayer, flow, len(flowHistoryEntry.MsgResponses))
+	msgResponses, _, err := k.HandleDeepResponses(ctx, msgResponses, relayer, flow, len(flowHistoryEntry.MsgResponses))
 	if err != nil {
 		return err
 	}
@@ -171,10 +171,8 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	if err != nil {
 		return err
 	}
-	// reward hook
-	if msgClass == 1 {
-		k.hooks.AfterActionICA(ctx, owner)
-	}
+
+	k.hooks.AfterActionICA(ctx, owner)
 
 	flowHistoryEntry.Executed = true
 
