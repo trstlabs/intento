@@ -3,7 +3,6 @@ title: Interchain Queries (ICQ)
 description: Learn how to query data across IBC-connected chains using Interchain Queries
 sidebar_position: 2
 sidebar_class_name: sidebar-item-concept
----
 
 The **Interchain Query (ICQ) feature** enables seamless cross-chain interactions by querying the state of one blockchain from another. This feature allows developers to create intent-based actions that trigger specific behaviors based on the queried data. By utilizing interchain queries, you can automate decision-making processes across multiple blockchains, providing an efficient way to orchestrate complex, multi-chain applications.
 
@@ -17,6 +16,158 @@ You can query various data types from the state of other chains. There are two p
 
 1. **Supported Types:** You can use one of the [supported types](../reference/intent-engine/supported_types.md), which are predefined and commonly used data types within the Cosmos ecosystem.
 2. **Registered Proto Interfaces:** Alternatively, you can utilize the registered protocol buffer interfaces that adhere to Cosmos SDK standards. These provide a more flexible way to query and interpret the state, allowing you to work with complex data structures.
+
+### Using TwapRecord in Intento Flows
+
+TwapRecord provides accumulated pricing data for AMM pools, enabling flows to make time-weighted average price (TWAP)-based decisions. This is particularly useful for automated trading strategies, streaming swaps, and DCA execution.
+
+#### Key Fields and Usage
+
+| Field | Description | Flow Mode | Use Case |
+|-------|-------------|-----------|----------|
+| `p0_arithmetic_twap_accumulator` | Accumulated numerator for arithmetic TWAP of asset0 | Difference-mode | Compute average price over a fixed interval for DCA, autocompounding, or trend detection. |
+| `p1_arithmetic_twap_accumulator` | Accumulated numerator for asset1 | Difference-mode | Same as above for the paired asset. |
+| `geometric_twap_accumulator` | Accumulated value for geometric/log TWAP | Difference-mode | Volatility-aware or growth-rate strategies. |
+| `p0_last_spot_price` | Latest spot price of asset0 | Current value | Spot-based triggers, arbitrage checks, or interpolation if exact interval boundaries are missing. |
+| `p1_last_spot_price` | Latest spot price of asset1 | Current value | Same as above for the paired asset. |
+| `time` | Timestamp of the record | Context-dependent | Anchors for interpolation or freshness checks. |
+| `height` | Block height of the record | Difference-mode | Anchors for delta calculations. |
+| `last_error_time` | Time of last spot price error | Current value | Fail-safe: flows should ignore TWAP values after this timestamp. |
+Got it. Let’s rewrite the ICQ documentation with the **realistic `math.Dec` operands**, the actual **enum operator names**, and more **context for users** on why/when to use these strategies. I’ll keep it technical but make sure it’s framed so builders immediately see *how* to plug this into their flows.
+
+
+# 🔗 ICQ + TWAP in Intento Flows
+
+With ICQ, flows can now pull **on-chain state directly from another chain** (e.g. Osmosis) and use it in **execution conditions**.
+The most powerful use case is **TWAP (Time-Weighted Average Price)**, which allows strategies to react to price averages instead of just the latest spot price.
+
+This helps you:
+
+* Smooth out volatility (avoid one-off spikes).
+* Detect **real trends** rather than noise.
+* Build **guardrails** around execution.
+* Create **arbitrage-like conditions** between spot and TWAP.
+
+
+## How ICQ is used in conditions
+
+* Attach `icq_config` to a **Comparison** or **FeedbackLoop**.
+* Define the **query** (`query_type`, `query_key`) → the Intento Portal can generate the right key for you.
+* The `response_key` tells the flow which **field inside the store object** (e.g. `p0_arithmetic_twap_accumulator`) to read.
+* `operand` is always a **`math.Dec` string** (high precision decimal).
+
+  * Example: `"0.000000000000000100"`.
+* `operator` must use the enum names:
+
+  * `SMALLER_THAN`, `LARGER_THAN`, `GREATER_EQUAL`, etc.
+* Use `difference_mode = true` for accumulators → otherwise you’re comparing absolute counter values, not the delta.
+
+
+## Examples
+
+### **1. TWAP-based DCA**
+
+**Why**: Spread buys over time, only execute if TWAP shows asset is undervalued.
+**How**: Compare TWAP delta against a static threshold.
+
+```jsonc
+"comparisons": [
+  {
+    "response_key": "p0_arithmetic_twap_accumulator",
+    "value_type": "osmosistwapv1beta1.TwapRecord",
+    "operator": "SMALLER_THAN",
+    "operand": "0.000000000000000100", 
+    "difference_mode": true,
+    "icq_config": {
+      "connection_id": "connection-0",
+      "chain_id": "osmosis-1",
+      "query_type": "store/twap/key",
+      "query_key": "<generated_twap_key>"
+    }
+  }
+]
+```
+
+
+### **2. Trend Detection**
+
+**Why**: Avoid buying in chop. Only act when TWAP delta is positive (uptrend) or negative (downtrend).
+**How**: Compare TWAP delta against zero.
+
+```jsonc
+"comparisons": [
+  {
+    "response_key": "p0_arithmetic_twap_accumulator",
+    "value_type": "osmosistwapv1beta1.TwapRecord",
+    "operator": "LARGER_THAN",
+    "operand": "0.000000000000000000", 
+    "difference_mode": true,
+    "icq_config": {
+      "connection_id": "connection-0",
+      "chain_id": "osmosis-1",
+      "query_type": "store/twap/key",
+      "query_key": "<generated_twap_key>"
+    }
+  }
+]
+```
+
+
+### **3. Spot vs TWAP Arbitrage**
+
+**Why**: Capture inefficiencies between current spot and averaged price.
+**How**: Spot smaller than TWAP → asset is cheap compared to average.
+
+```jsonc
+"comparisons": [
+  {
+    "response_key": "p0_last_spot_price",
+    "value_type": "osmosistwapv1beta1.TwapRecord",
+    "operator": "SMALLER_THAN",
+    "operand": "osmosistwapv1beta1.TwapRecord.GeometricTwapAccumulator",
+    "difference_mode": false,
+    "icq_config": {
+      "connection_id": "connection-0",
+      "chain_id": "osmosis-1",
+      "query_type": "store/twap/key",
+      "query_key": "<generated_twap_key>"
+    }
+  }
+]
+```
+
+
+### **4. Safe Compounding (Guardrail)**
+
+**Why**: Avoid autocompounding when markets are unstable.
+**How**: Require TWAP drift below a threshold before execution continues.
+
+```jsonc
+"comparisons": [
+  {
+    "response_key": "p0_arithmetic_twap_accumulator",
+    "value_type": "osmosistwapv1beta1.TwapRecord",
+    "operator": "LESS_EQUAL",
+    "operand": "0.000000000000000050", 
+    "difference_mode": true,
+    "icq_config": {
+      "connection_id": "connection-0",
+      "chain_id": "osmosis-1",
+      "query_type": "store/twap/key",
+      "query_key": "<generated_twap_key>"
+    }
+  }
+]
+```
+
+## Quick Recap for Builders
+
+* **Use `difference_mode = true`** when querying TWAP accumulators.
+* **Operators** are enums (`SMALLER_THAN`, `LARGER_THAN`, etc.), not symbols.
+* **Operands** are high-precision decimals (`math.Dec`), not floats.
+* For **Spot vs TWAP**, the operand can be another TWAP field → no static threshold required.
+
+This makes it possible to write **DCA bots, arbitrage triggers, or safe autocompound flows** directly on-chain using Intento.
 
 ### Feedback Loops and Comparisons
 
@@ -58,7 +209,6 @@ If SaveResponses in the Flow Configuration is set to true, query responses are a
 
 Here’s a tutorial for integrating`ICQConfig` for querying balances and adding `connectionId`, `hostConnectionId`, as well as a `TrustlessAgentConfig` in a new `submitFlow`.
 
----
 
 ## Example: Conditional Transfers with ICQ
 
@@ -77,6 +227,7 @@ This tutorial provides complete, working code examples that you can adapt for yo
 ## ICQ module details - x/interchainqueries
 
 SubmitQueryResponse is used to return the query responses. It is used by IBC Relayers. As we use the Stride implementation, it is the same as with Stride.
+In your relayer config please set allow_ccq to true or leave unconfigured. Also the event_source fields have to be set to push. 
 
 ```protobuf
 message MsgSubmitQueryResponse {

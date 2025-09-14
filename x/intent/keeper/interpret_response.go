@@ -8,11 +8,11 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
-
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/gogoproto/proto"
+	osmosistwapv1beta1 "github.com/trstlabs/intento/x/intent/msg_registry/osmosis/twap/v1beta1"
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -30,101 +30,101 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 	if len(responses) <= int(comparison.ResponseIndex) && queryCallback == nil {
 		return false, fmt.Errorf("not enough message responses to compare to, number of responses: %v", len(responses))
 	}
-	var valueFromResponse interface{}
+	var valueFromResponse, previousValue interface{}
 	var err error
 
-	if queryCallback != nil {
-
-		valueFromResponse, err = parseICQResponse(queryCallback, comparison.ValueType)
-		fmt.Println("valueFromResponse", valueFromResponse)
-		if err != nil {
-			var respAny cdctypes.Any
-			err := k.cdc.Unmarshal(queryCallback, &respAny)
-			if err != nil {
-
-				var jsonObj map[string]interface{}
-				if err := json.Unmarshal(queryCallback, &jsonObj); err != nil {
-					k.Logger(ctx).Debug("response comparison: could not parse query callback data", "CallbackData", queryCallback)
-					return false, fmt.Errorf("response comparison: error parsing query callback data: %v", queryCallback)
-				}
-				if comparison.ResponseKey != "" {
-					valueFromResponse, err = extractJSONField(jsonObj, comparison.ResponseKey)
-					if err != nil {
-						return false, fmt.Errorf("failed to extract field '%s' from JSON: %w", comparison.ResponseKey, err)
-					}
-				} else {
-					valueFromResponse = jsonObj
-				}
-
-				valueFromResponse, err = parseResponseValue(valueFromResponse, comparison.ResponseKey, comparison.ValueType)
-				if err != nil {
-					return false, fmt.Errorf("error parsing value: %v", err)
-
-				}
-			}
-			if respAny.Value != nil {
-				var resp interface{}
-				err = k.cdc.UnpackAny(&respAny, &resp)
-				if err != nil {
-					return false, fmt.Errorf("response comparison: error unpacking: %v", err)
-				}
-				valueFromResponse, err = parseResponseValue(queryCallback, comparison.ResponseKey, comparison.ValueType)
-				if err != nil {
-					return false, fmt.Errorf("error parsing value: %v", err)
-				}
-			}
-
+	// Get the previous value if difference_mode is enabled
+	if comparison.DifferenceMode {
+		if previousValue, err = k.getPreviousResponseValue(ctx, flowID, comparison.ResponseIndex, comparison.ResponseKey, comparison.ValueType, queryCallback != nil); err != nil {
+			k.Logger(ctx).Error("error getting previous response value", "error", err)
+			return false, fmt.Errorf("error getting previous response value: %v", err)
 		}
-	} else {
+	}
 
-		var respAny cdctypes.Any
-		if len(responses) == 0 {
-			k.Logger(ctx).Debug("response comparison: could not parse response data")
-		} else {
-			respAny = *responses[comparison.ResponseIndex]
-		}
-		protoMsg, err := k.interfaceRegistry.Resolve(respAny.TypeUrl)
-		if err != nil {
-			return false, fmt.Errorf("failed to resolve type URL %s: %w", respAny.TypeUrl, err)
-		}
-
-		err = proto.Unmarshal(respAny.Value, protoMsg)
-		if err != nil {
-			return false, fmt.Errorf("error unmarshalling response: %v", err)
-		}
-		valueFromResponse, err = parseResponseValue(protoMsg, comparison.ResponseKey, comparison.ValueType)
-		if err != nil {
-			return false, fmt.Errorf("error parsing value: %v", err)
-		}
+	valueFromResponse, err = k.getValueFromResponse(
+		ctx,
+		comparison.ResponseIndex,
+		comparison.ResponseKey,
+		&comparison.ValueType,
+		queryCallback,
+		responses,
+	)
+	if err != nil {
+		return false, fmt.Errorf("error getting value from response: %w", err)
 	}
 
 	operand, err := parseOperand(comparison.Operand, comparison.ValueType)
 	if err != nil {
-		return false, fmt.Errorf("error parsing operand: %v", err)
+		valueType := comparison.Operand
+		fmt.Println("operand is not a number, trying to get value from response", "operand", comparison.Operand, "valueType", comparison.ValueType)
+		// try to use operand field to get value from response
+		operand, err = k.getValueFromResponse(
+			ctx,
+			comparison.ResponseIndex,
+			comparison.ResponseKey,
+			&valueType,
+			queryCallback,
+			responses,
+		)
+		if err != nil {
+			return false, fmt.Errorf("error parsing operand: %v", err)
+		}
 	}
 
-	// Normalize types for JSON value extraction
+	if comparison.DifferenceMode {
+		k.Logger(ctx).Debug("difference mode enabled", "valueFromResponse", valueFromResponse, "previousValue", previousValue)
+		fmt.Println("difference mode enabled", "valueFromResponse", valueFromResponse, "previousValue", previousValue)
+		diffValue, err := k.calculateDifference(ctx, valueFromResponse, previousValue)
+		if err != nil {
+			return false, fmt.Errorf("error calculating difference: %w", err)
+		}
+		valueFromResponse = diffValue
+	}
+
+	// Normalize types for comparison
 	valueFromResponse, operand = normalizeJSONTypes(valueFromResponse, operand)
+
 	fmt.Printf("Comparing value: %v with operand: %v using operator: %s\n", valueFromResponse, operand, comparison.Operator)
 	switch comparison.Operator {
 	case types.ComparisonOperator_EQUAL:
-		if valDec, ok := valueFromResponse.(math.Dec); ok {
+		switch val := valueFromResponse.(type) {
+		case math.Dec:
 			operandDec, ok := operand.(math.Dec)
 			if !ok {
 				return false, fmt.Errorf("operand is not of type math.Dec")
 			}
-			return valDec.Equal(operandDec), nil
+			return val.Equal(operandDec), nil
+
+		case math.Int:
+			operandInt, ok := operand.(math.Int)
+			if !ok {
+				return false, fmt.Errorf("operand is not of type math.Int")
+			}
+			return val.Equal(operandInt), nil
+
+		default:
+			return reflect.DeepEqual(valueFromResponse, operand), nil
 		}
-		return reflect.DeepEqual(valueFromResponse, operand), nil
+
 	case types.ComparisonOperator_NOT_EQUAL:
-		if valDec, ok := valueFromResponse.(math.Dec); ok {
+		switch val := valueFromResponse.(type) {
+		case math.Dec:
 			operandDec, ok := operand.(math.Dec)
 			if !ok {
 				return false, fmt.Errorf("operand is not of type math.Dec")
 			}
-			return !valDec.Equal(operandDec), nil
+			return !val.Equal(operandDec), nil
+
+		case math.Int:
+			operandInt, ok := operand.(math.Int)
+			if !ok {
+				return false, fmt.Errorf("operand is not of type math.Int")
+			}
+			return !val.Equal(operandInt), nil
+
+		default:
+			return !reflect.DeepEqual(valueFromResponse, operand), nil
 		}
-		return !reflect.DeepEqual(valueFromResponse, operand), nil
 	case types.ComparisonOperator_SMALLER_THAN:
 		if valDec, ok := valueFromResponse.(math.Dec); ok {
 			operandDec, ok := operand.(math.Dec)
@@ -237,48 +237,19 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 			flowID = feedbackLoop.FlowID
 
 		}
-
-		var valueFromResponse interface{}
+		var valueFromResponse, previousValue interface{}
 		var err error
-		if queryCallback != nil {
-			// Special handling for JSON valueType and ResponseKey
-			valueFromResponse, err = parseICQResponse(queryCallback, feedbackLoop.ValueType)
-			if err != nil {
-				var respAny cdctypes.Any
-				err := k.cdc.Unmarshal(queryCallback, &respAny)
-				if err != nil {
-					var jsonObj map[string]interface{}
-					if err := json.Unmarshal(queryCallback, &jsonObj); err != nil {
-						k.Logger(ctx).Debug("use value: could not parse query callback data", "CallbackData", queryCallback)
-						return fmt.Errorf("use value: error parsing query callback data: %v", queryCallback)
-					}
-					if feedbackLoop.ResponseKey != "" {
-						valueFromResponse, err = extractJSONField(jsonObj, feedbackLoop.ResponseKey)
-						if err != nil {
-							return fmt.Errorf("failed to extract field '%s' from JSON: %w", feedbackLoop.ResponseKey, err)
-						}
-					} else {
-						valueFromResponse = jsonObj
 
-					}
-					valueFromResponse, err = parseResponseValue(valueFromResponse, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
-					if err != nil {
-						return fmt.Errorf("use value: error parsing value: %v", err)
-					}
-				}
-				if respAny.Value != nil {
-					var resp interface{}
-					err = k.cdc.UnpackAny(&respAny, &resp)
-					if err != nil {
-						return fmt.Errorf("use value: error unpacking: %v", err)
-					}
-					valueFromResponse, err = parseResponseValue(queryCallback, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
-					if err != nil {
-						return fmt.Errorf("use value: error unpacking: %v", err)
-					}
-				}
+		// Get the previous value if difference_mode is enabled
+		if feedbackLoop.DifferenceMode {
+			if previousValue, err = k.getPreviousResponseValue(ctx, flowID, feedbackLoop.ResponseIndex, feedbackLoop.ResponseKey, feedbackLoop.ValueType, queryCallback != nil); err != nil {
+				k.Logger(ctx).Error("error getting previous response value", "error", err)
+				return fmt.Errorf("error getting previous response value: %v", err)
 			}
-		} else {
+		}
+
+		var responses []*cdctypes.Any
+		if queryCallback == nil {
 			history, err := k.GetFlowHistory(ctx, flowID)
 			if err != nil {
 				return err
@@ -286,28 +257,32 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 			if len(history) == 0 {
 				return nil
 			}
-			responsesAnys := history[len(history)-1].MsgResponses
-			if len(responsesAnys) == 0 {
-				return nil
-			}
-			if int(feedbackLoop.ResponseIndex) >= len(responsesAnys) || int(feedbackLoop.ResponseIndex) < 0 {
+			responses = history[len(history)-1].MsgResponses
+			if len(responses) == 0 || int(feedbackLoop.ResponseIndex) >= len(responses) {
 				continue
 			}
-
-			protoMsg, err := k.interfaceRegistry.Resolve(responsesAnys[feedbackLoop.ResponseIndex].TypeUrl)
-			if err != nil {
-				return fmt.Errorf("failed to resolve type URL %s: %w", responsesAnys[feedbackLoop.ResponseIndex].TypeUrl, err)
-			}
-
-			err = proto.Unmarshal(responsesAnys[feedbackLoop.ResponseIndex].Value, protoMsg)
-			if err != nil {
-				return err
-			}
-			valueFromResponse, err = parseResponseValue(protoMsg, feedbackLoop.ResponseKey, feedbackLoop.ValueType)
-			if err != nil {
-				return err
-			}
 		}
+
+		valueFromResponse, err = k.getValueFromResponse(
+			ctx,
+			feedbackLoop.ResponseIndex,
+			feedbackLoop.ResponseKey,
+			&feedbackLoop.ValueType,
+			queryCallback,
+			responses,
+		)
+		if err != nil {
+			return fmt.Errorf("error getting value from response: %w", err)
+		}
+		if feedbackLoop.DifferenceMode {
+			diffValue, err := k.calculateDifference(ctx, valueFromResponse, previousValue)
+			if err != nil {
+				return fmt.Errorf("error calculating difference: %w", err)
+			}
+			fmt.Println("calculated difference", "current", valueFromResponse, "previous", previousValue, "difference", diffValue)
+			valueFromResponse = diffValue
+		}
+
 		// Get the message to modify
 		msgIndex := feedbackLoop.MsgsIndex
 
@@ -462,6 +437,147 @@ func (k Keeper) RunFeedbackLoops(ctx sdk.Context, flowID uint64, msgs *[]*cdctyp
 	return nil
 }
 
+// getValueFromResponse extracts a value from either a regular response or an ICQ response
+func (k Keeper) getValueFromResponse(
+	ctx sdk.Context,
+	responseIndex uint32,
+	responseKey string,
+	valueType *string,
+	queryCallback []byte,
+	responses []*cdctypes.Any,
+) (interface{}, error) {
+	var valueFromResponse interface{}
+	var err error
+
+	if queryCallback != nil {
+		// Handle ICQ response
+		valueFromResponse, err = parseICQResponse(queryCallback, valueType)
+		if err != nil {
+			var respAny cdctypes.Any
+			err := k.cdc.Unmarshal(queryCallback, &respAny)
+			if err != nil {
+				var jsonObj map[string]interface{}
+				if err := json.Unmarshal(queryCallback, &jsonObj); err != nil {
+					k.Logger(ctx).Debug("response comparison: could not parse query callback data", "CallbackData", queryCallback)
+					return nil, fmt.Errorf("response comparison: error parsing query callback data: %v, valueType: %s, error: %v", queryCallback, *valueType, err)
+				}
+				if responseKey != "" {
+					valueFromResponse, err = extractJSONField(jsonObj, responseKey)
+					if err != nil {
+						return nil, fmt.Errorf("failed to extract field '%s' from JSON: %w", responseKey, err)
+					}
+				} else {
+					valueFromResponse = jsonObj
+				}
+
+				valueFromResponse, err = parseResponseValue(valueFromResponse, responseKey, *valueType)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing value: %v", err)
+				}
+			}
+			if respAny.Value != nil {
+				var resp interface{}
+				err = k.cdc.UnpackAny(&respAny, &resp)
+				if err != nil {
+					return nil, fmt.Errorf("response comparison: error unpacking: %v", err)
+				}
+				valueFromResponse, err = parseResponseValue(queryCallback, responseKey, *valueType)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing value: %v", err)
+				}
+			}
+		}
+	} else {
+		var respAny cdctypes.Any
+		if len(responses) == 0 {
+			k.Logger(ctx).Debug("response comparison: could not parse response data")
+		} else {
+			respAny = *responses[responseIndex]
+		}
+		protoMsg, err := k.interfaceRegistry.Resolve(respAny.TypeUrl)
+		if err != nil {
+			return false, fmt.Errorf("failed to resolve type URL %s: %w", respAny.TypeUrl, err)
+		}
+
+		err = proto.Unmarshal(respAny.Value, protoMsg)
+		if err != nil {
+			return false, fmt.Errorf("error unmarshalling response: %v", err)
+		}
+		valueFromResponse, err = parseResponseValue(protoMsg, responseKey, *valueType)
+		if err != nil {
+			return false, fmt.Errorf("error parsing value: %v", err)
+		}
+	}
+
+	return valueFromResponse, nil
+}
+
+// getPreviousResponseValue retrieves the previous response value for difference calculation
+func (k Keeper) getPreviousResponseValue(ctx sdk.Context, flowID uint64, responseIndex uint32, responseKey string, valueType string, isICQ bool) (interface{}, error) {
+	// Get the flow to access previous responses
+	flowHistory, err := k.GetFlowHistory(ctx, flowID)
+	if err != nil {
+		return nil, fmt.Errorf("flow not found: %d", flowID)
+	}
+
+	// Need at least 1 execution to have a previous value
+	if len(flowHistory) == 0 {
+		return nil, fmt.Errorf("no execution history available for flow %d", flowID)
+	}
+
+	k.Logger(ctx).Debug("getPreviousResponseValue", "history_length", len(flowHistory))
+
+	fmt.Println("getPreviousResponseValue", "history", flowHistory)
+	// Look for the most recent successful execution
+	for i := len(flowHistory) - 1; i >= 0; i-- {
+		history := flowHistory[i]
+
+		fmt.Println("getPreviousResponseValue index", i)
+
+		// Handle ICQ query responses
+		if isICQ && len(history.QueryResponses) > 0 {
+			fmt.Println("getPreviousResponseValue", "query_responses", history.QueryResponses)
+			if int(responseIndex) < len(history.QueryResponses) {
+				fmt.Println("getPreviousResponseValue", "query_responses", history.QueryResponses[responseIndex])
+				k.Logger(ctx).Debug("Found ICQ query response", "index", i, "response", history.QueryResponses[responseIndex])
+				return k.getValueFromResponse(
+					ctx,
+					responseIndex,
+					responseKey,
+					&valueType,
+					[]byte(history.QueryResponses[responseIndex]),
+					nil,
+				)
+			}
+			continue
+		}
+	}
+	for i := len(flowHistory) - 2; i >= 0; i-- {
+		history := flowHistory[i]
+
+		// Skip failed or empty executions
+		if !history.Executed || len(history.Errors) > 0 {
+			continue
+		}
+		// Handle regular message responses
+		if len(history.MsgResponses) > 0 && int(responseIndex) < len(history.MsgResponses) {
+			fmt.Println("getPreviousResponseValue", "msg_responses", history.MsgResponses)
+			k.Logger(ctx).Debug("Found message response", "index", i)
+			fmt.Println("getPreviousResponseValue", "msg_responses", history.MsgResponses[responseIndex])
+			return k.getValueFromResponse(
+				ctx,
+				responseIndex,
+				responseKey,
+				&valueType,
+				nil,
+				history.MsgResponses,
+			)
+		}
+	}
+
+	return nil, fmt.Errorf("no successful execution found in history")
+}
+
 // parseResponseValue retrieves and parses the value of a response key to the specified response type
 func parseResponseValue(response interface{}, responseKey, responseType string) (interface{}, error) {
 	// If responseKey is empty and response is a primitive, just return it
@@ -500,7 +616,6 @@ func parseResponseValue(response interface{}, responseKey, responseType string) 
 			return coins, nil
 		}
 	case "math.Int":
-		fmt.Println("parsing math.Int from response", val)
 		if val.Kind() == reflect.Struct {
 
 			if val.Type().Name() == "Int" {
@@ -518,12 +633,10 @@ func parseResponseValue(response interface{}, responseKey, responseType string) 
 		if val.Kind() == reflect.Float64 {
 			intVal := math.NewInt(int64(val.Float()))
 			return intVal, nil
-			// return val.Interface().(math.Int), nil
 		}
 		if val.Kind() == reflect.Int || val.Kind() == reflect.Int64 {
 			intVal := math.NewInt(reflect.ValueOf(val.Interface()).Int())
 			return intVal, nil
-			// return val.Interface().(math.Int), nil
 		} else {
 			fmt.Println("parsing math.Int from response failed", val)
 		}
@@ -544,10 +657,7 @@ func parseResponseValue(response interface{}, responseKey, responseType string) 
 		if val.Kind() == reflect.Slice && val.Type().Elem().Name() == "Int" {
 			return val.Interface().([]math.Int), nil
 		}
-		// case "[]sdk.Coin":
-		// 	if val.Kind() == reflect.Slice && val.Type().Elem().Name() == "Coin" {
-		// 		return val.Interface().([]sdk.Coin), nil
-		// 	}
+
 	}
 
 	return nil, fmt.Errorf("field could not be parsed as %s in %v ", responseType, val)
@@ -605,8 +715,9 @@ func parseOperand(operand string, responseType string) (interface{}, error) {
 }
 
 // parseICQResponse parses the ICQ response
-func parseICQResponse(response []byte, valueType string) (interface{}, error) {
-	switch valueType {
+func parseICQResponse(response []byte, valueType *string) (interface{}, error) {
+	fmt.Println("parsing ICQ response", "valueType", *valueType)
+	switch *valueType {
 	case "string":
 		return string(response), nil
 	case "sdk.Coin":
@@ -645,6 +756,7 @@ func parseICQResponse(response []byte, valueType string) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		return dec, nil
 	case "[]string":
 		var strings []string
@@ -673,8 +785,49 @@ func parseICQResponse(response []byte, valueType string) (interface{}, error) {
 		}
 		return jsonObj, nil
 	}
-	//idea: add more protos here
-	return nil, fmt.Errorf("unsupported operand type: %s", valueType)
+
+	if strings.Contains(*valueType, "osmosistwapv1beta1.TwapRecord") {
+		fmt.Println("Parsing osmosistwapv1beta1.TwapRecord")
+		var twapRecord osmosistwapv1beta1.TwapRecord
+		if err := twapRecord.Unmarshal(response); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal osmosistwapv1beta1.TwapRecord: %w", err)
+		}
+
+		// Check if we have a specific field requested (format: "osmosistwapv1beta1.TwapRecord.FieldName")
+		parts := strings.Split(*valueType, ".")
+		if len(parts) > 2 {
+			fieldName := parts[2]
+			*valueType = "math.Dec"
+			fmt.Println("Parsing osmosistwapv1beta1.TwapRecord field", "fieldName", fieldName)
+			rv := reflect.ValueOf(twapRecord)
+			field := rv.FieldByName(fieldName)
+			if !field.IsValid() {
+				return nil, fmt.Errorf("invalid field name: %s", fieldName)
+			}
+
+			legacyDec, ok := field.Interface().(math.LegacyDec)
+			if !ok {
+				return nil, fmt.Errorf("field %s is not a LegacyDec", fieldName)
+			}
+
+			dec, err := math.NewDecFromString(legacyDec.String())
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse LegacyDec: %w", err)
+			}
+
+			return dec, nil
+		}
+		dec, err := math.NewDecFromString(twapRecord.P0LastSpotPrice.String())
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse P0LastSpotPrice: %w", err)
+		}
+
+		*valueType = "math.Dec"
+		return dec, nil
+
+	}
+
+	return nil, fmt.Errorf("unsupported operand type: %s", *valueType)
 }
 
 // contains checks if a value contains an operand
@@ -942,6 +1095,67 @@ func tryParseNumeric(v interface{}) (interface{}, bool) {
 		return nil, false
 	default:
 		return nil, false
+	}
+}
+
+// calculateDifference calculates the difference between current and previous values for difference mode
+func (k Keeper) calculateDifference(ctx sdk.Context, currentValue, previousValue interface{}) (interface{}, error) {
+	switch current := currentValue.(type) {
+	case math.Dec:
+		prevDec, ok := previousValue.(math.Dec)
+		if !ok {
+			return nil, fmt.Errorf("previous value is not math.Dec, previous value type: %T, current value type: %T", previousValue, currentValue)
+		}
+		diff, err := current.Sub(prevDec)
+		if err != nil {
+			diff, err = prevDec.Sub(current)
+			if err != nil {
+				return nil, fmt.Errorf("math.Dec subtraction failed: %w", err)
+			}
+		}
+		fmt.Println("calculated difference", "current", current, "previous", prevDec, "difference", diff)
+		k.Logger(ctx).Debug("calculated difference", "current", current, "previous", prevDec, "difference", diff)
+		return diff, nil
+
+	case math.Int:
+		prevInt, ok := previousValue.(math.Int)
+		if !ok {
+			return nil, fmt.Errorf("previous value is not math.Int")
+		}
+		diff, err := current.SafeSub(prevInt)
+		if err != nil {
+			diff, err = prevInt.SafeSub(current)
+			if err != nil {
+				return nil, fmt.Errorf("math.Int subtraction failed: %w", err)
+			}
+		}
+		fmt.Println("calculated difference", "current", current, "previous", prevInt, "difference", diff)
+		k.Logger(ctx).Debug("calculated difference", "current", current, "previous", prevInt, "difference", diff)
+		return diff, nil
+
+	case sdk.Coin:
+		prevCoin, ok := previousValue.(sdk.Coin)
+		if !ok {
+			prevCoins, ok := previousValue.(sdk.Coins)
+			if !ok {
+				return nil, fmt.Errorf("previous value is not sdk.Coin or sdk.Coins")
+			}
+			prevCoin = prevCoins[0]
+		}
+
+		diff, err := current.SafeSub(prevCoin)
+		if err != nil {
+			diff, err = prevCoin.SafeSub(current)
+			if err != nil {
+				return nil, fmt.Errorf("sdk.Coin subtraction failed: %w", err)
+			}
+		}
+		fmt.Println("calculated difference", "current", current, "previous", prevCoin, "difference", diff)
+		k.Logger(ctx).Debug("calculated difference", "current", current, "previous", prevCoin, "difference", diff)
+		return diff, nil
+
+	default:
+		return nil, fmt.Errorf("unsupported type %T", current)
 	}
 }
 

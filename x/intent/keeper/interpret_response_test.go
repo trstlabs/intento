@@ -51,7 +51,6 @@ func TestParseCoinFromMsgExec(t *testing.T) {
 	types.Denom = "stake"
 	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
 	flow := createBaseflow(delAddr, flowAddr)
-
 	// Wrap MsgWithdrawDelegatorReward in MsgExec
 	msgWithdrawDelegatorReward := newFakeMsgWithdrawDelegatorReward(delAddr, val)
 	anyReward, err := cdctypes.NewAnyWithValue(msgWithdrawDelegatorReward)
@@ -65,9 +64,6 @@ func TestParseCoinFromMsgExec(t *testing.T) {
 	require.NoError(t, err)
 	err = flow.ValidateBasic()
 	require.NoError(t, err)
-
-	// executedLocally, msgResponses, err := keeper.TriggerFlow(ctx, &flow)
-	// require.NoError(t, err)
 	msgWithdrawDelegatorRewardResp := distrtypes.MsgWithdrawDelegatorRewardResponse{Amount: sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))}
 	msgWithdrawDelegatorRewardRespAny, err := cdctypes.NewAnyWithValue(&msgWithdrawDelegatorRewardResp)
 	require.NoError(t, err)
@@ -620,6 +616,11 @@ func TestCompareFromWasmResponse(t *testing.T) {
 	require.NoError(t, err, "error comparing value: %v", err)
 	require.True(t, ok, "comparison should succeed for smaller than")
 
+	compareValue = "0.10"
+	ok, err = keeper.CompareResponseValue(ctx, 1, nil, comparison)
+	require.NoError(t, err, "error comparing value: %v", err)
+	require.True(t, ok, "comparison should succeed for smaller than")
+
 	comparison.Operator = types.ComparisonOperator_LARGER_THAN
 	ok, err = keeper.CompareResponseValue(ctx, 1, nil, comparison)
 	require.NoError(t, err, "error comparing value: %v", err)
@@ -630,6 +631,7 @@ func TestCompareFromWasmResponse(t *testing.T) {
 	comparison.Operator = types.ComparisonOperator_SMALLER_THAN
 	ok, err = keeper.CompareResponseValue(ctx, 1, nil, comparison)
 	require.Error(t, err, "error comparing value: %v", err)
+	require.False(t, ok, "comparison should not succeed for smaller than")
 
 }
 
@@ -667,6 +669,76 @@ func TestFeedbackLoopFromWasmResponse(t *testing.T) {
 
 	expectedAmount := sdk.NewCoin("stake", math.NewInt(10000000))
 	require.Equal(t, expectedAmount, msgDelegate.Amount, "amount should be updated by feedback loop")
+}
+
+func TestTwapResponse(t *testing.T) {
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+	b64 := "CMIYEkRpYmMvNDk4QTA3NTFDNzk4QTBEOUEzODlBQTM2OTExMjNEQURBNTdEQUE0RkUxNjVENUM3NTg5NDUwNUI4NzZCQTZFNBpEaWJjL0JFMDcyQzAzREE1NDRDRjI4MjQ5OTQxOEU3QkM2NEQzODYxNDg3OUIzRUU5NUY5QUQ5MUU2QzM3MjY3RDQ4MzYg17jpFCoLCI6u+cUGEOqJ9AYyDzU2ODkyNjgxMzUwMDA3MDoWMTc1NzY5NTMyNDM3Mzg3MTQ5MTczOUIYMTU4NTY4MzE5NDQwNzI3Nzg1OTQ2NjM5Sh41Nzg4MDE4MzIzNjcxNjAzNzYyMzIxNjY1ODI5OTdSHS0zMjA0MDE2MzUxNDcxMzQ0Njk0NDk3MDEzMDg2WgsIkonnxQYQ1orCBQ=="
+	decoded, err := base64.StdEncoding.DecodeString(b64)
+	require.NoError(t, err)
+
+	comparison := types.Comparison{
+		ResponseIndex: 0,
+		ResponseKey:   "",
+		Operand:       "0.000000000000000100",
+		Operator:      types.ComparisonOperator_LARGER_THAN,
+		ValueType:     "osmosistwapv1beta1.TwapRecord",
+		ICQConfig:     &types.ICQConfig{Response: decoded},
+	}
+
+	ok, err := keeper.CompareResponseValue(ctx, 1, nil, comparison)
+	require.NoError(t, err)
+	require.True(t, ok, "comparison should succeed for larger than")
+
+	comparison.ValueType = "osmosistwapv1beta1.TwapRecord.P1LastSpotPrice"
+	ok, err = keeper.CompareResponseValue(ctx, 1, nil, comparison)
+	require.NoError(t, err)
+	require.True(t, ok, "comparison should succeed for larger than")
+
+	comparison.ValueType = "osmosistwapv1beta1.TwapRecord.dffadsf"
+	_, err = keeper.CompareResponseValue(ctx, 1, nil, comparison)
+	require.Error(t, err)
+
+	comparison.ValueType = "osmosistwapv1beta1.TwapRecord.LastErrorTime"
+	_, err = keeper.CompareResponseValue(ctx, 1, nil, comparison)
+	require.Error(t, err)
+
+	feedbackLoop := types.FeedbackLoop{
+		ResponseIndex: 0,
+		ResponseKey:   "",
+		ValueType:     "osmosistwapv1beta1.TwapRecord",
+		ICQConfig:     &types.ICQConfig{Response: decoded},
+		MsgKey:        "Amount.Amount",
+	}
+	val, ctx := delegateTokens(t, ctx, keeper, delAddr)
+	msgDelegate := newFakeMsgDelegate(sdk.AccAddress("test"), val)
+	msgs, err := types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
+	require.NoError(t, err)
+
+	err = keeper.RunFeedbackLoops(ctx, 1, &msgs, &types.ExecutionConditions{FeedbackLoops: []*types.FeedbackLoop{&feedbackLoop}})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "cannot assign math.Dec to math.Int")
+}
+
+func TestBalanceResponse(t *testing.T) {
+	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+	b64 := "NTE1MjM2NjU2OQ=="
+	decoded, err := base64.StdEncoding.DecodeString(b64)
+	require.NoError(t, err)
+
+	comparison := types.Comparison{
+		ResponseIndex: 0,
+		ResponseKey:   "balance",
+		Operand:       "100",
+		Operator:      types.ComparisonOperator_LARGER_THAN,
+		ValueType:     "math.Int",
+		ICQConfig:     &types.ICQConfig{Response: decoded},
+	}
+
+	ok, err := keeper.CompareResponseValue(ctx, 1, nil, comparison)
+	require.NoError(t, err)
+	require.True(t, ok, "comparison should succeed for larger than")
+
 }
 
 // func TestCompareStringFromWasmResponse(t *testing.T) {

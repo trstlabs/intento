@@ -144,7 +144,7 @@ message FeedbackLoop {
   uint32 msgs_index = 4; // index of the msg to replace
   string msg_key = 5; // key of the message to replace (e.g. Amount[0].Amount, FromAddress)
   string value_type = 6; // can be anything from math.Int, sdk.Coin, sdk.Coins, string, []string, []math.Int, math.Dec
-  //bool calculate_difference = 7; //True: calculate the difference with the previous value instead of using the value directly.
+  bool difference_mode = 7; //True: calculate the difference with the previous value instead of using the value directly.
   ICQConfig icq_config = 8 [(gogoproto.customname) = "ICQConfig"]; // config of ICQ to perform
 }
 
@@ -157,7 +157,7 @@ message Comparison {
   string value_type = 4; // can be anything from math.Int, sdk.Coin, sdk.Coins, string, []string, []math.Int,  math.Dec
   ComparisonOperator operator = 5;
   string operand = 6;
-  //bool calculate_difference = 7; //True: Calculate the difference with the previous value.
+  bool difference_mode = 7; //True: Calculate the difference with the previous value.
   ICQConfig icq_config = 8 [(gogoproto.customname) = "ICQConfig"]; // config of ICQ to perform
 }
 
