@@ -6,14 +6,12 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgrades "github.com/trstlabs/intento/app/upgrades"
-	testnetupgradesv094r1 "github.com/trstlabs/intento/app/upgrades/testnet/v0.9.4-r1"
+	mainnetupgradesv103 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.0.3"
 )
 
 var Upgrades = []upgrades.Upgrade{
 	// mainnet upgrades
-
-	// testnet upgrades
-	testnetupgradesv094r1.Upgrade,
+	mainnetupgradesv103.Upgrade,
 }
 
 func (app IntoApp) RegisterUpgradeHandlers(configurator module.Configurator) {

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/gogoproto/proto"
 	ibchooks "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8"
 	ibchookskeeper "github.com/cosmos/ibc-apps/modules/ibc-hooks/v8/keeper"
@@ -66,7 +67,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -835,14 +836,9 @@ func NewIntoApp(
 	}
 	app.SetAnteHandler(anteHandler)
 	app.SetPostHandler(postHandler)
-	//app.RegisterUpgradeHandlers(configurator)
 	app.SetEndBlocker(app.EndBlocker)
 
 	app.RegisterUpgradeHandlers(app.Configurator)
-	// app.UpgradeKeeper.SetUpgradeHandler("v0.9.4-r1", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-	// 	// If you have store migrations or keeper updates, do them here
-	// 	return app.mm.RunMigrations(ctx, configurator, vm)
-	// })
 
 	// if manager := app.SnapshotManager(); manager != nil {
 	// 	err := manager.RegisterExtensions(

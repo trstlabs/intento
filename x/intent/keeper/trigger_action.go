@@ -24,7 +24,7 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (int64, []*cdctyp
 		txMsgs := flow.GetTxMsgs(k.cdc)
 		msgResponses, err := handleLocalFlow(k, ctx, txMsgs, *flow)
 		if err != nil {
-			return 0, msgResponses, errorsmod.Wrap(err, "could execute local flow")
+			return 0, msgResponses, err
 		}
 		//indicates flow was executed locally
 		return -1, msgResponses, nil
