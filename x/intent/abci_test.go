@@ -83,7 +83,7 @@ func TestBeginBlockerTransfer(t *testing.T) {
 	require.Equal(t, ctx2.BlockHeader().Time, flowHistory[0].ScheduledExecTime)
 	require.Equal(t, ctx2.BlockHeader().Time, flowHistory[0].ActualExecTime)
 	require.NotNil(t, flowHistory[0].Errors)
-	require.Equal(t, flowHistory[0].Errors[0], "msg handling error: could execute local flow: 10010: invalid coins")
+	require.Equal(t, flowHistory[0].Errors[0], "msg handling error: could not execute local flow: 10010: invalid coins")
 }
 
 func TestBeginBlockerLoad(t *testing.T) {
