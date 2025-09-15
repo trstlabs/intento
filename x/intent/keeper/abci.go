@@ -317,12 +317,12 @@ func (k Keeper) evaluateComparison(ctx sdk.Context, flow types.Flow, comparison 
 		return true, nil // No history means there's nothing to compare against
 	}
 
-	history, err := k.GetFlowHistory(ctx, flowID)
+	historyEntry, err := k.GetLatestFlowHistoryEntry(ctx, flowID)
 	if err != nil {
 		return false, err
 	}
 
-	if history[len(history)-1].MsgResponses == nil && history[len(history)-1].QueryResponses == nil {
+	if historyEntry.MsgResponses == nil && historyEntry.QueryResponses == nil {
 		// if we should stop on failure or the condition is explicitly set to need all to be true, we return with an error here
 		if flow.Configuration.StopOnFailure || flow.Conditions.UseAndForComparisons {
 			return false, fmt.Errorf("did not make a comparison, no responses on the target history. Set SaveResponses to true to use responses for comparison")
@@ -330,7 +330,7 @@ func (k Keeper) evaluateComparison(ctx sdk.Context, flow types.Flow, comparison 
 		return true, nil //default to true in case there is nothing to compare against
 	}
 
-	responses := history[len(history)-1].MsgResponses
+	responses := historyEntry.MsgResponses
 
 	isTrue, err := k.CompareResponseValue(ctx, flow.ID, responses, comparison)
 	if err != nil {
@@ -348,12 +348,12 @@ func (k Keeper) checkDependentFlows(ctx sdk.Context, conditions *types.Execution
 				continue
 			}
 
-			history, err := k.GetFlowHistory(ctx, flowID)
-			if err != nil || len(history) == 0 {
+			historyEntry, err := k.GetLatestFlowHistoryEntry(ctx, flowID)
+			if err != nil || historyEntry == nil {
 				return false
 			}
 
-			success := history[len(history)-1].Executed && history[len(history)-1].Errors == nil
+			success := historyEntry.Executed && historyEntry.Errors == nil
 			if success == successCondition {
 				if isStop {
 					// Stop means do not execute and do not recur
@@ -418,10 +418,9 @@ func (k Keeper) shouldRecur(ctx sdk.Context, flow types.Flow, errorString string
 	// Check for errors in the latest flow history entry
 	hasHistoryError := false
 	if k.HasFlowHistoryEntry(ctx, flow.ID) {
-		history, err := k.GetFlowHistory(ctx, flow.ID)
-		if err == nil && len(history) > 0 {
-			latest := history[len(history)-1]
-			for _, errStr := range latest.Errors {
+		historyEntry, err := k.GetLatestFlowHistoryEntry(ctx, flow.ID)
+		if err == nil && historyEntry != nil {
+			for _, errStr := range historyEntry.Errors {
 				if errStr != "" {
 					hasHistoryError = true
 					break
