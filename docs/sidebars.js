@@ -116,6 +116,15 @@ const sidebars = {
       ],
       className: 'sidebar-item-tutorial',
     },
+    {
+      type: 'category',
+      label: 'Community Programs',
+      items: [
+        'community_programs/ambassador-program',
+        'community_programs/delegation-program',
+      ],
+      className: 'sidebar-item-community',
+    },
   ],
 };
 
