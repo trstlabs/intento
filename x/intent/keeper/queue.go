@@ -26,13 +26,21 @@ func (k Keeper) IterateFlowQueue(ctx sdk.Context, execTime time.Time, cb func(fl
 	}
 }
 
-// GetFlowsForBlock returns all expiring flows for a block
-func (k Keeper) GetFlowsForBlock(ctx sdk.Context) (flows []types.Flow) {
-	k.IterateFlowQueue(ctx, ctx.BlockHeader().Time, func(flow types.Flow) bool {
+// GetFlowsForBlockAndPruneQueue returns all expiring flows for a block and removes them from the queue
+// This is more efficient than getting and then removing flows separately as it does it in a single operation
+func (k Keeper) GetFlowsForBlockAndPruneQueue(ctx sdk.Context) (flows []types.Flow) {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	iterator := store.Iterator(types.FlowQueuePrefix, storetypes.PrefixEndBytes(types.FlowByTimeKey(ctx.BlockHeader().Time)))
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		flowID, _ := types.SplitFlowQueueKey(iterator.Key())
+
+		flow := k.GetFlow(ctx, flowID)
 		flows = append(flows, flow)
-		return false
-	})
-	return
+		store.Delete(iterator.Key())
+	}
+
+	return flows
 }
 
 // FlowQueueIterator returns an sdk.Iterator for all the flows in the Inactive Queue that expire by execTime

@@ -31,7 +31,7 @@ func TestBeginBlocker(t *testing.T) {
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
 	// test that flow was added to the queue
-	queue := k.GetFlowsForBlock(ctx2)
+	queue := k.GetFlowsForBlockAndPruneQueue(ctx2)
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 
@@ -40,7 +40,7 @@ func TestBeginBlocker(t *testing.T) {
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime)
 
 	//queue in BeginBocker
-	queue = k.GetFlowsForBlock(ctx3)
+	queue = k.GetFlowsForBlockAndPruneQueue(ctx3)
 	flowHistory := k.MustGetFlowHistory(ctx3, queue[0].ID)
 	// test that flow history was updated
 	require.Equal(t, ctx3.BlockHeader().Time, queue[0].ExecTime)
@@ -66,7 +66,7 @@ func TestBeginBlockerTransfer(t *testing.T) {
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
 	// test that flow was added to the queue
-	queue := k.GetFlowsForBlock(ctx2)
+	queue := k.GetFlowsForBlockAndPruneQueue(ctx2)
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 
@@ -75,7 +75,7 @@ func TestBeginBlockerTransfer(t *testing.T) {
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime)
 
 	//queue in BeginBocker
-	queue = k.GetFlowsForBlock(ctx3)
+	queue = k.GetFlowsForBlockAndPruneQueue(ctx3)
 	flowHistory := k.MustGetFlowHistory(ctx3, queue[0].ID)
 	// test that flow history was updated
 	require.Equal(t, ctx3.BlockHeader().Time, queue[0].ExecTime)
@@ -99,16 +99,16 @@ func TestBeginBlockerLoad(t *testing.T) {
 		k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
 	}
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
-	queue := k.GetFlowsForBlock(ctx2)
+	queue := k.GetFlowsForBlockAndPruneQueue(ctx2)
 	BeginBlocker(ctx2, k)
-	queue2 := k.GetFlowsForBlock(ctx2)
+	queue2 := k.GetFlowsForBlockAndPruneQueue(ctx2)
 	ctx3 := createNextExecutionContext(ctx2, ctx2.BlockTime().Add(time.Minute))
-	queue3 := k.GetFlowsForBlock(ctx3)
+	queue3 := k.GetFlowsForBlockAndPruneQueue(ctx3)
 	require.NotEqual(t, len(queue), len(queue2))
 	require.Equal(t, len(queue2), len(queue3)) //should be the same in later block if not executed
 
 	BeginBlocker(ctx3, k)
-	queue4 := k.GetFlowsForBlock(ctx3)
+	queue4 := k.GetFlowsForBlockAndPruneQueue(ctx3)
 	require.Equal(t, len(queue4), 0)
 }
 
@@ -125,7 +125,7 @@ func TestBeginBlockerStopOnSuccess(t *testing.T) {
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
 	// test that flow was added to the queue
-	queue := k.GetFlowsForBlock(ctx2)
+	queue := k.GetFlowsForBlockAndPruneQueue(ctx2)
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 	// BeginBlocker logic
@@ -150,7 +150,7 @@ func TestBeginBlockerStopOnFailure(t *testing.T) {
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
 	// test that flow was added to the queue
-	queue := k.GetFlowsForBlock(ctx2)
+	queue := k.GetFlowsForBlockAndPruneQueue(ctx2)
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
 
@@ -178,11 +178,10 @@ func TestBeginBlockerAlwaysStopOnLowBalance(t *testing.T) {
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
 	// test that flow was added to the queue
-	queue := k.GetFlowsForBlock(ctx2)
+	queue := k.GetFlowsForBlockAndPruneQueue(ctx2)
 	require.Equal(t, 1, len(queue))
 	require.Equal(t, uint64(123), queue[0].ID)
-
-	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx.BlockTime())
+	k.HandleFlow(ctx2, k.Logger(ctx2), queue[0], ctx.BlockTime())
 	flow = k.GetFlow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
 	flow = k.GetFlow(ctx3, flow.ID)
@@ -210,9 +209,9 @@ func TestErrorIsSavedToflow(t *testing.T) {
 
 	ctx2 := createNextExecutionContext(ctx, flow.ExecTime)
 	// test that flow was added to the queue
-	queue := k.GetFlowsForBlock(ctx2)
-	require.Equal(t, 1, len(queue))
-	require.Equal(t, uint64(123), queue[0].ID)
+	flows := k.GetFlowsForBlockAndPruneQueue(ctx2)
+	require.Equal(t, 1, len(flows))
+	require.Equal(t, uint64(123), flows[0].ID)
 	err = sendTokens(ctx, keepers, flow.Owner, emptyBalanceAcc, sdk.NewInt64Coin("stake", 3_000_000_000_000))
 	require.NoError(t, err)
 	err = sendTokens(ctx, keepers, flow.FeeAddress, emptyBalanceAcc, sdk.NewInt64Coin("stake", 3_000_000_000_000))
@@ -222,7 +221,7 @@ func TestErrorIsSavedToflow(t *testing.T) {
 	flow = k.GetFlow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime.Add(time.Hour))
 	flow = k.GetFlow(ctx3, flow.ID)
-	flowHistory := k.MustGetFlowHistory(ctx3, queue[0].ID)
+	flowHistory := k.MustGetFlowHistory(ctx3, flows[0].ID)
 
 	require.True(t, flow.ExecTime.Before(ctx3.BlockTime()))
 	require.NotNil(t, flowHistory[0].Errors)
@@ -638,7 +637,7 @@ func TestHandleFlow_WithFalseFeedbackLoopIndex(t *testing.T) {
 	ctx3 := createNextExecutionContext(ctx, flow.ExecTime.Add(time.Hour))
 
 	// Also check flow queue state after execution
-	queue := k.GetFlowsForBlock(ctx3)
+	queue := k.GetFlowsForBlockAndPruneQueue(ctx3)
 	require.NotNil(t, queue)
 	t.Logf("Flows queued after HandleFlow: %d", len(queue))
 }
@@ -747,7 +746,7 @@ func TestHandleFlow_WithGoodFeedbackLoopIndex(t *testing.T) {
 	ctx3 := createNextExecutionContext(ctx, flow.ExecTime.Add(time.Hour))
 
 	// Also check flow queue state after execution
-	queue := k.GetFlowsForBlock(ctx3)
+	queue := k.GetFlowsForBlockAndPruneQueue(ctx3)
 	require.NotNil(t, queue)
 	t.Logf("Flows queued after HandleFlow: %d", len(queue))
 }

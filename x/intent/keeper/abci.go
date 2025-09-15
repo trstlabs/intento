@@ -23,8 +23,6 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, 
 		msgResponses = []*cdctypes.Any{}
 	)
 
-	k.RemoveFromFlowQueue(ctx, flow)
-
 	allowed, err := k.allowedToExecute(ctx, flow)
 	if !allowed {
 		k.recordFlowNotAllowed(ctx, &flow, timeOfBlock, err)

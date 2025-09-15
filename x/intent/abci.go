@@ -17,7 +17,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	ensureRelayerRewardsAvailable(ctx, k)
 
 	logger := k.Logger(ctx)
-	flows := k.GetFlowsForBlock(ctx)
+
+	flows := k.GetFlowsForBlockAndPruneQueue(ctx)
 	if len(flows) == 0 {
 		return
 	}
@@ -33,12 +34,11 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		}
 
 		// Check if ICQConfig is present and submit an interchain query if applicable
-		if (flow.Conditions.FeedbackLoops != nil && flow.Conditions.FeedbackLoops[0].ICQConfig != nil) || (flow.Conditions.Comparisons != nil && flow.Conditions.Comparisons[0].ICQConfig != nil) {
+		if (len(flow.Conditions.FeedbackLoops) > 0 && flow.Conditions.FeedbackLoops[0].ICQConfig != nil) ||
+			(len(flow.Conditions.Comparisons) > 0 && flow.Conditions.Comparisons[0].ICQConfig != nil) {
 			k.SubmitInterchainQueries(ctx, flow, logger)
-			k.RemoveFromFlowQueue(ctx, flow)
 			// If the query is submitted, we skip handling this flow for now
 			continue
-
 		}
 		k.HandleFlow(ctx, logger, flow, ctx.BlockHeader().Time)
 	}

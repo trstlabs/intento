@@ -117,8 +117,10 @@ func TestGetFlowsForBlock(t *testing.T) {
 	// Call the CreateFlow function
 	err = keepers.IntentKeeper.CreateFlow(ctx, owner, label, msgs, duration, interval, startTime, feeFunds, configuration, types.TrustlessAgentConfig{}, "", "", types.ExecutionConditions{})
 	require.NoError(t, err)
-	flows := keepers.IntentKeeper.GetFlowsForBlock(ctx.WithBlockTime(startTime.Add(interval)))
+	flows := keepers.IntentKeeper.GetFlowsForBlockAndPruneQueue(ctx.WithBlockTime(startTime.Add(interval)))
 	require.Equal(t, len(flows), 2)
+	flows = keepers.IntentKeeper.GetFlowsForBlockAndPruneQueue(ctx.WithBlockTime(startTime.Add(interval)))
+	require.Equal(t, len(flows), 0)
 
 }
 
