@@ -75,7 +75,7 @@ func (k Keeper) SubmitInterchainQueries(ctx sdk.Context, flow types.Flow, logger
 		if found {
 			return //(or continue)
 		}
-		err := k.SubmitInterchainQuery(ctx, *feedbackLoop.ICQConfig, logger, icqID)
+		err := k.SubmitInterchainQuery(ctx, *feedbackLoop.ICQConfig, icqID)
 		if err != nil {
 			k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{Errors: []string{fmt.Sprint("Error submitting ICQ: decoding Base64 string: ", err)}})
 			return
@@ -91,7 +91,7 @@ func (k Keeper) SubmitInterchainQueries(ctx sdk.Context, flow types.Flow, logger
 		if found {
 			return
 		}
-		err := k.SubmitInterchainQuery(ctx, *comparison.ICQConfig, logger, icqID)
+		err := k.SubmitInterchainQuery(ctx, *comparison.ICQConfig, icqID)
 		if err != nil {
 			k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{Errors: []string{fmt.Sprint("Error submitting ICQ: decoding Base64 string: ", err)}})
 			return
@@ -101,7 +101,7 @@ func (k Keeper) SubmitInterchainQueries(ctx sdk.Context, flow types.Flow, logger
 }
 
 // submitInterchainQuery submits an interchain query when ICQConfig is present
-func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, icqConfig types.ICQConfig, logger log.Logger, id string) error {
+func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, icqConfig types.ICQConfig, id string) error {
 	requestData, err := base64.StdEncoding.DecodeString(icqConfig.QueryKey)
 	if err != nil {
 		return err
@@ -120,7 +120,7 @@ func (k Keeper) SubmitInterchainQuery(ctx sdk.Context, icqConfig types.ICQConfig
 	}
 	k.interchainQueryKeeper.SetQuery(ctx, query)
 	// Log successful submission of the interchain query
-	logger.Debug("interchain query submitted", "ICQ ID", id)
+	k.Logger(ctx).Debug("interchain query submitted", "ICQ ID", id)
 	return nil
 }
 
