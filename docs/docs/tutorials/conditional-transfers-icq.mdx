@@ -85,7 +85,7 @@ We'll use a feedback loop to dynamically update the transfer amount based on the
 const feedbackLoop: FeedbackLoop = {
   flowId: BigInt(0),               // Reference to the balance query flow
   responseIndex: 0,                // First response in the flow
-  responseKey: "amount.[0].amount", // Path to balance amount in response
+  responseKey: "Amount.[0].Amount", // Path to balance amount in response
   valueType: "math.Int",            // Type of the value
   msgsIndex: 1,                    // Index of MsgSend in messages array
   msgKey: "amount",                // Field to update in MsgSend
@@ -101,7 +101,7 @@ We'll only want to execute the transfer if the balance exceeds 200,000 uatom:
 const comparison: Comparison = {
   flowId: BigInt(0),               // Reference to the balance query flow
   responseIndex: 0,                // First response in the flow
-  responseKey: "amount.[0].amount", // Path to balance amount
+  responseKey: "Amount.[0].Amount", // Path to balance amount
   valueType: "math.Int",            // Type of the value
   operator: 4,                     // LARGER_THAN operator
   operand: "200000uatom",          // Threshold amount

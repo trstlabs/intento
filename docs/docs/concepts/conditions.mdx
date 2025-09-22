@@ -30,15 +30,15 @@ Imagine a financial ecosystem where every action depends on intricate conditions
 
 The `Comparison` feature allows you to compare a response value with a specified operand before executing an action message. This comparison determines whether the action proceeds based on the result. You can configure up to 5 comparisons per flow. It evaluates the output of the last execution to decide if the current execution should proceed.
 
-| Field            | Type                 | Description                                                                                      |
-| ---------------- | -------------------- | ------------------------------------------------------------------------------------------------ |
-| `flow_id`        | `uint64`             | The ID of the action to fetch the latest response value from (optional).                         |
-| `response_index` | `uint32`             | The index of the message response to use (optional).                                             |
-| `response_key`   | `string`             | The specific response key to use (e.g., `Amount[0].Amount`, `FromAddress`, optional).            |
-| `value_type`     | `string`             | The value type, such as `math.Int`, `sdk.Coin`, `sdk.Coins`, `string`, or other compatible types. |
-| `operator`       | `ComparisonOperator` | The operator used for comparison (e.g., `==`, `!=`, `<`, `>`).                                   |
-| `operand`        | `string`             | The value to compare against.                                                                    |
-| `icq_config`     | `ICQConfig`          | The configuration of the Interchain Queryto perform.                                             |
+| Field            | Type                 | Description                                                                                               |
+| ---------------- | -------------------- | --------------------------------------------------------------------------------------------------------- |
+| `flow_id`        | `uint64`             | The ID of the action to fetch the latest response value from (optional).                                  |
+| `response_index` | `uint32`             | The index of the message response to use (optional).                                                      |
+| `response_key`   | `string`             | The response key to use (e.g., `Amount[0].Amount`, Amount[-1].Amount`, `FromAddress`, optional). |
+| `value_type`     | `string`             | The value type, such as `math.Int`, `sdk.Coin`, `sdk.Coins`, `string`, or other compatible types.         |
+| `operator`       | `ComparisonOperator` | The operator used for comparison (e.g., `==`, `!=`, `<`, `>`).                                            |
+| `operand`        | `string`             | The value to compare against.                                                                             |
+| `icq_config`     | `ICQConfig`          | The configuration of the Interchain Queryto perform.                                                      |
 
 `
 
@@ -68,15 +68,15 @@ By leveraging the appropriate comparison operators, you can build intelligent, r
 
 The `Feedback Loops` feature enables you to replace a value in a message with the latest response value from another action before execution. This creates a feedback loop where the output of one action or Interchain Query becomes the input for another. You can configure up to 5 feedback loops per action.
 
-| Field            | Type        | Description                                                                                      |
-| ---------------- | ----------- | ------------------------------------------------------------------------------------------------ |
-| `flow_id`        | `uint64`    | The ID of the action to fetch the latest response value from (optional).                         |
-| `response_index` | `uint32`    | The index of the responses to use.                                                               |
-| `response_key`   | `string`    | The specific response key to use (e.g., "Amount").                                               |
-| `msgs_index`     | `uint32`    | The index of the message to replace.                                                             |
-| `msg_key`        | `string`    | The key of the message to replace (e.g., `Amount[0].Amount`, `FromAddress`).                     |
+| Field            | Type        | Description                                                                                       |
+| ---------------- | ----------- | ------------------------------------------------------------------------------------------------- |
+| `flow_id`        | `uint64`    | The ID of the action to fetch the latest response value from (optional).                          |
+| `response_index` | `uint32`    | The index of the responses to use.                                                                |
+| `response_key`   | `string`    | The specific response key to use (e.g., "Amount").                                                |
+| `msgs_index`     | `uint32`    | The index of the message to replace.                                                              |
+| `msg_key`        | `string`    | The key of the message to replace (e.g., `Amount[0].Amount`, `FromAddress`).                      |
 | `value_type`     | `string`    | The value type, such as `math.Int`, `sdk.Coin`, `sdk.Coins`, `string`, or other compatible types. |
-| `icq_config`     | `ICQConfig` | The configuration of the Interchain Queryto perform.                                             |
+| `icq_config`     | `ICQConfig` | The configuration of the Interchain Queryto perform.                                              |
 
 ---
 
@@ -134,7 +134,7 @@ A `Comparison` condition ensures the withdrawn amount is above the threshold:
 const comparison: Comparison = {
   flowId: BigInt(0), // Reward withdrawal flow
   responseIndex: 0, // First response index
-  responseKey: "amount.[0].amount", // Extracted amount key
+  responseKey: "Amount.[0].Amount", // Extracted amount key
   valueType: "math.Int", // Value type
   operator: 4, // LARGER_THAN
   operand: "200000", // Threshold
@@ -181,19 +181,18 @@ const initConditions: ExecutionConditions = {
 The Intent-based Flow includes both withdrawal and transfer actions:
 
 ```ts
-const msgSubmitFlow =
-  intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
-    label: "Reward Claim and Send Flow",
-    owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
-    msgs: [msgWithdrawReward, msgSend],
-    duration: "1440h",
-    interval: "600s",
-    feeFunds: [{ denom: "uinto", amount: "5000000" }],
-    configuration: executionConfig,
-    trustless_agent: {
-      agent_address: "into1xyz..."
-    },
-  });
+const msgSubmitFlow = intento.intent.v1.MessageComposer.withTypeUrl.submitFlow({
+  label: "Reward Claim and Send Flow",
+  owner: "into1wdplq6qjh2xruc7qqagma9ya665q6qhcpse4k6",
+  msgs: [msgWithdrawReward, msgSend],
+  duration: "1440h",
+  interval: "600s",
+  feeFunds: [{ denom: "uinto", amount: "5000000" }],
+  configuration: executionConfig,
+  trustless_agent: {
+    agent_address: "into1xyz...",
+  },
+});
 ```
 
 ---
@@ -212,6 +211,8 @@ client.signAndBroadcast(owner, [msgSubmitFlow], {
 ### 2. Automated Delegation
 
 Discover how to automatically delegate staking rewards to compound your returns:
+
 ```
 
 Just like before, the transaction is signed and broadcasted.
+```

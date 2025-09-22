@@ -902,7 +902,7 @@ func traverseFields(msgInterface interface{}, inputKey string) (reflect.Value, e
 		for _, key := range keys {
 			// Handle slices
 			if val.Kind() == reflect.Slice {
-				index, err := parseIndex(key)
+				index, err := parseIndex(key, val.Len())
 				if err != nil {
 					return reflect.Value{}, err
 				}
@@ -931,13 +931,25 @@ func traverseFields(msgInterface interface{}, inputKey string) (reflect.Value, e
 	return val, nil
 }
 
-// parseIndex parses a string index for slices
-func parseIndex(key string) (int, error) {
+// parseIndex parses a string index for slices, supporting negative indices.
+// 'length' is the length of the slice being indexed.
+func parseIndex(key string, length int) (int, error) {
 	var index int
 	_, err := fmt.Sscanf(key, "[%d]", &index)
 	if err != nil {
 		return -1, fmt.Errorf("invalid or missing slice index in key: %s", key)
 	}
+
+	// Convert negative index to a positive one.
+	if index < 0 {
+		index = length + index
+	}
+
+	// Validate the index to ensure it's within the slice bounds.
+	if index < 0 || index >= length {
+		return -1, fmt.Errorf("index %d out of bounds for slice of length %d", index, length)
+	}
+
 	return index, nil
 }
 

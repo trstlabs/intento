@@ -79,7 +79,7 @@ Create flows that execute based on specific conditions. For example, transfer to
 const comparison: Comparison = {
   flowId: BigInt(0),
   responseIndex: 0,
-  responseKey: "amount.[0].amount",
+  responseKey: "Amount.[-1].Amount", // Last coin in Amount sdk.Coin array
   valueType: "math.Int",
   operator: 4, // GREATER_THAN
   operand: "200000000" // 200 ATOM (in uatom)
@@ -96,7 +96,7 @@ Dynamically update flow input based on previous executions:
 const feedbackLoop: FeedbackLoop = {
   flowId: BigInt(0),
   responseIndex: 0,
-  responseKey: "amount.[0].amount",
+  responseKey: "Amount.[0].Amount",
   valueType: "math.Int",
   msgsIndex: 0,
   msgKey: "amount"

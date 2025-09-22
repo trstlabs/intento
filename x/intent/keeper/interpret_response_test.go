@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/base64"
 	"testing"
+	"time"
 
 	math "cosmossdk.io/math"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -695,6 +696,13 @@ func TestTwapResponse(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok, "comparison should succeed for larger than")
 
+	comparison.ValueType = "osmosistwapv1beta1.TwapRecord.P0LastSpotPrice"
+	comparison.Operand = "0.001000000000000000"
+	comparison.Operator = types.ComparisonOperator_SMALLER_THAN
+	ok, err = keeper.CompareResponseValue(ctx, 1, nil, comparison)
+	require.NoError(t, err)
+	require.True(t, ok, "comparison should succeed for smaller than")
+
 	comparison.ValueType = "osmosistwapv1beta1.TwapRecord.dffadsf"
 	_, err = keeper.CompareResponseValue(ctx, 1, nil, comparison)
 	require.Error(t, err)
@@ -777,3 +785,64 @@ func TestBalanceResponse(t *testing.T) {
 // 	require.NoError(t, err)
 // 	require.False(t, ok, "comparison should fail for wrong string value")
 // }
+
+func TestFlowWithRewardHistory(t *testing.T) {
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+
+	// Create the reward response from the history
+	rewardCoins := sdk.NewCoins(
+		sdk.NewCoin("ibc/0025F8A8...", math.NewInt(49)),
+		sdk.NewCoin("uatom", math.NewInt(2001260)), // This is > 1,000,000 uatom
+	)
+	rewardResponse := &distrtypes.MsgWithdrawDelegatorRewardResponse{Amount: rewardCoins}
+	anyResponse, err := cdctypes.NewAnyWithValue(rewardResponse)
+	require.NoError(t, err)
+
+	// Set up the flow history with the reward response
+	historyEntry := types.FlowHistoryEntry{
+		ScheduledExecTime: time.Now(),
+		ActualExecTime:    time.Now(),
+		ExecFee:           sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(1000))),
+		Executed:          true,
+		MsgResponses:      []*cdctypes.Any{anyResponse},
+	}
+	keeper.SetFlowHistoryEntry(ctx, 1, &historyEntry)
+
+	// Test the comparison
+	comparison := types.Comparison{
+		ResponseIndex: 0,
+		ResponseKey:   "Amount",
+		ValueType:     "sdk.Coins",
+		Operator:      types.ComparisonOperator_CONTAINS,
+		Operand:       "1000000uatom",
+	}
+	ok, err := keeper.CompareResponseValue(ctx, 1, []*cdctypes.Any{anyResponse}, comparison)
+	require.NoError(t, err)
+	require.True(t, ok, "Comparison should pass as 2,001,260 > 1,000,000")
+
+	feedbackLoops := []*types.FeedbackLoop{
+		{
+			FlowID:        1,
+			ResponseIndex: 0,
+			ResponseKey:   "Amount.[-1].Amount",
+			MsgsIndex:     0,
+			MsgKey:        "Amount.Amount",
+			ValueType:     "math.Int",
+		},
+	}
+
+	msg := stakingtypes.MsgDelegate{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: "valoper1...",
+		Amount:           sdk.NewCoin("uatom", math.NewInt(1000)),
+	}
+	anyMsg, err := cdctypes.NewAnyWithValue(&msg)
+	require.NoError(t, err)
+	msgs := []*cdctypes.Any{anyMsg}
+	err = keeper.RunFeedbackLoops(ctx, 1, &msgs, &types.ExecutionConditions{FeedbackLoops: feedbackLoops})
+	require.NoError(t, err)
+
+	keeper.cdc.Unmarshal(msgs[0].Value, &msg)
+	require.NoError(t, err)
+	require.Equal(t, msg.Amount, sdk.NewCoin("uatom", math.NewInt(2001260)))
+}
