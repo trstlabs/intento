@@ -1,75 +1,87 @@
 ---
-title: Portal Overview
-description: Guide to using the Intento Portal for managing intent-based flows
+title: Intento Portal User Guide
+description: Guide to using the Intento Portal for building and managing intent-based flows
 sidebar_position: 1
 sidebar_class_name: sidebar-item-guide
 ---
 
-Intento Portal is a powerful dApp designed for developers and integrators. It enables advanced workflows for setting, viewing, and updating flows using conditions, comparisons, and feedback loops. It supports complex blockchain interactions and cross-chain execution logic.
+Intento Portal is a user interface designed for developers, DeFi power users and integrators. With Intento Portal you can submit, view, manage, and update powerfull Intento flows using conditions, comparisons, and feedback loops.
 
-### Key Features of Intento Portal
+### Use Cases
 
-- **Conditional Automated Token Transfers**  
-  Define recurring token transfers with custom conditions to multiple recipients. Useful for DAOs, payroll, and streaming payments.
+- **Automation of Token Transfers and Swaps**  
+  Define recurring token transfers with custom conditions to multiple recipients. Useful for strategies, reducing slippage on large trades, and streaming payments.
 
-- **Advanced On-Chain Time-Based Logic**  
-  Build flows with feedback loops, comparisons, and time intervals that react to real-time on-chain data.
+- **Advanced On-Chain Conditions**  
+  Build flows with feedback loops, comparisons, and time intervals that react to real-time on-chain state. For example, conditional autocompound flows that cash out when prices are high, or trading strategies that compares a moving average with the current price.
 
 - **Cross-Chain Interoperability**  
-  Execute workflows across multiple Cosmos chains using IBC and ICA (Interchain Accounts).
+  Execute workflows across multiple chains using Trustless Agent. These are ICA addresses on Intento that subsidize fees.
 
-### Benefits
+### Key Features
 
-- **Efficiency and Precision**  
-  Orchestrate repetitive blockchain tasks with logic-based triggers.
-
-- **Composable Investment Strategies**  
-  Reinvest, stream, or redirect rewards based on intelligent logic.
-
-- **Dynamic Workflow Management**  
-  Build composable on-chain workflows that adapt based on conditions, feedback, and state.
-
+- **Flow Builder**. Build and submit flows
+- **Flow Management**. View, update, and delete flows
+- **Flow Monitoring**. View execution history, status, and results
+- **Flow Notifications**. Receive notifications when flows are created, executed, updated or timeout.
+- **Copy and Create**. Copy and create flows for reuse
+- **Custom Submit Page**. Integrators and AI Agents can dynamically let users submit flows in an easy and secure way
 
 ## Build Flows
 
 ### 1. Choose Chain and Execution Account
 
-Go to the `Flow Builder`. First, choose the target chain for execution. Available Trustless Agents will be listed — these are ICA addresses hosted by Intento which subsidizes fees.
+Go to the `Flow Builder`. First, choose the target chain for execution.
 
 ![1](@site/docs/images/portal/build/1.png)
 
-
 ### 2. Build Messages
 
-Add messages that define what you want to execute. Several examples are available for supported chains. For CosmWasm chains like Osmosis, you’ll find both contract interaction templates and DEX-related messages. For DEXes like Elys, we have several supported message types like swapping and claiming rewards.
+Add messages that define what you want to execute. Intent Templates are available for the supported chains, these can also include conditions and feedback loops so you don't have to worry about the configuration. For Osmosis, you’ll find both contract interaction templates and DEX-related messages.
 
 ![2](@site/docs/images/portal/build/2.png)
 
+### 3. Conditional Logic (Optional)
 
-### 3. Configure Execution Settings
+Flows can include conditional logic to control execution based on comparisons, external queries, or feedback loops.
+
+**Execution behavior**
+
+- By default, execution continues if _any_ comparison evaluates to `true`.
+- The configuration can be set to `AND` mode, requiring _all_ comparisons to evaluate to `true`.
+
+**Use cases**
+
+- Balance checks
+- Output comparisons
+- Detecting state changes
+- Asset price checks
+- Reinvesting rewards or similar actions
+
+**Available Condition items**
+
+- **Comparisons**: Define logical checks, e.g. `price > 100`.
+![3.1](@site/docs/images/portal/build/3.1.png)
+- **Feedback Loops**: Re-run actions automatically, e.g. autocompounding.
+![3.2](@site/docs/images/portal/build/3.2.png)
+- **Interchain Queries**: Query state or prices from other chains; used inside comparisons or feedback loops. You can generate state keys for types like balances, smart contract state, delegations, price records and test them using the `/cosmos/base/tendermint/v1beta1/abci_query` endpoint the target chain.
+![3.3](@site/docs/images/portal/build/3.3.png)
+- **Stoplights**: Configure stop/skip behavior on fail, success, or timeout. Stoplights can also link flows together, enabling complex workflows.
+![3.4](@site/docs/images/portal/build/3.4.png)
+
+Next to the templates, you can find flow examples and reusable condition snippets in the [Intento Portal Dashboard](https://portal.intento.zone) or in the [ integration hub repository](https://github.com/trstlabs/intento-integration-hub)
+
+
+### 4. Configure Execution Settings
 
 Decide how execution should behave:
 
 - Retry until success
-- Stop after an error
-- Enable fallback wallet (fees can be taken from your main wallet if the flow account runs out)
-
-![3](@site/docs/images/portal/build/3.png)
-
-
-### 4. Add Conditions & Feedback Logic - Optional
-
-Use response outputs to feed into future steps or define comparisons. Execution will only happen if all conditions return `true`.
-
-Use these tools to create feedback loops, like:
-
-- Re-checking balances
-- Waiting for specific responses
-- Responding to partial state changes
+- Stop after an error or timeout
+- Enable wallet fallback (fees are taken from your main wallet if flow account does not hold (enough) funds). Will use INTO first to save fees.
 
 ![4](@site/docs/images/portal/build/4.png)
 
-You can find flow examples and reusable condition snippets in the dashboard or in the [ integration hub repository](https://github.com/trstlabs/intento-integration-hub)
 
 ### 5. Final Flow Settings
 
@@ -79,13 +91,12 @@ When you're ready, hit `Build Flow`. In the dialog:
 - **Set interval**: how often it should run
 - **Set end time**: when the flow should end. You can use the calendar to select a date and time or the quick selector to select a duration.
 
-> Unselecting the start time means the first interval (e.g., 1 hour) will be used as the initial delay.
+> Not selecting a start time means the first interval (e.g., 1 hour) will be used as the initial delay.
 
 You’ll also configure fee settings:
 
 - Deduct from wallet (requires fallback wallet). In Intento Portal, this is enabled by default.
-- Attach fee account to the flow  
-  *(Ensure it holds enough $INTO. Unused fees are refunded after the final execution.)*
+- Attach fee account to the flow (optional). _(Unused fees are refunded after the final execution.)_
 
 ![dialogfullscreen](@site/docs/images/portal/build/dialogfullscreen.png)
 
@@ -97,36 +108,52 @@ The `Overview` section summarizes:
 
 Click `Submit` to broadcast the flow. A notification will link to the dashboard view.
 
+## Authorization
 
-## AuthZ Permissions
-
-Flows using hosted ICAs require `AuthZ` (authorization) from your wallet.
+Flows using Trustless Agents require `AuthZ` (authorization) from your wallet.
 
 In Cosmos, every message has:
+
 - a `typeUrl` (e.g., `/cosmos.bank.v1beta1.MsgSend`)
 - and `value` fields (payload)
 
-You grant `AuthZ` to an ICA using `MsgGrant` for specific message types and expiration (defaults to your flow's end time + 1 day on Intento Portal). The ICA can then use `MsgExec` to execute those messages.
+You grant `AuthZ` to a Trustless Agent using `MsgGrant` for specific message types and expiration (defaults to your flow's end time + 1 day on Intento Portal). The Trustless Agent can then use `MsgExec` to execute those messages.
 
-✅ **Security tip**: AuthZ in Intento is scoped. ICAs can **only** execute flows you signed — reducing risk even if the grant is compromised.
+**Security**: AuthZ for Intento Flows is scoped. Trustless Agents can **only** execute flows with messages submitted by the flow owner.
 
 :::info
-It’s recommended to test with a small flow before going live, especially on mainnet.
+It’s recommended to use small amounts of tokens or a short duration initially to test it out first, especially on mainnet. You can always update your messages and increase amounts later.
 :::
-
 
 ## Notes on Message Format
 
 - Use **camelCase** in message fields (e.g., `fromAddress` not `from_address`)
-- Token values are in **base units**:
+- Token values are supported both in **base units** and **denom**:
   - `5 ATOM` = `5000000uatom`
   - `5 INTO` = `5000000uinto`
+  - `0.5 INTO` = `500000uinto`
 
+For IBC tokens, the units are always in the base format + `ibc/{hash}`.
+
+## Placeholders
+
+You can use the Your Address placeholder as is, it will be replaced with the user's address when the flow is submitted.
+For on Intento you can use the Your Intento Address, it will be replaced with the user's Intento address when the flow is submitted.
+
+For other prefixes you can use the placeholder `Your {prefix} Address` e.g. `Your osmo Address`.
 
 ## Demo (June 2025)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/q1D9uLIh9GE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/q1D9uLIh9GE"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen
+></iframe>
 
 ## Future Improvements
 

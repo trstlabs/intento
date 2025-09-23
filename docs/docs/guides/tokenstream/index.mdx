@@ -39,7 +39,7 @@ Each stream includes an optional **Price Guard** setting:
 
 ## Streaming Directly (Integrated Chains)
 
-* Works with chains that support the Cosmos permission system `authz` (e.g. Osmosis Testnet).
+* Works with chains that support the Cosmos permission system `authz` (e.g. Osmosis).
 * One transaction creates a time-limited grant and starts the stream.
 * Grant expires **10 minutes after the last execution**, minimizing risk.
 * Smooth reuse of grants for back-to-back streams.
@@ -56,9 +56,9 @@ Each stream includes an optional **Price Guard** setting:
 
 
 
-## 🚀 How to Use tokenstream.fun
+## How To Use tokenstream.fun
 
-Streaming is frictionless. The app detects the routing method automatically:
+Getting started is easy. The app detects the routing method automatically:
 
 ### **1. Select Tokens**
 
@@ -67,12 +67,12 @@ Pick a source and destination token.
 * Examples:
 
   * `USDC → OSMO`
-  * `OSMO → ION`
-  * `ATOM → ELYS`
+  * `OSMO → BTC`
+  * `ATOM → INTO`
 
 Routing is handled for you.
 
-Then hit `Swap`, on supported routes, you'll see the `Go Once` and `Stream` buttons.
+Then hit `Stream` on supported routes, you'll see the `Go Once` and `Stream` buttons. If not supported, you'll see a `Swap` button.
 
 ### **2. Configure Stream Settings**
 
@@ -101,28 +101,28 @@ From the **Stream** page, click **Stream** to begin.
 
 Routing determines what happens next:
 
-#### 🔑 If using **Authz**:
+#### If using **Authz**:
 
 * One transaction sets a temporary grant and starts the stream.
 * Grant expires 10 minutes after the last execution.
 
-#### 🌉 If using **PFM + Intento**:
+#### If using **PFM + Intento**:
 
 * First transaction sends your tokens via IBC to the Intento chain.
 * You’ll be shown the **Intento sender account** to fund with gas tokens (e.g. OSMO or INTO).
 * Once funded, the stream begins.
 
 
-## 🔁 Example 1: OSMO → ION (Osmosis to Osmosis via Authz)
+## 🔁 Example 1: OSMO → INTO (Osmosis to Intento via Authz)
 
 ### Scenario:
 
-Streaming OSMO to ION on the same chain using a direct grant.
+Streaming OSMO to INTO on the same chain using a direct grant.
 
 ### Setup:
 
-* Connect Osmosis testnet wallet
-* Select `OSMO → ION`
+* Connect Osmosis wallet
+* Select `OSMO → INTO`
 * Choose duration + interval
 * Submit single transaction (includes:
 
@@ -131,7 +131,7 @@ Streaming OSMO to ION on the same chain using a direct grant.
 ### Behavior:
 
 * Intento executes the flow on Osmosis using Skip:Go
-* You receive ION over time
+* You receive INTO over time
 * Grant expires 10 minutes after final execution
 
 ### Requirements:
@@ -141,65 +141,36 @@ Streaming OSMO to ION on the same chain using a direct grant.
 
 
 
-## 🧵 Example 2: USDC (Noble) → OSMO (Osmosis via PFM + Intento)
+## 🔁 Example 2: USDC (on the Noble blockchain) → ATOM (Cosmos Hub via PFM + Intento)
 
 ### Scenario:
 
-Stream from a **non-authz** chain (Noble) into Osmosis using PFM.
+Stream from a **non-authz** chain (Noble) into Cosmos Hub using Packet Forwarding Middleware (PFM).
 
 ### Setup:
 
-1. Connect Noble testnet wallet
-2. Select `USDC (Noble)` → `OSMO (Osmosis)`
+1. Connect Noble wallet
+2. Select `USDC (Noble)` → `ATOM (on chain Cosmos Hub)`
 3. Configure stream
 4. Submit transaction to start the IBC transfer
 
 ### Behavior:
 
-* USDC is IBC-transferred from Noble to Osmosis using PFM
-* Tokens land on a **derived Intento account** on Osmosis
-* You fund that address with **OSMO or INTO** for gas
-* Intento executes the stream into OSMO using Skip:Go
+* USDC is IBC-transferred from Noble to Intento using PFM
+* Tokens land on a **derived Intento account** on Osmosis (if route is through Osmosis)
+* You fund that address with **OSMO, ATOM or INTO** for gas
+* Intento executes the stream into ATOM using Skip:Go
 
 ### Requirements:
 
-* **Testnet USDC from Noble**
-* **Gas on Osmosis (e.g. OSMO)** to fund the derived account
+* **USDC on Noble**
+* **Gas funds (e.g. ATOM)** to fund the derived account
 * Execution begins once account is funded
 
-
-
-## 🧰 Testnet Setup Tips
-
-### Get Testnet Tokens
-
-#### 🌀 OSMO (Osmosis testnet)
-
-* Telegram faucet: [Claim OSMO](https://t.me/c/2075185137/2462)
-* Discord command:
-
-  ```bash
-  $request {your osmo1 address} osmosis-test
-  ```
-
-  Join: [Intento Discord](https://discord.com/invite/hsVf9sYyZW)
-
-
-
-#### 💵 USDC (Noble testnet)
-
-* Go to: [faucet.circle.com](https://faucet.circle.com/)
-* Select **Noble**
-* Paste Noble testnet address (`noble1...`)
-* Click **Request Tokens**
-
-
-
-*All streams use real testnet IBC packets, Skip:Go contracts, and PFM routing.*
 Execution may be delayed a few blocks due to IBC confirmation.
 
 ## Notes & Limitations
 
 * **PFM-based streams** require external funding of the derived sender account for gas.
 * **Skip:Go** contracts assume a standardized IBC-Hooks and contracts.
-* Native support for additional DEXes, flow types, and automated funding is in progress.
+* Native support for additional DEXes, flow types, and funding tokens is in progress.

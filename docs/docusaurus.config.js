@@ -11,7 +11,7 @@ const algoliaIndexName = "intento";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "INTENTO",
+  title: "Intento Docs",
   tagline: "",
   favicon: "img/favicon.ico",
 
@@ -89,22 +89,10 @@ const config = {
         },
         items: [
           {
-            type: "doc",
-            docId: "index",
-            position: "left",
-            label: "Home",
-          },
-          {
             to: "/getting-started",
             position: "left",
             label: "Getting Started",
             className: "navbar__link--getting-started",
-          },
-          {
-            to: "/tutorials",
-            position: "left",
-            label: "Tutorials",
-            className: "navbar__link--tutorials",
           },
           {
             to: "/concepts/intent",
@@ -123,6 +111,12 @@ const config = {
             position: "left",
             label: "Reference",
             className: "navbar__link--reference",
+          },
+          {
+            to: "/tutorials",
+            position: "left",
+            label: "Tutorials",
+            className: "navbar__link--tutorials",
           },
           // Right-aligned social links
           {

@@ -52,7 +52,7 @@ const sidebars = {
       items: [
         {
           type: 'category',
-          label: 'Portal',
+          label: 'Intento Portal',
           items: [
             'guides/portal/overview',
             'guides/portal/submit-flows',
