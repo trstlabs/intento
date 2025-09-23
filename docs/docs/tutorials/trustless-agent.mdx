@@ -11,6 +11,8 @@ On default, no fee is paid to the Trustless Agent, but it can be configured to e
 
 **Trustless Agents** allow anyone to **execute flows** on behalf of users. Trustless Agents always execute via **authz** and always route through proper authentication in the intent engine to ensure users stay in full control of their assets in the most secure way.
 
+### Prerequisites
+- [intentod](https://github.com/trstlabs/intento) installed. Check [here](https://github.com/trstlabs/intento/releases) for latest version.
 ### Why Run a Trustless Agent?
 
 - You are running a relayer or incentivizing relayers and want to **cover gas fees that are paid by the relayers**
@@ -22,12 +24,13 @@ On default, no fee is paid to the Trustless Agent, but it can be configured to e
 
 ```bash
 intentod tx intent create-trustless-agent \
-  --connection-id connection-INTO-TO-ELYS \
+  --connection-id connection-INTO-TO-OSMO \
   --fee-coins-suported "1uinto,10ibc/F1B5C3489F881CC56ECC12EA903EFCF5D200B4D8123852C191A88A31AC79A8E4" \
   --from your-into-addr
+  --node https://rpc-mainnet.intento.zone
 ```
 
-- `--connection-id`: the **Intento** IBC connection ID (e.g., to Elys)
+- `--connection-id`: the **Intento** IBC connection ID (e.g., to OSMO)
 - `--fee-coins-suported`: Coins supported as fees for Trustless Agent
 
 Fee coins supported are an amount per execution and a denom. An execution is a transaction that is submitted to the host chain by the relayer. This can contain one or several messages.
@@ -38,10 +41,11 @@ If you need another ICA address or want to change the fee admin:
 
 ```bash
 intentod tx intent update-trustless-agent \
-  --connection-id connection-INTO-TO-ELYS \
+  --connection-id connection-INTO-TO-OSMO \
   --trustless-agent into1hostedaccount \
   --new-admin your-new-into-admin-addr \
   --from your-into-admin-addr
+  --node https://rpc-mainnet.intento.zone
 ```
 
 - `--fee-coins-suported`: Coins supported as fees for Trustless Agent, optional here
