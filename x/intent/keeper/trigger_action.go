@@ -175,7 +175,13 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 	k.hooks.AfterActionICA(ctx, owner)
 
 	flowHistoryEntry.Executed = true
-
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeFlowMsgResponse,
+			sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(flow.ID)),
+			sdk.NewAttribute(types.AttributeKeyFlowOwner, flow.Owner),
+		),
+	)
 	if flow.Configuration.SaveResponses {
 		flowHistoryEntry.MsgResponses = append(flowHistoryEntry.MsgResponses, msgResponses...)
 	}
@@ -243,9 +249,7 @@ func (k Keeper) HandleResponseAndSetFlowResult(ctx sdk.Context, portID string, c
 			}
 		}
 	}
-
 	return nil
-
 }
 
 func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.Flow, nextMsgs []*cdctypes.Any, flowHistoryEntry *types.FlowHistoryEntry) error {
