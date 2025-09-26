@@ -50,7 +50,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k *Keeper) SubmitICQRequest(ctx sdk.Context, query types.Query, forceUnique bool) error {
+func (k *Keeper) SubmitICQRequest(ctx sdk.Context, query types.Query) error {
 	k.Logger(ctx).Info("Submitting ICQ Request", "callbackId", query.CallbackId, "connectionId", query.ConnectionId, "queryType", query.QueryType, "timeout_duration", query.TimeoutDuration)
 
 	if err := k.ValidateQuery(ctx, query); err != nil {
@@ -61,8 +61,6 @@ func (k *Keeper) SubmitICQRequest(ctx sdk.Context, query types.Query, forceUniqu
 	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano() + query.TimeoutDuration.Nanoseconds())
 	query.TimeoutTimestamp = timeoutTimestamp
 
-	// Generate and set the query ID - optionally force it to be unique
-	query.Id = k.GetQueryId(ctx, query, forceUnique)
 	query.RequestSent = false
 
 	// Set the submission height on the Query to the latest light client height
@@ -94,8 +92,8 @@ func (k *Keeper) RetryICQRequest(ctx sdk.Context, query types.Query) error {
 
 	//custom logic: we retry once, and then it should be rejected to prevent looping.
 	query.TimeoutPolicy = types.TimeoutPolicy_REJECT_QUERY_RESPONSE
-	// Submit a new query (with a new ID)
-	if err := k.SubmitICQRequest(ctx, query, true); err != nil {
+	// Submit a new query
+	if err := k.SubmitICQRequest(ctx, query); err != nil {
 		return errorsmod.Wrap(err, types.ErrFailedToRetryQuery.Error())
 	}
 
