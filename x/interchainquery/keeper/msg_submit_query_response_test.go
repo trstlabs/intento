@@ -149,17 +149,16 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_RetryQuery() {
 	_, err := s.GetMsgServer().SubmitQueryResponse(s.Ctx, &tc.validMsg)
 	s.Require().NoError(err)
 
-	// check that the query original query was deleted,
-	// but that a new one was created for the retry
+	// check that the query id was not removed
 	_, found := s.App.InterchainQueryKeeper.GetQuery(s.Ctx, tc.query.Id)
-	s.Require().False(found, "original query should be removed")
+	s.Require().True(found, "query id should not be removed")
 
 	queries := s.App.InterchainQueryKeeper.AllQueries(s.Ctx)
 	s.Require().Len(queries, 1, "there should be one new query")
 
 	// Confirm original query attributes have not changed
 	actualQuery := queries[0]
-	s.Require().NotEqual(tc.query.Id, actualQuery.Id, "query ID")
+	s.Require().Equal(tc.query.Id, actualQuery.Id, "query ID")
 	s.Require().Equal(tc.query.QueryType, actualQuery.QueryType, "query type")
 	s.Require().Equal(tc.query.ConnectionId, actualQuery.ConnectionId, "query connection ID")
 	s.Require().Equal(tc.query.CallbackModule, actualQuery.CallbackModule, "query callback module")
