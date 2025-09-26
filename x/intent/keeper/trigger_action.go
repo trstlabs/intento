@@ -128,6 +128,13 @@ func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flo
 		}
 
 		handler := k.msgRouter.Handler(msg)
+		if handler == nil {
+			return nil, errorsmod.Wrapf(
+				types.ErrUnknownRequest,
+				"no message handler found for message type %s",
+				sdk.MsgTypeURL(msg),
+			)
+		}
 		res, err := handler(cacheCtx, msg)
 		if err != nil {
 			return nil, err

@@ -13,7 +13,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
-	//tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	osmosisgammv1beta1 "github.com/trstlabs/intento/x/intent/msg_registry/osmosis/gamm/v1beta1"
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -40,6 +40,19 @@ func newFakeMsgSend(fromAddr sdk.AccAddress, toAddr sdk.AccAddress) *banktypes.M
 		FromAddress: fromAddr.String(),
 		ToAddress:   toAddr.String(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
+	}
+	return msgSend
+}
+
+func newFakeMsgSwap(fromAddr sdk.AccAddress) *osmosisgammv1beta1.MsgSwapExactAmountIn {
+	msgSend := &osmosisgammv1beta1.MsgSwapExactAmountIn{
+		Sender: fromAddr.String(),
+		Routes: []osmosisgammv1beta1.SwapAmountInRoute{
+			{
+				PoolId:        1,
+				TokenOutDenom: sdk.DefaultBondDenom,
+			},
+		},
 	}
 	return msgSend
 }
@@ -110,6 +123,26 @@ func TestSendLocalTxAutocompound(t *testing.T) {
 	history, _ = keeper.GetFlowHistory(ctx, flow.ID)
 	require.Equal(t, len(history[1].Errors), 0)
 	require.Equal(t, len(history[1].MsgResponses), 2)
+}
+
+func TestSendWrongLocalTx(t *testing.T) {
+	ctx, keepers, addr1, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+
+	flowAddr, _ := CreateFakeFundedAccount(ctx, keepers.accountKeeper, keepers.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000)))
+
+	types.Denom = "stake"
+
+	localMsg := newFakeMsgSwap(addr1)
+	anys, err := types.PackTxMsgAnys([]sdk.Msg{localMsg})
+	require.NoError(t, err)
+
+	flow := createBaseflow(addr1, flowAddr)
+	flow.Msgs = anys
+
+	executedLocally, msgResponses, err := keepers.TriggerFlow(ctx, &flow)
+	require.Error(t, err)
+	require.Nil(t, msgResponses)
+	require.NotEqual(t, int64(1), executedLocally)
 }
 
 func delegateTokens(t *testing.T, ctx sdk.Context, keepers Keeper, delAddr sdk.AccAddress) (stakingtypes.Validator, sdk.Context) {
