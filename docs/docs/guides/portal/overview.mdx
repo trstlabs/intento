@@ -87,7 +87,7 @@ Decide how execution should behave:
 
 When you're ready, hit `Build Flow`. In the dialog:
 
-- **Set start time** _(optional)_: when the first run begins
+- **Set start time** _(optional)_: when the first run begins. When set to Now, it will insert 10 minutes from the time you hit Now button. When set to None, the first interval is as the initial delay.
 - **Set interval**: how often it should run
 - **Set end time**: when the flow should end. You can use the calendar to select a date and time or the quick selector to select a duration.
 
@@ -141,6 +141,8 @@ You can use the Your Address placeholder as is, it will be replaced with the use
 For on Intento you can use the Your Intento Address, it will be replaced with the user's Intento address when the flow is submitted.
 
 For other prefixes you can use the placeholder `Your {prefix} Address` e.g. `Your osmo Address`.
+
+For the autocompound flows validator addresses are retrieved and auto-parsed if available. If not available you see "Not found. Stake tokens or insert a validator operator address here ⚠️" and have to insert the validator address manually.
 
 ## Demo (June 2025)
 
