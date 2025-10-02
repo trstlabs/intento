@@ -25,11 +25,14 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 
 	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(types.MaxGasTotal))
 
-	for _, flow := range flows {
+	for i, flow := range flows {
 		// Estimate a gas cost before actually running it
 		estimatedGas := uint64(100_000)
 		if ctx.GasMeter().Limit()-ctx.GasMeter().GasConsumed() < estimatedGas {
 			logger.Info("Skipping remaining flows due to block gas limit")
+			for _, flow := range flows[i:] {
+				k.InsertFlowQueue(ctx, flow.ID, ctx.BlockHeader().Time)
+			}
 			break
 		}
 
