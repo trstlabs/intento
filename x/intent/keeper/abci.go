@@ -257,7 +257,7 @@ func (k Keeper) allowedToExecute(ctx sdk.Context, flow types.Flow) (bool, error)
 	comparisonsResult, err := k.checkComparisons(ctx, flow, conditions)
 	if err != nil {
 		if shouldRecur {
-			k.scheduleNextExecution(ctx, flow)
+			k.scheduleNextExecution(ctx, flow, err.Error())
 		}
 		return false, err
 	}
@@ -270,7 +270,7 @@ func (k Keeper) allowedToExecute(ctx sdk.Context, flow types.Flow) (bool, error)
 
 	// Step 3: Handle recurring flows if not allowed to execute
 	if !allowedToExecute && shouldRecur {
-		k.scheduleNextExecution(ctx, flow)
+		k.scheduleNextExecution(ctx, flow, "")
 	}
 
 	return allowedToExecute, nil
@@ -278,8 +278,6 @@ func (k Keeper) allowedToExecute(ctx sdk.Context, flow types.Flow) (bool, error)
 
 // checkComparisons evaluates the conditions.Comparisons based on AND/OR logic.
 func (k Keeper) checkComparisons(ctx sdk.Context, flow types.Flow, conditions *types.ExecutionConditions) (bool, error) {
-	var err error = nil
-
 	if conditions.Comparisons == nil {
 		return true, nil
 	}
@@ -296,14 +294,18 @@ func (k Keeper) checkComparisons(ctx sdk.Context, flow types.Flow, conditions *t
 	}
 
 	// OR logic: At least one comparison must evaluate to true
+	var lastErr error
 	for _, comparison := range conditions.Comparisons {
 		isTrue, err := k.evaluateComparison(ctx, flow, *comparison)
 		if err == nil && isTrue {
 			return true, nil
 		}
+		if err != nil {
+			lastErr = err
+		}
 	}
-
-	return false, err
+	// If none matched, return false and any error that occurred
+	return false, lastErr
 }
 
 // evaluateComparison checks a single comparison against the flow history.
@@ -313,26 +315,39 @@ func (k Keeper) evaluateComparison(ctx sdk.Context, flow types.Flow, comparison 
 		flowID = comparison.FlowID
 	}
 
-	if !k.HasFlowHistoryEntry(ctx, flowID) {
-		return true, nil // No history means there's nothing to compare against
+	// No history and no ICQ response means there's nothing to compare against
+	noICQResponse := comparison.ICQConfig == nil || comparison.ICQConfig.Response == nil
+	if !k.HasFlowHistoryEntry(ctx, flowID) && noICQResponse {
+		return true, nil
 	}
 
-	historyEntry, err := k.GetLatestFlowHistoryEntry(ctx, flowID)
-	if err != nil {
-		return false, err
-	}
-
-	if historyEntry.MsgResponses == nil && historyEntry.QueryResponses == nil {
-		// if we should stop on failure or the condition is explicitly set to need all to be true, we return with an error here
-		if flow.Configuration.StopOnFailure || flow.Conditions.UseAndForComparisons {
-			return false, fmt.Errorf("did not make a comparison, no responses on the target history. Set SaveResponses to true to use responses for comparison")
+	// Use latest non-empty message responses instead of loading the full history entry.
+	// If there are no message responses and no ICQ response, skip this comparison.
+	var msgResponses []*cdctypes.Any
+	if noICQResponse {
+		responses, err := k.GetLatestMsgResponses(ctx, flowID)
+		if err != nil {
+			if err == types.ErrNotFound {
+				return true, nil
+			}
+			return false, err
 		}
-		return true, nil //default to true in case there is nothing to compare against
+		msgResponses = responses
 	}
 
-	responses := historyEntry.MsgResponses
+	// For example Autocompound logic: if latest entry of the SAME flow has ErrFlowConditions, allow re-execution
+	// by returning true so the flow can try again.
+	if (comparison.FlowID == 0 || comparison.FlowID == flow.ID) && comparison.ICQConfig == nil {
+		if latest, err := k.GetLatestFlowHistoryEntry(ctx, flowID); err == nil && latest != nil {
+			for _, errStr := range latest.Errors {
+				if strings.Contains(errStr, types.ErrFlowConditions) {
+					return true, nil
+				}
+			}
+		}
+	}
 
-	isTrue, err := k.CompareResponseValue(ctx, flow.ID, responses, comparison)
+	isTrue, err := k.CompareResponseValue(ctx, flow.ID, msgResponses, comparison)
 	if err != nil {
 		return false, fmt.Errorf("error in CompareResponseValue: %w", err)
 	}
@@ -392,11 +407,13 @@ func (k Keeper) checkDependentFlows(ctx sdk.Context, conditions *types.Execution
 }
 
 // scheduleNextExecution schedules the next execution for recurring flows.
-func (k Keeper) scheduleNextExecution(ctx sdk.Context, flow types.Flow) {
-	nextExecTime := flow.ExecTime.Add(flow.Interval)
-	k.InsertFlowQueue(ctx, flow.ID, nextExecTime)
-	flow.ExecTime = nextExecTime
-	k.SetFlow(ctx, &flow)
+func (k Keeper) scheduleNextExecution(ctx sdk.Context, flow types.Flow, errorString string) {
+	if k.shouldRecur(ctx, flow, errorString) {
+		nextExecTime := flow.ExecTime.Add(flow.Interval)
+		k.InsertFlowQueue(ctx, flow.ID, nextExecTime)
+		flow.ExecTime = nextExecTime
+		k.SetFlow(ctx, &flow)
+	}
 }
 
 // recordFlowNotAllowed adds an flow entry to the flow history

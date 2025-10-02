@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -287,103 +288,103 @@ func TestNotExecutingWithWrongSigner(t *testing.T) {
 	require.Contains(t, history[len(history)-1].Errors[0], "owner doesn't have permission to send this message: unauthorized")
 }
 
-func TestAllowedToExecuteWithNoStopOnFailure(t *testing.T) {
+func TestEvaluateComparison_AutocompoundErrFlowConditions_AllowsExecution(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
-
-	flowOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
-	feeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
-	toSendAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
-	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx, flowOwnerAddr)[0].Amount, math.NewInt(3_000_000_000_000))
-	localMsg := &banktypes.MsgSend{
-		FromAddress: flowOwnerAddr.String(),
-		ToAddress:   toSendAcc.String(),
-		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
-	}
-	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
-
-	flow := types.Flow{
-		ID:         123,
-		Owner:      flowOwnerAddr.String(),
-		FeeAddress: feeAddr.String(),
-		Msgs:       anys,
-	}
 	k := keepers.IntentKeeper
-	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil})
-	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil})
 
-	flow.Configuration = &types.ExecutionConfiguration{}
+	// Create a simple flow
+	configuration := types.ExecutionConfiguration{SaveResponses: true}
+	flow, _ := createTestFlow(ctx, configuration, keepers)
+	k.SetFlow(ctx, &flow)
+
+	// Record a latest history entry with ErrFlowConditions for the same flow
+	errEntry := &types.FlowHistoryEntry{Errors: []string{types.ErrFlowConditions}}
+	k.SetFlowHistoryEntry(ctx, flow.ID, errEntry)
+
+	// Set a dummy comparison (will be skipped by autocompound shortcut)
 	flow.Conditions = &types.ExecutionConditions{}
-	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "101"}}
+	flow.Conditions.Comparisons = []*types.Comparison{{
+		ResponseIndex: 0,
+		ResponseKey:   "",
+		ValueType:     "math.Int",
+		Operator:      types.ComparisonOperator_EQUAL,
+		Operand:       "0",
+	}}
+
 	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time)
+
 	history, err := k.GetFlowHistory(ctx, flow.ID)
-	require.Nil(t, err)
+	require.NoError(t, err)
+	require.NotEmpty(t, history)
+	// Should execute despite previous ErrFlowConditions
 	require.True(t, history[len(history)-1].Executed)
 }
 
-func TestNotAllowedToExecuteWithStopOnFailure(t *testing.T) {
+func TestEvaluateComparison_SkipWhenNoResponsesAndNoICQ_AllowsExecution(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
-
-	flowOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
-	feeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
-	toSendAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
-	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx, flowOwnerAddr)[0].Amount, math.NewInt(3_000_000_000_000))
-	localMsg := &banktypes.MsgSend{
-		FromAddress: flowOwnerAddr.String(),
-		ToAddress:   toSendAcc.String(),
-		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
-	}
-	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
-
-	flow := types.Flow{
-		ID:         123,
-		Owner:      flowOwnerAddr.String(),
-		FeeAddress: feeAddr.String(),
-		Msgs:       anys,
-	}
 	k := keepers.IntentKeeper
+
+	configuration := types.ExecutionConfiguration{}
+	flow, _ := createTestFlow(ctx, configuration, keepers)
+	k.SetFlow(ctx, &flow)
+
+	// Add history entries with nil/empty MsgResponses
 	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil})
 	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil})
 
-	flow.Configuration = &types.ExecutionConfiguration{StopOnFailure: true}
+	// Comparison without ICQ should be skipped and not block execution
 	flow.Conditions = &types.ExecutionConditions{}
-	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "101"}}
+	flow.Conditions.Comparisons = []*types.Comparison{{
+		ResponseIndex: 0,
+		ResponseKey:   "Amount.[0].Amount",
+		ValueType:     "math.Int",
+		Operator:      types.ComparisonOperator_EQUAL,
+		Operand:       "101",
+	}}
+
 	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time)
+
 	history, err := k.GetFlowHistory(ctx, flow.ID)
-	require.Nil(t, err)
-	require.False(t, history[len(history)-1].Executed)
+	require.NoError(t, err)
+	require.NotEmpty(t, history)
+	// Should execute even though there were no msg responses and no ICQ
+	require.True(t, history[len(history)-1].Executed)
 }
 
-func TestAllowedToExecuteWithNoStopOnFailureAndUseAndForComparisons(t *testing.T) {
+func TestEvaluateComparison_UsesLatestMsgResponsesFromOtherFlow(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
-
-	flowOwnerAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
-	feeAddr, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 3_000_000_000_000)))
-	toSendAcc, _ := keeper.CreateFakeFundedAccount(ctx, keepers.AccountKeeper, keepers.BankKeeper, sdk.NewCoins(sdk.NewInt64Coin("stake", 0)))
-	require.Equal(t, keepers.BankKeeper.GetAllBalances(ctx, flowOwnerAddr)[0].Amount, math.NewInt(3_000_000_000_000))
-	localMsg := &banktypes.MsgSend{
-		FromAddress: flowOwnerAddr.String(),
-		ToAddress:   toSendAcc.String(),
-		Amount:      sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))),
-	}
-	anys, _ := types.PackTxMsgAnys([]sdk.Msg{localMsg})
-
-	flow := types.Flow{
-		ID:         123,
-		Owner:      flowOwnerAddr.String(),
-		FeeAddress: feeAddr.String(),
-		Msgs:       anys,
-	}
 	k := keepers.IntentKeeper
-	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil})
-	k.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{MsgResponses: nil})
 
-	flow.Configuration = &types.ExecutionConfiguration{}
-	flow.Conditions = &types.ExecutionConditions{UseAndForComparisons: true}
-	flow.Conditions.Comparisons = []*types.Comparison{{ResponseIndex: 0, ResponseKey: "Amount.[0].Amount", ValueType: "math.Int", Operator: 0, Operand: "101"}}
+	configuration := types.ExecutionConfiguration{SaveResponses: true}
+	flow, _ := createTestFlow(ctx, configuration, keepers)
+	k.SetFlow(ctx, &flow)
+
+	// Prepare another flow ID with a history entry that has MsgResponses
+	otherFlowID := uint64(1111)
+	resp := distributiontypes.MsgWithdrawDelegatorRewardResponse{Amount: sdk.NewCoins(sdk.NewInt64Coin("stake", 101))}
+	respAny, err := cdctypes.NewAnyWithValue(&resp)
+	require.NoError(t, err)
+	k.SetFlowHistoryEntry(ctx, otherFlowID, &types.FlowHistoryEntry{MsgResponses: []*cdctypes.Any{respAny}})
+
+	// Comparison targets the other flow's responses: Amount contains 101stake
+	flow.Conditions = &types.ExecutionConditions{}
+	flow.Conditions.UseAndForComparisons = true
+	flow.Conditions.Comparisons = []*types.Comparison{{
+		FlowID:        otherFlowID,
+		ResponseIndex: 0,
+		ResponseKey:   "Amount",
+		ValueType:     "sdk.Coins",
+		Operator:      types.ComparisonOperator_CONTAINS,
+		Operand:       "101stake",
+	}}
+
 	k.HandleFlow(ctx, k.Logger(ctx), flow, ctx.BlockHeader().Time)
+
 	history, err := k.GetFlowHistory(ctx, flow.ID)
-	require.Nil(t, err)
-	require.False(t, history[len(history)-1].Executed)
+	require.NoError(t, err)
+	require.NotEmpty(t, history)
+	// Should execute because comparison evaluated using latest msg responses of other flow
+	require.True(t, history[len(history)-1].Executed)
 }
 
 func createTestContext(t *testing.T) (sdk.Context, keeper.TestKeepers, codec.Codec) {

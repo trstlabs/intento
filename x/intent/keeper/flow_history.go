@@ -29,7 +29,29 @@ func (k Keeper) GetLatestFlowHistoryEntry(ctx sdk.Context, flowId uint64) (*type
 		return &entry, nil
 	}
 
-	return nil, nil // Or appropriate error to indicate not found
+	return nil, types.ErrNotFound
+}
+
+// GetLatestMsgResponses retrieves the most recent non-empty MsgResponses for a flow.
+// It iterates the history in reverse and returns on the first entry that has MsgResponses.
+func (k Keeper) GetLatestMsgResponses(ctx sdk.Context, flowId uint64) ([]*cdctypes.Any, error) {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	prefixStore := prefix.NewStore(store, types.GetFlowHistoryKey(flowId))
+
+	iterator := prefixStore.ReverseIterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var entry types.FlowHistoryEntry
+		if err := k.cdc.Unmarshal(iterator.Value(), &entry); err != nil {
+			return nil, err
+		}
+		if len(entry.MsgResponses) > 0 {
+			return entry.MsgResponses, nil
+		}
+	}
+
+	return nil, types.ErrNotFound
 }
 
 // GetFlowHistory retrieves all history entries for a specific flowId.
