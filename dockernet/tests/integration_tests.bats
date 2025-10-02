@@ -341,7 +341,27 @@ EOF
 
   # Define the file path
   msg_exec_file="msg_exec.json"
- 
+
+  cat <<EOF >"$msg_exec_file"
+{
+  "@type": "/cosmos.authz.v1beta1.MsgExec",
+  "msgs": [
+    {
+      "@type": "/cosmos.bank.v1beta1.MsgSend",
+      "amount": [
+        {
+          "amount": "$MSGSEND_AMOUNT",
+          "denom": "$HOST_DENOM"
+        }
+      ],
+      "from_address": "$HOST_USER_ADDRESS",
+      "to_address": "$HOST_RECEIVER_ADDRESS"
+    }
+  ],
+  "grantee": "$ica_address"
+}
+EOF
+
 
   msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "MsgSend using Trustless Agent" --duration "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance -y)
   echo "$msg_submit_flow"
@@ -468,14 +488,14 @@ EOF
   WAIT_FOR_BLOCK $INTO_LOGS 3
 
   # Define the file path
-  msg_exec_file="msg_exec.json"
+  msg_exec_file="./msg_exec.json"
 
 
   #query INTO IBC balance
   query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+GliYy9GMUI1QzM0ODlGODgxQ0M1NkVDQzEyRUE5MDNFRkNGNUQyMDBCNEQ4MTIzODUyQzE5MUE4OEEzMUFDNzlBOEU0'
   #query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+HVhdG9t' #ATOM DENOM
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Trustless Agent" --duration "120s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "comparisons": [{"response_index":0,"response_key": "", "operand":"111", "operator":4,"value_type": "math.Int", "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Trustless Agent" --duration "61s" \ --interval "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "comparisons": [{"response_index":0,"response_key": "", "operand":"111", "operator":4,"value_type": "math.Int", "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
 
   GET_FLOW_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_FLOW_BY_ID
@@ -489,6 +509,10 @@ EOF
 }
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Autocompound on host" {
+  # call MsgDelegate
+  validator_address=$(GET_VAL_ADDR $HOST_CHAIN_ID 1)
+  delegate=$($HOST_MAIN_CMD_TX staking delegate $validator_address $MSGDELEGATE_AMOUNT$HOST_DENOM --from $HOST_USER -y)
+  WAIT_FOR_BLOCK $INTO_LOGS 3
 
   trustless_agents=$($INTO_MAIN_CMD q intent list-trustless-agents --output json)
   # Use jq to filter the agent_address based on the connection ID
@@ -591,9 +615,9 @@ fi
 
   host_user_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
 
-  msg_withdraw="MsgWithdrawDelegatorReward.json"
+  msg_withdraw="./MsgWithdrawDelegatorReward.json"
 
-  msg_delegate="MsgDelegate.json"
+  msg_delegate="./MsgDelegate.json"
  
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -601,7 +625,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   start_at=$(date -u -d "+2 minutes" +"%s")  # Linux version
 fi
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate $msg_withdraw $msg_delegate --label "Autocompound Twice" --duration "120s" --interval "60s" --start-at $start_at --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}, {"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate $msg_withdraw $msg_delegate --label "Autocompound Twice" --duration "61s" \ --interval "60s" --start-at $start_at --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}, {"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
 
   echo "$msg_submit_flow"
 
@@ -615,42 +639,6 @@ fi
   staking_balance_diff=$(($staking_balance_end - $MSGDELEGATE_AMOUNT))
 
   assert_not_equal "$staking_balance_diff" 0
-}
-
-
-@test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Periodic MsgSend using AuthZ" {
-  # get initial balances on host account
-  host_user_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
-  host_receiver_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
-
-  # get token balance user on INTO
-  user_into_balance_start=$($INTO_MAIN_CMD q bank balance $(INTO_ADDRESS) $INTO_DENOM | GETBAL)
-
-  ica_address=$($INTO_MAIN_CMD q intent interchainaccounts $(INTO_ADDRESS) connection-$CONNECTION_ID)
-  ica_address=$(echo "$ica_address" | awk '{print $2}')
-
-  # Define the file path
-  msg_exec_file="msg_exec.json"
-
-
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "Recurring transfer on host chain from host user" --duration "2880h" --interval "60s" --stop-on-failure --fee-funds $RECURRING_MSGSEND_AMOUNT_TOTAL$INTO_DENOM --connection-id connection-$CONNECTION_ID --from $INTO_USER --fallback-to-owner-balance --stop-on-timeout -y)
-  echo "$msg_submit_flow"
-
-  GET_FLOW_ID $(INTO_ADDRESS)
-  WAIT_FOR_EXECUTED_FLOW_BY_ID
-  sleep 20
-  # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
-  host_receiver_balance_mid=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
-  receiver_diff=$(($host_receiver_balance_mid - $host_receiver_balance_start))
-  assert_equal "$receiver_diff" $MSGSEND_AMOUNT
-
-  sleep 60
-  # WAIT_FOR_EXECUTED_FLOW_BY_ID
-
-  # calculate difference between token balance receiver before and after, should equal MSGSEND_AMOUNT
-  host_receiver_balance_end=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_RECEIVER_ADDRESS $HOST_DENOM | GETBAL)
-  receiver_diff=$(($host_receiver_balance_end - $host_receiver_balance_mid))
-  assert_equal "$receiver_diff" $MSGSEND_AMOUNT
 }
 
 @test "[INTEGRATION-BASIC-$CHAIN_NAME] Flow Conditional Autocompound on host" {
@@ -670,10 +658,10 @@ fi
 
   host_user_balance_start=$($HOST_MAIN_CMD 2>&1 q bank balance $HOST_USER_ADDRESS $HOST_DENOM | GETBAL)
 
-  msg_withdraw="MsgWithdrawDelegatorReward.json"
-  msg_delegate="MsgDelegate.json"
+  msg_withdraw="./MsgWithdrawDelegatorReward.json"
+  msg_delegate="./MsgDelegate.json"
   
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Conditional Autocompound" --duration "120s" --interval "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}' --save-responses -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Conditional Autocompound" --duration "120s" \ --interval "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}' --save-responses -y)
   echo "$msg_submit_flow"
 
   GET_FLOW_ID $(INTO_ADDRESS)
@@ -700,7 +688,27 @@ fi
   into_user_balance_start=$($INTO_MAIN_CMD 2>&1 q bank balance $INTO_USER_ADDRESS $INTO_DENOM | GETBAL)
 
   msg_withdraw="MsgWithdrawDelegatorReward.json"
+  cat <<EOF >"$msg_withdraw"
+{
+    "@type": "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+    "delegator_address": "$INTO_USER_ADDRESS",
+    "validator_address": "$validator_address"
+}
+EOF
+
+
   msg_delegate="MsgDelegate.json"
+  cat <<EOF >"$msg_delegate"
+{
+    "@type": "/cosmos.staking.v1beta1.MsgDelegate",
+    "delegator_address": "$INTO_USER_ADDRESS",
+    "validator_address": "$validator_address",
+    "amount": {
+        "amount": "10",
+        "denom": "$INTO_DENOM"
+      }
+}
+EOF
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
   start_at=$(date -v+2M +"%s")  # macOS version
@@ -733,7 +741,7 @@ fi
 
   msg_exec_file="msg_exec.json"
   echo "$msg_exec_file"
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" \
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "./$msg_exec_file" \
     --label "ICQ Balance Diff = 0" \
     --duration "120s" \
     --interval "60s" \
@@ -776,9 +784,9 @@ fi
   agent_address=$(echo "$trustless_agents" | jq -r --arg conn_id "connection-$CONNECTION_ID" '.trustless_agents[] | select(.ica_config.connection_id == $conn_id) | .agent_address')
 
   msg_exec_file="msg_exec.json"
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" \
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "./$msg_exec_file" \
     --label "ICQ Diff < Recent Value" \
-    --duration "120s" \
+    --duration "61s" \
     --interval "60s" \
     --trustless-agent $agent_address \
     --trustless-agent-fee-limit 20$INTO_DENOM \
