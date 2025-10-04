@@ -471,7 +471,7 @@ func updateConditions(
 	// --- Comparisons validation ---
 	if msgConditions.Comparisons != nil {
 		for _, cmp := range msgConditions.Comparisons {
-			if int(cmp.ResponseIndex) < 0 || int(cmp.ResponseIndex) >= len(msgMsgs) {
+			if int(cmp.ResponseIndex) < 0 || int(cmp.ResponseIndex) >= len(msgMsgs) && cmp.ICQConfig == nil {
 				return errorsmod.Wrapf(
 					types.ErrInvalidRequest,
 					"Comparisons: response index %d out of bounds (len: %d)",
