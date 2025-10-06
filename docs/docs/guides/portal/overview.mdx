@@ -133,14 +133,14 @@ It’s recommended to use small amounts of tokens or a short duration initially 
   - `5 INTO` = `5000000uinto`
   - `0.5 INTO` = `500000uinto`
 
-For IBC tokens, the units are always in the base format + `ibc/{hash}`.
+For IBC tokens, you can now use the format TOKEN (IBC Path on executing chain), e.g. USDC (transfer/channel-750). The corresponding amount will be converted micro units automatically.
 
 ## Placeholders
 
-You can use the Your Address placeholder as is, it will be replaced with the user's address when the flow is submitted.
-For on Intento you can use the Your Intento Address, it will be replaced with the user's Intento address when the flow is submitted.
+You can use the `Your address` placeholder as is, it will be replaced with the user's address when the flow is submitted.
+For on Intento you can use the `Your Intento address`, it will be replaced with the user's Intento address when the flow is submitted.
 
-For other prefixes you can use the placeholder `Your {prefix} Address` e.g. `Your osmo Address`.
+For other prefixes you can use the placeholder `Your {prefix} address` e.g. `Your osmo address`.
 
 For the autocompound flows validator addresses are retrieved and auto-parsed if available. If not available you see "Not found. Stake tokens or insert a validator operator address here ⚠️" and have to insert the validator address manually.
 
