@@ -1,6 +1,9 @@
 package types
 
-import query "github.com/cosmos/cosmos-sdk/types/query"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	query "github.com/cosmos/cosmos-sdk/types/query"
+)
 
 // NewQueryInterchainAccountRequest creates and returns a new QueryInterchainAccountFromAddressRequest
 func NewQueryInterchainAccountRequest(owner, connectionID string) *QueryInterchainAccountFromAddressRequest {
@@ -75,9 +78,14 @@ func NewQueryTrustlessAgentsRequest(pagination *query.PageRequest) *QueryTrustle
 	}
 }
 
-// NewQueryTrustlessAgentResponse creates and returns a new QueryTrustlessAgentsResponse
-func NewQueryTrustlessAgentsResponse(trustlessAgents []TrustlessAgent) *QueryTrustlessAgentsResponse {
-	return &QueryTrustlessAgentsResponse{
-		TrustlessAgents: trustlessAgents,
+// NewQueryTotalBurntRequest creates and returns a new QueryTotalBurntRequest
+func NewQueryTotalBurntRequest() *QueryTotalBurntRequest {
+	return &QueryTotalBurntRequest{}
+}
+
+// NewQueryTotalBurntResponse creates and returns a new QueryTotalBurntResponse
+func NewQueryTotalBurntResponse(totalBurnt sdk.Coin) *QueryTotalBurntResponse {
+	return &QueryTotalBurntResponse{
+		TotalBurnt: totalBurnt,
 	}
 }

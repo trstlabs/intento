@@ -246,9 +246,9 @@ func (q QueryServer) TrustlessAgentsByFeeAdmin(c context.Context, req *types.Que
 	pageRes, err := query.FilteredPaginate(prefixStore, req.Pagination, func(key []byte, _ []byte, accumulate bool) (bool, error) {
 		if accumulate {
 			trustlessAgentAddress := string(key)
-			flow := q.keeper.GetTrustlessAgent(ctx, trustlessAgentAddress)
+			trustlessAgent := q.keeper.GetTrustlessAgent(ctx, trustlessAgentAddress)
 
-			trustlessAgents = append(trustlessAgents, flow)
+			trustlessAgents = append(trustlessAgents, trustlessAgent)
 
 		}
 		return true, nil
@@ -260,5 +260,15 @@ func (q QueryServer) TrustlessAgentsByFeeAdmin(c context.Context, req *types.Que
 	return &types.QueryTrustlessAgentsByFeeAdminResponse{
 		TrustlessAgents: trustlessAgents,
 		Pagination:      pageRes,
+	}, nil
+}
+
+// TotalBurnt implements the Query/TotalBurnt gRPC method
+func (q QueryServer) TotalBurnt(goCtx context.Context, req *types.QueryTotalBurntRequest) (*types.QueryTotalBurntResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	totalBurnt := q.keeper.GetTotalBurnt(ctx)
+
+	return &types.QueryTotalBurntResponse{
+		TotalBurnt: totalBurnt,
 	}, nil
 }

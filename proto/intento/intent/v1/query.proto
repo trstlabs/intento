@@ -3,6 +3,7 @@ syntax = "proto3";
 package intento.intent.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "intento/intent/v1/flow.proto";
@@ -64,6 +65,11 @@ service Query {
   // Params returns the total set of Intent parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/intento/intent/v1/params";
+  }
+
+  // TotalBurnt returns the total amount of coins that have been burnt
+  rpc TotalBurnt(QueryTotalBurntRequest) returns (QueryTotalBurntResponse) {
+    option (google.api.http).get = "/intento/intent/v1/total_burnt_coins";
   }
 }
 
@@ -184,4 +190,13 @@ message QueryTrustlessAgentsByFeeAdminResponse {
   repeated TrustlessAgent trustless_agents = 1 [ (gogoproto.nullable) = false ];
   // Pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryTotalBurntRequest is the request type for the Query/TotalBurnt RPC method.
+message QueryTotalBurntRequest {}
+
+// QueryTotalBurntResponse is the response type for the Query/TotalBurnt RPC method.
+message QueryTotalBurntResponse {
+  // total_burnt defines the total amount that has been burnt
+  cosmos.base.v1beta1.Coin total_burnt = 1 [ (gogoproto.nullable) = false ];
 }

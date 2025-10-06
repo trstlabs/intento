@@ -34,6 +34,7 @@ var (
 	TrustlessAgentsByAdminPrefix   = []byte{0x12}
 	FlowFeedbackLoopQueryKeyPrefix = []byte{0x14}
 	FlowComparisonQueryKeyPrefix   = []byte{0x15}
+	TotalBurntKey                  = []byte{0x16} // Key for storing total burnt coins
 	KeyLastID                      = append(SequenceKeyPrefix, []byte("lastId")...)
 	KeyLastTxAddrID                = append(SequenceKeyPrefix, []byte("lastTxAddrId")...)
 )

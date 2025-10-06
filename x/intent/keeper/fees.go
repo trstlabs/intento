@@ -6,6 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/trstlabs/intento/x/intent/types"
 )
@@ -59,7 +60,7 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.Flow, feeAddr sdk.Ac
 	}
 
 	toCommunityPool := totalFlowFees
-	if !fixedFeeCoin.IsNil() {
+	if !fixedFeeCoin.IsNil() && fixedFeeCoin.Denom == types.Denom {
 		toCommunityPool = totalFlowFees.Sub(fixedFeeCoin)
 
 		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, feeAddr, types.ModuleName, sdk.NewCoins(fixedFeeCoin))
@@ -70,6 +71,10 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.Flow, feeAddr sdk.Ac
 		if err != nil {
 			return sdk.Coin{}, errorsmod.Wrap(errorsmod.ErrPanic, "could not burn coins, this should never happen")
 		}
+
+		// Track total burnt coins
+		k.addToTotalBurnt(ctx, fixedFeeCoin)
+
 		k.Logger(ctx).Debug("flow fee burn", "amount", fixedFeeCoin)
 
 		ctx.EventManager().EmitEvents(sdk.Events{
@@ -121,6 +126,36 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.Flow, feeAddr sdk.Ac
 	k.Logger(ctx).Debug("fee", "amount", totalFlowFees)
 
 	return totalFlowFees, nil
+}
+
+// addToTotalBurnt adds the given coin to the total burnt coins
+func (k Keeper) addToTotalBurnt(ctx sdk.Context, coin sdk.Coin) {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	fmt.Println("coin", coin)
+	var totalBurnt sdk.Coin
+	bz := store.Get(types.TotalBurntKey)
+	if bz != nil {
+		k.cdc.MustUnmarshal(bz, &totalBurnt)
+	}
+
+	if totalBurnt.Denom == "" {
+		totalBurnt = coin
+	} else {
+		totalBurnt = totalBurnt.Add(coin)
+	}
+
+	store.Set(types.TotalBurntKey, k.cdc.MustMarshal(&totalBurnt))
+}
+
+func (k Keeper) GetTotalBurnt(ctx sdk.Context) sdk.Coin {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+
+	var totalBurnt sdk.Coin
+	bz := store.Get(types.TotalBurntKey)
+	if bz != nil {
+		k.cdc.MustUnmarshal(bz, &totalBurnt)
+	}
+	return totalBurnt
 }
 
 // GetFeeAccountForMinFees checks if the flow fee address (or optionally the owner address)

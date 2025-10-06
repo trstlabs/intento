@@ -33,8 +33,9 @@ func TestDistributeCoinsNotRecurring(t *testing.T) {
 	types.Denom = sdk.DefaultBondDenom
 
 	lastTime := time.Now().Add(time.Second * 20)
+	msg, _ := sdktypes.NewAnyWithValue(&types.MsgSubmitTx{})
 	flow := types.Flow{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime,
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: []*sdktypes.Any{msg}, StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime,
 	}
 
 	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, flow, 1_000_000)
@@ -73,8 +74,9 @@ func TestDistributeCoinsOwnerFeeFallbackNotRecurring(t *testing.T) {
 	ownerAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 30_000_000)))
 	types.Denom = sdk.DefaultBondDenom
 	lastTime := time.Now().Add(time.Second * 20)
+	msg, _ := sdktypes.NewAnyWithValue(&types.MsgSubmitTx{})
 	flow := types.Flow{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime, Configuration: &types.ExecutionConfiguration{WalletFallback: true},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: []*sdktypes.Any{msg}, StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime, Configuration: &types.ExecutionConfiguration{WalletFallback: true},
 	}
 
 	//tokens from the owner will be used
@@ -120,8 +122,9 @@ func TestDistributeCoinsEmptyOwnerBalanceAndMultipliedFlexFee(t *testing.T) {
 	pub2 := secp256k1.GenPrivKey().PubKey()
 	ownerAddr := sdk.AccAddress(pub2.Address())
 
+	msg, _ := sdktypes.NewAnyWithValue(&types.MsgSubmitTx{})
 	flow := types.Flow{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), SelfHostedICA: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: []*sdktypes.Any{msg}, Interval: time.Second * 20, StartTime: time.Now().Add(time.Hour * -1), EndTime: time.Now().Add(time.Second * 20), SelfHostedICA: &types.ICAConfig{PortID: "ibccontoller-test", ConnectionID: "connection-0"},
 	}
 
 	ctx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
@@ -170,8 +173,9 @@ func TestDistributeCoinsDifferentDenom(t *testing.T) {
 
 	// Simulate the flow info for testing
 	lastTime := time.Now().Add(time.Second * 20)
+	msg, _ := sdktypes.NewAnyWithValue(&types.MsgSubmitTx{})
 	flow := types.Flow{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: NewMsg(), StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime,
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: []*sdktypes.Any{msg}, StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime,
 	}
 
 	// Get the validator rewards and check for no rewards yet
@@ -459,7 +463,56 @@ func TestGetFeeAccountForMinFees_WithMultipleBalanceDenoms(t *testing.T) {
 	require.Equal(t, "ibc/17409F270CB2FE874D5E3F339E958752DEC39319E5A44AD0399D2D1284AD499C", denom)
 }
 
-func NewMsg() []*sdktypes.Any {
+func TestTotalBurnt(t *testing.T) {
+	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0))))
+
+	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 30_000_000)))
+
+	keeper.SetParams(ctx, types.Params{
+		FlowFundsCommission: 10,
+		BurnFeePerMsg:       2_000_000, // 2INTO
+		FlowFlexFeeMul:      10,
+		GasFeeCoins:         sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1))),
+		MaxFlowDuration:     time.Hour * 24 * 366 * 10, // a little over 10 years
+		MinFlowDuration:     time.Second * 60,
+		MinFlowInterval:     time.Second * 20,
+	})
+
+	pub2 := secp256k1.GenPrivKey().PubKey()
+	ownerAddr := sdk.AccAddress(pub2.Address())
+	types.Denom = sdk.DefaultBondDenom
+
+	lastTime := time.Now().Add(time.Second * 20)
 	msg, _ := sdktypes.NewAnyWithValue(&types.MsgSubmitTx{})
-	return []*sdktypes.Any{msg}
+	flow := types.Flow{
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: []*sdktypes.Any{msg}, StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime,
+	}
+
+	// Initially, total burnt coins should be empty
+	totalBurnt := keeper.GetTotalBurnt(ctx)
+	require.True(t, totalBurnt == sdk.Coin{})
+
+	acc, _, err := keeper.GetFeeAccountForMinFees(ctx, flow, 1_000_000)
+	require.Nil(t, err)
+	_, err = keeper.DistributeCoins(ctx, flow, acc, types.Denom)
+	require.Nil(t, err)
+
+	// After burning, total burnt coins should contain the burnt amount
+	totalBurnt = keeper.GetTotalBurnt(ctx)
+	expectedBurnt := sdk.NewCoin(types.Denom, math.NewInt(2_000_000))
+	require.Equal(t, expectedBurnt, totalBurnt)
+
+	// Run another flow to accumulate more burnt coins
+	lastTime = time.Now().Add(time.Second * 40)
+	flow2 := types.Flow{
+		ID: 1, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: []*sdktypes.Any{msg}, StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime,
+	}
+
+	_, err = keeper.DistributeCoins(ctx, flow2, acc, types.Denom)
+	require.Nil(t, err)
+
+	// Total burnt coins should now be 4_000_000 (2_000_000 * 2)
+	totalBurnt = keeper.GetTotalBurnt(ctx)
+	expectedBurnt = sdk.NewCoin(types.Denom, math.NewInt(4_000_000))
+	require.Equal(t, expectedBurnt, totalBurnt)
 }
