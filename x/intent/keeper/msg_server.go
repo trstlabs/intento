@@ -191,12 +191,13 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 	}
 
 	if msg.Conditions != nil {
-		err = updateConditions(flow.Conditions, msg.Msgs, flow.EndTime.Sub(timeNowWindow), flow.Interval)
+		err = updateConditions(msg.Conditions, msg.Msgs, flow.EndTime.Sub(timeNowWindow), flow.Interval)
 		if err != nil {
 			fmt.Printf("Error updating conditions: %v\n", err)
 			return nil, err
 		}
 
+		flow.Conditions = msg.Conditions
 	}
 	if len(msg.Msgs) != 0 {
 		flow.Msgs = msg.Msgs
