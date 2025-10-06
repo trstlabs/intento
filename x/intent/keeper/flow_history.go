@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/base64"
 	"encoding/binary"
 
 	"time"
@@ -137,13 +138,15 @@ func (k Keeper) addFlowHistoryEntry(ctx sdk.Context, flow *types.Flow, actualExe
 		historyEntry.MsgResponses = append(historyEntry.MsgResponses, msgResponses...)
 		for i, comparison := range flow.Conditions.Comparisons {
 			if comparison.ICQConfig != nil {
-				historyEntry.QueryResponses = append(historyEntry.QueryResponses, string(comparison.ICQConfig.Response))
+				encoded := base64.StdEncoding.EncodeToString(comparison.ICQConfig.Response)
+				historyEntry.QueryResponses = append(historyEntry.QueryResponses, encoded)
 				flow.Conditions.Comparisons[i].ICQConfig.Response = nil
 			}
 		}
 		for i, feedbackLoop := range flow.Conditions.FeedbackLoops {
 			if feedbackLoop.ICQConfig != nil {
-				historyEntry.QueryResponses = append(historyEntry.QueryResponses, string(feedbackLoop.ICQConfig.Response))
+				encoded := base64.StdEncoding.EncodeToString(feedbackLoop.ICQConfig.Response)
+				historyEntry.QueryResponses = append(historyEntry.QueryResponses, encoded)
 				flow.Conditions.FeedbackLoops[i].ICQConfig.Response = nil
 			}
 		}
