@@ -428,6 +428,7 @@ func (k Keeper) recordFlowNotAllowed(ctx sdk.Context, flow *types.Flow, timeOfBl
 
 // shouldRecur checks whether the flow should be rescheduled based on recurrence rules
 func (k Keeper) shouldRecur(ctx sdk.Context, flow types.Flow, errorString string) bool {
+	// Don't recur if there was a balance too low error
 	if strings.Contains(errorString, types.ErrBalanceTooLow) {
 		return false
 	}
@@ -437,6 +438,12 @@ func (k Keeper) shouldRecur(ctx sdk.Context, flow types.Flow, errorString string
 	if k.HasFlowHistoryEntry(ctx, flow.ID) {
 		historyEntry, err := k.GetLatestFlowHistoryEntry(ctx, flow.ID)
 		if err == nil && historyEntry != nil {
+			// If the flow wasn't executed (no error, no query response) and this is not the first run
+			if len(historyEntry.Errors) == 0 && len(historyEntry.MsgResponses) == 0 && !historyEntry.Executed {
+				return false
+			}
+
+			// Check for any errors in history
 			for _, errStr := range historyEntry.Errors {
 				if errStr != "" {
 					hasHistoryError = true
@@ -446,7 +453,12 @@ func (k Keeper) shouldRecur(ctx sdk.Context, flow types.Flow, errorString string
 		}
 	}
 
-	isRecurring := flow.ExecTime.Before(flow.EndTime) && (flow.ExecTime.Add(flow.Interval).Before(flow.EndTime) || flow.ExecTime.Add(flow.Interval).Equal(flow.EndTime))
+	// Check if the flow is configured to recur based on its time settings
+	isRecurring := flow.ExecTime.Before(flow.EndTime) &&
+		(flow.ExecTime.Add(flow.Interval).Before(flow.EndTime) ||
+			flow.ExecTime.Add(flow.Interval).Equal(flow.EndTime))
+
+	// Determine if the flow is allowed to recur based on its configuration and execution status
 	allowedToRecur := (!flow.Configuration.StopOnSuccess && !flow.Configuration.StopOnFailure) ||
 		(flow.Configuration.StopOnSuccess && (errorString != "" || hasHistoryError)) ||
 		(flow.Configuration.StopOnFailure && (errorString == "" && !hasHistoryError))
