@@ -466,7 +466,8 @@ func TestGetFeeAccountForMinFees_WithMultipleBalanceDenoms(t *testing.T) {
 func TestTotalBurnt(t *testing.T) {
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0))))
 
-	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 30_000_000)))
+	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)))
+	ownerAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin(sdk.DefaultBondDenom, 100_000_000)))
 
 	keeper.SetParams(ctx, types.Params{
 		FlowFundsCommission: 10,
@@ -478,14 +479,12 @@ func TestTotalBurnt(t *testing.T) {
 		MinFlowInterval:     time.Second * 20,
 	})
 
-	pub2 := secp256k1.GenPrivKey().PubKey()
-	ownerAddr := sdk.AccAddress(pub2.Address())
 	types.Denom = sdk.DefaultBondDenom
 
 	lastTime := time.Now().Add(time.Second * 20)
 	msg, _ := sdktypes.NewAnyWithValue(&types.MsgSubmitTx{})
 	flow := types.Flow{
-		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: []*sdktypes.Any{msg}, StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime,
+		ID: 0, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: []*sdktypes.Any{msg}, StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime, Configuration: &types.ExecutionConfiguration{WalletFallback: true},
 	}
 
 	// Initially, total burnt coins should be empty
@@ -505,9 +504,10 @@ func TestTotalBurnt(t *testing.T) {
 	// Run another flow to accumulate more burnt coins
 	lastTime = time.Now().Add(time.Second * 40)
 	flow2 := types.Flow{
-		ID: 1, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: []*sdktypes.Any{msg}, StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime,
+		ID: 1, Owner: ownerAddr.String(), FeeAddress: feeAddr.String(), Msgs: []*sdktypes.Any{msg}, StartTime: time.Now().Add(time.Hour * -1), EndTime: lastTime, ExecTime: lastTime, Configuration: &types.ExecutionConfiguration{WalletFallback: true},
 	}
-
+	acc, _, err = keeper.GetFeeAccountForMinFees(ctx, flow2, 1_000_000)
+	require.Nil(t, err)
 	_, err = keeper.DistributeCoins(ctx, flow2, acc, types.Denom)
 	require.Nil(t, err)
 

@@ -65,11 +65,11 @@ func (k Keeper) DistributeCoins(ctx sdk.Context, flow types.Flow, feeAddr sdk.Ac
 
 		err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, feeAddr, types.ModuleName, sdk.NewCoins(fixedFeeCoin))
 		if err != nil {
-			return sdk.Coin{}, err
+			return sdk.Coin{}, errorsmod.Wrap(types.ErrUnexpectedFeeCalculation, "could not send coins to module: "+err.Error())
 		}
 		err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(fixedFeeCoin))
 		if err != nil {
-			return sdk.Coin{}, errorsmod.Wrap(errorsmod.ErrPanic, "could not burn coins, this should never happen")
+			return sdk.Coin{}, errorsmod.Wrap(types.ErrUnexpectedFeeCalculation, "could not burn coins: "+err.Error())
 		}
 
 		// Track total burnt coins
