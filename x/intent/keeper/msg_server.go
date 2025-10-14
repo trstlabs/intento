@@ -159,7 +159,10 @@ func (k msgServer) UpdateFlow(goCtx context.Context, msg *types.MsgUpdateFlow) (
 		if err != nil {
 			return nil, errorsmod.Wrap(types.ErrUpdateFlow, err.Error())
 		}
+		if interval == 0 {
+			return nil, errorsmod.Wrapf(types.ErrUpdateFlow, "interval must be greater than 0")
 
+		}
 		if interval != 0 && interval < p.MinFlowInterval || interval > flow.EndTime.Sub(flow.StartTime) {
 			return nil, errorsmod.Wrapf(types.ErrUpdateFlow, "interval: %s  must be longer than minimum interval:  %s, and execution should happen before end time", interval, p.MinFlowInterval)
 		}
