@@ -108,7 +108,10 @@ func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flo
 				return nil, errorsmod.Wrap(types.ErrUnauthorized, "owner doesn't have permission to send this message")
 			}
 		}
-
+		flowOwnerAddr, err := sdk.AccAddressFromBech32(flow.Owner)
+		if err != nil {
+			return nil, err
+		}
 		if flow.Msgs[index].TypeUrl == "/ibc.applications.transfer.v1.MsgTransfer" {
 			transferMsg, err := types.GetTransferMsg(k.cdc, flow.Msgs[index])
 			if err != nil {
@@ -118,12 +121,9 @@ func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flo
 			if err != nil {
 				return nil, err
 			}
+			k.hooks.AfterActionICA(ctx, flowOwnerAddr)
 			continue
 		} else {
-			flowOwnerAddr, err := sdk.AccAddressFromBech32(flow.Owner)
-			if err != nil {
-				return nil, err
-			}
 			k.hooks.AfterActionLocal(cacheCtx, flowOwnerAddr)
 		}
 
