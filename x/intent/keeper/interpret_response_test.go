@@ -12,6 +12,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
+	osmosistwapv1beta1 "github.com/trstlabs/intento/x/intent/msg_registry/osmosis/twap/v1beta1"
 	"github.com/trstlabs/intento/x/intent/types"
 )
 
@@ -747,6 +748,136 @@ func TestBalanceResponse(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok, "comparison should succeed for larger than")
 
+}
+
+func TestNegativeTwapDifference(t *testing.T) {
+	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+
+	// Create a flow ID for testing
+	flowID := uint64(1)
+
+	// Create a flow first to ensure the history works
+	flow := types.Flow{
+		ID:         flowID,
+		ExecTime:   time.Now(),
+		Conditions: &types.ExecutionConditions{},
+	}
+	keeper.SetFlow(ctx, &flow)
+
+	// Create a previous TWAP record with an initial price
+	previousTwapRecord := osmosistwapv1beta1.TwapRecord{
+		PoolId:                      1,
+		Asset0Denom:                 "uatom",
+		Asset1Denom:                 "uosmo",
+		Height:                      100,
+		Time:                        time.Now().Add(-1 * time.Hour),      // 1 hour ago
+		P0LastSpotPrice:             math.LegacyNewDecWithPrec(-1000, 4), // -0.1000
+		P1LastSpotPrice:             math.LegacyNewDec(1),
+		P0ArithmeticTwapAccumulator: math.LegacyNewDec(0),
+		P1ArithmeticTwapAccumulator: math.LegacyNewDec(0),
+		GeometricTwapAccumulator:    math.LegacyNewDec(0),
+	}
+
+	// Create the current TWAP record with a different price
+	currentTwapRecord := previousTwapRecord
+	currentTwapRecord.P0LastSpotPrice = math.LegacyNewDecWithPrec(-1234, 4) // -0.1234
+	currentTwapRecord.Time = time.Now()                                     // Current time
+
+	// Serialize the current TWAP record
+	twapBytes, err := currentTwapRecord.Marshal()
+	require.NoError(t, err)
+
+	// Create a flow history entry with the previous response
+	previousResponseAny, err := cdctypes.NewAnyWithValue(&previousTwapRecord)
+	require.NoError(t, err)
+
+	// Create a flow history entry with the previous response
+	historyEntry := types.FlowHistoryEntry{
+		ScheduledExecTime: time.Now().Add(-30 * time.Minute), // 30 minutes ago
+		ActualExecTime:    time.Now().Add(-30 * time.Minute),
+		QueryResponses:    []string{string(previousResponseAny.Value)},
+		Executed:          true,
+		// Ensure there are no errors to mark this as a successful execution
+		Errors: nil,
+		// Add some coins to the execution fee to make it a valid entry
+		ExecFee: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))),
+	}
+
+	// Set the flow history entry
+	keeper.SetFlowHistoryEntry(ctx, flowID, &historyEntry)
+
+	// Verify the history was set correctly
+	history, _ := keeper.GetFlowHistory(ctx, flowID)
+	require.Len(t, history, 1, "should have one history entry")
+
+	// Log the history entry for debugging
+	k := keeper
+	k.Logger(ctx).Info("History entry",
+		"executed", history[0].Executed,
+		"errors", history[0].Errors,
+		"hasMsgs", len(history[0].MsgResponses) > 0,
+		"execFee", history[0].ExecFee)
+
+	tests := []struct {
+		name     string
+		operand  string
+		operator types.ComparisonOperator
+		expected bool
+		errMsg   string
+		diffMode bool
+	}{
+		{
+			name:     "negative decrease (more negative) - larger than",
+			operand:  "-0.2",
+			operator: types.ComparisonOperator_LARGER_THAN,
+			expected: true, // -0.1234 - (-0.1) = -0.0234 > -0.2
+			diffMode: true,
+		},
+		{
+			name:     "negative decrease (more negative) - less than",
+			operand:  "-0.02",
+			operator: types.ComparisonOperator_SMALLER_THAN,
+			expected: true, // -0.0234 < -0.02
+			diffMode: true,
+		},
+		{
+			name:     "negative value - larger than",
+			operand:  "-0.124",
+			operator: types.ComparisonOperator_LARGER_THAN,
+			expected: true, // -0.1234 > -0.124
+			diffMode: false,
+		},
+		{
+			name:     "negative value - less than",
+			operand:  "-0.12",
+			operator: types.ComparisonOperator_SMALLER_THAN,
+			expected: true, // -0.1234 < -0.12
+			diffMode: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			comparison := types.Comparison{
+				ResponseIndex:  0,
+				ResponseKey:    "P0LastSpotPrice",
+				Operand:        tc.operand,
+				Operator:       tc.operator,
+				ValueType:      "osmosistwapv1beta1.TwapRecord.P0LastSpotPrice",
+				DifferenceMode: tc.diffMode,
+				ICQConfig:      &types.ICQConfig{Response: twapBytes},
+			}
+
+			ok, err := keeper.CompareResponseValue(ctx, 1, nil, comparison)
+			if tc.errMsg != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMsg)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, ok, "test case: %s", tc.name)
+			}
+		})
+	}
 }
 
 // func TestCompareStringFromWasmResponse(t *testing.T) {

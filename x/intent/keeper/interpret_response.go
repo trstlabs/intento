@@ -1102,12 +1102,10 @@ func (k Keeper) calculateDifference(ctx sdk.Context, currentValue, previousValue
 		if !ok {
 			return nil, fmt.Errorf("previous value is not math.Dec, previous value type: %T, current value type: %T", previousValue, currentValue)
 		}
+		// Calculate difference with sign preserved
 		diff, err := current.Sub(prevDec)
 		if err != nil {
-			diff, err = prevDec.Sub(current)
-			if err != nil {
-				return nil, fmt.Errorf("math.Dec subtraction failed: %w", err)
-			}
+			return nil, fmt.Errorf("math.Dec subtraction failed: %w", err)
 		}
 		k.Logger(ctx).Debug("calculated difference", "current", current, "previous", prevDec, "difference", diff)
 		return diff, nil
@@ -1117,12 +1115,10 @@ func (k Keeper) calculateDifference(ctx sdk.Context, currentValue, previousValue
 		if !ok {
 			return nil, fmt.Errorf("previous value is not math.Int")
 		}
+		// Calculate difference with sign preserved
 		diff, err := current.SafeSub(prevInt)
 		if err != nil {
-			diff, err = prevInt.SafeSub(current)
-			if err != nil {
-				return nil, fmt.Errorf("math.Int subtraction failed: %w", err)
-			}
+			return nil, fmt.Errorf("math.Int subtraction failed: %w", err)
 		}
 		k.Logger(ctx).Debug("calculated difference", "current", current, "previous", prevInt, "difference", diff)
 		return diff, nil
