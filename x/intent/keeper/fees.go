@@ -173,7 +173,16 @@ func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, flow types.Flow, expect
 
 	feeBalances := k.bankKeeper.GetAllBalances(ctx, feeAddr)
 
-	for _, coin := range p.GasFeeCoins {
+	// Reorder FeeLimit so "uinto" comes first if available
+	gasFeeCoins := p.GasFeeCoins
+	for i, coin := range gasFeeCoins {
+		if coin.Denom == types.Denom {
+			gasFeeCoins[0], gasFeeCoins[i] = gasFeeCoins[i], gasFeeCoins[0]
+			break
+		}
+	}
+
+	for _, coin := range gasFeeCoins {
 		feeCoin, _, err := k.calculateFee(coin.Denom, expectedGas, flow, p)
 		if err != nil {
 			return nil, "", err
@@ -192,7 +201,7 @@ func (k Keeper) GetFeeAccountForMinFees(ctx sdk.Context, flow types.Flow, expect
 		}
 
 		ownerBalances := k.bankKeeper.GetAllBalances(ctx, ownerAddr)
-		for _, coin := range p.GasFeeCoins {
+		for _, coin := range gasFeeCoins {
 			feeCoin, _, err := k.calculateFee(coin.Denom, expectedGas, flow, p)
 			if err != nil {
 				return nil, "", err
@@ -240,7 +249,7 @@ func (k Keeper) SendFeesToTrustlessAgentFeeAdmin(ctx sdk.Context, flow types.Flo
 	// Reorder FeeLimit so "uinto" comes first if available
 	feeLimits := flow.TrustlessAgent.FeeLimit
 	for i, coin := range feeLimits {
-		if coin.Denom == "uinto" {
+		if coin.Denom == types.Denom {
 			feeLimits[0], feeLimits[i] = feeLimits[i], feeLimits[0]
 			break
 		}
