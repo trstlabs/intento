@@ -1,6 +1,7 @@
 services:
   into1:
     image: intento:into
+    restart: always
     volumes:
       - ./state/into1:/home/intento/.intento
     ports:
@@ -20,6 +21,7 @@ services:
       - ./state/into3:/home/intento/.intento
 
   gaia1:
+    restart: always
     image: intento:gaia
     volumes:
       - ./state/gaia1:/home/gaia/.gaia
