@@ -439,7 +439,7 @@ func (k Keeper) shouldRecur(ctx sdk.Context, flow types.Flow, errorString string
 		historyEntry, err := k.GetLatestFlowHistoryEntry(ctx, flow.ID)
 		if err == nil && historyEntry != nil {
 			// If the flow wasn't executed (no error, no query response) and this is not the first run
-			if len(historyEntry.Errors) == 0 && len(historyEntry.MsgResponses) == 0 && !historyEntry.Executed {
+			if len(historyEntry.Errors) == 0 && len(historyEntry.MsgResponses) == 0 && !historyEntry.Executed && len(historyEntry.QueryResponses) == 0 {
 				return false
 			}
 
