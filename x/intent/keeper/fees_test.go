@@ -357,7 +357,7 @@ func TestSendFeesToTrustlessAgentFeeAdmin(t *testing.T) {
 			name: "uinto set first and used first",
 			setup: func(t *testing.T) (sdk.Context, Keeper, sdk.AccAddress, sdk.AccAddress, types.Flow, types.TrustlessAgent) {
 				ctx, keeper, _, _, _, _ := setupTest(t, nil)
-
+				types.Denom = "uinto"
 				denomA := "uinto"
 				denomB := "ibc/BBB..."
 				denomC := "ibc/CCC..."
