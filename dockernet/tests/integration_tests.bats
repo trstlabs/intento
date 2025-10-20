@@ -495,7 +495,7 @@ EOF
   query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+GliYy9GMUI1QzM0ODlGODgxQ0M1NkVDQzEyRUE5MDNFRkNGNUQyMDBCNEQ4MTIzODUyQzE5MUE4OEEzMUFDNzlBOEU0'
   #query_key='AhRzQ/BoErqMPmPAB1G+lJ3WqA0C+HVhdG9t' #ATOM DENOM
 
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Trustless Agent" --duration "61s" \ --interval "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "comparisons": [{"response_index":0,"response_key": "", "operand":"111", "operator":4,"value_type": "math.Int", "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "$msg_exec_file" --label "ICQ and Trustless Agent" --duration "61s" --interval "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "comparisons": [{"response_index":0,"response_key": "", "operand":"111", "operator":4,"value_type": "math.Int", "icq_config": {"connection_id":"connection-'$CONNECTION_ID'","chain_id":"'$HOST_CHAIN_ID'","timeout_policy":2,"timeout_duration":50000000000,"query_type":"store/bank/key","query_key":"'$query_key'"}}] }' -y)
 
   GET_FLOW_ID $(INTO_ADDRESS)
   WAIT_FOR_EXECUTED_FLOW_BY_ID
@@ -625,7 +625,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   start_at=$(date -u -d "+2 minutes" +"%s")  # Linux version
 fi
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate $msg_withdraw $msg_delegate --label "Autocompound Twice" --duration "61s" \ --interval "60s" --start-at $start_at --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}, {"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate $msg_withdraw $msg_delegate --label "Autocompound Twice" --duration "61s" --interval "60s" --start-at $start_at --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --stop-on-failure --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}, {"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}]}'  --save-responses -y)
 
   echo "$msg_submit_flow"
 
@@ -661,7 +661,7 @@ fi
   msg_withdraw="./MsgWithdrawDelegatorReward.json"
   msg_delegate="./MsgDelegate.json"
   
-  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Conditional Autocompound" --duration "120s" \ --interval "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}' --save-responses -y)
+  msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow $msg_withdraw $msg_delegate --label "Conditional Autocompound" --duration "120s" --interval "60s" --trustless-agent $agent_address --trustless-agent-fee-limit 20$INTO_DENOM --from $INTO_USER --fallback-to-owner-balance --conditions '{ "feedback_loops": [{"response_index":0,"response_key": "Amount.[0]", "msgs_index":1, "msg_key":"Amount","value_type": "sdk.Coin"}], "comparisons": [{"response_index":0,"response_key": "Amount.[0]", "operand":"1'$HOST_DENOM'", "operator":4,"value_type": "sdk.Coin"}]}' --save-responses -y)
   echo "$msg_submit_flow"
 
   GET_FLOW_ID $(INTO_ADDRESS)
@@ -743,8 +743,8 @@ fi
   echo "$msg_exec_file"
   msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "./$msg_exec_file" \
     --label "ICQ Balance Diff = 0" \
-    --duration "120s" \
-    --interval "60s" \
+    --duration "300s" \
+    --interval "90s" \
     --trustless-agent $agent_address \
     --trustless-agent-fee-limit 20$INTO_DENOM \
     --fallback-to-owner-balance \
@@ -760,7 +760,7 @@ fi
         "connection_id":"connection-'$CONNECTION_ID'",
         "chain_id":"'$HOST_CHAIN_ID'",
         "timeout_policy":2,
-        "timeout_duration":50000000000,
+        "timeout_duration":80000000000,
         "query_type":"store/bank/key",
         "query_key":"'$query_key'"
       }}] }' -y)
@@ -786,8 +786,8 @@ fi
   msg_exec_file="msg_exec.json"
   msg_submit_flow=$($INTO_MAIN_CMD tx intent submit-flow "./$msg_exec_file" \
     --label "ICQ Diff < Recent Value" \
-    --duration "61s" \
-    --interval "60s" \
+    --duration "300s" \
+    --interval "90s" \
     --trustless-agent $agent_address \
     --trustless-agent-fee-limit 20$INTO_DENOM \
     --fallback-to-owner-balance \
@@ -803,7 +803,7 @@ fi
         "connection_id":"connection-'$CONNECTION_ID'",
         "chain_id":"'$HOST_CHAIN_ID'",
         "timeout_policy":2,
-        "timeout_duration":50000000000,
+        "timeout_duration":60000000000,
         "query_type":"store/bank/key",
         "query_key":"'$query_key'"
       }}]}' -y)
