@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -532,12 +533,17 @@ func (k Keeper) getPreviousResponseValue(ctx sdk.Context, flowID uint64, respons
 		if isICQ && len(history.QueryResponses) > 0 {
 			if int(responseIndex) < len(history.QueryResponses) {
 				k.Logger(ctx).Debug("Found ICQ query response", "index", i, "response", history.QueryResponses[responseIndex])
+				// Decode the base64-encoded response
+				decoded, err := base64.StdEncoding.DecodeString(history.QueryResponses[responseIndex])
+				if err != nil {
+					return nil, fmt.Errorf("failed to decode base64 ICQ response: %w", err)
+				}
 				return k.getValueFromResponse(
 					ctx,
 					responseIndex,
 					responseKey,
 					&valueType,
-					[]byte(history.QueryResponses[responseIndex]),
+					decoded,
 					nil,
 				)
 			}
