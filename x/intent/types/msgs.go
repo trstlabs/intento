@@ -196,14 +196,14 @@ func (msg MsgSubmitFlow) ValidateBasic() error {
 		return fmt.Errorf("label must be shorter than 50 characters")
 	}
 
-	interval, err := time.ParseDuration(msg.Interval)
-	if err != nil {
-		return err
-	}
-
-	// If a custom start time is provided, ensure the interval is greater than 0
-	if msg.StartAt > 0 && interval == 0 {
-		return fmt.Errorf("interval must be greater than 0 when a custom start time is provided")
+	if msg.Interval != "" {
+		interval, err := time.ParseDuration(msg.Interval)
+		if err != nil {
+			return err
+		}
+		if msg.StartAt > 0 && interval == 0 {
+			return fmt.Errorf("interval must be greater than 0 when a custom start time is provided")
+		}
 	}
 
 	for _, message := range msg.GetTxMsgs() {
