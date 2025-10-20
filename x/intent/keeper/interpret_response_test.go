@@ -795,7 +795,7 @@ func TestNegativeTwapDifference(t *testing.T) {
 	historyEntry := types.FlowHistoryEntry{
 		ScheduledExecTime: time.Now().Add(-30 * time.Minute), // 30 minutes ago
 		ActualExecTime:    time.Now().Add(-30 * time.Minute),
-		QueryResponses:    []string{string(previousResponseAny.Value)},
+		QueryResponses:    []string{base64.StdEncoding.EncodeToString(previousResponseAny.Value)},
 		Executed:          true,
 		// Ensure there are no errors to mark this as a successful execution
 		Errors: nil,

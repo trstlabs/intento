@@ -310,7 +310,7 @@ func TestDifferenceModeWithTwapRecord(t *testing.T) {
 
 	// Store first response
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{
-		QueryResponses: []string{string(decoded1)},
+		QueryResponses: []string{base64.StdEncoding.EncodeToString(decoded1)},
 		Executed:       true,
 	})
 
@@ -467,7 +467,7 @@ func TestDifferenceModeWithTwapRecordSpotPrice(t *testing.T) {
 	twapRecord.GeometricTwapAccumulator = math.LegacyNewDecWithPrec(200, 3)
 	twapRecordAny, _ = cdctypes.NewAnyWithValue(&twapRecord)
 	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{
-		QueryResponses: []string{string(twapRecordAny.Value)},
+		QueryResponses: []string{base64.StdEncoding.EncodeToString(twapRecordAny.Value)},
 		Executed:       true,
 	})
 
