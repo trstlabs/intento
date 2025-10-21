@@ -65,8 +65,14 @@ How you interact with our content and the consistency of your presence on our so
 
 The originality of the ideas and the amount of work invested in bringing them to life.
 
-**Reward calculation:**
-Average rating for each dimension / 5 * 100
+### **Reward Calculation**
+
+Each dimension is rated on a scale of **1–5**.  
+Your **final score** is the **average rating across all four dimensions**, expressed as a percentage:
+
+**Reward Score = (Average Rating ÷ 5) × 100**
+
+This score determines your share of the available rewards for that period.
 
 ## Incentives and Rewards
 
