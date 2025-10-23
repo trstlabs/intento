@@ -34,7 +34,7 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, 
 
 	logger.Debug("flow execution", "id", flow.ID)
 
-	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, flow, types.MaxGas)
+	feeAddr, feeDenom, err := k.GetFeeAccountForMinFees(cacheCtx, flow, uint64(100_000*len(flow.Msgs)))
 	if err != nil {
 		errorString = appendError(errorString, err.Error())
 	} else if feeAddr == nil || feeDenom == "" {

@@ -290,7 +290,7 @@ func executeMessageBatch(k Keeper, ctx sdk.Context, flow types.Flow, nextMsgs []
 			return nil
 		}
 		// Only try to distribute fees if we have a valid fee address and denom
-		feeAddr, feeDenom, feeErr := k.GetFeeAccountForMinFees(cacheCtx, flow, types.MaxGas)
+		feeAddr, feeDenom, feeErr := k.GetFeeAccountForMinFees(cacheCtx, flow, uint64(100_000*len(nextMsgs)))
 		if feeErr != nil {
 			errorString = appendError(errorString, feeErr.Error())
 		} else if feeAddr == nil || feeDenom == "" {

@@ -501,6 +501,71 @@ func TestGetFeeAccountForMinFees_WithMultipleBalanceDenomsUintoUsedFirst(t *test
 	require.Equal(t, "uinto", denom)
 }
 
+func TestGetFeeAccountForMinFees_WithSpecificParams(t *testing.T) {
+	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(
+		sdk.NewCoin("uinto", math.NewInt(2_000_000)),
+		sdk.NewCoin("ibc/47BD209179859CDE4A2806763D7189B6E6FE13A17880FE2B42DE1E6C1E329E23", math.NewInt(100)),
+		sdk.NewCoin("ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9", math.NewInt(10)),
+	))
+
+	feeAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(
+		sdk.NewCoin("uinto", math.NewInt(1_000_000)),
+		sdk.NewCoin("ibc/47BD209179859CDE4A2806763D7189B6E6FE13A17880FE2B42DE1E6C1E329E23", math.NewInt(100)),
+		sdk.NewCoin("ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9", math.NewInt(10)),
+	))
+
+	keeper.SetParams(ctx, types.Params{
+		FlowFundsCommission: 2,
+		FlowFlexFeeMul:      5,
+		BurnFeePerMsg:       10_000,
+		GasFeeCoins: sdk.NewCoins(
+			sdk.NewCoin("ibc/47BD209179859CDE4A2806763D7189B6E6FE13A17880FE2B42DE1E6C1E329E23", math.NewInt(50)),
+			sdk.NewCoin("ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9", math.NewInt(3)),
+			sdk.NewCoin("uinto", math.NewInt(500)),
+		),
+		MaxFlowDuration: time.Hour * 24 * 1098, // 1.5 years
+		MinFlowDuration: time.Minute * 10,
+		MinFlowInterval: time.Minute * 5,
+	})
+
+	pub2 := secp256k1.GenPrivKey().PubKey()
+	ownerAddr := sdk.AccAddress(pub2.Address())
+
+	msg, _ := sdktypes.NewAnyWithValue(&types.MsgSubmitTx{})
+	flow := types.Flow{
+		ID:         1,
+		Owner:      ownerAddr.String(),
+		FeeAddress: feeAddr.String(),
+		Msgs:       []*sdktypes.Any{msg},
+		StartTime:  time.Now().Add(-time.Hour),
+		EndTime:    time.Now().Add(time.Hour * 24 * 365),
+		ExecTime:   time.Now(),
+	}
+
+	// Test with 1,000,000 gas
+	acc, denom, err := keeper.GetFeeAccountForMinFees(ctx, flow, 200_000)
+	require.NoError(t, err, "GetFeeAccountForMinFees should not return an error")
+	require.NotNil(t, acc, "GetFeeAccountForMinFees should return a non-nil account")
+	require.Equal(t, feeAddr.String(), acc.String(), "Fee account address should match the expected fee address")
+
+	// Log the account balances for debugging
+	feeBalances := keeper.bankKeeper.GetAllBalances(ctx, feeAddr)
+	t.Logf("Fee account balances: %s", feeBalances)
+
+	// Calculate expected fee
+	expectedFee := sdk.NewCoin("uinto", math.NewInt(500_000)) // 500 * 1,000,000 / 1,000
+	params, err := keeper.GetParams(ctx)
+	require.NoError(t, err, "Failed to get params")
+
+	// Log the gas fee coins for debugging
+	t.Logf("Gas fee coins: %v", params.GasFeeCoins)
+
+	fee, _, err := keeper.calculateFee(denom, 1_000_000, flow, params)
+	require.NoError(t, err, "calculateFee should not return an error")
+	require.Equal(t, expectedFee.Denom, fee.Denom, "Fee denom should match expected denom")
+	require.True(t, fee.Amount.GTE(expectedFee.Amount), "fee %s should be >= %s", fee, expectedFee)
+}
+
 func TestTotalBurnt(t *testing.T) {
 	ctx, keeper, _, _, _, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(0))))
 
