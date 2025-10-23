@@ -131,44 +131,62 @@ func (k Keeper) ClaimClaimableForAddr(ctx sdk.Context, addr sdk.AccAddress) erro
 	return nil
 }
 
-// GetTotalClaimableAmountPerAction
 func (k Keeper) GetTotalClaimableAmountPerAction(ctx sdk.Context, addr sdk.AccAddress) (math.Int, error) {
 	record, err := k.GetClaimRecord(ctx, addr)
 	if err != nil {
 		return math.ZeroInt(), errors.New("claim record not found")
 	}
 
+	// Get module params (contains airdrop start, decay durations, denom, etc.)
 	p, err := k.GetParams(ctx)
 	if err != nil {
 		return math.ZeroInt(), err
 	}
 
-	// If we are before the start time, do nothing.
-	// This case _shouldn't_ occur on chain, since the
-	// start time ought to be chain start time.
+	// Before airdrop start → nothing is claimable
 	if ctx.BlockTime().Before(p.AirdropStartTime) {
 		return math.ZeroInt(), nil
 	}
 
-	totalDelegations := k.GetTotalDelegations(ctx, addr)
-
+	// Calculate elapsed time since airdrop started
 	timeElapsed := ctx.BlockTime().Sub(p.AirdropStartTime)
-	timeLeft := timeElapsed - p.DurationUntilDecay + p.DurationOfDecay
-	if timeElapsed < p.DurationUntilDecay {
-		return record.MaximumClaimableAmount.Amount.Quo(math.NewInt(int64(len(types.Action_name)))), nil
+
+	// Base amount per action (divide total allocation by number of actions)
+	baseAmount := record.MaximumClaimableAmount.Amount.Quo(math.NewInt(int64(len(types.Action_name))))
+
+	// If we are still before the decay period starts → full base amount is claimable
+	if timeElapsed <= p.DurationUntilDecay {
+		return baseAmount, nil
 	}
 
-	if timeLeft < 0 {
-		timeLeft = 0
+	// Time since decay started
+	decayElapsed := timeElapsed - p.DurationUntilDecay
+	if decayElapsed < 0 {
+		decayElapsed = 0 // safety check
 	}
-	decayPercent := math.LegacyNewDecFromInt(math.NewInt((int64(timeLeft)))).QuoInt64(int64(p.DurationOfDecay)).Ceil().TruncateInt()
 
-	baseAmount := record.MaximumClaimableAmount.Amount.QuoRaw(int64(len(types.Action_name)))
-	adjustedAmount := baseAmount.Mul(decayPercent)
+	// Linear decay fraction
+	// Fraction of claimable remaining: 1 → just started decay, 0 → fully decayed
+	remainingFrac := math.LegacyNewDecFromInt(
+		math.NewInt(int64(p.DurationOfDecay - decayElapsed)),
+	).Quo(math.LegacyNewDecFromInt(math.NewInt(int64(p.DurationOfDecay))))
 
-	// Delegation adjustment
-	if totalDelegations.IsPositive() {
-		adjustedAmount = adjustedAmount.Mul(totalDelegations)
+	// Clamp fraction to [0,1] to avoid negative or >100%
+	if remainingFrac.LT(math.LegacyZeroDec()) {
+		remainingFrac = math.LegacyZeroDec()
+	} else if remainingFrac.GT(math.LegacyOneDec()) {
+		remainingFrac = math.LegacyOneDec()
+	}
+
+	// Apply decay fraction to base amount
+	decayedAmount := math.LegacyNewDecFromInt(baseAmount).Mul(remainingFrac).TruncateInt()
+
+	// Final adjusted amount — no delegation multiplier applied
+	adjustedAmount := decayedAmount
+
+	// Safety check: Ensure we never exceed base allocation per action
+	if adjustedAmount.GT(baseAmount) {
+		adjustedAmount = baseAmount
 	}
 
 	return adjustedAmount, nil
@@ -189,20 +207,6 @@ func (k Keeper) TransferToUser(ctx sdk.Context, addr sdk.AccAddress, claimableCo
 	// k.SetupVestingSchedule(ctx, addr, amount, vestingPeriod)
 
 	return nil
-}
-
-// GetTotalDelegations retrieves total delegations for an address.
-func (k Keeper) GetTotalDelegations(ctx sdk.Context, addr sdk.AccAddress) math.Int {
-	delegations, err := k.stakingKeeper.GetDelegatorDelegations(ctx, addr, 10)
-	if err != nil {
-		return math.ZeroInt()
-	}
-	total := math.ZeroInt()
-	for _, delegation := range delegations {
-		total = total.Add(delegation.Shares.RoundInt())
-	}
-
-	return total
 }
 
 // GetModuleAccountBalance gets the airdrop coin balance of module account

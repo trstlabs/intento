@@ -408,6 +408,199 @@ func (s *KeeperTestSuite) TestEndAirdrop() {
 	s.Require().Equal(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0).String(), moduleBalance.String())
 }
 
+func (s *KeeperTestSuite) TestClaimFunctionality() {
+	const (
+		totalDecayDuration  = time.Hour * 24 * 90 // 90 days total decay period
+		totalVestingPeriods = 4
+	)
+
+	testCases := []struct {
+		name          string
+		setup         func(suite *KeeperTestSuite, addr sdk.AccAddress, k keeper.Keeper) error
+		timeOffset    time.Duration // Time offset from airdrop start
+		expectedError bool
+		errMsg        string
+		expectedRatio string // Expected ratio of claimable amount (e.g., "1.0" for 100%, "0.5" for 50%)
+	}{
+		{
+			name: "successful claim at start",
+			setup: func(suite *KeeperTestSuite, addr sdk.AccAddress, k keeper.Keeper) error {
+				record, err := k.GetClaimRecord(suite.ctx, addr)
+				if err != nil {
+					return err
+				}
+				record.Status[0].ActionCompleted = true
+				return k.SetClaimRecord(suite.ctx, record)
+			},
+			timeOffset:    0, // At airdrop start
+			expectedError: false,
+			expectedRatio: "1.0", // Full decay ratio at start
+		},
+		{
+			name: "successful claim at 25% decay",
+			setup: func(suite *KeeperTestSuite, addr sdk.AccAddress, k keeper.Keeper) error {
+				record, err := k.GetClaimRecord(suite.ctx, addr)
+				if err != nil {
+					return err
+				}
+				record.Status[0].ActionCompleted = true
+				return k.SetClaimRecord(suite.ctx, record)
+			},
+			timeOffset:    totalDecayDuration / 4, // 25% through decay period
+			expectedError: false,
+			expectedRatio: "0.75", // 75% of remaining is claimable
+		},
+		{
+			name: "successful claim at 50% decay",
+			setup: func(suite *KeeperTestSuite, addr sdk.AccAddress, k keeper.Keeper) error {
+				record, err := k.GetClaimRecord(suite.ctx, addr)
+				if err != nil {
+					return err
+				}
+				record.Status[0].ActionCompleted = true
+				return k.SetClaimRecord(suite.ctx, record)
+			},
+			timeOffset:    totalDecayDuration / 2, // 50% through decay period
+			expectedError: false,
+			expectedRatio: "0.5", // 50% of remaining is claimable
+		},
+		{
+			name: "successful claim at 75% decay",
+			setup: func(suite *KeeperTestSuite, addr sdk.AccAddress, k keeper.Keeper) error {
+				record, err := k.GetClaimRecord(suite.ctx, addr)
+				if err != nil {
+					return err
+				}
+				record.Status[0].ActionCompleted = true
+				return k.SetClaimRecord(suite.ctx, record)
+			},
+			timeOffset:    totalDecayDuration * 3 / 4, // 75% through decay period
+			expectedError: false,
+			expectedRatio: "0.25", // 25% of remaining is claimable
+		},
+		{
+			name: "no claimable tokens at end of decay",
+			setup: func(suite *KeeperTestSuite, addr sdk.AccAddress, k keeper.Keeper) error {
+				record, err := k.GetClaimRecord(suite.ctx, addr)
+				if err != nil {
+					return err
+				}
+				record.Status[0].ActionCompleted = true
+				return k.SetClaimRecord(suite.ctx, record)
+			},
+			timeOffset:    totalDecayDuration, // End of decay period
+			expectedError: true,
+			errMsg:        "address does not have claimable tokens",
+			expectedRatio: "0.0",
+		},
+		{
+			name: "no claimable tokens - no completed actions",
+			setup: func(suite *KeeperTestSuite, addr sdk.AccAddress, k keeper.Keeper) error {
+				return nil
+			},
+			timeOffset:    0,
+			expectedError: true,
+			errMsg:        "address does not have claimable tokens",
+			expectedRatio: "0.0",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			k := s.app.ClaimKeeper
+
+			// Set up params with immediate decay (no delay)
+			err := k.SetParams(s.ctx, types.Params{
+				AirdropStartTime:       s.ctx.BlockTime(),
+				ClaimDenom:             sdk.DefaultBondDenom,
+				DurationUntilDecay:     0, // Start decaying immediately
+				DurationOfDecay:        totalDecayDuration,
+				DurationVestingPeriods: types.DefaultDurationVestingPeriods,
+			})
+			s.Require().NoError(err)
+
+			// Create a test account
+			testAddr := s.createAccount()
+
+			// Create a claim record for the test account
+			claimAmount := math.NewInt(1000_000)
+
+			// Create vesting periods (all completed for testing)
+			vestingCompleted := make([]bool, totalVestingPeriods)
+			for i := range vestingCompleted {
+				vestingCompleted[i] = true
+			}
+
+			claimRecord := types.ClaimRecord{
+				Address:                testAddr.String(),
+				MaximumClaimableAmount: sdk.NewCoin(sdk.DefaultBondDenom, claimAmount),
+				Status: []types.Status{
+					{
+						ActionCompleted:         false, // Will be set by test case setup
+						VestingPeriodsCompleted: vestingCompleted,
+						VestingPeriodsClaimed:   make([]bool, totalVestingPeriods),
+					},
+				},
+			}
+			err = k.SetClaimRecord(s.ctx, claimRecord)
+			s.Require().NoError(err)
+
+			// Fund the claim module account with enough tokens
+			moduleCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, claimAmount))
+			bankKeeper := s.app.BankKeeper
+			bankKeeper.MintCoins(s.ctx, minttypes.ModuleName, moduleCoins)
+			err = bankKeeper.SendCoinsFromModuleToModule(s.ctx, minttypes.ModuleName, types.ModuleName, moduleCoins)
+			s.Require().NoError(err)
+
+			// Set block time based on test case
+			params, err := k.GetParams(s.ctx)
+			s.Require().NoError(err)
+			s.ctx = s.ctx.WithBlockTime(params.AirdropStartTime.Add(tc.timeOffset))
+
+			// Set up test case specific conditions
+			err = tc.setup(s, testAddr, k)
+			s.Require().NoError(err)
+
+			// Calculate base amount per action (total amount / number of actions)
+			baseAmount := claimAmount.Quo(math.NewInt(int64(len(types.Action_name))))
+			// The actual implementation is using: actualAmount = baseAmount * 0.8 * ratio
+			ratio := math.LegacyMustNewDecFromStr(tc.expectedRatio)
+			expectedAmount := math.LegacyNewDecFromInt(baseAmount).
+				Mul(math.LegacyNewDecWithPrec(8, 1)).
+				Mul(ratio).
+				TruncateInt()
+
+			// Try to claim
+			msgServer := keeper.NewMsgServerImpl(k)
+			_, err = msgServer.ClaimClaimable(sdk.WrapSDKContext(s.ctx), &types.MsgClaimClaimable{
+				Sender: testAddr.String(),
+			})
+
+			// Verify results
+			if tc.expectedError {
+				s.Require().Error(err)
+				if tc.errMsg != "" {
+					s.Require().Contains(err.Error(), tc.errMsg)
+				}
+			} else {
+				s.Require().NoError(err, "claim should succeed")
+
+				// Verify the claimed amount matches expected decay
+				balance := bankKeeper.GetBalance(s.ctx, testAddr, sdk.DefaultBondDenom)
+
+				// The actual amount should match the expected amount based on decay
+				// Allow for small rounding differences (1 unit)
+				diff := balance.Amount.Sub(expectedAmount).Abs()
+				s.True(diff.LTE(math.NewInt(1)),
+					"expected amount %s, got %s (diff: %s) for ratio %s at time offset %s",
+					expectedAmount, balance.Amount, diff, tc.expectedRatio, tc.timeOffset)
+			}
+		})
+	}
+
+}
+
 func (s *KeeperTestSuite) createAccount() sdk.AccAddress {
 	pubKey := ed25519.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubKey.Address())
