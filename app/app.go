@@ -911,8 +911,8 @@ func (app *IntoApp) BlockedAddrs() map[string]bool {
 	delete(modAccAddrs, authtypes.NewModuleAddress(alloctypes.SupplementPoolName).String())
 	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	delete(modAccAddrs, authtypes.NewModuleAddress(ibcexported.ModuleName).String())
-
 	delete(modAccAddrs, authtypes.NewModuleAddress(distrtypes.ModuleName).String())
+	delete(modAccAddrs, authtypes.NewModuleAddress(claimtypes.ModuleName).String())
 
 	return modAccAddrs
 }
