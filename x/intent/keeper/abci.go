@@ -45,9 +45,10 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, 
 		ibcSequences, errorString = k.handleFlowExecution(cacheCtx, &flow, &msgResponses, errorString)
 
 		feeCoin, err := k.DistributeCoins(cacheCtx, flow, feeAddr, feeDenom)
-		fee = sdk.NewCoins(feeCoin)
 		if err != nil {
 			errorString = appendError(errorString, fmt.Sprintf(types.ErrFlowFeeDistribution, err.Error()))
+		} else {
+			fee = sdk.NewCoins(feeCoin)
 		}
 	}
 
