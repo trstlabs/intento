@@ -52,13 +52,24 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, 
 		}
 	}
 
-	k.addFlowHistoryEntry(cacheCtx, &flow, timeOfBlock, fee, ibcSequences, msgResponses, errorString)
+	// refactor after upgrade
+	currentFlow := flow
+	upgradeHeight := int64(3850000)
+	if ctx.ChainID() != "intento-1" || (ctx.ChainID() == "intento-1" && ctx.BlockHeight() >= upgradeHeight) {
+		if k.shouldRecur(cacheCtx, flow, errorString) {
+			flow.ExecTime = flow.ExecTime.Add(flow.Interval)
+			k.InsertFlowQueue(cacheCtx, flow.ID, flow.ExecTime)
+		}
+	}
+	k.addFlowHistoryEntry(cacheCtx, &currentFlow, timeOfBlock, fee, ibcSequences, msgResponses, errorString)
 
 	writeCtx()
 
-	if k.shouldRecur(ctx, flow, errorString) {
-		flow.ExecTime = flow.ExecTime.Add(flow.Interval)
-		k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
+	if ctx.ChainID() == "intento-1" && ctx.BlockHeight() < upgradeHeight {
+		if k.shouldRecur(ctx, flow, errorString) {
+			flow.ExecTime = flow.ExecTime.Add(flow.Interval)
+			k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
+		}
 	}
 
 	emitFlowEvent(ctx, flow)

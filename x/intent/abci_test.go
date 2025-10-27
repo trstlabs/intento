@@ -19,7 +19,6 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
-
 	ctx, keepers, _ := createTestContext(t)
 	configuration := types.ExecutionConfiguration{SaveResponses: true}
 	flow, sendToAddr := createTestFlow(ctx, configuration, keepers)
@@ -75,8 +74,9 @@ func TestBeginBlockerTransfer(t *testing.T) {
 	flow = k.GetFlow(ctx2, flow.ID)
 	ctx3 := createNextExecutionContext(ctx2, flow.ExecTime)
 
-	//queue in BeginBocker
+	// queue in BeginBlocker window (at nextExec)
 	queue = k.GetFlowsForBlockAndPruneQueue(ctx3)
+	require.Equal(t, 1, len(queue))
 	flowHistory := k.MustGetFlowHistory(ctx3, queue[0].ID)
 	// test that flow history was updated
 	require.Equal(t, ctx3.BlockHeader().Time, queue[0].ExecTime)
@@ -750,4 +750,91 @@ func TestHandleFlow_WithGoodFeedbackLoopIndex(t *testing.T) {
 	queue := k.GetFlowsForBlockAndPruneQueue(ctx3)
 	require.NotNil(t, queue)
 	t.Logf("Flows queued after HandleFlow: %d", len(queue))
+}
+
+func TestHandleFlow_SchedulesPreUpgrade(t *testing.T) {
+	ctx, keepers, _ := createTestContext(t)
+	k := keepers.IntentKeeper
+
+	configuration := types.ExecutionConfiguration{SaveResponses: true}
+	flow, _ := createTestFlow(ctx, configuration, keepers)
+	require.NoError(t, flow.ValidateBasic())
+
+	k.SetFlow(ctx, &flow)
+	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
+
+	prevExec := flow.ExecTime
+	nextExec := prevExec.Add(flow.Interval)
+
+	flowHistory := types.FlowHistoryEntry{
+		ScheduledExecTime: prevExec,
+		ActualExecTime:    prevExec,
+		MsgResponses:      []*cdctypes.Any{{TypeUrl: "", Value: nil}},
+		Errors:            nil,
+	}
+	k.SetFlowHistoryEntry(ctx, flow.ID, &flowHistory)
+	// Build context at prevExec with intento-1 chain to trigger scheduling logic
+	header2 := tmproto.Header{
+		Height:          3_849_000, // below upgrade
+		Time:            flow.ExecTime,
+		ChainID:         "intento-1",
+		ProposerAddress: ctx.BlockHeader().ProposerAddress,
+	}
+	ctx2 := sdk.NewContext(ctx.MultiStore(), header2, false, ctx.Logger())
+	queue := k.GetFlowsForBlockAndPruneQueue(ctx2)
+	require.Equal(t, 1, len(queue))
+
+	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime())
+	flow = k.GetFlow(ctx2, flow.ID)
+
+	ctx3 := createNextExecutionContext(ctx2, nextExec)
+	queue2 := k.GetFlowsForBlockAndPruneQueue(ctx3)
+	require.Equal(t, 0, len(queue2))
+}
+
+func TestHandleFlow_SchedulesPostUpgrade(t *testing.T) {
+	ctx, keepers, _ := createTestContext(t)
+	k := keepers.IntentKeeper
+
+	configuration := types.ExecutionConfiguration{SaveResponses: true}
+	flow, _ := createTestFlow(ctx, configuration, keepers)
+	require.NoError(t, flow.ValidateBasic())
+
+	k.SetFlow(ctx, &flow)
+	k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)
+
+	prevExec := flow.ExecTime
+	nextExec := prevExec.Add(flow.Interval)
+
+	flowHistory := types.FlowHistoryEntry{
+		ScheduledExecTime: prevExec,
+		ActualExecTime:    prevExec,
+		MsgResponses:      []*cdctypes.Any{{TypeUrl: "", Value: nil}},
+		Errors:            nil,
+	}
+	k.SetFlowHistoryEntry(ctx, flow.ID, &flowHistory)
+	header := tmproto.Header{
+		Height:          3_900_000,
+		Time:            prevExec,
+		ChainID:         "intento-1",
+		ProposerAddress: ctx.BlockHeader().ProposerAddress,
+	}
+	ctx2 := sdk.NewContext(ctx.MultiStore(), header, false, ctx.Logger())
+
+	queue := k.GetFlowsForBlockAndPruneQueue(ctx2)
+	require.Equal(t, 1, len(queue))
+
+	k.HandleFlow(ctx2, k.Logger(ctx2), flow, ctx2.BlockTime())
+	flow = k.GetFlow(ctx2, flow.ID)
+
+	headerNext := tmproto.Header{
+		Height:          header.Height + 1,
+		Time:            nextExec,
+		ChainID:         "intento-1",
+		ProposerAddress: ctx.BlockHeader().ProposerAddress,
+	}
+	ctx3 := sdk.NewContext(ctx.MultiStore(), headerNext, false, ctx.Logger())
+	queue2 := k.GetFlowsForBlockAndPruneQueue(ctx3)
+	require.Equal(t, 1, len(queue2))
+	require.Equal(t, flow.ID, queue2[0].ID)
 }
