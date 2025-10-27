@@ -752,12 +752,13 @@ func TestHandleFlow_WithGoodFeedbackLoopIndex(t *testing.T) {
 	t.Logf("Flows queued after HandleFlow: %d", len(queue))
 }
 
-func TestHandleFlow_SchedulesPreUpgrade(t *testing.T) {
+func TestHandleLocalFlow_SchedulesPreUpgrade(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
 	k := keepers.IntentKeeper
 
 	configuration := types.ExecutionConfiguration{SaveResponses: true}
 	flow, _ := createTestFlow(ctx, configuration, keepers)
+
 	require.NoError(t, flow.ValidateBasic())
 
 	k.SetFlow(ctx, &flow)
@@ -789,10 +790,10 @@ func TestHandleFlow_SchedulesPreUpgrade(t *testing.T) {
 
 	ctx3 := createNextExecutionContext(ctx2, nextExec)
 	queue2 := k.GetFlowsForBlockAndPruneQueue(ctx3)
-	require.Equal(t, 0, len(queue2))
+	require.Equal(t, 1, len(queue2))
 }
 
-func TestHandleFlow_SchedulesPostUpgrade(t *testing.T) {
+func TestHandleLocalFlow_SchedulesPostUpgrade(t *testing.T) {
 	ctx, keepers, _ := createTestContext(t)
 	k := keepers.IntentKeeper
 
