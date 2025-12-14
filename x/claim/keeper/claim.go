@@ -305,6 +305,7 @@ func (k Keeper) EndAirdrop(ctx sdk.Context) error {
 		return err
 	}
 	k.clearInitialClaimables(ctx)
+	k.clearVestingQueue(ctx)
 	return nil
 }
 

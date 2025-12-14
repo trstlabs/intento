@@ -398,6 +398,29 @@ func (s *KeeperTestSuite) TestEndAirdrop() {
 	err := s.app.ClaimKeeper.SetClaimRecords(s.ctx, claimRecords)
 	s.Require().NoError(err)
 
+	// Verify claim records exist before EndAirdrop
+	record1, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
+	s.Require().NoError(err)
+	s.Require().Equal(addr1.String(), record1.Address)
+
+	record2, err := s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr2)
+	s.Require().NoError(err)
+	s.Require().Equal(addr2.String(), record2.Address)
+
+	// Insert vesting queue entries to verify they get cleared
+	err = s.app.ClaimKeeper.InsertEntriesIntoVestingQueue(s.ctx, addr1.String(), byte(types.ACTION_ACTION_LOCAL), s.ctx.BlockTime())
+	s.Require().NoError(err)
+	err = s.app.ClaimKeeper.InsertEntriesIntoVestingQueue(s.ctx, addr2.String(), byte(types.ACTION_ACTION_ICA), s.ctx.BlockTime())
+	s.Require().NoError(err)
+
+	// Verify vesting queue has entries before EndAirdrop
+	vestingEntriesFound := 0
+	s.app.ClaimKeeper.IterateVestingQueue(s.ctx, s.ctx.BlockTime().Add(time.Hour*24*365), func(addr sdk.AccAddress, action int32, period int32, endTime time.Time) bool {
+		vestingEntriesFound++
+		return false
+	})
+	s.Require().Greater(vestingEntriesFound, 0, "Vesting queue should have entries before EndAirdrop")
+
 	// End the airdrop
 	err = s.app.ClaimKeeper.EndAirdrop(s.ctx)
 	s.Require().NoError(err)
@@ -406,6 +429,35 @@ func (s *KeeperTestSuite) TestEndAirdrop() {
 	moduleAccAddr := s.app.AccountKeeper.GetModuleAddress(types.ModuleName)
 	moduleBalance := s.app.BankKeeper.GetBalance(s.ctx, moduleAccAddr, sdk.DefaultBondDenom)
 	s.Require().Equal(sdk.NewInt64Coin(sdk.DefaultBondDenom, 0).String(), moduleBalance.String())
+
+	// Verify claim records are deleted
+	_, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr1)
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "address does not have claim record")
+
+	_, err = s.app.ClaimKeeper.GetClaimRecord(s.ctx, addr2)
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "address does not have claim record")
+
+	// Verify GetClaimRecords returns empty list
+	allRecords := s.app.ClaimKeeper.GetClaimRecords(s.ctx)
+	s.Require().Empty(allRecords)
+
+	// Verify vesting queue is cleared
+	vestingEntriesAfter := 0
+	s.app.ClaimKeeper.IterateVestingQueue(s.ctx, s.ctx.BlockTime().Add(time.Hour*24*365), func(addr sdk.AccAddress, action int32, period int32, endTime time.Time) bool {
+		vestingEntriesAfter++
+		return false
+	})
+	s.Require().Equal(0, vestingEntriesAfter, "Vesting queue should be empty after EndAirdrop")
+
+	// Test idempotency: calling EndAirdrop again should not panic or error
+	err = s.app.ClaimKeeper.EndAirdrop(s.ctx)
+	s.Require().NoError(err, "EndAirdrop should be idempotent and not error on second call")
+
+	// Verify state remains clean after second call
+	allRecordsAfterSecondCall := s.app.ClaimKeeper.GetClaimRecords(s.ctx)
+	s.Require().Empty(allRecordsAfterSecondCall, "Claim records should still be empty after second EndAirdrop call")
 }
 
 func (s *KeeperTestSuite) TestClaimFunctionality() {

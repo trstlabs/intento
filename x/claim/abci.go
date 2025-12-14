@@ -13,6 +13,7 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 	if err != nil {
 		panic(err)
 	}
+
 	// Process vesting queue
 	k.IterateVestingQueue(ctx, ctx.BlockHeader().Time,
 		func(recipientAddr sdk.AccAddress, action int32, period int32, endTime time.Time) bool {
@@ -33,11 +34,15 @@ func EndBlocker(ctx sdk.Context, k keeper.Keeper) {
 		},
 	)
 
-	// End Airdrop if time passed
+	// End Airdrop if time passed and there are still claim records to clean up
 	timeElapsed := ctx.BlockTime().Sub(params.AirdropStartTime)
 	if timeElapsed > params.DurationUntilDecay+params.DurationOfDecay {
-		if err := k.EndAirdrop(ctx); err != nil {
-			panic(err)
+		// Only call EndAirdrop if there are claim records (idempotency guard)
+		claimRecords := k.GetClaimRecords(ctx)
+		if len(claimRecords) > 0 {
+			if err := k.EndAirdrop(ctx); err != nil {
+				panic(err)
+			}
 		}
 	}
 }

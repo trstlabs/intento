@@ -8,6 +8,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -164,9 +165,23 @@ func (k Keeper) clearInitialClaimables(ctx sdk.Context) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	prefixStore := prefix.NewStore(store, []byte(types.ClaimRecordsStorePrefix))
 	iterator := prefixStore.Iterator(nil, nil)
+	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
-		store.Delete(key)
+		prefixStore.Delete(key)
+	}
+}
+
+// clearVestingQueue clears all vesting queue entries
+func (k Keeper) clearVestingQueue(ctx sdk.Context) {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	iterator := store.Iterator(
+		types.VestingQueuePrefix,
+		storetypes.PrefixEndBytes(types.VestingQueuePrefix),
+	)
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		store.Delete(iterator.Key())
 	}
 }
 
