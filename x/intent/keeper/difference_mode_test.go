@@ -482,3 +482,126 @@ func TestDifferenceModeWithTwapRecordSpotPrice(t *testing.T) {
 	require.True(t, isTrue)
 
 }
+
+func TestTwapAccelerationPositiveTrend(t *testing.T) {
+	// This test verifies TWAP acceleration detection:
+	// When Δaccumulator₂ > Δaccumulator₁, it indicates a positive price trend
+	// (price × time)_now > (price × time)_previous
+
+	// Setup test environment
+	ctx, keeper, _, _, delAddr, _ := setupTest(t, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1_000_000))))
+	flowAddr, _ := CreateFakeFundedAccount(ctx, keeper.accountKeeper, keeper.bankKeeper, sdk.NewCoins(sdk.NewInt64Coin(testDenom, 3_000_000)))
+	types.Denom = testDenom
+
+	valAddr, ctx := delegateTokens(t, ctx, keeper, delAddr)
+	flow := createBaseflow(delAddr, flowAddr)
+
+	// Interval 0: Initial accumulator value = 1000
+	// This establishes the baseline
+	twapRecord0 := osmosistwapv1beta1.TwapRecord{
+		PoolId:                      1,
+		P1ArithmeticTwapAccumulator: math.LegacyNewDecWithPrec(1000, 0), // 1000
+		P0ArithmeticTwapAccumulator: math.LegacyNewDecWithPrec(500, 0),
+		P1LastSpotPrice:             math.LegacyNewDecWithPrec(100, 0),
+		P0LastSpotPrice:             math.LegacyNewDecWithPrec(50, 0),
+		GeometricTwapAccumulator:    math.LegacyNewDecWithPrec(750, 0),
+	}
+	twapRecordAny0, err := cdctypes.NewAnyWithValue(&twapRecord0)
+	require.NoError(t, err)
+
+	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{
+		QueryResponses: []string{base64.StdEncoding.EncodeToString(twapRecordAny0.Value)},
+		Executed:       true,
+	})
+
+	// Interval 1: Accumulator = 1300
+	// Δaccumulator₁ = 1300 - 1000 = 300
+	twapRecord1 := osmosistwapv1beta1.TwapRecord{
+		PoolId:                      1,
+		P1ArithmeticTwapAccumulator: math.LegacyNewDecWithPrec(1300, 0), // 1300
+		P0ArithmeticTwapAccumulator: math.LegacyNewDecWithPrec(650, 0),
+		P1LastSpotPrice:             math.LegacyNewDecWithPrec(130, 0),
+		P0LastSpotPrice:             math.LegacyNewDecWithPrec(65, 0),
+		GeometricTwapAccumulator:    math.LegacyNewDecWithPrec(975, 0),
+	}
+	twapRecordAny1, err := cdctypes.NewAnyWithValue(&twapRecord1)
+	require.NoError(t, err)
+
+	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{
+		QueryResponses: []string{base64.StdEncoding.EncodeToString(twapRecordAny1.Value)},
+		Executed:       true,
+	})
+
+	// Interval 2: Accumulator = 1700
+	// Δaccumulator₂ = 1700 - 1300 = 400
+	// Since Δaccumulator₂ (400) > Δaccumulator₁ (300), this is acceleration (positive trend)
+	twapRecord2 := osmosistwapv1beta1.TwapRecord{
+		PoolId:                      1,
+		P1ArithmeticTwapAccumulator: math.LegacyNewDecWithPrec(1700, 0), // 1700
+		P0ArithmeticTwapAccumulator: math.LegacyNewDecWithPrec(850, 0),
+		P1LastSpotPrice:             math.LegacyNewDecWithPrec(170, 0),
+		P0LastSpotPrice:             math.LegacyNewDecWithPrec(85, 0),
+		GeometricTwapAccumulator:    math.LegacyNewDecWithPrec(1275, 0),
+	}
+	twapRecordAny2, err := cdctypes.NewAnyWithValue(&twapRecord2)
+	require.NoError(t, err)
+
+	// Set up comparison with difference_mode = true
+	// This will compute the delta between intervals and compare
+	flow.Conditions = &types.ExecutionConditions{
+		Comparisons: []*types.Comparison{
+			{
+				ResponseIndex:  0,
+				ResponseKey:    "",
+				ValueType:      "osmosistwapv1beta1.TwapRecord.P1ArithmeticTwapAccumulator",
+				DifferenceMode: true,
+				ICQConfig: &types.ICQConfig{
+					Response: twapRecordAny2.Value,
+				},
+				Operand:  "delta", // Dynamic check: compares Δ₂ (curr) vs Δ₁ (prev)
+				Operator: types.ComparisonOperator_LARGER_THAN,
+			},
+		},
+	}
+
+	// Create a message to update
+	msgDelegate := newFakeMsgDelegate(delAddr, valAddr)
+	msgDelegate.Amount = sdk.NewCoin(testDenom, math.NewInt(1000))
+	flow.Msgs, _ = types.PackTxMsgAnys([]sdk.Msg{msgDelegate})
+
+	// Run comparison
+	// Expected: Δaccumulator₂ (400) > 300 → true (positive trend detected)
+	isTrue, err := keeper.CompareResponseValue(ctx, flow.ID, flow.Msgs, *flow.Conditions.Comparisons[0])
+	require.NoError(t, err)
+	require.True(t, isTrue, "Expected positive trend: Δaccumulator₂ (400) > Δaccumulator₁ (300)")
+
+	// Test negative case: Interval 3 with deceleration
+	// Accumulator = 2000
+	// Δaccumulator₃ = 2000 - 1700 = 300
+	// Since Δaccumulator₃ (300) is NOT > Δaccumulator₂ (400), this is deceleration
+	twapRecord3 := osmosistwapv1beta1.TwapRecord{
+		PoolId:                      1,
+		P1ArithmeticTwapAccumulator: math.LegacyNewDecWithPrec(2000, 0), // 2000
+		P0ArithmeticTwapAccumulator: math.LegacyNewDecWithPrec(1000, 0),
+		P1LastSpotPrice:             math.LegacyNewDecWithPrec(200, 0),
+		P0LastSpotPrice:             math.LegacyNewDecWithPrec(100, 0),
+		GeometricTwapAccumulator:    math.LegacyNewDecWithPrec(1500, 0),
+	}
+	twapRecordAny3, err := cdctypes.NewAnyWithValue(&twapRecord3)
+	require.NoError(t, err)
+
+	keeper.SetFlowHistoryEntry(ctx, flow.ID, &types.FlowHistoryEntry{
+		QueryResponses: []string{base64.StdEncoding.EncodeToString(twapRecordAny3.Value)},
+		Executed:       true,
+	})
+
+	// Update comparison to check against previous delta (400)
+	flow.Conditions.Comparisons[0].ICQConfig.Response = twapRecordAny3.Value
+	flow.Conditions.Comparisons[0].Operand = "delta" // Dynamic check: compares Δ₃ (curr) vs Δ₂ (prev)
+
+	// Run comparison again
+	// Expected: Δaccumulator₃ (300) > 400 → false (deceleration, not a positive trend)
+	isTrue, err = keeper.CompareResponseValue(ctx, flow.ID, flow.Msgs, *flow.Conditions.Comparisons[0])
+	require.NoError(t, err)
+	require.False(t, isTrue, "Expected no positive trend: Δaccumulator₃ (300) is not > Δaccumulator₂ (400)")
+}

@@ -6,6 +6,11 @@ package types
 import (
 	bytes "bytes"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	time "time"
+
 	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
@@ -15,10 +20,6 @@ import (
 	types2 "github.com/trstlabs/intento/x/interchainquery/types"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

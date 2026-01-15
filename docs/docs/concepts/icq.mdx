@@ -90,10 +90,10 @@ This helps you:
 ```
 
 
-### **2. Trend Detection**
+### **2. Trend Detection (Acceleration)**
 
-**Why**: Avoid buying in chop. Only act when TWAP delta is positive (uptrend) or negative (downtrend).
-**How**: Compare TWAP delta against zero.
+**Why**: Identify when momentum is building up (acceleration). Only act when the rate of price change is increasing (Δ₂ > Δ₁).
+**How**: Use `operand: "delta"` with `difference_mode: true`.
 
 ```jsonc
 "comparisons": [
@@ -101,7 +101,7 @@ This helps you:
     "response_key": "p0_arithmetic_twap_accumulator",
     "value_type": "osmosistwapv1beta1.TwapRecord",
     "operator": "LARGER_THAN",
-    "operand": "0.000000000000000000", 
+    "operand": "delta", // Compares current delta vs previous delta
     "difference_mode": true,
     "icq_config": {
       "connection_id": "connection-0",
@@ -167,6 +167,7 @@ This helps you:
 * **Operators** are enums (`SMALLER_THAN`, `LARGER_THAN`, etc.), not symbols.
 * **Operands** are high-precision decimals (`math.Dec`), not floats.
 * For **Spot vs TWAP**, the operand can be another TWAP field → no static threshold required.
+* Use **`operand="delta"`** to detect acceleration (compare current rate vs previous rate).
 
 This makes it possible to write **DCA bots, arbitrage triggers, or safe autocompound flows** directly on-chain using Intento.
 

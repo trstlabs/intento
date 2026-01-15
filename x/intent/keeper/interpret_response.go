@@ -41,11 +41,13 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 		}
 	}
 
+	// Use a copy of ValueType because getValueFromResponse can modify it in place
+	valueType := comparison.ValueType
 	valueFromResponse, err = k.getValueFromResponse(
 		ctx,
 		comparison.ResponseIndex,
 		comparison.ResponseKey,
-		&comparison.ValueType,
+		&valueType,
 		queryCallback,
 		responses,
 	)
@@ -53,21 +55,31 @@ func (k Keeper) CompareResponseValue(ctx sdk.Context, flowID uint64, responses [
 		return false, fmt.Errorf("error getting value from response: %w", err)
 	}
 
-	operand, err := parseOperand(comparison.Operand, comparison.ValueType)
-	if err != nil {
-		valueType := comparison.Operand
-		k.Logger(ctx).Debug("operand is not a number, trying to get value from response", "operand", comparison.Operand, "valueType", comparison.ValueType)
-		// try to use operand field to get value from response
-		operand, err = k.getValueFromResponse(
-			ctx,
-			comparison.ResponseIndex,
-			comparison.ResponseKey,
-			&valueType,
-			queryCallback,
-			responses,
-		)
+	var operand interface{}
+	if comparison.Operand == "delta" && comparison.DifferenceMode {
+		// Calculate the previous delta (delta between n-1 and n-2)
+		k.Logger(ctx).Debug("calculating previous delta for comparison")
+		operand, err = k.calculatePreviousDelta(ctx, flowID, comparison.ResponseIndex, comparison.ResponseKey, comparison.ValueType, queryCallback != nil)
 		if err != nil {
-			return false, fmt.Errorf("error parsing operand: %v", err)
+			return false, fmt.Errorf("error calculating previous delta: %v", err)
+		}
+	} else {
+		operand, err = parseOperand(comparison.Operand, valueType)
+		if err != nil {
+			valueType := comparison.Operand
+			k.Logger(ctx).Debug("operand is not a number, trying to get value from response", "operand", comparison.Operand, "valueType", comparison.ValueType)
+			// try to use operand field to get value from response
+			operand, err = k.getValueFromResponse(
+				ctx,
+				comparison.ResponseIndex,
+				comparison.ResponseKey,
+				&valueType,
+				queryCallback,
+				responses,
+			)
+			if err != nil {
+				return false, fmt.Errorf("error parsing operand: %v", err)
+			}
 		}
 	}
 
@@ -1164,4 +1176,95 @@ func toFloat64(v interface{}) float64 {
 	default:
 		return 0
 	}
+}
+
+// calculatePreviousDelta calculates the delta between the n-1 and n-2 execution responses
+// This is used for acceleration detection (comparing current delta vs previous delta)
+func (k Keeper) calculatePreviousDelta(ctx sdk.Context, flowID uint64, responseIndex uint32, responseKey string, valueType string, isICQ bool) (interface{}, error) {
+	// Get the flow history
+	flowHistory, err := k.GetFlowHistory(ctx, flowID)
+	if err != nil {
+		return nil, fmt.Errorf("flow not found: %d", flowID)
+	}
+
+	if len(flowHistory) < 2 {
+		return nil, fmt.Errorf("not enough execution history for acceleration detection (need at least 2 previous executions)")
+	}
+
+	var valueN1, valueN2 interface{}
+	var foundN1, foundN2 bool
+
+	// Find n-1 (most recent) and n-2 (second most recent) values
+	// Iterate backwards through history
+	for i := len(flowHistory) - 1; i >= 0; i-- {
+		history := flowHistory[i]
+
+		// Skip failed executions
+		if !history.Executed || len(history.Errors) > 0 {
+			continue
+		}
+
+		var val interface{}
+		var err error
+		var hasResponse bool
+
+		if isICQ {
+			// Handle ICQ response
+			if len(history.QueryResponses) > 0 && int(responseIndex) < len(history.QueryResponses) {
+				decoded, err := base64.StdEncoding.DecodeString(history.QueryResponses[responseIndex])
+				if err != nil {
+					continue
+				}
+				// Use a copy of valueType because getValueFromResponse can modify it in place
+				currentValueType := valueType
+				val, err = k.getValueFromResponse(
+					ctx,
+					responseIndex,
+					responseKey,
+					&currentValueType,
+					decoded,
+					nil,
+				)
+				if err == nil {
+					hasResponse = true
+				}
+			}
+		} else {
+			// Handle message response
+			if len(history.MsgResponses) > 0 && int(responseIndex) < len(history.MsgResponses) {
+				// Use a copy of valueType because getValueFromResponse can modify it in place
+				currentValueType := valueType
+				val, err = k.getValueFromResponse(
+					ctx,
+					responseIndex,
+					responseKey,
+					&currentValueType,
+					nil,
+					history.MsgResponses,
+				)
+				if err == nil {
+					hasResponse = true
+				}
+			}
+		}
+
+		if hasResponse {
+			if !foundN1 {
+				valueN1 = val
+				foundN1 = true
+			} else if !foundN2 {
+				valueN2 = val
+				foundN2 = true
+				break // Found both values
+			}
+		}
+	}
+
+	if !foundN1 || !foundN2 {
+		return nil, fmt.Errorf("could not find previous two successful executions with valid responses for acceleration detection")
+	}
+
+	// Calculate delta = Value(n-1) - Value(n-2)
+	k.Logger(ctx).Debug("calculating previous delta", "Value(n-1)", valueN1, "Value(n-2)", valueN2)
+	return k.calculateDifference(ctx, valueN1, valueN2)
 }
