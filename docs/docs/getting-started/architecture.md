@@ -1,47 +1,101 @@
 ---
 sidebar_position: 1
-title: Technical overview
+title: Technical Overview
 description: A technical overview of the Intento blockchain, including its architecture, consensus mechanism, block structure, network topology, solutions, and data availability.
 ---
 
 
 Intento's intent-based flow framework has been meticulously designed to execute transactions based on defined schedules, leveraging the blockchain's inherent security. This framework, devoid of reliance on external agents or smart contracts, utilizes custom BeginBlocker functions for flow executions. The integration with the IBC Interchain Accounts standard, permit the Intento chain to execute transactions across IBC-enabled chains without moving the assets out of the user's control.
 
-![architecture](@site/docs/images/architecture.png)
+```mermaid
+flowchart LR
+    %% Main Entry Points
+    CometBFT[CometBFT] --> SDK[SDK Block]
+    
+    SDK --> BeginBlock[BeginBlock]
+    SDK --> GenTx[General Transactions]
+
+    %% Flow Queue Logic
+    BeginBlock --> FlowQueue[/Flow Queue/]
+    FlowQueue --> ICQCheck{No ICQ?}
+    
+    ICQCheck -- Yes --> SubmitICQ[Submit ICQ]
+    SubmitICQ -. Response submitted by relayer .-> ConditionCheck
+    
+    ICQCheck -- No --> GetFlow[Get Flow]
+    GetFlow --> ConditionCheck{Conditions?}
+
+    %% Decision Logic
+    ConditionCheck --> FeedbackCheck{Feedback?}
+    
+    FeedbackCheck -- Yes --> UseResponse[Use Response]
+    UseResponse --> InterchainCheck
+    
+    FeedbackCheck -- No --> InterchainCheck{Interchain?}
+
+    %% Execution and Destination
+    InterchainCheck -- Yes --> ICAPacket[[ICA Packet]]
+    InterchainCheck -- No --> LocalMsg[Local Msg]
+
+    ICAPacket -.-> DestChain[(Dest Chain)]
+    LocalMsg --> UpdateQueue[/Update Queue/]
+    
+    DestChain -. Ack/Timeout .-> UpdateQueue
+```
 
 Intento’s execution mechanism queues flows, checking them at the beginning of each block for their scheduled execution time. In the event of a blockchain halt, the system is designed to resume queued executions in subsequent blocks, ensuring reliability and continuity.
 With Intento you can use the power of IBC for your user intents. You can use Interchain Queries (ICQ) and use their responses for comparisons and build feedback loops. Or use Interchain Accounts (ICA) to execute actions on connected chains. Below are just some of the examples of how flows can look like.
 
-![Example flows](@site/docs/images/example_flows.png)
+```mermaid
+flowchart LR
+    %% User Intent
+    UI[User Intent]
 
-## Leveraging Interchain Security
+    %% Flows
+    UI --> F1[Flow]
+    UI --> F2[Flow]
+    UI --> F3[Flow]
+    UI --> F4[Flow]
 
-Intento is designed to provide a decentralized, scalable, and secure environment for executing intent-based action flows across multiple blockchains. A key component of Intento’s architecture is **Interchain Security**, which enables the protocol to inherit security from established validator sets while maintaining its autonomy and flexibility. ICS allows Intento to optimize security, decentralization, and network efficiency as it scales.
+    %% Flow 1 - Initial handling
+    F1 --> IQ[Submit Interchain Query]
+    IQ --> C1[Check Conditions]
+    C1 --> LT1[Local Trigger]
+    LT1 --> E1[Executed = True]
 
-### Why ICS?
+    %% Flow 2 - IBC trigger
+    F2 --> C2[Check Conditions]
+    C2 --> IBC1[IBC Trigger]
+    IBC1 --> D1[Destination Chain 1]
+    D1 --> M1[Execute Message]
+    D1 --> M2[Execute Message]
 
-ICS is integral to Intento’s architecture for several reasons:
+    %% Flow 3 - IBC + feedback
+    F3 --> C3[Check Conditions]
+    C3 --> IBC2[IBC Trigger]
+    IBC2 --> D2[Destination Chain 2]
+    D2 --> M3[Execute Message]
+    D2 --> M4[Execute Message]
 
-1. **Decentralized Security** – By leveraging ICS, Intento benefits from the Cosmos Hub’s highly decentralized validator set, reducing the risk of centralization and single points of failure.
-2. **Economic Security** – Rather than bootstrapping its own validator network, Intento inherits the economic security of the Cosmos Hub’s staked ATOM, making attacks more costly and difficult.
-3. **Scalability & Modularity** – ICS allows Intento to focus on execution and orchestration of action flows while relying on an external, secure validator set for consensus.
-4. **Permissionless Growth** – With ICS v2 introducing partial set security, Intento can progressively decentralize its validator set while maintaining a robust security foundation.
+    %% IBC response handling
+    D2 -. IBC Packet Response .-> FB1[Run Feedback Loop]
+    FB1 --> T1[Trigger with New Msg]
+    T1 --> E2[Executed = True]
 
-### How Intento Uses ICS
+    %% Flow 4 - chained execution
+    F4 --> C4[Check Conditions]
+    C4 --> IBC3[IBC Trigger]
+    IBC3 --> D3[Destination Chain 3]
+    D3 --> M5[Execute Message]
+    D3 --> M6[Execute Message]
 
-Intento operates as a consumer chain under ICS, meaning its consensus mechanism is secured by Cosmos Hub validators who validate Intento’s transactions in exchange for rewards. This setup ensures:
+    %% Re-queued flow execution
+    FB1 --> C5[Check Conditions]
+    C5 --> LT2[Local Trigger]
+    LT2 --> E3[Executed = True]
 
-- A high level of security from day one.
-- A streamlined consensus mechanism without requiring Intento to maintain its own validator set.
-- Efficient block finalization and execution of action flows.
+```
 
-#### Action Flows and ICS
-
-Intento enables intent-based action execution across IBC-connected chains, which requires highly reliable and timely processing. By utilizing ICS, Intento ensures:
-
-- **Secure orchestration** of workflows such as cross-chain portfolio management, autocompounding staking rewards, and scheduled transactions.
-- **Minimal latency** in processing conditional triggers, governance actions, and smart contract executions.
-- **Resilient infrastructure** that can handle high volumes of interchain queries and state updates efficiently.
 
 ## CometBFT and Time Management
 
@@ -49,4 +103,4 @@ CometBFT, with its proposer-based timestamp mechanism, ensures a consistent and 
 
 ## Conclusion
 
-Intento’s architecture enables secure, scalable, and efficient execution of decentralized workflows. By integrating ICS and IBC, Intento provides a next-generation solution for cross-chain orchestration while maintaining self-custodial security. Intento is set to scale alongside the Cosmos ecosystem, ensuring a robust and future-proof infrastructure for intent-based action flows.
+Intento’s architecture enables secure, scalable, and efficient execution of decentralized workflows. By integrating IBC, Intento provides a next-generation solution for cross-chain orchestration while maintaining self-custodial security. Intento is set to scale to support a wide range of chains and VMs, ensuring a robust and future-proof infrastructure for intent-based action flows.

@@ -40,6 +40,7 @@ const sidebars = {
       label: 'Concepts',
       items: [
         'concepts/intent',
+        'concepts/flow-patterns',
         'concepts/icq',
         'concepts/conditions',
         'concepts/fees',

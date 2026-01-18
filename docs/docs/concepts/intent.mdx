@@ -11,10 +11,76 @@ Intent-based action flows are submitted by providing an interval, duration, end 
 
 A flow on Intento in technical terms is an object containing messages that are triggered at a specified time, or recurringly with intervals, with conditions such as feedback loops, stops and comparisons. Flow trigger entries are scheduled, and checked at the beginning of a new block.
 
-In the illustration below you can see several examples of how flows can look like.
-![Example flows](@site/docs/images/example_flows.png)
+```mermaid
+flowchart LR
+    %% User Intent
+    UI[User Intent]
 
-Interchain Accounts are a key component of Intento. They allow for the secure management of assets across different IBC-connected chains. This means that Intento's Intents can execute actions on other chains based on custom logic, making them extremely versatile and useful for a wide range of applications. With this, you can execute Cosmos SDK blockchain messages such as:
+    %% Flows
+    UI --> F1[Flow]
+    UI --> F2[Flow]
+    UI --> F3[Flow]
+    UI --> F4[Flow]
+
+    %% Flow 1 - Initial handling
+    F1 --> IQ[Submit Interchain Query]
+    IQ --> C1[Check Conditions]
+    C1 --> LT1[Local Trigger]
+    LT1 --> E1[Executed = True]
+
+    %% Flow 2 - IBC trigger
+    F2 --> C2[Check Conditions]
+    C2 --> IBC1[IBC Trigger]
+    IBC1 --> D1[Destination Chain 1]
+    D1 --> M1[Execute Message]
+    D1 --> M2[Execute Message]
+
+    %% Flow 3 - IBC + feedback
+    F3 --> C3[Check Conditions]
+    C3 --> IBC2[IBC Trigger]
+    IBC2 --> D2[Destination Chain 2]
+    D2 --> M3[Execute Message]
+    D2 --> M4[Execute Message]
+
+    %% IBC response handling
+    D2 -. IBC Packet Response .-> FB1[Run Feedback Loop]
+    FB1 --> T1[Trigger with New Msg]
+    T1 --> E2[Executed = True]
+
+    %% Flow 4 - chained execution
+    F4 --> C4[Check Conditions]
+    C4 --> IBC3[IBC Trigger]
+    IBC3 --> D3[Destination Chain 3]
+    D3 --> M5[Execute Message]
+    D3 --> M6[Execute Message]
+
+    %% Re-queued flow execution
+    FB1 --> C5[Check Conditions]
+    C5 --> LT2[Local Trigger]
+    LT2 --> E3[Executed = True]
+
+```
+
+### Flow Anatomy
+
+A Flow is composed of three main layers: **Triggers**, **Logic**, and **Actions**.
+
+```mermaid
+graph LR
+    Input[MsgSubmitFlow] --> Flow
+    
+    subgraph Flow [Flow Object]
+        direction TB
+        Triggers[<b>Triggers</b><br/>Start, Interval, State]
+        Logic[<b>Logic</b><br/>Conditions, Comparisons, Feedback Loops]
+        Actions[<b>Actions</b><br/>Messages e.g. Swap, Send, Delegate]
+        
+        Triggers --> Logic
+        Logic --> Actions
+    end
+```
+
+Intento's Intents can execute actions on supported chains based on custom logic, making them extremely versatile and useful for a wide range of applications. With this, you can execute Cosmos SDK blockchain messages such as:
 
 - `MsgSend` for token transfers
 - `MsgSwapExactAmountIn` for token swapping on Osmosis
@@ -22,9 +88,9 @@ Interchain Accounts are a key component of Intento. They allow for the secure ma
 - `MsgExecuteContract` to execute a CosmWasm contract
 - `MsgInstantiateContract` to instantiate a CosmWasm contract
 
-#### Approaches for Executing Messages on Other Chains
+#### Approaches for Executing Messages on Supported Chains
 
-Intento can execute messages on other chains using several approaches:
+Intento can execute messages on supported chains using several approaches:
 
 1. **ICS20 Transfers with a Memo**
    - Easy to set up on available chains by using packet forwarding
@@ -38,6 +104,37 @@ Intento can execute messages on other chains using several approaches:
    - You have to manage host chain fee balances yourself
 
 To use Self-Hosted Interchain Accounts, you first register an interchain account. This involves creating a port ID and connection ID, which allows you to connect their account to other chains over IBC. You additionaly have to send funds for fees on the host chain. Using the Authz module on the host chain - the chain you want to execute at - you can grant the flow permission to execute a specific message.
+
+## Execution Process
+
+The following sequence details how a flow transitions from submission to cross-chain execution.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Chain as Intento Chain
+    participant Relayer
+    participant Host as Host Chain
+
+    User->>Chain: 1. MsgSubmitFlow
+    Chain->>Chain: 2. Validate & Queue Flow
+
+    loop Every Block
+        Chain->>Chain: 3. Check Schedule & Conditions
+        
+        opt Conditions Met
+            Chain->>Chain: 4. Apply Feedback Loops
+            Chain->>Relayer: 5. Send IBC Packet (Execution)
+            Relayer->>Host: 6. Execute Messages
+            Host-->>Relayer: 7. Acknowledge Result
+            Relayer-->>Chain: 8. Update History
+            
+            opt Is Recurring
+                Chain->>Chain: 9. Reschedule Next Run
+            end
+        end
+    end
+```
 
 ## MsgSubmitFlow
 
@@ -82,21 +179,6 @@ The `Flow History` captures the timeline and details of every executed flow and 
 | `errors`              | A list of error messages encountered during the execution. If empty, the execution was successful.                 |
 | `msg_responses`       | A collection of responses for the executed messages. This field remains empty if `save_responses` is set to false. |
 | `query_responses`     | Contains responses to any queries performed. This field is also empty if `save_responses` is false.                |
-
-## Execution Process
-
-A high level overview of the process from flow submission to triggering messages across chains.
-
-1. Submit an flow using `MsgSubmitFlow` - if fee funds are sent along with it, a new fee address is generated
-2. Chain checks if execution settings from `Conditions` are ok.
-3. An Intento `Flow` is inserted in a queue
-4. In each block, scheduled flows are retrieved given the current block time
-5. If set, comparisons are made with prior outputs and Interchain Queries and return true or false.
-6. Feedback Loops are checked. Message and and Interchain Query responses are inserted into messages.
-7. IBC transaction is sent and executed to the host chain
-8. If the flow is recurring, a new entry is inserted into the queue
-9. IBC Packet gets acknowledged by a relayer and the flow entry is updated
-10. Remaining funds sent to a flow fee account are returned to the flow owner
 
 <!-- _Continue reading on on how intent engine works in the [engine](@site/docs/engine/index.md) section of our documetation._ -->
 

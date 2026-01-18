@@ -1,24 +1,101 @@
 ---
-title: Getting Started with Intento
+title: Getting Started
 sidebar_position: 1
 sidebar_class_name: sidebar-item-tutorials
 ---
 
-Intento is a decentralized system built with the Cosmos SDK for intent-based execution via flows, enabling orchestration across IBC-connected chains without smart contracts. TRST Labs has been developing the Intent engine since early 2023 to abstract transaction complexity and enable permissionless, self-custodial orchestration.  
+## What is Intento?
 
-### Why Cosmos?  
+Intento is a decentralized execution layer for **intent-based flows**.  
+It lets users and applications describe *what should happen*—across chains, over time, or based on conditions—and have that intent executed permissionlessly and self-custodially.
 
-The Cosmos ecosystem is a network of application-specific blockchains connected by IBC (Inter-Blockchain Communication). Intento aligns with Cosmos’s vision of a modular and interoperable blockchain future, enabling secure, cross-chain applications for all. Intento is proud to be part of this decentralized community building key decentralized infrastructure for a more interconnected tomorrow.
+No custom smart contracts.  
+No privileged executors.  
+No trusted relayers.
 
-### Our Mission
+Just declarative intent → verifiable execution.
 
-Intento eliminates the need for intermediary smart contracts, allowing users to orchestrate blockchain actions directly through simple configurations. Our goal is to:  
+The Intento engine is developed by TRST Labs since early 2023 with one goal: **abstract transaction complexity without abstracting control**.
 
-1. **Put users in control** – Self-custodial execution without reliance on third parties.  
-2. **Improve efficiency** – Reduce gas costs and simplify multi-chain interactions.  
-3. **Expand accessibility** – Enable new financial workflows with low-friction orchestration.  
-4. **Enhance security** – Remove privileged execution layers and centralized points of failure.  
 
-### IBC – A New Standard for Cross-Chain Execution  
+## How Intento Works (High Level)
 
-Unlike traditional bridges, IBC provides direct chain-to-chain communication without external validators. Intento leverages IBC, ICA (Interchain Accounts), and ICQ (Interchain Queries) to enable new use cases. By combining intent-based execution with Cosmos’s modular and scalable architecture, Intento sets a new standard for blockchain orchestration.  
+Intento introduces *flows*: structured execution plans that define:
+
+- **Actions** (transactions, cross-chain calls, swaps, transfers)
+- **Conditions** (time, state, feedback loops, comparisons)
+- **Execution scope** (single-chain or multi-chain)
+- **Ownership** (always user-controlled)
+
+Flows are submitted once and executed autonomously according to their configuration—without requiring upgradeable contracts or delegated custody.
+
+
+## Chain Support: Cosmos, EVM, and Beyond
+
+Intento is **chain-agnostic by design**.
+
+Today, Intento is deployed on a Cosmos SDK chain and leverages native cross-chain primitives to coordinate execution across multiple networks. This provides battle-tested guarantees around message passing, account control, and verification.
+
+At the same time, Intento is built to **orchestrate across ecosystems**, including:
+
+- **Cosmos chains** (via native cross-chain accounts and queries)
+- **EVM chains** (via external execution targets and message routing)
+- **Hybrid flows** that span Cosmos ↔ EVM environments
+
+Cosmos is not the product—it’s the execution substrate.  
+The intent model, flow engine, and orchestration logic are portable.
+
+
+## Why Intent-Based Execution?
+
+Most blockchain UX still forces users to think in **transactions**:
+sign this, submit that, wait, repeat.
+
+Intento flips that model:
+
+- Users express **desired outcomes**
+- The system handles **ordering, retries, timing, and coordination**
+- Execution remains **fully transparent and verifiable**
+
+This enables workflows that are otherwise painful or impossible:
+- Streaming and recurring actions
+- Cross-chain strategies
+- Conditional execution without on-chain bots
+- Long-lived automation without smart contract risk
+
+
+## Core Principles
+
+1. **User Control First**  
+   Execution is always self-custodial. No hidden permissions, no opaque agents.
+
+2. **No Custom Smart Contracts**  
+   Flows operate using existing chain capabilities—reducing attack surface and governance risk.
+
+3. **Composable by Default**  
+   Flows can trigger other flows, react to chain state, or integrate external systems.
+
+4. **Minimal Trust, Maximum Verifiability**  
+   Every step is observable, deterministic, and auditable.
+
+
+## Under the Hood (Briefly)
+
+Depending on the target chain, Intento uses:
+- Cross-chain accounts for remote execution
+- State queries for conditional logic
+- Deterministic message routing for multi-step flows
+
+These components allow Intento to coordinate actions across chains without introducing new trust assumptions.
+
+You don’t need to understand the internals to use Intento—but they’re there when you want to go deeper.
+
+
+## Next Steps
+
+- Learn how flows are structured  
+- Explore example intent configurations  
+- Deploy your first cross-chain flow  
+
+Intento is not another abstraction layer.  
+It’s an execution primitive for how blockchain interactions should work going forward.

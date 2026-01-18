@@ -1,0 +1,191 @@
+---
+sidebar_position: 2
+sidebar_class_name: sidebar-item-concept
+title: Flow Patterns
+description: Visualizing flow execution and common design patterns
+pagination_label: Flow Patterns
+---
+
+To design effective Intent-based Flows, it helps to visualize the execution lifecycle and understand common structural patterns. This guide provides diagrams and blueprints for standard and advanced flow architectures.
+
+## Execution Lifecycle
+
+Understanding how the Intento engine processes a flow is critical for debugging and optimization. The following diagram illustrates the decision loop for a recurring flow.
+
+```mermaid
+graph TD
+    Start((Start)) --> Registered[MsgRegisterFlow]
+    Registered --> Scheduler{Time to Execute?}
+    
+    Scheduler -- No --> Wait[Wait Interval]
+    Wait --> Scheduler
+    
+    Scheduler -- Yes --> Conditions{Check Conditions}
+    
+    subgraph "Condition Logic"
+        Conditions --> |Uses ICQ| Query[Interchain Query]
+        Query --> Compare{Conditions Met?}
+        Compare -- No --> RecurCheck
+    end
+    
+    Compare -- Yes --> Dependencies{Dependencies Met?}
+    Dependencies -- No --> RecurCheck
+    
+    Dependencies -- Yes --> Execute[Execute Messages]
+    
+    subgraph "Execution Phase"
+        Execute --> Feedback[Apply Feedback Loops]
+        Feedback --> Tx[Submit Transaction]
+        Tx --> Result{Success?}
+    end
+    
+    Result -- Yes --> StopCheck{Stop On Success?}
+    Result -- No --> StopFailCheck{Stop On Failure?}
+    
+    StopCheck -- Yes --> End((End/Stop))
+    StopCheck -- No --> RecurCheck{Should Recur?}
+    
+    StopFailCheck -- Yes --> End
+    StopFailCheck -- No --> RecurCheck
+    
+    RecurCheck -- Yes --> Wait
+    RecurCheck -- No --> End
+```
+
+---
+
+## Pattern 1: The Guardrail
+
+**Goal:** Execute an action only when specific on-chain conditions are met.
+
+*   **Use Case:** Buy token X only when its price drops below $Y.
+*   **Structure:**
+    *   **Interval:** Short (e.g., 1 minute).
+    *   **Condition:** `PriceOracle < TargetPrice`.
+    *   **Configuration:** `StopOnSuccess = True`.
+
+This pattern checks the condition repeatedly. If false, it does nothing and waits. If true, it executes once and permanently stops.
+
+---
+
+## Pattern 2: The Loop (DCA)
+
+**Goal:** Repeat an action periodically, regardless of external state.
+
+*   **Use Case:** Dollar Cost Average (DCA) - Buy $100 of ETH every week.
+*   **Structure:**
+    *   **Interval:** 1 week.
+    *   **Condition:** None (Always True).
+    *   **Configuration:** `StopOnSuccess = False`, `StopOnFailure = False`.
+
+---
+
+## Pattern 3: The Branch (If/Else)
+
+**Goal:** Execute Logic A if Condition X is true, otherwise execute Logic B if Condition Y is true.
+
+Since a single flow executes linearly, branching logic is achieved by **Coupling Two Flows** running in parallel with mutually exclusive conditions.
+
+*   **Use Case:** 
+    *   If `DAI < 0.99` → Buy DAI (Arbitrage).
+    *   If `DAI > 1.01` → Sell DAI (Arbitrage).
+
+**Diagram:**
+
+```mermaid
+graph TD
+    subgraph "Flow A (Buy Logic)"
+        A_Start((Start)) --> A_Check{Price < 0.99?}
+        A_Check -- Yes --> A_Exec[**Action: Buy**]
+        A_Check -- No --> A_Skip[Skip / No-Op]
+        A_Exec --> A_Stop((Stop on Success))
+    end
+
+    subgraph "Flow B (Sell Logic)"
+        B_Start((Start)) --> B_Check{Price > 1.01?}
+        B_Check -- Yes --> B_Exec[**Action: Sell**]
+        B_Check -- No --> B_Skip[Skip / No-Op]
+        B_Exec --> B_Stop((Stop on Success))
+    end
+    
+    Clock[Block Timer] --> A_Start
+    Clock --> B_Start
+    
+    style A_Exec fill:#d4f7dc,stroke:#26a641
+    style B_Exec fill:#f7d4d4,stroke:#c92a2a
+```
+
+---
+
+## Pattern 4: The Feedback Loop (Dynamic Data)
+
+**Goal:** Use the result of a previous query or action as the input for the next action.
+
+*   **Use Case:** Withdraw all available staking rewards (unknown amount) and send them to a cold wallet.
+*   **Structure:**
+    1.  **Msg 1:** `WithdrawDelegatorReward` (Response contains `Amount`).
+    2.  **Feedback Loop:** Extract `Amount` from Msg 1 Response → Inject into Msg 2 `Amount` field.
+    3.  **Msg 2:** `MsgSend` (Executes with the dynamic amount).
+
+```mermaid
+sequenceDiagram
+    participant Keeper
+    participant History as Flow History
+    participant Msg2 as MsgSend
+    
+    Note over Keeper: Preparing Execution
+    
+    Keeper->>History: Get Response 1 (WithdrawReward)
+    History-->>Keeper: Return "500ATOM"
+    
+    Note over Keeper: Apply Feedback Loop
+    
+    Keeper->>Msg2: Replace "Amount" field
+    Msg2->>Msg2: Update "0" -> "500ATOM"
+    
+    Keeper->>Chain: Execute MsgSend(Amount: 500ATOM)
+```
+
+---
+
+## Pattern 5: The Chain Reaction (Dependencies)
+
+**Goal:** Execute Flow B only if Flow A has successfully executed.
+
+*   **Use Case:** 
+    1.  Flow A: Swap ATOM for OSMO.
+    2.  Flow B: Provide Liquidity with the new OSMO.
+*   **Structure:**
+    *   **Flow A:** Normal configuration.
+    *   **Flow B:** 
+        *   `skip_on_failure_of: [Flow_A_ID]`. (If A fails or hasn't run, B skips).
+        *   Alternatively: `stop_on_failure_of: [Flow_A_ID]` to permanently stop B if A fails.
+
+This creates a sequential dependency graph without needing a single monolithic transaction.
+
+---
+
+## Pattern 6: The Composite Condition (AND/OR)
+
+**Goal:** Execute action only when MULTIPLE conditions are met.
+
+*   **Use Case:** Buy ETH if Price < $2000 **AND** Volume > 1M.
+*   **Structure:**
+    *   **Comparison 1:** Price < 2000.
+    *   **Comparison 2:** Volume > 1M.
+    *   **Configuration:** `use_and_for_comparisons: true`.
+
+*   **Variant (OR):** Buy if Price < $2000 **OR** RSI < 30.
+    *   **Configuration:** `use_and_for_comparisons: false`.
+
+---
+
+## Pattern 7: The Wallet Fallback (Gas Safety)
+
+**Goal:** Ensure the flow continues executing even if the Flow Account runs out of gas fees.
+
+*   **Use Case:** High-frequency trading where the dedicated flow wallet might be depleted, but the Master (Owner) wallet has funds.
+*   **Structure:**
+    *   **Configuration:** `wallet_fallback: true`.
+    *   **Behavior:** If the Flow Account has insufficient fees, the system deducts fees from the User's main account (Owner) instead.
+
