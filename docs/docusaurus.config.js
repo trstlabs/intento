@@ -74,7 +74,13 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
+      mermaid: {
+        theme: {
+          light: "base",
+          dark: "dark",
+        },
+      },
+
       image: "img/web.png",
       docs: {
         sidebar: {

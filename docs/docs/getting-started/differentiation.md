@@ -3,90 +3,146 @@ title: Differentiation
 sidebar_position: 3
 ---
 
-Intento enables **intent-based flows without smart contracts**, making automated execution streamlined, self-custodial, and scalable. Unlike traditional automation that depends on bot networks or privileged smart contracts, Intento empowers users to directly own and control execution, removing unnecessary intermediaries and security risks.
+Intento enables **intent-based flows without application smart contracts**, providing protocol-level orchestration for automated, self-custodial, and scalable execution. Unlike traditional automation systems that rely on bot networks, solvers, or privileged application contracts, Intento moves orchestration itself on-chain — making flow logic, execution authority, and recovery part of the protocol rather than off-chain infrastructure.
+
+This shifts the source of truth for automation from off-chain actors and application-level VMs to a verifiable, on-chain orchestration layer.
 
 ### The Problem with Existing Approaches  
 
-#### Bot Networks  
+#### Bot Networks
 
-Decentralized execution via bot networks requires tasks to be registered on-chain, with bots competing to claim rewards. However, this approach has inefficiencies:
+```mermaid
+flowchart LR
+  User[User / App] -->|Intent or Order| IntentSystem[Intent System or Relayer]
+  IntentSystem --> |Task Broadcast| SolverNet[Solver or Bot Network]
+  SolverNet --> |Off-chain Decision Making| Strategy[Private Routing and Strategy Logic]
+  Strategy --> |Submit Transaction| EVMChain[EVM Chain]
+  EVMChain --> |Transaction Receipt| SolverNet
+  SolverNet --> |Off-chain Report| IntentSystem
 
-- **Network Congestion & Gas Costs** – Multiple bots executing the same transaction cause congestion and increase fees.
-- **Centralization Risks** – The first-come-first-served model discourages participation from smaller operators, leading to a race-to-the-bottom effect.
-- **Complex Automation Workflows** – Execution logic requires additional privileged contracts, increasing costs and security risks.
+  subgraph Trusted["Trusted Off-chain Execution Zone"]
+    SolverNet
+    Strategy
+  end
 
-#### Custom Smart Contracts  
+  Risks[Trust and Security Tradeoffs: Solver discretion, Off-chain routing logic, MEV and censorship, Best-effort]
+  IntentSystem --> Risks
+```
 
-Privileged Smart contracts on CosmWasm chains can schedule executions via BeginBlocker/EndBlocker, but this introduces drawbacks:
+Bot and solver networks coordinate off-chain agents to fulfill intents. While flexible, this model introduces fundamental limitations:
 
-- **Higher Gas Costs** – Scheduled executions require extra computational resources, increasing user fees.
-- **Computational Overhead** – Smart contract-based automation incurs static costs of running inside a VM, regardless of efficiency.
-- **Blockspace Limitations** – Time-based executions compete with general transactions, requiring governance oversight.
-- **Security Risks** – Privileged contracts introduce attack vectors, increasing risks for users.
+* **Solver Discretion** – Execution strategy, routing, and timing are controlled by off-chain actors.
+* **Additional Trust Assumptions** – Users must trust solvers to act correctly and report honestly.
+* **MEV and Censorship Risk** – Off-chain execution increases exposure to reordering, withholding, and selective execution.
+* **Limited On-chain Composability** – Execution logic is not part of the on-chain state machine.
 
-### How Intento Solves This  
+##### Chainlink vs Intento for Event Automation
 
-Intento eliminates the need for bots and privileged smart contracts, enabling direct, intent-based execution:
+Existing solutions like Chainlink automate based on triggers, but they differ in scope and capability. Chainlink is primarily a **trigger and oracle network**: it monitors conditions and calls smart contract functions when those conditions are met. It is well-suited for single-step automation like rebases, upkeep, or cron-style jobs, but it cannot manage multi-step workflows, maintain state, or orchestrate actions across multiple chains or protocols.
 
-- **User-Owned Flows** – Intento shifts power to users, enabling self-custodial, automated workflows without intermediaries.
-- **Scalable & Efficient** – Execution logic runs at a fraction of the cost of traditional automation services.
-- **Protocol-Neutral & Interoperable** – Works across different blockchain ecosystems without dependencies on specific contract frameworks.
-- **Orchestration & Composability** – Intento enables composing multiple flows together, allowing users to create complex, automated processes across chains.
-- **Direct IBC, ICA & ICQ Integration** – By integrating Inter-Blockchain Communication (IBC), Interchain Accounts (ICA), and Interchain Queries (ICQ), Intento facilitates secure, automated, and cross-chain workflows without requiring intermediary execution layers.
-- **Conditions, Comparisons & Feedback Loops** – Execution logic can be condition-based, supporting real-time comparisons, iterative feedback loops, and adaptive automation.
-- **Advanced Use Cases** – Supports conditional payments, streaming transactions, auto-compounding, and portfolio optimization, making it a powerful tool for DeFi and beyond.
-- **Single Token Fee Abstraction** – With Trustless Agents, users can pay all fees in a single token (e.g., INTO or ATOM), simplifying automation and reducing friction.
+Intento, in contrast, is a **cross-chain orchestration and intent-execution platform**. It enables users to define multi-step, conditional workflows that execute across chains and protocols, maintain state, and adapt over time using feedback loops. Instead of just signaling that an event occurred, Intento decides *what happens next*, allowing for fully autonomous flows such as streaming swaps, auto-compounding, or multi-protocol DeFi strategies.
 
-### How Intento Differs from Anoma & Agoric  
+| Capability                  | Chainlink | Intento |
+| --------------------------- | --------- | ------- |
+| Simple triggers             | ✅         | ✅       |
+| Time-based jobs             | ✅         | ✅       |
+| Condition checks   | ✅         | ✅       |
+| Cross-chain execution       | ❌         | ✅       |
+| Multi-step workflows        | ❌         | ✅       |
+| Stateful long-running flows | ❌         | ✅       |
+| User intent abstraction     | ❌         | ✅       |
+| Feedback loops              | ❌         | ✅       |
+| Protocol orchestration      | ❌         | ✅       |
+| Agent-like behavior         | ❌         | ✅       |
 
-#### Anoma (Intent-Matching vs. Intent-Execution)
+#### Custom Smart Contracts
 
-Commonalities:
+Privileged application smart contracts on CosmWasm and EVM chains can schedule or automate execution, but this shifts orchestration into application-level VMs:
 
-- **User-Centric & Flexible** – Like Anoma, Intento allows generalized intent-based automation without smart contracts.
-- **Plug-and-Play Automation** – No need for additional specialized infrastructure.
-- **Expands What’s Possible** – Enables applications that cannot be built purely on smart contract VMs.
+* **Higher Gas Costs** – VM-based orchestration incurs persistent execution overhead.
+* **Static Computational Overhead** – Costs scale with VM execution, not orchestration complexity.
+* **Blockspace Competition** – Time-based or automated execution competes with general transactions.
+* **Expanded Attack Surface** – Privileged contracts increase protocol and user risk.
 
-Differences:
+### Source of Truth: How Intento Solves This
 
-- **Intento is focused on execution, not matching** – Anoma facilitates intent discovery and matching, while Intento directly executes user-owned flows.
-- **More deterministic execution** – Intento guarantees predictable execution without relying on intent-matching networks.
+Intento moves orchestration itself on-chain at the protocol layer. Flow state, conditions, retries, and execution authority are enforced by the network, not by off-chain agents or application-level smart contracts.
 
-Examples of Anoma applications:
+This makes Intento a control plane for execution, not just an intent interface.
 
-- Fully decentralized order book exchanges
-- Decentralized Slack/Discord alternatives
-- Matchmaking apps (e.g., decentralized Tinder for X)
+* **Protocol-Level Orchestration** – Flow logic is part of the chain state machine.
+* **User-Owned Execution** – Users retain direct control over execution authority via protocol-derived accounts.
+* **Deterministic Flows** – Conditions, comparisons, and feedback loops are enforced on-chain.
+* **Native Recovery & Retries** – Failed steps can be retried or recovered as part of protocol logic.
+* **Reduced Trusted Computing Base** – Trust is minimized to the underlying chains and transport protocols.
 
-#### Agoric (Complex vs. Simple, User-Owned Execution)  
+### Cross-Chain Execution Model
 
-Commonalities:
+Intento executes cross-chain flows via protocol-derived execution identities:
 
-- **Orchestration & Time-Based Actions** – Both Intento and Agoric allow developers to automate and schedule cross-chain actions.
-- **Cross-Chain Interoperability** – Both support multi-chain automation.
+* **Union Inferred Proxy Accounts** for verified EVM execution via Union transport.
+* **Interchain Accounts (ICA)** for native Cosmos-based execution.
+* **Interchain Queries (ICQ)** for reading cross-chain state as part of flow conditions.
 
-Differences:
+This enables secure, verifiable cross-chain execution without relying on off-chain relayers or solver discretion.
 
-- **Intento is simple, user-owned, and requires no smart contracts** – Agoric’s Orchestration API is powerful but requires developers to manage remote accounts, multi-block async execution, and timer-based scheduling.
-- **Agoric is better suited for complex custom workflows** that require fine-tuning and for protocols that need to build a complex custom solution or want to manage and monetize orchestration infrastructure.
-- **Intento enables monetization through Trustless Agents** – Protocols and integrators implement Trustless Agents, uncontrollable interchain accounts that abstract away fees while keeping user flows fully self-custodial.
+### Intents: NEAR, ATOM, and Intento
 
-Agoric Orchestration API features:
+NEAR Intents and emerging ATOM intents primarily focus on intent submission and solver-based fulfillment, where off-chain agents determine how to execute user intents and submit transactions on the user’s behalf. This model optimizes for routing flexibility but places execution authority and strategy off-chain.
 
-- **Remote account control** – Create and manage accounts on remote chains.
-- **Async execution over multiple blocks** – Contracts handle responses across long periods.
-- **On-chain timers** – Enables scheduled execution (e.g., subscriptions).
+Intento takes a fundamentally different approach by compiling intents into deterministic, verifiable on-chain state machines. Orchestration logic, execution control, and recovery are enforced by the protocol itself using protocol-derived accounts. This removes solver discretion from the critical path and makes intent execution natively composable with other on-chain systems.
 
-### **Network Effects**  
+In practice, Intento is not just an intent system — it is an orchestration layer for trust-minimized, cross-chain execution.
 
-- **More Adoption → Greater Demand for Execution → Increased Value Capture** – As more users adopt Intento, demand for intent execution grows, driving network utility and token value.
-- **Governance-Driven Execution Parameters** – The community governs execution scalability and fee burn parameters, ensuring long-term sustainability.
-- **Monetization for Integrators** – Integrators can host interchain accounts, abstracting host chain fees and allowing users to pay fees in a single token (e.g., INTO or ATOM), making automation seamless.
-- **Decentralized Revenue Model** – Execution services can be monetized while maintaining full user control and self-custodial execution.
-- **Permissionless Hosting** – Any integrator can run Trustless Agent, monetizing by charging fees while ensuring non-custodial execution for users.
+### How Intento Differs from Anoma & Agoric
 
-### A New Standard for Intent-Based Execution  
+#### Anoma (Intent Matching vs Protocol-Level Execution)
 
-Intento redefines automation by shifting from contract-based execution to direct, user-owned intent-based flows. This approach enhances security, reduces complexity, and ensures scalability without compromising decentralization
+Anoma focuses on intent discovery, matching, and coordination across a decentralized network.
 
-Whether for DeFi actions, cross-chain operations, or scheduled transactions, Intento delivers a faster, cheaper, and more flexible alternative. With orchestration capabilities, IBC/ICA/ICQ integration, advanced conditional logic, and monetization mechanisms, Intento unlocks new levels of automation, security, and efficiency across blockchains.
+* Anoma specializes in intent matching and counterparty discovery.
+* Intento specializes in protocol-level execution and orchestration.
+
+Intento does not depend on matching networks to fulfill intents. Instead, it directly executes user-owned flows via on-chain orchestration, providing deterministic execution without relying on off-chain matching or fulfillment layers.
+
+#### Agoric (Application Orchestration vs Protocol Orchestration)
+
+Agoric provides powerful tools for building application-level orchestration inside smart contract environments.
+
+* Agoric is optimized for building complex application-specific workflows.
+* Intento is optimized for protocol-level, user-owned orchestration without per-application smart contracts.
+
+Intento removes the need for developers to manage remote accounts, async VM logic, and timer-based orchestration inside application contracts by moving orchestration into the protocol itself.
+
+### Network Architecture
+
+```mermaid
+flowchart LR
+  User[User / App] -->|Signed Intent| Intento[Intento Network]
+  Intento ==> |On-chain Flow Logic and Conditions| Proxy[Union Inferred Proxy Account]
+  Proxy ==> |Union Verified Cross-chain Transport| EVMChain[EVM Chain]
+  EVMChain ==> |Direct Contract Call| EVMContract[Target EVM Contract]
+  EVMContract ==> |On-chain Result| EVMChain
+  EVMChain ==> |Verified Ack| Intento
+
+  subgraph Trustless["Trust-Minimized Verifiable Path"]
+    Intento
+    Proxy
+    EVMChain
+  end
+
+  Guarantees[On-chain Guarantees: Deterministic, Verifiable cross-chain execution, No off-chain discretion]
+  Intento --> Guarantees
+```
+
+* **Composable Orchestration Graphs** – Flows become reusable, composable primitives across protocols.
+* **Permissionless Hosting** – Any integrator can run Trustless Agents and monetize execution while preserving non-custodial guarantees.
+* **Protocol-Level Value Capture** – Execution, orchestration, and recovery become native protocol services.
+
+### A New Standard for Intent-Based Execution
+
+Intento establishes a new category of infrastructure: protocol-level orchestration for intent-based execution.
+
+By moving execution control, flow logic, and recovery on-chain, Intento enables automation that is more secure, more composable, and more scalable than solver-based or contract-based systems.
+
+Intento is not an interface for intents. It is the orchestration layer for trust-minimized, cross-chain execution.
