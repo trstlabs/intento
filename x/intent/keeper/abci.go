@@ -52,10 +52,8 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, 
 		}
 	}
 
-	// refactor after upgrade
 	currentFlow := flow
-	upgradeHeight := int64(3850000)
-	if ctx.ChainID() != "intento-1" || (ctx.ChainID() == "intento-1" && ctx.BlockHeight() >= upgradeHeight) {
+	if flow.IsInterchain() {
 		if k.shouldRecur(cacheCtx, flow, errorString) {
 			flow.ExecTime = flow.ExecTime.Add(flow.Interval)
 			k.InsertFlowQueue(cacheCtx, flow.ID, flow.ExecTime)
@@ -65,7 +63,7 @@ func (k Keeper) HandleFlow(ctx sdk.Context, logger log.Logger, flow types.Flow, 
 
 	writeCtx()
 
-	if ctx.ChainID() == "intento-1" && ctx.BlockHeight() < upgradeHeight {
+	if !flow.IsInterchain() {
 		if k.shouldRecur(ctx, flow, errorString) {
 			flow.ExecTime = flow.ExecTime.Add(flow.Interval)
 			k.InsertFlowQueue(ctx, flow.ID, flow.ExecTime)

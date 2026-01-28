@@ -65,7 +65,7 @@ func isAuthzMsgExec(message *codectypes.Any) bool {
 }
 
 func isLocalMessage(flow types.Flow) bool {
-	return (flow.SelfHostedICA == nil || flow.SelfHostedICA.ConnectionID == "") && (flow.TrustlessAgent == nil || flow.TrustlessAgent.AgentAddress == "")
+	return flow.IsLocal()
 }
 
 func isTrustlessAgentMessage(flow types.Flow) bool {

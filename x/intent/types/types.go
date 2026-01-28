@@ -28,6 +28,38 @@ func (flow Flow) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sdk.Msg) {
 	return sdkMsgs
 }
 
+func (flow Flow) IsInterchain() bool {
+	if flow.SelfHostedICA.ConnectionID != "" {
+		return true
+	}
+	if flow.TrustlessAgent.AgentAddress != "" {
+		return true
+	}
+	return false
+}
+
+func (flow Flow) IsLocal() bool {
+	return !flow.IsInterchain()
+}
+
+func (flow Flow) IsICQ() bool {
+	if flow.Conditions.FeedbackLoops != nil {
+		for _, loop := range flow.Conditions.FeedbackLoops {
+			if loop.ICQConfig != nil {
+				return true
+			}
+		}
+	}
+	if flow.Conditions.Comparisons != nil {
+		for _, comparison := range flow.Conditions.Comparisons {
+			if comparison.ICQConfig != nil {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 var GasFeeCoinsSupported sdk.Coins = sdk.Coins{sdk.NewCoin(Denom, math.NewInt(10))}
 
 // GetTxMsgs unpacks sdk messages from any messages
