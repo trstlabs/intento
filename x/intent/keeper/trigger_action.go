@@ -1,12 +1,16 @@
 package keeper
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authztypes "github.com/cosmos/cosmos-sdk/x/authz"
@@ -20,7 +24,7 @@ import (
 
 func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (int64, []*cdctypes.Any, error) {
 	// local flow
-	if (flow.SelfHostedICA == nil || flow.SelfHostedICA.ConnectionID == "") && (flow.TrustlessAgent == nil || flow.TrustlessAgent.AgentAddress == "") {
+	if flow.IsLocal() {
 		txMsgs := flow.GetTxMsgs(k.cdc)
 		msgResponses, err := handleLocalFlow(k, ctx, txMsgs, *flow)
 		if err != nil {
@@ -91,6 +95,84 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (int64, []*cdctyp
 	return int64(res.Sequence), nil, nil
 }
 
+// incrementSalt handles different salt formats (string, number, etc.)
+func incrementSalt(salt interface{}) interface{} {
+	switch v := salt.(type) {
+	case string:
+		// If it's a hex string with 0x prefix, try to parse it as a number
+		if len(v) > 2 && v[:2] == "0x" {
+			// For hex strings, we'll just append '1' as a simple increment
+			// In a real implementation, you might want to parse the hex to a number, increment, and convert back
+			return v + "1"
+		}
+		// For non-hex strings, just append '1'
+		return v + "1"
+	case float64:
+		// For numbers, increment by 1
+		return v + 1
+	default:
+		// For any other type, return as is
+		return salt
+	}
+}
+
+// handleContractMsgSalt handles the salt incrementing logic for MsgExecuteContract messages
+func handleContractMsgSalt(execMsg *wasmtypes.MsgExecuteContract) error {
+	if len(execMsg.Msg) == 0 {
+		return nil
+	}
+
+	// 1) get the inner message string
+	msgStr := string(execMsg.Msg)
+
+	// 2) unquote if it's a quoted JSON string
+	if len(msgStr) > 1 && msgStr[0] == '"' && msgStr[len(msgStr)-1] == '"' {
+		if unq, err := strconv.Unquote(msgStr); err == nil {
+			msgStr = unq
+		}
+	}
+
+	// 3) decode base64 if needed
+	var inner map[string]interface{}
+	if decoded, err := base64.StdEncoding.DecodeString(msgStr); err == nil {
+		if err := json.Unmarshal(decoded, &inner); err != nil {
+			return fmt.Errorf("failed to unmarshal base64 contract msg: %w", err)
+		}
+	} else {
+		// fallback: maybe it really was raw JSON
+		if err := json.Unmarshal([]byte(msgStr), &inner); err != nil {
+			return fmt.Errorf("failed to unmarshal raw contract msg: %w", err)
+		}
+	}
+
+	// 4) increment salt at root or first nested object
+	if salt, ok := inner["salt"]; ok {
+		inner["salt"] = incrementSalt(salt)
+	} else {
+		for _, v := range inner {
+			if nested, ok := v.(map[string]interface{}); ok {
+				if salt, exists := nested["salt"]; exists {
+					nested["salt"] = incrementSalt(salt)
+					break
+				}
+			}
+		}
+	}
+
+	// 5) marshal inner map → JSON → base64 → JSON string
+	modifiedJSON, err := json.Marshal(inner)
+	if err != nil {
+		return fmt.Errorf("failed to marshal modified contract msg: %w", err)
+	}
+	b64 := base64.StdEncoding.EncodeToString(modifiedJSON)
+	execMsg.Msg, err = json.Marshal(b64)
+	if err != nil {
+		return fmt.Errorf("failed to JSON-marshal base64 contract msg: %w", err)
+	}
+
+	return nil
+}
+
 func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flow) ([]*cdctypes.Any, error) {
 	// CacheContext returns a new context with the multi-store branched into a cached storage object
 	// writeCache is called only if all msgs succeed, performing state transitions atomically
@@ -126,7 +208,9 @@ func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flo
 		} else {
 			k.hooks.AfterActionLocal(cacheCtx, flowOwnerAddr)
 		}
-
+		if sdk.MsgTypeURL(msg) == "/cosmos.staking.v1beta1.MsgCreateValidator" {
+			return nil, errorsmod.Wrap(types.ErrUnauthorized, "validator creation is gated by governance; direct usage is disabled")
+		}
 		handler := k.msgRouter.Handler(msg)
 		if handler == nil {
 			return nil, errorsmod.Wrapf(
@@ -135,12 +219,34 @@ func handleLocalFlow(k Keeper, ctx sdk.Context, txMsgs []sdk.Msg, flow types.Flo
 				sdk.MsgTypeURL(msg),
 			)
 		}
+		if execMsg, ok := msg.(*wasmtypes.MsgExecuteContract); ok {
+			k.Logger(ctx).Debug("handleContractMsgSalt", "msg", execMsg.String())
+			if err := handleContractMsgSalt(execMsg); err != nil {
+				return nil, fmt.Errorf("error handling contract message salt: %w", err)
+			}
+			k.Logger(ctx).Debug("handleContractMsgSalt", "msg", execMsg.String())
+
+			// wrap in Any and update the flow
+			anyMsg, err := cdctypes.NewAnyWithValue(execMsg)
+			if err != nil {
+				return nil, fmt.Errorf("failed to pack MsgExecuteContract into Any: %w", err)
+			}
+			flow.Msgs[index] = anyMsg
+		}
+
 		res, err := handler(cacheCtx, msg)
 		if err != nil {
 			return nil, err
 		}
 
 		msgResponses = append(msgResponses, res.MsgResponses...)
+
+		// append events
+		sdkEvents := make([]sdk.Event, len(res.Events))
+		for i := range res.Events {
+			sdkEvents[i] = sdk.Event(res.Events[i])
+		}
+		cacheCtx.EventManager().EmitEvents(sdkEvents)
 
 	}
 	writeCache()
