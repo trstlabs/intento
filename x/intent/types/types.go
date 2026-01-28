@@ -29,10 +29,10 @@ func (flow Flow) GetTxMsgs(unpacker types.AnyUnpacker) (sdkMsgs []sdk.Msg) {
 }
 
 func (flow Flow) IsInterchain() bool {
-	if flow.SelfHostedICA.ConnectionID != "" {
+	if flow.SelfHostedICA != nil && flow.SelfHostedICA.ConnectionID != "" {
 		return true
 	}
-	if flow.TrustlessAgent.AgentAddress != "" {
+	if flow.TrustlessAgent != nil && flow.TrustlessAgent.AgentAddress != "" {
 		return true
 	}
 	return false
