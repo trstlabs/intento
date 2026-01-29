@@ -17,5 +17,6 @@ README.md
 .github
 .git
 dockernet/logs
+dockernet/state
 deps
 genesis
