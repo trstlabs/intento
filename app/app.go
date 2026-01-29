@@ -39,6 +39,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/spf13/cast"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -139,7 +140,7 @@ import (
 	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
 	ccvdistr "github.com/cosmos/interchain-security/v6/x/ccv/democracy/distribution"
 
-	ccvstaking "github.com/cosmos/interchain-security/v6/x/ccv/democracy/staking"
+	//ccvstaking "github.com/cosmos/interchain-security/v6/x/ccv/democracy/staking"
 	"github.com/trstlabs/intento/x/alloc"
 	allockeeper "github.com/trstlabs/intento/x/alloc/keeper"
 	alloctypes "github.com/trstlabs/intento/x/alloc/types"
@@ -172,7 +173,7 @@ var (
 		bank.AppModuleBasic{},
 		capability.AppModuleBasic{},
 		ccvdistr.AppModuleBasic{},
-		ccvstaking.AppModuleBasic{},
+		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		claim.AppModuleBasic{},
 		ccvconsumer.AppModuleBasic{},
@@ -526,7 +527,8 @@ func NewIntoApp(
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
+		AddRoute(RouterKey, NewValidatorAdminProposalHandler(app.StakingKeeper, app.BankKeeper))
 
 	govConfig := govtypes.DefaultConfig()
 	/*
@@ -697,7 +699,8 @@ func NewIntoApp(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper /*  app.GetSubspace(minttypes.ModuleName) */),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
-		ccvstaking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		//ccvstaking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
@@ -834,7 +837,18 @@ func NewIntoApp(
 	if err != nil {
 		panic(err)
 	}
-	app.SetAnteHandler(anteHandler)
+	// Parse disable gatekeeping flag
+	disablePoAGatekeeping := cast.ToBool(appOpts.Get("intento.poa.disable_gatekeeping"))
+
+	// GateCreateValidatorAnteHandler is now a decorator
+	gatekeeper := GateCreateValidatorAnteHandler(disablePoAGatekeeping)
+
+	// Wrap the default anteHandler
+	finalAnteHandler := func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+		return gatekeeper.AnteHandle(ctx, tx, simulate, anteHandler)
+	}
+
+	app.SetAnteHandler(finalAnteHandler)
 	app.SetPostHandler(postHandler)
 	app.SetEndBlocker(app.EndBlocker)
 

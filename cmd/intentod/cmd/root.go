@@ -187,7 +187,6 @@ func initRootCmd(
 		ExportSnapshotCmd(),
 		ImportGenesisAccountsFromSnapshotCmd(app.DefaultNodeHome),
 		PrepareGenesisCmd(app.DefaultNodeHome, app.ModuleBasics),
-		AddConsumerSectionCmd(app.DefaultNodeHome),
 		pruning.Cmd(newApp, app.DefaultNodeHome),
 		snapshot.Cmd(newApp),
 	)
@@ -255,6 +254,8 @@ func txCommand(basicManager module.BasicManager) *cobra.Command {
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),
 		authcmd.GetSimulateCmd(),
+		app.NewCmdSubmitValidatorAddProposal(),
+		app.NewCmdSubmitValidatorRemoveProposal(),
 	)
 
 	basicManager.AddTxCommands(cmd)

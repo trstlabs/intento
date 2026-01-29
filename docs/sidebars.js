@@ -87,6 +87,7 @@ const sidebars = {
         'reference/intent-engine/supported_types',
         'reference/intent-engine/authentication',
         'reference/api/querying',
+        'reference/consensus',
       ],
       className: 'sidebar-item-reference',
     },

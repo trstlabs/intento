@@ -152,9 +152,6 @@ finish-upgrade-integration-tests:
 
 upgrade-integration-tests-part-1: start-docker-all start-upgrade-integration-tests submit-upgrade-after-tests
 
-setup-ics:
-	UPGRADE_HEIGHT=150 bash $(DOCKERNET_HOME)/upgrades/setup_ics.sh
-
 ###############################################################################
 ###                              LocalNet                                   ###
 ###############################################################################
