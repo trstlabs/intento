@@ -26,7 +26,6 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
 	"github.com/spf13/cobra"
-	"github.com/trstlabs/intento/app"
 	alloctypes "github.com/trstlabs/intento/x/alloc/types"
 	claimtypes "github.com/trstlabs/intento/x/claim/types"
 	intenttypes "github.com/trstlabs/intento/x/intent/types"
@@ -384,9 +383,6 @@ func MainnetGenesisParams() GenesisParams {
 	genParams.ConsensusParams.Evidence.MaxAgeNumBlocks = int64(genParams.StakingParams.UnbondingTime.Seconds()) / 3
 	genParams.ConsensusParams.Version.App = 1
 	genParams.DistributedAccounts = []banktypes.Balance{}
-
-	consumerGenesisState := app.CreateMinimalConsumerTestGenesis()
-	genParams.ConsumerGenesisState = *consumerGenesisState
 
 	//interchain accounts host
 	genParams.IcaParams.AllowMessages = []string{"*"} // allow all msgs

@@ -38,7 +38,8 @@ set_into_genesis() {
     jq '.app_state.intent.params.gas_fee_coins = [{"amount":"80","denom":"uinto"},{"amount":"20","denom":"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"}]' $genesis_config > json.tmp && mv json.tmp $genesis_config
     
     jq '.app_state.claim.params.duration_vesting_periods = ["40s","50s","60s","70s"]' $genesis_config > json.tmp && mv json.tmp $genesis_config
-    
+    jq '.app_state.claim.params.duration_until_decay = "0"' $genesis_config > json.tmp && mv json.tmp $genesis_config
+    jq '.app_state.claim.params.duration_of_decay = "18000s"' $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.staking.params.unbonding_time = $newVal' --arg newVal "$UNBONDING_TIME" $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.gov.params.max_deposit_period = $newVal' --arg newVal "$MAX_DEPOSIT_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
     jq '.app_state.gov.params.voting_period = $newVal' --arg newVal "$VOTING_PERIOD" $genesis_config > json.tmp && mv json.tmp $genesis_config
@@ -188,8 +189,8 @@ set_host_genesis() {
       "authorized_quote_denoms": [
         "uosmo",
         "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
-        "ibc/0CD3A0285E1341859B5E86B6AB7682F023D03E97607CCC1DC95706411D866DF7",
-        "ibc/D189335C6E4A68B513C10AB227BF1C1D38C746766278BA3EEB4FB14124F1D858"
+        "ibc/524C6521B4448277A0E983A5B7E656F04DCE3A6F902EFFAC7D3100EB420F0DFE",
+        "ibc/82C634003F0C458849B2F7E303C40AC260C9B12AB1CE89C2CC47319CD9B99033"
       ]
         },
     "pool_routes": [],
@@ -297,8 +298,8 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
         TEST_FILES_DIR=$DOCKERNET_HOME/tests/test_files
         $cmd prepare-genesis testnet $CHAIN_ID
         if [ -d "$TEST_FILES_DIR" ]; then
-            $cmd export-snapshot $TEST_FILES_DIR/active-users.csv $TEST_FILES_DIR/nft1.csv $TEST_FILES_DIR/nft2.csv $TEST_FILES_DIR/snapshot_output.json --nft-weight-1 20 --nft-weight 10 --user-weight 5
-            $cmd import-genesis-accounts-from-snapshot $TEST_FILES_DIR/snapshot_output.json $TEST_FILES_DIR/non-airdrop-accounts.json --airdrop-amount=90_000_000_000_000
+            $cmd export-snapshot $TEST_FILES_DIR/badkids.csv $TEST_FILES_DIR/madscientists.csv  $TEST_FILES_DIR/celestiasloths.csv $TEST_FILES_DIR/CoCoChill.csv $TEST_FILES_DIR/pulsaro.csv $TEST_FILES_DIR/omniflixvid1.csv $TEST_FILES_DIR/snapshot_output.json --nft-weights 50,15,7,5,5,1
+            $cmd import-genesis-accounts-from-snapshot $TEST_FILES_DIR/snapshot_output.json $TEST_FILES_DIR/non-airdrop-accounts0.1.json --airdrop-amount=90_000_000_000_000
         fi
     fi
     # Update node networking configuration
@@ -308,7 +309,7 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     genesis_json="${STATE}/${node_name}/config/genesis.json"
     
     
-    # sed -i -E "s|cors_allowed_origins = \[\]|cors_allowed_origins = [\"\*\"]|g" $config_toml
+    sed -i -E "s|cors_allowed_origins = \[\]|cors_allowed_origins = [\"\*\"]|g" $config_toml
     sed -i -E "s|127.0.0.1|0.0.0.0|g" $config_toml
     sed -i -E "s|timeout_commit = \"5s\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
     sed -i -E "s|timeout_commit = \"2s\"|timeout_commit = \"${BLOCK_TIME}\"|g" $config_toml
@@ -326,6 +327,10 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     sed -i -E 's|swagger = .*|swagger = true|g' $app_toml
     sed -i -E "s|snapshot-interval = 0|snapshot-interval = 300|g" $app_toml
     sed -i -E 's|localhost|0.0.0.0|g' $app_toml
+    
+    if [[ "$CHAIN" == "INTO" ]]; then
+        sed -i -E 's|disable_gatekeeping = false|disable_gatekeeping = true|g' $app_toml
+    fi
     
     sed -i -E "s|chain-id = \"\"|chain-id = \"${CHAIN_ID}\"|g" $client_toml
     sed -i -E "s|keyring-backend = \"os\"|keyring-backend = \"test\"|g" $client_toml
@@ -347,8 +352,6 @@ for (( i=1; i <= $NUM_NODES; i++ )); do
     if [ "$CHAIN" == "GAIA" ]; then
         $cmd genesis add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
         $cmd genesis gentx $val_acct ${STAKE_TOKENS}${DENOM} --chain-id $CHAIN_ID --keyring-backend test &> /dev/null
-    elif [ "$CHAIN" == "INTO" ]; then
-        $cmd add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
     else
         $cmd add-genesis-account ${val_addr} ${GENESIS_TOKENS}${DENOM}
         $cmd gentx $val_acct ${STAKE_TOKENS}${DENOM} --chain-id $CHAIN_ID --keyring-backend test &> /dev/null
@@ -450,7 +453,7 @@ fi
 
 if [ "$CHAIN" == "GAIA" ]; then
     $MAIN_CMD genesis collect-gentxs &> /dev/null
-elif [ "$CHAIN" != "INTO" ]; then
+else
     # now we process gentx txs on the main node
     $MAIN_CMD collect-gentxs &> /dev/null
 fi
@@ -460,7 +463,7 @@ sed -i -E "s|seeds = .*|seeds = \"\"|g" $MAIN_CONFIG
 
 # update chain-specific settings
 if [ "$CHAIN" == "INTO" ]; then
-    #sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
+    sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG
     set_into_genesis $MAIN_GENESIS
 else
     #sed -i -E "s|log_level = \"info\"|log_level = \"debug\"|g" $MAIN_CONFIG

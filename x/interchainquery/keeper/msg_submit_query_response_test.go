@@ -119,7 +119,7 @@ func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_ProofStale() {
 
 	// Attempt to submit the response, it should fail because the response is stale
 	_, err := s.GetMsgServer().SubmitQueryResponse(s.Ctx, &tc.validMsg)
-	s.Require().ErrorContains(err, "Query proof height (15) is older than the submission height (100)")
+	s.Require().ErrorContains(err, fmt.Sprintf("Query proof height (%d) is older than the submission height (100)", tc.validMsg.Height))
 }
 
 func (s *KeeperTestSuite) TestMsgSubmitQueryResponse_Timeout_RejectQuery() {
