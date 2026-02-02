@@ -37,5 +37,5 @@ func TestHandleContractMsgSalt(t *testing.T) {
 	require.True(t, ok)
 	salt, ok := sendMap["salt"].(string)
 	require.True(t, ok)
-	require.Equal(t, "0xcfc1d1a8cceceb17cd53831d50ffd12daa0f70b2bb6265b3cd3a60501208d7dc1", salt)
+	require.Equal(t, "0xcfc1d1a8cceceb17cd53831d50ffd12daa0f70b2bb6265b3cd3a60501208d7dd", salt)
 }
