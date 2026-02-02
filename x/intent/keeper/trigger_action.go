@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 	"time"
@@ -99,10 +100,20 @@ func (k Keeper) TriggerFlow(ctx sdk.Context, flow *types.Flow) (int64, []*cdctyp
 func incrementSalt(salt interface{}) interface{} {
 	switch v := salt.(type) {
 	case string:
-		// If it's a hex string with 0x prefix, try to parse it as a number
-		if len(v) > 2 && v[:2] == "0x" {
-			// For hex strings, we'll just append '1' as a simple increment
-			// In a real implementation, you might want to parse the hex to a number, increment, and convert back
+		// If it's a hex string with 0x prefix, treat as bytes32 and increment as uint256
+		if len(v) > 2 && strings.HasPrefix(v, "0x") {
+			hexPart := v[2:]
+			bigInt := new(big.Int)
+			if _, ok := bigInt.SetString(hexPart, 16); ok {
+				bigInt.Add(bigInt, big.NewInt(1))
+				newHex := bigInt.Text(16)
+				// pad with leading zeros to 64 characters (32 bytes)
+				for len(newHex) < 64 {
+					newHex = "0" + newHex
+				}
+				return "0x" + newHex
+			}
+			// if parsing fails, fall back to appending '1'
 			return v + "1"
 		}
 		// For non-hex strings, just append '1'
@@ -164,11 +175,7 @@ func handleContractMsgSalt(execMsg *wasmtypes.MsgExecuteContract) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal modified contract msg: %w", err)
 	}
-	b64 := base64.StdEncoding.EncodeToString(modifiedJSON)
-	execMsg.Msg, err = json.Marshal(b64)
-	if err != nil {
-		return fmt.Errorf("failed to JSON-marshal base64 contract msg: %w", err)
-	}
+	execMsg.Msg = modifiedJSON
 
 	return nil
 }
@@ -520,80 +527,4 @@ func (k Keeper) HandleDeepResponses(ctx sdk.Context, msgResponses []*cdctypes.An
 		}
 	}
 	return msgResponses, msgClass, nil
-}
-
-// SetFlowOnTimeout sets the flow timeout result to the flow
-
-func (k Keeper) SetFlowOnTimeout(ctx sdk.Context, sourcePort string, channelID string, seq uint64) error {
-	id := k.getTmpFlowID(ctx, sourcePort, channelID, seq)
-	if id <= 0 {
-		return nil
-	}
-	flow := k.GetFlow(ctx, id)
-	if flow.Configuration.StopOnTimeout {
-		k.RemoveFromFlowQueue(ctx, flow)
-	}
-	k.Logger(ctx).Debug("flow packet timed out", "flow_id", id)
-
-	flowHistoryEntry, err := k.GetLatestFlowHistoryEntry(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	flowHistoryEntry.TimedOut = true
-	flowHistoryEntry.Executed = false
-	k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeFlowTimedOut,
-			sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(flow.ID)),
-			sdk.NewAttribute(types.AttributeKeyFlowOwner, flow.Owner),
-		),
-	)
-	return nil
-}
-
-// SetFlowError sets the flow error result and emits an error event
-func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq uint64, errString string) {
-	id := k.getTmpFlowID(ctx, sourcePort, channelID, seq)
-	if id == 0 {
-		return
-	}
-
-	k.Logger(ctx).Debug("flow", "id", id, "error", errString)
-
-	flowHistoryEntry, err := k.GetLatestFlowHistoryEntry(ctx, id)
-	if err != nil {
-		flowHistoryEntry = &types.FlowHistoryEntry{Errors: []string{err.Error()}}
-	}
-
-	flow, err := k.TryGetFlow(ctx, id)
-	if err != nil {
-		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, err.Error())
-	}
-
-	if errString != "" {
-		//only append error if it is not already in the list
-		alreadyExists := false
-		for _, e := range flowHistoryEntry.Errors {
-			if e == errString {
-				alreadyExists = true
-				break
-			}
-		}
-		if flowHistoryEntry.Errors == nil || !alreadyExists {
-			flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, errString)
-		}
-		flowHistoryEntry.Executed = false
-		k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
-
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				types.EventTypeFlowError,
-				sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(id)),
-				sdk.NewAttribute(types.AttributeKeyFlowOwner, flow.Owner),
-				sdk.NewAttribute(types.AttributeKeyError, errString),
-			),
-		)
-	}
 }

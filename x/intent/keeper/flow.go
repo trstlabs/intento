@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -171,14 +172,6 @@ func (k Keeper) addToFlowOwnerIndex(ctx sdk.Context, ownerAddress sdk.AccAddress
 	store.Set(types.GetFlowByOwnerIndexKey(ownerAddress, flowID), []byte{})
 }
 
-// changeFlowOwnerIndex changes element to the index for flows-by-creator queries
-// func (k Keeper) changeFlowOwnerIndex(ctx sdk.Context, ownerAddress, newOwnerAddress sdk.AccAddress, flowID uint64) {
-// 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-
-// 	store.Set(types.GetFlowByOwnerIndexKey(newOwnerAddress, flowID), []byte{})
-// 	store.Delete(types.GetFlowByOwnerIndexKey(ownerAddress, flowID))
-// }
-
 // IterateFlowsByOwner iterates over all flows with given creator address in order of creation time asc.
 func (k Keeper) IterateFlowsByOwner(ctx sdk.Context, owner sdk.AccAddress, cb func(address sdk.AccAddress) bool) {
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
@@ -212,4 +205,79 @@ func (k Keeper) SetTmpFlowID(ctx sdk.Context, flowID uint64, portID string, chan
 	key = append(key, types.GetBytesForUint(seq)...) // Append sequence number
 
 	store.Set(key, types.GetBytesForUint(flowID))
+}
+
+// SetFlowOnTimeout sets the flow timeout result to the flow
+func (k Keeper) SetFlowOnTimeout(ctx sdk.Context, sourcePort string, channelID string, seq uint64) error {
+	id := k.getTmpFlowID(ctx, sourcePort, channelID, seq)
+	if id <= 0 {
+		return nil
+	}
+	flow := k.GetFlow(ctx, id)
+	if flow.Configuration.StopOnTimeout {
+		k.RemoveFromFlowQueue(ctx, flow)
+	}
+	k.Logger(ctx).Debug("flow packet timed out", "flow_id", id)
+
+	flowHistoryEntry, err := k.GetLatestFlowHistoryEntry(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	flowHistoryEntry.TimedOut = true
+	flowHistoryEntry.Executed = false
+	k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeFlowTimedOut,
+			sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(flow.ID)),
+			sdk.NewAttribute(types.AttributeKeyFlowOwner, flow.Owner),
+		),
+	)
+	return nil
+}
+
+// SetFlowError sets the flow error result and emits an error event
+func (k Keeper) SetFlowError(ctx sdk.Context, sourcePort, channelID string, seq uint64, errString string) {
+	id := k.getTmpFlowID(ctx, sourcePort, channelID, seq)
+	if id == 0 {
+		return
+	}
+
+	k.Logger(ctx).Debug("flow", "id", id, "error", errString)
+
+	flowHistoryEntry, err := k.GetLatestFlowHistoryEntry(ctx, id)
+	if err != nil {
+		flowHistoryEntry = &types.FlowHistoryEntry{Errors: []string{err.Error()}}
+	}
+
+	flow, err := k.TryGetFlow(ctx, id)
+	if err != nil {
+		flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, err.Error())
+	}
+
+	if errString != "" {
+		//only append error if it is not already in the list
+		alreadyExists := false
+		for _, e := range flowHistoryEntry.Errors {
+			if e == errString {
+				alreadyExists = true
+				break
+			}
+		}
+		if flowHistoryEntry.Errors == nil || !alreadyExists {
+			flowHistoryEntry.Errors = append(flowHistoryEntry.Errors, errString)
+		}
+		flowHistoryEntry.Executed = false
+		k.SetCurrentFlowHistoryEntry(ctx, id, flowHistoryEntry)
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeFlowError,
+				sdk.NewAttribute(types.AttributeKeyFlowID, fmt.Sprint(id)),
+				sdk.NewAttribute(types.AttributeKeyFlowOwner, flow.Owner),
+				sdk.NewAttribute(types.AttributeKeyError, errString),
+			),
+		)
+	}
 }
