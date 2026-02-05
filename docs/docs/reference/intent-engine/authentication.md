@@ -18,9 +18,9 @@ The module processes three primary message types:
    - These messages allow one account to execute messages on behalf of another.
    - Authentication involves verifying the signers for all contained messages to ensure proper delegation.
 
-3. **ICA (Interchain Account) Messages**:
-   - These are messages sent via IBC (Inter-Blockchain Communication) through an interchain account.
-   - Trustless Execution Agent messages can only call `MsgExec` for security reasons, while Self-Hosted ICA messages are allowed without restrictions.
+3. **Proxy Account Messages**:
+   - These are messages sent via IBC (Inter-Blockchain Communication) through a Proxy Account (ICA or Union Proxy).
+   - **Trustless Agent** messages can only call `MsgExec` for security reasons (requiring AuthZ grants on the host), while **Self-Hosted Proxy** messages are allowed without restrictions (as the user controls the account).
 
 ---
 
@@ -48,22 +48,24 @@ if isAuthzMsgExec(message) {
 
 This ensures that delegation rules are respected and all flows performed on behalf of another account are authorized.
 
-### Trustless Execution Agent Messages
+### Trustless Agent Messages
 
-Trustless Execution Agent messages are authenticated differently. Since ICA operates via IBC, the packet sender is already verified by the IBC protocol. Additionally, our module controls which Trustless Execution Agent to use through the configuration provided by the user. Because of this controlled environment, further signer validation is unnecessary for Trustless Execution Agent messages. However, Trustless Execution Agent messages are restricted to `MsgExec` only for added security:
+Trustless Agent messages are authenticated differently. Since the proxy execution happens via IBC (either ICA packet or Union ZK proof), the packet source is authenticated by the transport layer. Our module controls which Trustless Agent to use through the configuration provided by the user.
+
+For Trustless Agents (Cosmos), messages are restricted to `MsgExec` only. This ensures the agent can only perform actions for which the user has explicitly granted authorization (via AuthZ) on the host chain.
 
 ```go
 if isTrustlessAgentMessage(flow) {
     if message.TypeUrl != sdk.MsgTypeURL(&authztypes.MsgExec{}) {
-        return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Trustless Execution Agent messages")
+        return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only MsgExec is allowed for Trustless Agent messages")
     }
     return nil
 }
 ```
 
-### Self-hosted ICA Messages
+### Self-Hosted Proxy Messages
 
-Self-hosted ICA messages do not require additional restrictions. They are trusted based on the direct control of the owner. These messages are allowed without further validation:
+Self-Hosted Proxy messages (e.g., standard ICA or Union EVM execution) do not require additional restrictions from the Intent Engine's perspective. They are trusted based on the ownership of the flow.
 
 ```go
 if isSelfHostedICAMessage(flow) {

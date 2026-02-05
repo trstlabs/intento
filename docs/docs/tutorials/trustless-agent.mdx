@@ -1,5 +1,5 @@
 ---
-title: Trustless Agent For Integrators
+title: Trustless Agents
 description: Learn how to run a trustless agent and how to configure fee admin for your integration
 sidebar_position: 3
 sidebar_class_name: sidebar-item-tutorial
@@ -9,7 +9,7 @@ Integrators can leverage one of the Trustless Agents that are available on [Inte
 Trustless Agents improve UX and reduce gas costs for users, while also providing a way to monitize an Intento integration by a third party. 
 On default, no fee is paid to the Trustless Agent, but it can be configured to earn INTO / ATOM rewards or any token. Flow submitters must set a fee limit and add your Trustless Agent explicitly in order to activate fee payment.
 
-**Trustless Agents** allow anyone to **execute flows** on behalf of users. Trustless Agents always execute via **authz** and always route through proper authentication in the intent engine to ensure users stay in full control of their assets in the most secure way.
+**Trustless Agents** allow anyone to **execute flows** on behalf of users. These agents always execute via **AuthZ** and route through proper authentication to ensuring users stay in full control of their assets while the Agent handles the execution and fees.
 
 ### Prerequisites
 - [intentod](https://github.com/trstlabs/intento) installed. Check [here](https://github.com/trstlabs/intento/releases) for latest version.
@@ -59,4 +59,6 @@ intentod tx intent update-trustless-agent \
   - All flow actions must originate from the flow **owner’s wallet**.
   - You must have an **authz grant** for any MsgExec submitted.
 
-In other words: users **retain full control** over their funds, and Trustless Agents are only permitted to submit on their behalf if granted through the AuthZ module on the host chain.
+In other words: users **retain full control** over their funds, and Agents are only permitted to submit on their behalf if granted through the AuthZ module on the host chain.
+
+> **Note on Union/EVM:** This specific "Trustless Agent" tooling is primarily for Cosmos SDK chains using AuthZ. For EVM chains connected via Union, users execute via their inferred **Union Proxy Account**, which requires approvals/permits on the EVM chain.

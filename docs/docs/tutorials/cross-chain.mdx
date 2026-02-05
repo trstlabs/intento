@@ -40,7 +40,7 @@ This system unlocks powerful use cases across any chain connected to Intento:
 - Call smart contracts cross-chain
 - Perform ICQ and conditional flows
 - Create advanced flows with feedback loops
-- Delegate control to interchain accounts without needing governance votes for every step
+- Delegate control to proxy accounts (ICA or Union) without needing governance votes for every step
 
 Whether you're building wallets, automation tools, or interchain dApps—flows can now be triggered from anywhere, securely and easily.
 
@@ -140,7 +140,7 @@ Here’s an improved version of the example with clearer language, structure, an
 
 Using ICS20 to set up Intent-based flows is for users familiar with ICS20 transfers and Authz permissions. Our ICS20 middleware is designed to allow DAOs to submit flows, which can be done locally on Intento or on a destination chain. This can also be the source chain.
 
-There are several caveats when setting up flows with ICS20. When automating on a destination chain for the first time, **two messages** are required to activate the flow. One flow sets up the flow and creates an Interchain Account on Intento, while the other sets permissions and sends funds to the Interchain Account on the destination chain.
+There are several caveats when setting up flows with ICS20. When automating on a destination chain for the first time, **two messages** are required to activate the flow. One flow sets up the flow and creates a Proxy Account (ICA) on Intento, while the other sets permissions and sends funds to the account on the destination chain.
 
 In this example, we will demonstrate how a DAO can integrate with Intento by automating the payment process to a service provider.
 
@@ -285,7 +285,7 @@ You can also use [MsgSwapExactAmountOut](https://github.com/osmosis-labs/osmosis
 
 ![ICS DAO Permissions](@site/docs/images/connected_chain/from_connected_chain_flow3.png)
 
-The Interchain Account (ICA) must be properly funded and authorized before it can execute the flow.
+The Proxy Account (e.g. ICA) must be properly funded and authorized before it can execute the flow.
 
 #### Paying for Fees
 

@@ -1,106 +1,157 @@
 ---
 sidebar_position: 1
-title: Technical Overview
-description: A technical overview of the Intento blockchain, including its architecture, consensus mechanism, block structure, network topology, solutions, and data availability.
+title: System Architecture
+description: A high-level overview of the Intento blockchain architecture, the x/intent module, and cross-chain capabilities.
 ---
 
+# System Architecture
 
-Intento's intent-based flow framework has been meticulously designed to execute transactions based on defined schedules, leveraging the blockchain's inherent security. This framework, devoid of reliance on external agents or smart contracts, utilizes custom BeginBlocker functions for flow executions. The integration with the IBC Interchain Accounts standard, permit the Intento chain to execute transactions across IBC-enabled chains without moving the assets out of the user's control.
+Intento is a sovereign blockchain derived from the Cosmos SDK, designed specifically to orchestrate complex, asynchronous, and cross-chain workflows. At its core is the `x/intent` module, a specialized scheduling and execution engine that enables users to define "intents"—programmable actions that execute when specific conditions are met.
 
-```mermaid
-flowchart LR
-    %% Main Entry Points
-    CometBFT[CometBFT] --> SDK[SDK Block]
-    
-    SDK --> BeginBlock[BeginBlock]
-    SDK --> GenTx[General Transactions]
+This document provides a high-level view of how Intento works, from the underlying consensus layer to the application logic that powers user intents.
 
-    %% Flow Queue Logic
-    BeginBlock --> FlowQueue[/Flow Queue/]
-    FlowQueue --> ICQCheck{No ICQ?}
-    
-    ICQCheck -- Yes --> SubmitICQ[Submit ICQ]
-    SubmitICQ -. Response submitted by relayer .-> ConditionCheck
-    
-    ICQCheck -- No --> GetFlow[Get Flow]
-    GetFlow --> ConditionCheck{Conditions?}
+## High-Level Overview
 
-    %% Decision Logic
-    ConditionCheck --> FeedbackCheck{Feedback?}
-    
-    FeedbackCheck -- Yes --> UseResponse[Use Response]
-    UseResponse --> InterchainCheck
-    
-    FeedbackCheck -- No --> InterchainCheck{Interchain?}
+Intento operates on a standard CometBFT (formerly Tendermint) consensus engine, ensuring fast finality and security. The application layer is built using the Cosmos SDK, with the `x/intent` module serving as the central nervous system for all automation.
 
-    %% Execution and Destination
-    InterchainCheck -- Yes --> ICAPacket[[ICA Packet]]
-    InterchainCheck -- No --> LocalMsg[Local Msg]
-
-    ICAPacket -.-> DestChain[(Dest Chain)]
-    LocalMsg --> UpdateQueue[/Update Queue/]
-    
-    DestChain -. Ack/Timeout .-> UpdateQueue
-```
-
-Intento’s execution mechanism queues flows, checking them at the beginning of each block for their scheduled execution time. In the event of a blockchain halt, the system is designed to resume queued executions in subsequent blocks, ensuring reliability and continuity.
-With Intento you can use the power of IBC for your user intents. You can use Interchain Queries (ICQ) and use their responses for comparisons and build feedback loops. Or use Interchain Accounts (ICA) to execute actions on connected chains. Below are just some of the examples of how flows can look like.
+The architecture is designed to support:
+-   **Asynchronous Execution**: Flows are not just executed immediately in a transaction but can be scheduled for future blocks.
+-   **Cross-Chain Interoperability**: Deep integration with IBC (Inter-Blockchain Communication) allows Intento to act as a control center for accounts and assets on other chains.
+-   **Conditional Logic**: Execution is gated by on-chain state, time, or even state from other chains (via Interchain Queries).
 
 ```mermaid
-flowchart LR
-    %% User Intent
-    UI[User Intent]
+flowchart TB
+    subgraph Consensus["Consensus Layer (CometBFT)"]
+        ValidatorSet["Validator Set"]
+        BlockTime["Block Timestamp & Finality"]
+    end
 
-    %% Flows
-    UI --> F1[Flow]
-    UI --> F2[Flow]
-    UI --> F3[Flow]
-    UI --> F4[Flow]
+    subgraph App["Application Layer (Cosmos SDK)"]
+        Auth["Auth & Bank Modules"]
+        IBC["IBC Modules (Client/Connection/Channel)"]
+        
+        subgraph IntentModule["x/intent Module"]
+            WaitList["Flow Queue / WaitList"]
+            Keeper["Intent Keeper"]
+            BeginBlocker["BeginBlocker Trigger"]
+        end
+    end
 
-    %% Flow 1 - Initial handling
-    F1 --> IQ[Submit Interchain Query]
-    IQ --> C1[Check Conditions]
-    C1 --> LT1[Local Trigger]
-    LT1 --> E1[Executed = True]
+    subgraph External["Cross-Chain World"]
+        TargetChain["Target Chain (e.g., Osmosis, Ethereum via Union)"]
+        Relayers["IBC Relayers"]
+    end
 
-    %% Flow 2 - IBC trigger
-    F2 --> C2[Check Conditions]
-    C2 --> IBC1[IBC Trigger]
-    IBC1 --> D1[Destination Chain 1]
-    D1 --> M1[Execute Message]
-    D1 --> M2[Execute Message]
-
-    %% Flow 3 - IBC + feedback
-    F3 --> C3[Check Conditions]
-    C3 --> IBC2[IBC Trigger]
-    IBC2 --> D2[Destination Chain 2]
-    D2 --> M3[Execute Message]
-    D2 --> M4[Execute Message]
-
-    %% IBC response handling
-    D2 -. IBC Packet Response .-> FB1[Run Feedback Loop]
-    FB1 --> T1[Trigger with New Msg]
-    T1 --> E2[Executed = True]
-
-    %% Flow 4 - chained execution
-    F4 --> C4[Check Conditions]
-    C4 --> IBC3[IBC Trigger]
-    IBC3 --> D3[Destination Chain 3]
-    D3 --> M5[Execute Message]
-    D3 --> M6[Execute Message]
-
-    %% Re-queued flow execution
-    FB1 --> C5[Check Conditions]
-    C5 --> LT2[Local Trigger]
-    LT2 --> E3[Executed = True]
-
+    ValidatorSet -- Proposes Block --> BeginBlocker
+    BeginBlocker -- Check Schedule --> WaitList
+    WaitList -- Ready Flows --> Keeper
+    Keeper -- Execute --> IBC
+    IBC -- Packet --> Relayers
+    Relayers -- Relay --> TargetChain
 ```
 
+## The Intent Module (`x/intent`)
 
-## CometBFT and Time Management
+The `x/intent` module is the custom application logic that differentiates Intento from extensive general-purpose chains. It manages the lifecycle of every "Flow"—a set of instructions that makes up a user's intent.
 
-CometBFT, with its proposer-based timestamp mechanism, ensures a consistent and secure timestamping system for block creation. This approach mitigates risks associated with inaccurate timestamps, maintaining the blockchain's integrity. The adoption of precision and delay parameters among validators facilitates a synchronized agreement on the block timestamps, crucial for the orderly function of the blockchain.
+For a deeper dive into the core concepts, see [Intent Concepts](../concepts/intent.mdx).
 
-## Conclusion
+### Flow Lifecycle
 
-Intento’s architecture enables secure, scalable, and efficient execution of decentralized workflows. By integrating IBC, Intento provides a next-generation solution for cross-chain orchestration while maintaining self-custodial security. Intento is set to scale to support a wide range of chains and VMs, ensuring a robust and future-proof infrastructure for intent-based action flows.
+The lifecycle of a flow involves submission, queuing, validation, and execution.
+
+1.  **Submission**: A user submits a `MsgSubmitFlow` transaction. This message contains the actions to execute, scheduling parameters (start time, interval), and conditions.
+    *   *See [Parameters](../reference/intent-engine/parameters.md) for details on flow configuration.*
+
+2.  **Scheduling & Queueing**: If the flow is valid, it is added to the module's internal store. The `BeginBlocker` function runs at the start of every block to check if any flows are due for execution based on their `EndTime` or `Interval`.
+
+3.  **Condition Check**: Before execution, the module evaluates any associated conditions. This might involve checking local account balances or verifying data returned from an Interchain Query (ICQ).
+    *   *See [Conditions](../concepts/conditions.mdx) for logic available during execution.*
+
+4.  **Execution**:
+    *   **Local**: If the flow is local, messages are wrapped and executed via the standard Cosmos SDK `MsgServiceRouter`. This includes standard module interactions (e.g., specific `x/bank` sends) as well as initiating cross-chain transfers via the local IBC module (e.g., `MsgTransfer`).
+    *   **Interchain**: If the flow targets another chain, the module constructs an IBC packet (usually controlling an Interchain Account) and efficiently sends it out.
+
+```mermaid
+flowchart TD
+    %% Inputs
+    UserTx["User Transaction (MsgSubmitFlow)"] -->|Create| FlowStore
+    IBCHook["IBC Hook (Incoming Packet)"] -->|Create| FlowStore["Flow Store"]
+    
+    %% Scheduler
+    BeginBlocker["BeginBlocker (Time)"] -->|Trigger| FlowStore
+    FlowStore -->|Process| Conditions{Conditions Met?}
+
+    %% Check Logic
+    ICQ["ICQ Response"] -.->|Verify| Conditions
+    Conditions -- No --> Requeue["Requeue / Wait"]
+    Conditions -- Yes --> Routing{Routing Type}
+
+    %% Execution
+    Routing -- "Local" --> ServiceRouter["MsgServiceRouter"]
+    ServiceRouter -- "MsgExecuteContract" --> UnionWrapper["Union Wrapper"]
+    ServiceRouter -- "MsgTransfer" --> IBC["IBC Module"]
+    ServiceRouter -- "MsgSend" --> Bank["Bank Module"]
+    UnionWrapper --> UnionInfra["Union Calls"]
+    UnionInfra --> RemoteChain["Remote Chain"]
+
+    Routing -- "Interchain" --> ICA["ICA Packet"]
+    ICA -->|IBC| RemoteChain["Remote Chain"]
+
+    %% Feedback Loop
+    RemoteChain -->|Ack / Timeout| OnAck["OnAcknowledgement"]
+    OnAck -->|Update Msgs| Feedback["Feedback Loop Logic"]
+    Feedback -->|Next Step| FlowStore
+```
+
+### State Management
+
+Flows are indexed by ID and strictly associated with their creator. The module maintains efficient data structures to quickly retrieve:
+*   Active flows pending execution.
+*   Flows waiting for a specific time window.
+*   Results of previous executions (for flows with feedback loops).
+
+## Cross-Chain Architecture
+
+Intento is built to be a cross-chain orchestrator. It uses standard IBC protocols and next-generation interoperability layers like Union to interact with the wider ecosystem.
+
+### Proxy Accounts
+
+Intento uses **Proxy Accounts** to execute actions on remote chains. Instead of moving assets to Intento, users control an account on a host chain (like Osmosis, Neutron, or Arbitrum) *from* Intento. The `x/intent` module sends instructions to the host chain, where they are executed as if the user signed them locally.
+
+There are two main types of Proxy Accounts:
+
+1.  **Interchain Accounts (ICA)**: Standard Cosmos SDK implementation. Requires an explicit registration step. Used primarily for Cosmos chains.
+2.  **Union Proxy Accounts**: Used for EVM chains (e.g., Ethereum, Arbitrum, Base) connected via Union. These are **inferred** (deterministically derived from your Intento address), so **no account creation is required**.
+
+### Union (UCS03)
+
+Union provides a zero-knowledge–based interoperability layer that enables secure cross-chain messaging without trusted relayers. Intento integrates with Union’s UCS03 (ZKGM) protocol.
+
+**EVM Integration**: 
+When targeting EVM chains, Intento utilizes Union Proxy Accounts. Since these accounts are deterministic, users can immediately start executing flows. However, executing actions on the destination chain requires **Permits** or **Approvals** (EIP-2612 or standard ERC-20 approvals) to allow the proxy to spend assets. Make sure to sign the necessary approvals on the target EVM chain before submitting flows.
+
+## Security & Authentication
+
+### Authentication & Delegated Execution
+Intento supports advanced authentication mechanisms to allow for flexible yet secure automation. Users can delegate execution rights to **"Trustless Agents"**—specialized accounts that can pay for fees and execute flows on behalf of the user without having full custody of the user's main assets.
+
+*   *See [Authentication](../reference/intent-engine/authentication.md) for details on permissions and agents.*
+
+### Consensus & Timestamps
+CometBFT provides the secure timestamping mechanism required for time-based intents. Since the `BeginBlocker` relies on strictly increasing block times, Intento guarantees that scheduled flows are executed as close to their target time as the consensus allows, without relying on centralized off-chain keepers.
+
+## Integration & Observability
+
+For teams looking to integrate with Intento, the platform provides standard Cosmos SDK interfaces and emitted events for tracking flow status.
+
+### Interfaces
+*   **gRPC / REST**: Full state querying of flows, params, and authentication status.
+*   **CometBFT RPC**: For subscribing to block results and transactions.
+
+### Event Stream
+The `x/intent` module emits specific typed events that external systems can index to track the lifecycle of a flow. Key events include:
+*   `flow-created`: Emitted when `MsgSubmitFlow` is successful.
+*   `flow-triggered`: Emitted by `BeginBlocker` when a flow attempts execution.
+*   `flow-msg-response` / `flow-msg-timed-out`: Emitted after execution to indicate success or failure.
+*   `flow-error`: Emitted if a condition check or execution fails.

@@ -93,17 +93,23 @@ Intento's Intents can execute actions on supported chains based on custom logic,
 Intento can execute messages on supported chains using several approaches:
 
 1. **ICS20 Transfers with a Memo**
-   - Easy to set up on available chains by using packet forwarding
-   - Memo field actions have limited support by chains
-2. **Trustless Agent**
-   - Easy to set up and manage
-   - Host chain fees are managed by an admin
-   - You configure a fee limit
-3. **Self-Hosted Interchain Accounts**
-   - Full control over the account
-   - You have to manage host chain fee balances yourself
+   - Easy to set up on available chains by using packet forwarding.
+   - Memo field actions have limited support by chains.
 
-To use Self-Hosted Interchain Accounts, you first register an interchain account. This involves creating a port ID and connection ID, which allows you to connect their account to other chains over IBC. You additionaly have to send funds for fees on the host chain. Using the Authz module on the host chain - the chain you want to execute at - you can grant the flow permission to execute a specific message.
+2. **Trustless Agents**
+   - **Best for:** Ease of use and gas abstraction.
+   - **How:** Uses a distinct account on the host chain managed by an agent.
+   - **Fees:** Handled by the agent (admin). User configures a fee limit.
+
+3. **Self-Hosted Proxy Accounts**
+   - **Best for:** Full control.
+   - **How:**
+     - **Cosmos (ICA):** You register an Interchain Account (ICA). Requires creating a port/connection. You must fund the ICA address on the host chain to pay for gas.
+     - **EVM (Union):** You use your **Inferred Proxy Account**. No registration needed. You authorize execution via **Permits/Approvals** on the EVM chain.
+
+To use Self-Hosted Proxy Accounts on Cosmos (ICA), you first register an interchain account. This involves creating a port ID and connection ID. You additionally have to send funds for fees on the host chain.
+
+To use Union Proxy Accounts on EVM, simply derive your proxy address and ensure it has the necessary approvals (e.g., ERC-20 approvals) to execute the desired actions. No account creation transaction is needed.
 
 ## Execution Process
 
@@ -151,8 +157,8 @@ Submitting an flow with MsgSubmitFlow can be done with the following input:
 | `FeeFunds`               | `repeated cosmos.base.v1beta1.Coin` | Optional funds to be used for transaction fees, limiting the amount of fees incurred             | ✔️       |
 | `ConnectionID`           | `string`                            | The ID of the connection to use for a self-hosted ICA                                            | ✔️       |
 | `HostConnectionID`       | `string`                            | The ID of the host chain connection to use for a self-hosted ICA                                 | ✔️       |
-| `TrustlessAgent`         | `string`                            | Uncontrollable account that executes on a host chain on your behalf                              | ✔️       |
-| `TrustlessAgentFeeLimit` | `cosmos.base.v1beta1.Coin`          | A limit of the fees a Trustless Agent can charge per execution, if set by creator                | ✔️       |
+| `TrustlessAgent`         | `string`                            | Address of the Trustless Agent to use (optional)                                 | ✔️       |
+| `TrustlessAgentFeeLimit` | `cosmos.base.v1beta1.Coin`          | A limit of the fees the Agent can charge per execution                           | ✔️       |
 | `Configuration`          | `ExecutionConfiguration`            | Optional set of basic conditions and settings                                                    | ✔️       |
 | `Conditions`             | `repeated Condition`                | Powerful set of conditions such as comparisons and feedback loops                                | ✔️       |
 
@@ -160,8 +166,8 @@ Submitting an flow with MsgSubmitFlow can be done with the following input:
 
 - When `Interval` is not provided, the end of the duration will be the time the flow executes.
 - When `FeeFunds` are not provided, fees can be deducted from the Owner account by setting `WalletFallback` to true in `Configuration`.
-- When `ConnectionID`,`HostConnectionID` and `TrustlessAgent` are not provided, it is assumed that `Msgs` are local messages to be executed on Intento.
-- `TrustlessAgent` requires `TrustlessAgentFeeLimit`
+- When `ConnectionID`, `HostConnectionID` and `TrustlessAgent` are not provided, it is assumed that `Msgs` are local messages to be executed on Intento.
+- `TrustlessAgent` requires `TrustlessAgentFeeLimit`.
 
 ## Flow History
 
