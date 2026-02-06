@@ -21,7 +21,7 @@ Imagine a financial ecosystem where every action depends on intricate conditions
 | `feedback_loops`          | `repeated FeedbackLoop` | A list of feedback loops that dynamically replace message values with the latest response values.              |
 | `comparisons`             | `repeated Comparison`   | A list of comparisons to evaluate response values and decide whether execution should proceed.                 |
 | `stop_on_success_of`      | `repeated uint64`       | An array of dependent intents; execution halts if any of these execute successfully.                           |
-| `stop_on_failure_of`      | `repeated uint64`       | An array of dependent intents; execution halts if any of these fail to execute.                                |
+| `stop_on_failure_of`      | `repeated uint64`       | An array of dependent intents; execution halts if any of these fail to execute.   |
 | `skip_on_failure_of`      | `repeated uint64`       | An array of dependent intents that must execute successfully after their latest call for execution to proceed. |
 | `skip_on_success_of`      | `repeated uint64`       | An array of dependent intents that must fail after their latest call for execution to proceed.                 |
 | `use_and_for_comparisons` | `bool`                  | Determines whether comparisons are combined with AND (true) or OR (false).                                     |

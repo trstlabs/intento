@@ -6,7 +6,7 @@ description: Use cases
 
 import DocusaurusSvg from "./../images/actions.svg";
 
-Intento enables high-value intent-based flows and orchestration for DeFi protocols, developers, DAOs, and end-users. By integrating with Intento, organizations can establish programmable, trust-minimized execution across multiple chains. This allows for adaptive coordination, conditional execution based on real-time data (such as Interchain Queries, or ICQs), and continuous feedback loops to refine processes.
+Intento enables high-value intent-based flows and orchestration for DeFi protocols, developers, DAOs, and end-users. By integrating with Intento, organizations can establish programmable, trust-minimized execution across multiple chains. This allows for adaptive coordination, conditional execution based on real-time data, and continuous feedback loops to refine processes.
 
 <DocusaurusSvg width="100%" height="100%" />
 
@@ -19,67 +19,123 @@ By leveraging Intento, users can:
 - Implement scheduled payments and dynamic rebalancing
 - Automate liquidity shifts based on predefined thresholds
 - Develop intent-driven governance and treasury operations
-- Create advanced DeFi trading and yield strategies
 
-### LP and Yield Intent-Based Flows
+---
 
-| Use Case                                                           | Challenge                                                                                                                         | Potential Solution                                                                                                                                       | ICQ Condition                                           | Feedback Loop                                                  |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------- |
-| **Orchestrate LP Reward Diversification**                          | LP rewards increase position in the pool, but users may want to convert a portion into another asset without manual intervention. | Track total shares growth (ICQ). Set threshold-based triggers (Comparison). Execute via ICA: swap rewards into another asset.                             | Track total pool shares to monitor reward accumulation. | Adjust thresholds dynamically based on historical performance. |
-| **Dynamic Portfolio Management with ICAs & Conditional Execution** | Users managing multiple pools need dynamic asset rebalancing based on market conditions and yield opportunities.                  | Monitor pool APYs & volatility (ICQs). Compare risk-adjusted returns (Comparison). Execute via User-controlled ICA: shift funds to higher-yielding pools. | Query APYs and total shares across pools.               | Adjust thresholds based on historical yield trends.            |
-| **Feedback Loops for Automated Yield Optimization**                | Users want a self-optimizing strategy that dynamically shifts liquidity based on performance trends.                              | Track historical yield trends (ICQ). Set threshold-based triggers (Comparison). Execute shifts via ICA.                                                   | Monitor liquidity depth and yield patterns over time.   | Adjust allocation frequency based on reward stability.         |
-| **Rebalancing LP Positions Based on Market Changes**               | Market price fluctuations impact LP profitability, requiring frequent rebalancing to mitigate impermanent loss.                   | Monitor asset prices in pools (ICQ). Set rebalance conditions (Comparison). Execute rebalance via ICA.                                                    | Detect price movements and liquidity shifts.            | Adjust rebalancing intervals based on price volatility trends. |
-| **Arbitrage Strategies Using External Price Feeds**                | Price discrepancies between Osmosis and other chains create arbitrage opportunities difficult for DAOs to capture.                | Fetch external price data (ICQ). Identify arbitrage windows (Comparison). Execute via ICA.                                                                | Compare Osmosis prices with external DEX data.          | Adjust arbitrage thresholds based on past execution success.   |
+## DeFi & Yield Methods
 
-### DeFi Intent-Based Execution
+### Dynamic Portfolio Management & Rebalancing
+* **Challenge**: Users managing multiple positions need dynamic rebalancing based on market conditions, APYs, and volatility.
+* **Potential Solution**: Monitor pool APYs and weight deviations (ICQs). Compare risk-adjusted returns (Comparison). Execute via ICA: shift funds or rebalance weights.
+* **ICQ Condition**: Query APYs, total shares, and asset prices.
+* **Feedback Loop**: Adjust thresholds and allocation frequency based on historical trends.
 
-| DeFi Feature                      | Description                                                                                 | ICQ Condition                                          | Feedback Loop                                              |
-| --------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------- |
-| **Dynamic Portfolio Rebalancing** | Orchestrate asset adjustments based on market shifts, ICQ feedback, or governance triggers. | Monitor asset weight deviations and market conditions. | Adjust allocation thresholds dynamically.                  |
-| **Staking Reward Optimization**   | Continuously monitor staking rewards and execute compounding when yield thresholds are met. | Track staking rewards accumulation.                    | Modify auto-compounding logic based on historical returns. |
-| **DCA & Limit Orders**            | Execute trades based on price conditions rather than relying on manual intervention.        | Compare asset price to user-defined conditions.        | Adjust execution timing based on market trends.            |
-| **Loan Management**               | Repay loans when balance conditions are met, preventing liquidation risks.                  | Track loan health factors and interest rates.          | Adapt repayment logic based on changing collateral ratios. |
-| **Liquidity Pool Adjustments**    | Adjust LP positions dynamically based on utilization metrics.                               | Monitor pool utilization and fee structures.           | Modify position rebalancing based on historical trends.    |
-| **Swap Streaming**                | Conduct trades over time to minimize slippage and price impact.                             | Track market depth and volatility.                     | Adjust streaming speed based on execution success.         |
+### LP Reward Diversification
+* **Challenge**: LP rewards increase exposure to a specific asset, but users may prefer to diversify yield.
+* **Potential Solution**: Track total shares growth (ICQ). Set threshold-based triggers (Comparison). Execute via ICA: swap rewards into another asset (e.g., Stablecoins).
+* **ICQ Condition**: Track total pool shares to monitor reward accumulation.
+* **Feedback Loop**: Adjust thresholds dynamically based on accumulation rate.
 
-### Payments & Treasury Orchestration
+### Automated Yield Optimization (Auto-Compounding)
+* **Challenge**: Users want to maximize APY by compounding rewards frequently but gas costs and manual effort are prohibitive.
+* **Potential Solution**: Track accrued rewards (ICQ). Set optimal threshold triggers (Comparison). Execute claim and restake via ICA.
+* **ICQ Condition**: Monitor reward balance against gas cost estimates.
+* **Feedback Loop**: Adjust compounding frequency based on reward stability.
 
-| Payment Flow Type            | Description                                                                                | ICQ Condition                                   | Feedback Loop                                                    |
-| ---------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------- | ---------------------------------------------------------------- |
-| **Scheduled Treasury Flows** | DAOs and businesses can execute payroll or fund transfers based on predefined schedules.   | Verify treasury balance and execution time.     | Adjust schedules dynamically based on cash flow trends.          |
-| **Subscription Models**      | Service providers can distribute NFT-based subscriptions or recurring payments securely.   | Validate NFT ownership and subscription status. | Modify subscription handling based on renewal rates.             |
-| **Escrowed Transactions**    | Funds release based on ICQ-confirmed milestones or conditions, reducing counterparty risk. | Verify escrow conditions before disbursement.   | Adjust escrow triggers based on dispute resolution patterns.     |
-| **Donation Distributions**   | Automatically allocate donations based on real-time funding needs or governance votes.     | Monitor funding needs and DAO vote outcomes.    | Modify allocation strategies based on funding impact assessment. |
+### Arbitrage Strategies
+* **Challenge**: Price discrepancies between chains create arbitrage windows difficult to capture manually.
+* **Potential Solution**: Fetch external price data (ICQ). Identify arbitrage windows (Comparison). Execute via ICA.
+* **ICQ Condition**: Compare local DEX prices with external feeds.
+* **Feedback Loop**: Adjust arbitrage thresholds based on execution success rate.
 
-### Governance & DAO Intent-Based Actions
+### DCA & Limit Orders
+* **Description**: Execute trades based on specific price conditions or time intervals rather than immediate execution.
+* **ICQ Condition**: Compare asset price to user-defined targets or check time intervals.
+* **Feedback Loop**: Adjust execution timing based on market volatility.
 
-| DAO Orchestration                      | Description                                                                          | ICQ Condition                                         | Feedback Loop                                                       |
-| -------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------- |
-| **Scheduled Voting**                   | Governance proposals can be tallied and executed at predefined intervals.            | Validate voting period completion.                    | Adjust scheduling based on voter participation trends.              |
-| **Treasury Allocation Adjustments**    | Fund reallocations based on DAO votes or market conditions.                          | Track governance vote outcomes and treasury balances. | Modify allocation parameters based on fund utilization efficiency.  |
-| **Token Vesting & Distribution**       | Continuous vesting based on governance-approved schedules.                           | Monitor vesting schedules and claim conditions.       | Adapt vesting parameters based on token distribution impact.        |
-| **Validator Set Monitoring**           | Automatically trigger validator staking/unbonding based on active set participation. | Track validator performance and network conditions.   | Adjust staking strategies based on validator reliability trends.    |
-| **On-Chain Condition-Based Execution** | Proposal outcomes can directly trigger treasury flows or operational changes.        | Verify governance decision finalization.              | Modify execution parameters based on past governance effectiveness. |
+### Loan Management & Liquidation Protection
+* **Description**: Repay loans automatically when health factors drop, preventing liquidation.
+* **ICQ Condition**: Track loan health factors (LTV) and interest rates.
+* **Feedback Loop**: Adapt repayment buffers based on price volatility.
 
-### Intent-Based Features For Protocols
+### Swap Streaming
+* **Description**: Split large trades over time to minimize slippage and price impact.
+* **ICQ Condition**: Track market depth and volatility.
+* **Feedback Loop**: Adjust streaming speed based on slippage actuals.
 
-| **DeFi Feature**                                          | **Description**                                                                                                                                                                                                                                                                                                          | **ICQ Condition**                                                                  | **Feedback Loop**                                                                                         |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| **Wallet Stake Conditional Auto-Compounding**             | Wallet like Keplr and Leap can integrate intent-based auto-compounding, intelligently reinvesting rewards under optimal conditions. For example: skip compounding below a threshold, withdraw if the price hits a target, compound only if inflation is below a threshold, or dynamically adjust reinvestment intervals. | ICQs monitor price targets, inflation, reward size, and thresholds for compounding | Continuous optimization based on ICQ feedback to ensure auto-compounding aligns with optimal conditions.  |
-| **RWA Portfolio Management**                              | Intento enables institutional investors to manage and optimize real-world asset (RWA) portfolios across chains and decentralized exchanges (DEXes). It supports actions like portfolio rebalancing, liquidity optimization, and risk management via Proxy Accounts (ICA/Union), Queries, and conditional execution.             | ICQs monitor portfolio performance, market conditions, and rebalancing needs       | Portfolio actions are optimized and executed based on ICQ-driven triggers, ensuring efficient allocation. |
-| **Cross-Chain Asset Coordination for Issuers**            | Digital asset issuers (e.g., Circle) can integrate Intento to trigger token burns or mints based on liquidity conditions, continuously monitored by ICQs, reducing smart contract risk and exposure.                                                                                                                     | ICQs monitor liquidity levels and execute token burns or mints as required         | ICQ feedback ensures coordination across chains and triggers liquidity adjustments only when needed.      |
-| **DEX & AMM Strategies: Enhancing Liquidity Positioning** | DEXes like Uniswap can leverage Intento for intent-based order execution, rebalancing, and swap streaming, eliminating intermediate escrow contracts for better capital efficiency. ICQs ensure periodic rebalancing and adjust liquidity dynamically.                                                                   | ICQs monitor market conditions, trigger orders or rebalancing based on conditions  | User preferences and market conditions drive continuous adjustments to liquidity positions.               |
-| **Staking Protocols: Intent-Based Auto-Compounding**      | Liquid staking protocols (e.g., Lido, Swell, EigenLayer) can leverage Intento for non-custodial auto-compounding and re-staking, triggered by ICQs monitoring reward accrual, governance votes, or validator performance. This keeps compounding aligned with user intent.                                               | ICQ monitors reward accrual, governance votes, or validator performance            | Dynamic re-staking and compounding actions are continuously adjusted based on ICQ feedback.               |
+---
 
-### Interchain Queries, Comparisons & Feedback Loops
+## Payments & Treasury Orchestration
 
-Intento’s integration with ICQs enables:
+### Scheduled Treasury Flows & Payroll
+* **Description**: DAOs and businesses can execute payroll or fund transfers based on predefined schedules.
+* **ICQ Condition**: Verify treasury balance and execution time.
+* **Feedback Loop**: Adjust schedules dynamically based on cash flow trends.
 
-- **Real-time balance checks** to determine fund availability before executing flows.
-- **Validator status monitoring** to trigger stake adjustments when a validator falls out of the active set.
-- **Cross-chain asset tracking** to rebalance liquidity and token supplies without manual input.
-- **Governance-triggered fund allocations** based on DAO-approved conditions.
+### Subscription Models
+* **Description**: Service providers can distribute NFT-based subscriptions or recurring payments securely.
+* **ICQ Condition**: Validate NFT ownership, expiration, and subscription status.
+* **Feedback Loop**: Modify subscription handling based on renewal rates.
 
-Intento transforms execution from static automation to **dynamic, intent-driven flows**, adapting to market conditions, governance signals, and interchain state changes. By incorporating comparisons and real-time feedback loops, Intento ensures that actions remain trust-minimized, self-custodial, and aligned with user-defined conditions.
+### Escrowed Transactions
+* **Description**: Funds release based on confirmed milestones or conditions, reducing counterparty risk.
+* **ICQ Condition**: Verify escrow conditions (e.g., delivery confirmation) before disbursement.
+* **Feedback Loop**: Adjust escrow triggers based on dispute resolution patterns.
 
-By leveraging Intento, protocols, DAOs, and users can build resilient, efficient, and interoperable workflows across decentralized ecosystems. Read more about use case examples in the Designing Flows section.
+### Donation Distributions
+* **Description**: Automatically allocate donations based on real-time funding needs or governance votes.
+* **ICQ Condition**: Monitor funding needs and DAO vote outcomes.
+* **Feedback Loop**: Modify allocation strategies based on funding impact assessment.
+
+---
+
+## Governance & DAO Actions
+
+### Scheduled & Conditional Voting
+* **Description**: Governance proposals can be tallied and executed at predefined intervals, or votes cast automatically based on criteria.
+* **ICQ Condition**: Validate voting period or proposal content.
+* **Feedback Loop**: Adjust voting strategy based on participation trends.
+
+### Dynamic Treasury Allocation
+* **Description**: Fund reallocations triggered by DAO votes or specific market conditions (e.g. "Buyback if token < $X").
+* **ICQ Condition**: Track governance vote outcomes and treasury balances.
+* **Feedback Loop**: Modify allocation parameters based on fund utilization efficiency.
+
+### Token Vesting & Distribution
+* **Description**: Continuous vesting based on governance-approved schedules or performance milestones.
+* **ICQ Condition**: Monitor vesting schedules and claim conditions.
+* **Feedback Loop**: Adapt vesting parameters based on token distribution impact.
+
+### Validator Set Monitoring
+* **Description**: Automatically trigger validator staking/unbonding based on active set participation or uptime.
+* **ICQ Condition**: Track validator performance and network conditions.
+* **Feedback Loop**: Adjust staking strategies based on validator reliability trends.
+
+---
+
+## Protocol & Institutional Integrations
+
+### Wallet-Native Auto-Compounding
+* **Description**: Wallets (e.g., Keplr, Leap) can integrate intent-based auto-compounding natively, allowing users to opt-in to intelligent reinvestment without external dApps.
+* **ICQ Condition**: ICQs monitor price targets, inflation, reward size, and thresholds for compounding.
+* **Feedback Loop**: Continuous optimization based on ICQ feedback to ensure auto-compounding aligns with optimal conditions.
+
+### RWA Portfolio Management
+* **Description**: Institutional investors manage real-world asset (RWA) portfolios across chains. Supports rebalancing, liquidity optimization, and risk management via Proxy Accounts.
+* **ICQ Condition**: ICQs monitor portfolio performance, market conditions, and rebalancing needs.
+* **Feedback Loop**: Portfolio actions are optimized and executed based on ICQ-driven triggers.
+
+### Cross-Chain Asset Coordination for Issuers
+* **Description**: Digital asset issuers (e.g., Circle, Tether) can trigger token burns or mints based on cross-chain liquidity conditions monitored by ICQs, bridging assets purely on-demand.
+* **ICQ Condition**: ICQs monitor liquidity levels and supply across chains.
+* **Feedback Loop**: Triggers liquidity adjustments only when needed, maintaining efficient float.
+
+### DEX & AMM Liquidity Strategies
+* **Description**: DEXes (e.g., Uniswap, Osmosis) can integrate Intento for native limit orders, rebalancing, and just-in-time liquidity provisioning.
+* **ICQ Condition**: ICQs monitor market conditions to trigger orders or rebalance positions.
+* **Feedback Loop**: Continuous adjustments to liquidity positions based on volume and volatility.
+
+### Liquid Staking Protocols
+* **Description**: Liquid staking protocols (e.g., Lido, Swell) can use Intento for non-custodial auto-compounding and re-staking of underlying assets across chains.
+* **ICQ Condition**: ICQ monitors reward accrual and validator performance.
+* **Feedback Loop**: Dynamic re-staking actions adjusted based on yield performance.

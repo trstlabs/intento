@@ -1,200 +1,178 @@
 ---
+
 title: The INTO Token
 sidebar_position: 6
-description: The INTO Token - Documentation & Whitepaper
+description: $INTO Tokenomics, Allocation, and Economic Model
 ---
-# INTO Token - Documentation & Whitepaper
 
-## Overview
+# The INTO Token ($INTO)
 
-INTO is the native token of the **Intento Network**, a Cosmos-based Layer 1 designed for **intent-based orchestration** across the interchain. It enables secure, programmable flows that let users and agents execute complex, self-custodial actions across chains.
+$INTO is the native token of the Intento Network — a Cosmos-based L1 designed to orchestrate complex, self-custodial execution flows across the interchain.
 
-INTO is not just a fee token. It is the **coordination layer** that aligns validators, relayers, builders, and users through staking, governance, and a deflationary execution model.
+Its role is deliberately narrow and structural: securing the network, coordinating economic incentives, governing protocol evolution, and pricing execution of intent-based flows. $INTO is not positioned as a speculative asset, but as a coordination primitive embedded directly into how Intento operates.
 
-> For full details about the INTO token, see our [Introducing INTO: The Token Powering Interchain Flows](https://intento.zone/post/introducing-into-the-token-powering-interchain-flows/) blog post.
+## Why $INTO Exists
 
+An intent-based L1 requires more than generic gas mechanics. Intento needs a token that can simultaneously:
 
-## Network Requirements
+* Secure the chain via Proof-of-Stake
+* Govern execution rules, upgrades, and treasury usage
+* Incentivize validators, relayers, and builders
+* Price and regulate cross-chain execution flows
 
-To operate an intent-based L1, the network must provide:
+$INTO fulfills these requirements as a single coordination asset.
 
-* **Security** — Validators staking $INTO to secure consensus.
-* **Governance** — Token holders guiding upgrades, parameters, and community allocations.
-* **Incentives** — Stakers, relayers, and contributors aligned through emissions and fees.
-* **Fee System** — A mechanism to meter execution of interchain flows.
+By staking $INTO, participants:
 
-$INTO fulfills all four roles.
+* Contribute to network security
+* Earn staking rewards and fee-based incentives
+* Participate directly in governance
+* Benefit from protocol usage via fee capture and burn mechanics
 
 
-## Token Utility
+## Network Utility and Fee Model
 
-### 1. Staking
+Execution on Intento is expressed through programmable flows composed of on-chain messages. Fees scale with complexity: simple flows cost less, multi-step interchain flows cost more.
 
-* Secure the network by delegating to validators.
-* Earn staking rewards.
-* Participate in shared protocol revenue.
+Key characteristics:
 
-### 2. Flow Execution
+* **Gas-based pricing:** Fees are charged per message and execution step
+* **Conditional logic is free:** Queries and condition checks (balances, prices, rewards) do not incur fees
+* **Multi-token fees:** Fees can be paid in $INTO or supported foreign assets (e.g. ATOM, OSMO)
 
-* Pay execution fees for interchain flows.
-* Save on fees when paying directly in $INTO.
-* A portion of each $INTO-paid fee is **burned**, creating a deflationary loop.
-* Unique **wallet fallback** feature: fees can be pulled from a user’s balance without pre-deposits.
+### Fee Routing
 
-### 3. Governance
+* **Fees paid in $INTO:**
 
-Holders can propose and vote on:
+  * A portion is burned per message
+  * The remainder is distributed to stakers
 
-* Fee parameters and exemptions.
-* Incentive distribution (stakers, relayers, builders).
-* Upgrades to flow functionality and integrations.
-* Spending from the community pool.
+* **Fees paid in other tokens:**
 
+  * Routed entirely to the Community Pool
 
-## Flow Fee Model
+This creates two parallel value paths: deflationary pressure on $INTO through usage, and steady treasury growth in diversified assets.
 
-* **Charged per message and execution step.**
-* Complex flows cost more; simple flows cost less.
-* **Condition checks and queries are free** — flows only execute when conditions are met.
+### Wallet Fallback
 
-Fee routing:
+Flows can draw fees directly from a user’s wallet balance without requiring upfront deposits. Users sign once and retain custody throughout execution.
 
-* **$INTO payments:** part is burned, part to community pool.
-* **Non-$INTO tokens (ATOM, OSMO, ELYS):** routed entirely to treasury.
+## Staking, Security, and Governance
 
+$INTO secures the Intento chain via Proof-of-Stake.
 
-## Token Supply
+* Validators and delegators stake $INTO
+* Stakers earn inflation rewards and a share of execution fees
+* Governance power is proportional to stake
 
-### Initial Allocation (Genesis Supply: 400M $INTO)
+Governance controls:
 
-| Category          | Amount (M) | % of Supply |
-| ----------------- | ---------- | ----------- |
-| Airdrop           | 90         | 22.5%       |
-| Team              | 90         | 22.5%       |
-| Community Pool    | 82         | 20.5%       |
-| Strategic Reserve | 70         | 17.5%       |
-| StreamSwap Event  | 40         | 10.0%       |
-| Grant Program     | 22         | 5.5%        |
-| Testnet Program   | 6          | 1.5%        |
-| **Total**         | **400M**   | **100%**    |
+* Network parameters (fees, burn rates, execution limits)
+* Allowed message types and flow features
+* Community Pool allocations
+* Software upgrades and integrations
 
-**Liquid at Launch:** StreamSwap Event, Airdrop, and Testnet allocations.
-**Long-Term Vesting:** Team, Reserve, and Grant Program.
+Governance authority is intentionally broad, reflecting Intento’s role as shared coordination infrastructure.
 
+## Token Supply and Allocation
 
-## Vesting & Unlocks
+Genesis supply: **400,000,000 INTO**
 
-* **Team:** Continuous vesting, 5 years.
-* **Strategic Reserve:** 50% liquid at launch; 50% vests linearly over 5 years.
-* **Grant Program:** Continuous vesting, 5 years.
-* **Airdrop:** Unlocked via 4 staged actions over days/weeks; clawback for unclaimed.
+The allocation is structured to balance early participation, long-term alignment, and operational flexibility.
 
-This avoids supply shocks and ties distribution to participation.
+| Category          | Amount (M) | % of Supply | Vesting                        |
+| ----------------- | ---------: | ----------: | ------------------------------ |
+| Airdrop           |         90 |       22.5% | Action-based, short-term       |
+| Team              |         90 |       22.5% | 5-year continuous vesting      |
+| Community Pool    |         82 |       20.5% | DAO-controlled                 |
+| Strategic Reserve |         70 |       17.5% | 50% liquid, 50% 5-year vesting |
+| StreamSwap Event  |         40 |       10.0% | Liquid                         |
+| Grant Program     |         22 |        5.5% | 5-year continuous vesting      |
+| Testnet Program   |          6 |        1.5% | Liquid                         |
+| **Total**         |    **400** |    **100%** |                                |
 
+### Vesting Principles
 
-## Emission Schedule
+* No cliffs across major allocations
+* Continuous vesting aligned with long-term contribution
+* Meaningful circulating supply at launch
 
-* **Inflation:** Starts at 10%, reduced 25% per year → near-zero after year 10.
-* **Total Supply Growth:** 400M → \~559M over 20 years.
-* **Distribution of New Emissions:**
+This structure avoids abrupt supply shocks while maintaining sufficient liquidity for network usage.
 
-  * 70% Community Pool.
-  * 25% Stakers (ATOM + INTO).
-  * 5% Relayers.
+---
 
-| Year | Supply (M) | Annual Inflation |
-| ---- | ---------- | ---------------- |
-| 0    | 400        | –                |
-| 1    | 440        | 10.0%            |
-| 3    | 470        | 6.8%             |
-| 5    | 509        | 3.4%             |
-| 10   | 548        | 0.7%             |
-| 20   | 559        | 0.0%             |
+## Emissions and Inflation
 
+$INTO follows a decaying inflation schedule designed to bootstrap security without permanent dilution.
 
-## Airdrop Design
+* Initial inflation: **10% annually**
+* Annual decay: **25% reduction year-over-year**
+* Near-zero inflation (<1%) by Year 10
+* Long-term supply projection: ~559M after 20 years (excluding burns)
 
-* **22.5% (90M)** allocated to airdrop.
-* Claimable via the Intento Portal.
-* **Clawback Model:** unclaimed tokens return to treasury.
-* **Claim Unlock:** Users must complete flows and stake tokens to access allocation.
+| Year    | Estimated Supply | Inflation |
+| ------- | ---------------: | --------: |
+| Genesis |             400M |         – |
+| Year 1  |             440M |     10.0% |
+| Year 3  |             470M |      6.8% |
+| Year 5  |             509M |      3.4% |
+| Year 10 |             548M |      0.7% |
+| Year 20 |             559M |     ~0.0% |
 
-| Claim Rate | Tokens Distributed | Clawed Back |
-| ---------- | ------------------ | ----------- |
-| 20%        | 18M                | 72M         |
-| 50%        | 45M                | 45M         |
-| 80%        | 72M                | 18M         |
+Emissions are governed and can evolve as network needs change.
 
-This structure ensures distribution only to active, aligned users.
 
-### Unlock Mechanism
 
-Recipients must complete **four meaningful on-chain actions** to unlock their allocation:
+## Airdrop Outcome and Clawback
 
-1. Orchestrate a flow on Intento.
-2. Orchestrate a flow over IBC.
-3. Stake tokens.
-4. Participate in governance.
+The airdrop was designed to prioritize active participation rather than passive claims. Unclaimed allocations were returned to the Community Pool.
 
-**Unlock model:**
+**Result:**
 
-* Each action → unlocks **20%** of the airdrop portion.
-* Remaining portion vests over several days.
-* Claiming requires staking at least **67%** of unlocked tokens.
+* **77M $INTO** clawed back
+* Added directly to the Community Pool
 
-This is not a “click-claim” airdrop. It ensures alignment through **participation and staking**.
+This materially increased DAO-controlled resources and reduced inactive supply, strengthening long-term alignment.
 
-### Decay Model
 
-To prevent idle supply, the airdrop includes a **time-based decay mechanism**:
 
-* **Grace Period (DurationUntilDecay):** 4 weeks after claim eligibility.
+## Community Pool
 
-  * No penalties during this time.
-* **Decay Period (DurationOfDecay):** 8 weeks after the grace period.
+The Community Pool functions as the protocol treasury.
 
-  * Linear reduction: unclaimed allocation decreases to 0 by the end of the period.
+Funds may be allocated via governance for:
 
-**Example:** If a participant waits until halfway through the decay period (\~8 weeks after launch), only \~50% of their unclaimed allocation remains.
+* Builder grants and ecosystem development
+* Liquidity initiatives
+* Relayer and infrastructure incentives
+* Strategic buybacks or burns
 
-Any tokens left unclaimed after full decay return to the **Community Pool**.
+Treasury assets include both $INTO and foreign fee tokens accrued through network usage.
 
-### Clawback
 
-Unclaimed or unused allocations are not left idle. They are **clawed back** into the Community Pool to support:
 
-* Builder grants.
-* User incentives.
-* Ecosystem growth campaigns.
+## Summary
 
-This ensures that all $INTO either strengthens the protocol or aligns with active participants.
+$INTO is the coordination asset underlying Intento’s execution layer.
 
+It is used to:
 
-## Deflationary Mechanism
+* Secure the network
+* Govern protocol evolution
+* Price and regulate execution
+* Align incentives across validators, relayers, builders, and users
 
-Every executed flow strengthens the system:
+As usage increases, execution fees grow, supply is reduced through burns, and the Community Pool expands. The system is designed to scale with real activity, not speculation.
 
-* A portion of $INTO is **burned per message**, permanently reducing supply.
-* Non-$INTO fees accumulate in the treasury, governed by stakers.
-* Increased flow usage → higher burn rate → tighter supply.
+$INTO’s value is inseparable from Intento’s role as interchain coordination infrastructure.
 
 
-## Alignment Model
 
-* **Validators:** Secured by INTO stake.
-* **Relayers:** Incentivized with 5% emissions.
-* **Builders:** Supported via community pool and grants.
-* **Users:** Save fees and gain governance rights by holding $INTO.
+## Roadmap
 
-No VC unlocks. No cliffs. Continuous vesting for core contributors.
-
-## Conclusion
-
-$INTO is the backbone of Intento: a token designed to coordinate intent execution across chains.
-
-* **Programmable fees, deflationary design.**
-* **Multi-chain execution, AI-ready orchestration.**
-* **Built for builders, users, validators, and relayers alike.**
-
-Every flow strengthens the network. Every burn aligns supply with real usage.
-$INTO is not speculative fuel — it is powering the **coordination layer** for decentralized intent execution.
+<div className="flex justify-center">
+  <blockquote className="twitter-tweet">
+    <a href="https://twitter.com/IntentoZone/status/1962520714130710917"></a>
+  </blockquote>
+  <script async src="https://platform.twitter.com/widgets.js" charSet="utf-8"></script>
+</div>

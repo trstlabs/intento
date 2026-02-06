@@ -29,7 +29,6 @@ const sidebars = {
         'getting-started/architecture',
         'getting-started/use-cases',
         'getting-started/differentiation',
-        'getting-started/integration',
         'getting-started/into-token'
       ],
       className: 'sidebar-item-getting-started',
@@ -44,6 +43,7 @@ const sidebars = {
         'concepts/icq',
         'concepts/conditions',
         'concepts/fees',
+        'concepts/intento-vs-agents',
       ],
       className: 'sidebar-item-concept',
     },

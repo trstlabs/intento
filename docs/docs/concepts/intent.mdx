@@ -93,12 +93,12 @@ Intento's Intents can execute actions on supported chains based on custom logic,
 Intento can execute messages on supported chains using several approaches:
 
 1. **ICS20 Transfers with a Memo**
-   - Easy to set up on available chains by using packet forwarding.
+   - Easy to set up on available chains by using packet forwarding (supported for 50+ chains).
    - Memo field actions have limited support by chains.
 
 2. **Trustless Agents**
    - **Best for:** Ease of use and gas abstraction.
-   - **How:** Uses a distinct account on the host chain managed by an agent.
+   - **How:** Uses a distinct account on the host chain managed by an agent. You grant them permission (via AuthZ) to execute specific messages.
    - **Fees:** Handled by the agent (admin). User configures a fee limit.
 
 3. **Self-Hosted Proxy Accounts**

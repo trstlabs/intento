@@ -12,21 +12,20 @@ This shifts the source of truth for automation from off-chain actors and applica
 #### Bot Networks
 
 ```mermaid
-flowchart LR
+flowchart TD
   User[User / App] -->|Intent or Order| IntentSystem[Intent System or Relayer]
   IntentSystem --> |Task Broadcast| SolverNet[Solver or Bot Network]
-  SolverNet --> |Off-chain Decision Making| Strategy[Private Routing and Strategy Logic]
+  
+  subgraph Trusted["Trusted Off-chain Execution Zone"]
+    SolverNet --> |Off-chain Decision Making| Strategy[Private Routing &<br/>Strategy Logic]
+  end
+
   Strategy --> |Submit Transaction| EVMChain[EVM Chain]
   EVMChain --> |Transaction Receipt| SolverNet
   SolverNet --> |Off-chain Report| IntentSystem
 
-  subgraph Trusted["Trusted Off-chain Execution Zone"]
-    SolverNet
-    Strategy
-  end
-
-  Risks[Trust and Security Tradeoffs: Solver discretion, Off-chain routing logic, MEV and censorship, Best-effort]
-  IntentSystem --> Risks
+  Risks["Trust and Security Tradeoffs:<br/>- Solver discretion<br/>- Off-chain routing logic<br/>- MEV and censorship<br/>- Best-effort"]
+  IntentSystem -.-> Risks
 ```
 
 Bot and solver networks coordinate off-chain agents to fulfill intents. While flexible, this model introduces fundamental limitations:
@@ -117,22 +116,21 @@ Intento removes the need for developers to manage remote accounts, async VM logi
 ### Network Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
   User[User / App] -->|Signed Intent| Intento[Intento Network]
-  Intento ==> |On-chain Flow Logic and Conditions| Proxy[Union Inferred Proxy Account]
-  Proxy ==> |Union Verified Cross-chain Transport| EVMChain[EVM Chain]
+  
+  subgraph Trustless["Trust-Minimized Verifiable Path"]
+    Intento ==> |On-chain Flow Logic| Proxy[Union Inferred Proxy Account]
+    Proxy ==> |Union Verified Transport| EVMChain[EVM Chain]
+  end
+
   EVMChain ==> |Direct Contract Call| EVMContract[Target EVM Contract]
   EVMContract ==> |On-chain Result| EVMChain
   EVMChain ==> |Verified Ack| Intento
 
-  subgraph Trustless["Trust-Minimized Verifiable Path"]
-    Intento
-    Proxy
-    EVMChain
-  end
 
-  Guarantees[On-chain Guarantees: Deterministic, Verifiable cross-chain execution, No off-chain discretion]
-  Intento --> Guarantees
+  Guarantees["On-chain Guarantees:<br/>- Deterministic<br/>- Verifiable execution<br/>- No off-chain discretion"]
+  Intento -.-> Guarantees
 ```
 
 * **Composable Orchestration Graphs** – Flows become reusable, composable primitives across protocols.
