@@ -104,6 +104,18 @@ func StakingValMsg(moniker string, stake int64, valoper string, pk ed25519.PubKe
 	}
 }
 
+func GetReadyValidators() (map[string]bool, error) {
+	msgs, err := GatherStakingMsgs()
+	if err != nil {
+		return nil, err
+	}
+	ready := make(map[string]bool)
+	for _, msg := range msgs {
+		ready[msg.ValidatorAddress] = true
+	}
+	return ready, nil
+}
+
 // GatherGovernorStakingMsgs builds MsgCreateValidator messages for all
 // "governor" validators that are explicitly marked as ready for sovereign
 // validation.
@@ -355,6 +367,9 @@ func DeICS(
 	DAOaddr := sdk.AccAddress(DAOaddrBz)
 
 	// Create sovereign validators (governors that opted in + any extras)
+	// Deduplicate validators by address to prevent double funding/processing
+	processedValidators := make(map[string]bool)
+
 	for _, msg := range newValMsgs {
 		_, valAddrBz, err := bech32.DecodeAndConvert(msg.ValidatorAddress)
 		if err != nil {
@@ -362,6 +377,12 @@ func DeICS(
 		}
 		valAddr := sdk.ValAddress(valAddrBz)
 		accAddr := sdk.AccAddress(valAddrBz)
+
+		// Check if we already processed this validator in this loop
+		if processedValidators[valAddr.String()] {
+			continue
+		}
+		processedValidators[valAddr.String()] = true
 
 		// Re-encode address to use the current global prefix to avoid 'hrp does not match' errors
 		msg.ValidatorAddress = valAddr.String()

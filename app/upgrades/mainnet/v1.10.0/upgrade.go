@@ -24,18 +24,20 @@ func CreateUpgradeHandler(
 	keepers upgrades.IntentoKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// Load ready validators from file
+		readyValopers, err := GetReadyValidators()
+		if err != nil {
+			return nil, err
+		}
+
 		// Run DeICS logic
-		// We pass nil for readyValopers so that logic relies on default behavior (filtering only jails etc, checking allowlist if it was non-nil)
-		// effectively trying to migrate all governors that meet criteria.
-		// NOTE: DeICS implementation checks: if readyValopers != nil && !readyValopers[valoperStr].
-		// So if readyValopers is nil, it skips that check, allowing all non-jailed governors to migrate.
-		err := DeICS(
+		err = DeICS(
 			sdk.UnwrapSDKContext(ctx),
 			*keepers.StakingKeeper,
 			keepers.ConsumerKeeper,
 			*keepers.StakingKeeper,
 			keepers.BankKeeper,
-			nil,
+			readyValopers,
 		)
 		if err != nil {
 			return nil, err
