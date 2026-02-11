@@ -8,7 +8,7 @@ import (
 	upgrades "github.com/trstlabs/intento/app/upgrades"
 	mainnetupgradesv103 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.0.3"
 	mainnetupgradesv105 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.0.5"
-	mainnetupgradesv110 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.10.0"
+	mainnetupgradesv110 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.1.0"
 )
 
 var Upgrades = []upgrades.Upgrade{

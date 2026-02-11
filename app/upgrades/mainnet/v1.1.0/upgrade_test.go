@@ -12,7 +12,7 @@ import (
 	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
 	"github.com/trstlabs/intento/app"
 	"github.com/trstlabs/intento/app/upgrades"
-	v1100 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.10.0"
+	v1100 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.1.0"
 )
 
 func TestUpgrade(t *testing.T) {

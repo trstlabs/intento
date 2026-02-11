@@ -10,7 +10,7 @@ import (
 	"github.com/trstlabs/intento/app/upgrades"
 )
 
-const UpgradeName = "v1.10.0"
+const UpgradeName = "v1.1.0"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
