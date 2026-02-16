@@ -5,54 +5,73 @@ import (
 
 	math "cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
-	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
 	"github.com/trstlabs/intento/app"
 	"github.com/trstlabs/intento/app/upgrades"
 	v1100 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.1.0"
 )
 
 func TestUpgrade(t *testing.T) {
+	// Set config for prefixes
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount("into", "intopub")
+	config.SetBech32PrefixForValidator("intovaloper", "intovaloperpub")
+	config.SetBech32PrefixForConsensusNode("intovalcons", "intovalconspub")
+	// config.Seal() // Don't seal to avoid panic if other tests run
+
 	// initialize app with initChain=true to have validators
 	intoApp := app.InitIntentoTestApp(true)
 	ctx := intoApp.BaseApp.NewContext(false)
 
-	// Check initial state
-	// Manual fix: Ensure CCValidators are populated from staking validators
-	stakingVals, err := intoApp.StakingKeeper.GetAllValidators(ctx)
+	// Fund the DAO address
+	_, daoAddrBz, err := bech32.DecodeAndConvert(v1100.FundAddress)
 	require.NoError(t, err)
-	require.NotEmpty(t, stakingVals, "should have staking validators initially")
+	daoAddr := sdk.AccAddress(daoAddrBz)
 
-	for _, v := range stakingVals {
-		consAddr, err := v.GetConsAddr()
-		require.NoError(t, err)
-		pk, err := v.ConsPubKey()
-		require.NoError(t, err)
-		power := v.GetConsensusPower(sdk.DefaultPowerReduction)
-		ccvVal, err := ccvconsumertypes.NewCCValidator(consAddr, power, pk)
-		require.NoError(t, err)
-		intoApp.ConsumerKeeper.SetCCValidator(ctx, ccvVal)
+	fundCoins := sdk.NewCoins(sdk.NewCoin(v1100.Denom, math.NewInt(100_000_000_000)))
+	err = intoApp.BankKeeper.MintCoins(ctx, "mint", fundCoins)
+	require.NoError(t, err)
+	err = intoApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", daoAddr, fundCoins)
+	require.NoError(t, err)
+
+	initialDaoBalance := intoApp.BankKeeper.GetBalance(ctx, daoAddr, v1100.Denom)
+
+	// Create a "ready" validator that matches one in the embedded JSON files
+	// Address from validators/staking/sk8.json
+	readyValoperStr := "intovaloper1mn86qd3w8050e065jq9xgsegc9yr6k34zamc9r"
+	valAddr, err := sdk.ValAddressFromBech32(readyValoperStr)
+	require.NoError(t, err)
+	accAddr := sdk.AccAddress(valAddr)
+
+	// Ensure this ready validator has 0 balance initially
+	require.True(t, intoApp.BankKeeper.GetBalance(ctx, accAddr, v1100.Denom).IsZero())
+
+	// Create the validator in staking keeper
+	pk := ed25519.GenPrivKey().PubKey()
+	pkAny, err := codectypes.NewAnyWithValue(pk)
+	require.NoError(t, err)
+
+	readyVal := stakingtypes.Validator{
+		OperatorAddress: readyValoperStr,
+		ConsensusPubkey: pkAny,
+		Status:          stakingtypes.Bonded,
+		Tokens:          math.NewInt(100),
+		DelegatorShares: math.LegacyNewDec(100),
 	}
-
-	consumerVals := intoApp.ConsumerKeeper.GetAllCCValidator(ctx)
-	require.NotEmpty(t, consumerVals, "should have consumer validators initially")
-
-	// Fund the FundAddress (DAO address) used in DeICS
-	_, fundAddrBz, err := bech32.DecodeAndConvert(v1100.FundAddress)
+	intoApp.StakingKeeper.SetValidator(ctx, readyVal)
+	err = intoApp.StakingKeeper.SetValidatorByConsAddr(ctx, readyVal)
 	require.NoError(t, err)
-	fundAddr := sdk.AccAddress(fundAddrBz)
+	// We don't need to set power index unless we care about voting power updates,
+	// but DeICS iterates GetAllValidators which iterates the store by operator address, so SetValidator is key.
 
-	// Mint coins to the mint module and send them to the fund address
-	coins := sdk.NewCoins(sdk.NewCoin(v1100.DefaultDenom, math.NewInt(1000_000_000_000)))
-	err = intoApp.BankKeeper.MintCoins(ctx, "mint", coins)
-	require.NoError(t, err)
-	err = intoApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", fundAddr, coins)
-	require.NoError(t, err)
-
-	initialFundBalance := intoApp.BankKeeper.GetBalance(ctx, fundAddr, v1100.DefaultDenom)
+	// Also have the existing random validators from InitChain (ValA, ValB etc)
+	// They won't be in the ready set.
 
 	// Setup the upgrade handler
 	mm := intoApp.ModuleManager
@@ -71,22 +90,27 @@ func TestUpgrade(t *testing.T) {
 	_, err = handler(ctx, plan, versionMap)
 	require.NoError(t, err)
 
-	// Verify logic execution by checking if FundAddress was debited
-	// DeICS creates/updates validators by funding them.
-	// Since we have at least one validator in the test setup (governor),
-	// DeICS should have funded it with SovereignSelfStake (1_000_000).
-	finalFundBalance := intoApp.BankKeeper.GetBalance(ctx, fundAddr, v1100.DefaultDenom)
+	// Verify ready validator was funded
+	finalBalance := intoApp.BankKeeper.GetBalance(ctx, accAddr, v1100.Denom)
+	require.Equal(t, int64(v1100.MinStake), finalBalance.Amount.Int64(), "Ready validator should be funded to MinStake")
 
-	// We expect the balance to decrease by at least SovereignSelfStake
-	diff := initialFundBalance.Amount.Sub(finalFundBalance.Amount)
-	require.True(t, diff.GTE(math.NewInt(v1100.SovereignSelfStake)), "FundAddress should have spent funds to bond validators")
+	// Verify DAO balance decreased exactly by MinStake
+	finalDaoBalance := intoApp.BankKeeper.GetBalance(ctx, daoAddr, v1100.Denom)
+	diff := initialDaoBalance.Amount.Sub(finalDaoBalance.Amount)
+	require.Equal(t, int64(v1100.MinStake), diff.Int64(), "DAO should spend MinStake")
 
-	// Also confirm migration successful
-	// We can check if MaxValidators was updated in params (DeICS updates params)
-	params, err := intoApp.StakingKeeper.GetParams(ctx)
+	// Verify random validators are jailed
+	allVals, err := intoApp.StakingKeeper.GetAllValidators(ctx)
 	require.NoError(t, err)
-	// DeICS sets MaxValidators to len(consumer) + len(newMsgs).
-	// Test setup has 1 validator. So roughly 1 + 1 = 2 (or 1 if skipped).
-	// But it sets it explicitly.
-	require.True(t, params.MaxValidators > 0, "MaxValidators should be set")
+
+	foundReady := false
+	for _, v := range allVals {
+		if v.OperatorAddress == readyValoperStr {
+			foundReady = true
+			require.False(t, v.IsJailed(), "Ready validator should NOT be jailed")
+		} else {
+			require.True(t, v.IsJailed(), "Random validator %s should be jailed", v.OperatorAddress)
+		}
+	}
+	require.True(t, foundReady, "Should find the ready validator in the store")
 }

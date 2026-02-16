@@ -34,8 +34,6 @@ func CreateUpgradeHandler(
 		err = DeICS(
 			sdk.UnwrapSDKContext(ctx),
 			*keepers.StakingKeeper,
-			keepers.ConsumerKeeper,
-			*keepers.StakingKeeper,
 			keepers.BankKeeper,
 			readyValopers,
 		)
