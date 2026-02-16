@@ -14,7 +14,7 @@ dockernet/upgrades/cosmovisor
 dockernet/temp.sh
 msg_*.json
 /*.sh
-!app/upgrades/mainnet/v1.1.0/validators/staking/*.json
 *.json
+!app/upgrades/mainnet/v1.1.0/validators/staking/*.json
 dockernet/tests/test_files
 dockernet/config/*1
