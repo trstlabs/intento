@@ -1,0 +1,27 @@
+{
+    "operator_address": "intovaloper1jyy0zu3chaggetslv6f8yrh6fp6h9d8qu3luye",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "0+33XwIAqWiNrw7sjsBIbihQpac2t/5GoEt3glv4V+w="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "22466043533342",
+    "delegator_shares": "22466043533342.000000000000000000",
+    "description": {
+        "moniker": "Atlas Staking",
+        "identity": "3FAA58BDC270427D",
+        "website": "https:/www.atlasstaking.com",
+        "security_contact": "info@atlasstaking.com",
+        "details": "Where Your Crypto Works As Hard As You Do"
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.050000000000000000",
+            "max_rate": "0.200000000000000000",
+            "max_change_rate": "0.010000000000000000"
+        },
+        "update_time": "2025-08-28T17:47:33.64287839Z"
+    },
+    "min_self_delegation": "1"
+}

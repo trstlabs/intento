@@ -1,0 +1,27 @@
+{
+    "operator_address": "intovaloper1mn86qd3w8050e065jq9xgsegc9yr6k34zamc9r",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "MONwfvQKZnkoqpK47qzpLsq71bgEtYbMo/V5wgvuWxw="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "12151659080788",
+    "delegator_shares": "12151659080788.000000000000000000",
+    "description": {
+        "moniker": "Blockval",
+        "identity": "0F25E489A4D3C794",
+        "website": "https://blockval.io",
+        "security_contact": "info@blockval.io",
+        "details": "Validator run by crypto enthusiasts. Check our website or join our telegram channel https://t.me/Blockval."
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.000000000000000000",
+            "max_rate": "0.200000000000000000",
+            "max_change_rate": "0.020000000000000000"
+        },
+        "update_time": "2025-09-04T11:30:04.250300193Z"
+    },
+    "min_self_delegation": "1"
+}

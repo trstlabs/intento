@@ -1,0 +1,27 @@
+{
+    "operator_address": "intovaloper15pygk4xvy4f87ynmnydzp7f6k9a3rt3cq4cdf2",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "ZBCtJPxVvzB7gqjM/hL4taw/CuPPzuJyfOtPb+Ld/W0="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "10588080695259",
+    "delegator_shares": "10588080695259.000000000000000000",
+    "description": {
+        "moniker": "Synergy Nodes",
+        "identity": "673CA76602A5AC88",
+        "website": "https://www.synergynodes.com",
+        "security_contact": "contact@synergynodes.com",
+        "details": "We are operating a secure, stable Validator Node for multiple mainnet chains. We provide infrastructure support - public RPC, LCD endpoints, daily snapshots, operate multiple IBC Relayers, Blockchain Explorers, etc. All info on our website."
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.050000000000000000",
+            "max_rate": "0.100000000000000000",
+            "max_change_rate": "0.010000000000000000"
+        },
+        "update_time": "2025-09-25T13:29:29.961164441Z"
+    },
+    "min_self_delegation": "1"
+}

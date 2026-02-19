@@ -8,12 +8,14 @@ import (
 	upgrades "github.com/trstlabs/intento/app/upgrades"
 	mainnetupgradesv103 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.0.3"
 	mainnetupgradesv105 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.0.5"
+	mainnetupgradesv110 "github.com/trstlabs/intento/app/upgrades/mainnet/v1.1.0"
 )
 
 var Upgrades = []upgrades.Upgrade{
 	// mainnet upgrades
 	mainnetupgradesv103.Upgrade,
 	mainnetupgradesv105.Upgrade,
+	mainnetupgradesv110.Upgrade,
 }
 
 func (app IntoApp) RegisterUpgradeHandlers(configurator module.Configurator) {

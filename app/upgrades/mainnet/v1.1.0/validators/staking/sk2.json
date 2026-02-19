@@ -1,0 +1,27 @@
+{
+    "operator_address": "intovaloper1a6qyup7zgyj53r43tq2ngqrrvx70fqhycucrmn",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "pyCfZj+be9VibGCwtyCYk5L8h0WeXym9LtjUB1PuMM8="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "10298812581383",
+    "delegator_shares": "10298812581383.000000000000000000",
+    "description": {
+        "moniker": "POSTHUMAN 🧬 StakeDrop",
+        "identity": "8A9FC930E1A980D6",
+        "website": "https://posthuman.digital",
+        "security_contact": "validator@posthuman.digital",
+        "details": "Stake to get Airdrops and 🧬 125% slashing protection ⚛️ https://posthuman.digital/"
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.100000000000000000",
+            "max_rate": "0.200000000000000000",
+            "max_change_rate": "0.010000000000000000"
+        },
+        "update_time": "2025-08-28T14:32:51.667133976Z"
+    },
+    "min_self_delegation": "1"
+}

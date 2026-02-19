@@ -860,7 +860,7 @@ func TestNegativeTwapDifference(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			comparison := types.Comparison{
 				ResponseIndex:  0,
-				ResponseKey:    "P0LastSpotPrice",
+				ResponseKey:    "osmosistwapv1beta1.TwapRecord.P0LastSpotPrice",
 				Operand:        tc.operand,
 				Operator:       tc.operator,
 				ValueType:      "osmosistwapv1beta1.TwapRecord.P0LastSpotPrice",

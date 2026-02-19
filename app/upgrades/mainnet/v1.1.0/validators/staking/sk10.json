@@ -1,0 +1,27 @@
+{
+    "operator_address": "intovaloper16ykrj6yyr3y9p2wdppn90pg5ukdjx7pm3jl43k",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "fCUI5xkHZUETQz7FRzvnPvTvQt6+hN5qgfqyE4BVznw="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "10401279042318",
+    "delegator_shares": "10401279042318.000000000000000000",
+    "description": {
+        "moniker": "CodeBlockLabs",
+        "identity": "E1ADDC27DCE641C2",
+        "website": "https://CodeBlockLabs.com",
+        "security_contact": "codeblocklabs@proton.me",
+        "details": "Join CodeBlockLabs Community at https://t.me/CodeBlockLabs"
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.100000000000000000",
+            "max_rate": "1.000000000000000000",
+            "max_change_rate": "1.000000000000000000"
+        },
+        "update_time": "2025-10-01T12:30:02.494463899Z"
+    },
+    "min_self_delegation": "1"
+}

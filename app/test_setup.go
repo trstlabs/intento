@@ -19,15 +19,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
-	ibccommitmenttypes "github.com/cosmos/ibc-go/v8/modules/core/23-commitment/types"
-	ibctmtypes "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types" //nolint:staticcheck
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
-	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
-	ccvprovidertypes "github.com/cosmos/interchain-security/v6/x/ccv/provider/types"
-
-	ccvtypes "github.com/cosmos/interchain-security/v6/x/ccv/types"
 )
 
 func init() {
@@ -121,19 +114,20 @@ func GenesisStateWithValSet(app *IntoApp) GenesisState {
 	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
 
 	bondAmt := sdk.DefaultPowerReduction
-	initValPowers := []abci.ValidatorUpdate{}
 
 	for _, val := range valSet.Validators {
 		pk, _ := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		pkAny, _ := codectypes.NewAnyWithValue(pk)
 		validator := stakingtypes.Validator{
-			OperatorAddress:   sdk.ValAddress(val.Address).String(),
-			ConsensusPubkey:   pkAny,
-			Jailed:            false,
-			Status:            stakingtypes.Bonded,
-			Tokens:            bondAmt,
-			DelegatorShares:   math.LegacyOneDec(),
-			Description:       stakingtypes.Description{},
+			OperatorAddress: sdk.ValAddress(val.Address).String(),
+			ConsensusPubkey: pkAny,
+			Jailed:          false,
+			Status:          stakingtypes.Bonded,
+			Tokens:          bondAmt,
+			DelegatorShares: math.LegacyOneDec(),
+			Description: stakingtypes.Description{
+				Moniker: "governor",
+			},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
 			Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
@@ -141,13 +135,6 @@ func GenesisStateWithValSet(app *IntoApp) GenesisState {
 		}
 		validators = append(validators, validator)
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), math.LegacyOneDec()))
-
-		// add initial validator powers so consumer InitGenesis runs correctly
-		pub, _ := val.ToProto()
-		initValPowers = append(initValPowers, abci.ValidatorUpdate{
-			Power:  val.VotingPower,
-			PubKey: pub.PubKey,
-		})
 	}
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
@@ -180,58 +167,16 @@ func GenesisStateWithValSet(app *IntoApp) GenesisState {
 	)
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
-	vals, err := tmtypes.PB2TM.ValidatorUpdates(initValPowers)
-	if err != nil {
-		panic("failed to get vals")
-	}
-
-	consumerGenesisState := CreateMinimalConsumerTestGenesis()
-	consumerGenesisState.Provider.InitialValSet = initValPowers
-	consumerGenesisState.Provider.ConsensusState.NextValidatorsHash = tmtypes.NewValidatorSet(vals).Hash()
-	consumerGenesisState.Params.Enabled = true
-	if err := consumerGenesisState.Validate(); err != nil {
-		panic(err)
-	}
-	genesisState[ccvconsumertypes.ModuleName] = app.AppCodec().MustMarshalJSON(consumerGenesisState)
-
 	return genesisState
 }
 
 // Initializes a new Intento App casted as a TestingApp for IBC support
-func InitIntentoIBCTestingApp(initValPowers []abci.ValidatorUpdate) func() (ibctesting.TestingApp, map[string]json.RawMessage) {
+func InitIntentoIBCTestingApp(_ []abci.ValidatorUpdate) func() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	return func() (ibctesting.TestingApp, map[string]json.RawMessage) {
 
 		app := InitIntentoTestApp(false)
-		genesisState := NewDefaultGenesisState(app.appCodec)
-		// Feed consumer genesis with provider validators
-		var consumerGenesis ccvconsumertypes.GenesisState
-		app.appCodec.MustUnmarshalJSON(genesisState[ccvconsumertypes.ModuleName], &consumerGenesis)
-		consumerGenesis.Provider.InitialValSet = initValPowers
-		consumerGenesis.Params.Enabled = true
-		genesisState[ccvconsumertypes.ModuleName] = app.appCodec.MustMarshalJSON(&consumerGenesis)
+		genesisState := GenesisStateWithValSet(app)
 
 		return app, genesisState
 	}
-}
-
-// This function creates consumer module genesis state that is used as starting point for modifications
-// that allow chain to be started locally without having to start the provider chain and the relayer.
-// It is also used in tests that are starting the chain node.
-func CreateMinimalConsumerTestGenesis() *ccvconsumertypes.GenesisState {
-	genesisState := ccvconsumertypes.DefaultGenesisState()
-	genesisState.Params.Enabled = true
-	genesisState.NewChain = true
-	genesisState.Provider.ClientState = ccvprovidertypes.DefaultParams().TemplateClient
-	genesisState.Provider.ClientState.ChainId = "intento"
-	genesisState.Provider.ClientState.LatestHeight = ibcclienttypes.Height{RevisionNumber: 0, RevisionHeight: 1}
-	genesisState.Provider.ClientState.TrustingPeriod, _ = ccvtypes.CalculateTrustPeriod(genesisState.Params.UnbondingPeriod, ccvprovidertypes.DefaultTrustingPeriodFraction)
-
-	genesisState.Provider.ClientState.UnbondingPeriod = genesisState.Params.UnbondingPeriod
-	genesisState.Provider.ClientState.MaxClockDrift = ccvprovidertypes.DefaultMaxClockDrift
-	genesisState.Provider.ConsensusState = &ibctmtypes.ConsensusState{
-		Timestamp: time.Now().UTC(),
-		Root:      ibccommitmenttypes.MerkleRoot{Hash: []byte("dummy")},
-	}
-
-	return genesisState
 }
