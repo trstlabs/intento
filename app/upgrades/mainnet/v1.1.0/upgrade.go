@@ -3,6 +3,7 @@ package v1100
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,6 +39,17 @@ func CreateUpgradeHandler(
 			readyValopers,
 		)
 		if err != nil {
+			return nil, err
+		}
+
+		// Update Slashing Params
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		slashingParams, err := keepers.SlashingKeeper.GetParams(sdkCtx)
+		if err != nil {
+			return nil, err
+		}
+		slashingParams.MinSignedPerWindow = math.LegacyNewDecWithPrec(5, 1) // 50%
+		if err := keepers.SlashingKeeper.SetParams(sdkCtx, slashingParams); err != nil {
 			return nil, err
 		}
 

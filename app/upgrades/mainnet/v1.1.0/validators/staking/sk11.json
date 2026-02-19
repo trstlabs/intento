@@ -1,0 +1,27 @@
+{
+    "operator_address": "intovaloper1gfa2k4zhp3zx38a0ugvk2za4jyzrqvcfz5hs85",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "Tc6c0MYuBr7G3dEFLt8yjwCDgaWv9G4deCOZ2NmcgEg="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "10220072000000",
+    "delegator_shares": "10220072000000.000000000000000000",
+    "description": {
+        "moniker": "CosmosSpaces",
+        "identity": "06B033BAC39DA21C",
+        "website": "https://cosmosspaces.zone",
+        "security_contact": "security@cosmosspaces.zone",
+        "details": "Bare Metal Validators, Relayers, and RPC providers. Top tier infrastructure providers rooted in the Cosmos community."
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.050000000000000000",
+            "max_rate": "0.200000000000000000",
+            "max_change_rate": "0.010000000000000000"
+        },
+        "update_time": "2025-10-04T23:16:23.256102915Z"
+    },
+    "min_self_delegation": "1"
+}

@@ -1,0 +1,26 @@
+{
+    "operator_address": "intovaloper1t0668wel267nqmafqdkkp06k9lr7zgnee58gc0",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "q4CmBu9CvpnaCn93kmYD13qB6ZH+HzN/jesGOd8vXqM="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "11711967206065",
+    "delegator_shares": "11711967206065.000000000000000000",
+    "description": {
+        "moniker": "Interstellar 🍸",
+        "identity": "9633C081790FAB0A",
+        "website": "https://www.interstellar-108.com",
+        "details": "Proprietary fund, investor, blockchain validator and infrastructure service provider."
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.050000000000000000",
+            "max_rate": "0.200000000000000000",
+            "max_change_rate": "0.010000000000000000"
+        },
+        "update_time": "2025-08-28T02:31:43.886871016Z"
+    },
+    "min_self_delegation": "1"
+}

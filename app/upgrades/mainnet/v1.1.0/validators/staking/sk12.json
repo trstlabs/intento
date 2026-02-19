@@ -1,0 +1,27 @@
+{
+    "operator_address": "intovaloper1yt0whdf62s5fry5tpavzfazpm4x5fq0n7d662e",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "uLtYymUKD+kJ3FvDpI4SwafA14uohiHGMx+5P9mVwhU="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "12370747567940",
+    "delegator_shares": "12370747567940.000000000000000000",
+    "description": {
+        "moniker": "NodeStake",
+        "identity": "94EFE192B2C52424",
+        "website": "https://nodestake.org",
+        "security_contact": "info@nodestake.org",
+        "details": "NodeStake is the professional validator, infrastructure provider and IBC relayer.⚛️7*24h | https://twitter.com/Nodestake_top"
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.050000000000000000",
+            "max_rate": "0.200000000000000000",
+            "max_change_rate": "0.050000000000000000"
+        },
+        "update_time": "2025-08-27T14:06:15.259963395Z"
+    },
+    "min_self_delegation": "1"
+}

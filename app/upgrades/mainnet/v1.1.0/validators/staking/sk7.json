@@ -1,0 +1,27 @@
+{
+    "operator_address": "intovaloper1kpknk3de3ctv094f9tcfyh6kkvmekt5sk4qn2q",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "ZyoSmtTLurBoGtkovwK5LiWKk2ORXZ5Sv1wzYH9W8KY="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "10083996000000",
+    "delegator_shares": "10083996000000.000000000000000000",
+    "description": {
+        "moniker": "LuckyStar",
+        "identity": "F2BA212A924EA1F3",
+        "website": "https://www.explorer.luckystar.asia",
+        "security_contact": "aluckystarasia@gmail.com",
+        "details": "https://github.com/LuckyStarAsia"
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.100000000000000000",
+            "max_rate": "0.200000000000000000",
+            "max_change_rate": "0.050000000000000000"
+        },
+        "update_time": "2025-08-27T15:49:09.024279188Z"
+    },
+    "min_self_delegation": "1"
+}

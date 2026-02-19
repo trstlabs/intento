@@ -11,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/spf13/cobra"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
 const (
@@ -48,8 +50,13 @@ $ %s tx validator-add \
 			pubKeyStr := args[1]
 			moniker := args[2]
 
-			var pubKey codectypes.Any
-			if err := clientCtx.Codec.UnmarshalJSON([]byte(pubKeyStr), &pubKey); err != nil {
+			var pk cryptotypes.PubKey
+			if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pubKeyStr), &pk); err != nil {
+				return err
+			}
+
+			pubKey, err := codectypes.NewAnyWithValue(pk)
+			if err != nil {
 				return err
 			}
 
@@ -71,7 +78,7 @@ $ %s tx validator-add \
 				return err
 			}
 
-			content := NewValidatorAddProposal(title, description, valoper, pubKey, moniker)
+			content := NewValidatorAddProposal(title, description, valoper, *pubKey, moniker)
 			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, clientCtx.GetFromAddress())
 			if err != nil {
 				return err

@@ -80,6 +80,7 @@ func TestUpgrade(t *testing.T) {
 		StakingKeeper:  intoApp.StakingKeeper,
 		ConsumerKeeper: intoApp.ConsumerKeeper,
 		BankKeeper:     intoApp.BankKeeper,
+		SlashingKeeper: intoApp.SlashingKeeper,
 	}
 
 	handler := v1100.CreateUpgradeHandler(mm, configurator, keepers)
@@ -113,4 +114,9 @@ func TestUpgrade(t *testing.T) {
 		}
 	}
 	require.True(t, foundReady, "Should find the ready validator in the store")
+
+	// Verify Slashing Params
+	params, err := intoApp.SlashingKeeper.GetParams(ctx)
+	require.NoError(t, err)
+	require.True(t, math.LegacyNewDecWithPrec(5, 1).Equal(params.MinSignedPerWindow), "MinSignedPerWindow should be 0.5")
 }

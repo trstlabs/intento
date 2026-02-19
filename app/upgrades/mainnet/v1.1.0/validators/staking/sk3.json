@@ -1,0 +1,23 @@
+{
+    "operator_address": "intovaloper13wn4xm7spj37xr7equ6exjzl2qnua0mw9fjs2s",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "UGFzkPzqb7665ABbuBbL02xgbPbEzFdhuzFRb4cQbn4="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "102422118305",
+    "delegator_shares": "102422118305.000000000000000000",
+    "description": {
+        "moniker": "Pulsaro 🐦"
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.050000000000000000",
+            "max_rate": "0.200000000000000000",
+            "max_change_rate": "0.010000000000000000"
+        },
+        "update_time": "2025-08-29T08:05:18.759559889Z"
+    },
+    "min_self_delegation": "1"
+}

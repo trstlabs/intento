@@ -1,0 +1,27 @@
+{
+  "operator_address": "intovaloper193zk7phtkfqtexleg0wqjw6um8dax28gvmu9jt",
+  "consensus_pubkey": {
+    "type": "/cosmos.crypto.ed25519.PubKey",
+    "value": "MVvKSwlqY5BdTY1lyEFv1UjIKWSY23r6cTJkLGKUm90="
+  },
+  "status": "BOND_STATUS_BONDED",
+  "tokens": "12759673972294",
+  "delegator_shares": "12759673972294.000000000000000000",
+  "description": {
+    "moniker": "ECO Stake 🌱",
+    "identity": "5992A6D423A406D6",
+    "website": "https://ecostake.com",
+    "security_contact": "support@ecostake.com",
+    "details": "We built REStake.app to auto-compound your staking rewards 🔄 Trusted across the Cosmos. Over 3 years of reliable, slash-free operation with added slash protection 🛡️ Climate positive - we donate 10% of commission to support climate causes 🌱"
+  },
+  "unbonding_time": "1970-01-01T00:00:00Z",
+  "commission": {
+    "commission_rates": {
+      "rate": "0.050000000000000000",
+      "max_rate": "0.100000000000000000",
+      "max_change_rate": "0.010000000000000000"
+    },
+    "update_time": "2025-08-27T18:07:40.891655181Z"
+  },
+  "min_self_delegation": "1000000"
+}
