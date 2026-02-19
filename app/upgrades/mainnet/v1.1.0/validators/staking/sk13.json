@@ -1,0 +1,27 @@
+{
+    "operator_address": "intovaloper1m2l3pwrfgam2esscpgh8hpy6t2akl4amjj3mwn",
+    "consensus_pubkey": {
+        "type": "/cosmos.crypto.ed25519.PubKey",
+        "value": "aPmCnRhR9+WHWlr7GJCTOIafw6el/15PgvFg8jBDJgw="
+    },
+    "status": "BOND_STATUS_BONDED",
+    "tokens": "1000000",
+    "delegator_shares": "1000000.000000000000000000",
+    "description": {
+        "moniker": "Stake\u0026Relax 🦥",
+        "identity": "BD90F7F27099E9E3",
+        "website": "https://linktr.ee/stakeandrelax",
+        "security_contact": "stakeandrelax_validator@proton.me",
+        "details": "StakeandRelax to get Stake🥩\u0026Rolex⌚Twitter:@StakeandRelax"
+    },
+    "unbonding_time": "1970-01-01T00:00:00Z",
+    "commission": {
+        "commission_rates": {
+            "rate": "0.050000000000000000",
+            "max_rate": "0.200000000000000000",
+            "max_change_rate": "0.010000000000000000"
+        },
+        "update_time": "2026-02-18T14:17:56.546254573Z"
+    },
+    "min_self_delegation": "1"
+}
