@@ -24,7 +24,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
 	"github.com/spf13/cobra"
 	alloctypes "github.com/trstlabs/intento/x/alloc/types"
 	claimtypes "github.com/trstlabs/intento/x/claim/types"
@@ -61,10 +60,9 @@ type GenesisParams struct {
 	ClaimParams    claimtypes.Params
 	MintParams     minttypes.Params
 
-	IcaParams            icatypes.Params
-	IntentParams         intenttypes.Params
-	WasmParams           wasmtypes.Params
-	ConsumerGenesisState ccvconsumertypes.GenesisState
+	IcaParams    icatypes.Params
+	IntentParams intenttypes.Params
+	WasmParams   wasmtypes.Params
 }
 
 func PrepareGenesisCmd(defaultNodeHome string, mbm module.BasicManager) *cobra.Command {

@@ -135,7 +135,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	ibctestingtypes "github.com/cosmos/ibc-go/v8/testing/types"
-	ccvconsumer "github.com/cosmos/interchain-security/v6/x/ccv/consumer"
 	ccvconsumerkeeper "github.com/cosmos/interchain-security/v6/x/ccv/consumer/keeper"
 	ccvconsumertypes "github.com/cosmos/interchain-security/v6/x/ccv/consumer/types"
 	ccvdistr "github.com/cosmos/interchain-security/v6/x/ccv/democracy/distribution"
@@ -176,7 +175,6 @@ var (
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		claim.AppModuleBasic{},
-		ccvconsumer.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
 		alloc.AppModuleBasic{},
 		gov.NewAppModuleBasic(
@@ -449,7 +447,7 @@ func NewIntoApp(
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, app.StakingKeeper, ccvconsumertypes.ConsumerRedistributeName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	app.DistrKeeper = distrkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, app.StakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	app.ClaimKeeper = claimkeeper.NewKeeper(
 		appCodec,
@@ -475,7 +473,7 @@ func NewIntoApp(
 		appCodec,
 		legacyAmino,
 		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
-		&app.ConsumerKeeper,
+		app.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -513,15 +511,15 @@ func NewIntoApp(
 	app.Ics20WasmHooks.ContractKeeper = &app.WasmKeeper // wasm keeper initialized below
 
 	// Add ICS Consumer Keeper
-	app.ConsumerKeeper = ccvconsumerkeeper.NewNonZeroKeeper(
-		appCodec,
-		keys[ccvconsumertypes.StoreKey],
-		app.GetSubspace(ccvconsumertypes.ModuleName),
-	)
+	// app.ConsumerKeeper = ccvconsumerkeeper.NewNonZeroKeeper(
+	// 	appCodec,
+	// 	keys[ccvconsumertypes.StoreKey],
+	// 	app.GetSubspace(ccvconsumertypes.ModuleName),
+	// )
 
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibcexported.StoreKey], app.GetSubspace(ibcexported.ModuleName), &app.ConsumerKeeper, app.UpgradeKeeper, scopedIBCKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, keys[ibcexported.StoreKey], app.GetSubspace(ibcexported.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// register the proposal types
@@ -638,10 +636,10 @@ func NewIntoApp(
 		address.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
 	//TODO Check if we need this
-	app.ConsumerKeeper.SetStandaloneStakingKeeper(app.StakingKeeper)
+	//app.ConsumerKeeper.SetStandaloneStakingKeeper(app.StakingKeeper)
 	// register slashing module StakingHooks to the consumer keeper
-	app.ConsumerKeeper = *app.ConsumerKeeper.SetHooks(app.SlashingKeeper.Hooks())
-	consumerModule := ccvconsumer.NewAppModule(app.ConsumerKeeper, app.GetSubspace(ccvconsumertypes.ModuleName))
+	//app.ConsumerKeeper = *app.ConsumerKeeper.SetHooks(app.SlashingKeeper.Hooks())
+	// consumerModule := ccvconsumer.NewAppModule(app.ConsumerKeeper, app.GetSubspace(ccvconsumertypes.ModuleName))
 	// Create the ICS4 wrapper which routes up the stack from ibchooks -> ratelimit
 	// (see full stack definition below)
 	app.HooksICS4Wrapper = ibchooks.NewICS4Middleware(
@@ -666,8 +664,8 @@ func NewIntoApp(
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(ibctransfertypes.ModuleName, app.TransferStack).
 		AddRoute(intenttypes.ModuleName, icaControllerStack).
-		AddRoute(icahosttypes.SubModuleName, icaHostStack).
-		AddRoute(ccvconsumertypes.ModuleName, consumerModule)
+		AddRoute(icahosttypes.SubModuleName, icaHostStack)
+	//.AddRoute(ccvconsumertypes.ModuleName, consumerModule)
 
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -712,7 +710,7 @@ func NewIntoApp(
 		intentModule,
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
 		ibcfee.NewAppModule(app.IBCFeeKeeper),
-		consumerModule,
+		//consumerModule,
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.BaseApp.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		ibchooks.NewAppModule(app.AccountKeeper),
 		transfer.NewAppModule(app.TransferKeeper),
@@ -752,7 +750,7 @@ func NewIntoApp(
 		wasmtypes.ModuleName,
 		ibchookstypes.ModuleName,
 		ibcwasmtypes.ModuleName,
-		ccvconsumertypes.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderEndBlockers(
@@ -763,7 +761,7 @@ func NewIntoApp(
 		alloctypes.ModuleName, claimtypes.ModuleName, wasmtypes.ModuleName,
 		ibchookstypes.ModuleName,
 		ibcwasmtypes.ModuleName,
-		ccvconsumertypes.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -780,7 +778,7 @@ func NewIntoApp(
 		ibcfeetypes.ModuleName, wasmtypes.ModuleName,
 		ibchookstypes.ModuleName,
 		ibcwasmtypes.ModuleName,
-		ccvconsumertypes.ModuleName,
+		consensusparamtypes.ModuleName,
 	)
 
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
