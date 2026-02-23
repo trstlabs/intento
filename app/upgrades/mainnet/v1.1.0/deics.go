@@ -104,19 +104,13 @@ func DeICS(
 			continue
 		}
 
-		// SOFT REMOVAL: Instead of deleting, we set power to 0.
-		// This prevents the "validator does not exist" panic in EndBlocker.
-		val.Status = stakingtypes.Unbonded
-		val.Tokens = math.ZeroInt()
-		if err := sk.SetValidator(ctx, val); err != nil {
-			return err
+		// SOFT REMOVAL: Begin unbonding instead of forcefully setting status/power.
+		// This follows the proper lifecycle and avoids EndBlocker panics.
+		if _, err := sk.BeginUnbondingValidator(ctx, val); err != nil {
+			return fmt.Errorf("failed to unbond validator %s: %w", valoper, err)
 		}
+		fmt.Printf("Started unbonding validator %s\n", valoper)
 
-		// Signal to CometBFT that this validator now has 0 weight.
-		if err := sk.SetLastValidatorPower(ctx, valAddr, 0); err != nil {
-			return err
-		}
-		fmt.Printf("Deactivated validator %s (set power 0)\n", valoper)
 	}
 
 	return moveICSToStaking(ctx, sk, bk, DAOaddr, consumerValidators)
