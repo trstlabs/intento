@@ -104,12 +104,20 @@ func DeICS(
 			continue
 		}
 
-		// SOFT REMOVAL: Begin unbonding instead of forcefully setting status/power.
-		// This follows the proper lifecycle and avoids EndBlocker panics.
-		if _, err := sk.BeginUnbondingValidator(ctx, val); err != nil {
-			return fmt.Errorf("failed to unbond validator %s: %w", valoper, err)
+		// SOFT REMOVAL: Only process Bonded validators to avoid state transition panics.
+		// Validators already in Unbonding/Unbonded states are left untouched.
+		if val.Status != stakingtypes.Bonded {
+			fmt.Printf("Skipping non-bonded validator %s with status %v\n", valoper, val.Status)
+			continue
 		}
-		fmt.Printf("Started unbonding validator %s\n", valoper)
+
+		// For Bonded validators: keep status as Bonded, but zero LastValidatorPower.
+		// This avoids EndBlocker panics from direct status changes while
+		// effectively removing them from consensus.
+		if err := sk.SetLastValidatorPower(ctx, valAddr, 0); err != nil {
+			return fmt.Errorf("failed to zero power for validator %s: %w", valoper, err)
+		}
+		fmt.Printf("Zeroed power for non-ready bonded validator %s\n", valoper)
 
 	}
 
