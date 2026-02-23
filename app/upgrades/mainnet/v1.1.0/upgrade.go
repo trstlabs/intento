@@ -36,6 +36,7 @@ func CreateUpgradeHandler(
 			sdk.UnwrapSDKContext(ctx),
 			*keepers.StakingKeeper,
 			keepers.BankKeeper,
+			keepers.ConsumerKeeper,
 			readyValopers,
 		)
 		if err != nil {
