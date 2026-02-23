@@ -100,12 +100,14 @@ func TestUpgrade(t *testing.T) {
 
 	// Verify validator states post-migration.
 	//
-	// Non-ready governance validators must NOT be jailed — they must be set
-	// directly to Unbonded in the staking store. Calling Jail() on them would
-	// emit a power=0 CometBFT validator update for a consensus key that
-	// CometBFT has never seen (governance validators never drove local
-	// consensus on the ICS consumer chain), causing FinalizeBlock to panic
-	// with "validator does not exist".
+	// Non-ready governance validators are removed from the power index and have
+	// their LastValidatorPower zeroed. This means:
+	//   - Status remains Bonded in the store (intentional — changing it directly
+	//     causes "bad state transition bondedToUnbonding" panic in the endblocker)
+	//   - IsJailed() == false (we never call Jail() — that would emit a power=0
+	//     CometBFT update for a key comet has never seen → "validator does not
+	//     exist" panic)
+	//   - LastValidatorPower == 0 → endblocker ignores them entirely this block
 	allVals, err := intoApp.StakingKeeper.GetAllValidators(ctx)
 	require.NoError(t, err)
 
@@ -117,7 +119,15 @@ func TestUpgrade(t *testing.T) {
 			require.Equal(t, stakingtypes.Bonded, v.Status, "Ready validator should remain Bonded")
 		} else {
 			require.False(t, v.IsJailed(), "Non-ready validator %s must NOT be jailed (would crash CometBFT)", v.OperatorAddress)
-			require.Equal(t, stakingtypes.Unbonded, v.Status, "Non-ready validator %s should be Unbonded", v.OperatorAddress)
+			// Status intentionally left as-is (Bonded) — changing it directly
+			// triggers a bad state transition panic in the staking endblocker.
+			// The validator is effectively removed via zeroed LastValidatorPower.
+			require.Equal(t, stakingtypes.Bonded, v.Status, "Non-ready validator %s status left as Bonded to avoid state transition panic", v.OperatorAddress)
+
+			// Confirm LastValidatorPower is zeroed so endblocker ignores it.
+			lastPower, err := intoApp.StakingKeeper.GetLastValidatorPower(ctx, sdk.ValAddress(v.OperatorAddress))
+			require.NoError(t, err)
+			require.Equal(t, int64(0), lastPower, "Non-ready validator %s should have zero last power", v.OperatorAddress)
 		}
 	}
 	require.True(t, foundReady, "Should find the ready validator in the store")
