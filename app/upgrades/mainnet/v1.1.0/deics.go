@@ -205,7 +205,14 @@ func DeICS(
 			if err := stakingKeeper.DeleteValidatorByPowerIndex(ctx, val); err != nil {
 				return fmt.Errorf("failed to remove power index for governance %s: %w", valoper, err)
 			}
-			if err := stakingKeeper.SetLastValidatorPower(ctx, valAddr, 0); err != nil {
+			// IMPORTANT: LastValidatorPower is keyed by sdk.ValAddress(consAddr),
+			// NOT by the operator valAddr from bech32. The ICS consumer module
+			// sets last power using the consensus-address-derived valAddr.
+			// Using the operator address here would zero the wrong key and
+			// the endblocker would still find the old entry and emit an update
+			// for a key CometBFT never had → "failed to find validator to remove".
+			consValAddr := sdk.ValAddress(consAddr)
+			if err := stakingKeeper.SetLastValidatorPower(ctx, consValAddr, 0); err != nil {
 				return fmt.Errorf("failed to zero last power for governance %s: %w", valoper, err)
 			}
 		}
