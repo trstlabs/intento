@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"strings"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -28,6 +29,31 @@ const (
 	ICSSelfStake = 1
 	Denom        = "uinto"
 )
+
+// cometValidatorSet is the exact set of validator consensus addresses (hex)
+// that CometBFT held at height 10632699 — the block immediately before the
+// upgrade. Source: GET /validators?height=10632699&per_page=100 on the live chain.
+//
+// This is the ground truth for which validators need explicit power=0 removal
+// updates. Any validator not in this set must NOT receive a removal update —
+// doing so causes "failed to find validator to remove" at commit.
+//
+// Includes both dual-role validators (in x/staking + ICS consumer set) and
+// pure ICS validators (only in consumer set). Does NOT include the slashed
+// validator 9DA88F50 which was in the consumer store but already removed from
+// CometBFT's set before the upgrade.
+var cometValidatorSet = map[string]bool{
+	"37A59AE2151D67B83C1AAF49A78070EDF8336060": true, // NodeStake
+	"85A85F24E9B212F0B7CBBD1F7F032B8775B69258": true, // POSTHUMAN
+	"857E6467573CCBE514B631A8DD6D20286CC28D21": true, // pure ICS
+	"0C1551FDE29A3EA2F5FA7EFDD88C225C621B8402": true, // Interstellar
+	"1345682C0374388FD4885F7C2AA2933A78E4096B": true, // ECO Stake
+	"C082B0D6060B6DC1B752BB01E47961A2AC3B9AB4": true, // 01node
+	"28BC56792C823F1E46FEC0C12264C7EE20CD7923": true, // Stake&Relax
+	"DF866F356499AE8C7F222169FEBBC0BE94F1FCDC": true, // Atlas Staking
+	"D373EF87CA0935D7AA1BFAF8770332A85B4B0252": true, // Apeiron Nodes (slashed, but still in comet set)
+	"009037C2C75632F3BF9E39A11C0E81EACB262D9E": true, // pure ICS
+}
 
 //go:embed validators/staking
 var Vals embed.FS
@@ -61,34 +87,31 @@ func GetReadyValidators() (map[string]bool, error) {
 	return ready, err
 }
 
+// isInCometSet returns true if the given consensus address was in CometBFT's
+// validator set at the upgrade height. Uses the hardcoded ground-truth map.
+func isInCometSet(consAddr sdk.ConsAddress) bool {
+	return cometValidatorSet[strings.ToUpper(fmt.Sprintf("%X", consAddr))]
+}
+
 // DeICS migrates the chain from ICS consumer to sovereign.
 //
-// Two separate validator sets exist on an ICS democracy chain:
+// Validator set topology at upgrade height (confirmed from live chain state):
 //
-//  1. x/staking — local governance/democracy validators. Never part of CometBFT
-//     consensus. Their consensus keys are unknown to CometBFT.
+//   - 8 dual-role validators: present in both x/staking (governance) and the
+//     ICS consumer set. They were signing blocks — CometBFT knows their keys.
 //
-//  2. x/ccv/consumer — ICS validators assigned by the provider (Cosmos Hub).
-//     These drove CometBFT consensus. CometBFT only knows these keys.
+//   - 2 pure ICS validators: only in the consumer store, not in x/staking.
+//     Were signing blocks — CometBFT knows their keys.
 //
-// Migration strategy (validated against Neutron's v6 reference implementation):
+//   - 7 governance-only validators: in x/staking but NOT in CometBFT's set.
+//     Never participated in local consensus.
 //
-//   - UpdateParams first: set MaxValidators >= ICS + sovereign count and copy
-//     UnbondingTime from consumer params. Without this the begin blocker panics.
+//   - 1 ghost validator: in consumer store with LastValidatorPower>0 but
+//     already removed from CometBFT's set (slashed/tombstoned before upgrade).
+//     Must NOT receive a power=0 update.
 //
-//   - Ready governance validators: fund their account so they can self-bond.
-//     Leave them Bonded — staking emits proper power>0 updates to CometBFT.
-//
-//   - Non-ready governance validators: zero LastValidatorPower and remove from
-//     power index. DO NOT call Jail() (emits update for key CometBFT never saw →
-//     "validator does not exist" panic) and DO NOT set status=Unbonded directly
-//     (endblocker sees last power>0, attempts bondedToUnbonding on already-Unbonded
-//     validator → "bad state transition" panic).
-//
-//   - ICS validators: register into staking using v.GetAddress() throughout
-//     (matching Neutron's reference — GetAddress() returns the same address the
-//     ICS consumer module used when calling SetLastValidatorPower). Force-bond
-//     them so staking emits power=0 removal updates to CometBFT this block.
+// The cometValidatorSet map is the authoritative source for which validators
+// CometBFT will accept removal updates for.
 func DeICS(
 	ctx sdk.Context,
 	stakingKeeper stakingkeeper.Keeper,
@@ -107,20 +130,15 @@ func DeICS(
 
 	// -------------------------------------------------------------------------
 	// Step 1: UpdateParams — must happen before any validator set manipulation.
-	//
-	// MaxValidators must be >= ICS validators + ready sovereign validators to
-	// avoid a begin blocker panic. UnbondingTime is copied from consumer params
-	// so the chain has a valid unbonding period from day one as sovereign.
+	// Sets MaxValidators high enough to hold all validators alive during this
+	// block, and copies UnbondingTime from consumer params.
 	// -------------------------------------------------------------------------
 	cp := consumerKeeper.GetConsumerParams(ctx)
-	readyCount := len(readyValopers)
 	_, err = srv.UpdateParams(ctx, &stakingtypes.MsgUpdateParams{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		Params: stakingtypes.Params{
-			UnbondingTime: cp.UnbondingPeriod,
-			// Must cover all validators alive during this block: ICS (being
-			// removed) + sovereign (being added). Safe to reduce next block.
-			MaxValidators:     uint32(len(consumerValidators) + readyCount + 10), //nolint:gosec
+			UnbondingTime:     cp.UnbondingPeriod,
+			MaxValidators:     uint32(len(consumerValidators) + len(readyValopers) + 10), //nolint:gosec
 			MaxEntries:        7,
 			HistoricalEntries: 10_000,
 			BondDenom:         Denom,
@@ -132,11 +150,18 @@ func DeICS(
 	}
 
 	// -------------------------------------------------------------------------
-	// Step 2: Handle governance/democracy validators in x/staking.
+	// Step 2: Handle x/staking governance validators.
 	//
-	// These were never part of CometBFT consensus on the ICS consumer chain.
-	// Their keys are invisible to CometBFT — do not emit any consensus updates
-	// for them.
+	// Dual-role validators (in CometBFT set): delete from power index only.
+	// LastValidatorPower is left intact so the endblocker finds them in the
+	// `last` map, sees power=0 (not in index), and emits a clean power=0
+	// removal update to CometBFT via the valid Bonded→Unbonding transition.
+	//
+	// Governance-only validators (NOT in CometBFT set): delete from power
+	// index AND zero LastValidatorPower so the endblocker ignores them
+	// entirely — emitting any update for these keys would crash CometBFT.
+	//
+	// Ready validators: fund their account so they can self-bond as sovereign.
 	// -------------------------------------------------------------------------
 	validators, err := stakingKeeper.GetAllValidators(ctx)
 	if err != nil {
@@ -146,6 +171,11 @@ func DeICS(
 	for _, val := range validators {
 		valoper := val.GetOperator()
 		valAddr, err := sdk.ValAddressFromBech32(valoper)
+		if err != nil {
+			return err
+		}
+
+		consAddr, err := val.GetConsAddr()
 		if err != nil {
 			return err
 		}
@@ -160,44 +190,35 @@ func DeICS(
 					return fmt.Errorf("failed to fund ready validator %s: %w", valoper, err)
 				}
 			}
-			// Stays Bonded — staking endblocker emits power>0 update to CometBFT.
-		} else {
-			// Non-ready governance validator. These validators ARE in CometBFT's
-			// active set (they participated in ICS consensus alongside the pure
-			// ICS validators). CometBFT must receive an explicit power=0 update
-			// for each of them or it will crash at commit with "failed to find
-			// validator to remove".
-			//
-			// Correct approach: only delete from the power index. Leave
-			// LastValidatorPower untouched. The staking endblocker will:
-			//   1. Find this validator in the `last` map (last power > 0)
-			//   2. See current power = 0 (absent from power index)
-			//   3. Execute the valid Bonded → Unbonding transition
-			//   4. Emit a power=0 update to CometBFT ✓
-			//
-			// Do NOT zero LastValidatorPower — that would make the endblocker
-			// skip the validator entirely, leaving CometBFT with a stale entry.
-			// Do NOT set status=Unbonded directly — that causes the endblocker
-			// to find it already Unbonded mid-transition → "bad state transition
-			// bondedToUnbonding" panic.
+			// Stays Bonded — endblocker emits power>0 update to CometBFT.
+		} else if isInCometSet(consAddr) {
+			// Dual-role: in CometBFT's set. Remove from power index only.
+			// Endblocker will handle the Bonded→Unbonding transition and
+			// emit the power=0 removal update to CometBFT correctly.
 			if err := stakingKeeper.DeleteValidatorByPowerIndex(ctx, val); err != nil {
-				return fmt.Errorf("failed to remove power index for %s: %w", valoper, err)
+				return fmt.Errorf("failed to remove power index for dual-role %s: %w", valoper, err)
 			}
-			// LastValidatorPower intentionally left as-is.
+			// LastValidatorPower intentionally left intact.
+		} else {
+			// Governance-only: NOT in CometBFT's set. Remove from power index
+			// AND zero LastValidatorPower so endblocker ignores entirely.
+			if err := stakingKeeper.DeleteValidatorByPowerIndex(ctx, val); err != nil {
+				return fmt.Errorf("failed to remove power index for governance %s: %w", valoper, err)
+			}
+			if err := stakingKeeper.SetLastValidatorPower(ctx, valAddr, 0); err != nil {
+				return fmt.Errorf("failed to zero last power for governance %s: %w", valoper, err)
+			}
 		}
 	}
 
 	// -------------------------------------------------------------------------
-	// Step 3: Register ICS validators into x/staking and force-bond them so
-	// staking emits power=0 removal updates to CometBFT this block.
+	// Step 3: Register pure ICS validators (not in x/staking) into staking
+	// and force-bond them so the endblocker emits power=0 removal updates.
 	//
-	// Following Neutron's reference implementation exactly:
-	//   - Use v.GetAddress() for both funding and as the valoper address.
-	//     This is the address the ICS consumer module used when it called
-	//     SetLastValidatorPower, so GetLastValidatorPower lookups will match.
-	//   - ICS validators get 1uinto stake → VP = 1/1_000_000 = 0.
-	//   - Force-bond so they enter the active set; endblocker kicks them out
-	//     the same block and emits the power=0 update to CometBFT.
+	// Uses cometValidatorSet to gate which validators actually need the
+	// bond+removal treatment — validators in the consumer store but absent
+	// from CometBFT's set (e.g. previously slashed/tombstoned) are registered
+	// inert and skipped.
 	// -------------------------------------------------------------------------
 	if err := moveICSToStaking(ctx, stakingKeeper, bankKeeper, DAOaddr, consumerValidators); err != nil {
 		return err
@@ -206,22 +227,18 @@ func DeICS(
 	return nil
 }
 
-// moveICSToStaking registers ICS validators into x/staking and force-bonds
-// them so the staking endblocker emits power=0 removal updates to CometBFT.
+// moveICSToStaking registers ICS consumer validators into x/staking.
 //
-// Address handling follows Neutron's reference implementation (v5/v6):
-// v.GetAddress() is used for both funding and as the staking valoper address.
-// This matches the address the ICS consumer module used internally when it
-// called SetLastValidatorPower — ensuring LastValidatorPower lookups hit the
-// correct store key and CometBFT's validator set is cleanly updated.
+// For validators in cometValidatorSet: registered with 1uinto stake (VP=0),
+// force-bonded so staking emits a power=0 removal update to CometBFT.
 //
-// The flow per ICS validator:
-//  1. Fund v.GetAddress() with 1uinto for the self-bond
-//  2. CreateValidator with valoper = v.GetAddress(), stake = 1uinto (VP=0)
-//  3. SetLastValidatorPower = 1 so endblocker sees a delta (1→0)
-//  4. bondValidator: force to Bonded so it enters the active set this block
-//  5. Endblocker: VP=0 → moves to unbonding, emits power=0 update to CometBFT
-//  6. SendCoinsFromModuleToModule: reconcile NotBondedPool → BondedPool
+// For validators NOT in cometValidatorSet (e.g. previously slashed and already
+// removed from CometBFT's internal set): registered inert with VP=0, no bond.
+// Emitting a removal update for these would crash with "failed to find
+// validator to remove".
+//
+// Skips validators whose consensus key is already in x/staking (dual-role
+// validators handled in Step 2).
 func moveICSToStaking(
 	ctx sdk.Context,
 	sk stakingkeeper.Keeper,
@@ -230,14 +247,27 @@ func moveICSToStaking(
 	consumerValidators []ccvconsumertypes.CrossChainValidator,
 ) error {
 	srv := stakingkeeper.NewMsgServerImpl(&sk)
-	skippedValidators := 0
+	bondedCount := 0
 
 	for i, v := range consumerValidators {
-		// v.GetAddress() is the address the ICS consumer module used when
-		// syncing this validator's power into x/staking. Use it everywhere.
-		valAddr := sdk.ValAddress(v.GetAddress())
-		accAddr := sdk.AccAddress(v.GetAddress())
+		// Derive consensus address from pubkey — this is how CometBFT indexes
+		// validators internally.
+		consPubKey, err := v.ConsPubKey()
+		if err != nil {
+			return fmt.Errorf("ics validator %d: failed to get cons pubkey: %w", i, err)
+		}
+		pk := consPubKey.(cryptotypes.PubKey)
+		consAddr := sdk.ConsAddress(pk.Address())
 
+		// Skip dual-role validators — already handled in Step 2 via x/staking.
+		if _, lookupErr := sk.GetValidatorByConsAddr(ctx, consAddr); lookupErr == nil {
+			continue
+		} else if !errors.Is(lookupErr, stakingtypes.ErrNoValidatorFound) {
+			return lookupErr
+		}
+
+		// Use consAddr-derived valAddr for staking operations.
+		valAddr := sdk.ValAddress(consAddr)
 		valoperAddr, err := bech32.ConvertAndEncode(
 			sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr,
 		)
@@ -246,27 +276,11 @@ func moveICSToStaking(
 		}
 
 		// Fund the account that will self-bond.
+		accAddr := sdk.AccAddress(consAddr)
 		if err := bk.SendCoins(ctx, DAOaddr, accAddr, sdk.NewCoins(
 			sdk.NewCoin(Denom, math.NewInt(ICSSelfStake)),
 		)); err != nil {
 			return fmt.Errorf("failed to fund ICS validator %s: %w", valoperAddr, err)
-		}
-
-		// Derive consAddr from the consensus pubkey for the duplicate-key check.
-		// This is the only place we need the pubkey-derived address.
-		consPubKey, err := v.ConsPubKey()
-		if err != nil {
-			return fmt.Errorf("ics validator %d: failed to get cons pubkey: %w", i, err)
-		}
-		consAddr := sdk.GetConsAddress(consPubKey.(cryptotypes.PubKey))
-
-		// Skip if this consensus key is already registered — an ICS validator
-		// that reused their key when joining the sovereign set.
-		if _, lookupErr := sk.GetValidatorByConsAddr(ctx, consAddr); lookupErr == nil {
-			skippedValidators++
-			continue
-		} else if !errors.Is(lookupErr, stakingtypes.ErrNoValidatorFound) {
-			return lookupErr
 		}
 
 		_, err = srv.CreateValidator(ctx, &stakingtypes.MsgCreateValidator{
@@ -285,8 +299,13 @@ func moveICSToStaking(
 			return fmt.Errorf("failed to create ICS validator %s: %w", valoperAddr, err)
 		}
 
-		// Set last power=1 so the endblocker sees a delta (1→0) and emits a
-		// clean power=0 removal update to CometBFT for this key.
+		if !isInCometSet(consAddr) {
+			// Not in CometBFT's set — register inert, no removal update needed.
+			// (e.g. previously slashed validator still in consumer store)
+			continue
+		}
+
+		// In CometBFT's set — force-bond so endblocker emits power=0 removal.
 		if err := sk.SetLastValidatorPower(ctx, valAddr, 1); err != nil {
 			return fmt.Errorf("failed to set last power for %s: %w", valoperAddr, err)
 		}
@@ -296,25 +315,21 @@ func moveICSToStaking(
 			return fmt.Errorf("failed to get ICS validator %s after creation: %w", valoperAddr, err)
 		}
 
-		// Force-bond: validator enters active set this block with VP=0.
-		// Endblocker moves it to unbonding and emits the power=0 CometBFT update.
 		if _, err := bondValidator(ctx, sk, savedVal); err != nil {
 			return fmt.Errorf("failed to bond ICS validator %s: %w", valoperAddr, err)
 		}
+
+		bondedCount++
 	}
 
-	// Reconcile pool balances: force-bonded validators had their stake sitting
-	// in NotBondedPool. Move exactly that amount to BondedPool to keep the
-	// module account invariants intact.
-	bondedCount := len(consumerValidators) - skippedValidators
+	// Reconcile pool: force-bonded validators had stake in NotBondedPool.
 	coins := sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(int64(bondedCount)*ICSSelfStake))) //nolint:gosec
 	return bk.SendCoinsFromModuleToModule(ctx, stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, coins)
 }
 
 // bondValidator force-transitions a validator to Bonded status, bypassing the
-// normal unbonding queue. This is intentional during the ICS→sovereign upgrade:
-// we need the validator in the active set so staking emits a validator update
-// to CometBFT in the same block.
+// normal unbonding queue. Intentional during the ICS→sovereign upgrade so that
+// staking emits a validator update to CometBFT in the same block.
 //
 // Copied from cosmos-sdk x/staking/keeper/val_state_change.go.
 func bondValidator(ctx context.Context, k stakingkeeper.Keeper, validator stakingtypes.Validator) (stakingtypes.Validator, error) {
