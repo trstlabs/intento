@@ -23,7 +23,17 @@ func (app IntoApp) RegisterUpgradeHandlers(configurator module.Configurator) {
 	for _, u := range Upgrades {
 		app.UpgradeKeeper.SetUpgradeHandler(
 			u.UpgradeName,
-			u.CreateUpgradeHandler(app.ModuleManager, configurator, upgrades.IntentoKeepers{}),
+			u.CreateUpgradeHandler(app.ModuleManager, configurator, upgrades.IntentoKeepers{
+				StakingKeeper:  app.StakingKeeper,
+				ConsumerKeeper: app.ConsumerKeeper,
+				BankKeeper:     app.BankKeeper,
+				SlashingKeeper: app.SlashingKeeper,
+				MintKeeper:     app.MintKeeper,
+				DistrKeeper:    app.DistrKeeper,
+				GovKeeper:      app.GovKeeper,
+				ParamsKeeper:   app.ParamsKeeper,
+				UpgradeKeeper:  app.UpgradeKeeper,
+			}),
 		)
 	}
 
