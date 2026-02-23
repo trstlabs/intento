@@ -76,17 +76,21 @@ func GetReadyValidators() (map[string]bool, error) {
 //  3. The ICS validators that CometBFT DOES know about were never in
 //     x/staking at all, so nothing was cleaning them out of CometBFT's set.
 //
-// Fix (borrowed from the advanced v1100 implementation):
+// Fix:
 //
-//   - Sovereign/ready validators: created normally via MsgCreateValidator so
-//     staking emits a proper power>0 update to CometBFT.
+//   - Sovereign/ready validators: fund them so they can self-bond. They stay
+//     Bonded and staking emits proper power>0 updates to CometBFT.
 //
-//   - ICS validators: registered into staking with 1uinto stake (VP rounds to
-//     0) and force-bonded so staking emits a power=0 update. CometBFT sees a
-//     clean removal.
+//   - Non-ready governance validators: remove from power index and zero
+//     LastValidatorPower. The endblocker only processes validators where
+//     last power != current power. Zeroing last power means no state
+//     transition is attempted, avoiding the "bad state transition
+//     bondedToUnbonding" panic that occurs when setting status=Unbonded
+//     directly on a previously-bonded validator.
 //
-//   - Non-ready governance validators: set directly to Unbonded in the staking
-//     store WITHOUT calling Jail, so no consensus update is emitted.
+//   - ICS validators: registered into staking with 1uinto stake (VP=0) and
+//     force-bonded so staking emits a power=0 update to CometBFT, cleanly
+//     evicting them from CometBFT's active set.
 func DeICS(
 	ctx sdk.Context,
 	stakingKeeper stakingkeeper.Keeper,
@@ -103,8 +107,7 @@ func DeICS(
 	// -------------------------------------------------------------------------
 	// Step 1: Handle existing governance/democracy validators in x/staking.
 	//
-	// These were never part of CometBFT consensus on the ICS chain. Do NOT call
-	// Jail() on them — that would emit a consensus update for unknown keys.
+	// These were never part of CometBFT consensus on the ICS chain.
 	// -------------------------------------------------------------------------
 	validators, err := stakingKeeper.GetAllValidators(ctx)
 	if err != nil {
@@ -113,15 +116,14 @@ func DeICS(
 
 	for _, val := range validators {
 		valoper := val.GetOperator()
+		valAddr, err := sdk.ValAddressFromBech32(valoper)
+		if err != nil {
+			return err
+		}
 
 		if readyValopers[valoper] {
-			// Fund the validator account if below MinStake so it can self-bond.
-			valAddr, err := sdk.ValAddressFromBech32(valoper)
-			if err != nil {
-				return err
-			}
+			// Fund if below MinStake so the validator can self-bond as sovereign.
 			accAddr := sdk.AccAddress(valAddr)
-
 			balance := bankKeeper.GetBalance(ctx, accAddr, Denom)
 			if balance.Amount.LT(math.NewInt(MinStake)) {
 				coins := sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(MinStake)))
@@ -129,17 +131,26 @@ func DeICS(
 					return err
 				}
 			}
-			// Validator stays bonded — staking will emit a proper power>0 update.
+			// Validator stays Bonded — staking emits a proper power>0 update.
 		} else {
-			// NOT ready: set unbonded directly in the store.
-			// Calling Jail() would emit a power=0 CometBFT update for a key
-			// CometBFT has never seen → "validator does not exist" panic.
-			val.Status = stakingtypes.Unbonded
-			if err := stakingKeeper.SetValidator(ctx, val); err != nil {
-				return fmt.Errorf("failed to unbond non-ready governor %s: %w", valoper, err)
-			}
+			// NOT ready. We must NOT:
+			//   - Call Jail(): emits power=0 comet update for a key comet has
+			//     never seen → "validator does not exist" panic.
+			//   - Set status=Unbonded directly: endblocker sees last power>0,
+			//     tries bondedToUnbonding, finds already Unbonded →
+			//     "bad state transition bondedToUnbonding" panic (seen in logs:
+			//     val_state_change.go:276).
+			//
+			// Correct approach: remove from the power index and zero
+			// LastValidatorPower. The endblocker (ApplyAndReturnValidatorSetUpdates)
+			// only processes validators where last power != current computed power.
+			// With last power=0 and validator absent from the power index,
+			// it is ignored entirely this block.
 			if err := stakingKeeper.DeleteValidatorByPowerIndex(ctx, val); err != nil {
 				return fmt.Errorf("failed to remove power index for %s: %w", valoper, err)
+			}
+			if err := stakingKeeper.SetLastValidatorPower(ctx, valAddr, 0); err != nil {
+				return fmt.Errorf("failed to zero last power for %s: %w", valoper, err)
 			}
 		}
 	}
@@ -149,7 +160,7 @@ func DeICS(
 	// staking emits power=0 updates to CometBFT, cleanly evicting them.
 	//
 	// ICS validators have 1uinto stake → VP = 1/1_000_000 = 0 in staking math.
-	// Staking endblocker will remove them from the active set this same block.
+	// Staking endblocker removes them from the active set this same block.
 	// -------------------------------------------------------------------------
 	consumerValidators := consumerKeeper.GetAllCCValidator(ctx)
 	if err := moveICSToStaking(ctx, stakingKeeper, bankKeeper, DAOaddr, consumerValidators); err != nil {
@@ -171,13 +182,12 @@ func moveICSToStaking(
 	consumerValidators []ccvconsumertypes.CrossChainValidator,
 ) error {
 	srv := stakingkeeper.NewMsgServerImpl(&sk)
-
 	skippedValidators := 0
 
 	for i, v := range consumerValidators {
 		accAddr := v.GetAddress()
 
-		// Fund the ICS validator address so it can self-bond 1uinto.
+		// Fund so the ICS validator can self-bond 1uinto.
 		if err := bk.SendCoins(ctx, DAOaddr, accAddr, sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(ICSSelfStake)))); err != nil {
 			return fmt.Errorf("failed to fund ICS validator %s: %w", accAddr, err)
 		}
@@ -187,14 +197,13 @@ func moveICSToStaking(
 			return err
 		}
 
-		// ConsPubKey() returns (cryptotypes.PubKey, error) on the concrete type.
 		consPubKey, err := v.ConsPubKey()
 		if err != nil {
 			return err
 		}
 
-		// Skip if this consensus key is already registered (e.g. an ICS validator
-		// that chose to reuse their key as a sovereign validator).
+		// Skip if consensus key already registered — an ICS validator that
+		// reused their key when joining the sovereign set.
 		_, lookupErr := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(consPubKey.(cryptotypes.PubKey)))
 		if lookupErr == nil {
 			skippedValidators++
@@ -203,11 +212,8 @@ func moveICSToStaking(
 			return lookupErr
 		}
 
-		// GetPubkey() returns *codectypes.Any which is exactly what MsgCreateValidator.Pubkey expects.
 		_, err = srv.CreateValidator(ctx, &stakingtypes.MsgCreateValidator{
-			Description: stakingtypes.Description{
-				Moniker: fmt.Sprintf("ics %d", i),
-			},
+			Description: stakingtypes.Description{Moniker: fmt.Sprintf("ics %d", i)},
 			Commission: stakingtypes.CommissionRates{
 				Rate:          math.LegacyMustNewDecFromStr("0.1"),
 				MaxRate:       math.LegacyMustNewDecFromStr("0.1"),
@@ -222,9 +228,8 @@ func moveICSToStaking(
 			return fmt.Errorf("failed to create ICS validator %s in staking: %w", valoperAddr, err)
 		}
 
-		// SetLastValidatorPower so staking knows this key previously had power,
-		// ensuring it emits a power=0 update to CometBFT when the endblocker
-		// sees VP = 1uinto / 1_000_000 = 0.
+		// Set last power=1 so the endblocker sees a delta (1 → 0) and emits
+		// a power=0 update to CometBFT, cleanly removing the ICS key.
 		valAddr := sdk.ValAddress(accAddr)
 		if err := sk.SetLastValidatorPower(ctx, valAddr, 1); err != nil {
 			return fmt.Errorf("failed to set last validator power for %s: %w", valoperAddr, err)
@@ -236,14 +241,15 @@ func moveICSToStaking(
 		}
 
 		// Force-bond so the validator enters the active set this block.
-		// Staking will then compute VP=0 and emit the removal update to CometBFT.
+		// With VP=0 (1uinto / 1_000_000), the endblocker immediately moves
+		// it to unbonding and emits the removal update to CometBFT.
 		if _, err := bondValidator(ctx, sk, savedVal); err != nil {
 			return fmt.Errorf("failed to bond ICS validator %s: %w", valoperAddr, err)
 		}
 	}
 
-	// Reconcile pool balances: we force-bonded ICS validators whose stake was
-	// sitting in NotBondedPool, so move it to BondedPool.
+	// Reconcile pool balances: force-bonded validators had stake in
+	// NotBondedPool; move it to BondedPool to keep invariants intact.
 	bondedCount := len(consumerValidators) - skippedValidators
 	if bondedCount > 0 {
 		coins := sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(int64(bondedCount)*ICSSelfStake))) //nolint:gosec
@@ -256,10 +262,10 @@ func moveICSToStaking(
 }
 
 // bondValidator force-transitions a validator to Bonded status, bypassing the
-// normal unbonding queue. This is intentional during the ICS→sovereign upgrade
-// so that staking emits a validator update to CometBFT in the same block.
+// normal unbonding queue. Intentional during the ICS→sovereign upgrade so that
+// staking emits a validator update to CometBFT in the same block.
 //
-// Copied from cosmos-sdk staking keeper val_state_change.go.
+// Copied from cosmos-sdk x/staking/keeper/val_state_change.go.
 func bondValidator(ctx context.Context, k stakingkeeper.Keeper, validator stakingtypes.Validator) (stakingtypes.Validator, error) {
 	if err := k.DeleteValidatorByPowerIndex(ctx, validator); err != nil {
 		return validator, err
@@ -270,11 +276,9 @@ func bondValidator(ctx context.Context, k stakingkeeper.Keeper, validator stakin
 	if err := k.SetValidator(ctx, validator); err != nil {
 		return validator, err
 	}
-
 	if err := k.SetValidatorByPowerIndex(ctx, validator); err != nil {
 		return validator, err
 	}
-
 	if err := k.DeleteValidatorQueue(ctx, validator); err != nil {
 		return validator, err
 	}
