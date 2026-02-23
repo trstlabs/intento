@@ -228,9 +228,23 @@ func moveICSToStaking(
 			return fmt.Errorf("failed to create ICS validator %s in staking: %w", valoperAddr, err)
 		}
 
-		// Set last power=1 so the endblocker sees a delta (1 → 0) and emits
-		// a power=0 update to CometBFT, cleanly removing the ICS key.
 		valAddr := sdk.ValAddress(accAddr)
+
+		// Only emit a removal update to CometBFT if CometBFT actually had this
+		// validator in its set. We detect this by checking LastValidatorPower:
+		// the ICS consumer module sets this for validators it tracks. If it is
+		// already 0 (or absent), CometBFT has no record of this key — emitting
+		// a power=0 update would cause "failed to find validator to remove".
+		existingPower, err := sk.GetLastValidatorPower(ctx, valAddr)
+		if err != nil || existingPower == 0 {
+			// CometBFT does not know this key. The validator is registered in
+			// staking with VP=0 and will fall out naturally. No comet update needed.
+			skippedValidators++
+			continue
+		}
+
+		// CometBFT had this validator. Set last power=1 so the endblocker sees
+		// a delta (1 → 0) and emits a clean power=0 removal update to CometBFT.
 		if err := sk.SetLastValidatorPower(ctx, valAddr, 1); err != nil {
 			return fmt.Errorf("failed to set last validator power for %s: %w", valoperAddr, err)
 		}
