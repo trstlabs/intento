@@ -174,6 +174,12 @@ func DeICS(
 // minimal stake and immediately bonds them, causing staking to emit a power=0
 // validator update to CometBFT. This is the only safe way to evict ICS
 // validators from CometBFT's active set during the sovereignty migration.
+//
+// Address derivation note: CometBFT identifies validators by
+// sdk.ConsAddress(pk.Address()) — the first 20 bytes of the consensus pubkey
+// hash. This differs from v.GetAddress() which is the provider-side account
+// address. We must use the pubkey-derived address throughout to correctly
+// match CometBFT's internal validator set.
 func moveICSToStaking(
 	ctx sdk.Context,
 	sk stakingkeeper.Keeper,
@@ -182,36 +188,66 @@ func moveICSToStaking(
 	consumerValidators []ccvconsumertypes.CrossChainValidator,
 ) error {
 	srv := stakingkeeper.NewMsgServerImpl(&sk)
-	skippedValidators := 0
+	bondedCount := 0
 
 	for i, v := range consumerValidators {
-		accAddr := v.GetAddress()
-
-		// Fund so the ICS validator can self-bond 1uinto.
-		if err := bk.SendCoins(ctx, DAOaddr, accAddr, sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(ICSSelfStake)))); err != nil {
-			return fmt.Errorf("failed to fund ICS validator %s: %w", accAddr, err)
-		}
-
-		valoperAddr, err := bech32.ConvertAndEncode(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), accAddr)
-		if err != nil {
-			return err
-		}
-
+		// Decode consensus pubkey first — it drives all address derivation.
 		consPubKey, err := v.ConsPubKey()
 		if err != nil {
-			return err
+			return fmt.Errorf("ics validator %d: failed to get cons pubkey: %w", i, err)
+		}
+		pk := consPubKey.(cryptotypes.PubKey)
+
+		// consAddr is how CometBFT identifies this validator internally.
+		consAddr := sdk.ConsAddress(pk.Address())
+		// valAddr derived from consAddr — this is what staking's LastValidatorPower uses.
+		valAddr := sdk.ValAddress(consAddr)
+		valoperAddr, err := bech32.ConvertAndEncode(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
+		if err != nil {
+			return fmt.Errorf("ics validator %d: failed to encode valoper: %w", i, err)
 		}
 
-		// Skip if consensus key already registered — an ICS validator that
-		// reused their key when joining the sovereign set.
-		_, lookupErr := sk.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(consPubKey.(cryptotypes.PubKey)))
-		if lookupErr == nil {
-			skippedValidators++
+		// Fund via v.GetAddress() (provider-side accAddr) for the self-bond.
+		accAddr := v.GetAddress()
+		if err := bk.SendCoins(ctx, DAOaddr, accAddr, sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(ICSSelfStake)))); err != nil {
+			return fmt.Errorf("failed to fund ICS validator %s: %w", valoperAddr, err)
+		}
+
+		// Skip if this consensus key is already registered as a sovereign validator.
+		if _, lookupErr := sk.GetValidatorByConsAddr(ctx, consAddr); lookupErr == nil {
 			continue
 		} else if !errors.Is(lookupErr, stakingtypes.ErrNoValidatorFound) {
 			return lookupErr
 		}
 
+		// Check if CometBFT actually had this validator in its set.
+		// LastValidatorPower > 0 (keyed by the consAddr-derived valAddr) means
+		// the ICS consumer module synced real voting power for this key and
+		// CometBFT was tracking it. Only those need an explicit power=0 removal.
+		existingPower, err := sk.GetLastValidatorPower(ctx, valAddr)
+		if err != nil || existingPower == 0 {
+			// CometBFT never had this key — no removal update needed.
+			// Register in staking with VP=0 so it exists but is inert.
+			_, err = srv.CreateValidator(ctx, &stakingtypes.MsgCreateValidator{
+				Description: stakingtypes.Description{Moniker: fmt.Sprintf("ics %d", i)},
+				Commission: stakingtypes.CommissionRates{
+					Rate:          math.LegacyMustNewDecFromStr("0.1"),
+					MaxRate:       math.LegacyMustNewDecFromStr("0.1"),
+					MaxChangeRate: math.LegacyMustNewDecFromStr("0.1"),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				ValidatorAddress:  valoperAddr,
+				Pubkey:            v.GetPubkey(),
+				Value:             sdk.NewCoin(Denom, math.NewInt(ICSSelfStake)),
+			})
+			if err != nil {
+				return fmt.Errorf("failed to create inert ICS validator %s: %w", valoperAddr, err)
+			}
+			continue
+		}
+
+		// CometBFT had this validator with real power. Register it in staking,
+		// then force-bond it so the endblocker emits a power=0 removal to CometBFT.
 		_, err = srv.CreateValidator(ctx, &stakingtypes.MsgCreateValidator{
 			Description: stakingtypes.Description{Moniker: fmt.Sprintf("ics %d", i)},
 			Commission: stakingtypes.CommissionRates{
@@ -225,46 +261,29 @@ func moveICSToStaking(
 			Value:             sdk.NewCoin(Denom, math.NewInt(ICSSelfStake)),
 		})
 		if err != nil {
-			return fmt.Errorf("failed to create ICS validator %s in staking: %w", valoperAddr, err)
+			return fmt.Errorf("failed to create ICS validator %s: %w", valoperAddr, err)
 		}
 
-		valAddr := sdk.ValAddress(accAddr)
-
-		// Only emit a removal update to CometBFT if CometBFT actually had this
-		// validator in its set. We detect this by checking LastValidatorPower:
-		// the ICS consumer module sets this for validators it tracks. If it is
-		// already 0 (or absent), CometBFT has no record of this key — emitting
-		// a power=0 update would cause "failed to find validator to remove".
-		existingPower, err := sk.GetLastValidatorPower(ctx, valAddr)
-		if err != nil || existingPower == 0 {
-			// CometBFT does not know this key. The validator is registered in
-			// staking with VP=0 and will fall out naturally. No comet update needed.
-			skippedValidators++
-			continue
-		}
-
-		// CometBFT had this validator. Set last power=1 so the endblocker sees
-		// a delta (1 → 0) and emits a clean power=0 removal update to CometBFT.
+		// Set last power=1 so the endblocker sees a delta (1→0) and emits
+		// a clean power=0 removal update to CometBFT.
 		if err := sk.SetLastValidatorPower(ctx, valAddr, 1); err != nil {
-			return fmt.Errorf("failed to set last validator power for %s: %w", valoperAddr, err)
+			return fmt.Errorf("failed to set last power for %s: %w", valoperAddr, err)
 		}
 
 		savedVal, err := sk.GetValidator(ctx, valAddr)
 		if err != nil {
-			return fmt.Errorf("failed to get saved ICS validator %s: %w", valoperAddr, err)
+			return fmt.Errorf("failed to get validator %s after creation: %w", valoperAddr, err)
 		}
 
-		// Force-bond so the validator enters the active set this block.
-		// With VP=0 (1uinto / 1_000_000), the endblocker immediately moves
-		// it to unbonding and emits the removal update to CometBFT.
 		if _, err := bondValidator(ctx, sk, savedVal); err != nil {
 			return fmt.Errorf("failed to bond ICS validator %s: %w", valoperAddr, err)
 		}
+
+		bondedCount++
 	}
 
 	// Reconcile pool balances: force-bonded validators had stake in
-	// NotBondedPool; move it to BondedPool to keep invariants intact.
-	bondedCount := len(consumerValidators) - skippedValidators
+	// NotBondedPool; move exactly that amount to BondedPool.
 	if bondedCount > 0 {
 		coins := sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(int64(bondedCount)*ICSSelfStake))) //nolint:gosec
 		if err := bk.SendCoinsFromModuleToModule(ctx, stakingtypes.NotBondedPoolName, stakingtypes.BondedPoolName, coins); err != nil {
