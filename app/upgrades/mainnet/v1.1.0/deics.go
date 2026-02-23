@@ -40,26 +40,13 @@ func wasInCometSet(
 	consAddr sdk.ConsAddress,
 ) (bool, error) {
 
-	val, err := sk.GetValidatorByConsAddr(ctx, consAddr)
-	if err != nil {
-		if errors.Is(err, stakingtypes.ErrNoValidatorFound) {
-			return false, nil
-		}
-		return false, err
-	}
-
-	operatorStr := val.GetOperator()
-	valAddr, err := sdk.ValAddressFromBech32(operatorStr)
-	if err != nil {
-		return false, err
-	}
-
-	power, err := sk.GetLastValidatorPower(ctx, valAddr)
-	if err != nil {
-		return false, err
-	}
-
-	return power > 0, nil
+	cometKnownVals := make(map[string]bool)
+	sk.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) bool {
+		cometKnownVals[addr.String()] = true
+		fmt.Println("LastValPower:", addr.String(), power)
+		return false
+	})
+	return cometKnownVals[consAddr.String()], nil
 }
 
 func GetReadyValidators() (map[string]bool, error) {
@@ -92,7 +79,10 @@ func DeICS(
 	consumerKeeper ccvconsumerkeeper.Keeper,
 	readyValopers map[string]bool,
 ) error {
-
+	stakingKeeper.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) bool {
+		fmt.Println("LastValPower:", addr.String(), power)
+		return false
+	})
 	_, DAOaddrBz, err := bech32.DecodeAndConvert(FundAddress)
 	if err != nil {
 		return err
@@ -100,6 +90,7 @@ func DeICS(
 	DAOaddr := sdk.AccAddress(DAOaddrBz)
 
 	consumerValidators := consumerKeeper.GetAllCCValidator(ctx)
+	fmt.Printf("Consumer validators: %d\n", len(consumerValidators))
 
 	if err != nil {
 		return fmt.Errorf("failed to update staking params: %w", err)
@@ -109,7 +100,7 @@ func DeICS(
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("Validators staking:", len(validators))
 	for _, val := range validators {
 		valoper := val.GetOperator()
 		valAddr, err := sdk.ValAddressFromBech32(valoper)
@@ -121,7 +112,7 @@ func DeICS(
 		if err != nil {
 			return err
 		}
-
+		fmt.Printf("Processing  consAddr %s  val Addr %s\n", consAddr, valAddr)
 		if readyValopers[valoper] {
 			accAddr := sdk.AccAddress(valAddr)
 			balance := bankKeeper.GetBalance(ctx, accAddr, Denom)
@@ -142,7 +133,7 @@ func DeICS(
 		if err := stakingKeeper.DeleteValidatorByPowerIndex(ctx, val); err != nil {
 			return err
 		}
-
+		fmt.Printf("Removed validator %s (in comet: %t)\n", valoper, inComet)
 		if !inComet {
 			// governance-only — prevent removal update
 			consValAddr := sdk.ValAddress(consAddr)
@@ -171,6 +162,7 @@ func moveICSToStaking(
 		if err != nil {
 			return err
 		}
+		fmt.Printf("Processing consumer validator %d\n", i)
 
 		pk, ok := consPubKey.(cryptotypes.PubKey)
 		if !ok {
@@ -191,9 +183,12 @@ func moveICSToStaking(
 		}
 
 		valAddr := sdk.ValAddress(consAddr)
+
 		valoperAddr, err := bech32.ConvertAndEncode(
 			sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr,
 		)
+		fmt.Printf("Processing  valoperAddr %s  val Addr %s\n", valoperAddr, valAddr)
+
 		if err != nil {
 			return err
 		}
@@ -217,6 +212,7 @@ func moveICSToStaking(
 			Pubkey:            v.GetPubkey(),
 			Value:             sdk.NewCoin(Denom, math.NewInt(ICSSelfStake)),
 		})
+		fmt.Printf("Created validator %s (in comet: %t)\n", valoperAddr, inComet)
 		if err != nil {
 			return err
 		}
@@ -237,6 +233,7 @@ func moveICSToStaking(
 		if _, err := bondValidator(ctx, sk, savedVal); err != nil {
 			return err
 		}
+		fmt.Printf("Bonded validator %s (in comet: %t)\n", valoperAddr, inComet)
 
 		bondedCount++
 	}
