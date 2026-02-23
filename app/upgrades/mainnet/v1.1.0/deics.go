@@ -162,16 +162,28 @@ func DeICS(
 			}
 			// Stays Bonded — staking endblocker emits power>0 update to CometBFT.
 		} else {
-			// Remove from power index and zero LastValidatorPower so the staking
-			// endblocker ignores this validator entirely this block.
-			// See val_state_change.go:ApplyAndReturnValidatorSetUpdates — it only
-			// processes validators where last power != current computed power.
+			// Non-ready governance validator. These validators ARE in CometBFT's
+			// active set (they participated in ICS consensus alongside the pure
+			// ICS validators). CometBFT must receive an explicit power=0 update
+			// for each of them or it will crash at commit with "failed to find
+			// validator to remove".
+			//
+			// Correct approach: only delete from the power index. Leave
+			// LastValidatorPower untouched. The staking endblocker will:
+			//   1. Find this validator in the `last` map (last power > 0)
+			//   2. See current power = 0 (absent from power index)
+			//   3. Execute the valid Bonded → Unbonding transition
+			//   4. Emit a power=0 update to CometBFT ✓
+			//
+			// Do NOT zero LastValidatorPower — that would make the endblocker
+			// skip the validator entirely, leaving CometBFT with a stale entry.
+			// Do NOT set status=Unbonded directly — that causes the endblocker
+			// to find it already Unbonded mid-transition → "bad state transition
+			// bondedToUnbonding" panic.
 			if err := stakingKeeper.DeleteValidatorByPowerIndex(ctx, val); err != nil {
 				return fmt.Errorf("failed to remove power index for %s: %w", valoper, err)
 			}
-			if err := stakingKeeper.SetLastValidatorPower(ctx, valAddr, 0); err != nil {
-				return fmt.Errorf("failed to zero last power for %s: %w", valoper, err)
-			}
+			// LastValidatorPower intentionally left as-is.
 		}
 	}
 
