@@ -67,8 +67,6 @@ func TestUpgrade(t *testing.T) {
 	intoApp.StakingKeeper.SetValidator(ctx, readyVal)
 	err = intoApp.StakingKeeper.SetValidatorByConsAddr(ctx, readyVal)
 	require.NoError(t, err)
-	// We don't need to set power index unless we care about voting power updates,
-	// but DeICS iterates GetAllValidators which iterates the store by operator address, so SetValidator is key.
 
 	// Also have the existing random validators from InitChain (ValA, ValB etc)
 	// They won't be in the ready set.
@@ -100,7 +98,14 @@ func TestUpgrade(t *testing.T) {
 	diff := initialDaoBalance.Amount.Sub(finalDaoBalance.Amount)
 	require.Equal(t, int64(v1100.MinStake), diff.Int64(), "DAO should spend MinStake")
 
-	// Verify random validators are jailed
+	// Verify validator states post-migration.
+	//
+	// Non-ready governance validators must NOT be jailed — they must be set
+	// directly to Unbonded in the staking store. Calling Jail() on them would
+	// emit a power=0 CometBFT validator update for a consensus key that
+	// CometBFT has never seen (governance validators never drove local
+	// consensus on the ICS consumer chain), causing FinalizeBlock to panic
+	// with "validator does not exist".
 	allVals, err := intoApp.StakingKeeper.GetAllValidators(ctx)
 	require.NoError(t, err)
 
@@ -109,8 +114,10 @@ func TestUpgrade(t *testing.T) {
 		if v.OperatorAddress == readyValoperStr {
 			foundReady = true
 			require.False(t, v.IsJailed(), "Ready validator should NOT be jailed")
+			require.Equal(t, stakingtypes.Bonded, v.Status, "Ready validator should remain Bonded")
 		} else {
-			require.True(t, v.IsJailed(), "Random validator %s should be jailed", v.OperatorAddress)
+			require.False(t, v.IsJailed(), "Non-ready validator %s must NOT be jailed (would crash CometBFT)", v.OperatorAddress)
+			require.Equal(t, stakingtypes.Unbonded, v.Status, "Non-ready validator %s should be Unbonded", v.OperatorAddress)
 		}
 	}
 	require.True(t, foundReady, "Should find the ready validator in the store")
