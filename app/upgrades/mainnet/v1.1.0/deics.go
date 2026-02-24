@@ -2,7 +2,9 @@ package v1100
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
+	"io/fs"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +25,33 @@ const (
 
 //go:embed validators/staking
 var Vals embed.FS
+
+type StakingValidator struct {
+	OperatorAddress string `json:"operator_address"`
+}
+
+func GetReadyValidators() (map[string]bool, error) {
+	ready := make(map[string]bool)
+	err := fs.WalkDir(Vals, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		data, err := Vals.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		var skval StakingValidator
+		if err := json.Unmarshal(data, &skval); err != nil {
+			return err
+		}
+		ready[skval.OperatorAddress] = true
+		return nil
+	})
+	return ready, err
+}
 
 func DeICS(
 	ctx sdk.Context,
