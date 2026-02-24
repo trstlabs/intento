@@ -2,9 +2,7 @@ package v1100
 
 import (
 	"embed"
-	"encoding/json"
 	"fmt"
-	"io/fs"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,48 +24,6 @@ const (
 //go:embed validators/staking
 var Vals embed.FS
 
-type StakingValidator struct {
-	OperatorAddress string `json:"operator_address"`
-}
-
-func wasInCometSet(
-	ctx sdk.Context,
-	sk stakingkeeper.Keeper,
-	consAddr sdk.ConsAddress,
-) (bool, error) {
-
-	cometKnownVals := make(map[string]bool)
-	sk.IterateLastValidatorPowers(ctx, func(addr sdk.ValAddress, power int64) bool {
-		cometKnownVals[addr.String()] = true
-		fmt.Println("LastValPower:", addr.String(), power)
-		return false
-	})
-	return cometKnownVals[consAddr.String()], nil
-}
-
-func GetReadyValidators() (map[string]bool, error) {
-	ready := make(map[string]bool)
-	err := fs.WalkDir(Vals, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		data, err := Vals.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		var skval StakingValidator
-		if err := json.Unmarshal(data, &skval); err != nil {
-			return err
-		}
-		ready[skval.OperatorAddress] = true
-		return nil
-	})
-	return ready, err
-}
-
 func DeICS(
 	ctx sdk.Context,
 	sk stakingkeeper.Keeper,
@@ -82,17 +38,30 @@ func DeICS(
 	DAOaddr := sdk.AccAddress(DAOaddrBz)
 
 	consumerValidators := ck.GetAllCCValidator(ctx)
-	validators, err := sk.GetAllValidators(ctx)
+	stakingValidators, err := sk.GetAllValidators(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, val := range validators {
+	// Build a map of ICS validators by consensus address for quick lookup
+	icsValsByConsAddr := make(map[string]ccvconsumertypes.CrossChainValidator)
+	for _, icsVal := range consumerValidators {
+		consPubKey, _ := icsVal.ConsPubKey()
+		consAddr := sdk.ConsAddress(consPubKey.Address())
+		icsValsByConsAddr[consAddr.String()] = icsVal
+	}
+
+	// Process existing staking validators - only FUND the ready ones
+	for _, val := range stakingValidators {
 		valoper := val.GetOperator()
 		valAddr, _ := sdk.ValAddressFromBech32(valoper)
+		consAddr, _ := val.GetConsAddr()
 
-		if readyValopers[valoper] {
-			// Ensure ready validators meet the MinStake
+		_, isICSVal := icsValsByConsAddr[sdk.ConsAddress(consAddr).String()]
+		isGovReady := readyValopers[valoper]
+
+		// Only fund validators that are governance-ready (whether ICS or not)
+		if isGovReady {
 			accAddr := sdk.AccAddress(valAddr)
 			balance := bk.GetBalance(ctx, accAddr, Denom)
 			if balance.Amount.LT(math.NewInt(MinStake)) {
@@ -100,84 +69,96 @@ func DeICS(
 				if err := bk.SendCoins(ctx, DAOaddr, accAddr, sdk.NewCoins(sdk.NewCoin(Denom, diff))); err != nil {
 					return err
 				}
+				if isICSVal {
+					fmt.Printf("✓ Funded ICS→native ready validator %s with %s\n", valoper, diff.String())
+				} else {
+					fmt.Printf("✓ Funded ready validator %s with %s\n", valoper, diff.String())
+				}
 			}
-			continue
+			// Remove from ICS map so we don't recreate them
+			if isICSVal {
+				delete(icsValsByConsAddr, sdk.ConsAddress(consAddr).String())
+			}
+		} else {
+			// Not ready - just log, don't touch them
+			// They'll have low power and won't affect consensus much
+			if isICSVal {
+				fmt.Printf("⚠ ICS validator %s exists but not governance-ready (leaving as-is)\n", valoper)
+				delete(icsValsByConsAddr, sdk.ConsAddress(consAddr).String())
+			} else {
+				fmt.Printf("⚠ Non-ICS validator %s not governance-ready (leaving as-is)\n", valoper)
+			}
 		}
-
-		// SOFT REMOVAL: Only process Bonded validators to avoid state transition panics.
-		// Validators already in Unbonding/Unbonded states are left untouched.
-		if val.Status != stakingtypes.Bonded {
-			fmt.Printf("Skipping non-bonded validator %s with status %v\n", valoper, val.Status)
-			continue
-		}
-
-		// For Bonded validators: keep status as Bonded, but zero LastValidatorPower.
-		// This avoids EndBlocker panics from direct status changes while
-		// effectively removing them from consensus.
-		if err := sk.SetLastValidatorPower(ctx, valAddr, 0); err != nil {
-			return fmt.Errorf("failed to zero power for validator %s: %w", valoper, err)
-		}
-		fmt.Printf("Zeroed power for non-ready bonded validator %s\n", valoper)
-
 	}
 
-	return moveICSToStaking(ctx, sk, bk, DAOaddr, consumerValidators)
+	// Now handle ICS validators that DON'T exist in staking yet
+	return createNewICSValidators(ctx, sk, bk, DAOaddr, icsValsByConsAddr, readyValopers)
 }
 
-func moveICSToStaking(
+func createNewICSValidators(
 	ctx sdk.Context,
 	sk stakingkeeper.Keeper,
 	bk bankkeeper.Keeper,
 	DAOaddr sdk.AccAddress,
-	consumerValidators []ccvconsumertypes.CrossChainValidator,
+	icsValsByConsAddr map[string]ccvconsumertypes.CrossChainValidator,
+	readyValopers map[string]bool,
 ) error {
 	srv := stakingkeeper.NewMsgServerImpl(&sk)
 
-	for i, v := range consumerValidators {
-		consPubKey, _ := v.ConsPubKey()
+	i := 0
+	for _, icsVal := range icsValsByConsAddr {
+		consPubKey, _ := icsVal.ConsPubKey()
 		consAddr := sdk.ConsAddress(consPubKey.Address())
-
-		// If they already exist in staking, skip creation
-		if _, err := sk.GetValidatorByConsAddr(ctx, consAddr); err == nil {
-			continue
-		}
-
-		// Use the consensus address bytes to form the validator address
 		valAddr := sdk.ValAddress(consAddr)
 		valoperAddr, _ := bech32.ConvertAndEncode(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), valAddr)
 
-		// 1. Fund the account for self-delegation
+		// Check if this ICS validator is governance-ready
+		isReady := readyValopers[valoperAddr]
+
+		var fundAmount math.Int
+		var minSelfDel math.Int
+		var moniker string
+
+		if isReady {
+			// Ready validators get full funding
+			fundAmount = math.NewInt(MinStake)
+			minSelfDel = math.NewInt(MinStake)
+			moniker = fmt.Sprintf("ics-%d", i)
+			fmt.Printf("✓ Creating ready ICS validator %s with %s stake\n", moniker, fundAmount.String())
+		} else {
+			// Non-ready validators get minimal funding (1 token)
+			// They'll exist but have negligible voting power
+			fundAmount = math.NewInt(ICSSelfStake)
+			minSelfDel = math.NewInt(ICSSelfStake)
+			moniker = fmt.Sprintf("ics-unready-%d", i)
+			fmt.Printf("⚠ Creating non-ready ICS validator %s with minimal stake\n", moniker)
+		}
+
+		// Fund the account
 		accAddr := sdk.AccAddress(consAddr)
-		if err := bk.SendCoins(ctx, DAOaddr, accAddr, sdk.NewCoins(sdk.NewCoin(Denom, math.NewInt(ICSSelfStake)))); err != nil {
+		if err := bk.SendCoins(ctx, DAOaddr, accAddr, sdk.NewCoins(sdk.NewCoin(Denom, fundAmount))); err != nil {
 			return err
 		}
 
-		// 2. Create the validator object
+		// Create the validator - DON'T try to manipulate status
+		// Just create and let staking module handle everything naturally
 		_, err := srv.CreateValidator(ctx, &stakingtypes.MsgCreateValidator{
-			Description: stakingtypes.Description{Moniker: fmt.Sprintf("ics-%d", i)},
+			Description: stakingtypes.Description{Moniker: moniker},
 			Commission: stakingtypes.CommissionRates{
 				Rate:          math.LegacyMustNewDecFromStr("0.1"),
 				MaxRate:       math.LegacyMustNewDecFromStr("0.1"),
 				MaxChangeRate: math.LegacyMustNewDecFromStr("0.1"),
-			}, MinSelfDelegation: math.NewInt(ICSSelfStake),
-			ValidatorAddress: valoperAddr,
-			Pubkey:           v.GetPubkey(),
-			Value:            sdk.NewCoin(Denom, math.NewInt(ICSSelfStake)),
+			},
+			MinSelfDelegation: minSelfDel,
+			ValidatorAddress:  valoperAddr,
+			Pubkey:            icsVal.GetPubkey(),
+			Value:             sdk.NewCoin(Denom, fundAmount),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create ICS validator %d: %w", i, err)
 		}
 
-		// 3. Force them into the bonded set if they were active in ICS
-		// This ensures the transition is seamless.
-		newVal, _ := sk.GetValidator(ctx, valAddr)
-		newVal.Status = stakingtypes.Bonded
-		if err := sk.SetValidator(ctx, newVal); err != nil {
-			return err
-		}
-		if err := sk.SetLastValidatorPower(ctx, valAddr, ICSSelfStake); err != nil {
-			return err
-		}
+		i++
 	}
 
 	return nil
